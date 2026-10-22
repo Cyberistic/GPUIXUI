@@ -1,5 +1,10 @@
 import { readFileSync, readdirSync } from "node:fs";
-import { contrastRatio, highContrastLightColors } from "@gpuixui/tokens";
+import {
+  contrastRatio,
+  elevationShadow,
+  highContrastLightColors,
+  lightTheme,
+} from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { pageUrl, propsOf } from "./component-index";
 import { packageCollections } from "./collection-routes";
@@ -71,6 +76,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     file: "button.mdx",
     row: "Buttons",
     source: "packages/primitives/src/components/Button.tsx",
+  },
+  {
+    file: "card.mdx",
+    row: "Cards",
+    suite: "packages/components/src/behaviour/card.test.tsx",
+    shadowed: "packages/components/docs/card.mdx",
+    source: "packages/components/src/card.tsx",
   },
   {
     file: "command-menu.mdx",
@@ -275,6 +287,80 @@ describe("the curated component pages", () => {
     expect(text).toContain("`brandText(theme)`");
     expect(text).not.toContain("text in the primary role");
     expect(text).not.toContain("| `link` | `primary` |");
+  });
+
+  it("describe the card's edge, lift and fixed metrics", () => {
+    // The package page the curated page replaces said the outline edge was the
+    // `border` role, the elevated card painted `elevation.md`, and colour,
+    // spacing, radius and type all came from the theme. The recipe says
+    // otherwise: the outline edge is `border-input`, elevated is `shadow-sm`
+    // (which the registry maps to `elevation.sm`), and `components` compiles
+    // against the default registry's fixed metrics (ADR 0006) — so a platform
+    // switch repaints a card and does not reshape it. Reading the recipe here
+    // means the page and the compiled surface cannot disagree.
+    const card = pages.find((page) => page.file === "card.mdx");
+    expect(card, "the card page is not in the curated set").toBeDefined();
+    if (card === undefined) return;
+
+    const recipes = read("packages/tw/src/recipes.ts");
+    const block =
+      /export const CARD_VARIANTS = \{([\s\S]*?)\} as const;/.exec(
+        recipes,
+      )?.[1] ?? "";
+    const variants = new Map(
+      [...block.matchAll(/^\s*(\w+):\s*"([^"]*)",?$/gm)].map((match) => [
+        match[1] ?? "",
+        match[2] ?? "",
+      ]),
+    );
+
+    expect(variants.get("outline")).toBe("border border-input");
+    expect(variants.get("plain")).toBe("");
+
+    const utility = /shadow-([a-z]+)/.exec(variants.get("elevated") ?? "")?.[1];
+    expect(utility, "the elevated card paints no shadow").toBeDefined();
+
+    const utilities = read("packages/tw/src/utilities.ts");
+    const mapped = new RegExp(`\\b${utility ?? ""}:\\s*"([a-z]+)"`).exec(
+      utilities,
+    )?.[1];
+    const level = (["sm", "md", "lg"] as const).find(
+      (candidate) => candidate === mapped,
+    );
+    expect(
+      level,
+      `the registry maps shadow-${utility ?? ""} to ${mapped ?? "nothing"}`,
+    ).toBeDefined();
+    if (level === undefined) return;
+
+    const shadow = elevationShadow(lightTheme, level);
+    expect(shadow, `elevation.${level} paints no shadow`).toBeDefined();
+    if (shadow === undefined) return;
+
+    const radiusBlock =
+      /const RADIUS: Readonly<Record<string, number>> = \{([\s\S]*?)\};/.exec(
+        utilities,
+      )?.[1] ?? "";
+    const radius = /^\s*lg: (\d+),$/m.exec(radiusBlock)?.[1];
+    expect(radius, "the fixed registry has no lg radius").toBeDefined();
+
+    // The seam the card compiles through: fixed metrics, not theme density.
+    const seam = read("packages/components/src/internal/recipe.ts");
+    expect(seam).toContain("shadcn's fixed metrics");
+    expect(seam).toMatch(/\*\*default\*\* registry/);
+
+    const text = body(card).replace(/\s+/g, " ");
+    expect(text).toContain("`input`");
+    expect(text).toContain(`\`elevation.${level}\``);
+    expect(text).toContain(`${shadow.offsetY}px offset`);
+    expect(text).toContain(`${shadow.blurRadius}px blur`);
+    expect(text).toContain(`${radius ?? ""}px`);
+    expect(text).toContain("default registry");
+
+    // The retracted claims: the package page taught a role and a lift the
+    // recipe does not paint.
+    expect(text).not.toContain("elevation.md");
+    expect(text).not.toContain("radius.lg");
   });
 
   it("describe the single shadow the overlay recipes paint", () => {

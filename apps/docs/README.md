@@ -42,6 +42,7 @@ blocks/settings.mdx          A settings page with tabbed sections
 blocks/dashboard.mdx         An activity dashboard composed from the library
 components/index.mdx         The filterable component index
 components/button.mdx        Curated: previews, install, source (the package page keeps the API)
+components/card.mdx          Curated: the three treatments, the recipe's fixed metrics
 components/command-menu.mdx  Curated: the palette's matcher, group ranking and keys
 components/dialog.mdx        Curated: a real confirmation workflow
 components/dropdown-menu.mdx Curated: highlighted row is the focused row

@@ -220,6 +220,110 @@
   }
 }
 
+/* ---- card: mirrors @gpuixui/tw's CARD_* against the default registry ----
+ *
+ * The cards compile their metrics from shadcn's fixed steps (an 8px corner,
+ * 16px header padding, 16/24 title, 14/20 body), not from the platform
+ * theme's radius or density — ADR 0006. The colours are the surface's roles.
+ */
+.gx-card {
+  display: flex;
+  flex-direction: column;
+  width: 260px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.gx-card-outline {
+  border: 1px solid var(--input);
+}
+
+.gx-card-elevated {
+  box-shadow: 0 1px 2px var(--shadow);
+}
+
+.gx-card-wide {
+  width: 340px;
+}
+
+.gx-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
+}
+
+.gx-card-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.gx-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 16px 12px;
+}
+
+.gx-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.gx-card-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--muted-foreground);
+}
+
+.gx-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.gx-card-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--muted-foreground);
+}
+
+.gx-card-value {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.gx-card-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px 12px 0;
+  border-top: 1px solid var(--input);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--muted-foreground);
+}
+
+/* The recipe's footer has no bottom padding; a control adds it through `style`. */
+.gx-card-footer-padded {
+  padding-bottom: 12px;
+}
+
 /* ---- dialog: mirrors components/src/dialog.tsx ---- */
 .gx-demo-dialog {
   min-height: 340px;

@@ -1,4 +1,5 @@
 import button from "../../../../../packages/primitives/src/components/Button.tsx?raw";
+import card from "../../../../../packages/components/src/card.tsx?raw";
 import commandMenu from "../../../../../packages/components/src/command-menu.tsx?raw";
 import dialog from "../../../../../packages/components/src/dialog.tsx?raw";
 import dropdownMenu from "../../../../../packages/components/src/dropdown-menu.tsx?raw";
@@ -13,6 +14,7 @@ import tabs from "../../../../../packages/components/src/tabs.tsx?raw";
  */
 export const componentSources = {
   button,
+  card,
   commandMenu,
   dialog,
   dropdownMenu,

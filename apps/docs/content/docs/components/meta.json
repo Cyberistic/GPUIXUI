@@ -3,6 +3,8 @@
   "pages": [
     "---Actions---",
     "button",
+    "---Surfaces---",
+    "card",
     "---Overlays---",
     "dialog",
     "popover",

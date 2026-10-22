@@ -99,6 +99,86 @@ const ButtonStates = () => (
   </div>
 );
 
+const PLAN_ROWS: ReadonlyArray<readonly [string, string]> = [
+  ["Seats", "12 of 20"],
+  ["Storage", "184 GB"],
+  ["Invoices", "Enabled"],
+];
+
+/**
+ * One card, drawn with the recipe's fixed metrics.
+ *
+ * The colours are the preview surface's roles; the geometry is the recipe's,
+ * because the components compile `CARD_*` against the default registry
+ * (shadcn's fixed metrics) rather than the primitives' density scale.
+ */
+const PlanCard = ({
+  variant,
+}: {
+  readonly variant: "outline" | "elevated" | "plain";
+}) => (
+  <div className={`gx-card gx-card-${variant}`}>
+    <div className="gx-card-header">
+      <p className="gx-card-title">Pro plan</p>
+      <p className="gx-card-desc">
+        Everything in Starter, plus seats and invoicing.
+      </p>
+    </div>
+    <div className="gx-card-content">
+      {PLAN_ROWS.map(([label, value]) => (
+        <div className="gx-card-row" key={label}>
+          <span>{label}</span>
+          <span className="gx-card-value">{value}</span>
+        </div>
+      ))}
+    </div>
+    <div className="gx-card-footer">
+      <span>Manage billing</span>
+      <span>Cancel plan</span>
+    </div>
+  </div>
+);
+
+const CardVariants = () => (
+  <div className="gx-card-grid">
+    {(["outline", "elevated", "plain"] as const).map((variant) => (
+      <div className="gx-card-column" key={variant}>
+        <p className="gx-demo-label">{variant}</p>
+        <PlanCard variant={variant} />
+      </div>
+    ))}
+  </div>
+);
+
+const CardComposition = () => (
+  <div className="gx-card gx-card-outline gx-card-wide">
+    <div className="gx-card-header">
+      <p className="gx-card-title">Notifications</p>
+      <p className="gx-card-desc">
+        Choose what this workspace emails you about.
+      </p>
+    </div>
+    <div className="gx-card-content">
+      <div className="gx-card-row">
+        <span>Build failures</span>
+        <span className="gx-card-value">Immediately</span>
+      </div>
+      <div className="gx-card-row">
+        <span>Weekly digest</span>
+        <span className="gx-card-value">Mondays</span>
+      </div>
+    </div>
+    <div className="gx-card-footer gx-card-footer-padded">
+      <button className="gx-btn gx-btn-secondary" type="button">
+        Cancel
+      </button>
+      <button className="gx-btn gx-btn-primary" type="button">
+        Save changes
+      </button>
+    </div>
+  </div>
+);
+
 const DialogDemo = () => {
   const [open, setOpen] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
@@ -802,6 +882,82 @@ const stateSource = `import { Button } from "@gpuixui/primitives";
   +
 </Button>;`;
 
+const cardVariantsSource = `import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@gpuixui/components/card";
+
+const rows = [
+  ["Seats", "12 of 20"],
+  ["Storage", "184 GB"],
+  ["Invoices", "Enabled"],
+];
+
+export const PlanCards = () => (
+  <div style={{ display: "flex", flexDirection: "row", gap: 16 }}>
+    {(["outline", "elevated", "plain"] as const).map((variant) => (
+      <Card key={variant} variant={variant} style={{ width: 260 }}>
+        <CardHeader>
+          <CardTitle>Pro plan</CardTitle>
+          <CardDescription>
+            Everything in Starter, plus seats and invoicing.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {rows.map(([label, value]) => (
+            <div
+              key={label}
+              style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <text>{label}</text>
+              <text>{value}</text>
+            </div>
+          ))}
+        </CardContent>
+        <CardFooter>
+          <text>Manage billing</text>
+          <text>Cancel plan</text>
+        </CardFooter>
+      </Card>
+    ))}
+  </div>
+);`;
+
+const cardCompositionSource = `import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@gpuixui/components/card";
+import { Button } from "@gpuixui/primitives";
+
+export const NotificationCard = ({ save }: { save: () => void }) => (
+  <Card style={{ maxWidth: 420 }}>
+    <CardHeader>
+      <CardTitle>Notifications</CardTitle>
+      <CardDescription>
+        Choose what this workspace emails you about.
+      </CardDescription>
+    </CardHeader>
+    <CardContent>
+      <text>Build failures — immediately</text>
+      <text>Weekly digest — Mondays</text>
+    </CardContent>
+    <CardFooter style={{ paddingBottom: 12 }}>
+      <Button variant="secondary">Cancel</Button>
+      <Button variant="primary" onActivate={save}>
+        Save changes
+      </Button>
+    </CardFooter>
+  </Card>
+);`;
+
 const dialogSource = `import {
   Dialog,
   DialogClose,
@@ -984,6 +1140,12 @@ export const demos: Readonly<Record<string, Demo>> = {
   "button-variants": { render: ButtonRow, source: buttonSource },
   "button-sizes": { render: ButtonSizes, source: sizeSource },
   "button-states": { render: ButtonStates, source: stateSource },
+  "card-variants": { render: CardVariants, source: cardVariantsSource },
+  "card-composition": {
+    render: CardComposition,
+    source: cardCompositionSource,
+    composition: true,
+  },
   "command-menu-demo": {
     render: CommandMenuDemo,
     source: commandMenuSource,

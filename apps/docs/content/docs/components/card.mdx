@@ -1,0 +1,177 @@
+---
+title: Card
+description: A bounded surface that groups related content, in three treatments.
+---
+
+`Card` groups related content on one surface. It is **composition only**: it has
+no state, does not focus, scroll, dismiss or trap anything, and never wraps an
+overlay. Its colours are the theme's; its metrics are the recipe's fixed steps.
+
+Gaps and paints below were measured on `@gpuix/native@0.11.0`.
+
+<ComponentPreview name="card-variants" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Card" />
+
+<ComponentSource name="card" file="packages/components/src/card.tsx" />
+
+## Usage
+
+```tsx
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@gpuixui/components/card";
+
+<Card>
+  <CardHeader>
+    <CardTitle>Pro plan</CardTitle>
+    <CardDescription>
+      Everything in Starter, plus seats and invoicing.
+    </CardDescription>
+  </CardHeader>
+  <CardContent>{rows}</CardContent>
+  <CardFooter>{actions}</CardFooter>
+</Card>;
+```
+
+Only `Card` is required. Drop the parts a card does not need; the surface is the
+same shape either way. The full build is the `card` example in
+`packages/components/examples/card.example.tsx`, which the native playground
+mounts.
+
+## Variants
+
+| `variant` | Recipe | Paints |
+| --------- | ------ | ------ |
+| `outline` (default) | `border border-input` | a 1px edge in the **`input`** role, not the `border` role |
+| `elevated` | `shadow-sm` | `elevation.sm` — a 1px offset and a 2px blur, tinted by the `shadow` role |
+| `plain` | — | the `card` fill only, for a card inside another surface |
+
+The `outline` edge borrows the field fill role: in the base light theme `input`
+and `card` are the same white, so the card is drawn by its fill against the page
+rather than by a darker rule. A theme that wants a visible edge repaints
+`input`, not `border`.
+
+`elevated` is the one recipe in the library that paints its lift: it carries no
+ring, so the last shadow utility is the elevation. The overlay surfaces order
+`ring-1` after `shadow-*` and therefore paint an edge without a lift;
+[Dialog](/docs/components/dialog) records that. A card does not.
+
+<ComponentPreview name="card-composition" />
+
+## Composition
+
+| Part | Renders | Hosts |
+| ---- | ------- | ----- |
+| `Card` | `div` | `CardHeader`, `CardContent`, `CardFooter` |
+| `CardHeader` | `div` | `CardTitle`, `CardDescription`, or a meta row |
+| `CardTitle` | `text` | the card's heading (level 3) |
+| `CardDescription` | `text` | one line of supporting copy |
+| `CardContent` | `div` | rows, a form or a chart |
+| `CardFooter` | `div` | actions, right-aligned above a hairline |
+
+The placement is checked at render, not only in the types: a family part in the
+wrong parent throws before it paints, naming the part and the parent — for
+example `CardTitle cannot be used inside Card.` — instead of painting an
+unspaced heading. Anything that is not a Card part — a Button, a Badge, a `div`,
+a row — is left to the caller.
+
+## Keyboard
+
+None. A card is not focusable, takes no keys and is not in the tab order, and
+neither is `CardTitle`. The controls inside it own their keys and their focus
+rings; a card that needs an action uses a `Button` in `CardFooter` or in the
+body.
+
+## API reference
+
+Every part takes the GPUix host props (`style`, `testId`, pointer and layout
+handlers) and **merges `style` last**, so a caller can override one rule without
+forking the component.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `variant` | `"outline" \| "elevated" \| "plain"` | `"outline"` | the surface treatment in the table above |
+| `className` | `string` | none | a recipe class string joined after the component's own, so it wins a conflict |
+| `style` | `StyleDesc` | none | merged last, after the compiled recipe |
+| `children` | `PartChildren` | none | the parts; text and numbers are rejected for every part that hosts parts |
+
+`CardTitle`, `CardDescription`, `CardContent` and `CardFooter` add no props of
+their own beyond the host props and `className`/`style`.
+
+## Theming
+
+The colours are the theme's roles; the metrics are the recipe's, compiled
+against the **default registry** (shadcn's fixed metrics) rather than the
+primitives' density scale — the same seam every Tier 2 component compiles
+through, recorded in ADR 0006.
+
+| Part | Reads |
+| ---- | ----- |
+| surface | the `card` fill |
+| title | `foreground`, at the fixed `base` step (16/24, weight 600) |
+| description, body rows | `mutedForeground`, at the fixed `sm` step (14/20) |
+| outline and footer edge | the `input` role |
+| elevated lift | `elevation.sm`, tinted by the `shadow` role |
+| corners | the registry's 8px `lg` step |
+
+Two consequences a reader should not have to discover:
+
+- Changing `colors.card`, `colors.foreground` or `colors.mutedForeground`
+  repaints every card. Changing the theme's `radius` or `density` does **not**
+  reshape it: a card is 8px-rounded with 16px header padding on every platform,
+  and the platform switch repaints its colours and type family but not its
+  geometry. Pass `className` or `style` to own the metrics.
+- The footer recipe is `px-3 pt-3` with **no bottom padding**, so a control in it
+  sits on the card's bottom edge. The composition above adds
+  `style={{ paddingBottom: 12 }}` to `CardFooter`; the shipped example uses text
+  actions for the same reason.
+
+## Accessibility and limitations
+
+- `CardTitle` renders a `<text>` with `role="heading"` and `aria-level={3}`. The
+  level is published by the runtime as the accessibility tree's `level` field.
+- A card is not a landmark and has no role, name or `aria-*` state of its own.
+  Its accessible name is the heading a reader meets first, so a card without a
+  `CardTitle` has no name to announce.
+- The surface clips overflow (`overflow: hidden`), so a scrolling body belongs
+  in `CardContent` with its own height, not in a card that grows with its rows.
+- The heading level is fixed at 3, not read from the surrounding document: a
+  card inside a card still announces a level-3 heading, and a card on a page
+  whose only heading is an `h1` skips a level. Write the heading yourself when
+  the document outline matters.
+- The preview above is a browser rendering of the recipe. The shipped card is a
+  GPUix host tree; the Code tab and the source accordion are the real usage.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | the `div` and `text` host props and the `StyleDesc` seam |
+| `@gpuix/react/floating` | `mergeStyles`, so a caller `style` merges last |
+| `@gpuixui/tw` | the `CARD_*` recipes and `cn` |
+
+No overlay, no runtime service and no global state: the theme reaches the card
+through the package's own theme seam over `@gpuixui/tokens`.
+
+## Related
+
+- **List** — rows inside `CardContent`.
+- **EmptyState** — the "nothing here yet" panel for a card body.
+- **Dialog** — a card-shaped surface that does focus and dismiss.
+- **Badge** — the status pill a card header's meta row carries.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `yes` runtime verdict: a card is three `div`s
+and a `<text>`, so it needs no runtime feature. 5 native behaviour tests in
+`packages/components/src/behaviour/card.test.tsx` hold each variant's surface,
+the parts' text order, the level-3 heading in the accessibility tree, a caller
+`style` winning over the variant, and the fill from both themes.
