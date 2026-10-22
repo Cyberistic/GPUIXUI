@@ -807,6 +807,26 @@ every overlay a tween:
   surface to *survive* polls for the painted state with `settlePainted`, so it
   does not spend the whole budget on a surface doing the right thing.
 
+Three more, and the reason a full pass reports the probes it failed rather than
+a count: every one of these was green alone and red in a pass, and the two full
+passes that found them named *different* probes, so the box's load was the
+variable rather than the components.
+
+- a fresh mount was read before its own first layout pass had reported (`the
+  centre is the painted box the onLayout report names: expected 780 ± 1, got
+  0`), so `window-resize-reflow` waits for `reports > 0` and for the app's
+  `useWindowSize()` to carry a positive pair before it compares either;
+- the palette was reopened with a press sent during the previous surface's exit
+  tween (`the runtime paints command-zoom: expected a value, got none`): the
+  layer that is closing dismisses the press that would reopen it, so the surface
+  never mounts. `openPalette` now waits for the surface to be **gone**, then
+  **painted**, then its search field **focused** — the three states the typing
+  after it depends on;
+- the column menu was reopened the same way (`a press still opens the menu after
+  the header shrank: expected true, got false`), and the select that starts that
+  exit tween is now a check of its own (`selecting a column dismisses the
+  menu`), so the wait is a measurement rather than a sleep in front of one.
+
 ### `focus-visible` — measured on 0.11.0 here
 
 The probe paints the ring as a `focusVisible` outline
@@ -1565,6 +1585,14 @@ fails `closing the palette returns the focus to its opener`
 (`expected "none", got "palette-trigger"`, exit `1`). `modal-focus-restore`
 below still measures the remaining raw-`autoFocus` case.
 
+A **reopen** is its own wait. The palette's close runs the dialog's exit tween,
+and a press sent during it is dismissed by the layer that is closing instead of
+opening the surface again — measured as a full-pass failure (`the runtime paints
+command-zoom: expected a value, got none`). `openPalette` therefore waits for the
+surface to be gone, then painted, then `command-input` focused before a step
+types into it; a palette that never focuses its field still fails the focus check
+after the wait, on `none`.
+
 ### `popover-lifecycle` — measured on 0.11.0 here
 
 The shipped `Popover` in a window: where it opens, and the three ways it leaves.
@@ -2273,6 +2301,12 @@ re-clamp signal for the window as well as for a sibling. The zero-size guard
 (`windowSizeOf`) reports a renderer that answers `0`, a negative or a non-finite
 dimension as a missing size instead of asserting a layout against it.
 
+The **opening** read is polled, not sampled: `useWindowSize()` samples every
+100ms and the centre's `onLayout` reports on the runtime's first layout pass, so
+a loaded box read a `w=0` readout beside a 780px painted box (`expected 780 ± 1,
+got 0`). The probe waits for both channels to carry a value before it asserts,
+and a hook or a pane that never reports still fails on the placeholder.
+
 The app channel lags the renderer: the platform's zoom is animated and
 `useWindowSize()` samples every 100ms, so the probe waits (bounded at 960ms) for
 both channels to name the new box before it asserts. That wait is the negative
@@ -2552,6 +2586,7 @@ Measured:
 | Escape | the panel unpaints (the check waits for the exit tween: a one-shot read saw it still painted) and the focus returns to the trigger |
 | Enter (keyboard open) | focus lands on the first item, `status` |
 | Enter again | `hidden=status changes=1`, the status header unpaints |
+| the select | the surface dismisses on its own exit tween — the probe waits for it to be gone before reopening |
 | a column after the anchor | the trigger's `x` is unchanged |
 | press the trigger again | the menu still opens after the header shrank (the check waits for the painted panel: a one-shot read saw nothing) |
 
@@ -3418,11 +3453,14 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop, the app-level shortcut and selection probes run in real GPUix 0.11.0
-  on this host. The last full pass was **55/57** on 2026-10-22 — every probe it
-  covered ran, and the reds were: `list-lifecycle`, `command-palette` (both in
-  the components workstream's in-flight work, recorded in `TODO.md`). Measured
-  alone since then: `svg-pattern` (green on 0.11.0, 34 checks). The full live
-  suite is the release gate that turns this line green.
+  on this host. The last full pass was **58/58** on 2026-10-22: every probe the
+  registry declares ran and passed in one window. Two partial passes before it
+  named different probes (`list-lifecycle` and `command-palette`, then
+  `window-resize-reflow` and `header-menu-lifecycle`), and the component defects
+  behind the first pair were fixed in that workstream while the remaining three
+  were one-shot frame reads in the probes — see §A probe waits for a settled
+  paint, which records all three measured shapes and the waits that replaced
+  them. The full live suite is the release gate, and this line is its result.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

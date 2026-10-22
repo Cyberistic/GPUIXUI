@@ -6530,12 +6530,20 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         concurrency: 1,
       });
 
-    /** Presses the trigger and lets the surface paint. */
+    /** Presses the trigger and waits for the surface and its field. */
     const openPalette: Effect.Effect<void, Smoke.SmokeHostError> = Effect.gen(
       function* () {
+        // A press sent while the last surface is still on its exit tween is
+        // dismissed by the layer that is closing, so the palette never opens
+        // (measured: `the runtime paints command-zoom — expected a value, got
+        // none`, after a reopen that raced the previous close). Waiting for the
+        // two states the next steps need — the surface painted, the search
+        // field focused — makes the open the probe's, not the box's load.
+        yield* settleGone(ctx, "command-menu");
         yield* ctx.host.focusElement("palette-trigger");
         yield* ctx.host.click("palette-trigger");
-        yield* Effect.sleep(SETTLE);
+        yield* settlePainted(ctx, "command-menu");
+        yield* settleUntil(ctx.host.focused(), (id) => id === "command-input");
       },
     );
 
@@ -6555,7 +6563,7 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* openPalette;
     yield* ctx.expectEqual(
       "a press opens the palette surface",
-      (yield* paintedBox(ctx, "command-menu")).width > 0,
+      (yield* settledBox(ctx, "command-menu")).width > 0,
       true,
     );
     yield* ctx.expectEqual(
@@ -6599,7 +6607,7 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
       "typing filters the palette to the matching row",
-      (yield* paintedBox(ctx, "command-theme")).width > 0,
+      (yield* settledBox(ctx, "command-theme")).width > 0,
       true,
     );
     yield* ctx.expectEqual(
@@ -6627,7 +6635,7 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
       "a disabled action still paints as a row",
-      (yield* paintedBox(ctx, "command-zoom")).width > 0,
+      (yield* settledBox(ctx, "command-zoom")).width > 0,
       true,
     );
     yield* ctx.host.key("enter");
@@ -6639,7 +6647,7 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.expectEqual(
       "a disabled action leaves the palette open",
-      (yield* paintedBox(ctx, "command-menu")).width > 0,
+      (yield* settledBox(ctx, "command-menu")).width > 0,
       true,
     );
 
@@ -8707,12 +8715,51 @@ const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         width: readoutNumber(readout, "w"),
         height: readoutNumber(readout, "h"),
       }));
+    /**
+     * The app's read once its hook has sampled the window.
+     *
+     * `useWindowSize()` samples the renderer every 100ms, so the mount's first
+     * frame can carry the hook's placeholder. The opening checks are about the
+     * number the app reports, not about how soon its first sample landed, so
+     * they wait for a positive pair before comparing — a hook that never
+     * samples still fails, on the placeholder it settled on.
+     */
+    const settledAppSize = () =>
+      Effect.map(
+        settleUntil(
+          ctx.host.text("resize-window-readout"),
+          (readout) =>
+            readoutNumber(readout, "w") > 0 && readoutNumber(readout, "h") > 0,
+        ),
+        (readout) => ({
+          width: readoutNumber(readout, "w"),
+          height: readoutNumber(readout, "h"),
+        }),
+      );
     /** The centre pane's `onLayout` count and last reported width. */
     const centreReport = () =>
       Effect.map(ctx.host.text("resize-centre-readout"), (readout) => ({
         width: readoutNumber(readout, "w"),
         reports: readoutNumber(readout, "reports"),
       }));
+    /**
+     * The centre's report once its first layout pass has run.
+     *
+     * A fresh mount reports `reports=0` until the runtime lays the row out, and
+     * the frame that carries the report depends on the box's load; reading it
+     * on the mount's first frame measured `w=0` against a painted 780.
+     */
+    const settledCentreReport = () =>
+      Effect.map(
+        settleUntil(
+          ctx.host.text("resize-centre-readout"),
+          (readout) => readoutNumber(readout, "reports") > 0,
+        ),
+        (readout) => ({
+          width: readoutNumber(readout, "w"),
+          reports: readoutNumber(readout, "reports"),
+        }),
+      );
     /** The centre pane's painted box. */
     const centreBounds = () =>
       Effect.flatMap(
@@ -8748,7 +8795,7 @@ const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     // 1. The renderer's size is a real box and the app reads the same one.
     const size = yield* ctx.host.windowSize();
-    const app = yield* appSize();
+    const app = yield* settledAppSize();
     yield* ctx.expectEqual(
       "the renderer reports a positive paintable width",
       size.width > 0,
@@ -8776,7 +8823,7 @@ const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.expectNear(
       "the centre is the painted box the onLayout report names",
-      (yield* centreReport()).width,
+      (yield* settledCentreReport()).width,
       centre.width,
       1,
     );
@@ -12241,7 +12288,17 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 6. A press on the trigger still opens the menu after the relayout.
+    // 6. The select closes the surface on its exit tween. A press sent during
+    //    that tween is dismissed by the layer it is closing, so the probe waits
+    //    for the menu to be gone before it reopens it — the measured shape of a
+    //    one-shot read here was `a press still opens the menu …  got false`.
+    yield* ctx.expectEqual(
+      "selecting a column dismisses the menu",
+      yield* settleGone(ctx, "header-menu"),
+      true,
+    );
+
+    // 7. A press on the trigger still opens the menu after the relayout.
     yield* ctx.host.click(HEADER_TRIGGER);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
