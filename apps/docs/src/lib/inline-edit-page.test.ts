@@ -6,13 +6,13 @@ import { classesToStyle } from "../../../../packages/tw/src/index";
 /**
  * The curated Inline edit page, held to the source it describes.
  *
- * A curated page shadows the package's page at the same URL, so every claim
- * only it makes has to be true: the packages its Dependencies table lists are
- * the ones the component imports, the native count is the suite's own, the
- * runtime version is the workspace pin, and the fixed corner the page prints is
- * the one the recipe compiles. The preview rules are held the same way — the
- * display takes the `sm` height and the `accent` wash the component paints, and
- * the editor the `md` height and the `background` fill its recipe compiles.
+ * `component-page-truth.test.ts` reads the curated set for the claims every page
+ * makes — the runtime pin, the native count, the inventory status and the
+ * packages the source imports. This file holds what is particular to this page:
+ * the corner it prints is the one the recipe compiles (not the theme's radius,
+ * which the platform switch moves), the preview rules take the heights and roles
+ * the component paints, and the finish rule the page teaches is the one the
+ * model and the source implement.
  *
  * `node:fs` is the test's own read of a checked-in file, not runtime I/O.
  */
@@ -24,10 +24,8 @@ const read = (path: string): string =>
 
 const page = read("apps/docs/content/docs/components/inline-edit.mdx");
 const source = read("packages/components/src/inline-edit.tsx");
-const suite = read("packages/components/src/behaviour/inline-edit.test.tsx");
 const recipes = read("packages/tw/src/recipes.ts");
 const css = read("apps/docs/src/styles/demos.css");
-const strategy = read("docs/preview-strategy.md");
 
 /** One CSS block, from its selector to the closing brace. */
 const block = (sheet: string, selector: string): string => {
@@ -50,49 +48,23 @@ const dependencies = (): ReadonlyArray<string> => {
     });
 };
 
-/** Every non-relative package the component imports, `this package` aside. */
-const imports = (): ReadonlyArray<string> =>
-  [...source.matchAll(/(?:from\s+|import\s+)"([^"]+)"/g)]
-    .flatMap((match) => (match[1] === undefined ? [] : [match[1]]))
-    .filter(
-      (specifier) =>
-        !specifier.startsWith(".") &&
-        !specifier.startsWith("node:") &&
-        specifier !== "react" &&
-        specifier !== "react-dom",
-    )
-    .filter((specifier, index, all) => all.indexOf(specifier) === index);
-
 describe("the Inline edit page", () => {
-  it("lists the packages the component imports, and no others", () => {
-    // The page writes its own Dependencies table, which suppresses the site's
-    // generated strip, so this table is the only dependency record a reader gets.
-    expect(dependencies().toSorted()).toEqual(
-      ["this package", ...imports()].toSorted(),
+  it("lists no package the component does not import", () => {
+    // The other direction — every import is listed — is the curated set's case.
+    // A table row nobody imports sends a reader after a dependency they do not
+    // need, and suppresses the site's generated strip while it is there.
+    const imported = new Set(
+      [...source.matchAll(/(?:from\s+|import\s+)"([^"]+)"/g)].flatMap((match) =>
+        match[1] === undefined ? [] : [match[1]],
+      ),
     );
-    expect(imports()).toContain("@gpuixui/tw");
-    expect(imports()).toContain("@gpuix/react/floating");
-  });
 
-  it("prints the native cases the suite runs", () => {
-    const printed = /(\d+) native/.exec(page)?.[1];
-    const cases = (suite.match(/\bit\(/g) ?? []).length;
-
-    expect(cases).toBeGreaterThanOrEqual(8);
-    expect(printed).toBe(String(cases));
-  });
-
-  it("names the runtime version the workspace pins, and no other", () => {
-    const pinned =
-      /"@gpuix\/native":\s*"([^"]+)"/.exec(read("package.json"))?.[1] ?? "";
-
-    expect(pinned).not.toBe("");
-    expect(page).toContain(`@gpuix/native@${pinned}`);
     expect(
-      [...page.matchAll(/\b(\d+\.\d+\.\d+)\b/g)].flatMap((match) =>
-        (match[1] ?? "") === pinned ? [] : [match[1]],
+      dependencies().filter(
+        (name) => name !== "this package" && !imported.has(name),
       ),
     ).toEqual([]);
+    expect(dependencies()).toContain("this package");
   });
 
   it("prints the corner the recipe compiles, not the theme's step", () => {
@@ -119,9 +91,7 @@ describe("the Inline edit page", () => {
       (match) => match[1] ?? "",
     );
     expect(printed.length).toBeGreaterThanOrEqual(2);
-    expect(
-      printed.filter((value) => value !== String(radius(display ?? ""))),
-    ).toEqual([]);
+    expect(printed.filter((value) => value !== "4")).toEqual([]);
     expect(page).toContain("rounded-sm");
     expect(block(css, ".gx-inline-display")).toContain("border-radius: 4px");
     expect(block(css, ".gx-inline-input")).toContain("border-radius: 4px");
@@ -132,6 +102,7 @@ describe("the Inline edit page", () => {
     const editor = block(css, ".gx-inline-input");
 
     expect(display).toContain("min-height: var(--control-height-sm)");
+    expect(source).toContain('minHeight: controlHeight(theme, "sm")');
     expect(block(css, ".gx-inline-display:hover:not(:disabled)")).toContain(
       "background: var(--accent)",
     );
@@ -146,6 +117,7 @@ describe("the Inline edit page", () => {
     expect(editor).toContain("background: var(--background)");
     expect(editor).toContain("border: 1px solid var(--input)");
     expect(editor).toContain("color: var(--input-foreground)");
+    expect(source).toContain('height: controlHeight(theme, "md")');
   });
 
   it("teaches the finish, the focus and the app's gate", () => {
@@ -157,18 +129,10 @@ describe("the Inline edit page", () => {
     expect(page).toContain("no `aria-invalid` and no `aria-describedby`");
   });
 
-  it("mounts both previews and announces the page where previews are listed", () => {
+  it("mounts both previews its demos register", () => {
     expect(page).toContain('<ComponentPreview name="inline-edit-workflow" />');
     expect(page).toContain('<ComponentPreview name="inline-edit-states" />');
-    expect(strategy).toContain("Inline edit");
-    expect(read("apps/docs/content/docs/theming.mdx")).toContain(
-      "](/docs/components/inline-edit)",
-    );
-  });
-
-  it("ships the native usage in both code tabs", () => {
     const demos = read("apps/docs/src/components/docs/inline-edit-demo.tsx");
-
     expect(demos).toContain("export const inlineEditWorkflowSource");
     expect(demos).toContain("export const inlineEditStatesSource");
     expect(

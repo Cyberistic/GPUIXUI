@@ -5701,22 +5701,25 @@ started from an app button). The rules live in
 unchanged-draft silence, both focus reasons, the Escape-only discard, the draft
 that restarts from the committed value, the empty-value/app-gate split and the
 name limit, and reads `inline-edit.tsx` for the latch, the `draft !== value`
-guard, the two refocus reasons and the `sm`/`md` heights. `inline-edit-page.test.ts`
-(8 cases) holds the page's Dependencies table to the component's own imports,
-the printed native count to the suite's 8, the runtime pin to the workspace
-catalog, **every** printed corner to the compiled `rounded-sm` (4px) and the
-preview rules to `--control-height-sm`/`-md`, `accent`, `accent-foreground`,
-`background` and `input`. The page is in the sidebar (`meta.json` Forms), the
-Components index, `/docs/theming`'s switch list, the strategy's "Curated today"
-line, `sources.ts`, the app README ledger and `package-docs.test.ts`'s curated
-set. Directions measured: dropping the `!state.editing` guard fails the
-double-`Enter` case by name, printing `7 native` fails the count case, and a
-stale `fixed 6px` in one Theming row fails the corner case. `nub run --filter
-@gpuixui/docs test` is 981 passed with the two failures being the data lane's
-in-flight table work (`table-preview.test.ts`, `lane-page.test.ts`), both outside
-this page; `build` and `check:tests` are green. No native GPUix scenario applies
-(a docs page has no runtime path); the component's own evidence stays with its
-row.
+guard, the two refocus reasons and the `sm`/`md` heights. The page is in
+`component-page-truth.test.ts`'s curated set, so the generic claims hold it too
+(the runtime pin, the 8 native cases, the inventory's `done`/`partial` verdict
+and every import its Dependencies table must list), and
+`inline-edit-page.test.ts` (5 cases) holds what is particular to it: no invented
+dependency row, **every** printed corner against the compiled `rounded-sm`
+(4px), the preview rules against `--control-height-sm`/`-md`, `accent`,
+`accent-foreground`, `background` and `input`, the finish/focus/gate sentences,
+and both registered previews with their native source strings. The page is in
+the sidebar (`meta.json` Forms), the Components index, `/docs/theming`'s switch
+list, the strategy's "Curated today" line, `sources.ts`, the app README ledger
+and `package-docs.test.ts`'s curated set. Directions measured: dropping the
+`!state.editing` guard fails the double-`Enter` case by name, printing
+`7 native` fails the count case, and a stale `fixed 6px` in one Theming row
+fails the corner case. `nub run --filter @gpuixui/docs test` is 978 passed with
+the two failures being the data lane's in-flight table work
+(`table-preview.test.ts`, `lane-page.test.ts`), both outside this page; `build`
+and `check:tests` are green. No native GPUix scenario applies (a docs page has no
+runtime path); the component's own evidence stays with its row.
 
 `[x]` Route the **curated Table page** to the pinned column that ships beside
 it — `FrozenTable` landed in `@gpuixui/data` with `/docs/data-display/frozen-columns`,

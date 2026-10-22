@@ -192,6 +192,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/field.tsx",
   },
   {
+    file: "inline-edit.mdx",
+    row: "Inline edit",
+    suite: "packages/components/src/behaviour/inline-edit.test.tsx",
+    shadowed: "packages/components/docs/inline-edit.mdx",
+    source: "packages/components/src/inline-edit.tsx",
+  },
+  {
     file: "list.mdx",
     row: "Lists / list items",
     suite: "packages/components/src/behaviour/list.test.tsx",
