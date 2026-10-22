@@ -123,7 +123,9 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   a pane cannot keep a wheel from its page. Size the table's container to the
   height it has and give **it** the overflow, keep the page around it out of the
   scroll path, and read the table's own `onScrollChange` — an ancestor's
-  `onScroll` fires for a wheel aimed inside the table.
+  `onScroll` fires for a wheel aimed inside the table. It holds for a
+  `<virtual-list>` pane too: the rule is the scroll host's, not the
+  `overflow` box's.
 - **Sort and selection are keyed by record, and a window measured both** — a
   press selects the record it hit **and that row holds the focus**, so the next
   key reaches that row's own handler with no synthetic focus; `down` roves focus

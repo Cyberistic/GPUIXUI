@@ -1427,6 +1427,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(nested?.evidence).toContain("-340");
     expect(nested?.evidence).toContain("-360");
     expect(nested?.evidence).toContain("events=3");
+    expect(nested?.evidence).toContain("<virtual-list>");
     expect(nested?.evidence).toContain("preventDefault");
     expect(nested?.workaround).toContain("non-scrolling");
     expect(nested?.workaround).toContain("onScrollChange");
@@ -1444,6 +1445,7 @@ describe("docs/gpuix-capabilities.md", () => {
     ).toBeDefined();
     expect(nested?.[1]).toContain("nested-scroll-lifecycle");
     expect(nested?.[1]).toContain("every scrollable ancestor");
+    expect(nested?.[1]).toContain("<virtual-list>");
     expect(nested?.[2]).toContain("onScrollChange");
     expect(nested?.[2]).toContain("non-scrolling");
   });
