@@ -276,6 +276,12 @@ export const liveRegistry = [
       "Workspace: a dock's Tab traversal reaches its panes in tree order, a closed sidebar's unguarded control keeps its stop while the guarded one leaves, and a rail step carries focus and the pane",
     capability: "workspace",
   },
+  {
+    id: "header-menu-lifecycle",
+    title:
+      "Table: a column menu anchored inside a scrolled header opens under its trigger, follows the wheel, dismisses with Escape and hides a column",
+    capability: "table",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

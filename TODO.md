@@ -522,7 +522,29 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 64/64
+`[x]` `[██████████]` 65/65
+
+`[x]` Land the `header-menu-lifecycle` live probe and measure **a menu anchored
+      inside a scrolled header** — Tier 3's column configuration row is `?`, and
+      the fact it needs is whether an overlay placed from a trigger in the
+      header's scroller stays with it. A 540px header (name 200, trigger 100,
+      size 120, status 120) in a 420px frame, with the shipped `DropdownMenu` in
+      the trigger cell, measured on 0.11.0: the trigger cell starts where the
+      name cell ends (200) while the trigger paints 22px into it, the panel
+      paints below the trigger and starts at its own `x` (±2), a −100 wheel moves
+      the trigger and the panel **−100 in the same read**, Escape unpaints it and
+      returns the focus, Enter opens it on the first item (`status`), Enter hides
+      that column (`hidden=status changes=1`, the header cell unpaints, a column
+      after the anchor does not move it), and a press on the trigger still opens
+      it after the header shrank. `src/live/header-menu.ts` holds the widths and
+      `headerTriggerCellX` (5 unit cases). 20 checks, `--only
+      header-menu-lifecycle`, green on 0.11.0 (and beside `dock-focus-lifecycle`
+      in one window, 2/2). Two negative controls measured (dropping the frame's
+      `overflowX`: `expected 122 ± 2, got 222`; painting the menu in column
+      order: `expected "header-menu-item-status", got
+      "header-menu-item-name"`; exit `1` each). Evidence:
+      `apps/playground/README.md` §`header-menu-lifecycle`,
+      `.artifacts/live/header-menu.png`
 
 `[x]` Land the `dock-focus-lifecycle` live probe and measure **what a keyboard
       reaches inside a nested dock** — Tier 4's keyboard navigation row was `?`
@@ -2208,6 +2230,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | The `/docs/themes` **Decorative surfaces** bullet still names four surface kinds — "dividers, skeleton fills, the modal veil and status edges" — while `decorativeSurfaces` measures nine kinds: it omits the scrollbar thumb, the `hover`/`active`/`selected`/`accent` state washes, the `secondary` action face, and the elevation shadow the tokens workstream just added (whose deepest level is now held to the same floor, and whose high-contrast dark tint was invisible on its black page) | docs-site | **resolved** — the bullet now names all nine kinds in the component's own terms (a `divider` rules a region, a `skeleton` stands in, a `scrim` veils a modal, a `statusTint` fills a message and a `statusEdge` bounds it, a `scrollbar` is the thumb a scroller tints, a `stateWash` is a hovered/pressed/selected/accented row, a `filledAction` is `secondary`'s face — the one filled variant with no brand colour and no border — and an `elevation` is a raised surface's shadow, measured at the deepest level because a flat scale cannot hide behind a lighter step) and interpolates both `{decorativeSurfaces.length}` and `{decorativeFloor}` from `@gpuixui/tokens` instead of printing a count or a floor. `theming-page.test.ts` gains `names every decorative surface kind the report measures`: it derives the kind set from `decorativeSurfaces`, fails with the missing names, requires both interpolations and refuses the retracted `dividers, skeleton fills, the modal veil and status` sentence. Directions measured: restoring the old four-kind sentence fails the case with eight unnamed kinds, and the fixed page passes 28/28 |
 
 | Record a dock's **keyboard order** — the live `dock-focus-lifecycle` probe measured what Tier 4's Keyboard navigation row calls "ours": one Tab stop per rail and one per pane, a 0-width closed sidebar whose unguarded control keeps its tab stop, its own 12px box and programmatic focus while the pointer is clipped, the guarded control leaving and returning with the state, a rail step that must move real focus itself, and a field that owns its arrows | docs-site (capability record + `/docs/runtime`) and components (the Tier 4 Keyboard navigation row, `?`) | **open** — add a **Dock keyboard navigation** row (`supported, with limits`: composed, not provided) carrying those measurements and the workaround (one stop per rail via a roving `tabIndex`, `tabIndex={-1}` on a closed pane's controls, `renderer.focusElement` on a rail step), publish it on `/docs/runtime#measured-in-a-window`, and name `dock-focus-lifecycle` in §5's owed-probe list; `capability-doc.test.ts` gains the record-row, page-row and required-probe cases. Evidence: `apps/playground/README.md` §`dock-focus-lifecycle` |
+
+| Record an **anchored menu inside a scrolled header** — the live `header-menu-lifecycle` probe measured the composition Tier 3's column configuration row (`?`) needs: the panel follows its anchor's wheel (−100 for both in one read), the trigger's own box is 22px inside its cell (so column arithmetic reads the cell), Escape returns the focus, the first item hides its column, a column after the anchor does not move it, and the menu still opens after the header shrinks | docs-site (capability record + `/docs/runtime`) and components (the Tier 3 Column configuration row, `?`) | **open** — add a **Menu anchored in a scroller** row (`supported, with limits`: composed, not provided) carrying the measurement and the workaround (anchor from the cell's box, keep the trigger outside the reflowed columns), publish it on `/docs/runtime#measured-in-a-window`, and name `header-menu-lifecycle` in §5's owed-probe list; `capability-doc.test.ts` gains the record-row, page-row and required-probe cases. Evidence: `apps/playground/README.md` §`header-menu-lifecycle` |
 
 | The theme editor's readout met a **seventh number rule** — `@gpuixui/tokens` added `emphasis` (`bodyStrong`'s weight exceeds `body`'s, because the two roles share a size and a leading and the weight is the whole difference between reading and emphasis), so `numberRequirement: Record<NumberRule, string>` in `theme-editor-logic.ts` no longer compiled (TS2741) and the readout would have printed `needs undefined` for a brand that forwards one weight to every role | docs-site | **resolved** — the map gains `emphasis: "a weight that exceeds the body text it emphasises"`, and `/docs/themes`'s Numbers bullet states the third pair rule (why a strong role that weighs what body weighs paints identically) instead of claiming two. `theme-editor-logic.test.ts` builds `bodyStrong` at `body`'s weight and asserts the exact line (`typography bodyStrong.fontWeight — 400 cannot be laid out (needs a weight that exceeds the body text it emphasises)`) with the gate failing; `theming-page.test.ts` proves the report returns `emphasis` for that brand and holds the page to `bodyStrong` and the three-rule sentence while refusing the retracted "two rules" wording. Directions measured: dropping the map entry fails with `needs undefined`, and restoring the two-rule sentence fails the page case |
 

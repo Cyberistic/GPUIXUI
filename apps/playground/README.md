@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-40 probes a real window can prove, of which eleven mount shipped
+41 probes a real window can prove, of which eleven mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
 combobox and the modal focus rule), five mount
@@ -45,7 +45,8 @@ combobox and the modal focus rule), five mount
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
-restore, a dock's keyboard order and the app-level key handler).
+restore, a dock's keyboard order, an anchored menu in a scrolled header and the
+app-level key handler).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -2272,6 +2273,55 @@ giving every trigger a stop fails the order check with
 24 checks, `--only dock-focus-lifecycle`, green on 0.11.0. Capture:
 `.artifacts/live/dock-focus.png`.
 
+### `header-menu-lifecycle` — measured on 0.11.0 here
+
+A **column menu anchored inside a scrolled header**. Tier 3's column
+configuration row is `?`: the composition needs a menu whose trigger lives in
+the header a data grid scrolls horizontally, and the header's offset is a
+paint-level value — the fact a plan needs is whether an overlay placed from that
+trigger's box stays with it when the header moves. The shipped `DropdownMenu`
+is mounted in the trigger cell of a 540px header inside a 420px frame, so the
+header has 120px of travel.
+
+Measured:
+
+| Step | Result |
+| ---- | ------ |
+| mount | name 200px, trigger cell at the name cell's end (200 → 216 at the window's padding), status clipped |
+| press `columns…` | the panel paints **below** the trigger's box and starts at the trigger's own `x` (±2) |
+| wheel the header −100 | the trigger moves −100 and the panel moves **−100 in the same read** |
+| Escape | the panel unpaints and the focus returns to the trigger |
+| Enter (keyboard open) | focus lands on the first item, `status` |
+| Enter again | `hidden=status changes=1`, the status header unpaints |
+| a column after the anchor | the trigger's `x` is unchanged |
+| press the trigger again | the menu still opens after the header shrank |
+
+Four facts a column menu can be built on:
+
+1. **An anchored overlay follows its anchor's scroll.** The wheel is a
+   paint-level offset and the panel re-places with it — one read after the wheel
+   has both at −100 — so a filter or column menu can live inside the scrolled
+   header rather than needing a fixed toolbar.
+2. **Anchor arithmetic uses the cell, not the trigger element.** The trigger
+   cell starts where the name column ends (200), while the trigger itself paints
+   at 222 because the control carries its own inset; a column-width calculation
+   that reads the trigger's box would be 22px out.
+3. **The menu's own keyboard path agrees with the press path.** Enter opens it
+   on the first item, Escape returns the focus to the trigger, and the first
+   item is the one the paint lists first — the item order is a component
+   decision, not the column order.
+4. **Hiding a column before the anchor moves it; hiding one after it does not.**
+   The fixture's `headerTriggerCellX` models both, so a grid that keeps the
+   trigger in a fixed cell has to pin it outside the reflowed columns.
+
+Negative controls measured, both exit `1` and restored green: dropping the
+header's `overflowX` fails `the wheel moved the trigger with its column`
+(`expected 122 ± 2, got 222` — the wheel moved nothing), and painting the menu
+in column order instead of reverse fails `Enter opens the menu on its first
+item` (`expected "header-menu-item-status", got "header-menu-item-name"`).
+20 checks, `--only header-menu-lifecycle`, green on 0.11.0. Capture:
+`.artifacts/live/header-menu.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -2378,7 +2428,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (40/40), with a written report and screenshots.
+  (41/41), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

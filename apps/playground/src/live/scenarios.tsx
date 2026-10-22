@@ -179,6 +179,20 @@ import {
   type TableSort,
 } from "./table.js";
 import {
+  HEADER_COLUMNS,
+  HEADER_FIRST_ITEM,
+  HEADER_FRAME,
+  HEADER_FRAME_WIDTH,
+  HEADER_TRIGGER,
+  HEADER_TRIGGER_AFTER,
+  HEADER_TRIGGER_CELL,
+  HEADER_TRIGGER_WIDTH,
+  headerCellId,
+  headerContentWidth,
+  toggleHidden,
+  type HeaderColumn,
+} from "./header-menu.js";
+import {
   DOCK_GUARDED_ACTION,
   DOCK_SIDEBAR_WIDTH,
   DOCK_STATUS,
@@ -10208,6 +10222,261 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("dock-focus");
   });
 
+/**
+ * `header-menu-lifecycle` — a column menu anchored **inside a scrolled header**.
+ *
+ * Tier 3's column-configuration row is `?`, and the half that decides whether
+ * it is buildable is the overlay: the trigger sits in a horizontally scrolled
+ * header, whose offset is a paint-level value. The probe opens the shipped
+ * `DropdownMenu` from that trigger, then wheels the header and asks whether the
+ * painted panel moved with its anchor, dismisses it and reopens it by keyboard,
+ * and hides a column from the menu.
+ */
+const HeaderMenuProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [hidden, setHidden] = useState<ReadonlyArray<HeaderColumn["id"]>>([]);
+  const [changes, setChanges] = useState(0);
+
+  const toggle = (id: HeaderColumn["id"]) => {
+    setHidden((current) => toggleHidden(current, id));
+    setChanges((count) => count + 1);
+  };
+
+  const visible = Arr.filter(
+    HEADER_COLUMNS,
+    (column) => !Arr.contains(hidden, column.id),
+  );
+  const renderCell = (column: HeaderColumn) => (
+    <div
+      key={column.id}
+      testId={headerCellId(column.id)}
+      style={{
+        width: column.width,
+        flexShrink: 0,
+        padding: 6,
+        borderBottomWidth: theme.borderWidth.thin,
+        borderColor: theme.colors.border,
+        backgroundColor: theme.colors.card,
+      }}
+    >
+      <text style={{ color: theme.colors.mutedForeground }}>
+        {column.label}
+      </text>
+    </div>
+  );
+
+  return (
+    <div
+      testId="header-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A column menu anchored in a scrolled header: does the panel follow the
+        wheel?
+      </text>
+      <Readout testId="header-readout">{`hidden=${
+        Arr.isReadonlyArrayNonEmpty(hidden) ? Arr.join(hidden, "+") : "none"
+      } changes=${changes}`}</Readout>
+      <div
+        testId={HEADER_FRAME}
+        style={{
+          width: HEADER_FRAME_WIDTH,
+          overflowX: "scroll",
+          backgroundColor: theme.colors.card,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            width: headerContentWidth(hidden),
+          }}
+        >
+          {Arr.filter(
+            visible,
+            (column) => column.id === HEADER_TRIGGER_AFTER,
+          ).map(renderCell)}
+          <div
+            testId={HEADER_TRIGGER_CELL}
+            style={{
+              width: HEADER_TRIGGER_WIDTH,
+              flexShrink: 0,
+              padding: 6,
+              borderBottomWidth: theme.borderWidth.thin,
+              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.card,
+            }}
+          >
+            <DropdownMenu>
+              <DropdownMenuTrigger testId={HEADER_TRIGGER}>
+                columns…
+              </DropdownMenuTrigger>
+              <DropdownMenuContent label="Columns" testId="header-menu">
+                {Arr.map(Arr.reverse(HEADER_COLUMNS), (column) => (
+                  <DropdownMenuItem
+                    key={column.id}
+                    testId={`header-menu-item-${column.id}`}
+                    onSelect={() => toggle(column.id)}
+                  >
+                    {column.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          {Arr.filter(
+            visible,
+            (column) => column.id !== HEADER_TRIGGER_AFTER,
+          ).map(renderCell)}
+        </div>
+      </div>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        the header is one scroller; the rows are a sibling, as a table has them
+      </text>
+    </div>
+  );
+};
+
+/**
+ * The menu's checks: it opens under its anchor inside the scroller, the panel
+ * follows (or does not follow) the header's wheel, Escape returns the focus,
+ * and the first item hides a column without moving the anchor.
+ */
+const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("header-probe");
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text("header-readout");
+    const box = (testId: string) => paintedBox(ctx, testId);
+    const gone = (testId: string) =>
+      Effect.map(ctx.host.bounds(testId), (bounds) =>
+        Option.isNone(Option.fromNullishOr(bounds)),
+      );
+
+    yield* ctx.expectContains(
+      "the header starts with every column visible",
+      yield* readout(),
+      "hidden=none changes=0",
+    );
+
+    // 1. The trigger's cell is the first column, then the header's own x.
+    const nameCell = yield* box(headerCellId("name"));
+    yield* ctx.expectNear(
+      "the trigger cell starts where the name column ends",
+      (yield* box(HEADER_TRIGGER_CELL)).x,
+      nameCell.x + nameCell.width,
+      1,
+    );
+    const trigger = yield* box(HEADER_TRIGGER);
+
+    // 2. A press opens the menu under its anchor.
+    yield* ctx.host.click(HEADER_TRIGGER);
+    yield* Effect.sleep(SETTLE);
+    const menu = yield* box("header-menu");
+    yield* ctx.expectEqual(
+      "the menu opens below the trigger's box",
+      menu.y >= trigger.y + trigger.height,
+      true,
+    );
+    yield* ctx.expectNear(
+      "the menu starts from the trigger's own x",
+      menu.x,
+      trigger.x,
+      2,
+    );
+
+    // 3. Wheel the header and read where the panel went.
+    yield* ctx.host.wheel(HEADER_FRAME, -100, 0);
+    yield* Effect.sleep(SETTLE);
+    const triggerAfter = yield* box(HEADER_TRIGGER);
+    const menuAfter = yield* box("header-menu");
+    yield* ctx.expectNear(
+      "the wheel moved the trigger with its column",
+      triggerAfter.x,
+      trigger.x - 100,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the menu follows its anchor's wheel",
+      menuAfter.x,
+      menu.x - 100,
+      2,
+    );
+
+    // 4. Escape dismisses it and returns the focus.
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape unpaints the menu",
+      yield* gone("header-menu"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "Escape returns the focus to the trigger",
+      yield* focusedAfterPaint(ctx),
+      HEADER_TRIGGER,
+    );
+
+    // 5. Keyboard-open it and hide the last column from the first item.
+    yield* ctx.host.wheel(HEADER_FRAME, 100, 0);
+    yield* ctx.host.focusElement(HEADER_TRIGGER);
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Enter opens the menu on its first item",
+      yield* focusedAfterPaint(ctx),
+      HEADER_FIRST_ITEM,
+    );
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the first item hides its column",
+      yield* readout(),
+      "hidden=status changes=1",
+    );
+    yield* ctx.expectEqual(
+      "the hidden column's header unpaints",
+      yield* gone(headerCellId("status")),
+      true,
+    );
+    yield* ctx.expectNear(
+      "a column after the anchor does not move it",
+      (yield* box(HEADER_TRIGGER)).x,
+      trigger.x,
+      1,
+    );
+
+    // 6. A press on the trigger still opens the menu after the relayout.
+    yield* ctx.host.click(HEADER_TRIGGER);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectSome(
+      "a press still opens the menu after the header shrank",
+      Option.fromNullishOr(yield* ctx.host.bounds("header-menu")),
+    );
+    yield* ctx.host.key("escape");
+    yield* ctx.host.capture("header-menu");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -10410,5 +10679,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "dock-focus-lifecycle",
     view: () => <DockFocusProbe />,
     steps: dockFocusSteps,
+  },
+  "header-menu-lifecycle": {
+    id: "header-menu-lifecycle",
+    view: () => <HeaderMenuProbe />,
+    steps: headerMenuSteps,
   },
 };
