@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-42 probes a real window can prove, of which eleven mount shipped
+43 probes a real window can prove, of which eleven mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
 combobox and the modal focus rule), five mount
@@ -2401,6 +2401,60 @@ painting the fixture box at 50% fails
 255)", got "rgba(109, 34, 22, 255)"`. 4 checks per run, capture
 `.artifacts/live/backdrop.png`.
 
+### `chart-raster` — measured on 0.11.0 here
+
+The **chart surface**. A chart has no host element and no drawing surface on
+this runtime — `<canvas>` paints nothing and `<svg source>` is rasterised into
+**one** tinted mask — so the only per-pixel route the published API offers is
+`ImgInstance.setImagePixels`, and the only vector route is `ImgInstance.setImage`
+decoding SVG **bytes**. The probe paints the same three-series plot three ways:
+a buffer, a second buffer when the data changes, and the plot's SVG markup
+pushed as bytes.
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/live/run.js --only chart-raster
+```
+
+19 checks, green on 0.11.0. The fixture is `src/live/chart.ts` (three 14×30
+bars, one band of columns per series) and its arithmetic — the bands do not
+overlap, the margin has no colour in it, a buffer pixel converts to a fraction
+of the painted box — is held by `chart.test.ts` (7 cases).
+
+| Question | Measurement |
+| -------- | ----------- |
+| Does a buffer keep each pixel's own colour? | Three series paint three exact colours (`#2ECC71`, `#3498DB`, `#E74C3C`), and a sampled point inside the first bar reads `rgba(46, 204, 113, 255)` — one element, more than one colour, which a tinted `<svg>` cannot do |
+| Does a transparent pixel composite? | The buffer's `0, 0, 0, 0` margin reads the `#14223A` box behind the element, so a chart inherits the card it sits on instead of painting an opaque rectangle |
+| Does new data repaint? | A press pushes a second buffer: the frame carries `#9B59B6`, `#F1C40F` and `#16A085` and **none** of the first palette, with no re-mount and no re-layout call |
+| Do SVG bytes carry their own fills? | `setImage(Buffer.from(markup))` decodes and paints `#B14AFF`, `#00A893` and `#FF8A00` — the vector route, unlike `<svg source>`, which paints every shape in the one tint its `style.color` names |
+
+Two negative controls measured, exit `1` each and restored green: pushing the
+first buffer on the "New data" press fails
+`the updated series 1 paints from the second buffer: expected true, got false`,
+and painting the plot's backing in the theme's card colour fails
+`the plot's transparent margin shows the surface behind it: expected
+"rgba(20, 34, 58, 255)", got "rgba(25, 29, 37, 255)"` (the sample is a real
+frame read, not a constant).
+
+What a chart component should do with this:
+
+1. **`setImagePixels` is the multi-colour raster route**, and the pixels must be
+   on the element before the frame that paints it — a layout effect, the order
+   `content-surfaces` records for a waveform.
+2. **Re-push for new data.** The element is not remounted, and the second
+   buffer replaces the first whole.
+3. **`setImage` with SVG bytes is the vector route**: one element, every `fill`
+   its own colour. `<svg source>` stays one tint, so a multi-series vector chart
+   is either this or one element per colour.
+4. **Leave the plot's background transparent** so the surface behind it shows;
+   paint a background only when the chart must not inherit the card.
+5. **Labels are not part of the raster.** A chart composes `<text>` beside the
+   image for axes and legends, and the raster carries the marks.
+
+Not measured here: a **translucent** bar over another bar (only a fully
+transparent pixel is proved to composite), and resize — the element scales its
+buffer to its box, so a chart drawn at its layout size is the safe shape.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -2513,7 +2567,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (42/42), with a written report and screenshots.
+  (43/43), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

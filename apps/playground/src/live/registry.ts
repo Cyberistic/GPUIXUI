@@ -288,6 +288,12 @@ export const liveRegistry = [
       "Window: a windowBackground paints the surface the app leaves empty — opaque fills it, transparent and blurred leave it to the desktop",
     capability: "layout",
   },
+  {
+    id: "chart-raster",
+    title:
+      "Content: a chart paints from a pixel buffer in its own colours, updates when its data changes, and takes multi-colour SVG bytes",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

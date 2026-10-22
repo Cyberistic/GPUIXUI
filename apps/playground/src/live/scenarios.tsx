@@ -105,10 +105,24 @@ import {
 import { Pixels, type Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
 import { SplitPane } from "../panels/split-pane.js";
-import { Pressable, Readout } from "../ui.js";
+import { Pressable, Readout, Toolbar } from "../ui.js";
 import { useWindowKey } from "../window-key.js";
 import { useWindowFacts } from "./window-facts.js";
 import type { LiveProbeId } from "./registry.js";
+import {
+  BAR_PIXEL,
+  MARGIN_PIXEL,
+  PLOT,
+  PLOT_BACKING,
+  PLOT_SIZE,
+  PLOT_SVG,
+  REPLACEMENT,
+  SERIES,
+  VECTOR,
+  plotPixels,
+  pointIn,
+  type Box,
+} from "./chart.js";
 import {
   BUFFER_COLOUR,
   CANVAS_PARENT,
@@ -10581,6 +10595,205 @@ const backdropSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * The chart probe: the same three-bar plot drawn into a pixel buffer, painted
+ * again from a second buffer when the data changes, and pushed as SVG bytes.
+ */
+const ChartProbe = (): ReactNode => {
+  const theme = useTheme();
+  const bufferImage = useRef<ImgInstance>(null);
+  const svgImage = useRef<ImgInstance>(null);
+  const [frame, setFrame] = useState(1);
+  const [svgStatus, setSvgStatus] = useState("pending");
+
+  // The pixels must be on the element before the frame that paints it, and a
+  // re-push has to be readable as the frame the data changed in.
+  useLayoutEffect(() => {
+    const instance = bufferImage.current;
+    if (instance === null) return;
+    instance.setImagePixels(
+      PLOT.width,
+      PLOT.height,
+      Buffer.from(plotPixels(frame === 1 ? SERIES : REPLACEMENT)),
+    );
+  }, [frame]);
+
+  useLayoutEffect(() => {
+    const instance = svgImage.current;
+    if (instance === null) return;
+    // A layout effect is the boundary: the native decoder is an imperative call
+    // that may throw, and there is no Effect runtime inside a render, so the
+    // outcome is captured as the readout the probe asserts on.
+    const decoded = Effect.try(() => instance.setImage(Buffer.from(PLOT_SVG)));
+    setSvgStatus(
+      Effect.runSync(
+        Effect.match(decoded, {
+          onFailure: (error) => `threw ${String(error)}`,
+          onSuccess: () => "set",
+        }),
+      ),
+    );
+  }, []);
+
+  const plot = (testId: string, ref: typeof bufferImage) => (
+    <div
+      style={{
+        width: PLOT_SIZE.width,
+        height: PLOT_SIZE.height,
+        backgroundColor: hexOf(PLOT_BACKING),
+      }}
+    >
+      <img
+        testId={testId}
+        ref={ref}
+        alt="A three-series bar plot"
+        objectFit="fill"
+        style={{ width: PLOT_SIZE.width, height: PLOT_SIZE.height }}
+      />
+    </div>
+  );
+
+  return (
+    <div
+      testId="chart-probe"
+      style={{
+        width: 760,
+        height: 440,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+      }}
+    >
+      <div style={{ display: "flex", gap: theme.spacing.xl }}>
+        {plot("chart-buffer", bufferImage)}
+        {plot("chart-svg", svgImage)}
+      </div>
+      <Toolbar>
+        <Pressable testId="chart-next" onClick={() => setFrame(2)}>
+          <text
+            style={{
+              ...textStyle(theme, "label"),
+              color: theme.colors.foreground,
+            }}
+          >
+            New data
+          </text>
+        </Pressable>
+      </Toolbar>
+      <Readout testId="chart-frame">{`frame=${frame}`}</Readout>
+      <Readout testId="chart-svg-status">{`svg=${svgStatus}`}</Readout>
+    </div>
+  );
+};
+
+/** How many pixels of one decoded capture paint `colour` exactly. */
+const chartCount = (frame: Pixels.Pixels, colour: Rgb): number =>
+  Pixels.countColour(frame, new Pixels.Rgba({ ...colour, a: 0xff }));
+
+/** One buffer pixel read out of the capture, named by the colour it landed on. */
+const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("chart-buffer");
+    yield* ctx.host.capture("chart");
+    const frame = yield* ctx.host.pixels("chart");
+    const size = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, size),
+    );
+    const box = (testId: string) =>
+      Effect.flatMap(
+        Effect.map(ctx.host.bounds(testId), Option.fromNullishOr),
+        (bounds) =>
+          ctx.expectSome(`the ${testId} plot occupies its box`, bounds),
+      );
+    const sample = (bounds: Box, pixel: { x: number; y: number }): string => {
+      const point = framePoint(pointIn(bounds, pixel), scale);
+      return Option.match(
+        Option.fromNullishOr(Pixels.pixelAt(frame, point.x, point.y)),
+        { onNone: () => "outside the capture", onSome: describeColour },
+      );
+    };
+    const paints = (captured: Pixels.Pixels, colour: Rgb, label: string) =>
+      ctx.expectEqual(label, chartCount(captured, colour) > 0, true);
+    const absent = (captured: Pixels.Pixels, colour: Rgb, label: string) =>
+      ctx.expectEqual(label, chartCount(captured, colour), 0);
+
+    // 1. A buffer keeps its own per-pixel colours: the route a chart with more
+    //    than one series needs, which a tinted `<svg>` cannot take.
+    const buffer = yield* box("chart-buffer");
+    yield* box("chart-svg");
+    yield* Effect.forEach(
+      SERIES,
+      (colour, index) =>
+        paints(frame, colour, `series ${index + 1} paints from the buffer`),
+      { concurrency: 1 },
+    );
+    yield* ctx.expectEqual(
+      "a bar's body reads its own series colour",
+      sample(buffer, BAR_PIXEL),
+      describeColour(new Pixels.Rgba({ ...SERIES[0], a: 0xff })),
+    );
+
+    // 2. A margin pixel is the card behind the plot, so the element composites
+    //    its transparency instead of painting an opaque square.
+    yield* ctx.expectEqual(
+      "the plot's transparent margin shows the surface behind it",
+      sample(buffer, MARGIN_PIXEL),
+      describeColour(new Pixels.Rgba({ ...PLOT_BACKING, a: 0xff })),
+    );
+
+    // 3. `setImage` decodes SVG bytes: the vector route, with every fill its
+    //    own colour rather than one mask tint.
+    yield* ctx.expectEqual(
+      "the svg bytes reached the element",
+      yield* ctx.host.text("chart-svg-status"),
+      "svg=set",
+    );
+    yield* Effect.forEach(
+      VECTOR,
+      (colour, index) =>
+        paints(frame, colour, `vector series ${index + 1} paints its own fill`),
+      { concurrency: 1 },
+    );
+
+    // 4. New data replaces the frame: a chart that only ever painted once would
+    //    be a screenshot.
+    yield* ctx.host.click("chart-next");
+    yield* ctx.expectEqual(
+      "the probe is on the frame the press produced",
+      yield* settleUntil(
+        ctx.host.text("chart-frame"),
+        (value) => value === "frame=2",
+      ),
+      "frame=2",
+    );
+    yield* ctx.host.capture("chart-second");
+    const updated = yield* ctx.host.pixels("chart-second");
+    yield* Effect.forEach(
+      REPLACEMENT,
+      (colour, index) =>
+        paints(
+          updated,
+          colour,
+          `the updated series ${index + 1} paints from the second buffer`,
+        ),
+      { concurrency: 1 },
+    );
+    yield* Effect.forEach(
+      SERIES,
+      (colour, index) =>
+        absent(
+          updated,
+          colour,
+          `the first buffer's series ${index + 1} is gone`,
+        ),
+      { concurrency: 1 },
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -10793,5 +11006,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "window-backdrop",
     view: () => <BackdropProbe />,
     steps: backdropSteps,
+  },
+  "chart-raster": {
+    id: "chart-raster",
+    view: () => <ChartProbe />,
+    steps: chartSteps,
   },
 };
