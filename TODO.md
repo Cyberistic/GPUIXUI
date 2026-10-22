@@ -3343,6 +3343,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 `[x]` `[██████████]` 117/117
 
+`[ ]` Move the **styling page's two-registry split** when the primitives' empty
+selection box takes the measured edge — `packages/primitives/src/recipe/registry.ts`
+overrides `border-input` to the `input` fill, which is `/docs/styling`'s "one
+deliberate difference" and `styling-page.test.ts`'s
+`keeps the deliberate border-input difference`; the open interlock row **The empty
+selection box's edge is a fill role** replaces it with `border-strong` (the
+working tree already has the override removed), so that page row, its prose and the
+guard must move in the same push. Until then the docs suite is red against an
+uncommitted primitives tree and green against `master`.
+
 `[x]` Record **where the overlay preview stays coarser than the shipped surface** —
 the four curated overlay pages already state the two shadows (`elevation.lg` beside
 the recipe's 1px `foreground` ring) and `component-page-truth.test.ts` holds them,
