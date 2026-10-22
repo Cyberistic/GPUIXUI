@@ -3428,6 +3428,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Correct the catalogue's **unadopted ring seam** sentence — `docs/tokens.md` §Focus says the two seams "are where that rule was first written; this helper is its one home, and a seam that has not delegated to it yet is tracked in `TODO.md`", while both seams now delegate (`packages/primitives/src/core/focus.ts`, `packages/components/src/internal/theme.ts`) and no such task remains. Say both delegate and hold the sentence | tokens-theme (`docs/tokens.md`, `packages/tokens/src/docs.test.ts`) | open — reword §Focus; a `docs.test.ts` case should fail if a seam is again described as not delegated |
 
+| Follow the **`borderStrong` move** in the preview style sheet — the tokens pass moved the edge role in every shipped palette (`lightColors` `#727D8C` → `#6E7887`, `darkColors` `#788494` → `#949EAB`, the platform and retro styles with them) and added the four boundary pairs `borderStrong` on each `xSoft` tint, so a control's edge is measured on a message's own fill. `apps/docs/src/styles/demos.css`'s `.gx-demo` block still carries the previous dark value, so `theme-css.test.ts`'s `keep the .gx-demo defaults equal to the dark theme` reports `[ '--border-strong' ]`; the theming page's colour table is generated and needs nothing | docs-site (`apps/docs/src/styles/demos.css`) | open — set `--border-strong` to `themes.dark.colors.borderStrong` (measured `#949EAB` while the tokens pass is in flight, so land it with the final value) and rerun `theme-css`; the row exists because the guard is red on `master` until the two land together |
+
 ## Phase D — data and workspace components
 
 `[ ]` `[░░░░░░░░░░]` 0/3
