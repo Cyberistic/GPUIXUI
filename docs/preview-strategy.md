@@ -182,6 +182,38 @@ injected renderer, but `@gpuix/react` pulls `@gpuix/native/runtime` and
 that graph bundles for a browser. Until it does, `/live` drives the batch
 protocol by hand — the same operations, resolved by the same library styles.
 
+### The press path is measured
+
+A strategy-3 preview is React in the browser, so a capture of the server-rendered
+markup proves the paint and **nothing about an interaction**. Measured: a capture
+taken while the dev server was still compiling the route tree found `0` DOM nodes
+carrying a React fiber, and a press on the carousel's next control moved nothing;
+the same page, once hydrated, moved its readout `Slide 1 of 4` → `Slide 2 of 4`
+and back. A cold dev server took **~10.5 s** to hydrate (every route module,
+including the three docs collections, compiles before the client entry commits);
+a warm load is under two seconds. A fiber is not the precondition a press needs —
+the control's `__reactProps.onClick` is, because the tree attaches node by node.
+
+`apps/docs/scripts/preview-press-probe.ts` measures that path on the served
+Carousel page. It waits for the workflow demo's next control to carry
+`__reactProps.onClick`, then presses **Next** and **Previous** and reads the slide
+out of `Slide N of 4`, so the assertion is the demo's own state, not a pixel.
+Run it with a dev server up:
+
+```sh
+nub run --filter @gpuixui/docs dev
+nub apps/docs/scripts/preview-press-probe.ts
+```
+
+Measured 2026-10-22 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80:
+hydrated after 10.7 s with 1 366 nodes carrying a fiber, `next: Slide 1 of 4 →
+Slide 2 of 4`, `previous: Slide 2 of 4 → Slide 1 of 4`, exit `0`. The negative
+control is the hydration budget itself — `--timeout 500` prints
+`FAIL the demo never hydrated within 500 ms` and exits `1`. Like the other
+browser probes this is a run against a dev server, not part of `nub run test`;
+`src/lib/preview-press.test.ts` holds this policy to the probe (the ready-check,
+both directions and the commands) and the readout parser to its contract.
+
 ### Pages the package writes
 
 Each package writes the page a component ships with. The site mounts those
