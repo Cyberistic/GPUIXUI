@@ -622,3 +622,30 @@ that declares it. `public-symbols.test.ts` holds it to the workspace in both
 directions: every published module yields the symbols its source declares, and
 the scanner's rules are pinned by fixtures that fail when a form is missed.
 
+## The testing page
+
+[Testing](/docs/testing) documents `@gpuixui/testing`, the harness every native
+scenario is written against. It has no preview and no specimen: the harness is
+not a surface a browser can draw, and its subject is the renderer the page cannot
+mount. The runnable artefacts are the snippets and the commands, so the page is
+held to the package's source instead.
+
+- **Its rows are the interface.** `src/lib/testing-page.test.ts` parses
+  `packages/testing/src/index.ts` for the namespaces the root projects, and the
+  `SmokeHost`, `AsyncSmokeHost` and `Assertions` interfaces for their members. A
+  verb or assertion has to reach a table row — a passing mention in a sentence
+  does not count, so deleting a row fails even when the prose still names it. A
+  verb the package gains is a row the page owes; a verb it loses is a row the
+  page may not keep.
+- **Its exit codes have two owners.** `Report.exitCode` answers `0` or `1`; the
+  `2` that means "no evidence" belongs to `apps/playground`'s runner. The guard
+  reads both files, so moving a code fails whether the report or the page
+  changes.
+- **Its commands are the manifests'.** Every `nub run --filter <package>
+  <script>` on the page resolves against that package's `package.json`, and the
+  smoke command is held to the script that builds and runs
+  `dist/smoke/run.js`.
+- **Its limits follow the package.** The page calls the harness workspace
+  internal only while `packages/testing/package.json` is `private`, so publishing
+  it is a page change rather than a stale footnote.
+

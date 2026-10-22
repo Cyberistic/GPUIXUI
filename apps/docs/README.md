@@ -47,6 +47,7 @@ components/dropdown-menu.mdx Curated: highlighted row is the focused row
 components/popover.mdx       Curated: anchored placement
 components/tabs.mdx          Curated: the measured indicator
 primitives/index.mdx         The Tier 1 section index (its pages come from the packages)
+testing.mdx                  The two test lanes, the check model and the report
 contributing.mdx             The checks, the worktree rules, the component checklist
 license.mdx                  Licenses and attribution, read from LICENSES/*.md
 ```

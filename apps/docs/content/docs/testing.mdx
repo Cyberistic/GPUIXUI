@@ -1,0 +1,285 @@
+---
+title: Testing
+description: The two test lanes, the check model a native scenario is written in, and the report a run leaves behind.
+---
+
+A component is finished when its behaviour is proven in the real GPUix renderer,
+not when its preview looks right. That proof comes from two lanes, and they
+answer different questions:
+
+| Lane | Question | Where it lives |
+| ---- | -------- | -------------- |
+| The package's own suite | Does this module compute the right value, and does this component respond to input? | `packages/<package>/src/**/*.test.ts(x)`, run with `vitest` or `@effect/vitest` |
+| The native smoke suite | Does the runtime paint, focus, scroll and dismiss the way the component assumes? | a scenario in `apps/playground`, run against a real renderer or window |
+
+A test has to be able to fail: `nub run check:tests` rejects one that asserts
+nothing, compares a value with itself, or asserts back what the test stubbed. A
+regression fix lands with a test that fails without the fix and passes with it —
+[Contributing](/docs/contributing) is the rule, this page is the machinery.
+
+## What the package owns
+
+`@gpuixui/testing` is the platform-free half of the native suite. It never
+imports `@gpuix/react` or `@gpuix/native`, so its own tests run on any host —
+including one with no binding — while `apps/playground` supplies the renderer.
+
+| Namespace | Responsibility |
+| --------- | -------------- |
+| `Runtime` | `detectRuntime` (never fails), `bindingHint` and the `RuntimeStatus` union |
+| `Smoke` | the scenario, check and report model: `SmokeScenario`, `SmokeHost`, `runScenarios`, `SmokeReport`, `CAPABILITIES`, the assertion types, and their async twins for a window |
+| `Native` | `createTestHost` over the structural `NativeRenderer`/`NativeElement` port — the synchronous offscreen host |
+| `Pixels` | `decodePng` (with an injected inflate), `pixelAt`, `countColour`, `hexToRgba` — paint evidence from a captured frame |
+| `State` | `runCommands` — fold a component runtime's commands and query the final state |
+| `Report` | `formatReport`, `reportJson`, `passed` and `exitCode` |
+
+```ts
+import { Native, Report, Smoke } from "@gpuixui/testing";
+import { Effect } from "effect";
+
+// Inside the runner: it owns the mount, the harness only reads and reports.
+const host = Native.createTestHost(renderer);
+const report = await Effect.runPromise(
+  Smoke.runScenarios(host, scenarios, {
+    host: "test-renderer",
+    startedAt: Date.now(),
+  }),
+);
+process.stdout.write(`${Report.formatReport(report)}\n`);
+process.exitCode = Report.exitCode(report);
+```
+
+`Runtime.detectRuntime` is the preflight. It takes the platform, the arch and a
+loader, and returns a `RuntimeStatus` instead of throwing: `RuntimeReady` when
+the binding loaded, `RuntimeUnsupported` with a `reason` and an actionable
+`hint` when it did not. The suite can therefore explain an unsupported host
+rather than crashing on import.
+
+## A scenario is one capability
+
+A scenario names one capability from `Smoke.CAPABILITIES`, declares the view the
+runner mounts, and proves one behaviour in `steps`. Every check is labelled, so a
+failure reads as the sentence that did not hold.
+
+```ts
+import { Smoke } from "@gpuixui/testing";
+import { Effect } from "effect";
+import * as Option from "effect/Option";
+
+export const cardScenario: Smoke.SmokeScenario = {
+  id: "card-lifecycle",
+  title: "A card paints its title beside its action",
+  capability: "layout",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const box = yield* ctx.expectSome(
+        "the card painted a box",
+        Option.fromNullishOr(ctx.host.bounds("card")),
+      );
+      yield* ctx.expectNear("its width", box.width, 320, 1);
+      yield* ctx.expectContains(
+        "the title",
+        ctx.host.text("card") ?? "",
+        "Settings",
+      );
+    }),
+};
+```
+
+A scenario can never fail the suite. A typed assertion becomes a `failed` check,
+a defect becomes an `errored` one, and the next scenario still runs — so one
+regression is reported instead of hiding the rest.
+
+### The assertions
+
+Each one records a passing `CheckResult` when it holds and fails with a
+`SmokeAssertionError` when it does not. The error's message is
+`` `${label}: expected ${expected}, got ${actual}` ``, which is the line the
+report prints.
+
+| Assertion | Signature | For |
+| --------- | --------- | --- |
+| `expectEqual` | `(label, actual, expected)` — actual first | a string, number or boolean |
+| `expectNear` | `(label, actual, expected, tolerance)` | a measured pixel count or offset |
+| `expectContains` | `(label, haystack, needle)` | painted or read-back text |
+| `expectSome` | `(label, Option)` | a value the host may not have (a missing `testId`) |
+| `check` | `(label, Effect)` | an assertion composed from several reads |
+
+## The host a scenario drives
+
+`SmokeHost` is the offscreen surface: synchronous, backed by the real
+`TestRenderer`. `AsyncSmokeHost` is the window twin — the same idea, every verb
+an `Effect` that fails with a `SmokeHostError` naming the verb that broke.
+
+### Offscreen
+
+| Verb | Reads or does |
+| ---- | ------------- |
+| `text` | the joined text of an element's subtree |
+| `paintedText` | every glyph run the last frame painted |
+| `bounds` | an element's painted box |
+| `paintedStyle` | the runtime's own style report, decoded into a `StyleSnapshot` |
+| `a11yTree` | the renderer's accessibility dump, decoded into an `A11yTree` |
+| `focused` | the focused element's `testId` |
+| `click` | presses an element through the renderer's input path |
+| `clickWindow` | presses a window coordinate |
+| `key` | sends one keystroke to the focused element |
+| `focusNext` | native focus traversal forwards |
+| `focusPrevious` | native focus traversal backwards |
+| `wheel` | a wheel event over an element |
+| `drag` | presses on an element, travels and releases |
+| `dragSelect` | drags a **text selection** between two points |
+| `selectedText` | the joined selection, or `null` |
+| `clearSelection` | drops the selection, so an opt-out is provable |
+| `fileDrop` | a Finder-style drop of absolute paths at an element |
+| `scrollOffset` | the rendered scroll handle's offset |
+| `highlights` | every highlight wash the last frame painted |
+| `screenshot` | writes the current frame to an absolute path |
+| `advance` | advances the renderer's clock |
+
+Four of those are measured facts rather than conveniences:
+
+- `dragSelect` is separate from `drag` because the runtime registers its
+  selection listeners during **paint**, so a hand-rolled down/move/up with no
+  flush between the steps selects nothing.
+- `a11yTree` is the only channel that sees a `role` or an `aria-*` attribute;
+  painted text never carries one.
+- `<virtual-list>` and `<anchored>` paint no bounds of their own, so `bounds`
+  walks up to the nearest painted ancestor rather than reporting a zero box.
+- A style the runtime reports with an unexpected type fails the whole
+  `StyleSnapshot` decode (`null`), deliberately: a changed style report is a
+  defect a scenario must see, never something to coerce.
+
+### In a window
+
+| Verb | Reads or does |
+| ---- | ------------- |
+| `text` | an element's joined text |
+| `paintedText` | every glyph run the window painted |
+| `bounds` | an element's painted box |
+| `windowSize` | the window's paintable size in logical pixels |
+| `zoomWindow` | runs the platform's zoom — the only size lever the binding publishes |
+| `focused` | the focused element's `testId` |
+| `click` | a left press |
+| `rightClick` | a right press, which is the only route to `onAuxClick` |
+| `hover` | moves the pointer onto an element without pressing |
+| `drag` | a real pointer drag, button held |
+| `wheel` | a wheel over an element's centre |
+| `key` | a key **down**, delivered by the automation protocol |
+| `keyUp` | releases a held key, for a control that activates on release |
+| `scrollOffset` | the window's scroll handle for an element |
+| `scrollToItem` | reveals a `<virtual-list>` row by index |
+| `listAnchor` | the logical row a `<virtual-list>` is anchored at |
+| `selectedText` | the window's selection, or `null` |
+| `clearSelection` | drops the window's selection |
+| `focusNext` | native focus traversal forwards |
+| `focusElement` | moves native focus from component code |
+| `registerFont` | installs a face **after** the first paint |
+| `waitFor` | waits until an element paints, so a probe never races its mount |
+| `capture` | captures the window under a name inside the runner's artifacts |
+| `pixels` | decodes the capture, so paint is asserted on a frame |
+
+Two of those differ from the offscreen host on purpose. `key` presses through
+the automation protocol, which delivers a key **down and no key up** — a control
+that activates on release (Space on a button, checkbox or switch, the platform's
+own rule) is only provable with `keyUp`. And a window's renderer reports no
+style, so `paintedStyle` has no twin: a live probe proves paint from `pixels`.
+
+## The report
+
+`SmokeReport` is the run's machine-readable output: the host label, its timing,
+one `ScenarioResult` per scenario and one `CapabilityResult` per capability. A
+capability is `verified` only when every scenario covering it passed, `failed`
+when one did not, and `unverified` when none ran.
+
+| Export | Answer |
+| ------ | ------ |
+| `formatReport` | the human table: one row per scenario, the failure detail, and a summary line |
+| `reportJson` | the same report, schema-encoded |
+| `passed` | true when at least one scenario ran and every one passed |
+| `exitCode` | `0` when `passed`, else `1` |
+
+The **runner** owns the third code, because only it knows whether the harness
+could run at all:
+
+| Code | Set by | Meaning |
+| ---- | ------ | ------- |
+| `0` | `Report.exitCode` | every scenario ran and passed |
+| `1` | `Report.exitCode` | at least one scenario failed — a real regression |
+| `2` | the playground runner | the runtime is unsupported here, or nothing ran — **no evidence** |
+
+Observe it from the built CLI, not through `nub run`, which collapses a non-zero
+child exit to `1`:
+
+```sh
+nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
+```
+
+## Running a suite
+
+```sh
+nub run --filter @gpuixui/testing test          # the harness's own tests
+nub run --filter playground smoke               # the headless native suite
+nub run --filter playground build && nub apps/playground/dist/live/run.js --list
+nub run --filter playground build && nub apps/playground/dist/live/run.js --only <id>
+```
+
+`--only` is repeatable in both runners, and with none the runner selects every
+scenario. The live suite opens real windows and is a release gate, not part of
+`check`: while iterating, run the one scenario the change touches and record its
+id.
+
+## Reading a frame
+
+A window has no style report, so a live probe proves paint from the capture it
+took. `Pixels` is that reader, and it takes the inflate function as an argument
+so the package still imports no platform module:
+
+```ts
+import { Pixels } from "@gpuixui/testing";
+
+const frame = Pixels.decodePng(bytes, inflate);
+if (!(frame instanceof Pixels.Pixels)) throw new Error(frame.message);
+
+const fill = Pixels.hexToRgba("#7C5CFF");
+const count = fill === null ? 0 : Pixels.countColour(frame, fill);
+export const sampled = Pixels.pixelAt(frame, 210, 100);
+```
+
+`decodePng` returns a `PngDecodeError` rather than a guess for a truncated frame;
+`pixelAt` returns `null` outside the image; `countColour` counts exact matches,
+because a capture is device-scaled and a coordinate is not worth asserting on.
+
+## Replaying a runtime
+
+A component runtime is a pure reducer plus part-shaped queries, which means its
+transitions can be replayed without mounting anything. `State.runCommands` is
+structural — it needs `initial`, `reduce` and `query`, not a class — so a suite
+outside the owning package drives the same fold.
+
+```ts
+import { State } from "@gpuixui/testing";
+
+const replay = State.runCommands(runtime, commands);
+export const state = replay.state;
+export const styles = replay.result;
+```
+
+The query runs once, on the final state, so a check cannot pass on an answer
+computed halfway through the fold.
+
+## Limitations
+
+- **This package is workspace-internal.** It is built to `dist/` for the
+  playground and the docs suite, and it is not installed by a consumer of the
+  library.
+- **A missing binding is data, not a failure.** `Runtime.detectRuntime` reports
+  `RuntimeUnsupported`; the runner turns that into exit `2`. Nothing is written
+  to `.artifacts/`, so a stale report cannot be mistaken for a fresh one.
+- **The two hosts are not interchangeable.** `paintedStyle` and `a11yTree` are
+  `TestRenderer` facts, and `windowSize`, `zoomWindow`, `hover`, `rightClick`,
+  `keyUp`, `registerFont` and `pixels` are window facts. A probe that needs both
+  is two probes.
+- **A check is evidence of what ran.** `verified` never means "should work": it
+  means every scenario covering that capability passed on the host in this run.
+  The verdicts behind this site are on [Runtime](/docs/runtime), and the probes
+  themselves are listed in `apps/playground/README.md`.

@@ -59,7 +59,9 @@ touches; `--list` prints the ids.
 A test must be able to fail. `nub run check:tests` rejects a test that asserts
 nothing, compares a value with itself, or asserts back what the test stubbed.
 That is the floor: a regression fix lands with a test that fails without the fix
-and passes with it, proven in both directions.
+and passes with it, proven in both directions. [Testing](/docs/testing) documents
+the harness a native scenario is written in — the check model, the host verbs and
+the report.
 
 ## What a component ships with
 
