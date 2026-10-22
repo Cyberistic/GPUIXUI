@@ -12,8 +12,9 @@
  * the exact claim the probe exists to settle.
  *
  * It also holds the probe's prose: the heading the registry test expects, the
- * check count the README prints, and the `lineClamp` limitation, so a runtime
- * bump cannot leave the page claiming a clamp that paints.
+ * check count the README prints, and the clamp half — `lineClamp` paints every
+ * line while the shipped `Text`'s `clamp` resolves a definite box — so a runtime
+ * bump cannot leave the page claiming a clamp the component does not paint.
  */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
@@ -175,28 +176,52 @@ describe("the truncation probe's record", () => {
     expect(printed).toBe(asserted);
   });
 
-  it("mounts the clamp it measures as a no-op", () => {
-    // "The clamp paints nothing" is only a measurement if the fixture asked for
-    // one: a probe that dropped the property would paint five lines and pass.
+  it("mounts the raw clamp and the shipped prop it measures", () => {
+    // "The raw clamp paints every line" is only a measurement if the fixture
+    // asked for one: a probe that dropped the property would paint five lines
+    // and pass. The shipped prop is mounted beside it, because it is the route
+    // that does cut.
     expect(scenarios).toContain("lineClamp: TRUNCATION_CLAMP_LINES");
     expect(scenarios).toContain("lineClamp={TRUNCATION_CLAMP_LINES}");
     expect(scenarios).toContain("<Text clamp={TRUNCATION_CLAMP_LINES}>");
   });
 
-  it("states the clamp limitation the frame measured", () => {
-    // The page and the probe have to agree that `lineClamp` paints every line
-    // and that a definite height is the cut; a runtime bump that fixes the
-    // clamp fails the probe, and one that fixes only the page fails this.
+  it("states the clamp the frame measured", () => {
+    // Two different mechanisms, two claims: `lineClamp` paints every line, and
+    // a definite height — which the shipped `Text` resolves itself — is the
+    // cut. A probe that keeps the old "the shipped prop is the same no-op"
+    // sentence fails here, so a fixed component cannot be measured as broken.
     expect(steps).toContain(
       "a clamp on the text paints every line of the paragraph",
     );
     expect(steps).toContain("a clamp on the box paints every line too");
     expect(steps).toContain(
+      "the shipped Text's clamp prop paints the two lines",
+    );
+    // The name alone would pass if the expectation went back to the uncut
+    // paragraph, which is the defect this probe used to record.
+    expect(steps).toContain(
+      "shippedClamp.measured.lines,\n      TRUNCATION_CLAMP_LINES,",
+    );
+    expect(steps).not.toContain(
       "the shipped Text's clamp prop paints every line as well",
+    );
+    expect(steps).toContain(
+      "the shipped Text's clamp box is only as tall as its two lines",
     );
     expect(steps).toContain(
       "a definite height with a hidden overflow paints the two lines",
     );
     expect(readme).toContain("**`lineClamp` does not paint in 0.11.0.**");
+  });
+
+  it("prints the clamp the shipped Text paints, not the one it replaced", () => {
+    expect(readme).toContain(
+      "| the shipped `Text` with `clamp={2}` | **two** lines in a 48-point box",
+    );
+    // The old row taught the measured defect after the component was fixed.
+    expect(readme).not.toContain(
+      "the library's `clamp` prop is the same no-op",
+    );
   });
 });

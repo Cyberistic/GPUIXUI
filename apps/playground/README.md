@@ -3468,19 +3468,19 @@ runtime offers, and reads the frame.
 | a paragraph in a 200-point cell | **five** lines, and the cell is 108 points tall |
 | the same paragraph with `lineClamp: 2` on the `<text>` | **five** lines — the clamp paints nothing, and the box stays 108 |
 | the same with `lineClamp: 2` on the cell that holds the text | **five** lines — the clamp paints nothing there either |
-| the shipped `Text` with `clamp={2}` | **five** lines — the library's `clamp` prop is the same no-op |
+| the shipped `Text` with `clamp={2}` | **two** lines in a 48-point box — the library's `clamp` resolves the same definite height, without `lineClamp` |
 | the same with a definite two-line height and `overflow: hidden` | **two** lines in a 48-point box — the only cut that painted |
 | a 200-point cell with no `overflow` declared | the run paints to **303**, 103 points past the cell and over its neighbour, while `bounds()` still reports the cell's **200** |
 
-29 checks, `--only text-truncation`, green on 0.11.0 (~0.4 s). Fixture:
+30 checks, `--only text-truncation`, green on 0.11.0 (~0.4 s). Fixture:
 `src/live/truncation.ts` — the ids, the run and the paragraph, and
 `readTruncation`, which counts the painted lines, the ink's right edge, and the
-upper-half ink at each end of the lowest line; `truncation.test.ts` (11 cases)
+upper-half ink at each end of the lowest line; `truncation.test.ts` (12 cases)
 holds the reader to a drawn frame where a stem and a row of dots are known, at
 both device scales, refuses a blank or unreadable region, and holds this
 section's heading, count and `lineClamp` sentence to the steps that assert them.
 
-Two negative controls were measured, exit `1` each, then restored green:
+Three negative controls were measured, exit `1` each, then restored green:
 
 - dropping `textOverflow` from the second cell fails `an ellipsized run ends
   inside the box where a sliced glyph runs to the edge` — the mark is the
@@ -3488,6 +3488,10 @@ Two negative controls were measured, exit `1` each, then restored green:
 - raising the workaround's height to six lines fails `a definite height with a
   hidden overflow paints the two lines` with **`expected 2, got 5`** — the cut
   is the height, and nothing else in the fixture makes it.
+- restoring the pre-fix expectation for the shipped clamp (the uncut paragraph's
+  five lines) fails `the shipped Text's clamp prop paints the two lines` with
+  **`expected 5, got 2`** — the probe records the component's cut now, not the
+  defect it replaced.
 
 What it settles, for the data and workspace components:
 
@@ -3495,11 +3499,12 @@ What it settles, for the data and workspace components:
    width, `position: "relative"` and `overflow: "hidden"`, and the run needs
    `whiteSpace: "nowrap"`; `textOverflow` then replaces the sliced glyph with
    an ellipsis. `ellipsis-start` is real and keeps the tail.
-2. **`lineClamp` does not paint in 0.11.0.** It is accepted on the text, on the
-   box, and by the shipped `Text`'s own `clamp` prop, and every line still
-   paints — so a `maxLines` label cannot be built from it: the component has to
-   own a definite height equal to `lines × lineHeight` and declare
-   `overflow: "hidden"`.
+2. **`lineClamp` does not paint in 0.11.0.** It is accepted on the text and on
+   the box, and every line still paints — so a `maxLines` label cannot be built
+   from it directly: the component has to own a definite height equal to
+   `lines × lineHeight` and declare `overflow: "hidden"`. The shipped `Text`'s
+   `clamp` prop does exactly that (it sets no `lineClamp`), which is why the
+   probe reads **two** lines and a 48-point box from it.
 3. **Do not trust `bounds()` for an overflow.** The layout report keeps an
    escaping run inside its cell's width; only the captured paint shows the
    103-point escape. A probe that asks "did it overflow" must read the frame.
@@ -3508,9 +3513,8 @@ What it settles, for the data and workspace components:
    does not need a wrapper div for truncation.
 
 The capability record's **Text truncation** row now carries this: the clip and
-both marks are supported, `lineClamp` is not. The library's own
-`truncate({ maxLines })` spec still writes `lineClamp`, which is the interlock
-row in `TODO.md`.
+both marks are supported, `lineClamp` is not, and the shipped `Text`'s `clamp`
+is the definite-height route (`packages/primitives/src/core/style.ts`).
 
 ### `box-paint` — measured on 0.11.0 here
 

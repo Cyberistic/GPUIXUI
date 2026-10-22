@@ -17499,9 +17499,15 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
     yield* ctx.expectEqual(
-      "the shipped Text's clamp prop paints every line as well",
+      "the shipped Text's clamp prop paints the two lines",
       shippedClamp.measured.lines,
-      wrapped.measured.lines,
+      TRUNCATION_CLAMP_LINES,
+    );
+    yield* ctx.expectNear(
+      "the shipped Text's clamp box is only as tall as its two lines",
+      shippedClamp.box.height,
+      clampSized.box.height,
+      2,
     );
     yield* ctx.expectEqual(
       "the cut box is shorter than the uncut one",
