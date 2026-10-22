@@ -460,9 +460,15 @@ it("cuts the half star from the filled glyph instead of scaling it", async () =>
         );
   // A whole filled star paints its glyph directly; the half star's glyph sits
   // two levels inside the clip (clip → cell → glyph). Same height means the
-  // half was cut at the midpoint, not scaled to fit the half-wide box.
+  // half was cut at the midpoint, not scaled to fit the half-wide box, and the
+  // same offset from the star's edge means the cut glyph is in the outline's
+  // own place — a cell stretched to the clip would start the glyph outside it.
+  const third = byLabel(runtime, "3 of 5");
+  const thirdBox = Option.getOrElse(runtime.boundsOfId(third.id), () =>
+    expect.fail("the third star painted no bounds"),
+  );
   const whole = boundsOf(
-    Option.fromNullishOr(byLabel(runtime, "3 of 5").children[0]),
+    Option.fromNullishOr(third.children[0]),
     "the third star's glyph",
   );
   const halfGlyph = boundsOf(
@@ -470,6 +476,7 @@ it("cuts the half star from the filled glyph instead of scaling it", async () =>
     "the half star's glyph",
   );
   expect(halfGlyph.height).toBe(whole.height);
+  expect(halfGlyph.x - starBox.x).toBe(whole.x - thirdBox.x);
 
   // The other stars are untouched: whole stars paint no clip at all.
   expect(byLabel(runtime, "3 of 5").children).toHaveLength(1);
