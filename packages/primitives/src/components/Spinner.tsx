@@ -15,6 +15,7 @@
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import * as Arr from "effect/Array";
+import { iconPixels } from "@gpuixui/icons";
 import { cn } from "@gpuixui/tw";
 import {
   SPINNER_SEGMENTS,
@@ -63,7 +64,10 @@ export const renderSpinner = (
   theme: PrimitiveTheme,
   step: number,
 ): ReactElement => {
-  const dot = typeof size === "number" ? size : theme.iconSize[size ?? "md"];
+  // A named step and a raw count both go through the icon scale's own resolver:
+  // a measurement that never arrived (or zero, or negative) must not reach
+  // `width` as `NaN`, which the runtime paints as no dot at all.
+  const dot = iconPixels(size ?? "md");
   const group = mergeStyle(
     recipeTw.classesToStyle(cn(spinnerGroupClass, className), theme).style,
     style,

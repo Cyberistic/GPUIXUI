@@ -38,6 +38,10 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 `size` names a step on the theme's icon scale (`xs`–`xl`, so a dot lines up with
 the text or glyph beside it) and also accepts raw pixels, because a spinner
 inside a `Button` often has to match the button's own glyph rather than a step.
+A raw count the runtime cannot paint — a measurement that never arrived, an
+infinity, zero or a negative number — reads as the `md` step, the same rule an
+`Icon` follows: a `NaN` width paints no dot while the status is still announced,
+so the indicator would vanish without a word.
 
 The `on-*` accents exist for that case: `variantSpinnerAccent(variant,
 disabled)` maps a filled button to the on-colour its own label uses, and a
@@ -101,7 +105,10 @@ preference covers the action and the indicator inside it.
   every dot, and each `on-*` accent resolving to its fill's on-colour (including
   `on-accent` on the selected surface and `on-disabled` on the neutral pair).
 - `src/components/presentational.test.tsx` — the dots take their side from a
-  named icon step and from raw pixels, and default to the theme's `md`.
+  named icon step and from raw pixels, default to the theme's `md`, and read a
+  count they cannot paint (`NaN`, an infinity, zero or a negative number) as
+  that default instead of painting nothing (`src/components/Spinner.tsx` reuses
+  `@gpuixui/icons`' `iconPixels`, so a dot and an icon answer alike).
 - `src/components/Button.test.tsx` — a busy filled button hands the spinner
   `on-primary`/`on-secondary`/`on-destructive`, a variant with no fill keeps
   `primary`, and a disabled filled button's spinner moves to `on-disabled` while

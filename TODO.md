@@ -3030,6 +3030,18 @@ below.
       `expected '#5F4BDB' to be '#5B48D0'`), and `recipe/recipe.test.ts`'s
       shipped-theme case fails on the old resolver. Docs: `docs/text.mdx`
       §Tones/§Verification and the README's two layers.
+`[x]` `packages/primitives`: a **spinner given a dot size it cannot paint
+      vanished** — `size` takes a measured pixel count as well as a scale step,
+      and the count reached `width`/`height` verbatim: `NaN` from a measurement
+      that never arrived (and infinity, zero or a negative count) paints no dot,
+      while the status role is still announced, so the indicator disappears
+      without a word. The component now resolves the size through
+      `@gpuixui/icons`' `iconPixels`, the rule an `Icon` already follows, so an
+      unusable count reads as the `md` step. Proof:
+      `components/presentational.test.tsx`'s `reads a dot size it cannot paint
+      as the default step` measures the four counts and fails on the old
+      expression with `[ NaN, NaN, NaN ]`. Docs: `docs/spinner.mdx`
+      §Sizes/§Verification and the `COMPONENTS.md` Loading indicators row.
 `[x]` `packages/primitives`: **a busy action announced English** — `Button`,
       `IconButton` and `Toggle` wrote `aria-description="Loading"` and handed
       `Spinner` the same hardcoded name, while `Progress` (`loadingText`) and

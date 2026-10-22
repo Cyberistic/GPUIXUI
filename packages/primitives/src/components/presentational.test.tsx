@@ -623,6 +623,27 @@ describe("loading", () => {
     );
     expect(dotSides(9)).toStrictEqual(Arr.replicate(9, 3));
   });
+
+  it("reads a dot size it cannot paint as the default step", () => {
+    // The bug: `size` also takes the number a caller measured, and it reached
+    // `style.width`/`height` verbatim. A measurement that never arrived
+    // (`NaN`), zero or a negative count paints no dot at all — the status is
+    // still announced, so the indicator vanishes without a word. The icon
+    // scale's own resolver already answers this case, so a spinner dot reads
+    // the same as an icon.
+    const dotSides = (size?: Parameters<typeof renderSpinner>[0]["size"]) =>
+      Arr.map(elementChildren(renderSpinner({ size }, testTheme, 0)), (dot) =>
+        expectSome(numberIn(dot, "width")),
+      );
+    Arr.forEach(
+      [Number.NaN, Number.POSITIVE_INFINITY, 0, -8],
+      (unpaintable) => {
+        expect(dotSides(unpaintable)).toStrictEqual(
+          Arr.replicate(testTheme.iconSize.md, 3),
+        );
+      },
+    );
+  });
 });
 
 describe("ButtonGroup's public surface", () => {
