@@ -32,6 +32,8 @@ a second copy would drift silently.
 There is deliberately **no default theme**: a primitive rendered without a
 `ThemeProvider` above it throws `MissingThemeProviderError` naming the provider.
 A silent default palette is how two design systems end up in one application.
+The provider writes `@gpuixui/tokens/react`'s context, so a tree mixing primitives
+with `@gpuixui/components` wraps once and both read the same theme.
 
 Density is a multiplier over the theme's metrics, never a second palette:
 `<ThemeProvider theme={theme} density={extendedTheme.density}>` changes numbers

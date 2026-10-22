@@ -1,10 +1,10 @@
 /**
  * The theme context: where a primitive gets the values it draws with.
  *
- * There is deliberately **no default theme**. A component that silently invents
- * a palette is how two design systems end up in one application, and the second
- * one is always wrong in dark mode. So a primitive without a provider above it
- * fails with an error that names the provider, at the moment it renders.
+ * The values live in `@gpuixui/tokens/react`'s context, the same one
+ * `@gpuixui/components` reads, so a tree that mixes the two packages wraps once
+ * and cannot paint two palettes. This module adds the density override and the
+ * package's fail-loud rule; it owns no palette of its own.
  */
 
 import {
@@ -13,12 +13,23 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import {
+  ThemeProvider as TokensThemeProvider,
+  useTheme as useTokensTheme,
+} from "@gpuixui/tokens/react";
 import type { Density, PrimitiveTheme } from "../core/index.js";
 import { withDensity } from "./internal.js";
 
-const ThemeContext = createContext<PrimitiveTheme | null>(null);
+/**
+ * Whether this package's provider is above the component.
+ *
+ * A presence marker, not a second theme: the token provider falls back to the
+ * light theme when nothing supplies one, and a primitive must not mistake that
+ * fallback for a caller's choice.
+ */
+const Provided = createContext(false);
 
-/** Thrown when a primitive renders outside a `ThemeProvider`. */
+/** Thrown when a primitive renders without this package's `ThemeProvider`. */
 export class MissingThemeProviderError extends Error {
   constructor() {
     super(
@@ -42,7 +53,8 @@ export interface ThemeProviderProps {
 }
 
 /**
- * Provide the theme to every primitive below it.
+ * Provide the theme to every primitive below it, and to the shared token
+ * context a component in the same tree reads.
  *
  * A component boundary, not domain logic: a missing provider is a programming
  * error (a defect), which is exactly what React's error boundary models, so it
@@ -53,14 +65,15 @@ export const ThemeProvider = ({
   density,
   children,
 }: ThemeProviderProps): ReactElement => (
-  <ThemeContext.Provider value={withDensity(theme, density)}>
-    {children}
-  </ThemeContext.Provider>
+  <TokensThemeProvider theme={withDensity(theme, density)}>
+    <Provided.Provider value>{children}</Provided.Provider>
+  </TokensThemeProvider>
 );
 
-/** The active theme. Fails loudly when there is no provider. */
+/** The active theme. Fails loudly when this package's provider is absent. */
 export const useTheme = (): PrimitiveTheme => {
-  const theme = useContext(ThemeContext);
-  if (theme === null) throw new MissingThemeProviderError();
+  const theme = useTokensTheme();
+  const provided = useContext(Provided);
+  if (!provided) throw new MissingThemeProviderError();
   return theme;
 };

@@ -17,7 +17,8 @@
  */
 
 import { expect, it } from "vitest";
-import { darkTheme, lightTheme } from "@gpuixui/tokens";
+import { darkTheme, densityPresets, lightTheme } from "@gpuixui/tokens";
+import { useTheme as useSharedTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
@@ -59,6 +60,49 @@ const rendered = (node: React.ReactElement): Promise<Runtime> =>
     runtime.render(node);
     return runtime;
   });
+
+/**
+ * A caller's element that reads `@gpuixui/tokens/react` directly, which is how
+ * every `@gpuixui/components` part gets its theme. It paints both a colour and
+ * a metric from that context, so a provider that fed only primitives' own tree
+ * would leave this element on the token package's light fallback.
+ */
+const SharedProbe = ({ testId }: { readonly testId: string }) => {
+  const theme = useSharedTheme();
+  return (
+    <div
+      testId={testId}
+      style={{
+        backgroundColor: theme.colors.background,
+        height: theme.density.controlHeight.md,
+      }}
+    />
+  );
+};
+
+it("supplies the shared token context a mixed tree reads", async () => {
+  const runtime = await rendered(
+    <ThemeProvider theme={darkTheme}>
+      <SharedProbe testId="shared" />
+    </ThemeProvider>,
+  );
+  expect(painted(runtime, "shared", "backgroundColor")).toBe(
+    darkTheme.colors.background,
+  );
+});
+
+it("carries the density override into the shared context", async () => {
+  const runtime = await rendered(
+    <ThemeProvider theme={lightTheme} density={densityPresets.compact}>
+      <SharedProbe testId="shared" />
+    </ThemeProvider>,
+  );
+  const height = Option.getOrElse(
+    Option.map(runtime.bounds("shared"), (bounds) => bounds.height),
+    () => -1,
+  );
+  expect(height).toBe(densityPresets.compact.controlHeight.md);
+});
 
 it("paints each role from the theme it is given", async () => {
   const runtime = await rendered(scene(lightTheme));

@@ -8,6 +8,11 @@ through `useTheme()`. It is **not** a theme builder and it ships **no default
 palette**: without a provider above it, a primitive throws
 `MissingThemeProviderError` at the moment it renders.
 
+The context is `@gpuixui/tokens/react`'s — the same one `@gpuixui/components`
+reads — so a tree that mixes the two packages wraps **once**, with this
+provider, and both paint the same theme. The density override reaches that
+context too.
+
 ## Usage
 
 ```tsx
@@ -74,8 +79,8 @@ import { platformTheme, lightTheme } from "@gpuixui/tokens";
 | `density` | `Density` | `theme.density` | swaps the numeric metrics group; colours stay |
 | `children` | `ReactNode` | — | the tree that may render primitives |
 
-`useTheme(): PrimitiveTheme` returns the active theme and throws
-`MissingThemeProviderError` when there is none.
+`useTheme(): PrimitiveTheme` returns the active theme from the shared context and
+throws `MissingThemeProviderError` when this package's provider is absent.
 
 ## Keyboard
 
@@ -102,14 +107,22 @@ re-render with a different `theme` prop — verified natively by
 - There is no built-in light/dark toggle and no persistence: theme choice is
   application state, owned by the app.
 - Providers do not merge: the nearest `ThemeProvider` supplies the whole theme.
+- This provider writes the shared token context, but it cannot detect a tree
+  wrapped only in `@gpuixui/tokens`' provider: that provider falls back to the
+  light theme, which is indistinguishable from a caller passing `lightTheme` on
+  purpose. Render primitives inside this provider (it supplies both packages).
 
 ## Verification
 
 - `src/components/ThemeProvider.test.tsx` — the missing-provider error and the
-  density swap are proven on the render boundary.
+  density swap are proven on the render boundary; the provider is the token
+  package's own, and a scan holds a second **theme** context out of the package
+  (the part contexts are not theme contexts).
 - `src/core/theme.test.ts` — the colour-literal scan and density metrics.
 - `runtime/theme.runtime.test.tsx` — both palettes paint only their own colours;
-  a live theme switch repaints every asserted role.
+  a live theme switch repaints every asserted role; a caller's element that
+  reads the token context directly paints this provider's theme and density,
+  not the token package's light fallback.
 - `runtime/theme-axes.runtime.test.tsx` — the high-contrast palettes paint only
   their own colours in both modes; a density override moves control heights to
   the preset and leaves colour alone; `platformTheme`'s mono family reaches the
