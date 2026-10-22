@@ -7,7 +7,12 @@
 import { describe, expect, it } from "vitest";
 import { linear } from "./easing.js";
 import { inertia } from "./inertia.js";
-import { MotionValue, springTransition, tween } from "./motion.js";
+import {
+  DEFAULT_TWEEN_MS,
+  MotionValue,
+  springTransition,
+  tween,
+} from "./motion.js";
 import { layoutSpring } from "./spring.js";
 
 describe("MotionValue", () => {
@@ -65,5 +70,26 @@ describe("MotionValue", () => {
     const sample = value.sample(350);
     expect(sample.value).toBeCloseTo(35 * (1 - Math.E ** -1), 3);
     expect(sample.active).toBe(true);
+  });
+
+  it("falls back from a tween duration that cannot run", () => {
+    // A `NaN` duration divides the clock into `NaN`: every sample is `NaN` (the
+    // runtime paints a null inset) and the run never reports completion, so the
+    // hook would churn frames forever. Infinity never completes either. Both
+    // take the house duration, which the declared transition carries.
+    const declared = tween(Number.NaN, linear);
+    expect(declared.kind === "tween" && declared.durationMs).toBe(
+      DEFAULT_TWEEN_MS,
+    );
+
+    [Number.NaN, Number.POSITIVE_INFINITY].forEach((durationMs) => {
+      const value = new MotionValue(0);
+      value.animate(1, tween(durationMs, linear));
+      expect(value.sample(DEFAULT_TWEEN_MS / 2).value).toBeCloseTo(0.5, 5);
+      const done = value.sample(DEFAULT_TWEEN_MS);
+      expect(done.value).toBe(1);
+      expect(done.active).toBe(false);
+      expect(done.complete).toBe(true);
+    });
   });
 });

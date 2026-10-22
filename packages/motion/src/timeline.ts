@@ -29,14 +29,14 @@ export const keyframe = (
 /**
  * Samples sorted keyframes at unit progress, interpolating between the
  * surrounding keyframes and applying the upper keyframe's easing. Frames must
- * be sorted ascending by `at`.
+ * be sorted ascending by `at`; a progress that is not a number reads as `0`.
  */
 export const sampleKeyframes = (
   frames: readonly Keyframe[],
   progress: number,
 ): number => {
   if (frames.length === 0) return 0;
-  const t = clamp01(progress);
+  const t = clamp01(Number.isNaN(progress) ? 0 : progress);
   const first = frames[0];
   const last = frames[frames.length - 1];
   if (first === undefined || last === undefined) return 0;
@@ -142,13 +142,13 @@ export class Sequence<K> {
     );
   }
 
-  /** Samples every step at sequence elapsed time. */
+  /** Samples every step at sequence elapsed time. A `NaN` time reads as `0`. */
   sample(elapsedMs: number): readonly SequenceStepSample<K>[] {
+    const elapsed = Number.isNaN(elapsedMs) ? 0 : Math.max(elapsedMs, 0);
     return this.steps.map((step) => {
-      const t = Math.max(elapsedMs, 0);
-      if (t < step.startMs)
+      if (elapsed < step.startMs)
         return { key: step.key, state: "pending", value: 0 };
-      const local = t - step.startMs;
+      const local = elapsed - step.startMs;
       if (step.durationMs <= 0 || local >= step.durationMs) {
         return { key: step.key, state: "completed", value: 1 };
       }
@@ -162,6 +162,6 @@ export class Sequence<K> {
 
   /** Whether every step has completed at sequence elapsed time. */
   complete(elapsedMs: number): boolean {
-    return elapsedMs >= this.duration();
+    return (Number.isNaN(elapsedMs) ? 0 : elapsedMs) >= this.duration();
   }
 }

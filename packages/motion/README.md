@@ -97,6 +97,17 @@ therefore counts again over the full duration rather than repainting `200` in
 one frame. A consumer driving `MotionValue` directly owns the same rule: sample
 at the moment you retarget.
 
+## Inputs the runtime can paint
+
+Every sampler is total: a number it cannot read is replaced before it reaches a
+formula. `sampleSpring`, `sampleInertia`, `sampleKeyframes` and
+`Sequence.sample`/`complete` read a `NaN` clock (or progress) as the start of
+the run, and still clamp an infinity to the end — a presenter whose clock read
+failed paints the first frame rather than `NaN`. A tween duration that cannot
+run (`NaN` or an infinity) falls back to `DEFAULT_TWEEN_MS` (300 ms), and a zero
+or negative one is an instant assignment. `MotionValue.sample` keeps its own
+rule: an unusable clock holds the last sample rather than jumping to the end.
+
 ## The runtime's declarative timing
 
 GPUix executes a tween over a duration and an easing it is told. That timing is

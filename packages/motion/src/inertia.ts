@@ -59,7 +59,9 @@ export const project = (
 
 /**
  * Samples exponential deceleration at an explicit elapsed time. The trajectory
- * approaches {@link project} and clamps to bounds with zero velocity.
+ * approaches {@link project} and clamps to bounds with zero velocity. A `NaN`
+ * elapsed time reads as the release frame, so a clock the caller could not read
+ * never reaches the formulas.
  */
 export const sampleInertia = (
   inertia: Inertia,
@@ -67,7 +69,7 @@ export const sampleInertia = (
   velocity: number,
   elapsedMs: number,
 ): InertiaSample => {
-  const t = Math.max(elapsedMs, 0) / 1000;
+  const t = (Number.isNaN(elapsedMs) ? 0 : Math.max(elapsedMs, 0)) / 1000;
   const decay = Math.exp(-t / inertia.tau);
   const rest = from + velocity * inertia.tau;
   const value = clamp(from + (rest - from) * (1 - decay), inertia);

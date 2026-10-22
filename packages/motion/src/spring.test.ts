@@ -58,6 +58,16 @@ describe("sampleSpring", () => {
     expect(Number.isFinite(sample.velocity)).toBe(true);
   });
 
+  it("reads a non-finite elapsed time as the start of the run", () => {
+    // `Math.max(NaN, 0)` is `NaN`, so a caller passing a clock it could not read
+    // used to get a `NaN` sample through every formula instead of a start frame.
+    const start = sampleSpring(layoutSpring, 0, 1, 0, 0);
+    expect(sampleSpring(layoutSpring, 0, 1, 0, Number.NaN)).toEqual(start);
+    expect(
+      sampleSpring(layoutSpring, 0, 1, 0, Number.POSITIVE_INFINITY),
+    ).toEqual(sampleSpring(layoutSpring, 0, 1, 0, 2000));
+  });
+
   it("over-damped springs converge without overshoot", () => {
     const overdamped = springPhysics({ stiffness: 100, damping: 40, mass: 1 });
     const samples = [16, 80, 400, 5000].map(

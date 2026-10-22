@@ -24,6 +24,14 @@ describe("sampleKeyframes", () => {
     // Segment [0, 0.5] with local progress 0.5 → easeOut(0.5) = 0.875.
     expect(sampleKeyframes(frames, 0.25)).toBeCloseTo(50 * 0.875, 5);
   });
+
+  it("reads a NaN progress as the first frame, an infinity as the last", () => {
+    // The clamp only maps a comparable number: `NaN` used to pass straight into
+    // the easing and paint a `NaN` value.
+    const frames = [keyframe(0, 10), keyframe(1, 20)];
+    expect(sampleKeyframes(frames, Number.NaN)).toBe(10);
+    expect(sampleKeyframes(frames, Number.POSITIVE_INFINITY)).toBe(20);
+  });
 });
 
 describe("stagger", () => {
@@ -68,5 +76,18 @@ describe("Sequence", () => {
     const sample = sequence.sample(25);
     expect(sample.map((step) => step.value)).toEqual([0.3, 0, 0]);
     expect(sequence.duration()).toBe(10 + 2 * 20 + 50);
+  });
+
+  it("reads a NaN elapsed time as the start, and an infinity as the end", () => {
+    // `Math.max(NaN, 0)` is `NaN`, so a caller's unreadable clock used to produce
+    // an `active` step whose value was `NaN` — a frame the runtime paints as
+    // nothing — instead of the pending start.
+    const sequence = new Sequence<string>().at("a", 0, 100);
+    expect(sequence.sample(Number.NaN)).toEqual(sequence.sample(0));
+    expect(sequence.sample(Number.POSITIVE_INFINITY)[0]?.state).toBe(
+      "completed",
+    );
+    expect(sequence.complete(Number.NaN)).toBe(false);
+    expect(sequence.complete(Number.POSITIVE_INFINITY)).toBe(true);
   });
 });

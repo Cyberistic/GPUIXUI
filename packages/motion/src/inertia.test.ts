@@ -47,4 +47,11 @@ describe("inertia", () => {
       expect(sample.value).toBeGreaterThanOrEqual(0);
     });
   });
+
+  it("reads a non-finite elapsed time as the start of the coast", () => {
+    // `Math.max(NaN, 0)` is `NaN`, so a clock the caller could not read used to
+    // return `NaN` from every field instead of the release frame.
+    const release = sampleInertia(inertia(350), 0, 100, 0);
+    expect(sampleInertia(inertia(350), 0, 100, Number.NaN)).toEqual(release);
+  });
 });

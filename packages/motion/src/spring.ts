@@ -117,7 +117,8 @@ export const retarget = (
 
 /**
  * Samples a spring at an explicit elapsed time, returning value and velocity.
- * Non-finite inputs are sanitized to sensible defaults.
+ * Non-finite inputs are sanitized to sensible defaults: a `NaN` elapsed time is
+ * the start of the run (`0`), while an infinity is the end of it.
  */
 export const sampleSpring = (
   physics: SpringPhysics,
@@ -129,7 +130,7 @@ export const sampleSpring = (
   const safeFrom = sanitizeNumber(from, 0);
   const safeTarget = sanitizeNumber(target, safeFrom);
   const safeVelocity = sanitizeNumber(velocity, 0);
-  const t = Math.max(elapsedMs, 0) / 1000;
+  const t = (Number.isNaN(elapsedMs) ? 0 : Math.max(elapsedMs, 0)) / 1000;
 
   if (t === 0) {
     const settled = atRest(physics, safeFrom, safeTarget, safeVelocity);

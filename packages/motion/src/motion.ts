@@ -41,11 +41,26 @@ export const DEFAULT_TWEEN_MS = 300;
 /** Immediate assignment, also used under reduced motion. */
 export const instant: Transition = { kind: "instant" };
 
-/** A duration/easing tween. */
+/**
+ * A tween duration that can run.
+ *
+ * A non-finite duration divides the elapsed time into `NaN`, so the sample is
+ * `NaN` and the run never reports completion — a surface that hands the runtime
+ * a `NaN` inset. It falls back to {@link DEFAULT_TWEEN_MS} the way every other
+ * unusable timing in the package does.
+ */
+const tweenDurationMs = (durationMs: number): number =>
+  Number.isFinite(durationMs) ? durationMs : DEFAULT_TWEEN_MS;
+
+/** A duration/easing tween. A duration that cannot run uses the house default. */
 export const tween = (
   durationMs = DEFAULT_TWEEN_MS,
   easing: Easing = easeOut,
-): Transition => ({ kind: "tween", durationMs, easing });
+): Transition => ({
+  kind: "tween",
+  durationMs: tweenDurationMs(durationMs),
+  easing,
+});
 
 /** A velocity-aware spring. */
 export const springTransition = (physics: SpringPhysics): Transition => ({
@@ -223,7 +238,7 @@ export class MotionValue {
     }
 
     if (transition.kind === "tween") {
-      const durationSec = transition.durationMs / 1000;
+      const durationSec = tweenDurationMs(transition.durationMs) / 1000;
       if (durationSec <= 0 || t >= durationSec) {
         this.finish();
         return;
