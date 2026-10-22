@@ -69,6 +69,7 @@ the licence is noted and attributed in `LICENSES/`.
 | [GPUix](https://gpuix.dev) | the native renderer — GPU, no DOM | — |
 | [open-gpui](https://github.com/Latias94/open-gpui) (`crates/motion`) | spring/sequence physics, ported to TS | Apache-2.0 |
 | [gpui-motion](https://github.com/1bye/gpui-motion) | broader motion API surface — easing variants and inertia — borrowed as spec | MIT |
+| [TanStack](https://tanstack.com) | headless cores — Table (grid state), Virtual (windowing), Form (field state), Pacer (debounce/throttle), Hotkeys (accelerators) | MIT |
 
 ## References
 
@@ -81,6 +82,7 @@ edited:
 - GPUI Kit — https://github.com/longbridge/gpui-kit
 - shadcn/ui — https://github.com/shadcn-ui/ui
 - Fumadocs — https://github.com/fuma-nama/fumadocs
+- TanStack — https://github.com/TanStack (table, virtual, form, pacer, hotkeys: headless cores; the docs app runs TanStack Start)
 - PanelUI — https://panelui.dev/docs/components (documentation only: no public
   source repository, so it is read as documentation and not cloned)
 

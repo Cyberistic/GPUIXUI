@@ -65,7 +65,7 @@ workstream_scope() {
       echo "motion: wire @gpuixui/motion into the existing surfaces first (Dialog, Drawer, Popover, DropdownMenu, CommandMenu, Toast, Accordion, Tabs, PreviewCard), following shadcn and Base UI enter/exit patterns, then implement the animated primitives in plan 600. You own packages/motion and the motion wiring inside packages/components. Never animate transform (runtime issue 102): fade plus offset only."
       ;;
     data)
-      echo "data presentation: open packages/data (@gpuixui/data) and implement plan 610 — table core, sorting, selection, filtering, column configuration and resizing, virtualization, tree views and expandable rows, SVG charts, and the data surfaces (key-value, stat card, property panel, toolbar, advanced filter). You own packages/data and the data probes in apps/playground. The runtime has no sticky positioning, no transform and no canvas drawing: follow the measured rules in plan 610."
+      echo "data presentation: open packages/data (@gpuixui/data) and implement plan 610 — table core, sorting, selection, filtering, column configuration and resizing, virtualization, tree views and expandable rows, SVG charts, and the data surfaces — use @tanstack/table-core for the grid state, @tanstack/virtual-core for windowing and @tanstack/pacer for debounce instead of hand-rolling them (key-value, stat card, property panel, toolbar, advanced filter). You own packages/data and the data probes in apps/playground. The runtime has no sticky positioning, no transform and no canvas drawing: follow the measured rules in plan 610."
       ;;
     *)
       echo "the next unclaimed task."

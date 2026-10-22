@@ -35,11 +35,14 @@ loading skeleton; density-aware row height.
 
 ### Phase 2 — sorting, selection, filtering
 
-`useTableSort`, `useTableSelection`, `useTableFilter` as pure reducers over an
-immutable row array (Effect-friendly, framework-free), then the components:
-sortable header buttons, a selection column with shift-range, a filter field that
-narrows painted rows and clears a hidden selection. Proven against
-`table-filter-lifecycle`.
+State comes from **`@tanstack/table-core`** (headless, no DOM in the core): the
+table instance owns sorting, filtering, grouping, selection, column visibility,
+ordering, pinning and pagination. We own the GPUix renderer — rows, headers and
+cells — and the behaviour tests. The one DOM helper in the core is column
+resizing; implement that with the pointer rule this repo already measured.
+
+A filter field narrows painted rows and clears a hidden selection. Proven
+against `table-filter-lifecycle`.
 
 ### Phase 3 — column configuration and resizing
 
@@ -49,8 +52,10 @@ rule).
 
 ### Phase 4 — virtualization
 
-`useVirtualRows` computing the visible window from `scrollOffset` and row height;
-`VirtualList` and `VirtualTable` reading it. Only the window mounts.
+**`@tanstack/virtual-core`** computes the window; we supply the scroll offset and
+row measurement from GPUix (the core's own element observers are the only DOM
+part). `VirtualList` and `VirtualTable` render the returned range; only the
+window mounts.
 
 ### Phase 5 — trees and expansion
 
@@ -83,8 +88,12 @@ packages/data/src/
   surfaces/     KeyValue, StatCard, PropertyPanel, DataToolbar
 ```
 
-No React state outside hooks; the reducers are pure and exported so a consumer
-can drive the grid from Effect or from their own store.
+No React state outside hooks. The table, virtual and form state comes from
+TanStack's headless cores, so a consumer can drive a grid from Effect or from
+their own store. Debounce and throttle use **`@tanstack/pacer`**.
+
+TanStack Charts is **not** used: it is DOM/SVG-renderer first. The five chart
+primitives in Phase 6 are stacked `<svg>` on GPUix.
 
 ## 4. Rules
 
