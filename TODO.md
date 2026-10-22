@@ -995,7 +995,7 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 123/123
+`[x]` `[██████████]` 124/124
 
 `[x]` Measure **where a bitmap's pixels land under `objectFit`** — the prop is
       a host prop rather than a style, so a window's style report cannot see it
@@ -1023,6 +1023,38 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       `apps/playground/README.md` §`image-fit`,
       `.artifacts/live/image-fit.png`. The `COMPONENTS.md` image rows and the
       capability record owe the citation (Interlock below).
+
+`[x]` Measure **whether a roving-focus widget holds in a window** — Tier 4's
+      *Keyboard navigation* row was `?`: a data grid, tree or toolbar is one tab
+      stop whose arrows move real focus, and the runtime's focus handles were
+      verified while the model was the caller's. The `grid-focus-lifecycle` live
+      probe mounts a 3×3 grid whose remembered cell carries `tabIndex: 0` and
+      the other eight `-1`, with a focusable control either side: Tab enters at
+      the remembered cell, `Right`/`Down`/`Home`/`End`/`Up` each move real focus
+      and the remembered cell follows (`roving=r0c1`), an arrow at an edge
+      **clamps** rather than wrapping, Tab leaves after one press, a press on
+      `r2c1` activates it and becomes the remembered cell (`activations=1`),
+      Tab re-enters there, `focusElement` reaches a `-1` cell, and `Shift+Tab`
+      leaves backwards. **The measured caveat:** `tabIndex: -1` is a sort key,
+      not an exclusion — the runtime orders a negative cell **before** the
+      zero-index stops, so Tab from a programmatically focused `-1` cell
+      (`gridfocus-r2c2`) lands on `grid-focus-before`, not after the grid; the
+      model holds while focus only moves through the app's arrows, and a
+      component that focuses a non-roving cell must expect that exit. 20 checks,
+      `--only grid-focus-lifecycle`, green on 0.11.0 (~1 s). Fixture
+      `src/live/grid-focus.ts` (the 3×3 geometry, `moveIndex`/`tabIndexOf`,
+      `gridKeyOf`, the readout, `GRID_FOCUS_CHECKS`) + `grid-focus.test.ts` (14
+      cases: the geometry, both axes, every clamp, `Home`/`End`, the key filter,
+      the one-zero rule, the tab-stop list, the readout, the registry entry, the
+      view wiring, this section and the printed count). Two negative controls
+      measured, exit `1` each, restored green: making every cell `tabIndex: 0`
+      fails `Tab leaves the grid after one press` (`expected
+      "grid-focus-after", got "gridfocus-r1c0"`), and wrapping `Right` fails
+      `Right clamps at the row's end` (`expected "gridfocus-r0c2", got
+      "gridfocus-r0c0"`). Evidence: `apps/playground/README.md`
+      §`grid-focus-lifecycle`, `.artifacts/live/grid-focus.png`. The
+      `COMPONENTS.md` row and the capability record owe the citation
+      (Interlock below).
 
 `[x]` Measure **whether a filled child takes its row's hover away** — every
       list, table and tree row paints its pointer feedback through the runtime's
@@ -5340,6 +5372,19 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       restored, the unit suite is 53 files / 975 tests green and `check-types`
       clean. Docs need no change — the state's JSDoc already says "true while any
       option holds native focus", which is what it now reports.
+`[x]` `packages/primitives`: **`Rating` kept a focus on a star it no longer
+      drew** — the same stale-index class as the groups above: `max` is caller
+      arithmetic, so a rating shrunk from five stars to three still told its
+      `style` callback `{ focused: true }` while the star that held native focus
+      was unmounted, and the next activating key clamped the stale index onto the
+      new tail (a reader who had focus on star five chose star three). The
+      renderer now drops an index outside `1..max` before it paints the focus
+      state or chooses the star a key acts on, so a key after a shrink falls back
+      to the tab stop the rating can actually reach. Directions measured: with
+      the old `focus.focusedIndex` restored, `Rating.test.tsx`'s shrink case
+      fails on the state report; restored, the suite is 24/24 and the package is
+      53 files / 976 tests with `check-types` clean. Docs: the `COMPONENTS.md`
+      Rating row.
 
 ## Blockers (project-level, with evidence)
 
@@ -5832,6 +5877,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Publish **what `objectFit` paints** where an image's fit is chosen — the capability record's **Image painting** row and `/docs/runtime` now carry the box (`image-box`) and the sources, and say nothing about the paint inside it: `objectFit` is a host prop, not a style, and the playground's `image-fit` (161 checks, 0.11.0) measured that `fill` stretches both axes, `contain` letterboxes the same run, `cover` crops the outer bands (`Avatar` and `ImageZoom` both declare it, so their circle and frame are a real crop), `scaleDown` keeps a smaller bitmap's own size centred, `none` anchors it at the box's **origin** rather than its centre (unlike a browser's default), an absent prop paints `contain`, and `borderRadius` clips the bitmap itself. Two rows owe the citation: the record's Image painting row (and the page's **Image bytes** row) and `COMPONENTS.md`'s *Image preview*/*Crop area* rows, whose fit answer is currently unstated | docs-site (capability record + `/docs/runtime`) and components (`COMPONENTS.md`) | **components half resolved 2026-10-23** — both Tier 5 rows carry the probe: **Image preview** lists all six placements (`fill`, `contain`, `cover`, `scaleDown`, `none`, absent → `contain`), the `borderRadius` clip and the two rules (reserve both dimensions; offset `none` yourself), and **Crop area** states that the paint under the crop is measured while the handles, constraints and mask stay unverified. `src/inventory.test.ts` gains `states the paint inside an image's box`: it reads the README's `image-fit` section and the 161-check line, then holds both rows to the probe, the count and the `cover`/`none`/`contain` placements. Direction measured: replacing Image preview's citation with "the probe" fails `Image preview: … to contain '`image-fit`'`; restored, 16/16. **The docs-site half is open**: the record's Image painting row and `/docs/runtime` still owe the placements and the two rules. |
 
 | Link the **virtual tree's page** from the data-display lane — `@gpuixui/data` now ships `VirtualTree` with `packages/data/docs/virtual-tree.mdx` and the `virtual-tree` example, but `/docs/data-display`'s surface table stops at the plain tree and `Virtualization`, so a reader planning a large hierarchy has no route to the windowed form. The lane page should add a **Virtual tree** row (or extend the tree row) linking `/docs/data-display/virtual-tree`, and `lane-page.test.ts` can hold it to the package export and the example registration the way it holds the frozen-column and virtualization links | docs-site (`apps/docs/content/docs/data-display/index.mdx`, `lane-page.test.ts`) | open — owner: docs-site. The package half is landed: `VirtualTree` is a root export, `docs/virtual-tree.mdx` has `title: Virtual trees`, `virtual-tree` is in the example registry, and `packages/data/src/behaviour/virtual-tree.test.tsx` (7 cases) is green |
+
+| Cite the **roving-focus grid a window measured** — Tier 4's *Keyboard navigation* row is `?` ("Real native focus handles (verified); the roving-focus model is ours"), and the capability record's *Dock keyboard navigation* row calls a `tabIndex={-1}` control "skipped by the same traversal", which is only true forwards: the `grid-focus-lifecycle` probe (20 checks, 0.11.0) measured that a grid with one `0` cell and eight `-1` cells is one forward stop with arrows moving real focus and the remembered cell restored, while a negative cell is **ordered before** the zero-index stops rather than removed from the chain — Tab from a programmatically focused `gridfocus-r2c2` lands on `grid-focus-before`, and `Shift+Tab` from the remembered stop leaves backwards in one press | components (`COMPONENTS.md`) and docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) | **open** — the row should move from `?` to `yes (measured)` with the probe and the two directions, and the record's roving sentence should say "ordered before" rather than "skipped" so a reader does not rely on `-1` as a removal. Evidence: `apps/playground/README.md` §`grid-focus-lifecycle`, `.artifacts/live/grid-focus.png` |
 
 ## Phase D — data and workspace components
 

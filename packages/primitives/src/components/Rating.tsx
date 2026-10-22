@@ -191,6 +191,14 @@ export const renderRating = (
   const half = props.allowHalf === true;
   const value = clampRating(state.current, max, half);
   const tabStop = ratingTabStop(value, max, half);
+  // A star the rating no longer draws cannot hold focus: `max` is caller
+  // arithmetic, so a list that shrank would otherwise leave the group painting
+  // itself focused over stars nobody focused and send the next key to the
+  // clamped tail.
+  const focusedIndex = Option.filter(
+    focus.focusedIndex,
+    (index) => index >= 1 && index <= max,
+  );
   const interactive = props.disabled !== true && props.readOnly !== true;
   /** The score the paint reaches: the pointer's while it is inside, else the value. */
   const lit = interactive
@@ -202,7 +210,7 @@ export const renderRating = (
     : value;
   /** The star an activating key chooses: the one holding focus, else the tab stop. */
   const focusedStar = clampRating(
-    Option.getOrElse(focus.focusedIndex, () => tabStop),
+    Option.getOrElse(focusedIndex, () => tabStop),
     max,
   );
   const selectFocused = (): void => {
@@ -307,7 +315,7 @@ export const renderRating = (
         resolveStyle(props.style, {
           disabled: props.disabled === true,
           readOnly: props.readOnly === true,
-          focused: Option.isSome(focus.focusedIndex),
+          focused: Option.isSome(focusedIndex),
           invalid: props.invalid === true,
         }),
       )}

@@ -431,6 +431,41 @@ describe("Rating", () => {
     });
   });
 
+  it("forgets a focused star the rating no longer draws", () => {
+    // The bug guarded: `max` is caller arithmetic, so a rating shrunk from five
+    // stars to three kept reporting `focused: true` to its `style` callback
+    // while the star that held native focus was unmounted, and the next
+    // activating key clamped the stale index onto the new tail instead of
+    // choosing the star the group can actually reach.
+    const seen: RatingState[] = [];
+    const onSelect = vi.fn();
+    const element = render(
+      {
+        max: 3,
+        style: (live) => {
+          seen.push(live);
+          return {};
+        },
+      },
+      0,
+      5,
+      { onSelect },
+    );
+
+    expect(seen).toEqual([
+      { disabled: false, readOnly: false, focused: false, invalid: false },
+    ]);
+    expect(starsOf(element).map(labelOf)).toStrictEqual([
+      "1 of 3",
+      "2 of 3",
+      "3 of 3",
+    ]);
+    expectSome(hostHandler(element, "onKeyUp"))(
+      keyEvent("space", { eventType: "keyUp" }),
+    );
+    expect(onSelect).toHaveBeenCalledWith(1);
+  });
+
   it("hands a style callback the live state and lets its result win", () => {
     const seen: RatingState[] = [];
     const element = render(
