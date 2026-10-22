@@ -1,0 +1,84 @@
+---
+title: Code editor
+description: A highlighted, editable code surface — a native textarea over a tokenized highlight layer.
+---
+
+`CodeEditor` is a real `<textarea>` with a read-only highlight layer behind it.
+The runtime's `<textarea>` owns the caret, the selection, the IME and the
+clipboard, so the editor never re-implements text input. It paints two layers in
+one box: a highlight layer of `@tanstack/highlight` runs (tokenised text plus a
+line-number gutter) and, on top, the transparent `<textarea>` — the reader sees
+the highlighted code, the runtime reads the keystrokes.
+
+## Usage
+
+```tsx
+import { CodeEditor } from "@gpuixui/editor";
+
+<CodeEditor
+  value={value}
+  onValueChange={setValue}
+  language="tsx"
+  lineNumbers
+/>;
+```
+
+The language id is the tokenizer's. When it is omitted, the editor paints plain
+text. `value`/`onValueChange` are the controlled contract; omit `value` and the
+editor holds its own draft.
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| typing | native editing; changes reach `onValueChange` |
+| Tab (`tabMode="insert"`) | inserts `indent` instead of moving focus |
+| Tab (`tabMode="focus"`) | moves focus, the platform's own traversal |
+| Enter | keeps the newline and appends the previous line's leading indentation |
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `value` | `string` | — | The controlled text. |
+| `defaultValue` | `string` | `""` | The uncontrolled starting text. |
+| `onValueChange` | `(value: string) => void` | — | Every edit, including Tab and Enter. |
+| `language` | `string` | — | The tokenizer's language id. |
+| `lineNumbers` | `boolean` | `true` | Number the rows in a gutter. |
+| `tabMode` | `"insert" \| "focus"` | `"insert"` | What Tab does. |
+| `indent` | `string` | `"  "` | The string Tab inserts. |
+| `placeholder` | `string` | — | The editor's hint. |
+| `readOnly` | `boolean` | `false` | View-only. |
+| `disabled` | `boolean` | `false` | Not editable, out of the tab order. |
+| `minRows` / `maxRows` | `number` | — | The runtime's row controls. |
+| `fullWidth` | `boolean` | `false` | Fill the available width. |
+| `label` | `string` | `"Code editor"` | The accessible name. |
+| `className` | `string` | — | A Tailwind class string, merged last. |
+| `style` | `StateStyle<CodeEditorState>` | — | The surface, or a function of `{ disabled, focused }`. |
+
+## Limitations
+
+- **A transparent textarea paints no caret.** Measured upstream
+  (`gpuix-capabilities.md` §Editable highlighted overlay): a focused field with
+  transparent ink shows no caret, and it reports no scroll offset. The editor
+  states the caret colour through `nativeTextTheme` and keeps both layers on one
+  scroll surface, but a fully positional overlay needs two runtime gaps closed.
+- **Tab insert and Enter auto-indent append at the end of the document.** The
+  runtime exposes no caret position, so an insertion cannot target the caret; it
+  lands at the end, which is correct while typing sequentially.
+- **Pixel-exact alignment is not verified without a native host.** The two
+  layers share the `codeBlock` type scale and one surface, but the textarea's own
+  text inset is the runtime's, not the component's.
+
+## Verification
+
+`src/code-editor/highlight.test.ts` holds the tokenizer: a TypeScript snippet's
+token boundaries and roles, the plain-text fallback, the runs concatenating back
+to the source (with a negative control that drops the last run), and the line
+split across a trailing newline. `src/code-editor/logic.test.ts` holds the Tab
+decision and the indentation helpers.
+
+## Related
+
+- [Diff viewer](/docs/components/diff-viewer) — two sources compared, tinted by change.
+- [Search and replace](/docs/components/search-replace) — find and replace over the editor's text.

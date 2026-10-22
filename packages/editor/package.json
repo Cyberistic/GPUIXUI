@@ -1,0 +1,38 @@
+{
+  "name": "@gpuixui/editor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tier 4 code surfaces \u2014 a highlighted editor, a diff viewer and find-and-replace \u2014 rendered by GPUix through React.",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./examples": "./examples/index.ts",
+    "./diff/logic": "./src/diff/logic.ts",
+    "./search/logic": "./src/search/logic.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gpuix/react": "catalog:",
+    "@gpuixui/primitives": "workspace:*",
+    "@gpuixui/tokens": "workspace:*",
+    "@gpuixui/tw": "workspace:*",
+    "@tanstack/highlight": "catalog:",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@gpuixui/config": "workspace:*",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

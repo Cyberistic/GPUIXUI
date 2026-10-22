@@ -1,0 +1,68 @@
+---
+title: Search and replace
+description: A find field, a match count, next/previous, and replace / replace-all over a controlled text.
+---
+
+`SearchReplace` is a find-and-replace bar over a controlled text. It matches
+with a literal, non-overlapping scan and replaces with the same scan, so the
+match count and a replace-all always agree on what "one match" is. The bar owns
+only the bar: the document text is the caller's `value`, edited through
+`onValueChange`.
+
+## Usage
+
+```tsx
+import { SearchReplace } from "@gpuixui/editor";
+
+<SearchReplace value={value} onValueChange={setValue} />;
+```
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| F3 | next match |
+| Shift+F3 | previous match |
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `value` | `string` | — | The controlled document text. |
+| `onValueChange` | `(value: string) => void` | — | Reports a single replace and a replace-all. |
+| `placeholder` | `string` | `"Find"` | The find field's hint. |
+| `replacePlaceholder` | `string` | `"Replace with"` | The replacement field's hint. |
+| `findLabel` | `string` | `"Find"` | The find field's accessible name. |
+| `replaceFieldLabel` | `string` | `"Replace with"` | The replacement field's accessible name. |
+| `replaceLabel` / `replaceAllLabel` | `string` | `"Replace"` / `"Replace all"` | The actions' names. |
+| `nextLabel` / `previousLabel` | `string` | `"Next match"` / `"Previous match"` | The navigation names. |
+| `disabled` | `boolean` | `false` | Disable the bar. |
+| `className` | `string` | — | A Tailwind class string, merged last. |
+
+## The matcher
+
+`src/search/logic.ts` scans left to right and resumes at a match's end, so
+overlapping matches are skipped: `"aa"` inside `"aaa"` is one match, not two. An
+empty query matches nothing. `replaceAll` is built from the same ranges, replaced
+last-to-first so an earlier replacement never shifts a later index.
+
+## Limitations
+
+- **Literal, case-sensitive matching.** No regex, no whole-word, no case toggle.
+- **The active match cannot move the editor.** The runtime reports no caret or
+  scroll offset, so the bar reports `n / m` and leaves the jump to a surface that
+  can scroll to it.
+- **The bar does not own the text.** The caller applies every replacement through
+  `onValueChange`.
+
+## Verification
+
+`src/search/logic.test.ts` holds the matcher: overlapping matches skipped (with a
+negative control against an overlapping scan), every non-overlapping occurrence
+found, an empty query returning nothing, and replace-all agreeing with the match
+count.
+
+## Related
+
+- [Code editor](/docs/components/code-editor) — the surface this bar drives.
+- [Diff viewer](/docs/components/diff-viewer) — two sources compared.
