@@ -1865,7 +1865,9 @@ The app channel lags the renderer: the platform's zoom is animated and
 `useWindowSize()` samples every 100ms, so the probe waits (bounded at 960ms) for
 both channels to name the new box before it asserts. That wait is the negative
 control below, and the rule for a component: read the size for arithmetic,
-re-clamp on `onLayout`.
+re-clamp on `onLayout`. The guard's own two directions: `host.test.ts` refuses a
+zero, negative and non-finite box (measured: dropping `windowSizeOf`'s filter
+fails `refuses a box no layout can be measured against`, restored 68/68).
 
 Negative controls measured: the first version of the probe sampled once at
 180ms against the renderer alone and failed
