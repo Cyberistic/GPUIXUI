@@ -5218,6 +5218,12 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const bottomNaive = "loading-bottom-naive";
     const bottomFixed = "loading-bottom-fixed";
     const newerLast = NEWER_FIRST + MESSAGE_ROWS - 1;
+
+    yield* ctx.host.waitFor(`${topNaive}-row-${OLDER_FIRST}`);
+    // `waitFor` answers from the automation tree, which exists a frame before
+    // the paint: `bounds` is a painted value, so the four frames need one.
+    yield* Effect.sleep(Duration.millis(300));
+
     const topNaiveTop = yield* topOf(
       "the top naive list's frame painted",
       `${topNaive}-frame`,
@@ -5241,9 +5247,6 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const topNaiveOff = offScreenIn(topNaiveTop);
     const bottomNaiveOff = offScreenIn(bottomNaiveTop);
     const topFixedOff = offScreenIn(topFixedTop);
-
-    yield* ctx.host.waitFor(`${topNaive}-row-${OLDER_FIRST}`);
-    yield* Effect.sleep(SETTLE);
 
     // 1. Premise: while the page is in flight the void IS the list's anchor,
     //    and the message the reader is reading sits one void height below it.
