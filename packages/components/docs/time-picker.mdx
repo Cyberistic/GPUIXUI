@@ -3,9 +3,15 @@ title: Time picker
 description: One time of day, entered as an HH:mm hour and minute field.
 ---
 
-`TimePicker` is a field with two labelled segments — hours and minutes — and an
-optional clear control. The value is a time of day, not a timestamp: no date, no
-zone, no clock read.
+<ComponentPreview name="time-picker-states" />
+
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
 
 ```tsx
 import {
@@ -25,193 +31,33 @@ const [standup, setStandup] = useState<string | null>("09:30");
 </TimePicker>;
 ```
 
-## Value format
+## Composition
 
-The public value is **`HH:mm`**, 24-hour, or `null` for "no time". Never a
-`DateTime`, never a locale-formatted string, never a timestamp. `undefined`
-means uncontrolled.
-
-```tsx
-<TimePicker defaultValue="09:30">
-  <TimePickerSegment segment="hours" />
-  <TimePickerSeparator />
-  <TimePickerSegment segment="minutes" />
-</TimePicker>;
-```
-
-Two digits are canonical: `"9:30"`, `"24:00"` and `"12:60"` are malformed. A
-malformed controlled value renders as an empty field, exactly like a malformed
-date value renders the date placeholder.
-
-## Anatomy
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `TimePicker` | the value, the text state, clamping, arrows and the field chrome |
-| `TimePickerSegment` | one real `<input>`; `segment="hours"` (`00..23`) or `"minutes"` (`00..59`) |
-| `TimePickerSeparator` | a static, non-selectable `:` |
-| `TimePickerClear` | the clear control; renders only with `clearable` and a value |
-
-The root owns the value and the group name (`label`, default `"Time"`); the parts
-own their own place, so a caller can reorder them or drop the clear control. This
-is a **field**, not a trigger with a popup: the GPUix runtime has no spinbutton
-value to announce, so a popup would be less honest than two inputs.
-
-Two inputs rather than one `role="spinbutton"` is deliberate: 0.11.0 exposes
-`aria-valuetext` but no `aria-valuenow`, so a custom spinbutton could not
-announce its value. A text input announces its value natively.
-
-## Editing
-
-- Typing keeps the last two digits of a segment. A value above the segment
-  maximum clamps immediately: `99` in hours becomes `23`, in minutes `59`. The
-  text and the value never disagree.
-- Typing one segment composes a complete value with the other segment read as
-  `0`, so typing `9` in hours reports `09:00`. The untouched segment stays blank
-  until blur, which keeps the second keystroke predictable.
-- Backspacing a segment to empty clears the whole time (`null` and both segments
-  empty). A half-erased time is not a value.
-- Blur pads both segments to two digits (`9` becomes `09`) and fills a blank
-  segment with `00`.
-
-## Keyboard
-
-| Key | Result |
-| ---- | ------ |
-| digits | edits the focused segment; out-of-range text clamps |
-| `ArrowUp` / `ArrowDown` on hours | ±1 hour, carrying and wrapping across midnight |
-| `ArrowUp` / `ArrowDown` on minutes | ±`minuteStep` minutes, carrying and wrapping |
-| `Tab` / `Shift+Tab` | moves between the segments, then out of the field |
-| `Enter` / `Space` on the clear control | clears, reports `null`, focuses the hours segment |
-
-Arrow keys and typing share one clock function, so hours and minutes cannot
-disagree at `09:59 + 1` (`10:00`) or `00:00 - 1` (`23:59`).
-
-## Minute step
-
-`minuteStep` changes the **arrow-key** step only: default `1`, normalised to an
-integer in `1..59`. Typed minutes always accept `00..59`, so a schedule that
-wants quarter-hour increments still lets a consumer enter `09:07` deliberately.
-
-```tsx
-<TimePicker minuteStep={15} value={time} onValueChange={setTime}>
-  <TimePickerSegment segment="hours" />
-  <TimePickerSeparator />
-  <TimePickerSegment segment="minutes" />
-</TimePicker>;
-```
-
-## Controlled and uncontrolled
-
-A controlled picker whose consumer ignores the change snaps back to the prop
-value while `onValueChange` still fires. `clearable` reports `null`; the caller
-owns that state and decides what "not set" means.
-
-```tsx
-<TimePicker clearable value={standup} onValueChange={setStandup}>
-  <TimePickerSegment segment="hours" />
-  <TimePickerSeparator />
-  <TimePickerSegment segment="minutes" />
-  <TimePickerClear />
-</TimePicker>;
+```text
+TimePicker
+├── TimePickerSegment
+├── TimePickerSeparator
+└── TimePickerClear
 ```
 
 ## API
 
-Every part takes the GPUix host props and merges `style` last. The root's `testId`
-is the base for the parts: `<testId>-hours`, `<testId>-minutes` and
-`<testId>-clear`. The clear control paints a 24px square — the pressable-target
-floor, with a 16px glyph inside — and takes the keyboard outline the segments do.
-
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
 | `TimePicker` | `value` / `defaultValue` | `string \| null` — `HH:mm`, 24-hour | — / `null` |
-| `TimePicker` | `onValueChange` | `(value: string \| null) => void` — every accepted edit, including clear | — |
-| `TimePicker` | `label` | `string` — the field group's accessible name | `"Time"` |
-| `TimePicker` | `minuteStep` | `number` — arrow-key step, normalised to 1..59 | `1` |
-| `TimePicker` | `clearable` | `boolean` — shows the clear control while a time is set | `false` |
+| `TimePicker` | `onValueChange` | `(value: string \| null) => void` | — |
+| `TimePicker` | `label` | `string` | `"Time"` |
+| `TimePicker` | `minuteStep` | `number` | `1` |
+| `TimePicker` | `clearable` | `boolean` | `false` |
 | `TimePicker` | `disabled` | `boolean` | `false` |
-| `TimePicker` | `testId` | `string` — base id for the parts | `"time-picker"` |
 | `TimePickerSegment` | `segment` | `"hours" \| "minutes"` (required) | — |
 | `TimePickerSegment` | `style` | `StateStyle<TimePickerSegmentState>` | recipe |
 | `TimePickerSeparator` | `children` | `ReactNode` | `:` |
-| `TimePickerClear` | `label` | `string` — the control's accessible name | `"Clear time"` |
+| `TimePickerClear` | `label` | `string` | `"Clear time"` |
 
-## Theming
+## Limitations
 
-The field paints `colors.input` with `colors.inputForeground` text, a
-`borderWidth.thin` border in `colors.border` and the registry's fixed 6px corner
-(`rounded-md`, ADR 0006); the separator and
-the clear icon use `colors.mutedForeground`; hover on the clear control uses
-`colors.accent`. Focus is the runtime's
-`focusVisible` outline in `colors.ring`, declared at rest by each segment input
-and by the clear control — the group never takes focus, so it paints no ring.
-Both themes are asserted in the theme matrix.
-
-## Style by state
-
-`TimePickerSegment.style` takes a `StyleDesc` or a function of
-`TimePickerSegmentState` (`{ disabled, focused }`); the root's field surface
-still owns the group focus ring.
-
-`focused` reaches a press, a click and a programmatic focus — but not a `Tab`
-traversal: the runtime focuses the element without running its `onFocus` on
-0.11.0 (`tabs-lifecycle` reads `focuses=0`; `tooltip-lifecycle` does not open its
-tip, re-measured 2026-10-22). The ring declared at rest is still the keyboard
-cue: the flag is presentational, and nothing here depends on the event
-(`docs/component-api.md` §3).
-
-```tsx
-<TimePickerSegment
-  segment="hours"
-  style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })}
-/>
-```
-
-## Accessibility and limitations
-
-- The field is a labelled `group`; each input carries `aria-label="<label>
-  hours"` / `"<label> minutes"` and its value natively.
-- **No `aria-valuenow` / spinbutton role** in `@gpuix/native@0.11.0`. The inputs
-  are text segments; the arrow-key step is an enhancement, not the only way to
-  enter a time.
-- **No `aria-disabled`** in 0.11.0. `disabled` makes both inputs `readOnly`,
-  removes the clear control, dims the field and takes the segments out of the
-  tab order; the field also refuses every edit path of its own — a read-only
-  host still receives keys, so the arrow step stops at the root's guard rather
-  than moving the caller's value. It does not announce a disabled state.
-- **Fixed 24-hour display.** No AM/PM and no locale: the repo has no i18n layer,
-  and a 12-hour toggle would need a real message catalogue. No seconds and no
-  timezone either — the value is a time of day, not an instant.
-- **`minuteStep` is arrows-only.** It is not a validation rule.
-- The caret position after a programmatic clamp is the host input's: GPUix
-  exposes no caret or selection position, so the component cannot place the
-  caret itself.
-
-## Verification
-
-`src/time-picker/time.test.ts` (12 tests) covers canonical parsing, formatting
-and a round-trip of all 1440 minutes, hour carry in both directions, midnight
-wrapping, day wrap, strict and clamping segment parsers, padding, step
-normalisation, the last-two-digits rule and segment composition.
-
-`src/behaviour/time-picker.test.tsx` (11 tests) covers typed hours reaching
-`onValueChange`, typed minutes completing the value, out-of-range clamping,
-arrow carry and midnight wrap, `minuteStep`, blur padding, the clear rules and
-the disabled state (which refuses the arrow step as well as the clear control),
-the controlled contract, the segments laid out where the caller put them, and no
-clear control when the part is not composed. The theme matrix adds the
-both-theme surface assertion.
-
-```sh
-nub run --filter @gpuixui/components test
-nub run --filter @gpuixui/components test:behaviour
-```
-
-## Related
-
-- **Date picker** — the day half of a scheduling field; compose the two when a
-  form needs both a day and a time.
-- **Field** — a label and message around any input.
-- **Search input** — the field this control's chrome and clear affordance
-  follow.
+- No `aria-valuenow` / spinbutton role.
+- Fixed 24-hour display; no AM/PM or locale.
+- `minuteStep` is arrow keys only.
+- `focused` misses a `Tab` traversal — focus without running its `onFocus`.

@@ -223,7 +223,10 @@ describe("the package docs collections", () => {
 
         const jsx = prose(source)
           .split("\n")
-          .filter((line) => /<[A-Za-z/]/.test(line))
+          .filter(
+            (line) =>
+              /<[A-Za-z/]/.test(line) && !line.includes("<ComponentPreview"),
+          )
           .map((line) => `${name}: ${line.trim()}`);
 
         return [...missing, ...unquoted, ...jsx];

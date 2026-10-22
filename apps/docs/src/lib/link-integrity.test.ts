@@ -126,9 +126,12 @@ const anchorsOf = (source: string): ReadonlySet<string> => {
   return new Set(seen.keys());
 };
 
-const anchors = new Map(
-  pages.map((page) => [page.url, anchorsOf(page.source)]),
-);
+// A curated page shadows the package page at its URL, so the first page read
+// (the site's) owns the anchors a `#hash` link resolves against.
+const anchors = new Map<string, ReadonlySet<string>>();
+for (const page of pages) {
+  if (!anchors.has(page.url)) anchors.set(page.url, anchorsOf(page.source));
+}
 
 interface Link {
   readonly from: string;

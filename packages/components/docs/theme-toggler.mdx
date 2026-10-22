@@ -3,11 +3,11 @@ title: Theme toggler
 description: The icon control that switches the application between its light and dark theme.
 ---
 
-`ThemeToggler` is the press that changes the theme, not the theme itself. The
-library ships two themes and a provider, but the application owns which one is
-active — and the runtime exposes no system appearance query — so the control
-takes the current mode, names the next step, and reports the mode a press
-requests.
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
 
 ## Usage
 
@@ -27,110 +27,21 @@ const [mode, setMode] = useState<"light" | "dark">("dark");
 </ThemeProvider>;
 ```
 
-The provider is what repaints the screen: the toggler only asks for the other
-mode. An application that persists the preference writes it where it already
-keeps application state; the component holds nothing.
-
-## The name and the glyph
-
-Both describe the **press**, never the current mode: a moon in a dark
-application would tell a reader nothing about what pressing it does.
-
-| Current mode | Glyph | Accessible name |
-| ------------ | ----- | --------------- |
-| `dark` | sun | "Switch to light theme" |
-| `light` | moon | "Switch to dark theme" |
-
-A caller that ships its own copy names one or both directions:
-
-```tsx
-<ThemeToggler
-  mode="dark"
-  onChange={setMode}
-  lightLabel="Use the light theme"
-  darkLabel="Use the dark theme"
-/>;
-```
-
-## Sizes
-
-```tsx
-<ThemeToggler mode={mode} onChange={setMode} size="sm" />
-<ThemeToggler mode={mode} onChange={setMode} />
-<ThemeToggler mode={mode} onChange={setMode} size="lg" />
-```
-
-The control is the package's icon action, so its height follows the theme's
-density scale at each size.
-
-## Motion
-
-The glyph arrives with the house entrance on the `fast` level: a fade and a 3 px
-rise, the same seam the overlays and `Reveal` use. `level` picks the house
-duration and `level="none"` paints the glyph at rest — the right choice for a
-toolbar where movement would read as jitter:
-
-```tsx
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <ThemeToggler mode={mode} onChange={setMode} />
-</MotionProvider>;
-```
-
-`MotionProvider preference="reduced"` zeroes the duration, so the new glyph
-paints in the frame it appears. The runtime has no `transform` (upstream issue
-#102), so one glyph fades in rather than two scaling over each other.
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `mode` | `"light" \| "dark"` | — | The application's current theme mode. |
-| `onChange` | `(mode: "light" \| "dark") => void` | — | The mode a press requests. |
-| `lightLabel` | `string` | `"Switch to light theme"` | The name while a press would switch to light. |
-| `darkLabel` | `string` | `"Switch to dark theme"` | The name while a press would switch to dark. |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | The control's height from the theme's density scale. |
-| `level` | `MotionLevel \| "none"` | `"fast"` | The glyph's entrance; `"none"` paints at rest. |
-| `className` | `string` | — | A Tailwind class string, merged last. |
-| `style` | `StateStyle<ThemeTogglerState>` | — | The control's style, or a function of `{ mode, reducedMotion }`. |
-
-The `testId` (default `theme-toggler`) lands on the button; the glyph's wrapper
-carries `<testId>-glyph`. `ThemeTogglerState` is exported for a state-aware
-`style`.
-
-## Accessibility
-
-The control is one focusable `button` whose name is the action, so a reader
-hears "Switch to light theme" rather than "moon". The glyph is decorative: it
-publishes no node of its own. GPUix does not inherit colour into an `<svg>`, so
-the vector takes the `foreground` role while the button's hover wash paints the
-well behind it.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `mode` | `"light" \| "dark"` | — |
+| `onChange` | `(mode: "light" \| "dark") => void` | — |
+| `lightLabel` | `string` | `"Switch to light theme"` |
+| `darkLabel` | `string` | `"Switch to dark theme"` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `level` | `MotionLevel \| "none"` | `"fast"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<ThemeTogglerState>` | — |
 
 ## Limitations
 
-- **The component holds no theme state.** There is no runtime appearance query
-  (`docs/gpuix-capabilities.md` records the absence), so the application resolves
-  the mode, stores it and re-provides the theme.
-- **One glyph, not a cross-fade.** Both glyphs would need to sit over each other
-  and scale, and the runtime has no `transform`.
-- **The glyph does not follow the hover tint.** An `<svg>` takes its colour from
-  its own style; the button's hover changes the well, not the vector.
-
-## Verification
-
-`src/behaviour/theme-toggler.test.tsx` renders the control in the real GPUix
-renderer (6 tests): the button's name and the decorative glyph the action paints,
-a press reporting the other mode in both directions, a caller's own copy per
-direction, the 3 px rise measured on the motion clock, `level="none"` at rest with
-no motion target, and the reduced preference painting the new glyph in its first
-frame. The three answers the control derives are `src/theme-toggler/logic.test.ts`
-(4 tests): the requested mode, the glyph showing the target rather than the
-state, the press-naming default labels, and a caller's copy including an
-intentionally empty one.
-
-## Related
-
-- [Theming](/docs/theming) — the two shipped themes, the provider and the token
-  extension mechanism this control switches between.
-- [Reveal](/docs/components/reveal) — the entrance the glyph arrives with.
-- [Button](/docs/primitives/button) — the action the icon control is built on.
-- [Runtime](/docs/runtime) — the measured absence of a system appearance query.
+- The component holds no theme state.
+- One glyph, not a cross-fade — no `transform`.
+- The glyph does not follow the hover tint.

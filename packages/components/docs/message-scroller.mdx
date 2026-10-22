@@ -1,13 +1,13 @@
 ---
 title: Message Scroller
-description: Follow new content while the reader is at the end, and never yank them when they are not.
+description: Follow new content at the end; never yank a reader who scrolled up.
 ---
 
-`MessageScroller` is the conversation/log/transcript surface: a bounded scroll
-viewport that follows the newest row while the reader is at the end, leaves the
-reader's position untouched once they scroll up, and offers an explicit way back
-with a count of what arrived. The behaviour is ported from **shadcn/ui's Message
-Scroller**; the implementation is ours and runs on GPUix host elements.
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
 
 ## Usage
 
@@ -31,89 +31,27 @@ import {
 </MessageScroller>;
 ```
 
-The viewport needs a **bounded height**, either its own `height` or a flex parent
-with a bounded height. Without one there is nothing to scroll.
+## Composition
 
-The runnable build is `examples/message-scroller.example.tsx`, which the native
-playground mounts. It appends rows and streams a reply token by token.
-
-## Behaviour
-
-| Action | Result |
-| ------ | ------ |
-| A row is appended while pinned | the view follows the new tail |
-| The last row grows while pinned (a stream) | the view keeps its bottom visible |
-| The reader wheels up | the view stays put; `JumpToLatest` appears |
-| Rows arrive while unpinned | the count in the affordance grows |
-| `JumpToLatest` is activated | the view returns to the end, the count clears, `onPinnedChange(true)` fires |
-| The reader wheels back to the end | re-pins and clears the count |
-| A short history | no scroll, no affordance |
-| `pinned` controlled | the caller's value wins; every accepted change reports through `onPinnedChange` |
-
-A scroll within the threshold (default 24px, the theme's `spacing["2xl"]`) still
-counts as "at the end", so a wheel nudge does not switch following off.
+```text
+MessageScroller
+├── MessageScrollerViewport
+│   └── MessageScrollerItem
+└── MessageScrollerJumpToLatest
+```
 
 ## API
 
-Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
-merges `style` last.
-
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `MessageScroller` | `role="group"` named by `label` | `label` (required), `threshold?`, `pinned?`, `defaultPinned?` (true), `onPinnedChange?`, children |
-| `MessageScrollerViewport` | the `overflow: "scroll"` container and its tail sentinel | `style`, `onScroll?`, `ref?`, children |
-| `MessageScrollerItem` | one row, no surface of its own | `style`, children |
-| `MessageScrollerJumpToLatest` | a small secondary button; renders nothing while pinned | `label?` (`"Jump to latest"`), `style` |
-
-Declare items directly inside the viewport: each **direct child** counts as one
-row for the unread count, and other elements are allowed but count as rows too.
-
-## Theming
-
-The viewport paints the `background`/`foreground` roles; the item has no surface;
-the affordance uses the local Button's `secondary` role, its focus ring, and the
-theme's `sm` control height. A custom theme changes all of it with no code
-change — see [Theming](/docs/theming).
-
-## Accessibility
-
-- The root is a named `group`.
-- The affordance is a real focusable control with text that carries the count, so
-  a screen reader reads "3 new messages" rather than an unlabelled icon.
-- `End` does not re-pin: the viewport is a plain scroll container and GPUix
-  0.11.0 gives a component no "scroll to end" key binding. Use the affordance.
-- GPUix 0.11.0 exposes no `aria-live`; new rows are not announced.
+| `MessageScroller` | `role="group"` named by `label` | `label` (required), `threshold?`, `pinned?`, `defaultPinned?`, `onPinnedChange?`, children |
+| `MessageScrollerViewport` | the scroll container and its tail sentinel | `style`, `onScroll?`, `ref?`, children |
+| `MessageScrollerItem` | one row, no surface | `style`, children |
+| `MessageScrollerJumpToLatest` | a secondary button; nothing while pinned | `label?`, `style` |
 
 ## Limitations
 
-- **Not virtualized.** Every row renders. `<virtual-list>` takes an item count
-  and an `estimatedItemHeight` rather than compound children, so it cannot host
-  `MessageScrollerItem` without changing the public API. The pin decision is
-  already measured from the tail, which is what a virtualized version needs.
-- **The affordance sits beneath the viewport**, not floating in its corner:
-  `position: "absolute"` resolves against the mount parent in 0.11.0, so a
-  corner overlay would be a window-level layer.
-- **No resize observer.** A row that grows while the scroller does not re-render
-  (internal child state) is not followed; a stream that lives in the app's state
-  re-renders the scroller and is followed.
-- **No `aria-live`** and no "new messages" announcement.
-
-## Testing
-
-`src/behaviour/message-scroller.test.tsx` drives the real renderer: it wheels the
-viewport, appends rows, grows the tail and clicks the affordance, then reads the
-real `getScrollOffset`/bounds. `src/message-scroller/logic.test.ts` covers the
-pin/unread fold without a window.
-
-## Credit
-
-Behaviour ported from [shadcn/ui's Message Scroller](https://ui.shadcn.com/docs/components/base/message-scroller),
-MIT. No shadcn source is copied; the GPUix implementation and API are original.
-
-## Related
-
-- **Chat** — the scaffold that composes this scroller into a conversation.
-- **Message** — the row this viewport scrolls.
-- **List** — the same row registry, without the pinned-follow rule.
-- **Toast** — a notice for what arrived while the reader was away.
-- **ScrollArea** — a bounded, keyboard-reachable scroll region.
+- Not virtualized; every row renders.
+- The affordance sits beneath the viewport.
+- No resize observer.
+- No `aria-live`; new rows are not announced.

@@ -3,9 +3,15 @@ title: Pagination
 description: Previous/next controls around a stable-width page window.
 ---
 
-`Pagination` is controlled: the app owns the page, the control renders the
-window the app's page implies. The arithmetic lives in `pagination/logic.ts` so
-the width does not jump as the user pages.
+<ComponentPreview name="pagination-states" />
+
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
 
 ```tsx
 import {
@@ -24,129 +30,31 @@ const [page, setPage] = useState(1);
 </Pagination>;
 ```
 
-## Anatomy
+## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `Pagination` | the `role="navigation"` root, its name, the clamped page and the window |
-| `PaginationPrevious` | the "Prev" control, with a chevron; leaves the tab order on the first page |
-| `PaginationList` | the page window: page buttons and the ellipses for gaps |
-| `PaginationItem` | one page number; the current page is primary and non-pressable |
-| `PaginationNext` | the "Next" control, with a chevron; leaves the tab order on the last page |
-| `PaginationEllipsis` | the non-focusable ellipsis icon that stands in for omitted pages |
-
-The root derives the window once, so a caller never re-implements the stable-width
-rule. The parts are still composable: add a `PaginationItem` beside the list for a
-"jump to page" shortcut, or put your page-size control between the numbered
-window and `PaginationNext`.
-
-
-## Window rule
-
-| Input | Result |
-| ----- | ------ |
-| `pageCount <= 0` | nothing rendered |
-| a count it cannot read (`NaN`, `±Infinity`) | nothing rendered |
-| a list that fits (`siblingCount + 5` or fewer pages) | every page |
-| page 1 of 10 | `1 2 3 4 5 … 10` |
-| page 5 of 10 | `1 … 4 5 6 … 10` |
-| page 10 of 10 | `1 … 6 7 8 9 10` |
-
-`siblingCount` widens the window around the current page (default 1), and a
-sibling count or page it cannot read reads as that default and the first page —
-a count that arrived as `NaN` from `Math.ceil(total / pageSize)` must not paint
-the word `NaN`. `showEdges={false}` drops the first and last page and renders
-only the siblings. An out-of-range `page` is clamped. An ellipsis is only drawn
-over a gap of two or more pages: a gap of one renders the page itself, because
-the number and the ellipsis take the same slot and the number is one press
-closer — so a crop whose only gap is one page renders the whole trail, and an
-ellipsis never stands between two neighbours with nothing between them.
-
-## Layout and states
-
-The root lays the parts out in a row. The current page is a button with
-`aria-selected` and the primary fill; pressing it does nothing. Previous and Next
-leave the tab order at the ends instead of merely looking disabled.
-
-## Keyboard
-
-Tab moves through the enabled buttons only. Enter and Space activate the focused
-button, through the shared button primitive.
+```text
+Pagination
+├── PaginationPrevious
+├── PaginationList
+│   ├── PaginationItem
+│   └── PaginationEllipsis
+└── PaginationNext
+```
 
 ## API
 
-Every part takes the GPUix host props and merges `style` last.
-
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
-| `Pagination` | `page` | `number` (required) — 1-based, clamped into range; a value it cannot read is page 1 | — |
-| `Pagination` | `pageCount` | `number` (required) — zero or fewer renders nothing; a non-finite count renders nothing | — |
+| `Pagination` | `page` | `number` (required) — 1-based, clamped | — |
+| `Pagination` | `pageCount` | `number` (required) | — |
 | `Pagination` | `onPageChange` | `(page: number) => void` (required) | — |
-| `Pagination` | `siblingCount` | `number` — pages either side of the current one; a value it cannot read is 1 | `1` |
-| `Pagination` | `showEdges` | `boolean` — keep the first and last page visible | `true` |
-| `PaginationList` | — | renders the derived page window | — |
-| `PaginationItem` | `page` | `number` (required) — the page this button goes to | — |
+| `Pagination` | `siblingCount` | `number` | `1` |
+| `Pagination` | `showEdges` | `boolean` | `true` |
+| `PaginationItem` | `page` | `number` (required) | — |
 | `PaginationItem` | `style` | `StateStyle<PaginationItemState>` | recipe |
-| `PaginationPrevious` / `PaginationNext` | — | page by one; leave the tab order at their end | — |
-| `PaginationEllipsis` | — | the non-focusable gap mark | — |
 
-## Theming
+## Limitations
 
-Page buttons are `controlHeight(theme, "sm")` square with a fixed 6px corner —
-the `rounded-md` the primitives' action recipe names, compiled by `@gpuixui/tw`
-against its own registry — so a platform switch repaints their colours and type
-but does not reshape them. The current page is the `primary` variant:
-`colors.primary` behind `colors.primaryForeground`. Every other page number is a
-ghost action, which paints no fill of its own, so its label is the page ink
-`colors.foreground` and the pointer adds only the `hover`/`active` wash; the
-muted role belongs to the ellipsis alone. The ellipsis paints
-`colors.mutedForeground` at the fixed 12/16 step its `text-xs` compiles to, so a
-theme's `caption` role does not move it.
-
-## Style by state
-
-`PaginationItem.style` takes a `StyleDesc` or a function of
-`PaginationItemState` (`{ active }`), where `active` is the current page.
-
-```tsx
-<PaginationItem
-  page={3}
-  style={(state) => ({ opacity: state.active ? 1 : 0.8 })}
-/>
-```
-
-## Accessibility and limitations
-
-- `role="navigation"` and a name on the root; `aria-label="Page N"` on every page
-  button; `aria-label="More pages"` on each ellipsis.
-- **No `aria-current="page"`** in 0.11.0 (`HostProps`): the current page carries
-  the supported `aria-selected` instead, plus the primary fill.
-- The control is controlled-only by design: the result set and the page usually
-  live together, and a second uncontrolled copy would drift.
-- No page-size selector; put one beside the control when needed.
-
-## Verification
-
-`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (10 tests):
-disabled edges, the page number (not index) reported, the current page no-op,
-Previous/Next stepping, the ellipsis not being a tab stop, Enter activation,
-`pageCount: 0` and a `NaN` page count both rendering nothing, unreadable bounds
-painting page 1 in readable numbers, the current fill in both themes, the
-composed part order, and an item outside the list reading the root's page.
-
-`src/pagination/logic.test.ts` covers the window table above, including clamping,
-unreadable counts, wide siblings and unique ascending pages. It also sweeps every
-page of 1–12 pages
-at 0–4 siblings and fails an ellipsis whose neighbours differ by one or less —
-the window that drew `1 … 2 3 4 5 6 7 8` for page 8 of 8, wider than the trail it
-was cropping.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
-
-## Related
-
-- **Breadcrumb** — position in a hierarchy rather than a result set.
-- **List** — the rows being paged.
-- **Data toolbar** — page size and filters belong there.
+- No `aria-current="page"`; the current page uses `aria-selected`.
+- Controlled-only by design.
+- No page-size selector.

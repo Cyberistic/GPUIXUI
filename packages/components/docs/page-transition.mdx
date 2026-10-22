@@ -3,10 +3,13 @@ title: Page transition
 description: A region that swaps between views with the house exit and entrance.
 ---
 
-`PageTransition` is the transition a router would own: the application decides
-which view is current, passes it as children and names it with `viewKey`, and the
-region runs the swap the way the overlays open — a fade plus a few pixels of
-travel, because the runtime has no `transform` (upstream issue #102).
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
 
 ```tsx
 import { PageTransition } from "@gpuixui/components";
@@ -16,117 +19,21 @@ import { PageTransition } from "@gpuixui/components";
 </PageTransition>;
 ```
 
-## The swap
-
-A swap is two halves, not a cross-fade. `@gpuix/native@0.11.0` has no
-`aria-hidden`, so keeping the outgoing view mounted beside the incoming one would
-put both pages in the accessibility tree and leave the old page's controls
-focusable while they fade. Instead:
-
-1. the view on screen **leaves** (fade out, travel toward the edge the reader
-   came from);
-2. it is unmounted and the waiting view is **mounted**, so exactly one view is in
-   the tree at every point;
-3. the new view **arrives** (fade in, travel from the far edge).
-
-The region is empty for no longer than one exit. A key changed mid-exit replaces
-the waiting view without restarting the exit, so a reader who arrows quickly sees
-one exit rather than a queue, and returning to the view still on screen cancels
-the swap — the same view comes back instead of leaving and remounting itself.
-
-## Direction
-
-`direction="forward"` (the default) reads as moving right through a document:
-the old view leaves toward the left and the new one arrives from the right.
-`direction="back"` mirrors both halves, so the movement agrees with the action
-that caused it.
-
-```tsx
-<PageTransition viewKey={step} direction={goingBack ? "back" : "forward"}>
-  {stepBody}
-</PageTransition>;
-```
-
-`distance` sets the travel in pixels (default `16`); a value that is not positive
-and finite falls back to that step rather than reaching the runtime as `NaN`.
-
-## Motion
-
-The two halves use the named levels from `@gpuixui/motion`, the same timings the
-overlays open with: `fast` (160 ms), `normal` (200 ms, the default) and `slow`
-(320 ms).
-
-- `level="none"` swaps in the frame the key changes, for a dense workspace where
-  a transition would be noise.
-- `MotionProvider preference="reduced"` does the same and paints no motion target
-  at all.
-
-```tsx
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <PageTransition viewKey={section}>{view}</PageTransition>
-</MotionProvider>;
-```
-
-Because the runtime has no `transform`, the travel is a relative `left` on the
-view box and the region **clips** it: a page wider than the region is cut at the
-region's edge, so give the region the width the page should have.
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `viewKey` | `string` | — | The view on screen. A change starts the swap; the same key keeps the mounted view. |
-| `children` | `ReactNode` | — | The current view's content. Mounted only while it is the shown view. |
-| `direction` | `"forward" \| "back"` | `"forward"` | Which way the reader is moving. |
-| `distance` | `number` | `16` | Pixels travelled; a value that cannot run falls back to `16`. |
-| `level` | `MotionLevel \| "none"` | `"normal"` | The timing of both halves, or no journey at all. |
-| `className` | `string` | — | A Tailwind class string for the region, merged last. |
-| `style` | `StateStyle<PageTransitionPaint>` | — | The region's style, or a function of `{ view, phase, direction, reducedMotion }`. |
-
-The region carries the `testId` (default `page-transition`); the mounted view's
-box carries `<testId>-view`. `PageTransitionPaint` is exported for a state-aware
-`style`.
-
-## Accessibility
-
-Exactly one view is in the accessibility tree, and it is the one the reader can
-act on. The swap happens after the outgoing view's exit, so a control that is
-focused inside a page that leaves **unmounts**: when the incoming view needs the
-focus, the caller moves it (a heading with `autoFocus`, or the first control).
-Nothing announces the change — `0.11.0` has no live region — so the page's own
-heading should say where the reader now is.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `viewKey` | `string` | — |
+| `children` | `ReactNode` | — |
+| `direction` | `"forward" \| "back"` | `"forward"` |
+| `distance` | `number` | `16` |
+| `level` | `MotionLevel \| "none"` | `"normal"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<PageTransitionPaint>` | — |
 
 ## Limitations
 
-- **One view at a time.** The two pages never cross-fade: `0.11.0` has no
-  `aria-hidden`, so a mounted outgoing page would stay in the accessibility tree
-  and the tab order.
-- **A clipped region.** The travel is a relative `left`, so the region clips
-  content at its edges rather than letting it paint outside.
-- **No vertical direction.** A vertical slide reads as a scroll, not a page; the
-  component offers the horizontal reading direction only.
-- **The focus does not move.** A page swap is not a focus transition: the caller
-  restores focus when the new view needs it.
-- **No exit without an entrance.** The halves are ordered by the same level; a
-  caller that wants a different exit timing composes `Reveal` or a dialog
-  instead.
-
-## Verification
-
-`src/behaviour/page-transition.test.tsx` renders the region in the real GPUix
-renderer (6 tests): the outgoing view held for its exit and the incoming one
-mounted only after it, the arrival offset on both directions measured on a
-paused clock, `level="none"` and the reduced preference swapping in the frame
-they change with no motion target, a key changed mid-exit that never paints the
-abandoned view, and a return to the view on screen that travels home rather than
-settling out. The decisions are `src/page-transition/logic.test.ts`
-(10 tests): the state machine's ordering, the latest request winning mid-exit,
-the cancel, the instant swap, the single settle, and both directions' frames with
-the fallback distance.
-
-## Related
-
-- [Reveal](/docs/components/reveal) — the entrance a single view arrives with.
-- [Tabs](/docs/components/tabs) — switching between sibling panels in place.
-- [Auto height](/docs/components/auto-height) — a region that grows to its view.
-- [Motion](/docs/motion) — the levels and the reduced preference.
+- One view at a time; the two never cross-fade.
+- A clipped region; travel is a relative `left`.
+- No vertical direction.
+- The focus does not move with the swap.

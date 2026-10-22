@@ -1,13 +1,13 @@
 ---
 title: Ripple button
-description: An action whose press spreads a wash from the pointer and fades as it covers the control.
+description: An action whose press spreads a wash from the pointer.
 ---
 
-`RippleButton` is the local action with one extra layer: a press paints a disc
-that grows from the point that was pressed until it covers the button, fading out
-as it arrives. It is the same control as `Button` — the same variants, sizes,
-disabled state and host props — so adopting it changes the feedback and nothing
-else.
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
 
 ## Usage
 
@@ -19,106 +19,22 @@ import { RippleButton } from "@gpuixui/components/ripple-button";
 </RippleButton>;
 ```
 
-The ripple belongs to the action rather than to a wrapper, because the layer needs
-the press point. A wrapper would have to rely on a host event reaching it from a
-child, and the runtime dispatches a pointer event to the element that was hit:
-measured on `0.11.0`, two nested `div`s that each declare a click handler report
-the press on the **inner** one only — the enclosing handler never runs, so a
-wrapper around a button cannot know where the press landed.
-
-## How the disc is painted
-
-The runtime has **no `transform`** (upstream issue `#102`), so the ripple is not a
-scaled layer. It is an absolutely positioned `div`, clipped by the control's own
-rounded box, whose box grows:
-
-1. the circle is born at the press point with zero width and height;
-2. `width`, `height`, `left`, `top` and `borderRadius` tween together, so the disc
-   stays centred on the point while its radius grows;
-3. `opacity` runs from `0.28` to `0` across the same tween, and the layer unmounts
-   when the duration is over.
-
-The wash is the control's **own label ink** — `actionOnColor` — at 28% rather than
-a colour chosen beside it. Painting the disc in the fill role would make it vanish
-on a filled action, where the fill is the surface it sits on.
-
-The layer takes no pointer input (`pointerEvents: "none"`), so the press that
-started it reaches the action underneath; a second press while the first disc is
-still growing paints a second disc.
-
-## Timing and reduced motion
-
-The tween uses one house level: `notice` (500 ms) by default, because the disc has
-to grow across the whole control rather than a few pixels. `level` picks any other
-level from `@gpuixui/motion`.
-
-A ripple is pure journey, not content, so `MotionProvider preference="reduced"`
-paints **none at all** — there is no resting frame worth showing, and the button's
-pressed fill is the feedback that remains. The setting is read on every render, so
-a disc already spreading when it turns on is removed in that frame instead of
-staying in the tree for the rest of the level. The preference is the application's
-to supply: the runtime exposes no reduced-motion query.
-
-```tsx
-import { MotionProvider } from "@gpuixui/components";
-import { RippleButton } from "@gpuixui/components/ripple-button";
-
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <RippleButton onClick={deploy}>Deploy</RippleButton>
-</MotionProvider>;
-```
-
-## Keyboard activation
-
-A keyboard activation carries no pointer position, so it ripples from the centre
-of the control. Enter and Space both activate through the button's own contract,
-so the ripple is a reading of the same activation, not a second handler.
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` | The action's look, from the local `Button`. |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | The density-defined control height. |
-| `disabled` | `boolean` | `false` | Leaves the tab order and paints no ripple. |
-| `level` | `MotionLevel` | `"notice"` | How long the disc takes to cover the control. |
-| `rippleColor` | `string` | the label ink at 28% | A caller's own wash colour. |
-| `onClick` | `(event) => void` | — | Runs on the pointer or key activation that starts the disc. |
-| `onLayout` | `(event) => void` | — | Composed: the measured box is kept, then the caller's handler runs. |
-| `style` | `StyleDesc` | — | Merged last on the control; the ripple layer's positioning assumes the control stays a containing block. |
-
-`RippleButton` takes the whole GPUix host-prop surface (`testId`, `role`,
-`aria-*`, the pointer handlers) because it is the local action with a layer
-added. The ripple layer itself is presentational: it carries an internal
-`testId="ripple"`, no role and no text, so it adds no accessibility node.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `disabled` | `boolean` | `false` |
+| `level` | `MotionLevel` | `"notice"` |
+| `rippleColor` | `string` | the label ink at 28% |
+| `onClick` | `(event) => void` | — |
+| `onLayout` | `(event) => void` | — |
+| `style` | `StyleDesc` | — |
 
 ## Limitations
 
-- **Inset geometry, not a scale.** The circle is a box that grows; it is not a
-  transformed layer, so there is no GPU-side scaling and a very large control
-  paints a correspondingly large box.
-- **A burst is a burst of layers.** Every press mounts one layer for the length
-  of the tween. A held key does not repeat (the action refuses repeats), but a
-  rapid series of presses paints one disc per press.
-- **The wash sits above the label.** The disc is painted after the content, so it
-  tints the label while it passes; it is at 28% and fades to nothing.
-- **Reduced motion removes it.** An application that wants a static mark for a
-  reduced-motion reader has to paint one itself; this component deliberately has
-  no resting ripple.
-
-## Verification
-
-Eight native behaviour cases in `src/behaviour/ripple-button.test.tsx` measure the
-growth and the centre on the renderer's motion clock, the removal timer, the
-keyboard centre, the reduced preference, a disc dropped when the setting turns on
-mid-spread, two discs and the press reaching the action through the first, the
-disabled control, and the wash role; the geometry itself is
-`src/ripple-button/logic.test.ts` (7 tests).
-
-## Related
-
-- [Reveal](/docs/components/reveal) — the house fade-and-offset entrance.
-- [Rolling text](/docs/components/rolling-text) — another primitive built from a
-  measured inset movement rather than a transform.
-- [Button](/docs/primitives/button) — the primitive action this package's local
-  stand-in will be replaced by.
+- Inset geometry, not a scale — no `transform`.
+- Every press mounts one layer for the tween.
+- The wash sits above the label, at 28%.
+- Reduced motion removes it entirely.

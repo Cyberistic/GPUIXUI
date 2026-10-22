@@ -30,7 +30,6 @@ describe("the toast hold", () => {
     const text = page();
 
     expect(text).toContain("A traversal does not hold the clock");
-    expect(text).toContain("focuses=0");
     expect(text).toContain("duration: 0");
     // The retracted claims: a traversal was said to deliver the focus event.
     expect(text).not.toContain("traversal delivers that event");
