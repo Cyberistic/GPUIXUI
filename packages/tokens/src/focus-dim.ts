@@ -16,6 +16,16 @@
  * `muted` fill `#1E222A` paints `#161A20` over the page, and its `foreground`
  * text `#EEF1F5` paints `#6C7075` over that fill — both
  * `blend(colour, behind, 1 - 0.4)`.
+ *
+ * A row **under the pointer** is dimmed as a whole: the wash it tints and the
+ * label it carries fade together, so its label lands on the dimmed wash rather
+ * than on the strip the row sits on. The table therefore measures the washes a
+ * row wears as fills of their own, which is what the runtime composites. Over
+ * the shipped, high-contrast, platform and authored styles the tightest wash
+ * placement is Linux light's `accent` under a chosen row's title on a muted
+ * strip at **2.07:1** — the dim moves the label and the wash toward the strip
+ * together, so the pair stays well above the floor — and a brand whose wash is
+ * tuned to the label's dimmed colour erases it (1.00:1), which the report names.
  */
 
 import type { ThemeColors } from "./color.js";
@@ -49,15 +59,43 @@ const fieldFills = ["input", "background"] as const;
 const fieldLabels = ["inputForeground", "placeholder"] as const;
 
 /**
+ * The washes a row wears while the pointer is on it, and the label each carries.
+ *
+ * A row under the pointer is a control that **has a fill of its own** — the wash
+ * it tints — so the dim composites its label over that wash rather than over the
+ * strip the row sits on. The table measured a row on the strip only, so the
+ * composite a reader sees while Tab is elsewhere was measured nowhere: a hovered
+ * row is dimmed as a whole, wash and label together.
+ *
+ * The pairs are the paints, read from the rows that wear them: a ghost action or
+ * a menu row tints `hover` and keeps `foreground` (`hover:bg-hover` in the
+ * primitives' recipe), a list row tints `accent` under the pointer and `active`
+ * while it is pressed (`list.tsx`), and a **chosen** row keeps its own title role
+ * (`selectedForeground`) under both washes.
+ */
+const washedRows: ReadonlyArray<
+  readonly [fill: keyof ThemeColors, label: keyof ThemeColors]
+> = [
+  ["hover", "foreground"],
+  ["accent", "foreground"],
+  ["accent", "selectedForeground"],
+  ["active", "foreground"],
+  ["active", "selectedForeground"],
+];
+
+/**
  * Every control the keyboard dim is measured on: the three filled actions, a
  * field (both of its fills, its value and its placeholder), a focusable row's
- * own text, and a selected row, on each strip a control sits on.
+ * own text, a selected row, and the washes a row wears while the pointer is on
+ * it, on each strip a control sits on.
  *
  * A focusable row with no fill of its own — a menu row, a tab, a checkbox's
  * label — names the surface it sits on as its own fill: that composite is the
  * one the runtime paints, because the fill blends with itself and stays put
  * while the text fades over it. A composite field is not one of those: it has a
- * fill, it is just the page role, so it is listed by that fill.
+ * fill, it is just the page role, so it is listed by that fill. A row **under
+ * the pointer** has a fill too — the wash it tints — so it is listed by that
+ * wash.
  */
 export const keyboardDimPairs: readonly KeyboardDimPair[] = strips.flatMap(
   (over) => [
@@ -70,6 +108,7 @@ export const keyboardDimPairs: readonly KeyboardDimPair[] = strips.flatMap(
     { fill: over, label: "foreground", over },
     { fill: over, label: "mutedForeground", over },
     { fill: "selected", label: "selectedForeground", over },
+    ...washedRows.map(([fill, label]) => ({ fill, label, over })),
   ],
 );
 

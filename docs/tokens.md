@@ -1853,7 +1853,7 @@ for a role it cannot composite) and the floor.
 
 `keyboardFocusDimOpacity` is a runtime constant rather than a `Theme` group:
 every element the runtime dims gets this share, so a brand that set its own
-would describe a paint the library does not have. `keyboardDimPairs` is the 40
+would describe a paint the library does not have. `keyboardDimPairs` is the 60
 placements the three filled actions, a field's value and placeholder in both of
 its fills (`input` and the page role a composite field paints), a focusable row's
 own text and a selected row sit on across `background`, `card`,
@@ -1861,6 +1861,19 @@ own text and a selected row sit on across `background`, `card`,
 fill, which is that composite, while a composite field has a fill and is listed
 by it. The lowest field placement is macOS light's
 composite hint on a muted strip at **1.68:1**.
+
+A row **under the pointer** is dimmed as a whole — the wash it tints and the
+label it carries fade together — so its label lands on the *dimmed wash*, not
+on the strip the row sits on. The table therefore measures the washes a row
+wears as fills of their own: `hover` (a ghost action or a menu row), `accent`
+(a list row under the pointer) and `active` (the press), each with the labels
+that row carries — `foreground`, and `selectedForeground` for a **chosen** row.
+Over the shipped, high-contrast, platform and authored styles the tightest wash
+placement is Linux light's accent under a chosen row's title at **2.07:1** — the
+dim moves the label and the wash toward the strip together, so the pair stays
+well above the floor. A brand can still break it: a wash tuned so that its
+dimmed colour *is* the label's colour erases the label (1.00:1), and the report
+names the wash rather than the strip, because the wash is the row's own fill.
 
 The floor is `decorativeFloor` (1.05:1), deliberately **not** a readability
 floor: the dim is a where-can-Tab-go cue whose job is to keep the control
@@ -2031,7 +2044,10 @@ palette cannot answer; the report rides the `decorative` one, so the gate holds
 it without a twelfth contract. The derivation repairs all six shipped styles
 (macOS light 1.053:1, macOS dark 1.052:1, Linux dark 1.080:1, Windows dark
 1.077:1, Luna light 1.065:1, Aero light 1.060:1), and the tightest placement
-over every style is the macOS dark press at **1.052:1**.
+over every style is the macOS dark press at **1.052:1**. The painters are the
+components' and the primitives' work — until a row asks for the helper, the raw
+roles are what it paints, and the six styles above are the ones where that press
+is invisible (`TODO.md` → Interlocks).
 
 A **filled action** is the same defect one control over. `secondary` is the one
 filled variant with no brand colour and no border — `packages/primitives` paints

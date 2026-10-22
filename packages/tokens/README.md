@@ -283,7 +283,9 @@ dark's 1.015:1, Windows dark's 1.044:1, Luna light's 1.016:1 and Aero light's
 1.020:1. No palette can close it — macOS dark's `accent` carries a 7:1 label and
 a 3:1 primary tick, and `selectedForeground` on the lightened `active` is pinned
 at 7:1 — so the step is derived; the derivation repairs all six, and the
-tightest placement over every style is the macOS dark press at **1.052:1**.
+tightest placement over every style is the macOS dark press at **1.052:1**. The
+painters are the components' and the primitives' work: until a row asks for the
+helper, the raw roles are what it paints.
 
 ## Brand text
 
@@ -398,7 +400,7 @@ lands on its own dimmed fill, not on the page. Against the shipped dark palette
 the `muted` fill `#1E222A` paints `#161A20` and its `foreground` text `#EEF1F5`
 paints `#6C7075` over that fill, which is `blend(colour, behind, 1 - 0.4)`.
 
-`keyboardDimPairs` is the 40 placements the three filled actions, a field's
+`keyboardDimPairs` is the 60 placements the three filled actions, a field's
 value and placeholder in both of its fills (a plain field's `input` and the page
 role a composite field paints), a focusable row's own text and a selected row sit
 on, and
@@ -407,7 +409,12 @@ on, and
 where-can-Tab-go cue — and the tightest shipped placement is Linux light's
 `primary` over a card at 1.27:1, so a control whose text must stay readable while
 the focus is elsewhere opts out of the dim; the lowest field placement is the
-macOS light's composite hint on a muted strip at 1.68:1.
+macOS light's composite hint on a muted strip at 1.68:1. A row **under the
+pointer** is dimmed as a whole, so its label lands on the dimmed **wash** it
+tints rather than on the strip it sits on: the washes a row wears (`hover`,
+`accent`, `active`) are measured as fills of their own, and the tightest wash
+placement over the shipped styles is Linux light's accent under a chosen row's
+title at 2.07:1.
 
 ## Text selection
 

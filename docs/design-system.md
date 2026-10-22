@@ -594,7 +594,7 @@ the tightest shipped placement is Linux light's `primary` over a card at 1.27:1
 (`#C8DDF5` on `#A4C6EF`). So the contract is the same one the disabled state
 carries — the label is still seen — at `decorativeFloor` (1.05:1), not a
 readability floor, and a control whose text must stay readable while the focus
-is elsewhere opts out of the dim. `keyboardDimFailures` measures the 40
+is elsewhere opts out of the dim. `keyboardDimFailures` measures the 60
 placements the three filled actions, a field (both of its fills, its value and
 its placeholder), a focusable row and a selected row sit on; the composite is
 the disabled fade's, with the label over the *dimmed*
@@ -603,6 +603,11 @@ model; against the shipped dark palette the pair is the `muted` fill `#1E222A`
 painted as `#161A20` and the `foreground` text `#EEF1F5` as `#6C7075` over it.
 The lowest field placement is macOS light's
 composite hint on a muted strip at **1.68:1**, still above the cue's floor.
+A row under the pointer is dimmed as a whole, so its label lands on the dimmed
+**wash** it tints rather than on the strip it sits on: the washes a row wears
+(`hover`, `accent`, `active`) are measured as fills of their own, and the
+tightest wash placement over the shipped styles is Linux light's accent under a
+chosen row's title at **2.07:1**.
 It is the gate's tenth report (`audit.keyboardDim`): the dim and the
 disabled fade are the same composite with two shares, so no palette fails the
 dim alone — the dim's band sits inside the fade's — and what the report adds is

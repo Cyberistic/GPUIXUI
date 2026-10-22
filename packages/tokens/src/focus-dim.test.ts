@@ -105,18 +105,18 @@ describe("the dim the gate and the actions have adopted", () => {
     expect(Object.keys(audit)).toContain("keyboardDim");
     expect(audit.keyboardDim).toEqual([]);
 
-    const sources = {
-      primitives: readFileSync(
-        new URL("../../primitives/src/core/focus.ts", import.meta.url),
-        "utf8",
-      ),
-      components: readFileSync(
-        new URL("../../components/src/internal/button.tsx", import.meta.url),
-        "utf8",
-      ),
-    };
-    expect(sources.primitives).toContain("keyboardFocusDim: false");
-    expect(sources.components).toContain("keyboardFocusDim: false");
+    // The components' action delegates to the primitives' (plan 160), so the
+    // declaration may live in either half of the chain; the claim is that the
+    // chain paints a filled action that opts out of the dim.
+    const chain = [
+      "../../components/src/internal/button.tsx",
+      "../../primitives/src/core/focus.ts",
+      "../../primitives/src/core/variants.ts",
+      "../../primitives/src/components/Button.tsx",
+    ]
+      .map((path) => readFileSync(new URL(path, import.meta.url), "utf8"))
+      .join("\n");
+    expect(chain).toContain("keyboardFocusDim: false");
 
     Object.entries(dimSurfaces()).forEach(([name, text]) => {
       expect(text, `${name} no longer names the gate report`).toContain(
@@ -184,9 +184,14 @@ describe("keyboardDimPairs", () => {
         `${over}/foreground`,
         `${over}/mutedForeground`,
         "selected/selectedForeground",
+        "hover/foreground",
+        "accent/foreground",
+        "accent/selectedForeground",
+        "active/foreground",
+        "active/selectedForeground",
       ]);
     });
-    expect(keyboardDimPairs).toHaveLength(40);
+    expect(keyboardDimPairs).toHaveLength(60);
   });
 
   it("names the surface as the fill for a row that has none", () => {
@@ -194,12 +199,121 @@ describe("keyboardDimPairs", () => {
     // fades over the page while the page stays: the surface is its own fill.
     // A composite field's fill is the page role too, but it *has* a fill, so
     // the row pairs are the two text roles a row carries, not every pair whose
-    // fill and strip happen to be the same role.
-    const rows = keyboardDimPairs.filter(({ label }) =>
-      ["foreground", "mutedForeground"].includes(label),
+    // fill and strip happen to be the same role. A row under the pointer has a
+    // fill too — the wash it tints — so it is not one of these.
+    const rows = keyboardDimPairs.filter(
+      ({ label, fill, over }) =>
+        ["foreground", "mutedForeground"].includes(label) && fill === over,
     );
     expect(rows).toHaveLength(8);
     expect(rows.every((pair) => pair.fill === pair.over)).toBe(true);
+  });
+
+  it("measures the wash a row wears as the fill the dim composites over", () => {
+    // A hovered row is dimmed as a whole: the wash it tints and the label it
+    // carries fade together, so the label lands on the *dimmed wash*, not on the
+    // strip the row sits on. The table measured a row on the strip only, so the
+    // composite a reader sees while Tab is elsewhere was measured nowhere.
+    const washed = keyboardDimPairs.filter(({ fill }) =>
+      ["hover", "accent", "active"].includes(fill),
+    );
+    expect(washed).toHaveLength(20);
+    (["background", "card", "popover", "muted"] as const).forEach((over) => {
+      expect(
+        washed
+          .filter((pair) => pair.over === over)
+          .map((pair) => `${pair.fill}/${pair.label}`),
+      ).toEqual([
+        "hover/foreground",
+        "accent/foreground",
+        "accent/selectedForeground",
+        "active/foreground",
+        "active/selectedForeground",
+      ]);
+    });
+
+    // The painters: a ghost action or a menu row tints `hover`, and the list row
+    // tints `accent` under the pointer and `active` while it is pressed.
+    const list = readFileSync(
+      new URL("../../components/src/list.tsx", import.meta.url),
+      "utf8",
+    );
+    const recipe = readFileSync(
+      new URL("../../primitives/src/recipe/index.ts", import.meta.url),
+      "utf8",
+    );
+    expect(list).toContain("backgroundColor: theme.colors.accent");
+    expect(list).toContain("backgroundColor: theme.colors.active");
+    expect(list).toContain("color: theme.colors.selectedForeground");
+    expect(recipe).toContain("hover:bg-hover active:bg-active");
+  });
+
+  it("keeps the dimmed label visible on the wash it wears", () => {
+    const measured = allThemes.flatMap((theme) =>
+      keyboardDimPairs
+        .filter(({ fill }) => ["hover", "accent", "active"].includes(fill))
+        .map((pair) => {
+          const dimmed = fadedPair(theme.colors, pair, keyboardFocusDimOpacity);
+          return {
+            theme: theme.name,
+            pair,
+            ratio: contrastRatio(dimmed.label, dimmed.fill) ?? 0,
+          };
+        }),
+    );
+    const tightest = measured.reduce((low, next) =>
+      next.ratio < low.ratio ? next : low,
+    );
+
+    // The tightest wash placement is the Linux look's accent under a chosen
+    // row's title, on a muted strip — the dim moves the label and the wash
+    // toward the strip together, so the pair stays well above the floor.
+    expect(tightest.theme).toBe("Light · Linux");
+    expect(tightest.pair).toEqual({
+      fill: "accent",
+      label: "selectedForeground",
+      over: "muted",
+    });
+    expect(tightest.ratio.toFixed(2)).toBe("2.07");
+    expect(tightest.ratio).toBeGreaterThan(decorativeFloor);
+    allThemes.forEach((theme) => {
+      expect(keyboardDimFailures(theme), theme.name).toEqual([]);
+    });
+
+    // The number the catalogue prints, so the page cannot teach a placement the
+    // table dropped or a value the table no longer holds.
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    expect(page).toContain("accent under a chosen row's title at **2.07:1**");
+  });
+
+  it("reports a wash the dim erases, not only a strip it erases", () => {
+    // A brand with a dark toolbar, a mid-grey body text and a light hover
+    // wash. The dim keeps 40% of the wash over the toolbar, and `#A4A4A4` at
+    // 40% over `#181818` is `#505050` — the label's own colour — so the dimmed
+    // label lands exactly on the dimmed wash and the row reads as one block.
+    // The same label on the strip still reads (the strip placement is a
+    // different composite), so only the wash placement is reported.
+    const brand = extendTheme(lightTheme, {
+      colors: {
+        muted: "#181818",
+        foreground: "#505050",
+        hover: "#A4A4A4",
+      },
+    });
+    const failures = keyboardDimFailures(brand);
+
+    expect(
+      failures.map(({ fill, label, over }) => ({ fill, label, over })),
+    ).toEqual([{ fill: "hover", label: "foreground", over: "muted" }]);
+    expect(failures[0]?.ratio).toBe(1);
+    // The same label on the strip is measured and passes: the wash is the
+    // row's own fill, and the report names the wash.
+    expect(
+      failures.filter(({ fill, over }) => fill === over && over === "muted"),
+    ).toEqual([]);
   });
 });
 
