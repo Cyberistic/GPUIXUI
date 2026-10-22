@@ -1477,6 +1477,22 @@ a workaround for two live sessions sharing one worktree; see
       press, a click or a programmatic focus — and `src/api.test.ts` derives the
       six flagged files from the source, fails when one loses its ring
       (measured: `[ 'search-input.tsx' ]`) and when the sentence goes (measured)
+    - [x] State the toast hold the runtime can actually deliver — the page
+      promised that "keyboard focus on either control" pauses the auto-dismiss
+      clock, and a `Tab` traversal delivers no focus event (`tabs-lifecycle`, the
+      same gap `PreviewCard` was just fixed for), so a keyboard reader could
+      watch an Undo vanish. The page's rules table, pause/resume paragraph,
+      actions bullet and accessibility note now say a **focus event** holds the
+      clock (a press or a programmatic focus), name the measured traversal gap
+      and tell an actionable toast aimed at a keyboard user to carry
+      `duration: 0`; `COMPONENTS.md`'s row matches. `src/toast/hold-claims.test.ts`
+      (3) reads the page and the two rules it depends on — the card holds on
+      `setHover`/`setFocus` and the store treats a non-positive duration as
+      persistent — and fails on the retracted absolute (measured: restoring
+      "A keyboard user is held too" fails by name, and a `> 1` store threshold
+      fails the persistence case). Unit 433/46, behaviour 559/53, `check-types`
+      green. The focus-hold *mechanism* is unchanged: a press still pauses the
+      clock, and only the claim and the escape hatch moved
     - [x] Inventory test counts and the drifted rows — plan 139
     - [x] Tabs vertical orientation verified: axis keys, layout and manual activation — plan 321
     - [x] Toast actions: one labelled action with a provider-owned handler — plan 322
