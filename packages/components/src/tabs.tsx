@@ -19,11 +19,15 @@
  * pair into the pill's offsets. So the pill follows a trigger that resizes, and
  * a caller's rail padding or border cannot leave it short.
  *
- * Measured limitations: `@gpuix/native@0.11.0` has no `transform`, so the pill
- * jumps between triggers instead of sliding, and no `zIndex`, so it stays behind
- * the triggers by being their earlier sibling. It has no `aria-orientation`,
- * `aria-controls` or `aria-labelledby` either (`HostProps`), so the panel is
- * named by its value and the trigger/panel relationship is positional.
+ * Measured limitations: the pill **slides** by retargeting the box's
+ * `left`/`top`/`width`/`height` (a `normal` motion target), because
+ * `@gpuix/native@0.11.0` has no `transform`; the movement is a box
+ * interpolation rather than a scaled layer, and reduced motion is the
+ * consumer's policy (`MotionProvider`). There is no `zIndex`, so the pill stays
+ * behind the triggers by being their earlier sibling. It has no
+ * `aria-orientation`, `aria-controls` or `aria-labelledby` either (`HostProps`),
+ * so the panel is named by its value and the trigger/panel relationship is
+ * positional.
  */
 
 import type {
@@ -754,7 +758,7 @@ export const tabsMeta = {
   limitations: [
     "no aria-orientation, aria-controls or aria-labelledby in 0.11.0; the panel is named by its value",
     "the trigger/panel relationship is positional, not semantic",
-    "the shared selected surface is measured through onLayout, but the runtime has no transform: it jumps between tabs instead of sliding",
+    "the selected surface is measured through onLayout and slides by retargeting its left/top/width/height; the runtime has no transform, so the movement is a box interpolation, and reduced motion is the caller's MotionProvider policy",
     "no zIndex: the surface stays behind the triggers by being their earlier sibling",
   ],
   docs: "docs/tabs.mdx",

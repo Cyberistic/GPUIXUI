@@ -1,7 +1,10 @@
 # 160 — Retire the components package's local Button stand-in
 
-**Owner:** components · **Size:** multi-phase (≈2 sessions) · **Status:** ready, with
-two hard prerequisites (R1/R2 below) that are **not** in this workstream.
+**Owner:** components · **Size:** multi-phase (≈2 sessions) · **Status:**
+**blocked at Phase 1** — R1/R2 pass, but the trigger call sites need host props
+primitives' `Button` cannot express (`ref`, `aria-expanded`, `aria-selected`,
+pointer handlers, a `Props` spread). See §Measured STOP; the unblocking change is
+a `@gpuixui/primitives` task recorded in `TODO.md` → Interlocks.
 
 ## Why
 
@@ -77,6 +80,34 @@ edge. primitives' `secondary` has no border and its `outline` has no fill, so th
 mapping that preserves the current look is `variant="secondary"` **plus**
 `className="border border-strong"` (`@gpuixui/tw` has both utilities). Verify the
 painted border colour in `src/behaviour/button.test.tsx`'s existing case.
+
+## Measured STOP — Phase 1 (2026-10-22)
+
+The baseline passed (`check-types` exit 0, unit 449/449, behaviour 585/585) and
+**R1/R2 pass**, so the prerequisite gate was open. Phase 1's inventory then hit
+the plan's own STOP clause: call sites pass host props primitives' `Button`
+cannot express, so a thin adapter could not preserve the trigger APIs.
+
+`packages/primitives/src/components/internal.ts` `InteractionProps` is
+`onClick`/`onKeyDown`/`onKeyUp`/`onFocus`/`onBlur` only, and `ButtonProps` adds
+`testId`, `className`, `style`, `label` and its own fields — there is no `ref`
+and no `Props` spread. The call sites need:
+
+| Need | Call sites |
+| ---- | ---------- |
+| `ref` on the action | `popover.tsx:138` (`setTrigger`), `preview-card.tsx:206`, `dropdown-menu.tsx:209` (`setTrigger`), `navigation-menu.tsx:505` (`setTrigger`), `date-picker.tsx:274` (`setTrigger`), `confirm-dialog.tsx:105` (the cancel focus target) |
+| `aria-expanded` | `popover.tsx:139`, `preview-card.tsx:208`, `navigation-menu.tsx:507`, `dialog.tsx:151`, `drawer.tsx:142` |
+| `aria-selected` | `pagination.tsx:253` (the current page) |
+| `onMouseEnter` / `onMouseLeave` | `preview-card.tsx:209/215`, `navigation-menu.tsx:508/512` (hover-open) |
+| an arbitrary host-prop spread | every trigger composes `{...rest}` from its own `Props`, so a caller's `aria-*`, `onSubmit` or `tabIndex` reaches the element |
+
+The current stand-in expresses all five because it is a `div` with `{...rest}`.
+Do **not** invent a wrapper prop or a second adapter around primitives' `Button`
+(the plan forbids it, and it would recreate the two implementations this plan
+deletes). The unblocking change belongs to `@gpuixui/primitives`: `Button` must
+forward `ref`, its `aria-*` set and the pointer handlers, i.e. accept the host
+props a trigger needs. That request is recorded in `TODO.md` → Interlocks; this
+plan stays active and Phase 2 does not start until primitives ships it.
 
 ## Phase 0 — baseline (10 min)
 

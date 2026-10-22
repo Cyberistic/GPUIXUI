@@ -258,4 +258,29 @@ describe("component API contract", () => {
 
     expect(missing).toEqual([]);
   });
+
+  it("records the slide the tab pill paints, not a jump", () => {
+    // The record and the source header used to say the pill "jumps between
+    // tabs instead of sliding" while `tabs-indicator` is a motion target
+    // retargeted from the box on screen, so a reader was told the opposite of
+    // the code. The limit that remains is the runtime's absent `transform`.
+    const limitations = Option.match(
+      Arr.findFirst(inventory, (meta) => meta.name === "Tabs"),
+      { onNone: () => [], onSome: (meta) => meta.limitations },
+    );
+    const claimed = Option.getOrUndefined(
+      Arr.findFirst(limitations, (text) => text.includes("selected surface")),
+    );
+    const header = readFileSync(
+      fileURLToPath(new URL("src/tabs.tsx", packageRoot)),
+      "utf8",
+    );
+    const intro = header.slice(0, header.indexOf("import type"));
+
+    expect(claimed).toContain("slides");
+    expect(claimed).toContain("transform");
+    expect(Arr.some(limitations, (text) => text.includes("jumps"))).toBe(false);
+    expect(intro).toContain("slides");
+    expect(intro).not.toContain("jumps between");
+  });
 });
