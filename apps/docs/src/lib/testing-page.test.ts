@@ -18,6 +18,14 @@ import {
  * The page is held to the package's own source: the entry's namespaces, the two
  * host interfaces, the assertion set, the manifests' scripts, the runner's exit
  * codes and the sidebar it lives in.
+ *
+ * The capability rule is held to the runner for the same reason. The page said
+ * a capability is `verified` "when every scenario covering it passed" and
+ * `unverified` "when none ran", which was the rule before `capabilityStatuses`
+ * graded from the registry a run selected out of: a `--only` run that sampled
+ * one probe prints `unverified`, and a capability the run never touched gets no
+ * line at all. A reader who ran one probe read a green line as a capability
+ * total, so the old sentence is the regression these cases guard.
  */
 
 /** True when the value is a plain object, the shape a manifest or a meta file has. */
@@ -59,6 +67,7 @@ const pageText = page.replace(/\s+/g, " ");
 const entry = readRepo("packages/testing/src/index.ts");
 const smoke = readRepo("packages/testing/src/smoke.ts");
 const report = readRepo("packages/testing/src/report.ts");
+const readme = readRepo("packages/testing/README.md");
 const pixels = readRepo("packages/testing/src/pixels.ts");
 const runner = readRepo("apps/playground/src/smoke/run.ts");
 
@@ -85,6 +94,13 @@ const pixelExports = (): ReadonlyArray<string> =>
 const paintSection = (): string => {
   const start = pageText.indexOf("## Reading a frame");
   const end = pageText.indexOf("## Replaying a runtime");
+  return start < 0 || end < start ? "" : pageText.slice(start, end);
+};
+
+/** The page's report section, from its heading to the next one. */
+const reportSection = (): string => {
+  const start = pageText.indexOf("## The report");
+  const end = pageText.indexOf("## Running a suite");
   return start < 0 || end < start ? "" : pageText.slice(start, end);
 };
 
@@ -242,6 +258,72 @@ describe("the testing page", () => {
 
     // The report module really does answer only the first two.
     expect(report).toContain("): 0 | 1 =>");
+  });
+
+  it("states the capability rule the runner applies, not the one it replaced", () => {
+    // The verdict is drawn from the registry the run selected out of, so a
+    // scoped run cannot claim a total it never measured. The three source
+    // claims are the ones the page's bullets paraphrase.
+    expect(smoke).toContain("export const capabilityStatuses = (");
+    expect(smoke).toContain(
+      'Arr.length(ran) === count ? "verified" : "unverified"',
+    );
+    expect(smoke).toContain(
+      "if (Arr.length(ran) === 0) return Option.none<CapabilityResult>();",
+    );
+
+    const section = reportSection();
+    expect(section, "the page has no report section").not.toBe("");
+    expect(section).toContain(
+      "every scenario the registry declares for that capability",
+    );
+    expect(section).toContain("**sampled**");
+    expect(section).toContain("no line at all");
+    expect(section).toContain("never touched the capability");
+
+    // The rule this page shipped before the runner declared its scope: a
+    // scoped run's probe is exactly the case it got wrong.
+    expect(section).not.toContain("`unverified` when none ran");
+  });
+
+  it("names the verdict seam a runner outside this repo needs", () => {
+    // `runScenarios` only knows the declaration when the caller passes it, so
+    // the seam is public: a page that documents the verdict without the three
+    // names leaves a runner unable to reproduce it.
+    const seam = ["Coverage", "coverageOf", "capabilityStatuses"];
+
+    expect(smoke).toContain("export interface Coverage");
+    expect(smoke).toContain("export const coverageOf = (");
+    expect(smoke).toContain("export const capabilityStatuses = (");
+    expect(smoke).toContain("readonly coverage?: ReadonlyArray<Coverage>;");
+
+    const missingRows = seam.filter((name) => !hasRow(name));
+    expect(
+      missingRows,
+      "the page's export table does not carry the verdict seam",
+    ).toEqual([]);
+
+    // The package's own record lists the same seam; the two cannot diverge.
+    const smokeRow =
+      readme.split("\n").find((line) => line.startsWith("| `Smoke`")) ?? "";
+    expect(
+      seam.filter((name) => !smokeRow.includes(`\`${name}`)),
+      "the package README no longer lists the verdict seam",
+    ).toEqual([]);
+  });
+
+  it("prints the note a scoped run appends to its summary", () => {
+    // `formatReport` adds the note so `unverified` beside a green probe is not
+    // read as a red line. The page quotes it verbatim, so the wording is read
+    // from the formatter rather than retyped here.
+    const note = /" \(unverified: [^"]+\)"/.exec(report)?.[0]?.slice(2, -1);
+    expect(
+      note,
+      "formatReport no longer explains an unverified capability",
+    ).toBeDefined();
+    expect(pageText).toContain(note ?? "\u0000");
+    expect(report).toContain("const summary = (report: SmokeReport): string =>");
+    expect(pageText).toContain("`formatReport` appends");
   });
 
   it("says the harness is workspace-internal only while the package is", () => {
