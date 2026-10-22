@@ -5,12 +5,22 @@
  * The keyframe sampling follows `gpui-ce-motion`'s `Animation` segment model
  * (the upper keyframe's easing shapes the segment ending there); the sequence
  * driver follows open-gpui `crates/motion/src/sequence.rs` (Apache-2.0).
+ *
+ * The values a caller builds a timeline from are repaired before they reach the
+ * formulas: a frame whose offset or value cannot be read is not a stop, a step
+ * whose timing cannot be read is placed at the start with no duration, and a
+ * step that cannot be read is no wait. A `NaN` anywhere used to paint a frame
+ * the runtime draws as nothing and leave `Sequence.complete` false forever.
  */
 
 import { linear, type Easing } from "./easing.js";
 
 const clamp01 = (value: number): number =>
   value < 0 ? 0 : value > 1 ? 1 : value;
+
+/** A number a formula can read, or the fallback it stands for. */
+const finiteOr = (value: number, fallback: number): number =>
+  Number.isFinite(value) ? value : fallback;
 
 /** One timed target at a normalized offset in `[0, 1]`. */
 export interface Keyframe {
@@ -26,27 +36,36 @@ export const keyframe = (
   easing?: Easing,
 ): Keyframe => ({ at, value, easing });
 
+/** The frames a sample can stop on, in the order it was given. */
+const stopsOf = (frames: readonly Keyframe[]): ReadonlyArray<Keyframe> =>
+  frames.filter(
+    (frame) => Number.isFinite(frame.at) && Number.isFinite(frame.value),
+  );
+
 /**
  * Samples sorted keyframes at unit progress, interpolating between the
- * surrounding keyframes and applying the upper keyframe's easing. Frames must
- * be sorted ascending by `at`; a progress that is not a number reads as `0`.
+ * surrounding keyframes and applying the upper keyframe's easing. Frames must be
+ * sorted ascending by `at`. A progress that is not a number reads as `0`, and a
+ * frame whose offset or value cannot be read is dropped rather than becoming the
+ * segment's endpoint — an unreadable stop would make every value between it and
+ * its neighbour `NaN`, which the runtime paints as nothing.
  */
 export const sampleKeyframes = (
   frames: readonly Keyframe[],
   progress: number,
 ): number => {
-  if (frames.length === 0) return 0;
+  const stops = stopsOf(frames);
+  if (stops.length === 0) return 0;
   const t = clamp01(Number.isNaN(progress) ? 0 : progress);
-  const first = frames[0];
-  const last = frames[frames.length - 1];
+  const first = stops[0];
+  const last = stops[stops.length - 1];
   if (first === undefined || last === undefined) return 0;
   if (t <= first.at) return first.value;
   if (t >= last.at) return last.value;
 
-  let upper = 1;
-  while (upper < frames.length && (frames[upper]?.at ?? 1) < t) upper += 1;
-  const hi = frames[upper];
-  const lo = frames[upper - 1];
+  const upper = stops.findIndex((frame) => frame.at >= t);
+  const hi = stops[upper];
+  const lo = stops[upper - 1];
   if (lo === undefined || hi === undefined || hi.at === lo.at) {
     return hi?.value ?? lo?.value ?? 0;
   }
@@ -60,7 +79,8 @@ export type StaggerFrom = "start" | "end" | "center";
 
 /**
  * The delay (ms) for the `index`-th of `count` children under `from`. Returns
- * `0` for an out-of-range index or empty group.
+ * `0` for an out-of-range index or empty group, and for a step that is not a
+ * wait: a non-finite one is unreadable and a negative one is no delay at all.
  */
 export const stagger = (
   stepMs: number,
@@ -75,7 +95,7 @@ export const stagger = (
       : from === "end"
         ? count - 1 - index
         : Math.abs(index - (count - 1) / 2);
-  return stepMs * distance;
+  return (Number.isFinite(stepMs) && stepMs > 0 ? stepMs : 0) * distance;
 };
 
 /** Per-step sample state. */
@@ -104,14 +124,25 @@ interface Step<K> {
 export class Sequence<K> {
   private readonly steps: Step<K>[] = [];
 
-  /** Appends a step at an absolute start time. */
+  /**
+   * Appends a step at an absolute start time.
+   *
+   * A start or duration that cannot be read is repaired to `0`: a `NaN` start
+   * used to leave the step permanently active at `NaN` and a `NaN` duration made
+   * `duration()`/`complete()` `NaN`, so a driver loop never stopped.
+   */
   at(
     key: K,
     startMs: number,
     durationMs: number,
     easing: Easing = linear,
   ): this {
-    this.steps.push({ key, startMs, durationMs, easing });
+    this.steps.push({
+      key,
+      startMs: finiteOr(startMs, 0),
+      durationMs: finiteOr(durationMs, 0),
+      easing,
+    });
     return this;
   }
 

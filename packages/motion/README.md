@@ -115,6 +115,12 @@ swapped, and a non-finite position or velocity reads as a standstill. A coast
 therefore always projects a finite rest and settles, instead of painting `NaN` and
 sampling forever.
 
+A timeline is repaired at the value the caller supplies: a keyframe whose offset
+or value cannot be read is not a stop (it is dropped, and a set with none answers
+`0`), a `Sequence` step whose start or duration cannot be read is placed at `0`
+with no duration, so it is completed on the first sample and the sequence's own
+end stays a number, and a stagger step that is non-finite or negative is no wait.
+
 ## The runtime's declarative timing
 
 GPUix executes a tween over a duration and an easing it is told. That timing is

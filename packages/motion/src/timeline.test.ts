@@ -2,6 +2,11 @@
  * Guards keyframes, stagger, and the keyed sequence driver: offsets interpolate
  * with the segment easing, stagger distributes delays, and steps move through
  * pending → active → completed. Reverting any of these fails its assertion.
+ *
+ * The last suite guards the totality the package promises for a timeline a
+ * caller **built by hand**: a frame or a step whose offset, value or duration
+ * cannot be read must be repaired rather than reach the formulas, because a
+ * `NaN` there painted nothing and left a driver sampling forever.
  */
 import { describe, expect, it } from "vitest";
 import { easeOut } from "./easing.js";
@@ -89,5 +94,72 @@ describe("Sequence", () => {
     );
     expect(sequence.complete(Number.NaN)).toBe(false);
     expect(sequence.complete(Number.POSITIVE_INFINITY)).toBe(true);
+  });
+});
+
+describe("a timeline built by hand", () => {
+  it("does not stop on a frame whose value cannot be read", () => {
+    // A frame is a value a caller computed (a measured height, a counter). One
+    // that cannot be read used to interpolate the whole segment to `NaN`.
+    const frames = [keyframe(0, 10), keyframe(1, Number.NaN)];
+    expect(sampleKeyframes(frames, 0.5)).toBe(10);
+    expect(sampleKeyframes(frames, 1)).toBe(10);
+  });
+
+  it("does not stop on a frame whose offset cannot be read", () => {
+    const frames = [
+      keyframe(0, 0),
+      keyframe(Number.NaN, 100),
+      keyframe(1, 200),
+    ];
+    expect(sampleKeyframes(frames, 0.5)).toBe(100);
+  });
+
+  it("answers zero when no frame can be read", () => {
+    expect(sampleKeyframes([keyframe(Number.NaN, Number.NaN)], 0.5)).toBe(0);
+    expect(sampleKeyframes([], 0.5)).toBe(0);
+  });
+
+  it("waits for nothing when the step cannot be read", () => {
+    // A delay that is not a wait is no wait: `delayedTiming` already drops a
+    // zero one, and `NaN`/negative steps used to reach the runtime as `NaN`.
+    expect(stagger(Number.NaN, 2, 4)).toBe(0);
+    expect(stagger(Number.POSITIVE_INFINITY, 2, 4)).toBe(0);
+    expect(stagger(-10, 2, 4)).toBe(0);
+    expect(stagger(20, 2, 3)).toBe(40);
+  });
+
+  it("places a step whose start cannot be read at the start", () => {
+    const sequence = new Sequence<string>().at("a", Number.NaN, 100);
+    expect(sequence.sample(0)).toEqual([
+      { key: "a", state: "active", value: 0 },
+    ]);
+    expect(sequence.sample(50)[0]?.value).toBeCloseTo(0.5, 5);
+    expect(sequence.duration()).toBe(100);
+  });
+
+  it("completes a step whose duration cannot be read", () => {
+    // A step that cannot be timed is not a step that runs forever: it is done
+    // on the first sample, and the sequence's own end stays a number.
+    const sequence = new Sequence<string>().at("a", 0, Number.NaN);
+    expect(sequence.sample(0)).toEqual([
+      { key: "a", state: "completed", value: 1 },
+    ]);
+    expect(sequence.duration()).toBe(0);
+    expect(sequence.complete(0)).toBe(true);
+  });
+
+  it("keeps a staggered group's end readable", () => {
+    // `stagger()`'s `NaN` start used to make `duration()` `NaN`, so `complete`
+    // never answered true and a driver loop never stopped.
+    const sequence = new Sequence<string>().stagger(
+      ["a", "b"],
+      0,
+      Number.NaN,
+      100,
+    );
+    expect(sequence.sample(50).map((step) => step.value)).toEqual([0.5, 0.5]);
+    expect(sequence.duration()).toBe(100);
+    expect(sequence.complete(100)).toBe(true);
   });
 });
