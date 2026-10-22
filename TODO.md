@@ -1420,7 +1420,8 @@ a workaround for two live sessions sharing one worktree; see
       0.11.0, and the guard resolves a bare `plan NNN` against the plan
       directory's own file names. Both directions measured: planting `plan 099`
       fails `cites plan 099, which does not exist`, and the tree passes as it is.
-      679 unit / 194 runtime / 21 icons
+      The guards section also says three suites, not two. 679 unit / 194 runtime
+      / 21 icons
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness
@@ -1606,6 +1607,19 @@ a workaround for two live sessions sharing one worktree; see
       `docs/list.mdx` keyboard section states the rule, `COMPONENTS.md`'s row
       names it. Unit 433/46 + 4, behaviour 559/53 + 38 list cases, `check-types`
       green
+    - [x] Repeat the focus caveat on the six pages that list a `focused` state —
+      `docs/component-api.md` §3 now states the measured rule once, but the
+      component pages a consumer actually reads (`accordion`, `collapsible`,
+      `field`, `search-input`, `tabs`, `time-picker`) listed `focused` in their
+      `StateStyle` tables with no caveat, so a reader would write a callback that
+      never fires in a window. Each page carries the four-line paragraph (a
+      press or a programmatic focus delivers the event; the ring at rest is the
+      cue); `src/api.test.ts` derives the six source files that declare
+      `readonly focused: boolean` and fails when one's page drops the sentence
+      (measured: deleting `tabs.mdx`'s copy fails naming `tabs.tsx`). The toast
+      suite's three focus-hold cases also stop saying "keyboard focus" and say "a
+      focus event", matching the page. Unit 437/47, `check-types`, lint and
+      `check:tests` green
     - [x] Inventory test counts and the drifted rows — plan 139
     - [x] Tabs vertical orientation verified: axis keys, layout and manual activation — plan 321
     - [x] Toast actions: one labelled action with a provider-owned handler — plan 322

@@ -86,6 +86,11 @@ so a Tab paints it and a mouse press does not.
 (`{ disabled, focused }`); the style is applied to the field surface, not the
 inner `<input>`.
 
+`focused` arrives only when the runtime sends a focus event: a `Tab` traversal
+focuses the part without running its handler, so a callback keyed on it sees a
+press or a programmatic focus. The ring declared at rest is the keyboard cue
+(`docs/component-api.md` §3).
+
 ```tsx
 <SearchInput style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })} />
 ```

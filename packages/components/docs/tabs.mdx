@@ -133,6 +133,11 @@ earlier sibling.
 (`{ active, disabled, focused, highlighted, orientation }`); the result merges
 after the trigger's own rules.
 
+`focused` arrives only when the runtime sends a focus event: a `Tab` traversal
+focuses the part without running its handler, so a callback keyed on it sees a
+press or a programmatic focus. The ring declared at rest is the keyboard cue
+(`docs/component-api.md` §3).
+
 ```tsx
 <TabsTrigger
   value="profile"

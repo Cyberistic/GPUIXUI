@@ -263,7 +263,7 @@ describe("Toast", () => {
     page.unmount();
   });
 
-  it("pauses auto-dismiss while keyboard focus is on the dismiss control", async () => {
+  it("pauses auto-dismiss when a focus event reaches the dismiss control", async () => {
     const page = renderComponent(<Harness duration={Duration.millis(600)} />);
 
     clickCentreOf(page, "push");
@@ -289,7 +289,7 @@ describe("Toast", () => {
     page.unmount();
   });
 
-  it("keeps the hold when the pointer leaves while focus stays inside", async () => {
+  it("keeps the hold when the pointer leaves while a control still holds focus", async () => {
     const page = renderComponent(<Harness duration={Duration.millis(600)} />);
 
     clickCentreOf(page, "push");
@@ -359,7 +359,7 @@ describe("Toast", () => {
     page.unmount();
   });
 
-  it("pauses auto-dismiss while keyboard focus is on the action control", async () => {
+  it("pauses auto-dismiss when a focus event reaches the action control", async () => {
     const page = renderComponent(
       <Harness duration={Duration.millis(600)} onAction={() => undefined} />,
     );

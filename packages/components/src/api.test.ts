@@ -1,5 +1,9 @@
 /**
- * The public API contract in `docs/component-api.md` §8, checked against code.
+ * The public API contract in `docs/component-api.md`, checked against code.
+ *
+ * §8 is the parts spec, and §3 is the state vocabulary: `focused` is the one
+ * member a window cannot always deliver, so the six parts that expose it are
+ * held to the ring that carries the cue, and their pages to the caveat.
  *
  * The bug these guard: §8 is the spec a consumer reads, and §9 claims every
  * shipped Tier 2 component exports the parts its row names — but nothing read
@@ -197,6 +201,18 @@ describe("component API contract", () => {
     );
 
     expect(missingRing).toEqual([]);
+
+    // The pages a reader reads must repeat the caveat: a state list is API, and
+    // a callback keyed on `focused` silently never fires in a window.
+    const silentPage = Arr.filter(
+      flagged,
+      (file) =>
+        !Str.includes("arrives only when the runtime sends a focus event")(
+          sourceOf(`../docs/${Str.replace(/\.tsx$/, ".mdx")(file)}`),
+        ),
+    );
+
+    expect(silentPage).toEqual([]);
   });
 
   it("keeps a planned part out of the package until its row lands", () => {
