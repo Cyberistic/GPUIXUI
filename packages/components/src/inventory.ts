@@ -63,6 +63,7 @@ import { starsMeta } from "./stars.js";
 import { stepperMeta } from "./stepper.js";
 import { tabsMeta } from "./tabs.js";
 import { tagInputMeta } from "./tag-input.js";
+import { themeTogglerMeta } from "./theme-toggler.js";
 import { timelineMeta } from "./timeline.js";
 import { timePickerMeta } from "./time-picker.js";
 import { toastMeta } from "./toast.js";
@@ -143,6 +144,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   stepperMeta,
   tabsMeta,
   tagInputMeta,
+  themeTogglerMeta,
   timelineMeta,
   timePickerMeta,
   toastMeta,

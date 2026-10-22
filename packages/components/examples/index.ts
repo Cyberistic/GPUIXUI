@@ -69,6 +69,7 @@ import { StarsExample } from "./stars.example.js";
 import { StepperExample } from "./stepper.example.js";
 import { TabsExample } from "./tabs.example.js";
 import { TagInputExample } from "./tag-input.example.js";
+import { ThemeTogglerExample } from "./theme-toggler.example.js";
 import { TimePickerExample } from "./time-picker.example.js";
 import { TimelineExample } from "./timeline.example.js";
 import { ToastExample } from "./toast.example.js";
@@ -133,6 +134,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   stepper: StepperExample,
   tabs: TabsExample,
   "tag-input": TagInputExample,
+  "theme-toggler": ThemeTogglerExample,
   "time-picker": TimePickerExample,
   timeline: TimelineExample,
   toast: ToastExample,

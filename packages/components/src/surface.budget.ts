@@ -47,15 +47,16 @@ export const surfaceBudget = {
   // 123 → 125 for Particles (`particles.tsx` and its field rule); 125 → 128 for
   // Stars (`stars.tsx` and its twinkle rule) and the fields' shared scatter
   // arithmetic (`internal/scatter.ts`). 128 → 130 for CodeBlock
-  // (`code-block.tsx` and its header/row rule).
-  modules: 130,
+  // (`code-block.tsx` and its header/row rule); 130 → 132 for ThemeToggler
+  // (`theme-toggler.tsx` and its press/glyph/label rule).
+  modules: 132,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
   // with Particles and 803 KiB with Stars; 820 KiB with CodeBlock (840 055
-  // bytes). The ceiling keeps the headroom a prose edit needs while a bulk
-  // addition still has to state itself.
-  bytes: 840 * 1024,
+  // bytes) and 827 KiB with ThemeToggler. The ceiling keeps the headroom a
+  // prose edit needs while a bulk addition still has to state itself.
+  bytes: 850 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
 } as const;

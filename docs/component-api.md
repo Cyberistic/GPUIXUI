@@ -361,6 +361,7 @@ the honest parts.
 | Particles | `Particles` (one part) | — | plan 600 |
 | Stars | `Stars` (one part) | — | plan 600 |
 | Code block | `CodeBlock` (one part) | — | plan 600 |
+| Theme toggler | `ThemeToggler` (one part) | — | plan 600 |
 
 **Planned Tier 2 additions** — none. The last reserved family, Chat and
 Message (plan `207`), landed with its parts unchanged, so every part table above
