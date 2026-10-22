@@ -5787,7 +5787,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 180/180
+`[x]` `[██████████]` 181/181
+
+`[x]` Stop the **index and the Table page calling a shipped lane
+partial** — `/docs/components` said "the data lane is partial — @gpuixui/data
+ships the table core, while column configuration, virtualisation, a tree view,
+charts and the inspector surfaces are still `todo`" and the curated Table page
+said "the rows that remain — a tree, a chart surface — are recorded as gaps",
+while every one of those Tier 3 rows is `done` in `COMPONENTS.md`. Both pages
+now leave the state to the rows (the index prints each row's verdict from the
+inventory) and name the surfaces a grid composes with; the Table page also
+printed 15 native cases where the suite runs 18 after the data workstream's
+three new ones. `component-index.test.ts` gained `leaves a lane's status to its
+rows`: it reads both pages, requires the lane link, refuses `still `todo``,
+`recorded as gaps` and `the rows that remain`, and the stale count is the
+failure `component-page-truth.test.ts` reports by name. Directions measured:
+restoring either sentence fails the new case on its own string, and the count
+case reported `table.mdx: says 15, suite runs 18`. `nub run --filter
+@gpuixui/docs test` green (99 files / 989 tests); `check-types`, `build` and
+`check:tests` green. No native scenario applies — a docs page has no runtime
+path.
 
 `[x]` Curate the **Inline edit** page and hold its one finish, its blur commit
 and its app gate to the source — `/docs/components/inline-edit` served only the
