@@ -141,10 +141,15 @@ the value from `onCreate` for a controlled combobox.
 ## Motion
 
 The popup arrives on the house entrance: a fade plus **4px of travel out from the
-side it opens at** (`normal`, 200 ms, ease-out). A popup below its trigger starts
-above its resting place and moves down; one placed above starts below and moves
-up, so the side the component corrects the runtime's placement to is the side the
-travel comes from. There is **no exit tween** — GPUix's own `ComboboxContent`
+side it is asked to open at** (`normal`, 200 ms, ease-out, GPUix's `side` prop,
+default `bottom`). A popup below its trigger starts above its resting place and
+moves down; `side="top"` starts below and moves up. The direction is the
+**requested** side's, not the measured one, because a surface's first motion frame
+is committed when its host mounts — one commit before the component's measured
+flip can re-anchor it. A popup the component flips above its trigger therefore
+still travels the way its requested side travels; the distance is 4px and the
+resting placement is the measured one (pin: `behaviour/combobox.test.tsx`, "the
+popup's entrance"). There is **no exit tween** — GPUix's own `ComboboxContent`
 renders nothing while the root is closed, so a closing popup has no box left to
 keep mounted for one; it leaves with the state that closed it.
 `MotionProvider preference="reduced"` removes the duration, so the resting frame
@@ -212,13 +217,17 @@ pair holds — the same rule the menu row follows.
   trigger rather than using the runtime's containing-block centre.
 - The popup has an **entry tween only**: the runtime's content unmounts when the
   root closes, so there is no box left to fade out.
+- The entrance travels the **requested** side's direction: the first motion frame
+  is committed when the host mounts and the measured flip lands a commit later, so
+  a popup flipped above its trigger still moves the way its requested side does
+  (4px; the resting placement is unchanged).
 - `align="center"` is clamped by the snap margin near a window edge.
 - The trigger is a `div` with button semantics (the `@gpuixui/primitives`
   stand-in), not a native button element.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (25 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (26 tests):
 open + input focus, a centred popup and a near-bottom popup that opens above its
 trigger, filtering, ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
@@ -232,8 +241,10 @@ placeholder/name coming from the part, the search field's hint painted rather
 than handed to the host, the create row — offered for an
 unmatched query, reported once with the trimmed query while the selection stays
 put, suppressed when an option matches, the query is blank, no handler is given,
-or the mode is multiple — and the popup's entrance, measured on a paused clock
-for both placements and under the reduced preference.
+or the mode is multiple — and the popup's entrance, measured on a paused clock for
+the default side, a requested top side (which proves the direction follows the
+requested side) and the flipped popup that keeps its requested side's travel,
+plus the reduced preference.
 `src/behaviour/focus-ring.test.tsx` holds the trigger and the search field to the
 keyboard outline, and a disabled trigger to declaring none.
 

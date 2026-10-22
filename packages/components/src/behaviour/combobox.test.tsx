@@ -124,6 +124,19 @@ const LowPicker = () => (
   </div>
 );
 
+/** A trigger low enough to leave the top side room, which this picker asks for. */
+const TopPicker = () => (
+  <div style={{ paddingTop: 320 }}>
+    <Combobox options={options}>
+      <ComboboxTrigger label="Assign reviewer" />
+      <ComboboxContent side="top">
+        <ComboboxInput label="Search reviewers" />
+        <ComboboxList label="Reviewers" />
+      </ComboboxContent>
+    </Combobox>
+  </div>
+);
+
 /** Let the runtime's microtask (focus) and React's updates settle. */
 const settle = async (): Promise<void> => {
   await Promise.resolve();
@@ -600,14 +613,17 @@ const frame = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 30));
 
 describe("the popup's entrance", () => {
-  it("travels out from the side it opens at", async () => {
+  it("travels down into place when it opens below its trigger", async () => {
     // The bugs this guards: a popup that pops into place while every other
-    // anchored panel fades and travels, and an entrance that always moves down
-    // although the popup opened above its trigger.
+    // anchored panel fades and travels, and a travel that points at the wrong
+    // edge of the trigger.
     const picker = renderComponent(<Picker />);
     picker.renderer.clockPause();
     await open(picker);
+
+    const trigger = requireBounds(picker, "combobox-trigger");
     const entering = requireBounds(picker, "combobox-content").y;
+    expect(entering).toBeGreaterThanOrEqual(trigger.y + trigger.height);
 
     picker.renderer.clockFastForward(400);
     await frame();
@@ -618,7 +634,33 @@ describe("the popup's entrance", () => {
     picker.unmount();
   });
 
-  it("enters from below when it opens above its trigger", async () => {
+  it("enters from below when it is asked to open above its trigger", async () => {
+    // The direction follows the side the popup was asked to open at, so this
+    // case fails if the entrance is hardcoded to the default bottom travel.
+    const picker = renderComponent(<TopPicker />);
+    picker.renderer.clockPause();
+    await open(picker);
+
+    const trigger = requireBounds(picker, "combobox-trigger");
+    const entering = requireBounds(picker, "combobox-content");
+    // The requested side had room, so the popup stayed where it was put.
+    expect(entering.y + entering.height).toBeLessThanOrEqual(trigger.y);
+
+    picker.renderer.clockFastForward(400);
+    await frame();
+    const resting = requireBounds(picker, "combobox-content");
+
+    // Above its trigger, the popup starts below its resting place and moves up.
+    expect(entering.y - resting.y).toBe(4);
+    picker.unmount();
+  });
+
+  it("keeps the entrance its requested side owns when the component flips it", async () => {
+    // A surface's first motion frame is fixed when its host mounts, which is one
+    // commit before the measured flip can re-anchor it: a popup the component
+    // flips above its trigger still travels the way its requested bottom side
+    // travels. This case pins that measured limitation, so the arrangement that
+    // retargets the entrance has to say so here as well as in the docs.
     const picker = renderComponent(<LowPicker />);
     picker.renderer.clockPause();
     await open(picker);
@@ -631,7 +673,7 @@ describe("the popup's entrance", () => {
     picker.renderer.clockFastForward(400);
     await frame();
     const resting = requireBounds(picker, "combobox-content");
-    // Above its trigger, the popup starts below its resting place and moves up.
+
     expect(entering.y - resting.y).toBe(-4);
     picker.unmount();
   });

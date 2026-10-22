@@ -444,8 +444,8 @@ export interface ComboboxContentProps extends FloatingContentProps {
 /**
  * The popup. It renders while the combobox is open, anchored by GPUix, and
  * arrives on the house entrance: a fade plus 4px of travel out from the side it
- * was measured at. There is no exit tween — the runtime's own content unmounts
- * the moment the root closes, so there is no box left to fade.
+ * was asked to open at. There is no exit tween — the runtime's own content
+ * unmounts the moment the root closes, so there is no box left to fade.
  */
 export const ComboboxContent = ({
   side = "bottom",
@@ -477,9 +477,12 @@ export const ComboboxContent = ({
 
   // The house entrance, entry only: GPUix's own `ComboboxContent` renders
   // nothing while the root is closed, so there is no box to keep mounted for an
-  // exit tween. The travel points out from the side the surface was measured at,
-  // which is why the placement is read here rather than assumed.
-  const frames = fadeFromAnchor(placement.side, 4);
+  // exit tween. A surface's first motion frame is committed when its host
+  // mounts, one commit before the measured flip can move it, so the travel
+  // follows the side this popup was asked to open at; a popup the component
+  // flips above its trigger keeps the entrance its requested side owns
+  // (`behaviour/combobox.test.tsx`, "the popup's entrance").
+  const frames = fadeFromAnchor(side, 4);
 
   return (
     <HeadlessContent
