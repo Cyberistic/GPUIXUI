@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-71 probes a real window can prove, of which fifteen mount shipped
+72 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -4051,6 +4051,46 @@ Two negative controls measured, exit `1` each, then restored green:
   row with onKeyDown runs hits=row-key` with `expected "hits=none", got
   "hits=row-key"` — the key path is the second half of the rule.
 
+### `list-row-press` — measured on 0.11.0 here
+
+**Does a press on a selectable row's `trailing` slot reach the row?** The slot is
+documented as "a badge, a shortcut", and `Badge` is "non-interactive by design —
+a badge is never a button and nothing inside one is clickable". `press-routing-lifecycle`
+measured why that pair is dangerous: a child that paints a fill is the boundary
+GPUI's hit test stops counting hovered elements at, so a filled badge can take a
+press the row never hears.
+
+The shipped `List` is mounted with the three shapes a reader composes and each
+press is read from the list's own `onValueChange` through a readout:
+
+| Press | What it lands on | Selected after |
+| ----- | ---------------- | -------------- |
+| `badge` | a press on the shipped badge in the trailing slot | `selected=none` |
+| `badge-inert` | a press on the same badge declaring `pointerEvents: none` | `selected=badge-inert` |
+| `text` | a press on a plain text slot | `selected=text` |
+| `badge-body` | a press on the badge row's own body | `selected=badge` |
+
+The first row is a **measured defect**, not a contract: a non-interactive badge in
+the status column of a selectable list is a dead zone — the press selects
+nothing, and the row's title and body still select, so the row looks half
+clickable. `Badge` is the component to fix: it has no handler, its own header
+says nothing inside it is clickable, and `pointerEvents: "none"` (the carousel
+drawing's rule) is what makes it transparent to the row. The second row is the
+workaround a caller can apply today, and the last two are the controls that prove
+the list itself takes a press and the failure is the badge's.
+
+5 checks, `--only list-row-press`, green on 0.11.0 (~0.5 s). Fixture:
+`src/live/list-row.ts` (`LIST_ROW_PRESSES` is the table; `formatSelection` its one
+spelling); `list-row.test.ts` (4 cases) holds the presses to the mounted rows, a
+single target each, and this section's table to the measured selections. Evidence:
+`.artifacts/live/list-row-press.png`.
+
+Negative control measured, exit `1`, restored green: expecting the shipped badge
+to reach its row fails `a press on the shipped badge in the trailing slot leaves
+selected=badge` with **`expected "selected=none", got "selected=badge"`** — the
+press really does not reach the row, so the defect is a measurement and not a
+missing mount.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -4267,8 +4307,8 @@ narrower. Each deviation is deliberate and measured:
   `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`,
   `elevation-paint`, `opacity-paint`, `movable-tabs-lifecycle`,
   `slider-vertical-lifecycle`, `modifier-select-lifecycle`, `rtl-text`,
-  `syntax-palette` and `press-routing-lifecycle` (thirteen probes, each run
-  alone).
+  `syntax-palette`, `press-routing-lifecycle` and `list-row-press` (fourteen
+  probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

@@ -36,6 +36,7 @@ import {
   type Theme,
 } from "@gpuixui/tokens";
 import {
+  Badge,
   Combobox,
   ComboboxContent,
   ComboboxEmpty,
@@ -603,6 +604,18 @@ import {
   type LastPress,
   type RowSelection,
 } from "./modifier-select.js";
+import {
+  LIST_ROW_CAPTION,
+  LIST_ROW_CLEAR,
+  LIST_ROW_LIST,
+  LIST_ROW_PRESSES,
+  LIST_ROW_READOUT,
+  LIST_ROW_ROWS,
+  formatSelection,
+  listRowId,
+  listRowTrailingId,
+  type TrailingShape,
+} from "./list-row.js";
 import {
   PRESS_CAPTION,
   PRESS_CLEAR,
@@ -20285,6 +20298,155 @@ const pressRoutingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("press-routing");
   });
 
+/**
+ * A selectable row's `trailing` slot: the shipped `Badge`, the same badge
+ * declaring `pointerEvents: "none"`, and a plain `<text>`.
+ */
+const ListRowPressProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [selected, setSelected] = useState("");
+
+  const trailingOf = (row: TrailingShape): ReactNode =>
+    Match.value(row).pipe(
+      Match.when("badge", () => (
+        <Badge testId={listRowTrailingId("badge")} variant="success" size="sm">
+          Ready
+        </Badge>
+      )),
+      Match.when("badge-inert", () => (
+        <Badge
+          testId={listRowTrailingId("badge-inert")}
+          variant="success"
+          size="sm"
+          style={{ pointerEvents: "none" }}
+        >
+          Ready
+        </Badge>
+      )),
+      Match.when("text", () => (
+        <text
+          testId={listRowTrailingId("text")}
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          Ready
+        </text>
+      )),
+      Match.exhaustive,
+    );
+
+  return (
+    <div
+      style={{
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        testId={LIST_ROW_CAPTION}
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A selectable row&apos;s trailing slot: does a press on a badge reach the
+        row it sits in?
+      </text>
+      <div
+        testId={LIST_ROW_CLEAR}
+        role="button"
+        tabIndex={0}
+        onClick={() => setSelected("")}
+        style={{
+          width: 72,
+          height: 24,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          ...textStyle(theme, "caption"),
+          backgroundColor: theme.colors.secondary,
+          color: theme.colors.secondaryForeground,
+          borderRadius: theme.radius.sm,
+        }}
+      >
+        Clear
+      </div>
+      <List
+        testId={LIST_ROW_LIST}
+        selectionMode="single"
+        value={selected}
+        onValueChange={setSelected}
+        style={{
+          width: 420,
+          backgroundColor: theme.colors.card,
+          borderWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+        }}
+      >
+        {Arr.map(LIST_ROW_ROWS, (row) => (
+          <ListItem
+            key={row}
+            value={row}
+            textValue={row}
+            testId={listRowId(row)}
+            trailing={trailingOf(row)}
+          >
+            <ListItemTitle>{`Row ${row}`}</ListItemTitle>
+          </ListItem>
+        ))}
+      </List>
+      <text
+        testId={LIST_ROW_READOUT}
+        style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}
+      >
+        {formatSelection(selected)}
+      </text>
+    </div>
+  );
+};
+
+const listRowPressSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(LIST_ROW_LIST);
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text(LIST_ROW_READOUT);
+    const clear = () =>
+      Effect.flatMap(ctx.host.click(LIST_ROW_CLEAR), () =>
+        Effect.sleep(SETTLE),
+      );
+
+    yield* ctx.expectEqual(
+      "the list opens with nothing selected",
+      yield* readout(),
+      formatSelection(""),
+    );
+
+    yield* Effect.forEach(
+      LIST_ROW_PRESSES,
+      (press) =>
+        Effect.gen(function* () {
+          yield* clear();
+          yield* Effect.flatMap(ctx.host.click(press.target), () =>
+            Effect.sleep(SETTLE),
+          );
+          yield* ctx.expectEqual(
+            `${press.caption} leaves ${formatSelection(press.selects)}`,
+            yield* readout(),
+            formatSelection(press.selects),
+          );
+        }),
+      { concurrency: 1 },
+    );
+
+    yield* ctx.host.capture("list-row-press");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -20642,5 +20804,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "press-routing-lifecycle",
     view: () => <PressRoutingProbe />,
     steps: pressRoutingSteps,
+  },
+  "list-row-press": {
+    id: "list-row-press",
+    view: () => <ListRowPressProbe />,
+    steps: listRowPressSteps,
   },
 };

@@ -462,6 +462,12 @@ export const liveRegistry = [
       "Input: a press or key on a composite row's inner element names every handler it runs, in the order it runs",
     capability: "input",
   },
+  {
+    id: "list-row-press",
+    title:
+      "Input: a selectable row takes a press on a badge in its trailing slot only when the badge steps out of the pointer",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
