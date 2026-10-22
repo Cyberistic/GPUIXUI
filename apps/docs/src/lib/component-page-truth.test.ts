@@ -1,12 +1,14 @@
 import { readFileSync } from "node:fs";
 import {
   contrastRatio,
+  disabledOpacity,
   elevationShadow,
   highContrastLightColors,
   lightTheme,
 } from "@gpuixui/tokens";
 import { switchThumbStyle, switchTrackStyle } from "@gpuixui/primitives/core";
 import { describe, expect, it } from "vitest";
+import { classesToStyle } from "../../../../packages/tw/src/index";
 import { pageUrl, propsOf } from "./component-index";
 import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
@@ -819,6 +821,30 @@ describe("the curated component pages", () => {
     const primitiveButton = read(
       "packages/primitives/src/components/Button.tsx",
     );
+    // A page button is the primitives' action, so its corner is the class that
+    // recipe names — compiled, not remembered. The components package cannot
+    // import an unexported recipe constant, and this page must print the pixel
+    // the painter draws rather than a theme role no painter reads.
+    const actionRecipe = read("packages/primitives/src/recipe/index.ts");
+    const radiusClass =
+      /\brounded-[\w-]+/.exec(
+        /const BUTTON_BASE =\s*"([^"]*)"/.exec(actionRecipe)?.[1] ?? "",
+      )?.[0] ?? "";
+    expect(
+      radiusClass,
+      "the primitives' action recipe names no radius",
+    ).not.toBe("");
+    const corner = classesToStyle(radiusClass, lightTheme).style.borderRadius;
+    expect(corner, `${radiusClass} compiles no corner`).toBe(6);
+    // A disabled page button is the primitive's fade, and the share the page
+    // prints is the one the recipe compiles — the same share the disabled
+    // contract measures with `disabledOpacity`. A ghost action paints no fill,
+    // so it takes `UNFILLED_DISABLED` rather than the neutral pair.
+    const fadeClass =
+      /UNFILLED_DISABLED = "(disabled:opacity-\S+)"/.exec(actionRecipe)?.[1] ??
+      "";
+    const fade = classesToStyle(fadeClass, lightTheme).disabled.opacity;
+    expect(fade, `${fadeClass} compiles no fade`).toBe(disabledOpacity);
 
     // One window function with both knobs, and the branch that keeps a
     // single hidden page as the page itself.
@@ -857,6 +883,16 @@ describe("the curated component pages", () => {
     expect(text).toContain('No `aria-current="page"`');
     expect(text).toContain("aria-selected");
     expect(text).not.toContain("ghost buttons with `colors.mutedForeground`");
+    // The corner the painter draws, read from the compiled utility: the page
+    // button is the primitives' action, whose `rounded-md` is the registry's
+    // fixed 6px, so a platform switch repaints it and does not reshape it. The
+    // retracted claim named the theme's `radius.md`, which no painter reads.
+    expect(text).toContain(`${corner}px corner`);
+    expect(text).toContain(radiusClass);
+    expect(text).not.toContain("`radius.md`");
+    expect(text).not.toContain("reshapes the page buttons");
+    // The disabled share the page prints is the recipe's compiled one.
+    expect(text).toContain(`\`disabledOpacity\`, \`${fade}\``);
     expect(button).toContain(
       'Match.when("ghost", () => theme.colors.foreground)',
     );

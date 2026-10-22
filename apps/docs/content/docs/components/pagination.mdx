@@ -138,16 +138,17 @@ current page — the hook for a caller's own emphasis.
 | Part | Reads |
 | ---- | ----- |
 | the rail | `spacing.sm` between controls, through the theme's spacing scale |
-| page buttons | `density.controlHeight.sm` square, `radius.md` corner |
+| page buttons | `density.controlHeight.sm` square, fixed 6px corner (the action recipe's `rounded-md`) |
 | the current page | `primary` fill with `primaryForeground` |
 | other pages and the steps | ghost: `foreground` type, `hover`/`active` washes on the pointer |
 | a disabled step | the ghost fade (`disabledOpacity`, `0.5`), out of the tab order |
 | the ellipsis | `mutedForeground` and a caption type role |
 | the focus ring | `ring`, on the keyboard path |
 
-The corner is the theme's `radius.md`, so a platform switch reshapes the page
-buttons; the height is the platform's `sm` control height, so density moves it
-too. The list's type is the `label` role, and the gap mark is a caption.
+The corner is the fixed 6px the primitives' action recipe's `rounded-md`
+compiles to, so a platform switch repaints the page buttons but does not reshape
+them; the height is the platform's `sm` control height, so density moves it too.
+The list's type is the `label` role, and the gap mark is a caption.
 
 ## Accessibility and limitations
 
