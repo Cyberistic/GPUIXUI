@@ -42,6 +42,33 @@ const ellipsis = (side: "start" | "end"): PageItem => ({
 const clamp = (value: number, low: number, high: number): number =>
   Math.min(Math.max(value, low), high);
 
+/** A count as a whole number a list can render, or `fallback` when unreadable. */
+const countable = (value: number, fallback: number): number =>
+  Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : fallback;
+
+/**
+ * The page and count a control paints.
+ *
+ * A count is often arithmetic over a response (`Math.ceil(total / pageSize)`),
+ * and a measurement that never arrived reaches a caller as `NaN`: a list built
+ * from that count would paint the string `NaN` or an unbounded trail. A count
+ * the component cannot read is no count at all, and a page it cannot read is
+ * the first one.
+ */
+export const paginationRange = (
+  page: number,
+  pageCount: number,
+): { readonly current: number; readonly pageCount: number } => {
+  const count = countable(pageCount, 0);
+  return {
+    current:
+      count === 0
+        ? 1
+        : clamp(Number.isFinite(page) ? Math.trunc(page) : 1, 1, count),
+    pageCount: count,
+  };
+};
+
 const pages = (from: number, to: number): ReadonlyArray<PageItem> =>
   Arr.map(Arr.range(from, Math.max(from, to)), page);
 
@@ -70,14 +97,13 @@ const between = (
 export const pageWindow = ({
   page: rawPage,
   pageCount: rawPageCount,
-  siblingCount = 1,
+  siblingCount: rawSiblingCount = 1,
   showEdges = true,
 }: PageWindowInput): ReadonlyArray<PageItem> => {
-  const pageCount = Math.max(0, Math.trunc(rawPageCount));
+  const { current, pageCount } = paginationRange(rawPage, rawPageCount);
   if (pageCount === 0) return [];
 
-  const current = clamp(Math.trunc(rawPage), 1, pageCount);
-  const siblings = Math.max(0, Math.trunc(siblingCount));
+  const siblings = countable(rawSiblingCount, 1);
   const left = Math.max(current - siblings, 1);
   const right = Math.min(current + siblings, pageCount);
 

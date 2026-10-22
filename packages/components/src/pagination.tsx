@@ -34,7 +34,11 @@ import {
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { controlHeight, useTheme } from "./internal/theme.js";
-import { pageWindow, type PageItem } from "./pagination/logic.js";
+import {
+  pageWindow,
+  paginationRange,
+  type PageItem,
+} from "./pagination/logic.js";
 
 /** The rules a pagination part follows; throws outside a {@link Pagination}. */
 interface PaginationContextValue {
@@ -91,19 +95,25 @@ export const Pagination = ({
   ...rest
 }: PaginationProps) => {
   const theme = useTheme();
-  const current = Math.min(Math.max(page, 1), pageCount);
+  const { current, pageCount: count } = paginationRange(page, pageCount);
   const window = useMemo(
-    () => pageWindow({ page: current, pageCount, siblingCount, showEdges }),
-    [current, pageCount, siblingCount, showEdges],
+    () =>
+      pageWindow({
+        page: current,
+        pageCount: count,
+        siblingCount,
+        showEdges,
+      }),
+    [current, count, siblingCount, showEdges],
   );
 
-  if (pageCount <= 0) return null;
+  if (count === 0) return null;
 
   assertParts(paginationRoot, children);
 
   return (
     <PaginationContext.Provider
-      value={{ current, pageCount, onPageChange, window }}
+      value={{ current, pageCount: count, onPageChange, window }}
     >
       <div
         role="navigation"

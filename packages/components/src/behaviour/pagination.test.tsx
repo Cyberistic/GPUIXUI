@@ -141,13 +141,30 @@ describe("Pagination", () => {
   });
 
   it("renders nothing when there are no pages", () => {
-    const pager = renderComponent(
+    const empty = renderComponent(
       <Pager testId="pager" page={1} pageCount={0} onPageChange={vi.fn()} />,
     );
+    try {
+      expect(empty.renderer.findByTestId("pager")).toBeUndefined();
+    } finally {
+      empty.unmount();
+    }
 
-    expect(pager.renderer.findByTestId("pager")).toBeUndefined();
-
-    pager.unmount();
+    // `Math.ceil(total / pageSize)` over a response that never arrived is NaN;
+    // the old root compared `NaN <= 0` (false) and painted a trail labelled NaN.
+    const unreadable = renderComponent(
+      <Pager
+        testId="pager"
+        page={1}
+        pageCount={Number.NaN}
+        onPageChange={vi.fn()}
+      />,
+    );
+    try {
+      expect(unreadable.renderer.findByTestId("pager")).toBeUndefined();
+    } finally {
+      unreadable.unmount();
+    }
   });
 
   it("paints the current page with the primary role in both themes", () => {
@@ -165,6 +182,25 @@ describe("Pagination", () => {
 
     assertTheme("dark", darkTheme.colors.primary);
     assertTheme("light", lightTheme.colors.primary);
+
+    // A page and sibling count the control cannot read paint page 1 and the
+    // default window, never the string `NaN`.
+    const unreadable = renderComponent(
+      <Pager
+        page={Number.NaN}
+        pageCount={10}
+        siblingCount={Number.POSITIVE_INFINITY}
+        onPageChange={vi.fn()}
+      />,
+    );
+    try {
+      expect(buttonFor(unreadable, "1")?.style.backgroundColor).toBe(
+        darkTheme.colors.primary,
+      );
+      expect(unreadable.renderer.getAllText()).not.toContain("NaN");
+    } finally {
+      unreadable.unmount();
+    }
   });
 
   it("renders the parts in the order the caller composed them", () => {

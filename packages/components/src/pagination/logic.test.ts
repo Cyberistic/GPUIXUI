@@ -15,7 +15,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
-import { pageWindow, type PageItem } from "./logic.js";
+import { pageWindow, paginationRange, type PageItem } from "./logic.js";
 
 const pages = (...values: ReadonlyArray<number>): ReadonlyArray<PageItem> =>
   values.map((page) => ({ kind: "page", page }));
@@ -199,6 +199,43 @@ describe("pageWindow", () => {
       gap("start"),
       ...pages(26, 27, 28, 29, 30),
     ]);
+  });
+
+  it("renders no pages for a count it cannot read", () => {
+    // A count is often `Math.ceil(total / pageSize)`; a response that never
+    // arrived reaches the control as `NaN`, and an unread number must not paint
+    // the string `NaN` (or an endless trail).
+    expect(pageWindow({ page: 1, pageCount: Number.NaN })).toEqual([]);
+    expect(
+      pageWindow({ page: 1, pageCount: Number.POSITIVE_INFINITY }),
+    ).toEqual([]);
+    expect(paginationRange(1, Number.NaN)).toEqual({
+      current: 1,
+      pageCount: 0,
+    });
+    expect(paginationRange(7, Number.POSITIVE_INFINITY)).toEqual({
+      current: 1,
+      pageCount: 0,
+    });
+  });
+
+  it("reads an unreadable page or sibling count as its default", () => {
+    expect(pageWindow({ page: Number.NaN, pageCount: 10 })).toEqual(
+      pageWindow({ page: 1, pageCount: 10 }),
+    );
+    expect(
+      pageWindow({ page: 5, pageCount: 10, siblingCount: Number.NaN }),
+    ).toEqual(pageWindow({ page: 5, pageCount: 10 }));
+    const entries = pageWindow({
+      page: Number.NaN,
+      pageCount: 10,
+      siblingCount: Number.POSITIVE_INFINITY,
+    });
+    const numbers = Arr.filterMap(entries, (entry) =>
+      entry.kind === "page" ? Result.succeed(entry.page) : Result.failVoid,
+    );
+    expect(numbers.length).toBeGreaterThan(0);
+    expect(Arr.every(numbers, Number.isFinite)).toBe(true);
   });
 
   it("always includes the current page", () => {

@@ -46,18 +46,21 @@ window and `PaginationNext`.
 | Input | Result |
 | ----- | ------ |
 | `pageCount <= 0` | nothing rendered |
+| a count it cannot read (`NaN`, `±Infinity`) | nothing rendered |
 | a list that fits (`siblingCount + 5` or fewer pages) | every page |
 | page 1 of 10 | `1 2 3 4 5 … 10` |
 | page 5 of 10 | `1 … 4 5 6 … 10` |
 | page 10 of 10 | `1 … 6 7 8 9 10` |
 
-`siblingCount` widens the window around the current page (default 1).
-`showEdges={false}` drops the first and last page and renders only the siblings.
-An out-of-range `page` is clamped. An ellipsis is only drawn over a gap of two or
-more pages: a gap of one renders the page itself, because the number and the
-ellipsis take the same slot and the number is one press closer — so a crop whose
-only gap is one page renders the whole trail, and an ellipsis never stands
-between two neighbours with nothing between them.
+`siblingCount` widens the window around the current page (default 1), and a
+sibling count or page it cannot read reads as that default and the first page —
+a count that arrived as `NaN` from `Math.ceil(total / pageSize)` must not paint
+the word `NaN`. `showEdges={false}` drops the first and last page and renders
+only the siblings. An out-of-range `page` is clamped. An ellipsis is only drawn
+over a gap of two or more pages: a gap of one renders the page itself, because
+the number and the ellipsis take the same slot and the number is one press
+closer — so a crop whose only gap is one page renders the whole trail, and an
+ellipsis never stands between two neighbours with nothing between them.
 
 ## Layout and states
 
@@ -76,10 +79,10 @@ Every part takes the GPUix host props and merges `style` last.
 
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
-| `Pagination` | `page` | `number` (required) — 1-based, clamped into range | — |
-| `Pagination` | `pageCount` | `number` (required) — zero or fewer renders nothing | — |
+| `Pagination` | `page` | `number` (required) — 1-based, clamped into range; a value it cannot read is page 1 | — |
+| `Pagination` | `pageCount` | `number` (required) — zero or fewer renders nothing; a non-finite count renders nothing | — |
 | `Pagination` | `onPageChange` | `(page: number) => void` (required) | — |
-| `Pagination` | `siblingCount` | `number` — pages either side of the current one | `1` |
+| `Pagination` | `siblingCount` | `number` — pages either side of the current one; a value it cannot read is 1 | `1` |
 | `Pagination` | `showEdges` | `boolean` — keep the first and last page visible | `true` |
 | `PaginationList` | — | renders the derived page window | — |
 | `PaginationItem` | `page` | `number` (required) — the page this button goes to | — |
@@ -127,11 +130,13 @@ theme's `caption` role does not move it.
 `src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (10 tests):
 disabled edges, the page number (not index) reported, the current page no-op,
 Previous/Next stepping, the ellipsis not being a tab stop, Enter activation,
-`pageCount: 0`, the current fill in both themes, the composed part order, and an
-item outside the list reading the root's page.
+`pageCount: 0` and a `NaN` page count both rendering nothing, unreadable bounds
+painting page 1 in readable numbers, the current fill in both themes, the
+composed part order, and an item outside the list reading the root's page.
 
 `src/pagination/logic.test.ts` covers the window table above, including clamping,
-wide siblings and unique ascending pages. It also sweeps every page of 1–12 pages
+unreadable counts, wide siblings and unique ascending pages. It also sweeps every
+page of 1–12 pages
 at 0–4 siblings and fails an ellipsis whose neighbours differ by one or less —
 the window that drew `1 … 2 3 4 5 6 7 8` for page 8 of 8, wider than the trail it
 was cropping.
