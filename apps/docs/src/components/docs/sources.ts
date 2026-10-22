@@ -16,6 +16,7 @@ import dropdownMenu from "../../../../../packages/components/src/dropdown-menu.t
 import drawer from "../../../../../packages/components/src/drawer.tsx?raw";
 import field from "../../../../../packages/components/src/field.tsx?raw";
 import form from "../../../../../packages/components/src/form.tsx?raw";
+import inlineEdit from "../../../../../packages/components/src/inline-edit.tsx?raw";
 import list from "../../../../../packages/components/src/list.tsx?raw";
 import pagination from "../../../../../packages/components/src/pagination.tsx?raw";
 import popover from "../../../../../packages/components/src/popover.tsx?raw";
@@ -56,6 +57,7 @@ export const componentSources = {
   drawer,
   field,
   form,
+  inlineEdit,
   list,
   pagination,
   popover,

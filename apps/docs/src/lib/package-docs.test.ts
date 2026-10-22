@@ -166,6 +166,7 @@ describe("the package docs collections", () => {
     "/docs/components/dropdown-menu",
     "/docs/components/field",
     "/docs/components/form",
+    "/docs/components/inline-edit",
     "/docs/components/list",
     "/docs/components/pagination",
     "/docs/components/popover",

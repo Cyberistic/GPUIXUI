@@ -18,6 +18,7 @@
     "checkbox",
     "switch",
     "field",
+    "inline-edit",
     "form",
     "date-picker",
     "time-picker",

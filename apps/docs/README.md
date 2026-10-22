@@ -59,6 +59,7 @@ components/drawer.mdx        Curated: the edge box, the dismiss stack, the exit 
 components/dropdown-menu.mdx Curated: highlighted row is the focused row
 components/field.mdx        Curated: one message slot, submit-time validation, no fade
 components/form.mdx         Curated: the submit lifecycle, the core's field meta, the flat summary
+components/inline-edit.mdx  Curated: one finish per edit, blur commits, the caller's value
 components/list.mdx         Curated: one roving tab stop, type-ahead, the range that skips a row
 components/pagination.mdx   Curated: the derived window, the gap-of-one rule, the clamped page
 components/popover.mdx       Curated: anchored placement
@@ -125,6 +126,8 @@ src/components/docs/drawer-preview.ts     The drawer preview's edge box, dismiss
 src/components/docs/drawer-demo.tsx       The drawer's two browser renderings and their source strings
 src/components/docs/list-preview.ts       The list preview's arrow order, type-ahead and selection rules
 src/components/docs/list-demo.tsx         The list's two browser renderings and their source strings
+src/components/docs/inline-edit-preview.ts The rename's finish rule, focus reason and the app's name gate
+src/components/docs/inline-edit-demo.tsx  The inline edit's two browser renderings and their source strings
 src/components/docs/pagination-preview.ts The pagination preview's window rule, clamp and page slice
 src/components/docs/pagination-demo.tsx   The pagination's two browser renderings and their source strings
 src/components/docs/menu-preview.ts       The menu preview's row model and arrow arithmetic

@@ -75,6 +75,12 @@ import {
   formWorkflowSource,
 } from "./form-demo";
 import {
+  InlineEditStates,
+  InlineEditWorkflow,
+  inlineEditStatesSource,
+  inlineEditWorkflowSource,
+} from "./inline-edit-demo";
+import {
   enabledEntries,
   highlightAfter,
   menuEntries,
@@ -2632,6 +2638,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   },
   "form-states": { render: FormStates, source: formStatesSource },
   "form-workflow": { render: FormWorkflow, source: formWorkflowSource },
+  "inline-edit-states": {
+    render: InlineEditStates,
+    source: inlineEditStatesSource,
+  },
+  "inline-edit-workflow": {
+    render: InlineEditWorkflow,
+    source: inlineEditWorkflowSource,
+  },
   "field-states": { render: FieldStates, source: fieldStatesSource },
   "layout-shell": {
     render: LayoutShell,

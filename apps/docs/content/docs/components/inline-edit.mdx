@@ -1,0 +1,216 @@
+---
+title: Inline edit
+description: Rename a value where it is displayed — a display that swaps to a real input, with one finish per edit and the committed value left to the caller.
+---
+
+`InlineEdit` shows a value as text and swaps to a real `<input>` in place when
+the reader activates it. GPUix has no `contenteditable`, so the swap is
+explicit: a `role="button"` display is replaced by the runtime's own input host,
+not a styled text field pretending to be editable.
+
+- The caller owns the committed value; the component owns only the draft.
+- It commits **once** per edit, even though `Enter` can arrive twice.
+- A blur commits. `Escape` is the only discard.
+
+<ComponentPreview name="inline-edit-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="InlineEdit" />
+
+<ComponentSource
+  name="inlineEdit"
+  file="packages/components/src/inline-edit.tsx"
+/>
+
+## Usage
+
+```tsx
+import { InlineEdit } from "@gpuixui/components";
+import { useState } from "react";
+
+export const RenameProject = () => {
+  const [name, setName] = useState("Docs site");
+
+  return (
+    <InlineEdit
+      label="Project name"
+      onCommit={(next) => {
+        // The component reported a changed value; the app decides what to save.
+        setName(next);
+      }}
+      value={name}
+    />
+  );
+};
+```
+
+`value` is required and caller-owned: the control never writes its own copy, so
+a commit the app refuses simply leaves the display on the value the app still
+holds. The runnable build is `examples/inline-edit.example.tsx`, which the
+native playground mounts.
+
+## The finish
+
+Every route ends in one function, and the guard is what makes a double `Enter`
+harmless:
+
+| Action | Result | Focus |
+| ------ | ------ | ----- |
+| `Click`, `Enter` or `Space` on the display | edit mode | the new input (`focusElement` after the swap) |
+| `Enter` in the input | commit a **changed** draft, return to the display | the display |
+| `submit` (the same `Enter` arriving again) | nothing — the edit already finished | the display |
+| Blur | commit a **changed** draft, return to the display | wherever the reader moved it |
+| `Escape` | discard the draft, return to the display | the display |
+| A commit with an unchanged draft | nothing is called | the display |
+| An empty draft | a valid committed value — the placeholder is painted, not a cancel | the display |
+
+Two consequences a drawing cannot show:
+
+- **Blur is a commit, not a cancel.** Tabbing away saves the name. If a form
+  must not save on focus loss, the app decides that, not the control.
+- **One finish per edit.** `Enter` reaches the field as both a key and the
+  input's submit event; the component latches the finish, so `onCommit` cannot
+  fire twice for one edit. A controlled `editing` that never flips back pins the
+  field in edit mode — the component reports, the caller decides.
+
+## States
+
+<ComponentPreview name="inline-edit-states" />
+
+| State | What the control shows |
+| ----- | ---------------------- |
+| rest | the committed value in `foreground`, on a `sm` row |
+| empty value | the placeholder in `mutedForeground` — a value, not a prompt |
+| editing | a real `<input>` at the `md` height, with the caret and the platform's editing keys |
+| disabled | half opacity, no tab stop, no ring; the display ignores activation |
+| controlled | the app owns `editing`; the control reports `onEditingChange` and nothing else |
+
+There are no sizes or variants: one display row, one input, and the two heights
+the theme's density sets.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `InlineEdit` | the display, the swap, the draft, the focus move and the finish |
+
+There are no sub-parts. A pencil icon, a surrounding label or a validation
+message is app composition: the control ships one display and one input, so a
+`Field`'s label and an error line sit beside it rather than inside it.
+
+The component is not a text field with a read mode. If the value is always
+editable, use an `Input`; if the value is read-only until a dialog opens, use a
+`Dialog` with a `Field`. `InlineEdit` is for the case where the value *is* the
+page and the reader renames it in place.
+
+## Keyboard
+
+- The display is a tab stop (`Tab` reaches it) and a `role="button"`, so
+  `Enter` and `Space` both start the edit.
+- In the input, `Enter` commits and `Escape` discards; `Tab` blurs, which
+  commits by contract.
+- A disabled control leaves the tab order and refuses activation, so a `Tab`
+  traversal skips it.
+- The component installs no other shortcut. There is no key to jump to the
+  field's end or to select the text — the runtime hosts the input, so the
+  platform's own editing keys apply once it holds focus.
+
+## API reference
+
+### `InlineEdit`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `string` | — | the committed text; required, and the caller owns it |
+| `onCommit` | `(value: string) => void` | — | called on a **changed** `Enter` or blur commit, never twice per edit |
+| `label` | `string` | — | the accessible name of both the display and the input |
+| `placeholder` | `string` | `"—"` | painted in `mutedForeground` while the value is empty |
+| `disabled` | `boolean` | `false` | leaves the tab order, ignores activation and fades to 0.5 |
+| `editing` | `boolean` | — | the controlled edit state; `undefined` leaves it to the control |
+| `defaultEditing` | `boolean` | `false` | the uncontrolled starting state |
+| `onEditingChange` | `(editing: boolean) => void` | — | reports the edit state the control took |
+| `style` | `StateStyle<InlineEditState>` | — | resolved against `{ editing, disabled }`, merged last |
+| `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `testId` | `string` | — | stable locator |
+
+`InlineEditState` is `{ editing, disabled }`, handed to the `style` callback
+after the recipe, so a caller can paint an editing row the recipe does not. The
+input also accepts the runtime's `InputProps` minus `value` — `onKeyDown`,
+`onFocus` and `onBlur` compose with the component's own handlers rather than
+replacing them.
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| display text | `foreground`; the placeholder is `mutedForeground` |
+| display hover | `accent` fill, `accentForeground` text |
+| display height | `controlHeight.sm` |
+| display corner | the recipe's fixed 4px (`rounded-sm`) |
+| editor fill | `background` |
+| editor text | `inputForeground`, with the `selection` wash |
+| editor edge | `input` |
+| editor height | `controlHeight.md` |
+| editor corner | the recipe's fixed 4px (`rounded-sm`) |
+| disabled | `disabledFade`: half opacity, no focus ring |
+
+The heights are **density steps**, so the display and the editor resize with the
+platform's compact or comfortable preset; the corner is the recipe's fixed
+metric, so the shape does not follow `radius` — the platform switch repaints the
+roles and re-heights the rows without reshaping the text. A custom theme changes
+the whole control with no code change — see
+[`docs/tokens.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md).
+
+## Accessibility and limitations
+
+- The display is a `role="button"` and the input is a real `<input>`; both take
+  the same `label`, so name the value ("Project name"), not the action ("Edit").
+- `@gpuix/native@0.11.0` has no `aria-invalid` and no `aria-describedby`, so a
+  refused commit has **no field-level announcement**. The control's job is the
+  edit; a message beside it is the app's, and 0.11.0 has no live region either,
+  so paint it where it is read rather than relying on it being announced.
+- There is no `contenteditable` in the runtime: the display and the input are
+  separate elements, which is why the focus is moved explicitly after the swap.
+  A reader never sees a caret inside the displayed text.
+- Blur commits, so clicking anywhere else saves a changed draft. `Escape` is the
+  only discard, and it is not reachable from the display — an edit must be
+  started before it can be cancelled.
+- An empty string is a valid committed value; the control paints the
+  placeholder. A form that requires a name gates it in the app, as the preview
+  does.
+- The component keeps no history and no undo. A rename that needs one is the
+  app's record, not a second state inside the field.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the display, the editor, the draft, the finish guard and the focus move |
+| `@gpuix/react` | the input host, the key event and the renderer's `focusElement` |
+| `@gpuix/react/floating` | `mergeStyles` and `resolveStyle` for the state callback |
+| `@gpuixui/tw` | the `INLINE_EDIT_*` recipes and `cn` conflict resolution |
+
+## Related
+
+- **Field** — a real label, a description and a submit-time message around an
+  input that is always editable.
+- **Dialog** — when a rename needs more than one value or an explicit Save.
+- **Tag input** — many short values, committed one at a time.
+- **List** — rows whose names are renamed in place from an inspector.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `partial` runtime verdict: the edit contract is
+whole, but 0.11.0 has no `contenteditable` (the swap is explicit) and no
+`aria-invalid`/`aria-describedby` (a refused commit is the app's feedback).
+
+`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer — 8 native
+behaviour tests: the display with no input, the click swap with focus, the
+keyboard swap, an `Enter` commit that returns the focus, the `Escape` discard, a
+blur commit, the unchanged draft (and the disabled control), and a controlled
+edit state.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```

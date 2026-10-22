@@ -5414,3 +5414,107 @@ button.gx-table-row:focus-visible {
   font-size: 11.5px;
   line-height: 1.7;
 }
+
+/* ---- inline edit: mirrors components/src/inline-edit.tsx ----
+   The display is `INLINE_EDIT_DISPLAY` (`px-1`, the display text at 14/20) at
+   the `sm` control height with the component's `accent` hover wash; the editor
+   is `INLINE_EDIT_INPUT` — the page role as its fill (`bg-background`), the
+   `input` edge, 14/20 — at the `md` height. The corner is the recipe's fixed
+   `rounded-sm` (4px), so a platform switch repaints the roles and re-heights the
+   row without reshaping the text. The refusal line is the app's feedback: the
+   component ships no `aria-invalid` and no message slot. */
+.gx-inline-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.gx-inline-grid {
+  display: grid;
+  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  width: 100%;
+}
+
+.gx-inline-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-inline-display {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.gx-inline-display:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-inline-display:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-inline-display:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.gx-inline-display > [data-empty] {
+  color: var(--muted-foreground);
+}
+
+.gx-inline-input {
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-sm);
+  border: 1px solid var(--input);
+  border-radius: 4px;
+  background: var(--background);
+  color: var(--input-foreground);
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.gx-inline-input:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-inline-readout,
+.gx-inline-hint {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.gx-inline-hint {
+  font-family: var(--font-sans);
+  font-size: 12px;
+}
+
+.gx-inline-refusal {
+  color: var(--destructive-soft-foreground);
+  font-size: 12px;
+  line-height: 1.7;
+}

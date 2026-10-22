@@ -5637,7 +5637,52 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 179/179
+`[x]` `[██████████]` 180/180
+
+`[x]` Curate the **Inline edit** page and hold its one finish, its blur commit
+and its app gate to the source — `/docs/components/inline-edit` served only the
+package page (strategy 4: no preview), so the rename control every settings row
+is built from had nothing a reader could press, and the rule that makes it safe
+lived in one source comment. The curated page shadows
+`packages/components/docs/inline-edit.mdx` and teaches what a drawing cannot
+show: the display swaps to a real `<input>` (no `contenteditable` in 0.11.0) and
+the focus is moved explicitly after the swap; a changed draft commits **once**
+on `Enter` or blur — the runtime delivers `Enter` twice, and the component
+latches the finish — while an unchanged draft calls nothing; `Escape` from the
+input is the **only** discard, so a blur is a save and tabbing away is not a
+cancel; a blur commit leaves the focus where the reader put it while the
+keyboard returns it to the display; an empty string is a valid committed value
+and the app is what refuses it; and a controlled `editing` that never flips back
+pins the field in edit mode because the component only reports. It states the
+measured limits (no `contenteditable`, no `aria-invalid`/`aria-describedby`, no
+live region so a refusal is the app's own read message) and the fixed metrics
+(the display's `sm` height and 4px recipe corner, the editor's `md` height and
+`background` fill, the `accent` hover wash). Two browser previews:
+`inline-edit-workflow` (a project rename with a reported-commit count, a
+discard count, the focus reason and the app's blank-name refusal) and
+`inline-edit-states` (rest, empty value, editing, disabled and a controlled edit
+started from an app button). The rules live in
+`src/components/docs/inline-edit-preview.ts` so they are testable:
+`inline-edit-preview.test.ts` (11 cases) proves the double-`Enter` no-op, the
+unchanged-draft silence, both focus reasons, the Escape-only discard, the draft
+that restarts from the committed value, the empty-value/app-gate split and the
+name limit, and reads `inline-edit.tsx` for the latch, the `draft !== value`
+guard, the two refocus reasons and the `sm`/`md` heights. `inline-edit-page.test.ts`
+(8 cases) holds the page's Dependencies table to the component's own imports,
+the printed native count to the suite's 8, the runtime pin to the workspace
+catalog, **every** printed corner to the compiled `rounded-sm` (4px) and the
+preview rules to `--control-height-sm`/`-md`, `accent`, `accent-foreground`,
+`background` and `input`. The page is in the sidebar (`meta.json` Forms), the
+Components index, `/docs/theming`'s switch list, the strategy's "Curated today"
+line, `sources.ts`, the app README ledger and `package-docs.test.ts`'s curated
+set. Directions measured: dropping the `!state.editing` guard fails the
+double-`Enter` case by name, printing `7 native` fails the count case, and a
+stale `fixed 6px` in one Theming row fails the corner case. `nub run --filter
+@gpuixui/docs test` is 981 passed with the two failures being the data lane's
+in-flight table work (`table-preview.test.ts`, `lane-page.test.ts`), both outside
+this page; `build` and `check:tests` are green. No native GPUix scenario applies
+(a docs page has no runtime path); the component's own evidence stays with its
+row.
 
 `[x]` Route the **curated Table page** to the pinned column that ships beside
 it — `FrozenTable` landed in `@gpuixui/data` with `/docs/data-display/frozen-columns`,
