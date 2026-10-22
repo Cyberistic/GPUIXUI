@@ -1,0 +1,196 @@
+---
+title: Command menu
+description: A searchable action list in a modal surface — the ⌘K palette.
+---
+
+`CommandMenu` is the palette a desktop app opens from a shortcut: pick an action
+by name, with the list filtered as you type. It composes rather than reinvents —
+**Dialog** owns the surface, Escape and the focus trap, the runtime's `<input>`
+owns typing, and `menu/logic.ts` owns which row the keys move to.
+
+It is not a dropdown menu: a dropdown is a short list anchored to the control
+that opened it, while a palette is modal, is opened by a key, and stays open
+while the query changes. Nor is it a select: the query filters the actions, and
+`Enter` runs one rather than setting a value.
+
+<ComponentPreview name="command-menu-demo" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="CommandMenu" />
+
+<ComponentSource
+  name="commandMenu"
+  file="packages/components/src/command-menu.tsx"
+/>
+
+## Usage
+
+The actions belong to the app, because their `perform` closes over the workspace.
+Render the palette once at the root and open it from a shortcut:
+
+```tsx
+import {
+  CommandMenu,
+  CommandMenuEmpty,
+  CommandMenuInput,
+  CommandMenuList,
+} from "@gpuixui/components/command-menu";
+
+const actions = [
+  {
+    id: "new-file",
+    label: "New file",
+    group: "File",
+    shortcut: "⌘N",
+    perform: newFile,
+  },
+  {
+    id: "toggle-sidebar",
+    label: "Toggle sidebar",
+    group: "View",
+    shortcut: "⌘B",
+    perform: toggleSidebar,
+  },
+];
+
+<CommandMenu open={open} onOpenChange={setOpen} actions={actions}>
+  <CommandMenuInput placeholder="Type a command…" />
+  <CommandMenuList />
+  <CommandMenuEmpty>No matching commands</CommandMenuEmpty>
+</CommandMenu>;
+```
+
+`open` is required and controlled: the palette is opened by the application's
+own shortcut, not by a trigger inside the component. `shortcut` is **display
+only** — the component binds no keys; that is the app's command registry.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `CommandMenu` | the dialog, the query and the ranked matches; `open` is controlled |
+| `CommandMenuInput` | the search field: typing, arrows/Home/End, `Enter`, Escape |
+| `CommandMenuList` | the scrolling match column: group headings, rows and key hints |
+| `CommandMenuItem` | one runnable row; the list renders one per match |
+| `CommandMenuEmpty` | shown only when nothing matches; its children are the message |
+
+The root owns the query because ranking needs the whole action set: `actions`
+stays a root prop, and the list renders the rows derived from it. The search
+input keeps focus the whole time and the active row is **highlighted, not
+focused** — focusing a row would take typing away after the first arrow key.
+That is also why closing returns the focus to whatever opened the palette.
+
+Groups render in the caller's order, and a heading appears when `group` changes
+between consecutive matches. A heading therefore never repeats because a lower
+group happened to score higher.
+
+## Filtering
+
+The default matcher is a case-insensitive **subsequence**: the query's
+characters must appear in order in the label, not necessarily together, so
+initials work.
+
+| Query | Matches |
+| ----- | ------- |
+| `opfl` | **Op**en **f**i**l**e — a non-contiguous match |
+| `open` | `Open file` above `Reopen closed tab` — a word start beats a mid-word run |
+| `e` | `Split editor` scores its `e` at a word start and still stays in the View group |
+
+Scoring is deterministic: ten points a matched character, eight more when it
+starts a word, and two per character in the current consecutive run. Matches are
+then ranked **within each group**, and ties keep declaration order. An empty
+query shows every action in declaration order.
+
+Pass `filter` to replace all of it with a boolean predicate. Accepted rows keep
+declaration order — no hidden fuzzy pass and no reordering. Disabled actions stay
+visible, cannot be run, and are never a target for the arrow keys or the initial
+highlight.
+
+The browser preview above repeats this rule rather than approximating it:
+`src/components/docs/command-preview.ts` mirrors `menu/fuzzy.ts`, and
+`command-preview.test.ts` pins the non-contiguous match, the word-start score and
+the group order.
+
+## Keyboard
+
+| Key | Result |
+| ---- | ------ |
+| type | filters; the highlight resets to the first enabled match |
+| `ArrowDown` / `ArrowUp` | move the highlight, wrapping and skipping disabled rows |
+| `Home` / `End` | first/last enabled row |
+| `Enter` | runs the highlighted action and closes |
+| `Escape` | closes |
+| `Tab` | follows the dialog's trap |
+
+`Enter` arrives as the input's `submit` event rather than a key-down — measured
+in `@gpuix/native@0.11.0` — which is also why `Space` types a space instead of
+running a row.
+
+## API reference
+
+`CommandMenu` is controlled: `open` and `onOpenChange` are required. Every part
+takes the GPUix host props and merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `CommandMenu` | the composed `Dialog` surface | `open: boolean` (required), `onOpenChange: (open: boolean) => void` (required), `actions: ReadonlyArray<CommandAction>` (required), `recents?: ReadonlyArray<string>`, `filter?: (action: CommandAction, query: string) => boolean` |
+| `CommandMenuInput` | host `<input>` | `placeholder?: string` (default `"Type a command…"`), `label?: string` (default `"Search commands"`) |
+| `CommandMenuList` | scrolling match column | — (renders the root's ranked matches) |
+| `CommandMenuItem` | one runnable row | `action: CommandAction` (required) |
+| `CommandMenuEmpty` | the no-match message | `children?: ReactNode` (default `No matching commands`) |
+
+`CommandAction` is `{ id, label, group?, shortcut?, disabled?, perform }`:
+`perform` is the handler a click or `Enter` runs, and `group` places the row
+under its heading.
+
+## Theming
+
+The surface is the dialog's: `popover`, `radius.xl` and the `lg` elevation. The
+input paints `input` / `inputForeground` with a `borderWidth.thin` border in
+`border` and `radius.md`. Rows are the shared menu rows — `hover` for the
+highlight with the 2px `accent` bar — so a palette row and a menu row look like
+one family.
+
+The preview above paints from those roles, so the sidebar's platform switch
+repaints and re-shapes it with every other preview on the site.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | host props, events and the `PublicInstance` the input ref holds |
+| `@gpuix/react/floating` | `mergeStyles` for the parts' style contract |
+| `@gpuixui/tw` | the `COMMAND_*` recipes |
+| `effect` | `Array`, `HashSet`, `Option` and `String` for the matching fold |
+
+## Accessibility and limitations
+
+- The dialog is named `"Command menu"`, the input is `"Search commands"`, and
+  rows are `role="option"` with `aria-selected` tracking the highlight.
+- **No `aria-activedescendant` or `aria-controls`** in `@gpuix/native@0.11.0`:
+  the input never points assistive technology at the highlighted row, so the
+  relationship between the query and the active row is visual only.
+- The input is the runtime's host `<input>`, not a styled wrapper — the same
+  stand-in the other fields use.
+- Ranking is per group, not global; a group's heading keeps the caller's place
+  even when another group holds the best match.
+- Recents are caller-owned data (`recents`), shown only for an empty query under
+  one `Recent` heading. The component records no history.
+- The dialog owns dismissal, so `Escape` closes the palette and outside presses
+  follow the same topmost-layer rule as every other overlay.
+- `shortcut` is a label. Nothing is bound, and a palette without an app-level
+  shortcut is a palette nobody can open.
+
+## Related
+
+- **Dialog** — the modal surface this composes, including the focus trap.
+- **Dropdown menu** — a short action list anchored to a control, not a palette.
+- **Combobox** — filtering applied to a value rather than to actions.
+
+## Status
+
+`done`, with the runtime support marked `partial` in `COMPONENTS.md`:
+19 native behaviour tests in the real GPUix renderer plus 12 unit tests for the
+matcher. Measured on `@gpuix/native@0.11.0`; the missing
+`aria-activedescendant` is the runtime's, not the component's.

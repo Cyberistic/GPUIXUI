@@ -491,6 +491,70 @@
   font-weight: 600;
 }
 
+/* ---- command menu: mirrors components/src/command-menu.tsx ---- */
+.gx-demo-command {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+  min-height: 340px;
+  padding: 24px;
+}
+
+.gx-command-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 3px);
+  background: var(--card);
+}
+
+.gx-command-key {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--placeholder);
+}
+
+.gx-palette {
+  width: min(360px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--popover);
+  box-shadow: 0 24px 60px var(--shadow);
+}
+
+.gx-palette-input {
+  width: 100%;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--input);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
+}
+
+.gx-palette-list {
+  max-height: 232px;
+  overflow-y: auto;
+  padding: 5px;
+}
+
+.gx-palette-empty {
+  margin: 0;
+  padding: 10px 8px;
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+}
+
 /* ---- tabs: mirrors components/src/tabs.tsx ---- */
 .gx-demo-tabs {
   flex-direction: column;

@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useId,
   useLayoutEffect,
@@ -7,6 +8,12 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
+import {
+  commandMatches,
+  firstEnabled,
+  nextEnabled,
+  type CommandAction,
+} from "./command-preview";
 import {
   enabledEntries,
   highlightAfter,
@@ -610,6 +617,152 @@ const DropdownMenuDemo = () => {
   );
 };
 
+const CommandMenuDemo = () => {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [highlight, setHighlight] = useState<string | null>(null);
+  const [lastAction, setLastAction] = useState<string | null>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+
+  const rows = commandMatches(query);
+
+  const close = () => {
+    setOpen(false);
+    setHighlight(null);
+    trigger.current?.focus();
+  };
+
+  const openPalette = () => {
+    setQuery("");
+    setHighlight(firstEnabled(commandMatches("")) ?? null);
+    setOpen(true);
+  };
+
+  const run = (action: CommandAction) => {
+    if (action.disabled === true) return;
+    setLastAction(action.label);
+    close();
+  };
+
+  useEffect(() => {
+    if (open) input.current?.focus();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      close();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const onInput = (value: string) => {
+    setQuery(value);
+    // Typing resets the highlight to the first runnable match, as the
+    // component does — the query changes which row Enter would run.
+    setHighlight(firstEnabled(commandMatches(value)) ?? null);
+  };
+
+  const onInputKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const next = nextEnabled(
+        rows,
+        highlight,
+        event.key === "ArrowDown" ? 1 : -1,
+      );
+      if (next !== undefined) setHighlight(next);
+      return;
+    }
+    if (event.key === "Home" || event.key === "End") {
+      event.preventDefault();
+      const ordered = event.key === "Home" ? rows : [...rows].reverse();
+      const next = firstEnabled(ordered);
+      if (next !== undefined) setHighlight(next);
+      return;
+    }
+    if (event.key !== "Enter") return;
+    const action = rows.find((row) => row.id === highlight);
+    if (action === undefined) return;
+    event.preventDefault();
+    run(action);
+  };
+
+  return (
+    <div className="gx-demo-command">
+      <div className="gx-command-file">
+        <div>
+          <p className="gx-menu-file-title">workspace.ts</p>
+          <p className="gx-menu-file-meta">2 unsaved changes</p>
+        </div>
+        <button
+          className="gx-btn gx-btn-secondary gx-btn-sm"
+          onClick={openPalette}
+          ref={trigger}
+          type="button"
+        >
+          Commands <kbd className="gx-command-key">⌘K</kbd>
+        </button>
+      </div>
+      <p className="gx-menu-readout">
+        Last action: <b>{lastAction ?? "none yet"}</b>
+      </p>
+      {open ? (
+        <div className="gx-dialog-backdrop" role="presentation">
+          <div
+            aria-label="Command menu"
+            aria-modal="true"
+            className="gx-palette"
+            role="dialog"
+          >
+            <input
+              aria-label="Search commands"
+              className="gx-palette-input"
+              onChange={(event) => onInput(event.target.value)}
+              onKeyDown={onInputKeyDown}
+              placeholder="Type a command…"
+              ref={input}
+              value={query}
+            />
+            <div className="gx-palette-list" role="listbox">
+              {rows.length === 0 ? (
+                <p className="gx-palette-empty">No matching commands</p>
+              ) : null}
+              {rows.map((action, index) => (
+                <Fragment key={action.id}>
+                  {index === 0 || rows[index - 1]?.group !== action.group ? (
+                    <p aria-hidden="true" className="gx-menu-label">
+                      {action.group}
+                    </p>
+                  ) : null}
+                  <button
+                    aria-selected={highlight === action.id}
+                    className="gx-menu-row"
+                    data-highlighted={highlight === action.id}
+                    disabled={action.disabled}
+                    onClick={() => run(action)}
+                    role="option"
+                    type="button"
+                  >
+                    <span>{action.label}</span>
+                    {action.shortcut === undefined ? null : (
+                      <kbd className="gx-command-key">{action.shortcut}</kbd>
+                    )}
+                  </button>
+                </Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 const buttonSource = `import { Button } from "@gpuixui/primitives";
 
 export function ProjectActions() {
@@ -800,10 +953,41 @@ export function FileActions({ name }: { name: string }) {
   );
 }`;
 
+const commandMenuSource = `import {
+  CommandMenu,
+  CommandMenuEmpty,
+  CommandMenuInput,
+  CommandMenuList,
+} from "@gpuixui/components/command-menu";
+import { useState } from "react";
+
+const actions = [
+  { id: "new-file", label: "New file", group: "File", shortcut: "⌘N", perform: newFile },
+  { id: "open-file", label: "Open file", group: "File", shortcut: "⌘O", perform: openFile },
+  { id: "save", label: "Save", group: "File", shortcut: "⌘S", perform: save },
+  { id: "sidebar", label: "Toggle sidebar", group: "View", shortcut: "⌘B", perform: toggleSidebar },
+];
+
+export function Palette() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <CommandMenu open={open} onOpenChange={setOpen} actions={actions}>
+      <CommandMenuInput placeholder="Type a command…" />
+      <CommandMenuList />
+      <CommandMenuEmpty>No matching commands</CommandMenuEmpty>
+    </CommandMenu>
+  );
+}`;
+
 export const demos: Readonly<Record<string, Demo>> = {
   "button-variants": { render: ButtonRow, source: buttonSource },
   "button-sizes": { render: ButtonSizes, source: sizeSource },
   "button-states": { render: ButtonStates, source: stateSource },
+  "command-menu-demo": {
+    render: CommandMenuDemo,
+    source: commandMenuSource,
+  },
   "dialog-demo": { render: DialogDemo, source: dialogSource },
   "dropdown-menu-demo": {
     render: DropdownMenuDemo,

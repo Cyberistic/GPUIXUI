@@ -59,6 +59,12 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/primitives/src/components/Button.tsx",
   },
   {
+    file: "command-menu.mdx",
+    row: "Command menus",
+    suite: "packages/components/src/behaviour/command-menu.test.tsx",
+    source: "packages/components/src/command-menu.tsx",
+  },
+  {
     file: "dialog.mdx",
     row: "Dialogs",
     suite: "packages/components/src/behaviour/dialog.test.tsx",

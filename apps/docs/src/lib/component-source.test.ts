@@ -69,7 +69,14 @@ describe("the component source accordions", () => {
     const paths = registryPaths();
 
     expect(paths.size).toBe(Object.keys(componentSources).length);
-    expect(paths.size).toBeGreaterThanOrEqual(4);
+    expect(paths.size).toBeGreaterThanOrEqual(5);
+    // An `?raw` import that resolves to nothing would be an empty accordion
+    // too, so the content is read as well as the key.
+    expect(
+      Object.entries(componentSources)
+        .filter(([, source]) => source.trim().length === 0)
+        .map(([key]) => key),
+    ).toEqual([]);
   });
 
   it("name a registered source on every page", () => {
