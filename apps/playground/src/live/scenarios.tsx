@@ -15,7 +15,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Duration, Effect, Match } from "effect";
+import { Duration, Effect, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -5522,6 +5522,258 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("loading-row-corrected");
   });
 
+/** The fixed pane the resize probe lays its flexible region against. */
+const RESIZE_SIDEBAR = 120;
+
+/**
+ * A `key=value` field out of a readout, or `-1` when the key is absent.
+ *
+ * A missing key must never read as `0`: the probe asserts that a width changed,
+ * and `0` is a plausible stale width.
+ */
+const readoutNumber = (readout: string, key: string): number =>
+  Option.getOrElse(
+    pipe(
+      Str.match(new RegExp(`${key}=(-?\\d+)`))(readout),
+      Option.flatMap((match) => Option.fromNullishOr(match[1])),
+      Option.map((digits) => Number.parseInt(digits, 10)),
+    ),
+    () => -1,
+  );
+
+/**
+ * `window-resize-reflow` — the window an app is laid out in changes, and both
+ * channels a panel has to it report the change.
+ *
+ * A workspace is resized by its user, not only by a sibling pane: a split's
+ * `max` is the caller's number, and a sidebar, inspector or dock that re-clamps
+ * only on `onLayout` still needs the window's own size to pass as that number.
+ * Nothing had measured either channel. The renderer's `getWindowSize` is
+ * documented as having once answered a hardcoded 800x600, and `useWindowSize()`
+ * samples it every 100ms — no probe had read either against a real layout.
+ *
+ * The probe lays a 120px sidebar beside a flexible centre that fills the row,
+ * then zooms the window through the only lever the binding exposes. A window
+ * open at 900x520 is a user frame, so the platform's zoom takes it to its
+ * standard frame and calling it again restores the user frame; the probe waits
+ * for each frame before asserting, because the hook polls and the zoom animates.
+ *
+ * What it measures: the renderer's size is the box the layout occupies (the
+ * sidebar plus centre equal it, so a constant would fail); the app's
+ * `useWindowSize()` reports the same pair; zoom changes the size, the flexible
+ * pane reflows to it and `onLayout` reports the new width; and the restore puts
+ * both back.
+ */
+const WindowResizeProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [centre, setCentre] = useState({ width: 0, reports: 0 });
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        height: "100%",
+        gap: 6,
+      }}
+    >
+      <text
+        testId="resize-window-readout"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`w=${Math.round(window.width)} h=${Math.round(window.height)}`}
+      </text>
+      <div
+        testId="resize-row"
+        style={{
+          display: "flex",
+          width: "100%",
+          flexGrow: 1,
+          minHeight: 0,
+        }}
+      >
+        <div
+          testId="resize-sidebar"
+          style={{
+            width: RESIZE_SIDEBAR,
+            flexShrink: 0,
+            backgroundColor: theme.colors.muted,
+          }}
+        />
+        <div
+          testId="resize-centre"
+          onLayout={(payload) =>
+            setCentre((current) => ({
+              width: Math.round(payload.width ?? current.width),
+              reports: current.reports + 1,
+            }))
+          }
+          style={{ flexGrow: 1, backgroundColor: theme.colors.card }}
+        />
+      </div>
+      <text
+        testId="resize-centre-readout"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`w=${centre.width} reports=${centre.reports}`}
+      </text>
+    </div>
+  );
+};
+
+const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    /** The app's own read of the window, as its readout prints it. */
+    const appSize = () =>
+      Effect.map(ctx.host.text("resize-window-readout"), (readout) => ({
+        width: readoutNumber(readout, "w"),
+        height: readoutNumber(readout, "h"),
+      }));
+    /** The centre pane's `onLayout` count and last reported width. */
+    const centreReport = () =>
+      Effect.map(ctx.host.text("resize-centre-readout"), (readout) => ({
+        width: readoutNumber(readout, "w"),
+        reports: readoutNumber(readout, "reports"),
+      }));
+    /** The centre pane's painted box. */
+    const centreBounds = () =>
+      Effect.flatMap(
+        Effect.map(ctx.host.bounds("resize-centre"), Option.fromNullishOr),
+        (bounds) => ctx.expectSome("the centre pane painted", bounds),
+      );
+    /**
+     * The window's size after a zoom has settled in **both** channels.
+     *
+     * `zoomWindow` is animated and the app's hook polls every 100ms, so a single
+     * frame after the call proves neither. The helper samples until the
+     * renderer's box changed and `useWindowSize` names it, then returns the
+     * renderer's size; a timeout returns what it last read so the assertion
+     * reports the number the app actually shows.
+     */
+    const settledSize = (previous: Smoke.Size) => {
+      const poll = (
+        tries: number,
+      ): Effect.Effect<Smoke.Size, Smoke.SmokeHostError> =>
+        Effect.gen(function* () {
+          const size = yield* ctx.host.windowSize();
+          const app = yield* appSize();
+          const followed =
+            size.width !== previous.width &&
+            app.width === Math.round(size.width) &&
+            app.height === Math.round(size.height);
+          if (followed || tries <= 0) return size;
+          yield* Effect.sleep(Duration.millis(80));
+          return yield* poll(tries - 1);
+        });
+      return poll(12);
+    };
+
+    // 1. The renderer's size is a real box and the app reads the same one.
+    const size = yield* ctx.host.windowSize();
+    const app = yield* appSize();
+    yield* ctx.expectEqual(
+      "the renderer reports a positive paintable width",
+      size.width > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "useWindowSize reads the renderer's width",
+      app.width,
+      Math.round(size.width),
+    );
+    yield* ctx.expectEqual(
+      "useWindowSize reads the renderer's height",
+      app.height,
+      Math.round(size.height),
+    );
+
+    // 2. That number is the box the layout occupies, not a constant: the row
+    //    fills it and the flexible pane takes what the sidebar leaves.
+    const centre = yield* centreBounds();
+    yield* ctx.expectNear(
+      "the sidebar plus the centre fill the window's width",
+      RESIZE_SIDEBAR + centre.width,
+      size.width,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the centre is the painted box the onLayout report names",
+      (yield* centreReport()).width,
+      centre.width,
+      1,
+    );
+
+    // 3. Zoom changes the window. The app's hook follows it, and the flexible
+    //    pane reflows without the app writing a width.
+    const reportsBefore = (yield* centreReport()).reports;
+    yield* ctx.host.zoomWindow();
+    const zoomed = yield* settledSize(size);
+    yield* ctx.expectEqual(
+      "the platform's zoom changes the window's width",
+      zoomed.width !== size.width,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "useWindowSize follows the zoomed width",
+      (yield* appSize()).width,
+      Math.round(zoomed.width),
+    );
+    const zoomedCentre = yield* centreBounds();
+    yield* ctx.expectNear(
+      "the flexible pane reflows to the zoomed window",
+      RESIZE_SIDEBAR + zoomedCentre.width,
+      zoomed.width,
+      1,
+    );
+    const afterZoom = yield* centreReport();
+    yield* ctx.expectNear(
+      "the pane's layout report is its reflowed box",
+      afterZoom.width,
+      zoomedCentre.width,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the window resize runs the pane's layout pass again",
+      afterZoom.reports > reportsBefore,
+      true,
+    );
+    yield* ctx.host.capture("window-zoomed");
+
+    // 4. Zoom back: the window returns to the size it opened at, and so does
+    //    the layout. The probe leaves the window as it found it for the probes
+    //    that ran before it and for the next run.
+    yield* ctx.host.zoomWindow();
+    const restored = yield* settledSize(zoomed);
+    yield* ctx.expectNear(
+      "zooming back restores the window it opened at",
+      restored.width,
+      size.width,
+      1,
+    );
+    const restoredCentre = yield* centreBounds();
+    yield* ctx.expectNear(
+      "the layout returns with the window",
+      RESIZE_SIDEBAR + restoredCentre.width,
+      restored.width,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the restored width is what useWindowSize reports",
+      (yield* appSize()).width,
+      Math.round(restored.width),
+      1,
+    );
+    yield* ctx.host.capture("window-restored");
+  });
+
 /** The app-level shortcut probe: a palette toggled by the window's own key handler. */
 const WindowKeyProbe = (): ReactNode => {
   const theme = useTheme();
@@ -7529,5 +7781,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "loading-row-correction",
     view: () => <LoadingRowProbe />,
     steps: loadingRowSteps,
+  },
+  "window-resize-reflow": {
+    id: "window-resize-reflow",
+    view: () => <WindowResizeProbe />,
+    steps: windowResizeSteps,
   },
 };

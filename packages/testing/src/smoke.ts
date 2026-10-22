@@ -117,6 +117,12 @@ export interface Bounds {
   readonly height: number;
 }
 
+/** A window's paintable size read back from the runtime. */
+export interface Size {
+  readonly width: number;
+  readonly height: number;
+}
+
 /** A scroll offset read back from the runtime. */
 export interface Offset {
   readonly x: number;
@@ -392,6 +398,22 @@ export interface AsyncSmokeHost {
   readonly bounds: (
     testId: string,
   ) => Effect.Effect<Bounds | null, SmokeHostError>;
+  /**
+   * The window's paintable size in logical pixels.
+   *
+   * The renderer used to answer a hardcoded 800x600 here, so a probe that
+   * measures a layout against the window reads the number instead of assuming
+   * it. `useWindowSize()` samples the same call every 100ms, so a probe can
+   * hold the app's channel and the renderer's to each other.
+   */
+  readonly windowSize: () => Effect.Effect<Size, SmokeHostError>;
+  /**
+   * Runs the platform's zoom action, the one lever a window exposes.
+   *
+   * The binding publishes no `setSize`, so a probe that needs the app laid out
+   * in a different window asks the platform rather than the renderer.
+   */
+  readonly zoomWindow: () => Effect.Effect<void, SmokeHostError>;
   readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
   readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
   /**

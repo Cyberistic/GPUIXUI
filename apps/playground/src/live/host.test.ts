@@ -13,11 +13,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import { Smoke } from "@gpuixui/testing";
 import {
   fontInstaller,
   listAnchorOf,
   rightPress,
+  windowSizeOf,
   type LiveFontRegistrar,
   type PressableLocator,
 } from "./host.js";
@@ -73,6 +75,30 @@ describe("listAnchorOf", () => {
 
   it("keeps the renderer's null, which is how a plain element answers", () => {
     expect(listAnchorOf(null)).toBeNull();
+  });
+});
+
+describe("windowSizeOf", () => {
+  it("keeps the renderer's paintable box", () => {
+    expect(windowSizeOf(Option.some({ width: 900, height: 492 }))).toEqual(
+      Option.some({ width: 900, height: 492 }),
+    );
+  });
+
+  it("refuses a box no layout can be measured against", () => {
+    expect(windowSizeOf(Option.some({ width: 0, height: 492 }))).toEqual(
+      Option.none(),
+    );
+    expect(windowSizeOf(Option.some({ width: 900, height: -1 }))).toEqual(
+      Option.none(),
+    );
+    expect(
+      windowSizeOf(Option.some({ width: Number.NaN, height: 492 })),
+    ).toEqual(Option.none());
+  });
+
+  it("keeps the renderer's absence as absence, not as a default window", () => {
+    expect(windowSizeOf(Option.none())).toEqual(Option.none());
   });
 });
 

@@ -32,6 +32,8 @@ export type LiveRenderer = Pick<
   | "registerFont"
   | "scrollToItem"
   | "getListScrollTop"
+  | "getWindowSize"
+  | "zoomWindow"
 >;
 
 /**
@@ -146,6 +148,29 @@ export const listAnchorOf = (
       ),
   });
 
+/**
+ * A window size read back from the renderer, or `None` when it cannot lay out.
+ *
+ * `getWindowSize` used to answer a hardcoded 800x600, so the number is a
+ * boundary rather than a fact: a zero, negative or non-finite dimension is not
+ * a window a probe can assert a layout against, and reporting it as missing is
+ * better than measuring against a size the renderer never laid out.
+ */
+export const windowSizeOf = (
+  raw: Option.Option<{ readonly width: number; readonly height: number }>,
+): Option.Option<Smoke.Size> =>
+  Option.map(
+    Option.filter(
+      raw,
+      (size) =>
+        Number.isFinite(size.width) &&
+        size.width > 0 &&
+        Number.isFinite(size.height) &&
+        size.height > 0,
+    ),
+    (size) => ({ width: size.width, height: size.height }),
+  );
+
 /** An `AsyncSmokeHost` over a connected window. */
 export const createLiveHost = ({
   app,
@@ -171,6 +196,34 @@ export const createLiveHost = ({
         );
         return bounds;
       }),
+    /**
+     * The renderer's own paintable size. A probe compares it with the app's
+     * `useWindowSize()` readout and with the box a flexible pane paints, so a
+     * hardcoded answer from the binding fails the layout check instead of
+     * passing as a plausible number.
+     */
+    windowSize: () =>
+      Effect.gen(function* () {
+        const raw = yield* named(
+          "getWindowSize",
+          sync(() => renderer.getWindowSize()),
+        );
+        return yield* Option.match(windowSizeOf(Option.fromNullishOr(raw)), {
+          onNone: () =>
+            Effect.fail(
+              new Smoke.SmokeHostError({
+                verb: "getWindowSize",
+                cause: "the renderer reported no paintable size",
+              }),
+            ),
+          onSome: (size) => Effect.succeed(size),
+        });
+      }),
+    zoomWindow: () =>
+      named(
+        "zoomWindow",
+        sync(() => renderer.zoomWindow()),
+      ),
     focused: () =>
       Effect.gen(function* () {
         const id = yield* named(

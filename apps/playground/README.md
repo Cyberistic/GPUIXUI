@@ -37,14 +37,14 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-thirty-two probes a real window can prove, of which eight mount shipped
+thirty-three probes a real window can prove, of which eight mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
 the command palette, the tabs, the popover and the modal focus rule), five mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider, Text and Tooltip), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
-own wheel, a split pane, a virtual list, a paginated list's loading-row restore
-and the app-level key handler).
+own wheel and size, a split pane, a virtual list, a paginated list's loading-row
+restore and the app-level key handler).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -673,6 +673,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | log | bottom-anchored `<virtual-list>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up and appending does **not** snap back — a follow toggle is app state plus a scroll |
 | theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
+| window size | `getWindowSize()` is the box the layout fills (not the retired 800×600 constant): `useWindowSize()` reads the same pair, and `zoomWindow()` takes a 900×520 window to 1680×923 while the flexible pane reflows and `onLayout` reports the new width (`window-resize-reflow`) |
 | shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable |
 | content | `<svg source>` paints as one `style.color` tint; a multi-colour chart is one stacked `<svg>` per colour, and `<text>` inside it paints; `<img>` paints a data URL or a pixel buffer uploaded from a **layout** effect; `<canvas>` tracks no bounds and paints nothing (see the probe below) |
 
@@ -1831,6 +1832,52 @@ page rows from the corrective index fails `anchors the message under the top
 void at the pixel it held` (`Some({index: 1})` against `Some({index: 3})`), and
 a rule that always corrects fails `leaves a prepend alone once the reader is
 past the void`. Evidence: `.artifacts/live/loading-row-corrected.png`.
+
+### `window-resize-reflow` — measured on 0.11.0 here
+
+A workspace changes size from its **window**, not only from a sibling pane
+taking space. Two things a panel needs had never been read: the window's own
+size (a split's `max` is the caller's number, so a dock must pass the window's
+width) and whether a resize re-runs the layout a re-clamp listens to. The
+binding publishes no `setSize`, so `renderer.zoomWindow()` is the one lever a
+probe has; a 900×520 window is a user frame, so the platform's zoom takes it to
+its standard frame and a second call restores it.
+
+The probe fills a 100%-wide row with a fixed 120px sidebar and a flexible centre
+whose `onLayout` records its width and report count. Measured:
+
+| State | Window (`getWindowSize`) | `useWindowSize()` | Flexible centre | `onLayout` |
+| ----- | ------------------------ | ----------------- | --------------- | ---------- |
+| opened | 900×520 | 900×520 | 780 (sidebar + centre = the window) | reported 780 |
+| zoomed | 1680×923 | 1680×923 | 1560 | reported 1560 again |
+| restored | 900×520 | 900×520 | 780 | reported again |
+
+So `getWindowSize` is the **box the layout fills**, not the retired 800×600
+constant — the sidebar plus centre equals it in all three states, which is the
+check a constant cannot pass. The app's hook reports the same pair; the
+flexible pane reflows without the app writing a width; and a window resize runs
+the pane's layout pass again with its new painted box, so `onLayout` remains the
+re-clamp signal for the window as well as for a sibling. The zero-size guard
+(`windowSizeOf`) reports a renderer that answers `0`, a negative or a non-finite
+dimension as a missing size instead of asserting a layout against it.
+
+The app channel lags the renderer: the platform's zoom is animated and
+`useWindowSize()` samples every 100ms, so the probe waits (bounded at 960ms) for
+both channels to name the new box before it asserts. That wait is the negative
+control below, and the rule for a component: read the size for arithmetic,
+re-clamp on `onLayout`.
+
+Negative controls measured: the first version of the probe sampled once at
+180ms against the renderer alone and failed
+`useWindowSize follows the zoomed width — expected 1680, got 900`, which is the
+lag the wait exists for; dropping the `zoomWindow()` call fails
+`the platform's zoom changes the window's width` (`expected true, got false`);
+and drawing the sidebar 40px wider than the constant the probe expects fails
+`the sidebar plus the centre fill the window's width` (`expected 900 ± 1, got
+860` — the arithmetic is the layout's, not a tautology). Exit `1` each, restored
+green (`--only window-resize-reflow`, 16 checks). Evidence:
+`.artifacts/live/window-zoomed.png` (3360×1846, the window's 2× backing) and
+`.artifacts/live/window-restored.png` (1800×1040).
 
 ## Release gate
 

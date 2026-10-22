@@ -228,6 +228,12 @@ export const liveRegistry = [
       "Table: a page arriving while a loading row is the anchor is re-anchored on the message under it, so the splice does not replace the screen",
     capability: "virtual-list",
   },
+  {
+    id: "window-resize-reflow",
+    title:
+      "Workspace: the renderer's window size is the box the layout fills, useWindowSize follows it, and a zoom reflows a flexible pane",
+    capability: "workspace",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

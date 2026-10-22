@@ -97,6 +97,15 @@ renderer's `[itemIndex, offsetInItem, viewportHeight]` anchor (or `null` for
 anything that is not a list) as a `ListAnchor`. Pixel arithmetic lies while row
 heights are estimates, so a reveal is checked by the index it anchored at.
 
+The window itself is addressable too: `windowSize()` reads the renderer's
+paintable box (the size a dock passes as a split's caller-owned `max`), and
+`zoomWindow()` runs the platform's zoom — the one lever a window exposes, since
+the binding publishes no `setSize`. A size the renderer answers with a zero,
+negative or non-finite dimension is reported as a `SmokeHostError`, not as a box
+to measure against; `apps/playground`'s `windowSizeOf` is that guard, and
+`window-resize-reflow` is the probe that reads both channels against a real
+layout.
+
 Nullish returns on `SmokeHost` are the runtime boundary: a missing `testId`
 comes back as `null`, a scenario converts it with `Option.fromNullishOr` and
 fails with a label naming the id via `ctx.expectSome`.
