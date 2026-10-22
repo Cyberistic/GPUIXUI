@@ -323,6 +323,7 @@ import {
   NESTED_MENU_PANEL,
   NESTED_MENU_TRIGGER,
   NESTED_OPENER,
+  NESTED_OUTSIDE,
   NESTED_POPOVER_PANEL,
   NESTED_POPOVER_TRIGGER,
   NESTED_READOUT,
@@ -13335,6 +13336,12 @@ const NestedOverlayProbe = (): ReactNode => {
                 A popover inside a dialog, and a menu inside that.
               </DialogDescription>
             </DialogHeader>
+            {/* A press target inside the dialog and outside both floating
+                surfaces: the pointer half's "outside" press lands here. */}
+            <div
+              testId={NESTED_OUTSIDE}
+              style={{ height: 32, backgroundColor: theme.colors.muted }}
+            />
             <div
               style={{
                 display: "flex",
@@ -13553,6 +13560,74 @@ const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       NESTED_OPENER,
     );
     yield* ctx.host.capture("nested-dismissed");
+
+    // The pointer half. A press outside the floating surfaces raises **every**
+    // enclosing surface's `onMouseDownOutside`, and the stack must still dismiss
+    // exactly one of them: a gesture guard, not a handler guard.
+    yield* press(NESTED_OPENER, NESTED_DIALOG);
+    yield* press(NESTED_POPOVER_TRIGGER, NESTED_POPOVER_PANEL);
+    yield* press(NESTED_MENU_TRIGGER, NESTED_MENU_PANEL);
+    yield* ctx.expectEqual(
+      "the stack opens again for the pointer half",
+      yield* ctx.host.text(NESTED_READOUT),
+      "dialog=open popover=open menu=open opens=2,2,2 closes=1,1,1 dismissed=menu,popover,dialog",
+    );
+
+    // One press, outside the popover and the menu: only the menu may close.
+    yield* ctx.host.click(NESTED_OUTSIDE);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "one outside press closes one surface, not every handler it reaches",
+      yield* ctx.host.text(NESTED_READOUT),
+      "dialog=open popover=open menu=closed opens=2,2,2 closes=1,1,2 dismissed=menu,popover,dialog,menu",
+    );
+    yield* ctx.expectEqual(
+      "the first outside press left the popover and the dialog painted",
+      [
+        yield* settleGone(ctx, NESTED_MENU_PANEL),
+        (yield* paintedBox(ctx, NESTED_POPOVER_PANEL)).height > 0,
+        (yield* paintedBox(ctx, NESTED_DIALOG)).height > 0,
+      ].every(Boolean),
+      true,
+    );
+
+    // A second press is a new gesture, so the next surface goes.
+    yield* ctx.host.click(NESTED_OUTSIDE);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a second press closes the popover and leaves the dialog open",
+      yield* ctx.host.text(NESTED_READOUT),
+      "dialog=open popover=closed menu=closed opens=2,2,2 closes=1,2,2 dismissed=menu,popover,dialog,menu,popover",
+    );
+    yield* ctx.expectEqual(
+      "the second outside press left the dialog painted",
+      [
+        yield* settleGone(ctx, NESTED_POPOVER_PANEL),
+        (yield* paintedBox(ctx, NESTED_DIALOG)).height > 0,
+      ].every(Boolean),
+      true,
+    );
+
+    // A press outside the dialog closes the last surface; the veil is what the
+    // pointer lands on, which is exactly the dialog's own outside press.
+    yield* ctx.host.click(NESTED_OPENER);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press outside the dialog dismisses the last surface",
+      yield* settleGone(ctx, NESTED_DIALOG),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the pointer dismissed the stack outside-in",
+      yield* ctx.host.text(NESTED_READOUT),
+      "dialog=closed popover=closed menu=closed opens=2,2,2 closes=2,2,2 dismissed=menu,popover,dialog,menu,popover,dialog",
+    );
+    yield* ctx.expectEqual(
+      "the dialog returns focus to the app's opener after a press",
+      yield* focusedAfterPaint(ctx),
+      NESTED_OPENER,
+    );
+    yield* ctx.host.capture("nested-pointer-dismissed");
   });
 
 /**

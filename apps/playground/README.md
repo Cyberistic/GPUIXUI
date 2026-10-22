@@ -755,7 +755,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 
 | Critical interaction | Probes | What a window measures |
 | -------------------- | ------ | ---------------------- |
-| dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape, outside-in |
+| dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape and per outside press, outside-in |
 | menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
 | input update/validation | `text-input`, `validation-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
@@ -2878,8 +2878,11 @@ three surfaces and appends the surface each close lands on, so the readout's
 | Escape 1 | the menu leaves, the popover and the dialog stay painted, `closes=0,0,1 dismissed=menu`, and focus returns to the menu's trigger |
 | Escape 2 | the popover leaves, the dialog stays, `closes=0,1,1 dismissed=menu,popover`, focus back on the popover's trigger |
 | Escape 3 | the dialog leaves, `closes=1,1,1 dismissed=menu,popover,dialog`, focus back at the app's own opener |
+| pointer 1 | the stack reopens; one press on a target inside the dialog and **outside both floating surfaces** closes the menu only — `closes=1,1,2`, one close for three handlers, while the popover and the dialog stay painted |
+| pointer 2 | a second press is a **new gesture**, so the popover closes (`closes=1,2,2`) and the dialog stays |
+| pointer 3 | a press outside the dialog closes the last surface (`closes=2,2,2`, the six-name order outside-in) and returns focus to the app's opener |
 
-30 checks, `--only nested-overlay-lifecycle`, green on 0.11.0 (~6 s, three consecutive runs). Fixture:
+41 checks, `--only nested-overlay-lifecycle`, green on 0.11.0 (~14 s, two consecutive runs). Fixture:
 `src/live/nested-overlay.ts` — the ids, the three-surface state, its reducer and
 the readout. `nested-overlay.test.ts` (7 cases) holds the premise: an open is not
 a close, the outside-in order prints in the order it happened, a second close of
@@ -2889,17 +2892,22 @@ README's printed check count equals the probe's assertions (the explicit
 `ctx.expect*` sites plus every `paintedBox` read, which asserts its own
 presence).
 
-**Not asserted, and measured instead**: the same rule for a **pointer**. One
-press outside the popover and the menu raised both surfaces'
-`onMouseDownOutside` handlers, and the fixture recorded the menu closed
-**twice** on that one gesture (`closes=1,1,3`,
-`dismissed=menu,popover,dialog,menu,menu`); a following press on the same target
-did not reach the popover's handler at all, though Escape then closed it. The
-stack identifies a pointer gesture by the payload's object identity, and the
-runtime builds one payload per handler, so two layers each dismiss the topmost
-one. That is a defect in `packages/components`, recorded as an interlock row in
-`TODO.md`; this probe will carry the press checks when it is fixed. Captures:
-`.artifacts/live/nested-{open,menu-dismissed,dismissed}.png`.
+**The pointer half is asserted too.** It used to be a defect: one press outside
+the popover and the menu raised both surfaces' `onMouseDownOutside` handlers, and
+the fixture recorded the menu closed **twice** on that one gesture
+(`closes=1,1,3`, `dismissed=menu,popover,dialog,menu,menu`); a following press on
+the same target did not reach the popover's handler at all. `@gpuixui/components`
+now identifies one pointer gesture by the fields every handler of it shares
+(`pressShape`) for the one frame a press can last, so the probe's three presses
+close one surface each (`closes=1,1,2`, then `1,2,2`, then `2,2,2`). The fix's own
+suites hold both directions (`dismiss-layer.test.ts` fails eight cases with the
+guard returning "not consumed"; `overlay-layering.test.tsx` fails when the first
+press closes the popover too) — this probe is the window proof on the shipped
+three-level composition. A measured negative control here: dismissing the
+popover from the menu's own close handler (the caller double-closing) fails
+`the runtime paints nested-popover-panel` before the press readouts, because the
+popover is gone after the first press. Captures:
+`.artifacts/live/nested-{open,menu-dismissed,dismissed,pointer-dismissed}.png`.
 
 ### `editor-overlay` — measured on 0.11.0 here
 

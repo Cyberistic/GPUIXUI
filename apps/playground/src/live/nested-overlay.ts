@@ -39,6 +39,15 @@ export const NESTED_MENU_TRIGGER = "nested-menu-trigger";
 export const NESTED_MENU_PANEL = "nested-menu-panel";
 export const NESTED_MENU_ITEM = "nested-menu-item";
 
+/**
+ * A painted target inside the dialog but outside the popover and the menu.
+ *
+ * A pointer press needs somewhere to land that is not one of the surfaces under
+ * test: pressing the heading would work too, but a named filler makes the target
+ * a deliberate box rather than wherever a layout happens to put the title.
+ */
+export const NESTED_OUTSIDE = "nested-outside";
+
 /** The readout the checks assert against. */
 export const NESTED_READOUT = "nested-readout";
 
