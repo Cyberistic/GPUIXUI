@@ -10,7 +10,7 @@
 import type { KeyEvent } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { Match } from "effect";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, type MutableRefObject } from "react";
 import { useControllableState } from "./controllable.js";
 import { useDismissDepth } from "./dismiss-scope.js";
 import { dismissTopLayer, pushDismissLayer } from "./dismiss-layer.js";
@@ -20,6 +20,17 @@ import { isDismiss, isTab } from "./key.js";
 export interface ModalState {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
+  /**
+   * Where focus goes when the surface closes: the element that held it before
+   * the surface opened.
+   *
+   * A surface takes focus during its own commit — a child's `autoFocus` runs
+   * before any layout effect — so this is captured in the render that opens the
+   * surface, before its children exist. Capturing it at close would name a
+   * control inside the surface that is about to unmount, and the reader's focus
+   * would end up nowhere.
+   */
+  readonly restoreTarget: MutableRefObject<number | null>;
 }
 
 /** The open state and the dismiss layer it owns while open. */
@@ -34,11 +45,21 @@ export const useModalState = ({
   readonly onOpenChange?: (open: boolean) => void;
   readonly dismissible?: boolean;
 }): ModalState => {
+  const renderer = useGpuix().renderer;
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
     onChange: onOpenChange,
   });
+
+  const restoreTarget = useRef<number | null>(null);
+  const captured = useRef(false);
+  if (open && !captured.current) {
+    restoreTarget.current = renderer?.getFocusedElementId?.() ?? null;
+    captured.current = true;
+  } else if (!open) {
+    captured.current = false;
+  }
 
   // The layer handler must see the latest props without being re-pushed: a
   // re-push would move this surface above an overlay that opened after it.
@@ -55,12 +76,12 @@ export const useModalState = ({
     return pushDismissLayer(() => dismiss.current(), depth);
   }, [depth, open]);
 
-  return { open, setOpen };
+  return { open, setOpen, restoreTarget };
 };
 
 /**
  * Move focus into `contentId` once it exists, run the caller's `initialFocus`
- * after that, and return focus to whatever held it before on unmount.
+ * after that, and return focus to {@link ModalState.restoreTarget} at close.
  *
  * `open` is the close signal, not the content id: a surface stays mounted for
  * its exit tween (see `internal/presence.tsx`), and focus must leave the moment
@@ -70,9 +91,9 @@ export const useModalFocus = (
   contentId: number | undefined,
   initialFocus: (() => number | null) | undefined,
   open: boolean,
+  restoreTarget: MutableRefObject<number | null>,
 ): void => {
   const renderer = useGpuix().renderer;
-  const previousFocus = useRef<number | null>(null);
   const initialFocusRef = useRef(initialFocus);
   useLayoutEffect(() => {
     initialFocusRef.current = initialFocus;
@@ -80,14 +101,13 @@ export const useModalFocus = (
 
   useLayoutEffect(() => {
     if (contentId === undefined || !open) return;
-    previousFocus.current = renderer?.getFocusedElementId?.() ?? null;
     renderer?.focusElement?.(contentId);
     const initial = initialFocusRef.current?.() ?? null;
     if (initial !== null && initial !== contentId) {
       renderer?.focusElement?.(initial);
     }
     return () => {
-      const previous = previousFocus.current;
+      const previous = restoreTarget.current;
       // A destroyed opener must not be focused: `getElementBounds` is the
       // renderer's own existence check, and it is null once the element is gone.
       if (
@@ -99,7 +119,7 @@ export const useModalFocus = (
       }
       renderer?.focusElement?.(previous);
     };
-  }, [contentId, renderer, open]);
+  }, [contentId, renderer, open, restoreTarget]);
 };
 
 /**
