@@ -64,6 +64,7 @@ import {
   Checkbox,
   Input,
   RangeSlider,
+  Select as PrimitiveSelect,
   Slider,
   Text,
   ThemeProvider as PrimitiveThemeProvider,
@@ -5152,6 +5153,7 @@ const SelectProbe = (): ReactNode => {
   const window = useWindowSize();
   const [value, setValue] = useState("daily");
   const [changes, setChanges] = useState(0);
+  const [shipped, setShipped] = useState({ value: "daily", changes: 0 });
   const [presses, setPresses] = useState(0);
   const record = (next: string) => {
     setValue(next);
@@ -5193,6 +5195,33 @@ const SelectProbe = (): ReactNode => {
         }}
       >
         {`value=${value} changes=${changes}`}
+      </text>
+      {/* The shipped wrapper, addressed the way an automation test has to
+          address it: the root paints only its width, so the trigger and the
+          data-driven rows are the locators (`triggerTestId`/`itemTestId`). */}
+      <PrimitiveThemeProvider theme={palettes.dark}>
+        <PrimitiveSelect
+          label="Shipped cadence"
+          defaultValue="daily"
+          options={SELECT_OPTIONS}
+          triggerTestId="shipped-trigger"
+          itemTestId={(option) => `shipped-row-${option}`}
+          onValueChange={(next) =>
+            setShipped((current) => ({
+              value: next,
+              changes: current.changes + 1,
+            }))
+          }
+        />
+      </PrimitiveThemeProvider>
+      <text
+        testId="shipped-readout"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {`value=${shipped.value} changes=${shipped.changes}`}
       </text>
       <div
         style={{ display: "flex", flexDirection: "row", gap: theme.spacing.xl }}
@@ -5437,6 +5466,78 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "a disabled select keeps its label",
       yield* ctx.host.text("select-disabled-trigger"),
       "Daily",
+    );
+
+    // The shipped wrapper half: `triggerTestId` and `itemTestId` are what make a
+    // Select driveable from automation at all, so these checks address the
+    // library's own control rather than the runtime parts.
+    yield* ctx.expectContains(
+      "the shipped trigger paints its selected label",
+      yield* ctx.host.text("shipped-trigger"),
+      "Daily",
+    );
+    yield* ctx.expectEqual(
+      "the shipped select starts on its default",
+      yield* ctx.host.text("shipped-readout"),
+      "value=daily changes=0",
+    );
+    yield* ctx.expectEqual(
+      "the shipped list is closed at rest",
+      yield* painted("shipped-row-weekly"),
+      false,
+    );
+    yield* ctx.host.click("shipped-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press on the shipped trigger opens its list",
+      yield* painted("shipped-row-weekly"),
+      true,
+    );
+    yield* ctx.host.click("shipped-row-weekly");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press on a shipped row selects it",
+      yield* ctx.host.text("shipped-readout"),
+      "value=weekly changes=1",
+    );
+    yield* ctx.expectContains(
+      "the shipped trigger repaints with the new label",
+      yield* ctx.host.text("shipped-trigger"),
+      "Weekly",
+    );
+    yield* ctx.expectEqual(
+      "selecting a shipped row closes the list",
+      yield* painted("shipped-row-monthly"),
+      false,
+    );
+
+    // The keyboard path is still the runtime's: the wrapper must not intercept
+    // it. Opening lands on the selected row, so one arrow reaches the next.
+    yield* ctx.host.click("shipped-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow and Enter choose the next shipped row",
+      yield* ctx.host.text("shipped-readout"),
+      "value=monthly changes=2",
+    );
+
+    yield* ctx.host.click("shipped-trigger");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Escape closes the shipped list",
+      yield* painted("shipped-row-weekly"),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "Escape gives the shipped trigger its focus back",
+      yield* focusedAfterPaint(ctx),
+      "shipped-trigger",
     );
   });
 

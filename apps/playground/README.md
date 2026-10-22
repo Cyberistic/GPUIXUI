@@ -1597,7 +1597,8 @@ last, so an arrow that starts on `Monthly` has to wrap past the disabled row.
 | a second press on the trigger | closes the list (the outside-press path, not a toggle) |
 | a disabled select | ignores the press and keeps its label |
 
-26 checks. Two negative controls measured: dropping `sideOffset={6}` fails
+26 checks of the runtime's own parts, plus 10 on the shipped wrapper. Two
+negative controls measured: dropping `sideOffset={6}` fails
 `the list keeps the gap it was given below the trigger` with
 `expected 6 ± 1, got 0`; enabling the disabled row fails
 `an arrow skips the disabled row and wraps to the first enabled one` with
@@ -1605,10 +1606,15 @@ last, so an arrow that starts on `Monthly` has to wrap past the disabled row.
 each, and restored green (`--only select-lifecycle`). Evidence:
 `.artifacts/live/select-open.png`, `.artifacts/live/select-picked.png`.
 
-What it leaves open: the shipped `Select` cannot be driven by an automation
-test, because `SelectProps` carries no `testId` for its trigger or its option
-rows. That is recorded as an interlock for `primitives`; until then a probe of
-the wrapper can only press the root and read the joined text.
+The second half mounts the **shipped `Select`** through `triggerTestId` and
+`itemTestId`, which is what makes the wrapper driveable from automation at all:
+the root paints only its width, so a locator on it addresses nothing a press can
+use. It opens on a press on `shipped-trigger`, selects `shipped-row-weekly` by
+press (readout `value=weekly changes=1`, trigger repaints), chooses the next row
+with `down`+`Enter` (`value=monthly changes=2`) and closes on `Escape` with the
+focus back on its trigger. Negative control, measured: deriving the row locators
+from a constant fails `a press on the shipped trigger opens its list` with
+`expected true, got false` (exit `1`); restored, 36 checks green.
 
 ### `virtual-tree-lifecycle` — measured on 0.11.0 here
 
