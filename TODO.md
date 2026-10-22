@@ -2187,6 +2187,22 @@ a workaround for two live sessions sharing one worktree; see
       `COMPONENTS.md` rows to the code, so that table cannot drift again;
       their pages now render on the site at `/docs/primitives/<name>` (and the
       icon page at `/docs/icons/icon`), linked from the Primitives section index
+`[x]` `packages/primitives`: give `ButtonGroup` its **second axis** — the shadcn
+      reference takes `orientation`, and the primitive only ever laid a row, so a
+      column of attached actions had to be hand-built outside the group and lost
+      the shared width a group gives its actions. `orientation`
+      (`horizontal`/`vertical`, default `horizontal`) compiles to
+      `flex-col items-stretch` for a column: the group's actions share one width
+      so their ends line up, while an action with an explicit size (a square
+      `IconButton`) keeps it because a cross-axis stretch cannot override a set
+      width. Proof: `presentational.test.tsx` (the resolved
+      `flexDirection`/`alignItems` and the default), `recipe.test.ts` (the
+      compiled row and column layouts), and `runtime/controls.runtime.test.tsx`
+      (a vertical attached group stacks 0px apart, a separated one by the `sm`
+      gap, and two differently-labelled actions paint one width — measured
+      failing without the `flex-col`/stretch pair). The `icon-button` example
+      shows the attached column beside the row, and the page, the recipe oracle
+      and the `Button groups` inventory row carry the axis and its limits
 `[x]` `packages/primitives`: a field's own content is the control — two measured
       defects. **The `NumberField`'s keyboard ring was declared on its wrapper**,
       and the runtime paints `focusVisible` only on an element it tracks focus

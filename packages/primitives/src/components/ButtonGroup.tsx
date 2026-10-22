@@ -2,7 +2,9 @@
  * `ButtonGroup` — related actions as one control.
  *
  * `attached` removes the gap so the buttons read as a single segmented control;
- * `separated` keeps the theme's gap. The runtime has no `:first-child`/`:last-child`
+ * `separated` keeps the theme's gap. `orientation` stacks the actions in a
+ * column and shares one width between them, so their ends line up whatever
+ * their labels say. The runtime has no `:first-child`/`:last-child`
  * and a ref exposes no style mutation, so `attached` tells the actions it wraps
  * (`AttachedGroup`) that the **group** owns the silhouette: each one squares its
  * own corners and the group's radius plus `overflow: hidden` clip the two ends.
@@ -27,9 +29,18 @@ import { useTheme } from "./ThemeProvider.js";
 export const BUTTON_GROUP_MODES = ["attached", "separated"] as const;
 export type ButtonGroupMode = (typeof BUTTON_GROUP_MODES)[number];
 
+/** The axis a group lays its actions on. */
+export const BUTTON_GROUP_ORIENTATIONS = ["horizontal", "vertical"] as const;
+export type ButtonGroupOrientation = (typeof BUTTON_GROUP_ORIENTATIONS)[number];
+
 export interface ButtonGroupProps {
   /** Defaults to `attached`. */
   readonly mode?: ButtonGroupMode;
+  /**
+   * Defaults to `horizontal`. A vertical group shares one width between its
+   * actions, so their ends line up; a square action keeps its own size.
+   */
+  readonly orientation?: ButtonGroupOrientation;
   /** A gap on the theme's spacing scale, for `separated`. Defaults to `sm`. */
   readonly gap?: SpaceStep;
   /**
@@ -47,6 +58,7 @@ export interface ButtonGroupProps {
 export const renderButtonGroup = (
   {
     mode = "attached",
+    orientation = "horizontal",
     gap = "sm",
     label,
     style,
@@ -57,7 +69,7 @@ export const renderButtonGroup = (
   theme: PrimitiveTheme,
 ): ReactElement => {
   const resolved = recipeTw.classesToStyle(
-    cn(buttonGroupClass(mode, gap), className),
+    cn(buttonGroupClass(mode, gap, orientation), className),
     theme,
   );
   return (

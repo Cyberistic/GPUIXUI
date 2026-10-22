@@ -363,6 +363,25 @@ describe("layout containers", () => {
     ).toStrictEqual(Option.some(testTheme.spacing.sm));
   });
 
+  it("lays its actions on the axis it is given", () => {
+    // The bug this guards: a group was only ever a row, so a column of
+    // attached actions was impossible to build without hand-rolling the
+    // silhouette outside the component.
+    expect(
+      styleProp(renderButtonGroup({}, testTheme), "flexDirection"),
+    ).toStrictEqual(Option.some("row"));
+    const vertical = renderButtonGroup({ orientation: "vertical" }, testTheme);
+    expect(styleProp(vertical, "flexDirection")).toStrictEqual(
+      Option.some("column"),
+    );
+    // A column shares one width: without `stretch` two text actions end at
+    // different edges and the group reads as two unrelated buttons.
+    expect(styleProp(vertical, "alignItems")).toStrictEqual(
+      Option.some("stretch"),
+    );
+    expect(numberIn(vertical, "gap")).toStrictEqual(Option.some(0));
+  });
+
   it("give the group a name when it is labelled", () => {
     const named = renderButtonGroup(
       { mode: "attached", label: "Text alignment" },

@@ -477,8 +477,10 @@ describe("ScrollArea recipe", () => {
 describe("ButtonGroup recipe", () => {
   it("matches the attached and separated layouts", () => {
     expect(
-      recipeTw.classesToStyle(buttonGroupClass("attached", "sm"), testTheme)
-        .style,
+      recipeTw.classesToStyle(
+        buttonGroupClass("attached", "sm", "horizontal"),
+        testTheme,
+      ).style,
     ).toEqual({
       display: "flex",
       flexDirection: "row",
@@ -488,13 +490,42 @@ describe("ButtonGroup recipe", () => {
       overflow: "hidden",
     });
     expect(
-      recipeTw.classesToStyle(buttonGroupClass("separated", "sm"), testTheme)
-        .style,
+      recipeTw.classesToStyle(
+        buttonGroupClass("separated", "sm", "horizontal"),
+        testTheme,
+      ).style,
     ).toEqual({
       display: "flex",
       flexDirection: "row",
       alignItems: "center",
       gap: testTheme.spacing.sm,
+    });
+  });
+
+  it("stacks a vertical group and shares one width between its actions", () => {
+    expect(
+      recipeTw.classesToStyle(
+        buttonGroupClass("attached", "sm", "vertical"),
+        testTheme,
+      ).style,
+    ).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: 0,
+      borderRadius: testTheme.radius.md,
+      overflow: "hidden",
+    });
+    expect(
+      recipeTw.classesToStyle(
+        buttonGroupClass("separated", "md", "vertical"),
+        testTheme,
+      ).style,
+    ).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: testTheme.spacing.md,
     });
   });
 });
@@ -692,7 +723,8 @@ describe("the recipe stays one expression, not a stub", () => {
       toggleClass("outline", true, "lg"),
       separatorClass("horizontal", "md"),
       scrollClass("both"),
-      buttonGroupClass("attached", "sm"),
+      buttonGroupClass("attached", "sm", "horizontal"),
+      buttonGroupClass("separated", "sm", "vertical"),
       fieldSquareClass({ size: "md", invalid: true }),
       otpGroupClass,
       ratingStarClass({ disabled: true }),

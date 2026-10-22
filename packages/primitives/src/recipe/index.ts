@@ -359,10 +359,19 @@ export const scrollFrameClass = (spec: {
 export const buttonGroupClass = (
   mode: "attached" | "separated",
   gap: SpaceStep,
+  orientation: "horizontal" | "vertical",
 ): string =>
-  mode === "attached"
-    ? "flex flex-row items-center gap-0 rounded-md overflow-hidden"
-    : cn("flex flex-row items-center", `gap-${gap}`);
+  cn(
+    "flex",
+    orientation === "vertical"
+      ? // A column shares one width: a text action's label decides it
+        // otherwise, so two actions in one group would end at different
+        // edges. A square action keeps its own width, because an explicit
+        // size wins over `stretch`.
+        "flex-col items-stretch"
+      : "flex-row items-center",
+    mode === "attached" ? "gap-0 rounded-md overflow-hidden" : `gap-${gap}`,
+  );
 
 // ── OTP field ────────────────────────────────────────────────────────
 

@@ -584,6 +584,39 @@ it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", 
   expect(await gapOf("separated")).toBe(testTheme.spacing.sm);
 });
 
+it("stacks a vertical group's actions with no gap and one shared width", async () => {
+  // The bug this guards: a group was a row only, so a column of attached
+  // actions had to be hand-built outside the component and the shared width a
+  // group gives its actions was lost. `items-stretch` is what makes two
+  // differently-labelled actions end at the same edge.
+  const layoutOf = async (
+    mode: "attached" | "separated",
+  ): Promise<{ gap: number; widths: ReadonlyArray<number> }> => {
+    const runtime = await openWindow();
+    runtime.render(
+      <Surface>
+        <ButtonGroup mode={mode} orientation="vertical" gap="sm" testId="g">
+          <Button testId="one">One</Button>
+          <Button testId="two">A much longer label</Button>
+        </ButtonGroup>
+      </Surface>,
+    );
+    const one = boundsOf(runtime, "one");
+    const two = boundsOf(runtime, "two");
+    return {
+      gap: two.y - (one.y + one.height),
+      widths: [one.width, two.width],
+    };
+  };
+  const attached = await layoutOf("attached");
+  expect(attached.gap).toBe(0);
+  expect(attached.widths[0]).toBe(attached.widths[1]);
+  expect(await layoutOf("separated")).toStrictEqual({
+    gap: testTheme.spacing.sm,
+    widths: attached.widths,
+  });
+});
+
 it("squares an attached group's children so its seams do not show the page", async () => {
   // The bug: `attached` only rounded and clipped the container, so each child
   // kept the recipe's radius and two adjacent rounded fills left a notch at

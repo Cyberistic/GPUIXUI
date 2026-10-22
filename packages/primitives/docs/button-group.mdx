@@ -1,11 +1,11 @@
 ---
 title: ButtonGroup
-description: A row of related actions, attached or separated.
+description: A row or column of related actions, attached or separated.
 ---
 
-`ButtonGroup` lays buttons out as one row and gives the row `role="group"`. In
-`attached` mode the gap is zero, every action inside squares its own corners and
-the **group** is rounded and clipped, so the row reads as one control.
+`ButtonGroup` lays buttons out on one axis and gives the group `role="group"`.
+In `attached` mode the gap is zero, every action inside squares its own corners
+and the **group** is rounded and clipped, so the group reads as one control.
 
 ## Usage
 
@@ -19,12 +19,34 @@ import { Button, ButtonGroup } from "@gpuixui/primitives";
 </ButtonGroup>;
 ```
 
+A column of actions takes the same parts:
+
+```tsx
+<ButtonGroup mode="attached" orientation="vertical" label="Alignment">
+  <Button variant="ghost">Top</Button>
+  <Button variant="ghost">Middle</Button>
+  <Button variant="ghost">Bottom</Button>
+</ButtonGroup>;
+```
+
 ## Modes
 
 | `mode` | Gap | Shape |
 | ------ | --- | ----- |
 | `attached` (default) | 0 | children square their corners; group radius `md`, `overflow: hidden` |
 | `separated` | `gap` step (`sm` default) | buttons keep their own radius |
+
+## Orientation
+
+| `orientation` | Axis | Sizing |
+| ------------- | ---- | ------ |
+| `horizontal` (default) | a row, actions centred on the cross axis | each action keeps its own width |
+| `vertical` | a column, actions stretched to one width | a square action keeps its own size |
+
+A vertical group shares one width between its actions, so their ends line up
+whatever their labels say. The stretch is a cross-axis size, so an action with
+an explicit width — a square `IconButton`, for instance — keeps that width
+instead of being stretched.
 
 The runtime has no `:first-child`/`:last-child` selector and a ref exposes no
 style mutation, so the group cannot reshape a child from outside. It instead
@@ -40,7 +62,8 @@ package's actions is not reshaped.
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `mode` | `"attached" \| "separated"` | `"attached"` | zero gap + clipped group, or a spaced row |
+| `mode` | `"attached" \| "separated"` | `"attached"` | zero gap + clipped group, or a spaced group |
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | a row, or a column with one shared width |
 | `gap` | spacing step | `"sm"` | the gap in separated mode |
 | `label` | `string` | none | the group's accessible name, written as `aria-label` |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
@@ -77,17 +100,25 @@ radius is the only one painted on the silhouette.
   heading.
 - No overflow behaviour: a group wider than its parent does not collapse into a
   menu.
+- `orientation` has two values. A group that switches axis at runtime is two
+  groups in one slot, not a responsive breakpoint — the runtime has no media
+  queries.
 
 ## Verification
 
-- `src/components/presentational.test.tsx` — attached and separated geometry
-  plus `role="group"`, and the `label` → `aria-label` contract.
+- `src/components/presentational.test.tsx` — attached and separated geometry,
+  the axis `orientation` resolves to, `role="group"`, and the `label` →
+  `aria-label` contract.
+- `src/recipe/recipe.test.ts` — the compiled row and column layouts, including
+  the shared width a column asks for.
 - `src/components/Button.test.tsx` / `IconButton.test.tsx` — an attached action
   squares its corners and a caller's `style` still restores a radius.
 - `runtime/controls.runtime.test.tsx` — attached children are 0px apart and
   paint `borderRadius: 0` while separated children paint the theme's `md` radius
-  and sit the `sm` gap apart; a labelled group is an accessibility `Group` with
-  that name.
+  and sit the `sm` gap apart; a vertical group stacks its actions 0px apart in
+  `attached` mode and by the `sm` gap in `separated` mode, with both actions
+  painted at one width despite their different labels; a labelled group is an
+  accessibility `Group` with that name.
 
 ```sh
 nub run --filter @gpuixui/primitives test
