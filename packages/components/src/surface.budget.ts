@@ -43,14 +43,15 @@ export const surfaceBudget = {
   // 115 → 117 for Magnetic (`magnetic.tsx` and the lean rule beside it), and
   // 117 → 119 for LiquidButton (`liquid-button.tsx` and its flood rule).
   // 119 → 121 for AvatarGroup (`avatar-group.tsx` and its facepile rule).
-  // 121 → 123 for PinnedList (`pinned-list.tsx` and its header-position rule).
-  modules: 123,
+  // 121 → 123 for PinnedList (`pinned-list.tsx` and its header-position rule),
+  // and 123 → 125 for Particles (`particles.tsx` and its field rule).
+  modules: 125,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
-  // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup. The
-  // ceiling keeps the headroom a prose edit needs while a bulk addition still
-  // has to state itself.
-  bytes: 780 * 1024,
+  // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
+  // with Particles. The ceiling keeps the headroom a prose edit needs while a
+  // bulk addition still has to state itself.
+  bytes: 805 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
 } as const;

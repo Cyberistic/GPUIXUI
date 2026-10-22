@@ -45,6 +45,7 @@ import { messageMeta } from "./message.js";
 import { messageScrollerMeta } from "./message-scroller.js";
 import { navigationMenuMeta } from "./navigation-menu.js";
 import { paginationMeta } from "./pagination.js";
+import { particlesMeta } from "./particles.js";
 import { pinnedListMeta } from "./pinned-list.js";
 import { popoverMeta } from "./popover.js";
 import { previewCardMeta } from "./preview-card.js";
@@ -122,6 +123,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   messageScrollerMeta,
   navigationMenuMeta,
   paginationMeta,
+  particlesMeta,
   pinnedListMeta,
   popoverMeta,
   previewCardMeta,

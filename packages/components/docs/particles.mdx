@@ -1,0 +1,133 @@
+---
+title: Particles
+description: A decorative field of drifting motes for a hero, an empty state or a launch panel.
+---
+
+`Particles` paints a bounded box of small circles that drift, turn around and
+drift back. It is decoration: it publishes no accessibility node, takes no
+pointer input, and names nothing. The content in front of it owns the words and
+the presses.
+
+## Usage
+
+```tsx
+import { Particles } from "@gpuixui/components/particles";
+
+<div style={{ position: "relative", height: 220, overflow: "hidden" }}>
+  <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}>
+    <Particles count={28} seed={7} />
+  </div>
+  <Hero copy="Aurora 3.0" />
+</div>;
+```
+
+The field **measures itself**, so the box has to be bounded — a height, or an
+absolute inset like the one above. Before the first layout it paints nothing,
+because there is no box to place a mote in yet.
+
+## How the drift works
+
+The runtime has no `transform` (upstream issue #102) and no 2D canvas, so a mote
+does not translate or scale: it is an absolutely positioned circle whose
+`left`/`top` the runtime tweens. That is inset geometry, and it is why the field
+is clipped by its own box instead of wandering across the page.
+
+The runtime tweens a target **once**, so a float is a ping-pong. Each mote
+travels out on its own leg, and when that tween reports `onMotionComplete` it
+turns around and returns to the place it was seeded. The layout is a pure
+function of the measured box and one seed (`particles/logic.ts`):
+
+- **deterministic** — the same seed paints the same field, so a decorative
+  background does not reshuffle between mounts;
+- **bounded** — a mote starts its own size plus one amplitude from the edge, so
+  neither its resting place nor the far end of its leg leaves the box;
+- **desynced** — every leg runs `0.75…1.25` of `driftMs`, so the field never
+  breathes in unison;
+- **weighted** — each mote has its own opacity, so the field reads as depth
+  rather than as a dotted grid.
+
+```tsx
+import { Particles } from "@gpuixui/components/particles";
+import { useTheme } from "@gpuixui/components";
+
+const theme = useTheme();
+
+<Particles
+  count={16}
+  seed={4}
+  // The three decisions the field leaves to its caller.
+  color={theme.colors.mutedForeground}
+  minSize={1}
+  maxSize={3}
+  driftMs={9_000}
+/>;
+```
+
+## Reduced motion
+
+`MotionProvider preference="reduced"` paints the seeded field **still** rather
+than deleting it — the decoration stays, the journey goes. Every mote then has no
+motion target at all, so no tween is running and no turnaround can fire. The
+entrance fade is zeroed the same way the overlays are.
+
+```tsx
+import { MotionProvider, Particles } from "@gpuixui/components";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <Particles count={20} />
+</MotionProvider>;
+```
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `count` | `number` | `24` | `0` paints none; the cap is `120`, because each mote is its own native tween. |
+| `seed` | `number` | `1` | The layout seed. The same seed paints the same field; a non-finite value is the house seed. |
+| `minSize` | `number` | `2` | The smallest mote, in pixels. A value below 1 falls back. |
+| `maxSize` | `number` | `5` | The largest mote. An inverted pair is read low-to-high. |
+| `color` | `string` | theme `primary` | The mote colour; each mote paints it at its own opacity. |
+| `driftMs` | `number` | `14_000` | The base time for one leg. Below 320 ms it would be a jitter and falls back; 120 s is the cap. |
+| `level` | `MotionLevel` | `"slow"` | The entrance fade. `MotionProvider` zeroes it under the reduced preference. |
+| `className` | `string` | — | A Tailwind class string, merged last. |
+| `style` | `StyleDesc` | — | The box's style, or a function of `{ count, reducedMotion, width, height }`. Give it a height. |
+
+Every mote carries an internal id (`particle-0`, …) and a `testId` on the field
+lands on the clipped box.
+
+## Limitations
+
+- **A drift, not a translate.** No `transform` and no canvas, so a mote moves
+  its inset rather than scaling or flying a path. A field of connected
+  constellations would need a per-frame line layer the runtime cannot paint.
+- **The box must be bounded by the caller.** The field measures itself; a box
+  with no height paints no motes.
+- **A hidden field keeps animating.** The runtime exposes no visibility query, so
+  unmount the field (or pass `count={0}`) when it is off screen.
+- **A resize re-draws the field.** The layout follows the new box from the same
+  seed, and every leg restarts — a tween cannot be resumed at an arbitrary
+  progress.
+- **No accessibility node.** The field adds no role and no name; give the content
+  in front of it its own.
+- **One tween per mote.** `count` is capped at 120 so a field cannot turn into a
+  thousand native animations.
+
+## Verification
+
+Eight native behaviour cases in `src/behaviour/particles.test.tsx` measure the
+real renderer: the motes inside the box the field measured, the same seed
+painting the same field, a mote drifting out and turning around on the motion
+clock, the reduced preference painting the field still with no motion target, no
+accessibility node and no pointer input, `count={0}` painting none, a resize
+re-drawing the field, and the entrance at the house `slow` level. The arithmetic
+is `src/particles/logic.test.ts` (12 tests): determinism, every seeded place and
+leg inside the box, the size and leg-time ranges, the opacity spread, the return
+leg, the count/size/drift/seed fallbacks and an unmeasured box painting nothing.
+
+## Related
+
+- [Avatar group](/docs/components/avatar-group) — a staggered entrance in the
+  same house style.
+- [Reveal](/docs/components/reveal) — the entrance a field's content can join.
+- [Shine button](/docs/components/shine-button) — the action this hero composes.
+- [Liquid button](/docs/components/liquid-button) — another inset-geometry layer.

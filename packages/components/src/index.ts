@@ -45,6 +45,7 @@ export * from "./message-scroller.js";
 export * from "./motion.js";
 export * from "./navigation-menu.js";
 export * from "./pagination.js";
+export * from "./particles.js";
 export * from "./pinned-list.js";
 export * from "./popover.js";
 export * from "./preview-card.js";
