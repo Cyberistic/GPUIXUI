@@ -46,6 +46,7 @@ import { mentionInputMeta } from "./mention-input.js";
 import { messageMeta } from "./message.js";
 import { messageScrollerMeta } from "./message-scroller.js";
 import { navigationMenuMeta } from "./navigation-menu.js";
+import { pageTransitionMeta } from "./page-transition.js";
 import { paginationMeta } from "./pagination.js";
 import { particlesMeta } from "./particles.js";
 import { pinnedListMeta } from "./pinned-list.js";
@@ -128,6 +129,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   messageMeta,
   messageScrollerMeta,
   navigationMenuMeta,
+  pageTransitionMeta,
   paginationMeta,
   particlesMeta,
   pinnedListMeta,

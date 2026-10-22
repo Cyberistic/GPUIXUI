@@ -51,15 +51,19 @@ export const surfaceBudget = {
   // (`theme-toggler.tsx` and its press/glyph/label rule) and 132 → 134 for
   // CopyButton (`copy-button.tsx` and its label/window rule), the action
   // CodeBlock's header now composes instead of holding its own acknowledgement.
-  modules: 134,
+  // 134 → 136 for PageTransition (`page-transition.tsx` and the view-swap state
+  // machine beside it), the region that swaps two views with the house exit and
+  // entrance.
+  modules: 136,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
   // with Particles and 803 KiB with Stars; 820 KiB with CodeBlock (840 055
-  // bytes), 827 KiB with ThemeToggler and 835 KiB with CopyButton. The ceiling
-  // keeps the headroom a prose edit needs while a bulk addition still has to
-  // state itself.
-  bytes: 850 * 1024,
+  // bytes), 827 KiB with ThemeToggler, 835 KiB with CopyButton and 848 KiB with
+  // PageTransition. The ceiling keeps the headroom a prose edit needs while a
+  // bulk addition still has to state itself; it moved 850 → 860 KiB with
+  // PageTransition because 848 KiB left the next family only two.
+  bytes: 860 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
 } as const;

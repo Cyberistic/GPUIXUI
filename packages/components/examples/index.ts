@@ -52,6 +52,7 @@ import { MessageExample } from "./message.example.js";
 import { MessageScrollerExample } from "./message-scroller.example.js";
 import { MotionExample } from "./motion.example.js";
 import { NavigationMenuExample } from "./navigation-menu.example.js";
+import { PageTransitionExample } from "./page-transition.example.js";
 import { PaginationExample } from "./pagination.example.js";
 import { ParticlesExample } from "./particles.example.js";
 import { PinnedListExample } from "./pinned-list.example.js";
@@ -118,6 +119,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "message-scroller": MessageScrollerExample,
   motion: MotionExample,
   "navigation-menu": NavigationMenuExample,
+  "page-transition": PageTransitionExample,
   pagination: PaginationExample,
   particles: ParticlesExample,
   "pinned-list": PinnedListExample,
