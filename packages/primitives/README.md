@@ -101,16 +101,23 @@ none paints a literal and none scripts hover or press
 GPUix shapes an empty host's placeholder itself, in a fixed `#8F8F8F` that no
 theme value reaches (`COMPONENTS.md` → Text inputs). The fields therefore hand
 the host no `placeholder` and paint the words instead, through one seam
-published from the package root so a second package facing the same runtime
-paints the same hint rather than keeping a copy:
+published from the **`@gpuixui/primitives/hint`** subpath so a second package
+facing the same runtime paints the same hint rather than keeping a copy:
 
 - `fieldHint` — `fieldHint(field, theme, value, spec)` returns an
   `Option<FieldHint>`: `None` for a blank hint or a field that already has a
   value, and a faded paint while the field is disabled;
 - `hintFrame` — `hintFrame(theme, spec)` is the full-inset frame over the host,
   with `pointerEvents: "none"` so a press lands on the host underneath;
+- `hintHost` — `hintHost(layout?)` is the positioning context the absolute
+  frame needs, carrying the host's own flex layout;
 - `renderFieldHint` — `renderFieldHint(hint, testId)` paints one `<text>` named
   `${testId}-hint`.
+
+The subpath is deliberate: the package root re-exports every primitive, so
+reaching this seam through the barrel loads the whole Tier 1 package to paint
+one line of text. `fieldHint`, `hintFrame`, `hintHost` and `renderFieldHint`
+are also on the root for the fields in this package.
 
 `spec` is either `{ size, align, origin }` with `origin: "field"` (measured from
 the field's border box) or `"content"` (a host already inside that chrome), or

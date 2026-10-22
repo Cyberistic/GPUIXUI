@@ -19,19 +19,23 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Order from "effect/Order";
 import type { StyleDesc } from "@gpuix/react";
 import { disabledOpacity } from "@gpuixui/tokens";
+import * as hintSubpath from "@gpuixui/primitives/hint";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   fieldHint as publishedFieldHint,
   hintFrame as publishedHintFrame,
+  hintHost as publishedHintHost,
   renderFieldHint as publishedRenderFieldHint,
 } from "../index.js";
 import { fieldChrome, renderInput, type FieldProps } from "./Input.js";
 import {
   fieldHint,
   hintFrame,
+  hintHost,
   renderFieldHint,
   type FieldHint,
 } from "./hint.js";
@@ -223,12 +227,13 @@ describe("a field's hint", () => {
 describe("the published hint seam", () => {
   // The rule is a runtime fact, not one field's paint: `@gpuixui/components`
   // faces the same fixed `#8F8F8F` and paints its own hinted hosts. It can
-  // only call this seam if the package root publishes it, so a root that stops
-  // exporting one of the three parts leaves that package with a second copy
-  // (the two-copy state `TODO.md` → Interlocks records).
+  // only call this seam if the package publishes it, so a root that stops
+  // exporting one of the parts leaves that package with a second copy (the
+  // two-copy state `TODO.md` → Interlocks records).
   it("publishes the frame, the hint and its element from the package root", () => {
     expect(publishedFieldHint).toBe(fieldHint);
     expect(publishedHintFrame).toBe(hintFrame);
+    expect(publishedHintHost).toBe(hintHost);
     expect(publishedRenderFieldHint).toBe(renderFieldHint);
 
     const hint = expectSome(
@@ -304,9 +309,48 @@ describe("the published hint seam", () => {
     );
     expect(
       Arr.filter(
-        ["fieldHint", "hintFrame", "renderFieldHint"],
+        ["fieldHint", "hintFrame", "hintHost", "renderFieldHint"],
         (name) => !readme.includes(`\`${name}\``),
       ),
     ).toEqual([]);
+    expect(readme).toContain("@gpuixui/primitives/hint");
+  });
+
+  // The root barrel re-exports every primitive, so reaching this seam through
+  // it loads the whole Tier 1 package: `@gpuixui/components` measured 52
+  // modules / 416 KiB to paint one line of text, which is why the copy it
+  // already had was kept (`TODO.md` → Interlocks). The subpath is the route
+  // that makes the shared frame cheaper than the copy.
+  it("loads the seam from its subpath without the package barrel", () => {
+    expect(Arr.sort(Object.keys(hintSubpath), Order.String)).toEqual([
+      "fieldHint",
+      "hintFrame",
+      "hintHost",
+      "renderFieldHint",
+    ]);
+    expect(hintSubpath.fieldHint).toBe(fieldHint);
+    expect(hintSubpath.hintFrame).toBe(hintFrame);
+    expect(hintSubpath.hintHost).toBe(hintHost);
+    expect(hintSubpath.renderFieldHint).toBe(renderFieldHint);
+  });
+
+  // A hint frame is absolutely positioned, so the host it sits in is the
+  // positioning context. A host that wraps its own layout keeps it.
+  it("gives a hinted host its positioning context", () => {
+    expect(hintSubpath.hintHost()).toEqual({
+      position: "relative",
+      display: "flex",
+    });
+    expect(
+      hintSubpath.hintHost({ paddingLeft: 8, alignItems: "center" }),
+    ).toEqual({
+      position: "relative",
+      display: "flex",
+      paddingLeft: 8,
+      alignItems: "center",
+    });
+    expect(hintSubpath.hintHost({ position: "absolute" }).position).toBe(
+      "absolute",
+    );
   });
 });

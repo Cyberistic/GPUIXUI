@@ -67,7 +67,7 @@ export type {
 export { Input } from "./Input.js";
 export type { FieldProps, FieldState, InputProps } from "./Input.js";
 
-export { fieldHint, hintFrame, renderFieldHint } from "./hint.js";
+export { fieldHint, hintFrame, hintHost, renderFieldHint } from "./hint.js";
 export type { FieldHint, FieldHintAlign, HintField, HintSpec } from "./hint.js";
 
 export {

@@ -12,6 +12,10 @@
     "./core": {
       "types": "./src/core/index.ts",
       "default": "./src/core/index.ts"
+    },
+    "./hint": {
+      "types": "./src/components/hint.tsx",
+      "default": "./src/components/hint.tsx"
     }
   },
   "scripts": {

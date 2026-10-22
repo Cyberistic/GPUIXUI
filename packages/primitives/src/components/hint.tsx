@@ -12,6 +12,10 @@
  * `@gpuixui/components`' own hinted hosts face the same host behaviour and call
  * this seam instead of keeping a second copy. The frame takes no pointer input,
  * so a press through a hint still focuses the host underneath it.
+ *
+ * Import it from the `@gpuixui/primitives/hint` subpath, not the package root:
+ * the root barrel re-exports every primitive, so a second package reaching the
+ * seam through it loads the whole Tier 1 package to paint one line of text.
  */
 
 import type { ReactElement } from "react";
@@ -170,3 +174,17 @@ export const renderFieldHint = (
     </text>
   </div>
 );
+
+/**
+ * The box a hinted host sits in.
+ *
+ * The frame above is absolutely positioned, so the host needs a positioning
+ * context. A host keeps every part of its own chrome — border, fill, radius and
+ * the ring the runtime paints on the element it tracks — and this only becomes
+ * that context, carrying whatever flex role the host held.
+ */
+export const hintHost = (layout: StyleDesc = {}): StyleDesc => ({
+  position: "relative",
+  display: "flex",
+  ...layout,
+});

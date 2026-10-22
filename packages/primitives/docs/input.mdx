@@ -125,8 +125,11 @@ input, so a press through the hint still focuses the field. The hint fades with
 the field's disabled paint (`disabledOpacity`). A theme's `placeholder` role is
 now the colour the reader sees, and it is the role `contrastPairs` holds to the
 secondary floor on the field's fill. The paint is one **published seam** —
-`fieldHint`, `hintFrame` and `renderFieldHint` from the package root — so another
-package with its own hinted hosts paints the same hint instead of keeping a copy.
+`fieldHint`, `hintFrame`, `hintHost` and `renderFieldHint` from the
+`@gpuixui/primitives/hint` subpath (also on the package root) — so another
+package with its own hinted hosts paints the same hint instead of keeping a
+copy. The subpath exists because the root barrel re-exports every primitive:
+a second package reaching the seam through it loads the whole Tier 1 package.
 
 An `invalid` field keeps its `input` fill and paints only the **edge** — the
 border and the focus line — in `destructive`. The solid role is designed to
