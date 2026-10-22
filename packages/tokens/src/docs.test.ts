@@ -469,6 +469,18 @@ describe("filled action adoption claim", () => {
     expect(limitation).toContain("hover:bg-primary/90");
   });
 
+  it("says the tw recipe is the copyable one, not the library's action", () => {
+    // The clause read "the `@gpuixui/tw` `button` recipe the components package
+    // compiles against", which invites a reader to treat the copyable upstream
+    // recipe as the action a shipped control paints. The components' action
+    // imports the primitives' button, so no tw recipe is on its path.
+    expect(
+      read("../../../packages/components/src/internal/button.tsx"),
+    ).toContain("@gpuixui/primitives/button");
+    expect(limitation).toContain("copyable");
+    expect(limitation).not.toContain("compiles against");
+  });
+
   it("names the toggle's accent as an adopter, not a deviation", () => {
     // The page once recorded a pressed `Toggle`'s 0.9/0.8 alpha wash as the
     // remaining deviation; the primitives now paint the derived fills for the

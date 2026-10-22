@@ -3911,8 +3911,9 @@ or dropped is named rather than passing silently.
   Dark · Windows — because a wash is often the fill it replaces. It derives
   `filledHover`/`filledPressed` from its own fill now and clears the floor in
   all 16 styles.
-  The `@gpuixui/tw` `button` recipe the components package compiles against still
-  lifts the fill's alpha (`hover:bg-primary/90` in `packages/tw/src/recipes.ts`) —
+  The `@gpuixui/tw` `button` recipe still lifts the fill's alpha
+  (`hover:bg-primary/90` in `packages/tw/src/recipes.ts`) — it is the copyable
+  upstream recipe rather than the library's action, which the primitives own —
   the other owning package's half.
 - A field's **resting edge** is the decorative `border` role rather than the
   functional `borderStrong` one: `fieldVariant`
