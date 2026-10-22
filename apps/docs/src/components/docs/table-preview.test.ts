@@ -110,8 +110,12 @@ describe("the preview's filter", () => {
     // `useTable` after those options were replaced by one `columns` list, and
     // the lane page still described the sort as a `sortRows` helper the package
     // no longer has.
-    expect(gridCore).toContain("readonly valueOf: (row: Row) => string | number");
-    expect(read("packages/data/src/use-table.ts")).toContain("readonly columns");
+    expect(gridCore).toContain(
+      "readonly valueOf: (row: Row) => string | number",
+    );
+    expect(read("packages/data/src/use-table.ts")).toContain(
+      "readonly columns",
+    );
 
     expect(tableWorkflowSource).toContain("columns: [");
     expect(tableWorkflowSource).not.toContain("textOf");
