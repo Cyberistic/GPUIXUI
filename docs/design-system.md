@@ -469,7 +469,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | status text on `background`/`card`/`popover` and on the `hover`/`active` wash a floating row tints (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own `disabled` fill, on `background`/`card`/`popover` and on a `muted` toolbar or `secondary` panel (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
-| focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips, on the field, and on the `hover`/`active` wash a bordered control tints | 3:1 | 4.5:1 |
+| focus ring (on background, card, popover, muted and secondary, and on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs) and `borderStrong` on those strips, on the field, and on the `hover`/`active` wash a bordered control tints | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill or presence dot — on background, card, popover and a muted strip | 3:1 | 4.5:1 |
 | soft status surface against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |

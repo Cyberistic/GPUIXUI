@@ -294,6 +294,18 @@ export const contrastPairs: readonly ContrastPair[] = [
   // page beneath it.
   { foreground: "ring", background: "muted", floor: "boundary" },
   { foreground: "ring", background: "secondary", floor: "boundary" },
+  // A ring at `outlineOffset: 0` is a line on the border box: its inner side
+  // hugs the fill the control paints and its outer side the strip behind it, so
+  // that fill is a surface the ring has to be found on too. A focused row is
+  // often also selected or pointer-tinted — `list.tsx` fills `selected`, tints
+  // `accent` while hovered and `active` while pressed, and declares the
+  // keyboard ring on the same element — and a field's own fill is what its ring
+  // borders, which is not the page it sits on.
+  { foreground: "ring", background: "input", floor: "boundary" },
+  { foreground: "ring", background: "selected", floor: "boundary" },
+  { foreground: "ring", background: "hover", floor: "boundary" },
+  { foreground: "ring", background: "active", floor: "boundary" },
+  { foreground: "ring", background: "accent", floor: "boundary" },
   // A control boundary sits on the same strips: an outline button in a toolbar
   // draws its edge on `muted`, and a bordered control in a filled panel draws it
   // on `secondary`. The edge must stay findable there for the same reason.

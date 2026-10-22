@@ -372,7 +372,8 @@ const house = extendTheme(platformTheme(themes.dark, "win32"), {
   colors: {
     primary: "#B49CFF",
     primaryForeground: "#1C1547",
-    ring: "#8A6EFF",
+    // Light enough to be found on the selected wash its ring hugs.
+    ring: "#9B8CFF",
   },
   radius: { md: 6 },
 });

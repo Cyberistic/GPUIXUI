@@ -774,6 +774,122 @@ describe("a control boundary on the strip it sits on", () => {
 });
 
 /**
+ * Guards the ring's **own** surface. The table measured the ring on the strips a
+ * control rests on — the page, a card, a popover, a toolbar and a segmented
+ * panel — and on nothing the same element paints behind itself: `list.tsx`
+ * fills `selected`, tints `accent` while hovered and `active` while pressed, and
+ * declares the keyboard ring on that row; a ghost or outline action tints the
+ * same two washes under its ring; and a field's ring borders the field's own
+ * fill (`input`), which is not the page it sits on. `outlineOffset: 0` draws the
+ * line on the border box, so its inner side touches the fill and its outer side
+ * the strip behind it — a ring that matches the row it surrounds is the boundary
+ * of nothing, and no pair measured any of those five.
+ */
+describe("the ring on the fill it hugs", () => {
+  const fills = ["input", "selected", "hover", "active", "accent"] as const;
+
+  it("measures the ring on every fill a focused control paints", () => {
+    const missing = fills
+      .filter(
+        (background) =>
+          !contrastPairs.some(
+            (pair) =>
+              pair.foreground === "ring" &&
+              pair.background === background &&
+              pair.floor === "boundary",
+          ),
+      )
+      .map((background) => `ring/${background}`);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the painters that put a ring on a wash", () => {
+    // The pairs only mean something while the elements still paint them: the
+    // list row declares the ring at rest and tints all three of its own washes,
+    // and the ghost and outline actions do the same under their own ring.
+    const row = readFileSync(
+      new URL("../../components/src/list.tsx", import.meta.url),
+      "utf8",
+    );
+    const button = readFileSync(
+      new URL("../../components/src/internal/button.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(row).toContain("...keyboardRing(theme)");
+    expect(row).toContain("backgroundColor: theme.colors.selected");
+    expect(row).toContain("hover: { backgroundColor: theme.colors.accent }");
+    expect(row).toContain("active: { backgroundColor: theme.colors.active }");
+    expect(button).toContain("hover: { backgroundColor: theme.colors.hover }");
+    expect(button).toContain(
+      "active: { backgroundColor: theme.colors.active }",
+    );
+    expect(button).toContain("...keyboardRing(theme)");
+  });
+
+  it("reports a ring that disappears into the row it surrounds", () => {
+    const broken = { colors: { ...lightColors, ring: lightColors.selected } };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "ring" && background === "selected",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
+  });
+
+  it("reports a ring the pressed wash hides", () => {
+    const broken = { colors: { ...lightColors, ring: lightColors.active } };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "ring" && background === "active",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
+  });
+
+  it("keeps the ring findable on every fill in every shipped, platform and authored theme", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const placements = shipped.flatMap((theme) =>
+      fills.map((background) => ({
+        name: `${theme.name}/ring/${background}`,
+        ratio: contrastRatio(theme.colors.ring, theme.colors[background]),
+        floor: contrastFloorsFor(theme).boundary,
+      })),
+    );
+    const hidden = placements.filter(
+      ({ ratio, floor }) => ratio === undefined || ratio < floor,
+    );
+    const tightest = placements.reduce((low, next) =>
+      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+    );
+
+    expect(hidden).toEqual([]);
+    expect(tightest.name).toBe("Light/ring/active");
+    expect(tightest.ratio?.toFixed(2)).toBe("3.04");
+    // The catalogue prints the number this suite measures, so a palette edit
+    // moves the sentence instead of leaving a stale claim.
+    expect(
+      readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(`pressed wash at ${tightest.ratio?.toFixed(2)}:1`);
+  });
+});
+
+/**
  * Guards the edge an invalid control paints. A failed validation swaps the
  * control's border and its focus line to `destructive` — a field's border, the
  * `focusVisible` outline a primitive declares while invalid — so that role is a

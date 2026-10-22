@@ -683,7 +683,9 @@ const house = extendTheme(platformTheme(themes.dark, "win32"), {
   colors: {
     primary: "#B49CFF",
     primaryForeground: "#1C1547",
-    ring: "#8A6EFF",
+    // A ring is read against the fill it hugs, so this violet stays light
+    // enough to be found on the theme's own `selected` wash.
+    ring: "#9B8CFF",
     // The accent family too: `accent`, `selected` and `selection` are surfaces
     // derived from the accent, so leaving them on the platform's blue paints a
     // violet button inside a blue popover and a blue-tinted selection.
@@ -1041,7 +1043,7 @@ so a single number would be a guess — or carries no channels here at all (a
 named colour, an `hsl()`-family function). Shorthand hex is measured.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 69 pairs cover the text role
+— an empty array means the theme is readable. The 74 pairs cover the text role
 on each surface it can sit on: body and popover text, the text typed into an
 `input`, secondary text on `background`, `card`, `muted`, `popover` and a
 selected row, the selected row's title on that selection and the
@@ -1054,7 +1056,8 @@ surfaces and on the two group strips a disabled control sits in (`muted`,
 `secondary`), accent and selected, the state washes,
 the placeholder, and the essential boundaries and focus ring — the ring and the
 strong boundary on every surface a focused control can sit on, including a
-toolbar strip (`muted`), a segmented group (`secondary`) and the `hover`/`active`
+toolbar strip (`muted`), a segmented group (`secondary`), the fill the ring hugs
+(`input`, `selected`, `hover`, `active`, `accent`) and the `hover`/`active`
 wash a bordered control tints while it is hovered or pressed, plus the invalid
 edge below. A wash — `hover`,
 `active`, `accent` — is a surface too: a ghost button or a menu row tints it and
@@ -1107,6 +1110,23 @@ could fall into, where a `selected` close to its page — or a wash close to
 empty. `contrast.test.ts`'s `the text a selected row keeps` suite reads both
 painters, reports the erased title at 1.00:1 and the erased wash, and holds all
 16 styles to the floors.
+
+A **focused row** is the fifth case, and the ring's own surface is the one the
+table skipped. `outlineOffset: 0` draws the `focusVisible` line on the border
+box, so it is read against both neighbours: the fill the control paints behind
+itself and the strip beyond it. `list.tsx` fills `selected`, tints `accent` on
+hover and `active` on press, and declares the keyboard ring on that same row;
+the ghost and outline actions tint the same two washes under their ring; and a
+field's ring borders the field's own `input` fill, which is not the page it sits
+in. The five fills (`input`, `selected`, `hover`, `active`, `accent`) joined the
+ring's pairs at the boundary floor, so a brand whose ring is the colour of the
+row it surrounds is reported at 1.00:1 instead of shipping a focused row with no
+visible focus. Every shipped, high-contrast, platform and authored theme clears
+its variant's floor, the tightest being the base light theme's pressed wash at
+3.04:1 — thin headroom, recorded rather than widened, because the ring is a 2px
+line on a state the reader's own pointer created. `contrast.test.ts`'s `the ring
+on the fill it hugs` suite reads both painters, reports the two erased rings and
+sweeps all 16 styles, so the pairs cannot outlive the paint.
 
 `contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply
