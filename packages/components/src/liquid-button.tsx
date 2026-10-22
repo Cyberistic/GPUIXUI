@@ -22,7 +22,7 @@
 
 import type { EventPayload } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { motionLevels, type MotionLevel } from "@gpuixui/motion/timing";
+import type { MotionLevel } from "@gpuixui/motion/timing";
 import * as Option from "effect/Option";
 import { useEffect, useRef, useState } from "react";
 import { Button, actionOnColor, type ButtonProps } from "./internal/button.js";
@@ -31,7 +31,11 @@ import {
   measuredPoint,
   type MeasuredBox,
 } from "./internal/measure.js";
-import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
+import {
+  transitionWindowMs,
+  useMotionPreference,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import { alpha, useTheme } from "./internal/theme.js";
 import {
   liquidAcross,
@@ -91,14 +95,19 @@ export const LiquidButton = ({
     liquidColor ?? alpha(actionOnColor(theme, variant), liquidOpacity);
   const draining = Option.exists(flood, (current) => !current.filled);
 
+  const windowMs = transitionWindowMs(timing);
+
+  // A flood is pure journey, so a reader who turns the preference on mid-hover
+  // keeps no wash: the layer goes with the travel the setting removed.
   useEffect(() => {
-    if (!draining) return;
-    const handle = setTimeout(
-      () => setFlood(Option.none()),
-      motionLevels[level],
-    );
+    if (preference === "reduced") setFlood(Option.none());
+  }, [preference]);
+
+  useEffect(() => {
+    if (!draining || preference === "reduced") return;
+    const handle = setTimeout(() => setFlood(Option.none()), windowMs);
     return () => clearTimeout(handle);
-  }, [draining, level]);
+  }, [draining, preference, windowMs]);
 
   const measure = (event: EventPayload) => {
     box.current = measuredBox(event);

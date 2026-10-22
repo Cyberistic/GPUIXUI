@@ -54,8 +54,10 @@ level from `@gpuixui/motion`.
 
 A ripple is pure journey, not content, so `MotionProvider preference="reduced"`
 paints **none at all** — there is no resting frame worth showing, and the button's
-pressed fill is the feedback that remains. The preference is the application's to
-supply: the runtime exposes no reduced-motion query.
+pressed fill is the feedback that remains. The setting is read on every render, so
+a disc already spreading when it turns on is removed in that frame instead of
+staying in the tree for the rest of the level. The preference is the application's
+to supply: the runtime exposes no reduced-motion query.
 
 ```tsx
 import { MotionProvider } from "@gpuixui/components";
@@ -106,11 +108,12 @@ added. The ripple layer itself is presentational: it carries an internal
 
 ## Verification
 
-Seven native behaviour cases in `src/behaviour/ripple-button.test.tsx` measure the
+Eight native behaviour cases in `src/behaviour/ripple-button.test.tsx` measure the
 growth and the centre on the renderer's motion clock, the removal timer, the
-keyboard centre, the reduced preference, two discs and the press reaching the
-action through the first, the disabled control, and the wash role; the geometry
-itself is `src/ripple-button/logic.test.ts` (7 tests).
+keyboard centre, the reduced preference, a disc dropped when the setting turns on
+mid-spread, two discs and the press reaching the action through the first, the
+disabled control, and the wash role; the geometry itself is
+`src/ripple-button/logic.test.ts` (7 tests).
 
 ## Related
 

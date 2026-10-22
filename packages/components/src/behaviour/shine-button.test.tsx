@@ -46,6 +46,18 @@ const render = (props: Partial<ShineButtonProps> = {}) => {
   return { page, onClick };
 };
 
+/**
+ * One mounted action whose preference the case can change, so a flip keeps the
+ * component (and the sheen it is running) rather than remounting it.
+ */
+const Hoverable = ({ reduced }: { readonly reduced: boolean }) => (
+  <MotionProvider preference={reduced ? "reduced" : "animated"}>
+    <ShineButton testId="action" style={{ width }}>
+      Ship
+    </ShineButton>
+  </MotionProvider>
+);
+
 /** Every painted half of the sheen. */
 const shines = (page: ReturnType<typeof renderComponent>) =>
   page.renderer
@@ -102,6 +114,29 @@ describe("ShineButton", () => {
       expect(shines(page)).toHaveLength(2);
 
       await waitFor(() => expect(shines(page)).toHaveLength(0));
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("drops a sheen already crossing when the setting turns on", async () => {
+    // A sheen is pure journey. The preference is read on every render, so the
+    // band a hovered action is wearing goes with the travel the setting
+    // removed instead of staying mounted for the rest of the level.
+    const page = renderComponent(<Hoverable reduced={false} />);
+    try {
+      page.renderer.clockPause();
+      hoverCentreOf(page, "action");
+      settle(page);
+      page.renderer.clockFastForward(250);
+      settle(page);
+      expect(shines(page)).toHaveLength(2);
+
+      page.rerender(<Hoverable reduced />);
+      settle(page);
+
+      // Well inside the 500 ms window the animated sweep would still be running.
+      await waitFor(() => expect(shines(page)).toHaveLength(0), 80);
     } finally {
       page.unmount();
     }

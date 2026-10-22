@@ -49,8 +49,10 @@ ripple uses to cross a control. `level` selects any other level from
 
 A sheen marks a pointer, so it is feedback rather than content: under
 `MotionProvider preference="reduced"` **none is painted**. The control's own hover
-fill remains, which the local `Button` already paints. The preference is the
-application's to supply — the runtime exposes no reduced-motion query.
+fill remains, which the local `Button` already paints. The setting is read on
+every render, so a band already crossing when it turns on is removed in that
+frame instead of finishing its sweep. The preference is the application's to
+supply — the runtime exposes no reduced-motion query.
 
 ```tsx
 import { MotionProvider } from "@gpuixui/components";
@@ -104,11 +106,12 @@ no accessibility node.
 
 ## Verification
 
-Six native behaviour cases in `src/behaviour/shine-button.test.tsx` measure the
+Seven native behaviour cases in `src/behaviour/shine-button.test.tsx` measure the
 travel on the renderer's motion clock (born outside the left edge, centred at the
 half-way point, past the right edge), the removal timer, the re-entry restart, the
-reduced preference, the disabled action and the ink role; the arithmetic is
-`src/shine-button/logic.test.ts` (8 tests).
+reduced preference, a sheen dropped when the setting turns on mid-sweep, the
+disabled action and the ink role; the arithmetic is `src/shine-button/logic.test.ts`
+(8 tests).
 
 ## Related
 

@@ -47,6 +47,20 @@ const render = (props: Partial<LiquidButtonProps> = {}) => {
   return { page, onClick };
 };
 
+/**
+ * One mounted action whose preference the case can change.
+ *
+ * The provider's `preference` prop is what moves; the button below it keeps its
+ * state, so a flip is the reader's setting changing rather than a remount.
+ */
+const Hoverable = ({ reduced }: { readonly reduced: boolean }) => (
+  <MotionProvider preference={reduced ? "reduced" : "animated"}>
+    <LiquidButton testId="action" style={{ width }}>
+      Save
+    </LiquidButton>
+  </MotionProvider>
+);
+
 /** The painted flood layer, or undefined before one is mounted. */
 const flood = (page: ReturnType<typeof renderComponent>) =>
   page.renderer
@@ -204,6 +218,31 @@ describe("LiquidButton", () => {
       settle(page);
 
       expect(flood(page)).toBeUndefined();
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("drops a flood already crossing when the setting turns on", async () => {
+    // A wash is pure journey. The preference is read on every render, so the
+    // layer a hovered action is wearing goes with the travel the setting
+    // removed instead of staying at its final frame for the rest of the level.
+    // The provider's prop changes under one mounted action, so the flip is a
+    // re-render rather than a fresh tree.
+    const page = renderComponent(<Hoverable reduced={false} />);
+    try {
+      page.renderer.clockPause();
+      hoverCentreOf(page, "action");
+      settle(page);
+      page.renderer.clockFastForward(400);
+      settle(page);
+      expect(flood(page)).toBeDefined();
+
+      page.rerender(<Hoverable reduced />);
+      settle(page);
+
+      // Well inside the 200 ms window the animated drain would still be running.
+      await waitFor(() => expect(flood(page)).toBeUndefined(), 80);
     } finally {
       page.unmount();
     }

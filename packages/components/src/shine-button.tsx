@@ -15,13 +15,17 @@
 
 import type { EventPayload } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { motionLevels, type MotionLevel } from "@gpuixui/motion/timing";
+import type { MotionLevel } from "@gpuixui/motion/timing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useEffect, useRef, useState } from "react";
 import { Button, actionOnColor, type ButtonProps } from "./internal/button.js";
 import { measuredBox, type MeasuredBox } from "./internal/measure.js";
-import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
+import {
+  transitionWindowMs,
+  useMotionPreference,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import { alpha, useTheme } from "./internal/theme.js";
 import {
   sheenFrames,
@@ -67,12 +71,19 @@ export const ShineButton = ({
   const [sweeping, setSweeping] = useState(false);
   const [run, setRun] = useState(0);
   const ink = sheenColor ?? actionOnColor(theme, variant);
+  const windowMs = transitionWindowMs(timing);
+
+  // A sheen is pure journey, so a reader who turns the preference on mid-sweep
+  // keeps no band: it goes with the travel the setting removed.
+  useEffect(() => {
+    if (preference === "reduced") setSweeping(false);
+  }, [preference]);
 
   useEffect(() => {
-    if (!sweeping) return;
-    const handle = setTimeout(() => setSweeping(false), motionLevels[level]);
+    if (!sweeping || preference === "reduced") return;
+    const handle = setTimeout(() => setSweeping(false), windowMs);
     return () => clearTimeout(handle);
-  }, [level, run, sweeping]);
+  }, [preference, run, sweeping, windowMs]);
 
   const measure = (event: EventPayload) => {
     box.current = measuredBox(event);

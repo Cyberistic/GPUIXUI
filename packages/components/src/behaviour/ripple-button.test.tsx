@@ -49,6 +49,18 @@ const render = (props: Partial<RippleButtonProps> = {}) => {
 const disc = (page: ReturnType<typeof renderComponent>) =>
   page.renderer.findByTestId("ripple");
 
+/**
+ * One mounted action whose preference the case can change, so a flip keeps the
+ * button and the disc it is spreading rather than remounting them.
+ */
+const Pressable = ({ reduced }: { readonly reduced: boolean }) => (
+  <MotionProvider preference={reduced ? "reduced" : "animated"}>
+    <RippleButton testId="action" variant="primary">
+      Ship
+    </RippleButton>
+  </MotionProvider>
+);
+
 /** Every disc in the tree, for a burst of presses. */
 const discs = (page: ReturnType<typeof renderComponent>) =>
   page.renderer
@@ -161,6 +173,30 @@ describe("RippleButton", () => {
       settle(page);
       expect(onClick).toHaveBeenCalledTimes(2);
       expect(discs(page)).toHaveLength(2);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("drops a disc already spreading when the setting turns on", async () => {
+    // A disc is pure journey. The preference is read on every render, so the
+    // layer a press mounted goes with the travel the setting removed instead
+    // of staying in the tree for the rest of the level.
+    const page = renderComponent(<Pressable reduced={false} />);
+    try {
+      const box = requireBounds(page, "action");
+      page.renderer.clockPause();
+      page.renderer.nativeSimulateClick(box.x + 4, box.y + 4);
+      settle(page);
+      page.renderer.clockFastForward(100);
+      settle(page);
+      expect(disc(page)).toBeDefined();
+
+      page.rerender(<Pressable reduced />);
+      settle(page);
+
+      // Well inside the 500 ms window the animated disc would still be running.
+      await waitFor(() => expect(disc(page)).toBeUndefined(), 80);
     } finally {
       page.unmount();
     }

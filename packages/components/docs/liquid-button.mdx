@@ -53,8 +53,10 @@ duration, so a drain takes as long as the flood that filled it.
 
 A flood marks a pointer, so it is feedback rather than content: under
 `MotionProvider preference="reduced"` **none is painted**. The control's own
-hover fill remains, which the local `Button` already paints. The preference is
-the application's to supply — the runtime exposes no reduced-motion query.
+hover fill remains, which the local `Button` already paints. The setting is read
+on every render, so a flood already crossing when it turns on is removed in that
+frame instead of settling at its filled width. The preference is the
+application's to supply — the runtime exposes no reduced-motion query.
 
 ```tsx
 import { LiquidButton } from "@gpuixui/components/liquid-button";
@@ -107,11 +109,12 @@ it adds no accessibility node.
 
 ## Verification
 
-Eight native behaviour cases in `src/behaviour/liquid-button.test.tsx` measure the
+Nine native behaviour cases in `src/behaviour/liquid-button.test.tsx` measure the
 flood on the renderer's motion clock (born at the entry edge, growing across,
 draining to the side the pointer left by, a move inside a filled control keeping
-it, the removal timer, the reduced preference, the disabled action and the ink
-role); the arithmetic is `src/liquid-button/logic.test.ts` (8 tests).
+it, the removal timer, the reduced preference, a flood dropped when the setting
+turns on mid-cross, the disabled action and the ink role); the arithmetic is
+`src/liquid-button/logic.test.ts` (8 tests).
 
 ## Related
 

@@ -97,15 +97,25 @@ export const useSurfaceTiming = (level: MotionLevel): SurfaceTiming => {
 };
 
 /**
- * The mount window a leaving surface occupies, in whole milliseconds.
+ * The window a run occupies, in whole milliseconds.
  *
  * `motionTiming` names a duration in seconds because the runtime reads seconds;
- * the seam and the toast stack both keep a leaving box painted for exactly that
- * long, so the conversion lives in one place and a preference change rescales
- * both.
+ * every component that keeps a box painted for the length of a journey converts
+ * through here, so a preference change rescales the window with the tween it
+ * belongs to. A run with no duration is no window at all.
+ */
+export const transitionWindowMs = (timing: MotionTransition): number =>
+  Math.round((timing.duration ?? 0) * 1000);
+
+/**
+ * The mount window a leaving surface occupies, in whole milliseconds.
+ *
+ * The seam and the toast stack both keep a leaving box painted for exactly the
+ * length of its exit tween, so the conversion lives in one place and a
+ * preference change rescales both.
  */
 export const exitWindowMs = (timing: SurfaceTiming): number =>
-  Math.round((timing.exit.duration ?? 0) * 1000);
+  transitionWindowMs(timing.exit);
 
 /**
  * A house timing that waits `delayMs` before it runs — a stagger.

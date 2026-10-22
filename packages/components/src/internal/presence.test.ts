@@ -24,6 +24,7 @@ import {
   fadeFromAnchor,
   fadeFromSide,
   fadeOnly,
+  transitionWindowMs,
   type SurfaceTiming,
 } from "./presence.js";
 
@@ -101,6 +102,20 @@ describe("the mount window", () => {
 
   it("treats a timing with no duration as an instant assignment", () => {
     expect(exitWindowMs({ enter: { duration: 0 }, exit: {} })).toBe(0);
+  });
+
+  it("times any run by the transition it paints, not by the level's number", () => {
+    // The feedback layers (a ripple, a sheen, a flood) keep a layer mounted for
+    // the length of an *enter* journey, and the timing they paint is where the
+    // preference reaches the window: the level table alone cannot rescale.
+    expect(transitionWindowMs(timing("normal").enter)).toBe(
+      motionLevels.normal,
+    );
+    expect(transitionWindowMs(timing("notice").enter)).toBe(
+      motionLevels.notice,
+    );
+    expect(transitionWindowMs(timing("notice", "reduced").enter)).toBe(0);
+    expect(transitionWindowMs({})).toBe(0);
   });
 });
 

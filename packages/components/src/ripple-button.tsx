@@ -19,13 +19,17 @@
 
 import type { EventPayload } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { motionLevels, type MotionLevel } from "@gpuixui/motion/timing";
+import type { MotionLevel } from "@gpuixui/motion/timing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, actionOnColor, type ButtonProps } from "./internal/button.js";
 import { measuredBox, type MeasuredBox } from "./internal/measure.js";
-import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
+import {
+  transitionWindowMs,
+  useMotionPreference,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import { alpha, useTheme } from "./internal/theme.js";
 import {
   rippleFrames,
@@ -64,11 +68,18 @@ const RippleCircle = ({
   readonly onDone: (id: number) => void;
 }) => {
   const timing = useSurfaceTiming(level).enter;
+  const windowMs = transitionWindowMs(timing);
 
+  // A disc is pure journey: a reader who turns the preference on mid-ripple
+  // keeps no disc, and a level retimes the removal with the tween it paints.
   useEffect(() => {
-    const handle = setTimeout(() => onDone(id), motionLevels[level]);
+    if (windowMs === 0) {
+      onDone(id);
+      return;
+    }
+    const handle = setTimeout(() => onDone(id), windowMs);
     return () => clearTimeout(handle);
-  }, [id, level, onDone]);
+  }, [id, onDone, windowMs]);
 
   return (
     <div
