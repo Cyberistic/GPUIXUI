@@ -14,6 +14,7 @@ import { avatarMeta } from "./avatar.js";
 import { avatarGroupMeta } from "./avatar-group.js";
 import { badgeMeta } from "./badge.js";
 import { breadcrumbMeta } from "./breadcrumb.js";
+import { bubblesMeta } from "./bubbles.js";
 import { carouselMeta } from "./carousel.js";
 import { cardMeta } from "./card.js";
 import { chatMeta } from "./chat.js";
@@ -97,6 +98,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   avatarGroupMeta,
   badgeMeta,
   breadcrumbMeta,
+  bubblesMeta,
   carouselMeta,
   cardMeta,
   chatMeta,
