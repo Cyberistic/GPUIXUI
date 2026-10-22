@@ -12,6 +12,7 @@
  * - `sort/`, `selection/`, `filter/`, `columns/` — pure reducers plus the one
  *   control each needs; they import no React and can drive the grid from
  *   Effect.
+ * - `virtual/` — the typed seam over the runtime's `<virtual-list>`.
  * - `use-table`, `use-columns` — the uncontrolled controllers.
  *
  * Read `packages/data/README.md` for the runtime rules (no sticky, no
@@ -126,3 +127,6 @@ export type {
   ColumnController,
   UseColumnsOptions,
 } from "./columns/use-columns.js";
+
+export { VirtualList, visibleRange } from "./virtual/list.js";
+export type { VirtualListProps, VisibleRange } from "./virtual/list.js";

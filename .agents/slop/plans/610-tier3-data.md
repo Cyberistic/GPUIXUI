@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | in progress — phases 1–3 landed 2026-10-22 (`packages/data`; `data-table-core` probe 1/1, package suite 48 cases + 14 native behaviour cases) |
+| Status | in progress — phases 1–3 and 4a landed 2026-10-22 (`packages/data`; `data-table-core` probe 1/1, package suite 52 cases + 18 native behaviour cases) |
 | Phase | D — data and workspace |
 | Owner | the `data` workstream |
 | Depends on | `@gpuixui/components`, `@gpuixui/primitives`, `@gpuixui/tw`, `@gpuixui/tokens`, `@gpuixui/motion` |
@@ -127,9 +127,15 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
 - **Phase 2 note**: the painted-child press rule now lives in
   `table.tsx`'s row/cell docs and the two Tier 3 rows, guarded by
   `src/table/press-rule.test.ts` and a blank-cell press case.
-- Evidence: `nub run --filter @gpuixui/data test` (48) and `test:behaviour` (14)
+- **Phase 4a (virtual list) landed**: `VirtualList` wraps the runtime's
+  `<virtual-list>` with both host modes as a discriminated union, a definite
+  `height`, a typed `VisibleRange` and a forwarded ref for `scrollToItem`. The
+  2 000-row example proves only a window paints and a far row reveals. The
+  windowed mode's state (`windowStart`, overdraw, reveal order) stays app-owned
+  until phase 4b composes it with the table.
+- Evidence: `nub run --filter @gpuixui/data test` (52) and `test:behaviour` (18)
   green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
-  1/1. Phases 4–7 and frozen columns are the open TODO rows.
+  1/1. Phases 4b–7 and frozen columns are the open TODO rows.
 
 ## 5. Acceptance
 

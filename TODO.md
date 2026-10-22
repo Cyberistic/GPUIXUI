@@ -4736,8 +4736,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
     grid's, mirrored both ways in `onScrollChange` → `renderer.scrollTo` with a
     re-entrancy guard), not an order flag. `ColumnMenu` deliberately offers no
     pin row until that composition ships.
-  - [ ] Tier 3 phase 4 — virtualisation (`useVirtualRows`, `VirtualList`,
-    `VirtualTable`; `virtual-list-windowed`/`virtualized-table`)
+  - [x] Tier 3 phase 4a — `VirtualList`, the typed seam over the runtime's
+    `<virtual-list>`: a discriminated union mirrors both host modes,
+    `height` gives the viewport a definite bound, `onVisibleRange` maps the
+    untyped event to `{ first, last }` (an absent pair is `None`, never `0..0`),
+    and `ref` forwards the instance a reveal needs. 4 unit cases for the range
+    and 4 native behaviour cases on the shipped 2 000-row example (only a
+    window paints — `Row 1999` is retained and never painted — a wheel moves it,
+    the range arrives, and `scrollToItem` reveals row 1 200). Directions
+    measured: dropping the range pass-through leaves `first=- last=-` and fails
+    the wheel case; dropping the ref fails the reveal (`[0…9]` does not include
+    1200). Verified: `test:behaviour` (18/18, including the table file).
+    `itemCount` mode is exposed; its window arithmetic is phase 4b.
+  - [ ] Tier 3 phase 4b — `useVirtualRows` and `VirtualTable`: the windowed
+    mode's `windowStart` state (window wider than viewport + overdraw, reveal
+    moves the window before `scrollToItem`) and a table body that composes the
+    fixed header with a virtual body. `virtual-list-windowed` and
+    `virtualized-table` are the evidence.
   - [ ] Tier 3 phase 5 — `TreeView`, `useExpandedRows`, expandable table rows
     (`virtual-tree-lifecycle`, `virtual-list-expand`)
   - [ ] Tier 3 phase 6 — SVG charts (`BarChart`, `LineChart`, `DonutChart`,
@@ -4745,7 +4760,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
   - [ ] Tier 3 phase 7 — `KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar`,
     `AdvancedFilter` (`inspector-lifecycle`)
   - [ ] Register the data package on the site — `apps/docs/src/lib/examples.ts`
-    must list `packages/data/examples/table.example.tsx` (`apps/docs/src/lib/examples.test.ts`
+    must list `packages/data/examples/table.example.tsx` and
+    `packages/data/examples/virtual-list.example.tsx` (`apps/docs/src/lib/examples.test.ts`
     fails `lists every example file and nothing else` until it does), the
     architecture page must name `@gpuixui/data` (`architecture.test.ts` fails
     `names every workspace package`), and the Components index prose that calls
