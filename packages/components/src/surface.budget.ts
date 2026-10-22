@@ -65,8 +65,10 @@ export const surfaceBudget = {
   // `topography.tsx`/`topography/logic.ts`, and the two modules they share:
   // `internal/pattern-field.tsx` and `internal/svg-pattern.ts`), whose view boxes
   // are generated from their measured boxes. 153 → 155 for ImageZoom
-  // (`image-zoom.tsx` and the frame/pan rule beside it).
-  modules: 155,
+  // (`image-zoom.tsx` and the frame/pan rule beside it). 155 → 157 for MotionGrid
+  // (`motion-grid.tsx` and the slot/frame rule beside it), the grid whose cells
+  // retarget their insets on a reorder.
+  modules: 157,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -80,7 +82,9 @@ export const surfaceBudget = {
   // with Gradient and 900 → 940 KiB with GravityStars. 940 → 990 KiB with the
   // generated Hexagon and Topography fields (962 KiB measured, the shared
   // pattern frame included); 976 KiB measured with ImageZoom, under the ceiling.
-  bytes: 990 * 1024,
+  // 988 KiB measured with MotionGrid: the ceiling moved 990 → 1030 KiB then,
+  // because the next family would otherwise have had two kilobytes to fit in.
+  bytes: 1030 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
 } as const;

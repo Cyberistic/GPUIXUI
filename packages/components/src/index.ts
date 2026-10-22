@@ -51,6 +51,7 @@ export * from "./mention-input.js";
 export * from "./message.js";
 export * from "./message-scroller.js";
 export * from "./motion.js";
+export * from "./motion-grid.js";
 export * from "./navigation-menu.js";
 export * from "./page-transition.js";
 export * from "./pagination.js";
