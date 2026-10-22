@@ -109,11 +109,14 @@ on its own.
 | `Space` | toggles the focused option on key **up** |
 | `Enter` | toggles the focused option on key **down** |
 | a held key | repeat events do nothing |
+| a letter | moves focus to the next option whose label starts with it (never toggles it) |
 | `Tab` | reaches the group once, then leaves it |
 
 A Space **press** calls `preventDefault()`, so a scroll container does not also
 scroll while the control waits for the release. Moving focus never changes the
 value: unlike a radio group, a checkbox group has no "selection follows focus".
+Type-ahead follows the same rule — it moves focus to the matching option and
+leaves the value alone, because a typed key must never be a hidden press.
 
 ## Accessibility
 
@@ -161,7 +164,7 @@ decision, so a callback is the last word on a property the recipe also sets.
 - A group is one tab stop, so an option cannot be reached directly by Tab. That
   is a deliberate composite-widget trade — use separate `Checkbox` controls when
   every row should be its own stop.
-- No select-all, indeterminate parent, type-ahead or virtualisation; compose a
+- No select-all, indeterminate parent or virtualisation; compose a
   `Checkbox` parent beside the group and derive its state from the values.
 - No drag selection.
 
@@ -169,7 +172,8 @@ decision, so a callback is the last word on a property the recipe also sets.
 
 - `src/core/roving.test.ts` — the tab-stop decision: a disabled preferred index
   falls back to the first reachable option, an all-disabled group has none.
-- `src/components/CheckboxGroup.test.tsx` — value text and no `aria-checked`;
+- `src/components/CheckboxGroup.test.tsx` — a typed prefix moves focus to the
+  option it names without toggling it, plus value text and no `aria-checked`;
   the stop skips a disabled option; an arrow moves focus without toggling;
   Space-up and Enter-down; Home/End skip disabled options; a disabled row
   installs no press; both style callbacks; item children read into one list;

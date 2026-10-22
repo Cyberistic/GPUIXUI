@@ -6,7 +6,10 @@ import {
   decideMove,
   decidePage,
   decideToggle,
+  decideTypeAhead,
+  isTypeAheadKey,
   swallowKeyDefault,
+  TYPE_AHEAD_RESET_MS,
 } from "./keyboard.js";
 
 /**
@@ -148,5 +151,73 @@ describe("decidePage", () => {
 
   it("ignores a key that is not a page key", () => {
     expect(decidePage(1, 10, "down", 3)).toEqual(Option.none());
+  });
+});
+
+describe("decideTypeAhead", () => {
+  const labels = ["Alpha", "Alpine", "Bravo", "Charlie"];
+
+  it("lands on the next option whose label starts with the prefix", () => {
+    // From `Alpha` the search continues forward, so `a` reaches the *second*
+    // "Al..." rather than the option it is already on.
+    expect(decideTypeAhead(labels, 0, "a")).toEqual(Option.some(1));
+    expect(decideTypeAhead(labels, 0, "b")).toEqual(Option.some(2));
+  });
+
+  it("wraps to the start of the list", () => {
+    expect(decideTypeAhead(labels, 3, "a")).toEqual(Option.some(0));
+  });
+
+  it("is case-insensitive, because the runtime reports lower-case keys", () => {
+    expect(decideTypeAhead(["Zulu", "Yankee"], 1, "z")).toEqual(Option.some(0));
+  });
+
+  it("narrows with a longer buffer instead of replacing the match", () => {
+    // `al` is the pair a reader types to tell the two "Al..." options apart;
+    // from Bravo it finds the first one forward, which is Alpha (wrapping), and
+    // a fourth character narrows that to Alpine.
+    expect(decideTypeAhead(labels, 2, "al")).toEqual(Option.some(0));
+    expect(decideTypeAhead(labels, 2, "alpi")).toEqual(Option.some(1));
+  });
+
+  it("retries the last character when the whole buffer matches nothing", () => {
+    // A fast "qx" means "x": the standard rule, and the one that keeps a typo
+    // from stranding the reader with no move at all.
+    expect(decideTypeAhead(["Xylophone"], 0, "qx")).toEqual(Option.some(0));
+  });
+
+  it("never lands on an option that cannot be chosen", () => {
+    const disabled = new Set([1]);
+    expect(
+      decideTypeAhead(labels, 0, "al", (index) => disabled.has(index)),
+    ).toEqual(Option.some(0));
+    expect(
+      decideTypeAhead(
+        labels,
+        2,
+        "a",
+        (index) => index === 0 || disabled.has(index),
+      ),
+    ).toEqual(Option.none());
+  });
+
+  it("reports nothing for a group with no match or no options", () => {
+    expect(decideTypeAhead(labels, 0, "z")).toEqual(Option.none());
+    expect(decideTypeAhead([], 0, "a")).toEqual(Option.none());
+  });
+});
+
+describe("isTypeAheadKey", () => {
+  it("collects a character and leaves every named key alone", () => {
+    expect(isTypeAheadKey("a")).toBe(true);
+    expect(isTypeAheadKey("7")).toBe(true);
+    expect(isTypeAheadKey("space")).toBe(false);
+    expect(isTypeAheadKey("enter")).toBe(false);
+    expect(isTypeAheadKey("down")).toBe(false);
+    expect(isTypeAheadKey("")).toBe(false);
+  });
+
+  it("waits the platform's half second before the buffer starts over", () => {
+    expect(TYPE_AHEAD_RESET_MS).toBe(500);
   });
 });

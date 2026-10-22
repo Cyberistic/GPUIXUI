@@ -10,9 +10,11 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
 import { targetSize } from "@gpuixui/tokens";
+import { decideTypeAhead } from "../core/keyboard.js";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
@@ -60,6 +62,11 @@ const options: ReadonlyArray<RadioOption> = [
   { value: "beta", label: "Beta" },
   { value: "gamma", label: "Gamma" },
 ];
+const labels = Arr.map(options, (option) => option.label);
+
+/** Type-ahead as the component wires it: the buffer is the caller's, the match is not. */
+const typeAhead = (from: number, key: string) =>
+  decideTypeAhead(labels, from, key);
 
 describe("RadioGroup", () => {
   it("moves the selection with the arrow key and reports the option it landed on", () => {
@@ -75,6 +82,23 @@ describe("RadioGroup", () => {
     expect(expectSome(hostProp(element, "role"))).toBe("radiogroup");
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
     expect(onSelect).toHaveBeenCalledWith("beta");
+  });
+
+  it("lands on the option a typed prefix names, and selects it", () => {
+    // The bug this guards: a reader who knows the label had to arrow through
+    // the group. Type-ahead reaches the option by name, and a radio group's
+    // selection follows the focus it lands on.
+    const onSelect = vi.fn();
+    const element = renderRadioGroup(
+      { options },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      { ...radioHandlers(onSelect), typeAhead },
+    );
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("g"));
+    expect(onSelect).toHaveBeenCalledWith("gamma");
   });
 
   it("selects on the Space release, not on the press before it", () => {

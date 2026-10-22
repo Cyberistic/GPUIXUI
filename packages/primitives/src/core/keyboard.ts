@@ -20,6 +20,7 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Str from "effect/String";
 
 /** A key name as GPUix reports it in `EventPayload.key`, lower-cased. */
 export type KeyName = string;
@@ -131,4 +132,59 @@ export const decidePage = (
   if (key !== "pageup" && key !== "pagedown") return Option.none();
   const target = key === "pagedown" ? index + pageSize : index - pageSize;
   return Option.some(Math.max(0, Math.min(count - 1, target)));
+};
+
+/** How long a type-ahead buffer waits for its next character. */
+export const TYPE_AHEAD_RESET_MS = 500;
+
+/**
+ * Whether a key event carries a character a type-ahead buffer can collect.
+ *
+ * GPUix names a character key by the character itself (`"a"`, `"7"`) and every
+ * named key by a word (`"space"`, `"enter"`, `"tab"`), so the length is the
+ * rule: one character is a character, anything longer is a command.
+ */
+export const isTypeAheadKey = (key: KeyName): boolean => key.length === 1;
+
+/**
+ * The option a typed prefix lands on, searching forward from `from` and wrapping.
+ *
+ * Type-ahead is the keyboard contract a group of options owes a reader who knows
+ * what they are looking for: `b` moves to the first option whose label starts
+ * with `b`. The search starts **after** the current option, so pressing the same
+ * letter again cycles through the options that share it rather than sitting on
+ * the first one forever.
+ *
+ * A buffer that matches nothing is narrowed too far — the reader typed `qx`
+ * meaning `x` — so the last character is retried on its own.
+ *
+ * A disabled option is never a landing spot, and `None` means nothing matched
+ * (or the group is empty), so the caller can leave the key unhandled.
+ */
+export const decideTypeAhead = (
+  labels: ReadonlyArray<string>,
+  from: number,
+  buffer: string,
+  isDisabled: (index: number) => boolean = () => false,
+): Option.Option<number> => {
+  const count = labels.length;
+  if (count <= 0 || buffer.length === 0) return Option.none();
+  const search = (wanted: string): Option.Option<number> => {
+    const order = Arr.map(
+      Arr.range(1, count),
+      (offset) => (((from + offset) % count) + count) % count,
+    );
+    return Arr.findFirst(
+      order,
+      (index) =>
+        !isDisabled(index) &&
+        Str.startsWith(wanted)(Str.toLowerCase(labels[index] ?? "")),
+    );
+  };
+  const wanted = Str.toLowerCase(buffer);
+  return Option.match(search(wanted), {
+    onSome: Option.some,
+    onNone: () =>
+      wanted.length > 1 ? search(Str.takeRight(1)(wanted)) : Option.none(),
+  });
 };

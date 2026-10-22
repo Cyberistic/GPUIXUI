@@ -40,12 +40,15 @@ import { recipeTw } from "../recipe/registry.js";
 import { pressedValueText } from "./Toggle.js";
 import {
   optionBody,
+  optionDisabled,
   optionItems,
   optionName,
   useRovingFocus,
+  useTypeAhead,
   type GroupFocus,
   type GroupHandlers,
   type GroupItemProps,
+  type GroupKeys,
   type GroupOption,
 } from "./group.js";
 import {
@@ -183,7 +186,7 @@ export interface ToggleItemState {
 }
 
 /** What the renderer does with the group's own state. */
-export interface ToggleGroupHandlers extends GroupHandlers {
+export interface ToggleGroupHandlers extends GroupHandlers, GroupKeys {
   /** Turn one option on or off. */
   readonly onToggle: (value: string) => void;
 }
@@ -204,8 +207,7 @@ export const renderToggleGroup = (
   } = props;
   const options = toggleGroupItems(props);
   const count = Arr.length(options);
-  const isDisabled = (index: number): boolean =>
-    props.disabled === true || options[index]?.disabled === true;
+  const isDisabled = optionDisabled(options, props.disabled);
   // The preferred stop may be a disabled row, which takes no focus; the first
   // option a user can reach is what keeps the group in the tab order.
   const activeIndex = rovingIndex(count, preferredIndex, isDisabled);
@@ -239,6 +241,13 @@ export const renderToggleGroup = (
     const key = event.key ?? "";
     if (swallowKeyDefault(key, "down")) event.preventDefault();
     if (move(key) || jump(key)) return;
+    // A typed prefix moves focus but never presses: this group's arrows do not
+    // change a mode either, so the keyboard contract stays one rule.
+    const typed = Option.flatMap(
+      Option.all([Option.fromNullishOr(handlers.typeAhead), activeIndex]),
+      ([match, from]) => match(from, key),
+    );
+    if (Option.match(typed, { onNone: () => false, onSome: focusMove })) return;
     if (decideActivation(key, "down", event.isHeld === true)) activate();
   };
   // Space toggles on the release, the way a platform button does; Enter has
@@ -350,6 +359,10 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
     notify,
   );
   const options = toggleGroupItems(props);
+  const typeAhead = useTypeAhead(
+    options,
+    optionDisabled(options, props.disabled),
+  );
   const preferred: Option.Option<number> = Option.firstSomeOf([
     focus.focusedIndex,
     Arr.findFirstIndex(options, (option) =>
@@ -367,6 +380,7 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
         selected.set(toggleSelection(mode, selected.value.current, value)),
       onFocusMove: focus.onFocusMove,
       registerItem: focus.registerItem,
+      typeAhead,
     },
   );
 };

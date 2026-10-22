@@ -39,7 +39,8 @@ import {
   type Bounds,
   type Runtime,
 } from "./harness.js";
-import { Surface, openWindow, testTheme } from "./fixture.js";
+import { TYPE_AHEAD_RESET_MS } from "../src/core/keyboard.js";
+import { sleep, Surface, openWindow, testTheme } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
   Option.getOrElse(runtime.bounds(testId), () =>
@@ -892,6 +893,40 @@ it("wraps a RadioGroup's arrow navigation at the end", async () => {
   expect(announced(runtime, "Beta")).toBe("checked");
   runtime.keyDown("rg", "down");
   expect(announced(runtime, "Alpha")).toBe("checked");
+});
+
+it("reaches a radio option by the prefix a reader types, and starts the buffer over after the pause", async () => {
+  // The bug this guards: a reader who knows the option's name had to arrow to
+  // it, so a long list was unreachable by keyboard. The buffer is component
+  // state, so this is the one place it can be measured: two keys in one pause
+  // narrow the match, and the pause itself starts the next key over.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        options={[
+          { value: "alpine", label: "Alpine" },
+          { value: "alpha", label: "Alpha" },
+          { value: "bravo", label: "Bravo" },
+        ]}
+      />
+    </Surface>,
+  );
+  // The stop starts on the first row, and a search runs forward: `a` reaches
+  // the second "Al..." option rather than the one it is already on.
+  runtime.keyDown("rg", "a");
+  expect(announced(runtime, "Alpha")).toBe("checked");
+  // A second character inside the pause narrows instead of starting over.
+  runtime.keyDown("rg", "l");
+  expect(announced(runtime, "Alpine")).toBe("checked");
+  await sleep(TYPE_AHEAD_RESET_MS + 100);
+  // Past the pause the buffer is empty, so a lone `p` matches nothing and the
+  // group stays put; with a stale "al" buffer it would have read "alp" and
+  // moved to Alpha.
+  runtime.keyDown("rg", "p");
+  expect(announced(runtime, "Alpine")).toBe("checked");
 });
 
 it("exposes a named RadioGroup of named RadioButtons", async () => {

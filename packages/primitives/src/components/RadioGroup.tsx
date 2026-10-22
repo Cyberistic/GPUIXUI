@@ -45,13 +45,16 @@ import {
 import { recipeTw } from "../recipe/registry.js";
 import {
   optionBody,
+  optionDisabled,
   optionItems,
   optionName,
   optionRowStyle,
   useRovingFocus,
+  useTypeAhead,
   type GroupFocus,
   type GroupHandlers,
   type GroupItemProps,
+  type GroupKeys,
   type GroupOption,
 } from "./group.js";
 import {
@@ -141,7 +144,7 @@ export interface RadioItemState {
 export type RadioGroupFocus = GroupFocus;
 
 /** What the renderer does with the group's own state. */
-export interface RadioGroupHandlers extends GroupHandlers {
+export interface RadioGroupHandlers extends GroupHandlers, GroupKeys {
   readonly onSelect: (value: string) => void;
 }
 
@@ -174,8 +177,7 @@ export const renderRadioGroup = (
   const { orientation = "vertical", size = "md", accent = "primary" } = props;
   const options = radioItems(props);
   const count = Arr.length(options);
-  const isDisabled = (index: number): boolean =>
-    props.disabled === true || options[index]?.disabled === true;
+  const isDisabled = optionDisabled(options, props.disabled);
   // The stop the group asked for may be a disabled row, which takes no focus;
   // moving to the first option a user can reach is what keeps the group in the
   // tab order.
@@ -214,6 +216,13 @@ export const renderRadioGroup = (
     const key = event.key ?? "";
     if (swallowKeyDefault(key, "down")) event.preventDefault();
     if (move(key) || jump(key)) return;
+    // A typed prefix lands where a move would: selection follows focus in a
+    // radio group, so type-ahead chooses the option it reaches.
+    const typed = Option.flatMap(
+      Option.fromNullishOr(handlers.typeAhead),
+      (match) => match(stopIndex, key),
+    );
+    if (Option.match(typed, { onNone: () => false, onSome: navigate })) return;
     if (decideActivation(key, "down", event.isHeld === true)) select(stopIndex);
   };
   // Space selects on the release, the way a platform radio does; Enter has
@@ -338,12 +347,16 @@ export const RadioGroup = (props: RadioGroupProps): ReactElement => {
     valueChange(props),
   );
   const options = radioItems(props);
+  const typeAhead = useTypeAhead(
+    options,
+    optionDisabled(options, props.disabled),
+  );
   return renderRadioGroup(
     props,
     theme,
     selected.value,
     initialActiveIndex(options, selected.value.current),
     focus,
-    { onSelect: selected.set, ...focus },
+    { onSelect: selected.set, ...focus, typeAhead },
   );
 };

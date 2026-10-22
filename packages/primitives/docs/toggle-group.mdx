@@ -99,11 +99,14 @@ nothing on its own.
 | `Space` | presses the focused option on key **up** |
 | `Enter` | presses the focused option on key **down** |
 | a held key | repeat events do nothing |
+| a letter | moves focus to the next option whose label starts with it (never presses it) |
 | `Tab` | reaches the group once, then leaves it |
 
 An arrow moves focus **without** pressing: a toggle decides what the next action
 does, so walking the toolbar must not change it. A Space **press** calls
-`preventDefault()` so a scroll container does not also scroll.
+`preventDefault()` so a scroll container does not also scroll. Type-ahead follows
+the same rule: it moves focus to the matching option and leaves the mode alone,
+and the prefix accumulates for half a second so `un` can mean *Underline*.
 
 ## Accessibility
 
@@ -141,11 +144,11 @@ decision, so a callback is the last word.
   "selected item" background — each option paints its own pressed state.
 - No overflow-to-menu for a group wider than its parent, no dividers between
   options and no keyboard shortcut registration.
-- No type-ahead: every option is one arrow away.
 
 ## Verification
 
-- `src/components/ToggleGroup.test.tsx` — `single` keeps one value and clears
+- `src/components/ToggleGroup.test.tsx` — a typed prefix moves focus to the
+  option it names without pressing it, plus `single` keeps one value and clears
   on re-press, `multiple` adds and removes; value text and no `aria-pressed`;
   the stop skips a disabled option; an arrow moves focus without pressing;
   Space-up and Enter-down; a disabled option installs no press; both style

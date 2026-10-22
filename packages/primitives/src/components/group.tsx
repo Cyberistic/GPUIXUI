@@ -13,6 +13,7 @@ import {
   Children,
   Fragment,
   isValidElement,
+  useEffect,
   useRef,
   useState,
   type ComponentType,
@@ -26,6 +27,11 @@ import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import { targetSize } from "@gpuixui/tokens";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
+import {
+  decideTypeAhead,
+  isTypeAheadKey,
+  TYPE_AHEAD_RESET_MS,
+} from "../core/keyboard.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle } from "./internal.js";
@@ -170,6 +176,80 @@ export interface GroupHandlers {
     index: number,
   ) => (instance: PublicInstance | null) => void;
 }
+
+/** The matcher a group's owner supplies for typed prefixes. */
+export type TypeAhead = (from: number, key: string) => Option.Option<number>;
+
+/** What a group asks its owner to resolve from the characters typed so far. */
+export interface GroupKeys {
+  /**
+   * Optional: type-ahead needs a buffer the owner keeps across key events, so a
+   * bare renderer can leave it out and the group simply has no type-ahead.
+   */
+  readonly typeAhead?: TypeAhead;
+}
+
+/** Whether a group's option takes no focus or press, by index. */
+export const optionDisabled =
+  (
+    options: ReadonlyArray<GroupOption>,
+    groupDisabled: boolean | undefined,
+  ): ((index: number) => boolean) =>
+  (index) =>
+    groupDisabled === true || options[index]?.disabled === true;
+
+/**
+ * Collect character keys into a type-ahead buffer and resolve them to an option.
+ *
+ * A group of options owes a reader who knows what they are looking for a way to
+ * reach it without arrowing through the list, so `b` lands on the first option
+ * whose label starts with it. The buffer is what lets a second key narrow the
+ * match instead of replacing it; it starts over after
+ * {@link TYPE_AHEAD_RESET_MS}, the pause WAI-ARIA's authoring practices use, so
+ * two separate taps of the same letter are two moves rather than one narrowing.
+ *
+ * The buffer is React-local keyboard state — nothing else reads it and it dies
+ * with the group — so a ref and one timer are the right tools; the matching
+ * itself is `decideTypeAhead`, which is provable without a renderer.
+ */
+export const useTypeAhead = (
+  options: ReadonlyArray<GroupOption>,
+  isDisabled: (index: number) => boolean,
+): TypeAhead => {
+  const buffer = useRef("");
+  // A timer handle is a platform value, so its absence is modelled rather than
+  // left as `undefined` beside a real id.
+  const reset = useRef<Option.Option<ReturnType<typeof setTimeout>>>(
+    Option.none(),
+  );
+  const cancel = (): void =>
+    Option.match(reset.current, {
+      onNone: () => {},
+      onSome: clearTimeout,
+    });
+  useEffect(
+    () => () => {
+      cancel();
+    },
+    [],
+  );
+  return (from, key) => {
+    if (!isTypeAheadKey(key)) return Option.none();
+    buffer.current = `${buffer.current}${key}`;
+    cancel();
+    reset.current = Option.some(
+      setTimeout(() => {
+        buffer.current = "";
+      }, TYPE_AHEAD_RESET_MS),
+    );
+    return decideTypeAhead(
+      Arr.map(options, (option) => option.label),
+      from,
+      buffer.current,
+      isDisabled,
+    );
+  };
+};
 
 /** The state a group tracks for its roving tab stop. */
 export interface RovingFocus extends GroupFocus, GroupHandlers {}

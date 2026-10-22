@@ -99,6 +99,7 @@ installs no `onClick` at all, so neither handler runs.
 | ← / → (horizontal) | the same on the horizontal axis |
 | Home / End | jump to the first / last **enabled** option and select it |
 | Enter / Space | select the focused option |
+| a letter | selects the next option whose label starts with it, wrapping and skipping disabled options |
 | Tab | moves to the group as **one** stop; the selected option holds it |
 
 Arrows and Home/End **select as they move** and take focus with them, matching
@@ -106,6 +107,13 @@ the platform radio contract. The tab stop is the selection: a controlled
 `value` change from the parent moves the tab stop with it. Space selects on the
 **release** (the press is swallowed, so a scroll container does not also scroll);
 Enter selects on the press.
+
+A typed prefix lands where an arrow would — the selection follows it — and the
+search runs forward from the current option, so tapping the same letter again
+walks the options that share it. The prefix accumulates for half a second
+(`TYPE_AHEAD_RESET_MS`), which is what lets `al` tell two options apart instead
+of replacing the match, and a prefix that matches nothing retries its last
+character so a fast `qx` still means `x`.
 
 ## Accessibility
 
@@ -159,7 +167,6 @@ Both merge after every role decision, so a callback is the last word.
 
 ## Limitations
 
-- No type-ahead selection.
 - A `description` is not associated with the option for assistive technology.
 - An item's `label` must be passed even when the children already show the same
   text: the runtime has no `aria-labelledby`, so the two cannot be tied together
@@ -172,13 +179,16 @@ Both merge after every role decision, so a callback is the last word.
 
 ## Verification
 
-- `src/core/keyboard.test.ts` — arrow movement, wrapping, skipping, and
-  Home/End landing on the nearest enabled end.
+- `src/core/keyboard.test.ts` — arrow movement, wrapping, skipping, Home/End
+  landing on the nearest enabled end, and the type-ahead matcher (forward search
+  with wrap, case folding, a narrowing buffer, the last-character retry, and a
+  disabled match never being a landing spot).
 - `src/core/selection.test.ts` — circle and dot paint; the ring is not part of
   the resting paint, so the recipe oracle stays comparable.
 - `src/recipe/geometry.test.ts` — the compiled circle equals the resolver and an
   empty circle's edge clears the boundary floor on every measured strip.
-- `src/components/RadioGroup.test.tsx` — roving index and data options; an arrow
+- `src/components/RadioGroup.test.tsx` — roving index and data options; a typed
+  prefix selects the option it names; an arrow
   asks the group to move focus to the option it landed on; item children produce
   the same option list as `options`, the arrow path skips a disabled item, and an
   item's rich content reaches its row; the group's `style` callback sees the live
@@ -186,7 +196,8 @@ Both merge after every role decision, so a callback is the last word.
 - `runtime/controls.runtime.test.tsx` — arrows move, wrap and skip disabled
   options; Home/End jump to the enabled ends; arrows move native focus with the
   selection and a controlled value moves the tab stop; a click on the circle
-  selects.
+  selects; two typed keys narrow onto the second "Al..." option and a pause past
+  the buffer's half second starts the next key over, measured in a window.
 - `runtime/groups.runtime.test.tsx` — the ring is declared on the row that holds
   focus (and not on the circle), every option row reaches the 24px pressable
   floor, and the box a row draws is kept out of the press.

@@ -17,8 +17,11 @@ export {
   decideMove,
   decidePage,
   decideToggle,
+  decideTypeAhead,
   ENTER_KEY,
+  isTypeAheadKey,
   SPACE_KEY,
+  TYPE_AHEAD_RESET_MS,
 } from "./keyboard.js";
 export type { KeyName, KeyPhase, Orientation } from "./keyboard.js";
 

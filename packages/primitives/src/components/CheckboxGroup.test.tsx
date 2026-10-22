@@ -15,6 +15,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
 import { keyboardFocusRing, targetSize } from "@gpuixui/tokens";
+import { decideTypeAhead } from "../core/keyboard.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   CheckboxGroupItem,
@@ -59,6 +60,11 @@ const options: ReadonlyArray<CheckboxGroupOption> = [
   { value: "push", label: "Push" },
   { value: "sms", label: "SMS" },
 ];
+const labels = Arr.map(options, (option) => option.label);
+
+/** Type-ahead as the component wires it: the buffer is the caller's, the match is not. */
+const typeAhead = (from: number, key: string) =>
+  decideTypeAhead(labels, from, key);
 
 const render = (
   props: Parameters<typeof renderCheckboxGroup>[0],
@@ -90,6 +96,23 @@ const stopOf = (row: ReturnType<typeof rows>[number]): number | "absent" =>
   );
 
 describe("CheckboxGroup", () => {
+  it("moves focus to the option a typed prefix names, without toggling it", () => {
+    // The bug this guards: a reader who knew the option's name had to arrow to
+    // it. A checkbox group's arrows move focus only, so type-ahead must not
+    // change a value either — moving focus and toggling in one key would be a
+    // press this keyboard contract does not have.
+    const onToggle = vi.fn();
+    const onFocusMove = vi.fn();
+    const element = render({ options, label: "Channels" }, [], Option.some(0), {
+      ...handlers(onToggle),
+      onFocusMove,
+      typeAhead,
+    });
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("s"));
+    expect(onFocusMove).toHaveBeenCalledWith(2);
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
   it("announces every row's state as value text, and never invents aria-checked", () => {
     const element = render(
       { options, label: "Channels" },

@@ -9,8 +9,10 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
+import { decideTypeAhead } from "../core/keyboard.js";
 import { toggleSelection } from "../core/selection.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { type GroupFocus } from "./group.js";
@@ -53,6 +55,11 @@ const options: ReadonlyArray<ToggleGroupOption> = [
   { value: "italic", label: "Italic" },
   { value: "underline", label: "Underline" },
 ];
+const labels = Arr.map(options, (option) => option.label);
+
+/** Type-ahead as the component wires it: the buffer is the caller's, the match is not. */
+const typeAhead = (from: number, key: string) =>
+  decideTypeAhead(labels, from, key);
 
 const render = (
   props: Parameters<typeof renderToggleGroup>[0],
@@ -116,6 +123,22 @@ describe("toggleSelection", () => {
 });
 
 describe("ToggleGroup", () => {
+  it("moves focus to the option a typed prefix names, without pressing it", () => {
+    // The bug this guards: a reader who knew the mode's name had to arrow to
+    // it. Arrows in this group move focus only, so type-ahead must not change a
+    // mode either.
+    const onToggle = vi.fn();
+    const onFocusMove = vi.fn();
+    const element = render(
+      { type: "multiple", options, label: "Formatting" },
+      [],
+      Option.some(0),
+      { ...handlers(onToggle), onFocusMove, typeAhead },
+    );
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("u"));
+    expect(onFocusMove).toHaveBeenCalledWith(2);
+    expect(onToggle).not.toHaveBeenCalled();
+  });
   it("announces the group's help and addresses the row that holds the stop", () => {
     // Bug guarded: a toggle group is a control a form owns, but it had no
     // address and no announced help — the same hole one group over. The

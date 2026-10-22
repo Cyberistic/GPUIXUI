@@ -304,7 +304,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "No aria-checked or aria-multiselectable: state is announced as aria-valuetext",
       "The group is one tab stop, so an option is not reachable by Tab",
-      "No select-all, indeterminate parent, type-ahead or drag selection",
+      "No select-all, indeterminate parent or drag selection",
     ],
     source: [
       "src/components/CheckboxGroup.tsx",
@@ -326,7 +326,6 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "No aria-checked: a row's state is announced through aria-valuetext",
-      "No type-ahead selection",
       "An option description is not associated for assistive technology",
       "The data form of an option cannot carry rich content; use a RadioGroupItem for that",
     ],
@@ -572,7 +571,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "No aria-pressed: the pressed state is announced as aria-valuetext",
       "The group is one tab stop, so an option is not reachable by Tab",
-      "No overflow-to-menu, dividers, type-ahead or shortcut registration",
+      "No overflow-to-menu, dividers or shortcut registration",
     ],
     source: [
       "src/components/ToggleGroup.tsx",
