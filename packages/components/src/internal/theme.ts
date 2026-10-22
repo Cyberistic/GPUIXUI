@@ -34,6 +34,7 @@ import {
   lightTheme,
   nativeTextTheme,
   pointerWash,
+  selectionOn,
   statusTone,
   syntaxColors,
   targetSize,
@@ -139,10 +140,8 @@ export const controlRing = (
  * derivation needs — `pointerWash` answers `undefined` there and the press falls
  * back to the theme's own `active` role, the absence rule every contract follows.
  */
-export const pressWash = (
-  theme: Theme,
-  replaced: PointerWashSurface,
-): string => pointerWash(theme, "active", replaced) ?? theme.colors.active;
+export const pressWash = (theme: Theme, replaced: PointerWashSurface): string =>
+  pointerWash(theme, "active", replaced) ?? theme.colors.active;
 
 /**
  * The wash behind text a reader selects.
@@ -239,6 +238,20 @@ const softRoles: Readonly<Record<Tone, keyof ThemeColors>> = {
  */
 export const messageLink = (theme: Theme, value: Tone): string =>
   brandTextOn(theme, softRoles[value]);
+
+/**
+ * The wash a selectable run paints on one message's own tint.
+ *
+ * The theme's designed `selection` role is authored for the content tones, and a
+ * message's fill is its tone's `xSoft` role instead: measured, that wash leaves
+ * the copy under the body floor in 30 of the 32 dark tint placements (Windows
+ * dark's `warningSoft` at 5.21:1). The surface is known here, so the wash is
+ * derived against it — {@link selectionOn} moves it toward the page by the
+ * smallest step that keeps it a visible cue and the copy readable, which is the
+ * same rule {@link messageLink} applies to the brand.
+ */
+export const messageSelection = (theme: Theme, value: Tone): string =>
+  selectionOn(theme, softRoles[value]);
 
 /**
  * One tone as a whole surface: soft fill, tone text and a tinted border. Badge

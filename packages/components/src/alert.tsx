@@ -41,6 +41,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import {
   keyboardRing,
   messageLink,
+  messageSelection,
   targetSize,
   tone,
   useTheme,
@@ -96,7 +97,12 @@ export const Alert = ({
         role="alert"
         {...rest}
         style={mergeStyles(
-          recipeStyle(cn(ALERT_BASE, ALERT_TONES[value], className), theme),
+          mergeStyles(
+            recipeStyle(cn(ALERT_BASE, ALERT_TONES[value], className), theme),
+            // The wash inherits to the copy inside, and the tint is the surface
+            // it is read on — not a page role the designed wash answers for.
+            { selectionColor: messageSelection(theme, value) },
+          ),
           style,
         )}
       >

@@ -116,6 +116,17 @@ tint it sits on (`brandTextOn` through `messageLink`), keeping as much of the
 brand as that surface allows, and paints no wash of its own — the underline is
 the pointer cue, so the tint is the only surface the colour is read on.
 
+The same surface decides the **selection wash**. `selectionColor` inherits down
+a subtree, so the root declares it once and a selectable run in the description
+is washed over the tint. The theme's designed `selection` role is authored for
+the content tones: measured, it leaves the copy under the body floor in **30 of
+the 32** dark tint placements (Windows dark's `warningSoft` at **5.21:1**), so
+the root derives the wash against its own fill instead (`selectionOn` through
+`messageSelection`). Every light tint carries the designed role unchanged, and
+the derivation moves a dark one toward the page by the smallest step that keeps
+the wash a visible cue and the copy readable. A caller `style` still wins, so a
+message with no selectable copy can state the designed role itself.
+
 ## API
 
 Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
@@ -178,7 +189,9 @@ receives its click, a consumer `style` wins, a link action paints the colour
 derived for the message's own tint in both themes, and it activates by click and
 Enter and publishes `role="link"`. `src/internal/theme.test.ts` holds
 `messageLink` to the sixteen shipped styles and names the macOS dark placement the
-shared page colour cannot read.
+shared page colour cannot read; `src/behaviour/selection.test.tsx` reads this
+root's derived wash back off the renderer for every tone in both themes and holds
+the designed role failing on a dark tint.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

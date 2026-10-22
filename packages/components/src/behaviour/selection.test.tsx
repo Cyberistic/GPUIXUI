@@ -6,16 +6,35 @@
  * host in this package painted a wash the design system never checked. Each one
  * now declares the theme's own `selection` role — the wash `selectionFailures`
  * holds to a visibility and a legibility floor.
+ *
+ * The second bug these guard: a message's own tint is not one of those content
+ * tones, so the designed role leaves a selectable run's copy under the body floor
+ * in 30 of the 32 dark tint placements. `Alert` derives the wash per surface
+ * (`selectionOn` through `messageSelection`), and the suite holds the paint and
+ * the premise it is derived from.
  */
 
 import * as Arr from "effect/Array";
+import {
+  alphaOf,
+  blend,
+  contrastFloorsFor,
+  contrastRatio,
+  decorativeFloor,
+} from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
+import { Alert, AlertDescription, type AlertTone } from "../alert.js";
 import { ColorPicker } from "../color-picker.js";
 import { CommandMenu, CommandMenuInput } from "../command-menu.js";
 import { Field, FieldInput } from "../field.js";
 import { InlineEdit } from "../inline-edit.js";
 import { clickCentreOf } from "../internal/interaction.js";
-import { darkTheme } from "../internal/theme.js";
+import {
+  darkTheme,
+  lightTheme,
+  messageSelection,
+  tone,
+} from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -126,5 +145,75 @@ describe("selection wash", () => {
     // An accent default would pass a test that only compared the hosts with
     // each other, so the role itself has to differ from the role it replaced.
     expect(darkTheme.colors.selection).not.toBe(darkTheme.colors.primary);
+  });
+
+  it("derives the wash a selectable run inside a message is read through", () => {
+    const styles = [
+      ["dark", darkTheme],
+      ["light", lightTheme],
+    ] as const;
+    const tones: ReadonlyArray<AlertTone> = [
+      "info",
+      "success",
+      "warning",
+      "danger",
+    ];
+
+    Arr.forEach(styles, ([name, theme]) => {
+      Arr.forEach(tones, (value) => {
+        const root = renderComponent(
+          <Alert testId="alert" tone={value}>
+            <AlertDescription>
+              Two files could not be uploaded.
+            </AlertDescription>
+          </Alert>,
+          name,
+        );
+
+        const wash = root.renderer.findByTestId("alert")?.style.selectionColor;
+        const derived = messageSelection(theme, value);
+        expect(wash, `${name} ${value}`).toBe(derived);
+
+        // The description keeps the page ink, and a wash inherits down the
+        // subtree, so the pair is the copy the message paints read through the
+        // wash on the tone's own tint.
+        const tint = tone(theme, value).bg;
+        const composed = blend(tint, derived, alphaOf(derived));
+
+        expect(
+          contrastRatio(theme.colors.foreground, composed),
+          `${name} ${value}`,
+        ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).body);
+        expect(
+          contrastRatio(composed, tint),
+          `${name} ${value}`,
+        ).toBeGreaterThanOrEqual(decorativeFloor);
+
+        root.unmount();
+      });
+    });
+  });
+
+  it("does not leave a dark tint on the page's designed wash", () => {
+    // The premise: the role `selectionFailures` measures on the content tones is
+    // under the body floor when it washes a message's own tint, which is why the
+    // wash is derived against the surface the run is read on.
+    const designed = blend(
+      darkTheme.colors.warningSoft,
+      darkTheme.colors.selection,
+      alphaOf(darkTheme.colors.selection),
+    );
+
+    expect(contrastRatio(darkTheme.colors.foreground, designed)).toBeLessThan(
+      contrastFloorsFor(darkTheme).body,
+    );
+    expect(messageSelection(darkTheme, "warning")).not.toBe(
+      darkTheme.colors.selection,
+    );
+    // A light tint carries the designed role, so the derivation is per surface
+    // rather than a second wash for every message.
+    expect(messageSelection(lightTheme, "warning")).toBe(
+      lightTheme.colors.selection,
+    );
   });
 });
