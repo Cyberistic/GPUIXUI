@@ -37,8 +37,9 @@ const dividerDrags = Array.from(
 
 /** The move-only control's drag, the negative control. */
 const controlDrag = Number(
-  /host\.drag\(COLUMN_RESIZE_IDS\.controlDivider, (-?\d+), 0\)/.exec(steps)?.[1] ??
-    Number.NaN,
+  /host\.drag\(COLUMN_RESIZE_IDS\.controlDivider, (-?\d+), 0\)/.exec(
+    steps,
+  )?.[1] ?? Number.NaN,
 );
 
 /** One number per gesture, as the fixture's sweep of the probe's own bounds. */
@@ -63,10 +64,7 @@ export const columnDrag = {
   /** The width after each gesture: the fixture's clamp over the probe's deltas. */
   widths: (() => {
     const clamp = (size: number): number =>
-      Math.min(
-        number("max", fixture),
-        Math.max(number("min", fixture), size),
-      );
+      Math.min(number("max", fixture), Math.max(number("min", fixture), size));
     const [first = Number.NaN, second = Number.NaN, third = Number.NaN] =
       dividerDrags;
     const widened = clamp(number("name", fixture) + first);

@@ -1127,9 +1127,10 @@ describe("docs/gpuix-capabilities.md", () => {
     // that the width is read at each press. Every width printed here is derived
     // from the fixture's own numbers and the deltas the probe drives.
     const { opened, dragSteps, controlMoves, drags, widths } = columnDrag;
-    expect(drags, "the probe no longer drives three divider drags").toHaveLength(
-      3,
-    );
+    expect(
+      drags,
+      "the probe no longer drives three divider drags",
+    ).toHaveLength(3);
 
     const row = rowFor("Resizable column drag");
     expect(row?.verdict).toBe("supported, with limits");

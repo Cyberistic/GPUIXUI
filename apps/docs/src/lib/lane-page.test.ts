@@ -333,9 +333,10 @@ describe("the data-display page's drawing claims", () => {
     // The widths are derived from the fixture, so the page cannot print a stale
     // one.
     const { opened, dragSteps, controlMoves, drags, widths } = columnDrag;
-    expect(drags, "the probe no longer drives three divider drags").toHaveLength(
-      3,
-    );
+    expect(
+      drags,
+      "the probe no longer drives three divider drags",
+    ).toHaveLength(3);
 
     expect(rowFor(record, "Resizable column drag")).toContain(
       "supported, with limits",
