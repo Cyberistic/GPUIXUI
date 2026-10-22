@@ -331,6 +331,37 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(image?.[2]).toContain("useLayoutEffect");
   });
 
+  it("records the reveal and the range a window measured on a virtual list", () => {
+    // `COMPONENTS.md`'s Tree, Virtualized table and Log viewer rows all read
+    // `<virtual-list>`, and the record said only "read the painted window, not
+    // the index" — so a tree that revealed a path by scrolling to it, or one
+    // that paginated from `onVisibleRange`, had nothing warning it. A window
+    // measured both: `scrollToItem` reveals an unmounted row and fires no
+    // report, the report describes the previous scroll or the spliced child
+    // list, and roving focus moves through the renderer.
+    const virtual = rowFor("Virtualized list");
+    expect(virtual?.verdict).toBe("supported, with limits");
+    expect(virtual?.evidence).toContain("virtual-tree-lifecycle");
+    expect(virtual?.evidence).toContain("virtual-list-lifecycle");
+    expect(virtual?.evidence).toContain("scrollToItem");
+    expect(virtual?.evidence).toContain("onVisibleRange");
+    expect(virtual?.evidence).toContain("focusElement");
+    expect(virtual?.workaround).toContain("scrollToItem");
+    expect(virtual?.workaround).toContain("painted");
+  });
+
+  it("publishes the virtual-list reveal rule on /docs/runtime", () => {
+    const virtual = measuredRow("Virtualized list");
+    expect(
+      virtual,
+      "the page's measured table has no virtual-list row",
+    ).toBeDefined();
+    expect(virtual?.[1]).toContain("virtual-tree-lifecycle");
+    expect(virtual?.[1]).toContain("scrollToItem");
+    expect(virtual?.[1]).toContain("onVisibleRange");
+    expect(virtual?.[2]).toContain("scrollToItem");
+  });
+
   it("records the clipboard gap and the one place the platform still provides it", () => {
     // The binding publishes no clipboard API, so a component cannot offer
     // "copy" — but a window measured that the platform's own keys still run
@@ -492,6 +523,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("content-surfaces");
     expect(runtimePage).toContain("selection-lifecycle");
     expect(runtimePage).toContain("clipboard-lifecycle");
+    expect(runtimePage).toContain("virtual-tree-lifecycle");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });

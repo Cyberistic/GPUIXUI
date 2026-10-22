@@ -145,6 +145,24 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("outside the row scroller");
     expect(dataPage).toContain("one horizontal scroller");
   });
+
+  it("holds a virtualized reveal to the index-addressed rule a window measured", () => {
+    // The page told a table to virtualize through `<virtual-list>` and stopped
+    // there. A tree's "reveal this path" action and a virtualized table's
+    // pagination are the two places `virtual-tree-lifecycle` measured a trap:
+    // `scrollToItem` reveals an unmounted row and fires no `onVisibleRange`,
+    // and the report describes the child list at the splice.
+    const virtual = rowFor(record, "Virtualized list");
+
+    expect(virtual).toContain("supported, with limits");
+    expect(virtual).toContain("virtual-tree-lifecycle");
+    expect(virtual).toContain("scrollToItem");
+    expect(virtual).toContain("onVisibleRange");
+    expect(dataPage).toContain("scrollToItem");
+    expect(dataPage).toContain("onVisibleRange");
+    expect(dataPage).toContain("virtual-tree-lifecycle");
+    expect(dataPage).toContain("painted rows");
+  });
 });
 
 /**
