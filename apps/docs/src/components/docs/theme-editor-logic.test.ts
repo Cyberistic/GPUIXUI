@@ -408,7 +408,14 @@ describe("theme-editor audit readout", () => {
     // cannot fit clips the text. It is a second question from the press floor:
     // the editor must tell a reader which one the height failed.
     const audit = auditTheme(
-      extendTheme(themes.light, { typography: { body: { lineHeight: 30 } } }),
+      extendTheme(themes.light, {
+        typography: {
+          body: { lineHeight: 30 },
+          // `bodyStrong` shares the body's leading, so raising one alone also
+          // reports `emphasis`; this case is the fit rule alone.
+          bodyStrong: { lineHeight: 30 },
+        },
+      }),
     );
     const findings = auditFindings(audit).filter(
       (finding) => finding.kind === "number",

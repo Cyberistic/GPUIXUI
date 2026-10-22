@@ -172,7 +172,14 @@ describe("the theme page", () => {
     // so a height the report refuses was described by nothing.
     const audit = section(page("themes.mdx"), "The theme audit");
     const failures = auditTheme(
-      extendTheme(themes.light, { typography: { body: { lineHeight: 30 } } }),
+      extendTheme(themes.light, {
+        typography: {
+          body: { lineHeight: 30 },
+          // The emphasis rule holds the pair together, so a body leading raised
+          // alone is a second failure: this case isolates the fit.
+          bodyStrong: { lineHeight: 30 },
+        },
+      }),
     ).invalidNumbers;
 
     expect(failures).toEqual([

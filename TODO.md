@@ -3839,7 +3839,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 136/136
+`[x]` `[██████████]` 137/137
+
+`[x]` Isolate the fit cases from the **emphasis pair** the number report now
+holds — `bodyStrong` shares `body`'s size and leading by design, so two fixtures
+that raised `body`'s leading alone to make a control too short for its label
+started reporting a second failure (`typography bodyStrong.lineHeight — 20 …
+needs a weight that exceeds the body text it emphasises`) and the docs suite was
+red on `master` in `theming-page.test.ts` and `theme-editor-logic.test.ts`. Both
+fixtures now raise the pair's leading together, so each still measures only the
+fit rule; the emphasis rule's own page bullet and readout lines were already
+held by `names the emphasis rule the number report can return` and `words an
+emphasis that weighs the same as the body it lifts`. Directions measured: at
+HEAD the two cases failed with `[ …(2) ]` beside the single expected finding,
+and restored, `nub run --filter @gpuixui/docs test` is green (81 files / 766
+tests) with `check-types` clean.
 
 `[x]` Paint the **required marker** in the role a reader can read, and hold the
 page to the painter — `field.mdx`'s Theming table printed "required marker |
