@@ -510,7 +510,7 @@ A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 ## Checking a theme
 
 `auditTheme(theme)` is the gate: it runs every check a browser build gets from
-CSS validation and lint, and `passed` is true only when all ten reports are
+CSS validation and lint, and `passed` is true only when all eleven reports are
 empty. The floors follow the theme's own `contrast` variant, so a brand built
 from a high-contrast theme is measured at AAA without the caller naming a floor
 set — `contrastFloorsFor(theme)` is that rule on its own, every report that takes
@@ -552,6 +552,7 @@ audit.invalidNumbers; // [] — every size, length and shadow is layable, every 
 audit.contrast; // [] — every measured pair meets its floor
 audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face, disabled face and shadow is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
+audit.syntax; // [] — every code token is readable on the fill a code host paints
 audit.selection; // [] — every selection wash is visible and keeps its text readable
 audit.indicators; // [] — every progress fill, spinner dot and presence mark is visible
 audit.disabledFade; // [] — every faded disabled label still reads against its faded fill
@@ -570,7 +571,7 @@ a step — or a whole numeric group — and names the path (`typography.codeBloc
 `extendTheme`. The required steps are derived from the scales the package ships,
 so a role or metric added to one is required on the next release.
 
-`keyboardDimFailures(theme, floor?)` is the tenth report (`audit.keyboardDim`):
+`keyboardDimFailures(theme, floor?)` is the eleventh report (`audit.keyboardDim`):
 it measures the dim the runtime paints on every other focusable while one has
 keyboard focus, at `decorativeFloor` (see §Keyboard focus dim). The dim and the
 disabled fade are the same composite with two shares, so no palette fails the
@@ -814,7 +815,33 @@ the runtime sizes a code block from the theme's own `metrics` when an element's
 size and leading (`host.metrics.codeTextSize` / `codeLineHeight`). The runtime's
 own code block is 12.5/18, which is not this library's scale, so without the
 seam a brand's `codeBlock` role would stop at the code host. The gutter widths
-and the syntax palette stay the runtime's: the package has no tokens for them.
+stay the runtime's: the package has no tokens for them. The **syntax palette** is
+the package's — `host.syntax` is `syntaxColors(theme)`, see §Syntax palette.
+
+## Syntax palette
+
+A `<code>` host highlights with the token colours in its theme's `syntax` field,
+and a host handed none paints the runtime's built-in palette — the one designed
+for its dark default. `syntaxColors(theme)` fills it: twenty-four token types
+(`syntaxRoles`), one colour per key the runtime reads, resolved per mode and
+contrast variant. A token that names code — a keyword, a string, a number, a
+name — is held to the body floor on both fills a host paints (`input` and the
+page role a code block fills, `syntaxSurfaces`); a `comment` is held to the
+secondary floor, because it annotates the code rather than being it. The two
+high-contrast tables hold their comment at AAA too.
+
+```ts
+import { extendTheme, syntaxColors } from "@gpuixui/tokens";
+
+syntaxColors(theme).keyword; // the mode's keyword colour
+const brand = extendTheme(theme, { syntax: { keyword: "#7A1F5C" } });
+syntaxColors(brand).number; // still the shipped number colour
+```
+
+A brand's palette merges **key by key** over the table its base resolves (unlike
+`series`, whose five positions are one order), and a `PlatformStyle` may carry
+one per mode for its own page. `syntaxFailures(theme)` reports every token that
+misses its floor and is part of `auditTheme` (`audit.syntax`).
 
 ## For documentation sites
 
@@ -882,6 +909,10 @@ persisted theme at its own boundary, where `Schema` belongs.
 - No OS appearance detection; the app selects the mode and contrast.
 - Motion lives in `@gpuixui/motion`, not here: durations, easings, springs and
   reduced-motion policy are that package's, and a second copy would duplicate it.
+- The syntax palette reaches a `<code>` host through `nativeTextTheme`, and the
+  guard for that is structural; the **painted pixels** are not yet measured in a
+  window, and the runtime's tokenizer decides which run is a token. A pixel probe
+  is recorded in `TODO.md`.
 - Exports point at `src/`: the package is private, so a consumer compiles it
   directly and no build step is required. Phase G flips `exports` to `dist` when
   the package is published.

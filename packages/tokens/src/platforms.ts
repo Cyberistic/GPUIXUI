@@ -16,6 +16,7 @@ import {
   type Radius,
 } from "./scale.js";
 import type { SeriesColors } from "./series.js";
+import type { SyntaxColors } from "./syntax.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 /** GPUI's system UI font sentinel; it resolves to each platform's own UI font. */
@@ -81,6 +82,17 @@ export interface PlatformStyle extends PlatformType {
    * is not a high-contrast scale.
    */
   readonly series?: Readonly<Partial<Record<ThemeMode, SeriesColors>>>;
+  /**
+   * The syntax palette a look highlights code with, per mode. A mode it omits —
+   * and every style that declares none — resolves the base theme's table for
+   * that mode, which is designed to be read on every shipped fill.
+   *
+   * A look that repaints the surface a code block paints owns one for the same
+   * reason it owns a `series`: the tokens are read against that page. It follows
+   * the same rule as {@link colors} — a base of another contrast variant keeps
+   * its own palette.
+   */
+  readonly syntax?: Readonly<Partial<Record<ThemeMode, SyntaxColors>>>;
   /**
    * The contrast variant the palette is designed for. A base theme that needs
    * more keeps its own colours — accessibility outranks the platform look — so

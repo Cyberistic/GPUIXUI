@@ -34,6 +34,7 @@ import {
   type Spacing,
 } from "./scale.js";
 import type { SeriesColors } from "./series.js";
+import type { SyntaxColors } from "./syntax.js";
 import { typography, type TextStyle, type Typography } from "./typography.js";
 
 /**
@@ -108,6 +109,12 @@ export interface Theme {
    * that carries one replaces the five-colour table whole.
    */
   readonly series?: SeriesColors;
+  /**
+   * The palette a native `<code>` host highlights with. Absent on every shipped
+   * theme, which resolves the table for its mode and contrast variant; a theme
+   * that carries one replaces the table whole.
+   */
+  readonly syntax?: SyntaxColors;
 }
 
 /**
@@ -175,6 +182,12 @@ export interface ThemeOverrides {
    * the five positions are an order a chart and its legend both read.
    */
   readonly series?: SeriesColors;
+  /**
+   * Replace the syntax palette whole. A palette is complete — every token type
+   * the runtime reads — so a brand that recolors one keyword spreads the resolved
+   * table it wants to keep: `syntax: { ...syntaxColors(theme), keyword: … }`.
+   */
+  readonly syntax?: SyntaxColors;
 }
 
 /** Input to {@link createTheme}: a mode, a contrast variant and overrides. */
@@ -365,6 +378,10 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
     borderWidth: overlay(base.borderWidth, overrides.borderWidth),
     iconSize: overlay(base.iconSize, overrides.iconSize),
     series: overrides.series ?? base.series,
+    // A complete palette, like a series: twenty-four token types are the set the
+    // runtime reads, so a partial one would leave a token on the runtime's own
+    // colour. A brand edits one token by spreading the table it keeps.
+    syntax: overrides.syntax ?? base.syntax,
   };
 }
 
@@ -421,6 +438,7 @@ export function applyStyle(base: Theme, style: PlatformStyle): Theme {
     density: style.density,
     colors: applies ? style.colors[base.mode] : undefined,
     series: applies ? style.series?.[base.mode] : undefined,
+    syntax: applies ? style.syntax?.[base.mode] : undefined,
   });
 }
 

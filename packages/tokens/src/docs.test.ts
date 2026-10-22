@@ -164,6 +164,8 @@ describe("the audit's report list", () => {
     "eight",
     "nine",
     "ten",
+    "eleven",
+    "twelve",
   ] as const;
   const count = words[reports.length] ?? `${reports.length}`;
   const surfaces = [

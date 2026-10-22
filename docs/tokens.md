@@ -961,8 +961,8 @@ accent — and `retro.test.ts` holds the result to the same contracts.
 
 ## Checking your own theme
 
-A theme fails silently in ten independent ways, and `auditTheme(theme)` is the
-one call that returns all ten reports:
+A theme fails silently in eleven independent ways, and `auditTheme(theme)` is
+the one call that returns all eleven reports:
 
 ```ts
 import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
@@ -970,20 +970,21 @@ import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
 const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
 const audit = auditTheme(brand);
 
-audit.passed; // true only when all ten reports below are empty
+audit.passed; // true only when all eleven reports below are empty
 audit.invalidRoles; // roles the renderer cannot paint
 audit.invalidShadows; // elevation shadow colours the renderer cannot paint
 audit.invalidNumbers; // sizes, lengths and shadows the renderer cannot lay out
 audit.contrast; // text, icon and boundary pairs below their floor
 audit.decorative; // dividers, skeleton fills, veils, status edges, washes, control faces and shadows too subtle to see
 audit.series; // data-series colours lost on their plot, against each other, or for a colour-blind reader
+audit.syntax; // a code block's token colour that vanishes into the fill it is read on
 audit.selection; // a selection wash the reader cannot see, or that hides its text
 audit.indicators; // a progress fill, spinner dot or presence mark lost on its strip
 audit.disabledFade; // a disabled control whose faded label vanishes into the faded fill
 audit.keyboardDim; // a control whose label the runtime's keyboard dim erases
 ```
 
-`passed` is computed from the ten reports, so it cannot drift from them. The
+`passed` is computed from the eleven reports, so it cannot drift from them. The
 contrast floors come from the theme's own `contrast` variant —
 `contrastFloorsFor(theme)` returns `highContrastFloors` for a theme that declares
 `contrast: "high"` and `contrastFloors` otherwise — so a brand built from a
@@ -1020,7 +1021,8 @@ that lands at 1.45:1 is reported by the fade and not by the dim.
 
 Each report is also a function of its own, for a caller that wants one check.
 The three below are here; the categorical scale is §Data series
-(`seriesFailures`), the selection wash is §Text selection
+(`seriesFailures`), the code palette is §Syntax palette (`syntaxFailures`),
+the selection wash is §Text selection
 (`selectionFailures`), the fade is §The fade a disabled control paints
 (`disabledFadeFailures`) and the dim is §The dim a control paints while Tab is
 elsewhere (`keyboardDimFailures`).
@@ -2260,6 +2262,7 @@ property beside the object (§What a field's value actually paints):
 | `diffHunkBg` / `textDim` | `muted` / `mutedForeground` |
 | `codeText` / `codeWash` | `foreground` / `muted` — inline code as prose in a chip |
 | `border` | `border` — a rendered document's table rules |
+| `syntax` | `syntaxColors(theme)` — the token colours a `<code>` host highlights with (§[Syntax palette](#syntax-palette)) |
 | `metrics.diffTextSize` / `diffLineHeight` | `typography.codeBlock`'s size / leading |
 | `metrics.mdTextSize` / `mdLineHeight` | `typography.body`'s size / leading |
 | `metrics.mdHeadingSizes` / `mdHeadingLineHeights` | `h1`/`h2`/`h3` then `body` |
@@ -2271,8 +2274,9 @@ the runtime sizes a code block from the theme's own metrics — an element's
 (`packages/native/src/theme.rs`'s `Metrics` at the pinned `@gpuix/native@0.11.0`)
 — not this library's scale. The seam hands over `typography.codeBlock`'s size and
 leading, so a brand's block role reaches the host instead of stopping at it; the
-gutter widths and the syntax palette stay the runtime's, because this package
-has no tokens for them (§Limitations).
+gutter widths stay the runtime's, because this package has no tokens for them
+(§Limitations). The **syntax palette is this package's**: `host.syntax` carries
+one colour per token type, and §[Syntax palette](#syntax-palette) is that scale.
 
 ### The diff host
 
@@ -2408,6 +2412,99 @@ The mapping is held by
 runs every shipped theme and both fills through the same floors and fails when a
 components file that renders an `<input>`, `<textarea>` or `<code>` stops passing
 the seam.
+
+## Syntax palette
+
+`@gpuix/native@0.11.0` highlights a `<code>` block with the tokens in the host
+theme's `syntax` field. A host handed none paints its **own** palette, which is
+the one designed for its built-in dark default, so a light theme's code block had
+comments and keywords chosen for a dark canvas — the one native surface a reader
+spends time in was also the only themed surface with a foreign palette.
+
+`syntaxColors(theme)` returns the palette for a theme's mode and contrast
+variant: **twenty-four** token types, every key the runtime reads, so a host
+never falls back to its own colour for a token this package forgot.
+
+| Token | Light | Dark |
+| ----- | ----- | ---- |
+| `comment` | `#545D6C` | `#A1A9B7` |
+| `keyword` | `#3B2C8F` | `#A7A9FF` |
+| `string` | `#0E5135` | `#6FE0A3` |
+| `stringSpecial` | `#0A3A26` | `#A8F0C6` |
+| `escape` | `#4B3100` | `#FFDE8A` |
+| `number` | `#2A1B00` | `#FFC94D` |
+| `boolean` | `#173A88` | `#9FBEFF` |
+| `typeName` | `#2E2370` | `#C7CBFF` |
+| `typeBuiltin` | `#1C1547` | `#E0E3FF` |
+| `constructor` | `#152F6B` | `#C5D8FF` |
+| `function` | `#0C1D42` | `#DEE9FF` |
+| `functionBuiltin` | `#152F6B` | `#C5D8FF` |
+| `macroName` | `#5C1619` | `#FF9E9E` |
+| `property` | `#173A88` | `#9FBEFF` |
+| `constant` | `#3A0B0D` | `#FFC6C6` |
+| `variable` | `#191D25` | `#E1E5EC` |
+| `variableSpecial` | `#5C1619` | `#FFC6C6` |
+| `parameter` | `#3D4552` | `#CBD1DB` |
+| `operator` | `#2A303B` | `#E1E5EC` |
+| `punctuation` | `#3D4552` | `#CBD1DB` |
+| `tag` | `#7E1D21` | `#FF9E9E` |
+| `attribute` | `#4B3100` | `#FFDE8A` |
+| `label` | `#0B0D11` | `#EEF1F5` |
+| `invalid` | `#3A0B0D` | `#FF9E9E` |
+
+The four tables are `lightSyntax`, `darkSyntax`, `highContrastLightSyntax` and
+`highContrastDarkSyntax`; `syntaxRoles` is the ordered list of keys and
+`syntaxRoleFloors` says which floor each one answers to. Two claims are
+measured:
+
+- **Every token that names code is read at the body floor** — a keyword, a
+  string, a number or a name is the text the reader came for — on both fills a
+  native host paints: the page role a code block fills (`syntaxSurfaces` is
+  `background` and `input`, the two `nativeTextFills`). That is 7:1 by default
+  and 7:1 in a high-contrast theme; the tightest shipped cell is the dark
+  `keyword` at **7.22:1** on Linux's page — 0.22 of headroom, recorded rather
+  than widened, because a keyword one ramp step lighter would sit on the AAA
+  palette's other lightness band.
+- **A comment answers to the secondary floor** (4.5:1; 7:1 when the theme
+  declares `contrast: "high"`), because a comment is an annotation about the code
+  rather than the code. The two high-contrast tables are the default ones with
+  that one role moved to the AAA floor — `#3D4552` light and `#CBD1DB` dark —
+  which is why there are four rather than two.
+
+`syntaxFailures(theme, floors?)` reports every token that misses its floor,
+naming the token, the fill and the measured ratio, and reporting a colour it
+cannot measure rather than skipping it. `auditTheme` includes that report, so a
+brand is held to it. A theme owns a palette by carrying `syntax`, which merges
+**key by key** over the table its base resolves — unlike `series`, where the
+five positions are an order a chart and its legend share, a token type stands on
+its own, so recolouring one keyword is a one-key edit:
+
+```ts
+import { auditTheme, extendTheme, syntaxColors } from "@gpuixui/tokens";
+
+const brand = extendTheme(theme, {
+  syntax: { keyword: "#7A1F5C", string: "#0B5E4A" },
+});
+
+syntaxColors(brand).keyword; // the brand's own
+syntaxColors(brand).number; // the shipped table's value
+auditTheme(brand).syntax; // [] — every token still clears its floor
+```
+
+A **look** owns one the same way, in the `PlatformStyle` shape: a style may
+declare `syntax` per mode, `applyStyle` hands it over under the rule its palette
+follows (a high-contrast base keeps its own), and a style that declares none
+resolves the base theme's table. A runnable example resolves the palette for a
+brand and audits it; see
+[`src/syntax.example.ts`](../packages/tokens/src/syntax.example.ts).
+
+**Adoption.** `nativeTextTheme` hands `syntaxColors(theme)` to the host as
+`syntax`, and the components package's `CodeBlock` already passes that object
+(`theme={nativeTextTheme(theme, "background")}`), so a code block highlights in
+the theme's palette with no component change. The ink itself is painted by the
+runtime's text engine; the palette reaching it is held structurally by
+[`src/syntax.test.ts`](../packages/tokens/src/syntax.test.ts), and a window
+measurement of the highlighted pixels is recorded in `TODO.md` → Interlocks.
 
 ## Spacing
 
@@ -3358,13 +3455,14 @@ or dropped is named rather than passing silently.
   re-lays the text out against it (measured: 44px → 81px). The guideline stays
   "create the renderer, register, then render" because that first frame is the
   one the reader sees — the fallback is not permanent.
-- The native text host's **syntax palette** is not filled by `nativeTextTheme`:
-  the runtime reads `syntax` from its own theme struct and this package ships no
-  syntax scale, so highlighting stays a consumer's decision rather than a themed
-  one. The numbers with no token of their own stay the runtime's too — a code
-  block's gutter, a diff's paddings and accent bar, a document's table column
-  minima — while the type each host lays out (a code block, a diff line, a
-  document's body and headings) comes from the scale.
+- The native text host's **syntax palette is this package's** — `syntaxColors`
+  fills the host theme's `syntax` field with one colour per token type — but the
+  **numbers** around the code stay the runtime's: a code block's gutter width and
+  padding, a diff's paddings and accent bar, and a document's table column minima
+  have no token, so tuning them is still a runtime change. A `<markdown>` host's
+  inline code is prose in a chip rather than a second palette (`codeText` on
+  `codeWash`), and the highlighting itself is the runtime's tokenizer: this
+  package chooses the colours, not which run is a keyword.
 - `@gpuix/native@0.11.0`'s `focusVisible` outline is measured for Tab input and
   for a programmatic focus **after** a Tab, but not for a programmatic focus
   before any key. A mouse-opened dialog or menu therefore keeps `focusRing`'s

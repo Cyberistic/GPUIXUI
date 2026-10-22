@@ -5,14 +5,14 @@
  * paints black, a shadow colour it cannot parse paints no shadow at all, a
  * number it cannot lay out is dropped, a text pair below its floor is
  * unreadable, a decorative surface close to its background is invisible, a data
- * series is lost on its plot, the selection wash hides the text it selects, an
- * indicator mark disappears into the strip it is drawn on, a disabled control
- * faded by `disabledOpacity` loses its label, and the keyboard dim the runtime
- * paints on every other focusable erases a control's label. Each has its own
- * report, and a consumer who forgets one ships the failure it would have
- * caught — which is what the documented gate did, running two of the three and
- * holding every theme to the default floors even when the theme declares the
- * high-contrast variant.
+ * series is lost on its plot, a code block's syntax token vanishes into the page
+ * it is read on, the selection wash hides the text it selects, an indicator mark
+ * disappears into the strip it is drawn on, a disabled control faded by
+ * `disabledOpacity` loses its label, and the keyboard dim the runtime paints on
+ * every other focusable erases a control's label. Each has its own report, and a
+ * consumer who forgets one ships the failure it would have caught — which is
+ * what the documented gate did, running two of the three and holding every theme
+ * to the default floors even when the theme declares the high-contrast variant.
  */
 
 import {
@@ -53,6 +53,11 @@ import {
   type SeriesColors,
   type SeriesReport,
 } from "./series.js";
+import {
+  syntaxFailures,
+  type SyntaxColors,
+  type SyntaxFailure,
+} from "./syntax.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 import { typography as shippedTypography } from "./typography.js";
 
@@ -207,6 +212,12 @@ type SeriesSource = {
   readonly series?: SeriesColors;
 };
 
+/** The fields a syntax audit reads: the mode and an authored palette. */
+type SyntaxSource = {
+  readonly mode: ThemeMode;
+  readonly syntax?: SyntaxColors;
+};
+
 /** Everything a theme must be free of before it ships. */
 export interface ThemeAudit {
   /** Roles whose value is not a colour GPUix can paint. */
@@ -221,6 +232,8 @@ export interface ThemeAudit {
   readonly decorative: readonly DecorativeFailure[];
   /** Data series too close to a plot surface, to each other, or to one another under a colour-vision deficiency. */
   readonly series: SeriesReport;
+  /** Syntax token colours that cannot be read on the fill a code host paints. */
+  readonly syntax: readonly SyntaxFailure[];
   /** Selection washes that cannot be seen, or that hide the text inside them. */
   readonly selection: readonly SelectionFailure[];
   /** Indicator marks that cannot be found on the strip they are drawn on. */
@@ -229,12 +242,12 @@ export interface ThemeAudit {
   readonly disabledFade: readonly DisabledFadeFailure[];
   /** Controls whose label the keyboard dim erases while another control has focus. */
   readonly keyboardDim: readonly KeyboardDimFailure[];
-  /** True only when all ten reports are empty. */
+  /** True only when all eleven reports are empty. */
   readonly passed: boolean;
 }
 
 /**
- * Audit a theme against the ten contracts the library holds itself to.
+ * Audit a theme against the eleven contracts the library holds itself to.
  *
  * The contrast floors come from the theme's own `contrast` variant, so a
  * high-contrast brand is measured at AAA without the caller naming a floor set;
@@ -271,6 +284,7 @@ export function auditTheme(
   theme: ColourSource &
     ContrastSource &
     SeriesSource &
+    SyntaxSource &
     ShadowSource &
     NumberSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
@@ -283,6 +297,7 @@ export function auditTheme(
   const contrast = contrastFailures(theme, floors);
   const decorative = decorativeFailures(theme);
   const series = seriesFailures(theme);
+  const syntax = syntaxFailures(theme, floors);
   const selection = selectionFailures(theme, floors);
   const indicators = indicatorFailures(theme, floors);
   const disabledFade = disabledFadeFailures(theme);
@@ -294,6 +309,7 @@ export function auditTheme(
     contrast,
     decorative,
     series,
+    syntax,
     selection,
     indicators,
     disabledFade,
@@ -307,6 +323,7 @@ export function auditTheme(
       series.surfaces.length === 0 &&
       series.distinctness.length === 0 &&
       series.deficiencies.length === 0 &&
+      syntax.length === 0 &&
       selection.length === 0 &&
       indicators.length === 0 &&
       disabledFade.length === 0 &&

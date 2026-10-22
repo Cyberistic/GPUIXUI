@@ -57,6 +57,7 @@
  */
 
 import { statusTone } from "./styles.js";
+import { syntaxColors, type SyntaxColors } from "./syntax.js";
 import type { Theme, ThemeMode } from "./theme.js";
 
 /**
@@ -162,6 +163,12 @@ export interface NativeTextTheme {
   readonly codeWash: string;
   /** Table rules and dividers a rendered document draws, from `border`. */
   readonly border: string;
+  /**
+   * The token colours a `<code>` host highlights with, from
+   * {@link syntaxColors}: the runtime reads them from this field and paints its
+   * own dark-default palette when it is absent.
+   */
+  readonly syntax: SyntaxColors;
 }
 
 /**
@@ -250,5 +257,9 @@ export function nativeTextTheme(
     codeText: theme.colors.foreground,
     codeWash: theme.colors.muted,
     border: theme.colors.border,
+    syntax: syntaxColors(theme),
+    // The runtime reads a code block's token colours from here and paints its
+    // own dark-default palette when the field is absent, so a light theme's
+    // block would be highlighted for a dark canvas.
   };
 }

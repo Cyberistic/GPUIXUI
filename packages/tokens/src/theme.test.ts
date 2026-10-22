@@ -352,6 +352,7 @@ describe("theme audit example", () => {
         contrast: [],
         decorative: [],
         series: { surfaces: [], distinctness: [], deficiencies: [] },
+        syntax: [],
         selection: [],
         indicators: [],
         disabledFade: [],

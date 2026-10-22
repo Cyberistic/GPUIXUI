@@ -66,6 +66,15 @@ import {
   seriesSurfaces,
 } from "./series.js";
 import { statusTones } from "./styles.js";
+import {
+  darkSyntax,
+  highContrastDarkSyntax,
+  highContrastLightSyntax,
+  lightSyntax,
+  syntaxColors,
+  syntaxRoles,
+  syntaxSurfaces,
+} from "./syntax.js";
 import { highContrastThemes, platformTheme, themes } from "./theme.js";
 import { typography, type TextStyle } from "./typography.js";
 
@@ -613,6 +622,91 @@ describe("the catalogue's status tones", () => {
     });
 
     expect(drift).toEqual([]);
+  });
+});
+
+describe("the catalogue's syntax palette", () => {
+  it("prints the value each table carries, for every token type", () => {
+    const rows = headed(catalogue, ["Token", "Light", "Dark"]).rows;
+
+    expect(rows.map((row) => code(row[0] ?? ""))).toEqual([...syntaxRoles]);
+    const drift = rows.flatMap((row, index) => {
+      const role = syntaxRoles[index];
+      if (role === undefined) {
+        return [];
+      }
+      const light = code(row[1] ?? "");
+      const dark = code(row[2] ?? "");
+      return [
+        ...(light === lightSyntax[role]
+          ? []
+          : [`light ${role}: printed ${light}, carries ${lightSyntax[role]}`]),
+        ...(dark === darkSyntax[role]
+          ? []
+          : [`dark ${role}: printed ${dark}, carries ${darkSyntax[role]}`]),
+      ];
+    });
+
+    expect(drift).toEqual([]);
+  });
+
+  it("names the four tables, the floors and the quiet role's AAA values", () => {
+    [
+      "lightSyntax",
+      "darkSyntax",
+      "highContrastLightSyntax",
+      "highContrastDarkSyntax",
+      "syntaxRoles",
+      "syntaxRoleFloors",
+      "syntaxSurfaces",
+      "syntaxColors",
+      "syntaxFailures",
+    ].forEach((name) => expect(catalogue).toContain(`\`${name}\``));
+
+    // The high-contrast tables differ in one role, and the page prints both
+    // values: a stale hex there would teach a brand the wrong quiet colour.
+    expect(catalogue).toContain(highContrastLightSyntax.comment);
+    expect(catalogue).toContain(highContrastDarkSyntax.comment);
+    expect(syntaxRoles.length).toBe(24);
+    expect(flatCatalogue).toContain("**twenty-four** token types");
+  });
+
+  it("prints the tightest token it measures", () => {
+    const shipped = [
+      themes.light,
+      themes.dark,
+      highContrastThemes.light,
+      highContrastThemes.dark,
+      ...platformNames.map((name) => platformTheme(themes.light, name)),
+      ...platformNames.map((name) => platformTheme(themes.dark, name)),
+      ...[themes.light, themes.dark].flatMap((base) =>
+        retroNames.map((name) => retroTheme(base, name)),
+      ),
+    ];
+    const cells = shipped.flatMap((theme) =>
+      syntaxRoles
+        .filter((role) => role !== "comment")
+        .flatMap((role) =>
+          syntaxSurfaces.map((surface) => ({
+            theme: theme.name,
+            role,
+            surface,
+            ratio: contrastRatio(
+              syntaxColors(theme)[role],
+              theme.colors[surface],
+            ),
+          })),
+        ),
+    );
+    const tightest = cells.reduce((worst, cell) =>
+      (cell.ratio ?? 1) < (worst.ratio ?? 1) ? cell : worst,
+    );
+
+    expect(flatCatalogue).toContain(
+      `the tightest shipped cell is the dark \`keyword\` at **${(tightest.ratio ?? 0).toFixed(2)}:1** on Linux's page`,
+    );
+    expect(tightest.role).toBe("keyword");
+    expect(tightest.surface).toBe("background");
   });
 });
 

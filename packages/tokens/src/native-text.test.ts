@@ -34,6 +34,7 @@ import {
 } from "./native-text.js";
 import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
+import { lightSyntax } from "./syntax.js";
 import {
   darkTheme,
   extendTheme,
@@ -139,6 +140,7 @@ describe("nativeTextTheme", () => {
       codeText: lightTheme.colors.foreground,
       codeWash: lightTheme.colors.muted,
       border: lightTheme.colors.border,
+      syntax: lightSyntax,
     });
   });
 
@@ -208,6 +210,7 @@ describe("nativeTextTheme", () => {
       "fontMono",
       "fontSans",
       "metrics",
+      "syntax",
       "text",
       "textDim",
       "textFaint",
@@ -677,9 +680,10 @@ describe("the diff host's colours", () => {
     expect(catalogue).toContain("### The document host");
     expect(catalogue).toContain("prose in a chip");
     expect(catalogue).toContain("`diffTextSize`");
-    expect(catalogue).toContain(
-      "The native text host's **syntax palette** is not filled",
-    );
+    // The syntax palette is the package's now: the page says so, and the old
+    // "not filled" claim would send a reader to the runtime's own dark table.
+    expect(catalogue).toContain("syntax palette is this package's");
+    expect(catalogue).not.toContain("is not filled by `nativeTextTheme`");
     // The placeholder is fixed by the runtime, so the seam and the page must say
     // so instead of promising a role the host never reads.
     expect(seam).toContain("#8F8F8F");

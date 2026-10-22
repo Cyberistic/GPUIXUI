@@ -888,8 +888,8 @@ and the text or the icon would spill or clip while every number is still layable
 (§6).
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
-reports all ten in one call — `invalidRoles`, `invalidShadows`,
-`invalidNumbers`, `contrast`, `decorative`, `series`, `selection`,
+reports all eleven in one call — `invalidRoles`, `invalidShadows`,
+`invalidNumbers`, `contrast`, `decorative`, `series`, `syntax`, `selection`,
 `indicators`, `disabledFade` and `keyboardDim` — and `passed` is true only
 when every list is empty. The contrast half
 is measured against the theme's own `contrast` variant through
@@ -912,9 +912,19 @@ measures two opaque roles, `contrastPairs` with `contrastFloors` /
 itself and after each colour-vision deficiency — while
 `selectionFailures(theme, floors?)`
 measures the body and secondary text a selected run sits in,
-`indicatorFailures(theme, floors?)` measures the marks a component shows and
+`indicatorFailures(theme, floors?)` measures the marks a component shows,
+`syntaxFailures(theme, floors?)` the token colours a code block reads, and
 `keyboardDimFailures(theme)` the label the runtime's keyboard dim erases.
 Nothing about the requirement is private to this repo.
+
+A **code block** is the one text surface whose colour is a scale rather than a
+role: `syntaxColors(theme)` names a colour per token type — keyword, string,
+number, type, comment — because "this is a keyword" is not "this is a warning".
+Every token that names code is held to the body floor on both fills a native
+host paints, and a comment to the secondary floor (AAA in a high-contrast
+theme); `docs/tokens.md` §Syntax palette has the tables and the measured
+tightest cell. A brand owns the palette by carrying `syntax`, which merges token
+by token.
 
 ### Target sizes
 

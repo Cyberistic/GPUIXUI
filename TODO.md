@@ -302,7 +302,9 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 135/135
+`[x]` `[██████████]` 136/136
+
+`[x]` Ship the **syntax palette** a native `<code>` host highlights with — `@gpuix/native@0.11.0` reads token colours from the theme object's `syntax` field and falls back to its own palette designed for its dark default, and this package shipped none, so a light theme's code block was highlighted for a dark canvas while `docs/tokens.md` recorded "highlighting stays a consumer's decision". `syntaxColors(theme)` resolves **twenty-four** token types (`syntaxRoles`, every key the pinned `SyntaxTheme` reads) from four authored tables — `lightSyntax`, `darkSyntax` and a high-contrast pair — by mode and contrast variant. A token that names code is held to the **body floor** on both fills a host paints (`syntaxSurfaces` = `input` and the page role a code block fills, the two `nativeTextFills`); a `comment` — an annotation about the code rather than the code — to the **secondary floor**, which a high-contrast theme raises to 7:1, and that is the only difference between the default and high-contrast tables. `syntaxFailures(theme, floors?)` reports every token, fill and ratio and reports a colour it cannot measure; `auditTheme` folds it in as `audit.syntax`, so the gate has **eleven** reports and `passed` reads it. A theme owns a palette by carrying `syntax`, which **replaces the table whole** (a complete palette is what the host reads; a brand spreads `syntaxColors(theme)` to edit one token — `Partial<Record<…>>` cannot accept an object literal here because TypeScript's inherited `Object.constructor` collides with the runtime's `constructor` token), and a `PlatformStyle` may declare one per mode, which `applyStyle` hands over under its palette rule. **Adopted with no component change**: the components package's `CodeBlock` passes `nativeTextTheme(theme, "background")`, and the seam now hands `syntaxColors(theme)` to the host. `syntax.test.ts` (11 cases) holds the tables, the 672-placement sweep over the 14 shipped, platform and look themes, the tightest cell (dark `keyword` on Linux's page, **7.22:1**), the resolution, the brand and style routes, the erased keyword, the unmeasurable `hsl()` token and the executed example; `catalogue-values.test.ts` holds the printed table (24 rows × two columns), the four table names, the two high-contrast comment values and the printed tightest to the exports. Directions measured: removing `syntax: syntaxColors(theme)` fails three cases by name in `syntax.test.ts`/`native-text.test.ts`, dropping the `syntax` half of `passed` fails `reports a token that vanishes into the page`, painting the light `keyword` as the page fails the sweep and the printed row, and a printed `#3B2C91` fails the catalogue case. Docs: `docs/tokens.md` §Syntax palette (table, floors, brand and look routes, the retracted limitation), `docs/design-system.md` §9, the package README and the **Syntax palette** inventory row. The painted pixels are the interlock below
 
 `[x]` Measure the **brand link on a message's own tint** — `brandText(theme)` derives one colour for the eight surfaces a link can sit on, and a status tint is not one of them: an `Alert`'s description is a container (`alert.tsx`: "It is a container, so it may hold an action") filled with the tone's `xSoft` role, and a `link` action inside it paints `text-brand` → `brandText` (`packages/primitives/src/recipe/registry.ts`). Measured, that shared colour is under the text floor in **29 of the 64** tint placements across the sixteen shipped, high-contrast, platform and authored styles — macOS dark **3.43:1** on `warningSoft`, where the raw fill role is 2.32:1; the base light theme's 4.46:1 on `infoSoft` and the base dark theme's 3.94:1 on `warningSoft` are two more — and no single colour can fix that without dragging every link on the page away from the brand, because a tint is one tone from the page. So `brandTextOn(theme, surface, floors?)` holds the same 2% derivation (brand where the surface carries it, otherwise the smallest step toward `foreground`, never past it, an unmeasurable value returned unchanged) to **one** role: it clears every one of the 64 placements. The message's own copy stays `statusTone(theme, tone).foreground`, measured on the tint at the body floor. `brand-text.test.ts` gains eight cases — the painters (the alert tones, the container sentence and the registry's `text-brand`), the 29/64 measurement with macOS dark's two values and the base themes by name, the 16 × 4 sweep, kept-vs-stepped on both base themes, the high-contrast floor (High contrast light's 5.81:1 on `infoSoft` steps to 7:1), the unmeasurable brand, and the executed `messageLinkStyles` — plus the page case that prints the count and both macOS cells from the same computation. `brand-text.example.ts` gains `messageLinkStyles`, and `docs/tokens.md` §Brand text gains §A brand run inside a message, `docs/design-system.md` §3 the rule, the README the helper and the `Brand text` row both. Three directions measured: returning the shared colour from `brandTextOn` fails the sweep, the kept-vs-stepped, the high-contrast and the executed-link cases by name; a tint added to `brandTextSurfaces` fails six cases, the painter case among them; and rewording the page's count sentence fails the page case. Adoption by the alert's action is the interlock row in this file.
 
@@ -6066,24 +6068,30 @@ numbers).
       into place: `ComboboxContent` composed no motion seam at all, while every other
       floating surface faded and travelled, so the searchable picker was the one
       panel whose arrival was a jump. It now enters on the house entrance — a fade
-      plus 4px of travel **out from the side the placement measured** (`normal`,
-      200 ms, ease-out), read from `usePlacement` rather than assumed, so a popup
-      the component flipped above its trigger enters from *below*. There is **no
-      exit tween** and that is measured rather than omitted: GPUix's own
-      `ComboboxContent` returns `null` while the root is closed, so the box is
-      unmounted the moment the state closes and there is nothing to keep mounted
-      for a fade. `behaviour/combobox.test.tsx` gains `the popup's entrance` (3
-      cases, paused clock): a below popup rests 4px below its first frame, a
-      near-bottom popup (which the component flips above its trigger) rests 4px
-      *above* its first frame — so a hardcoded side fails — and under
-      `MotionProvider preference="reduced"` the first frame is the resting one.
-      Directions measured: with the `motion` prop removed, `travels out from the
-      side it opens at` fails on `expected 0 to be 4` and the two later cases fail
-      on the leaked root; with the transition forced to `0.2` the reduced case
-      fails by name while the other two stay green; restored, 25/25. Docs:
-      `docs/combobox.mdx` §Motion,
-      §Limitations and §Verification, the row in `docs/component-api.md` §11, and
-      the `Comboboxes` inventory row.
+      plus 4px of travel (`normal`, 200 ms, ease-out) **out from the side it is
+      asked to open at**. A surface's first motion frame is committed when its host
+      mounts, one commit before the measured flip can re-anchor it, so the travel
+      follows the requested `side` (default `bottom`), not the measured placement:
+      a popup below its trigger starts 4px above its rest and moves down, a
+      `side="top"` popup starts 4px below and moves up, and a popup the component
+      flips above its trigger keeps the requested side's travel while its resting
+      placement is the measured one. There is **no exit tween** and that is
+      measured rather than omitted: GPUix's own `ComboboxContent` returns `null`
+      while the root is closed, so the box is unmounted the moment the state closes
+      and there is nothing to keep mounted for a fade. `behaviour/combobox.test.tsx`
+      gains `the popup's entrance` (4 cases, paused clock): the default side travels
+      4px **down** into place (72 → 76), a requested `side="top"` travels 4px **up**
+      (96 → 92, so a hardcoded bottom fails), the flipped popup pins the
+      requested-side travel it inherits (516 → 520, the measured limitation, not
+      the "enters from below" claim an earlier reading of this entry made), and
+      under `MotionProvider preference="reduced"` the first frame is the resting
+      one. Directions measured: with the `motion` prop removed the first case fails
+      `expected 0 to be 4` and the later cases fail on the leaked root; with the
+      travel hardcoded to `bottom` the requested-top case fails by name; with the
+      transition forced to `0.2` the reduced case fails by name while the others
+      stay green; restored, 26/26. Docs: `docs/combobox.mdx` §Motion, §Limitations
+      and §Verification, the row in `docs/component-api.md` §11, and the
+      `Comboboxes` inventory row.
 `[x]` Add the combobox popup's **§Motion** to the curated page
       (`apps/docs/content/docs/components/combobox.mdx`) — the package page
       (`packages/components/docs/combobox.mdx` §Motion) and the per-surface table
