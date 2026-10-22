@@ -7,7 +7,7 @@
  * surface role — 1.06:1 on the page, a dot nobody could see.
  */
 
-import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
+import { contrastFloors, contrastRatio, indicatorRoles } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
@@ -173,13 +173,12 @@ describe("Timeline", () => {
       "a dot a reader cannot find on the strip it is drawn on",
     ).toEqual([]);
 
-    // The premise: the role the upcoming dot used to paint is a surface, and it
-    // is under the mark floor on the page in both shipped themes.
-    expect(
-      probes.map(({ theme }) =>
-        contrastRatio(theme.colors.muted, theme.colors.background),
-      ),
-    ).toEqual([1.064193271496126, 1.230144227242232]);
+    // The premise: `muted` is a surface role, and the token package's mark
+    // contract does not measure it, so a dot painted in it is a dot nobody
+    // checked. Read from the contract rather than from today's palette — the
+    // wash's ratio moves with a palette edit, the role list is the rule. (The
+    // light theme's wash measured 1.06:1 on the page when this case landed.)
+    expect(indicatorRoles).not.toContain("muted");
   });
 
   it("draws a connector after every event but the last", () => {

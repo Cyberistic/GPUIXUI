@@ -116,8 +116,10 @@ custom theme changes the rail with no code change — see
 `src/behaviour/timeline.test.tsx` runs in the real GPUix renderer (7 tests):
 declaration order, list/listitem roles, exactly one selected current event, the
 three dot fills, every dot held to the mark floor on the page and a card in both
-themes (with the 1.06:1 `muted` premise that made the old upcoming dot
-invisible), a connector after every event but the last, and a style callback
+themes, the premise read from the token package's `indicatorRoles` rather than a
+pinned ratio (`muted` is a surface role the mark contract does not measure, so a
+dot in it is a dot nobody checked — it measured 1.06:1 on the page when this
+landed), a connector after every event but the last, and a style callback
 receiving `{ status, last }` in both themes.
 
 ```sh
