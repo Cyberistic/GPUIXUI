@@ -1943,6 +1943,12 @@ host.diffHunkBg; // muted — the hunk header's chrome stripe
 | `metrics.codeTextSize` / `codeLineHeight` | `typography.codeBlock`'s size / leading |
 | `diffAdd` / `diffDel` | the `success` / `destructive` tone's readable role |
 | `diffHunkBg` / `textDim` | `muted` / `mutedForeground` |
+| `codeText` / `codeWash` | `foreground` / `muted` — inline code as prose in a chip |
+| `border` | `border` — a rendered document's table rules |
+| `metrics.diffTextSize` / `diffLineHeight` | `typography.codeBlock`'s size / leading |
+| `metrics.mdTextSize` / `mdLineHeight` | `typography.body`'s size / leading |
+| `metrics.mdHeadingSizes` / `mdHeadingLineHeights` | `h1`/`h2`/`h3` then `body` |
+| `metrics.mdCodeRadius` / `mdInlineCodeRadius` | `radius.lg` / `radius.sm` |
 
 A `<code>` host is the one host whose **type** also comes from the theme object:
 the runtime sizes a code block from the theme's own metrics — an element's
@@ -1987,6 +1993,26 @@ placeholder measured 4.03:1 on its own toolbar, and every light style was
 role is a step further from its surface now — light `#606A79`, dark `#858E9F`,
 Luna `#59616D`, Aero `#586978` — and every placement clears 4.5:1, the tightest
 being a dark platform's page fill at 5.01:1.
+
+### The document host
+
+A `<markdown>` host renders prose, headings, inline code and tables, and every
+one of them comes from the theme object. Its body and headings take the scale's
+own roles — `body` for the document body, `h1`/`h2`/`h3` and then `body` for the
+four heading levels — so a brand's type scale reaches a rendered document
+instead of stopping at the component tree. A `<diff>`'s rows follow the block
+role (`diffTextSize` / `diffLineHeight` from `typography.codeBlock`) because a
+diff is code, and a markdown code card and its inline chip take `radius.lg` and
+`radius.sm`.
+
+Inline code is **prose in a chip**, not a second syntax palette: the runtime's
+own violet ink over a 10% violet wash is a style no token owns, so `codeText` is
+the page's `foreground` and `codeWash` is `muted` — the pair the contrast table
+already holds at the body floor, with the chip itself visible against the page at
+the 1.05:1 decorative floor. A table rule takes `border`, the role a divider is
+measured by. The numbers with no token of their own stay the runtime's: a code
+block's gutter, a diff's paddings and accent bar, and a document's table column
+minima (§Limitations).
 
 ### What a field's placeholder actually paints
 
@@ -2922,12 +2948,13 @@ or dropped is named rather than passing silently.
   re-lays the text out against it (measured: 44px → 81px). The guideline stays
   "create the renderer, register, then render" because that first frame is the
   one the reader sees — the fallback is not permanent.
-- The native text host's **syntax palette** and its **diff and markdown
-  metrics** are not filled by `nativeTextTheme`: the runtime reads `syntax` and
-  those numbers from its own theme struct, and this package ships no syntax
-  scale, diff roles or markdown type roles. A `<code>` host takes its block type
-  from `typography.codeBlock` and paints plain text, so highlighting and a
-  markdown surface stay a consumer's decision rather than a themed one.
+- The native text host's **syntax palette** is not filled by `nativeTextTheme`:
+  the runtime reads `syntax` from its own theme struct and this package ships no
+  syntax scale, so highlighting stays a consumer's decision rather than a themed
+  one. The numbers with no token of their own stay the runtime's too — a code
+  block's gutter, a diff's paddings and accent bar, a document's table column
+  minima — while the type each host lays out (a code block, a diff line, a
+  document's body and headings) comes from the scale.
 - `@gpuix/native@0.11.0`'s `focusVisible` outline is measured for Tab input and
   for a programmatic focus **after** a Tab, but not for a programmatic focus
   before any key. A mouse-opened dialog or menu therefore keeps `focusRing`'s

@@ -704,7 +704,10 @@ is handed the theme's mode, families, `inputForeground`/`mutedForeground`, the
 three more: `diffAdd`/`diffDel` are the `success`/`destructive` tone's readable
 role (the runtime tints the row under a changed line at 5.5% of the same value,
 exported as `nativeDiffWash`), a hunk header sits on the `muted` `diffHunkBg` and
-its file path is `textDim`. A native field's placeholder is **not** themeable at
+its file path is `textDim`. A `<markdown>` host takes a document's body, heading
+and code type from `typography` (a diff's rows follow `codeBlock` too), inline
+code as the page ink on a `muted` chip (`codeText`/`codeWash`) rather than the
+runtime's violet, and its table rules from `border`. A native field's placeholder is **not** themeable at
 0.11.0 — the runtime shapes an empty field's hint with a fixed `#8F8F8F` — so a
 component that needs a themed hint paints it itself. The muted role is
 measured on that fill too: the same pair covers the separator and clear glyph a

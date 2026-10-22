@@ -66,6 +66,38 @@ const shipped = [
   ),
 ];
 
+/**
+ * The three surfaces a rendered document paints from the theme: inline code's
+ * ink on its chip, the chip on the page, and a table rule. Each is measured on
+ * the surface it is drawn on, so a brand that makes its chip the ink is reported
+ * rather than silently painting one block.
+ */
+const documentPlacements = (theme: Theme) => {
+  const host = nativeTextTheme(theme);
+  const floors = contrastFloorsFor(theme);
+  return [
+    {
+      claim: "inline code ink on its chip",
+      ratio: contrastRatio(host.codeText, host.codeWash),
+      floor: floors.body,
+    },
+    {
+      claim: "inline code chip on the page",
+      ratio: contrastRatio(host.codeWash, theme.colors.background),
+      floor: decorativeFloor,
+    },
+    {
+      claim: "table rule on the page",
+      ratio: contrastRatio(host.border, theme.colors.background),
+      floor: decorativeFloor,
+    },
+  ] satisfies ReadonlyArray<{
+    claim: string;
+    ratio: number | undefined;
+    floor: number;
+  }>;
+};
+
 describe("nativeTextTheme", () => {
   it("maps every role the host reads from the theme", () => {
     expect(nativeTextTheme(lightTheme)).toEqual({
@@ -81,11 +113,32 @@ describe("nativeTextTheme", () => {
       metrics: {
         codeTextSize: lightTheme.typography.codeBlock.fontSize,
         codeLineHeight: lightTheme.typography.codeBlock.lineHeight,
+        diffTextSize: lightTheme.typography.codeBlock.fontSize,
+        diffLineHeight: lightTheme.typography.codeBlock.lineHeight,
+        mdTextSize: lightTheme.typography.body.fontSize,
+        mdLineHeight: lightTheme.typography.body.lineHeight,
+        mdHeadingSizes: [
+          lightTheme.typography.h1.fontSize,
+          lightTheme.typography.h2.fontSize,
+          lightTheme.typography.h3.fontSize,
+          lightTheme.typography.body.fontSize,
+        ],
+        mdHeadingLineHeights: [
+          lightTheme.typography.h1.lineHeight,
+          lightTheme.typography.h2.lineHeight,
+          lightTheme.typography.h3.lineHeight,
+          lightTheme.typography.body.lineHeight,
+        ],
+        mdCodeRadius: lightTheme.radius.lg,
+        mdInlineCodeRadius: lightTheme.radius.sm,
       },
       diffAdd: lightTheme.colors.successSoftForeground,
       diffDel: lightTheme.colors.destructiveSoftForeground,
       diffHunkBg: lightTheme.colors.muted,
       textDim: lightTheme.colors.mutedForeground,
+      codeText: lightTheme.colors.foreground,
+      codeWash: lightTheme.colors.muted,
+      border: lightTheme.colors.border,
     });
   });
 
@@ -145,7 +198,10 @@ describe("nativeTextTheme", () => {
       "accent",
       "appearance",
       "bg",
+      "border",
       "caret",
+      "codeText",
+      "codeWash",
       "diffAdd",
       "diffDel",
       "diffHunkBg",
@@ -159,36 +215,134 @@ describe("nativeTextTheme", () => {
     ]);
   });
 
-  it("gives a code host the scale's own block type", () => {
-    // A `<code>` host lays its block out from the runtime theme's `metrics`, not
+  it("gives the document hosts the scale's own type", () => {
+    // A native host lays its rows out from the runtime theme's `metrics`, not
     // from a style property, so a seam that fills only the palette paints the
-    // runtime's 12.5/18 code block whatever the theme says. The role is read
-    // from the theme rather than retyped, so a brand's scale follows.
+    // runtime's own numbers — 12.5/18 for a code block, 12/21 for a diff line,
+    // 14/22 with 19/16/15/14 headings for a document — whatever the theme says.
     const host = nativeTextTheme(lightTheme);
+    const { typography } = lightTheme;
 
     expect(host.metrics).toEqual({
-      codeTextSize: lightTheme.typography.codeBlock.fontSize,
-      codeLineHeight: lightTheme.typography.codeBlock.lineHeight,
+      codeTextSize: typography.codeBlock.fontSize,
+      codeLineHeight: typography.codeBlock.lineHeight,
+      diffTextSize: typography.codeBlock.fontSize,
+      diffLineHeight: typography.codeBlock.lineHeight,
+      mdTextSize: typography.body.fontSize,
+      mdLineHeight: typography.body.lineHeight,
+      mdHeadingSizes: [
+        typography.h1.fontSize,
+        typography.h2.fontSize,
+        typography.h3.fontSize,
+        typography.body.fontSize,
+      ],
+      mdHeadingLineHeights: [
+        typography.h1.lineHeight,
+        typography.h2.lineHeight,
+        typography.h3.lineHeight,
+        typography.body.lineHeight,
+      ],
+      mdCodeRadius: lightTheme.radius.lg,
+      mdInlineCodeRadius: lightTheme.radius.sm,
     });
+
     const brand = extendTheme(lightTheme, {
-      typography: { codeBlock: { fontSize: 14, lineHeight: 22 } },
+      typography: {
+        codeBlock: { fontSize: 14, lineHeight: 22 },
+        body: { fontSize: 15, lineHeight: 23 },
+        h1: { fontSize: 30, lineHeight: 38 },
+      },
+      radius: { lg: 10, sm: 3 },
     });
-    expect(nativeTextTheme(brand).metrics).toEqual({
-      codeTextSize: 14,
-      codeLineHeight: 22,
+    const branded = nativeTextTheme(brand).metrics;
+    expect(branded.codeTextSize).toBe(14);
+    expect(branded.diffTextSize).toBe(14);
+    expect(branded.mdTextSize).toBe(15);
+    expect(branded.mdHeadingSizes[0]).toBe(30);
+    expect(branded.mdHeadingLineHeights[0]).toBe(38);
+    expect(branded.mdCodeRadius).toBe(10);
+    expect(branded.mdInlineCodeRadius).toBe(3);
+
+    // Every shipped style resolves its own scale: the four hosts read the same
+    // roles, so one comparison per theme covers the metrics a fill cannot move.
+    const drifted = shipped.flatMap(({ label, theme }) => {
+      const { metrics } = nativeTextTheme(theme);
+      const { typography } = theme;
+      const wanted: ReadonlyArray<readonly [string, unknown, unknown]> = [
+        ["codeTextSize", metrics.codeTextSize, typography.codeBlock.fontSize],
+        [
+          "codeLineHeight",
+          metrics.codeLineHeight,
+          typography.codeBlock.lineHeight,
+        ],
+        ["diffTextSize", metrics.diffTextSize, typography.codeBlock.fontSize],
+        [
+          "diffLineHeight",
+          metrics.diffLineHeight,
+          typography.codeBlock.lineHeight,
+        ],
+        ["mdTextSize", metrics.mdTextSize, typography.body.fontSize],
+        ["mdLineHeight", metrics.mdLineHeight, typography.body.lineHeight],
+        [
+          "mdHeadingSizes",
+          metrics.mdHeadingSizes.join(),
+          [
+            typography.h1.fontSize,
+            typography.h2.fontSize,
+            typography.h3.fontSize,
+            typography.body.fontSize,
+          ].join(),
+        ],
+        [
+          "mdHeadingLineHeights",
+          metrics.mdHeadingLineHeights.join(),
+          [
+            typography.h1.lineHeight,
+            typography.h2.lineHeight,
+            typography.h3.lineHeight,
+            typography.body.lineHeight,
+          ].join(),
+        ],
+        ["mdCodeRadius", metrics.mdCodeRadius, theme.radius.lg],
+        ["mdInlineCodeRadius", metrics.mdInlineCodeRadius, theme.radius.sm],
+      ];
+      return wanted
+        .filter(([, actual, expected]) => actual !== expected)
+        .map(
+          ([name, actual, expected]) =>
+            `${label} ${name}: ${actual} not ${expected}`,
+        );
     });
-    // Every shipped style resolves its own scale, in both fills.
-    const drifted = shipped.flatMap(({ label, theme }) =>
-      nativeTextFills.flatMap((fill) => {
-        const { metrics } = nativeTextTheme(theme, fill);
-        return metrics.codeTextSize === theme.typography.codeBlock.fontSize &&
-          metrics.codeLineHeight === theme.typography.codeBlock.lineHeight
-          ? []
-          : [`${label} ${fill}`];
-      }),
-    );
 
     expect(drifted).toEqual([]);
+  });
+
+  it("paints inline code as prose in a chip, and a document's rules", () => {
+    // A `<markdown>` host draws inline code in its own violet ink over a 10%
+    // violet wash — a second syntax palette no token owns. The seam hands it the
+    // page ink on the `muted` surface instead, which is the pair the contrast
+    // table already measures at the body floor, and the table rule the `border`
+    // role a divider is held to.
+    const failures = shipped.flatMap(({ label, theme }) =>
+      documentPlacements(theme)
+        .filter(({ ratio, floor }) => ratio === undefined || ratio < floor)
+        .map(
+          ({ claim, ratio, floor }) =>
+            `${label} ${claim}: ${ratio?.toFixed(2) ?? "unmeasurable"} < ${floor}`,
+        ),
+    );
+
+    expect(failures).toEqual([]);
+
+    // A brand whose chip is its own ink paints one block: the report names it.
+    const flat = extendTheme(lightTheme, {
+      colors: { muted: lightTheme.colors.foreground },
+    });
+    const reported = documentPlacements(flat)
+      .filter(({ ratio, floor }) => ratio === undefined || ratio < floor)
+      .map(({ claim }) => claim);
+
+    expect(reported).toContain("inline code ink on its chip");
   });
 
   it("paints the value, placeholder and caret at their floors on every shipped theme and fill", () => {
@@ -485,6 +639,14 @@ describe("the diff host's colours", () => {
     expect(catalogue).toContain("### The diff host");
     expect(catalogue).toContain("`nativeDiffWash` (0.055)");
     expect(catalogue).toContain("`diffHunkBg`");
+    // The document host: a rendered document's type and its chip both come from
+    // the theme, and the page says which numbers still do not.
+    expect(catalogue).toContain("### The document host");
+    expect(catalogue).toContain("prose in a chip");
+    expect(catalogue).toContain("`diffTextSize`");
+    expect(catalogue).toContain(
+      "The native text host's **syntax palette** is not filled",
+    );
     // The placeholder is fixed by the runtime, so the seam and the page must say
     // so instead of promising a role the host never reads.
     expect(seam).toContain("#8F8F8F");

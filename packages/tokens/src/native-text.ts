@@ -26,6 +26,11 @@
  * own code metrics are 12.5/18 (`packages/native/src/theme.rs`'s `Metrics`),
  * which is not this library's scale.
  *
+ * A `<markdown>` host is the document host: its body and headings take the
+ * scale's own roles, its inline code is the page ink on a `muted` chip
+ * (`codeText`/`codeWash` — the runtime's violet is a second syntax palette this
+ * package does not own), and its table rules take `border`.
+ *
  * A `<diff>` host paints three more roles, and the runtime derives a row's wash
  * from one of them: an added line's ink is `diffAdd` with the row tinted
  * {@link nativeDiffWash} of that same colour over the fill, a removed line's is
@@ -70,14 +75,33 @@ export const nativeDiffWash = 0.055;
 /**
  * The layout numbers a native text host takes from the theme.
  *
- * A `<code>` host lays its block out with the runtime theme's code metrics
- * rather than with `StyleDesc`, so the type scale reaches it through here.
+ * A host lays its rows out from the runtime theme's metrics rather than from
+ * `StyleDesc`, so the type scale reaches it through here — the code block, a
+ * diff's rows and a rendered document's body and headings. The numbers this
+ * package has no token for (paddings, gutter widths, table column minima) stay
+ * the runtime's.
  */
 export interface NativeTextMetrics {
   /** Code type size in pixels, from `typography.codeBlock`. */
   readonly codeTextSize: number;
   /** Code line height in pixels, from `typography.codeBlock`. */
   readonly codeLineHeight: number;
+  /** A diff line's type size, from `typography.codeBlock`. */
+  readonly diffTextSize: number;
+  /** A diff line's leading, from `typography.codeBlock`. */
+  readonly diffLineHeight: number;
+  /** A rendered document's body size, from `typography.body`. */
+  readonly mdTextSize: number;
+  /** A rendered document's body leading, from `typography.body`. */
+  readonly mdLineHeight: number;
+  /** `[h1, h2, h3, h4to6]` sizes, from the scale's heading roles and `body`. */
+  readonly mdHeadingSizes: number[];
+  /** The same headings' leadings. */
+  readonly mdHeadingLineHeights: number[];
+  /** A markdown code card's corner, from `radius.lg`. */
+  readonly mdCodeRadius: number;
+  /** An inline code chip's corner, from `radius.sm`. */
+  readonly mdInlineCodeRadius: number;
 }
 
 /**
@@ -117,6 +141,15 @@ export interface NativeTextTheme {
   readonly diffHunkBg: string;
   /** The diff's file-path chrome, from `mutedForeground`. */
   readonly textDim: string;
+  /**
+   * An inline code run's ink: the page's own `foreground`, so a document's code
+   * reads as prose in a chip rather than as a second syntax palette.
+   */
+  readonly codeText: string;
+  /** The chip behind an inline code run, from `muted`. */
+  readonly codeWash: string;
+  /** Table rules and dividers a rendered document draws, from `border`. */
+  readonly border: string;
 }
 
 /**
@@ -154,6 +187,27 @@ export function nativeTextTheme(
     metrics: {
       codeTextSize: theme.typography.codeBlock.fontSize,
       codeLineHeight: theme.typography.codeBlock.lineHeight,
+      // A diff is code, so it follows the block role rather than the runtime's
+      // own 12/21: a brand that changes its code scale expects both.
+      diffTextSize: theme.typography.codeBlock.fontSize,
+      diffLineHeight: theme.typography.codeBlock.lineHeight,
+      // A rendered document is prose, so its body and headings are the scale's.
+      mdTextSize: theme.typography.body.fontSize,
+      mdLineHeight: theme.typography.body.lineHeight,
+      mdHeadingSizes: [
+        theme.typography.h1.fontSize,
+        theme.typography.h2.fontSize,
+        theme.typography.h3.fontSize,
+        theme.typography.body.fontSize,
+      ],
+      mdHeadingLineHeights: [
+        theme.typography.h1.lineHeight,
+        theme.typography.h2.lineHeight,
+        theme.typography.h3.lineHeight,
+        theme.typography.body.lineHeight,
+      ],
+      mdCodeRadius: theme.radius.lg,
+      mdInlineCodeRadius: theme.radius.sm,
     },
     // The tone's readable role, not its solid fill: the ink is painted as text
     // (a file's `+12`, a line's marker and number) and the same value is the
@@ -163,5 +217,11 @@ export function nativeTextTheme(
     diffDel: statusTone(theme, "destructive").foreground,
     diffHunkBg: theme.colors.muted,
     textDim: theme.colors.mutedForeground,
+    // Inline code is prose in a chip: the runtime's own violet ink and 10% wash
+    // are a second syntax palette no token owns, while the page ink on the muted
+    // surface is the pair the contrast table already measures at the body floor.
+    codeText: theme.colors.foreground,
+    codeWash: theme.colors.muted,
+    border: theme.colors.border,
   };
 }
