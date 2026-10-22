@@ -1428,6 +1428,25 @@ a workaround for two live sessions sharing one worktree; see
       expected) and 4 unit cases; `--only tabs-lifecycle` now measures
       `expected "tabs-overview", got "tabs-reports"`, so the probe flip is the
       playground's half of the interlock row
+    - [x] Publish the theming surface — `@gpuixui/components` published no
+      provider and no theme, and no document said where a component's theme
+      comes from, so an app whose manifest declares only the components package
+      (the repo's isolated linker resolves a package's dependencies for that
+      package, not for its consumers) painted the light theme with no reachable
+      dark one. The root now exports `ThemeProvider`, `useTheme`, `lightTheme`
+      and `darkTheme` from the existing seam — the token package's own functions
+      by identity, so there is still one provider — and `README.md` gains a
+      §Theming with a copyable wrapper, `docs/component-api.md` §3 states the
+      rule. `src/theme-provider.test.ts` (4) holds the identity, the published
+      surface and the section's snippet; `src/behaviour/theme-provider.test.tsx`
+      (2) mounts the imported provider and proves a card and a badge paint the
+      dark roles and repaint to light on a rerender. Both directions measured:
+      dropping the export fails the unit identity cases and makes the behaviour
+      suite throw on an undefined component, and renaming the section fails both
+      README cases (`expected '' to contain 'light theme'`). Behaviour 557/53,
+      unit 429/45, `check-types` green. Measured on the way:
+      `renderComponent` paints only the **last** root child (`<><Badge>A</Badge>
+      <Badge>B</Badge></>` reads `["B"]`), now recorded in `internal/test-root.tsx`
     - [x] Inventory test counts and the drifted rows — plan 139
     - [x] Tabs vertical orientation verified: axis keys, layout and manual activation — plan 321
     - [x] Toast actions: one labelled action with a provider-owned handler — plan 322

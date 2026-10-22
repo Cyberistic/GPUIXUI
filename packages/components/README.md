@@ -88,18 +88,51 @@ dependency fails by name instead of quietly adding load time to every consumer.
 `src/surface.budget.ts` is the record; regenerate it with the command above and
 state what moved.
 
+## Theming
+
+Every component reads its roles from the token package's theme, and the package
+root publishes the provider and both shipped themes, so one import themes the
+whole library:
+
+```tsx
+import { render } from "@gpuix/react";
+import { Card, ThemeProvider, darkTheme } from "@gpuixui/components";
+
+render(
+  <ThemeProvider theme={darkTheme}>
+    <Card>Resting on the dark card role</Card>
+  </ThemeProvider>,
+);
+```
+
+They are `@gpuixui/tokens`' own exports, not a second provider: a consumer that
+already wraps the app in `@gpuixui/tokens/react`'s `ThemeProvider` needs no
+change, and one that imports another copy would split the tree in two.
+Without a provider every component paints the light theme. `useTheme` reads the
+resolved theme where a part needs a role in its own style, and
+`createTheme`/`extendTheme` from `@gpuixui/tokens` own the extension mechanism —
+this package adds no theme of its own.
+
+GPUix exposes no OS appearance query, so the application owns the mode: read the
+theme from your own state and pass it down. `src/theme-provider.test.ts` holds
+the published surface and the snippet above, and
+`src/behaviour/theme-provider.test.tsx` proves a mounted card repaints when the
+provider's theme changes.
+
 ## Chrome marks
 
-Every mark a control paints — close, caret, chevron, check, ellipsis, tone — is
-an `Icon` from `@gpuixui/icons` inside the part's recipe-styled wrapper, tinted
+Every mark a control paints — close, caret, chevron, check, tone — is an
+`Icon` from `@gpuixui/icons` inside the part's recipe-styled wrapper, tinted
 with the token role that wrapper used to give its text. A mark that names a
 control is decorative (`role="presentation"`) because the control already
 carries the name; a mark that *is* the state (a toast's tone, a menu row's
 checked box, an accordion's Expand/Collapse) carries a `label` and is announced
-as an image. Placeholder ellipses, keycap chords and the confirmation dialog's
-busy `…` stay typography: they are punctuation, not chrome.
+as an image. Placeholder ellipses and keycap chords stay typography: they are
+punctuation, not chrome. The confirmation dialog's busy mark was the last
+painted stand-in and is now the `loader` icon, in the action's own label role.
 `src/behaviour/icons.test.tsx` measures the painted `<svg>` and sweeps the
-source for a returning text stand-in.
+source for a returning text stand-in — an ellipsis standing alone as an
+element's content, which the trailing one of a placeholder is not.
 
 A filled action paints `keyboardFocusDim: false`. The runtime dims every other
 focusable element to 40% while a keyboard user is on one, which composites a

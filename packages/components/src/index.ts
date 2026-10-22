@@ -49,3 +49,21 @@ export * from "./time-picker.js";
 export * from "./toast.js";
 
 export type { PartChildren } from "./internal/parts.js";
+
+/**
+ * The theming surface: the provider every component reads its roles from, and
+ * the two themes it ships with.
+ *
+ * A consumer who installs this package alone must be able to theme it — the
+ * isolated linker does not put `@gpuixui/tokens` in their reach — so the
+ * provider and the themes are published here. They are the token package's own
+ * exports, re-exported through the package's single seam; there is still one
+ * provider, not a second one.
+ */
+export {
+  ThemeProvider,
+  darkTheme,
+  lightTheme,
+  useTheme,
+  type Theme,
+} from "./internal/theme.js";

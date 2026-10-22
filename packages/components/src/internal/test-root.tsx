@@ -33,6 +33,12 @@ export interface ComponentTestRoot {
  * first root's tree reads as empty, which looks like a component that rendered
  * nothing. Measured on this host, 2026-10-17 — a theme test that held two roots
  * read `backgroundColor: undefined` for the first.
+ *
+ * A tree also paints its **last** root child alone: rendering
+ * `<><Badge>A</Badge><Badge>B</Badge></>` reads `["B"]`, and a provider wrapping
+ * a `Card` and a `Badge` paints only the badge. Measured 2026-10-22 while
+ * testing the published `ThemeProvider`, which is why that suite renders one
+ * root element and composes inside it.
  */
 let mounted = false;
 

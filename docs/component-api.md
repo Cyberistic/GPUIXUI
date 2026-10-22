@@ -84,7 +84,12 @@ a public state object instead:
   `orientation`, `selected` — and are the only vocabulary allowed.
 - Every token lookup goes through the theme seam (`internal/theme.ts`); a
   component never repeats a raw role name or writes a colour/shadow/radius
-  literal.
+  literal. The seam is also where a consumer gets the theme: the package root
+  publishes `ThemeProvider`, `useTheme`, `lightTheme` and `darkTheme` — the
+  token package's own exports, never a second context — so an app whose
+  manifest declares only `@gpuixui/components` can still theme it. Without a
+  provider a part paints the light theme; the values and the extension
+  mechanism (`createTheme`/`extendTheme`) stay in `@gpuixui/tokens`.
 - The runtime dims every other focusable element while one holds keyboard focus
   (`keyboardFocusDim`, 40%). On a **filled action** that composites the label
   into its own fill — 5.0–10.5:1 at rest becomes 1.3–3.2:1 on every strip — so
