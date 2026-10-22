@@ -22,7 +22,8 @@
  * steps sit at that edge (the base dark theme measured 4.96:1 on its popover
  * before any wash), so the light sets take a step darker (`#4B5362`) and the
  * dark sets a step lighter (`#C1C7D1`), and every platform and authored style
- * inherits the headroom. No wash strength changed.
+ * inherits the headroom. The one wash that changed is the high-contrast dark
+ * one — 30% to 26% — because its secondary text is held to the AAA floor.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
