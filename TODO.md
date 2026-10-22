@@ -5455,7 +5455,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 175/175
+`[x]` `[██████████]` 176/176
 
 `[x]` Name the **pinned column** the data lane ships, not only the rule it
 follows — `FrozenTable` landed in `@gpuixui/data` with a page at

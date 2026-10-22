@@ -94,6 +94,20 @@ describe("the source behind a package page", () => {
     expect(invented).toEqual([]);
   });
 
+  it("names the file it prints instead of a length nobody re-measures", () => {
+    // The policy used to say the accordion "prints 9,709 characters of
+    // `Switch.tsx`"; the file had grown to 9,943, so a reader was shown a
+    // measurement nobody re-ran. The block prints the file whole, so the
+    // policy names the file and leaves its length to the file.
+    const policy = read("docs/preview-strategy.md");
+
+    expect(policy).not.toMatch(/\d[\d,]* characters of/);
+    expect(policy).toContain("prints `Switch.tsx` in full");
+    expect(
+      read("packages/primitives/src/components/Switch.tsx").length,
+    ).toBeGreaterThan(0);
+  });
+
   it("is mounted on the package page frame, after the page it belongs to", () => {
     const view = read("apps/docs/src/lib/docs-view.tsx");
     const frame = view.slice(view.indexOf("function PackageContent"));

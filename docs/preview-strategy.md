@@ -149,7 +149,9 @@ set, **and the sampled pixel is the fill the batch set** — a blank frame captu
 perfectly well, so its existence proves nothing.
 
 Run it with `nub apps/docs/scripts/live-surface-probe.ts`; the frames land in
-`.artifacts/live/`, which is verification-only and gitignored.
+`.artifacts/live/`. They are **local evidence** for the run and nothing under
+`.artifacts/` is site content: read them, then **delete** the directory rather
+than staging it. (`TODO.md` tracks the missing `.gitignore` rule for it.)
 `scripts/live-frame.ts` is the frame contract it judges against, and
 `src/lib/live-frame.test.ts` holds both directions: a frame that reported itself
 healthy while its pixels were white fails by name.
@@ -212,8 +214,9 @@ nub run --filter @gpuixui/docs dev
 nub apps/docs/scripts/live-route-probe.ts
 ```
 
-Frames land in `.artifacts/live/docs-live-route-{before,after}.png`, which are
-verification-only and gitignored. Measured on 2026-10-22, macOS 15.8.1 x86_64,
+Frames land in `.artifacts/live/docs-live-route-{before,after}.png` as **local
+evidence**: read them, then **delete** the directory rather than staging it.
+Measured on 2026-10-22, macOS 15.8.1 x86_64,
 headless Google Chrome 155.0.8059.80 over SwiftShader: the button sampled
 `#a7a9ff` (`controlStyle`'s dark primary), the banner `#1e222a` (`muted`), and
 after a press `#0e5135` (`successSoft`) with the status reading "Pressed 1 time".
@@ -267,6 +270,11 @@ cannot ship a page the site does not show and the two cannot drift:
 | Primitives | `packages/primitives/docs` | `/docs/primitives` | Primitives |
 | Icons | `packages/icons/docs` | `/docs/icons` | Primitives |
 | Components | `packages/components/docs` | `/docs/components` | Components |
+| Data | `packages/data/docs` | `/docs/data-display` | Data display |
+
+The table is the mounted set, not an illustration: `package-docs.test.ts` reads
+it against `packageCollections` in both directions, so a collection the site mounts
+and this table omits fails, and so does a row no collection backs.
 
 Those pages are **strategy 4**: no browser rendering, the real API tables and
 limitations, and a note at the top naming the command that opens the companion
@@ -384,8 +392,11 @@ the mount sits on the package frame rather than the curated one. Measured both
 ways: removing the mount fails the frame case (`expected … to contain
 '<PackageSource url={url} />'`), and pointing the loader at another file fails
 the copy case with the wrong text. Verified in a browser on
-`/docs/primitives/switch`: the accordion opens, prints 9,709 characters of
-`Switch.tsx`, and the GitHub link is that file's own path.
+`/docs/primitives/switch`: the accordion opens, prints `Switch.tsx` in full — the
+same text the file holds, not a summary copy — and the GitHub link is that
+file's own path. The file is printed whole, so a character count here would be a
+second measurement of someone else's file; the policy names the file, not its
+length.
 
 ### The status strip is generated, not written
 
@@ -587,14 +598,16 @@ sizes, no keyboard path) is omitted rather than faked. Four sections are not
 optional on any component page, though — `## API`, an accessibility or
 limitations section, the evidence section (`## Verification` or `## Testing`)
 and `## Related` — and `src/lib/package-page-template.test.ts` holds every page
-under `packages/*/docs` to them, across all three collections. A page could
+under `packages/*/docs` to them, across every mounted collection. A page could
 otherwise lose its prop table or its accessibility budget while the site kept
 rendering it as the component's documentation. The guard scans 70+ pages with a
 floor, so a walk that stopped matching cannot pass. It found one page without
-`## Related` (`packages/components/docs/message-scroller.mdx`, owned by
-`components`); that gap is recorded in `TODO.md` and in the guard's own list,
-and the guard fails once the section is added, so the entry cannot outlive the
-fix.
+`## Related` (`packages/components/docs/message-scroller.mdx`); the page names
+its siblings now and `packages/components/src/docs.test.ts` holds every
+components page to a `## Related` section, so the defect is closed at its owner
+as well as here. The guard's known-gap ledger is the only place a gap lives,
+and it is empty today; a gap that is fixed deletes its entry in the same change
+— the ledger cannot outlive a fix.
 
 ## The getting-started page
 

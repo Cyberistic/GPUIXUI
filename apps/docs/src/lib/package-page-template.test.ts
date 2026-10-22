@@ -136,4 +136,24 @@ describe("the package page template", () => {
 
     expect(unowned.map((gap) => gap.page)).toEqual([]);
   });
+
+  it("keeps the policy's description of the ledger true", () => {
+    // The policy said the one page without `## Related` "is recorded in
+    // TODO.md and in the guard's own list" after the page had been fixed and
+    // the entry deleted, so a reader was sent to two empty ledgers. The policy
+    // has to describe the ledger it has, and the page it names has to keep the
+    // section it was fixed for.
+    const policy = readFileSync(
+      new URL("docs/preview-strategy.md", root),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(policy.includes("it is empty today")).toBe(knownGaps.length === 0);
+    expect(policy).not.toContain("that gap is recorded in `TODO.md`");
+
+    const messageScroller = pages.find((page) =>
+      page.path.endsWith("message-scroller.mdx"),
+    );
+    expect(messageScroller?.headings).toContain("Related");
+  });
 });

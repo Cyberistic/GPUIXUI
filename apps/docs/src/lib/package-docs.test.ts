@@ -103,6 +103,47 @@ describe("the package docs collections", () => {
     ).toEqual([]);
   });
 
+  it("name every mounted collection in the policy's table", () => {
+    // `docs/preview-strategy.md`'s table is what an author reads before
+    // mounting a docs directory, so it is the mount list's other copy: a
+    // collection the site mounts and the table omits leaves the policy
+    // describing three of four sections, and a row no collection backs sends a
+    // reader looking for a route that does not exist.
+    const policy = readFileSync(
+      new URL("docs/preview-strategy.md", root),
+      "utf8",
+    );
+    const start = policy.indexOf("### Pages the package writes");
+    const end = policy.indexOf("### The dependency line", start);
+    const documented = policy
+      .slice(start, end)
+      .split("\n")
+      .filter((line) => line.startsWith("| ") && line.includes("`packages/"))
+      .map((line) =>
+        line
+          .split("|")
+          .map((cell) => cell.trim())
+          .slice(1, -1),
+      )
+      .flatMap(([, dir, route, section]) =>
+        dir === undefined || route === undefined || section === undefined
+          ? []
+          : [
+              `${dir.replaceAll("`", "")} ${route.replaceAll("`", "")} ${section}`,
+            ],
+      )
+      .toSorted();
+
+    expect(documented).toEqual(
+      packageCollections
+        .map(
+          (collection) =>
+            `${collection.dir} ${collection.route} ${collection.section}`,
+        )
+        .toSorted(),
+    );
+  });
+
   /**
    * The curated pages the site writes in place of the package's page. The site
    * goes deeper on these and owns their URL, so the package file is shadowed by
