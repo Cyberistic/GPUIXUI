@@ -1464,6 +1464,55 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain('align="start"');
   });
 
+  it("records what `aspectRatio` fills, derived from its fixture", () => {
+    // The record called `aspectRatio` supported on the strength of a type
+    // declaration, and a window reports no style — so only a painted box says
+    // which dimension the ratio fills. `aspect-ratio-paint` measured each axis,
+    // both definite dimensions, and the two container stretches; the geometry
+    // it printed is derived here from the fixture's own constants, so a record
+    // that teaches a size the probe no longer paints fails by name.
+    const fixture = read("apps/playground/src/live/aspect-ratio.ts");
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d.]+);`).exec(fixture)?.[1] ??
+          Number.NaN,
+      );
+    const ratio = constant("ASPECT_RATIO");
+    const width = constant("ASPECT_WIDTH");
+    const height = constant("ASPECT_HEIGHT");
+    const portraitWidth = constant("ASPECT_PORTRAIT_WIDTH");
+    const portraitRatio = constant("ASPECT_PORTRAIT_RATIO");
+    const columnWidth = constant("ASPECT_COLUMN_WIDTH");
+    const rowHeight = constant("ASPECT_ROW_HEIGHT");
+    const box = (w: number, h: number): string =>
+      `${Math.round(w)}×${Math.round(h)}`;
+
+    const aspect = rowFor("`aspectRatio`");
+    expect(aspect?.verdict).toBe("supported, with limits");
+    expect(aspect?.evidence).toContain("aspect-ratio-paint");
+    expect(aspect?.evidence).toContain(box(width, width / ratio));
+    expect(aspect?.evidence).toContain(
+      box(portraitWidth, portraitWidth / portraitRatio),
+    );
+    expect(aspect?.evidence).toContain(box(height * ratio, height));
+    expect(aspect?.evidence).toContain(box(width, height));
+    expect(aspect?.evidence).toContain(box(columnWidth, columnWidth / ratio));
+    expect(aspect?.evidence).toContain(box(0, rowHeight));
+    expect(aspect?.evidence).toContain("no width");
+    expect(aspect?.workaround).toContain("one axis open");
+
+    const page = measuredRow("Aspect ratio");
+    expect(
+      page,
+      "the page's measured table has no aspect-ratio row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("aspect-ratio-paint");
+    expect(page?.[1]).toContain(box(width, width / ratio));
+    expect(page?.[1]).toContain(box(height * ratio, height));
+    expect(page?.[1]).toContain(box(0, rowHeight));
+    expect(page?.[2]).toContain("height");
+  });
+
   it("records the Select reveal gap a window and a runtime suite measured", () => {
     // `Select` is named in §2 as provided, so the record read as "a Select is
     // just a wrapper". A window measured the overlay half (`select-lifecycle`)
