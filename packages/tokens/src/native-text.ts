@@ -109,6 +109,13 @@ export interface NativeTextMetrics {
   readonly mdHeadingLineHeights: number[];
   /** A markdown code card's corner, from `radius.lg`. */
   readonly mdCodeRadius: number;
+  /**
+   * The language strip a fence paints above its code, from `caption`. The
+   * runtime's own is `11` (`packages/native/src/theme.rs`'s `Metrics`), a size
+   * no role in the scale carries, so a brand's quiet label role stopped at the
+   * one label a document paints.
+   */
+  readonly mdCodeHeaderTextSize: number;
   /** An inline code chip's corner, from `radius.sm`. */
   readonly mdInlineCodeRadius: number;
 }
@@ -241,6 +248,10 @@ export function nativeTextTheme(
         theme.typography.body.lineHeight,
       ],
       mdCodeRadius: theme.radius.lg,
+      // A fence's language strip is a quiet label rather than code, so it
+      // follows the scale's label role; the runtime's own 11 belongs to no role
+      // and would stay put while the rest of a brand's type moved.
+      mdCodeHeaderTextSize: theme.typography.caption.fontSize,
       mdInlineCodeRadius: theme.radius.sm,
     },
     // The tone's readable role, not its solid fill: the ink is painted as text

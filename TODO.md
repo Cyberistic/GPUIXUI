@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 157/157
+`[x]` `[██████████]` 158/158
 
 `[x]` Retract the **adoption claims both mechanisms had already closed** — `docs/tokens.md` §The fade and `docs/design-system.md` §8 both ended by sending a reader to fix "the two recipe sets and the components' `Button`", while the primitives' recipe bucket already paints `disabled:bg-disabled disabled:text-disabled-foreground` and `packages/components/src/internal/button.tsx` translates the primitives' action and writes no opacity of its own; `docs/tokens.md` §The dim called the opt-out "an interlock row in `TODO.md`" after both packages had declared it. Read from the source: `core/focus.ts` exports `keepContent`, `components/Button.tsx` merges it for a variant `paintsFilledSurface` calls filled, a field host declares it, and the components package re-states the rule in `internal/theme.ts`, so a filled action and a field keep their text and only an unfilled action keeps the cue. The one recipe set still on a whole-control fade is `@gpuixui/tw`'s copyable `button` recipe (`disabled:opacity-50`), kept verbatim from shadcn and **not** what the library's action compiles; the unfilled parts of `core/style.ts` fade because they have no fill to replace. Both pages now say that, and the `COMPONENTS.md` `Contrast contract` row no longer claims the components' `Button` paints the ghost fade through `opacity: disabledOpacity` (the file contains no `opacity` at all). `disabled.test.ts`'s `names the one recipe set still on the fade, not two and a Button` reads the three painters, refuses the retracted sentence and holds the inventory row; `focus-dim.test.ts`'s `states the opt-out as landed in both packages` reads `keepContent` at its sites and refuses the dim's interlock sentence. The same retraction covers §Limitations' "`@gpuixui/tw` `button` recipe the components package compiles against" clause — it is the copyable upstream recipe, not the library's action — held by `docs.test.ts`'s `says the tw recipe is the copyable one, not the library's action`. Directions measured: restoring the fade sentence fails the disabled case by name, restoring the dim sentence fails the focus-dim case by name, restoring "compiles against" fails the docs case, and restored the package suite is green (43 files / 2 464 tests).
 
@@ -927,6 +927,24 @@ from the table fails the package's type-check (TS2741 naming `selection`).
 `nub run --filter @gpuixui/tokens test`: 43 files / 2 466 tests green;
 `check-types` clean. `docs/tokens.md` §System palettes says every field is
 compared.
+
+`[x]` Size a **code card's language strip** from the type scale — a `<markdown>`
+fence paints the language it was tagged with on a strip above the block, and the
+runtime sizes that strip from its own `md_code_header_text_size` (`11` at the
+pinned `@gpuix/native@0.11.0`, `packages/native/src/theme.rs`'s `Metrics`), a
+size no role in the scale carries: the seam handed the block's `codeBlock` size
+and leading but left the label over it at 11, so a brand's type scale stopped at
+the one label a document paints. `NativeTextMetrics` gains
+`mdCodeHeaderTextSize`, filled from `typography.caption` — a quiet label over the
+block, not code — and the runtime reads it (`MetricsOverride` is
+`rename_all = "camelCase"`, so the field lands). `native-text.test.ts` gains
+`sizes a code card's language strip from the scale` (the role, the shipped value
+is not the runtime's 11, and a brand that raises `caption` to 15 moves it), the
+two full-object literals and the per-theme drift table carry the new field, and
+the page case requires the catalogue's row. Directions measured: deleting the
+fill fails three cases by name (both full-object comparisons, printing
+`- "mdCodeHeaderTextSize": 12`, and the new case). Docs in `docs/tokens.md`
+§Native text hosts (a table row and the paragraph beside it).
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 

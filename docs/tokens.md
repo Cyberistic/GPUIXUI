@@ -2562,6 +2562,7 @@ property beside the object (§What a field's value actually paints):
 | `metrics.mdTextSize` / `mdLineHeight` | `typography.body`'s size / leading |
 | `metrics.mdHeadingSizes` / `mdHeadingLineHeights` | `h1`/`h2`/`h3` then `body` |
 | `metrics.mdCodeRadius` / `mdInlineCodeRadius` | `radius.lg` / `radius.sm` |
+| `metrics.mdCodeHeaderTextSize` | `typography.caption`'s size — a fence's language strip |
 
 A `<code>` host is the one host whose **type** also comes from the theme object:
 the runtime sizes a code block from the theme's own metrics — an element's
@@ -2570,7 +2571,10 @@ the runtime sizes a code block from the theme's own metrics — an element's
 — not this library's scale. The seam hands over `typography.codeBlock`'s size and
 leading, so a brand's block role reaches the host instead of stopping at it; the
 gutter widths stay the runtime's, because this package has no tokens for them
-(§Limitations). The **syntax palette is this package's**: `host.syntax` carries
+(§Limitations). The fence's **language strip** is the second size the host owns:
+the runtime paints it at its own `11`, a size no role carries, so the seam hands
+`typography.caption`'s — a quiet label over the block, which moves with a brand's
+scale. The **syntax palette is this package's**: `host.syntax` carries
 one colour per token type, and §[Syntax palette](#syntax-palette) is that scale.
 
 ### The diff host

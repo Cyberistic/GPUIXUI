@@ -131,6 +131,7 @@ describe("nativeTextTheme", () => {
           lightTheme.typography.body.lineHeight,
         ],
         mdCodeRadius: lightTheme.radius.lg,
+        mdCodeHeaderTextSize: lightTheme.typography.caption.fontSize,
         mdInlineCodeRadius: lightTheme.radius.sm,
       },
       diffAdd: lightTheme.colors.successSoftForeground,
@@ -246,6 +247,7 @@ describe("nativeTextTheme", () => {
         typography.body.lineHeight,
       ],
       mdCodeRadius: lightTheme.radius.lg,
+      mdCodeHeaderTextSize: typography.caption.fontSize,
       mdInlineCodeRadius: lightTheme.radius.sm,
     });
 
@@ -307,6 +309,11 @@ describe("nativeTextTheme", () => {
           ].join(),
         ],
         ["mdCodeRadius", metrics.mdCodeRadius, theme.radius.lg],
+        [
+          "mdCodeHeaderTextSize",
+          metrics.mdCodeHeaderTextSize,
+          typography.caption.fontSize,
+        ],
         ["mdInlineCodeRadius", metrics.mdInlineCodeRadius, theme.radius.sm],
       ];
       return wanted
@@ -432,6 +439,26 @@ describe("nativeTextTheme", () => {
     );
   });
 
+  it("sizes a code card's language strip from the scale", () => {
+    // A fence's language strip is a label over the block, and the runtime sizes
+    // it from `md_code_header_text_size` — `11` at the pinned release
+    // (`packages/native/src/theme.rs`) — which no role in the scale carries. A
+    // seam that left it to the runtime painted a brand's code card header at a
+    // size the brand never chose, while the block under it followed the scale.
+    const metrics = nativeTextTheme(lightTheme).metrics;
+    expect(metrics.mdCodeHeaderTextSize).toBe(
+      lightTheme.typography.caption.fontSize,
+    );
+    expect(metrics.mdCodeHeaderTextSize).not.toBe(11);
+
+    const rescaled = nativeTextTheme(
+      extendTheme(lightTheme, {
+        typography: { caption: { fontSize: 15, lineHeight: 19 } },
+      }),
+    ).metrics;
+    expect(rescaled.mdCodeHeaderTextSize).toBe(15);
+  });
+
   it("teaches the code host's type, not only its palette", () => {
     // A `<code>` host is the one host whose type comes from the theme object, so
     // a reader has to know both what the seam fills in and why the runtime's own
@@ -443,6 +470,9 @@ describe("nativeTextTheme", () => {
 
     expect(catalogue).toContain(
       "| `metrics.codeTextSize` / `codeLineHeight` | `typography.codeBlock`'s size / leading |",
+    );
+    expect(catalogue).toContain(
+      "| `metrics.mdCodeHeaderTextSize` | `typography.caption`'s size — a fence's language strip |",
     );
     expect(catalogue).toContain("its default is 12.5/18");
     expect(catalogue).toContain("syntax palette");
