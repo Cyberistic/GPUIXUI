@@ -42,7 +42,9 @@ describe("the install blocks", () => {
   it("find a block on every page that walks a reader through installing", () => {
     // A silent zero would pass every case below without reading a page.
     expect(blocks().length).toBeGreaterThanOrEqual(6);
-    expect(new Set(blocks().map((block) => block.page)).size).toBeGreaterThanOrEqual(6);
+    expect(
+      new Set(blocks().map((block) => block.page)).size,
+    ).toBeGreaterThanOrEqual(6);
   });
 
   it("name a package the workspace publishes", { timeout: 20_000 }, () => {
@@ -51,22 +53,30 @@ describe("the install blocks", () => {
     expect(
       blocks()
         .filter((block) => !published.has(block.packageName))
-        .map((block) => `${block.page}: ${block.packageName} is not an entry point`),
+        .map(
+          (block) =>
+            `${block.page}: ${block.packageName} is not an entry point`,
+        ),
     ).toEqual([]);
   });
 
-  it("import a symbol the package exports from its root", { timeout: 20_000 }, () => {
-    const published = publishedNames();
+  it(
+    "import a symbol the package exports from its root",
+    { timeout: 20_000 },
+    () => {
+      const published = publishedNames();
 
-    expect(
-      blocks().flatMap((block) => {
-        const exported = published.get(block.packageName) ?? new Set<string>();
-        return exported.has(block.importName)
-          ? []
-          : [
-              `${block.page}: ${block.packageName} does not export ${block.importName}`,
-            ];
-      }),
-    ).toEqual([]);
-  });
+      expect(
+        blocks().flatMap((block) => {
+          const exported =
+            published.get(block.packageName) ?? new Set<string>();
+          return exported.has(block.importName)
+            ? []
+            : [
+                `${block.page}: ${block.packageName} does not export ${block.importName}`,
+              ];
+        }),
+      ).toEqual([]);
+    },
+  );
 });

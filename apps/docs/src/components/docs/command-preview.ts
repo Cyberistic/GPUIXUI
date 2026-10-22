@@ -105,9 +105,7 @@ export const fuzzyScore = (query: string, text: string): number | undefined => {
  * their first appearance in the action list, each group ranked by score and
  * then declaration order. An empty query keeps declaration order.
  */
-export const commandMatches = (
-  query: string,
-): ReadonlyArray<CommandAction> => {
+export const commandMatches = (query: string): ReadonlyArray<CommandAction> => {
   const scored = commandActions.flatMap((action, index) => {
     const score = fuzzyScore(query, action.label);
     return score === undefined ? [] : [{ action, score, index }];
@@ -117,7 +115,9 @@ export const commandMatches = (
   return groups.flatMap((group) =>
     scored
       .filter(({ action }) => action.group === group)
-      .toSorted((left, right) => right.score - left.score || left.index - right.index)
+      .toSorted(
+        (left, right) => right.score - left.score || left.index - right.index,
+      )
       .map(({ action }) => action),
   );
 };

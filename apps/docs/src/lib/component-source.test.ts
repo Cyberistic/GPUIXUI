@@ -93,7 +93,9 @@ describe("the component source accordions", () => {
       const registered = paths.get(name);
       return registered === file
         ? []
-        : [`${page}: "${name}" prints ${file}, the registry imports ${registered ?? "nothing"}`];
+        : [
+            `${page}: "${name}" prints ${file}, the registry imports ${registered ?? "nothing"}`,
+          ];
     });
 
     expect(mismatched).toEqual([]);

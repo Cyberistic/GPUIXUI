@@ -116,7 +116,9 @@ describe("the curated component pages", () => {
     // keyboard contract and stay green. The table is parsed rather than trusted,
     // so a renamed or reordered row fails here too.
     const declared = policySections();
-    const undeclared = required.filter((section) => !declared.includes(section));
+    const undeclared = required.filter(
+      (section) => !declared.includes(section),
+    );
     expect(
       undeclared,
       "the template policy has no row for these required sections",
