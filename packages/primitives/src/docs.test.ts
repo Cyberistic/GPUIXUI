@@ -434,6 +434,65 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("gives the fields' missing cap its measured cause", () => {
+    // Bug guarded: `input.mdx` listed `maxLength` among the props it does not
+    // expose with no reason, so a reader could not tell an unwritten feature
+    // from one the runtime forbids. The runtime applies a field's `value` only
+    // when it **changes**, so a correction that leaves the value where it was —
+    // a five-character cap refusing the sixth — is never taken back from the
+    // box, and the next edit hands the refused character over. The fields'
+    // runtime suite measures both directions; the pages say so, point at it, and
+    // no page may list a cap as a prop.
+    const input = read("input.mdx");
+    const limitations = Option.getOrElse(
+      bodyOf(input, "Limitations"),
+      () => "",
+    );
+    const theming = Option.getOrElse(bodyOf(input, "Theming"), () => "");
+    const textarea = Option.getOrElse(
+      bodyOf(read("textarea.mdx"), "Limitations"),
+      () => "",
+    );
+    const numberField = Option.getOrElse(
+      bodyOf(read("number-field.mdx"), "Limitations"),
+      () => "",
+    );
+    const evidence = readFileSync(
+      fileURLToPath(
+        new URL("../runtime/fields.runtime.test.tsx", import.meta.url),
+      ),
+      "utf8",
+    );
+
+    expect({
+      rule: theming.includes("re-applies that text only when it"),
+      cause: limitations.includes("only when it **changes**"),
+      refusal: limitations.includes("cannot be taken back from the box"),
+      reports: limitations.includes("`abcde`, `abcdef`, `abcdefg`"),
+      citation: limitations.includes("runtime/fields.runtime.test.tsx"),
+      textarea: textarea.includes("same measured limit as `Input`"),
+      numberField: numberField.includes("only when it changes"),
+      applied: evidence.includes(
+        "applies a value the field's owner pushes mid-edit",
+      ),
+      refused: evidence.includes(
+        "cannot take back an edit that leaves the owner's value where it was",
+      ),
+      offered: documentedProps(input).includes("maxLength"),
+    }).toEqual({
+      rule: true,
+      cause: true,
+      refusal: true,
+      reports: true,
+      citation: true,
+      textarea: true,
+      numberField: true,
+      applied: true,
+      refused: true,
+      offered: false,
+    });
+  });
+
   it("is indexed by the package's own page table", () => {
     const index = read("README.md");
     const linked = Arr.filterMap(

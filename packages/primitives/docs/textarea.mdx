@@ -86,6 +86,11 @@ input. See `Input` §Theming for the measurement and the faded disabled hint.
 ## Limitations
 
 - **No `onSubmit`** — by design; see `runtime/fields.runtime.test.tsx`.
+- **No `maxLength`, filter or mask**: the same measured limit as `Input` — a
+  field's `value` reaches the box only when it changes, so an edit whose
+  correction leaves the value where it was cannot be taken back. See
+  `Input` §Theming/§Limitations; both directions are measured by
+  `runtime/fields.runtime.test.tsx`.
 - No rich text, no markdown preview, no character counter.
 - No auto-grow beyond `maxRows`: past it the field scrolls.
 - `disabled` is read-only at the host plus tab-order and handler guards, because

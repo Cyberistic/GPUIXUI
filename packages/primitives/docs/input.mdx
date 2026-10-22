@@ -145,11 +145,32 @@ readable while Tab is elsewhere; the ring still says where the keyboard focus
 is. `style` merges last, so an application that wants the cue on a field can put
 it back.
 
+**A correction reaches the box only when it moves the value.** The host is given
+the owner's text as `value`, and the runtime re-applies that text only when it
+changed. An owner that normalises every edit therefore works while the
+normalised text differs from what the box holds — trimming, reformatting,
+clamping into a range — but the edit that leaves the value where it was is never
+sent back: the box keeps the character just typed. That is why this field offers
+no `maxLength` and no filter: a cap whose sixth character is refused is exactly
+that edit. The honest composition is a counting hint beside the field (a
+`Text role="caption"` with the length and the limit) plus boundary validation,
+or a controlled field whose owner moves the value on every accepted edit.
+`examples/form.example.tsx` is that composition — the project name counts past
+sixty, marks the field invalid and the action refuses to save.
+
 ## Limitations
 
-- No `type`, `maxLength`, `inputMode` or `pattern`: the component exposes a
-  string field, not every native attribute. Validate with `Schema` at the
-  boundary.
+- **No `maxLength`, filter or mask** — the runtime applies a field's `value`
+  only when it **changes**, so a correction that leaves the value where it was
+  cannot be taken back from the box: an owner clamping five characters reports
+  `abcde` while the native box keeps the sixth character and hands it back on the
+  next edit (the reports run `abcde`, `abcdef`, `abcdefg`). A change that moves
+  the value is applied, so formatting or clamping a value still shows. A hard cap
+  is a counting hint beside the field plus validation at the boundary;
+  `runtime/fields.runtime.test.tsx` measures both directions, so this note dies
+  with a runtime that re-applies an unchanged value. See §Theming for the rule.
+- No `type`, `inputMode` or `pattern`: the host takes `value`, `readOnly`,
+  `theme` and its events — nothing else. Validate with `Schema` at the boundary.
 - `disabled` is emulated: the runtime exposes no `disabled` host prop (plan
   025). The component forwards `readOnly`, drops the field from the tab order
   and guards its handlers; the accessibility difference is the limitation above.

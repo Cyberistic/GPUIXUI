@@ -17,7 +17,7 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { createRef } from "react";
+import { createRef, useState } from "react";
 import type { PublicInstance } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
 import { Box } from "../src/components/Box.js";
@@ -212,6 +212,76 @@ it("gives a controlled Input's owner the value after each edit", async () => {
   );
   runtime.type("a b");
   expect(lastValue(field.values)).toBe("ab");
+});
+
+it("applies a value the field's owner pushes mid-edit", async () => {
+  // The owner correcting an edit can only take the box back when the value it
+  // pushes **moves**: the next reported edit proves what the native box holds,
+  // so an owner that replaces "a" with "X" must read "Xb" on the next key.
+  const runtime = await openWindow();
+  const values: string[] = [];
+  const Owner = () => {
+    const [text, setText] = useState("");
+    return (
+      <Surface>
+        <Input
+          testId="field"
+          label="Name"
+          autoFocus
+          value={text}
+          onChange={(next) => {
+            values.push(next);
+            setText("X");
+          }}
+        />
+      </Surface>
+    );
+  };
+  runtime.render(<Owner />);
+  runtime.type("a");
+  runtime.type("b");
+  expect(values).toStrictEqual(["a", "Xb"]);
+});
+
+it("cannot take back an edit that leaves the owner's value where it was", async () => {
+  // The measured limit behind the fields' missing `maxLength` (and every filter
+  // or mask that removes the character just typed): a `value` is applied only
+  // when it **changes**, so an owner clamping five characters reports the
+  // truncated value while the native box keeps the sixth character and hands it
+  // back on the next edit. A field that promised a hard cap would paint text its
+  // own value does not contain. Guarded so the pages' claim fails with the
+  // runtime: if a value is re-applied without changing, this case goes red and
+  // `Input`/`TextArea` may start offering a cap.
+  const runtime = await openWindow();
+  const values: string[] = [];
+  const Capped = () => {
+    const [text, setText] = useState("");
+    return (
+      <Surface>
+        <Input
+          testId="field"
+          label="Code"
+          autoFocus
+          value={text}
+          onChange={(next) => {
+            values.push(next);
+            setText(next.slice(0, 5));
+          }}
+        />
+      </Surface>
+    );
+  };
+  runtime.render(<Capped />);
+  runtime.type("a b c d e f g");
+  expect(values).toStrictEqual([
+    "a",
+    "ab",
+    "abc",
+    "abcd",
+    "abcde",
+    "abcdef",
+    "abcdefg",
+  ]);
 });
 
 it("refuses to edit or submit a disabled Input", async () => {

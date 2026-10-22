@@ -120,6 +120,25 @@ it("creates through the form example's busy action", async () => {
   ).toBe("62%");
 });
 
+it("counts the form example's name and refuses a name past its limit", async () => {
+  // The composition the field pages recommend instead of a `maxLength`: the
+  // runtime cannot take a refused character back (a `value` is applied only
+  // when it changed), so the form counts as the reader types and the action
+  // refuses what is too long. Measured through the painted caption, not a
+  // declared prop.
+  const runtime = await openWindow();
+  renderExample(runtime, "form");
+  expect(Option.getOrUndefined(runtime.text("form-example-name-count"))).toBe(
+    "5 of 60 characters",
+  );
+  runtime.type(Arr.join(Arr.replicate("a", 58), " "));
+  expect(Option.getOrUndefined(runtime.text("form-example-name-count"))).toBe(
+    "63 of 60 characters",
+  );
+  runtime.click("form-example-save");
+  expect(runtime.allText()).not.toContain("Creating project");
+});
+
 it("pauses through the selection example's switch", async () => {
   const runtime = await openWindow();
   renderExample(runtime, "selection");

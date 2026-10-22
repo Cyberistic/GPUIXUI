@@ -47,6 +47,12 @@ const NAME = copy("Project name", "Shown in the workspace switcher.");
 const OWNER = copy("Owner email", "The person who receives access requests.");
 const NOTES = copy("Description", "Markdown is not interpreted.");
 
+/** A project name longer than this is refused by the action, not the field. */
+const NAME_LIMIT = 60;
+
+/** Whether the name is past the length the action accepts. */
+const overLimit = (name: string): boolean => name.length > NAME_LIMIT;
+
 /** A form with four controls, a byte-sized progress state and a busy action. */
 export const FormExample = (): ReactElement => {
   const [name, setName] = useState("Atlas");
@@ -81,8 +87,19 @@ export const FormExample = (): ReactElement => {
             placeholder="Atlas"
             autoFocus
             fullWidth
+            invalid={overLimit(name)}
             testId="form-example-name"
           />
+          {/* The runtime applies a field's `value` only when it changed, so a
+              cap cannot take the sixty-first character back; the form counts and
+              refuses instead (`docs/input.mdx` §Theming). */}
+          <Text
+            role="caption"
+            tone={overLimit(name) ? "destructive" : "muted"}
+            testId="form-example-name-count"
+          >
+            {`${name.length} of ${NAME_LIMIT} characters`}
+          </Text>
         </Stack>
 
         <Stack direction="column" gap="2xs">
@@ -155,6 +172,7 @@ export const FormExample = (): ReactElement => {
           <Button
             variant="primary"
             loading={saving}
+            disabled={overLimit(name)}
             onActivate={() => setSaving(true)}
             testId="form-example-save"
           >

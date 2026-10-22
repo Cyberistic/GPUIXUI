@@ -173,8 +173,11 @@ so a caller that composes its own parts still gets the hint.
   guessed at; a locale decimal needs `formatValue` for display and parsing
   before the value reaches the field.
 - **No `type="number"`, `inputMode` or `maxLength`.** The host input takes
-  `value`, `readOnly`, `theme` and its events — nothing else, and the hint is the
-  field's own painted `<text>` (one line, clipped at the field's edge).
+  `value`, `readOnly`, `theme` and its events — nothing else, and a cap cannot be
+  laid on top: the runtime applies a field's `value` only when it changes, so a
+  refused character stays in the box (`Input` §Theming measures both directions
+  with `runtime/fields.runtime.test.tsx`). The hint is the field's own painted
+  `<text>` (one line, clipped at the field's edge).
 - **No drag-to-scrub.** The runtime has the coordinates, bounds and pointer
   capture for it (a track that listens to `mouseDown` and `mouseMove` keeps its
   moves outside its box — measured by the `pointer-capture` probe), so this is a
