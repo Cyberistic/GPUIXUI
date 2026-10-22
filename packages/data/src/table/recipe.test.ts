@@ -62,10 +62,19 @@ describe("the table recipes", () => {
     expect(style.color).toBe(lightTheme.colors.selectedForeground);
   });
 
-  it("keeps the selection wash under the pointer only on a chosen row", () => {
-    const selected = classesToStyle(TABLE_ROW_SELECTED, darkTheme).style;
+  it("leaves a chosen row's pointer states to the row, not the recipe", () => {
+    const chosen = classesToStyle(TABLE_ROW_SELECTED, darkTheme).style;
     const interactive = classesToStyle(TABLE_ROW_INTERACTIVE, darkTheme).style;
-    expect(selected.hover).toBeUndefined();
+
+    // The chosen recipe paints the fill and nothing else: a row's press state is
+    // the *derived* wash over the hover it replaces (`pointerWash`), which a
+    // class string cannot express.
+    expect(chosen.backgroundColor).toBe(darkTheme.colors.selected);
+    expect(chosen.hover).toBeUndefined();
+    expect(chosen.active).toBeUndefined();
+    expect(chosen.cursor).toBeUndefined();
+
+    // An unchosen pressable row answers with the plain hover wash.
     expect(interactive.hover?.backgroundColor).toBe(darkTheme.colors.hover);
   });
 

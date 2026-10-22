@@ -41,7 +41,7 @@ import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import type { ReactNode, Ref } from "react";
 import { recipeStyle } from "../recipe.js";
-import { useTheme } from "../theme.js";
+import { pointerWash, useTheme } from "../theme.js";
 import {
   reportBoth,
   TableFrameProvider,
@@ -313,8 +313,9 @@ export interface TableRowProps extends Omit<Props, "children"> {
  * One row.
  *
  * A row with a press handler answers the pointer (a hover wash and a pointer
- * cursor); a chosen row keeps the selection wash under the pointer instead, so
- * a reader can see what is chosen while moving across the grid.
+ * cursor); a chosen row answers it a step off the selection fill (`accent`,
+ * and the derived press wash over it), so the pointer can see the record it is
+ * over while the row keeps saying which record is chosen.
  *
  * A press stops at the **first child that paints a fill**, not at the innermost
  * handler (`press-routing-lifecycle`: filled `text` ran none, an unfilled one
@@ -334,12 +335,13 @@ export const TableRow = ({
   ...rest
 }: TableRowProps) => {
   const theme = useTheme();
+  const interactive = onClick !== undefined && disabled !== true;
   const recipe =
     selected === true
       ? TABLE_ROW_SELECTED
-      : onClick === undefined || disabled === true
-        ? TABLE_ROW
-        : TABLE_ROW_INTERACTIVE;
+      : interactive
+        ? TABLE_ROW_INTERACTIVE
+        : TABLE_ROW;
   return (
     <div
       {...rest}
@@ -352,6 +354,22 @@ export const TableRow = ({
         mergeStyles(recipeStyle(cn(recipe, className), theme), {
           borderBottomWidth: theme.borderWidth.thin,
           borderColor: theme.colors.border,
+          // A chosen row answers the pointer too: the selection fill says which
+          // record is chosen, and the `accent` wash a step off it says the
+          // pointer is on it. The press takes the wash derived over the hover,
+          // because a palette's own `active` role can sit under the
+          // perceptibility floor beside the `accent` it replaces.
+          ...(selected === true && interactive
+            ? {
+                cursor: "pointer",
+                hover: { backgroundColor: theme.colors.accent },
+                active: {
+                  backgroundColor:
+                    pointerWash(theme, "active", "accent") ??
+                    theme.colors.active,
+                },
+              }
+            : {}),
         }),
         style,
       )}

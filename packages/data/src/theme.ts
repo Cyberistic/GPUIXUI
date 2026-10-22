@@ -10,7 +10,7 @@
 import type { Theme } from "@gpuixui/tokens";
 import { useTheme as useTokenTheme } from "@gpuixui/tokens/react";
 
-export { controlFocusRing, textStyle } from "@gpuixui/tokens";
+export { controlFocusRing, pointerWash, textStyle } from "@gpuixui/tokens";
 export type { Theme };
 
 /**

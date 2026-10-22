@@ -31,6 +31,21 @@ export const requireBounds = (root: DataTestRoot, testId: string): Bounds =>
     throw new Error(`behaviour: no element with testId "${testId}"`);
   });
 
+/** The resolved style of `testId`, or the suite fails with the id it looked for. */
+export const requireStyle = (
+  root: DataTestRoot,
+  testId: string,
+): Record<string, unknown> =>
+  Option.getOrElse(
+    Option.map(
+      Option.fromNullishOr(root.renderer.findByTestId(testId)),
+      (element) => element.style,
+    ),
+    () => {
+      throw new Error(`behaviour: no element with testId "${testId}"`);
+    },
+  );
+
 /** Click the centre of `testId` through the runtime's real hit testing. */
 export const clickCentreOf = (root: DataTestRoot, testId: string): void => {
   const { x, y, width, height } = requireBounds(root, testId);

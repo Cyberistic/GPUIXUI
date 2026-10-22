@@ -20,9 +20,10 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { afterEach, describe, expect, it } from "vitest";
-import { darkTheme } from "@gpuixui/tokens";
+import { darkTheme, pointerWash } from "@gpuixui/tokens";
 import { TableExample } from "../../examples/table.example.js";
 import { TableColumnDivider } from "../columns/divider.js";
+import { requireStyle } from "../internal/interaction.js";
 import {
   renderData,
   settle,
@@ -127,6 +128,40 @@ describe("the example table", () => {
       root.renderer.findByTestId("files-row-file-3")?.style.backgroundColor,
     ).toBe(darkTheme.colors.selected);
     expect(readout(root)).toContain("1 selected");
+  });
+
+  it("moves a chosen row under the pointer, so it answers the pointer", () => {
+    const root = mount();
+
+    click(root, "files-row-file-3");
+    root.renderer.flush();
+
+    const bounds = boundsOf(root, "files-row-file-3");
+    const styleOf = (): Record<string, unknown> =>
+      requireStyle(root, "files-row-file-3");
+
+    expect(styleOf().backgroundColor).toBe(darkTheme.colors.selected);
+
+    root.renderer.nativeSimulateMouseMove(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+    );
+    root.renderer.flush();
+
+    // The chosen row keeps saying which record is chosen, and the pointer moves
+    // it one step off that fill: one flat fill wherever the pointer is would
+    // answer nothing. The runtime resolves a state diff into its own record, so
+    // the assertion is on the fields that matter.
+    expect(styleOf().backgroundColor).toBe(darkTheme.colors.selected);
+    expect(styleOf().hover).toMatchObject({
+      backgroundColor: darkTheme.colors.accent,
+    });
+    // The press takes the derived wash over the hover it replaces, not the raw
+    // `active` role — a palette's own role can sit under the perceptibility
+    // floor beside the `accent` it would paint over.
+    expect(styleOf().active).toMatchObject({
+      backgroundColor: pointerWash(darkTheme, "active", "accent"),
+    });
   });
 
   it("lets a press on an unfilled part of a cell reach its row", () => {
