@@ -1848,6 +1848,26 @@ a workaround for two live sessions sharing one worktree; see
       oracle, and dropping the two props from the content fails the restyle
       case. Docs in `docs/tooltip.mdx` §API/§Theming/§Verification (the fake
       lift is retracted) and the `COMPONENTS.md` Tooltips row
+`[x]` `packages/primitives`: `Tooltip` could not be **held open from code** — the
+      wrapper forwarded only the delay, while the pinned runtime's
+      `Tooltip`/`useControllableState` already take `open`, `defaultOpen`,
+      `onOpenChange` and `disableHoverableContent`, so a first-run hint, a guided
+      tour or a tip opened by an action had no route at all. The wrapper now
+      forwards all four: `open` makes the tip paint only while it is true (a
+      press or Escape still asks to close through `onOpenChange`), `defaultOpen`
+      starts a local-first tip open, and `disableHoverableContent` closes on
+      leave instead of letting the pointer cross onto the tip. Proof:
+      `Tooltip.test.tsx`'s `hands the runtime the open state its caller owns` and
+      `leaves the runtime's own state when the caller passes none` read the
+      props off the element tree, and `runtime/fields.runtime.test.tsx`'s
+      `paints a controlled Tooltip only while its owner says open` (a press
+      reports `false` and the tip stays painted until the owner flips `open`) and
+      `opens a Tooltip that mounts default-open, with no interaction` measure it
+      in a real renderer. Both directions measured: without the forwarding the
+      element-tree cases fail in `expectSome` and the controlled window case
+      paints nothing. Docs in `docs/tooltip.mdx` §Controlled/§API/§Keyboard/§Limitations/
+      §Verification (the "wrapper only sets the delay" limitation is retracted),
+      the `inventory.ts` record and the `COMPONENTS.md` Tooltips row
 `[x]` `packages/primitives`: `ScrollArea`'s viewport was **the one focusable
       primitive with no focus cue** — it is a tab stop with a keyboard contract
       (arrows, PageUp/PageDown, Home/End) and declared no `focusVisible`, so a
@@ -2933,7 +2953,35 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 99/99
+`[x]` `[██████████]` 100/100
+
+`[x]` The **curated page that displaces a package page** documented less than the
+page it hid — the site serves one page per URL, so `/docs/components/dropdown-menu`
+is the curated page and `packages/components/docs/dropdown-menu.mdx` is mounted
+nowhere. The curated page's API section had no `DropdownMenuCheckboxItem` (its
+required `checked` and `onCheckedChange`, and the `closeOnSelect` default of
+`false` that is the row's whole point), no `leading`/`trailing` slots, no
+`closeOnSelect` on the action row, no `alignOffset`, no trigger props and no
+submenu/group/separator parts — so a reader of the site could not find any of
+them. They are documented now, and the guard derives the displaced set from the
+two folders (a new collision fails until it is named) and requires every prop the
+displaced page documents to be named in the curated page's API section — tables
+and the prose beside them, since a `CommandAction` field is documented in a
+sentence. The same file now holds the Status section to **both** words of its
+inventory row: the status (`done`) and the runtime **support verdict**
+(`partial`), which a page could previously drop and read as a component the
+runtime covers whole. The component index's prop parser also stopped reading a
+default value as a prop — a `Props` cell writing its default as a code span made
+`false` a prop of every menu page, so the index's filter answered a query for a
+value.
+`component-page-truth.test.ts` (+4 cases) and `component-index.test.ts` (+1) hold
+it; four directions measured: the shipped dropdown page fails with the seven
+missing props by name, dropping `partial` from `dialog.mdx` fails
+`does not name the partial runtime verdict its inventory row records`, removing a
+`shadowed` entry fails the displacement case, and restoring the old `notAProp` set
+fails the default-value case. Docs in `docs/preview-strategy.md` §The component
+page template (whose duplicated Accessibility paragraph is gone). Suite 72 files
+/ 637 tests, `check-types` and `build` green.
 
 `[x]` Publish the **workspace restore** a probe measured — Tier 4's *persistent
 panel state* had no entry in the capability record or on `/docs/runtime`, and
