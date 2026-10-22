@@ -100,7 +100,7 @@ way.
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `content` | `ReactNode` | — (required) | the tip; keep it short and unwrapped |
-| `description` | `string` | `content` when it is a string | the trigger's accessible description |
+| `description` | `string` | `content` when it is a string | the trigger's accessible description; an explicit value replaces a description the trigger already carried |
 | `children` | `ReactNode` | — (required) | the trigger: a focusable host element, or a control that forwards the trigger pair |
 | `side` | `FloatingSide` | `"top"` | preferred placement |
 | `align` | `FloatingAlign` | GPUix's default | alignment against the trigger |
@@ -153,6 +153,12 @@ Evidence: `apps/playground/README.md` §`tooltip-lifecycle` (14 checks).
   `Button`/`IconButton`/`Toggle` hand it to their host; a component that does not
   forward it cannot carry it. The text is trimmed and a blank one is not published — an
   empty description is still an attribute a reader dismisses.
+- **A description the trigger already announced stays.** A field's validation
+  hint or a setting's explanation is the control's permanent help, and a short
+  tip does not replace it just because the pointer arrived: a string tip is
+  cloned only onto a trigger with no description of its own. An explicit
+  `description` prop is the caller naming the tip as the trigger's description,
+  so it replaces the trigger's own text; a blank one is the same as none.
 - **Measured in the accessibility tree**: the `description` field is one of the
   four attribute fields `getA11yTree()` reports, so the tip reaches a screen
   reader through the trigger. Two limits come with it: a node needs a `role` to
@@ -225,9 +231,11 @@ cannot see and no contrast pair measures.
 - `src/components/Select.test.tsx` / `fields.test.tsx` — the wrapper's theme
   spec at the render seam.
 - `src/components/Tooltip.test.tsx` — a string tip and an explicit `description`
-  reach the host trigger and a control trigger that forwards them, a non-text
-  tip without one invents nothing, and a component that forwards nothing is not
-  pretended to carry the description; the controlled open state
+  reach the host trigger and a control trigger that forwards them, a string tip
+  keeps the help a trigger already announces while an explicit `description`
+  replaces it, a non-text tip without one invents nothing, and a component that
+  forwards nothing is not pretended to carry the description; the controlled
+  open state
   (`open`/`defaultOpen`/`onOpenChange`/`disableHoverableContent`) reaches the
   runtime and an uncontrolled tip leaves the runtime's own state alone; a
   `TooltipProvider` hands the group's three timings to the runtime and leaves an

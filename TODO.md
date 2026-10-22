@@ -6944,6 +6944,33 @@ is raised to, because a weaker step is less visible. Directions measured:
 dropping the level from the formatter fails the new editor case, and restoring
 the old sentence fails the new page case. See the interlock row above.
 
+`[x]` Hold the preview policy's own **mount list, gap ledger and printed
+measurements** to the tree — `docs/preview-strategy.md` is the file a page
+author reads first, and three of its claims had drifted: its collection table
+listed three mounted collections while the site mounts four (`packages/data/docs`
+→ `/docs/data-display` landed with no row), it said the one page without
+`## Related` "is recorded in `TODO.md` and in the guard's own list" after
+`message-scroller.mdx` had been fixed and `knownGaps` emptied, and it printed
+"9,709 characters of `Switch.tsx`" while that file holds 9,943. The table gains
+the Data row and says it is the mounted set rather than an illustration, the
+`## Related` paragraph records the resolved history and names the package guard
+(`packages/components/src/docs.test.ts`) that holds it, and the source-block
+paragraph names the file it prints instead of its length. Guards hold each in
+both directions: `package-docs.test.ts`'s `name every mounted collection in the
+policy's table` parses the table and compares it to `packageCollections`
+(dir + route + section), so a fifth collection without a row or a row no
+collection backs fails; `package-page-template.test.ts`'s `keeps the policy's
+description of the ledger true` ties the "empty today" sentence to
+`knownGaps.length`, refuses the retracted TODO sentence, and requires
+`message-scroller.mdx` to keep `## Related`; `page-source.test.ts`'s `names the
+file it prints instead of a length nobody re-measures` refuses any
+`N characters of` claim and holds the policy to the `prints Switch.tsx in full`
+sentence. Directions measured: deleting the Data row fails the table case
+(`expected [ …(3) ] to deeply equal [ …(4) ]`), restoring the 9,709 count fails
+the source case by name, and restoring the ledger sentence fails the template
+case; restored, `nub run --filter @gpuixui/docs test` is green (97 files / 967
+tests). No native scenario applies (a policy is prose).
+
 `[x]` Drive a curated preview's **press path in a real browser session** — the site's headless Chrome *does* hydrate, just later than the capture waited: a cold dev server compiles the whole route tree (every MDX module) before the client entry commits, so a page read at ~1 s has `0` nodes carrying a React fiber and a press moves nothing, while the same page at ~10.5 s has 1 366 nodes with a fiber and the carousel's readout moves `Slide 1 of 4` → `Slide 2 of 4` → `Slide 1 of 4`. The earlier reading was a timing artefact, not a missing client entry (the entry, `hydrateStart` and `react-dom/client` all load with no failed requests). `apps/docs/scripts/preview-press-probe.ts` is the probe: it opens the Carousel page, waits for the workflow demo's **next control to carry `__reactProps.onClick`** (a fiber alone is not enough — the tree attaches node by node, and a press before the handler does nothing), presses Next and Previous through the DOM's own click path, and reads the slide out of `Slide N of 4`, so the assertion is the demo's state rather than a pixel. Measured 2026-10-22 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80: hydrated after 10.7 s, both moves green, exit `0`; the negative control is the hydration budget — `--timeout 500` prints `FAIL the demo never hydrated within 500 ms` and exits `1`. `docs/preview-strategy.md` gains §The press path is measured with the trap, the commands and the measured run; `src/lib/preview-press.test.ts` reads the policy and the probe (the ready-check before the press, both directions, the derived readout assertions) and unit-tests the readout parser against the kicker (`1 / 4` must not be read as the slide). Directions measured: removing the §heading fails the policy case by name, dropping `typeof props.onClick` fails the probe case, and the parser case reads `Slide 3 of 4` out of a string that also says `1 / 4`. The full docs suite is red only on the tokens workstream's uncommitted `track` contract (`passes the one gate the package runs on its own themes`, 1 of 36 in that file); this workstream's files and probe are green.
 
 

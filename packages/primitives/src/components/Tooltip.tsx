@@ -172,17 +172,33 @@ export const tooltipStyle = (
     caller,
   );
 
-/** The trigger with its description attached. */
+/**
+ * The trigger with its description attached.
+ *
+ * A trigger that already announces help of its own keeps it: that text is the
+ * control's permanent description (a field's validation hint, a setting's
+ * explanation) and a short tip does not replace it just because the pointer
+ * arrived. An explicit `description` is the caller naming the tip as the
+ * trigger's description, so it wins.
+ */
 const describedTrigger = (
   children: ReactNode,
   text: string | undefined,
+  explicit: boolean,
 ): ReactNode => {
   const name = accessibleName(text);
-  return name === undefined ||
+  if (
+    name === undefined ||
     !isValidElement<Record<string, unknown>>(children) ||
     children.type === Fragment
-    ? children
-    : cloneElement(children, { "aria-description": name });
+  ) {
+    return children;
+  }
+  const own = children.props["aria-description"];
+  const ownName = typeof own === "string" ? accessibleName(own) : undefined;
+  return explicit || ownName === undefined
+    ? cloneElement(children, { "aria-description": name })
+    : children;
 };
 
 /** The element tree `Tooltip` renders. Pure in its arguments. */
@@ -215,6 +231,7 @@ export const renderTooltip = (
       {describedTrigger(
         children,
         description ?? (typeof content === "string" ? content : undefined),
+        description !== undefined,
       )}
     </TooltipTrigger>
     <TooltipContent

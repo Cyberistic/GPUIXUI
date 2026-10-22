@@ -62,6 +62,44 @@ describe("Tooltip accessibility", () => {
     );
   });
 
+  it("keeps the help a trigger already announces", () => {
+    // The bug guarded: the wrapper cloned the tip over whatever the trigger
+    // already announced, so a field's validation hint or a setting's
+    // explanation disappeared the moment a short tip wrapped it.
+    const trigger = triggerOf(
+      render({
+        content: "Tip",
+        children: <div tabIndex={0} aria-description="Required by policy" />,
+      }),
+    );
+    expect(expectSome(hostProp(trigger, "aria-description"))).toBe(
+      "Required by policy",
+    );
+  });
+
+  it("lets an explicit description name the tip over the trigger's own help", () => {
+    const trigger = triggerOf(
+      render({
+        content: "Tip",
+        description: "Tip",
+        children: <div tabIndex={0} aria-description="Required by policy" />,
+      }),
+    );
+    expect(expectSome(hostProp(trigger, "aria-description"))).toBe("Tip");
+  });
+
+  it("publishes a string tip over a blank description", () => {
+    // A blank string is not help: `accessibleName` trims it to an absence, so
+    // the tip is the only description the trigger has.
+    const trigger = triggerOf(
+      render({
+        content: "Tip",
+        children: <div tabIndex={0} aria-description="   " />,
+      }),
+    );
+    expect(expectSome(hostProp(trigger, "aria-description"))).toBe("Tip");
+  });
+
   it("publishes an explicit description for a non-text tip", () => {
     const trigger = triggerOf(
       render({
