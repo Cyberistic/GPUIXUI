@@ -134,6 +134,14 @@ it, the reduced preference and the composed handlers); the arithmetic is
 `src/magnetic/logic.test.ts` (10 tests), and `src/internal/measure.test.ts` holds
 the pointer reading to the layout reading.
 
+The rule itself was measured in a window by the playground's `surface-origin`
+probe (15 checks, 0.11.0): a 120 pt panel opening above the surface delivered
+**no** layout report (`surface=1`, `reportedY=88`), a pointer move carried a fresh
+point, and the nudged probe re-reported the origin the surface has now (88 →
+208). Read against that fresh origin the same window point is the same local
+point (`120,30`); read against the stale report it is `120,150`, the lean the
+wrong way. Evidence: `apps/playground/README.md` §`surface-origin`.
+
 ## Related
 
 - [Reveal](/docs/components/reveal) — the house fade-and-offset entrance, the same

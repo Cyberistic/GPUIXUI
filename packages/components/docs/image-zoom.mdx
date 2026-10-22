@@ -158,3 +158,11 @@ pointer and layout handlers running beside the component's own. The arithmetic �
 fallbacks, the `1…4` magnification, edge clamping, tenth-of-a-pixel rounding and
 the comparison that skips a repeated frame — is `src/image-zoom/logic.test.ts`
 (12 tests).
+
+The rule itself was measured in a window by the playground's `surface-origin`
+probe (15 checks, 0.11.0): a 120 pt panel opening above the frame delivered
+**no** layout report (`surface=1`, `reportedY=88`), a pointer move carried a fresh
+point, and the nudged probe re-reported the origin the frame has now (88 → 208).
+Read against that fresh origin the same window point is the same local point
+(`120,30`); read against the stale report the pan is `120` further down the box
+(`120,150`). Evidence: `apps/playground/README.md` §`surface-origin`.
