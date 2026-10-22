@@ -86,6 +86,28 @@ panels then take plain numbers. A workspace does not render from
 `JSON.parse`, and a stale or hand-edited layout becomes a typed decode failure
 the app can reset, not a crash on mount.
 
+## The keyboard order a dock carries
+
+A dock is several focusable layers — a sidebar, a rail of documents, the pane —
+and the traversal across them is the app's, measured in a window by
+`dock-focus-lifecycle`:
+
+- **One stop per rail, one per pane.** The traversal from the sidebar toggle
+  visits the sidebar's actions, then a single stop for the whole rail (the
+  selected trigger), then the pane's first field, then the status bar. A stop per
+  trigger puts three rail stops in the same walk.
+- **A closed pane keeps its controls' stops.** A sidebar painted zero wide still
+  keeps its unguarded control in the traversal — with its own 12px box and
+  programmatic focus, while the pointer is clipped away. The dock removes the
+  stop with `tabIndex={-1}`, or the keyboard walks into a pane the reader cannot
+  see; the guard returns the stop when the pane reopens.
+- **A rail step moves focus itself.** The runtime does not move focus when the
+  selection changes, so the rail's key handler calls `renderer.focusElement`;
+  without it the pane repaints while focus stays on the old trigger.
+- **The pane's field owns its arrows.** `left`/`right` inside a field never
+  reach the rail, so the rail moves on its own chords or the arrows stay with the
+  fields.
+
 ## Gaps, with the evidence
 
 | Gap | Evidence | Strongest honest alternative |

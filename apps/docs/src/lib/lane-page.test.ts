@@ -267,6 +267,24 @@ describe("the workspace page's pointer and terminal claims", () => {
     expect(workspace).toContain("`onMouseMove`");
   });
 
+  it("teaches the keyboard order a dock carries, as the window measured it", () => {
+    // Tier 4's Keyboard navigation row calls the order "ours", and the page said
+    // nothing about it. `dock-focus-lifecycle` measured one stop per rail, the
+    // closed pane whose unguarded control keeps its stop, a rail step that must
+    // move real focus, and a field that owns its arrows — none of it a runtime
+    // feature, all of it app code a dock plan has to write.
+    const dock = rowFor(record, "Dock keyboard navigation");
+
+    expect(dock).toContain("dock-focus-lifecycle");
+    expect(dock).toContain("12px");
+    expect(dock).toContain("renderer.focusElement");
+    expect(workspace).toContain("dock-focus-lifecycle");
+    expect(workspace).toContain("One stop per rail");
+    expect(workspace).toContain("tabIndex={-1}");
+    expect(workspace).toContain("renderer.focusElement");
+    expect(workspace).toContain("owns its arrows");
+  });
+
   it("separates rendering into a terminal from hosting one", () => {
     expect(rowFor(record, "Terminal rendering")).toContain("supported");
     expect(workspace).toContain("terminal: true");

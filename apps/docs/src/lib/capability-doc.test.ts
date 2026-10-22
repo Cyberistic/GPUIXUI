@@ -690,6 +690,52 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("record");
   });
 
+  it("records the dock's keyboard order, and the pane a closed sidebar keeps in it", () => {
+    // Tier 4's Keyboard navigation row calls the keyboard order "ours", and
+    // `dock-focus-lifecycle` measured it: one stop per rail, a closed sidebar
+    // whose unguarded control keeps its stop, its own box and programmatic
+    // focus, a rail step that must move real focus, and a field that owns its
+    // arrows. A dock plan reading only `dock-reflow` would build none of it.
+    const dock = rowFor("Dock keyboard navigation");
+    expect(dock?.verdict).toBe("supported, with limits");
+    expect(dock?.evidence).toContain("dock-focus-lifecycle");
+    expect(dock?.evidence).toContain("12px");
+    expect(dock?.evidence).toContain("focusElement");
+    expect(dock?.workaround).toContain("tabIndex={-1}");
+
+    const page = measuredRow("Dock keyboard navigation");
+    expect(
+      page,
+      "the page's measured table has no dock-keyboard row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("dock-focus-lifecycle");
+    expect(page?.[1]).toContain("12px");
+    expect(page?.[2]).toContain("focusElement");
+  });
+
+  it("records the menu anchored inside a scroller, and the cell its arithmetic needs", () => {
+    // Tier 3's column configuration row is `?`: the composition needs a menu
+    // whose trigger lives in the header a grid scrolls, and
+    // `header-menu-lifecycle` measured that the anchored panel follows the
+    // anchor's offset in the same read, that Escape returns the focus, and that
+    // anchor arithmetic is 22px out if it reads the trigger instead of the cell.
+    const menu = rowFor("Menu anchored in a scroller");
+    expect(menu?.verdict).toBe("supported, with limits");
+    expect(menu?.evidence).toContain("header-menu-lifecycle");
+    expect(menu?.evidence).toContain("22px");
+    expect(menu?.evidence).toContain("before");
+    expect(menu?.workaround).toContain("cell");
+
+    const page = measuredRow("Menu anchored in a scroller");
+    expect(
+      page,
+      "the page's measured table has no anchored-header-menu row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("header-menu-lifecycle");
+    expect(page?.[1]).toContain("22px");
+    expect(page?.[2]).toContain("cell");
+  });
+
   it("records the floating placement a window measured, including the centre quirk", () => {
     // The headless `floating-placement` scenario drove the engine against a
     // `TestRenderer`; a window measured the horizontal sides and found that
@@ -1174,6 +1220,8 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("drag-reorder");
     expect(runtimePage).toContain("table-lifecycle");
     expect(runtimePage).toContain("frozen-column-lifecycle");
+    expect(runtimePage).toContain("dock-focus-lifecycle");
+    expect(runtimePage).toContain("header-menu-lifecycle");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });
