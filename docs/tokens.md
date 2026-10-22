@@ -1366,16 +1366,15 @@ a theme that erases the state fails by name instead of shipping it.
 The role pair is the contract, and a filled action already paints it: the
 primitives resolve `paintsFilledSurface` (`primary`, `secondary`, `destructive`)
 to `disabledAction(theme)` in `core/style.ts`, the recipe's disabled bucket is
-`disabled:bg-disabled disabled:text-disabled-foreground`, a menu row
-(`packages/components/src/menu/item.tsx`) paints `disabledForeground`, and the
-components package's own `Button`
-(`packages/components/src/internal/button.tsx`) paints the pair for every
-variant that has a fill. Two painters still fade the whole control: the
-`@gpuixui/tw` recipes' `disabled:opacity-50`, and the components' `Button` for
-its **unfilled** variants (`opacity: disabledOpacity`), which have no fill to
-collapse into. A `Toggle` is unfilled too, and a **field** keeps the fade
-because its fill is `input` and the faded label clears the floor on every
-content surface it sits on (§The fade is a page mechanism). A fade is
+`disabled:bg-disabled disabled:text-disabled-foreground`, and a menu row
+(`packages/components/src/menu/item.tsx`) paints `disabledForeground`. Two
+painters still fade the whole control: the `@gpuixui/tw` recipes'
+`disabled:opacity-50`, and the components package's own `Button`
+(`packages/components/src/internal/button.tsx`, `opacity: disabled ? 0.5 : 1`).
+An unfilled action — `outline`, `ghost`, `link`, a `Toggle` — has no fill to
+collapse into and fades with them, and a **field** keeps the fade because its
+fill is `input` and the faded label clears the floor on every content surface it
+sits on (§The fade is a page mechanism). A fade is
 translucent, which `contrastRatio` refuses: it shows whatever is behind it, so
 no role pair can measure the result. `disabledOpacity` is that share (`0.5`, a
 design constant rather than a `Theme` group — a brand that lowered it would
@@ -1436,8 +1435,8 @@ an unavailable action and an enabled tonal action painted the same box in the
 variant a reader selects for clarity; `disabled` is the quiet step now. A
 **field** keeps fading on `background`, `card` and `popover`: its fill is
 `input`, and the faded label clears the floor on all three. A filled action and
-the menu row already paint the pair in both packages; the `@gpuixui/tw` recipe
-set is what is left in `TODO.md` → Interlocks.
+the menu row already paint the pair in `packages/primitives`; the two recipe sets
+and the components' `Button` are the interlock left in `TODO.md`.
 
 #### The dim a control paints while Tab is elsewhere
 
