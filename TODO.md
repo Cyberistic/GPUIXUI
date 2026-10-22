@@ -5047,8 +5047,11 @@ palettes (a third rule), `docs/design-system.md` §11, the package README and th
       '"./typeahead": "./src/typeahead.ts"'`), the copy case fails with
       `src/internal/typeahead.ts` restored, and dropping the `key.length === 1`
       clause fails the named-key case. Docs: `docs/list.mdx` §Type-ahead,
-      the package README and the `COMPONENTS.md` Lists row. The data package's
-      adoption is the interlock row below.
+      the package README and the `COMPONENTS.md` Lists row. The data half landed
+      in the same window (`b7a99377`): `tree/logic.ts` keeps only the
+      position-to-key step over `typeaheadMatchIndex`, `tree-view.tsx` reads
+      `typedChar`/`useTypeahead`, and `src/tree/typeahead.test.ts` refuses a
+      second copy.
 
 `[x]` `packages/primitives`: **a `Rating` given a star count it cannot lay out
       took the render down** — `max` is caller arithmetic (a measured total, a
