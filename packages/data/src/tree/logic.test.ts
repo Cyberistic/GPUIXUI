@@ -27,12 +27,10 @@ import {
   expandTo,
   expandedPath,
   flattenTree,
-  idleTypeAhead,
   isExpanded,
   setExpanded,
   toggleExpanded,
   treeCursorMove,
-  typeAheadPress,
   typeAheadRow,
   type TreeRow,
   type TreeSpec,
@@ -212,45 +210,56 @@ describe("the tree cursor", () => {
 });
 
 describe("the typed prefix", () => {
-  const rows = flattenTree(tree, spec, expandAll(tree, spec));
-  const labelOf = (row: TreeRow<Node>): string => row.node.name;
+  /** A row whose key is not its label, so the two cannot stand in for each other. */
+  const row = (key: string, label: string): TreeRow<string> => ({
+    node: label,
+    key,
+    depth: 0,
+    parent: Option.none(),
+    hasChildren: false,
+    expanded: false,
+  });
+  const rows = [
+    row("k1", "readme.md"),
+    row("k2", "src"),
+    row("k3", "row.tsx"),
+    row("k4", "  row.child.tsx"),
+    row("k5", "index.ts"),
+  ];
+  const labelOf = (candidate: TreeRow<string>): string => candidate.node;
+
+  it("matches the row's label rather than its key", () => {
+    expect(typeAheadRow(rows, Option.none(), "s", labelOf)).toEqual(
+      Option.some("k2"),
+    );
+    // No label starts with `k`, though every key does.
+    expect(typeAheadRow(rows, Option.none(), "k", labelOf)).toEqual(
+      Option.none(),
+    );
+  });
 
   it("finds the first row after the cursor and wraps", () => {
-    expect(typeAheadRow(rows, Option.none(), "t", labelOf)).toEqual(
-      Option.some("table"),
+    expect(typeAheadRow(rows, Option.some("k1"), "r", labelOf)).toEqual(
+      Option.some("k3"),
     );
-    // After `table`, the next `t` wraps to the same one — the only match.
-    expect(typeAheadRow(rows, Option.some("table"), "t", labelOf)).toEqual(
-      Option.some("table"),
-    );
-    // Case-insensitive, and the first match in paint order.
-    expect(typeAheadRow(rows, Option.none(), "R", labelOf)).toEqual(
-      Option.some("row.tsx"),
-    );
-    // From that row the same prefix advances, which is what a repeated letter
-    // needs.
-    expect(typeAheadRow(rows, Option.some("row.tsx"), "r", labelOf)).toEqual(
-      Option.some("readme.md"),
+    // After the only match, the prefix wraps to the same row.
+    expect(typeAheadRow(rows, Option.some("k3"), "s", labelOf)).toEqual(
+      Option.some("k2"),
     );
   });
 
-  it("keeps the cursor when nothing matches", () => {
-    expect(typeAheadRow(rows, Option.some("src"), "zz", labelOf)).toEqual(
-      Option.none(),
-    );
-    expect(typeAheadRow(rows, Option.some("src"), "   ", labelOf)).toEqual(
-      Option.none(),
+  it("trims the label it matches, the way the published seam does", () => {
+    expect(typeAheadRow(rows, Option.some("k1"), "row.c", labelOf)).toEqual(
+      Option.some("k4"),
     );
   });
 
-  it("starts over after the window and keeps a repeated letter", () => {
-    const first = typeAheadPress(idleTypeAhead, "t", 1_000);
-    expect(first.text).toBe("t");
-    // Inside the window a second letter narrows the prefix…
-    expect(typeAheadPress(first, "a", 1_100).text).toBe("ta");
-    // …but a repeated letter is one search the next press advances.
-    expect(typeAheadPress(first, "t", 1_100).text).toBe("t");
-    // After the window the prefix starts again.
-    expect(typeAheadPress(first, "r", 1_600).text).toBe("r");
+  it("keeps the cursor when nothing matches or the prefix is blank", () => {
+    expect(typeAheadRow(rows, Option.some("k1"), "zz", labelOf)).toEqual(
+      Option.none(),
+    );
+    expect(typeAheadRow(rows, Option.some("k1"), "   ", labelOf)).toEqual(
+      Option.none(),
+    );
   });
 });

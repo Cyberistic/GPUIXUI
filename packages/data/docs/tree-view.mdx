@@ -52,6 +52,13 @@ The keys are the desktop tree's contract, provided by `treeCursorMove`:
 | `Enter` / `Space` | flip the branch under the cursor |
 | a printable character | type-ahead: the first row **after** the cursor whose label starts with the prefix, wrapping |
 
+The typed prefix is `@gpuixui/components/typeahead`'s rule, not this package's:
+the 500 ms window, the repeat rule (a second `r` advances instead of narrowing
+to `rr`), the case-insensitive trimmed match and the character a keystroke types
+(a chord, a modifier and Space are not text) live in that published seam, so a
+tree, a list and a menu agree. The tree supplies each row's `labelOf` and maps
+the position the seam answers back onto the row's key.
+
 A press on a folder opens it and reports the row through `onActivate`, so one
 handler serves files and folders. The expansion set is the caller's: a press
 hands back a whole cursor, which is what `useExpandedRows` stores.
@@ -143,11 +150,19 @@ inset is `TREE_INDENT` (16).
 
 ## Verification
 
-`src/tree/logic.test.ts` (13 tests) holds the flattening (a branch opens only on
-its own entry, a duplicated key and a cycle paint once, a reveal opens the
+`src/tree/logic.test.ts` (14 tests) holds the flattening (a branch opens only
+on its own entry, a duplicated key and a cycle paint once, a reveal opens the
 path), the key contract (clamping, Right opening then stepping in, Left closing
-before leaving, Enter/Space flipping) and the type-ahead (search after the
-cursor, wrapping, the 500 ms window).
+before leaving, Enter/Space flipping) and the tree's type-ahead step (a match on
+the row's label rather than its key, the search after the cursor, wrapping, the
+seam's trimmed match, a miss keeping the cursor).
+
+`src/tree/typeahead.test.ts` (2 tests) holds the **adoption**: both modules
+import `@gpuixui/components/typeahead`, the package publishes the subpath, and
+neither file declares a second window, buffer or `typedChar`. Directions
+measured: restoring `TYPE_AHEAD_WINDOW_MS` in `logic.ts` fails the second case
+by name, and the pre-adoption matcher — which lower-cased the label but did not
+trim it — fails `trims the label it matches` in the tree's own suite.
 
 `src/behaviour/tree.test.tsx` (7 tests) mounts the shipped example in the real
 renderer: a press opens the folder it lands on, a child insets 16px under its

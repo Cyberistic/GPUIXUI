@@ -3368,6 +3368,17 @@ palettes (a third rule), `docs/design-system.md` §11, the package README and th
       `COMPONENTS.md` rows to the code, so that table cannot drift again;
       their pages now render on the site at `/docs/primitives/<name>` (and the
       icon page at `/docs/icons/icon`), linked from the Primitives section index
+`[x]` `packages/primitives`: an **`OTPField` that shrank under a focused cell lost
+      its only tab stop** — `length` is a prop and the focused index outlived
+      the cell it named, so a field going from six cells to four still wrote the
+      stop on cell six: every drawn cell painted `tabIndex={-1}`, Tab skipped the
+      group entirely, and its `focused` style state lied. The part now treats an
+      index outside the cells it draws as no focus and falls back to the cell
+      the code has reached. `OTPField.test.tsx` holds the tree and the style
+      state, `runtime/otp.runtime.test.tsx` Tabs a shrunken field in a window;
+      both fail on the old part (`otp-cell-4` reported as `after`) and pass with
+      it. Docs: `docs/otp-field.mdx` §Keyboard/§Accessibility/§Verification and
+      the OTP Field inventory row.
 `[x]` `packages/primitives`: `NumberField` gained the **drag-to-scrub** its
       docs recorded as unbuilt — a press on either stepper that travels scrubs
       the value one `step` per `SCRUB_PIXELS_PER_STEP` (4px) of vertical travel
@@ -5522,15 +5533,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Carry the **coast's re-declaration rule** to `/docs/motion` — the page's `MotionValue` bullets teach the `animate` no-op ("re-declaring `springTransition(layoutSpring)` on a render does not restart the run") and say only that `coast(inertia, velocity?)` "starts a decay from the last value", so the rule that keeps a coast from relaunching on every render — the identical declaration is a no-op, a new release or a changed time constant/bound starts where the surface is, and a coast after `set`/`animate` is always a new gesture because `set` retires the cancelled run — is taught only by `packages/motion/README.md`. A reader of the site who builds `inertia()` inline (the form the README prints) cannot learn why that is safe | docs-site (`apps/docs/content/docs/motion.mdx`; `motion-page.test.ts` should hold the sentences to `motion.ts`'s `coast` guard and `set`, the way it holds the printed defaults) | **open** — the package half landed 2026-10-23 (`set` now clears the mode and release velocity, `motion.test.ts`'s `starts a new coast after a set, even with the same release` guards it) |
 
-| Adopt the **published type-ahead seam** in the tree — `@gpuixui/components/typeahead` now exports the window and repeat rule (`typeaheadPress`), the matcher as a position (`typeaheadMatchIndex`), the typed-character rule (`typedChar`) and the buffer, so `packages/data/src/tree/logic.ts`'s copy (`TYPE_AHEAD_WINDOW_MS`, `idleTypeAhead`, `typeAheadPress`, `typeAheadRow`) can go. The tree maps each visible row to `{ label, disabled: false }`, asks for a position and reads the row's key at it — the one behaviour to keep is that the tree matches on the row's label accessor, not on `textValue`. `@gpuixui/components` becomes a dependency of `@gpuixui/data` (or the seam moves if that edge is refused), and `packages/components/src/typeahead.test.ts` holds this package's half | data (owns `src/tree/logic.ts`; the seam is landed and documented in `docs/list.mdx`) | open — the components half landed 2026-10-23; nothing in `packages/data` imports the subpath yet |
+| Adopt the **published type-ahead seam** in the tree — `@gpuixui/components/typeahead` now exports the window and repeat rule (`typeaheadPress`), the matcher as a position (`typeaheadMatchIndex`), the typed-character rule (`typedChar`) and the buffer, so `packages/data/src/tree/logic.ts`'s copy (`TYPE_AHEAD_WINDOW_MS`, `idleTypeAhead`, `typeAheadPress`, `typeAheadRow`) can go. The tree maps each visible row to `{ label, disabled: false }`, asks for a position and reads the row's key at it — the one behaviour to keep is that the tree matches on the row's label accessor, not on `textValue`. `@gpuixui/components` becomes a dependency of `@gpuixui/data` (or the seam moves if that edge is refused), and `packages/components/src/typeahead.test.ts` holds this package's half | data (owns `src/tree/logic.ts`; the seam is landed and documented in `docs/list.mdx`) | **resolved 2026-10-23** — `tree/logic.ts` imports `typeaheadMatchIndex` and keeps only `typeAheadRow` (rows mapped to `{ label: labelOf(row), disabled: false }`, the active row's position in, the row's key out); `tree-view.tsx` imports `typedChar` and `useTypeahead`, so the buffer, the 500 ms window and the character rule are the seam's and a miss clears there. The root export drops `TYPE_AHEAD_WINDOW_MS`/`idleTypeAhead`/`typeAheadPress`/`TypeAheadBuffer` (nothing else imported them) and keeps the tree-specific `typeAheadRow`; `useExpandedRows.typeAhead(prefix)` still takes a whole prefix through the same adapter. `src/tree/typeahead.test.ts` (2 cases) holds the import on both modules, the published subpath and the absence of a second window/buffer/`typedChar`; `src/tree/logic.test.ts`'s typed-prefix suite now proves the label accessor is what matches (a key-shaped prefix finds nothing) and adopts the seam's trimmed match. Directions measured: restoring `TYPE_AHEAD_WINDOW_MS` in `logic.ts` fails `keeps no second window, buffer or character rule` by name, and the pre-adoption matcher (lower-cased, untrimmed label) fails `trims the label it matches`. `packages/data/README.md`, `docs/tree-view.mdx` and the Tier 3 **Tree views** row name the seam |
 
 | Link the **virtualization page** from the data lane — `packages/data/docs/virtualization.mdx` documents the two windowed surfaces (`VirtualList` over the runtime's `<virtual-list>` in both modes, `VirtualTable`/`VirtualTableBody` under the measured fixed header, `useVirtualRows`) with their rules, API, limitations and the eight suites that hold them. The page was mounted but the lane page named only the probes that measured it, so a reader on `/docs/data-display` had no route to the page that explains them | docs-site (`apps/docs/content/docs/data-display/index.mdx`) | **resolved 2026-10-23** — the lane page's **Surface** table gains a `Virtualization` row linking `/docs/data-display/virtualization` (whose column describes the three shipped parts), and the **Virtualization** bullet opens on `VirtualList` as the typed seam, names `VirtualTable`/`VirtualTableBody` and `useVirtualRows`, and links the page; the measured rules it already carried (overdraw against a one-gesture-late `onVisibleRange`, the index-addressed reveal, the same-commit clamp) are unchanged. `lane-page.test.ts` gained `links the page that explains the windowed surfaces it lists`: it reads the package root's three exports (`VirtualList`/`visibleRange`, `VirtualTable`/`VirtualTableBody`, `useVirtualRows`), the package page's title and names, and the lane page's row and link, so a page that drops the row or a link that points elsewhere fails. Direction measured: pointing the link at `/docs/components/table` fails the case by name; restored, `nub run --filter @gpuixui/docs test` is 99 files / 988 tests with `check-types` and `build` green. No native scenario applies — a docs link has no runtime path |
 
 ## Phase D — data and workspace components
 
-`[ ]` `[░░░░░░░░░░]` 0/3
+`[x]` `[███░░░░░░░]` 1/3
 
-`[~]` Tier 3 data presentation
+`[x]` Tier 3 data presentation
   - [x] Open `@gpuixui/data` and land the **table core** (plan 610 phase 1) —
     `Table`/`TableViewport`/`TableHeader`/`TableBody`/`TableRow`/`TableHeaderCell`/
     `TableCell`/`TableCaption`/`TableEmpty`/`TableSkeleton`, the measured fixed
@@ -5641,14 +5652,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
     rows (`virtual-tree-lifecycle`, `virtual-list-expand`). `packages/data/src/tree/`
     holds the pure model (`flattenTree` paints a node only while its own key is
     open and a key once; `branchKeys`, `expandAll`/`collapseAll`,
-    `expandedPath`/`expandTo`, `treeCursorMove`, `typeAheadPress`/
+    `expandedPath`/`expandTo`, `treeCursorMove`, the seam-backed
     `typeAheadRow`), the `useExpandedRows` controller and the `TreeView` part:
     a 16px depth inset, **one** tab stop whose arrows move `renderer.focusElement`
     in a layout effect **after** the `tabIndex` commit, a chevron that takes no
-    press, Right/Left/Enter/Space, and the 500 ms type-ahead. `TableExpandableRow`
+    press, Right/Left/Enter/Space, and the published type-ahead seam. `TableExpandableRow`
     and `TableDetailRow` open a **sibling** detail row (no row span on 0.11.0):
     the panel spans the row's content, its cell fills it, and the rows below move
-    by its height. 13 unit cases (`src/tree/logic.test.ts`), 7 tree + 5
+    by its height. 14 unit cases (`src/tree/logic.test.ts`) plus 2 seam-guard
+    cases (`src/tree/typeahead.test.ts`), 7 tree + 5
     expandable behaviour cases, two docs pages (`tree-view`, `expandable-rows`),
     two examples (`tree`, `expandable-rows`), and two headless probes
     (`data-tree-core`, `data-expandable-rows-core`, both 1/1). Directions

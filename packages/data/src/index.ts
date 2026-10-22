@@ -284,7 +284,6 @@ export type {
 
 export {
   TREE_INDENT,
-  TYPE_AHEAD_WINDOW_MS,
   TreeKey,
   branchKeys,
   collapseAll,
@@ -295,22 +294,15 @@ export {
   expandedPath,
   findRow,
   flattenTree,
-  idleTypeAhead,
   isExpanded,
   isTreeKey,
   setExpanded,
   toggleExpanded,
   treeCursorMove,
   treeKeys,
-  typeAheadPress,
   typeAheadRow,
 } from "./tree/logic.js";
-export type {
-  TreeCursor,
-  TreeRow,
-  TreeSpec,
-  TypeAheadBuffer,
-} from "./tree/logic.js";
+export type { TreeCursor, TreeRow, TreeSpec } from "./tree/logic.js";
 
 export { TREE_INSET, TreeView } from "./tree/tree-view.js";
 export type { TreeViewProps } from "./tree/tree-view.js";

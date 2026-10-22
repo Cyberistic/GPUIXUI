@@ -46,6 +46,7 @@ import {
 import * as Arr from "effect/Array";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
+import { typedChar, useTypeahead } from "@gpuixui/components/typeahead";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import {
@@ -63,13 +64,9 @@ import {
   emptyCursor,
   isTreeKey,
   treeCursorMove,
-  typeAheadPress,
-  typeAheadRow,
-  idleTypeAhead,
   TREE_INDENT,
   type TreeCursor,
   type TreeRow,
-  type TypeAheadBuffer,
 } from "./logic.js";
 import {
   TREE_CHEVRON,
@@ -106,29 +103,6 @@ export interface TreeViewProps<T> extends Omit<Props, "children"> {
   /** The tree's test id. Each row is `${testId}-row-${key}`. */
   readonly testId?: string;
 }
-
-/**
- * The one key that starts a type-ahead search, as a character.
- *
- * `keyChar` is the platform's character for the key; a chord, a modifier and a
- * space are not a typed prefix. `@gpuixui/components` carries the same rule in
- * its private key seam; `TODO.md` tracks hoisting it.
- */
-const typedChar = (event: EventPayload): Option.Option<string> =>
-  Option.filter(
-    Option.fromNullishOr(event.keyChar),
-    (char) =>
-      char.length === 1 &&
-      char !== " " &&
-      Option.exists(
-        Option.fromNullishOr(event.key),
-        (key) =>
-          key.length === 1 &&
-          event.modifiers?.cmd !== true &&
-          event.modifiers?.ctrl !== true &&
-          event.modifiers?.alt !== true,
-      ),
-  );
 
 /** One row: the inset, the chevron slot, the caller's content. */
 interface RowProps<T> {
@@ -228,7 +202,6 @@ export const TreeView = <T,>({
   );
   const resolved = cursor ?? uncontrolled;
   const elements = useRef(new Map<string, number>());
-  const buffer = useRef<TypeAheadBuffer>(idleTypeAhead);
   /**
    * The row the tree has focused, across renders.
    *
@@ -266,6 +239,26 @@ export const TreeView = <T,>({
       onCursorChange?.(next);
     },
     [cursor, onCursorChange],
+  );
+
+  /**
+   * The typed prefix, through the published seam a list and a menu read.
+   *
+   * The tree contributes its rows as labels and the position of the row it
+   * stands on; the window, the repeat rule and the character rule are
+   * `@gpuixui/components/typeahead`'s, so a tree cannot disagree with a list
+   * about what a typed prefix means. A miss clears the buffer there.
+   */
+  const typeahead = useTypeahead(
+    Arr.map(rows, (row) => ({
+      key: row.key,
+      label: labelOf(row.node),
+      disabled: false,
+    })),
+    Option.flatMap(resolved.active, (key) =>
+      Arr.findFirstIndex(rows, (row) => row.key === key),
+    ),
+    (match) => commit({ ...resolved, active: Option.some(match.key) }),
   );
 
   const paintRow =
@@ -346,24 +339,7 @@ export const TreeView = <T,>({
     }
     Option.match(typedChar(event), {
       onNone: () => {},
-      onSome: (char) => {
-        const next = typeAheadPress(buffer.current, char, performance.now());
-        Option.match(
-          typeAheadRow(rows, resolved.active, next.text, (row) =>
-            labelOf(row.node),
-          ),
-          {
-            onNone: () => {
-              // A miss starts a new search rather than poisoning later keys.
-              buffer.current = idleTypeAhead;
-            },
-            onSome: (key) => {
-              buffer.current = next;
-              commit({ ...resolved, active: Option.some(key) });
-            },
-          },
-        );
-      },
+      onSome: typeahead,
     });
   };
 

@@ -14,18 +14,20 @@
  * handler moved nothing, because the row was still outside the tab order (the
  * same measured rule the table example follows).
  *
- * The module repeats the components package's type-ahead timing (500 ms, the
- * last keystroke wins) because that seam is private and its package exports only
- * `src/*.tsx`; `TODO.md` tracks hoisting it beside the recipe cache.
+ * The type-ahead rule is not this module's: the window, the repeat rule and the
+ * character a keystroke types come from `@gpuixui/components/typeahead`, the
+ * seam a list and a menu also read, so a tree cannot disagree with them about
+ * what a typed prefix means. {@link typeAheadRow} keeps only the step that maps
+ * the position the seam answers back onto this tree's row key.
  */
 
-import { Match, pipe } from "effect";
+import { typeaheadMatchIndex } from "@gpuixui/components/typeahead";
+import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import * as Str from "effect/String";
 import { neighbourKey } from "../selection/logic.js";
 
 /**
@@ -349,44 +351,6 @@ export const treeCursorMove = <T>(
   );
 };
 
-/** The typed prefix and when its last keystroke arrived (milliseconds). */
-export interface TypeAheadBuffer {
-  readonly text: string;
-  readonly at: number;
-}
-
-/** Nothing typed. */
-export const idleTypeAhead: TypeAheadBuffer = { text: "", at: 0 };
-
-/** How long a prefix stays alive, in milliseconds. */
-export const TYPE_AHEAD_WINDOW_MS = 500;
-
-/**
- * Add one character to the buffer.
- *
- * A keystroke after the window starts a fresh prefix. Repeating the buffer's only
- * letter keeps it, so a second `d` advances to the next row that starts with `d`
- * rather than narrowing to `dd`. Matching is case-insensitive, so the buffer is
- * stored lower-cased.
- */
-export const typeAheadPress = (
-  buffer: TypeAheadBuffer,
-  char: string,
-  now: number,
-): TypeAheadBuffer => {
-  const letter = Str.toLowerCase(char);
-  if (buffer.text === "" || now - buffer.at > TYPE_AHEAD_WINDOW_MS) {
-    return { text: letter, at: now };
-  }
-  const repeating = pipe(
-    Str.split("")(buffer.text),
-    Arr.every((seen) => seen === letter),
-  );
-  return repeating
-    ? { text: buffer.text, at: now }
-    : { text: `${buffer.text}${letter}`, at: now };
-};
-
 /**
  * The row a typed prefix names: the first row **after** the active one whose
  * label starts with the prefix, wrapping to the first match.
@@ -400,21 +364,12 @@ export const typeAheadRow = <T>(
   active: Option.Option<string>,
   prefix: string,
   labelOf: (row: TreeRow<T>) => string,
-): Option.Option<string> => {
-  const needle = Str.toLowerCase(Str.trim(prefix));
-  if (Str.isEmpty(needle)) return Option.none();
-  const order = Arr.map(rows, (row, index) => ({
-    row,
-    index,
-    key: row.key,
-  }));
-  const from = Option.getOrElse(indexOf(rows, active), () => -1);
-  const matches = Arr.filter(order, (candidate) =>
-    Str.startsWith(needle)(Str.toLowerCase(labelOf(candidate.row))),
+): Option.Option<string> =>
+  Option.flatMap(
+    typeaheadMatchIndex(
+      Arr.map(rows, (row) => ({ label: labelOf(row), disabled: false })),
+      indexOf(rows, active),
+      prefix,
+    ),
+    (index) => Option.map(at(rows, index), (row) => row.key),
   );
-  return pipe(
-    Arr.findFirst(matches, (candidate) => candidate.index > from),
-    Option.orElse(() => Arr.head(matches)),
-    Option.map((candidate) => candidate.key),
-  );
-};

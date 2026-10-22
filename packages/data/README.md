@@ -57,8 +57,9 @@ src/
   columns/    visibility, order, resize bounds, ColumnMenu, TableColumnDivider
   virtual/    VirtualList over the runtime's <virtual-list>, both modes;
               VirtualTable, useVirtualRows, the window calculator
-  tree/       the flattening, the cursor contract, type-ahead, TreeView and
-              useExpandedRows
+  tree/       the flattening, the cursor contract, TreeView and
+              useExpandedRows; type-ahead reads
+              @gpuixui/components/typeahead
   chart/      the geometry, the one-tint-per-series markup, the five charts
               and the legend
   surfaces/   KeyValue, StatCard, PropertyPanel, DataToolbar, AdvancedFilter
@@ -246,7 +247,10 @@ A row of a different height uses `VirtualList` in children mode instead.
 
 A **tree** is a flattened column of rows with one tab stop. `useExpandedRows`
 holds the expansion set and the cursor; `TreeView` paints the rows and owns the
-keys, the native focus and the type-ahead buffer:
+keys and the native focus. A typed prefix is the **published** rule —
+`@gpuixui/components/typeahead` owns the window, the repeat rule and the
+character a keystroke types, so a tree, a list and a menu cannot disagree; the
+tree contributes each row's `labelOf` and keeps only the position-to-key step:
 
 ```tsx
 const tree = useExpandedRows({ roots: files, keyOf, childrenOf, labelOf });
