@@ -77,9 +77,13 @@ changes, and a brand retints the library's shadows by changing that one role.
 `elevationWithTint(elevation, tint)` is the same rule on its own, for a theme
 composed by hand.
 
-The deepest level must also be **visible** on the strips a raised surface falls
-on, which `decorativeFailures` measures as a ceiling — a blurred shadow passes
-below the floor only when a reader cannot see it at all. Those strips are the
+Every level a component raises a surface to must also be **visible** on the
+strips it can fall on, which `decorativeFailures` measures as a ceiling — a
+blurred shadow passes below the floor only when a reader cannot see it at all.
+`sm` is a card's lift, `md` the toast, preview card and navigation panel, and
+`lg` a dialog, popover, menu or drawer; the deepest level is not a checkpoint for
+the two below it, because a weaker lift is less visible by design. A failure
+names the level it measured. Those strips are the
 window's content surfaces (page, card, popover, toolbar, the segmented
 `secondary` panel and a field's `input` fill), every wash a surface can open
 over — the `selected` a chosen row holds, the `accent` a list row tints under the
@@ -89,7 +93,9 @@ on. It
 found the high-contrast dark theme twice: its black tint on a pure-black page read
 1.00:1 at every level, and the grey that replaced it was the same theme's
 `secondary` face, so a dialog over a segmented panel read 1.00:1 too. Its tint is
-lighter than every face it can fall on now.
+lighter than every face it can fall on now, and the tightest of the shipped
+styles' placements is 1.06:1 — the authored Windows 7 (Aero) dark card lift on a
+field's fill.
 
 ## Layering
 
@@ -718,10 +724,11 @@ the modal veil on the strips a modal covers, each status tone's soft tint on the
 on and its edge on those same four and on the four washes a row tints under a
 badge (read at the share `statusEdgeAlpha` that `statusTone` paints), the
 scrollbar thumb, `hover`/`active`/`selected`/`accent`
-and the `secondary` fill on the four strips a control can sit on, and the
-deepest elevation level composited over those four plus the washes a row can be
+and the `secondary` fill on the four strips a control can sit on, and every
+raised elevation level (`sm`, `md`, `lg`) composited over those four plus the
+washes a row can be
 wearing when a context menu opens over it (`selected`, `hover`, `accent`,
-`active`). Nothing escapes the
+`active`). A shadow failure names the level. Nothing escapes the
 contract either:
 `coverage.test.ts` holds every role in `colorRoles` to at least one measurement,
 and names the one a dedicated contract measures instead — `selection`, by

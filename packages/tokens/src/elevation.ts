@@ -158,10 +158,11 @@ export function invalidShadowColors(theme: {
 /**
  * The share of the `shadow` role each level paints. A pale canvas needs only a
  * hint of shade; a dark one needs more, because a shadow is the only
- * separation two dark surfaces have. The deepest level is also held to the
- * decorative perceptibility floor against the strips a raised surface falls on
+ * separation two dark surfaces have. Every level is also held to the
+ * decorative perceptibility floor against the strips it can fall on
  * (`decorativeFailures`), so a tint that cannot darken its page is reported
- * rather than shipped flat.
+ * rather than shipped flat — the weaker `sm` and `md` lifts included, because a
+ * card's lift is what a reader sees first.
  */
 const strength = {
   light: { sm: 0.08, md: 0.12, lg: 0.16 },

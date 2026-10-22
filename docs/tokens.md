@@ -2048,10 +2048,15 @@ is.
 The **elevation tint** is in the table too, and it is the surface this page used
 to say was deliberately outside it. A shadow is a blurred geometry, so a flat
 composite overstates what the eye receives — but it overstates in the safe
-direction: the table measures the scale's **deepest** level (`lg`), the strongest
-separation any raised surface can paint, so a shadow that passes may still read
-faint at its blurred edge and only a shadow a reader cannot see at all is
-reported. The measured colour is the level's own, because a level carries its
+direction: **every level a component raises a surface to** is measured over every
+strip it can fall on (`sm` is a card's lift, `md` the toast, preview card and
+navigation panel, `lg` a dialog, popover, menu or drawer), so a shadow that passes
+may still read faint at its blurred edge and only a shadow a reader cannot see at
+all is reported. The deepest level is **not** a ceiling for the two below it: a
+weaker level is less visible by design, so a brand whose card lift paints its own
+fill raises a card with no lift while the dialog's shadow still measures well —
+which is why each level is read, and why a failure names the level it measured.
+The measured colour is the level's own, because a level carries its
 share in its alpha byte and a brand can supply a level whole; the strips are the
 four a raised surface floats over (`background`, `card`, `popover`, `muted`), the
 two window fills the veil already names — a segmented `secondary` panel, which is
@@ -2073,11 +2078,12 @@ every level, so no raised surface there had a shadow), and its replacement grey
 matched the same theme's `secondary` face, so a dialog opened over a segmented
 panel painted a shadow the panel could not show (**1.00:1**) while the page, card,
 popover, toolbar and wash placements all passed. The tint is now a grey lighter
-than the faces it can fall on (`#4A4A4AB3`), and the deepest level clears the
-floor on all fourteen strips at 1.17–1.87:1, the tightest being the pressed
-`active` wash a row keeps while the press that opened the surface is down at
-1.17:1. The one-shadow-per-level rule and the role-owned tint remain
-`elevation.test.ts`'s.
+than the faces it can fall on (`#4A4A4AB3`), and every raised level clears the
+floor on all fourteen strips: the card's lift reads 1.08–1.28:1, the menu's
+1.13–1.59:1 and the dialog's 1.17–1.87:1. Across every shipped, high-contrast,
+platform and authored style the tightest of the 588 placements is 1.06:1 — the
+authored Windows 7 (Aero) dark card lift on a field's own fill. The
+one-shadow-per-level rule and the role-owned tint remain `elevation.test.ts`'s.
 
 ```ts
 import { decorativeFailures } from "@gpuixui/tokens";
@@ -2709,11 +2715,15 @@ level can give `md` the dialog's geometry, so a dialog casts a tighter shadow
 than the menu beneath it while every number is layable; the report names `lg` and
 the reach of both levels.
 
-A level also has to be **visible**: the deepest one must differ from each strip a
-raised surface falls on, which `decorativeFailures` measures (§Decorative
-surfaces). A tint equal to the page cannot darken it, however strong the level's
-share — the high-contrast dark theme's black-on-black shadows did exactly that —
-so a brand that retints `shadow` is held to the same floor as the shipped themes.
+A level also has to be **visible**: every level a component raises a surface to
+must differ from each strip a raised surface falls on, which `decorativeFailures`
+measures (§Decorative surfaces) and reports with the level that failed. A tint
+equal to the page cannot darken it, however strong the level's share — the
+high-contrast dark theme's black-on-black shadows did exactly that — so a brand
+that retints `shadow` is held to the same floor as the shipped themes. The
+deepest level is not a checkpoint for the rest: a card's `sm` lift is weaker than
+a dialog's `lg`, so a tint that leaves the dialog measurable can still erase the
+card.
 
 ## Layering
 

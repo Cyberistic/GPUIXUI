@@ -316,15 +316,18 @@ const skeletonStrips = ["background", "card", "popover", "muted"] as const;
  * The shadow a raised surface drops, on every strip it can float over.
  *
  * A level's strength lives in its own alpha byte, so the painted colour is the
- * level's and a placement names the level it measures. `lg` is the deepest step
- * the scale ships, and the claim is deliberately the weakest one a blurred
- * geometry supports: if even the strongest level cannot differ from the strip,
- * the whole scale is flat there, and a lighter step being subtler than `lg` is
- * the design rather than a defect. The measured result is a ceiling (a blurred
- * edge casts less than its full alpha), so this reports only a shadow that
- * cannot be seen at all — which is exactly the case that shipped: the
- * high-contrast dark theme's black tint on its pure-black page measured 1.00:1
- * at every level, so no raised surface in that variant had a shadow.
+ * level's and a placement names the level it measures. Every level a component
+ * raises a surface to is measured — a card's `sm`, the `md` a toast, a preview
+ * card and a navigation panel paint, and the `lg` of a dialog, popover, menu or
+ * drawer — because each is a decision a brand can supply whole: the strongest
+ * level says nothing about a weaker one, which is *less* visible than it by
+ * design. Measured on the deepest level alone, a brand whose `sm` paints the
+ * card's own fill shipped a raised card with no lift while the dialog's shadow
+ * passed. The measured result is still a ceiling (a blurred edge casts less than
+ * its full alpha), so this reports only a shadow that cannot be seen at all —
+ * which is exactly the case that shipped: the high-contrast dark theme's black
+ * tint on its pure-black page measured 1.00:1 at every level, so no raised
+ * surface in that variant had a shadow.
  *
  * The strips are the four content surfaces a raised surface floats over, the two
  * window fills the veil already names — a segmented `secondary` panel (a filled
@@ -346,7 +349,20 @@ const skeletonStrips = ["background", "card", "popover", "muted"] as const;
  * a pointer that hovers its ghost trigger (`internal/button.tsx`).
  */
 const elevationRole = "shadow" as const;
-const elevationLevel = "lg" as const;
+
+/**
+ * The levels a component raises a surface to, in the order it paints them.
+ *
+ * `overlay` is reserved and empty — layering is paint order, not a shadow — so it
+ * is not a placement: a level that paints nothing has no colour to measure, and
+ * `decorativeFailures` reports it as the absent level it is if a theme carries it
+ * empty.
+ */
+const raisedLevels = [
+  "sm",
+  "md",
+  "lg",
+] as const satisfies ReadonlyArray<ElevationLevel>;
 
 /**
  * The soft status tints a message's own action opens a surface over. An
@@ -458,13 +474,15 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
       over,
     }),
   ),
-  ...elevationStrips.map(
-    (over): DecorativeSurface => ({
-      surface: "elevation",
-      role: elevationRole,
-      over,
-      level: elevationLevel,
-    }),
+  ...raisedLevels.flatMap((level) =>
+    elevationStrips.map(
+      (over): DecorativeSurface => ({
+        surface: "elevation",
+        role: elevationRole,
+        over,
+        level,
+      }),
+    ),
   ),
   ...enabledFaces.map(
     (over): DecorativeSurface => ({
@@ -515,6 +533,12 @@ export interface DecorativeFailure {
   readonly role: keyof ThemeColors;
   /** The role it was painted over. */
   readonly over: keyof ThemeColors;
+  /**
+   * The elevation level whose shadow failed, for an `elevation` placement.
+   * Absent for every other surface, and for a level the theme does not carry
+   * (there is no level to name beyond the one the placement asks for).
+   */
+  readonly level?: ElevationLevel;
   /**
    * The measured ratio of the painted result, or `undefined` when it could not
    * be measured because the surface or the result is not opaque. An
@@ -572,7 +596,16 @@ export function decorativeFailures(
       const ratio = contrastRatio(painted, paintedOver);
       return ratio !== undefined && ratio >= floor
         ? []
-        : [{ surface, role, over, ratio, floor }];
+        : [
+            {
+              surface,
+              role,
+              over,
+              ...(level === undefined ? {} : { level }),
+              ratio,
+              floor,
+            },
+          ];
     },
   );
   const feedback = actionFeedbackFailures(theme, floor);

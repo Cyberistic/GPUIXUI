@@ -46,12 +46,15 @@
  * The elevation tint joined last, and it is the one surface the page said was
  * deliberately outside this contract: a shadow is a blurred geometry, so a flat
  * composite overstates what the eye receives. It overstates in the safe
- * direction — the deepest level is a ceiling, and only a shadow that cannot be
- * seen at all is reported — and the gap was real: the high-contrast dark theme
- * tints its shadows with black on a pure-black page, so **every** level measured
- * 1.00:1 there and no raised surface in that variant had a shadow. Its tint is
- * the grey its raised controls use now, and the scale reads 1.09–1.37:1 across
- * the five strips it can fall on.
+ * direction — the shadow a level paints is a ceiling, and only a shadow that
+ * cannot be seen at all is reported — and the gap was real: the high-contrast
+ * dark theme tints its shadows with black on a pure-black page, so **every**
+ * level measured 1.00:1 there and no raised surface in that variant had a
+ * shadow. Its tint is the grey its raised controls use now, and every level
+ * clears the floor on all fourteen strips. Measuring one level was the next
+ * hole: a weaker level is *less* visible by design, so a card's lift (`sm`) and
+ * a toast's (`md`) are measured beside the dialog's (`lg`), and a failure names
+ * the level it measured.
  */
 
 import { describe, expect, it } from "vitest";
@@ -112,11 +115,26 @@ const platformThemes = platformNames
     platformTheme(themes.dark, name),
   ]);
 
-const measured = (surface: string, role: string, over: string): boolean =>
+const measured = (
+  surface: string,
+  role: string,
+  over: string,
+  level?: string,
+): boolean =>
   decorativeSurfaces.some(
     (entry) =>
-      entry.surface === surface && entry.role === role && entry.over === over,
+      entry.surface === surface &&
+      entry.role === role &&
+      entry.over === over &&
+      (level === undefined || entry.level === level),
   );
+
+/** The levels a raised surface is measured at, in the order the table lists them. */
+const raisedLevels = ["sm", "md", "lg"] as const;
+
+/** Every elevation failure of a theme, in placement order. */
+const elevationFailures = (theme: Parameters<typeof decorativeFailures>[0]) =>
+  decorativeFailures(theme).filter(({ surface }) => surface === "elevation");
 
 describe("decorative surfaces", () => {
   it("measures a divider on every surface it can rule", () => {
@@ -720,7 +738,7 @@ describe("decorative surfaces", () => {
           );
   };
 
-  it("measures the deepest elevation level on the strips the veil already names", () => {
+  it("measures every raised elevation level on the strips the veil already names", () => {
     // A dialog lands on the page, a popover on a card, a menu in a toolbar and a
     // context menu over the row it was opened from; the shadow is the only thing
     // separating a raised surface from the strip in a dark theme. The veil and
@@ -729,13 +747,22 @@ describe("decorative surfaces", () => {
     // tint, so a dialog opened over a segmented panel there cast no shadow at all
     // (1.00:1). The field fill is the same strip one surface over — a picker's
     // panel overlaps the field it drops from.
-    const strips = [
+    //
+    // Every level a component raises a surface to is measured, not only the
+    // deepest: a card paints `sm`, a toast, preview card and navigation panel
+    // paint `md`, and a dialog, popover, menu and drawer paint `lg`. The deepest
+    // level says nothing about a weaker one — a weaker shadow is less visible by
+    // design, so a tint that erases a card's lift can leave a dialog's lift
+    // measurable, and measuring `lg` alone shipped that card flat.
+    const placements = decorativeSurfaces.filter(
+      ({ surface }) => surface === "elevation",
+    );
+    const levels = [
       ...new Set(
-        decorativeSurfaces
-          .filter(({ surface }) => surface === "elevation")
-          .map(({ over }) => over),
+        placements.flatMap(({ level }) => (level === undefined ? [] : [level])),
       ),
     ];
+    const strips = [...new Set(placements.map(({ over }) => over))];
     const veiled = [
       ...new Set(
         decorativeSurfaces
@@ -744,11 +771,53 @@ describe("decorative surfaces", () => {
       ),
     ];
 
+    expect(levels).toEqual([...raisedLevels]);
     expect(strips.length).toBeGreaterThanOrEqual(13);
     expect(veiled.filter((over) => !strips.includes(over))).toEqual([]);
     expect(
-      strips.filter((over) => !measured("elevation", "shadow", over)),
+      raisedLevels.flatMap((level) =>
+        strips
+          .filter((over) => !measured("elevation", "shadow", over, level))
+          .map((over) => `elevation/${level}/${over}`),
+      ),
     ).toEqual([]);
+  });
+
+  it("measures every level the tw recipes raise a surface to", () => {
+    // The three levels are not a guess: `packages/tw/src/recipes.ts` compiles
+    // every lift the components paint, and its shadow utilities resolve through
+    // the compiler's own table (`xs`/`sm` → `sm`, `md` → `md`, `lg`/`xl` → `lg`).
+    // `sm` is the card variant's lift, `md` the toast, preview card and
+    // navigation panel, `lg` a dialog, popover, menu and drawer; a utility that
+    // resolved to the reserved `overlay` would be a class that paints nothing,
+    // and it fails here instead.
+    const recipes = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+    const utilities = readFileSync(
+      new URL("../../tw/src/utilities.ts", import.meta.url),
+      "utf8",
+    );
+    const table =
+      /const ELEVATION[^=]*= \{([\s\S]*?)\};/.exec(utilities)?.[1] ?? "";
+    const levelOf = (utility: string): string | undefined =>
+      [...table.matchAll(/(\w+): "(\w+)"/g)].find(
+        ([, name]) => name === utility,
+      )?.[2];
+    const used = [
+      ...new Set(
+        [...recipes.matchAll(/\bshadow-(\w+)/g)].flatMap(([, utility]) => {
+          const level = utility === undefined ? undefined : levelOf(utility);
+          return level === undefined ? [] : [level];
+        }),
+      ),
+    ];
+
+    expect(used).toHaveLength(raisedLevels.length);
+    expect([...raisedLevels].filter((level) => !used.includes(level))).toEqual(
+      [],
+    );
   });
 
   it("measures a message's own action opening over its tint", () => {
@@ -862,16 +931,49 @@ describe("decorative surfaces", () => {
       },
     });
 
-    const strips = decorativeSurfaces
-      .filter(({ surface }) => surface === "elevation")
+    const lgStrips = decorativeSurfaces
+      .filter(({ surface, level }) => surface === "elevation" && level === "lg")
       .map(({ over }) => over);
 
     expect(
-      decorativeFailures(flat)
-        .filter(({ surface }) => surface === "elevation")
-        .map(({ over, ratio }) => [over, ratio]),
-    ).toEqual(strips.map((over) => [over, 1]));
+      elevationFailures(flat).map(({ level, over, ratio }) => [
+        level,
+        over,
+        ratio,
+      ]),
+    ).toEqual(lgStrips.map((over) => ["lg", over, 1]));
     expect(decorativeFailures(lightTheme)).toEqual([]);
+  });
+
+  it("measures a level a brand supplied that paints nothing, not only the deepest", () => {
+    // The deepest level is not a ceiling for the two below it: a weaker shadow is
+    // *less* visible by design, so a brand can erase a card's `sm` lift while its
+    // dialog's `lg` still measures well. `CARD_VARIANTS.elevated` paints `sm`,
+    // the toast, preview card and navigation panel paint `md`, so a scale whose
+    // weaker steps paint nothing raises a card and a toast with no lift at all
+    // while every report stayed empty.
+    const invisible = (share: string) => [
+      { offsetX: 0, offsetY: 1, blurRadius: 2, spreadRadius: 0, color: share },
+    ];
+    const flat = extendTheme(lightTheme, {
+      elevation: { sm: invisible("#00000000"), md: invisible("#00000000") },
+    });
+    const failures = elevationFailures(flat);
+
+    expect([...new Set(failures.map(({ level }) => level))]).toEqual([
+      "sm",
+      "md",
+    ]);
+    expect(failures.every(({ ratio }) => ratio === 1)).toBe(true);
+    // The dialog's lift is the shipped one and passes: the weaker steps are the
+    // hole, not the scale.
+    expect(failures.map(({ level }) => level)).not.toContain("lg");
+    expect(failures[0]).toMatchObject({
+      surface: "elevation",
+      level: "sm",
+      role: "shadow",
+      floor: decorativeFloor,
+    });
   });
 
   it("reports a shadow tinted with the row it falls on", () => {
@@ -889,31 +991,95 @@ describe("decorative surfaces", () => {
     ).toMatchObject({ ratio: 1, floor: decorativeFloor });
   });
 
-  it("prints the deepest level's range over the strips it measures", () => {
-    // The page prints the high-contrast dark range, so the sentence moves with
-    // the table: a placement added to the elevation half has to appear in it.
-    const level = highContrastDarkTheme.elevation.lg[0]?.color ?? "";
-    const ratios = decorativeSurfaces
-      .filter(({ surface }) => surface === "elevation")
-      .map(({ over }) => {
-        const strip = highContrastDarkTheme.colors[over];
-        return contrastRatio(blend(strip, level, alphaOf(level)), strip);
-      })
-      .filter((ratio): ratio is number => ratio !== undefined);
-    const [low, high] = ratios.reduce<readonly [number, number]>(
-      ([floor, ceiling], ratio) => [
-        Math.min(floor, ratio),
-        Math.max(ceiling, ratio),
-      ],
-      [Number.POSITIVE_INFINITY, 0],
-    );
-    const printed = `${low.toFixed(2)}–${high.toFixed(2)}:1`;
+  it("prints every raised level's range over the strips it measures", () => {
+    // The page prints the high-contrast dark ranges, so the sentence moves with
+    // the table: a level or a strip added to the elevation half has to appear in
+    // it. The three levels are printed separately because they answer different
+    // decisions — a card's lift, a toast's and a dialog's.
+    const range = (level: "sm" | "md" | "lg"): string => {
+      const painted = highContrastDarkTheme.elevation[level][0]?.color ?? "";
+      const ratios = decorativeSurfaces
+        .filter(
+          ({ surface, level: placed }) =>
+            surface === "elevation" && placed === level,
+        )
+        .map(({ over }) => {
+          const strip = highContrastDarkTheme.colors[over];
+          return contrastRatio(blend(strip, painted, alphaOf(painted)), strip);
+        })
+        .filter((ratio): ratio is number => ratio !== undefined);
+      const [low, high] = ratios.reduce<readonly [number, number]>(
+        ([floor, ceiling], ratio) => [
+          Math.min(floor, ratio),
+          Math.max(ceiling, ratio),
+        ],
+        [Number.POSITIVE_INFINITY, 0],
+      );
+      return `${low.toFixed(2)}–${high.toFixed(2)}:1`;
+    };
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8");
 
-    expect(printed).toBe("1.17–1.87:1");
-    expect(read("../../../docs/tokens.md")).toContain(printed);
-    expect(read("../../../docs/design-system.md")).toContain(printed);
+    expect(range("sm")).toBe("1.08–1.28:1");
+    expect(range("md")).toBe("1.13–1.59:1");
+    expect(range("lg")).toBe("1.17–1.87:1");
+    const printed = `the card's lift reads ${range("sm")}, the menu's ${range("md")} and the dialog's ${range("lg")}`;
+    // Whitespace-normalised: the page wraps prose, and a line break inside the
+    // sentence is not a drift in the numbers.
+    const prose = (path: string): string => read(path).replace(/\s+/g, " ");
+
+    expect(prose("../../../docs/tokens.md")).toContain(printed);
+    expect(prose("../../../docs/design-system.md")).toContain(printed);
+  });
+
+  it("prints the tightest placement over every shipped style and level", () => {
+    // The printed value is the whole contract's tightest cell, not the base
+    // theme's: 16 styles × 3 levels × 14 strips, the weakest shadow over the
+    // darkest strip it can fall on.
+    const every = [
+      ...shippedThemes,
+      ...platformThemes,
+      ...retroNames.flatMap((look) => [
+        retroTheme(lightTheme, look),
+        retroTheme(darkTheme, look),
+      ]),
+    ];
+    const cells = every.flatMap((theme) =>
+      raisedLevels.flatMap((level) =>
+        decorativeSurfaces
+          .filter(
+            ({ surface, level: placed }) =>
+              surface === "elevation" && placed === level,
+          )
+          .flatMap(({ over }) => {
+            const painted = theme.elevation[level][0]?.color;
+            if (painted === undefined) return [];
+            const strip = theme.colors[over];
+            const ratio = contrastRatio(
+              blend(strip, painted, alphaOf(painted)),
+              strip,
+            );
+            return ratio === undefined
+              ? []
+              : [{ label: theme.name, level, over, ratio }];
+          }),
+      ),
+    );
+    const tightest = cells.reduce((best, cell) =>
+      cell.ratio < best.ratio ? cell : best,
+    );
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8");
+
+    expect(cells).toHaveLength(every.length * raisedLevels.length * 14);
+    expect(tightest).toMatchObject({
+      label: "Dark · Windows 7 (Aero)",
+      level: "sm",
+      over: "input",
+    });
+    expect(tightest.ratio.toFixed(2)).toBe("1.06");
+    expect(read("../../../docs/tokens.md")).toContain("1.06:1");
+    expect(read("../README.md")).toContain("1.06:1");
   });
 
   it("reports the high-contrast dark panel a shadow could not lift", () => {
@@ -921,41 +1087,45 @@ describe("decorative surfaces", () => {
     // tint was the grey of its own `secondary` face, so a dialog opened over a
     // segmented panel painted a shadow the panel could not show — 1.00:1, while
     // the page, card, popover and toolbar placements all passed — and the same
-    // tint was 1.047:1 on the deep red message surface, under the floor at its
-    // edge. `hover` is that grey as well, so the hovered control a surface was
-    // opened from was erased by the same tint. The tint is lighter than the faces
-    // it can fall on now, and every strip clears.
+    // tint was under the floor on the deep red message surface at every level.
+    // `hover` is that grey as well, so the hovered control a surface was opened
+    // from was erased by the same tint. The tint is lighter than the faces it can
+    // fall on now, and every strip clears.
+    //
+    // Measuring every level also shows *why* the deepest level is not enough: at
+    // `sm` the card's weaker lift cannot clear the selected/accent washes or the
+    // lighter message tints either, so seven cells fail where `lg` has three.
     const before = extendTheme(highContrastDarkTheme, {
       colors: { shadow: "#2E2E2EB3" },
     });
+    const failures = elevationFailures(before);
+    const byLevel = (level: (typeof raisedLevels)[number]) =>
+      failures
+        .filter((failure) => failure.level === level)
+        .map(({ over }) => over);
 
-    expect(
-      decorativeFailures(before).filter(
-        ({ surface }) => surface === "elevation",
-      ),
-    ).toEqual([
-      {
-        surface: "elevation",
-        role: "shadow",
-        over: "secondary",
-        ratio: 1,
-        floor: decorativeFloor,
-      },
-      {
-        surface: "elevation",
-        role: "shadow",
-        over: "hover",
-        ratio: 1,
-        floor: decorativeFloor,
-      },
-      {
-        surface: "elevation",
-        role: "shadow",
-        over: "destructiveSoft",
-        ratio: 1.0467992163227682,
-        floor: decorativeFloor,
-      },
+    expect(failures).toHaveLength(13);
+    expect(byLevel("sm")).toEqual([
+      "secondary",
+      "selected",
+      "accent",
+      "hover",
+      "infoSoft",
+      "successSoft",
+      "destructiveSoft",
     ]);
+    expect(byLevel("md")).toEqual(["secondary", "hover", "destructiveSoft"]);
+    expect(byLevel("lg")).toEqual(["secondary", "hover", "destructiveSoft"]);
+    expect(
+      failures
+        .filter(({ over }) => over === "secondary" || over === "hover")
+        .every(({ ratio }) => ratio === 1),
+    ).toBe(true);
+    expect(
+      failures
+        .filter(({ over }) => over === "destructiveSoft")
+        .every(({ ratio, floor }) => ratio !== undefined && ratio < floor),
+    ).toBe(true);
     expect(
       decorativeFailures(highContrastDarkTheme).some(
         ({ surface }) => surface === "elevation",
@@ -983,23 +1153,30 @@ describe("decorative surfaces", () => {
     // with black on a pure-black page, so every level measured 1.00:1 there and
     // no raised surface had a shadow on the page. Its card, popover and toolbar
     // are lifted greys, so only the page was erased — which is the strip a dialog
-    // and a full-width card land on. The deepest level clears every strip now.
+    // and a full-width card land on. Every raised level clears every strip now,
+    // and the failure names the level it measured.
     const before = extendTheme(highContrastDarkTheme, {
       colors: { shadow: "#000000B3" },
     });
 
+    // Every level erased the page. The weaker steps also erased a card's lift on
+    // the strips the card's own fill and a field's fill paint (`sm` 1.03:1 on
+    // both, `md` 1.05:1), while the dialog's stronger `lg` lift still cleared
+    // them — the measurement that shows why one level cannot stand for the rest.
+    const failures = elevationFailures(before);
+    const background = failures.filter(({ over }) => over === "background");
+
+    expect(background.map(({ level }) => level)).toEqual([...raisedLevels]);
+    expect(background.every(({ ratio }) => ratio === 1)).toBe(true);
     expect(
-      decorativeFailures(before).filter(
-        ({ surface }) => surface === "elevation",
-      ),
+      failures
+        .filter(({ over }) => over !== "background")
+        .map(({ level, over, ratio }) => [level, over, ratio?.toFixed(2)]),
     ).toEqual([
-      {
-        surface: "elevation",
-        role: "shadow",
-        over: "background",
-        ratio: 1,
-        floor: decorativeFloor,
-      },
+      ["sm", "card", "1.03"],
+      ["sm", "input", "1.03"],
+      ["md", "card", "1.05"],
+      ["md", "input", "1.05"],
     ]);
     expect(
       decorativeFailures(highContrastDarkTheme).some(
@@ -1010,42 +1187,48 @@ describe("decorative surfaces", () => {
 
   it("reports a shadow painted in the page it falls on", () => {
     // The same defect from a brand: a tint equal to the strip cannot darken it,
-    // so every level is flat there no matter how strong its share is. The card,
+    // so the level is flat there no matter how strong its share is. The card,
     // popover, toolbar, panel, field fill and row washes are reported too — the
     // page-coloured tint lifts them by less than a percent. The soft status tints
-    // are the exception on purpose: a pale or deep tint is not in the page's
-    // lightness band, so the page's own colour is visible over one, and the
-    // placements measure that rather than assuming it.
+    // are mostly the same, and the one cell that still clears is the strongest
+    // level over the deep red message tint: a pale or deep tint is not in the
+    // page's lightness band, so a `lg` shadow is visible over it while the card's
+    // `sm` lift is not. That is the measurement that makes "the deepest level is
+    // a ceiling" false for the levels below it.
     const broken = extendTheme(lightTheme, {
       colors: { shadow: lightTheme.colors.background },
     });
 
-    const strips = decorativeSurfaces
-      .filter(({ surface }) => surface === "elevation")
-      .map(({ over }) => over);
-    // The deep red message tint is the one strip the page's own colour still
-    // moves: it sits far enough from the page's lightness to show a pale shadow,
-    // which is why the placement measures the tint rather than assuming it.
-    const erased = strips.filter((over) => over !== "destructiveSoft");
+    const failures = elevationFailures(broken);
+    const cells = decorativeSurfaces.filter(
+      ({ surface }) => surface === "elevation",
+    );
 
+    expect(failures).toHaveLength(cells.length - 1);
     expect(
-      decorativeFailures(broken)
-        .filter(({ surface }) => surface === "elevation")
-        .map(({ over, ratio }) => [over, ratio]),
-    ).toMatchObject(
-      erased.map((over) => [
-        over,
-        over === "background" ? 1 : expect.any(Number),
-      ]),
+      failures.every(
+        ({ ratio, floor }) =>
+          ratio === 1 || (ratio !== undefined && ratio < floor),
+      ),
+    ).toBe(true);
+    expect(failures.filter(({ over }) => over === "background")).toHaveLength(
+      3,
     );
     expect(
-      decorativeFailures(broken)
-        .filter(
-          ({ surface, over }) =>
-            surface === "elevation" && over !== "destructiveSoft",
-        )
-        .every(({ ratio, floor }) => ratio !== undefined && ratio < floor),
-    ).toBe(true);
+      cells.filter(
+        ({ surface, level, over }) =>
+          surface === "elevation" &&
+          !failures.some(
+            (failure) => failure.level === level && failure.over === over,
+          ),
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        surface: "elevation",
+        level: "lg",
+        over: "destructiveSoft",
+      }),
+    ]);
   });
 
   it("reports an elevation level the theme does not carry as unmeasurable", () => {
@@ -1277,7 +1460,7 @@ describe("the documented example", () => {
   it("reports the brand whose shadows are its page", () => {
     expect(decorativeSurfacesAreVisible(flatShadowBrand)).toBe(false);
     expect(report(flatShadowBrand)).toContain(
-      "elevation: shadow on background is 1.00",
+      "elevation.lg: shadow on background is 1.00",
     );
   });
 
@@ -1291,7 +1474,7 @@ describe("the documented example", () => {
   it("reports the brand whose shadow is its segmented panel", () => {
     expect(decorativeSurfacesAreVisible(panelShadowBrand)).toBe(false);
     expect(report(panelShadowBrand)).toContain(
-      "elevation: shadow on secondary is 1.00",
+      "elevation.lg: shadow on secondary is 1.00",
     );
   });
 

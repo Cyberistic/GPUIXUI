@@ -350,8 +350,9 @@ Overlay layering is paint order, not a shadow or a weight: the runtime has no
 `docs/tokens.md` is the model — the five mount layers, the topmost-layer
 dismissal stack, and why `elevation.overlay` stays a reserved, empty level. Dark
 shadows are stronger because contrast between surfaces is lower — but stronger is
-not the same as visible. The deepest level is held to the perceptibility floor
-against the strips a raised surface falls on — the page, card, popover and
+not the same as visible. **Every** level a component raises a surface to is held
+to the perceptibility floor against the strips it can fall on — the page, card,
+popover and
 toolbar, the segmented `secondary` panel and a field's `input` fill the veil
 already names, every wash a surface can open over (the
 `selected` a chosen row holds, the `accent` a list row tints under the pointer,
@@ -361,13 +362,18 @@ on, because an alert's documented action can open a menu over its own surface �
 the same `decorativeFailures` call a divider and a wash answer to (§9). A shadow
 is a blurred geometry, so the composite is a ceiling rather
 than what the eye receives: a shadow that passes may still read faint at its
-edge, and the contract reports only one that cannot be seen at all. It found
+edge, and the contract reports only one that cannot be seen at all. The deepest
+level is not a ceiling for the levels below it: `sm` lifts a card, `md` a toast,
+a preview card and a navigation panel, and `lg` a dialog, and a weaker lift is
+less visible by design — so a brand whose card lift paints its own fill raises a
+card with no lift while the dialog still measures well. It found
 exactly that twice: the high-contrast dark theme tinted its shadows with black on
 a pure-black page, so every level was 1.00:1 there and a dialog or a full-width
 card had no shadow, and the grey that replaced it matched the same theme's
 `secondary` face, so a dialog over a segmented panel still painted 1.00:1. Its
-tint is lighter than the faces it can fall on now, and the deepest level reads
-1.17–1.87:1 across all fourteen strips.
+tint is lighter than the faces it can fall on now: the card's lift reads
+1.08–1.28:1, the menu's 1.13–1.59:1 and the dialog's 1.17–1.87:1 across all
+fourteen strips.
 
 A level is a rung on the same kind of ladder as a radius: the surface a reader
 raises must cast a shadow that reaches further below its box than the level
@@ -650,7 +656,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the four washes a row wears (`hover`/`active` on a menu or combobox row; `accent`/`selected` on a list row) | 3:1 | 4.5:1 |
 | soft status surface and its edge against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
-| decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, rail, elevation shadow (at its deepest level) | 1.05:1 | 1.05:1 |
+| decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, rail, and every raised elevation level (`sm`, `md`, `lg`) | 1.05:1 | 1.05:1 |
 | a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
 | a bar's rail (`muted`) on background, card and popover — never on the muted strip it is made of | 1.05:1 | 1.05:1 |
 | a disabled action's fill against each face an enabled control wears (`primary`, `secondary`, `destructive`, `accent`, `input`) | 1.05:1 | 1.05:1 |
@@ -798,17 +804,21 @@ while its fill moves to the wash, and both base themes, high-contrast dark and
 Linux light were under the floor there — the four values moved stronger, and the
 message-tint pairs moved the neutral edge again.
 
-The elevation tint is measured on the same floor, as a **ceiling**: the deepest
-level is composited over the strips a raised surface can fall on — the page,
+The elevation tint is measured on the same floor, as a **ceiling**: every level a
+component raises a surface to is composited over the strips it can fall on — the
+page,
 card, popover and toolbar, the `secondary` panel and `input` fill the veil names,
 every wash a surface can open over when a context menu or a dialog opens
 (`selected`, `accent`, `active`, and the `hover` a click leaves on its trigger)
 and the four soft tints a message's own action
 can open a surface over — so a shadow that passes may still read faint at its
-blurred edge and one a reader cannot see is reported. That is how the
+blurred edge and one a reader cannot see is reported, naming the level. That is
+how the
 high-contrast dark page's black-on-black scale was found, and how the grey that
 replaced it was found to match the same theme's `secondary` face (1.00:1 over a
-segmented panel); the one-shadow rule and the role-owned tint stay
+segmented panel); reading `lg` alone would have missed that the same tint erased a
+card's weaker `sm` lift on the selected and accent washes. The one-shadow rule and
+the role-owned tint stay
 `elevation.test.ts`'s.
 
 One pair class is measured by a helper rather than by the table, because it is

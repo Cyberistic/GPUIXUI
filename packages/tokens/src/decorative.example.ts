@@ -64,6 +64,6 @@ export const panelShadowBrand = extendTheme(lightTheme, {
 /** A failure written the way a theme editor shows it. */
 export const report = (theme: Theme): ReadonlyArray<string> =>
   decorativeFailures(theme).map(
-    ({ surface, role, over, ratio }) =>
-      `${surface}: ${role} on ${over} is ${ratio === undefined ? "unmeasurable" : ratio.toFixed(2)}`,
+    ({ surface, level, role, over, ratio }) =>
+      `${surface}${level === undefined ? "" : `.${level}`}: ${role} on ${over} is ${ratio === undefined ? "unmeasurable" : ratio.toFixed(2)}`,
   );
