@@ -215,14 +215,19 @@ export const lightColors = {
   warningForeground: palette.amber[950],
   info: palette.blue[600],
   infoForeground: palette.neutral[0],
-  infoSoft: palette.blue[100],
-  infoSoftForeground: palette.blue[800],
-  successSoft: palette.green[100],
-  successSoftForeground: palette.green[800],
-  warningSoft: palette.amber[100],
+  // A soft status surface is measured against the strips a message sits on
+  // (`decorative.ts`), and a step-100 tint equalled the light `muted` toolbar
+  // it was painted in. One ramp step deeper keeps the surface visible on the
+  // page, a card and a toolbar, and the 900 step keeps the label readable on
+  // the deeper fill.
+  infoSoft: palette.blue[200],
+  infoSoftForeground: palette.blue[900],
+  successSoft: palette.green[200],
+  successSoftForeground: palette.green[900],
+  warningSoft: palette.amber[200],
   warningSoftForeground: palette.amber[900],
-  destructiveSoft: palette.red[100],
-  destructiveSoftForeground: palette.red[800],
+  destructiveSoft: palette.red[200],
+  destructiveSoftForeground: palette.red[900],
   border: palette.neutral[200],
   borderStrong: "#727D8C",
   input: palette.neutral[0],
@@ -268,13 +273,16 @@ export const darkColors = {
   warningForeground: palette.amber[950],
   info: palette.blue[300],
   infoForeground: palette.neutral[950],
-  infoSoft: palette.blue[900],
+  // The dark counterparts are one step lighter than the 900 step for the same
+  // reason: a 900 tint sat within 5% of the lighter popovers the platform and
+  // authored styles paint, so an alert inside one had no surface of its own.
+  infoSoft: palette.blue[800],
   infoSoftForeground: palette.blue[100],
-  successSoft: palette.green[900],
+  successSoft: palette.green[800],
   successSoftForeground: palette.green[100],
-  warningSoft: palette.amber[900],
+  warningSoft: palette.amber[800],
   warningSoftForeground: palette.amber[100],
-  destructiveSoft: palette.red[900],
+  destructiveSoft: palette.red[800],
   destructiveSoftForeground: palette.red[100],
   border: palette.neutral[800],
   borderStrong: "#788494",
@@ -322,13 +330,16 @@ export const highContrastLightColors = {
   warningForeground: "#000000",
   info: palette.blue[700],
   infoForeground: "#FFFFFF",
-  infoSoft: palette.blue[200],
+  // One step deeper than the default light theme's soft surfaces: the tints
+  // carry the same 950 text, and a high-contrast variant states its strength in
+  // every role it paints rather than inheriting the ordinary palette's.
+  infoSoft: palette.blue[300],
   infoSoftForeground: palette.blue[950],
-  successSoft: palette.green[200],
+  successSoft: palette.green[300],
   successSoftForeground: palette.green[950],
-  warningSoft: palette.amber[200],
+  warningSoft: palette.amber[300],
   warningSoftForeground: palette.amber[950],
-  destructiveSoft: palette.red[200],
+  destructiveSoft: palette.red[300],
   destructiveSoftForeground: palette.red[950],
   border: "#6E7683",
   borderStrong: "#4A4F58",

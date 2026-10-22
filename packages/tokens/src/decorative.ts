@@ -1,19 +1,19 @@
 /**
  * The perceptibility contract for the surfaces that carry no text: dividers,
- * skeleton fills, the modal veil, a status message's edge, the scrollbar thumb,
- * the wash a control tints its surface with while it is hovered, pressed,
- * selected or accented, and the fill a tonal action rests on.
+ * skeleton fills, the modal veil, a status message's soft surface and its edge,
+ * the scrollbar thumb, the wash a control tints its surface with while it is
+ * hovered, pressed, selected or accented, and the fill a tonal action rests on.
  *
  * WCAG's text and non-text floors do not cover them — they are decorative, and
  * the veil's job is to suppress what is behind it — so they have no floor at all
  * unless this file states one. They still have a minimum job: be seen. A divider
  * that matches the page is a card without an edge; a skeleton that matches the
  * row it stands in is an empty list that looks loaded; a veil that dims nothing
- * is a dialog with no layer behind it; an edge that matches its tint is a
+ * is a dialog with no layer behind it; a tint that matches the strip it sits in
+ * is a status message with no surface; an edge that matches its tint is a
  * message with no boundary; a hover that matches the row it tints is a menu with
  * no feedback; a tonal action painted in its toolbar's own colour is a label a
- * reader cannot tell is a button. One floor covers all seven, the same 1.05:1
- * the soft status surfaces are held to.
+ * reader cannot tell is a button. One floor covers all eight, 1.05:1.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
@@ -32,15 +32,17 @@ export interface DecorativeSurface {
   /**
    * What the surface is for, so a failure names the design decision rather than
    * two roles: `divider` rules a region, `skeleton` stands in for content that
-   * has not loaded, `scrim` is the veil under a modal, `statusEdge` bounds a
-   * status message's soft surface, `scrollbar` is the thumb a scroller paints,
-   * `stateWash` is the tint behind a hovered, pressed, selected or accented row,
-   * `filledAction` is the resting fill of a tonal action.
+   * has not loaded, `scrim` is the veil under a modal, `statusTint` is the soft
+   * fill behind a status message, `statusEdge` bounds it, `scrollbar` is the
+   * thumb a scroller paints, `stateWash` is the tint behind a hovered, pressed,
+   * selected or accented row, `filledAction` is the resting fill of a tonal
+   * action.
    */
   readonly surface:
     | "divider"
     | "skeleton"
     | "scrim"
+    | "statusTint"
     | "statusEdge"
     | "scrollbar"
     | "stateWash"
@@ -70,6 +72,20 @@ const statusEdge = (
   over,
   alpha: statusEdgeAlpha,
 });
+
+/**
+ * A status message's soft surface, on every strip a message is painted on. The
+ * tint is what tells an alert or a soft badge apart from the surface behind it,
+ * and the four strips are the ones a component paints a message on: a page, a
+ * card, a popover and a muted toolbar (or sidebar) — the same four a state wash
+ * is measured on. It was the one status part measured by nothing: `xSoft` only
+ * ever appeared as the background a `statusEdge` was measured over, so a tint
+ * equal to its strip read as every surface passing. Measured, the light base
+ * theme shipped `successSoft` on `muted` at 1.006:1, Luna light's `infoSoft` was
+ * its own page at 1.00:1, and eleven more looks or platforms were within 5% of
+ * the surface they tinted.
+ */
+const statusTintStrips = ["background", "card", "popover", "muted"] as const;
 
 /**
  * A state wash: the tint a hovered, pressed, selected or accented row paints
@@ -109,9 +125,9 @@ const filledActionStrips = ["background", "card", "popover", "muted"] as const;
  * actually used rather than against a single generic surface: a divider sits on
  * the page, inside a card, in a popover and in a muted toolbar strip; a
  * skeleton stands in for a row on a page, in a card and in a muted list; a soft
- * status surface's edge sits between its own tint and the page it is placed on;
- * a tonal action sits on any of the four strips, because a toolbar, a card and
- * a popover all hold buttons.
+ * status surface is the tint a message sits in and its edge bounds it, on every
+ * strip a message is placed on; a tonal action sits on any of the four strips,
+ * because a toolbar, a card and a popover all hold buttons.
  */
 export const decorativeSurfaces: readonly DecorativeSurface[] = [
   { surface: "divider", role: "border", over: "background" },
@@ -153,6 +169,13 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   // the meaning — so it is held to the perceptibility floor, not the boundary
   // floor, and measured on the tint it bounds and on both page surfaces.
   ...statusTones.flatMap((tone) => [
+    ...statusTintStrips.map(
+      (over): DecorativeSurface => ({
+        surface: "statusTint",
+        role: `${tone}Soft`,
+        over,
+      }),
+    ),
     statusEdge(tone, `${tone}Soft`),
     statusEdge(tone, "background"),
     statusEdge(tone, "card"),

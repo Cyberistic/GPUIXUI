@@ -23,6 +23,7 @@ import {
 import {
   highContrastDarkColors,
   lightColors,
+  palette,
   type ThemeColors,
 } from "./color.js";
 import { indicatorRoles, indicatorSurfaces } from "./indicator.js";
@@ -259,12 +260,12 @@ describe("the resting role of a floating row on the wash it tints", () => {
   });
 
   it("reports the pressed wash the two light looks shipped before this pair", () => {
-    // Rebuilt from the base red 800 so the numbers are the ones the palettes
-    // shipped, not the red 900 both looks now carry.
+    // Rebuilt from red 800 so the numbers are the ones the palettes shipped
+    // before every light theme moved to red 900 for its soft surface's text.
     const before = (theme: { readonly colors: ThemeColors }) => ({
       colors: {
         ...theme.colors,
-        destructiveSoftForeground: lightColors.destructiveSoftForeground,
+        destructiveSoftForeground: palette.red[800],
       },
     });
     const pressed = (theme: { readonly colors: ThemeColors }) =>
@@ -304,7 +305,7 @@ describe("the resting role of a floating row on the wash it tints", () => {
     ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
   });
 
-  it("clears the body floor in every shipped theme, with the base themes tightest", () => {
+  it("clears the body floor in every shipped theme, with the dark looks tightest", () => {
     const shipped = [
       ...Object.values(themes),
       ...Object.values(highContrastThemes),
@@ -332,10 +333,13 @@ describe("the resting role of a floating row on the wash it tints", () => {
     expect(measured.filter(({ ratio }) => ratio < contrastFloors.body)).toEqual(
       [],
     );
-    // The base light theme's red 800 on its pressed wash, so the shared value
-    // stays: only the two darker washes needed a deeper role.
-    expect(tightest.name).toBe("Light/destructiveSoftForeground/active");
-    expect(tightest.ratio.toFixed(2)).toBe("7.25");
+    // The dark looks' pressed washes carry the same red 900 text as every other
+    // theme, so the tightest placement is the warmest of them rather than the
+    // base light theme, whose text moved a step deeper with its soft surface.
+    expect(tightest.name).toBe(
+      "Dark · Windows XP (Luna)/destructiveSoftForeground/active",
+    );
+    expect(tightest.ratio.toFixed(2)).toBe("8.06");
   });
 });
 

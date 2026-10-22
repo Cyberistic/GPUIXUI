@@ -24,7 +24,7 @@
  * wash left a destructive row at 6.77:1, under the body floor.
  */
 
-import type { ThemeColors } from "./color.js";
+import { palette, type ThemeColors } from "./color.js";
 import type { PlatformStyle } from "./platforms.js";
 import { systemUiFont } from "./platforms.js";
 import type { Theme } from "./theme.js";
@@ -69,6 +69,15 @@ const lunaColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     accentForeground: "#123A66",
     selected: "#BDD4F0",
     selectedForeground: "#0E2F57",
+    // Luna's beige page sits at the same lightness a pale status tint has
+    // (`#ECE9D8` is 1.00:1 from the base blue soft fill), and its muted strip
+    // is deeper still, so a tint that clears the default page vanishes here.
+    // The look carries its own, one ramp step lighter than its page instead:
+    // visible against the beige, the white card and the deeper toolbar.
+    infoSoft: palette.blue[50],
+    successSoft: palette.green[50],
+    warningSoft: palette.amber[50],
+    destructiveSoft: palette.red[50],
     // Luna's pressed wash is warm and dark, so the shared red 800 label landed
     // at 6.77:1 on a pressed destructive row; red 900 keeps it readable there.
     destructiveSoftForeground: "#5C1619",

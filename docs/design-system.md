@@ -308,8 +308,9 @@ that drifted toward its text would be unreadable with nothing else noticing. A
 row floating on a popover keeps the *surface's* role instead — a menu row rests
 in `popoverForeground`, a destructive row in the tone's readable role — so both
 are measured on the same washes; that check found the two light looks' pressed
-washes at 6.93:1 and 6.77:1, and both now deepen `destructiveSoftForeground` to
-red 900 rather than flatten press into hover.
+washes at 6.93:1 and 6.77:1, so every light theme carries red 900 as
+`destructiveSoftForeground` — the same value the deeper soft surface needs for
+its label, rather than flattening press into hover.
 
 It is also measured as a surface, because a wash with no contrast against the row
 it tints is a state nobody sees: `decorativeFailures` holds each of `hover`,
@@ -449,7 +450,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips, on the field, and on the `hover`/`active` wash a bordered control tints | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill or presence dot — on background, card, popover and a muted strip | 3:1 | 4.5:1 |
-| soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
+| soft status surface against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash | 1.05:1 | 1.05:1 |
 | a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
@@ -465,17 +466,23 @@ variants and all six platform themes — and is part of the normal test suite. I
 can fail: a palette edit that reduces contrast fails the gate.
 
 The surfaces that carry no text are measured too, because "subtle" is not
-"invisible": a divider, a skeleton fill, the modal veil, a status message's
-edge, the scrollbar thumb, the wash a row is hovered, pressed, selected or
-accented with, and the resting fill of a tonal action are held to 1.05:1 against
-what they are painted on — the same perceptibility floor the soft status surfaces
-use. The veil is composited over its surface rather than rejected as
+"invisible": a divider, a skeleton fill, the modal veil, a status message's soft
+tint and its edge, the scrollbar thumb, the wash a row is hovered, pressed,
+selected or accented with, and the resting fill of a tonal action are held to
+1.05:1 against what they are painted on. The veil is composited over its surface rather than rejected as
 translucent, and the two places it is measured are the content surfaces a modal
 covers; a black page cannot be darkened, and a high-contrast theme separates its
 dialog with a border instead. The status edge is measured at the share
 `statusTone` paints, on the tint it bounds and on both page surfaces.
 `decorativeFailures(theme, floor?)` runs the check, and `decorative.test.ts` holds
-every shipped and platform theme to it. It found two platform styles whose
+every shipped and platform theme to it. The status-tint half found the surface a message sits in: the page promised this
+row, and the code measured only the edge, so a tint equal to its strip passed.
+The base light theme's `successSoft` was 1.006:1 on its `muted` toolbar, Luna
+light's `infoSoft` was its beige page at 1.00:1, macOS light's success tint
+1.022:1 from its window, and the three lighter dark popovers were within 5%; the
+light tints now sit one ramp step deeper with their text at 900, the dark tints
+one step lighter with their text at 100, and Luna carries a lighter tint of its
+own. It found two platform styles whose
 inherited skeleton matched their own surfaces — macOS light's on a muted strip
 (1.045:1) and Linux dark's on its card (1.004:1) — which now carry a `skeleton`
 of their own, and the state-wash half found five aliases: the base dark theme's

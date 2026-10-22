@@ -24,10 +24,21 @@
  * 1.015:1, Linux light at 1.040:1, Windows light at 1.021:1, and the four dark
  * platform/look palettes fell at 1.021–1.049:1 on their lighter popovers. Each
  * of those styles now carries its own control face.
+ *
+ * The status tint joined last, and it is the surface a message actually sits in:
+ * `xSoft` appeared only as the background a `statusEdge` was measured over, so a
+ * tint that matched its strip passed every suite. Measured, the base light
+ * theme's `successSoft` was 1.006:1 on its `muted` toolbar, Luna light's
+ * `infoSoft` was its own beige page at 1.00:1, and macOS light, Windows light,
+ * Aero light and the three lighter dark popovers were all within 5% — an alert
+ * or a soft badge in one had no surface of its own. The light tints now sit one
+ * ramp step deeper (the 200 step with the 900 text), the dark ones one step
+ * lighter (800 with the 100 text), and Luna — whose beige page is at the same
+ * lightness a pale tint has — carries a lighter tint of its own.
  */
 
 import { describe, expect, it } from "vitest";
-import { alpha, lightColors } from "./color.js";
+import { alpha, lightColors, palette } from "./color.js";
 import {
   decorativeFailures,
   decorativeFloor,
@@ -41,6 +52,7 @@ import {
 } from "./decorative.example.js";
 import { statusEdgeAlpha, statusTone, statusTones } from "./styles.js";
 import { platformNames } from "./platforms.js";
+import { retroTheme } from "./retro.js";
 import {
   darkTheme,
   highContrastDarkTheme,
@@ -119,6 +131,66 @@ describe("decorative surfaces", () => {
         alpha(lightColors[tone], statusEdgeAlpha),
       );
     });
+  });
+
+  it("measures every soft status surface on every strip a message sits on", () => {
+    // An alert, a toast and a soft badge are painted on the page, in a card, in
+    // a popover and in a muted toolbar — the tint is what tells the message
+    // apart from the surface behind it, so it is measured on all four.
+    const missing = statusTones.flatMap((tone) =>
+      ["background", "card", "popover", "muted"]
+        .filter((over) => !measured("statusTint", `${tone}Soft`, over))
+        .map((over) => `${tone}Soft/${over}`),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("reports a soft status surface that matches the strip it tints", () => {
+    const broken = {
+      colors: { ...lightColors, successSoft: lightColors.muted },
+    };
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, role, over }) =>
+          surface === "statusTint" &&
+          role === "successSoft" &&
+          over === "muted",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+  });
+
+  it("reports the tints the light palettes shipped before this step", () => {
+    // Measured on the shipped values: a step-100 success tint in a light muted
+    // toolbar and Luna light's step-100 info tint on its own beige page. Both
+    // were invisible surfaces that every contract called a pass.
+    const beforeBase = {
+      colors: { ...lightColors, successSoft: palette.green[100] },
+    };
+    const beforeLuna = {
+      colors: {
+        ...retroTheme(lightTheme, "luna").colors,
+        infoSoft: palette.blue[100],
+      },
+    };
+
+    expect(
+      decorativeFailures(beforeBase).find(
+        ({ surface, role, over }) =>
+          surface === "statusTint" &&
+          role === "successSoft" &&
+          over === "muted",
+      )?.ratio,
+    ).toBeCloseTo(1.006, 2);
+    expect(
+      decorativeFailures(beforeLuna).find(
+        ({ surface, role, over }) =>
+          surface === "statusTint" &&
+          role === "infoSoft" &&
+          over === "background",
+      )?.ratio,
+    ).toBeCloseTo(1, 2);
   });
 
   it("measures a scrollbar on every surface a scroller can sit on", () => {

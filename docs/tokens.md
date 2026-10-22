@@ -149,14 +149,14 @@ tool never has to copy the palette out of this page.
 | `warningForeground` | `#2A1B00` | `#2A1B00` | text on `warning` |
 | `info` | `#2559D6` | `#9FBEFF` | informational status, distinct from `primary` |
 | `infoForeground` | `#FFFFFF` | `#11141A` | text and icons on `info` |
-| `infoSoft` | `#DEE9FF` | `#152F6B` | soft informational surface |
-| `infoSoftForeground` | `#173A88` | `#DEE9FF` | text and icons on `infoSoft` |
-| `successSoft` | `#D3F9E2` | `#0A3A26` | soft success surface |
-| `successSoftForeground` | `#0E5135` | `#D3F9E2` | text and icons on `successSoft` |
-| `warningSoft` | `#FFEFC6` | `#4B3100` | soft warning surface |
+| `infoSoft` | `#C5D8FF` | `#173A88` | soft informational surface |
+| `infoSoftForeground` | `#152F6B` | `#DEE9FF` | text and icons on `infoSoft` |
+| `successSoft` | `#A8F0C6` | `#0E5135` | soft success surface |
+| `successSoftForeground` | `#0A3A26` | `#D3F9E2` | text and icons on `successSoft` |
+| `warningSoft` | `#FFDE8A` | `#6B4500` | soft warning surface |
 | `warningSoftForeground` | `#4B3100` | `#FFEFC6` | text and icons on `warningSoft` |
-| `destructiveSoft` | `#FFE0E0` | `#5C1619` | soft destructive surface |
-| `destructiveSoftForeground` | `#7E1D21` | `#FFE0E0` | text and icons on `destructiveSoft` |
+| `destructiveSoft` | `#FFC6C6` | `#7E1D21` | soft destructive surface |
+| `destructiveSoftForeground` | `#5C1619` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `border` | `#E1E5EC` | `#2A303B` | dividers and decorative borders |
 | `borderStrong` | `#727D8C` | `#788494` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
@@ -268,10 +268,13 @@ tone.border; // alpha(theme.colors.info, statusEdgeAlpha)
 
 `statusEdgeAlpha` is the share the edge paints — the one design value `statusTone`
 and the decorative-surface contract share, so the edge a component paints is the
-edge the contract measures. The edge is a **decorative** boundary (the message's
-text and icon carry the meaning), so it is held to the 1.05:1 perceptibility
-floor rather than the 3:1 boundary floor, on the tint it bounds and on both page
-surfaces; see [Decorative surfaces](#decorative-surfaces).
+edge the contract measures. The soft surface and the edge are both **decorative**
+(the message's text and icon carry the meaning), so each is held to the 1.05:1
+perceptibility floor rather than the 3:1 boundary floor: the tint on the four
+strips a message sits on, the edge on the tint it bounds and on both page
+surfaces. See [Decorative surfaces](#decorative-surfaces) for the palette step
+that follows from it. The label on the soft surface is text, so it is in the
+contrast table instead: `xSoftForeground` on `xSoft` at the body floor.
 
 `foreground` is the role to paint a status message **as text**, whether it sits
 on the tone's soft surface (an Alert) or directly on `background`/`card` (a field
@@ -488,13 +491,13 @@ getTheme("light"); // the default light theme, unchanged
 | `warningForeground` | `#000000` | `#000000` | text on `warning` |
 | `info` | `#1B45AC` | `#C5D8FF` | informational status, distinct from `primary` |
 | `infoForeground` | `#FFFFFF` | `#000000` | text and icons on `info` |
-| `infoSoft` | `#C5D8FF` | `#152F6B` | soft informational surface |
+| `infoSoft` | `#9FBEFF` | `#152F6B` | soft informational surface |
 | `infoSoftForeground` | `#0C1D42` | `#DEE9FF` | text and icons on `infoSoft` |
-| `successSoft` | `#A8F0C6` | `#0A3A26` | soft success surface |
+| `successSoft` | `#6FE0A3` | `#0A3A26` | soft success surface |
 | `successSoftForeground` | `#042015` | `#D3F9E2` | text and icons on `successSoft` |
-| `warningSoft` | `#FFDE8A` | `#4B3100` | soft warning surface |
+| `warningSoft` | `#FFC94D` | `#4B3100` | soft warning surface |
 | `warningSoftForeground` | `#2A1B00` | `#FFEFC6` | text and icons on `warningSoft` |
-| `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
+| `destructiveSoft` | `#FF9E9E` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `border` | `#6E7683` | `#7A7A7A` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#A7A7A7` | essential control boundaries |
@@ -564,10 +567,11 @@ Each styled platform repaints the roles that give it its identity — including 
 control face, the `secondary` fill a tonal action rests on, because a button's
 surface has to be visible on that platform's own window. Every other
 role — the status families, the soft tones, `foreground`, `mutedForeground`,
-`inputForeground` — keeps the base theme's value, with one exception: Windows
-light deepens `destructiveSoftForeground` to red 900 (`#5C1619`), because its
-pressed wash is darker than the base theme's and the shared red 800 label
-measured 6.93:1 on a pressed destructive row, under the body floor (§Contrast).
+`inputForeground` — keeps the base theme's value. The light styles therefore
+inherit the base light theme's red 900 (`#5C1619`) status text, which is the
+value the soft-surface step requires for its label **and** the one their pressed
+washes needed: the shared red 800 measured 6.93:1 on Windows light's pressed
+destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 
 | Role | macOS light | macOS dark | Linux light | Linux dark | Windows light | Windows dark |
 | ---- | ----------- | ---------- | ----------- | ---------- | ------------- | ------------ |
@@ -1019,9 +1023,10 @@ surface's role rather than the page's — a menu or combobox row is
 the table measures both on the `hover` and `active` wash `menuRowStyle` paints
 under them. That pair found two shipped misses: Windows light's pressed wash
 left the destructive row at 6.93:1 and Luna light's at 6.77:1, under the body
-floor. Both looks now carry red 900 (`#5C1619`) as `destructiveSoftForeground`;
-the base light theme's red 800 clears its own pressed wash at 7.25:1, so the
-shared value stays. A **bordered** control is the third case: the
+floor. Every light theme now carries red 900 (`#5C1619`) as
+`destructiveSoftForeground`: it is both the label the deeper soft surface needs
+(red 800 landed at 6.78:1 on it, under the body floor) and the value the two
+darker presses needed, so one role covers both. A **bordered** control is the third case: the
 secondary action paints `borderStrong` and keeps that edge while the same
 element's fill moves to the wash, so the edge is measured there too. It found
 four shipped misses — the base light theme's pressed secondary button at
@@ -1238,17 +1243,16 @@ keyboardDimFailures(lightTheme); // [] — every dimmed label stays visible
 
 ### Decorative surfaces
 
-Seven surfaces carry no text and are not an essential boundary, so WCAG's floors
+Eight surfaces carry no text and are not an essential boundary, so WCAG's floors
 do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
-(`overlay`), a status message's edge, a scrollbar thumb, the wash a row is tinted
-with while it is hovered, pressed, selected or accented, and the resting fill of
-a tonal action (`secondary`). They still have one job — be seen — so they get one
-floor of their own, `decorativeFloor = 1.05:1`, the same perceptibility threshold
-the soft status surfaces are held to. Below it a surface reads as the fill it is
-painted on: a card without an edge, a skeleton that looks like an empty row, a
-dialog with no layer behind it, a message with no boundary, a scroller whose
-thumb nobody can find, a menu row that does not answer the pointer, a button
-that looks like a label.
+(`overlay`), a status message's soft tint and its edge, a scrollbar thumb, the
+wash a row is tinted with while it is hovered, pressed, selected or accented, and
+the resting fill of a tonal action (`secondary`). They still have one job — be
+seen — so they get one floor of their own, `decorativeFloor = 1.05:1`. Below it a
+surface reads as the fill it is painted on: a card without an edge, a skeleton
+that looks like an empty row, a dialog with no layer behind it, a message with no
+surface or no boundary, a scroller whose thumb nobody can find, a menu row that
+does not answer the pointer, a button that looks like a label.
 
 `decorativeFailures(theme, floor?)` measures every placement the system paints,
 compositing a translucent role over its surface first, so the veil — translucent
@@ -1261,6 +1265,7 @@ how a status edge is measured at the alpha its component actually uses:
 | divider | `border` | `background`, `card`, `popover`, `muted` |
 | skeleton | `skeleton` | `background`, `card`, `muted` |
 | scrim | `overlay` | `card`, `popover` |
+| statusTint | each tone's `xSoft` | `background`, `card`, `popover`, `muted` |
 | statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, `background`, `card` |
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
 | stateWash | `hover`, `active`, `selected`, `accent` | `background`, `card`, `popover`, `muted` |
@@ -1269,6 +1274,20 @@ how a status edge is measured at the alpha its component actually uses:
 The thumb is chrome: the platform paints and sizes it and the role only tints it,
 so it is not held to the 3:1 a control boundary gets. It is still held to being
 findable, which is the same reason a divider is.
+
+A **soft status surface** is the tint an alert, a toast or a soft badge sits in,
+and the tint is what tells the message apart from the strip behind it. It had
+never been measured: `xSoft` appeared only as the background a status edge was
+measured over, so a tint equal to its strip passed every suite. Measured, the
+base light theme's `successSoft` sat 1.006:1 from its own `muted` toolbar, Luna
+light's `infoSoft` was its beige page at 1.00:1, macOS light's success and
+warning tints were 1.022:1 from its window, Windows light's 1.028:1 and Aero
+light's 1.016:1, and on the darker side Linux dark's destructive tint was
+1.005:1 on its card and Luna dark's info tint 1.015:1 on its popover. The light
+ramp moved one step deeper (the 200 step, with the 900 text) and the dark one one
+step lighter (800, with the 100 text); Luna carries a lighter tint of its own,
+because its beige page sits at the same lightness a pale tint has and a deeper
+one would vanish into its toolbar instead.
 
 A **state wash** is the one entry a component paints *behind* content rather than
 around it, so it has two jobs and two contracts: the text on it keeps the floors

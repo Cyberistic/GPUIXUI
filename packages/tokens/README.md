@@ -179,6 +179,12 @@ tone.background; // theme.colors.infoSoft
 tone.border; // alpha(theme.colors.info, 0.3)
 ```
 
+The soft surface and its 30%-alpha edge are both **decorative** — the message's
+text carries the meaning — so `decorativeFailures` holds the tint to 1.05:1 on
+the four strips a message sits on (page, card, popover, muted toolbar) and the
+edge to the same floor on the tint it bounds. The label is text, so it is in the
+contrast table instead: `xSoftForeground` on `xSoft` at the body floor.
+
 A runnable example lives in
 [`src/status-tone.example.ts`](./src/status-tone.example.ts).
 
@@ -445,7 +451,7 @@ audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
 audit.invalidNumbers; // [] — every size, length and shadow is layable, every leading reaches its size, and every control height and row height is pressable
 audit.contrast; // [] — every measured pair meets its floor
-audit.decorative; // [] — every divider, skeleton, veil, status edge, thumb, state wash and control face is visible
+audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash and control face is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
 audit.selection; // [] — every selection wash is visible and keeps its text readable
 audit.indicators; // [] — every progress fill, spinner dot and presence mark is visible
@@ -499,14 +505,17 @@ Each report is also a function of its own:
   misses its floor, including one it cannot measure because a value is
   translucent.
 - `decorativeFailures(theme, floor?)` lists every subtle surface — a divider, a
-  skeleton fill, the modal veil, a scrollbar thumb, the wash a hovered or
-  selected row is tinted with, the fill a tonal action rests on — that is too
-  close to what it is painted on to be seen, compositing a translucent role
-  first. The washes are the reason it matters twice: the base dark theme's
-  `hover` was its `popover`, so a hovered menu row painted nothing. The filled
-  action is the same defect without the state: light `secondary` was its `muted`
-  value, and `secondary` paints no border, so a secondary button in a toolbar
-  was a label with no button around it.
+  skeleton fill, the modal veil, a status tone's soft tint and its edge, a
+  scrollbar thumb, the wash a hovered or selected row is tinted with, the fill a
+  tonal action rests on — that is too close to what it is painted on to be seen,
+  compositing a translucent role first. Each half found a shipped alias: the base
+  dark theme's `hover` was its `popover`, so a hovered menu row painted nothing;
+  light `secondary` was its `muted` value and paints no border, so a secondary
+  button in a toolbar was a label with no button around it; and the light
+  `successSoft` was 1.006:1 on the muted strip it sat in, so a soft badge there
+  had no surface (the light tints moved one ramp step deeper and the dark ones one
+  step lighter, with Luna — whose beige page is at a pale tint's own lightness —
+  carrying a lighter tint of its own).
 - `seriesFailures(theme, floors?)` lists every chart swatch lost on its plot, too
   close to its neighbour, or too close to it for a reader with a colour-vision
   deficiency, and reports one it cannot measure.
@@ -533,12 +542,12 @@ shipped themes meet, so a brand is held to the same pairs rather than a second
 set. An invalid control's edge — the `destructive` role as a field's border and
 focus line — is held to the boundary floor on the six strips a control sits on:
 four through the mark contract and two (`input`, `secondary`) through
-`contrastPairs`. The decorative surfaces use `decorativeFloor` (1.05:1, the same
-perceptibility floor the soft status surfaces use), and `decorativeSurfaces`
-names the placements measured — dividers, skeleton fills, the modal veil, each
-status tone's edge (read at the share `statusEdgeAlpha` that `statusTone`
-paints), the scrollbar thumb, `hover`/`active`/`selected`/`accent` and the
-`secondary` fill on the four strips a control can sit on. Nothing
+`contrastPairs`. The decorative surfaces use `decorativeFloor` (1.05:1), and
+`decorativeSurfaces` names the placements measured — dividers, skeleton fills,
+the modal veil, each status tone's soft tint on the four strips a message sits
+on and its edge (read at the share `statusEdgeAlpha` that `statusTone` paints),
+the scrollbar thumb, `hover`/`active`/`selected`/`accent` and the `secondary`
+fill on the four strips a control can sit on. Nothing
 escapes the contract either: `coverage.test.ts` holds every role in `colorRoles`
 to at least one measurement, and names the two that a dedicated contract measures
 instead — `selection` and `shadow`. See
