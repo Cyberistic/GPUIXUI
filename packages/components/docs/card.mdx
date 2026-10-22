@@ -3,26 +3,7 @@ title: Card
 description: A bounded surface that groups related content.
 ---
 
-`Card` groups related content on one surface. It is **composition only**: it has
-no state, does not focus, scroll, dismiss or trap anything, and never wraps an
-overlay. Anything interactive inside a card is a control you put there.
-
-## Anatomy
-
-```
-┌ Card ────────────────────────────────┐
-│ CardHeader                           │
-│   CardTitle                          │
-│   CardDescription                    │  ← any number of lines
-├ CardContent ─────────────────────────┤
-│ your rows, forms or charts           │
-├ CardFooter ──────────────────────────┤  ← separated by a hairline
-│ always right-aligned actions         │
-└──────────────────────────────────────┘
-```
-
-Only `Card` is required. Drop the parts you do not need; the surface is the same
-shape either way.
+<ComponentPreview name="card-variants" />
 
 ## Usage
 
@@ -46,111 +27,33 @@ import {
 </Card>;
 ```
 
-The footer adds `pb-3` because the footer recipe has no bottom padding; see
-§Theming for the measurement.
+## Composition
 
-The full build is the `card` example in
-`packages/components/examples/card.example.tsx`, which the native playground
-mounts.
-
-## Variants
-
-| `variant` | Recipe | Paints |
-| --------- | ------ | ------ |
-| `outline` (default) | `border border-input` | a 1px edge in the `border` role on the `card` fill |
-| `elevated` | `shadow-sm` | the `card` fill and `elevation.sm`: a 1px offset and a 2px blur, tinted by the `shadow` role |
-| `plain` | — | the `card` fill only — for a card inside another surface |
-
-`border-input` is shadcn's name for its border, and `@gpuixui/tw` resolves it to
-the **`border` role**: this library's `input` role is the field *fill*, which in
-the base light theme is the card's own white and would draw no edge at all. A
-theme that wants a darker outline repaints `border`, not `input`.
-
-`elevated` is the variant with a lift: the recipe carries no ring, so its
-`shadow-sm` is the one shadow on the box. The overlay surfaces order `ring-1`
-after `shadow-*`, which is why they paint an edge without a lift; a card does
-not.
+```text
+Card
+├── CardHeader
+│   ├── CardTitle
+│   └── CardDescription
+├── CardContent
+└── CardFooter
+```
 
 ## API
-
-Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
-pointer and key handlers) and **merges `style` last**, so a consumer can override
-any rule without forking the component.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `Card` | `div` | `variant?: "outline" \| "elevated" \| "plain"` (default `"outline"`) |
 | `CardHeader` | `div` | — |
-| `CardTitle` | `text` | — (`role="heading"`, `aria-level={3}`) |
+| `CardTitle` | `text` | `role="heading"`, `aria-level={3}` |
 | `CardDescription` | `text` | — |
 | `CardContent` | `div` | — |
 | `CardFooter` | `div` | — |
 
-```tsx
-<Card variant="elevated" style={{ maxWidth: 420 }} />
-```
-
-## Theming
-
-The colours and the elevation's tint come from the theme; the geometry and the
-type steps are the recipe's, compiled against the **default registry** (shadcn's
-fixed metrics) rather than the primitives' density scale — the seam every Tier 2
-component compiles through, recorded in ADR 0006.
-
-| Part | Reads |
-| ---- | ----- |
-| surface | the `card` fill |
-| title | `foreground`, at the registry's `base` step (16/24, weight 600) |
-| description | `mutedForeground`, at the registry's `sm` step (14/20) |
-| outline and footer edge | the `border` role |
-| elevated lift | `elevation.sm`, tinted by the `shadow` role |
-| corners | the registry's 8px `lg` step |
-| header and footer padding | the registry's `px-4 pt-4 pb-3` and `px-3 pt-3` |
-
-Two consequences a reader should not have to discover:
-
-- Changing `colors.card`, `colors.foreground` or `colors.mutedForeground`
-  repaints every card. Changing the theme's `radius` or `density` does **not**
-  reshape it: a card is 8px-rounded with 16px header padding on every platform,
-  and the platform switch repaints its colours and its type family but not its
-  geometry or its type sizes. Pass `className` or `style` to own the metrics.
-- The footer recipe is `px-3 pt-3` with **no bottom padding**, so a control in a
-  default footer sits on the card's bottom edge. Add `className="pb-3"` (12px),
-  as the usage above does, or `style={{ paddingBottom: 12 }}`. The shipped
-  example uses text actions for the same reason.
-
-## Accessibility
-
-- `CardTitle` renders a `<text>` with `role="heading"` and `aria-level={3}`.
-- A card is not focusable and not a landmark; it contributes no role of its own.
-- A card's accessible name comes from its heading, not from a wrapper label.
-
 ## Limitations
 
-- The card does not clip a scrollable body: `overflow` is `hidden` on the
-  surface, so a scroller belongs in `CardContent` with its own height.
-- The docs site cannot render this component live — it is a GPUix host tree, not
-  DOM. The code above is the real source.
-
-## Verification
-
-`src/behaviour/card.test.tsx` runs in the real GPUix renderer (5 tests): the parts'
-text in tree order, each variant's surface treatment, the level-3 heading role in
-the accessibility dump, a consumer `style` winning over the variant, and the card
-fill from both themes. Run it with:
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
-
-`src/card-page.test.ts` (8 tests) compiles the `CARD_*` recipes through
-`@gpuixui/tw` and holds this page's paint claims to what the renderer is given:
-the `border` role the compiler resolves `border-input` to, `elevation.sm`, the
-fixed metrics on a platform theme, and the footer's missing bottom padding.
-
-It needs a host with a GPUix native binding — macOS arm64, Linux x64 or Windows
-x64, plus this Intel Mac, where a locally built `darwin-x64` binding from plan
-140 is installed.
+- The footer recipe has no bottom padding; add `className="pb-3"`.
+- `overflow` is hidden on the surface; put the scroller in `CardContent`.
+- Not focusable and not a landmark.
 
 ## Related
 

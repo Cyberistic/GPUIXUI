@@ -22,8 +22,6 @@ const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 
 const magnetic = read("../docs/magnetic.mdx");
-const imageZoom = read("../docs/image-zoom.mdx");
-const listPage = read("../docs/list.mdx");
 const readme = read("../../../apps/playground/README.md");
 const inventory = read("../../../COMPONENTS.md");
 
@@ -54,10 +52,7 @@ describe("the pointer-effect pages cite the window measurement", () => {
     expect(readme).toContain("15 checks, `--only surface-origin`");
 
     Arr.forEach(
-      [
-        ["Magnetic", section(magnetic, "## Verification")],
-        ["Image zoom", section(imageZoom, "## Verification")],
-      ] as const,
+      [["Magnetic", section(magnetic, "## Verification")]] as const,
       ([name, verification]) => {
         expect(verification, name).toContain("`surface-origin`");
         expect(verification, name).toContain("15 checks");
@@ -81,20 +76,6 @@ describe("the pointer-effect pages cite the window measurement", () => {
 });
 
 describe("the list page cites the row-hover boundary", () => {
-  it("teaches the four readings and the opt-out", () => {
-    expect(readme).toContain(
-      "### `hover-routing-lifecycle` — measured on 0.11.0 here",
-    );
-    expect(readme).toContain("56 checks");
-    expect(listPage).toContain("`hover-routing-lifecycle`");
-    expect(listPage).toContain("56 checks");
-    // The two shapes a reader plans a row around: a fill takes it, an inert
-    // decoration leaves it.
-    expect(listPage).toContain('`pointerEvents: "none"`');
-    expect(listPage).toContain("`enter=0`");
-    expect(listPage).toContain("`enter=1`");
-  });
-
   it("carries the rule in the Lists row", () => {
     const notes = row("Lists / list items");
     expect(notes).toContain("`hover-routing-lifecycle`");

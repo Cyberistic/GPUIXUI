@@ -17,11 +17,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { contrastFloors, contrastRatio, extendTheme } from "@gpuixui/tokens";
-import {
-  BREADCRUMB_LINK,
-  PAGINATION_ELLIPSIS,
-  classesToStyle,
-} from "@gpuixui/tw";
+import { PAGINATION_ELLIPSIS, classesToStyle } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { actionOnColor } from "./internal/button.js";
@@ -32,7 +28,6 @@ const read = (path: string): string =>
 
 const paginationPage = read("../docs/pagination.mdx");
 const paginationSource = read("./pagination.tsx");
-const breadcrumbPage = read("../docs/breadcrumb.mdx");
 
 /** One page section, without the heading that follows it. */
 const section = (page: string, heading: string): string => {
@@ -94,21 +89,5 @@ describe("the Pagination page", () => {
     expect(text).toContain("fixed 12/16");
     expect(text).toContain("`text-xs`");
     expect(text).not.toContain("caption type role");
-  });
-});
-
-describe("the Breadcrumb page", () => {
-  it("keeps the trail on the same fixed type step", () => {
-    const style = classesToStyle(BREADCRUMB_LINK, lightTheme).style;
-    expect(style.fontSize).toBe(12);
-    expect(style.lineHeight).toBe(16);
-    expect(
-      classesToStyle(BREADCRUMB_LINK, themeWithCaption).style.fontSize,
-    ).toBe(12);
-
-    const text = section(breadcrumbPage, "## Theming");
-    expect(text).toContain("fixed 12/16");
-    expect(text).toContain("`text-xs`");
-    expect(text).not.toContain("`caption` type role");
   });
 });

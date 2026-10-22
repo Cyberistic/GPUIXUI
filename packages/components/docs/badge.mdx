@@ -3,14 +3,6 @@ title: Badge
 description: A short status label on a pill.
 ---
 
-`Badge` labels something — a state, a count, a category. It is **not a control**:
-a badge is never clickable, never focusable and never a button. If it should do
-something when pressed, use a `Button` and give it the badge's styling. The pill
-also stays **out of the pointer** (`pointerEvents: "none"`): it paints a fill,
-and a filled child is the boundary the runtime's hit test stops counting at, so
-a status badge in a selectable row would otherwise swallow the row's press. A
-caller's `style` merges last, so an interactive badge can hand the pointer back.
-
 ## Usage
 
 ```tsx
@@ -21,47 +13,7 @@ import { Badge } from "@gpuixui/components/badge";
 </Badge>;
 ```
 
-A badge is one line of type: it hugs its text and never wraps. Inside a column
-layout it also hugs horizontally (`alignSelf: "flex-start"`), so it does not
-stretch into a full-width bar; pass `style={{ alignSelf: "stretch" }}` when you
-do want that.
-
-## Variants
-
-| `variant` | Fill | Text | Border |
-| --------- | ---- | ---- | ------ |
-| `neutral` (default) | `muted` | `mutedForeground` | — |
-| `primary` | `primary` | `primaryForeground` | — |
-| `success` | soft `success` tint | tone text | tone tint |
-| `warning` | soft `warning` tint | tone text | tone tint |
-| `danger` | soft `destructive` tint | tone text | tone tint |
-| `info` | soft `accent` tint | tone text | tone tint |
-| `outline` | none | `mutedForeground` | `borderStrong` |
-
-The four status variants draw from one palette shared with `Alert` and the toast
-viewport (`src/internal/theme.ts`), so statuses cannot drift apart between
-components. In light mode the `warning` tone uses the darker `warningForeground`
-shade, because the light `warning` value does not reach readable contrast on the
-tint.
-
-## Sizes
-
-| `size` | Type step | Height | Padding |
-| ------ | --------- | ------ | ------- |
-| `sm` | `text-xs` (12/16) | 20px | 8px × 2px |
-| `md` (default) | `text-sm` (14/20, weight 500) | 24px | 8px × 2px |
-
-There is no height literal: the pill's height is the step's line height plus its
-2px top and bottom padding. Both the type step and the padding are the registry's
-**fixed** metrics (ADR 0006), so a theme that restyles its type scale or its
-spacing leaves the pill where it is; only the colour roles it paints follow the
-theme.
-
 ## API
-
-`Badge` takes the GPUix host props (`style`, `testId`, `role`, `aria-*`, pointer
-and key handlers) and **merges `style` last**, so a consumer can override any rule
-without forking the component.
 
 | Prop | Type | Default |
 | ---- | ---- | ------- |
@@ -69,65 +21,15 @@ without forking the component.
 | `size` | `"sm" \| "md"` | `"md"` |
 | `children` | `ReactNode` | — |
 
-## Accessibility
-
-- A badge contributes **no role of its own**: a status is announced as its text
-  ("Failed"), which is why the text has to carry the meaning and the colour must
-  not be the only signal.
-- A badge is not focusable and not reachable by keyboard, because it is not
-  interactive. `tabIndex` is not set.
-- The four status tints are decorative; the words are the label. A card whose
-  only indication of failure is a red pill fails this rule.
-
-## Theming
-
-Every colour is a semantic role (`colors.muted`, `colors.primary`, `colors.border`,
-`colors.accent`, …) and every size comes from `typography`, `spacing` and `radius`
-— there are no literal colours or heights in the component. See `docs/tokens.md`.
-
-**The outline variant's edge is the boundary role, not the decorative one.**
-`outline` is the variant with nothing but its edge, and a badge is the component
-the list's `trailing` slot holds — so the edge is drawn on whatever wash the row
-is wearing. `colors.border` is the divider role: on the row's `accent` hover wash
-it measures ~1.00:1 in the shipped light and dark themes, so the pill had a
-boundary at rest and none under the pointer. It paints `borderStrong`, which
-`contrastPairs` holds to 3:1 on the page, a card and the row's washes.
-
 ## Limitations
 
-- Out of the pointer by design: the pill declares `pointerEvents: "none"`, so a
-  press on a status badge in a selectable row belongs to the row. The live
-  `list-row-press` probe measures the fixed route: a press on the shipped pill
-  selects its row (`selected=badge`), while the `badge-eager` control — the same
-  pill whose caller's `style` hands the pointer back — selects nothing
-  (`selected=none`), because a child that paints a fill is the boundary the
-  runtime's hit test stops counting at until its hitbox is removed. A caller's
-  `style` merges last and can turn the pointer back on.
-- No dismiss, no icon slot and no count animation. A badge that needs a close
-  affordance is a chip, which is not built yet.
-- The docs site cannot render this component live — it is a GPUix host tree, not
-  DOM. The code above is the real source.
-
-## Verification
-
-`src/behaviour/badge.test.tsx` runs in the real GPUix renderer (9 tests): the
-label renders as text, each non-status variant paints from its own theme role,
-each status variant paints from the shared tone palette, a status fill changes
-with the theme (so it cannot be a constant), each size's measured height matches
-its type step plus padding, every variant is pill-rounded, a consumer `style`
-wins, an outline badge's edge clears the boundary floor on the hover and
-selected washes of the row it sits in — with the decorative role's ~1.00:1
-measured as the premise — and the pill declares `pointerEvents: "none"` in both
-themes while a consumer's `style` can opt back in. `src/badge-page.test.ts` reads
-the `list-row-press` fixture and holds this page and the inventory row to the
-route the window measured.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
+- Not a control: never clickable, focusable or a button.
+- Out of the pointer; a press on a status badge selects its row.
+- No dismiss, icon slot or count animation.
+- A caller's `style` can hand the pointer back.
 
 ## Related
 
-- **Alert** — the same status palette, for a message that stays in the flow.
+- **Alert** — the same status palette, for a message in the flow.
 - **Card** — a surface a badge usually sits on.
 - **List** — rows whose status column is made of badges.

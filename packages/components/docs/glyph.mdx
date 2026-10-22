@@ -1,12 +1,7 @@
 ---
 title: Glyph
-description: A wall of characters generated for its own box, for a hero, a card or a launch panel.
+description: A wall of generated characters for its own box.
 ---
-
-`Glyph` paints a wall of characters behind its content: a grid generated from
-the box the field measured, one seeded mark per painted cell, breathing slowly
-between dim and full. Content passed as children sits above it and keeps its
-presses.
 
 ## Usage
 
@@ -24,83 +19,28 @@ import { Glyph } from "@gpuixui/components/glyph";
 </Glyph>;
 ```
 
-Give the field a box — a height, padding or a sized flex parent — because the
-grid is generated for the size the field actually has. Before the first layout
-it paints nothing.
-
-## How the wall is painted
-
-The runtime has no text pattern and no canvas surface, so a wall is **one
-`<text>` host per painted cell**. That cost is why the grid is capped: a box
-that would need more than 240 cells grows its cell instead of mounting thousands
-of text nodes, and the cell actually drawn is reported by `glyph/logic.ts`.
-
-- a cell draws a mark or stays empty (`density`), and a drawn cell carries its
-  own opacity, so the wall reads as texture rather than a solid block;
-- the mark, the gap and the brightness are three independent values hashed from
-  `seed` and the cell's place in the grid, so the same seed paints the same wall
-  on every mount and a different seed gives a different one;
-- `marks` is a string of code points to draw from; an empty string uses the
-  house set;
-- the grid covers whole cells, so a strip narrower than one cell at the right or
-  bottom edge stays empty;
-- `cellSize` is clamped to 10–72 px and `density` to `0…1`, and an unreadable
-  value uses the house value.
-
-## Accessibility
-
-A glyph is **paint, not content**. Every cell is `role="presentation"`, which
-the pinned runtime maps to no accessibility node at all — measured: a node is in
-the tree only with a role, and dropping the attribute turns a 400 × 240 wall into
-152 `label` nodes. So a reader is not read a wall of characters, and the content
-above the wall has to carry the name and the description.
-
-That absence is why the wall could land at all: the catalogue deferred `glyph`
-while the runtime offered no way to hide a decorative run of text.
-
-## Movement
-
-The runtime has no `transform` (upstream issue #102), so the wall cannot drift,
-zoom or rotate. The one motion it can honestly offer is a slow breath of
-opacity: the wall pings between 55% and full on its own `onMotionComplete`,
-because the runtime tweens a target once. `breatheMs` sets one leg (8 s by
-default); the entrance fade is the house `slow` level.
-
-Under `MotionProvider preference="reduced"` the wall paints still and full, with
-no breath and no entrance tween. A hidden wall keeps breathing — the runtime
-exposes no visibility query — so unmount it when it is off screen.
-
 ## API
 
-| Part / prop | Type | Default | Notes |
-| ----------- | ---- | ------- | ----- |
-| `children` | `ReactNode` | — | Content above the wall; it owns the words and the presses |
-| `marks` | `string` | `.+*/\<>[]{}~` | The code points a cell may draw; empty uses the house set |
-| `cellSize` | `number` | `22` | 10–72 px; grown when the box would exceed the cell cap |
-| `density` | `number` | `0.55` | The share of cells that carry a mark, `0…1` |
-| `seed` | `number` | `1` | The layout seed; the same seed paints the same wall |
-| `color` | `string` | the theme's `border` role | The ink of every mark |
-| `breatheMs` | `number` | `8_000` | One breath leg, 1–60 s |
-| `level` | `MotionLevel` | `"slow"` | The entrance level |
-| `style` | `StateStyle<GlyphState>` | — | A style, or a function of the measured wall |
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `children` | `ReactNode` | — |
+| `marks` | `string` | `.+*/\<>[]{}~` |
+| `cellSize` | `number` | `22` |
+| `density` | `number` | `0.55` |
+| `seed` | `number` | `1` |
+| `color` | `string` | theme `border` |
+| `breatheMs` | `number` | `8_000` |
+| `level` | `MotionLevel` | `"slow"` |
+| `style` | `StateStyle<GlyphState>` | — |
 
-`GlyphState` reports the measured `width` and `height` and whether the reduced
-preference is on, so a caller can size or ink the box from the same measurement
-the grid uses.
+## Limitations
+
+- Paint, not content; the wall publishes no accessibility node.
+- No drift, zoom or rotate; the breath is the only motion.
+- A hidden wall keeps breathing; unmount it when off screen.
 
 ## Related
 
 - [Hexagon](/docs/components/hexagon) — a generated line-art field.
 - [Topography](/docs/components/topography) — a contour field.
 - [Stars](/docs/components/stars) — a scattered field that twinkles.
-- [Particles](/docs/components/particles) — a drifting field of motes.
-
-## Verification
-
-`src/behaviour/glyph.test.tsx` (7 tests) measures the wall in the real renderer:
-the cells the logic lays out are the ones painted and every one stays inside the
-measured box; the same seed repaints the same wall; the wall publishes no
-accessibility node and takes no pointer input; the breath turns around on a leg
-and the reduced preference paints it still; content above the wall keeps a
-press; and a resize lays the wall out again. `src/glyph/logic.test.ts` (8 tests)
-holds the arithmetic: determinism, the cell cap, density and the fallbacks.

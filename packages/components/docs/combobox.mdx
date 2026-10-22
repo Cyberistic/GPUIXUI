@@ -1,11 +1,11 @@
 ---
 title: Combobox
-description: A searchable single- or multi-select over a ranked option list.
+description: A searchable single- or multi-select option list.
 ---
 
-`Combobox` combines a field-like trigger with a searchable popup. It wraps
-GPUix's headless combobox — focus, the active row and the keyboard stay the
-runtime's — and adds our option shape, ranking, row look and value semantics.
+<ComponentPreview name="combobox-workflow" />
+
+## Usage
 
 ```tsx
 import {
@@ -22,7 +22,7 @@ import {
     { value: "ada", label: "Ada Lovelace", description: "Engineering" },
     { value: "grace", label: "Grace Hopper", description: "Compilers" },
   ]}
-  onValueChange={(value) => setReviewer(typeof value === "string" ? value : null)}
+  onValueChange={setReviewer}
 >
   <ComboboxTrigger label="Assign reviewer" />
   <ComboboxContent>
@@ -33,231 +33,44 @@ import {
 </Combobox>;
 ```
 
-## Anatomy
+## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `Combobox` | the headless root: ranking, selection, open state and focus restore |
-| `ComboboxTrigger` | the field-shaped control: selected labels or `placeholder`, `aria-expanded`, a chevron |
-| `ComboboxContent` | the anchored popup surface |
-| `ComboboxInput` | the search field; Escape offers the key to the shared dismiss stack |
-| `ComboboxList` | the ranked listbox, one `ComboboxItem` per visible option |
-| `ComboboxItem` | one row: label, optional description, a check icon while selected |
-| `ComboboxEmpty` | shown only when no option matches; children replace the default |
-
-Single mode selects one value and closes. Multiple mode keeps the popup open,
-toggles the row, and reports the selected values in the order they were chosen.
-
-The root owns the state because ranking and the selection payload need the whole
-option set; the parts own their own labels and place. `ComboboxItem` is exported
-so a caller can compose the rows of a custom list from the same root.
-
-## Values, not labels
-
-`onValueChange` receives the option **value** (`"ada"`), never the display label
-(`"Ada Lovelace"`). The adapter maps values to labels only for display, which is
-why a rename never changes the stored data.
-
-The public shape is:
-
-```ts
-value?: string | ReadonlyArray<string>;                 // controlled
-onValueChange?: (value: string | null | ReadonlyArray<string>) => void;
+```text
+Combobox
+├── ComboboxTrigger
+└── ComboboxContent
+    ├── ComboboxInput
+    ├── ComboboxList
+    │   └── ComboboxItem
+    └── ComboboxEmpty
 ```
-
-`null` is "nothing selected" in single mode; `undefined` means uncontrolled.
-
-## Ranking
-
-The filter is our pure `combobox/logic.ts`, not GPUix's order-preserving
-predicate:
-
-| Rank | Rule |
-| ---- | ---- |
-| 0 | the label starts with the query |
-| 1 | a word inside the label starts with the query |
-| 2 | the label contains the query |
-| 3 | the description contains the query |
-
-Ties keep declaration order. Matching is case-insensitive and an empty query
-shows everything. Disabled options stay visible but cannot be selected by click,
-arrow or Enter.
-
-> **Adapter note.** GPUix's `filter` is a predicate applied to `items`, so it can
-> only remove rows, never reorder them. The adapter therefore passes an
-> already-ranked `items` array with `filter={null}` and controls `inputValue`.
-> This is plan 116 §3's documented fallback; a predicate could not express the
-> ranking. `combobox.test.tsx` asserts the order.
-
-## Keyboard
-
-| Key | Result |
-| ---- | ------ |
-| click / Enter / Down on the trigger | opens the popup |
-| typing | filters; the first enabled match is highlighted |
-| `ArrowDown` / `ArrowUp` | moves the highlight, wrapping and skipping disabled rows |
-| `Enter` | selects the highlighted row |
-| `Escape` | closes the popup and returns focus to the trigger; inside a dialog it closes only the popup |
-| outside press | closes without stealing focus back |
-
-The search input keeps focus; the highlighted row is visual. Both the trigger
-and the search field declare the keyboard-only `focusVisible` outline at rest,
-so a `Tab` to the closed control shows where it is, and a disabled trigger
-declares none. **No `aria-activedescendant`** exists in 0.11.0, so assistive
-technology does not get the input→row relationship; `aria-selected` on the rows
-is the supported signal.
-
-The popup joins the shared dismiss stack, so one `Escape` dismisses one surface,
-outside-in: with the popup open inside a dialog the popup closes and the dialog
-stays; the next `Escape` closes the dialog. One key dispatch is identified by
-the runtime's `keystrokeId`, because GPUix hands every enclosing handler its own
-payload object.
-
-## Creating a value
-
-`onCreate` turns the field into a combobox that can mint an option. When the
-query matches **nothing**, the popup gains one last row — `Create "…"` by
-default, or whatever `createLabel` returns — and choosing it reports the trimmed
-query:
-
-```tsx
-<Combobox
-  options={people}
-  onCreate={(name) => setPeople((current) => [...current, { value: name, label: name }])}
->
-  ...
-</Combobox>;
-```
-
-The root does not invent a selection from the query: only the caller can add the
-option and decide whether to select it, so `onCreate` and `onValueChange` are
-separate contracts. The popup closes and returns focus to the trigger. Offering
-the row only when nothing matches keeps it from competing with a real result;
-it is single-select only, and `children` still compose the same parts.
-
-Selecting a created query does not call `onValueChange`; add the option and set
-the value from `onCreate` for a controlled combobox.
-
-## Motion
-
-The popup arrives on the house entrance: a fade plus **4px of travel out from the
-side it is asked to open at** (`normal`, 200 ms, ease-out, GPUix's `side` prop,
-default `bottom`). A popup below its trigger starts above its resting place and
-moves down; `side="top"` starts below and moves up. The direction is the
-**requested** side's, not the measured one, because a surface's first motion frame
-is committed when its host mounts — one commit before the component's measured
-flip can re-anchor it. A popup the component flips above its trigger therefore
-still travels the way its requested side travels; the distance is 4px and the
-resting placement is the measured one (pin: `behaviour/combobox.test.tsx`, "the
-popup's entrance"). There is **no exit tween** — GPUix's own `ComboboxContent`
-renders nothing while the root is closed, so a closing popup has no box left to
-keep mounted for one; it leaves with the state that closed it.
-`MotionProvider preference="reduced"` removes the duration, so the resting frame
-paints in the frame the popup appears (`docs/component-api.md` §11).
 
 ## API
 
-Every part takes the GPUix host props and merges `style` last.
-
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
-| `Combobox` | `options` | `ReadonlyArray<ComboboxOption>` — `{ value, label, description?, disabled? }` (required) | — |
-| `Combobox` | `value` / `defaultValue` | `string \| ReadonlyArray<string>` — one value, or the values in the order chosen | — |
-| `Combobox` | `onValueChange` | `(value: string \| ReadonlyArray<string>) => void` | — |
+| `Combobox` | `options` | `ReadonlyArray<ComboboxOption>` (required) | — |
+| `Combobox` | `value` / `defaultValue` | `string \| ReadonlyArray<string>` | — |
+| `Combobox` | `onValueChange` | `(value) => void` | — |
 | `Combobox` | `multiple` | `boolean` | `false` |
 | `Combobox` | `disabled` | `boolean` | `false` |
-| `Combobox` | `onCreate` | `(query: string) => void` — single mode only; the caller adds the option | — |
+| `Combobox` | `onCreate` | `(query: string) => void` | — |
 | `Combobox` | `createLabel` | `(query: string) => string` | `Create "…"` |
-| `ComboboxTrigger` | `placeholder` | `string` — shown while nothing is selected | `"Select…"` |
-| `ComboboxTrigger` | `label` | `string` — the trigger's accessible name | — |
-| `ComboboxContent` | `side` / `align` | `"top" \| "right" \| "bottom" \| "left"` · `"start" \| "center" \| "end"` | `"bottom"` · `"start"` |
+| `ComboboxTrigger` | `placeholder` / `label` | `string` | `"Select…"` / — |
+| `ComboboxContent` | `side` / `align` | `"top" \| "right" \| "bottom" \| "left"` · `"start" \| "center" \| "end"` | `"bottom"` / `"start"` |
 | `ComboboxContent` | `sideOffset` / `alignOffset` | `number` | `4` / `0` |
 | `ComboboxInput` | `placeholder` / `label` | `string` | `"Search…"` / `"Search options"` |
-| `ComboboxList` | `label` | `string` — the listbox's accessible name | `"Options"` |
+| `ComboboxList` | `label` | `string` | `"Options"` |
 | `ComboboxList` | `itemStyle` | `StateStyle<ComboboxItemState>` | recipe |
-| `ComboboxItem` | `value` | `string` (required) — the label is read from the root's option | — |
+| `ComboboxItem` | `value` | `string` (required) | — |
 | `ComboboxEmpty` | `children` | `ReactNode` | `No matches` |
-
-## Theming
-
-The trigger paints `colors.background`, a `borderWidth.thin` border in
-`colors.borderStrong`, the registry's fixed 6px corner (`rounded-md`, ADR 0006)
-and `controlHeight(theme, "md")`, with `colors.mutedForeground` for the
-placeholder. The popup paints `colors.popover`, the same fixed 6px corner, the
-`md` elevation, a `maxHeight` of 280 with scrolling, and rows highlight with
-`colors.hover`. The selected check is `colors.primary`. **The search field
-paints the theme's measured `selection` role** behind a selected run
-(`selectionWash`), so the wash is held to `selectionFailures`' visibility and
-legibility floors rather than the runtime's unmeasured accent default.
-
-## Style by state
-
-Rows take a `StyleDesc` or a function of `ComboboxItemState`
-(`{ selected, highlighted, disabled }`, GPUix's own type). The list renders the
-rows, so pass it as `ComboboxList.itemStyle`; `ComboboxItem.style` accepts the
-same shape for a row composed by hand.
-
-```tsx
-<ComboboxList
-  itemStyle={(state) => ({ fontWeight: state.selected ? 600 : 500 })}
-/>
-```
-
-A **disabled row paints its label and description in `disabledForeground`** — the
-role `contrastPairs` measures on the popover — and drops its highlight wash. It
-is not faded: an opacity composites the label into the row's own fill, which no
-pair holds — the same rule the menu row follows.
 
 ## Limitations
 
-- No async option loading and no grouping headers in v1.
-- **Create-new is single-select and match-nothing only:** the row appears when
-  the query matches no option, not merely when it is not an exact label. The
-  root reports the query and leaves the selection alone.
-- The popup is an anchored layer, not a portal. The runtime snaps it inside the
-  window but does not flip it, so the component opens it on the opposite side
-  when snapping would cover the trigger; `align="center"` is measured from the
-  trigger rather than using the runtime's containing-block centre.
-- The popup has an **entry tween only**: the runtime's content unmounts when the
-  root closes, so there is no box left to fade out.
-- The entrance travels the **requested** side's direction: the first motion frame
-  is committed when the host mounts and the measured flip lands a commit later, so
-  a popup flipped above its trigger still moves the way its requested side does
-  (4px; the resting placement is unchanged).
-- `align="center"` is clamped by the snap margin near a window edge.
-- The trigger is a `div` with button semantics (the `@gpuixui/primitives`
-  stand-in), not a native button element.
-
-## Verification
-
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (26 tests):
-open + input focus, a centred popup and a near-bottom popup that opens above its
-trigger, filtering, ArrowDown + Enter selecting the **value**, the empty state,
-single replacement (including the selected row's `aria-selected`), multi
-add/remove with order, the disabled row, a disabled row's label and description
-painted in `disabledForeground` with no row-level fade (both themes), Escape
-restoring focus and closing only
-its own popup inside a dialog, prefix-before-substring ranking, both themes, the
-pointer path — selecting an option, toggling several while skipping a disabled
-one, closing on an outside press — a caller-supplied empty state, the trigger's
-placeholder/name coming from the part, the search field's hint painted rather
-than handed to the host, the create row — offered for an
-unmatched query, reported once with the trimmed query while the selection stays
-put, suppressed when an option matches, the query is blank, no handler is given,
-or the mode is multiple — and the popup's entrance, measured on a paused clock for
-the default side, a requested top side (which proves the direction follows the
-requested side) and the flipped popup that keeps its requested side's travel,
-plus the reduced preference.
-`src/behaviour/focus-ring.test.tsx` holds the trigger and the search field to the
-keyboard outline, and a disabled trigger to declaring none.
-
-`src/combobox/logic.test.ts` covers the ranking table, `labelOf`,
-`toggledSelection` and the create-row round trip.
-
-```sh
-nub run --filter @gpuixui/components test
-nub run --filter @gpuixui/components test:behaviour
-```
+- No async option loading or group headers.
+- Create-new is single-select and offered only when nothing matches.
+- No `aria-activedescendant`; `aria-selected` is the signal.
+- The popup has an entry tween only.
 
 ## Related
 

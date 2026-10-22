@@ -1,14 +1,7 @@
 ---
 title: Gradient text
-description: A phrase painted as a colour ramp, sampled one glyph at a time.
+description: A phrase painted as a per-glyph colour ramp.
 ---
-
-`GradientText` paints a phrase as a two-colour ramp: the first glyph is the
-start colour, the last is the end colour, and every glyph between is the blend
-at its position in the line. The runtime has no text fill, so the ramp is
-sampled **per glyph** rather than clipped to a gradient — the blend is discrete
-at glyph resolution, which is the strongest honest form the native text host
-can paint.
 
 ## Usage
 
@@ -16,106 +9,32 @@ can paint.
 import { GradientText } from "@gpuixui/components/gradient-text";
 
 <GradientText text="Native by default" />;
-```
 
-The default ramp runs from the theme's `foreground` role to its `primary` role,
-so the phrase reads as body copy that warms into the brand. Pass a pair to own
-the colours:
-
-```tsx
+// Own the colours.
 <GradientText text="Fast by design" from="#7C5CFF" to="#24C6A8" role="h2" />;
 ```
 
-An explicit `\n` starts a new line, and each line runs its own ramp:
-
-```tsx
-<GradientText text={"Two lines\nOne idea"} role="h3" />;
-```
-
-## How it paints
-
-`@gpuix/native@0.11.0` has no text fill: a `linear-gradient` is a box
-background, and a `<text>` host paints one `color`. So `GradientText` splits the
-phrase into one text host per code point and gives each host the ramp's colour
-at its position (`gradient-text/logic.ts`). A word is a non-wrapping row of
-glyphs, so wrapping happens **between** words and never inside one.
-
-Both ends must be hex colours (`#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`). An
-end that is not one paints the whole run in the start colour instead of
-inventing an interpolation the runtime could not reproduce. Sampled colours are
-written as lowercase hex — `#rrggbb`, or `#rrggbbaa` while the ramp is
-translucent.
-
-## Motion
-
-The only movement is the house entrance: the block fades in on mount at the
-`slow` level (320 ms, ease-out), because the ramp itself cannot travel — a
-moving ramp would recolour the glyphs every frame in React, and there is no
-`transform` to translate a second text layer instead (upstream issue #102).
-
-`level` picks another house duration, and `MotionProvider preference="reduced"`
-zeroes the fade: the resting text paints in the first frame.
-
-## Accessibility
-
-Each word is one accessibility node named with the word, and the remaining
-glyphs of that word are `role="presentation"`. `0.11.0` has no `aria-hidden`, so
-this is how a glyph-per-node headline still reads as words rather than letters.
-There is no live region, so a phrase that changes after mount is not announced;
-the new words are in the tree on the next read.
-
-The ramp is colour only. Colour is not the only carrier of meaning here because
-the phrase is content, not an encoding — but a caller who uses a gradient to
-mark a state must also say that state in copy or another role.
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `text` | `string` | — | Required. The phrase to paint. |
-| `from` | `string` | theme `foreground` | The ramp's first colour; must be hex to interpolate. |
-| `to` | `string` | theme `primary` | The ramp's last colour; must be hex to interpolate. |
-| `role` | `TextRole` | `"display"` | Any theme type role (`h1`, `h2`, `bodyStrong`, …). |
-| `level` | `MotionLevel` | `"slow"` | The entrance duration from `@gpuixui/motion`. |
-| `className` | `string` | — | Joined after the resting style, so it wins conflicts. |
-| `style` | `StateStyle<GradientTextState>` | — | `GradientTextState` is `{ text, glyphs, reducedMotion }`. |
-
-`GradientText` renders a container `div` with one row per explicit line and
-takes the GPUix host props (`testId`, `aria-*`) on that container.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `text` | `string` (required) | — |
+| `from` | `string` | theme `foreground` |
+| `to` | `string` | theme `primary` |
+| `role` | `TextRole` | `"display"` |
+| `level` | `MotionLevel` | `"slow"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<GradientTextState>` | — |
 
 ## Limitations
 
-- **No text fill.** The blend is discrete at glyph resolution, not a continuous
-  gradient clipped to the text. A continuous fill waits on a text-fill
-  capability.
-- **No moving ramp.** Recolouring per frame would need a React loop, and there
-  is no `transform` to move a second text layer.
-- **Hex ends only.** A named colour, `rgb()` or a gradient string in `from` or
-  `to` paints the run flat in `from`.
-- **Many nodes.** Every code point is its own host, so this is for a headline or
-  a short label, not a paragraph.
-- **The ramp restarts per line.** A two-line block is two complete ramps rather
-  than one ramp continued across the break.
+- No text fill; the blend is discrete at glyph resolution.
+- No moving ramp; the glyphs would recolour every frame.
+- Hex ends only; a non-hex end paints the run flat.
+- Many nodes; use it for a headline, not a paragraph.
 
 ## Related
 
-- [Gradient](/docs/components/gradient) — the same two-stop grammar as a box
-  background that breathes.
-- [Splitting text](/docs/components/splitting-text) — a phrase revealed one unit
-  at a time.
+- [Gradient](/docs/components/gradient) — the same two-stop grammar as a box.
+- [Splitting text](/docs/components/splitting-text) — a phrase revealed unit by unit.
 - [Typing text](/docs/components/typing-text) — a string arriving on a timer.
-- [Rotating text](/docs/components/rotating-text) — one phrase replaced by
-  another.
-
-## Verification
-
-`src/behaviour/gradient-text.test.tsx` renders the component in the real GPUix
-renderer (7 tests): every glyph painted in reading order, the exact
-black-to-white ramp sampled across four glyphs, the theme default pair, a
-non-hex end painted flat rather than as a hole, each word on one row with an
-explicit newline on the next, one accessibility node per word rather than per
-letter, and the reduced preference's zero-duration entrance beside the animated
-frame. `src/gradient-text/logic.test.ts` holds the ramp arithmetic without a
-renderer (11 tests): exact sampling, short and alpha hex, the unreadable-end
-fallback, non-finite positions, word and line splitting, one-glyph runs,
-surrogate pairs, and a blank phrase.

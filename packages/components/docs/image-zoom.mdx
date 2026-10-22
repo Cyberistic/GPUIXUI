@@ -1,12 +1,7 @@
 ---
 title: Image zoom
-description: A clipped frame whose picture magnifies and pans under the pointer.
+description: A frame whose picture magnifies under the pointer.
 ---
-
-`ImageZoom` is a picture a reader can inspect without leaving the page: the frame
-stays the size it was given, the picture inside grows, and the spot under the
-pointer stays under the pointer. It suits a map, a screenshot, a chart or a photo
-thumbnail in a gallery.
 
 ## Usage
 
@@ -21,148 +16,29 @@ import { ImageZoom } from "@gpuixui/components/image-zoom";
 />;
 ```
 
-## How the zoom is painted
-
-`0.11.0` has no `transform` (upstream issue #102), so the picture is not a scaled
-layer. The `<img>` host **scales its own buffer to its box** — the `chart-raster`
-probe measured that an image element paints its pixels across whatever box it is
-given — so the component grows the picture's `width` and `height` and moves its
-`left` and `top` inset. The frame is `overflow: hidden`, and a clipped box really
-does clip its content in this runtime (`motion-geometry` measured it), so the
-magnified picture reads as a window over the frame rather than a child spilling
-onto the page.
-
-The pan is the part that makes it feel like a magnifier: the pointer's share of
-the frame becomes the share of the magnified picture that stays under it, so the
-detail a reader points at does not drift while the picture grows. A pointer near
-an edge pins that edge of the picture to the frame's edge, so the pan never pulls
-the picture away and shows the page behind it.
-
-The frame never re-lays out: it keeps `width` × `height` from first paint, so a
-row of thumbnails does not shift while one of them is explored.
-
-## Sizes and magnification
-
-| Knob | What it does |
-| ---- | ------------ |
-| `width`, `height` | The frame's size in pixels. Default `240` × `160`. |
-| `scale` | The magnification while the pointer is inside. Default `1.6`, held to `1…4`. |
-| `radius` | The frame's corner radius, applied to the frame and the picture. Default `theme.radius.md`. |
-
-A `scale` below one would shrink the picture out of its own frame, so it becomes
-no magnification; a value above four is capped, because a large factor turns the
-pan into a hunt for the detail that moved. `scale={1}` is the off switch: the
-picture stays exactly on its frame and nothing moves.
-
-A frame size below one pixel falls back to the house size rather than clipping
-the picture to nothing. A responsive layout measures the space it has and passes
-the result — the frame is a number, not a CSS percentage.
-
-## The box the pointer is read against
-
-A frame is not always where it first painted: a pane opening, a sidebar
-collapsing or a scroll moves it without changing its size, and `onLayout`
-reports a **size** change, not a move. A pan taken against the old frame puts
-the pointed detail somewhere the reader is not. `ImageZoom` keeps a one-pixel
-probe at the frame's origin and toggles the probe's width on every pointer read,
-which makes the runtime lay it out again and report the origin the frame has now;
-the pan is derived from that origin and the measured size during render. The
-probe reads the frame's padded origin, so a frame with a border is measured
-inside it; the frame paints none.
-
-## Timing and reduced motion
-
-`level` picks one of the @gpuixui/motion durations — `step` 120 ms, `fast` 160,
-`normal` 200 (the default, because it follows a pointer), `slow` 320, `notice`
-500. A pointer move retargets from the box on screen, so a fast sweep of the
-pointer does not restart the movement.
-
-The magnification is content, not decoration, so
-`MotionProvider preference="reduced"` keeps it and removes only the journey: the
-picture is already at its new box in the frame the pointer moved. The preference
-is the application's, because the runtime exposes no reduced-motion query
-(`docs/gpuix-capabilities.md`).
-
-```tsx
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <ImageZoom src={chart} alt="The harbour" width={320} height={180} />
-</MotionProvider>;
-```
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `src` | `string` | — | A filesystem path, data URL or http(s) URL for the `<img>` host. |
-| `alt` | `string` | — | The picture's accessible name. Required: the frame publishes no name of its own. |
-| `width` | `number` | `240` | The frame's width; a value below 1 falls back to it. |
-| `height` | `number` | `160` | The frame's height; a value below 1 falls back to it. |
-| `scale` | `number` | `1.6` | The magnification, held to `1…4`; `1` turns the zoom off. |
-| `radius` | `number` | `theme.radius.md` | The corner radius of the frame and the picture. |
-| `level` | `MotionLevel` | `"normal"` | The house duration the pan uses. |
-| `className` | `string` | — | Joined after the resting style, so it wins conflicts. |
-| `style` | `StateStyle<ImageZoomState>` | — | `ImageZoomState` is `{ zoomed, reducedMotion }`. |
-
-`ImageZoom` renders a `div` frame around one `<img>` and takes the GPUix host
-props (`testId`, `aria-*`, `onLayout`, `onMouseMove`, `onMouseLeave`); the
-caller's pointer and layout handlers run beside the component's own, and `style`
-merges last.
-
-## Accessibility
-
-The picture is the content, so `alt` is required — there is no decorative mode,
-because a decorative image has nothing to zoom. The frame publishes no node of
-its own, so the image's name is the only thing a reader hears and the tree is not
-doubled.
-
-The zoom is pointer feedback: the picture takes no tab stop and no key handler,
-and nothing in the page changes state when it magnifies. A keyboard reader gets
-the same picture at its frame size, which is the honest resting reading; a page
-that needs the detail to be reachable without a pointer should also offer the
-full-size image as a link.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `src` | `string` | — |
+| `alt` | `string` (required) | — |
+| `width` | `number` | `240` |
+| `height` | `number` | `160` |
+| `scale` | `number` | `1.6` |
+| `radius` | `number` | `theme.radius.md` |
+| `level` | `MotionLevel` | `"normal"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<ImageZoomState>` | — |
 
 ## Limitations
 
-- **No wheel, pinch or drag-to-pan.** The runtime exposes no wheel-zoom or pinch
-  gesture, and a drag would need a capture contract the component does not own.
-  The pointer's position is the only lens.
-- **The source is what gets magnified.** The host scales the buffer it decoded,
-  so a very large factor on a small source is soft; ship a source large enough
-  for the `scale` you ask for.
-- **One image per frame.** There is no gallery, counter or open/close state here;
-  compose several `ImageZoom`s, or a `Carousel` of them, when the page needs more.
-- **The frame is fixed.** A side that should follow the window is measured by the
-  caller and passed as a number, because a percentage width would leave the pan
-  arithmetic without a length.
+- No wheel, pinch or drag-to-pan; the pointer is the only lens.
+- The source is what gets magnified; ship one large enough for `scale`.
+- One image per frame; compose a Carousel for a gallery.
+- The frame is fixed; a responsive side is measured by the caller.
 
 ## Related
 
-- [Carousel](/docs/components/carousel) — a set of slides, for the gallery around
-  a zoomable picture.
-- [Reveal](/docs/components/reveal) — the house entrance a zoomable plate can
-  arrive on.
-- [Magnetic](/docs/components/magnetic) — the other pointer-following effect, and
-  the same reasoning about a fixed hit box.
-- [Motion](/docs/motion) — the timing levels and the reduced-motion policy.
-
-## Verification
-
-`src/behaviour/image-zoom.test.tsx` renders the component in the real GPUix
-renderer (10 tests): the picture covering its frame at rest, the magnification and
-pan at three quarters across on the paused motion clock, the travel measured
-between the rest and target boxes, an edge pinning the picture so it still
-covers the frame, the return when the pointer leaves, a frame moved by a layout
-above it, the reduced preference painting the magnified box with no journey,
-`scale={1}` leaving the picture alone, the accessible name, and the caller's
-pointer and layout handlers running beside the component's own. The arithmetic —
-fallbacks, the `1…4` magnification, edge clamping, tenth-of-a-pixel rounding and
-the comparison that skips a repeated frame — is `src/image-zoom/logic.test.ts`
-(12 tests).
-
-The rule itself was measured in a window by the playground's `surface-origin`
-probe (15 checks, 0.11.0): a 120 pt panel opening above the frame delivered
-**no** layout report (`surface=1`, `reportedY=88`), a pointer move carried a fresh
-point, and the nudged probe re-reported the origin the frame has now (88 → 208).
-Read against that fresh origin the same window point is the same local point
-(`120,30`); read against the stale report the pan is `120` further down the box
-(`120,150`). Evidence: `apps/playground/README.md` §`surface-origin`.
+- [Carousel](/docs/components/carousel) — a set of slides, for the gallery around it.
+- [Reveal](/docs/components/reveal) — the house entrance a plate can arrive on.
+- [Magnetic](/docs/components/magnetic) — the other pointer-following effect.

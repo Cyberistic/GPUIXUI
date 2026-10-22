@@ -1,13 +1,11 @@
 ---
 title: Dropdown menu
-description: A list of actions anchored to the control that opened it.
+description: A list of actions anchored to its trigger.
 ---
 
-`DropdownMenu` shows a short list of actions next to its trigger. The surface is
-an anchored GPUix layer, which snaps inside the window but does not flip; the
-component opens it on the opposite side when snapping would cover the trigger,
-centres a requested surface from measured bounds, and owns the open state, the
-highlight, the dismissal rules and focus return.
+<ComponentPreview name="dropdown-menu-demo" />
+
+## Usage
 
 ```tsx
 import {
@@ -31,276 +29,43 @@ import {
 </DropdownMenu>;
 ```
 
-## Anatomy
+## Composition
 
-| Part | Responsibility |
-| ---- | -------------- |
-| `DropdownMenu` | open state, the dismiss layer, the positioning root |
-| `DropdownMenuTrigger` | a button that toggles the menu, `aria-expanded` included; `disabled` leaves the tab order, dims and refuses every open path |
-| `DropdownMenuContent` | the floating `role="menu"` surface, rendered while open |
-| `DropdownMenuItem` | one action; `onSelect` runs, then the menu closes |
-| `DropdownMenuCheckboxItem` | an on/off row that stays open after toggling |
-| `DropdownMenuSub` | a group of actions behind a secondary level |
-| `DropdownMenuSubTrigger` | the row that opens the submenu |
-| `DropdownMenuSubContent` | the floating second level, mounted while open and through its exit tween |
-| `DropdownMenuSeparator` | a hairline between groups |
-| `DropdownMenuLabel` | a small heading over a group |
-| `DropdownMenuGroup` | a labelled group of rows |
-
-`DropdownMenuContent` takes `side` (`top`/`right`/`bottom`/`left`, default
-`"bottom"`), `align` (`start`/`center`/`end`, default `"start"`), `sideOffset`
-(default `4`) and `collisionPadding` (default `8`, the margin kept from the
-window edge when the surface snaps). A surface that snaps over its trigger is
-opened on the opposite side when that side has room, otherwise on the roomier
-side. `align="center"` is exact and measured; `alignOffset` is added on top if
-the caller needs its own adjustment. `label` is the menu's accessible name.
-
-## Highlight is focus
-
-The highlighted row **is** the focused row. Every arrow move calls the renderer's
-`focusElement`, and every row that takes focus becomes the highlight, so a row
-can never look selected while Enter would activate a different one. A pointer
-hover does not move the highlight; clicked rows activate directly.
-
-## Keyboard
-
-| Key | Result |
-| ---- | ------ |
-| `Enter` / `Space` on the trigger | opens on the first enabled row, or closes when open |
-| `ArrowDown` on the trigger | opens on the first enabled row |
-| `ArrowUp` on the trigger | opens on the last enabled row |
-| `ArrowDown` / `ArrowUp` | moves to the next/previous enabled row, wrapping |
-| `Home` / `End` | first/last enabled row |
-| `Enter` / `Space` | runs the highlighted row and closes |
-| Letter keys | jumps to the next enabled row whose label starts with the typed prefix |
-| `Escape` | closes and returns focus to the trigger |
-| `Tab` | closes and lets focus move on — a menu is not modal |
-| `ArrowRight` on a submenu trigger | opens it and focuses its first row |
-| `ArrowDown` / `ArrowUp` on an open submenu trigger | enters the submenu at its first/last row |
-| `ArrowLeft` or `Escape` inside a submenu | closes that level and returns focus to its trigger |
-
-A keyboard open lands on a row, so a second `Enter` runs the first action without
-an extra arrow press. A pointer click leaves focus on the menu surface with no
-row highlighted, which is the desktop menu convention; the first arrow key then
-picks the first enabled row.
-
-One keypress runs one action: a repeat event while `Enter` or `Space` is held is
-ignored (`event.isHeld`), so holding the key cannot run a row twice or toggle a
-checkbox row back.
-
-Disabled rows are skipped by every arrow key, by `Home`/`End` and by type-ahead,
-and a click on one does nothing.
-
-## Type-ahead
-
-Typing a letter jumps to the next enabled row whose label starts with the typed
-prefix, so `Re` reaches **Rename** and `De` reaches **Delete**. The prefix is
-case-insensitive, ignores surrounding whitespace and is matched from the start of
-the label — not as a fuzzy substring.
-
-- The prefix lives for **500 ms** after the last keystroke. A later letter starts
-  a fresh search instead of extending an old one.
-- Typing the same letter again within the window advances to the next row that
-  starts with it, wrapping at the end — so `D`, `D`, `D` cycles every D row.
-- A prefix that matches nothing leaves the highlight where it was and clears the
-  buffer, so the next letter searches afresh.
-- A row whose `children` is not a plain string (a label with a badge beside it)
-  is matched through `textValue`:
-
-```tsx
-import { Badge } from "@gpuixui/components/badge";
-
-<DropdownMenuItem textValue="Rename" onSelect={rename}>
-  Rename <Badge>draft</Badge>
-</DropdownMenuItem>;
+```text
+DropdownMenu
+├── DropdownMenuTrigger
+└── DropdownMenuContent
+    ├── DropdownMenuItem
+    ├── DropdownMenuCheckboxItem
+    ├── DropdownMenuSeparator
+    ├── DropdownMenuLabel
+    ├── DropdownMenuGroup
+    └── DropdownMenuSub
+        ├── DropdownMenuSubTrigger
+        └── DropdownMenuSubContent
 ```
-
-The window is a timestamp comparison, not a `setTimeout`: the buffer records the
-monotonic time of its last keystroke and the next keystroke decides whether it has
-expired. Nothing has to run while the menu is idle, so the component owns no
-timer and no provider.
-
-## Dismissal
-
-Pressing outside, pressing the open trigger, `Escape` and choosing a row all
-close the menu. Menus are layers in the same dismiss stack as `Dialog` and
-`Popover`, so a menu opened inside a dialog closes first and leaves the dialog
-open.
-
-The trigger records that the menu was open at **mouse-down**. The press itself is
-an outside press that closes the menu, so the click that follows the same gesture
-must not re-open it — without that guard the menu flickers shut and open.
-
-## Checkbox rows and tones
-
-```tsx
-<DropdownMenuCheckboxItem
-  checked={showHidden}
-  onCheckedChange={setShowHidden}
->
-  Show hidden files
-</DropdownMenuCheckboxItem>
-```
-
-A checkbox row does not close the menu — toggling several settings in one visit
-is the point. It shows a check icon when checked and carries `aria-selected`.
-The mark paints `colors.primary`, a role `indicatorRoles` measures at the 3:1
-mark floor on the popover and on the `hover` wash a highlighted row tints; the
-`accent` wash it used to paint is 1.26:1 on the light popover, so a toggle that
-was on said nothing on screen.
-
-`tone="destructive"` paints the row in the status tone's page-text role
-(`statusTone(theme, "destructive").foreground`) — the role the contrast contract
-measures as text — rather than the solid `destructive` fill. It is a visual
-signal, not a confirmation step: pair a destructive row with **Confirmation
-dialog** when the action cannot be undone.
-
-## Submenus
-
-A submenu groups actions behind one secondary level:
-
-```tsx
-<DropdownMenuSub>
-  <DropdownMenuSubTrigger>Share</DropdownMenuSubTrigger>
-  <DropdownMenuSubContent label="Share">
-    <DropdownMenuItem onSelect={copyLink}>Copy link</DropdownMenuItem>
-    <DropdownMenuItem onSelect={email}>Email</DropdownMenuItem>
-  </DropdownMenuSubContent>
-</DropdownMenuSub>;
-```
-
-The trigger is an ordinary menu row: arrows and type-ahead reach it, and
-clicking, `Enter`, `Space`, `ArrowRight` or hovering opens the submenu. Opening a
-submenu focuses its first row, so the next `Enter` runs the first action without
-an extra arrow press. Only one submenu per menu is open at a time; moving onto
-another row closes the open one.
-
-The surface is positioned at the trigger row's right edge in window coordinates
-and clamped by GPUix's `fit="snap"`. A press on the submenu is geometrically
-outside the parent surface, so the runtime reports it to the parent's outside
-handler first; the submenu's own dismiss layer recognises the press inside its
-painted bounds and lets it reach the row. A press on the parent menu's background
-does not land in those bounds and still closes the whole menu.
-
-A row is chosen by pointer as well as by keyboard: clicking it runs the action
-once and closes both levels.
-
-`Escape` and `ArrowLeft` close **one** level: the submenu disappears, focus
-returns to its trigger, and the parent menu stays open. Choosing a submenu action
-closes both levels and returns focus to the dropdown trigger. An outside press
-also closes both.
-
-## Controlled and uncontrolled
-
-```tsx
-<DropdownMenu defaultOpen>…</DropdownMenu>;                        // remembers
-<DropdownMenu open={open} onOpenChange={setOpen}>…</DropdownMenu>;  // app remembers
-```
-
-## Motion
-
-The surface fades and travels 4px out from its trigger's side (`normal`,
-200 ms), and stays mounted for its exit tween — so a dismiss is immediate in
-state while the box fades out. A submenu does the same from its row's side and
-also stays mounted for its exit, taking no presses while it leaves; it always
-enters from the left, so the rare submenu the runtime snaps to the row's left
-travels from the same edge. `MotionProvider` supplies the reduced-motion
-preference (`docs/component-api.md` §11).
 
 ## API
 
-Every part takes the GPUix host props and merges `style` last.
-
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `DropdownMenu` | root context | `open?: boolean`, `defaultOpen?: boolean` (default `false`), `onOpenChange?: (open: boolean) => void` |
-| `DropdownMenuTrigger` | button with `aria-expanded` | `disabled?: boolean`; the rest are the local button's `variant`, `size` and `label` |
-| `DropdownMenuContent` | floating `role="menu"` surface | `label?: string`, `side?` (default `"bottom"`), `align?` (default `"start"`), `sideOffset?: number` (default `4`), `collisionPadding?: number` (default `8`), `alignOffset?: number` (default `0`) |
-| `DropdownMenuItem` | one action row | `onSelect?: () => void`, `disabled?: boolean`, `tone?: "default" \| "destructive"`, `leading?: ReactNode`, `trailing?: ReactNode`, `textValue?: string`, `closeOnSelect?: boolean` (default `true`) |
-| `DropdownMenuCheckboxItem` | an on/off row that stays open | `checked: boolean` and `onCheckedChange: (checked: boolean) => void` (both required); `closeOnSelect` defaults to `false` here |
+| `DropdownMenu` | root context | `open?`, `defaultOpen?` (default `false`), `onOpenChange?` |
+| `DropdownMenuTrigger` | button with `aria-expanded` | `disabled?`, button `variant`/`size`/`label` |
+| `DropdownMenuContent` | floating `role="menu"` surface | `label?`, `side?` (default `"bottom"`), `align?` (default `"start"`), `sideOffset?` (default `4`), `collisionPadding?` (default `8`) |
+| `DropdownMenuItem` | one action row | `onSelect?`, `disabled?`, `tone?`, `leading?`, `trailing?`, `textValue?`, `closeOnSelect?` (default `true`) |
+| `DropdownMenuCheckboxItem` | an on/off row that stays open | `checked` (required), `onCheckedChange` (required) |
 | `DropdownMenuSub` / `DropdownMenuSubTrigger` / `DropdownMenuSubContent` | one secondary level | `DropdownMenuSubContent` takes the root surface's placement props |
 | `DropdownMenuSeparator` / `DropdownMenuLabel` / `DropdownMenuGroup` | the structure between rows | — |
 
-## Theming
+## Limitations
 
-The surface compiles shadcn's fixed metrics: `colors.popover` /
-`colors.popoverForeground`, a 24px radius, 6px padding, a 192px minimum width, a
-1px `foreground` ring at 5% and the theme's `lg` elevation beside it — the ring
-and the lift are two declarations the runtime paints as one shadow list.
-Rows are `controlHeight(theme, "sm")` tall, paint the fixed 14/20 `text-sm` step
-at weight 500, and highlight with `colors.hover` plus a 2px left bar in
-`colors.accent`; a press paints **`pointerWash(theme, "active", "hover")`**,
-derived against the highlight it replaces (Light · macOS's raw `active` sat
-1.037:1 from its `hover`). A disabled row paints `colors.disabledForeground` — the role
-`contrastPairs` measures on the popover — and drops its hover and press fills.
-It is **not** faded: a 50% fade composites the label into the row's own fill,
-which a high-contrast theme can no longer read at the 3:1 it asks of the pair.
-
-## Style by state
-
-A row takes a `StyleDesc` or a function of its state: `MenuItemState`
-(`{ disabled, highlighted }`) or `MenuCheckboxItemState`
-(`{ checked, disabled, highlighted }`). `highlighted` is the row the menu's real
-focus is on. A state the row already paints correctly — the disabled colour pair
-above — needs no override.
-
-```tsx
-<DropdownMenuItem
-  style={(state) => ({ cursor: state.disabled ? "default" : "pointer" })}
->
-  Rename
-</DropdownMenuItem>
-```
-
-## Accessibility and limitations
-
-- `role="menu"` on the surface, `role="menuitem"` / `role="menuitemcheckbox"` on
-  rows, `aria-expanded` on the trigger.
-- **No `aria-haspopup`, `aria-controls`, `aria-checked` or `aria-activedescendant`**
-  in `@gpuix/native@0.11.0`: `HostProps` exposes only `aria-label`,
-  `aria-description`, `aria-expanded`, `aria-selected`, `aria-valuetext` and
-  `aria-level`. The checkbox row therefore uses `aria-selected`, and the link
-  between trigger and surface is positional. A submenu trigger announces
-  `aria-expanded` but not `aria-haspopup`.
-- One level of submenus is tested. A submenu inside a submenu follows the same
-  rule but is not exercised by a suite.
-- Submenus open to the right of their trigger and rely on `fit="snap"` to stay
-  in the window; there is no left-side flip.
-- The root surface flips once per open, from measured bounds. A surface taller
-  than both sides can still cover its trigger, and `align="center"` is clamped by
-  the snap margin near a window edge.
-- Type-ahead is a prefix match with no fuzzy scoring, and it ignores a label that
-  is not plain text unless `textValue` is set.
+- No `aria-haspopup`, `aria-controls`, `aria-checked` or `aria-activedescendant`.
+- One level of submenus is tested.
 - A hover does not preview a highlight; the pointer activates on click.
-
-## Verification
-
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (41
-tests): the `menu` role, a leaving surface no longer taking presses, keyboard opening on the first/last enabled row, a
-disabled trigger that stays out of the tab order and refuses ArrowDown, Enter and
-a press, a
-centred surface and a near-bottom surface that opens above its trigger, arrow
-focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
-restoring focus, a held Enter toggling a checkbox row once, clicked and disabled
-rows, Escape/outside press/trigger re-press
-dismissal, checkbox toggling and its check mark's measured role, the destructive
-row's measured
-page-text role, the
-surface in both themes, type-ahead (prefix, repeat cycling, disabled skip,
-Shift, window expiry, unmatched-prefix reset), and the submenu rules — keyboard,
-hover and pointer opening, right-edge placement, focus entering the first row,
-arrows and type-ahead staying inside, one submenu at a time, one-level
-Escape/ArrowLeft, a pointer click running the row and closing both levels, and an
-outside press closing both levels. `src/behaviour/overlay-elevation.test.tsx`
-reads the composed `lg` elevation beside the ring off the rendered surface.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
+- Type-ahead is a prefix match with no fuzzy scoring.
 
 ## Related
 
 - **Popover** — a floating panel rather than a list of actions.
 - **Context menu** — the same rows, positioned at the pointer.
 - **Command menu** — a searchable action list in a dialog.
-- **Confirmation dialog** — the modal guard for a destructive action.

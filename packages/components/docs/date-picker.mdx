@@ -3,9 +3,9 @@ title: Date picker
 description: One day, chosen from a month grid in a popover.
 ---
 
-`DatePicker` is a field-shaped trigger plus a month grid in a **Popover**. GPUix
-has no calendar primitive and no native date input, so the grid is ours: pure
-`DateTime` arithmetic in `date-picker/calendar.ts`, no `Date`, no `Intl`.
+<ComponentPreview name="date-picker-workflow" />
+
+## Usage
 
 ```tsx
 import {
@@ -15,8 +15,6 @@ import {
   DatePickerTrigger,
 } from "@gpuixui/components/date-picker";
 
-const [due, setDue] = useState<string | null>("2026-10-30");
-
 <DatePicker value={due} onValueChange={setDue}>
   <DatePickerTrigger label="Due date" />
   <DatePickerContent>
@@ -25,184 +23,40 @@ const [due, setDue] = useState<string | null>("2026-10-30");
 </DatePicker>;
 ```
 
-## Value format
+## Composition
 
-The public value is an **ISO day** — `YYYY-MM-DD` — or `null` for "no date".
-Never a `DateTime` and never a locale-formatted string: a stored value must not
-depend on how it is displayed. `undefined` means uncontrolled.
-
-```tsx
-<DatePicker defaultValue="2026-10-30">
-  <DatePickerTrigger />
-  <DatePickerContent>
-    <DatePickerCalendar />
-  </DatePickerContent>
-</DatePicker>;
+```text
+DatePicker
+├── DatePickerTrigger
+└── DatePickerContent
+    └── DatePickerCalendar
 ```
-
-## Anatomy
-
-| Part | Responsibility |
-| ---- | -------------- |
-| `DatePicker` | the value, the bounds, the open state and the trigger registry |
-| `DatePickerTrigger` | the field-shaped control: the selected day or `placeholder`, `aria-expanded`, a chevron |
-| `DatePickerContent` | the package's Popover surface: anchored layer, dismiss stack, Escape focus-return |
-| `DatePickerCalendar` | the month header, weekday row, day grid, key handling and the Clear row |
-
-The root owns the value and the bounds because selection and clamping need them;
-the calendar owns only the view month and the focused day, which reset when the
-surface opens. The grid is always six rows, so the popover does not change height
-between a 28-day February and a 31-day month. Days from the adjacent months are
-blank cells, not second-month buttons: a grid with two months is a different
-component with different selection rules.
-
-Browsing months changes the **view**, not the value. Only Enter, Space or a click
-selects.
-
-## Bounds
-
-`min` and `max` are **inclusive** ISO days. A bound that is absent or malformed
-is ignored, exactly like a malformed `value`.
-
-```tsx
-<DatePicker
-  min="2026-10-17"
-  max="2026-12-31"
-  value={checkIn}
-  onValueChange={setCheckIn}
->
-  <DatePickerTrigger label="Check-in" />
-  <DatePickerContent>
-    <DatePickerCalendar />
-  </DatePickerContent>
-</DatePicker>;
-```
-
-- Days outside the bounds are muted, leave the tab order and do not activate.
-- Arrow, Home/End and PageUp/PageDown movement **clamps** to the bounds instead
-  of stepping onto an unavailable day.
-- The previous/next month controls disable at the bound's month, so a visible
-  month always contains a selectable day.
-- Bounds constrain **choosing**, not a controlled `value`: a value outside the
-  bounds is displayed as the consumer supplied it.
-- `min` after `max` makes no day selectable — the grid is visible and inert. That
-  is a caller bug, and it fails safely instead of throwing from render.
-
-## Clearing
-
-`clearable` adds a `Clear` action to the surface while a day is selected. It
-reports `null`, closes the popover and returns focus to the trigger, matching the
-selection path.
-
-```tsx
-<DatePicker clearable value={due} onValueChange={setDue}>
-  <DatePickerTrigger label="Due date" />
-  <DatePickerContent>
-    <DatePickerCalendar />
-  </DatePickerContent>
-</DatePicker>;
-```
-
-The action is opt-in so an existing field does not gain a row; the caller still
-owns `null` as the "no date" state.
-
-## Keyboard
-
-| Key | Result |
-| ---- | ------ |
-| `ArrowLeft` / `ArrowRight` | one day back/forward, crossing month boundaries, clamped to `min`/`max` |
-| `ArrowUp` / `ArrowDown` | one week back/forward, clamped to `min`/`max` |
-| `Home` / `End` | the week's first/last day, using `weekStartsOn`, clamped |
-| `PageUp` / `PageDown` | previous/next month, clamped to the month's last day and the bounds |
-| `Enter` / `Space` | selects the focused day, updates the trigger, closes and returns focus |
-| `Escape` | closes and returns focus to the trigger |
-| `Tab` | leaves the popover — it is not a trap |
-
-One cell is the tab stop (the selected day, else the first selectable day of the
-viewed month); the arrow keys move real focus, so the highlight and the focus are
-the same cell. **A month control answers the movement keys too**: the runtime
-focuses the element a pointer pressed even when it is disabled, so a press on
-`Next month` at its bound parks the focus on the control — the nav row carries
-the same movement keys as the grid, and the next arrow moves into the calendar
-rather than nothing happening. `Enter`/`Space` stay the control's own press.
 
 ## API
 
-Every part takes the GPUix host props and merges `style` last.
-
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
-| `DatePicker` | `value` / `defaultValue` | `string \| null` — an ISO day, `YYYY-MM-DD` | — / `null` |
+| `DatePicker` | `value` / `defaultValue` | `string \| null` — an ISO day | — / `null` |
 | `DatePicker` | `onValueChange` | `(value: string \| null) => void` | — |
-| `DatePicker` | `weekStartsOn` | `1..7`, Monday is `1` | `1` |
-| `DatePicker` | `min` / `max` | ISO day, inclusive; a malformed bound is ignored | unbounded |
-| `DatePicker` | `clearable` | `boolean` — shows the Clear row while a day is set | `false` |
+| `DatePicker` | `weekStartsOn` | `1..7` | `1` |
+| `DatePicker` | `min` / `max` | ISO day, inclusive | unbounded |
+| `DatePicker` | `clearable` | `boolean` | `false` |
 | `DatePicker` | `disabled` | `boolean` | `false` |
-| `DatePicker` | `today` | ISO day the grid treats as today | runtime clock |
+| `DatePicker` | `today` | ISO day | runtime clock |
 | `DatePickerTrigger` | `placeholder` / `label` | `string` | `"Pick a date"` / — |
-| `DatePickerContent` | `side` / `align` | `"top" \| "right" \| "bottom" \| "left"` · `"start" \| "center" \| "end"` | `"bottom"` · `"start"` |
+| `DatePickerContent` | `side` / `align` | `"top" \| "right" \| "bottom" \| "left"` · `"start" \| "center" \| "end"` | `"bottom"` / `"start"` |
 | `DatePickerContent` | `sideOffset` | `number` | `6` |
-| `DatePickerCalendar` | `label` | `string` — the grid's accessible name | `"Calendar"` |
+| `DatePickerCalendar` | `label` | `string` | `"Calendar"` |
 
-## Theming
+## Limitations
 
-The trigger paints `colors.background`, a `borderWidth.thin` border in
-`colors.borderStrong` and the registry's fixed 6px corner (`rounded-md`, ADR
-0006). The surface paints `colors.popover` with `colors.border` and the same
-fixed 6px corner. The selected day is `colors.primary` on
-`colors.primaryForeground`; today keeps a `colors.primary` outline; hover uses
-`colors.hover`; an unavailable day uses `colors.mutedForeground` and no hover; the
-focus ring is `colors.ring`.
-
-## Accessibility and limitations
-
-- The grid is `role="grid"` with `role="row"` and `role="gridcell"`; a cell's
-  `aria-label` is the full day (`"17 October 2026"`) and the chosen cell carries
-  `aria-selected`. An unavailable day's name ends in `, unavailable`.
-- **No `aria-current`** in `@gpuix/native@0.11.0`: today is marked by a border,
-  not by an attribute.
-- **No `aria-disabled`** in `@gpuix/native@0.11.0`: an unavailable day leaves the
-  tab order, does not activate, and is named as unavailable instead of carrying a
-  disabled state.
-- **`min` after `max`** makes the grid inert (see Bounds) rather than throwing.
-- **Fixed English labels.** The repo has no i18n layer; month and weekday names
-  are strings in `date-picker/calendar.ts`. Wiring a locale means a real message
-  catalogue, not a prop that silently does nothing.
-- **No adjacent-month days** and no range selection in v1.
-- **No time of day.** A day and a time are separate values; compose **Time
-  picker** beside this control when a form needs both. Folding them together
-  would force a timestamp on every consumer that only needs one half.
-- The calendar uses `DateTime` from Effect; there is no `Date` or `Intl` in
-  `date-picker/calendar.ts`. The only clock read is `DateTime.nowUnsafe` for the
-  default "today" — pass the `today` prop to make a test or a server boundary
-  deterministic.
-
-## Verification
-
-`src/date-picker/calendar.test.ts` (18 tests) covers leap February, a mid-week
-month start under both week starts, a month start on the week start, the 42-cell
-shape, uniqueness and month membership, year-crossing month arithmetic, the last
-day of a month without `Date`, day identity, labels, ISO parsing (including
-`2026-02-30`), inclusive bounds, malformed bounds, clamping, month browse limits
-and `min` after `max`.
-
-`src/behaviour/date-picker.test.tsx` (18 tests) covers open + day focus, selection
-as an ISO value with focus return, the controlled contract, arrow/Home/End focus,
-PageDown browsing without changing the value, Escape focus-return, the
-next-month control, both themes, a disabled trigger, an unavailable day, arrow
-clamping, the month-control bound, the clear action and its visibility rules, the
-trigger's own placeholder/name, an empty surface when the calendar part is
-not composed, the movement keys a month control answers after the focus is
-parked on it, and an empty calendar anchoring on the day it calls today.
-
-```sh
-nub run --filter @gpuixui/components test
-nub run --filter @gpuixui/components test:behaviour
-```
+- No `aria-current`; today is marked by a border.
+- No `aria-disabled`; an unavailable day leaves the tab order.
+- Fixed English labels; no i18n layer.
+- No adjacent-month days, range selection or time of day.
 
 ## Related
 
 - **Popover** — the surface this composes.
-- **`DatePickerCalendar`** — the grid part; compose it inside `DatePickerContent`.
 - **Time picker** — the time-of-day half of a scheduling field.
-- **Field** — wrap the trigger when the date needs a label and a message slot.
+- **Field** — wrap the trigger when it needs a label and message slot.

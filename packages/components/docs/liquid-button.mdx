@@ -1,12 +1,7 @@
 ---
 title: Liquid button
-description: An action a soft fill floods into on hover and drains out of on leave.
+description: An action a soft fill floods into on hover.
 ---
-
-`LiquidButton` is the local action with a wash that floods in from the edge the
-pointer crosses and drains toward the edge it leaves by. It is the same control
-as `Button` — the same variants, sizes, disabled state and host props — so
-adopting it changes the hover feedback and nothing else.
 
 ## Usage
 
@@ -18,109 +13,29 @@ import { LiquidButton } from "@gpuixui/components/liquid-button";
 </LiquidButton>;
 ```
 
-The component reads the pointer itself, so the caller wires no hover state.
-
-## How the flood is painted
-
-The runtime has **no `transform`** (upstream issue `#102`), so the flood is not a
-scaled blob or a moving circle. It is one absolutely positioned layer whose
-`left` and `width` tween together:
-
-1. a pointer that enters on the **left** half is born with no width at the
-   control's left edge and grows to its full width;
-2. a pointer that enters on the **right** half is born with no width at the right
-   edge and grows leftward as its `left` falls to zero;
-3. leaving drains the same layer: the edge the pointer left through stays put and
-   the far edge runs toward it, so the fill empties out of that side rather than
-   blinking away.
-
-The layer is clipped by the control's rounded box and takes no pointer input, so
-the hover it marks still reaches the action.
-
-## Where the edge comes from
-
-The runtime's `mouseEnter`/`mouseLeave` payloads carry no position, so the edges
-are read from the pointer's **`mouseMove`** events: the first move inside the
-control starts the flood on its side, and the last move before the pointer
-leaves names the side it drains to. A move that stays inside a filled control
-changes nothing — only leaving ends the flood.
-
-## Timing and reduced motion
-
-One house level drives the sweep: `normal` (200 ms) by default. `level` picks any
-other level from `@gpuixui/motion`. Both halves — in and out — share the same
-duration, so a drain takes as long as the flood that filled it.
-
-A flood marks a pointer, so it is feedback rather than content: under
-`MotionProvider preference="reduced"` **none is painted**. The control's own
-hover fill remains, which the local `Button` already paints. The setting is read
-on every render, so a flood already crossing when it turns on is removed in that
-frame instead of settling at its filled width. The preference is the
-application's to supply — the runtime exposes no reduced-motion query.
-
-```tsx
-import { LiquidButton } from "@gpuixui/components/liquid-button";
-import { MotionProvider } from "@gpuixui/components";
-
-<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
-  <LiquidButton onClick={save}>Save draft</LiquidButton>
-</MotionProvider>;
-```
-
-## Keyboard and disabled
-
-A keyboard reader never moves a pointer, so no flood is painted; the
-`keyboardFocusRing` is the feedback that path already has. A disabled action
-paints no flood either, even though the pointer can still rest on it.
-
 ## API
 
-| Prop | Type | Default | Notes |
-| ---- | ---- | ------- | ----- |
-| `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` | The action's look, from the local `Button`. |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | The density-defined control height. |
-| `disabled` | `boolean` | `false` | Leaves the tab order and paints no flood. |
-| `level` | `MotionLevel` | `"normal"` | The flood's duration (200 ms at `normal`), used for the entry and the drain. |
-| `liquidColor` | `string` | the label ink at 16% | The wash colour. |
-| `onMouseMove` | `(event) => void` | — | Composed: the edge is taken, then the caller's handler runs. |
-| `onMouseLeave` | `(event) => void` | — | Composed: the drain starts, then the caller's handler runs. |
-| `onLayout` | `(event) => void` | — | Composed: the measured box is kept, then the caller's handler runs. |
-| `style` | `StyleDesc` | — | Merged last on the control; the flood assumes the control stays a containing block. |
-
-`LiquidButton` takes the whole GPUix host-prop surface (`testId`, `role`,
-`aria-*`, the pointer handlers) because it is the local action with one layer
-added. The layer carries an internal `testId="liquid"`, no role and no text, so
-it adds no accessibility node.
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `disabled` | `boolean` | `false` |
+| `level` | `MotionLevel` | `"normal"` |
+| `liquidColor` | `string` | label ink at 16% |
+| `onMouseMove` | `(event) => void` | — |
+| `onMouseLeave` | `(event) => void` | — |
+| `onLayout` | `(event) => void` | — |
+| `style` | `StyleDesc` | — |
 
 ## Limitations
 
-- **Inset travel, not a scaled blob.** The layer moves its `left` and `width`;
-  nothing is transformed, so the fill is a straight-edged rectangle inside the
-  control's rounded clip rather than an organic shape.
-- **Edges come from moves.** A pointer that teleports onto the control without a
-  move (a synthetic enter) paints nothing until the first move; a leave with no
-  preceding move drains toward the half the action was entered from.
-- **The flood crosses the label.** The wash paints above the content at 16% ink;
-  the text is tinted while the layer passes.
-- **One flood at a time.** Re-entering during a drain restarts the layer from the
-  new edge rather than painting a second one.
-- **Reduced motion and keyboard readers get none.** There is no static wash; the
-  hover fill and the focus ring are the remaining feedback.
-
-## Verification
-
-Nine native behaviour cases in `src/behaviour/liquid-button.test.tsx` measure the
-flood on the renderer's motion clock (born at the entry edge, growing across,
-draining to the side the pointer left by, a move inside a filled control keeping
-it, the removal timer, the reduced preference, a flood dropped when the setting
-turns on mid-cross, the disabled action and the ink role); the arithmetic is
-`src/liquid-button/logic.test.ts` (8 tests).
+- Inset travel, not a scaled blob; the fill is a straight rectangle.
+- Edges come from moves; a teleported pointer paints nothing until it moves.
+- The flood crosses the label at 16% ink.
+- Reduced motion and keyboard readers get no flood.
 
 ## Related
 
 - [Ripple button](/docs/components/ripple-button) — the press-time sibling.
-- [Shine button](/docs/components/shine-button) — a light that crosses the action
-  on hover.
+- [Shine button](/docs/components/shine-button) — a light that crosses on hover.
 - [Magnetic](/docs/components/magnetic) — content that leans toward the pointer.
-- [Button](/docs/primitives/button) — the primitive action this package's local
-  stand-in will be replaced by.

@@ -3,22 +3,7 @@ title: Carousel
 description: Discrete slide stepping, with every slide kept mounted.
 ---
 
-`Carousel` steps through a fixed set of slides with previous/next controls, a dot
-per slide and the arrow keys. It is **discrete**: the frame is sized by the slide
-on screen, so the track itself does not travel between two slides. What moves is
-the **indicator** — the active dot grows from a 6px circle to an 18px pill on the
-runtime's own clock, because `motion` interpolates box geometry (`width`) and has
-no `transform` (upstream issue #102).
-
-Every slide stays mounted and only the active one is displayed, which preserves
-each slide's component state (a form on slide two is not reset by visiting slide
-three).
-
-A travelling track would have to lay every slide out in one box so both the
-outgoing and the incoming slide could be painted at once, and the frame would then
-take its height from the tallest slide rather than the one being read. That is a
-layout decision, not a missing effect: the carousel keeps the content-sized frame
-and animates the one state it can, the indicator.
+<ComponentPreview name="carousel-states" />
 
 ## Usage
 
@@ -36,200 +21,38 @@ import {
     <CarouselSlide>…</CarouselSlide>
     <CarouselSlide>…</CarouselSlide>
   </CarouselTrack>
-  <div style={{ display: "flex", gap: 8 }}>
-    <CarouselControl direction="previous" />
-    <CarouselControl direction="next" />
-  </div>
+  <CarouselControl direction="previous" />
+  <CarouselControl direction="next" />
   <CarouselIndicators />
 </Carousel>;
 ```
 
-The runnable build is `examples/carousel.example.tsx`, which the native
-playground mounts.
+## Composition
 
-**Declare slides directly inside `CarouselTrack`.** The track reads its direct
-children to number them; wrapping them in a component or a fragment gives every
-slide the same index.
-
-## Behaviour
-
-| Action | Result |
-| ------ | ------ |
-| `next` / `previous` | moves one slide; a no-op at an edge unless `loop` |
-| `loop` | wraps in both directions |
-| `ArrowRight` / `ArrowLeft` (carousel or a dot focused) | same as the controls |
-| `Home` / `End` | first / last slide |
-| `value` controlled | the caller's index wins; the control still reports |
-
-The root is focusable and named by `label`. The active index is clamped to the
-slide count, so a controlled value past the end cannot blank the carousel.
-
-## Motion
-
-The carousel moves the one value a step changes and a reader can follow: the
-active dot's **width**. A selection retargets both the dot that lost the state and
-the one that gained it from the widths painted on screen, so the two travel
-against each other instead of swapping in one frame.
-
-```tsx
-// Inside CarouselIndicators, once per dot.
-<div
-  motion={{
-    initial: false,
-    animate: { width: selected ? 18 : 6 },
-    transition: timing.enter, // `fast` — 160 ms, the level an indicator uses
-  }}
-  style={{ height: 6, borderRadius: 3 }}
-/>;
+```text
+Carousel
+├── CarouselTrack
+│   └── CarouselSlide
+├── CarouselControl
+└── CarouselIndicators
 ```
-
-`initial: false` paints a rail that mounts on a selection at rest, so only a
-change of slide travels. `"fast"` (160 ms) is the level `@gpuixui/motion` names
-for an indicator, and the easing is the seam's enter curve. The two inks change
-in the frame the selection does, because `motion` interpolates numbers and has no
-colour — a dot mid-travel is therefore already the new role.
-
-`MotionProvider preference="reduced"` is a zero-duration assignment: the dot
-paints at its new width in the frame the slide changes, with no journey. The
-measurement is `src/behaviour/carousel.test.tsx`'s `grows the active dot over its
-level instead of jumping` (on a paused clock) and its reduced case, which freezes
-the clock so a journey could never arrive.
-
-The track itself does not travel: the frame is sized by the slide on screen, and
-a travel would need every slide laid out in one absolutely positioned box, which
-would take the frame's height from the tallest slide. The reasoning is the
-component's header comment and `COMPONENTS.md`'s row; there is no honest way to
-keep a content-sized frame and slide two slides past each other at once.
-
-## Indicators
-
-`CarouselIndicators` is the second route to a slide: **one press target per
-slide**, so a reader jumps three panels without stepping through them. It reads
-the slide count from the track and the active index from the root, so it never
-keeps a copy of either.
-
-```tsx
-<Carousel label="Workspace previews">
-  <CarouselTrack>{/* … */}</CarouselTrack>
-  <CarouselIndicators />
-</Carousel>;
-```
-
-The drawing is a small dot — a **wider pill on the active slide**, because a
-state carried by hue alone tells a reader who cannot separate the two hues
-nothing. Both inks are mark roles: `primary` for the active dot and
-`mutedForeground` for the rest, each measured at the 3:1 non-text floor on the
-page the carousel is painted on. Each target is 24 × 24 px — the press floor
-WCAG 2.2 SC 2.5.8 asks for — around the 6px drawing. A dot paints a fill, and a
-painted child is the boundary the runtime's hit test stops counting at, so the
-drawing declares `pointerEvents: "none"` and a press on the middle of a dot
-reaches its target. The routes are measured by `press-routing-lifecycle`:
-`text-filled` runs nothing, while `inert-control` reaches both handlers.
-
-The active drawing's width is a **motion target** — see [Motion](#motion) — so a
-step grows one dot and shrinks the one it replaced rather than swapping two
-styles in one frame.
-
-The group holds **one roving tab stop**, on the active dot: Tab reaches the dots
-once, the arrows move the slide and the stop together, and `Enter` (on the
-press) or `Space` (on the release) jumps to the focused dot. A track with no
-slides paints no indicators.
 
 ## API
 
-Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
-merges `style` last.
-
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Carousel` | `role="group"` with `aria-label`, `tabIndex={0}` | `label` (required), `value?`, `defaultValue?` (0), `onValueChange?`, `loop?`, children |
-| `CarouselTrack` | the slide row | children |
-| `CarouselSlide` | one slide, `display` toggled | `style?: StateStyle<CarouselSlideState>`, children |
+| `Carousel` | `role="group"` named by `label`, `tabIndex={0}` | `label` (required), `value?`, `defaultValue?` (0), `onValueChange?`, `loop?` |
+| `CarouselTrack` | the slide row | children (slides must be direct) |
+| `CarouselSlide` | one slide | `style?: StateStyle<CarouselSlideState>` |
 | `CarouselControl` | button | `direction: "previous" \| "next"`, `label?`, `disabled?` |
-| `CarouselIndicators` | `role="group"` of named dots | `label?` (default "Choose a slide"), `style?: StateStyle<CarouselIndicatorsState>` |
-
-`CarouselSlideState` is `{ active, index }`; `CarouselIndicatorsState` is
-`{ active, count }`. A dot is named "Go to slide N" and publishes
-`aria-selected` for the active one.
-
-## Theming
-
-The track paints the **`card` fill** with a `border-input` edge — the class
-shadcn names for its border, which `@gpuixui/tw` resolves to this library's
-**`border` role**; this package's `input` role is the field fill (the card's own
-white in the base light theme), so the class name is not the role — and a
-**fixed 8px** corner, because `rounded-lg` compiles from the registry's fixed
-shadcn scale (ADR 0006) rather than the theme's radius group. A platform switch
-re-heights the controls with its density and leaves the track's corner alone.
-
-Controls are **secondary actions**, so each sits on the theme's `secondary` fill
-with the edge the boundary role draws. The chevron is that control's label in vectors: it
-paints `secondaryForeground`, the on-colour of the fill it sits on, and never a
-role chosen for another fill — `secondaryForeground` on `primary` is 1.42:1 in
-Windows dark. `contrastPairs` measures the pair it paints on every shipped style,
-and the control's pointer states are the theme's derived opaque step from that
-same fill (`filledHover`/`filledPressed`), each held to the perceptibility floor
-against the fill it replaces. Slides have no surface of their own. A custom
-theme changes the frame with no code change — see [Theming](/docs/theming).
-
-## Accessibility
-
-- The root is a named `group` and takes focus for the arrow keys; it declares the
-  runtime's keyboard focus outline at rest, so a `Tab` shows the region the
-  arrows will act on while a pointer press shows nothing.
-- Controls are buttons named "Previous slide" / "Next slide"; a control at an
-  edge is disabled (out of the tab order, painted with the theme's
-  `disabled`/`disabledForeground` pair) unless `loop`. The control is a filled
-  `secondary` action, so it wears the measured pair rather than a fade.
-- Dots are buttons named "Go to slide N", with `aria-selected` on the active one
-  — `0.11.0` has no `aria-current`, the substitution Pagination, Stepper and
-  Breadcrumb use. The active dot is also wider, so the state is not
-  colour-only.
-- Inactive slides stay in the tree with `display: none`; a screen reader does not
-  announce them, and their component state survives.
-- There is no `aria-roledescription="carousel"` or slide-position announcement
-  in `0.11.0`.
+| `CarouselIndicators` | `role="group"` of named dots | `label?`, `style?: StateStyle<CarouselIndicatorsState>` |
 
 ## Limitations
 
-- **The track does not travel between slides.** The frame is sized by the slide
-  on screen, so a travel would need every slide laid out in one absolutely
-  positioned box and the frame would take the tallest slide's height. The
-  indicator's width is the movement the component ships.
-- The dot's two inks swap in the frame the slide changes; `motion` interpolates
-  numbers, so the colour is not part of the travel.
-- **No swipe/drag** (no drag host feature) and no scroll snap.
-- No auto-advance or thumbnails in v1; the dots are press targets, not a
-  progress indicator.
-- Slides must be direct children of the track.
-- Inactive slides stay mounted: many heavy slides cost render time.
-
-## Verification
-
-`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (17 tests):
-every slide mounted and one displayed, control stepping, edge clamping, loop
-wrapping, arrows and Home/End, a controlled carousel (including an index the
-caller's arithmetic could not read, which reads as the first slide), region naming and disabled
-edges, a style callback receiving `{ active, index }` in both themes, the
-chevron read back off the renderer against the label role and the mark floor of
-the fill it sits on, and the indicators — one named target per slide with
-`aria-selected` on the active one, a press jumping to the slide it names, the
-roving stop following the slide with the arrows still stepping from a dot, the
-24px target around the 6px drawing, both dot inks held to the mark floor in both
-themes, the active drawing read back at 18px from the renderer's own bounds, the
-width travelling between the two dots on a paused motion clock, the reduced
-preference painting the new width with the clock frozen, and no indicators for an
-empty track. `src/behaviour/focus-ring.test.tsx` holds the root's
-keyboard outline — declared at rest, kept while the region has focus, with no
-spread shadow behind it.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-```
-
-It needs a host with a GPUix native binding — macOS arm64, Linux x64, Windows
-x64, or this Intel Mac, where the locally built `darwin-x64` binding is installed
-(`apps/playground/README.md` §The binding on this host).
+- The track does not travel; the frame is sized by the visible slide.
+- No swipe, drag or scroll snap.
+- No auto-advance or thumbnails.
+- Inactive slides stay mounted; many heavy slides cost render time.
 
 ## Related
 

@@ -1,15 +1,11 @@
 ---
 title: List
-description: A vertical collection of rows, optionally single- or multi-selectable.
+description: A vertical collection of optionally selectable rows.
 ---
 
-`List` presents rows. With `selectionMode="single"` it becomes a `listbox`: arrow
-keys move a roving tab stop, a click selects, and the list behaves as a single tab
-stop instead of one per row. `selectionMode="multiple"` keeps that keyboard model
-and adds the desktop selection modifiers. In both modes, typing the first letters
-of a row jumps to it. A single or unselectable list can also pass `onActivate` to
-run a row action — open a file, load a record — without treating every selection
-change as an action.
+<ComponentPreview name="list-demo" />
+
+## Usage
 
 ```tsx
 import {
@@ -30,367 +26,76 @@ import {
 </List>;
 ```
 
-## Modes
+## Composition
 
-| `selectionMode` | Role | Tab stop | Keyboard |
-| --------------- | ---- | -------- | -------- |
-| `none` (default) | `list` / `listitem` | none — rows are not focusable | none |
-| `single` | `listbox` / `option` | exactly one **enabled** row | see below |
-| `multiple` | `listbox` / `option` | exactly one **enabled** row | see below |
-
-## Keyboard (single mode)
-
-| Key | Effect |
-| --- | ------ |
-| `↓` | focus the next enabled row, wrapping |
-| `↑` | focus the previous enabled row, wrapping |
-| `Ctrl+N` / `Ctrl+P` | the desktop equivalents of `↓` / `↑` |
-| `Home` | focus the first enabled row |
-| `End` | focus the last enabled row |
-| `Enter` | select the focused row, then run `onActivate` when the list has one |
-| `Space` | select the focused row only; it never runs the row action |
-| Letter keys | jump to the next enabled row whose `textValue` starts with the typed prefix |
-
-A disabled row is skipped by the arrow keys, by `Home`/`End` and by clicks; it can
-never be selected or activated.
-
-A key acts on the row the reader is on, read in three steps: the row that sent
-the key, then the element the renderer reports as focused, then the row the list
-recorded. All three exist because the runtime reports focus in more than one way
-on 0.11.0 — a traversal focuses a row **without running its `onFocus`**
-(`tabs-lifecycle` reads `focuses=0`), and a window builds a key payload per
-handler, so the list's own `onKeyDown` sees an `elementId` naming **the list**
-rather than the row (`list-lifecycle`). The focused element is therefore the
-precise reading a window gives, and the recorded row is the fallback for a key
-that arrives with no focus of its own. The rule is a pure function
-(`src/list/origin.ts`) with its own suite, `src/list/origin.test.ts`.
-
-A press on a disabled row still takes the pointer's focus — the runtime focuses
-it, and the row refuses the press — so it becomes the row the keys act from: `↓`
-leaves it for the next enabled row, and `Enter` there refuses. The tab stop
-deliberately does **not** follow it; it stays on an enabled row, because a
-traversal must not be the way onto the one row nothing accepts.
-
-## Keyboard (multiple mode)
-
-Movement works exactly as in single mode. Selection differs:
-
-| Key | Effect |
-| --- | ------ |
-| `Space` / `Enter` | toggle the focused row, keeping the rest |
-| `Shift+↓` / `Shift+↑` | move focus and select the range from the anchor |
-| `↓` / `↑` (no shift) | move focus and re-anchor; the selection stays |
-| `Cmd+A` / `Ctrl+A` | select every enabled row; focus stays put |
-
-Select-all becomes the new anchor at the first enabled row, so a following
-`Shift`+click extends from the top of the list. Single-mode lists ignore the key.
-Type-ahead works here too: a typed jump moves focus and re-anchors without
-changing the selection, so a following `Shift`+click extends from the row reached.
-
-## Type-ahead
-
-Type the first letters of a row to jump to it. Matching is a case-insensitive
-**prefix** (not fuzzy), reads `ListItem`'s `textValue`, and searches the rows
-after the current one, wrapping to the first match. A repeated letter therefore
-cycles through the rows that start with it, the desktop convention. Disabled rows
-and rows without `textValue` are skipped.
-
-```tsx
-<List selectionMode="single">
-  <ListItem value="readme" textValue="README.md">
-    <ListItemTitle>README.md</ListItemTitle>
-  </ListItem>
-  <ListItem value="design" textValue="Design notes">
-    <ListItemTitle>Design notes</ListItemTitle>
-  </ListItem>
-</List>
+```text
+List
+└── ListItem
+    ├── ListItemTitle
+    ├── ListItemDescription
+    ├── leading
+    └── trailing
 ```
 
-Typing `d` focuses “Design notes”; typing `d` again stays there (one match).
-Typing `r` from “Design notes” wraps back to “README.md”.
+## Examples
 
-The typed prefix lives for 500ms. The window is a lazy comparison against
-Effect's monotonic clock, not a timer: nothing runs while the list is idle, and a
-prefix that matches nothing is cleared so the next letter starts a fresh search.
-
-### The rule is published
-
-A list's type-ahead is not private to `List`. `@gpuixui/components/typeahead`
-exports the seam a surface with its own rows composes:
-
-- `typeaheadPress(buffer, char, nowMs)` — the buffer's window and repeat rule.
-- `typeaheadMatchIndex(items, from, prefix)` / `typeaheadMatch` — the first
-  enabled row at or after `from` whose label starts with the prefix, wrapping.
-- `typedChar(event)` — the character a keystroke types, or `None` for a named
-  key, Space or a chord.
-- `useTypeahead(items, from, onMatch)` — the hook `List` and the menus use.
-- `idleTypeahead`, `typeaheadWindow`, `typeaheadWindowMs`, and the
-  `TypeaheadBuffer` / `TypeaheadItem` types.
+### Multiple selection
 
 ```tsx
-import * as Option from "effect/Option";
-import {
-  idleTypeahead,
-  typeaheadMatchIndex,
-  typeaheadPress,
-} from "@gpuixui/components/typeahead";
-
-// `elapsedMs` is the caller's clock read, so the rule stays pure.
-const prefix = typeaheadPress(idleTypeahead, "r", elapsedMs);
-const at = typeaheadMatchIndex(rows, Option.none(), prefix.text);
+<List selectionMode="multiple" defaultValue={["a"]} onValueChange={log}>
+  <ListItem value="a" textValue="Alpha">
+    <ListItemTitle>Alpha</ListItemTitle>
+  </ListItem>
+  <ListItem value="b" textValue="Beta">
+    <ListItemTitle>Beta</ListItemTitle>
+  </ListItem>
+</List>;
 ```
 
-A surface keeps its own row type: map each row to `{ label, disabled }`, ask for
-a position, and read the row at that position.
-
-## Activation
-
-Selection is state; activation is an action. Pass `onActivate` when a row must
-**do** something — open a file, load a record, navigate:
+### Activation
 
 ```tsx
-<List
-  selectionMode="single"
-  value={file}
-  onValueChange={setFile}
-  onActivate={(id) => openFile(id)}
->
+<List selectionMode="single" onActivate={(id) => openFile(id)}>
   <ListItem value="readme" textValue="README.md">
     <ListItemTitle>README.md</ListItemTitle>
   </ListItem>
 </List>;
 ```
 
-| Gesture | Result |
-| ------- | ------ |
-| `Enter` (single) | selects the focused row, then calls `onActivate` with its value |
-| `Space` (single) | selects only; it never activates |
-| click (single) | selects, then calls `onActivate` |
-| click (`selectionMode="none"`) | calls `onActivate` immediately; there is no selection to make |
-| click or `Enter` on a disabled row | nothing |
-| any gesture on a `multiple` list | no activation; that variant does not accept the prop |
-
-Passing `onActivate` is opt-in for the row-action contract: a picker that only
-needs a choice should omit it, because a click will select without running
-anything. A multiple-selection list is a set of toggles, so activation would run
-by accident during range selection; the prop is rejected at the type level rather
-than ignored at runtime.
-
-There is no separate double-click action; the runtime's host events carry no
-reliable double-click signal, so a click would have to mean both select and
-activate. Use `Enter`/click activation, or render an explicit action control in
-the row's `trailing` slot when the interaction must be mouse-only.
-
 ## Selection
 
-Controlled and uncontrolled both work, like every stateful component here:
+A range press keeps the anchor; a plain or toggle press moves it
+(`modifier-select-lifecycle` measured the chord).
 
-```tsx
-// Uncontrolled: the list remembers.
-<List selectionMode="single" defaultValue="a" onValueChange={log} />;
-<List
-  selectionMode="multiple"
-  defaultValue={["a"]}
-  onValueChange={log}
-/>;
-
-// Controlled: the app remembers.
-<List selectionMode="single" value={selected} onValueChange={setSelected} />;
-<List
-  selectionMode="multiple"
-  value={assigned}
-  onValueChange={setAssigned}
-/>;
-```
-
-In controlled mode the list reports the change and leaves `aria-selected` where
-the consumer put it — a suite asserts exactly that, because silently updating
-would be the classic controlled-component bug.
-
-### Multiple selection
-
-| Pointer | Effect |
-| ------- | ------ |
-| click | select only that row; it becomes the anchor |
-| `Cmd`/`Ctrl`+click | toggle that row, keeping the rest; it becomes the anchor |
-| `Shift`+click | select the enabled range from the anchor to that row |
-
-A range never includes a disabled row. Values are reported in the order they were
-selected, without duplicates. Selecting the same set again reports nothing new.
-Single mode still has no second click that clears the value; a multiple list
-clears by toggling its last selected row.
-
-A range **keeps the anchor**: `Shift`+click extends from the row the last plain or
-toggle press left, so a second `Shift`+click extends from that same row rather
-than from the row it just selected. A plain press replaces the set and becomes the
-anchor; a `Cmd`/`Ctrl` press toggles one row and moves it. That is the contract a
-window measured — `apps/playground/README.md` §`modifier-select-lifecycle` drives
-real chorded clicks through the host's `clickWith` verb and reads the painted
-`selected` fill back (22 checks on 0.11.0) — so a file list, tree or grid that
-composes these rows should reuse it instead of inventing an anchor of its own.
-
-**Not built**: no drag reorder and no `aria-multiselectable` (see Accessibility).
+The type-ahead rule is published at `@gpuixui/components/typeahead`.
 
 ## API
-
-`List` and `ListItem` take the GPUix host props and merge `style` last.
 
 | `List` prop | Type | Default |
 | ----------- | ---- | ------- |
 | `selectionMode` | `"none" \| "single" \| "multiple"` | `"none"` |
-| `value` / `defaultValue` | `string` (single) · `ReadonlyArray<string>` (multiple) | — / `""` · `[]` |
-| `onValueChange` | `(value: string) => void` (single) · `(values: ReadonlyArray<string>) => void` (multiple) | — |
-| `onActivate` | `(value: string) => void` — single and `none` only; absent from the multiple variant | — |
+| `value` / `defaultValue` | `string` (single) · `ReadonlyArray<string>` (multiple) | — |
+| `onValueChange` | `(value) => void` | — |
+| `onActivate` | `(value: string) => void` | — |
 | `dense` | `boolean` | `false` |
-
-The value type follows the mode: a `single` list cannot be given an array and a
-`multiple` list cannot be given a string — the props are a discriminated union,
-so the compiler enforces it.
 
 | `ListItem` prop | Type | Default |
 | --------------- | ---- | ------- |
 | `value` | `string` (required) | — |
-| `textValue` | `string` — the text type-ahead matches; omit and the row is not searched | — |
+| `textValue` | `string` | — |
 | `disabled` | `boolean` | `false` |
 | `leading` | `ReactNode` | — |
 | `trailing` | `ReactNode` | — |
 
-`ListItemTitle` is the row's one line; `ListItemDescription` is its second, muted
-and ellipsised. Both are clipped to a single line (`whiteSpace: "nowrap"` +
-`textOverflow: "ellipsis"`) and can never stretch the row — measured natively
-against a control that wraps, in `list.test.tsx`.
-
-`ListItem` used outside `List` throws — a programming error at the boundary, not a
-runtime state to recover from.
-
-## Repaints
-
-Each row subscribes to its own slice of the selection (`src/list/store.ts`): a
-row's `style` resolves again only when that row's `active`, `selected` or
-`tabbable` state moves. Selecting one row therefore does not repaint the rest of
-a long list. `list-subscriptions.test.tsx` counts the resolutions and fails when
-an untouched row repaints.
-
-## Sizing
-
-A row is `density.rowHeight + spacing.md` tall (40px on the default comfortable
-density) and `density.rowHeight` when `dense` (32px). Selection paints
-`colors.selected` behind the row and `colors.selectedForeground` for its text —
-the title included, because a selected fill is saturated and the page's body role
-is not its on-colour. `ListItemDescription` keeps `colors.mutedForeground`, the
-pair the token contract measures on that fill at the secondary floor; hover paints
-`colors.accent` and a press paints **`pointerWash(theme, "active", "accent")`** —
-the smallest move toward `foreground` that clears the 1.05:1 floor against the
-hover wash it replaces, because six shipped styles painted the raw `active` in
-the wash it replaced (Light · macOS 1.026:1, Dark · macOS 1.011:1). A palette
-whose own wash answers the pointer is painted as authored. **A disabled row keeps
-every fill it would paint and carries the
-state in its text**: the title takes `colors.disabledForeground` on its strip (or
-`colors.mutedForeground` when the row is also selected, the pair measured on that
-wash), the description follows, the pointer gets `not-allowed`, and no `opacity`
-is applied — a fade would composite the selection wash the row just painted into
-the strip behind it (1.03:1 on several shipped styles, under the 1.05:1 the
-un-faded wash clears everywhere). A caller's `style` is the last word, including
-on a selected title.
-
-**A filled child takes the row's pointer feedback.** The runtime's `hover`
-refinement uses the same hit test the press takes, so a child that paints a fill —
-a badge, an avatar, a status pill in the `leading` slot — becomes the row's hover
-edge: the row's `accent` wash does not paint and the child hears its own
-`onMouseEnter`, while one that paints nothing leaves both to the row. The
-playground's `hover-routing-lifecycle` measured the rule on 0.11.0 (56 checks):
-`text-unfilled` leaves the row `enter=1` and paint `yes`, `text-filled` and
-`div-filled` leave the row `enter=0` and paint `no`, and a `pointerEvents: "none"`
-child puts the row back in the pointer's path (`enter=1`, paint `yes`) while the
-child still hears its own listener. Give a decorative child that opt-out, or
-paint the pointer state on the child when it must answer itself. Evidence:
-`apps/playground/README.md` §`hover-routing-lifecycle`.
-
-## Style by state
-
-`ListItem.style` takes a `StyleDesc` or a function of `ListItemState`
-(`{ active, disabled, selected }`); `active` is the row the list's roving focus
-is on.
-
-```tsx
-<ListItem
-  value="readme"
-  style={(state) => ({ opacity: state.selected ? 1 : 0.85 })}
->
-  <ListItemTitle>README.md</ListItemTitle>
-</ListItem>
-```
-
-## Accessibility
-
-- `role="list"`/`"listitem"` without selection and `listbox`/`option` with it, so
-  assistive technology reads a list of rows either way.
-- `aria-selected` is set on every row in both selectable modes, so the selection
-  (including each member of a multiple selection) is announced rather than only
-  painted.
-- **`aria-multiselectable` cannot be declared.** `@gpuix/native@0.11.0`'s
-  `HostProps` has no such attribute, so assistive technology learns the mode from
-  the per-row `aria-selected` values, not from the listbox itself.
-- **The active row's ring is keyboard-only.** `@gpuix/native@0.11.0` paints the
-  `focusVisible` outline after a keyboard focus and not after a click, and each
-  row declares it at rest.
-- Rows are reached as one list; Tab does not stop at every row.
-
 ## Limitations
 
-- No drag reorder, no group headers, no nested rows.
-- Activation is a callback, not a link: there is no `href`, no navigation
-  service and no role change, so an activatable row is not announced as a link.
-- Keyboard activation needs a selection mode. With `selectionMode="none"` the
-  rows are not focusable, so only a click can activate; use `single` when the
-  list must work from the keyboard.
-- A multiple list has no activation at all (the prop is rejected by the type),
-  because a double gesture would run an action while building a range.
-- Type-ahead searches `textValue`, not the rendered `ListItemTitle`: the row is a
-  composition, so the list cannot read its text. An omitted `textValue` makes the
-  row unsearchable rather than guessing.
-- No `aria-multiselectable` in 0.11.0 (see Accessibility).
-- No virtualisation: a `List` renders every row. Long collections belong in
-  `virtual-list`, which is a separate component with its own API.
-- The rows are not accessible by index: the API is `value`-based.
-
-## Verification
-
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (43 tests) plus
-`src/internal/collection.test.ts` for the navigation arithmetic,
-`src/internal/typeahead.test.ts` for the shared prefix matching,
-`src/list/origin.test.ts` for the three-step origin rule (a sending row, a
-focused row behind a payload that names the handler, and the record) and
-`src/list/selection.test.ts` for the multiple-selection rules: the modes and
-their roles, the absence and uniqueness of the tab stop, selection by click and by
-key, a disabled row rejecting both, real focus moving with wrap-around past a
-disabled row, `Home`/`End`, the accent hover on a real mouse move, the dense
-height, the controlled list not moving its own selection, type-ahead jumping and
-cycling while skipping disabled and unlabelled rows, activation by `Enter` and by
-click (and not by `Space`, a disabled row or a plain list without the prop), the
-arrow key reaching the row that activates, both text parts clipped to one line
-and bounded by the row, the selected title painted in the row's on-colour (held
-to the body floor on the fill it sits on) while the description keeps its muted
-role and a caller's `style` still wins, a disabled row keeping its selection wash
-at the role itself (no `opacity`) with its title on the secondary role measured
-there and, off the wash, on `disabledForeground`, a key refusing while a press has
-left a disabled row focused, the tab stop staying off that row, and — in multiple
-mode — plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow` ranges,
-`Cmd`/`Ctrl`+A selecting every enabled row, and a disabled row never entering a
-selection.
-
-The window half is the playground's `list-lifecycle` probe, which measured the
-same key path through a real window: a press focuses a disabled row, `Enter`
-refuses it, and `↓` leaves it for the next enabled row.
-
-```sh
-nub run --filter @gpuixui/components test:behaviour
-nub apps/playground/dist/live/run.js --only list-lifecycle
-```
+- No drag reorder, group headers or nested rows.
+- No `aria-multiselectable`; the mode reads from per-row `aria-selected`.
+- No virtualisation; a long list renders every row.
+- `onActivate` needs a selection mode; `none` is click-only.
 
 ## Related
 
 - **Card** — the surface a list sits in.
 - **Badge** — the usual `trailing` slot.
 - **Avatar** — the usual `leading` slot.
-- **Tabs** and the menus — they reuse the same item registry.
