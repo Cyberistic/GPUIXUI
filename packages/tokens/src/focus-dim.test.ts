@@ -127,6 +127,38 @@ describe("the dim the gate and the actions have adopted", () => {
       );
     });
   });
+
+  it("states the opt-out as landed in both packages, not as an owed interlock", () => {
+    // The page closed the paragraph with "That adoption is an interlock row in
+    // `TODO.md`" after both packages had declared the opt-out. The claim is read
+    // against the sources: the primitives export the rule, merge it for a
+    // variant that paints a fill, and every field host declares it — and the
+    // components package re-states the same rule for its own parts.
+    const source = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8");
+    expect(source("../../primitives/src/core/focus.ts")).toContain(
+      "export const keepContent",
+    );
+    expect(source("../../primitives/src/components/Button.tsx")).toContain(
+      "paintsFilledSurface(variant) ? mergeStyle(base, keepContent) : base",
+    );
+    expect(source("../../primitives/src/components/Input.tsx")).toContain(
+      "keepContent",
+    );
+    expect(source("../../components/src/internal/theme.ts")).toContain(
+      "export const keepContent",
+    );
+
+    Object.entries(dimSurfaces()).forEach(([name, text]) => {
+      expect(text, `${name}: the retracted interlock`).not.toContain(
+        "That adoption is an interlock row",
+      );
+    });
+    expect(
+      dimSurfaces()["docs/tokens.md"],
+      "the page never says the opt-out has landed",
+    ).toContain("Both packages have adopted it");
+  });
 });
 
 describe("keyboardFocusDimOpacity", () => {

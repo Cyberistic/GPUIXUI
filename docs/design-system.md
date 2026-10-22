@@ -559,9 +559,8 @@ is `disabledOpacity`, and
 label is faded over the *faded* fill. Measured: a filled action's label lands at
 1.51:1–2.83:1, and in a high-contrast theme at 1.74:1–2.23:1, under the 3:1 that
 variant's disabled floor asks for, so the fade cannot carry the state there. The
-role pair is therefore the contract and the fade is the deviation; the filled
-action and the menu row have adopted it, and the remaining replacement is
-recorded in `TODO.md` → Interlocks. The fade is measured by the gate as
+role pair is therefore the contract for a control with a fill, and the fade is
+the mechanism a control without one keeps. The fade is measured by the gate as
 `audit.disabledFade`, at `contrastFloors.disabled` in every variant — a brand
 whose label composites into its own faded fill fails by name even while every
 enabled pair passes.
@@ -585,9 +584,13 @@ a light content area composes its hint down to 1.30:1 while the page placement
 still reads 2.03:1. The tightest of those placements is the Windows 7 (Aero)
 look's composite hint on its `muted` toolbar at **1.96:1**, above its floor; the
 pairs are coverage, so a brand that tints its page cannot ship a hint nobody can
-read. A filled action and the menu row already paint the pair; the two recipe
-sets and the components' own `Button` remain the interlock in `TODO.md` →
-Interlocks.
+read. A filled action, the menu row and the primitives' recipe bucket already
+paint the pair; the components' own `Button` translates that one action and
+writes no opacity of its own. The one recipe set still on the fade is
+`@gpuixui/tw`'s copyable `button` recipe (`disabled:opacity-50`) — verbatim from
+shadcn, and not the recipe the library's action compiles — while an unfilled
+action, a slider's thumb and a rating's star fade because they have no fill to
+replace.
 
 **The disabled fill must not wear an enabled control's face.** A disabled
 control does not sit on a strip, it replaces the control, so the neutral fill is

@@ -1932,9 +1932,10 @@ is the point rather than an oversight: a high-contrast theme fades a filled
 action's label to between 1.74:1 and 2.23:1, under the 3:1 its own variant asks
 of the role pair, and no share a component can pick fixes that. So the fade
 cannot carry the state in a high-contrast theme — which is the measured reason
-the role pair is the contract and the fade is the deviation still being replaced
-(`TODO.md` → Interlocks). `disabled.test.ts` holds every shipped, platform and
-authored theme to the floor, the composite, the erased-label case and that gap.
+the role pair is the contract for a control with a fill, and the fade is the
+mechanism a control without one keeps. `disabled.test.ts` holds every shipped,
+platform and authored theme to the floor, the composite, the erased-label case
+and that gap.
 The report is part of `auditTheme`, as `audit.disabledFade`, so a brand's gate
 catches a label that fades into its own fill even though every enabled pair
 passes.
@@ -1964,9 +1965,15 @@ an unavailable action and an enabled tonal action painted the same box in the
 variant a reader selects for clarity; `disabled` is the quiet step now. A
 **field** keeps fading on `background`, `card` and `popover`: its fill is
 `input` (a composite field's is the page role), and the faded value and hint
-clear the floor on all three. A filled action and
-the menu row already paint the pair in `packages/primitives`; the two recipe sets
-and the components' `Button` are the interlock left in `TODO.md`.
+clear the floor on all three. A filled action, the menu row and the primitives'
+own recipe bucket already paint the pair; the components' `Button` translates that
+one action (`packages/components/src/internal/button.tsx` imports
+`@gpuixui/primitives/button`) and writes no opacity of its own, so it is not a
+second painter. The one recipe set still on the fade is `@gpuixui/tw`'s copyable
+`button` recipe (`disabled:opacity-50`) — kept verbatim from shadcn, and not what
+the library's action compiles: `packages/components/src/internal/button.tsx`
+imports the primitives' button — and the unfilled parts of
+`packages/primitives/src/core/style.ts` fade because they have no fill to replace.
 
 #### The dim a control paints while Tab is elsewhere
 
@@ -2024,8 +2031,12 @@ recognisable, not readable. Dimming a saturated fill toward a light page closes
 it on its label — the tightest shipped placement is Linux light's `primary` over
 `card` at 1.27:1 (`#C8DDF5` on `#A4C6EF`) — so a control whose text must stay
 readable while the focus is elsewhere opts out of the dim rather than asking the
-palette for a contrast the mechanism cannot keep. That adoption is an interlock
-row in `TODO.md`.
+palette for a contrast the mechanism cannot keep. Both packages have adopted it:
+`packages/primitives/src/core/focus.ts` exports `keepContent`, a control whose
+variant paints a fill merges it (`Button.tsx` asks `paintsFilledSurface`), every
+field host declares it, and the components package re-states the same rule for
+its own parts (`internal/theme.ts`) — so a filled action and a field keep their
+text, and an unfilled action keeps the cue.
 
 `keyboardDimFailures` is the gate's tenth report (`audit.keyboardDim`), so a
 brand runs it with the rest. The dim and the disabled fade are the same

@@ -448,6 +448,42 @@ describe("the pages that teach the disabled state", () => {
     });
   });
 
+  it("names the one recipe set still on the fade, not two and a Button", () => {
+    // Both pages closed this section by sending a reader to fix "the two recipe
+    // sets and the components' `Button`". The primitives' recipe bucket paints
+    // the pair, and the components' action translates the primitive rather than
+    // writing an opacity of its own, so only `@gpuixui/tw`'s copyable recipe
+    // still carries the fade — and no shipped control paints it. A page that
+    // named the other two sent a reader to repaint a state that already paints
+    // the contract.
+    expect(painters.recipe).toContain(
+      "disabled:bg-disabled disabled:text-disabled-foreground",
+    );
+    expect(painters.componentButton).toContain("@gpuixui/primitives/button");
+    expect(painters.componentButton).not.toContain("opacity");
+    expect(painters.twRecipes).toContain("disabled:opacity-50");
+
+    Object.entries(pages).forEach(([page, text]) => {
+      expect(text, `${page}: the retracted interlock`).not.toContain(
+        "the two recipe sets and the components'",
+      );
+      expect(
+        text,
+        `${page} no longer names the one recipe set left on the fade`,
+      ).toContain("`@gpuixui/tw`'s copyable `button` recipe");
+    });
+
+    const inventory = read("../../../COMPONENTS.md")
+      .split("\n")
+      .find((line) => line.startsWith("| Contrast contract |"));
+    expect(inventory, "the Contrast contract row").toBeDefined();
+    expect(
+      inventory,
+      "the row still names the components Button as a fade painter",
+    ).not.toContain("`opacity: disabledOpacity`");
+    expect(inventory).toContain("`@gpuixui/tw`'s recipes");
+  });
+
   it("reads the share each fade actually writes", () => {
     // `disabledOpacity` is the share `disabledFadeFailures` composites, so a
     // fade that writes another number is a mechanism the contract does not
