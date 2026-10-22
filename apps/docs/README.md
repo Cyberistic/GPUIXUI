@@ -56,6 +56,7 @@ components/popover.mdx       Curated: anchored placement
 components/select.mdx        Curated: the 320px list, the row that reveals itself
 components/tabs.mdx          Curated: the measured indicator
 components/toast.mdx         Curated: the bounded queue, one action, the hold
+components/tooltip.mdx       Curated: the tip's clock, the traversal that never opens it
 primitives/index.mdx         The Tier 1 section index (its pages come from the packages)
 testing.mdx                  The two test lanes, the check model and the report
 contributing.mdx             The checks, the worktree rules, the component checklist
@@ -98,6 +99,8 @@ src/components/docs/menu-preview.ts       The menu preview's row model and arrow
 src/components/docs/command-preview.ts    The palette preview's matcher and group ranking
 src/components/docs/select-preview.ts     The select preview's data and arrow arithmetic
 src/components/docs/select-demo.tsx       The select's two browser renderings and their source strings
+src/components/docs/tooltip-preview.ts    The tip's clock: delay, close grace, reopen window, traversal
+src/components/docs/tooltip-demo.tsx      The tooltip's two browser renderings and their source strings
 src/components/docs/sources.ts            The real source files the Code tab shows
 src/components/docs/component-source.tsx  The copyable source block, for a curated page
 src/components/docs/package-source.tsx    The generated source block a package page ends with

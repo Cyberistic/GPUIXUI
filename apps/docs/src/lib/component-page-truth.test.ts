@@ -173,6 +173,11 @@ const pages: ReadonlyArray<CuratedPage> = [
     shadowed: "packages/components/docs/toast.mdx",
     source: "packages/components/src/toast.tsx",
   },
+  {
+    file: "tooltip.mdx",
+    row: "Tooltips",
+    source: "packages/primitives/src/components/Tooltip.tsx",
+  },
 ];
 
 const body = (page: CuratedPage): string =>
@@ -1139,6 +1144,67 @@ describe("the curated component pages", () => {
     // Floors: every curated page is read, and each verdict is a real word.
     expect(pages.length).toBeGreaterThanOrEqual(4);
     expect(missing).toEqual([]);
+  });
+
+  it("hold the tip's clock and its trigger rule to the runtime", () => {
+    // The tip's timing is not in this wrapper: `@gpuix/react/tooltip` owns the
+    // delay, the grace a leaving pointer gets and the reopen window, and a page
+    // that printed the wrong number would teach a clock the component does not
+    // run. Two claims are the wrapper's own: the surface must be the theme's
+    // popover (the runtime mounts its own `#1A1A1A` behind a caller that sets
+    // no fill) and the trigger's `aria-description` is the assistive path,
+    // because a `Tab` traversal never runs the handler that opens the tip.
+    const tooltip = pages.find((page) => page.file === "tooltip.mdx");
+    expect(tooltip, "the tooltip page is not in the curated set").toBeDefined();
+    if (tooltip === undefined) return;
+
+    const runtime = read(
+      "packages/primitives/node_modules/@gpuix/react/dist/components/tooltip.js",
+    );
+    const floating = read(
+      "packages/primitives/node_modules/@gpuix/react/dist/components/floating.js",
+    );
+    expect(runtime).toContain("delayDuration = 0");
+    expect(runtime).toContain("skipDelayDuration = 300");
+    expect(runtime).toContain("setTimeout(close, 80)");
+    expect(runtime).toContain("defaultTabIndex: 0");
+    expect(runtime).toContain("onFocus: (event) => {");
+    expect(runtime).toContain("openImmediately()");
+    // The runtime's built-in surface, which the recipe's fill has to beat.
+    expect(floating).toContain('backgroundColor: "#1A1A1A"');
+
+    const source = read(tooltip.source);
+    expect(source).toContain("TooltipTrigger asChild");
+    expect(source).toContain('"aria-description": name');
+    expect(source).toContain("delayDuration={delay}");
+    expect(source).toContain("disableHoverableContent");
+
+    const recipe = read("packages/primitives/src/recipe/index.ts");
+    expect(recipe).toContain("bg-popover text-popover-foreground rounded-sm");
+    expect(recipe).toContain("pl-sm pr-sm pt-xs pb-xs");
+    expect(recipe).toContain("type-size-caption whitespace-nowrap");
+
+    const text = body(tooltip).replace(/\s+/g, " ");
+    // Every number the clock section prints is one of the runtime's three, so a
+    // stale figure cannot hide behind another mention of the same word.
+    const clockAt = body(tooltip).indexOf("## The clock");
+    const clock = body(tooltip).slice(clockAt);
+    const printed = new Set(
+      [...clock.slice(0, clock.indexOf("\n## ", 1)).matchAll(/(\d+) ms/g)].map(
+        (match) => match[1] ?? "",
+      ),
+    );
+    expect(printed).toEqual(new Set(["0", "80", "300"]));
+    expect(text).toContain("`defaultTabIndex: 0`");
+    expect(text).toContain("`aria-description`");
+    expect(text).toContain("no live region");
+    expect(text).toContain("`radius.sm`");
+    expect(text).toContain("`#1A1A1A`");
+    expect(text).toContain("`bg-popover`");
+    expect(text).toContain("hover is the one open path");
+    // The retracted claim: a traversal does not open the tip, so a page
+    // promising a keyboard-opened tip would teach a path the window lacks.
+    expect(text).not.toContain("opens on focus");
   });
 
   it("list every package the component imports", () => {

@@ -1,0 +1,207 @@
+---
+title: Tooltip
+description: A short label on hover — a themed wrapper over GPUix's own tooltip, with the surface, the accessibility copy and the clock accounted for.
+---
+
+`Tooltip` is a short label for the control beside it. It is **not** a popover:
+the tip holds no controls, it cannot be focused, and it dismisses itself. The
+anchored layer, the open delay, Escape dismissal and the provider defaults are
+`@gpuix/react/tooltip`'s; what this package owns is the surface's paint, the
+trigger's description and the rule that the trigger must be the focusable
+element. Timing and gaps below were measured on `@gpuix/native@0.11.0`.
+
+<ComponentPreview name="tooltip-demo" />
+
+## Installation
+
+<Install packageName="@gpuixui/primitives" importName="Tooltip" />
+
+<ComponentSource
+  name="tooltip"
+  file="packages/primitives/src/components/Tooltip.tsx"
+/>
+
+## Usage
+
+```tsx
+import { Icon } from "@gpuixui/icons";
+import { IconButton, Tooltip, useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
+
+export const RevenueHelp = () => (
+  <Tooltip content="Booked revenue, net of refunds." side="bottom">
+    <IconButton
+      icon={
+        <Icon
+          color={theme.colors.mutedForeground}
+          name="info"
+          size={theme.iconSize.sm}
+        />
+      }
+      label="Revenue definition"
+    />
+  </Tooltip>
+);
+```
+
+A host element works as a trigger too, and it needs a **role** to exist in the
+accessibility tree — a `div` carrying only a description is not a node a reader
+visits:
+
+```tsx
+<Tooltip content="Booked revenue, net of refunds.">
+  <div aria-label="Revenue definition" role="button" tabIndex={0}>
+    Definition
+  </div>
+</Tooltip>;
+```
+
+The child must be a single **focusable element**. `Tooltip`'s trigger clones it
+with the hover, focus and press handlers, so a control has to forward them:
+`Button`, `IconButton`, `Toggle`, `Checkbox` and `Switch` forward the whole
+`TooltipTriggerProps` pair and the `aria-description`; this package's `Box`
+forwards neither, so it paints a trigger that opens nothing.
+
+## States
+
+<ComponentPreview name="tooltip-states" />
+
+`defaultOpen` starts a tip open before any interaction — the local-first way to
+show a first-run hint. `open` takes the state outright: the tip paints only
+while it is `true`, while the trigger still reports every request (hover, focus,
+Escape, a press) through `onOpenChange`, so a caller can hold a hint open and
+still learn the reader dismissed it.
+
+## Composition
+
+| Part | Renders | Responsibility |
+| ---- | ------- | -------------- |
+| `Tooltip` | the runtime's root | the open state, the delay, the provider defaults |
+| the trigger | the child you pass | hover, focus, press and `aria-description`; one focusable element |
+| the tip | an anchored layer over the popover surface | the label; no controls, no focus |
+
+`Tooltip` is the whole composition — there is no `TooltipContent` to place, and
+the tip is not a child of the page's flow. Use a **Popover** when the surface has
+to hold something pressable, or a **Dropdown menu** when it holds actions.
+
+## Keyboard
+
+| Key | Effect |
+| ---- | ------ |
+| `Tab` | reaches the trigger — the runtime gives every trigger `defaultTabIndex: 0` — but **the tip stays closed** |
+| `Escape` | closes an open tip; the focus stays on the trigger |
+| `Enter` / `Space` | activates the control under the trigger; the press also closes the tip |
+
+A `Tab` traversal focuses the trigger **without running its `onFocus`** (measured
+three times on 0.11.0), and the runtime opens a tip only from that handler, so
+hover is the one open path a window offers. The offscreen `TestRenderer` does
+dispatch the event, which is why a headless suite cannot stand in for the
+window. The tip's words still reach a reader as the trigger's `aria-description`,
+so the keyboard path loses the visual, not the name.
+
+## The clock
+
+Three numbers live in `@gpuix/react/tooltip`, not in this wrapper:
+
+| Moment | The runtime's rule |
+| ------ | ------------------ |
+| hover enters | opens after `delayDuration` — **0 ms** by default, so the tip is immediate unless you pass `delay` |
+| pointer leaves the trigger | waits **80 ms** before closing, so the pointer can cross the gap onto the tip; entering the tip cancels the close |
+| a tip reopens | inside **300 ms** of closing, the delay is skipped |
+| the trigger's `onFocus` runs | opens at once, whatever the delay is |
+| a press or `Escape` | closes at once, and nothing reopens it until the pointer leaves |
+
+The preview on this page reproduces all five, which is why it can be pressed as
+well as hovered. `disableHoverableContent` removes the 80 ms grace — the tip
+closes the moment the pointer leaves the trigger, and the tip itself cannot be
+reached.
+
+## API reference
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `content` | `ReactNode` | — (required) | the label; keep it short, the runtime does not wrap overlay content |
+| `description` | `string` | `content` when it is a string | the trigger's accessible description; required for a non-text tip |
+| `children` | `ReactNode` | — (required) | the trigger: a focusable host element, or a control that forwards the trigger pair |
+| `side` | `FloatingSide` | `"top"` | the **preferred** side; the runtime moves the layer when it would leave the window |
+| `align` | `FloatingAlign` | `"center"` | alignment against the trigger |
+| `delay` | `number` | the provider's `0` | the hover delay in milliseconds |
+| `open` | `boolean` | the runtime's state | takes the open state; the tip paints only while it is `true` |
+| `defaultOpen` | `boolean` | `false` | starts open before any interaction; ignored while `open` is set |
+| `onOpenChange` | `(open: boolean) => void` | — | every state the runtime asked for, controlled or not |
+| `disableHoverableContent` | `boolean` | `false` | close as soon as the pointer leaves the trigger, instead of letting it cross onto the tip |
+| `className` | `string` | — | joined after the tip's recipe, so it wins conflicts |
+| `style` | `StyleDesc` | — | merged after the recipe **and** `className`, so it is the last word |
+| `testId` | `string` | — | lands on the tip's surface |
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| tip surface | `popover`, with the text in `popoverForeground` — a pair the contrast contract measures |
+| tip edge | `borderWidth.thin` in `border`, the decorative divider role |
+| tip radius | `radius.sm` |
+| tip padding | `spacing.sm` horizontally, `spacing.xs` vertically |
+| tip type | the `caption` role (12/16) |
+| trigger | whatever the wrapped control paints |
+
+The fill is not decoration: the runtime's `FloatingLayer` mounts its own
+`#1A1A1A` behind the caller's style, so a light theme without the recipe's
+`bg-popover` would paint the tip as the runtime's dark default. The wrapper's
+`bg-popover` is what makes the tip follow the theme, and `popoverForeground`
+rather than an inherited colour is what makes it readable on a brand's popover
+role.
+
+The tip is the `tip` layer of the layering model — above anchored content, below
+modals — and it has **no elevation** in its recipe: the tip is the one floating
+surface that adds no shadow, which is why the preview draws none either.
+
+## Accessibility and limitations
+
+- The trigger carries the tip as `aria-description`; GPUix 0.11.0 has no
+  `aria-describedby`, so there is no id reference between the two.
+- The tip has **no live region**: it is not announced when it appears. The
+  description is the assistive path, so a tip that repeats the trigger's name
+  adds nothing.
+- A `Tab` traversal does not open the tip; hover is the window's open path.
+- The tip carries no controls and cannot be focused: anything pressable belongs
+  in a popover or a menu.
+- The tip does not wrap — the runtime paints overlay content unwrapped — so a
+  sentence is the wrong content and a label is the right one.
+- Overlay content is not laid out in the page's flow, so a preview's corner and
+  gap are an approximation of the runtime's anchored placement (the same note the
+  preview policy records for every overlay).
+- A non-text tip has no description to derive, so pass `description` or the
+  trigger announces nothing.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the surface's paint, the trigger's description and the exported `tooltipStyle` |
+| `@gpuix/react/tooltip` | the anchored layer, the delay, Escape dismissal and the provider defaults |
+| `@gpuix/react` | the host style type |
+| `@gpuix/react/floating` | the `FloatingSide` / `FloatingAlign` types the placement props take |
+| `@gpuixui/tw` | the `tooltipClass` recipe, compiled through `recipeTw` |
+| `@gpuixui/icons` | the trigger's glyph in the example, not the tip |
+
+## Related
+
+- **Popover** — a surface that holds controls and stays until dismissed.
+- **Dropdown menu** — a surface that holds actions and closes on one.
+- **IconButton** — the usual trigger; it forwards the trigger pair and the description.
+- **Label** — the visible name a field carries, which is not a tip.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `partial` runtime verdict: GPUix ships the whole
+tooltip mechanism, so the layer, the delay and the dismissal are supported rather
+than reimplemented. The wrapper is held by
+`packages/primitives/src/components/Tooltip.test.tsx` and the live
+`tooltip-lifecycle` probe in `apps/playground` (14 checks on 0.11.0: hover opens
+the tip above its trigger, leaving closes it, Escape dismisses it with the focus
+on the trigger, and a traversal leaves it closed). The `partial` verdict is the
+one measured gap above — a keyboard traversal reaches the trigger but does not
+open the tip — and the strongest alternative is the `aria-description` the
+trigger already publishes.

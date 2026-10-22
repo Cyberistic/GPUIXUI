@@ -19,6 +19,7 @@
     "confirm-dialog",
     "popover",
     "dropdown-menu",
+    "tooltip",
     "command-menu",
     "---Navigation---",
     "accordion",

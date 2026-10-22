@@ -38,6 +38,12 @@ import {
   selectDemoSource,
   selectStatesSource,
 } from "./select-demo";
+import {
+  TooltipDemo,
+  TooltipStates,
+  tipStatesSource,
+  tooltipSource,
+} from "./tooltip-demo";
 
 /**
  * Browser previews for the docs pages.
@@ -2470,4 +2476,6 @@ export const demos: Readonly<Record<string, Demo>> = {
   "tabs-demo": { render: TabsDemo, source: tabsSource },
   "toast-tones": { render: ToastTones, source: toastTonesSource },
   "toast-workflow": { render: ToastWorkflow, source: toastWorkflowSource },
+  "tooltip-demo": { render: TooltipDemo, source: tooltipSource },
+  "tooltip-states": { render: TooltipStates, source: tipStatesSource },
 };

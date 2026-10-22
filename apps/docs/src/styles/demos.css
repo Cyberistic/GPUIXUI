@@ -2103,3 +2103,64 @@
 .gx-list-multiple {
   max-width: 480px;
 }
+
+/* ---- tooltip: mirrors primitives/src/components/Tooltip.tsx's recipe ----
+   `bg-popover text-popover-foreground rounded-sm border border-border` and
+   `pl-sm pr-sm pt-xs pb-xs type-size-caption whitespace-nowrap`: padding is
+   spacing.sm x spacing.xs, the type is the caption role (12/16) and the radius
+   is `radius.sm`, drawn as `--radius` (radius.md) less the two pixels between
+   the steps. The wrapper adds no elevation, so the preview draws none — the
+   only tip surface is the popover role and its one border. */
+.gx-tooltip-scene {
+  align-items: flex-start;
+  gap: 18px;
+  min-height: 200px;
+  padding: 92px 24px 32px;
+}
+
+.gx-tooltip-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.gx-tooltip-states {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+.gx-tip-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.gx-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 2;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.gx-tip-readout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--placeholder);
+}
+
+.gx-tip-readout b {
+  color: var(--primary);
+  font-weight: 600;
+}
