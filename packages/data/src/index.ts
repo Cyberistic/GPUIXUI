@@ -56,6 +56,9 @@ export type {
   TableExpandableRowProps,
 } from "./table/expandable.js";
 
+export { FrozenTable } from "./table/frozen.js";
+export type { FrozenTableProps } from "./table/frozen.js";
+
 export {
   CHART_AXIS_WIDTH,
   ChartLegend,

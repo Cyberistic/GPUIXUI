@@ -5207,12 +5207,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `350 → 510`; moving over `state.columns` instead of the visible list fails
     `["size","name"]`. Verified: `--only data-table-core` (1/1, headless) and
     `test:behaviour` (14/14). Frozen columns stay out — see the next row.
-  - [ ] Tier 3 phase 3b — pinned/frozen columns: the runtime paints no
-    `position: "sticky"`, so a frozen column is the measured two-pane
-    composition (`data-grid-frozen-column`: its own vertical scroller beside the
-    grid's, mirrored both ways in `onScrollChange` → `renderer.scrollTo` with a
-    re-entrancy guard), not an order flag. `ColumnMenu` deliberately offers no
-    pin row until that composition ships.
+  - [x] Tier 3 phase 3b — pinned/frozen columns: `FrozenTable` ships the
+    measured two-pane composition (`data-grid-frozen-column`,
+    `frozen-column-lifecycle`): the frozen column has its own vertical scroller
+    beside the data pane, mirrored both ways in `onScrollChange` →
+    `renderer.scrollTo` with a re-entrancy guard; the panes' headers take the
+    taller of their two measured heights so a differing text step cannot push a
+    row out of line; the sideways pan is the data pane's alone (`scrollTo`
+    carries the data pane's own `x`); and a press on a frozen cell chooses the
+    record for the whole grid. 6 native behaviour cases mount the shipped
+    `frozen-table` example (`src/behaviour/frozen-table.test.tsx`), a docs page
+    (`packages/data/docs/frozen-columns.mdx`) and the README row ship, and the
+    Tier 3 Tables/Column-configuration rows state the composition.
+    `ColumnMenu` still offers no pin row: a pin is a different layout, not a
+    column attribute.
   - [x] Tier 3 phase 4a — `VirtualList`, the typed seam over the runtime's
     `<virtual-list>`: a discriminated union mirrors both host modes,
     `height` gives the viewport a definite bound, `onVisibleRange` maps the

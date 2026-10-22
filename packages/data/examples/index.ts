@@ -11,6 +11,7 @@
 import type { ComponentType } from "react";
 import { ChartExample } from "./chart.example.js";
 import { ExpandableRowsExample } from "./expandable-rows.example.js";
+import { FrozenTableExample } from "./frozen-table.example.js";
 import { SurfacesExample } from "./surfaces.example.js";
 import { TableExample } from "./table.example.js";
 import { TreeExample } from "./tree.example.js";
@@ -20,6 +21,7 @@ import { VirtualTableExample } from "./virtual-table.example.js";
 /** One mountable screen per data surface. */
 export const examples: Readonly<Record<string, ComponentType>> = {
   table: TableExample,
+  "frozen-table": FrozenTableExample,
   tree: TreeExample,
   "expandable-rows": ExpandableRowsExample,
   chart: ChartExample,

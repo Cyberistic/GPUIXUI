@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | in progress — phases 1–7 landed 2026-10-22/23 (`packages/data`; headless probes `data-table-core`, `data-tree-core`, `data-expandable-rows-core`, `data-charts-core`; package suite 108 cases + 49 native behaviour cases). Remaining: frozen columns (a documented two-pane composition) |
+| Status | done — phases 1–7 and 3b landed 2026-10-22/23 (`packages/data`; headless probes `data-table-core`, `data-tree-core`, `data-expandable-rows-core`, `data-charts-core`; package suite 112 cases + 55 native behaviour cases). Frozen columns ship as `FrozenTable` |
 | Phase | D — data and workspace |
 | Owner | the `data` workstream |
 | Depends on | `@gpuixui/components`, `@gpuixui/primitives`, `@gpuixui/tw`, `@gpuixui/tokens`, `@gpuixui/motion` |
@@ -117,6 +117,17 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   and the `useTable` controller. The selection release runs during render, and
   the keyboard walk moves native focus after the `tabIndex` commit (a call from
   the key handler moved nothing — the row was still outside the tab order).
+- **Phase 3b (frozen columns) landed**: `FrozenTable` composes the measured
+  two-pane rule — the frozen column's own vertical scroller beside the data
+  pane's, mirrored both ways through `onScrollChange` → `renderer.scrollTo`
+  with a re-entrancy guard — with the panes' headers taking the taller of their
+  two measured heights, the sideways pan the data pane's alone (its own `x` is
+  carried into the vertical mirror) and a frozen press choosing the record for
+  the whole grid. 6 native behaviour cases mount the shipped example
+  (`src/behaviour/frozen-table.test.tsx`), the page is
+  `packages/data/docs/frozen-columns.mdx`, and the Tier 3 Tables and
+  Column-configuration rows state the composition. Evidence:
+  `data-grid-frozen-column`, `frozen-column-lifecycle`.
 - **Phase 3 (columns and resizing) landed**: `columns/logic` (visibility,
   visible-order moves, per-column resize bounds, keyboard steps), `useColumns`,
   `ColumnMenu` (the component package's measured DropdownMenu) and

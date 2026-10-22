@@ -7,8 +7,8 @@ table that composes it with a fixed header, the **tree** with its expansion and
 cursor model, the **expandable table row** that opens a detail panel under itself, the
 **charts** (bar, stacked, line, donut and sparkline, one tinted `<svg>` mask per
 series), and the **data surfaces** (a key-value list, a statistic card, a property
-panel, a toolbar and the advanced filter's predicate tree). Charts are the last
-phase of plan 610; frozen columns remain a documented composition.
+panel, a toolbar and the advanced filter's predicate tree), and the **frozen
+column** — two panes mirrored into one scroll (`FrozenTable`).
 
 ## Why a package
 
@@ -25,6 +25,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | Rule | Evidence | What this package does |
 | ---- | -------- | ---------------------- |
 | No `position: "sticky"` | `data-grid-fixed-header`, `table-lifecycle` | The header is a **sibling** of the row scroller, and both sit inside **one** horizontal scroller. A header moved into the row scroller painted at `y = -36`. |
+| A frozen column is two scrollers | `data-grid-frozen-column`, `frozen-column-lifecycle` | `FrozenTable` puts the frozen column in its own vertical scroller beside the data pane and mirrors both ways through `onScrollChange` → `renderer.scrollTo`, guarded by a ref. The sideways pan is the data pane's alone, and a pressed frozen cell chooses the record for the whole grid. |
 | No `transform` | upstream issue #102 | Column resize and row moves change `left`/`width`, never a transform. |
 | No canvas drawing | `chart-raster` | A chart is stacked `<svg>` (one tint each) or an `<img>` pixel buffer; see §Charts in plan 610. |
 | Wheel moves every scrollable ancestor | `nested-scroll-lifecycle` | The table's `height` bounds the table; the body owns the vertical wheel. |
@@ -46,7 +47,8 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 ```
 src/
   table/      Table, TableViewport, TableHeader, TableBody, TableRow,
-              TableHeaderCell, TableCell, TableCaption, TableEmpty, TableSkeleton
+              TableHeaderCell, TableCell, TableCaption, TableEmpty, TableSkeleton,
+              FrozenTable (the pinned-column composition)
   sort/       the reducer, the announced label, TableSortHeader
   selection/  press modes, range + anchor, retention, neighbour step
   filter/     the literal query, narrowTable, TableFilterField
