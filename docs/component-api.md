@@ -444,8 +444,10 @@ popover, menu and preview-card surfaces are hosted by `FloatingLayer`'s own
 element, so one mechanism covers every surface. A leaving surface paints in the
 same frame its state closed but **takes no presses**: its style goes to
 `pointerEvents: "none"` (and an anchored host drops its occlusion), so the press
-the dismissal was for lands on the control underneath. The consequence a
-consumer sees: a dismissal is *immediate* in state (focus returns,
+the dismissal was for lands on the control underneath. A **wrapper** — a
+`Reveal` or an `AutoHeight` box — is not an overlay, so while open it paints no
+pointer rule at all: it must never put a hitbox over the content it holds. The
+consequence a consumer sees: a dismissal is *immediate* in state (focus returns,
 `onOpenChange` fires) while the box fades out, and an element disappears from
 the tree a level's duration later.
 
