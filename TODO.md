@@ -3353,6 +3353,14 @@ working tree already has the override removed), so that page row, its prose and 
 guard must move in the same push. Until then the docs suite is red against an
 uncommitted primitives tree and green against `master`.
 
+`[ ]` Move the **`.gx-demo` `--placeholder` default** when the tokens workstream's
+native-text pass lands — it moves the dark `placeholder` role from `#7C8595` to
+`#858E9F` (and light from `#626C7B` to `#606A79`), so
+`theme-css.test.ts`'s `keep the .gx-demo defaults equal to the dark theme` reports
+`--placeholder` against the current style sheet. Same pattern as the styling item:
+the docs default is correct on `master` and stale against the uncommitted tokens
+tree.
+
 `[x]` Record **where the overlay preview stays coarser than the shipped surface** —
 the four curated overlay pages already state the two shadows (`elevation.lg` beside
 the recipe's 1px `foreground` ring) and `component-page-truth.test.ts` holds them,
