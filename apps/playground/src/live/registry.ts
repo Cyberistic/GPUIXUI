@@ -450,6 +450,12 @@ export const liveRegistry = [
       "Text: a Hebrew run paints right to left against a Latin control, and a non-joiner changes an Arabic run's advance, so the platform shapes and mirrors the string",
     capability: "text",
   },
+  {
+    id: "syntax-palette",
+    title:
+      "Text: a code host paints the keyword its syntax palette names, and one handed no palette paints the runtime's own",
+    capability: "text",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

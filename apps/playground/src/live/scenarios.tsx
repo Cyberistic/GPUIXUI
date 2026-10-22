@@ -31,6 +31,7 @@ import {
   statusTone,
   textStyle,
   type FontSource,
+  type NativeTextTheme,
   type PlatformName,
   type Theme,
 } from "@gpuixui/tokens";
@@ -572,6 +573,18 @@ import {
   shaped,
   shapingOf,
 } from "./rtl-text.js";
+import {
+  countInk,
+  countInkOn,
+  DARK_KEYWORD,
+  isPainted,
+  LIGHT_KEYWORD,
+  RUNTIME_KEYWORD,
+  RUNTIME_KEYWORD_TOLERANCE,
+  SYNTAX_IDS,
+  SYNTAX_LANGUAGE,
+  SYNTAX_SOURCE,
+} from "./syntax-palette.js";
 import {
   inkBounds,
   thumbCentreAt,
@@ -19640,6 +19653,239 @@ const rtlTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/** The width every syntax block takes, so two blocks sit in one row. */
+const SYNTAX_BLOCK_WIDTH = 400;
+
+/** The block's own padding; a code host paints no surface of its own. */
+const SYNTAX_BLOCK_PADDING = 10;
+
+/** The chrome a code host leaves to its caller: fill, edge, corner, padding. */
+const syntaxBlockStyle = (palette: Theme): StyleDesc => ({
+  width: SYNTAX_BLOCK_WIDTH,
+  paddingTop: SYNTAX_BLOCK_PADDING,
+  paddingBottom: SYNTAX_BLOCK_PADDING,
+  paddingLeft: SYNTAX_BLOCK_PADDING,
+  paddingRight: SYNTAX_BLOCK_PADDING,
+  borderWidth: palette.borderWidth.thin,
+  borderColor: palette.colors.border,
+  borderRadius: palette.radius.sm,
+  backgroundColor: palette.colors.background,
+  color: palette.colors.inputForeground,
+});
+
+/**
+ * The seam's host object with no token palette named, so the runtime's own
+ * syntax colours paint.
+ *
+ * This is the honest control, not a hand-built runtime theme: the host still
+ * receives the shipped metrics, fonts and surface roles, so the two blocks are
+ * laid out identically and only `syntax` is absent — the state of a caller who
+ * builds a theme object without `syntaxColors`.
+ */
+const runtimeSyntaxTheme = (
+  palette: Theme,
+): Omit<NativeTextTheme, "syntax"> => {
+  const { syntax: _syntax, ...host } = nativeTextTheme(palette, "background");
+  return host;
+};
+
+/** One code host: the probe's source, painted with or without a palette. */
+const SyntaxBlock = ({
+  id,
+  palette,
+  syntax,
+}: {
+  readonly id: string;
+  readonly palette: Theme;
+  readonly syntax: "shipped" | "runtime";
+}): ReactNode => (
+  <code
+    testId={id}
+    code={SYNTAX_SOURCE}
+    language={SYNTAX_LANGUAGE}
+    theme={
+      syntax === "shipped"
+        ? nativeTextTheme(palette, "background")
+        : runtimeSyntaxTheme(palette)
+    }
+    style={syntaxBlockStyle(palette)}
+  />
+);
+
+/**
+ * What colour a code host's highlighted glyphs actually paint.
+ *
+ * The token package ships a palette and `nativeTextTheme` hands it over, but a
+ * host object carrying the field is a source read: the runtime owns the
+ * tokenizer and the paint. So one source is painted three times — with the
+ * light palette, with the dark palette, and with the same dark host minus
+ * `syntax` — and each block's own box is counted in the captured frame.
+ */
+const SyntaxPaletteProbe = (): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      testId="syntax-probe"
+      style={{
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        testId={SYNTAX_IDS.caption}
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        Syntax palette: a native code host paints the keyword its palette names,
+        and a host handed no palette paints the runtime&apos;s own.
+      </text>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: theme.spacing.md,
+        }}
+      >
+        <SyntaxBlock
+          id={SYNTAX_IDS.light}
+          palette={palettes.light}
+          syntax="shipped"
+        />
+        <SyntaxBlock
+          id={SYNTAX_IDS.dark}
+          palette={palettes.dark}
+          syntax="shipped"
+        />
+      </div>
+      <SyntaxBlock
+        id={SYNTAX_IDS.runtime}
+        palette={palettes.dark}
+        syntax="runtime"
+      />
+    </div>
+  );
+};
+
+const syntaxPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(SYNTAX_IDS.light);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.hover(SYNTAX_IDS.caption);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("syntax-palette");
+    const frame = yield* ctx.host.pixels("syntax-palette");
+    const window = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+
+    /** How many pixels in a block's own box paint one colour. */
+    const inkOf = (id: string, hex: string, tolerance = 0) =>
+      Effect.gen(function* () {
+        const box = yield* paintedBox(ctx, id);
+        return yield* ctx.expectSome(
+          `${id} is inside the capture`,
+          countInk(frame, box, scale, hex, tolerance),
+        );
+      });
+
+    const light = yield* paintedBox(ctx, SYNTAX_IDS.light);
+    const dark = yield* paintedBox(ctx, SYNTAX_IDS.dark);
+    const runtime = yield* paintedBox(ctx, SYNTAX_IDS.runtime);
+
+    // 1. Each palette reaches the glyphs it names: the light block paints the
+    //    light keyword and the dark block the dark one.
+    yield* ctx.expectEqual(
+      "the light block paints the light palette's keyword",
+      isPainted(yield* inkOf(SYNTAX_IDS.light, LIGHT_KEYWORD)),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the dark block paints the dark palette's keyword",
+      isPainted(yield* inkOf(SYNTAX_IDS.dark, DARK_KEYWORD)),
+      true,
+    );
+
+    // 2. The palette travels with the host: neither block paints the other's
+    //    keyword, so the colour is the object it was handed rather than a shared
+    //    runtime default that happened to match one of them.
+    yield* ctx.expectEqual(
+      "the light block paints none of the dark palette's keyword",
+      yield* inkOf(SYNTAX_IDS.light, DARK_KEYWORD),
+      0,
+    );
+    yield* ctx.expectEqual(
+      "the dark block paints none of the light palette's keyword",
+      yield* inkOf(SYNTAX_IDS.dark, LIGHT_KEYWORD),
+      0,
+    );
+
+    // 3. The control: the same host without `syntax` paints the runtime's own
+    //    palette, which is the fallback the token group exists to replace.
+    yield* ctx.expectEqual(
+      "a host handed no palette paints none of the shipped keyword",
+      yield* inkOf(SYNTAX_IDS.runtime, DARK_KEYWORD),
+      0,
+    );
+    yield* ctx.expectEqual(
+      "a host handed no palette paints the runtime's own keyword",
+      isPainted(
+        yield* inkOf(
+          SYNTAX_IDS.runtime,
+          RUNTIME_KEYWORD,
+          RUNTIME_KEYWORD_TOLERANCE,
+        ),
+      ),
+      true,
+    );
+
+    // 4. The control is laid out like the block it is compared with, so the
+    //    absent colour is the palette and not a different source or size.
+    yield* ctx.expectEqual(
+      "the unthemed block is laid out like the dark one",
+      `${runtime.width}x${runtime.height}`,
+      `${dark.width}x${dark.height}`,
+    );
+
+    // 5. Every block paints its source: an absent keyword would otherwise read
+    //    as a clean negative.
+    yield* Effect.forEach(
+      [
+        {
+          id: SYNTAX_IDS.light,
+          box: light,
+          fill: palettes.light.colors.background,
+        },
+        {
+          id: SYNTAX_IDS.dark,
+          box: dark,
+          fill: palettes.dark.colors.background,
+        },
+        {
+          id: SYNTAX_IDS.runtime,
+          box: runtime,
+          fill: palettes.dark.colors.background,
+        },
+      ],
+      (block) =>
+        Effect.flatMap(
+          ctx.expectSome(
+            `${block.id} is inside the capture`,
+            countInkOn(frame, block.box, scale, block.fill),
+          ),
+          (ink) =>
+            ctx.expectEqual(`${block.id} paints its source`, ink > 0, true),
+        ),
+      { concurrency: 1 },
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -19987,5 +20233,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "rtl-text",
     view: () => <RtlTextProbe />,
     steps: rtlTextSteps,
+  },
+  "syntax-palette": {
+    id: "syntax-palette",
+    view: () => <SyntaxPaletteProbe />,
+    steps: syntaxPaletteSteps,
   },
 };

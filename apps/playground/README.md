@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-69 probes a real window can prove, of which fifteen mount shipped
+70 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -56,7 +56,7 @@ restore, a dock's keyboard order, an anchored menu in a scrolled header, the
 window's own backdrop, the app-level key handler, the app-level selection
 handler, a field's hint and value ink, a configurable data grid, a generated
 SVG pattern, a property inspector beside its preview, a table's chorded
-selection and right-to-left text shaping).
+selection, right-to-left text shaping and a code host's syntax palette).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -3916,6 +3916,65 @@ Three negative controls measured, exit `1` each, then restored green:
   changes the Arabic run's advance` (`expected true, got false`) — the width
   difference is the join controls, not two different strings.
 
+### `syntax-palette` — measured on 0.11.0 here
+
+**Do the token colours reach a code block's glyphs?** `@gpuixui/tokens` ships
+`syntaxColors(theme)` and `nativeTextTheme` hands the palette to a `<code>`
+host, but a host object carrying the field is a source read: the runtime owns
+the tokenizer and the paint. Handing a host **no** palette is the defect the
+token group closes — `@gpuix/native@0.11.0` then layers the runtime's built-in
+dark palette, whose keyword is a periwinkle chosen for its own dark default, so a
+light theme's code block paints comments and keywords for a dark canvas.
+
+One TypeScript source — four lines, each opening with `const` — is painted three
+times in one window, and each block's own box is counted in the capture at the
+device scale:
+
+| Block | Palette handed over | Keyword | Solid core pixels | The other shipped keyword | Source ink |
+| ----- | ------------------- | ------- | ----------------- | ------------------------- | ---------- |
+| light fill | `syntaxColors(lightTheme)` | `#3B2C8F` | **756** | none | 10 804 |
+| dark fill | `syntaxColors(darkTheme)` | `#A7A9FF` | **896** | none | 11 237 |
+| dark fill, no `syntax` | none | **`#8F96ED`** (runtime default) | **832** | none | 11 016 |
+
+The control is honest, not a second theme: `runtimeSyntaxTheme` spreads the seam
+and omits only `syntax`, so the unthemed block keeps the shipped metrics, fonts
+and surface roles and is laid out exactly like the dark block (the probe checks
+that the two boxes measure the same). The runtime default is
+`graph_tone(oklch(0.673, 0.182, 276.935))` in the pinned release's `theme.rs`,
+where `graph_tone` scales the **Hsla** saturation by 0.72 after the OKLCH
+conversion — not a chroma scale — and the frame reads `rgb(143, 150, 237)`.
+
+29 checks, `--only syntax-palette`, green on 0.11.0 (~0.5 s). Fixture:
+`src/live/syntax-palette.ts` — `countInk`/`countInkOn` read a colour inside a
+block's own box, refusing an unread crop rather than returning zero, and
+`SYNTAX_INK_FLOOR` keeps one antialiased stray pixel from reading as a palette;
+`syntax-palette.test.ts` (9 cases) draws the frames the reader counts, holds the
+two documented keyword hexes to `syntaxColors(lightTheme)`/`(darkTheme)`, keeps
+the runtime default apart from both shipped inks, and holds the source to four
+keyword lines in `ts`. Evidence: `.artifacts/live/syntax-palette.png`.
+
+What it settles:
+
+1. **The palette paints, per host.** The light and dark blocks paint their own
+   keyword and neither paints the other's, so the colour travels with the
+   theme object rather than being resolved once for the window.
+2. **The fallback is real.** A host handed no palette paints the runtime's own
+   periwinkle, which is what makes `syntaxColors` a fix rather than a
+   restatement of the runtime's default.
+3. **The token group reaches a real code surface.** `CodeBlock` passes
+   `nativeTextTheme(theme, "background")`, so a light or branded theme's code
+   reads with its own palette; the components package's own suites hold the
+   seam, and this probe is the paint.
+
+Two negative controls measured, exit `1` each, then restored green:
+
+- handing the runtime block the shipped palette fails `a host handed no palette
+  paints none of the shipped keyword` with **`expected 0, got 896`** — the
+  absence check is what proves the control is really unthemed.
+- handing the light block no palette fails `the light block paints the light
+  palette's keyword` with **`expected true, got false`** — the positive count is
+  what proves a palette reached the glyphs rather than a default matching it.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -4131,8 +4190,8 @@ narrower. Each deviation is deliberate and measured:
   Measured alone since then: `inspector-lifecycle`,
   `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`,
   `elevation-paint`, `opacity-paint`, `movable-tabs-lifecycle`,
-  `slider-vertical-lifecycle`, `modifier-select-lifecycle` and `rtl-text`
-  (eleven probes, each run alone).
+  `slider-vertical-lifecycle`, `modifier-select-lifecycle`, `rtl-text` and
+  `syntax-palette` (twelve probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
