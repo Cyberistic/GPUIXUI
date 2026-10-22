@@ -1,0 +1,237 @@
+---
+title: Form
+description: Schema validation and a submit lifecycle around a group of fields — the caller owns the value, and messages arrive only after a failed submit.
+---
+
+`Form` is the boundary around a group of fields: it runs the caller's schema,
+turns the messages on, and hands `onSubmit` a **decoded** value. It reads no
+values from the runtime, because the runtime has no form element and no DOM to
+read — the caller owns the draft. Gaps below were measured on
+`@gpuix/native@0.11.0`.
+
+<ComponentPreview name="form-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Form" />
+
+<ComponentSource name="form" file="packages/components/src/form.tsx" />
+
+## Usage
+
+```tsx
+import { Form } from "@gpuixui/components/form";
+import { Field, FieldInput } from "@gpuixui/components/field";
+import { Button } from "@gpuixui/primitives";
+import { Schema } from "effect";
+import { useState } from "react";
+
+const Account = Schema.Struct({
+  email: Schema.NonEmptyString,
+  name: Schema.NonEmptyString,
+});
+
+export const CreateAccount = () => {
+  const [draft, setDraft] = useState({ email: "", name: "" });
+
+  return (
+    <Form
+      label="Create account"
+      schema={Account}
+      value={draft}
+      onSubmit={(account) => save(account.email, account.name)}
+    >
+      {(form) => (
+        <>
+          <Field label="Email">
+            <FieldInput
+              value={draft.email}
+              onChange={(event) =>
+                setDraft({ ...draft, email: event.value ?? "" })
+              }
+            />
+          </Field>
+          <Field label="Name">
+            <FieldInput
+              value={draft.name}
+              onChange={(event) =>
+                setDraft({ ...draft, name: event.value ?? "" })
+              }
+            />
+          </Field>
+          <Button onClick={form.submit}>Create account</Button>
+        </>
+      )}
+    </Form>
+  );
+};
+```
+
+`Form` has no compound parts, so its children are a **render prop**: that is how
+a caller reaches `submit` without a part the contract does not allow. `Field`
+still paints one message; `Form` decides when validation runs and what a failed
+submit shows.
+
+## The submit lifecycle
+
+| Moment | What happens |
+| ------ | ------------ |
+| first render | nothing is validated and nothing is reported — a form that has never been submitted never nags, however the draft changes |
+| `submit` on an invalid draft | the schema's messages appear in one `role="alert"` block, in schema order, and `onSubmit` is **not** called |
+| an edit after a failed submit | the messages are **derived from the live draft**, so fixing a field clears its message without a second submit, and a still-bad field keeps its own |
+| `submit` on a valid draft | `onSubmit` receives the **decoded** value, never the raw one; the messages clear |
+| `pending` | a pending form ignores `submit`, so one press is one save |
+
+The one piece of state is the flag "a submit has failed". The messages are not
+state: they are recomputed from the caller's current value on every render,
+which is why an edit cannot leave a stale list on screen.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| root | the `form-root` column and, only with a `label`, `role="form"` with `aria-label` |
+| message block | one `role="alert"` above the children, in the destructive tone's page role |
+| children | the caller's fields, through the render prop's `{ errors, pending, submit }` |
+
+`Form` is deliberately not a field: it owns no input, no label and no message
+slot, so a form of one control is usually a `Field` with a `Button` rather than a
+`Form` around both. Reach for a different component when the need is different:
+
+- one label, one message slot and one control — [Field](/docs/components/field)
+  and inline validation;
+- a value the reader is still editing, with no submit — the draft belongs to the
+  caller and `Form` is not needed until there is something to submit;
+- a confirmation step around a form — [Confirmation dialog](/docs/components/confirm-dialog),
+  which reports its confirm and leaves the close to the caller.
+
+## Keyboard
+
+| Key | Contract |
+| ---- | -------- |
+| `Tab` | the form has **no tab stop of its own**; it reaches the controls inside it in order |
+| `Enter` on the focused action | activates the action by the [Button](/docs/components/button) contract — a form does not bind `Enter` at the root |
+| `Enter` in a field | the host emits its `submit` event only when a listener is installed on that field; `Form` installs none, so a field that should submit on `Enter` passes its own `onSubmit` to the field |
+
+A form is not a dialog: it does not trap focus, does not close on `Escape`, and
+holds no key of its own. Those belong to the surface it is mounted in.
+
+## API reference
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `schema` | `Schema.ConstraintDecoder<T>` | none | decides whether the value may be submitted; its messages are the ones painted |
+| `value` | `unknown` | none | the caller's draft; the form never reads a value from the runtime |
+| `onSubmit` | `(value: T) => void` | none | receives the **decoded** value, only when the schema accepts it |
+| `pending` | `boolean` | `false` | refuses `submit` while true, so one press is one save |
+| `label` | `string` | none | makes the root `role="form"` with `aria-label`; without it the root is a plain container |
+| `className` | `string` | none | joined after the recipe, so it wins conflicts |
+| `children` | `(state: FormState) => ReactNode` | none | the render prop: `errors`, `pending`, `submit` |
+| `style` | `StateStyle` | none | merged last on the root |
+
+`FormState` carries `{ errors, pending, submit }`: `errors` is every message from
+the last failed submit, in schema order, and `pending` mirrors the prop. The
+remaining GPUix host props are forwarded to the root `div`.
+
+## Blocking a second submit
+
+<ComponentPreview name="form-states" />
+
+`pending` is the caller's async state, not the form's. Pass it while a save is
+in flight: `Form` then refuses a second `submit`, and the caller disables its
+action so the reader can see why. A form that painted its own spinner would have
+to guess at the save it does not own.
+
+A failed submit does not move the focus: the runtime has no error summary to
+focus, and the messages paint above the fields the reader is already in. If a
+form wants the first bad field focused, the caller does that in its own submit
+handler — `Form` reports messages, not paths (see Limitations).
+
+## Message text is the schema's
+
+A message is the schema's own — a check's `message` annotation reaches the reader
+verbatim, and a raw issue never does. `Form` never composes sentences, prefixes a
+field name or counts errors, because a component that rewrote a message would
+disagree with the schema the caller validates against.
+
+```tsx
+const Address = Schema.String.check(
+  Schema.makeFilter((value: string) => value.includes("@"), {
+    identifier: "AddressHasAtCheck",
+    title: "Address has @",
+    description: "An address that contains `@`.",
+    message: "Enter an address with an @",
+  }),
+);
+```
+
+`validation/logic.ts` walks the issue tree: every message of a `Composite` is
+kept, a `Pointer` and an `Encoding` are transparent (they record *where*, and a
+form has no use for the JSON pointer), and a leaf becomes one message. Decoding
+runs with `errors: "all"`, so a failed submit reports **every** bad field rather
+than the first — which is why `validate` and `validateAll` disagree on purpose.
+
+## Theming
+
+| Element | Role or metric |
+| ------- | -------------- |
+| root | the `form-root` recipe's column, a 12px gap; no fill and no edge |
+| message block | the `form-errors` column, `statusTone(theme, "destructive").foreground` on whatever surface the form sits on |
+| message order | the schema's field order, one line per distinct message |
+| pending action | the caller's `Button`, disabled and busy by its own rules |
+
+`Form` paints no surface: a dialog, a card or a page section is the caller's, so
+the form inherits it. The message role is the tone's **page** role rather than
+the solid fill a destructive action paints, so a message is readable text and not
+a second button.
+
+## Accessibility and limitations
+
+- The root is a **named group** (`role="form"` with `aria-label`) only when
+  `label` is passed; without it the root is a plain container, which is what a
+  nested set of fields wants.
+- The messages are one `role="alert"` block above the children. The runtime has
+  no `aria-describedby` or `aria-errormessage` (`@gpuix/native@0.11.0`), so a
+  message cannot point at the field it belongs to; a `Field` around one control
+  is still the way to put a message under it.
+- **No field-to-message mapping.** `validateAll` returns messages, not paths, so
+  the caller cannot ask which field failed. Two fields that fail the same check
+  read as one sentence, because `validateAll` dedupes.
+- **No focus move, no scroll, no error count.** A summary that focuses or
+  scrolls is app code.
+- **No values read from the runtime.** The draft is the caller's; an edit that
+  the schema rejects is still in the draft until the caller changes it.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `this package` | the schema walk, the message block and the submit lifecycle |
+| `effect` | `Schema` decoding, `Effect` for the message walk, `Result` and `Array` |
+| `@gpuix/react` | the host `Props` type the root forwards |
+| `@gpuix/react/floating` | `mergeStyles` for the root's style |
+| `@gpuixui/tw` | the `form-root`, `form-errors` and `form-error` recipes |
+| `@gpuixui/tokens` | the destructive tone's page role, through the package theme provider |
+
+## Related
+
+- **Field** — one label, one description and one message slot around a control.
+- **Input** — the single-line field a form is mostly made of.
+- **Button** — the action the render prop's `submit` is wired to.
+- **Dialog** and **Confirmation dialog** — the surfaces a form is usually
+  mounted in.
+- **Checkbox** and **Switch** — the controls a settings form adds beside fields.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `partial` runtime verdict: the runtime
+publishes no form element and no value reader, so the form is the callers' bytes
+plus a schema rather than a rewrite of a host. The behaviour is held by 9 native behaviour tests in `packages/components/src/behaviour/form.test.tsx` —
+the failed submit, the derived messages, the edit that clears one, the decoded
+value, `pending` refusing a second submit and the named root. The chrome is held
+by `packages/components/src/recipe/recipe.test.ts` (the compiled `FORM_*`
+values in this page's Theming table).
+
+One limit is recorded above rather than hidden: there is no field-to-message
+mapping, because the schema walk returns messages rather than paths. The package
+page this page displaces is the same file the component ships with.

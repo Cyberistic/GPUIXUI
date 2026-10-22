@@ -33,6 +33,12 @@ import {
   listMultipleSource,
 } from "./list-demo";
 import {
+  FormStates,
+  FormWorkflow,
+  formStatesSource,
+  formWorkflowSource,
+} from "./form-demo";
+import {
   enabledEntries,
   highlightAfter,
   menuEntries,
@@ -2490,6 +2496,8 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: FieldValidation,
     source: fieldValidationSource,
   },
+  "form-states": { render: FormStates, source: formStatesSource },
+  "form-workflow": { render: FormWorkflow, source: formWorkflowSource },
   "field-states": { render: FieldStates, source: fieldStatesSource },
   "layout-shell": {
     render: LayoutShell,

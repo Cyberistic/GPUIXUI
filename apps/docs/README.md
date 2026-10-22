@@ -52,6 +52,7 @@ components/confirm-dialog.mdx Curated: Cancel first, confirm never closes, the f
 components/dialog.mdx        Curated: a real confirmation workflow
 components/dropdown-menu.mdx Curated: highlighted row is the focused row
 components/field.mdx        Curated: one message slot, submit-time validation, no fade
+components/form.mdx         Curated: the submit lifecycle, derived messages, no field-to-message map
 components/list.mdx         Curated: one roving tab stop, type-ahead, the range that skips a row
 components/popover.mdx       Curated: anchored placement
 components/search-input.mdx  Curated: the Escape rule, the 24px clear target, the fixed metrics
@@ -105,6 +106,8 @@ src/components/docs/command-preview.ts    The palette preview's matcher and grou
 src/components/docs/select-preview.ts     The select preview's data and arrow arithmetic
 src/components/docs/select-demo.tsx       The select's two browser renderings and their source strings
 src/components/docs/selection-preview.ts   The key edges a checkbox and a switch share
+src/components/docs/form-preview.ts      The form preview's messages, submit rule and accepted account
+src/components/docs/form-demo.tsx        The form's two browser renderings and their source strings
 src/components/docs/search-input-preview.ts The search preview's filter, count and Escape rule
 src/components/docs/search-input-demo.tsx The search field's two browser renderings and their source strings
 src/components/docs/switch-preview.ts      The switch preview's dependent-setting rule and its slide duration

@@ -9,6 +9,7 @@ import confirmDialog from "../../../../../packages/components/src/confirm-dialog
 import dialog from "../../../../../packages/components/src/dialog.tsx?raw";
 import dropdownMenu from "../../../../../packages/components/src/dropdown-menu.tsx?raw";
 import field from "../../../../../packages/components/src/field.tsx?raw";
+import form from "../../../../../packages/components/src/form.tsx?raw";
 import list from "../../../../../packages/components/src/list.tsx?raw";
 import popover from "../../../../../packages/components/src/popover.tsx?raw";
 import searchInput from "../../../../../packages/components/src/search-input.tsx?raw";
@@ -36,6 +37,7 @@ export const componentSources = {
   dialog,
   dropdownMenu,
   field,
+  form,
   list,
   popover,
   searchInput,

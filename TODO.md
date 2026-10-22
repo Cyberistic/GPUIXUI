@@ -3348,6 +3348,26 @@ a workaround for two live sessions sharing one worktree; see
       `docs/scroll-area.mdx` §Scroll position/§API/§Verification and the
       README's capability table.
 
+`[x]` `packages/primitives`: **a `Select` was absent from the accessibility tree**
+      — the page said "the wrapper adds the accessible name through the `label`
+      prop", but the name landed on `GpuixSelect`'s wrapper (a plain `div` with
+      no role) and GPUix's trigger is a `div` with a tab stop and no role either,
+      so a window's dump held only the `Window` node and the tab stop
+      (measured). A node needs a role to reach the tree, so the trigger now
+      carries `role="combobox"` and the `label` as its name: the tree publishes a
+      `ComboBox` with the Click and Focus actions. The rows stay silent (0.11.0's
+      `SelectItem`/`SelectGroup`/`SelectLabel` are plain `div`s), which is now
+      recorded instead of contradicted — the source comment and page claimed the
+      row "is already `aria-selected`". Proof: `Select.test.tsx` reads the
+      trigger's role/name and the wrapper's absent name; the window case in
+      `runtime/fields.runtime.test.tsx` finds the `ComboBox` node by role and
+      label, holds its two actions, and pins the open list's missing option node.
+      Both directions measured: without the pair the unit case fails in
+      `expectSome` and the window case reads no `ComboBox` node. Docs:
+      `docs/select.mdx` §Accessibility/§Limitations/§Theming/§Verification, the
+      README's capability table, the `Selects` inventory record (`yes` →
+      `partial`) and the `COMPONENTS.md` row.
+
 `[x]` `packages/components`: the focus cue was missing on four focusable parts and
       painted on parts that could not act. A colour swatch, a chip's remove
       control, the command palette's field and the combobox trigger/search field
@@ -3793,8 +3813,41 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 134/134
+`[x]` `[██████████]` 135/135
 
+`[x]` Curate the **Form** page and hold its submit lifecycle to the source —
+`/docs/components/form` served the package page (strategy 4: no preview), so the
+one component whose whole behaviour is a lifecycle had nothing a reader could
+press, and the template's Composition/Keyboard/API rows were missing. The
+curated page shadows `packages/components/docs/form.mdx` and teaches the four
+moments a screenshot cannot show (nothing is validated before the first submit;
+a failed submit reports **every** bad field in one `role="alert"` block; the
+messages are derived from the live draft, so fixing one clears only that one; a
+`pending` form refuses `submit` and `onSubmit` receives the **decoded** value),
+plus the schema walk (`errors: "all"` and the dedupe), the render prop as the
+only way to reach `submit`, and the measured gaps (no field-to-message mapping,
+no `aria-describedby`, no focus move, no values read from the runtime). Two
+browser previews: `form-workflow` (a create-account card whose save is pending,
+whose messages follow the draft and whose success line carries the accepted
+account) and `form-states` (pristine / failed / one fixed / pending). The
+arithmetic lives in `src/components/docs/form-preview.ts` so it is testable:
+`form-preview.test.ts` (7 cases) fails when a pristine form reports a message, a
+failed submit loses a field's message, an edit clears the wrong one, a pending
+form submits, or the success line quotes the untrimmed draft.
+`component-page-truth.test.ts` gained the page and `holds the form's submit
+lifecycle and its message block to the source`, reading `form.tsx` (the
+`showErrors` flag, the derived `validateAll` call, the `pending` guard, the
+`decodeUnknownResult`/`Result.isFailure` path, `onSubmit(decoded.success)`, the
+`role="alert"` block and the destructive page role), `validation/logic.ts`
+(`errors: "all"`, `Arr.dedupe`) and the `FORM_*` recipes. The sidebar (`meta.json`
+Forms), the Components index, `/docs/theming`'s switch list, the strategy's
+"Curated today" line, `sources.ts`, the app README ledger, the package-docs
+curated set and the inventory entry name the page. Directions measured:
+restoring a copied message list fails `expected … to contain 'derived from the
+live draft'`, and a preview that reports before a submit fails two cases by
+name. `check-types` and `build` are green; the remaining docs-suite failures at
+HEAD are other workstreams' in-flight edits (`field.mdx`'s count, two untracked
+package pages, the Select verdict and a tokens series move).
 `[x]` Curate the **Switch** page and hold its slide, its band and its knob guard
 to the source — `/docs/components/switch` served only the primitives package page
 (strategy 4: no preview), so the library's "takes effect now" control had nothing

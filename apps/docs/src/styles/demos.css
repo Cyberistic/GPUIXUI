@@ -1322,6 +1322,108 @@
   color: var(--disabled-foreground);
 }
 
+/* ---- form: mirrors components/src/form.tsx ----
+   The form paints no chrome of its own: its children sit on whatever surface
+   the caller put them on, and the messages are one `role="alert"` block above
+   them in the tone's page role. The preview's card is the caller's surface —
+   the page says so — and the error text reuses the field block's
+   `destructiveSoftForeground` so a message reads the same wherever it comes
+   from. */
+.gx-form {
+  display: flex;
+  justify-content: center;
+}
+
+.gx-form-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(380px, 100%);
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-form-title,
+.gx-form-lede,
+.gx-form-note,
+.gx-form-readout,
+.gx-form-success,
+.gx-form-state-label {
+  margin: 0;
+}
+
+.gx-form-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.gx-form-lede,
+.gx-form-note {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.gx-form-lede {
+  color: var(--muted-foreground);
+}
+
+.gx-form-note {
+  color: var(--placeholder);
+}
+
+.gx-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.gx-form-success {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-form-readout {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-form-states {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.gx-form-state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--background);
+}
+
+.gx-form-state-label {
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--muted-foreground);
+}
+
+.gx-form-state-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gx-form-state-body .gx-field {
+  width: 100%;
+}
+
 /* ---- toast: mirrors components/src/toast/viewport.tsx ----
    The card is `popover` on `popoverForeground`, `border` at a thin edge,
    `radius.md`, the `md` elevation and the tone's own colour on the 3px bar and

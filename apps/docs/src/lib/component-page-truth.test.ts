@@ -179,6 +179,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/search-input.tsx",
   },
   {
+    file: "form.mdx",
+    row: "Form",
+    suite: "packages/components/src/behaviour/form.test.tsx",
+    shadowed: "packages/components/docs/form.mdx",
+    source: "packages/components/src/form.tsx",
+  },
+  {
     file: "tabs.mdx",
     row: "Tabs",
     suite: "packages/components/src/behaviour/tabs.test.tsx",
@@ -1339,6 +1346,63 @@ describe("the curated component pages", () => {
     expect(text).toContain("`filledPressed`");
     expect(text).toContain("`iconSize`");
     expect(text).toContain('`pointerEvents: "none"`');
+  });
+
+  it("holds the form's submit lifecycle and its message block to the source", () => {
+    // A form is the one component whose whole behaviour is a lifecycle, so the
+    // page's most load-bearing claims are the four a screenshot cannot show: the
+    // messages appear only after a failed submit, they are derived from the live
+    // draft (an edit clears one), a pending form refuses a second submit, and
+    // `onSubmit` receives the decoded value. The package page listed none of the
+    // four, and it printed fifteen native cases for a suite that runs ten.
+    const form = pages.find((candidate) => candidate.file === "form.mdx");
+    expect(form, "the form page is not in the curated set").toBeDefined();
+    if (form === undefined) return;
+
+    const source = read(form.source);
+    expect(source).toContain(
+      "const [showErrors, setShowErrors] = useState(false);",
+    );
+    expect(source).toContain(
+      "const errors = showErrors ? Effect.runSync(validateAll(schema)(value)) : [];",
+    );
+    expect(source).toContain("if (pending) return;");
+    expect(source).toContain(
+      "const decoded = Schema.decodeUnknownResult(schema)(value);",
+    );
+    expect(source).toContain("if (Result.isFailure(decoded)) {");
+    expect(source).toContain("setShowErrors(true);");
+    expect(source).toContain("onSubmit(decoded.success);");
+    expect(source).toContain('role="alert"');
+    expect(source).toContain('statusTone(theme, "destructive").foreground');
+    expect(source).toContain('role: "form", "aria-label": label');
+    // The walk is the other half of "every bad field": the default decoder
+    // stops at the first failure, and `validateAll` asks for all of them.
+    const logic = read("packages/components/src/validation/logic.ts");
+    expect(logic).toContain('{ errors: "all" }');
+    expect(logic).toContain("Arr.dedupe");
+
+    const recipes = read("packages/tw/src/recipes.ts");
+    expect(recipes).toContain(
+      'export const FORM_ROOT = "flex flex-col gap-3";',
+    );
+    expect(recipes).toContain(
+      'export const FORM_ERRORS = "flex flex-col gap-0.5";',
+    );
+
+    const text = body(form).replace(/\s+/g, " ");
+    expect(text).toContain("nothing is validated and nothing is reported");
+    expect(text).toContain("derived from the live draft");
+    expect(text).toContain("**every** bad field");
+    expect(text).toContain("ignores `submit`");
+    expect(text).toContain("decoded");
+    expect(text).toContain("No field-to-message mapping");
+    expect(text).toContain("9 native behaviour tests");
+    expect(text).toContain("form-root");
+    // The retracted claims: a form that reads the runtime's value, and a message
+    // the component wrote rather than the schema.
+    expect(text).not.toContain("reads the runtime's value");
+    expect(text).not.toContain("15 native behaviour tests");
   });
 
   it("hold the search field's clear rule and its fixed metrics to the source", () => {
