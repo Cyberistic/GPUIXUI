@@ -447,7 +447,10 @@ describe("the measured target rows", () => {
 
     const notes = Option.getOrElse(
       Option.map(
-        Arr.findFirst(targetRows(), (row) => row.name === "Column configuration"),
+        Arr.findFirst(
+          targetRows(),
+          (row) => row.name === "Column configuration",
+        ),
         (row) => row.notes,
       ),
       () => "",
