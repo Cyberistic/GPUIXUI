@@ -332,15 +332,17 @@ Overlay layering is paint order, not a shadow or a weight: the runtime has no
 dismissal stack, and why `elevation.overlay` stays a reserved, empty level. Dark
 shadows are stronger because contrast between surfaces is lower — but stronger is
 not the same as visible. The deepest level is held to the perceptibility floor
-against the four strips a raised surface falls on, the same `decorativeFailures`
+against the five strips a raised surface falls on — the page, card, popover and
+toolbar, plus the `selected` wash a row wears when a context menu opens over it —
+the same `decorativeFailures`
 call a divider and a wash answer to (§9). A shadow is a blurred geometry, so the
 composite is a ceiling rather than what the eye receives: a shadow that passes may
 still read faint at its edge, and the contract reports only one that cannot be
 seen at all. It found exactly that — the high-contrast dark theme tinted its
 shadows with black on a pure-black page, so every level was 1.00:1 there and a
 dialog or a full-width card had no shadow; that theme's tint is now the grey its
-raised controls use, and the deepest level reads 1.21–1.37:1 across the page,
-card, popover and toolbar.
+raised controls use, and the deepest level reads 1.09–1.37:1 across the page,
+card, popover, toolbar and chosen row.
 
 A level is a rung on the same kind of ladder as a radius: the surface a reader
 raises must cast a shadow that reaches further below its box than the level
@@ -682,7 +684,8 @@ dialog's skeleton is measured on the dialog's own `popover` fill, not only on
 the page, a card and a muted list. The veil is composited over its surface rather than rejected as
 translucent, and it is measured on every content strip a window holds behind a
 modal — a card, a popover, a sidebar's `muted` toolbar, a segmented `secondary`
-panel and a field's `input` fill; the page's own void is exempt, because a black
+panel, a field's `input` fill and the `selected` wash a chosen row wears; the
+page's own void is exempt, because a black
 page cannot be darkened and a high-contrast theme separates its dialog with a
 border instead. The status edge is measured at the share
 `statusTone` paints, on the tint it bounds, on the four strips a message sits on
@@ -721,8 +724,9 @@ Linux light were under the floor there — the four values moved stronger, and t
 message-tint pairs moved the neutral edge again.
 
 The elevation tint is measured on the same floor, as a **ceiling**: the deepest
-level is composited over the four strips a raised surface can fall on, so a
-shadow that passes may still read faint at its blurred edge and one a reader
+level is composited over the five strips a raised surface can fall on — the
+page, card, popover and toolbar, and the chosen row a context menu opens over —
+so a shadow that passes may still read faint at its blurred edge and one a reader
 cannot see is reported. That is how the high-contrast dark page's black-on-black
 scale was found; the one-shadow rule and the role-owned tint stay
 `elevation.test.ts`'s.

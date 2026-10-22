@@ -206,10 +206,20 @@ const skeletonStrips = ["background", "card", "popover", "muted"] as const;
  * cannot be seen at all — which is exactly the case that shipped: the
  * high-contrast dark theme's black tint on its pure-black page measured 1.00:1
  * at every level, so no raised surface in that variant had a shadow.
+ *
+ * The strips are the four a raised surface floats over plus the `selected` wash
+ * a row wears behind it: a context menu opens over the row the reader
+ * right-clicked, so the shadow falls on that row's own fill.
  */
 const elevationRole = "shadow" as const;
 const elevationLevel = "lg" as const;
-const elevationStrips = ["background", "card", "popover", "muted"] as const;
+const elevationStrips = [
+  "background",
+  "card",
+  "popover",
+  "muted",
+  "selected",
+] as const;
 
 /**
  * The decorative surfaces the library paints. Each is measured where it is
@@ -239,14 +249,19 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   // over the page's void: a black page cannot be darkened by any scrim, and a
   // theme with one separates its dialog with a border instead. The strips are
   // the ones a window actually holds behind a modal — a card, a floating
-  // surface, a sidebar's `muted` toolbar, a segmented `secondary` panel and a
-  // field's `input` fill — because the veil covers the whole window: measured on
-  // the two page surfaces only, a modal over an undimmed sidebar passed.
+  // surface, a sidebar's `muted` toolbar, a segmented `secondary` panel, a
+  // field's `input` fill and the `selected` wash a chosen row wears — because
+  // the veil covers the whole window: measured on the two page surfaces only, a
+  // modal over an undimmed sidebar passed.
   { surface: "scrim", role: "overlay", over: "card" },
   { surface: "scrim", role: "overlay", over: "popover" },
   { surface: "scrim", role: "overlay", over: "muted" },
   { surface: "scrim", role: "overlay", over: "secondary" },
   { surface: "scrim", role: "overlay", over: "input" },
+  // A chosen row is part of that window too: opening a confirmation dialog over
+  // the row the reader just selected is the library's own pattern, so the veil
+  // has to recede the selection as well as the content around it.
+  { surface: "scrim", role: "overlay", over: "selected" },
   // A scrollbar thumb is chrome: the platform paints and sizes it, and the role
   // only tints it. A thumb that matches the strip it moves along is a scroller a
   // reader cannot find, so it is measured wherever a scroller can sit.

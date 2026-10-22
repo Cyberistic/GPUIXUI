@@ -51,13 +51,14 @@
  * tints its shadows with black on a pure-black page, so **every** level measured
  * 1.00:1 there and no raised surface in that variant had a shadow. Its tint is
  * the grey its raised controls use now, and the scale reads 1.09–1.37:1 across
- * the four strips.
+ * the five strips it can fall on.
  */
 
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import {
   alpha,
+  alphaOf,
   blend,
   highContrastDarkColors,
   highContrastLightColors,
@@ -174,11 +175,16 @@ describe("decorative surfaces", () => {
 
   it("measures a veil over the content surfaces a modal covers", () => {
     // A modal veils the whole window, not only the page under its own surface:
-    // the sidebar's toolbar, a segmented panel and the field behind it are all
-    // receded by the same role.
-    const missing = ["card", "popover", "muted", "secondary", "input"].filter(
-      (over) => !measured("scrim", "overlay", over),
-    );
+    // the sidebar's toolbar, a segmented panel, the field behind it and the row
+    // the reader has chosen are all receded by the same role.
+    const missing = [
+      "card",
+      "popover",
+      "muted",
+      "secondary",
+      "input",
+      "selected",
+    ].filter((over) => !measured("scrim", "overlay", over));
 
     expect(missing).toEqual([]);
   });
@@ -191,6 +197,21 @@ describe("decorative surfaces", () => {
     expect(
       decorativeFailures(broken).find(
         ({ surface, over }) => surface === "scrim" && over === "muted",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+  });
+
+  it("reports a veil painted in the row the reader chose", () => {
+    // A confirmation dialog opens over the row it is about, so the selection is
+    // behind the veil. A veil painted in that row's own fill leaves it exactly
+    // as bright as it was before the dialog appeared.
+    const broken = extendTheme(lightTheme, {
+      colors: { overlay: lightTheme.colors.selected },
+    });
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, over }) => surface === "scrim" && over === "selected",
       ),
     ).toMatchObject({ ratio: 1, floor: decorativeFloor });
   });
@@ -595,11 +616,16 @@ describe("decorative surfaces", () => {
 
   it("measures the deepest elevation level on every strip a raised surface floats over", () => {
     // A dialog lands on the page, a popover on a card or the page, a menu in a
-    // toolbar; the shadow is the only thing separating a raised surface from the
-    // strip in a dark theme, so all four are measured.
-    const missing = ["background", "card", "popover", "muted"].filter(
-      (over) => !measured("elevation", "shadow", over),
-    );
+    // toolbar and a context menu over the row it was opened from; the shadow is
+    // the only thing separating a raised surface from the strip in a dark theme,
+    // so all five are measured.
+    const missing = [
+      "background",
+      "card",
+      "popover",
+      "muted",
+      "selected",
+    ].filter((over) => !measured("elevation", "shadow", over));
 
     expect(missing).toEqual([]);
   });
@@ -631,8 +657,51 @@ describe("decorative surfaces", () => {
       ["card", 1],
       ["popover", 1],
       ["muted", 1],
+      ["selected", 1],
     ]);
     expect(decorativeFailures(lightTheme)).toEqual([]);
+  });
+
+  it("reports a shadow tinted with the row it falls on", () => {
+    // A context menu is opened over the row the reader right-clicked, so that
+    // row's fill is the strip its shadow lands on. A tint carrying the row's own
+    // colour darkens nothing there, and every page placement still passes.
+    const broken = extendTheme(lightTheme, {
+      colors: { shadow: lightTheme.colors.selected },
+    });
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, over }) => surface === "elevation" && over === "selected",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+  });
+
+  it("prints the deepest level's range over the strips it measures", () => {
+    // The page prints the high-contrast dark range, so the sentence moves with
+    // the table: a placement added to the elevation half has to appear in it.
+    const level = highContrastDarkTheme.elevation.lg[0]?.color ?? "";
+    const ratios = decorativeSurfaces
+      .filter(({ surface }) => surface === "elevation")
+      .map(({ over }) => {
+        const strip = highContrastDarkTheme.colors[over];
+        return contrastRatio(blend(strip, level, alphaOf(level)), strip);
+      })
+      .filter((ratio): ratio is number => ratio !== undefined);
+    const [low, high] = ratios.reduce<readonly [number, number]>(
+      ([floor, ceiling], ratio) => [
+        Math.min(floor, ratio),
+        Math.max(ceiling, ratio),
+      ],
+      [Number.POSITIVE_INFINITY, 0],
+    );
+    const printed = `${low.toFixed(2)}–${high.toFixed(2)}:1`;
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8");
+
+    expect(printed).toBe("1.09–1.37:1");
+    expect(read("../../../docs/tokens.md")).toContain(printed);
+    expect(read("../../../docs/design-system.md")).toContain(printed);
   });
 
   it("reports the high-contrast dark page no level could lift", () => {
@@ -641,7 +710,7 @@ describe("decorative surfaces", () => {
     // raised surface had a shadow on the page. Its card, popover and toolbar are
     // lifted greys, so only the page was erased — which is the strip a dialog
     // and a full-width card land on. The tint is the grey its raised controls
-    // use now, and the deepest level clears the floor on all four strips.
+    // use now, and the deepest level clears the floor on all five strips.
     const before = extendTheme(highContrastDarkTheme, {
       colors: { shadow: "#000000B3" },
     });
@@ -684,6 +753,7 @@ describe("decorative surfaces", () => {
       ["card", expect.any(Number)],
       ["popover", expect.any(Number)],
       ["muted", expect.any(Number)],
+      ["selected", expect.any(Number)],
     ]);
     expect(
       decorativeFailures(broken)
@@ -700,7 +770,10 @@ describe("decorative surfaces", () => {
       elevation: {},
     }).filter(({ surface }) => surface === "elevation");
 
-    expect(reported).toHaveLength(4);
+    expect(reported).toHaveLength(
+      decorativeSurfaces.filter(({ surface }) => surface === "elevation")
+        .length,
+    );
     expect(reported.every(({ ratio }) => ratio === undefined)).toBe(true);
   });
 
