@@ -5596,13 +5596,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
     package. Owner: tw.
   - [ ] Teach the **core-backed controller** on the docs that still show the old one —
     `@gpuixui/data`'s `useTable` now takes `{ rows, keyOf, columns }` (the column
-    list carries `valueOf`), the prompt cycle/sort/filter examples are unchanged in
+    list carries `valueOf`), the press-cycle/sort/filter behaviour is unchanged, but
     behaviour but `textOf`/`valueOf`/`sortRows`/`narrowTable` no longer exist.
     `apps/docs/content/docs/components/table.mdx` (§usage snippet and the API
     table's `useTable` row), `apps/docs/content/docs/data-display/index.mdx`
     (the `sortRows` gap table row) and
     `apps/docs/src/components/docs/table-demo.tsx` (`tableWorkflowSource`) still
-    teach the deleted API. Owner: docs-site.
+    teach the deleted API. **Two guards now read deleted internals**:
+    `apps/docs/src/components/docs/table-preview.test.ts` reads
+    `packages/data/src/filter/logic.ts` (`ENOENT`; the filter is
+    `grid-core.ts`'s `includesString` registration + the trim, so the two
+    assertions move there); `apps/docs/src/lib/lane-page.test.ts`'s *retains a
+    released selection and names the call that drops it* expects
+    `clearSelection(selection)` in `use-table.ts`, which now reads
+    `clearSelection(chosen)` (the chosen set is the core's ids plus the gesture
+    anchor). Repoint both at `grid-core.ts`/`use-table.ts` rather than restoring
+    the reducers. Owner: docs-site.
   - [ ] Hoist the **type-ahead seam** — `packages/data/src/tree/logic.ts` repeats
     the components' private rule (a 500 ms window, the last keystroke wins, a
     repeated letter keeps the prefix, matching is case-insensitive) because
