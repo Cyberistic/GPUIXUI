@@ -95,11 +95,14 @@ boundary at rest and none under the pointer. It paints `borderStrong`, which
 
 ## Limitations
 
-- Out of the pointer by design: the pill declares `pointerEvents: "none"`, so
-  the press on a status badge in a selectable row belongs to the row (the live
-  `list-row-press` probe measured `selected=none` with the shipped pill and the
-  row selecting once it opted out). A caller's `style` merges last and can turn
-  the pointer back on.
+- Out of the pointer by design: the pill declares `pointerEvents: "none"`, so a
+  press on a status badge in a selectable row belongs to the row. The live
+  `list-row-press` probe measures the fixed route: a press on the shipped pill
+  selects its row (`selected=badge`), while the `badge-eager` control — the same
+  pill whose caller's `style` hands the pointer back — selects nothing
+  (`selected=none`), because a child that paints a fill is the boundary the
+  runtime's hit test stops counting at until its hitbox is removed. A caller's
+  `style` merges last and can turn the pointer back on.
 - No dismiss, no icon slot and no count animation. A badge that needs a close
   affordance is a chip, which is not built yet.
 - The docs site cannot render this component live — it is a GPUix host tree, not
@@ -115,7 +118,9 @@ its type step plus padding, every variant is pill-rounded, a consumer `style`
 wins, an outline badge's edge clears the boundary floor on the hover and
 selected washes of the row it sits in — with the decorative role's ~1.00:1
 measured as the premise — and the pill declares `pointerEvents: "none"` in both
-themes while a consumer's `style` can opt back in.
+themes while a consumer's `style` can opt back in. `src/badge-page.test.ts` reads
+the `list-row-press` fixture and holds this page and the inventory row to the
+route the window measured.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
