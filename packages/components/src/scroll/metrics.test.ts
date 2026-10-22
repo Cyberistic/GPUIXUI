@@ -63,11 +63,20 @@ describe("scrollMetrics", () => {
   it("ignores a measurement that is not a number", () => {
     expect(sample(Number.NaN, Number.NaN, Number.NaN)).toEqual({
       progress: 0,
+      offsetY: 0,
       scrollable: false,
       atStart: true,
       atEnd: true,
     });
     expect(sample(-200, 200, Number.POSITIVE_INFINITY).progress).toBe(0);
+  });
+
+  it("keeps the offset a pinned header is positioned from, clamped", () => {
+    expect(sample(0, 200, 600).offsetY).toBe(0);
+    expect(sample(-240, 200, 600).offsetY).toBe(-240);
+    // A bounce past either end reports the end the reader can see.
+    expect(sample(40, 200, 600).offsetY).toBe(0);
+    expect(sample(-900, 200, 600).offsetY).toBe(-400);
   });
 });
 

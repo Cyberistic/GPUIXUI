@@ -26,10 +26,12 @@ export interface ScrollSample {
   readonly contentHeight: number;
 }
 
-/** What a scroll box's position means for a bar and a pair of edges. */
+/** What a scroll box's position means for a bar, a pair of edges and a pinned header. */
 export interface ScrollMetrics {
   /** How far through the content the reader is, `0` to `1`. */
   readonly progress: number;
+  /** The clamped absolute offset: `0` at the start, negative as it scrolls. */
+  readonly offsetY: number;
   /** Whether the content is taller than the box, i.e. there is anywhere to go. */
   readonly scrollable: boolean;
   /** Whether the reader is at the top (or there is nothing to scroll). */
@@ -63,6 +65,8 @@ export const scrollMetrics = (sample: ScrollSample): ScrollMetrics => {
 
   return {
     progress: scrollable ? travelled / overflow : 0,
+    // `-0` is not the start: a header positioned from it would read as a scroll.
+    offsetY: travelled === 0 ? 0 : -travelled,
     scrollable,
     atStart: !scrollable || -offset <= 1,
     atEnd: !scrollable || -offset >= overflow - 1,

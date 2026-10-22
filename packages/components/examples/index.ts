@@ -51,6 +51,7 @@ import { MessageScrollerExample } from "./message-scroller.example.js";
 import { MotionExample } from "./motion.example.js";
 import { NavigationMenuExample } from "./navigation-menu.example.js";
 import { PaginationExample } from "./pagination.example.js";
+import { PinnedListExample } from "./pinned-list.example.js";
 import { PopoverExample } from "./popover.example.js";
 import { PreviewCardExample } from "./preview-card.example.js";
 import { RevealExample } from "./reveal.example.js";
@@ -111,6 +112,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   motion: MotionExample,
   "navigation-menu": NavigationMenuExample,
   pagination: PaginationExample,
+  "pinned-list": PinnedListExample,
   popover: PopoverExample,
   "preview-card": PreviewCardExample,
   reveal: RevealExample,

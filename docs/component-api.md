@@ -287,6 +287,7 @@ row in the same change.
 | Avatar group | `AvatarGroup` | — | plan 600 |
 | Alerts | `Alert`, `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`, `AlertDismiss` | — | plan 158 |
 | Lists / list items | `List`, `ListItem`, `ListItemTitle`, `ListItemDescription` | — | plan 111 |
+| Pinned list | `PinnedList` | — | plan 600 |
 | Empty states | `EmptyState` | — | plan 111 |
 | Inline validation | `Field`, `FieldLabel`, `FieldDescription`, `FieldError`, `FieldInput` | `FieldRoot`/`Label`/`Description`/`Error`/`Validity`/`Item`/`Control` | plan 115 |
 | Toasts / notifications | `ToastProvider`, `ToastViewport` (+ `useToast`; an action is a draft field with a provider-owned handler, not a part) | `ToastProvider`/`Root`/`Title`/`Description`/`Action`/`Close`/`Viewport`/`Portal`/`Content` | plan 115, 322 |

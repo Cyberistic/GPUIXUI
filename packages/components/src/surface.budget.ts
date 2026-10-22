@@ -43,7 +43,8 @@ export const surfaceBudget = {
   // 115 → 117 for Magnetic (`magnetic.tsx` and the lean rule beside it), and
   // 117 → 119 for LiquidButton (`liquid-button.tsx` and its flood rule).
   // 119 → 121 for AvatarGroup (`avatar-group.tsx` and its facepile rule).
-  modules: 121,
+  // 121 → 123 for PinnedList (`pinned-list.tsx` and its header-position rule).
+  modules: 123,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup. The
