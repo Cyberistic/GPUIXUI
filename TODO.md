@@ -639,7 +639,36 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 88/88
+`[x]` `[██████████]` 89/89
+
+`[x]` Correct the **example gallery's coverage claim** — `apps/playground`'s
+      README pinned the gallery at **39 screens / 158 checks** in five places
+      (the section's opening twice, the step table's `of=39`, the check total,
+      and the negative control's `expected 39, got 1`) while
+      `packages/components/examples` now registers **72** examples, so the one
+      paragraph a reader uses to judge the headless suite understated it at
+      roughly half — the exact drift the gallery's *source* was already guarded
+      against (`examples.test.ts` failed a count in the header; the README kept
+      printing it). The totals are a function of another package's registry and
+      grow by four with every example, so the section now states the probe's
+      **shape** — four checks per page (readout, wrapper paint, height, subtree
+      text) plus two for the run — leaves the size to the readout
+      (`of=${Arr.length(exampleIds)}`), and the negative control names its
+      message without quoting a number (`expected 72, got 1` cannot outlive the
+      registry). `src/scenarios/examples.test.ts` gained three cases (now 5):
+      the section and the §What is proven bullet reject a registry size, a
+      check total, `of=<n>` and `expected <n>, got <n>`; the shape sentence is
+      **derived** from `examplesMountScenario`'s own `ctx.expect*` sites (four
+      inside the per-page `Effect.forEach`, two outside), so a fifth per-page
+      assertion or a third run-level one fails the sentence by name; and the two
+      negative controls are held to the probe's source. Three directions
+      measured: restoring `(39 screens, 158 checks)` fails `does not pin the
+      registry size or a total derived from it` and `states the per-page shape…`
+      (`expected … to contain 'four checks per page'`); a fifth per-page
+      assertion fails with `to contain 'five checks per page'`; a third
+      run-level assertion fails with `to contain 'three checks for the run'` —
+      restored, 289/289 unit tests green. Scenarios run: `--only examples-mount`
+      (headless, 1/1 green, the probe itself unchanged).
 
 `[x]` Measure the **property inspector a workspace pane holds** — Tier 3's
       *property panels*, *key-value displays*, *data toolbars* and *statistic
@@ -3264,6 +3293,24 @@ a workaround for two live sessions sharing one worktree; see
       §Native text hosts are the interlock row below.
       Docs in `docs/input.mdx` (§Theming/§Limitations/§Verification),
       `docs/textarea.mdx`, `docs/number-field.mdx` and the three Tier 1 rows.
+
+`[x]` `packages/primitives`: `ScrollArea` told a caller to keep `onScrollChange`
+      "for a restored offset" while handing out no way to set one — the only
+      scrollable element was private, and only the renderer can move it (by
+      element id). `ScrollArea` now takes `viewportRef` and a composed
+      `ScrollAreaViewport` takes `ref`: both hand over the scroller itself,
+      composed with the viewport's own keyboard handle rather than replacing it,
+      so a caller restores a saved offset, returns to the top or reveals a row
+      without losing the arrow keys. Proof: `presentational.test.tsx` (the
+      implicit viewport carries the area's `viewportRef`) and
+      `runtime/layout.runtime.test.tsx` (the held element is the scrollable one,
+      a Back-to-top action on it returns the offset to 0 and `onScrollChange`
+      reports both moves, and a composed viewport's caller ref is composed with
+      the keyboard handle). Both directions measured: dropping the area's
+      forwarding fails the ref case by name, and `ref ?? instance` in place of
+      the merge leaves the key at `y: 0` where `-32` was required. Docs:
+      `docs/scroll-area.mdx` §Scroll position/§API/§Verification and the
+      README's capability table.
 
 `[x]` `packages/components`: the focus cue was missing on four focusable parts and
       painted on parts that could not act. A colour swatch, a chip's remove

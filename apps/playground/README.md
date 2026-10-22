@@ -622,17 +622,17 @@ grid's `overflowX` fails `a horizontal wheel pans the grid`
 
 ## The example gallery
 
-`packages/components/examples/index.ts` is the registry of the 39 screens the
+`packages/components/examples/index.ts` is the registry of every screen the
 component docs quote, and this app is its only consumer. Nothing proved those
 screens *mount*: a component's behaviour suite proves its parts, not a
 composition of parts with caller-owned state. `examples-mount` pages through the
-registry in sorted id order — one screen mounted at a time, because 39 screens at
-once lay out a very tall tree and leave a screen's timer or `Effect` fiber running
-behind the next one — and asserts, from the renderer:
+registry in sorted id order — one screen mounted at a time, because mounting the
+whole registry at once lays out a very tall tree and leaves a screen's timer or
+`Effect` fiber running behind the next one — and asserts, from the renderer:
 
 | Step | Check |
 | ---- | ----- |
-| each page | the readout names the next id (`example=<id> page=<n> of=39`) |
+| each page | the readout names the next id (`example=<id> page=<n> of=<registry size>`) |
 | each page | the example's wrapper paints (`bounds` is a value) and lays out a height of its own |
 | each page | the wrapper's own subtree carries text, so the screen painted content rather than merely existing |
 | after the last press | the readout reads `example=none …` — the plan ends where the registry does, and the last screen unmounts with its timers |
@@ -642,11 +642,18 @@ above it), so its text is the screen's own. That is what lets the run also asser
 that no two pages paint the same screen: a registry row pointing at a component
 another row already mounts would show the reader one example under two names.
 
-158 checks, `--only examples-mount`, green on 0.11.0. Negative controls
-measured: adding an id the registry has no entry for fails
+**four checks per page** — the readout, the wrapper's paint, its height and its
+text — plus **two checks for the run**: no two ids paint one screen, and the
+plan ends where the registry does. `--only examples-mount`, green on 0.11.0. The
+totals are a function of the other package's registry and grow by four with every
+example, so neither a screen count nor a check total is printed here — exactly as
+the gallery's own header leaves its size to `of=${Arr.length(exampleIds)}` and
+the prose to this section. Negative controls measured: adding an id the registry
+has no entry for fails
 `no-such-example lays out a height of its own` (`expected true, got false`);
 mounting every page from one component fails
-`no two examples paint the same screen` (`expected 39, got 1`) — exit `1` each.
+`no two examples paint the same screen` (it reports one painted screen against
+the registry's size) — exit `1` each.
 
 ## Search in a virtualized document
 
@@ -3530,9 +3537,10 @@ narrower. Each deviation is deliberate and measured:
   them. The full live suite is the release gate, and this line is its result.
   Measured alone since then: `inspector-lifecycle` (one probe, run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
-  pages through the components' registry (39 screens, 158 checks) and fails when
-  a page paints nothing or two ids show one screen. Its two negative controls
-  are named in §The example gallery.
+  pages through the components' registry (four checks per page plus two for the
+  run, the shape `examples.test.ts` derives from the probe's assertion sites) and
+  fails when a page paints nothing or two ids show one screen. Its two negative
+  controls are named in §The example gallery.
 - The terminal-mode probe proves the runtime paints a view into a pty:
   `terminal-render`, `terminal-resize`, `terminal-pointer` and `terminal-input`
   (4/4 on 0.11.0) decode the platform's kitty frames to an 800×640 page with
@@ -3587,8 +3595,10 @@ narrower. Each deviation is deliberate and measured:
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The README's printed totals follow the registry: `registry.test.ts` fails when
-  the scenario count or the capability list stops matching, so a new scenario
-  cannot leave the document claiming the previous run.
+  the probe count, a probe's section, the critical-interaction rows, or a partial
+  pass's reds and alone-measured probes stop matching, so a new probe cannot
+  leave the document claiming the previous run. (The capability side is the
+  bullet above: `scenarioProblems` names a capability no scenario covers.)
 - The resize arithmetic clamps inclusively (`resize.test.ts`).
 - The CLI's unsupported path returns `2` without evaluating the suite
   (`run.test.ts`).
