@@ -269,6 +269,44 @@ describe("Dialog", () => {
     dialog.unmount();
   });
 
+  it("returns focus to the opener when the surface auto-focused its own field", async () => {
+    // The regression: `autoFocus` runs during the surface's commit, before the
+    // effect that recorded the previous holder, so the restore target used to be
+    // the field itself — which unmounts with the surface, leaving the reader's
+    // focus nowhere. The holder is now captured in the opening render.
+    const AutoFocusPage = () => (
+      <div style={{ display: "flex", padding: 40 }}>
+        <Dialog>
+          <DialogTrigger testId="open">Rename</DialogTrigger>
+          <DialogContent label="Rename" testId="dialog" size="sm">
+            <DialogTitle>Rename</DialogTitle>
+            <input testId="name" autoFocus />
+            <DialogClose testId="cancel">Cancel</DialogClose>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+    const dialog = renderComponent(<AutoFocusPage />);
+
+    clickCentreOf(dialog, "open");
+    // The field wins the focus once, as its `autoFocus` asks...
+    expect(focusedTestId(dialog)).toEqual(Option.some("dialog"));
+
+    dialog.renderer.focusElement(
+      dialog.renderer.findByTestId("name")?.id ?? -1,
+    );
+    expect(focusedTestId(dialog)).toEqual(Option.some("name"));
+
+    clickCentreOf(dialog, "cancel");
+    // ...and the opener gets it back, not the field that is fading away.
+    expect(focusedTestId(dialog)).toEqual(Option.some("open"));
+    await waitFor(() =>
+      expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
+    );
+
+    dialog.unmount();
+  });
+
   it("feeds both the internal and the caller's content ref", () => {
     const ref = createRef<PublicInstance>();
     const dialog = renderComponent(

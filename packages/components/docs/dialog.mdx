@@ -105,10 +105,12 @@ actions off screen.
 
 - `role="dialog"` with the required `label` as its accessible name.
 - Focus enters the surface on open and returns to the opener on close.
-- **Focus a field with `initialFocus`, not `autoFocus`.** A field that focuses
-  itself at mount becomes the modal's restore target before the opener is
-  recorded, so the opener does not get the focus back when the surface closes.
-  `initialFocus` runs after the surface is recorded, so the return is safe.
+- **`autoFocus` inside the surface is safe.** The element that held focus is
+  captured in the render that opens the surface, before its children mount, so a
+  field that focuses itself no longer becomes the restore target; the opener gets
+  the focus back when the surface closes (guarded by
+  `src/behaviour/dialog.test.tsx`). `initialFocus` is still the explicit way to
+  choose which control lands focused.
 - **No `aria-modal` and no `aria-labelledby`.** `@gpuix/native@0.11.0` exposes
   only `aria-label`, `aria-description`, `aria-expanded`, `aria-selected`,
   `aria-valuetext` and `aria-level` on a host element (see `HostProps` in
@@ -155,7 +157,7 @@ button. Every part merges `style` last.
 
 ## Verification
 
-`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (13 tests): the
+`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (14 tests): the
 veil measured at the window bounds, a click on a control behind it blocked, focus
 entering and returning, Escape and backdrop dismissal, Tab wrapping at both ends,
 `role`/`aria-label` in the accessibility dump, both themes reading

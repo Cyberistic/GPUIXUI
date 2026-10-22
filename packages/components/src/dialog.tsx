@@ -43,6 +43,7 @@ import {
   useContext,
   useMemo,
   useState,
+  type MutableRefObject,
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
@@ -82,6 +83,7 @@ const MAX_WIDTH: Readonly<Record<DialogSize, number>> = {
 interface DialogContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
+  readonly restoreTarget: MutableRefObject<number | null>;
 }
 
 const DialogContext = createContext<DialogContextValue | undefined>(undefined);
@@ -121,7 +123,7 @@ export const Dialog = ({
   dismissible = true,
   children,
 }: DialogProps) => {
-  const { open, setOpen } = useModalState({
+  const { open, setOpen, restoreTarget } = useModalState({
     open: openProp,
     defaultOpen,
     onOpenChange,
@@ -129,8 +131,8 @@ export const Dialog = ({
   });
 
   const context = useMemo<DialogContextValue>(
-    () => ({ open, setOpen }),
-    [open, setOpen],
+    () => ({ open, setOpen, restoreTarget }),
+    [open, restoreTarget, setOpen],
   );
 
   assertParts(dialogRoot, children);
@@ -213,7 +215,7 @@ export const DialogContent = ({
   ...rest
 }: DialogContentProps) => {
   const theme = useTheme();
-  const { open, setOpen } = useDialogContext();
+  const { open, setOpen, restoreTarget } = useDialogContext();
   const renderer = useGpuix().renderer ?? undefined;
   const window = useWindowSize();
   assertParts(dialogContent, children);
@@ -228,7 +230,7 @@ export const DialogContent = ({
     ref,
   );
   const contentId = content?.id;
-  useModalFocus(contentId, initialFocus, open);
+  useModalFocus(contentId, initialFocus, open, restoreTarget);
 
   if (!presence.mounted) return null;
 

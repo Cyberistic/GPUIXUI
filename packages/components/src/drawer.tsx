@@ -32,6 +32,7 @@ import {
   useContext,
   useMemo,
   useState,
+  type MutableRefObject,
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
 import {
@@ -80,6 +81,7 @@ const HEIGHT: Readonly<Record<DrawerSize, number>> = {
 interface DrawerContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
+  readonly restoreTarget: MutableRefObject<number | null>;
 }
 
 const DrawerContext = createContext<DrawerContextValue | undefined>(undefined);
@@ -112,7 +114,7 @@ export const Drawer = ({
   dismissible = true,
   children,
 }: DrawerProps) => {
-  const { open, setOpen } = useModalState({
+  const { open, setOpen, restoreTarget } = useModalState({
     open: openProp,
     defaultOpen,
     onOpenChange,
@@ -120,8 +122,8 @@ export const Drawer = ({
   });
 
   const context = useMemo<DrawerContextValue>(
-    () => ({ open, setOpen }),
-    [open, setOpen],
+    () => ({ open, setOpen, restoreTarget }),
+    [open, restoreTarget, setOpen],
   );
 
   assertParts(drawerRoot, children);
@@ -225,7 +227,7 @@ export const DrawerContent = ({
   ...rest
 }: DrawerContentProps) => {
   const theme = useTheme();
-  const { open, setOpen } = useDrawerContext();
+  const { open, setOpen, restoreTarget } = useDrawerContext();
   const renderer = useGpuix().renderer ?? undefined;
   const window = useWindowSize();
   assertParts(drawerContent, children);
@@ -241,7 +243,7 @@ export const DrawerContent = ({
   );
 
   const contentId = content?.id;
-  useModalFocus(contentId, initialFocus, open);
+  useModalFocus(contentId, initialFocus, open, restoreTarget);
 
   if (!presence.mounted) return null;
 
