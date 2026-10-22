@@ -702,18 +702,20 @@ the action's own pixels:
 | Sample | Pointer focus on the fourth action | After Tab returns the focus to it |
 | ------ | ---------------------------------- | --------------------------------- |
 | filled `secondary` | 66 008 exact-fill pixels | **66 008** — every pixel kept |
-| `ghost` (label tinted `success` by the caller) | 611 label pixels | **0** — dimmed away |
+| `ghost` (label tinted `success`, sized 28px, by the caller) | 3 218 label pixels | **0** — dimmed away |
 | `destructive` forced into the cue | 65 483 | **0** — the dim composites the fill |
 
 So the components' declaration is a painted fact: a filled action opts out
 (`keyboardFocusDim: false` from `paintsFilledSurface`) and a ghost keeps the
 where-can-Tab-go cue, while a caller's `style` merges last and can put the dim
-back. The ghost's label is tinted from the caller because it paints no fill, and
-the label is the only pixel the mechanism can change.
+back. The ghost's label is tinted and sized from the caller because it paints no
+fill, the label is the only pixel the mechanism can change, and 28px keeps
+enough exact-coloured glyph interiors for the count to read on a non-retina
+display.
 
 **A text field is not a dim target.** The first version of this probe tabbed into
-a shipped `Input` and measured no dim at all — the ghost's 611 label pixels
-survived every Tab. That is the runtime, not the probe: `renderer.rs`'s
+a shipped `Input` and measured no dim at all — the ghost's label pixels survived
+every Tab. That is the runtime, not the probe: `renderer.rs`'s
 `keyboard_focus_path` returns no path when the focused element is an
 `input`/`textarea`, "text fields do not count: typing is keyboard input too, and
 dimming the window while someone types is noise". The focus target is therefore a
@@ -723,7 +725,7 @@ dims" claim quietly assumes; the token pages do not say it yet (`TODO.md`).
 Negative controls, measured: forcing the filled action into the cue fails
 `a filled action keeps every pixel of its fill — expected 66008, got 0`; giving
 the ghost `keyboardFocusDim: false` fails `a ghost action's label is dimmed
-away — expected 0, got 611` (exit `1` each). Restored, 12 checks green.
+away — expected 0, got 3218` (exit `1` each). Restored, 12 checks green.
 Captures: `.artifacts/live/pointer.png`, `.artifacts/live/keyboard.png`.
 
 ### `floating-sides` — measured on 0.11.0 here

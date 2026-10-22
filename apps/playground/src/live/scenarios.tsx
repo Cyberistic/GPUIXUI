@@ -279,8 +279,10 @@ const FocusDimProbe = (): ReactNode => {
  * colour nothing else in the view paints: the filled action keeps every pixel of
  * its fill, the action a caller forces back into the cue loses all of them, and
  * the ghost action's label — a role no other element uses — is dimmed away. The
- * ghost's label takes its colour from the caller `style`, because a ghost paints
- * no fill and the label is the only pixel the mechanism can change.
+ * ghost's label takes its colour and a 28px size from the caller `style`,
+ * because a ghost paints no fill and the label is the only pixel the mechanism
+ * can change; the size keeps enough exact-coloured glyph interiors for the count
+ * to read on a non-retina display.
  *
  * A text field is **not** the focus target: the runtime skips the dim entirely
  * while an `<input>`/`<textarea>` holds the focus ("typing is keyboard input too,
@@ -309,7 +311,7 @@ const FilledActionDimProbe = (): ReactNode => {
         <Button
           testId="dim-ghost"
           variant="ghost"
-          style={{ color: theme.colors.success }}
+          style={{ color: theme.colors.success, fontSize: 28 }}
         >
           Ghost action
         </Button>
