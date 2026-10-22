@@ -63,6 +63,7 @@ export {
   decideRating,
   pointerRating,
   ratingTabStop,
+  starCount,
   starFill,
   starState,
 } from "./rating.js";

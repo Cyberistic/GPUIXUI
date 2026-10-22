@@ -533,3 +533,24 @@ it("steps a half score by half and lands Home on the half star", async () => {
   expect(checkedStars(runtime)[0]).toBe("half");
   expect(checkedStars(runtime)[1]).toBe("unchecked");
 });
+
+it("paints one star for a count a window cannot lay out", async () => {
+  // The bug guarded: `max` is caller arithmetic, and an infinite count reached
+  // `Arr.range(1, max)`, whose `new Array(Infinity)` throws
+  // `RangeError: Invalid array length` — before this case existed, mounting the
+  // shipped component with that count took the render down.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating label="Loose" max={Number.POSITIVE_INFINITY} />
+      <Rating label="Unknown" max={Number.NaN} />
+    </Surface>,
+  );
+  expect(byLabel(runtime, "1 of 1")).toBeDefined();
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), { role: "RadioButton", label: "2 of 2" }),
+    ),
+  ).toBe(false);
+  expect(announced(runtime, "1 of 1")).toBe("unchecked");
+});

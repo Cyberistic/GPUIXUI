@@ -43,6 +43,7 @@ import {
   decideRating,
   pointerRating,
   ratingTabStop,
+  starCount,
   starFill,
   starState,
   type StarBox,
@@ -81,7 +82,11 @@ export interface RatingProps
   /** Controlled rating, `0..max` (0 is unrated). */
   readonly value?: number;
   readonly defaultValue?: number;
-  /** Defaults to 5. */
+  /**
+   * How many stars to paint; defaults to five. A count that cannot be laid out
+   * — `NaN`, an infinity, zero or a negative number — paints one star, the same
+   * answer the value clamp, the keys and the tab stop read (`starCount`).
+   */
   readonly max?: number;
   /**
    * Score in halves as well as whole stars. The left half of a star is the
@@ -154,9 +159,17 @@ export interface RatingHandlers {
   readonly scoreAt?: (index: number, event: EventPayload) => number;
 }
 
-/** A usable star count: at least one, whole. */
+/**
+ * A usable star count for the paint.
+ *
+ * `max` is caller arithmetic (a measured total, a stored preference), so it
+ * goes through the same rule the value, the keys and the tab stop read
+ * (`starCount`): a count that cannot be laid out is one star rather than an
+ * `Arr.range` bound — `new Array(Infinity)` throws. No `max` is the documented
+ * five.
+ */
 export const ratingMax = (max: number | undefined): number =>
-  Math.max(1, Math.trunc(max ?? 5));
+  max === undefined ? 5 : starCount(max);
 
 /** A pointer that is nowhere: the idle state a render helper starts from. */
 const NO_POINTER: RatingHover = {

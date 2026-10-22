@@ -15,9 +15,25 @@ import {
   decideRating,
   pointerRating,
   ratingTabStop,
+  starCount,
   starFill,
   starState,
 } from "./rating.js";
+
+describe("starCount", () => {
+  it("reads a count it cannot lay out as one star", () => {
+    // The bug guarded: `Infinity` reached `Arr.range(1, max)` in the paint,
+    // whose `new Array(Infinity)` throws `RangeError: Invalid array length`
+    // and takes the render with it.
+    expect(starCount(Number.POSITIVE_INFINITY)).toBe(1);
+    expect(starCount(Number.NEGATIVE_INFINITY)).toBe(1);
+    expect(starCount(Number.NaN)).toBe(1);
+    expect(starCount(0)).toBe(1);
+    expect(starCount(-4)).toBe(1);
+    expect(starCount(3.7)).toBe(3);
+    expect(starCount(5)).toBe(5);
+  });
+});
 
 describe("clampRating", () => {
   it("keeps a rating inside 0..max and drops fractions", () => {

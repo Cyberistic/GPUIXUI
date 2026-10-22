@@ -78,6 +78,23 @@ describe("Rating", () => {
     ]);
   });
 
+  it("paints one star for a count it cannot lay out, instead of throwing", () => {
+    // The bug guarded: `max` is caller arithmetic (a measured total, a config
+    // value), and a non-finite count reached `Arr.range(1, max)`, whose
+    // `new Array(Infinity)` throws `RangeError: Invalid array length` — the
+    // whole render died — while `NaN` painted one star but named it "1 of NaN",
+    // a count no reader can use. One star is the count the value, the keys and
+    // the tab stop already read for it (`core/rating.ts`'s `starCount`).
+    const infinite = render(
+      { label: "Quality", max: Number.POSITIVE_INFINITY },
+      0,
+    );
+    expect(starsOf(infinite).map(labelOf)).toStrictEqual(["1 of 1"]);
+    const unreadable = render({ label: "Quality", max: Number.NaN }, 0);
+    expect(starsOf(unreadable).map(labelOf)).toStrictEqual(["1 of 1"]);
+    expect(starsOf(render({ label: "Quality" }, 0))).toHaveLength(5);
+  });
+
   it("marks the stars up to the value as checked", () => {
     const element = render({}, 3);
     const values = starsOf(element).map((star) =>

@@ -22,8 +22,16 @@ export interface StarBox {
   readonly width: number;
 }
 
-/** A usable star count: a whole number, at least one. */
-const limitOf = (max: number): number =>
+/**
+ * A usable star count: a whole number, at least one.
+ *
+ * `max` is caller arithmetic — a measured total, a stored preference — so it
+ * arrives as one number and has to become an array length. A count that cannot
+ * be laid out reads as one star, the same answer the value clamp, the key
+ * contract and the tab stop already give it; an infinite count would otherwise
+ * reach `new Array(Infinity)` and throw `RangeError: Invalid array length`.
+ */
+export const starCount = (max: number): number =>
   Math.max(1, Math.trunc(Number.isFinite(max) ? max : 1));
 
 /**
@@ -43,7 +51,7 @@ export const clampRating = (
   half = false,
 ): number => {
   if (!Number.isFinite(value)) return 0;
-  return Math.min(limitOf(max), Math.max(0, snapRating(value, half)));
+  return Math.min(starCount(max), Math.max(0, snapRating(value, half)));
 };
 
 /** How much of one star is filled: `0`, `1`, or the half between them. */
@@ -80,7 +88,7 @@ export const decideRating = (
   key: string,
   half = false,
 ): Option.Option<number> => {
-  const limit = limitOf(max);
+  const limit = starCount(max);
   const place = half ? 0.5 : 1;
   if (key === "home") return Option.some(place);
   if (key === "end") return Option.some(limit);
@@ -109,7 +117,7 @@ export const ratingTabStop = (
   half = false,
 ): number => {
   const current = clampRating(value, max, half);
-  return current === 0 ? 1 : Math.min(limitOf(max), Math.ceil(current));
+  return current === 0 ? 1 : Math.min(starCount(max), Math.ceil(current));
 };
 
 /**

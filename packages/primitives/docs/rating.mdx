@@ -49,7 +49,7 @@ key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 | `defaultValue` | `number` | `0` | uncontrolled start |
 | `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange`; the new name runs when both are passed |
 | `onValueChange` | `(value: number) => void` | — | the new rating; `0` means cleared |
-| `max` | `number` | `5` | how many stars to paint |
+| `max` | `number` | `5` | how many stars to paint; a count that cannot be laid out (`NaN`, an infinity, zero or a negative number) paints one star |
 | `allowHalf` | `boolean` | `false` | score in halves: a press on a star's left half, half steps, a half star painted |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | star size from `iconSize` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, inert |
@@ -66,6 +66,13 @@ key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 Values are snapped to the precision the rating scores at — whole stars, or the
 nearest half with `allowHalf` — and clamped to `0..max`; a value that is not a
 number reads as unrated.
+
+`max` is caller arithmetic — a measured total, a stored preference — so it goes
+through one rule before it becomes stars: a count that cannot be laid out reads
+as **one star** (`starCount`, also exported from `@gpuixui/primitives/core`).
+That is the same count the value clamp, the key contract and the tab stop read,
+and an infinite count would otherwise reach the array the paint is built from and
+throw `RangeError: Invalid array length` instead of painting anything.
 
 Your host handlers are composed with the rating's, never substituted: the press
 and focus arrive from the star they landed on, the keys from the group root. A
@@ -175,12 +182,14 @@ recipe also sets.
 
 - `src/core/rating.test.ts` — clamping (not wrapping), Home/End, Delete/Backspace,
   an arrow never clearing a rated value, the tab-stop choice, a zero or
-  fractional `max`, and the half precision: what a score snaps to, which part of
-  a star is filled, the announced state, the half step, Home's half star, the
-  half score's tab stop, and the score a press position aims at.
+  fractional `max`, `starCount` reading an unusable count as one star, and the
+  half precision: what a score snaps to, which part of a star is filled, the
+  announced state, the half step, Home's half star, the half score's tab stop,
+  and the score a press position aims at.
 - `src/components/Rating.test.tsx` — group and star labels, checked states, the
   single tab stop, filled vs outline icons, the destructive paint and muted
-  empty stars while invalid, keys, click, disabled/readOnly, ring, a `style`
+  empty stars while invalid, one star painted for an `Infinity` or `NaN` count
+  instead of a `RangeError`, keys, click, disabled/readOnly, ring, a `style`
   callback receiving the live state and winning, the pointer preview (filled
   stars ahead of the value, the value still announced, disabled and read-only
   ignoring it), the half star's clipped cell (its width, overflow, pointer
@@ -207,7 +216,9 @@ recipe also sets.
   stars paint `colors.primary` (destructive while invalid, with the empty stars
   still muted); Tab enters on the rating and the next Tab leaves the group;
   disabled refuses input; and every star's painted box is at least the 24px
-  pressable floor (measured at `sm`, the smallest glyph).
+  pressable floor (measured at `sm`, the smallest glyph); a group given an
+  infinite or `NaN` count mounts and paints one star, where the old expression
+  threw `RangeError: Invalid array length` before the first paint.
 
 ```sh
 nub run --filter @gpuixui/primitives test
