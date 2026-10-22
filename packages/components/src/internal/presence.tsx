@@ -97,6 +97,17 @@ export const useSurfaceTiming = (level: MotionLevel): SurfaceTiming => {
 };
 
 /**
+ * The mount window a leaving surface occupies, in whole milliseconds.
+ *
+ * `motionTiming` names a duration in seconds because the runtime reads seconds;
+ * the seam and the toast stack both keep a leaving box painted for exactly that
+ * long, so the conversion lives in one place and a preference change rescales
+ * both.
+ */
+export const exitWindowMs = (timing: SurfaceTiming): number =>
+  Math.round((timing.exit.duration ?? 0) * 1000);
+
+/**
  * A fade that travels `offset` pixels along one axis.
  *
  * A positive `top` starts the surface low and rises it into place; a negative
@@ -190,7 +201,7 @@ export const useSurfacePresence = (
 
   useEffect(() => {
     if (open || !mounted) return;
-    const ms = Math.round((timing.exit.duration ?? 0) * 1000);
+    const ms = exitWindowMs(timing);
     if (ms === 0) {
       setMounted(false);
       return;

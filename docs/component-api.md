@@ -421,7 +421,10 @@ translates beyond an inset offset (upstream issue #102, plan `600` §3). shadcn'
 `zoom-in-95` stays unsupported rather than being faked.
 
 **Presence is a duration.** A closed surface stays mounted for its exit tween and
-unmounts when that duration has elapsed (`useSurfacePresence`). `AnimatePresence`
+unmounts when that duration has elapsed (`useSurfacePresence`, and the toast
+stack's per-card removal on the same `exitWindowMs`). A preference change
+rescales that window, so a card or a panel already leaving under `"animated"`
+is gone at once when the reader turns reduced motion on. `AnimatePresence`
 reports an exit only through `onMotionComplete` on a `motion.div`, and the
 popover, menu and preview-card surfaces are hosted by `FloatingLayer`'s own
 element, so one mechanism covers every surface. A leaving surface paints in the
@@ -471,8 +474,9 @@ the first frame`).
 the movement and the mount window in the real renderer: bounds move by the
 surface's offset, the exit keeps the box painted and then removes it, the
 reduced preference paints the resting frame with no travel (including a setting
-turned on mid-entry), the accordion grows from zero to its measured height, and
-the tab pill lands exactly on the next trigger's box. A press through a leaving
+turned on mid-entry, and a dismissed notice removed at once), the accordion
+grows from zero to its measured height, and the tab pill lands exactly on the
+next trigger's box. A press through a leaving
 box is measured on the context menu and on a dismissed modal's veil.
 `src/presence-contract.test.ts` holds every
 floating host in the package to the two rules that make it possible — a host

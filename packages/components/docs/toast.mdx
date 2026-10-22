@@ -154,7 +154,9 @@ palette Alert and Badge use). Width is 380px.
 - **A card slides in from the right edge** (16px + fade, `notice` 500 ms) and
   stays painted for that tween after it leaves the store, then unmounts. The
   leave is timed by the same duration, not by the runtime's clock, so a frozen
-  motion clock cannot strand a card. `MotionProvider` supplies the
+  motion clock cannot strand a card. The scheduled window is rescaled when the
+  preference changes, so turning reduced motion on while a card leaves removes
+  it at once instead of finishing the journey. `MotionProvider` supplies the
   reduced-motion preference (`docs/component-api.md` §11).
 - Not portalled: the viewport is an absolutely positioned element in its parent,
   so put it at the app root.

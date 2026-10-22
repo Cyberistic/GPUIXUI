@@ -670,6 +670,28 @@ const heightOf = (
   return bounds.height;
 };
 
+/** A toast stack whose motion preference the test can change mid-flight. */
+const PreferenceToast = ({ reduced }: { readonly reduced: boolean }) => (
+  <ToastProvider>
+    <Page reducedMotion={reduced}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <ToastPusher />
+        <ToastViewport />
+      </div>
+    </Page>
+  </ToastProvider>
+);
+
+/** Pushes one toast; it sits under the provider so it can reach the store. */
+const ToastPusher = () => {
+  const toast = useToast();
+  return (
+    <Button testId="push-notice" onClick={() => toast.push({ title: "Saved" })}>
+      Push
+    </Button>
+  );
+};
+
 describe("the preference", () => {
   it("settles a surface that is still moving when the setting turns on", async () => {
     // The reader turns Reduce Motion on mid-entry. The seam reads the preference
@@ -693,8 +715,7 @@ describe("the preference", () => {
     page.unmount();
   });
 
-  it("paints a section at its measured height on the first frame", async () => {
-    // The reveal's target is a measurement that arrives after a paint, so under
+  it("paints a section at its measured height on the first frame", async () => {    // The reveal's target is a measurement that arrives after a paint, so under
     // the reduced preference the section must already be at its full height in
     // the frame it opens rather than growing from zero.
     const page = renderComponent(
@@ -720,6 +741,32 @@ describe("the preference", () => {
     await delay();
     expect(first).toBeGreaterThan(0);
     expect(heightOf(page.renderer, "body")).toBe(first);
+    page.unmount();
+  });
+
+  it("removes a dismissed notice at once when the setting turns on", async () => {
+    // A dismissed card is kept painted for its `notice` window (500 ms) so its
+    // exit can run. A reader who turns Reduce Motion on while it leaves asked
+    // not to watch that journey: the stack rescales the window it already
+    // scheduled instead of finishing it.
+    const page = renderComponent(<PreferenceToast reduced={false} />);
+    page.renderer.clockPause();
+    clickCentreOf(page, "push-notice");
+    await waitFor(() => expect(painted(page.renderer, "toast-1")).toBe(true));
+    // Let the card land, so its dismiss control is where the pointer is.
+    page.renderer.clockFastForward(700);
+    settle(page);
+    await delay();
+
+    clickCentreOf(page, "toast-dismiss");
+    await delay();
+    expect(painted(page.renderer, "toast-1")).toBe(true);
+
+    page.rerender(<PreferenceToast reduced />);
+    await delay();
+    await delay();
+    // Well inside the 500 ms the animated window would still be running.
+    expect(painted(page.renderer, "toast-1")).toBe(false);
     page.unmount();
   });
 });

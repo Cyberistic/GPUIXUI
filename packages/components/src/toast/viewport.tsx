@@ -24,6 +24,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Button, IconButton } from "../internal/button.js";
 import { overlaySurfaceStyle } from "../internal/overlay.js";
 import {
+  exitWindowMs,
   fadeFromSide,
   presenceMotion,
   useSurfaceTiming,
@@ -60,6 +61,12 @@ interface StackEntry {
   readonly present: boolean;
 }
 
+/** A scheduled removal of a leaving card, and the window it was scheduled for. */
+interface ExitTimer {
+  readonly handle: ReturnType<typeof setTimeout>;
+  readonly ms: number;
+}
+
 /**
  * The stack with the cards that have just left it, kept for their exit tween.
  *
@@ -67,8 +74,9 @@ interface StackEntry {
  * `Clock` time, not animation frames — so the viewport is what remembers the
  * card long enough to run its exit. The entry list keeps its order: a card
  * leaving does not reorder the stack under the reader. A leave is timed by the
- * seam's exit duration, not by the runtime's clock, so a frozen motion clock
- * cannot strand a card on screen.
+ * seam's exit window, not by the runtime's clock, so a frozen motion clock
+ * cannot strand a card on screen; a preference change rescales a leave already
+ * in progress, so turning reduced motion on removes the card at once.
  */
 const useToastStack = (
   toasts: ReadonlyArray<Toast>,
@@ -78,7 +86,7 @@ const useToastStack = (
     Arr.map(toasts, (toast) => ({ toast, present: true })),
   );
   const painted = useRef(entries);
-  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const timers = useRef(new Map<string, ExitTimer>());
 
   useLayoutEffect(() => {
     painted.current = entries;
@@ -103,25 +111,31 @@ const useToastStack = (
       (toast): StackEntry => ({ toast, present: true }),
     );
     const merged = [...kept, ...appended];
-    const ms = Math.round((timing.exit.duration ?? 0) * 1000);
+    const ms = exitWindowMs(timing);
     setEntries(merged);
     Arr.forEach(merged, (entry) => {
-      if (entry.present || timers.current.has(entry.toast.id)) return;
-      timers.current.set(
-        entry.toast.id,
-        setTimeout(() => {
-          timers.current.delete(entry.toast.id);
+      if (entry.present) return;
+      const id = entry.toast.id;
+      const running = timers.current.get(id);
+      // Re-running for a new toast must not restart a leave already timed, but
+      // a new window (the preference changed) must replace the old one.
+      if (running !== undefined && running.ms === ms) return;
+      if (running !== undefined) clearTimeout(running.handle);
+      timers.current.set(id, {
+        ms,
+        handle: setTimeout(() => {
+          timers.current.delete(id);
           setEntries((list) =>
-            Arr.filter(list, (item) => item.toast.id !== entry.toast.id),
+            Arr.filter(list, (item) => item.toast.id !== id),
           );
         }, ms),
-      );
+      });
     });
   }, [timing.exit.duration, toasts]);
 
   useLayoutEffect(
     () => () => {
-      timers.current.forEach((handle) => clearTimeout(handle));
+      timers.current.forEach((timer) => clearTimeout(timer.handle));
       timers.current.clear();
     },
     [],
