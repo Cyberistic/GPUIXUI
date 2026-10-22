@@ -74,7 +74,9 @@ describe("the confirmation flow the probe records", () => {
     expect(shipped).toContain(`testId="${CONFIRM_ACCEPT}"`);
     // Cancel is the surface's initial focus: `Enter` on an untouched dialog
     // must take the safe path.
-    expect(shipped).toContain("initialFocus={() => cancel.current?.id ?? null}");
+    expect(shipped).toContain(
+      "initialFocus={() => cancel.current?.id ?? null}",
+    );
     // Confirm only reports: a dialog that closed itself would lose a failed save.
     expect(shipped).toContain("onClick={onConfirm}");
   });
