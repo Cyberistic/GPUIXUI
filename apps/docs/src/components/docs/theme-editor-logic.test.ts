@@ -102,8 +102,11 @@ describe("theme-editor persistence boundary", () => {
     expect(parseState(null)).toBeUndefined();
     expect(parseState({ light: { colors: {} } })).toBeUndefined();
 
+    // A five-digit hex is unpaintable under every grammar the package has
+    // accepted. A CSS name may be paintable, because the boundary follows
+    // `isPaintableColor` rather than carrying a 6/8-digit regex of its own.
     const badHex: EditorState = {
-      light: { colors: { primary: "red" } },
+      light: { colors: { primary: "#12345" } },
       dark: { colors: {} },
     };
     expect(parseState(badHex)).toBeUndefined();

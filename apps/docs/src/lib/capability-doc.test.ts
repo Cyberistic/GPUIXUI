@@ -135,7 +135,10 @@ const citedProbes = (): ReadonlyArray<string> => {
       .flatMap((cell) => [...cell.matchAll(/\(`([a-z][a-z0-9-]*)`\)/g)])
       .map((match) => match[1] ?? "");
   return Array.from(
-    new Set([...ids("## Measured in a window"), ...ids("## Measured offscreen")]),
+    new Set([
+      ...ids("## Measured in a window"),
+      ...ids("## Measured offscreen"),
+    ]),
   );
 };
 
@@ -150,7 +153,6 @@ const registeredProbes = (): ReadonlySet<string> => {
     ...ids("apps/playground/src/live/registry.ts"),
   ]);
 };
-
 
 /** The typings-gap row whose label starts with `label`, or `undefined`. */
 const typingsRow = (label: string) =>
@@ -523,7 +525,10 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(dock?.workaround).toContain("idempotent");
 
     const page = measuredRow("Dock reflow");
-    expect(page, "the page's measured table has no dock-reflow row").toBeDefined();
+    expect(
+      page,
+      "the page's measured table has no dock-reflow row",
+    ).toBeDefined();
     expect(page?.[1]).toContain("dock-reflow");
     expect(page?.[1]).toContain("w=340");
     expect(page?.[1]).toContain("w=240");
@@ -803,8 +808,59 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(unverified.join(" ")).toContain("Reduced-motion");
   });
 
+  it("records the cross-pane drag the runtime's event protocol shapes", () => {
+    // A drag-and-drop component (and a detachable tab) asks whether a drag can
+    // cross two panes. `drag-between-panes` measured that it can — but the whole
+    // gesture arrives before React commits the render the press scheduled, so the
+    // obvious `dragging` state gate never fires, and the item that listens to
+    // `onMouseDown` alone captures nothing. Both facts decide the implementation,
+    // and neither is in the typings.
+    const drag = rowFor("Cross-pane drag");
+    expect(drag?.verdict).toBe("supported, with limits");
+    expect(drag?.evidence).toContain("drag-between-panes");
+    expect(drag?.evidence).toContain("drops=1");
+    expect(drag?.evidence).toContain("pointer-capture");
+    expect(drag?.workaround).toContain("ref");
+    expect(drag?.workaround).toContain("onMouseMove");
+
+    const page = measuredRow("Cross-pane drag");
+    expect(
+      page,
+      "the page's measured table has no cross-pane-drag row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("drag-between-panes");
+    expect(page?.[1]).toContain("state");
+    expect(page?.[2]).toContain("ref");
+  });
+
+  it("records the keyboard focus dim and the field it never dims", () => {
+    // The dim is a paint mechanism every component shares, and the catalogue's
+    // "every other focusable dims" claim quietly assumed it applies while a
+    // field is focused. `filled-action-dim` measured the opposite: a focused
+    // `input`/`textarea` casts no dim, so a filled action beside a form needs no
+    // opt-out — while a ghost's label does disappear, and a faded filled label
+    // can measure 1.27:1. A page or a plan reading only the token would get both
+    // wrong.
+    const dim = rowFor("Keyboard focus dim");
+    expect(dim?.verdict).toBe("supported, with limits");
+    expect(dim?.evidence).toContain("keyboard-focus-dim");
+    expect(dim?.evidence).toContain("filled-action-dim");
+    expect(dim?.evidence).toContain("input");
+    expect(dim?.evidence).toContain("1.27:1");
+    expect(dim?.workaround).toContain("keyboardFocusDim: false");
+
+    const page = measuredRow("Keyboard focus dim");
+    expect(
+      page,
+      "the page's measured table has no keyboard-focus-dim row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("keyboard-focus-dim");
+    expect(page?.[1]).toContain("filled-action-dim");
+    expect(page?.[1]).toContain("input");
+    expect(page?.[2]).toContain("keyboardFocusDim: false");
+  });
+
   it("publishes the measured gaps on /docs/runtime", () => {
-    expect(runtimePage).toContain("## Measured in a window");
     expect(runtimePage).toContain("data-grid-fixed-header");
     expect(runtimePage).toContain("editor-surface");
     expect(runtimePage).toContain("tooltip-lifecycle");
