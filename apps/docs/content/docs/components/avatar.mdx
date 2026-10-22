@@ -1,0 +1,186 @@
+---
+title: Avatar
+description: A person or team, as a picture with an initials fallback — one accessible node, and a presence dot that is announced rather than colour-only.
+---
+
+`Avatar` identifies a person, team or service: a round picture, or the initials
+derived from the name when there is no picture, with an optional presence dot on
+the rim. The fallback is deterministic, so an avatar never shifts its layout
+between the initials and the image, and the whole chip is one accessible node.
+
+<ComponentPreview name="avatar-workflow" />
+
+The preview draws the shapes with the theme bridge; the shipped component is a
+GPUix host tree, and its Code tab is the real usage. The team panel around the
+faces — the roster, its online filter and the invite — is **app composition**:
+the component draws one avatar and owns none of it.
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Avatar" />
+
+<ComponentSource name="avatar" file="packages/components/src/avatar.tsx" />
+
+## Usage
+
+```tsx
+import { Avatar } from "@gpuixui/components/avatar";
+
+<Avatar name="Ada Lovelace" src="/photos/ada.png" size="md" status="online" />;
+
+// Without a picture the initials are derived from the name.
+<Avatar name="Jean-Luc Picard" />;
+```
+
+`name` is both the accessible label and the source of the fallback, so it is
+required even when `src` is given. An avatar is not interactive: it takes no tab
+stop and no press contract.
+
+## Initials
+
+The fallback is a pure function over the name
+(`packages/components/src/avatar/logic.ts`). Whitespace and `-` both separate
+parts; the first and **last** parts contribute a letter; the letters are code
+points rather than code units, so an emoji or a non-Latin name stays whole; and
+a name with no letter at all paints a visible placeholder instead of an empty
+disc:
+
+| Name | Initials | Rule |
+| ---- | -------- | ---- |
+| `Ada Lovelace` | `AL` | first letter of the first and last part |
+| `Jean-Luc Picard` | `JP` | whitespace and `-` both separate parts |
+| `J. Robert Oppenheimer` | `JO` | the last part, not the second |
+| `ada` | `A` | one part, one letter |
+| `李 小龙` | `李小` | code points, not code units |
+| `🎨 Artist` | `🎨A` | an astral character stays whole |
+| `  ` | `?` | no letter at all gives a visible placeholder |
+| `Grace Brewster Murray Hopper` | `GH` | a middle name changes nothing |
+| `  Ada   Lovelace  ` | `AL` | surrounding and repeated space trims away |
+| `-` | `?` | a separator alone is still no letter |
+| `🎨🎨 Ada` | `🎨A` | two astral parts, first and last |
+
+## Sizes and presence
+
+<ComponentPreview name="avatar-states" />
+
+| `size` | Diameter | Initials |
+| ------ | -------- | -------- |
+| `xs` | 20px | 8px |
+| `sm` | 26px | 10px |
+| `md` (default) | 32px | 13px |
+| `lg` | 40px | 16px |
+
+The diameters are the token scale `avatarSize`, fixed rather than a theme group:
+a diameter is content-sized like an image, so a brand restyles the colours around
+the chip and not the chip itself. The initials paint at 40% of the diameter
+(`Math.round(diameter * 0.4)`), which keeps the letter proportional at every size
+rather than stepping it through the type roles.
+
+| `status` | Dot fill | Word |
+| -------- | -------- | ---- |
+| `online` | `success` | Online |
+| `away` | the `warning` tone's readable role (`warningSoftForeground`) | Away |
+| `busy` | `destructive` | Busy |
+| `offline` | `mutedForeground` | Offline |
+| omitted | no dot | No presence shown |
+
+The dot is a **mark**, not text, so it paints a role the token contract measures
+at the mark floor. `warning`'s solid fill carries near-black text and is too
+close to a light card to be a 10px dot, so `away` paints the tone's readable
+role instead. A dot is colour-only information, so a sighted reader needs the
+word beside the face where the difference matters — the preview prints one.
+
+## Composition
+
+`Avatar` is one part: there is no `AvatarImage`/`AvatarFallback` pair to place,
+because the component decides between the picture and the initials itself.
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Avatar` | the disc, the fallback or picture, the name and the presence description |
+
+For a group, compose [`AvatarGroup`](/docs/components/avatar-group): it lays the
+same discs in a facepile whose width is arithmetic over the diameter and a 25%
+overlap, and names the members a cap hides. Put an avatar in a list row's
+leading slot or a card header; [Badge](/docs/components/badge) is the role or
+status label beside it.
+
+The panel above is the composition worth copying: a roster keyed by name, an
+online filter over the same list, and an invite that refuses a blank or a
+duplicate name — because a face keys on its name, a second Ada would be one face
+drawn twice.
+
+## Keyboard
+
+An avatar is not focusable and handles no key. The panel's own controls are
+ordinary browser controls in the preview; a native app gives the filter and the
+invite its real controls, and the avatar stays inert beside them.
+
+## API reference
+
+`Avatar` takes the GPUix host props and merges `style` last, so a consumer can
+override any rule without forking the component.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `name` | `string` | — (required) | the accessible label **and** the initials' source |
+| `src` | `string` | — | a path, data URL or `http(s)` URL; without it the initials paint |
+| `size` | `"xs" \| "sm" \| "md" \| "lg"` | `"md"` | the diameter from `avatarSize` |
+| `status` | `"online" \| "away" \| "busy" \| "offline"` | — | paints the dot and becomes the node's description |
+| `className` | `string` | — | joined after the root recipe |
+| `style` | `StyleDesc \| (state) => StyleDesc` | — | merged last |
+
+## Theming
+
+| Painted area | Role |
+| ------------ | ---- |
+| the disc | `muted` |
+| the initials | `foreground`, at 40% of the diameter |
+| the presence dot | `success`, the `warning` tone's readable role, `destructive`, or `mutedForeground` |
+| the dot's rim | `card` at `borderWidth.strong`, so it reads on the surface the avatar sits on |
+
+The root is deliberately **not** clipped so the dot can sit on the rim; an inner
+disc clips the picture into a circle. A clipped root would cut the dot in half.
+No colour is a literal, so a platform switch or a brand theme repaints the disc,
+the ink and the dot without touching the component.
+
+## Accessibility and limitations
+
+- The root is the avatar's **one** accessible node: a `role="img"` named `name`.
+  The initials and the picture are presentational, so a reader never hears "AL"
+  as a word beside the name and a picture does not publish a second image node.
+- The presence dot is colour-only information, so `status` is also the node's
+  description. `@gpuix/native@0.11.0` has one description field per node and no
+  `aria-describedby`, so a caller's own `aria-description` replaces the presence
+  text rather than joining it.
+- **No image-loading or error state.** If `src` points at a missing file, the
+  runtime paints nothing inside the disc until the image arrives, and the
+  initials are not restored, because the runtime reports no load failure to
+  React. Pass a picture only when you can rely on it; otherwise omit `src`.
+- An avatar has no disabled, invalid or loading state — it is a picture, not a
+  control.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | the host tree and the `role`/`aria-*` props |
+| `@gpuix/react/floating` | `mergeStyles` for the caller's `style`, merged last |
+| `@gpuixui/tw` | the root, disc and fallback recipes (`AVATAR_*`) |
+| `effect` | the exhaustive match that maps a status to its dot role |
+
+## Related
+
+- [Avatar group](/docs/components/avatar-group) — the facepile and its overflow chip.
+- [Badge](/docs/components/badge) — a role or status label beside an avatar.
+- [List](/docs/components/list) — rows whose leading slot is an avatar.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `yes` runtime verdict: a picture, the initials
+fallback and a presence dot are all supported shapes. 10 native behaviour tests
+prove the single accessible node (the name on the root, the initials and picture
+presentational), the image and fallback paths, the four presence roles, the rim
+and the absence of a tab stop; `packages/components/src/avatar/logic.test.ts`
+adds 8 cases for the initials rules. The one limitation is the absent image-load
+state above.

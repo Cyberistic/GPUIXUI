@@ -5694,3 +5694,230 @@ button.gx-table-row:focus-visible {
   font-size: 12px;
   line-height: 1.7;
 }
+
+/* Avatar — the disc, its fallback, the presence dot and the roster panel. */
+
+.gx-avatar-demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--card-foreground);
+}
+
+.gx-avatar-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.gx-avatar-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.gx-avatar-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gx-avatar-name {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.gx-avatar-role,
+.gx-avatar-foot,
+.gx-avatar-readout,
+.gx-avatar-notice {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.gx-avatar-readout {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.gx-avatar-notice {
+  color: var(--foreground);
+}
+
+.gx-avatar-roster {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-avatar-roster-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  min-height: var(--row-height);
+}
+
+.gx-avatar-presence {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.gx-avatar-invite {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.gx-avatar-input {
+  flex: 1;
+  min-width: 0;
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--input);
+  color: var(--input-foreground);
+  font: inherit;
+  font-size: 13px;
+}
+
+.gx-avatar-input::placeholder {
+  color: var(--placeholder);
+}
+
+.gx-avatar-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-avatar {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.gx-avatar-disc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.gx-avatar-initials {
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.gx-avatar-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gx-avatar-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--card);
+  border-radius: 50%;
+}
+
+.gx-avatar-dot[data-status="online"] {
+  background: var(--success);
+}
+
+.gx-avatar-dot[data-status="away"] {
+  background: var(--warning-soft-foreground);
+}
+
+.gx-avatar-dot[data-status="busy"] {
+  background: var(--destructive);
+}
+
+.gx-avatar-dot[data-status="offline"] {
+  background: var(--muted-foreground);
+}
+
+.gx-avatar-run {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.gx-avatar-run-label {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gx-avatar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--spacing-lg);
+}
+
+.gx-avatar-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-avatar-state-label {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.gx-avatar-choice-button {
+  min-height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--card);
+  color: var(--card-foreground);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-avatar-choice-button[data-chosen] {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.gx-avatar-choice-button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}

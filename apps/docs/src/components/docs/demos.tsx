@@ -9,6 +9,12 @@ import {
   type ReactNode,
 } from "react";
 import {
+  AvatarStates,
+  AvatarWorkflow,
+  avatarStatesSource,
+  avatarWorkflowSource,
+} from "./avatar-demo";
+import {
   CarouselStates,
   CarouselWorkflow,
   carouselStatesSource,
@@ -2531,6 +2537,11 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: AlertComposition,
     source: alertCompositionSource,
     composition: true,
+  },
+  "avatar-states": { render: AvatarStates, source: avatarStatesSource },
+  "avatar-workflow": {
+    render: AvatarWorkflow,
+    source: avatarWorkflowSource,
   },
   "breadcrumb-states": {
     render: BreadcrumbStates,

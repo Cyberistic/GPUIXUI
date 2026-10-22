@@ -5353,9 +5353,10 @@ rebuilt the model to the surviving test's contract, fixed two assertions the
 test had wrong about the source (`avatarSize` sliced out of a file with four
 `xs` steps; `recipeStyle(cn(AVATAR_ROOT, className), theme)`), and left the tree
 consistent — `avatar-preview.test.ts` + `avatar-demo.test.tsx` are **25/25** —
-but **uncommitted and unclaimed**, so the other docs session can land or replace
-it. Everything this session committed (`/docs/motion`, the capability rows, the
-presence-seam truth pass, the docs palette) is untouched. The blocker stands:
+then the session that wrote the test finished it (the dependency row, the
+strategy's wrapped title, the README ledger) and landed the page. Everything this
+session committed (`/docs/motion`, the capability rows, the presence-seam truth
+pass, the docs palette) is untouched. The blocker stands:
 two docs sessions must not be scheduled onto `apps/docs`.
 
 `[x]` **The GPUix native runtime now loads on this machine, so the Tier 2 behaviour
@@ -6012,6 +6013,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
     dropping `scaleOf` fails the window case on the missing `tick-200`.
     `packages/data/docs/charts.mdx` §The numbers, the Charts row and the README
     state the rule. Package suite 128/128, behaviour 68/68, `check-types` clean.
+  - [x] Stop a **row claiming a state the window cannot hear** — `TableRow` wrote
+    `aria-disabled={disabled}`, and the runtime's `aria-*` set is closed: it
+    carries `aria-label`, `aria-description`, `aria-id`, `aria-expanded`,
+    `aria-selected`, `aria-valuetext` and `aria-level` and drops the rest
+    (`docs/gpuix-capabilities.md`, measured by `a11y-tree`), so a disabled row
+    read as an ordinary row while its press handler was gone — behaviour and
+    announcement disagreed and the source looked correct. The attribute is gone;
+    a disabled row is its behaviour (no press handler, no pointer wash) and the
+    reason belongs in a cell's text, stated in `TableRow`'s docs and the Tables
+    row. `src/table/aria.test.ts` (3 cases) sweeps every shipped source file for
+    an `aria-*` write outside the measured seven, holds the row's docs to the
+    fact and the consequence, and refuses a capability record that stops naming
+    the set. Directions measured: restoring the attribute fails the sweep naming
+    `table/table.tsx: aria-disabled`, and cutting the consequence from the docs
+    fails the second case by name. Package suite 131/131, behaviour 68/68,
+    `check-types` clean.
   - [x] Register the data package on the site — `@gpuixui/data` shipped its table
     and virtual-list examples with no docs surface, so three site guards failed
     and one page lied. `examples.ts` gained a **lane home**: a package with no
@@ -6192,7 +6209,58 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 188/188
+`[x]` `[██████████]` 190/190
+
+`[x]` Curate the **Avatar** page and hold its fallback, its dot roles and its one
+accessible node to the source — `/docs/components/avatar` served only the package
+page (strategy 4: no preview), so the identity chip every list row and card
+header carries had nothing a reader could press. The curated page shadows
+`packages/components/docs/avatar.mdx` and teaches what a drawing cannot show:
+the initials rule with its eleven cases (whitespace and `-` split the parts, the
+first and **last** parts contribute, code points beat code units so `🎨 Artist`
+stays whole, and a name with no letter paints `?`); the four diameters from
+`avatarSize` with the initials at 40% of it; the presence roles (`online` →
+`success`, `away` → the `warning` tone's **readable** role because the solid
+`warning` fill is too close to a light card for a 10px dot, `busy` →
+`destructive`, `offline` → `mutedForeground`); the unclipped root beside the
+clipped disc (a clipped root cuts the dot in half); `card` at
+`borderWidth.strong` as the dot's rim; and the single `role="img"` node whose
+description carries the presence, with no image-load or error state. Two browser
+previews: `avatar-workflow` (a roster panel with an online filter and an invite
+that refuses a blank or duplicate name, because a face keys on its name) and
+`avatar-states` (the four sizes, the fallback table, every presence with its
+word beside it, and a drawn portrait for the picture path, labelled as a drawing
+rather than a photo). Rules live in
+`src/components/docs/avatar-preview.ts`: `avatar-preview.test.ts` (17 cases)
+executes the component's own `initials` beside the preview's on every printed
+name, derives the diameters from `packages/tokens/src/scale.ts`, and reads
+`avatar.tsx` for the 40%, the 10px dot, the rim, the unclipped root and the
+absent error path; `avatar-demo.test.tsx` (8 cases) holds the rendered markup,
+the dot roles and the panel's gates. The page is in the sidebar (Data), the
+Components index, `/docs/theming`'s switch list, the strategy's "Curated today"
+line, `sources.ts`, the app README ledger and `package-docs.test.ts`'s curated
+set, and `component-page-truth.test.ts` holds its runtime pin, native count,
+inventory verdict and dependency rows (including the `@gpuix/react/floating`
+import its old table omitted). Directions measured: a preview that split a
+surrogate pair failed the astral case (`expected '🎨A' to have a length of 2`),
+reading the token scale unsliced returned the icon steps (`[4, 6, 8, 12]`), and
+the dependency case named the missing `@gpuix/react/floating` row.
+`nub run --filter @gpuixui/docs test` green (103 files / 1038 tests).
+
+`[x]` Restore the docs guards the **presence seam**, the **form suite** and the
+**motion timing seam** moved — three truth cases read `presenceStyle`'s two
+literal branches (`{ pointerEvents: "auto" }` / `"none"`) after the seam narrowed
+to one ternary (`pointerEvents: present ? "auto" : "none"`, with a `wrapper` mode
+that paints nothing at rest), so the drawer, context-menu and toast cases were red
+on `master`; `form.mdx` printed 9 native behaviour tests while the suite runs 10
+after the corrected-submit case (`submits a corrected value after a schema
+failure`), and the page now names that retry; and `/docs/motion`'s guard pinned
+`motionLevels[level] / 1000` while the timing module now converts through
+`levelMs(level) / 1000` (the seam that keeps an unreadable persisted level from
+reaching the runtime as `undefined / 1000`). Directions measured: the three
+presence cases failed by name on the old literals, the count case reported
+`form.mdx: says nothing, suite runs 10`, and the motion case failed on
+`motionLevels[level] / 1000`; all four are green now.
 
 `[x]` Publish the **`<img>` box** a thumbnail must reserve — the capability
 record's Image painting row taught the four sources an image can paint from and
