@@ -3853,7 +3853,10 @@ restoring a copied message list fails `expected … to contain 'derived from the
 live draft'`, and a preview that reports before a submit fails two cases by
 name. `check-types` and `build` are green; the remaining docs-suite failures at
 HEAD are other workstreams' in-flight edits (`field.mdx`'s count, two untracked
-package pages, the Select verdict and a tokens series move).
+package pages, the Select verdict and a tokens series move). Verified in the dev
+server: `/docs/components/form` answers `200` with its title, both previews (the
+workflow's action and the states' four moments), the sidebar link, and
+`/api/search?query=form` returns the page and its headings.
 `[x]` Curate the **Switch** page and hold its slide, its band and its knob guard
 to the source — `/docs/components/switch` served only the primitives package page
 (strategy 4: no preview), so the library's "takes effect now" control had nothing
