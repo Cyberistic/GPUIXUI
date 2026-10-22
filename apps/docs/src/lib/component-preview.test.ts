@@ -110,4 +110,27 @@ describe("the component previews", () => {
         .map((page) => page.slug),
     ).toEqual([]);
   });
+
+  it("says the overlay preview draws a corner the native surface does not", () => {
+    // The native dialog compiles `rounded-4xl` (a fixed 32px) and paints the
+    // theme's `elevation.lg` beside the recipe's ring, while `.gx-dialog` draws
+    // the platform radius plus 8px and one CSS shadow. Without the note, a
+    // reader switching platforms believes the native corner moved with the
+    // preview.
+    const recipes = read("packages/tw/src/recipes.ts");
+    const dialog =
+      /export const DIALOG_CONTENT =\s*\n?\s*"([^"]+)"/.exec(recipes)?.[1] ?? "";
+    expect(dialog, "the dialog recipe lost its fixed radius").toContain(
+      "rounded-4xl",
+    );
+
+    const css = read("apps/docs/src/styles/demos.css");
+    expect(css).toContain("border-radius: calc(var(--radius) + 8px)");
+
+    const strategy = read("docs/preview-strategy.md");
+    expect(strategy).toContain("calc(var(--radius) + 8px)");
+    expect(strategy).toContain("rounded-4xl");
+    expect(strategy).toContain("elevation.lg");
+    expect(strategy).toContain("differ in radius");
+  });
 });

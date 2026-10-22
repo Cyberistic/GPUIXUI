@@ -34,6 +34,15 @@ this site uses **3 for the paint and geometry, and 2 for the runtime**:
 A preview is never the authority. If a preview and the component disagree, the
 component is right and the preview is a bug.
 
+One drawing is deliberately coarser, and this file records it: an **overlay
+surface**. The native dialog, popover and menu compile a fixed recipe radius
+(`rounded-4xl`, 32px) and paint the theme's `elevation.lg` beside the recipe's
+1px `foreground` ring, while the preview's `.gx-dialog` draws
+`border-radius: calc(var(--radius) + 8px)` and a single CSS shadow. The platform
+switch therefore reshapes the preview's corner and not the native one, so the two
+agree on palette and lift and differ in radius — an approximation, not a
+measurement of the shipped surface.
+
 ### Strategy 1 is real: the GPUix web build
 
 `@gpuix/native@0.11.0` ships a second target beside the `.node` binding: a
