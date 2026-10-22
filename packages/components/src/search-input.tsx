@@ -27,7 +27,7 @@ import {
 import * as Option from "effect/Option";
 import { useCallback, useRef, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
-import { hintHost, renderHint, textHint } from "./internal/hint.js";
+import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
 import { activationHandlers, isDismiss } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
@@ -118,12 +118,11 @@ export const SearchInput = ({
     ...keepContent,
   });
   const testId = rest.testId ?? "search-input";
-  const hint = textHint(
-    theme,
-    { style: controlStyle, align: "center", disabled },
-    placeholder,
-    value,
-  );
+  const hint = fieldHint({ placeholder, disabled }, theme, value, {
+    origin: "host",
+    align: "center",
+    style: controlStyle,
+  });
 
   return (
     <div
@@ -173,7 +172,7 @@ export const SearchInput = ({
         />
         {Option.match(hint, {
           onNone: () => null,
-          onSome: (painted) => renderHint(painted, testId),
+          onSome: (painted) => renderFieldHint(painted, testId),
         })}
       </div>
       {value === "" ? null : (

@@ -83,7 +83,7 @@ describe("TagInput", () => {
     const tags = renderComponent(<Harness initial={["design", "docs"]} />);
 
     // The empty field paints its own hint, because the host's placeholder is a
-    // fixed grey no theme can reach (`internal/hint.tsx`).
+    // fixed grey no theme can reach (`@gpuixui/primitives/hint`).
     expect(tags.renderer.getAllText()).toEqual(["design", "docs", "Add a tag"]);
 
     tags.unmount();

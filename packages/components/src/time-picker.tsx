@@ -46,7 +46,7 @@ import {
   type ReactNode,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
-import { hintHost, renderHint, textHint } from "./internal/hint.js";
+import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
 import { activationHandlers } from "./internal/key.js";
 import {
   assertParts,
@@ -352,11 +352,11 @@ export const TimePickerSegment = ({
     },
     style: fieldStyle,
   };
-  const hint = textHint(
+  const hint = fieldHint(
+    { placeholder: segment === "hours" ? "HH" : "MM", disabled },
     theme,
-    { style: fieldStyle, align: "center", disabled },
-    segment === "hours" ? "HH" : "MM",
     text,
+    { origin: "host", align: "center", style: fieldStyle },
   );
 
   return (
@@ -372,7 +372,7 @@ export const TimePickerSegment = ({
       />
       {Option.match(hint, {
         onNone: () => null,
-        onSome: (painted) => renderHint(painted, `${testId}-${segment}`),
+        onSome: (painted) => renderFieldHint(painted, `${testId}-${segment}`),
       })}
     </div>
   );

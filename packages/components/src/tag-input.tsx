@@ -30,7 +30,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { createContext, useContext, useState } from "react";
-import { hintHost, renderHint, textHint } from "./internal/hint.js";
+import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
 import { activationHandlers, isEnter } from "./internal/key.js";
 import {
   assertParts,
@@ -203,12 +203,11 @@ export const TagInputField = ({
     }),
     resolveStyle(style, { disabled }),
   );
-  const hint = textHint(
-    theme,
-    { style: fieldStyle, align: "center", disabled },
-    placeholder,
-    draft,
-  );
+  const hint = fieldHint({ placeholder, disabled }, theme, draft, {
+    origin: "host",
+    align: "center",
+    style: fieldStyle,
+  });
 
   return (
     <div style={hintHost({ flexGrow: 1 })}>
@@ -234,7 +233,7 @@ export const TagInputField = ({
       />
       {Option.match(hint, {
         onNone: () => null,
-        onSome: (painted) => renderHint(painted, rest.testId),
+        onSome: (painted) => renderFieldHint(painted, rest.testId),
       })}
     </div>
   );

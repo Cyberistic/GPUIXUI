@@ -72,7 +72,7 @@ import {
   type ComboboxOption,
 } from "./combobox/logic.js";
 import { useControllableState } from "./internal/controllable.js";
-import { hintHost, renderHint, textHint } from "./internal/hint.js";
+import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
 import { isDismiss } from "./internal/key.js";
@@ -515,12 +515,11 @@ export const ComboboxInput = ({
     ...controlRing(theme),
     ...keepContent,
   });
-  const hint = textHint(
-    theme,
-    { style: fieldStyle, align: "center" },
-    placeholder,
-    query,
-  );
+  const hint = fieldHint({ placeholder }, theme, query, {
+    origin: "host",
+    align: "center",
+    style: fieldStyle,
+  });
 
   return (
     <div style={hintHost({ width: "100%" })}>
@@ -537,7 +536,7 @@ export const ComboboxInput = ({
       />
       {Option.match(hint, {
         onNone: () => null,
-        onSome: (painted) => renderHint(painted, "combobox-input"),
+        onSome: (painted) => renderFieldHint(painted, "combobox-input"),
       })}
     </div>
   );

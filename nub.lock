@@ -245,6 +245,9 @@ importers:
       '@gpuixui/motion':
         specifier: workspace:*
         version: link:../motion
+      '@gpuixui/primitives':
+        specifier: workspace:*
+        version: link:../primitives
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../tokens

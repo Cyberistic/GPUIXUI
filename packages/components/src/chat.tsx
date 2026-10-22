@@ -64,7 +64,7 @@ import * as Machine from "./chat/logic.js";
 export * from "./chat/logic.js";
 import { Button } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
-import { hintHost, renderHint, textHint } from "./internal/hint.js";
+import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
 import { isDismiss } from "./internal/key.js";
 import {
   assertParts,
@@ -387,12 +387,11 @@ export const ChatComposer = ({
     ...keepContent,
     minHeight: theme.spacing["2xl"],
   });
-  const placeholderHint = textHint(
-    theme,
-    { style: fieldStyle, align: "top", disabled },
-    placeholder,
-    draft,
-  );
+  const placeholderHint = fieldHint({ placeholder, disabled }, theme, draft, {
+    origin: "host",
+    align: "top",
+    style: fieldStyle,
+  });
 
   return (
     <div
@@ -434,7 +433,7 @@ export const ChatComposer = ({
           />
           {Option.match(placeholderHint, {
             onNone: () => null,
-            onSome: (painted) => renderHint(painted, "chat-field"),
+            onSome: (painted) => renderFieldHint(painted, "chat-field"),
           })}
         </div>
         {busy && canStop ? (

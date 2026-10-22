@@ -4,7 +4,7 @@
  * The module count is exact: the entry's graph is the package's import cost, and
  * a new family, a moved module or a deleted one must be a deliberate change to
  * this record rather than an accident of a commit. The byte ceiling carries a
- * little headroom over the measured size (722 KiB on 2026-10-22) so prose
+ * little headroom over the measured size (999 KiB on 2026-10-22) so prose
  * edits do not need a bump while a bulk addition does.
  *
  * `packages` is every package the package's **own** modules import. A new name
@@ -52,6 +52,12 @@ export const surfaceBudget = {
   // CopyButton (`copy-button.tsx` and its label/window rule), the action
   // CodeBlock's header now composes instead of holding its own acknowledgement.
   // 134 → 136 for PageTransition (`page-transition.tsx` and the view-swap state
+  // 160 → 159 when the painted hint's local copy was deleted and the eight
+  // hinted hosts started importing `@gpuixui/primitives/hint` (`TODO.md` →
+  // Interlocks): the rule has one implementation now. The graph does not get
+  // cheaper — the primitives' seam joins it at 5 modules / 49 KiB beside
+  // `@gpuixui/primitives`, which is the subpath's cost rather than the barrel's
+  // (that route measured 52 modules / 416 KiB) — but the duplicate rule is gone.
   // machine beside it), the region that swaps two views with the house exit and
   // entrance. 136 → 138 for Bubbles (`bubbles.tsx` and its rise rule); 138 → 140
   // for Fireworks (`fireworks.tsx` and its burst rule); 140 → 142 for Gradient
@@ -70,7 +76,7 @@ export const surfaceBudget = {
   // retarget their insets on a reorder. 157 → 160 for SlidingText
   // (`sliding-text.tsx`, the slide rule beside it, and `internal/text-swap.ts`,
   // the half RollingText now reads its state machine and timing from too).
-  modules: 160,
+  modules: 159,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB

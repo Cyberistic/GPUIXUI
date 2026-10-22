@@ -43,7 +43,7 @@ import {
 } from "react";
 import { Dialog, DialogContent } from "./dialog.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
-import { hintHost, renderHint, textHint } from "./internal/hint.js";
+import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
 import { isDismiss, isDown, isFirst, isLast, isUp } from "./internal/key.js";
 import { overlaySurfaceStyle } from "./internal/overlay.js";
 import {
@@ -332,12 +332,11 @@ export const CommandMenuInput = ({
     ...selectionWash(theme),
     ...keepContent,
   };
-  const hint = textHint(
-    theme,
-    { style: fieldStyle, align: "center" },
-    placeholder,
-    query,
-  );
+  const hint = fieldHint({ placeholder }, theme, query, {
+    origin: "host",
+    align: "center",
+    style: fieldStyle,
+  });
 
   return (
     <div style={hintHost()}>
@@ -356,7 +355,7 @@ export const CommandMenuInput = ({
       />
       {Option.match(hint, {
         onNone: () => null,
-        onSome: (painted) => renderHint(painted, "command-input"),
+        onSome: (painted) => renderFieldHint(painted, "command-input"),
       })}
     </div>
   );

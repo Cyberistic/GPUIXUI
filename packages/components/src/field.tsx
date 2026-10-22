@@ -29,7 +29,7 @@ import {
 import * as Option from "effect/Option";
 import { createContext, useContext, useState } from "react";
 import { useFieldsetDisabled } from "./fieldset.js";
-import { hintHost, renderHint, textHint } from "./internal/hint.js";
+import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
 import {
   assertParts,
   type PartChildren,
@@ -282,12 +282,11 @@ export const FieldInput = ({
     }),
     resolveStyle(style, state),
   );
-  const hint = textHint(
-    theme,
-    { style: hostStyle, align: "center", disabled: isDisabled },
-    placeholder,
-    text,
-  );
+  const hint = fieldHint({ placeholder, disabled: isDisabled }, theme, text, {
+    origin: "host",
+    align: "center",
+    style: hostStyle,
+  });
 
   return (
     <div style={hintHost()}>
@@ -319,7 +318,7 @@ export const FieldInput = ({
       />
       {Option.match(hint, {
         onNone: () => null,
-        onSome: (painted) => renderHint(painted, rest.testId),
+        onSome: (painted) => renderFieldHint(painted, rest.testId),
       })}
     </div>
   );

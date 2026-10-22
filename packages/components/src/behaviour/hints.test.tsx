@@ -7,7 +7,9 @@
  * value reaches it, so a light theme painted a hint nobody can read while
  * `contrastPairs` held the `placeholder` role to the secondary floor on both
  * field fills. Every text host in this package now hands the host no
- * placeholder and paints the hint itself (`internal/hint.tsx`).
+ * placeholder and paints the hint itself, through the seam
+ * `@gpuixui/primitives/hint` publishes (`fieldHint`/`renderFieldHint`) — one
+ * implementation of the rule, shared with the primitives' own fields.
  *
  * The table holds every host, so a host that stops painting its hint fails by
  * name; the shape cases hold the text origin, the press-through, the draft
@@ -43,7 +45,7 @@ import {
   type ComponentTestRoot,
   type TestTheme,
 } from "../internal/test-root.js";
-import { darkTheme, lightTheme } from "../internal/theme.js";
+import { darkTheme, disabledOpacity, lightTheme } from "../internal/theme.js";
 import {
   MentionInput,
   MentionInputItem,
@@ -288,8 +290,20 @@ describe("the painted field hint", () => {
       </Field>,
     );
 
-    expect(hintColour(root, "field-input-hint")).toBe(
-      darkTheme.colors.disabledForeground,
+    // The shared seam's disabled contract: the measured placeholder role, faded
+    // by the same share the field chrome fades by, rather than a second role.
+    const hint = root.renderer.findByTestId("field-input-hint");
+    expect(hint?.style.color).toBe(darkTheme.colors.placeholder);
+    expect(hint?.style.opacity).toBe(disabledOpacity);
+
+    // The fade belongs to the disabled state: the same hint at rest is opaque.
+    root.rerender(
+      <Field label="Email">
+        <FieldInput testId="field-input" placeholder="you@example.com" />
+      </Field>,
+    );
+    expect(root.renderer.findByTestId("field-input-hint")?.style.opacity).toBe(
+      undefined,
     );
   });
 

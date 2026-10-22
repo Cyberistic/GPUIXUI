@@ -36,7 +36,7 @@ import {
   type ReactElement,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
-import { hintHost, renderHint, textHint } from "./internal/hint.js";
+import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
 import { activationHandlers, isDismiss, isDown, isUp } from "./internal/key.js";
 import {
   assertParts,
@@ -188,12 +188,11 @@ export const MentionInput = ({
     ...selectionWash(theme),
     ...keepContent,
   });
-  const hint = textHint(
-    theme,
-    { style: controlStyle, align: "center", disabled },
-    placeholder,
-    text,
-  );
+  const hint = fieldHint({ placeholder, disabled }, theme, text, {
+    origin: "host",
+    align: "center",
+    style: controlStyle,
+  });
 
   return (
     <MentionContext.Provider value={context}>
@@ -250,7 +249,7 @@ export const MentionInput = ({
             />
             {Option.match(hint, {
               onNone: () => null,
-              onSome: (painted) => renderHint(painted, testId),
+              onSome: (painted) => renderFieldHint(painted, testId),
             })}
           </div>
         </div>

@@ -22,6 +22,7 @@
     "@gpuixui/icons": "workspace:*",
     "@gpuixui/keyboard": "workspace:*",
     "@gpuixui/motion": "workspace:*",
+    "@gpuixui/primitives": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "@gpuixui/tw": "workspace:*",
     "effect": "catalog:"

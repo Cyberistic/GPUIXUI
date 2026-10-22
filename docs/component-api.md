@@ -423,10 +423,13 @@ translates beyond an inset offset (upstream issue #102, plan `600` §3). shadcn'
 unmounts when that duration has elapsed (`useSurfacePresence`). `AnimatePresence`
 reports an exit only through `onMotionComplete` on a `motion.div`, and the
 popover, menu and preview-card surfaces are hosted by `FloatingLayer`'s own
-element, so one mechanism covers every surface. The consequence a consumer sees:
-a dismissal is *immediate* in state (focus returns, `onOpenChange` fires) while
-the box fades out, and an element disappears from the tree a level's duration
-later.
+element, so one mechanism covers every surface. A leaving surface paints in the
+same frame its state closed but **takes no presses**: its style goes to
+`pointerEvents: "none"` (and an anchored host drops its occlusion), so the press
+the dismissal was for lands on the control underneath. The consequence a
+consumer sees: a dismissal is *immediate* in state (focus returns,
+`onOpenChange` fires) while the box fades out, and an element disappears from
+the tree a level's duration later.
 
 **Per surface:**
 
@@ -488,13 +491,18 @@ shapes an empty field's placeholder in a fixed `#8F8F8F`
 (`custom_elements/input.rs` at the pinned 0.11.0), so the `placeholder` role the
 contrast table measures on both fills never reaches it — 2.84:1 on a white field.
 Every text host therefore takes no `placeholder` prop and paints the hint itself
-through `internal/hint.tsx`: a paint-only frame at the host's own text origin
-(the inset is read from the host's compiled style, so a recipe change moves it),
-the host's type scale, and `colors.placeholder` — or `colors.disabledForeground`
-on a disabled field. The frame is `pointerEvents: "none"`, so a press through the
-hint focuses the host. The hosts are `FieldInput`, `SearchInput`,
-`TagInputField`, `MentionInput`, `ChatComposer`, both `TimePickerSegment`s,
-`CommandMenuInput` and `ComboboxInput`; `src/behaviour/hints.test.tsx` holds each
-one's painted role and that the host is handed no placeholder. `InlineEdit`
-paints its placeholder as the display's own text and `ColorPicker`'s hex field
-never shows one, so neither has a host hint to replace.
+through the seam `@gpuixui/primitives/hint` publishes (`fieldHint`,
+`renderFieldHint`, `hintHost`) — one implementation of the rule, shared with the
+primitives' own fields rather than kept twice: a paint-only frame at the host's
+own text origin (the inset is read from the host's compiled style, so a recipe
+change moves it), the host's type scale, and `colors.placeholder` — faded by
+`disabledOpacity` on a disabled field. The frame is `pointerEvents: "none"`, so a
+press through the hint focuses the host. A hint longer than its field is clipped
+at the field's edge, exactly as the runtime's own placeholder is. The hosts are
+`FieldInput`, `SearchInput`, `TagInputField`, `MentionInput`, `ChatComposer`,
+both `TimePickerSegment`s, `CommandMenuInput` and `ComboboxInput`;
+`src/behaviour/hints.test.tsx` holds each one's painted role, the disabled fade
+and that the host is handed no placeholder, and `src/hints-seam.test.ts` holds
+the adoption (no local copy, the subpath rather than the primitives' barrel).
+`InlineEdit` paints its placeholder as the display's own text and `ColorPicker`'s
+hex field never shows one, so neither has a host hint to replace.
