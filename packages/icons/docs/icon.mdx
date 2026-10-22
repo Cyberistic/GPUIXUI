@@ -1,6 +1,6 @@
 ---
 title: Icons
-description: 48 monochrome icons, their size scale and the two accessibility rules.
+description: 76 monochrome icons, their size scale and the two accessibility rules.
 ---
 
 `@gpuixui/icons` is the icon set: each icon is a self-contained 24×24 monochrome
@@ -37,6 +37,37 @@ A runnable composition is `packages/primitives/examples/icons.example.tsx`.
 
 `ICON_NAMES` / `IconName` is the source of truth for which icons exist; `icons`
 exposes the markup by name; `ICON_SIZES` / `iconPixels` resolve the scale.
+
+## Names
+
+Grouped the way a screen is composed, not alphabetically — `ICON_NAMES` itself is
+sorted, which is what keeps a generated index stable.
+
+**Navigation and layout** — `arrow-down`, `arrow-left`, `arrow-right`, `arrow-up`,
+`chevron-down`, `chevron-left`, `chevron-right`, `chevron-up`, `chevrons-up-down`,
+`external-link`, `home`, `link`, `panel-bottom`, `panel-left`, `panel-right`
+
+**Actions** — `check`, `copy`, `download`, `ellipsis`, `ellipsis-vertical`,
+`filter`, `maximize`, `minimize`, `minus`, `pause`, `pencil`, `play`, `plus`,
+`redo`, `refresh`, `save`, `search`, `sliders-horizontal`, `sort-asc`,
+`sort-desc`, `square`, `trash`, `undo`, `upload`, `x`
+
+**Files and data** — `calendar`, `database`, `file`, `file-text`, `folder`,
+`folder-open`, `git-branch`, `grid`, `grip-vertical`, `list`, `table`
+
+**Surfaces and media** — `clock`, `code`, `image`, `settings`, `terminal`
+
+**People and messaging** — `bell`, `bot`, `mail`, `sparkles`, `user`, `users`
+
+**Status and feedback** — `circle`, `error`, `info`, `loader`, `lock`, `shield`,
+`star`, `star-filled`, `success`, `warning`
+
+**Appearance** — `eye`, `eye-off`, `moon`, `sun`
+
+Two of them are ours rather than Lucide's, because no upstream icon says the same
+thing: `star-filled` (the `star` outline filled instead of stroked, which is how
+`Rating` paints a chosen star) and `sort-desc` (the mirror of `sort-asc`). Neither
+carries a colour; the tint is still `style.color`.
 
 ## Sizes
 
@@ -80,16 +111,22 @@ paint values a monochrome tint can use. No individual icon carries a colour.
   runtime cannot rotate (see `Spinner`).
 - No icon font and no ligatures.
 - The set is curated, not a full Lucide import: add a name to `registry.ts` and
-  `names.ts` together, and the type checker enforces both.
+  `names.ts` together, and the type checker enforces both. Geometry comes from
+  the Lucide release the provenance record names — update that record when the
+  release moves.
 
 ## Verification
 
 - `src/registry.test.ts` — every icon is 24×24 geometry, self-contained and free
-  of scripts, external references and embedded colours.
+  of scripts, external references and embedded colours; no two names carry the
+  same geometry (a copy-pasted entry ships a wrong glyph); and the markup uses
+  only the six element types the runtime suite has painted.
 - `src/sizes.test.ts` — every named step resolves, and a raw number passes
   through.
 - `src/Icon.test.ts` — the decoration/image rule, required colour and the
   pointer-events rule.
+- `src/docs.test.ts` — the page prints the set's real size, lists every name in
+  it, and cites the provenance record that carries the licence notices.
 - `packages/primitives/runtime/icons.runtime.test.tsx` — the raw `<svg source>`
   paints at 20×20 (`lg`) and 24×24 (`xl`); a decorative icon is absent from the
   accessibility tree while a labelled one is an `Image`; a red versus blue
@@ -104,9 +141,13 @@ nub run --filter @gpuixui/primitives test:runtime
 
 ## Provenance
 
-Geometry follows the [Lucide](https://lucide.dev) 24×24 grid, ISC licence. No
-third-party icon file is copied verbatim and no logo or brand mark is included.
-See `LICENSES/` for the attribution record.
+The geometry is taken from [Lucide](https://lucide.dev) `lucide-static@1.61.0`,
+on its 24×24 grid at `stroke-width="2"` — copied, not traced by eye. Lucide
+licenses the set under ISC and the icons it inherits from Feather under MIT, so
+**both notices travel with the geometry**; they are reproduced in full, with the
+version they were read at, in [`LICENSES/lucide.md`](../../../LICENSES/lucide.md).
+No colour, wrapper attribute, icon font, sprite, logo or brand mark is copied,
+and `LICENSES/` records what we do and do not take.
 
 ## Related
 

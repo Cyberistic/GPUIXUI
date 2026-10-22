@@ -25,6 +25,7 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon, ICON_SIZES } from "@gpuixui/icons";
+import type { IconName } from "@gpuixui/icons";
 import { a11yNode, type Runtime } from "./harness.js";
 import { Surface, openWindow } from "./fixture.js";
 
@@ -96,7 +97,7 @@ const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
  */
 const tintedFrames = (
   runtime: Runtime,
-  name: "check" | "star-filled",
+  name: IconName,
 ): Effect.Effect<
   {
     readonly red: Uint8Array;
@@ -149,4 +150,31 @@ it("tints a filled glyph too, which is how a chosen star reads", async () => {
   );
   expect(sameBytes(captured.alsoRed, captured.red)).toBe(true);
   expect(sameBytes(captured.blue, captured.red)).toBe(false);
+});
+
+it("paints every geometry form the set is built from", async () => {
+  // The other icons are new *data*, and a markup string that does not parse
+  // paints nothing — which looks exactly like a decorative SVG: the element is
+  // there, at its size, and the frame is empty. A red/blue pair can only differ
+  // if the geometry painted and the tint reached it, so this is the one read
+  // that fails on a broken path, an unclosed arc, or a `rect` the parser drops.
+  const runtime = await openWindow();
+  const samples: ReadonlyArray<[IconName, string]> = [
+    ["pause", "two rects and nothing else"],
+    ["play", "one closed path of arcs"],
+    ["circle", "one circle and nothing else"],
+    ["file", "arcs joined to straight segments"],
+  ];
+  // Sequential: each capture paints the frame the next one replaces.
+  const unmeasured = await Effect.runPromise(
+    Effect.forEach(
+      samples,
+      ([name, form]) =>
+        Effect.map(tintedFrames(runtime, name), (captured) =>
+          sameBytes(captured.blue, captured.red) ? [`${name}: ${form}`] : [],
+        ),
+      { concurrency: 1 },
+    ),
+  );
+  expect(Arr.flatten(unmeasured)).toEqual([]);
 });

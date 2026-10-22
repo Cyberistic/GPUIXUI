@@ -17,6 +17,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Tokens from "@gpuixui/tokens";
 import { ICON_NAMES } from "./names.js";
@@ -25,10 +26,30 @@ import { ICON_SIZES } from "./sizes.js";
 const page = readFileSync(new URL("../docs/icon.mdx", import.meta.url), "utf8");
 const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
 const iconSource = readFileSync(new URL("./Icon.tsx", import.meta.url), "utf8");
+const lucideRecord = readFileSync(
+  new URL("../../../LICENSES/lucide.md", import.meta.url),
+  "utf8",
+);
 
 /** A frontmatter field's value, or nothing when the field is absent. */
 const frontmatter = (field: string): Option.Option<string> =>
   Option.fromNullishOr(new RegExp(`^${field}: (.+)$`, "m").exec(page)?.[1]);
+
+/** The body of one `##` section, without its heading. */
+const section = (heading: string): string =>
+  Option.getOrElse(
+    Option.map(
+      Arr.findFirst(page.split(/^## /m), (part) =>
+        part.startsWith(`${heading}\n`),
+      ),
+      (part) => part.slice(heading.length + 1),
+    ),
+    () => expect.fail(`the page has no "${heading}" section`),
+  );
+
+/** Every backticked name in a section, in order. */
+const namesIn = (body: string): ReadonlyArray<string> =>
+  Arr.map([...body.matchAll(/`([a-z][a-z-]*)`/g)], (match) => match[1] ?? "");
 
 describe("the icon page", () => {
   it("prints the size of the set it documents", () => {
@@ -47,9 +68,43 @@ describe("the icon page", () => {
       expect(row?.[1]).toBe(String(pixels));
     });
   });
+
+  it("lists every icon the package ships, and only those", () => {
+    // A set that grows while its page keeps the old names leaves a reader
+    // typing a name that does not exist — and a name typed into the page that
+    // does not exist is the same bug in the other direction.
+    const listed = Arr.sort(
+      Arr.dedupe(namesIn(section("Names"))),
+      Order.String,
+    );
+    expect(listed).toEqual([...ICON_NAMES]);
+  });
+
+  it("cites a provenance record that carries both notices", () => {
+    // The claim that used to be false: the page said no third-party icon file
+    // was copied while most of the geometry is Lucide's, and pointed at a
+    // `LICENSES/` directory with no Lucide record — an ISC/MIT notice the
+    // release owed and did not carry.
+    expect(section("Provenance")).toContain("`LICENSES/lucide.md`");
+    expect(lucideRecord).toContain("lucide-static` `1.61.0`");
+    expect(lucideRecord).toContain("## ISC License");
+    expect(lucideRecord).toContain("Lucide Icons and Contributors");
+    expect(lucideRecord).toContain(
+      "## MIT License (for the icons derived from Feather)",
+    );
+    expect(lucideRecord).toContain("Cole Bemis");
+  });
 });
 
 describe("the icons README", () => {
+  it("cites the provenance record instead of claiming nothing is copied", () => {
+    // The same retracted claim the page carried: most of the geometry *is*
+    // Lucide's, so a README that denies it and points at a directory with no
+    // Lucide record undoes the page's correction.
+    expect(readme).toContain("LICENSES/lucide.md");
+    expect(readme).not.toContain("copied verbatim");
+  });
+
   it("imports only names @gpuixui/tokens exports", () => {
     // The bug guarded: the README's first example imported `{ theme }` from
     // "@gpuixui/tokens", which publishes `lightTheme`/`darkTheme`/`getTheme` —

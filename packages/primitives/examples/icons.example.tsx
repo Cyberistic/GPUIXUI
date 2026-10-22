@@ -27,6 +27,25 @@ const STATUS_ICONS: ReadonlyArray<{
   { name: "clock", tone: "muted" },
 ];
 
+/**
+ * The workspace vocabulary: the glyphs a dock, a file tree and a toolbar ask
+ * for, painted as decoration beside one caption like a toolbar would.
+ */
+const WORKSPACE_ICONS: ReadonlyArray<IconName> = [
+  "panel-left",
+  "panel-right",
+  "panel-bottom",
+  "terminal",
+  "file",
+  "file-text",
+  "save",
+  "play",
+  "pause",
+  "undo",
+  "redo",
+  "sparkles",
+];
+
 /** Decoration, meaning and the size scale in one card. */
 export const IconsExample = (): ReactElement => {
   const theme = useTheme();
@@ -65,6 +84,25 @@ export const IconsExample = (): ReactElement => {
               <Text role="label">{item.name}</Text>
             </Stack>
           ))}
+        </Stack>
+
+        <Separator orientation="horizontal" />
+
+        <Stack direction="column" gap="xs">
+          <Text role="caption" tone="muted">
+            Workspace
+          </Text>
+          <Stack direction="row" align="center" gap="sm">
+            {Arr.map(WORKSPACE_ICONS, (name) => (
+              <Icon
+                key={name}
+                name={name}
+                color={theme.colors.mutedForeground}
+                size="md"
+                testId={`icon-${name}`}
+              />
+            ))}
+          </Stack>
         </Stack>
 
         <Separator orientation="horizontal" />

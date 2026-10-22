@@ -53,6 +53,44 @@ describe("icon registry", () => {
     expect(offenders.map(([name]) => name)).toEqual([]);
   });
 
+  it("draws only with the element types the runtime suite has painted", () => {
+    // The window suite paints the shared grammar (`check` and `star-filled` are
+    // `path`/`circle` shapes). A new element type (`ellipse`, `text`, `mask`)
+    // paints its own default — or nothing — until a probe measures it, so the
+    // set stays on the elements it has measured.
+    const PAINTED = Arr.fromIterable([
+      "path",
+      "circle",
+      "rect",
+      "line",
+      "polyline",
+      "polygon",
+    ]);
+    const drawn = (markup: string): ReadonlyArray<string> =>
+      Arr.map(
+        [...markup.matchAll(/<(?!svg\b)([a-zA-Z]+)\b/g)],
+        (match) => match[1] ?? "",
+      );
+    const unmeasured = Arr.flatMap(R.toEntries(icons), ([, markup]) =>
+      Arr.filter(drawn(markup), (element) => !Arr.contains(PAINTED, element)),
+    );
+    expect(unmeasured).toEqual([]);
+  });
+
+  it("gives no two names the same geometry", () => {
+    // The copy-paste bug: adding `save` by duplicating `download` compiles,
+    // passes every structural check, and paints the wrong glyph under the new
+    // name — so a consumer asking for one icon gets another.
+    const groups = Arr.groupBy(R.toEntries(icons), ([, markup]) => markup);
+    const shared = Arr.filter(
+      R.values(groups),
+      (group) => Arr.length(group) > 1,
+    );
+    expect(
+      Arr.map(shared, (group) => Arr.map(group, ([name]) => name)),
+    ).toEqual([]);
+  });
+
   it("declares exactly as many names as it has icons", () => {
     expect(R.keys(icons)).toHaveLength(ICON_NAMES.length);
   });

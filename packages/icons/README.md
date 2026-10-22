@@ -54,12 +54,18 @@ with the text beside it.
 
 ## Conventions for the markup
 
-- 24x24 `viewBox`, geometry only, on the Lucide grid.
+- 24x24 `viewBox`, geometry only, on the Lucide grid, copied from the release the
+  provenance record names.
 - `fill="none"` and `stroke="#000"` in the shared wrapper — the two paint values
   a monochrome tint can use. Do not put a colour in an individual icon: the
   theme cannot reach it.
 - Self-contained: no `<script>`, `<image>`, `<foreignObject>`, `<style>`,
   `<use>`, `href`, `url(`, or `@import`.
+- One name per geometry: two names sharing markup means one of them paints the
+  wrong glyph.
+- Only the element types a window probe has painted (`path`, `circle`, `rect`,
+  `line`, `polyline`, `polygon`) — a new type paints nothing until something
+  measures it.
 
 `src/registry.test.ts` enforces all of the above over every entry, so a
 malformed icon fails the suite rather than shipping.
@@ -75,14 +81,20 @@ malformed icon fails the suite rather than shipping.
 
 ## Provenance
 
-Geometry follows the [Lucide](https://lucide.dev) 24x24 grid, ISC licence. No
-third-party icon file is copied verbatim, and no logo or brand mark is included.
-See `LICENSES/` for the attribution record.
+The geometry is copied from [Lucide](https://lucide.dev)
+`lucide-static@1.61.0`, on its 24x24 grid. Lucide licenses the set under ISC and
+the icons it inherits from Feather under MIT, so both notices travel with the
+geometry: they are reproduced in full in
+[`LICENSES/lucide.md`](../../LICENSES/lucide.md). No colour, wrapper attribute,
+icon font, sprite, logo or brand mark is copied. `sort-desc` (the mirror of
+`sort-asc`) and `star-filled` (Lucide's `star` filled) are the package's own.
 
 ## Verification status
 
 The registry, sizing and `Icon`'s accessibility/props contract are covered by
-executable tests (`nub run --filter @gpuixui/icons test`).
+executable tests (`nub run --filter @gpuixui/icons test`). The registry suite also
+fails when two names share geometry, when an entry uses an element type no probe
+has painted, or when the set's page stops listing a name it ships.
 
 **Verified in the real GPUix runtime** by
 `packages/primitives/runtime/icons.runtime.test.tsx`, which runs with
@@ -95,6 +107,11 @@ package that consumes icons). Measured 2026-10-17:
   an `Image` node carrying its name;
 - `style.color` tints the painted mark: two captures of the same red icon are
   byte-identical while the blue capture differs.
+
+Measured 2026-10-22: the same red/blue pair runs for one icon of each element
+form the set uses (`pause` rects, `play` a closed arc path, `circle`, `file` arcs
+joined to segments), because markup that does not parse paints an empty frame —
+indistinguishable from a decorative icon. An icon given no geometry fails it.
 
 The binding behind that run is the locally-built `darwin-x64` artifact — the
 recipe is in `apps/playground/README.md` §The binding on this host — not a
