@@ -612,7 +612,11 @@ shipped themes meet, so a brand is held to the same pairs rather than a second
 set. An invalid control's edge — the `destructive` role as a field's border and
 focus line — is held to the boundary floor on the six strips a control sits on:
 four through the mark contract and two (`input`, `secondary`) through
-`contrastPairs`. The decorative surfaces use `decorativeFloor` (1.05:1), and
+`contrastPairs`. The strong edge is measured on the two washes a **row** paints
+under a control in its `trailing` slot as well — `accent` while the pointer is
+over the row, `selected` once it is chosen — because the default `secondary`
+action owns that edge and a brand could otherwise paint it in the row's colour.
+The decorative surfaces use `decorativeFloor` (1.05:1), and
 `decorativeSurfaces` names the placements measured — dividers, skeleton fills,
 the modal veil on the strips a modal covers, each status tone's soft tint on the four strips a message sits
 on and its edge on those same four (read at the share `statusEdgeAlpha` that

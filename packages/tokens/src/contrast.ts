@@ -415,6 +415,15 @@ export const contrastPairs: readonly ContrastPair[] = [
   // the edge must stay findable on, not just the resting surface.
   { foreground: "borderStrong", background: "hover", floor: "boundary" },
   { foreground: "borderStrong", background: "active", floor: "boundary" },
+  // And a control sits inside a **row's** wash, not only under its own: a list
+  // row offers its `trailing` slot to an explicit action (a `secondary` button,
+  // the one variant that owns a `borderStrong` edge), tints `accent` under the
+  // pointer and fills `selected` once chosen. Those are the two washes the ring
+  // is already measured on and the edge was not, so a brand whose edge matched
+  // the row it sits in could ship a button with no outline while every strip it
+  // rests on passed.
+  { foreground: "borderStrong", background: "accent", floor: "boundary" },
+  { foreground: "borderStrong", background: "selected", floor: "boundary" },
   // A failed validation swaps a control's edge — and the focus line it paints
   // while invalid — to the `destructive` role, so that role is a boundary on
   // every strip a control sits on. The page, card, popover and `muted` strips

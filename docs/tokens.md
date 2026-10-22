@@ -1223,7 +1223,7 @@ named colour, an `hsl()`-family function). Shorthand hex is measured.
 — an empty array means the theme is readable. The floors are the theme's own
 variant's unless one is passed, which is the rule `auditTheme` applies: a brand
 derived from a high-contrast theme is measured at 7:1 for secondary text without
-the caller remembering to say so. The 91 pairs cover the text role
+the caller remembering to say so. The 93 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1249,7 +1249,8 @@ strong boundary on every surface a focused control can sit on, including a
 toolbar strip (`muted`), a segmented group (`secondary`), a floating surface
 (`popover` — a dialog's footer or a popover's form), the fill the ring hugs
 (`input`, `selected`, `hover`, `active`, `accent`) and the `hover`/`active`
-wash a bordered control tints while it is hovered or pressed, plus the invalid
+wash a bordered control tints while it is hovered or pressed, plus the
+`accent`/`selected` wash a row paints under that same control, plus the invalid
 edge below. A wash — `hover`,
 `active`, `accent` — is a surface too: a ghost button or a menu row tints it and
 leaves its label in the
@@ -1353,6 +1354,22 @@ its variant's floor, the tightest being the base light theme's pressed wash at
 line on a state the reader's own pointer created. `contrast.test.ts`'s `the ring
 on the fill it hugs` suite reads both painters, reports the two erased rings and
 sweeps all 16 styles, so the pairs cannot outlive the paint.
+
+A **trailing action** is the boundary's last strip — and the same two washes the
+ring already had. A list row hands its `trailing` slot to an explicit action,
+which is what the slot exists for: a control that must run without the row's own
+activation (`packages/components/docs/list.mdx`). The components' `Button`
+defaults to `secondary`, the one variant that paints `borderStrong`, and the row
+tints `accent` under the pointer and fills `selected` once chosen — so the edge
+is drawn on those washes, not on the page, and nothing measured it there. A brand
+whose edge matched the row it sits in therefore shipped an outlined action with
+no outline in the one place a list puts it, with every strip the control rests on
+passing. Both washes joined the boundary pairs, and every shipped, high-contrast,
+platform and authored style clears the floor, the tightest being macOS light's
+hovered row at 3.08:1 — a neutral edge on a blue-tinted wash, eight hundredths
+above it. `contrast.test.ts`'s `the edge of a control inside a row's wash` suite
+reads the slot, both washes and the default action's edge, reports an edge equal
+to its wash at 1.00:1 and sweeps all 16 styles.
 
 `contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply

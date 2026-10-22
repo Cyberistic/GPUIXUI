@@ -1582,6 +1582,121 @@ describe("the ring on the fill it hugs", () => {
 });
 
 /**
+ * Guards the edge a control draws **inside a row's wash**.
+ *
+ * The bug this holds: the boundary reached every strip a control rests on and the
+ * wash the same control tints under itself (`hover`, `active`), while the two
+ * washes a *row* paints under a control in its `trailing` slot — `accent` under
+ * the pointer, `selected` once the row is chosen — were measured for the ring and
+ * for nothing else. A list row offers that slot to an explicit action (`docs`:
+ * "render an explicit action control in the row's `trailing` slot"), and the
+ * components' `Button` defaults to `secondary`, the one variant that owns a
+ * `borderStrong` edge. So a brand whose edge matched the row it sits in shipped
+ * an outlined action with no outline in the one place a list puts it, while every
+ * pair on the strips it rests on passed.
+ */
+describe("the edge of a control inside a row's wash", () => {
+  const washes = ["accent", "selected"] as const;
+
+  it("measures the strong boundary on both washes a row paints", () => {
+    const missing = washes
+      .filter(
+        (background) =>
+          !contrastPairs.some(
+            (pair) =>
+              pair.foreground === "borderStrong" &&
+              pair.background === background &&
+              pair.floor === "boundary",
+          ),
+      )
+      .map((background) => `borderStrong/${background}`);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the painters that put a bordered action inside a row", () => {
+    // The pairs only mean something while the composition still exists: the row
+    // owns the `trailing` slot, paints `accent` on hover and `selected` when
+    // chosen, and the default action paints the measured strong edge.
+    const row = readFileSync(
+      new URL("../../components/src/list.tsx", import.meta.url),
+      "utf8",
+    );
+    const button = readFileSync(
+      new URL("../../components/src/internal/button.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(row).toContain("readonly trailing?: ReactNode");
+    expect(row).toContain("hover: { backgroundColor: theme.colors.accent }");
+    expect(row).toContain("backgroundColor: theme.colors.selected");
+    expect(row).toContain("{trailing}");
+    expect(button).toContain('variant = "secondary"');
+    expect(button).toContain("borderColor: theme.colors.borderStrong");
+  });
+
+  it("reports an edge that disappears into the row wash it sits in", () => {
+    washes.forEach((background) => {
+      const broken = {
+        colors: { ...lightColors, borderStrong: lightColors[background] },
+      };
+
+      expect(
+        contrastFailures(broken).find(
+          ({ foreground, background: strip }) =>
+            foreground === "borderStrong" && strip === background,
+        ),
+      ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
+    });
+  });
+
+  it("keeps the edge findable on both washes in every shipped theme", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const placements = shipped.flatMap((theme) =>
+      washes.map((background) => ({
+        name: `${theme.name}/borderStrong/${background}`,
+        ratio: contrastRatio(
+          theme.colors.borderStrong,
+          theme.colors[background],
+        ),
+        floor: contrastFloorsFor(theme).boundary,
+      })),
+    );
+    const hidden = placements.filter(
+      ({ ratio, floor }) => ratio === undefined || ratio < floor,
+    );
+    const tightest = placements.reduce((low, next) =>
+      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+    );
+
+    expect(hidden).toEqual([]);
+    // A neutral edge on a wash a light palette tints blue is the hardest of the
+    // sixteen: macOS light's hovered row, at 3.08:1 against the 3:1 floor.
+    expect(tightest.name).toBe(
+      `${platformTheme(themes.light, "darwin").name}/borderStrong/accent`,
+    );
+    expect(tightest.ratio).toBeCloseTo(3.08, 2);
+    // The catalogue prints the number this suite measures, so a palette edit
+    // moves the sentence instead of leaving a stale claim.
+    expect(
+      readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(`hovered row at ${printedRatio(tightest.ratio)}`);
+  });
+});
+
+/**
  * Guards the edge an invalid control paints. A failed validation swaps the
  * control's border and its focus line to `destructive` — a field's border, the
  * `focusVisible` outline a primitive declares while invalid — so that role is a
