@@ -6399,8 +6399,9 @@ const scrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
  * another one, so the wheel has a routing decision to make: does the inner
  * scroller keep it while it can move, does the outer one take it when the inner
  * reaches its end, and does the inner's event reach an ancestor's `onScroll`
- * handler? The fixture's geometry (`nested-scroll.ts`) makes the two wheels aim
- * at places that can only hit one scroller each.
+ * handler? The fixture's geometry (`nested-scroll.ts`) puts the inner scroller
+ * wholly inside the page and the page-only wheel on a filler row the list does
+ * not cover, so each wheel can only be aimed at the scroller it names.
  */
 const NestedScrollProbe = (): ReactNode => {
   const theme = useTheme();
@@ -6428,8 +6429,8 @@ const NestedScrollProbe = (): ReactNode => {
           color: theme.colors.mutedForeground,
         }}
       >
-        Wheel over the inner list: it moves first. At its end, does the page
-        behind it move too?
+        Wheeling over the list scrolls the page behind it too: one wheel moves
+        every scroller above the pointer.
       </text>
       <div
         testId="nested-outer"
