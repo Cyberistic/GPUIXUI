@@ -71,6 +71,7 @@ Verdicts: **supported** · **supported, with limits** · **not supported** ·
 | Per-element `transform` / `rotate` / `scale` / `translate` / `skew` | not supported | no such field in `StyleDesc` | animate the numeric `MotionStyle` fields with `@gpuixui/motion`; static rotation/scale is unrepresentable |
 | `zIndex` / stacking order | not supported in the published API | no `zIndex` in the published `StyleDesc`; paint order is tree order, so an overlay must render last (`toast.mdx`, `tabs.mdx`) | render the surface last in the tree. **The repo's source-built `darwin-x64` binding carries a local `zIndex` patch** (`apps/playground/patches/gpuix-zindex.patch`) — do not write against it in library code |
 | Sticky positioning | not supported | **measured** by `data-grid-fixed-header`: a `position: "sticky"` child inside its scroller moved by exactly the scroll amount, i.e. it paints as `relative`. `position` is typed `string`, so the type does not say this | put the header **outside** the row scroller as a sibling; wrap header and rows in one `overflowX` scroller so both move together |
+| Frozen column | supported, with limits | **Composed, not provided** — with no sticky, a frozen first column is the header rule on the other axis, and **measured** by `data-grid-frozen-column` (a 120px label pane beside a 240px grid over 60 × 28px rows): a wheel over the grid moves both panes to `-300` and a wheel over the frozen column moves both to `-600`, because the app mirrors `onScrollChange` into `scrollTo` on the other pane in **both** directions; the row under the reader keeps its `y` across panes; a `deltaX` wheel pans the grid 200px and leaves the frozen column still (a frozen column does not pan); a press on a frozen cell selects the row for the whole grid; and a `-10000` wheel clamps both panes at the same `-(60 × 28 − 240) = -1440` | compose two scrollers, one per pane, and mirror their offsets through `onScrollChange` + `scrollTo`, guarding the echo with a **ref** — `scrollTo` paints synchronously, so the target's own change arrives inside the call and would otherwise mirror back. Share one row identity, set `overflowX` only on the pane that pans, and expect no single-scroller freeze |
 | `backdropFilter` / per-element blur | not supported | no such field; blur exists only as the window backdrop | use an opaque or translucent fill |
 | Window backdrop vibrancy (`windowBackground: "blurred"`) | unverified | declared as a macOS window option; no probe paints one on this host | use an opaque or translucent window and fill |
 | CSS `filter`, `clip-path`, blend modes, text shadow | not supported | absent from `StyleDesc` | compose the effect from `div`/`svg` layers |
@@ -142,8 +143,9 @@ short, never the carrier of meaning.
   (`data-grid-fixed-header`, `editor-surface`, `tooltip-lifecycle`,
   `tabs-lifecycle`, `scroll-lifecycle`, `pointer-capture`, `content-surfaces`,
   `selection-lifecycle`, `clipboard-lifecycle`, `virtual-tree-lifecycle`,
-  `virtual-list-windowed`, `virtual-list-rows`, `portal-layer`), because a
-  measured gap is absent from the typings rather than merely hard to find.
+  `virtual-list-windowed`, `virtual-list-rows`, `portal-layer`,
+  `data-grid-frozen-column`), because a measured gap is absent from the typings
+  rather than merely hard to find.
 - The five absences the typings alone prove — links (`href`), `fieldset`,
   `onContextMenu`, `onPaste` and the closed `aria-*` set — are held from both
   sides too: a row dropped from this file, a page row dropped from

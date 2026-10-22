@@ -94,6 +94,14 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   `data-grid-fixed-header`. The header sits outside the row scroller, and both
   share one horizontal scroller so they move together; otherwise it scrolls
   away.
+- **A frozen column is that rule on the other axis** — its own vertical scroller
+  beside the grid's, with the app mirroring `onScrollChange` into `scrollTo` in
+  **both** directions (`data-grid-frozen-column`). The mirror needs a **ref**
+  guard, because `scrollTo` paints synchronously and the target's own change
+  would otherwise mirror back. Both panes clamp together (`-1440` for 60 × 28px
+  rows in a 240px pane), the row under the reader keeps its `y` across panes, a
+  press on a frozen cell selects the row for the whole grid, and a horizontal
+  wheel pans the data pane alone — a frozen column does not pan.
 
 ## Gaps, with the evidence
 

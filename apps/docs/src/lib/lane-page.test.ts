@@ -164,6 +164,21 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("painted rows");
   });
 
+  it("teaches a frozen column as two mirrored scrollers", () => {
+    // The page told a table that a fixed header is a sibling, and stopped. A
+    // frozen column is the same rule on the other axis, and
+    // `data-grid-frozen-column` measured it: two panes, mirrored offsets, one
+    // shared row, and the horizontal pan on the data pane alone.
+    const frozen = rowFor(record, "Frozen column");
+
+    expect(frozen).toContain("data-grid-frozen-column");
+    expect(frozen).toContain("onScrollChange");
+    expect(dataPage).toContain("frozen column");
+    expect(dataPage).toContain("data-grid-frozen-column");
+    expect(dataPage).toContain("onScrollChange");
+    expect(dataPage).toContain("ref");
+  });
+
   it("teaches the windowed mode a large table needs, and its two rules", () => {
     // The page said a virtualized table is "a different composition" and left
     // it there, so a table of 100 000 rows had nothing telling it which mode to

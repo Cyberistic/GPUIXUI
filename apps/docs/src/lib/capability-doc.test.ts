@@ -447,6 +447,29 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("on screen");
   });
 
+  it("records the frozen column a table composes from two scrollers", () => {
+    // The runtime paints no sticky, so a pinned column is not a provided
+    // capability — but `data-grid-frozen-column` measured the composition that
+    // works: two scrollers mirrored in both directions, clamped together, with
+    // the horizontal pan on the data pane alone. A table plan reading only the
+    // sticky row would not know the mirror exists or that the echo needs a ref.
+    const frozen = rowFor("Frozen column");
+    expect(frozen?.verdict).toBe("supported, with limits");
+    expect(frozen?.evidence).toContain("data-grid-frozen-column");
+    expect(frozen?.evidence).toContain("onScrollChange");
+    expect(frozen?.evidence).toContain("-1440");
+    expect(frozen?.workaround).toContain("ref");
+
+    const page = measuredRow("Frozen column");
+    expect(
+      page,
+      "the page's measured table has no frozen-column row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("data-grid-frozen-column");
+    expect(page?.[1]).toContain("onScrollChange");
+    expect(page?.[2]).toContain("ref");
+  });
+
   it("records the clipboard gap and the one place the platform still provides it", () => {
     // The binding publishes no clipboard API, so a component cannot offer
     // "copy" — but a window measured that the platform's own keys still run
@@ -611,6 +634,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("virtual-tree-lifecycle");
     expect(runtimePage).toContain("virtual-list-windowed");
     expect(runtimePage).toContain("virtual-list-rows");
+    expect(runtimePage).toContain("data-grid-frozen-column");
     expect(runtimePage).toContain("portal-layer");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
