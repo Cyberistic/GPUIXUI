@@ -225,9 +225,9 @@ describe("shadow role", () => {
     expect(highContrastLightElevation.sm[0]?.color).toBe("#00000014");
     expect(highContrastLightElevation.md[0]?.color).toBe("#0000001F");
     expect(highContrastLightElevation.lg[0]?.color).toBe("#00000029");
-    expect(highContrastDarkElevation.sm[0]?.color).toBe("#2E2E2E66");
-    expect(highContrastDarkElevation.md[0]?.color).toBe("#2E2E2EA6");
-    expect(highContrastDarkElevation.lg[0]?.color).toBe("#2E2E2ECC");
+    expect(highContrastDarkElevation.sm[0]?.color).toBe("#4A4A4A66");
+    expect(highContrastDarkElevation.md[0]?.color).toBe("#4A4A4AA6");
+    expect(highContrastDarkElevation.lg[0]?.color).toBe("#4A4A4ACC");
   });
 });
 

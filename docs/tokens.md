@@ -674,7 +674,7 @@ getTheme("light"); // the default light theme, unchanged
 | `disabledForeground` | `#5A5A5A` | `#8A8A8A` | disabled text |
 | `skeleton` | `#D6D6D6` | `#3D3D3D` | loading placeholder |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb |
-| `shadow` | `#00000040` | `#2E2E2EB3` | elevation tint |
+| `shadow` | `#00000040` | `#4A4A4AB3` | elevation tint |
 
 ## Typography
 
@@ -1981,20 +1981,28 @@ separation any raised surface can paint, so a shadow that passes may still read
 faint at its blurred edge and only a shadow a reader cannot see at all is
 reported. The measured colour is the level's own, because a level carries its
 share in its alpha byte and a brand can supply a level whole; the strips are the
-four a raised surface floats over (`background`, `card`, `popover`, `muted`) plus
-every wash a row can be wearing when the surface opens — the `selected` a chosen
-row holds, the `accent` a list row tints under the pointer, and the `active` a row
-keeps while the press that opened the surface is down. A context menu opens over
-the row the reader right-clicked, so its shadow lands on that row's own fill. A
-menu row's `hover` is not one of them: no surface opens over a menu row, and the
-row a surface is opened from is a list row, which tints `accent`.
+four a raised surface floats over (`background`, `card`, `popover`, `muted`), the
+two window fills the veil already names — a segmented `secondary` panel, which is
+also a tonal action's face, and a field's own `input` fill, which a picker's panel
+overlaps — every wash a row can be wearing when the surface opens, and the four
+soft status tints a message is painted on. A context menu opens over the row the
+reader right-clicked, so its shadow lands on that row's own fill; an `Alert`'s
+description is a container whose documented action is a plain `Button`, so a menu
+opened from one casts its shadow over the tint the message sits in. A menu row's
+`hover` is not one of them: no surface opens over a menu row, and the row a
+surface is opened *from* is a list row, which tints `accent`.
 
-That gap was real. The high-contrast dark theme tinted its shadows with black on
-a **pure-black** page, so every level measured 1.00:1 there and a dialog or a
-full-width card had no shadow at all. Its tint is the grey its raised controls
-use (`#2E2E2EB3` now), and the deepest level clears the floor on all seven strips
-at 1.09–1.37:1, the tightest being the chosen and the pointer's `accent` wash at
-1.09:1. The one-shadow-per-level rule and the role-owned tint remain
+The veil and the shadow cover the same window, so a strip the veil names and the
+shadow does not is a hole — and the high-contrast dark theme had one. The black
+tint it shipped first was found exactly this way (1.00:1 on its pure-black page at
+every level, so no raised surface there had a shadow), and its replacement grey
+matched the same theme's `secondary` face, so a dialog opened over a segmented
+panel painted a shadow the panel could not show (**1.00:1**) while the page, card,
+popover, toolbar and wash placements all passed. The tint is now a grey lighter
+than the faces it can fall on (`#4A4A4AB3`), and the deepest level clears the
+floor on all thirteen strips at 1.17–1.87:1, the tightest being the pressed
+`active` wash a row keeps while the press that opened the surface is down at
+1.17:1. The one-shadow-per-level rule and the role-owned tint remain
 `elevation.test.ts`'s.
 
 ```ts
@@ -2438,9 +2446,9 @@ cannot render half of itself.
 
 | Level | Light | Dark | High-contrast light | High-contrast dark | Use |
 | ----- | ----- | ---- | ------------------- | ------------------ | --- |
-| `sm` | `0 1 2 0 #191D2514` | `0 1 2 0 #00000066` | `0 1 2 0 #00000014` | `0 1 2 0 #2E2E2E66` | resting cards |
-| `md` | `0 4 12 -2 #191D251F` | `0 8 24 -4 #000000A6` | `0 4 12 -2 #0000001F` | `0 8 24 -4 #2E2E2EA6` | menus and popovers |
-| `lg` | `0 16 40 -8 #191D2529` | `0 24 56 -12 #000000CC` | `0 16 40 -8 #00000029` | `0 24 56 -12 #2E2E2ECC` | dialogs and command palettes |
+| `sm` | `0 1 2 0 #191D2514` | `0 1 2 0 #00000066` | `0 1 2 0 #00000014` | `0 1 2 0 #4A4A4A66` | resting cards |
+| `md` | `0 4 12 -2 #191D251F` | `0 8 24 -4 #000000A6` | `0 4 12 -2 #0000001F` | `0 8 24 -4 #4A4A4AA6` | menus and popovers |
+| `lg` | `0 16 40 -8 #191D2529` | `0 24 56 -12 #000000CC` | `0 16 40 -8 #00000029` | `0 24 56 -12 #4A4A4ACC` | dialogs and command palettes |
 | `overlay` | `[]` | `[]` | `[]` | `[]` | reserved; overlay layering uses the scrim colour |
 
 A level is a list because the runtime accepts a shadow list; the scale is

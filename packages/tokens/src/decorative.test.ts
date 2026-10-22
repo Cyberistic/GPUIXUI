@@ -79,6 +79,7 @@ import {
   flatActionBrand,
   flatShadowBrand,
   flatSkeletonBrand,
+  panelShadowBrand,
   report,
   unavailableActionBrand,
 } from "./decorative.example.js";
@@ -625,11 +626,15 @@ describe("decorative surfaces", () => {
       : list.includes("active: { backgroundColor: theme.colors.active }");
   };
 
-  it("measures the deepest elevation level on every strip a raised surface floats over", () => {
-    // A dialog lands on the page, a popover on a card or the page, a menu in a
-    // toolbar and a context menu over the row it was opened from; the shadow is
-    // the only thing separating a raised surface from the strip in a dark theme,
-    // so the four content strips and every wash a row can wear are measured.
+  it("measures the deepest elevation level on the strips the veil already names", () => {
+    // A dialog lands on the page, a popover on a card, a menu in a toolbar and a
+    // context menu over the row it was opened from; the shadow is the only thing
+    // separating a raised surface from the strip in a dark theme. The veil and
+    // the shadow cover the same window, so a strip the veil names and the shadow
+    // does not is a hole: high-contrast dark's `secondary` **is** the shadow's
+    // tint, so a dialog opened over a segmented panel there cast no shadow at all
+    // (1.00:1). The field fill is the same strip one surface over — a picker's
+    // panel overlaps the field it drops from.
     const strips = [
       ...new Set(
         decorativeSurfaces
@@ -637,11 +642,31 @@ describe("decorative surfaces", () => {
           .map(({ over }) => over),
       ),
     ];
+    const veiled = [
+      ...new Set(
+        decorativeSurfaces
+          .filter(({ surface }) => surface === "scrim")
+          .map(({ over }) => over),
+      ),
+    ];
 
-    expect(strips.length).toBeGreaterThanOrEqual(7);
+    expect(strips.length).toBeGreaterThanOrEqual(13);
+    expect(veiled.filter((over) => !strips.includes(over))).toEqual([]);
     expect(
       strips.filter((over) => !measured("elevation", "shadow", over)),
     ).toEqual([]);
+  });
+
+  it("measures a shadow on the tint a message's own action opens over", () => {
+    // An `Alert`'s description is a container and its documented action is a
+    // plain `Button`, so a menu or a popover opened from one casts its shadow
+    // over the tint the message is painted on — the same composition the row
+    // washes are measured for, one surface over.
+    const missing = statusTones
+      .map((tone) => `${tone}Soft`)
+      .filter((over) => !measured("elevation", "shadow", over));
+
+    expect(missing).toEqual([]);
   });
 
   it("measures a surface opened from the row the pointer is on", () => {
@@ -757,18 +782,71 @@ describe("decorative surfaces", () => {
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8");
 
-    expect(printed).toBe("1.09–1.37:1");
+    expect(printed).toBe("1.17–1.87:1");
     expect(read("../../../docs/tokens.md")).toContain(printed);
     expect(read("../../../docs/design-system.md")).toContain(printed);
   });
 
+  it("reports the high-contrast dark panel a shadow could not lift", () => {
+    // The shipped defect the veil's strip list predicted: this variant's shadow
+    // tint was the grey of its own `secondary` face, so a dialog opened over a
+    // segmented panel painted a shadow the panel could not show — 1.00:1, while
+    // the page, card, popover and toolbar placements all passed — and the same
+    // tint was 1.047:1 on the deep red message surface, under the floor at its
+    // edge. The tint is lighter than the faces it can fall on now, and every
+    // strip clears.
+    const before = extendTheme(highContrastDarkTheme, {
+      colors: { shadow: "#2E2E2EB3" },
+    });
+
+    expect(
+      decorativeFailures(before).filter(
+        ({ surface }) => surface === "elevation",
+      ),
+    ).toEqual([
+      {
+        surface: "elevation",
+        role: "shadow",
+        over: "secondary",
+        ratio: 1,
+        floor: decorativeFloor,
+      },
+      {
+        surface: "elevation",
+        role: "shadow",
+        over: "destructiveSoft",
+        ratio: 1.0467992163227682,
+        floor: decorativeFloor,
+      },
+    ]);
+    expect(
+      decorativeFailures(highContrastDarkTheme).some(
+        ({ surface }) => surface === "elevation",
+      ),
+    ).toBe(false);
+  });
+
+  it("reports a shadow painted in the panel it falls on", () => {
+    // The same defect from a brand, on the strip a filled panel paints: a tint
+    // that carries the panel's own value darkens nothing there, and every page
+    // placement still passes.
+    const broken = extendTheme(lightTheme, {
+      colors: { shadow: lightTheme.colors.secondary },
+    });
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, over }) => surface === "elevation" && over === "secondary",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+  });
+
   it("reports the high-contrast dark page no level could lift", () => {
-    // The shipped defect: the high-contrast dark theme tinted its shadows with
-    // black on a pure-black page, so every level measured 1.00:1 there and no
-    // raised surface had a shadow on the page. Its card, popover and toolbar are
-    // lifted greys, so only the page was erased — which is the strip a dialog
-    // and a full-width card land on. The tint is the grey its raised controls
-    // use now, and the deepest level clears the floor on all five strips.
+    // The first shipped defect: the high-contrast dark theme tinted its shadows
+    // with black on a pure-black page, so every level measured 1.00:1 there and
+    // no raised surface had a shadow on the page. Its card, popover and toolbar
+    // are lifted greys, so only the page was erased — which is the strip a dialog
+    // and a full-width card land on. The deepest level clears every strip now.
     const before = extendTheme(highContrastDarkTheme, {
       colors: { shadow: "#000000B3" },
     });
@@ -796,8 +874,11 @@ describe("decorative surfaces", () => {
   it("reports a shadow painted in the page it falls on", () => {
     // The same defect from a brand: a tint equal to the strip cannot darken it,
     // so every level is flat there no matter how strong its share is. The card,
-    // popover and toolbar are reported too — the page-coloured tint lifts them
-    // by less than a percent.
+    // popover, toolbar, panel, field fill and row washes are reported too — the
+    // page-coloured tint lifts them by less than a percent. The soft status tints
+    // are the exception on purpose: a pale or deep tint is not in the page's
+    // lightness band, so the page's own colour is visible over one, and the
+    // placements measure that rather than assuming it.
     const broken = extendTheme(lightTheme, {
       colors: { shadow: lightTheme.colors.background },
     });
@@ -805,20 +886,27 @@ describe("decorative surfaces", () => {
     const strips = decorativeSurfaces
       .filter(({ surface }) => surface === "elevation")
       .map(({ over }) => over);
+    // The deep red message tint is the one strip the page's own colour still
+    // moves: it sits far enough from the page's lightness to show a pale shadow,
+    // which is why the placement measures the tint rather than assuming it.
+    const erased = strips.filter((over) => over !== "destructiveSoft");
 
     expect(
       decorativeFailures(broken)
         .filter(({ surface }) => surface === "elevation")
         .map(({ over, ratio }) => [over, ratio]),
     ).toMatchObject(
-      strips.map((over) => [
+      erased.map((over) => [
         over,
         over === "background" ? 1 : expect.any(Number),
       ]),
     );
     expect(
       decorativeFailures(broken)
-        .filter(({ surface }) => surface === "elevation")
+        .filter(
+          ({ surface, over }) =>
+            surface === "elevation" && over !== "destructiveSoft",
+        )
         .every(({ ratio, floor }) => ratio !== undefined && ratio < floor),
     ).toBe(true);
   });
@@ -1023,6 +1111,13 @@ describe("the documented example", () => {
     expect(decorativeSurfacesAreVisible(unavailableActionBrand)).toBe(false);
     expect(report(unavailableActionBrand)).toContain(
       "disabledFace: disabled on secondary is 1.00",
+    );
+  });
+
+  it("reports the brand whose shadow is its segmented panel", () => {
+    expect(decorativeSurfacesAreVisible(panelShadowBrand)).toBe(false);
+    expect(report(panelShadowBrand)).toContain(
+      "elevation: shadow on secondary is 1.00",
     );
   });
 

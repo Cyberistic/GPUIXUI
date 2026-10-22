@@ -52,6 +52,15 @@ export const flatSkeletonBrand = extendTheme(lightTheme, {
   colors: { skeleton: lightTheme.colors.popover },
 });
 
+/**
+ * A brand whose shadow is the fill of its segmented panel. A dialog opened over
+ * that panel casts a shadow the panel cannot show — the same defect as a tint
+ * that is the page, one window strip over.
+ */
+export const panelShadowBrand = extendTheme(lightTheme, {
+  colors: { shadow: lightTheme.colors.secondary },
+});
+
 /** A failure written the way a theme editor shows it. */
 export const report = (theme: Theme): ReadonlyArray<string> =>
   decorativeFailures(theme).map(

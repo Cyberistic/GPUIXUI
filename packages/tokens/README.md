@@ -79,9 +79,14 @@ composed by hand.
 
 The deepest level must also be **visible** on the strips a raised surface falls
 on, which `decorativeFailures` measures as a ceiling — a blurred shadow passes
-below the floor only when a reader cannot see it at all. That found the
-high-contrast dark theme, whose black tint on a pure-black page read 1.00:1 at
-every level; its tint is the grey its raised controls use now.
+below the floor only when a reader cannot see it at all. Those strips are the
+window's content surfaces (page, card, popover, toolbar, the segmented
+`secondary` panel and a field's `input` fill), every wash a row can be wearing
+when a surface opens over it, and the four soft tints a message is painted on. It
+found the high-contrast dark theme twice: its black tint on a pure-black page read
+1.00:1 at every level, and the grey that replaced it was the same theme's
+`secondary` face, so a dialog over a segmented panel read 1.00:1 too. Its tint is
+lighter than every face it can fall on now.
 
 ## Layering
 

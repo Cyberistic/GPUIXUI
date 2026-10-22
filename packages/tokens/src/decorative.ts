@@ -300,24 +300,45 @@ const skeletonStrips = ["background", "card", "popover", "muted"] as const;
  * high-contrast dark theme's black tint on its pure-black page measured 1.00:1
  * at every level, so no raised surface in that variant had a shadow.
  *
- * The strips are the four a raised surface floats over plus the washes a row
- * wears behind it: a context menu opens over the row the reader right-clicked,
- * so the shadow falls on that row's own fill — the `selected` a chosen row
- * holds, the `accent` a list row tints under the pointer, and the `active` a
- * row keeps while the press that opened the surface is down. A menu row's
- * `hover` is deliberately not one of them: no surface opens over a menu row,
- * and the row a menu is opened *from* is a list row, which tints `accent`.
+ * The strips are the four content surfaces a raised surface floats over, the two
+ * window fills the veil already names — a segmented `secondary` panel (a filled
+ * panel as well as a tonal action's face) and a field's own `input` fill, which
+ * a picker's panel overlaps — every wash a row can be wearing when the surface
+ * opens, and the four soft tints a message is painted on, because an alert's
+ * documented action can open a menu over its own tint. The veil and the shadow
+ * cover the same window, so a strip the veil names and the shadow does not was
+ * the hole: the high-contrast dark `secondary` **is** the shadow's tint, so a
+ * dialog opened over a segmented panel there cast no shadow at all (1.00:1).
+ *
+ * The washes: a context menu opens over the row the reader right-clicked, so the
+ * shadow falls on that row's own fill — the `selected` a chosen row holds, the
+ * `accent` a list row tints under the pointer, and the `active` a row keeps
+ * while the press that opened the surface is down. A menu row's `hover` is
+ * deliberately not one of them: no surface opens over a menu row, and the row a
+ * menu is opened *from* is a list row, which tints `accent`.
  */
 const elevationRole = "shadow" as const;
 const elevationLevel = "lg" as const;
+
+/**
+ * The soft status tints a surface opened from a message lands on. An `Alert`'s
+ * description is a container and its documented action is a plain `Button`, so a
+ * menu or a popover opened from one casts its shadow over the tint the message
+ * is painted on — the same composition the row washes are measured for.
+ */
+const elevationTints = statusTones.map((tone) => `${tone}Soft` as const);
+
 const elevationStrips = [
   "background",
   "card",
   "popover",
   "muted",
+  "secondary",
+  "input",
   "selected",
   "active",
   "accent",
+  ...elevationTints,
 ] as const;
 
 /**

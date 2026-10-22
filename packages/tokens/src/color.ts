@@ -433,8 +433,11 @@ export const highContrastDarkColors = {
   // A black tint cannot darken a pure-black page, so this variant's shadow is
   // the grey its raised controls use: at the scale's own shares it reads
   // 1.09–1.37:1 across the page, card, popover and muted strips, where the
-  // black it shipped was 1.00:1 on the page at every level.
-  shadow: "#2E2E2EB3",
+  // black it shipped was 1.00:1 on the page at every level. It is lighter than
+  // `secondary` and `active` because those are strips a surface floats over:
+  // the control face's own `#2E2E2E` was the tint, so the shadow erased itself
+  // on a segmented panel.
+  shadow: "#4A4A4AB3",
 } satisfies ThemeColors;
 
 /**
