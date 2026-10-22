@@ -487,6 +487,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "data-tree-lifecycle",
+    title:
+      "Tree: the shipped tree moves one tab stop with the cursor, opens and closes branches by arrow, jumps by type-ahead, and reveals a deep file",
+    capability: "tree",
+  },
+  {
     id: "virtual-table-lifecycle",
     title:
       "Table: the shipped virtualized table retains one window of a thousand rows, reveals a far row that was never mounted, and holds its header while the rows move",

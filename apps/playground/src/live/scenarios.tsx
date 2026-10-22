@@ -182,6 +182,21 @@ import {
 } from "./otp-keys.js";
 
 import {
+  DATA_TREE_COLLAPSE,
+  DATA_TREE_EXPAND,
+  DATA_TREE_INITIAL,
+  DATA_TREE_READOUT,
+  DATA_TREE_REVEAL,
+  DATA_TREE_REVEALED,
+  DATA_TREE_ROWS_ALL,
+  DATA_TREE_ROWS_FOLDED,
+  DATA_TREE_ROWS_OPEN,
+  DATA_TREE_ROWS_REVEALED,
+  dataTreeReadout,
+  dataTreeRow,
+} from "./data-tree.js";
+
+import {
   VIRTUAL_TABLE,
   VIRTUAL_TABLE_FILTER,
   VIRTUAL_TABLE_FILTERED_ROWS,
@@ -21830,6 +21845,212 @@ const virtualTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * The shipped `@gpuixui/data` workspace tree, driven in a real window.
+ *
+ * Tier 3's *Tree views* row rests on the offscreen `data-tree-core` scenario,
+ * where a key is synthesised into the row's handler. The tree's contract is
+ * about **native focus**: one tab stop that follows the cursor, a `focusElement`
+ * call made after the row's `tabIndex` commits, and a type-ahead buffer fed by
+ * the keys the focused row receives. The probe mounts the example from the
+ * package's registry and reads the focused row's `testId` after every gesture, so
+ * a key that never reached the row names the gesture rather than the component.
+ */
+const DataTreeProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const Example = dataExamples["tree"];
+  return (
+    <div
+      testId="data-tree-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The shipped workspace tree: one tab stop follows the cursor, arrows open
+        and close branches, typing jumps to a row, and a reveal opens the path
+        to a deep file.
+      </text>
+      {Example === undefined ? null : <Example />}
+    </div>
+  );
+};
+
+const dataTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(DATA_TREE_READOUT);
+    const readout = () => ctx.host.text(DATA_TREE_READOUT);
+    const present = (key: string) =>
+      Effect.map(ctx.host.bounds(dataTreeRow(key)), Option.fromNullishOr);
+    const mounted = (key: string) => Effect.map(present(key), Option.isSome);
+    const state = (rows: number, active: string) =>
+      dataTreeReadout({ rows, active: Option.some(active) });
+
+    yield* ctx.expectEqual(
+      "the tree opens on the example's own readout",
+      yield* readout(),
+      DATA_TREE_INITIAL,
+    );
+    yield* ctx.expectEqual(
+      "the active row is mounted",
+      yield* mounted("src"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a closed branch's children are not in the tree",
+      yield* mounted("button.tsx"),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "nothing holds the focus until the reader touches the tree",
+      yield* focusedId(ctx),
+      "none",
+    );
+
+    // A press on an **open** folder closes it, and the runtime hands the press's
+    // focus to the row: the tree's one tab stop and the focused element agree
+    // from the first gesture.
+    yield* ctx.host.click(dataTreeRow("src"));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press on an open folder folds it",
+      yield* readout(),
+      state(DATA_TREE_ROWS_FOLDED, "src"),
+    );
+    yield* ctx.expectEqual(
+      "and the row takes the focus the press gave it",
+      yield* focusedAfterPaint(ctx),
+      dataTreeRow("src"),
+    );
+    yield* ctx.expectEqual(
+      "the folded branch's children leave the tree",
+      yield* mounted("components"),
+      false,
+    );
+
+    // Right opens the closed branch, then steps into it: the first press opens,
+    // the second moves the cursor, and the row's `tabIndex` commit comes first.
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Right opens the branch the cursor is on",
+      yield* readout(),
+      state(DATA_TREE_ROWS_OPEN, "src"),
+    );
+    yield* ctx.expectEqual(
+      "and paints its children",
+      yield* mounted("components"),
+      true,
+    );
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Right again steps into the open branch",
+      yield* readout(),
+      state(DATA_TREE_ROWS_OPEN, "components"),
+    );
+    yield* ctx.expectEqual(
+      "moving the cursor moves the real focus with it",
+      yield* focusedAfterPaint(ctx),
+      dataTreeRow("components"),
+    );
+
+    // Down walks the visible rows in paint order — past a closed branch's hidden
+    // children — and Left leaves a branch for its parent.
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "ArrowDown walks to the next visible row",
+      yield* readout(),
+      state(DATA_TREE_ROWS_OPEN, "index.ts"),
+    );
+    yield* ctx.expectEqual(
+      "with the focus",
+      yield* focusedAfterPaint(ctx),
+      dataTreeRow("index.ts"),
+    );
+    yield* ctx.host.key("left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "ArrowLeft leaves the branch for its parent",
+      yield* readout(),
+      state(DATA_TREE_ROWS_OPEN, "src"),
+    );
+
+    // Type-ahead is the third way to move the cursor, and it moves the focus too.
+    yield* ctx.host.key("p");
+    yield* ctx.host.key("a");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "typing a name jumps to the row it matches",
+      yield* readout(),
+      state(DATA_TREE_ROWS_OPEN, "package.json"),
+    );
+    yield* ctx.expectEqual(
+      "and the jump moves the focus",
+      yield* focusedAfterPaint(ctx),
+      dataTreeRow("package.json"),
+    );
+
+    // The reveal is the app's action, not the tree's key handler: it opens the
+    // path and moves the cursor, while the focus stays on the button the reader
+    // pressed — a search hit needs its own `focusElement` to hand the row over.
+    yield* ctx.host.click(DATA_TREE_REVEAL);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the reveal opens the path to a deep file and moves the cursor",
+      yield* readout(),
+      state(DATA_TREE_ROWS_REVEALED, DATA_TREE_REVEALED),
+    );
+    yield* ctx.expectEqual(
+      "the revealed row is mounted",
+      yield* mounted(DATA_TREE_REVEALED),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a reveal from a button leaves the focus on that button (measured limit)",
+      yield* focusedAfterPaint(ctx),
+      DATA_TREE_REVEAL,
+    );
+    yield* ctx.host.capture("data-tree-revealed");
+
+    // The two batch actions change the row set without touching the cursor: the
+    // active key survives even while its row is hidden, which is what the
+    // readout prints.
+    yield* ctx.host.click(DATA_TREE_COLLAPSE);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Collapse all folds every branch",
+      yield* readout(),
+      state(DATA_TREE_ROWS_FOLDED, DATA_TREE_REVEALED),
+    );
+    yield* ctx.host.click(DATA_TREE_EXPAND);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Expand all shows every row",
+      yield* readout(),
+      state(DATA_TREE_ROWS_ALL, DATA_TREE_REVEALED),
+    );
+    yield* ctx.expectEqual(
+      "the deepest file in the expanded tree is mounted",
+      yield* mounted("header.tsx"),
+      true,
+    );
+    yield* ctx.host.capture("data-tree-expanded");
+  });
+
+/**
  * A grid whose first column is drag-resized in a real window.
  *
  * Tier 3's **Resizable columns** row cites only the headless
@@ -22673,5 +22894,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "virtual-table-lifecycle",
     view: () => <VirtualTableProbe />,
     steps: virtualTableSteps,
+  },
+  "data-tree-lifecycle": {
+    id: "data-tree-lifecycle",
+    view: () => <DataTreeProbe />,
+    steps: dataTreeSteps,
   },
 };

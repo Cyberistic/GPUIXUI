@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-77 probes a real window can prove, of which eighteen mount shipped
+78 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -50,7 +50,8 @@ the command palette, the tabs, the list, the popover, the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack
 and the modal focus rule), seven mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip and
-the Button), one more
+the Button), three mount `@gpuixui/data`'s examples (the table, the virtualized
+table and the tree), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
@@ -4279,6 +4280,49 @@ is opened (**`expected "ArrowRight moves one day forward: 2026-03-13", got
 day fails with **`expected "date-day-2026-03-11", got "date-next"`** — the
 measured limit is reported, not assumed away.
 
+### `data-tree-lifecycle` — measured on 0.11.0 here
+
+**Does the shipped tree's cursor really own native focus?** Tier 3's *Tree views*
+row rests on the offscreen `data-tree-core` scenario, where a key is synthesised
+into the row's handler. `TreeView`'s whole contract is about the **real** focus:
+one tab stop that follows the cursor, a `focusElement` call made after the row's
+`tabIndex` commits, and a type-ahead buffer fed by the keys the focused row
+receives. The probe mounts the example from the package's registry and reads the
+focused row's `testId` after every gesture, so a key that never reached a row
+names the gesture rather than the component.
+
+| Gesture | Readout | What it proves |
+| ------- | ------- | -------------- |
+| open | `5 rows · active=src` | `src` is expanded and active; a press hasn't happened, so nothing holds the focus |
+| press `src` | `3 rows · active=src` | a press on an **open** folder folds it — and the runtime hands the row the press's focus |
+| `right` | `5 rows · active=src` | Right opens the closed branch and paints its children |
+| `right` | `5 rows · active=components` | Right again steps into the open branch, and the focus moves with the cursor |
+| `down` | `5 rows · active=index.ts` | the walk skips a closed branch's hidden children |
+| `left` | `5 rows · active=src` | Left leaves a branch for its parent |
+| type `p`, `a` | `5 rows · active=package.json` | the type-ahead buffer jumps, and the jump moves the focus too |
+| press Reveal row.tsx | `9 rows · active=row.tsx` | the reveal opens the whole path and moves the cursor — while the focus stays on the **button** (measured limit) |
+| Collapse all | `3 rows · active=row.tsx` | every branch folds; the cursor keeps a key whose row is hidden |
+| Expand all | `11 rows · active=row.tsx` | every row paints again, deepest file included |
+
+The reveal row is the one a consumer has to act on: the app's own action changes
+the tree's cursor through its controlled props, and the tree's focus effect does
+not run for a cursor it did not move — so a search hit or a "show this file"
+command must call `focusElement` on the revealed row itself, or a keyboard reader
+is left on the button. The collapse/expand rows are the same shape: batch actions
+move the row set, not the cursor, and the readout prints the key the controller
+still holds.
+
+22 checks, `--only data-tree-lifecycle`, green on 0.11.0 (~0.8 s, three
+consecutive runs). Negative control measured, exit `1`, restored green:
+expecting `active=button.tsx` after the second Right fails `Right again steps
+into the open branch` with **`expected "5 rows · active=button.tsx", got "5 rows
+· active=components"`** — the readout is the controller's, not the probe's. Fixture: `src/live/data-tree.ts` (the ids, the readout's
+spelling and the four measured row counts) + `data-tree.test.ts` (5 cases: the
+workspace parsed from the example's own `file(...)` literal and every count
+derived from it, the readout template, the ids the example and `TreeView` derive,
+the probe held to the fixture, and this section). Evidence:
+`.artifacts/live/data-tree-{revealed,expanded}.png`.
+
 ### `virtual-table-lifecycle` — measured on 0.11.0 here
 
 **What does the shipped virtualized table actually retain, and what does it
@@ -4588,8 +4632,8 @@ narrower. Each deviation is deliberate and measured:
   `slider-vertical-lifecycle`, `modifier-select-lifecycle`, `rtl-text`,
   `syntax-palette`, `press-routing-lifecycle`, `list-row-press`,
   `column-resize-lifecycle`, `button-activation-lifecycle` and
-  `date-picker-lifecycle`, `data-table-lifecycle` and `virtual-table-lifecycle`
-  (nineteen probes, each run alone).
+  `date-picker-lifecycle`, `data-table-lifecycle`, `virtual-table-lifecycle` and
+  `data-tree-lifecycle` (twenty probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
