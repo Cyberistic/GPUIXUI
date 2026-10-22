@@ -7149,6 +7149,23 @@ fails the case by name; restored, the file is 44/44 and
       dead path planted in `core/scroll.ts`'s comment is reported as
       `packages/primitives/src/core/scroll.ts: names packages/nope, which does
       not exist`, and with both restored the file is 31/31.
+`[x]` `packages/primitives`: **the page documented one scroller and said
+      nothing about a scroller inside another** — `nested-scroll-lifecycle`
+      measured on 0.11.0 that a wheel moves **every scrollable ancestor on the
+      hit path** by the same delta, that no host prop refuses it (there is no
+      wheel handler and no `preventDefault`), and that `onScroll` fires on every
+      ancestor while each `onScrollChange` names one offset. That is the fact a
+      dock — or any page holding a list — is designed around, so
+      `docs/scroll-area.mdx` gains **§Nesting** with the measurement and the two
+      rules (size a workspace to the window and let each pane scroll; read
+      `onScrollChange`, not `onScroll`), the `<virtual-list>` case included, and
+      §Verification cites the probe (31 checks). Guard: `src/docs.test.ts`'s
+      `teaches the wheel a nested scroller cannot keep` requires the section,
+      the ancestor rule, the absent `preventDefault`, the `onScrollChange`
+      advice, both citations, the registry entry and the README heading.
+      Direction measured: deleting §Nesting fails the case by name (`ancestor:
+      false`); restored, the file is 32/32. `COMPONENTS.md`'s Scrollable
+      containers row carries the same contract and figures.
 
 ## Swarm-owned blockers (fix these)
 

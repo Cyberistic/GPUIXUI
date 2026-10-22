@@ -215,6 +215,27 @@ The keyboard contract above is what makes the scroller usable without a pointer,
 and the `focusVisible` outline is what makes the stop visible: a tab stop with no
 cue is a place a keyboard reader arrives without knowing.
 
+## Nesting
+
+A window measured what a wheel does to a scroller inside another one
+(`nested-scroll-lifecycle`, 31 checks on 0.11.0), and it is not the innermost
+scroller that takes it: **every scrollable ancestor on the hit path moves by the
+same delta**. A list inside a scrolling page moved `-100` and the page moved
+`-100` with it, each scroller clamping against its own content (`-340` for the
+list, `-360` for the page under one 100 000px wheel), and the page's `onScroll`
+heard the wheel aimed inside the list.
+
+There is no wheel handler and no `preventDefault` in the host props, so a pane
+cannot keep a wheel from its page. Two rules follow:
+
+- A dock or workspace sized to the window is not a scroller around pane
+  scrollers — let each pane scroll and keep the outer layout still.
+- `onScroll` fires on every ancestor, so it cannot say which scroller the reader
+  rolled from the event alone. Read each scroller's own `onScrollChange` offset.
+
+The same holds for a `<virtual-list>` pane, because the rule belongs to the
+native scroll host and not to an `overflow: "scroll"` box.
+
 ## Theming
 
 The frame resolves `padding`, `rounded-*` and `border` from the theme's spacing,
@@ -250,6 +271,11 @@ scrollbar's paint is otherwise the platform's. The keyboard step is the theme's
   no label drops the stop, the role and the name; the viewport declares the
   keyboard ring and a non-focusable one declares none; the frame's
   padding/radius stay off the viewport.
+- `nested-scroll-lifecycle` (a window, 31 checks on 0.11.0) — a scroller inside
+  a scroller: every scrollable ancestor takes the wheel's own delta, each clamps
+  against its own content, the page's `onScroll` hears a wheel aimed inside the
+  list, and a `<virtual-list>` pane moves its page too. Evidence:
+  `apps/playground/README.md` §`nested-scroll-lifecycle`.
 - `keyboard-scroll-lifecycle` (a window, 62 checks on 0.11.0) — the delivery
   path the offscreen verbs cannot prove: a traversal has to reach the stop
   before a key moves anything, one line is the theme's `density.rowHeight`,

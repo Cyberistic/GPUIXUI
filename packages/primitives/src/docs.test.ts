@@ -1390,6 +1390,49 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("teaches the wheel a nested scroller cannot keep", () => {
+    // Bug guarded: the page documented one scroller and said nothing about a
+    // scroller inside another, while a window had measured that a wheel moves
+    // every scrollable ancestor on the hit path and that no prop can refuse it
+    // — the fact a dock, or a page holding a list, is designed around.
+    const page = read("scroll-area.mdx");
+    const nesting = Option.getOrElse(bodyOf(page, "Nesting"), () => "");
+    const verification = Option.getOrElse(
+      bodyOf(page, "Verification"),
+      () => "",
+    );
+    const registry = readFileSync(
+      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
+      "utf8",
+    );
+    const readme = readFileSync(
+      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
+      "utf8",
+    );
+
+    expect({
+      ancestor: nesting.includes("every scrollable ancestor"),
+      noPrevent: nesting.includes("no `preventDefault`"),
+      ownOffset: nesting.includes("`onScrollChange` offset"),
+      probe: nesting.includes("`nested-scroll-lifecycle`"),
+      verified: verification.includes("`nested-scroll-lifecycle`"),
+      checks: verification.includes("31 checks on 0.11.0"),
+      evidence: verification.includes("§`nested-scroll-lifecycle`"),
+      heading: readme.includes("### `nested-scroll-lifecycle`"),
+      registry: registry.includes('id: "nested-scroll-lifecycle"'),
+    }).toEqual({
+      ancestor: true,
+      noPrevent: true,
+      ownOffset: true,
+      probe: true,
+      verified: true,
+      checks: true,
+      evidence: true,
+      heading: true,
+      registry: true,
+    });
+  });
+
   it("names only package paths that exist", () => {
     // Bug guarded: ScrollArea's limitations handed the virtual-list work to a
     // `data-grid` package "when it lands" — a directory this workspace has
