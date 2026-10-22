@@ -30,6 +30,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { createContext, useContext, useState } from "react";
+import { hintHost, renderHint, textHint } from "./internal/hint.js";
 import { activationHandlers, isEnter } from "./internal/key.js";
 import {
   assertParts,
@@ -177,6 +178,7 @@ export interface TagInputFieldState {
 export const TagInputField = ({
   className,
   style,
+  placeholder,
   onKeyDown,
   onFocus,
   onBlur,
@@ -185,31 +187,46 @@ export const TagInputField = ({
   const theme = useTheme();
   const { draft, disabled, editDraft, addDraft } = useTagInput();
 
+  const fieldStyle = mergeStyles(
+    mergeStyles(recipeStyle(cn(TAG_INPUT_FIELD, className), theme), {
+      height: controlHeight(theme, "sm"),
+      ...controlRing(theme, { disabled }),
+      ...selectionWash(theme),
+      ...keepContent,
+    }),
+    resolveStyle(style, { disabled }),
+  );
+  const hint = textHint(
+    theme,
+    { style: fieldStyle, align: "center", disabled },
+    placeholder,
+    draft,
+  );
+
   return (
-    <input
-      {...rest}
-      // The group paints the page role behind the tokens and this field.
-      theme={nativeTextTheme(theme, "background")}
-      readOnly={disabled}
-      value={draft}
-      onChange={(event) => editDraft(event.value ?? "")}
-      onKeyDown={(event: KeyEvent) => {
-        onKeyDown?.(event);
-        if (isEnter(event)) addDraft();
-      }}
-      onSubmit={() => addDraft()}
-      onFocus={(event) => onFocus?.(event)}
-      onBlur={(event) => onBlur?.(event)}
-      style={mergeStyles(
-        mergeStyles(recipeStyle(cn(TAG_INPUT_FIELD, className), theme), {
-          height: controlHeight(theme, "sm"),
-          ...controlRing(theme, { disabled }),
-          ...selectionWash(theme),
-          ...keepContent,
-        }),
-        resolveStyle(style, { disabled }),
-      )}
-    />
+    <div style={hintHost({ flexGrow: 1 })}>
+      <input
+        {...rest}
+        // The group paints the page role behind the tokens and this field; the
+        // hint is painted, because the host's own placeholder is a fixed grey.
+        theme={nativeTextTheme(theme, "background")}
+        readOnly={disabled}
+        value={draft}
+        onChange={(event) => editDraft(event.value ?? "")}
+        onKeyDown={(event: KeyEvent) => {
+          onKeyDown?.(event);
+          if (isEnter(event)) addDraft();
+        }}
+        onSubmit={() => addDraft()}
+        onFocus={(event) => onFocus?.(event)}
+        onBlur={(event) => onBlur?.(event)}
+        style={fieldStyle}
+      />
+      {Option.match(hint, {
+        onNone: () => null,
+        onSome: (painted) => renderHint(painted, rest.testId),
+      })}
+    </div>
   );
 };
 

@@ -80,7 +80,9 @@ describe("TagInput", () => {
   it("renders the chips and the field, named as a group", () => {
     const tags = renderComponent(<Harness initial={["design", "docs"]} />);
 
-    expect(tags.renderer.getAllText()).toEqual(["design", "docs"]);
+    // The empty field paints its own hint, because the host's placeholder is a
+    // fixed grey no theme can reach (`internal/hint.tsx`).
+    expect(tags.renderer.getAllText()).toEqual(["design", "docs", "Add a tag"]);
 
     tags.unmount();
   });
@@ -117,7 +119,8 @@ describe("TagInput", () => {
     type(tags, "design");
     tags.renderer.simulateKeystrokes("enter");
 
-    expect(tags.renderer.getAllText()).toEqual(["design"]);
+    // The draft cleared with the refused token, so the hint is back.
+    expect(tags.renderer.getAllText()).toEqual(["design", "Add a tag"]);
 
     tags.unmount();
   });

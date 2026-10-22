@@ -29,6 +29,7 @@ import {
 import * as Option from "effect/Option";
 import { createContext, useContext, useState } from "react";
 import { useFieldsetDisabled } from "./fieldset.js";
+import { hintHost, renderHint, textHint } from "./internal/hint.js";
 import {
   assertParts,
   type PartChildren,
@@ -230,12 +231,19 @@ export const FieldInput = ({
   onFocus,
   onBlur,
   style,
+  placeholder,
+  value,
+  onChange,
   ...rest
 }: FieldInputProps) => {
   const theme = useTheme();
   const field = useContext(FieldContext);
   const fieldsetDisabled = useFieldsetDisabled();
   const [focused, setFocused] = useState(false);
+  // The host edits its own text, so the field keeps the same draft the hint
+  // reads. A controlled `value` stays authoritative.
+  const [draft, setDraft] = useState("");
+  const text = value ?? draft;
   const isInvalid = invalid ?? field?.error !== undefined;
   const isDisabled = disabled || fieldsetDisabled;
   const state: FieldInputState = {
@@ -250,47 +258,64 @@ export const FieldInput = ({
     onSome: (text) => (field?.required === true ? `${text}. Required` : text),
   });
 
+  const hostStyle = mergeStyles(
+    mergeStyles(recipeStyle(cn(FIELD_INPUT, className), theme), {
+      height: controlHeight(theme, "md"),
+      backgroundColor: isDisabled ? theme.colors.disabled : theme.colors.input,
+      color: isDisabled
+        ? theme.colors.disabledForeground
+        : theme.colors.inputForeground,
+      borderColor:
+        isInvalid && !isDisabled
+          ? theme.colors.destructive
+          : theme.colors.border,
+      ...(isDisabled ? { cursor: "not-allowed" } : {}),
+      ...(isDisabled ? {} : keyboardRing(theme, isInvalid)),
+      ...selectionWash(theme),
+      ...keepContent,
+    }),
+    resolveStyle(style, state),
+  );
+  const hint = textHint(
+    theme,
+    { style: hostStyle, align: "center", disabled: isDisabled },
+    placeholder,
+    text,
+  );
+
   return (
-    <input
-      {...rest}
-      // The host draws its own value, placeholder and caret, so it is told the
-      // fill they sit on; without it the runtime layers the text on its
-      // built-in dark palette and a light field gets a dark-surface hint.
-      theme={nativeTextTheme(theme, "input")}
-      {...(isDisabled ? { readOnly: true, tabIndex: -1 } : {})}
-      {...(field === undefined ? {} : { "aria-label": field.label })}
-      {...(description === undefined
-        ? {}
-        : { "aria-description": description })}
-      onFocus={(event) => {
-        setFocused(true);
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        setFocused(false);
-        onBlur?.(event);
-      }}
-      style={mergeStyles(
-        mergeStyles(recipeStyle(cn(FIELD_INPUT, className), theme), {
-          height: controlHeight(theme, "md"),
-          backgroundColor: isDisabled
-            ? theme.colors.disabled
-            : theme.colors.input,
-          color: isDisabled
-            ? theme.colors.disabledForeground
-            : theme.colors.inputForeground,
-          borderColor:
-            isInvalid && !isDisabled
-              ? theme.colors.destructive
-              : theme.colors.border,
-          ...(isDisabled ? { cursor: "not-allowed" } : {}),
-          ...(isDisabled ? {} : keyboardRing(theme, isInvalid)),
-          ...selectionWash(theme),
-          ...keepContent,
-        }),
-        resolveStyle(style, state),
-      )}
-    />
+    <div style={hintHost()}>
+      <input
+        {...rest}
+        // The host draws its own value and caret but not its hint: 0.11.0
+        // shapes a placeholder in a fixed grey no token reaches, so the field
+        // paints the hint itself in the measured `placeholder` role.
+        theme={nativeTextTheme(theme, "input")}
+        value={value}
+        {...(isDisabled ? { readOnly: true, tabIndex: -1 } : {})}
+        {...(field === undefined ? {} : { "aria-label": field.label })}
+        {...(description === undefined
+          ? {}
+          : { "aria-description": description })}
+        onChange={(event) => {
+          if (value === undefined) setDraft(event.value ?? "");
+          onChange?.(event);
+        }}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
+        style={hostStyle}
+      />
+      {Option.match(hint, {
+        onNone: () => null,
+        onSome: (painted) => renderHint(painted, rest.testId),
+      })}
+    </div>
   );
 };
 

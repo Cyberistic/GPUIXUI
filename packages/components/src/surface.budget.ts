@@ -56,8 +56,12 @@ export const surfaceBudget = {
   // entrance. 136 → 138 for Bubbles (`bubbles.tsx` and its rise rule); 138 → 140
   // for Fireworks (`fireworks.tsx` and its burst rule); 140 → 142 for Gradient
   // (`gradient.tsx` and its two-stop ramp rule); 142 → 144 for GravityStars
-  // (`gravity-stars.tsx` and its fall rule).
-  modules: 144,
+  // (`gravity-stars.tsx` and its fall rule); 144 → 145 for the painted field
+  // hint (`internal/hint.tsx`), because a GPUix host's own placeholder is a
+  // fixed grey no theme reaches and every text field paints its hint instead.
+  // 145 → 147 for SlidingNumber (`sliding-number.tsx` and the decimal-place rule
+  // beside it), the odometer whose columns a value can grow.
+  modules: 147,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB

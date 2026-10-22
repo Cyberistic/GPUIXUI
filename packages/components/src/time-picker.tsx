@@ -46,6 +46,7 @@ import {
   type ReactNode,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
+import { hintHost, renderHint, textHint } from "./internal/hint.js";
 import { activationHandlers } from "./internal/key.js";
 import {
   assertParts,
@@ -323,13 +324,23 @@ export const TimePickerSegment = ({
   const text = segment === "hours" ? hoursText : minutesText;
   const state: TimePickerSegmentState = { disabled, focused };
 
+  const fieldStyle = mergeStyles(
+    mergeStyles(recipeStyle(TIME_PICKER_SEGMENT, theme), {
+      width: SEGMENT_WIDTH,
+      backgroundColor: undefined,
+      ...(disabled ? {} : keyboardRing(theme)),
+      ...selectionWash(theme),
+      ...keepContent,
+    }),
+    resolveStyle(style, state),
+  );
   const props: InputProps = {
     testId: `${testId}-${segment}`,
     "aria-label": `${groupLabel} ${segment}`,
-    // The segments are transparent over the picker's `input` fill.
+    // The segments are transparent over the picker's `input` fill; the format
+    // hint is painted, because the host's own placeholder is a fixed grey.
     theme: nativeTextTheme(theme, "input"),
     value: text,
-    placeholder: segment === "hours" ? "HH" : "MM",
     readOnly: disabled,
     tabIndex: disabled ? -1 : 0,
     onChange: (event) => edit(segment, event.value ?? ""),
@@ -339,23 +350,31 @@ export const TimePickerSegment = ({
       normalize();
       setFocusedSegment(false);
     },
-    style: mergeStyles(
-      mergeStyles(recipeStyle(TIME_PICKER_SEGMENT, theme), {
-        width: SEGMENT_WIDTH,
-        backgroundColor: undefined,
-        ...(disabled ? {} : keyboardRing(theme)),
-        ...selectionWash(theme),
-        ...keepContent,
-      }),
-      resolveStyle(style, state),
-    ),
+    style: fieldStyle,
   };
+  const hint = textHint(
+    theme,
+    { style: fieldStyle, align: "center", disabled },
+    segment === "hours" ? "HH" : "MM",
+    text,
+  );
 
   return (
-    <input
-      {...props}
-      {...(segment === "hours" ? { ref: registerHours } : {})}
-    />
+    <div
+      style={hintHost({
+        width: SEGMENT_WIDTH,
+        alignSelf: "stretch",
+      })}
+    >
+      <input
+        {...props}
+        {...(segment === "hours" ? { ref: registerHours } : {})}
+      />
+      {Option.match(hint, {
+        onNone: () => null,
+        onSome: (painted) => renderHint(painted, `${testId}-${segment}`),
+      })}
+    </div>
   );
 };
 

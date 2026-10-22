@@ -36,6 +36,7 @@ import {
   type ReactElement,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
+import { hintHost, renderHint, textHint } from "./internal/hint.js";
 import { activationHandlers, isDismiss, isDown, isUp } from "./internal/key.js";
 import {
   assertParts,
@@ -127,6 +128,7 @@ export const MentionInput = ({
   disabled = false,
   className,
   children,
+  placeholder,
   testId,
   ...rest
 }: MentionInputProps) => {
@@ -181,6 +183,18 @@ export const MentionInput = ({
     [active, maxVisible, open, text],
   );
 
+  const controlStyle = mergeStyles(recipeStyle(MENTION_INPUT_CONTROL, theme), {
+    ...(disabled ? {} : keyboardRing(theme)),
+    ...selectionWash(theme),
+    ...keepContent,
+  });
+  const hint = textHint(
+    theme,
+    { style: controlStyle, align: "center", disabled },
+    placeholder,
+    text,
+  );
+
   return (
     <MentionContext.Provider value={context}>
       <div style={floatingRootStyle()}>
@@ -195,41 +209,50 @@ export const MentionInput = ({
             },
           )}
         >
-          <input
-            {...rest}
-            // The composite field paints the page role, so its value sits on
-            // `background` rather than a plain field's `input` fill.
-            theme={nativeTextTheme(theme, "background")}
-            aria-label={label}
-            testId={testId}
-            value={text}
-            readOnly={disabled}
-            onChange={(event) => {
-              if (disabled) return;
-              setText(event.value ?? "");
-              setDismissed(false);
-            }}
-            onSubmit={() => {
-              if (disabled || visible.length === 0) return;
-              select(visible[active] ?? "");
-            }}
-            onKeyDown={(event: EventPayload) => {
-              if (disabled || Option.isNone(open) || visible.length === 0)
-                return;
-              if (isDown(event)) {
-                setHighlighted((current) => current + 1);
-              } else if (isUp(event)) {
-                setHighlighted((current) => current - 1);
-              } else if (isDismiss(event)) {
-                setDismissed(true);
-              }
-            }}
-            style={mergeStyles(recipeStyle(MENTION_INPUT_CONTROL, theme), {
-              ...(disabled ? {} : keyboardRing(theme)),
-              ...selectionWash(theme),
-              ...keepContent,
+          <div
+            style={hintHost({
+              flexGrow: 1,
+              alignSelf: "stretch",
+              minWidth: 0,
             })}
-          />
+          >
+            <input
+              {...rest}
+              // The composite field paints the page role, so its value sits on
+              // `background` rather than a plain field's `input` fill; the hint
+              // is painted because the host's own placeholder is a fixed grey.
+              theme={nativeTextTheme(theme, "background")}
+              aria-label={label}
+              testId={testId}
+              value={text}
+              readOnly={disabled}
+              onChange={(event) => {
+                if (disabled) return;
+                setText(event.value ?? "");
+                setDismissed(false);
+              }}
+              onSubmit={() => {
+                if (disabled || visible.length === 0) return;
+                select(visible[active] ?? "");
+              }}
+              onKeyDown={(event: EventPayload) => {
+                if (disabled || Option.isNone(open) || visible.length === 0)
+                  return;
+                if (isDown(event)) {
+                  setHighlighted((current) => current + 1);
+                } else if (isUp(event)) {
+                  setHighlighted((current) => current - 1);
+                } else if (isDismiss(event)) {
+                  setDismissed(true);
+                }
+              }}
+              style={controlStyle}
+            />
+            {Option.match(hint, {
+              onNone: () => null,
+              onSome: (painted) => renderHint(painted, testId),
+            })}
+          </div>
         </div>
         {children}
       </div>

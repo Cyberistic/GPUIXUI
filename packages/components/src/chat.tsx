@@ -64,6 +64,7 @@ import * as Machine from "./chat/logic.js";
 export * from "./chat/logic.js";
 import { Button } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
+import { hintHost, renderHint, textHint } from "./internal/hint.js";
 import { isDismiss } from "./internal/key.js";
 import {
   assertParts,
@@ -378,6 +379,21 @@ export const ChatComposer = ({
     setDraft("");
   };
 
+  const fieldStyle = mergeStyles(recipeStyle(CHAT_COMPOSER_FIELD, theme), {
+    ...(disabled
+      ? { color: theme.colors.disabledForeground }
+      : keyboardRing(theme)),
+    ...selectionWash(theme),
+    ...keepContent,
+    minHeight: theme.spacing["2xl"],
+  });
+  const placeholderHint = textHint(
+    theme,
+    { style: fieldStyle, align: "top", disabled },
+    placeholder,
+    draft,
+  );
+
   return (
     <div
       {...rest}
@@ -392,37 +408,35 @@ export const ChatComposer = ({
         </div>
       )}
       <div style={recipeStyle(CHAT_COMPOSER_ROW, theme)}>
-        <textarea
-          testId="chat-field"
-          aria-label={label}
-          // The composer paints the page role behind its transparent field.
-          theme={nativeTextTheme(theme, "background")}
-          value={draft}
-          placeholder={placeholder}
-          readOnly={disabled}
-          // The host has no `disabled` prop (the primitives' rule): a disabled
-          // field is read-only, out of the tab order, and paints the measured
-          // disabled pair rather than a fade.
-          tabIndex={disabled ? -1 : 0}
-          minRows={1}
-          maxRows={6}
-          onChange={(event) => setDraft(event.value ?? "")}
-          onSubmit={send}
-          onKeyDown={(event: KeyEvent) => {
-            onKeyDown?.(event);
-            // Escape reaches a textarea's keydown (measured); Enter does not,
-            // so this is the stop path and not the submit one.
-            if (busy && canStop && isDismiss(event)) stop();
-          }}
-          style={mergeStyles(recipeStyle(CHAT_COMPOSER_FIELD, theme), {
-            ...(disabled
-              ? { color: theme.colors.disabledForeground }
-              : keyboardRing(theme)),
-            ...selectionWash(theme),
-            ...keepContent,
-            minHeight: theme.spacing["2xl"],
+        <div style={hintHost({ flexGrow: 1 })}>
+          <textarea
+            testId="chat-field"
+            aria-label={label}
+            // The composer paints the page role behind its transparent field.
+            theme={nativeTextTheme(theme, "background")}
+            value={draft}
+            readOnly={disabled}
+            // The host has no `disabled` prop (the primitives' rule): a disabled
+            // field is read-only, out of the tab order, and paints the measured
+            // disabled pair rather than a fade.
+            tabIndex={disabled ? -1 : 0}
+            minRows={1}
+            maxRows={6}
+            onChange={(event) => setDraft(event.value ?? "")}
+            onSubmit={send}
+            onKeyDown={(event: KeyEvent) => {
+              onKeyDown?.(event);
+              // Escape reaches a textarea's keydown (measured); Enter does not,
+              // so this is the stop path and not the submit one.
+              if (busy && canStop && isDismiss(event)) stop();
+            }}
+            style={fieldStyle}
+          />
+          {Option.match(placeholderHint, {
+            onNone: () => null,
+            onSome: (painted) => renderHint(painted, "chat-field"),
           })}
-        />
+        </div>
         {busy && canStop ? (
           <Button
             testId="chat-stop"

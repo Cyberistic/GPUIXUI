@@ -24,8 +24,10 @@ import {
   SEARCH_INPUT_CONTROL,
   SEARCH_INPUT_ICON,
 } from "@gpuixui/tw";
+import * as Option from "effect/Option";
 import { useCallback, useRef, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
+import { hintHost, renderHint, textHint } from "./internal/hint.js";
 import { activationHandlers, isDismiss } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
@@ -106,6 +108,18 @@ export const SearchInput = ({
     if (instance !== null) renderer?.focusElement?.(instance.id);
   };
   const state: SearchInputState = { disabled, focused };
+  const controlStyle = mergeStyles(recipeStyle(SEARCH_INPUT_CONTROL, theme), {
+    ...(disabled ? {} : keyboardRing(theme)),
+    ...selectionWash(theme),
+    ...keepContent,
+  });
+  const testId = rest.testId ?? "search-input";
+  const hint = textHint(
+    theme,
+    { style: controlStyle, align: "center", disabled },
+    placeholder,
+    value,
+  );
 
   return (
     <div
@@ -120,39 +134,41 @@ export const SearchInput = ({
       <div style={recipeStyle(SEARCH_INPUT_ICON, theme)}>
         <Icon name="search" size="sm" color={theme.colors.mutedForeground} />
       </div>
-      <input
-        {...rest}
-        // A composite field paints the page role as its own fill, so the host's
-        // placeholder and caret are measured against `background`.
-        theme={nativeTextTheme(theme, "background")}
-        ref={setInput}
-        testId={rest.testId ?? "search-input"}
-        value={value}
-        placeholder={placeholder}
-        readOnly={disabled}
-        onChange={(event) => {
-          onChange?.(event);
-          setValue(event.value ?? "");
-        }}
-        onKeyDown={(event: KeyEvent) => {
-          onKeyDown?.(event);
-          if (isDismiss(event)) clear();
-        }}
-        onSubmit={() => onSubmit?.(value)}
-        onFocus={(event) => {
-          setFocused(true);
-          rest.onFocus?.(event);
-        }}
-        onBlur={(event) => {
-          setFocused(false);
-          rest.onBlur?.(event);
-        }}
-        style={mergeStyles(recipeStyle(SEARCH_INPUT_CONTROL, theme), {
-          ...(disabled ? {} : keyboardRing(theme)),
-          ...selectionWash(theme),
-          ...keepContent,
+      <div style={hintHost({ flexGrow: 1, alignSelf: "stretch", minWidth: 0 })}>
+        <input
+          {...rest}
+          // A composite field paints the page role as its own fill, so the
+          // caret is measured against `background`; the hint is painted rather
+          // than handed to the host, whose placeholder is a fixed grey.
+          theme={nativeTextTheme(theme, "background")}
+          ref={setInput}
+          testId={testId}
+          value={value}
+          readOnly={disabled}
+          onChange={(event) => {
+            onChange?.(event);
+            setValue(event.value ?? "");
+          }}
+          onKeyDown={(event: KeyEvent) => {
+            onKeyDown?.(event);
+            if (isDismiss(event)) clear();
+          }}
+          onSubmit={() => onSubmit?.(value)}
+          onFocus={(event) => {
+            setFocused(true);
+            rest.onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setFocused(false);
+            rest.onBlur?.(event);
+          }}
+          style={controlStyle}
+        />
+        {Option.match(hint, {
+          onNone: () => null,
+          onSome: (painted) => renderHint(painted, testId),
         })}
-      />
+      </div>
       {value === "" ? null : (
         <div
           role="button"

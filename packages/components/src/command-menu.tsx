@@ -15,7 +15,12 @@
  * set; the parts are the input, the list, one row and the empty state.
  */
 
-import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import type {
+  EventPayload,
+  Props,
+  PublicInstance,
+  StyleDesc,
+} from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import {
   COMMAND_EMPTY,
@@ -38,6 +43,7 @@ import {
 } from "react";
 import { Dialog, DialogContent } from "./dialog.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
+import { hintHost, renderHint, textHint } from "./internal/hint.js";
 import { isDismiss, isDown, isFirst, isLast, isUp } from "./internal/key.js";
 import { overlaySurfaceStyle } from "./internal/overlay.js";
 import {
@@ -312,33 +318,47 @@ export const CommandMenuInput = ({
   const { query, setQuery, runActive, handleKeyDown, registerInput } =
     useCommandMenu();
 
+  const fieldStyle: StyleDesc = {
+    ...overlaySurfaceStyle(COMMAND_INPUT, className, theme),
+    height: controlHeight(theme, "md"),
+    paddingLeft: theme.spacing.md,
+    paddingRight: theme.spacing.md,
+    backgroundColor: theme.colors.input,
+    color: theme.colors.inputForeground,
+    borderWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    ...controlRing(theme),
+    ...selectionWash(theme),
+    ...keepContent,
+  };
+  const hint = textHint(
+    theme,
+    { style: fieldStyle, align: "center" },
+    placeholder,
+    query,
+  );
+
   return (
-    <input
-      ref={registerInput}
-      testId="command-input"
-      aria-label={label}
-      // The palette's field paints the `input` role as its own fill.
-      theme={nativeTextTheme(theme, "input")}
-      placeholder={placeholder}
-      value={query}
-      onChange={(event) => setQuery(event.value ?? "")}
-      onSubmit={runActive}
-      onKeyDown={handleKeyDown}
-      style={{
-        ...overlaySurfaceStyle(COMMAND_INPUT, className, theme),
-        height: controlHeight(theme, "md"),
-        paddingLeft: theme.spacing.md,
-        paddingRight: theme.spacing.md,
-        backgroundColor: theme.colors.input,
-        color: theme.colors.inputForeground,
-        borderWidth: theme.borderWidth.thin,
-        borderColor: theme.colors.border,
-        borderRadius: theme.radius.md,
-        ...controlRing(theme),
-        ...selectionWash(theme),
-        ...keepContent,
-      }}
-    />
+    <div style={hintHost()}>
+      <input
+        ref={registerInput}
+        testId="command-input"
+        aria-label={label}
+        // The palette's field paints the `input` role as its own fill; its hint
+        // is painted, because the host's own placeholder is a fixed grey.
+        theme={nativeTextTheme(theme, "input")}
+        value={query}
+        onChange={(event) => setQuery(event.value ?? "")}
+        onSubmit={runActive}
+        onKeyDown={handleKeyDown}
+        style={fieldStyle}
+      />
+      {Option.match(hint, {
+        onNone: () => null,
+        onSome: (painted) => renderHint(painted, "command-input"),
+      })}
+    </div>
   );
 };
 

@@ -348,6 +348,7 @@ the honest parts.
 | Auto height | `AutoHeight` | — | plan 600 |
 | Rotating text | `RotatingText` | — | plan 600 |
 | Rolling text | `RollingText` | — | plan 600 |
+| Sliding number | `SlidingNumber` | — | plan 600 |
 | Reveal | `Reveal` | — | plan 600 |
 | Scroll fade | `ScrollFade` (one part) | — | plan 600 |
 | Scroll progress | `ScrollProgress` (one part) | — | plan 600 |
@@ -475,3 +476,19 @@ composite field that paints the page role as its own fill:
 The roles are measured on both fills by `packages/tokens/src/native-text.test.ts`;
 `packages/components/src/behaviour/native-text.test.tsx` holds every host's
 wiring and the fill the field actually paints.
+
+**The hint is painted, not handed to the host.** A GPUix `<input>`/`<textarea>`
+shapes an empty field's placeholder in a fixed `#8F8F8F`
+(`custom_elements/input.rs` at the pinned 0.11.0), so the `placeholder` role the
+contrast table measures on both fills never reaches it — 2.84:1 on a white field.
+Every text host therefore takes no `placeholder` prop and paints the hint itself
+through `internal/hint.tsx`: a paint-only frame at the host's own text origin
+(the inset is read from the host's compiled style, so a recipe change moves it),
+the host's type scale, and `colors.placeholder` — or `colors.disabledForeground`
+on a disabled field. The frame is `pointerEvents: "none"`, so a press through the
+hint focuses the host. The hosts are `FieldInput`, `SearchInput`,
+`TagInputField`, `MentionInput`, `ChatComposer`, both `TimePickerSegment`s,
+`CommandMenuInput` and `ComboboxInput`; `src/behaviour/hints.test.tsx` holds each
+one's painted role and that the host is handed no placeholder. `InlineEdit`
+paints its placeholder as the display's own text and `ColorPicker`'s hex field
+never shows one, so neither has a host hint to replace.

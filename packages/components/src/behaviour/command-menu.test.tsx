@@ -19,6 +19,7 @@ import {
   focusedTestId,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
+import { darkTheme } from "../internal/theme.js";
 import {
   CommandMenu,
   CommandMenuEmpty,
@@ -483,7 +484,7 @@ describe("CommandMenu", () => {
     palette.unmount();
   });
 
-  it("takes the input's placeholder and name from the part", () => {
+  it("paints the part's placeholder as its hint and takes its name", () => {
     const Named = () => {
       const [open, setOpen] = useState(true);
       return (
@@ -501,8 +502,13 @@ describe("CommandMenu", () => {
     const palette = renderComponent(<Named />);
     const input = palette.renderer.findByTestId("command-input");
 
-    expect(input?.customProps?.placeholder).toBe("Find a command");
+    // The host is handed no placeholder: the runtime shapes it in a fixed grey
+    // no token reaches, so the field paints the hint in the measured role.
+    expect(input?.customProps?.placeholder).toBeUndefined();
     expect(input?.customProps?.["aria-label"]).toBe("Find");
+    const hint = palette.renderer.findByTestId("command-input-hint");
+    expect(hint?.style.color).toBe(darkTheme.colors.placeholder);
+    expect(palette.renderer.getAllText()).toContain("Find a command");
 
     palette.unmount();
   });

@@ -72,6 +72,7 @@ import {
   type ComboboxOption,
 } from "./combobox/logic.js";
 import { useControllableState } from "./internal/controllable.js";
+import { hintHost, renderHint, textHint } from "./internal/hint.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
 import { isDismiss } from "./internal/key.js";
@@ -102,6 +103,8 @@ interface ComboboxContextValue {
   readonly selectedValues: ReadonlyArray<string>;
   readonly open: boolean;
   readonly disabled: boolean;
+  /** The text in the search field; the popup owns it through the runtime. */
+  readonly query: string;
   readonly labelFor: (value: string) => string;
   readonly isDisabled: (value: string) => boolean;
   readonly trigger: RefObject<PublicInstance | null>;
@@ -288,6 +291,7 @@ export const Combobox = ({
         selectedValues,
         open,
         disabled,
+        query,
         labelFor,
         isDisabled: (value) =>
           Option.exists(
@@ -505,23 +509,37 @@ export const ComboboxInput = ({
   label = "Search options",
 }: ComboboxInputProps) => {
   const theme = useTheme();
+  const { query } = useCombobox();
+  const fieldStyle = mergeStyles(recipeStyle(COMBOBOX_INPUT, theme), {
+    height: controlHeight(theme, "sm"),
+    ...controlRing(theme),
+    ...keepContent,
+  });
+  const hint = textHint(
+    theme,
+    { style: fieldStyle, align: "center" },
+    placeholder,
+    query,
+  );
 
   return (
-    <HeadlessInput
-      testId="combobox-input"
-      placeholder={placeholder}
-      aria-label={label}
-      // The headless field forwards the host theme; its own fill is `input`.
-      theme={nativeTextTheme(theme, "input")}
-      onKeyDown={(event) => {
-        if (isDismiss(event)) dismissTopLayer(event);
-      }}
-      style={mergeStyles(recipeStyle(COMBOBOX_INPUT, theme), {
-        height: controlHeight(theme, "sm"),
-        ...controlRing(theme),
-        ...keepContent,
+    <div style={hintHost({ width: "100%" })}>
+      <HeadlessInput
+        testId="combobox-input"
+        aria-label={label}
+        // The headless field forwards the host theme; its own fill is `input`.
+        // The hint is painted, because the host's placeholder is a fixed grey.
+        theme={nativeTextTheme(theme, "input")}
+        onKeyDown={(event) => {
+          if (isDismiss(event)) dismissTopLayer(event);
+        }}
+        style={fieldStyle}
+      />
+      {Option.match(hint, {
+        onNone: () => null,
+        onSome: (painted) => renderHint(painted, "combobox-input"),
       })}
-    />
+    </div>
   );
 };
 
