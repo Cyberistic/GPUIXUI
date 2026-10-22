@@ -86,7 +86,13 @@ describe("the grid's geometry", () => {
   it("names a cell by the row and column a readout prints", () => {
     expect(cellId(0, 0)).toBe("gridfocus-r0c0");
     expect(cellId(2, 1)).toBe("gridfocus-r2c1");
-    expect(new Set(Arr.map(GRID_CELLS, (index) => cellId(positionOf(index).row, positionOf(index).column))).size).toBe(GRID_CELL_COUNT);
+    expect(
+      new Set(
+        Arr.map(GRID_CELLS, (index) =>
+          cellId(positionOf(index).row, positionOf(index).column),
+        ),
+      ).size,
+    ).toBe(GRID_CELL_COUNT);
   });
 });
 
@@ -120,14 +126,11 @@ describe("the roving movement", () => {
   });
 
   it("reads only the keys the grid answers", () => {
-    expect(Arr.getSomes(Arr.map(["left", "right", "up", "down", "home", "end"], gridKeyOf))).toEqual([
-      "left",
-      "right",
-      "up",
-      "down",
-      "home",
-      "end",
-    ]);
+    expect(
+      Arr.getSomes(
+        Arr.map(["left", "right", "up", "down", "home", "end"], gridKeyOf),
+      ),
+    ).toEqual(["left", "right", "up", "down", "home", "end"]);
     expect(Option.isNone(gridKeyOf("tab"))).toBe(true);
     expect(Option.isNone(gridKeyOf("enter"))).toBe(true);
     expect(Option.isNone(gridKeyOf(""))).toBe(true);
@@ -137,15 +140,7 @@ describe("the roving movement", () => {
 describe("the tab stop", () => {
   it("makes the remembered cell the only zero", () => {
     expect(Arr.map(GRID_CELLS, (index) => tabIndexOf(index, 4))).toEqual([
-      -1,
-      -1,
-      -1,
-      -1,
-      0,
-      -1,
-      -1,
-      -1,
-      -1,
+      -1, -1, -1, -1, 0, -1, -1, -1, -1,
     ]);
     expect(tabIndexOf(0, 0)).toBe(0);
   });
@@ -204,12 +199,12 @@ describe("the grid-focus probe's record", () => {
   it("asks the view for every part the section teaches", () => {
     expect(steps).toContain("formatReadout(initialReadout)");
     expect(steps).toContain("GRID_FOCUS_IDS.before");
-    expect(scenarios).toContain(
-      "tabIndex={tabIndexOf(index, readout.roving)}",
-    );
+    expect(scenarios).toContain("tabIndex={tabIndexOf(index, readout.roving)}");
     expect(scenarios).toContain("renderer?.focusElement?.(entry.elementId)");
-    expect(scenarios).toContain("onKeyDown={(event) => onKey(event.key ?? \"\")}");
-    expect(scenarios).toContain("ctx.host.key(\"shift-tab\")");
+    expect(scenarios).toContain(
+      'onKeyDown={(event) => onKey(event.key ?? "")}',
+    );
+    expect(scenarios).toContain('ctx.host.key("shift-tab")');
   });
 
   it("prints the measured rule for a cell outside the tab stop", () => {

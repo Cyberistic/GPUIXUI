@@ -24766,9 +24766,9 @@ const GridFocusProbe = (): ReactNode => {
   const renderer = useGpuix().renderer;
   const [readout, setReadout] = useState<GridFocusReadout>(initialReadout);
   const roving = useRef(0);
-  const cellIds = useRef<ReadonlyArray<{ readonly index: number; readonly elementId: number }>>(
-    [],
-  );
+  const cellIds = useRef<
+    ReadonlyArray<{ readonly index: number; readonly elementId: number }>
+  >([]);
 
   const cellStyle = {
     width: 64,
@@ -24784,7 +24784,10 @@ const GridFocusProbe = (): ReactNode => {
   /** Keeps the cell's native id, the handle `focusElement` takes. */
   const register = useCallback(
     (index: number, instance: PublicInstance | null) => {
-      const kept = Arr.filter(cellIds.current, (entry) => entry.index !== index);
+      const kept = Arr.filter(
+        cellIds.current,
+        (entry) => entry.index !== index,
+      );
       cellIds.current =
         instance === null
           ? kept
@@ -25004,11 +25007,7 @@ const gridFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "roving=r2c1 activations=1",
     );
     yield* enterFromBefore;
-    yield* focusCell(
-      "the pressed cell is where Tab re-enters",
-      2,
-      1,
-    );
+    yield* focusCell("the pressed cell is where Tab re-enters", 2, 1);
 
     // 5. A cell that is not a tab stop is still reachable by the app — and it
     //    keeps a place in the traversal, ordered *before* the zero-index stops,
