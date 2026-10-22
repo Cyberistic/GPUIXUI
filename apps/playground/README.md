@@ -2392,7 +2392,8 @@ echo $?                                          # 0 = evidence, 2 = no window
 What a release records:
 
 - `.artifacts/live-report.json` — each probe's checks, with the host line
-  (`gpuix live window darwin-x64 @gpuix/native 0.11.0`) and the duration;
+  (`gpuix live window darwin-x64 @gpuix/native 0.11.0 (window-background
+  opaque)`) and the duration, so a report says which window it came from;
 - `.artifacts/live/<state>.png` — one capture per paint state a probe names,
   which is what the docs cite instead of a fake preview;
 - the probe count, **derived** from the registry rather than typed:

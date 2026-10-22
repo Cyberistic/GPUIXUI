@@ -79,8 +79,16 @@ class NoWindowError extends Schema.TaggedError<NoWindowError>()(
   },
 ) {}
 
-const hostLabel = (): string =>
-  `gpuix live window ${process.platform}-${process.arch} @gpuix/native 0.11.0`;
+/**
+ * The report's host line.
+ *
+ * The backdrop is part of the window the evidence came from — a
+ * `window-background=transparent` run proves something an opaque one does not —
+ * so it is printed rather than left to the command line the reader no longer
+ * has.
+ */
+export const hostLabel = (background: WindowBackground): string =>
+  `gpuix live window ${process.platform}-${process.arch} @gpuix/native 0.11.0 (window-background ${background})`;
 
 export { liveRegistry };
 
@@ -268,7 +276,7 @@ export const program = (
     const report = yield* Smoke.runAsyncScenarios(
       host,
       selected,
-      { host: hostLabel(), startedAt },
+      { host: hostLabel(background), startedAt },
       mount(root, renderer, selected, registerWindowKey, background),
     );
 

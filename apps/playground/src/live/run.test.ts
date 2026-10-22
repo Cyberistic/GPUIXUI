@@ -9,7 +9,14 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
-import { EXIT, liveProbes, liveRegistry, main, selectProbes } from "./run.js";
+import {
+  EXIT,
+  hostLabel,
+  liveProbes,
+  liveRegistry,
+  main,
+  selectProbes,
+} from "./run.js";
 
 const probe = (argv: ReadonlyArray<string>) => {
   let loaded = false;
@@ -89,5 +96,17 @@ describe("live main", () => {
       expect(code).toBe(EXIT.passed);
       expect(deps.loaded()).toBe(false);
     });
+  });
+});
+
+describe("the live report's host line", () => {
+  it("names the window's backdrop, so a report says which window it came from", () => {
+    // `layout=verified` for `window-backdrop` means nothing if the report cannot
+    // say whether the window was opaque, and the docs cite the report.
+    expect(hostLabel("transparent")).toContain("window-background transparent");
+    expect(hostLabel("opaque")).toContain("window-background opaque");
+    expect(hostLabel("blurred")).toContain(
+      `gpuix live window ${process.platform}-${process.arch} @gpuix/native 0.11.0`,
+    );
   });
 });
