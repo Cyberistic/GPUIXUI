@@ -1088,6 +1088,7 @@ it, naming both steps:
 | `iconSize` | `xs` → `sm` → `md` → `lg` → `xl` |
 | `typography` | `caption` → `label` → `body` → `h3` → `h2` → `h1` → `display`, by role size |
 | `density` | `controlHeight` and `controlPaddingX`, `sm` → `md` → `lg` |
+| `elevation` | `sm` → `md` → `lg`, by the reach of the shadow each level paints |
 
 `bodyStrong` shares `body`'s size and differs by weight, and the two mono roles
 are a separate family rather than rungs of the size ladder, so neither is
@@ -1096,6 +1097,17 @@ must weigh more than `body`, and `invalidNumbers` reports it as `emphasis`
 (§Numbers). A value that is not finite is skipped here and reported once by
 `invalidNumbers`, which owns it.
 
+Elevation is the one ladder whose rung is not a single token. A level is a
+geometry plus a share of the `shadow` role, so its depth is the distance the
+shadow reaches below the box it lifts — `offsetY + blurRadius + spreadRadius`
+of the shadow `elevationShadow` paints. The horizontal offset is not depth and
+the colour belongs to the role, so neither is read: a brand that deepens a level
+by opacity alone has made the shadow heavier, not the surface higher. A level
+that paints nothing is not a rung — the reserved empty `overlay` and a level a
+restored theme does not carry are both skipped — while a brand that fills
+`overlay` is compared above `lg`, because it has raised a surface there. A level
+carrying a shadow list is read at the entry `elevationShadow` paints.
+
 ```ts
 import { extendTheme, invalidScales, lightTheme } from "@gpuixui/tokens";
 
@@ -1103,6 +1115,23 @@ invalidScales(lightTheme); // []
 invalidScales(extendTheme(lightTheme, { radius: { xl: 8 } }));
 // [{ group: "radius", path: "xl", value: 8,
 //    previous: { path: "lg", value: 8 } }]
+invalidScales(
+  extendTheme(lightTheme, {
+    elevation: {
+      md: [
+        {
+          offsetX: 0,
+          offsetY: 24,
+          blurRadius: 56,
+          spreadRadius: -12,
+          color: "#191D25A6",
+        },
+      ],
+    },
+  }),
+);
+// [{ group: "elevation", path: "lg", value: 48,
+//    previous: { path: "md", value: 68 } }] — a menu casting the dialog's shadow
 ```
 
 The rule found one shipped style: the Windows platform carried `lg: 8` and
@@ -1937,6 +1966,14 @@ resolved theme reads the tables directly. `elevation.test.ts` holds each level t
 the role's hue and its strength, holds every shipped theme to its own role, and
 proves a brand's retint reaches every inherited level while an explicit one
 survives.
+
+A level is also a **rung of a scale**: the level a surface is raised to must reach
+further below its box than the level under it, and `invalidScales` compares them
+by the distance the painted shadow extends — `offsetY + blurRadius +
+spreadRadius` (§Scale order). A brand that copies a design-tool export level by
+level can give `md` the dialog's geometry, so a dialog casts a tighter shadow
+than the menu beneath it while every number is layable; the report names `lg` and
+the reach of both levels.
 
 A level also has to be **visible**: the deepest one must differ from each strip a
 raised surface falls on, which `decorativeFailures` measures (§Decorative

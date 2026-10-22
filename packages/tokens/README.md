@@ -535,12 +535,14 @@ Each report is also a function of its own:
   is the width of both focus rings, so a zero there leaves the outline and the
   fallback shadow invisible while every colour report stays clean.
 - `invalidScales(theme)` lists every named step that does not exceed the one
-  before it — spacing, radii, border weights, icon sizes, the type hierarchy and
-  the control heights and paddings. Every value can be layable while the name
-  still lies: a `sm` control taller than its `lg`, or a dialog as square as a
-  card. It is not one of the audit's ten reports yet (the docs readout words each
-  report it prints), so run it beside `auditTheme`; it found the Windows style's
-  `xl` radius equal to its `lg`.
+  before it — spacing, radii, border weights, icon sizes, the type hierarchy, the
+  control heights and paddings, and the elevation levels by the distance each
+  level's shadow reaches below its box. Every value can be layable while the name
+  still lies: a `sm` control taller than its `lg`, a dialog as square as a card,
+  or a dialog casting a tighter shadow than a menu. It is not one of the audit's
+  ten reports yet (the docs readout words each report it prints), so run it
+  beside `auditTheme`; it found the Windows style's `xl` radius equal to its
+  `lg`.
 - `contrastFailures(theme, floors?)` lists every text-on-surface pair that
   misses its floor, including one it cannot measure because a value is
   translucent.

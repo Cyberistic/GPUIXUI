@@ -22,3 +22,27 @@ export const computedBrand: Theme = extendTheme(lightTheme, {
 
 /** The steps that put the brand's scale out of order, ready for a release gate. */
 export const brandScaleReport = invalidScales(computedBrand);
+
+/**
+ * A brand whose elevation was copied one level at a time from a design-tool
+ * export, so the menu's shadow reaches further than the dialog's: a surface
+ * raised to `lg` sits closer to the page than the `md` one beneath it, while
+ * every number is layable and every colour is one the renderer paints.
+ */
+export const unevenElevationBrand: Theme = extendTheme(lightTheme, {
+  name: "Acme uneven elevation",
+  elevation: {
+    md: [
+      {
+        offsetX: 0,
+        offsetY: 24,
+        blurRadius: 56,
+        spreadRadius: -12,
+        color: "#191D25A6",
+      },
+    ],
+  },
+});
+
+/** The elevation ladder the brand inverted, measured by `invalidScales`. */
+export const elevationScaleReport = invalidScales(unevenElevationBrand);

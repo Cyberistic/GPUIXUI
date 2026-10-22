@@ -231,12 +231,13 @@ needs an inset; §9 has the rule.
 Every one of these scales is a **ladder**, and its order is part of the
 contract: a brand's `sm` control stays shorter than its `md`, which stays
 shorter than its `lg`; a radius step stays rounder than the one below it; a
-heading stays larger than its body text. `invalidScales(theme)` reports a step
-that repeats or inverts its neighbour — the gap `invalidNumbers` cannot see,
-because each value on its own is layable. It found the Windows style's `xl`
-radius equal to its `lg`, so a dialog and a card there were equally square; `xl`
-is 10 now. `invalidScales` is not one of the audit's reports yet; §11 says why
-and what to run.
+heading stays larger than its body text; an elevation level casts a shadow that
+reaches further below its surface than the level under it. `invalidScales(theme)`
+reports a step that repeats or inverts its neighbour — the gap `invalidNumbers`
+cannot see, because each value on its own is layable. It found the Windows
+style's `xl` radius equal to its `lg`, so a dialog and a card there were equally
+square; `xl` is 10 now. `invalidScales` is not one of the audit's reports yet;
+§11 says why and what to run.
 
 ## 7. Radii, borders and elevation
 
@@ -325,6 +326,14 @@ shadows with black on a pure-black page, so every level was 1.00:1 there and a
 dialog or a full-width card had no shadow; that theme's tint is now the grey its
 raised controls use, and the deepest level reads 1.21–1.37:1 across the page,
 card, popover and toolbar.
+
+A level is a rung on the same kind of ladder as a radius: the surface a reader
+raises must cast a shadow that reaches further below its box than the level
+beneath it, which `invalidScales` measures as
+`offsetY + blurRadius + spreadRadius` of the painted shadow (§6). A brand that
+copies a design-tool export level by level can hand `md` the dialog's geometry
+and paint a dialog shallower than the menu under it; the report names both
+levels.
 
 ## 8. Interaction states
 
@@ -812,12 +821,12 @@ resolved theme before it ships and assert `passed` in the package's own tests.
 
 One contract sits beside the gate rather than inside it: `invalidScales(theme)`
 holds every named ladder to its order — spacing, radii, border weights, icons,
-the type hierarchy and the control sizes — because a scale is selected by name,
-and a brand whose `sm` control is taller than its `lg` has a `size` prop that
-lies while every value is still layable. The audit's report list is printed by
-the docs site's readout, which words each report, so folding this in is one
-coordinated change with that page (`TODO.md` → Interlocks); until then a brand
-runs `invalidScales` beside `auditTheme`. §6 and
+the type hierarchy, the control sizes and the elevation levels — because a scale
+is selected by name, and a brand whose `sm` control is taller than its `lg` has
+a `size` prop that lies while every value is still layable. The audit's report
+list is printed by the docs site's readout, which words each report, so folding
+this in is one coordinated change with that page (`TODO.md` → Interlocks); until
+then a brand runs `invalidScales` beside `auditTheme`. §6 and
 [`tokens.md`](./tokens.md#scale-order) carry the rule and the shipped style it
 corrected.
 

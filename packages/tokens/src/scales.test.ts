@@ -36,10 +36,16 @@ import {
   retroNames,
   retroTheme,
   themes,
+  type BoxShadow,
   type InvalidScale,
   type ThemeOverrides,
 } from "./index.js";
-import { brandScaleReport, computedBrand } from "./scales.example.js";
+import {
+  brandScaleReport,
+  computedBrand,
+  elevationScaleReport,
+  unevenElevationBrand,
+} from "./scales.example.js";
 
 const brand = (overrides: ThemeOverrides) => extendTheme(lightTheme, overrides);
 
@@ -86,6 +92,22 @@ describe("every shipped theme keeps its scales ordered", () => {
       },
     ]);
   });
+});
+
+/**
+ * One elevation shadow in the shape a brand supplies: a design-tool export hands
+ * the caller a geometry and a colour, not the shipped level's share of `shadow`.
+ */
+const shadow = (
+  offsetY: number,
+  blurRadius: number,
+  spreadRadius: number,
+): BoxShadow => ({
+  offsetX: 0,
+  offsetY,
+  blurRadius,
+  spreadRadius,
+  color: "#191D25A6",
 });
 
 /**
@@ -169,6 +191,18 @@ const breaks: ReadonlyArray<{
       previous: { path: "controlPaddingX.sm", value: 20 },
     },
   },
+  {
+    label: "elevation",
+    // The dialog's geometry copied onto the menu level: `md` now reaches 68px
+    // below its box while `lg` reaches 48.
+    overrides: { elevation: { md: [shadow(24, 56, -12)] } },
+    expected: {
+      group: "elevation",
+      path: "lg",
+      value: 48,
+      previous: { path: "md", value: 68 },
+    },
+  },
 ];
 
 describe("the step that breaks a scale", () => {
@@ -222,6 +256,79 @@ describe("a value that cannot be laid out", () => {
   });
 });
 
+describe("the elevation ladder", () => {
+  it("reads the distance a shadow reaches, not one rung of its geometry", () => {
+    // Offset and blur alone say 56px below the box, which would pass; the
+    // negative spread is what pulls the softest edge up under the menu level.
+    const tightened = brand({ elevation: { lg: [shadow(16, 40, -60)] } });
+
+    expect(invalidScales(tightened)).toEqual([
+      {
+        group: "elevation",
+        path: "lg",
+        value: -4,
+        previous: { path: "md", value: 14 },
+      },
+    ]);
+  });
+
+  it("compares a reserved level once it paints, and not while it is empty", () => {
+    // The shipped scale's `overlay` is reserved and empty, so `lg` is the last
+    // rung; a brand that fills it has raised a surface above `lg`.
+    expect(invalidScales(lightTheme)).toEqual([]);
+
+    const filled = brand({ elevation: { overlay: [shadow(1, 2, 0)] } });
+
+    expect(invalidScales(filled)).toEqual([
+      {
+        group: "elevation",
+        path: "overlay",
+        value: 3,
+        previous: { path: "lg", value: 48 },
+      },
+    ]);
+  });
+
+  it("reads the shadow the level paints, not another entry in its list", () => {
+    // `elevationShadow` paints the first entry. Read the second and `md` would
+    // measure 3, passing against `lg`'s 48.
+    const listed = brand({
+      elevation: { md: [shadow(24, 56, -12), shadow(1, 2, 0)] },
+    });
+
+    expect(invalidScales(listed)).toEqual([
+      {
+        group: "elevation",
+        path: "lg",
+        value: 48,
+        previous: { path: "md", value: 68 },
+      },
+    ]);
+  });
+
+  it("skips a level the theme does not carry", () => {
+    const { lg: _omitted, ...restored } = lightTheme.elevation;
+
+    expect(invalidScales({ ...lightTheme, elevation: restored })).toEqual([]);
+  });
+
+  it("leaves a geometry that cannot be laid out to invalidNumbers", () => {
+    const unlayable = brand({
+      elevation: { md: [shadow(Number.NaN, 12, -2)] },
+    });
+
+    expect(invalidScales(unlayable)).toEqual([]);
+    expect(invalidNumbers(unlayable)).toEqual([
+      {
+        group: "elevation",
+        path: "md[0].offsetY",
+        value: Number.NaN,
+        rule: "finite",
+      },
+    ]);
+  });
+});
+
 describe("the shipped example", () => {
   it("reports the brand's three broken rungs", () => {
     expect(brandScaleReport).toEqual([
@@ -253,5 +360,17 @@ describe("the shipped example", () => {
     expect(invalidNumbers(computedBrand)).toEqual([]);
     expect(auditTheme(computedBrand).passed).toBe(true);
     expect(brandScaleReport.length).toBeGreaterThan(0);
+  });
+
+  it("reports the brand whose menu level outranks its dialog", () => {
+    expect(elevationScaleReport).toEqual([
+      {
+        group: "elevation",
+        path: "lg",
+        value: 48,
+        previous: { path: "md", value: 68 },
+      },
+    ]);
+    expect(auditTheme(unevenElevationBrand).passed).toBe(true);
   });
 });
