@@ -131,10 +131,13 @@ describe("a mark on the row a reader chose", () => {
       "utf8",
     );
 
-    // The row: a hover tints `accent`, the pointer's press `active`, and a
-    // chosen row fills `selected`.
+    // The row: a hover tints `accent`, the pointer's press its derived wash
+    // (`pressWash` — the `active` role can sit under the floor beside the wash
+    // it replaces) and a chosen row fills `selected`.
     expect(list).toContain("hover: { backgroundColor: theme.colors.accent }");
-    expect(list).toContain("active: { backgroundColor: theme.colors.active }");
+    expect(list).toContain(
+      'active: { backgroundColor: pressWash(theme, "accent") }',
+    );
     expect(list).toContain("backgroundColor: theme.colors.selected");
     // The dot: every state paints a role the mark table measures.
     expect(avatar).toContain("theme.colors.success");
@@ -229,7 +232,9 @@ describe("a mark on the wash a row tints", () => {
     expect(menu).toContain("color={theme.colors.primary}");
     expect(menu).toContain("hover: disabled ? undefined");
     expect(menu).toContain("backgroundColor: theme.colors.hover");
-    expect(menu).toContain("backgroundColor: theme.colors.active");
+    // The press is the derived wash over the `hover` the row rests in, so the
+    // tick is measured on the role the derived wash plays.
+    expect(menu).toContain('pressWash(theme, "hover")');
     expect(combobox).toContain("color={theme.colors.primary}");
     expect(combobox).toContain(
       "backgroundColor: state.highlighted ? theme.colors.hover : undefined",

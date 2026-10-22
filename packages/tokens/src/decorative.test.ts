@@ -402,11 +402,20 @@ describe("decorative surfaces", () => {
       recipes.indexOf("export const BADGE_VARIANTS"),
       recipes.indexOf("export const ALERT_BASE"),
     );
+    // A row's four washes as the painters now paint them: the `accent` a hover
+    // tints and the `selected` a chosen row fills are roles, while the press is
+    // the derived wash over the `accent` it replaces (`pressWash`) — its role is
+    // still `active`, which is what the badge's edge is measured on.
+    const washes = {
+      accent: "hover: { backgroundColor: theme.colors.accent }",
+      active: 'active: { backgroundColor: pressWash(theme, "accent") }',
+      selected: "backgroundColor: theme.colors.selected",
+    } as const;
     const edgeLess = statusTones.filter(
       (tone) => !badges.includes(`border border-${tone}/30`),
     );
-    const unwashed = ["accent", "active", "selected"].filter(
-      (role) => !list.includes(`backgroundColor: theme.colors.${role}`),
+    const unwashed = Object.entries(washes).flatMap(([role, paint]) =>
+      list.includes(paint) ? [] : [role],
     );
 
     expect({ edgeLess, unwashed }).toEqual({ edgeLess: [], unwashed: [] });
@@ -858,16 +867,25 @@ describe("decorative surfaces", () => {
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8");
     const list = read("../../components/src/list.tsx");
-    const button = read("../../components/src/internal/button.tsx");
+    // The components' action delegates to the primitives' button (plan 160), so
+    // the ghost action's hover wash is the primitives' variant table's.
+    const variants = read("../../primitives/src/core/variants.ts");
     const row = read("../../components/src/menu/item.tsx");
-    return wash === "accent"
-      ? list.includes("hover: { backgroundColor: theme.colors.accent }")
-      : wash === "active"
-        ? list.includes("active: { backgroundColor: theme.colors.active }")
-        : button.includes("hover: { backgroundColor: theme.colors.hover }") &&
-          row.includes(
-            "hover: disabled ? undefined : { backgroundColor: theme.colors.hover }",
-          );
+    // The row's press is the derived wash over its hover (`pressWash`), whose
+    // role is `active`: a surface opened under the press floats over that paint,
+    // and the role is what the contract measures it on.
+    const painted = {
+      accent: list.includes("hover: { backgroundColor: theme.colors.accent }"),
+      active: list.includes(
+        'active: { backgroundColor: pressWash(theme, "accent") }',
+      ),
+      hover:
+        variants.includes("backgroundColor: theme.colors.hover") &&
+        row.includes(
+          "hover: disabled ? undefined : { backgroundColor: theme.colors.hover }",
+        ),
+    } as const;
+    return painted[wash];
   };
 
   it("measures every raised elevation level on the strips the veil already names", () => {

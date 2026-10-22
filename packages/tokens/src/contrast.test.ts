@@ -56,10 +56,14 @@ const printedRatio = (ratio: number | undefined): string =>
  * declaration with a disabled control left out, because the runtime keeps the
  * focus of an element it disables and a ring there would sit on a control that
  * refuses every key. Pinning one helper's name made a rename red; pinning the
- * declaration keeps the pair alive through it.
+ * declaration keeps the pair alive through it. Whether the declaration is
+ * spread into a style or merged into one is the painter's syntax, so both read
+ * as a declaration.
  */
 const declaresKeyboardRing = (source: string): boolean =>
-  /\.\.\.(?:keyboardRing|controlRing|controlFocusRing)\(theme/.test(source);
+  /(?:\.\.\.)?(?:keyboardRing|controlRing|controlFocusRing)\(theme/.test(
+    source,
+  );
 
 /** A recipe's class string, read from `@gpuixui/tw`'s source. */
 const recipe = (source: string, name: string): string => {
@@ -511,13 +515,20 @@ describe("text on the state washes", () => {
  * paint and this suite holds the pair that remains and the painter.
  */
 describe("the secondary action's label on the fill it paints", () => {
+  // The components' action delegates to the primitives' button (plan 160), so
+  // the paint a contract is held to is the primitives' variant table, and the
+  // on-colour resolver the components still publish for their own glyphs.
   const button = readFileSync(
     new URL("../../components/src/internal/button.tsx", import.meta.url),
     "utf8",
   );
-  const secondary = button.slice(
-    button.indexOf('Match.when("secondary", () => ({'),
-    button.indexOf('Match.when("ghost", () => ({'),
+  const variants = readFileSync(
+    new URL("../../primitives/src/core/variants.ts", import.meta.url),
+    "utf8",
+  );
+  const secondary = variants.slice(
+    variants.indexOf("const secondary: ControlVariant"),
+    variants.indexOf("const washed:"),
   );
 
   it("measures the label on the resting fill", () => {
@@ -539,11 +550,12 @@ describe("the secondary action's label on the fill it paints", () => {
     expect(button).toContain(
       'Match.when("secondary", () => theme.colors.secondaryForeground)',
     );
-    expect(button).toContain("color: actionOnColor(theme, value)");
-    expect(secondary).toContain('filledHover(theme, "secondary")');
-    expect(secondary).toContain('filledPressed(theme, "secondary")');
+    expect(button).toContain("@gpuixui/primitives/button");
+    expect(secondary).toContain('...filled("secondary")');
+    expect(variants).toContain("filledHover(theme, action)");
+    expect(variants).toContain("filledPressed(theme, action)");
     expect(secondary, "the wash the fix replaced").not.toContain(
-      "backgroundColor: theme.colors.hover",
+      "theme.colors.hover",
     );
   });
 
@@ -990,7 +1002,10 @@ describe("the resting role of a floating row on the wash it tints", () => {
 
     expect(menuItem).toContain("text-popover-foreground");
     expect(row).toContain("{ backgroundColor: theme.colors.hover }");
-    expect(row).toContain("{ backgroundColor: theme.colors.active }");
+    // The press is the row's derived wash, not the bare role: `active` can sit
+    // under the perceptibility floor beside the `hover` it replaces, so the
+    // painter asks `pressWash` for the step (`pointerWashFailures` measures it).
+    expect(row).toContain('{ backgroundColor: pressWash(theme, "hover") }');
     expect(row).toContain('statusTone(theme, "destructive").foreground');
   });
 
@@ -1122,7 +1137,12 @@ describe("the status label on the wash a list row wears", () => {
     );
 
     expect(list).toContain("hover: { backgroundColor: theme.colors.accent }");
-    expect(list).toContain("active: { backgroundColor: theme.colors.active }");
+    // The press is the derived wash over the `accent` it replaces — the role it
+    // plays is still `active`, which is what the pair above measures
+    // (`pointerWashFailures` holds the step itself).
+    expect(list).toContain(
+      'active: { backgroundColor: pressWash(theme, "accent") }',
+    );
     expect(list).toContain("backgroundColor: theme.colors.selected");
     expect(style).toContain(
       "destructive: (theme) => theme.colors.destructiveSoftForeground",
@@ -1556,7 +1576,9 @@ describe("the text a selected row keeps", () => {
     expect(row).toContain("backgroundColor: theme.colors.selected");
     expect(row).toContain("color: theme.colors.selectedForeground");
     expect(row).toContain("{ backgroundColor: theme.colors.accent }");
-    expect(row).toContain("{ backgroundColor: theme.colors.active }");
+    // The press is derived over the wash it replaces, so the pair measured above
+    // is the role the derived wash plays (`pointerWashFailures` holds the step).
+    expect(row).toContain('pressWash(theme, "accent")');
   });
 
   it("reports a primitive surface that swallows the text on it", () => {
@@ -1795,7 +1817,21 @@ describe("a control boundary on the strip it sits on", () => {
     );
 
     expect(button).toContain('variant = "secondary"');
-    expect(button).toContain("borderColor: theme.colors.borderStrong");
+    // The edge may be painted as the role or as the tw class that resolves to
+    // it; the contract is the role, so either form is checked against the
+    // registry that resolves it.
+    expect(
+      ["borderColor: theme.colors.borderStrong", "border border-strong"].some(
+        (form) => button.includes(form),
+      ),
+      "the components' action paints no borderStrong edge",
+    ).toBe(true);
+    expect(
+      readFileSync(
+        new URL("../../tw/src/utilities.ts", import.meta.url),
+        "utf8",
+      ),
+    ).toContain("borderColor: theme.colors.borderStrong");
     expect(confirm).toContain('testId="confirm-cancel"');
     expect(recipe(recipes, "DIALOG_CONTENT")).toContain("bg-popover");
     expect(recipe(recipes, "POPOVER_CONTENT")).toContain("bg-popover");
@@ -1914,7 +1950,12 @@ describe("a control's edge on a message's own tint", () => {
     expect(alert).toContain("ALERT_TONES[value]");
     expect(alert).toContain("AlertDescription");
     expect(button).toContain('variant = "secondary"');
-    expect(button).toContain("borderColor: theme.colors.borderStrong");
+    expect(
+      ["borderColor: theme.colors.borderStrong", "border border-strong"].some(
+        (form) => button.includes(form),
+      ),
+      "the components' action paints no borderStrong edge",
+    ).toBe(true);
     expect(page).toContain('<Alert tone="danger">');
     expect(page).toContain("<Button onClick={retry}>Try again</Button>");
   });
@@ -2036,10 +2077,29 @@ describe("the ring on the fill it hugs", () => {
     expect(declaresKeyboardRing(row), "list.tsx").toBe(true);
     expect(row).toContain("backgroundColor: theme.colors.selected");
     expect(row).toContain("hover: { backgroundColor: theme.colors.accent }");
-    expect(row).toContain("active: { backgroundColor: theme.colors.active }");
+    // The press is the derived wash over the row's hover — the ring hugs the
+    // paint, so the derived press is the fill it is measured on
+    // (`pointerWashFailures` holds the step that produces it).
+    expect(row).toContain(
+      'active: { backgroundColor: pressWash(theme, "accent") }',
+    );
     expect(combobox).toContain("backgroundColor: theme.colors.hover");
     expect(declaresKeyboardRing(combobox), "combobox.tsx").toBe(true);
-    expect(declaresKeyboardRing(button), "internal/button.tsx").toBe(true);
+    // The components' action delegates to the primitives' button (plan 160), so
+    // the ring it paints is the one that button declares.
+    expect(button).toContain("@gpuixui/primitives/button");
+    expect(
+      declaresKeyboardRing(
+        readFileSync(
+          new URL(
+            "../../primitives/src/components/Button.tsx",
+            import.meta.url,
+          ),
+          "utf8",
+        ),
+      ),
+      "primitives/Button.tsx",
+    ).toBe(true);
   });
 
   it("reports a ring that disappears into the row it surrounds", () => {
@@ -2141,7 +2201,21 @@ describe("the ring on a message's own tint", () => {
     );
 
     expect(alert).toContain("ALERT_TONES");
-    expect(declaresKeyboardRing(button), "internal/button.tsx").toBe(true);
+    // The action's ring is the primitives' now: the components' button
+    // delegates to it (plan 160).
+    expect(button).toContain("@gpuixui/primitives/button");
+    expect(
+      declaresKeyboardRing(
+        readFileSync(
+          new URL(
+            "../../primitives/src/components/Button.tsx",
+            import.meta.url,
+          ),
+          "utf8",
+        ),
+      ),
+      "primitives/Button.tsx",
+    ).toBe(true);
   });
 
   it("reports a ring that disappears into the tint it surrounds", () => {
@@ -2248,7 +2322,14 @@ describe("the edge of a control inside a row's wash", () => {
     expect(row).toContain("backgroundColor: theme.colors.selected");
     expect(row).toContain("{trailing}");
     expect(button).toContain('variant = "secondary"');
-    expect(button).toContain("borderColor: theme.colors.borderStrong");
+    // The edge may be painted as the role or as the tw class that resolves to
+    // it; the contract is the role, so either form counts.
+    expect(
+      ["borderColor: theme.colors.borderStrong", "border border-strong"].some(
+        (form) => button.includes(form),
+      ),
+      "the components' action paints no borderStrong edge",
+    ).toBe(true);
   });
 
   it("reports an edge that disappears into the row wash it sits in", () => {

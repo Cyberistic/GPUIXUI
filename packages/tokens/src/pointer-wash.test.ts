@@ -27,7 +27,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
-import type { ThemeColors } from "./color.js";
+import { alphaOf, blend, type ThemeColors } from "./color.js";
 import {
   contrastFloorsFor,
   contrastPairs,
@@ -37,10 +37,12 @@ import {
 import {
   decorativeFailures,
   decorativeFloor,
+  decorativeSurfaces,
   pointerWash,
   pointerWashFailures,
   pointerWashTransitions,
 } from "./decorative.js";
+import { elevationShadow } from "./elevation.js";
 import { platformNames } from "./platforms.js";
 import {
   flatPressBrand,
@@ -52,6 +54,7 @@ import {
 import { retroNames, retroTheme } from "./retro.js";
 import {
   darkTheme,
+  extendTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
   lightTheme,
@@ -226,6 +229,89 @@ describe("the wash a pointer state paints", () => {
     expect(tightest.ratio).toBeCloseTo(1.0516, 3);
   });
 
+  it("keeps the veil and every raised level visible over the press a row derives", () => {
+    // A context menu, a confirmation dialog or a command palette opens **from**
+    // the row the press landed on, so the veil recedes the press and each raised
+    // level's shadow falls on it (`decorativeSurfaces` names the strip `active`).
+    // The table names the role; the row wears the derived wash, whose step moves
+    // toward `foreground` — the colour a veil is usually built from — so the
+    // derived paint is where a veil has the least to work with, and nothing
+    // measured the two together.
+    const raised = [
+      ...new Set(
+        decorativeSurfaces.flatMap(({ surface, level }) =>
+          surface === "elevation" && level !== undefined ? [level] : [],
+        ),
+      ),
+    ];
+    /** The ratio a veil or a level keeps against the press it is painted over. */
+    const overPress = (press: string, painted: string): number | undefined =>
+      contrastRatio(blend(press, painted, alphaOf(painted)), press);
+    const measured = everyStyle.map(([name, theme]) => {
+      const ratios = (["accent", "hover"] as const).flatMap((replaced) => {
+        const press = pressWash(theme, replaced);
+        if (press === undefined) {
+          return [];
+        }
+        return [
+          {
+            placement: `${name}/${replaced}/veil`,
+            ratio: overPress(press, theme.colors.overlay),
+          },
+          ...raised.map((level) => {
+            const shadow = elevationShadow(theme, level);
+            return {
+              placement: `${name}/${replaced}/${level}`,
+              ratio:
+                shadow === undefined
+                  ? undefined
+                  : overPress(press, shadow.color),
+            };
+          }),
+        ];
+      });
+      return { name, ratios };
+    });
+    const unmeasured = measured.flatMap(({ ratios }) =>
+      ratios.flatMap(({ placement, ratio }) =>
+        ratio === undefined ? [placement] : [],
+      ),
+    );
+    const hidden = measured.flatMap(({ ratios }) =>
+      ratios.flatMap(({ placement, ratio }) =>
+        ratio !== undefined && ratio < decorativeFloor ? [placement] : [],
+      ),
+    );
+    const tightest = measured
+      .map(({ name, ratios }) => ({
+        name,
+        ratio: Math.min(...ratios.map(({ ratio }) => ratio ?? 0)),
+      }))
+      .reduce((closest, next) => (next.ratio < closest.ratio ? next : closest));
+
+    expect(unmeasured).toEqual([]);
+    expect(hidden).toEqual([]);
+    // The tightest is the high-contrast dark press, where the veil has the least
+    // room: the press is already the lightest wash in the palette.
+    expect(tightest.name).toBe("High contrast dark");
+    expect(tightest.ratio.toFixed(2)).toBe("1.08");
+
+    // The case can fail: a brand whose shadow *is* the press it falls on casts no
+    // shadow there, exactly the defect the placement measures.
+    const press = pressWash(lightTheme, "accent");
+    const flatShadow = extendTheme(lightTheme, {
+      colors: { shadow: press ?? lightTheme.colors.shadow },
+    });
+    const flatPaint = elevationShadow(flatShadow, "lg")?.color;
+    expect(press).toBeDefined();
+    expect(flatPaint).toBeDefined();
+    expect(
+      press !== undefined && flatPaint !== undefined
+        ? overPress(press, flatPaint)
+        : undefined,
+    ).toBe(1);
+  });
+
   it("reports a stored theme that lost its wash as unmeasurable", () => {
     // A theme restored from storage can predate the role; the placement is
     // reported rather than skipped, the same rule every other contract follows.
@@ -298,5 +384,24 @@ describe("the pages that teach the wash", () => {
         .replace(/\s+/g, " ")
         .includes("smallest move toward the theme's `foreground`"),
     ).toBe(true);
+  });
+
+  it("says the painters derive it, and that the veil sits on the derived paint", () => {
+    // The pages taught the derivation as an owed painter change until both
+    // packages adopted it; a reader following that sentence duplicates a paint
+    // that is already wired. The veil and the shadow are measured on the derived
+    // wash rather than the role, which is the composition this suite measures.
+    [catalogue, designSystem].forEach((document, page) => {
+      const text = document.replace(/\s+/g, " ");
+      const name = page === 0 ? "docs/tokens.md" : "docs/design-system.md";
+
+      expect(text.includes('pressWash(theme, "accent")'), name).toBe(true);
+      expect(text.includes("1.08:1"), name).toBe(true);
+      expect(
+        text.includes("until a row asks for the helper") ||
+          text.includes("The painters are the components' workstreams"),
+        name,
+      ).toBe(false);
+    });
   });
 });

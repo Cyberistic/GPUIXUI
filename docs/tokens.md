@@ -2052,10 +2052,23 @@ palette cannot answer; the report rides the `decorative` one, so the gate holds
 it without a twelfth contract. The derivation repairs all six shipped styles
 (macOS light 1.053:1, macOS dark 1.052:1, Linux dark 1.080:1, Windows dark
 1.077:1, Luna light 1.065:1, Aero light 1.060:1), and the tightest placement
-over every style is the macOS dark press at **1.052:1**. The painters are the
-components' and the primitives' work — until a row asks for the helper, the raw
-roles are what it paints, and the six styles above are the ones where that press
-is invisible (`TODO.md` → Interlocks).
+over every style is the macOS dark press at **1.052:1**. The painters ask for the
+helper and name the wash they replace: the components' list row
+(`pressWash(theme, "accent")`), menu row and `Collapsible` trigger
+(`pressWash(theme, "hover")`), and the primitives' ghost/outline/link recipes,
+toggle, empty checkbox/switch and number-field stepper (`core/pointer.ts`) — so
+no row presses in the bare role the six measurements above counted as invisible.
+
+Because the press is a derived paint, the surfaces that sit **on** it are
+measured on the paint rather than the role: a context menu, a confirmation dialog
+or a command palette opens from the row the press landed on, so the veil recedes
+the derived wash and every raised level's shadow falls on it — and the derivation
+moves toward `foreground`, the colour a veil is usually built from, which is
+where a veil has the least to work with. All 128 placements (two replaced washes
+per style × the veil and the three raised levels) clear the floor over the 16
+shipped, high-contrast, platform and authored styles; the tightest is High
+contrast dark at **1.08:1**, and `pointer-wash.test.ts` holds it with a brand
+whose `shadow` is its own press as the negative control.
 
 A **filled action** is the same defect one control over. `secondary` is the one
 filled variant with no brand colour and no border — `packages/primitives` paints
@@ -3655,8 +3668,11 @@ or dropped is named rather than passing silently.
   the same two helpers (`packages/primitives/src/core/selection.ts`), so its mark
   sits on an opaque fill; a pressed `Toggle` takes them for its `accent` face
   (`packages/primitives/src/core/variants.ts`); and the components package's
-  `Button` derives all three actions, its `secondary` variant included
-  (`packages/components/src/internal/button.tsx`). That variant swapped the fill
+  action delegates to the primitives' button
+  (`packages/components/src/internal/button.tsx`), so it paints the same derived
+  fills — the variant table the primitives own derives all three actions, its
+  `secondary` variant included (`packages/primitives/src/core/variants.ts`).
+  That variant swapped the fill
   for the `hover` / `active` role washes until the contract measured **15 of its
   32 pointer placements** under the 1.05:1 floor — hovered 1.000:1 in High
   contrast light, High contrast dark and Light · macOS, pressed 1.000:1 in

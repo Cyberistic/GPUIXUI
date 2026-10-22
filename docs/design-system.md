@@ -447,7 +447,14 @@ wash the row already wears, never one that costs a label the floor it holds on
 the role the wash plays. Zero is a step, so a palette that already answers the
 pointer is painted as it is; the derivation repairs all six shipped styles and
 the tightest placement over every style is the macOS dark press at **1.052:1**.
-The painters are the components' workstreams — `TODO.md` → Interlocks.
+Both packages' painters ask for it and name the wash they replace (the
+components' list row presses `pressWash(theme, "accent")` and its menu row and
+collapsible trigger `pressWash(theme, "hover")`; the primitives' ghost/outline/link
+recipes, toggle, empty checkbox/switch and stepper), so no row presses in the
+bare role those six measurements counted as invisible. The veil
+and the raised levels are then measured on the **derived** paint, because a
+surface opens from the row the press landed on: all 128 placements clear the
+floor, the tightest is High contrast dark at **1.08:1**.
 
 A **filled role's pointer feedback** is derived, never a lifted alpha: a
 half-alpha fill shows the surface behind the control, so the same face reads as
