@@ -29,6 +29,7 @@
 import {
   Children,
   createContext,
+  Fragment,
   isValidElement,
   useContext,
   useRef,
@@ -43,6 +44,7 @@ import type {
   StyleDesc,
 } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
@@ -318,11 +320,21 @@ export const ScrollAreaViewport = (
  * old `<ScrollArea>rows</ScrollArea>` keeps scrolling. A caller who needs a
  * heading outside the scroller composes `ScrollAreaViewport` among the
  * children instead; that viewport is the one they placed.
+ *
+ * A fragment is transparent — a caller groups a heading and a viewport in one
+ * without meaning to wrap either — so the scan descends through fragments
+ * exactly as it does through an array. Reading only the direct children left a
+ * viewport in a fragment invisible, and the area wrapped the whole composition
+ * in a second, implicit scroller.
  */
 const composesItsOwnViewport = (children: ReactNode): boolean =>
-  Children.toArray(children).some(
-    (child) => isValidElement(child) && child.type === ScrollAreaViewport,
-  );
+  Arr.some(Children.toArray(children), (child) => {
+    if (!isValidElement<{ readonly children?: ReactNode }>(child)) return false;
+    if (child.type === ScrollAreaViewport) return true;
+    return (
+      child.type === Fragment && composesItsOwnViewport(child.props.children)
+    );
+  });
 
 /** The element a scroll area renders. Pure in its arguments. */
 export const renderScrollArea = (

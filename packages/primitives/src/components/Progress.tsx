@@ -296,8 +296,11 @@ export const renderProgress = (
       aria-valuetext={part.valueText}
       testId={testId}
       style={mergeStyle(
-        recipeTw.classesToStyle(className, theme).style,
-        mergeStyle(frameStyle(theme), style),
+        mergeStyle(
+          frameStyle(theme),
+          recipeTw.classesToStyle(className, theme).style,
+        ),
+        style,
       )}
     >
       <ProgressPartContext.Provider value={part}>

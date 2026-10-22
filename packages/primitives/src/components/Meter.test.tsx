@@ -119,6 +119,17 @@ describe("Meter", () => {
     );
   });
 
+  it("lets a caller's className restyle the frame", () => {
+    // The bug guarded: the frame's own column layout was merged *after* the
+    // caller's classes, so `className="flex-row"` compiled and then lost to the
+    // resting `flexDirection: column` — the documented join order never held.
+    const element = renderMeter(
+      { value: 62, className: "flex-row" },
+      testTheme,
+    );
+    expect(stringIn(element, "flexDirection")).toBe("row");
+  });
+
   it("keeps the default composition to the track and its indicator", () => {
     const element = renderMeter({ value: 68 }, testTheme);
     const track = trackOf(element);

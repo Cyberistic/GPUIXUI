@@ -113,7 +113,8 @@ parts use the `caption` type role in the `muted` text tone.
 - `src/core/value.test.ts` — the fraction and clamping the paint depends on.
 - `src/components/Meter.test.tsx` — role, announced value, clamped range and
   fill, the formatted measurement part, the label part, a custom composition,
-  the frame/style split, and that it is neither a tab stop nor a handler target.
+  the frame's `style`/`className` split (a caller's `flex-row` wins over the
+  resting column), and that it is neither a tab stop nor a handler target.
 - `runtime/value.runtime.test.tsx` — AccessKit reports `Meter` with the value,
   the fill's painted width is the measurement's fraction of the track, and Tab
   never lands on it. Measured 2026-10-17 (plan 053 §11).

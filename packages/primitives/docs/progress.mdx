@@ -155,7 +155,8 @@ no interval running; a determinate bar is unaffected because it never animated.
   it, the buffer segment between value and buffer (and its clamps, its absence
   behind the value and on an indeterminate bar), the indeterminate lead, the tone
   on both the determinate and the indeterminate fill, a custom composition, the
-  root frame's style merge, and the lead held at the resting offset under
+  root frame's `style` and `className` merge (a caller's `flex-row` wins over the
+  frame's resting column), and the lead held at the resting offset under
   `reducedMotion`.
 - `runtime/loading.runtime.test.tsx` — announces `"42%"`, clamps 140 to `"100%"`
   and −5 to `"0%"`, the fill tracks the value inside the track, the buffer paints

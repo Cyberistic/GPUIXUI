@@ -229,8 +229,11 @@ export const renderMeter = (
       aria-valuetext={part.valueText}
       testId={props.testId}
       style={mergeStyle(
-        recipeTw.classesToStyle(props.className, theme).style,
-        mergeStyle(frameStyle(theme), props.style),
+        mergeStyle(
+          frameStyle(theme),
+          recipeTw.classesToStyle(props.className, theme).style,
+        ),
+        props.style,
       )}
     >
       <MeterPartContext.Provider value={part}>

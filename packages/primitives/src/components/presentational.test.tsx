@@ -306,6 +306,37 @@ describe("layout containers", () => {
     expect(expectSome(elementProp(viewport, "testId"))).toBe("scroller");
   });
 
+  it("finds the caller's viewport inside a fragment", () => {
+    // The bug guarded: the composition scan read only direct children, so a
+    // viewport grouped in a fragment (or a fragment inside one) was invisible
+    // and the area wrapped the whole composition — heading and all — in a
+    // second, implicit scroller.
+    const root = renderScrollArea(
+      {
+        axis: "vertical",
+        viewportTestId: "implicit",
+        children: (
+          <>
+            <div />
+            <>
+              <ScrollAreaViewport testId="scroller" />
+            </>
+          </>
+        ),
+      },
+      testTheme,
+    );
+    const provider =
+      elementChildren(root)[0] ?? expect.fail("the area drew nothing");
+    const composed = elementChildren(provider);
+    expect(composed).toHaveLength(2);
+    const viewport =
+      composed[1] ??
+      expect.fail("the composition dropped the caller's viewport");
+    expect(viewport.type).toBe(ScrollAreaViewport);
+    expect(expectSome(elementProp(viewport, "testId"))).toBe("scroller");
+  });
+
   it("group related buttons under one role", () => {
     const attached = renderButtonGroup({ mode: "attached" }, testTheme);
     expect(expectSome(hostProp(attached, "role"))).toBe("group");

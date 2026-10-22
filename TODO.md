@@ -1785,6 +1785,24 @@ a workaround for two live sessions sharing one worktree; see
       (`expected false to be true` in the window). Docs in
       `docs/scroll-area.mdx` §Keyboard/§Accessibility/§Verification and the
       Scrollable containers inventory row
+`[x]` `packages/primitives`: a caller's composition lost in two places. **A
+      `ScrollAreaViewport` grouped in a fragment was invisible** — the
+      composition scan read only direct children, so the area wrapped the whole
+      composition (heading and all) in a second, implicit scroller and the
+      heading scrolled with the rows; the scan now descends through fragments
+      exactly as through an array. **`Progress` and `Meter` merged their resting
+      frame after the caller's `className`**, so the recipe → `className` →
+      `style` order their pages print never held: `className="flex-row"`
+      compiled to a row and then painted a column. The frame is now the base the
+      classes join, with `style` last. Proof: `presentational.test.tsx`'s `finds
+      the caller's viewport inside a fragment` (two siblings, the second the
+      caller's scroller, never the implicit one) and `Progress.test.tsx` /
+      `Meter.test.tsx`'s `lets a caller's className restyle the frame`. Both
+      directions measured: reverting either fails by name (`expected [ …(1) ] to
+      have a length of 2`, `expected 'column' to be 'row'`). Docs in
+      `docs/scroll-area.mdx` §Usage/§Verification and the Progress/Meter
+      verification lists; the Scrollable containers, Progress and Meter
+      inventory rows record it
 `[x]` `packages/primitives`: the provider owns **no** theme of its own — it was
       the last package with a private theme context, so a page mixing
       `@gpuixui/primitives` with `@gpuixui/components` had to wrap twice and the

@@ -188,6 +188,18 @@ describe("Progress", () => {
     expect(expectSome(hostStyleString(track, "flexDirection"))).toBe("row");
   });
 
+  it("lets a caller's className restyle the frame", () => {
+    // The bug guarded: the frame's own column layout was merged *after* the
+    // caller's classes, so `className="flex-row"` compiled and then lost to the
+    // resting `flexDirection: column` — the documented join order never held.
+    const element = renderProgress(
+      { value: 42, className: "flex-row" },
+      testTheme,
+      0,
+    );
+    expect(expectSome(hostStyleString(element, "flexDirection"))).toBe("row");
+  });
+
   it("keeps the default composition to the track and its indicator", () => {
     const element = bar(Option.some(42));
     const track = trackOf(element);

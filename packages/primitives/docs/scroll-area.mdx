@@ -62,7 +62,9 @@ import {
 Plain children are the content of one implicit viewport, so
 `<ScrollArea>rows</ScrollArea>` keeps scrolling. A `ScrollAreaViewport` among
 the children is the caller's own scroller; it inherits the area's axis,
-callbacks, thumb and keyboard behaviour unless it overrides them.
+callbacks, thumb and keyboard behaviour unless it overrides them. A fragment is
+transparent: the viewport may sit inside `<>{…}</>`, because grouping a heading
+and a scroller should not change which element scrolls.
 
 ## Parts
 
@@ -166,12 +168,14 @@ scrollbar's paint is otherwise the platform's. The keyboard step is the theme's
 - `src/core/scroll.test.ts` — the key → offset arithmetic: arrows, pages,
   Home/End, the start clamp, the axes a region does not scroll, and a key the
   region does not own.
-- `src/components/presentational.test.tsx` — the viewport is a tab stop with the
-  area's absolute-offset callback; an unnamed one is the named `group`
-  `"Scroll region"`; a named one keeps its group without a stop; `focusable={false}`
-  with no label drops the stop, the role and the name; the viewport declares the
-  keyboard ring and a non-focusable one declares none; the frame's
-  padding/radius stay off the viewport.
+- `src/components/presentational.test.tsx` — a caller's viewport among the
+  children is kept as the scroller, including one grouped inside a fragment, so
+  the area never wraps that composition in a second implicit one; the viewport
+  is a tab stop with the area's absolute-offset callback; an unnamed one is the
+  named `group` `"Scroll region"`; a named one keeps its group without a stop;
+  `focusable={false}` with no label drops the stop, the role and the name; the
+  viewport declares the keyboard ring and a non-focusable one declares none; the
+  frame's padding/radius stay off the viewport.
 - `runtime/layout.runtime.test.tsx` — a wheel with `deltaY -100` leaves the
   viewport's offset at `y -100` and the caller's `onScroll` receives `-100`;
   keyboard Down/PageDown/Home/End move the painted offset; `onScrollChange`
