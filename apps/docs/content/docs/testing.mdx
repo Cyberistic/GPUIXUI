@@ -269,9 +269,9 @@ computed halfway through the fold.
 
 ## Limitations
 
-- **This package is workspace-internal.** It is built to `dist/` for the
-  playground and the docs suite, and it is not installed by a consumer of the
-  library.
+- **This package is workspace-internal.** Only `apps/playground` depends on it,
+  and it is built to `dist/` for that app rather than installed by a consumer of
+  the library. The site's guard reads its source, not its build.
 - **A missing binding is data, not a failure.** `Runtime.detectRuntime` reports
   `RuntimeUnsupported`; the runner turns that into exit `2`. Nothing is written
   to `.artifacts/`, so a stale report cannot be mistaken for a fresh one.
