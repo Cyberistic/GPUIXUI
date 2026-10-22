@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { columnDrag } from "./column-drag.test-util";
 import { sidebarPages } from "./sidebar-pages.test-util";
 
 /**
@@ -320,6 +321,40 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("search-virtual-document");
     expect(dataPage).toContain("findRanges");
     expect(dataPage).toContain("row index");
+  });
+
+  it("holds a column drag to the press that arms it and the width each press reads", () => {
+    // The page taught sort, filter, freeze, virtualize, a column menu and press
+    // routing, and said resizing was "application state" with no rule — while a
+    // window had measured the whole gesture. `column-resize-lifecycle` measured
+    // that the press arms the capture (a move-only divider hears 1 of 8 and
+    // never resizes), that the release ends it, that a drag clamps at the floor,
+    // and that a second gesture measures from the width its own press found.
+    // The widths are derived from the fixture, so the page cannot print a stale
+    // one.
+    const { opened, dragSteps, controlMoves, drags, widths } = columnDrag;
+    expect(drags, "the probe no longer drives three divider drags").toHaveLength(
+      3,
+    );
+
+    expect(rowFor(record, "Resizable column drag")).toContain(
+      "supported, with limits",
+    );
+    expect(dataPage).toContain("A column's divider arms the capture");
+    expect(dataPage).toContain("column-resize-lifecycle");
+    expect(dataPage).toContain(`${opened} → ${widths.widened}`);
+    expect(dataPage).toContain(`**${widths.clamped}**`);
+    expect(dataPage).toContain(`**${widths.measured}**`);
+    expect(dataPage).toContain(`**${widths.stepped}**`);
+    expect(dataPage).toContain(`**${controlMoves} of ${dragSteps}**`);
+    expect(dataPage).toContain("onMouseDown");
+    expect(dataPage).toContain("onMouseMove");
+    expect(dataPage).toContain("nextSize");
+    // The gap row is where a reader looks for the limit, and it must carry the
+    // measured gesture rather than the old one-line verdict.
+    expect(rowFor(dataPage, "Resizable columns")).toContain(
+      "column-resize-lifecycle",
+    );
   });
 
   it("teaches a column menu's consequences, and the clamp the renderer owns", () => {

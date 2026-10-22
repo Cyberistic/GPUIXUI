@@ -201,6 +201,22 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   a key typed in an editable cell reaches the row's `onKeyDown`
   (`field-cell → hits=row-key`) while the field keeps it, so the row reads the
   event's own `elementId` before acting on an arrow (`press-routing-lifecycle`).
+- **A column's divider arms the capture, and its width is read at each press** —
+  a desktop resize is the split pane's drag rotated, and a window measured the
+  reader's path (`column-resize-lifecycle`): a 6px divider that listens to both
+  `onMouseDown` and `onMouseMove` arms the runtime's pointer capture, so it kept
+  **8 of 8** moves past its own box and widened the column 160 → 220, with the
+  header painting the new width and every later column shifting by the same 60.
+  The release ends the gesture, a −150 drag clamps at the **120** floor and
+  paints it, and a second +30 drag measures from the **150** its own press found
+  rather than the earlier gesture's start — so read the width when the press
+  lands and apply the pointer's delta to that snapshot, exactly as `SplitPane`
+  holds its press. `right` on the focused divider steps it by 16 to **166**, so
+  a pointer-only resize is half a control, and a divider shipped with only the
+  move half hears **1 of 8** moves and never resizes, which is the control.
+  Clamp through the split pane's own `nextSize` arithmetic — a column and a pane
+  are one drag against one pair of bounds — and keep header and rows in one
+  `overflowX` scroller so a pan moves them together.
 - **A filter's rules are the app's, and a window measured them** — a filter is
   an `<input>` above the rows, so nothing in the runtime can make the four
   decisions a grid owns. `table-filter-lifecycle` typed a literal,
@@ -252,7 +268,7 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
 | No cell-level accessibility | `role`, `aria-label`, `aria-selected` and `aria-level` exist; `aria-colindex`, `aria-rowindex` and `aria-describedby` do not |
 | Charts | No chart component; every drawing route is measured. `<svg source>` paints its markup as **one tint**, so a multi-series chart is one stacked `<svg>` per colour, and `<text>` inside the markup paints; a `setImagePixels` buffer keeps each pixel's own colour — three series inside one element — and its transparent margin composites onto the card behind it, uploaded from a layout effect; `setImage` decoding SVG **bytes** keeps every `fill`, which `<svg source>` cannot; `<canvas>` is measured **blank**, so the fill behind it shows through. Two limits: a translucent bar over another bar is unmeasured, and a buffer scales to its element's box, so a chart is drawn at its layout size |
 | Hierarchical data | A tree view needs a `<virtual-list>` plus our own flattening; hierarchical virtualization is ours. `virtual-tree-lifecycle` measured the shape: one `<virtual-list>` child per visible node, 4 000 rows from 40 open directories, arrows moving native focus through `renderer.focusElement`, and a reveal by index |
-| Resizable columns | Pointer events and `col-resize`/`row-resize` cursors exist; no column model, so the resize is application state |
+| Resizable columns | Pointer events and `col-resize`/`row-resize` cursors exist; no column model, so the resize is application state. A window measured the drag (`column-resize-lifecycle`): a divider that listens to both `onMouseDown` and `onMouseMove` keeps **8 of 8** moves past its own box (160 → 220, a −150 drag clamping at **120**, the next +30 measuring from **150**, `right` stepping to **166** with header and cells on one offset), while a move-only divider hears **1 of 8** and resizes nothing |
 
 The full runtime table is on [Runtime](/docs/runtime).
 

@@ -1639,7 +1639,9 @@ describe("the curated component pages", () => {
     const recipe = read("packages/primitives/src/recipe/index.ts");
 
     expect(source).toContain('role="checkbox"');
-    expect(source).toContain("aria-valuetext={selectionValueText(current)}");
+    // The state travels as `aria-valuetext`, derived from the shared helper —
+    // not a literal pair, because the words became a provider value.
+    expect(source).toContain("aria-valuetext={selectionValueText(");
     // No `aria-checked` attribute (the module's comment names the absence).
     expect(source).not.toContain("aria-checked=");
     expect(source).toContain("aria-description=");
@@ -1699,9 +1701,9 @@ describe("the curated component pages", () => {
     const recipe = read("packages/primitives/src/recipe/index.ts");
 
     expect(source).toContain('role="switch"');
-    expect(source).toContain(
-      'aria-valuetext={state.current ? "checked" : "unchecked"}',
-    );
+    // The two states travel as `aria-valuetext`, derived from the shared
+    // helper rather than a literal pair.
+    expect(source).toContain("aria-valuetext={selectionValueText(");
     // No `aria-checked` attribute (the module's comment names the absence).
     expect(source).not.toContain("aria-checked=");
     expect(source).toContain("aria-description=");

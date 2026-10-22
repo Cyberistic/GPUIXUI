@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { columnDrag } from "./column-drag.test-util";
 
 /**
  * The capability record, held to the code that encodes it.
@@ -1117,6 +1118,45 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[1]).toContain("survives the sort");
     expect(page?.[1]).toContain("centre");
     expect(page?.[2]).toContain("record");
+  });
+
+  it("records the drag that resizes a column, and the press that arms it", () => {
+    // Tier 3's *Resizable columns* row rested on the headless
+    // `table-column-resize` scenario, where the pointer is synthesised, so a
+    // data-grid plan could not know that the press is what arms the capture or
+    // that the width is read at each press. Every width printed here is derived
+    // from the fixture's own numbers and the deltas the probe drives.
+    const { opened, dragSteps, controlMoves, drags, widths } = columnDrag;
+    expect(drags, "the probe no longer drives three divider drags").toHaveLength(
+      3,
+    );
+
+    const row = rowFor("Resizable column drag");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("column-resize-lifecycle");
+    expect(row?.evidence).toContain("table-column-resize");
+    expect(row?.evidence).toContain(`${opened} → ${widths.widened}`);
+    expect(row?.evidence).toContain(`**${dragSteps} of ${dragSteps}**`);
+    expect(row?.evidence).toContain(`**${widths.clamped}**`);
+    expect(row?.evidence).toContain(`**${widths.measured}**`);
+    expect(row?.evidence).toContain(`**${widths.stepped}**`);
+    expect(row?.evidence).toContain(`**${controlMoves} of ${dragSteps}**`);
+    expect(row?.workaround).toContain("onMouseDown");
+    expect(row?.workaround).toContain("nextSize");
+    expect(row?.workaround).toContain("each press");
+
+    const page = measuredRow("Resizable column drag");
+    expect(
+      page,
+      "the page's measured table has no resizable-column row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("column-resize-lifecycle");
+    expect(page?.[1]).toContain(`${opened} → ${widths.widened}`);
+    expect(page?.[1]).toContain(`**${widths.clamped}**`);
+    expect(page?.[1]).toContain(`**${widths.measured}**`);
+    expect(page?.[1]).toContain(`**${widths.stepped}**`);
+    expect(page?.[1]).toContain(`**${controlMoves} of ${dragSteps}**`);
+    expect(page?.[2]).toContain("onMouseDown");
   });
 
   it("records the handler a press on a row's inner element runs", () => {
