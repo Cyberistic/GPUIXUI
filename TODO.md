@@ -634,7 +634,7 @@ a workaround for two live sessions sharing one worktree; see
       terminal-mode app too; the terminal's in-band resize (`ESC[48;20;50;0;0t`)
       repaints the app at 400×320 while a pty `stty` alone does not. 4/4
       (`terminal-render`, `terminal-resize`, `terminal-pointer`,
-      `terminal-input`), green (~6–8 s). Two decoder defects found while building it — a completed transfer
+      `terminal-input`), green (~6–10 s). Two decoder defects found while building it — a completed transfer
       replaced the frame list instead of appending (a repainted run read as "no
       page"), and an image delete carries no `;<payload>` so the APC grammar missed
       the restore — and both directions measured per case. The paint check's
@@ -642,7 +642,10 @@ a workaround for two live sessions sharing one worktree; see
       `0.000` of `#d9432b` (exit `1`), restored green. `packages/testing` gained
       `Pixels.encodePng` and `Pixels.boundsOfColour` (4 cases); the harness is
       macOS-only (`script` + `stty`, `cat | script` because libuv's socketpair
-      stdin is rejected) and the Linux wrapper is recorded as open. Evidence:
+      stdin is rejected) and the Linux wrapper is recorded as open. A run that
+      paints no frame quotes the child's own terminal text (its preflight remedy),
+      because that output lands on the pty and not on the wrapper's stderr.
+      Evidence:
       `apps/playground/README.md` §Terminal mode, `.artifacts/terminal/{frame,clicked,resized,pressed}.png`.
       Publishing it in the record and `/docs/runtime` is the interlock row above
 

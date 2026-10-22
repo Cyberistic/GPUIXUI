@@ -297,6 +297,27 @@ const settle = (
 const text = (chunks: ReadonlyArray<Uint8Array>): string =>
   new TextDecoder().decode(concat(chunks));
 
+/**
+ * What a reader would have seen in the pty, with the control stream removed.
+ *
+ * A child that never paints usually says why on the terminal it was given — the
+ * preflight's "no GPUix binding" remedy is printed there, not on the wrapper's
+ * stderr, so a no-frame failure has to quote it or the run reads as silence.
+ */
+export const plainText = (chunks: ReadonlyArray<Uint8Array>): string => {
+  /* oxlint-disable no-control-regex -- the value being stripped is a terminal stream */
+  const stripped = text(chunks)
+    .replace(/\x1b_G[^\x1b]*\x1b\\/g, "")
+    .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, "")
+    .replace(/\x1b\[[0-9;?<>=]*[A-Za-z]/g, "")
+    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "")
+    .replace(/\r/g, "");
+  /* oxlint-enable no-control-regex */
+  return stripped.trim().length <= 300
+    ? stripped.trim()
+    : `…${stripped.trim().slice(-300)}`;
+};
+
 const rgbaText = (value: Pixels.Rgba): string =>
   `#${[value.r, value.g, value.b]
     .map((channel) => channel.toString(16).padStart(2, "0"))
@@ -724,6 +745,7 @@ const noFrame = (
   attempts: number,
   stream: KittyStream,
   diagnostics: ReadonlyArray<string>,
+  output: ReadonlyArray<Uint8Array>,
   stderr: string,
 ): TerminalError =>
   new TerminalError({
@@ -747,6 +769,7 @@ const noFrame = (
         )}`,
         `  child: ${Arr.isReadonlyArrayNonEmpty(diagnostics) ? Arr.join(diagnostics, "; ") : "no spawn or exit event"}`,
         `  stderr: ${stderr.trim() === "" ? "(empty)" : stderr.trim()}`,
+        `  terminal: ${plainText(output) === "" ? "(nothing painted or printed)" : plainText(output)}`,
       ],
       "\n",
     ),
@@ -789,6 +812,7 @@ const capture = (
             FIRST_FRAME_ATTEMPTS,
             first,
             child.diagnostics(),
+            child.output(),
             text(child.errors()),
           ),
         );
@@ -855,6 +879,7 @@ const capture = (
             FIRST_FRAME_ATTEMPTS,
             final,
             child.diagnostics(),
+            child.output(),
             text(child.errors()),
           ),
         );

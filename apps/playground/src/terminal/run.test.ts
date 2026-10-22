@@ -31,6 +31,7 @@ import {
 import {
   POINTER_CLICK,
   RESIZE_SEQUENCE,
+  plainText,
   RESIZED_GRID,
   TERMINAL_GRID,
   evidenceOf,
@@ -175,6 +176,25 @@ describe("reading a run's frames", () => {
     const frames = [frame(TERMINAL_PRESSED), frame(TERMINAL_REST)];
     expect(Option.isSome(firstPainted(frames, TERMINAL_REST, 0.9))).toBe(true);
     expect(Option.isNone(firstPainted(frames, TERMINAL_INK, 0.9))).toBe(true);
+  });
+});
+
+describe("what a failed run says", () => {
+  it("quotes the child's own terminal text, without its control stream", () => {
+    const stream = [
+      "\x1b[?1049h\x1b[?25l",
+      "\x1b_Ga=T,i=1,p=1,f=32,t=d,s=1,v=1,m=0;AAAA\x1b\\",
+      "terminal playground: no GPUix binding on darwin-x64\r\n",
+      "  remedy: build the binding first\r\n",
+      "\x1b[?1049l",
+    ].join("");
+    expect(plainText([new TextEncoder().encode(stream)])).toBe(
+      "terminal playground: no GPUix binding on darwin-x64\n  remedy: build the binding first",
+    );
+  });
+
+  it("says nothing when the child printed nothing", () => {
+    expect(plainText([new Uint8Array(0)])).toBe("");
   });
 });
 

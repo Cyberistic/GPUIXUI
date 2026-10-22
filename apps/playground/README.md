@@ -3108,7 +3108,7 @@ Two details of the harness are load-bearing:
   terminal on exit, and replays its logs to stderr afterwards.
 
 Measured on 0.11.0 here (`terminal-render`, `terminal-resize`, `terminal-pointer`,
-`terminal-input`, 4/4, ~6–8 s):
+`terminal-input`, 4/4, ~6–10 s on a busy host):
 
 | State | What the stream proves |
 | ----- | ---------------------- |
@@ -3122,7 +3122,10 @@ Measured on 0.11.0 here (`terminal-render`, `terminal-resize`, `terminal-pointer
 | quit | ctrl-c exits `0`; the stream then leaves the alternate screen, shows the cursor, disables the four protocols, pops the keyboard flags and deletes the image (`a=d`) |
 
 Exit codes are the suite's: `0` passed, `1` a check failed, `2` no evidence (no
-frame at all, an unknown argument, or a host without the macOS pty wrapper).
+frame at all, an unknown argument, or a host without the macOS pty wrapper). A
+no-frame failure quotes the child's own terminal text with the control stream
+stripped — the preflight's "no GPUix binding" remedy is printed on the pty, not
+on the wrapper's stderr, so the run has to replay it.
 Artifacts: `.artifacts/terminal/frame.png`, `.artifacts/terminal/clicked.png`,
 `.artifacts/terminal/resized.png`, `.artifacts/terminal/pressed.png`,
 `.artifacts/terminal-report.json`.
