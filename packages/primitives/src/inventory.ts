@@ -370,6 +370,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "No aria-checked: the state is announced through aria-valuetext",
       "A visible Label paints text only; the label prop names the control",
       "The slide is 150ms; reducedMotion lands the thumb (the runtime exposes no preference)",
+      "No pending state: disable the switch while a request is in flight (a busy spinner is Toggle's contract, not this control's)",
     ],
     source: [
       "src/components/Switch.tsx",

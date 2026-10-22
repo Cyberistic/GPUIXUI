@@ -233,6 +233,74 @@ const otpAlphabetProblems = (): ReadonlyArray<string> =>
     },
   );
 
+/**
+ * Problems with the Switch record after the Toggle's busy paragraph was
+ * retracted from its row.
+ *
+ * The regression: the Switches row carried a paragraph copied from the Toggle
+ * row — "**A busy toggle** (`loading`) paints a spinner in the accent's
+ * on-colour while pressed … refuses activation and keeps its tab stop" — while
+ * `SwitchProps` declares no `loading`, the page says "No loading or pending
+ * state; disable it while a request is in flight", and the row six words later
+ * said "No pending state". A reader of the inventory was told to pass a prop
+ * TypeScript rejects. The busy spinner is `Toggle`'s contract, so this holds the
+ * two controls apart in both directions: the switch keeps no promise it cannot
+ * paint, and the toggle keeps the one it does.
+ */
+const switchPendingProblems = (): ReadonlyArray<string> =>
+  Option.match(
+    Arr.findFirst(inventory, (meta) => meta.name === "Switches"),
+    {
+      onNone: () => ["Switches: no record"],
+      onSome: (switches) => [
+        ...(sourceOf("src/components/Switch.tsx").includes("readonly loading")
+          ? ["Switches: the source declares a loading prop the documents deny"]
+          : []),
+        ...(Arr.some(switches.limitations, (line) =>
+          line.includes("No pending state"),
+        )
+          ? []
+          : ["Switches: the record does not state the missing pending state"]),
+        ...(sourceOf(switches.docs).includes("No loading or pending state")
+          ? []
+          : [
+              "Switches: the page does not teach disabling the switch in flight",
+            ]),
+        ...Option.match(rowFor(switches), {
+          onNone: () => ["Switches: no COMPONENTS.md row"],
+          onSome: (row) => [
+            ...(row.notes.includes("busy toggle")
+              ? ["Switches: the row promises the Toggle's busy state"]
+              : []),
+            ...(row.notes.includes("No pending state") &&
+            row.notes.includes("in flight")
+              ? []
+              : [
+                  "Switches: the row does not name disabling it while a request is in flight",
+                ]),
+          ],
+        }),
+        ...(sourceOf("src/components/Toggle.tsx").includes("readonly loading")
+          ? []
+          : ["Toggle: the source no longer declares its busy state"]),
+        ...Option.match(
+          Arr.findFirst(inventory, (meta) => meta.name === "Toggle"),
+          {
+            onNone: () => ["Toggle: no record"],
+            onSome: (toggle) =>
+              Option.match(rowFor(toggle), {
+                onNone: () => ["Toggle: no COMPONENTS.md row"],
+                onSome: (row) =>
+                  row.notes.includes("busy toggle")
+                    ? []
+                    : ["Toggle: the row lost its busy state"],
+              }),
+          },
+        ),
+      ],
+    },
+  );
+
 describe("Tier 1 inventory", () => {
   it("names files that exist", () => {
     const problems = Arr.flatMap(inventory, (meta) =>
@@ -268,6 +336,12 @@ describe("Tier 1 inventory", () => {
 
   it("does not narrow the alphabet the OTP core keeps", () => {
     expect(otpAlphabetProblems()).toEqual([]);
+  });
+
+  it("keeps the switch's pending state honest", () => {
+    // The busy spinner belongs to Toggle; a switch that saves over the network
+    // is disabled while the request is in flight.
+    expect(switchPendingProblems()).toEqual([]);
   });
 
   it("records the tooltip's measured keyboard path", () => {

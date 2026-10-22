@@ -3952,6 +3952,30 @@ a workaround for two live sessions sharing one worktree; see
       `number-field.mdx` §API/§Theming/§Limitations/§Verification, the inventory
       record and the Tier 1 `Number Field` row.
 
+`[x]` `packages/primitives`: the **Switches** row promised a busy state the
+      control does not have — it carried a paragraph copied from the `Toggle`
+      row ("**A busy toggle** (`loading`) paints a spinner … refuses activation
+      and keeps its tab stop"), while `SwitchProps` declares no `loading`, the
+      page says "No loading or pending state; disable it while a request is in
+      flight", and the row six words later said "No pending state" itself. A
+      consumer reading the inventory was told to pass a prop TypeScript rejects.
+      The paragraph is gone and the row states the honest rule (a setting that
+      saves over the network disables the switch while the request is in flight;
+      the busy spinner is `Toggle`'s contract), and the record carries the same
+      limitation. `src/inventory.test.ts`'s `keeps the switch's pending state
+      honest` reads the component source, the record, the row and the page, and
+      holds the two controls apart in both directions: it fails when a `loading`
+      prop appears in `Switch.tsx`, when the row promises a busy switch, when the
+      record or the page stops teaching the disabled alternative — and when
+      `Toggle` loses the `loading` prop or the row claim it already has.
+      Directions measured: restoring the pasted sentence fails `Switches: the
+      row promises the Toggle's busy state`; removing `readonly loading` from
+      `Toggle.tsx` fails `Toggle: the source no longer declares its busy state`;
+      rewording the page's sentence fails `Switches: the page does not teach
+      disabling the switch in flight`; restored, 12/12. The Tier 1 preamble's
+      stale "13 files, 119 tests" is replaced by the suite's own path rather than
+      a new number that can drift again.
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21
