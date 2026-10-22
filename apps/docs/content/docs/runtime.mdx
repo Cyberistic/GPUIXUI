@@ -120,6 +120,8 @@ function Grow({ open }: { open: boolean }) {
 `@gpuixui/motion` drives the numeric `MotionStyle` fields the runtime *does* have
 — `width`, `height`, `top`, `right`, `bottom`, `left`, `opacity`, `borderRadius`.
 Static rotation/scale stays unsupported until the runtime grows a `transform` key.
+The physics behind those fields — springs, retargeting, keyframes, inertia and
+the app-supplied reduced-motion policy — is [Motion](/docs/motion).
 
 ### Grid span
 

@@ -1,0 +1,257 @@
+---
+title: Motion
+description: Springs, easing, keyframes, inertia and reduced motion — the physics a GPUix motion target does not compute, sampled from a clock the caller owns.
+---
+
+GPUix tweens a numeric style field on its own clock: `motion.div` walks
+`initial` → `animate` → `exit` and reports `onMotionComplete`. `@gpuixui/motion`
+is the layer above that — closed-form springs, retargeting that keeps velocity,
+keyframes and stagger, inertial decay, and reduced motion as a policy. It is
+pure: no timers, no observers, no GPUix import. Every function samples at an
+elapsed time you pass in, so a movement is a value in a test rather than a wait.
+
+## What the package owns
+
+| Module | Responsibility |
+| ------ | -------------- |
+| spring | `springPhysics`, three presets, `sampleSpring`, `atRest` and `retarget` — under-, critical- and over-damped integration |
+| easing | `linear`, `easeIn` / `easeOut` / `easeInOut`, `circIn` / `circOut` / `circInOut`, `backIn` / `backOut` / `backInOut`, `anticipate` and `bezier` |
+| timeline | `keyframe` + `sampleKeyframes`, `stagger` and the keyed `Sequence` driver |
+| inertia | `inertia`, `project` and `sampleInertia` — exponential decay with optional hard bounds |
+| value | `MotionValue` and its transitions: `instant`, `tween`, `springTransition`, `transitionEquals` |
+| React | `useSpring`, `useTransition`, `useInertia` and `useMotion` from `@gpuixui/motion/react` |
+
+The library's components paint their transitions with the **runtime's**
+declarative `motion.div`, not with this package: a dialog fading in needs a
+duration and an easing, which the runtime already executes. This package is for
+physics the runtime does not compute — a spring that can be retargeted mid-flight,
+a stagger, a momentum coast — and its adoption by the animated surfaces is
+tracked as plan `600` Phase 0.
+
+## The clock is yours
+
+Every function takes an elapsed time in milliseconds and returns a sample.
+Nothing schedules, sleeps or watches: `sampleSpring(layoutSpring, 0, 1, 0, 2000)`
+settles because the maths says it has, not because a timer fired. A caller can
+therefore drive motion from a gesture, a scroll offset or a test's frozen clock.
+
+The hooks are the only place a clock is read. Each keeps one `performance.now()`
+origin for the life of the component and samples every 16 ms, clearing its timer
+on unmount. A hook is an app-boundary convenience; the pure functions are the
+contract.
+
+## Springs
+
+| Preset | Stiffness | Damping | For |
+| ------ | --------- | ------- | --- |
+| `affordanceSpring` | 320 | 34 | short, subtle feedback — a press or a toggle |
+| `layoutSpring` | 260 | 28 | committed layout motion: collapse, expand, insert, remove |
+| `continuitySpring` | 190 | 23 | a target that changes mid-flight: a pane, a divider, a zoom |
+
+`springPhysics(params)` is the sanitising constructor. A non-finite or
+non-positive mass, stiffness, rest delta or rest speed falls back to its
+default; damping may be **zero** (a spring with no resistance) and is otherwise
+non-negative; every value is clamped, so a spring built from user input cannot
+produce `NaN` or blow up. Whatever comes out can be sampled.
+
+```ts
+import { layoutSpring, retarget, sampleSpring } from "@gpuixui/motion";
+
+// 80 ms into a run from 0 → 1 — value and velocity live.
+const mid = sampleSpring(layoutSpring, 0, 1, 0, 80);
+
+// Retargeting keeps both, so a change of mind continues the movement
+// instead of starting a second one.
+const next = retarget(mid, 2);
+
+export const at = sampleSpring(
+  layoutSpring,
+  next.value,
+  next.target,
+  next.velocity,
+  1_000,
+).value;
+```
+
+`sampleSpring` returns `{ value, velocity, target, settled }`, and `settled` is
+the rest test `atRest` performs: within `restDelta` of the target and within
+`restSpeed` of a standstill. A caller can stop sampling on that flag rather than
+guessing a duration.
+
+## One retained value
+
+`MotionValue` holds a scalar across samples, which is what a gesture needs
+between releases.
+
+```ts
+import { MotionValue, layoutSpring, springTransition } from "@gpuixui/motion";
+
+const width = new MotionValue(120);
+width.animate(240, springTransition(layoutSpring));
+
+// Sample at elapsed times the caller owns. `complete` is a one-shot edge.
+const first = width.sample(16);
+const last = width.sample(500);
+
+export const [moving, settled] = [first.active, last.complete];
+```
+
+- `set` assigns a value and cancels any run without momentum;
+  `animate(target, transition)` retargets from the current presentation;
+  `coast(inertia, velocity?)` starts a decay from the last value.
+- An `animate` call that repeats the current target **and** an equal transition
+  is a no-op, so re-declaring `springTransition(layoutSpring)` on a render does
+  not restart the run.
+- `sample` clamps a non-monotonic time to the last sample, so a clock that steps
+  backwards cannot rewind the paint.
+- `complete` is true only on the sample that finishes the run; `active` says
+  whether another sample will move the value.
+- A transition is `instant`, `tween()` — `DEFAULT_TWEEN_MS` of 300 ms, easing
+  with `easeOut` — or `springTransition(physics)`, and `transitionEquals`
+  compares two declarations structurally rather than by identity.
+
+## Keyframes, stagger and sequences
+
+A keyframe list is normalised progress, not milliseconds, so the same timeline
+scales to any duration:
+
+```ts
+import { easeOut, sampleKeyframes, stagger } from "@gpuixui/motion";
+
+const offsets = [
+  { at: 0, value: 0 },
+  { at: 0.6, value: 120, easing: easeOut },
+  { at: 1, value: 100 },
+];
+
+export const halfway = sampleKeyframes(offsets, 0.5);
+export const delayAt = (index: number) => stagger(20, index, 3, "center");
+```
+
+Frames must be sorted ascending by `at`. `t <= first.at` returns the first value
+and `t >= last.at` the last, so the ends do not extrapolate; between two frames
+the **upper** frame's easing shapes the segment that ends at it. `stagger(stepMs,
+index, count, from?)` returns a delay from `start`, `end` or `center`.
+
+`Sequence` positions keyed steps in absolute elapsed time and samples all of
+them at once — `at`, `append`, `stagger`, `duration`, `sample` and `complete`.
+Each sample is `{ key, state, value }` with `state` one of `pending`, `active`
+or `completed`. It is a driver, not a scheduler: nothing advances without a
+sample, so a sequence can be scrubbed, frozen in a test, or driven by a gesture.
+
+## Inertia
+
+```ts
+import { inertia, project, sampleInertia } from "@gpuixui/motion";
+
+const scroll = inertia(350, { min: 0, max: 2_400 });
+
+export const rest = project(scroll, 100, 900);
+export const frame = sampleInertia(scroll, 100, 900, 120);
+```
+
+`inertia(tauMs, bounds?)` builds the decay constant and its hard bounds; the
+time constant defaults to 350 ms, a non-finite or non-positive value falls back
+to it, and inverted bounds are swapped rather than refused. `project` answers where a release would settle — position
+plus velocity times the time constant, clamped — and `sampleInertia` decays
+toward it exponentially, clamps at a bound with **zero** velocity, and reports
+`settled` once the remaining speed is at or below the rest threshold. There is
+no boundary spring: a bounce at the edge is not modelled.
+
+## In React
+
+```tsx
+import { motion } from "@gpuix/react";
+import { layoutSpring } from "@gpuixui/motion";
+import { useSpring } from "@gpuixui/motion/react";
+
+export const Grow = ({ open }: { readonly open: boolean }) => {
+  const { value } = useSpring(open ? 240 : 120, layoutSpring);
+  return <motion.div animate={{ width: value }} transition={{ duration: 0 }} />;
+};
+```
+
+Each hook returns `{ value, velocity, complete }` and accepts
+`{ reducedMotion }`. `useSpring` and `useTransition` build their transition from
+primitive arguments, so passing a physics preset or a tween inline is safe;
+`useMotion(target, transition)` takes the transition itself and compares
+structurally, but its effect re-runs on the reference — pass a module constant
+or a memoized value.
+
+The `transition={{ duration: 0 }}` is deliberate: the hook has already sampled
+the physics, so the runtime assigns the number instead of tweening it a second
+time. The package drives the numeric fields a GPUix `MotionStyle` has — `width`,
+`height`, `top`, `right`, `bottom`, `left`, `opacity` (0–1) and `borderRadius`.
+There is no `transform` key, so scale, rotate and translate cannot be painted or
+animated; motion on those axes waits on a runtime change.
+
+## Reduced motion is a policy, not a capability
+
+The pinned runtime exposes no reduced-motion preference — the capability record
+keeps detection `unverified` and says not to claim a mode — so the app supplies
+one. Every hook takes `reducedMotion`, and `MotionValue.sample(elapsed, true)`
+finishes an active run immediately at its target with zero velocity, including
+an inertial coast. The library never guesses the preference; the same split
+appears in the components, where `Button` and `IconButton` take a
+`reducedMotion` prop for the busy spinner and `Switch` paints its two states
+without the slide.
+
+## What the runtime measured
+
+The runtime's own tween and this package's samples meet at one measured seam.
+The probe (`motion-geometry`) and the rest of the table are on
+[Runtime capabilities § Measured in a window](/docs/runtime#measured-in-a-window):
+
+- A 3 s `easeInOut` transition painted `40, 43, 117, 123, 221, 240, 240, 240`,
+  so the runtime tweens rather than jumping, and `onMotionComplete` fired once
+  per run.
+- The animated box **clips** its content instead of reflowing it: a fixed
+  320 × 200 child kept its size while its parent was 120 × 40 and while it was
+  240 × 240. Animate an outer `overflow: "hidden"` box for a collapsing sidebar
+  or a growing row.
+- `duration: 0` paints the two target sizes with no frame between them — the
+  negative control, and the reason the hook example above assigns the value.
+
+## Limits to design around
+
+- **No `transform`.** Scale, rotate and translate have no style key; a
+  `MotionValue` is a number, so motion is confined to the fields the runtime
+  can paint.
+- **A value, not a graph.** One sample is one scalar. A colour, a shadow or a
+  multi-property timeline is several values you compose yourself.
+- **No scheduler.** `Sequence` and `MotionValue` advance only when sampled, and
+  the hooks sample on a 16 ms timer, so a paused tab pauses motion. A list that
+  reorders while it animates still owns its own identity.
+- **No boundary spring.** Inertia stops at its bound at zero velocity; a bounce
+  is out of scope.
+- **The runtime clips, it does not reflow.** A collapsing sidebar animates an
+  outer clipped box; its content keeps its size throughout the run.
+
+## Provenance
+
+The spring and timeline maths is a TypeScript port of `open-gpui`'s
+`crates/motion` (Apache-2.0), and `MotionValue` and the inertia API follow
+`gpui-ce-motion` (MIT OR Apache-2.0). Neither is vendored or imported, and the
+notices a port has to carry are recorded in
+[License and attribution](/docs/license).
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `react` | the hooks in `@gpuixui/motion/react`; an **optional** peer, so the pure entry has no React dependency |
+| `@gpuix/react` | only in the example: `motion.div` is the target a sampled value is written to |
+
+## Related
+
+- [Runtime capabilities](/docs/runtime) — the declarative tween the components
+  use, the missing `transform` key, and the rest of the measured table.
+- [Architecture](/docs/architecture) — where a motion value sits in the package
+  graph, and why motion is not a token.
+- [Theming](/docs/theming) — the durations and shadows a movement is painted
+  against; motion itself carries no colour.
+- [Switch](/docs/primitives/switch) — the shipped control whose thumb slides
+  through the runtime's `motion.div`.
+- [Tabs](/docs/components/tabs) — the shared indicator that jumps rather than
+  slides, because there is no `transform`.
+- [License and attribution](/docs/license) — the two motion records above.
