@@ -53,6 +53,12 @@ packages/motion     Motion physics (springs, easing, timelines, inertia) + React
 packages/primitives Tier 1 render primitives
 packages/icons      Icon set and sizing rules
 packages/components Tier 2 composition and feedback components
+packages/data       Tier 3 data presentation: table, virtual, tree, charts
+packages/dock       Tier 4 panels: split panes, panel groups, dock layouts
+packages/editor     Tier 4 code surfaces: editor, diff, search and replace
+packages/files      Tier 4 file and inspector surfaces: tree, log, properties
+packages/media      Tier 4 media surfaces: image preview, drop zone, upload
+packages/shell      Tier 4 app chrome: menus, status bar, toolbar
 packages/data       Tier 3 data presentation: tables, sort/selection/filter, charts
 packages/tw         shadcn class recipes → GPUix StyleDesc (with `cn`)
 packages/runtime    The pinned runtime's capability matrix + typed refusals
