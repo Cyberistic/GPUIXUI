@@ -639,3 +639,87 @@ describe("the command palette", () => {
     page.unmount();
   });
 });
+
+/** A page whose motion preference the test can change while a surface moves. */
+const PreferencePage = ({ reduced }: { readonly reduced: boolean }) => (
+  <Page reducedMotion={reduced}>
+    <Dialog>
+      <DialogTrigger testId="open">Rename</DialogTrigger>
+      <DialogContent label="Rename" testId="dialog" size="sm">
+        <DialogFooter>
+          <DialogClose testId="cancel">Cancel</DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </Page>
+);
+
+/** The painted height of `testId`, failing when nothing was painted. */
+const heightOf = (
+  renderer: TestRoot["renderer"],
+  testId: string,
+): number => {
+  const instance = renderer.findByTestId(testId);
+  if (instance === undefined) {
+    throw new Error(`behaviour: no element with testId "${testId}"`);
+  }
+  const bounds = renderer.getElementBounds(instance.id);
+  if (bounds === null) {
+    throw new Error(`behaviour: "${testId}" painted no box`);
+  }
+  return bounds.height;
+};
+
+describe("the preference", () => {
+  it("settles a surface that is still moving when the setting turns on", async () => {
+    // The reader turns Reduce Motion on mid-entry. The seam reads the preference
+    // on every render, so the in-flight run's duration becomes zero and the
+    // resting frame is what is left — the journey does not finish.
+    const page = renderComponent(<PreferencePage reduced={false} />);
+    page.renderer.clockPause();
+    clickCentreOf(page, "open");
+    await delay();
+    const entering = where(page.renderer, "dialog", "y");
+
+    page.rerender(<PreferencePage reduced />);
+    await delay();
+    const settled = where(page.renderer, "dialog", "y");
+    // Nothing is left to run: the frozen clock has not moved the surface since.
+    expect(entering - settled).toBe(8);
+
+    page.renderer.clockFastForward(400);
+    await delay();
+    expect(where(page.renderer, "dialog", "y")).toBe(settled);
+    page.unmount();
+  });
+
+  it("paints a section at its measured height on the first frame", async () => {
+    // The reveal's target is a measurement that arrives after a paint, so under
+    // the reduced preference the section must already be at its full height in
+    // the frame it opens rather than growing from zero.
+    const page = renderComponent(
+      <Page reducedMotion>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="shipping">
+            <AccordionTrigger testId="trigger">Shipping</AccordionTrigger>
+            <AccordionContent testId="body">
+              <text>Ships in two days.</text>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </Page>,
+    );
+    page.renderer.clockPause();
+    clickCentreOf(page, "trigger");
+    settle(page);
+    await delay();
+    const first = heightOf(page.renderer, "body");
+
+    page.renderer.clockFastForward(400);
+    settle(page);
+    await delay();
+    expect(first).toBeGreaterThan(0);
+    expect(heightOf(page.renderer, "body")).toBe(first);
+    page.unmount();
+  });
+});

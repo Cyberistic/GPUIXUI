@@ -293,7 +293,7 @@ row in the same change.
 | Badges | `Badge` | — | plan 111 |
 | Avatars | `Avatar` | `AvatarRoot`/`Image`/`Fallback` | plan 111 |
 | Avatar group | `AvatarGroup` | — | plan 600 |
-| Alerts | `Alert`, `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`, `AlertDismiss` | — | plan 158 |
+| Alerts | `Alert`, `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`, `AlertLink`, `AlertDismiss` | — | plan 158 |
 | Lists / list items | `List`, `ListItem`, `ListItemTitle`, `ListItemDescription` | — | plan 111 |
 | Pinned list | `PinnedList` | — | plan 600 |
 | Empty states | `EmptyState` | — | plan 111 |
@@ -459,13 +459,22 @@ Under `"reduced"` a tween's duration is zero and no easing is named: the resting
 frame still paints, only the journey is removed. The same rule holds for a
 component that has no provider (the default is `"animated"`).
 
+**The preference is read on every render**, so turning it on settles a run that
+is already moving: an entry interrupted half-way jumps to its resting frame
+instead of finishing the journey, and a reveal whose height is a measurement
+paints at its full measured height in the frame it opens rather than growing
+from zero. `presence.test.tsx` measures both (`settles a surface that is still
+moving when the setting turns on`, `paints a section at its measured height on
+the first frame`).
+
 **Verification.** `packages/components/src/behaviour/presence.test.tsx` measures
 the movement and the mount window in the real renderer: bounds move by the
 surface's offset, the exit keeps the box painted and then removes it, the
-reduced preference paints the resting frame with no travel, the accordion grows
-from zero to its measured height, and the tab pill lands exactly on the next
-trigger's box. A press through a leaving box is measured on the context menu and
-on a dismissed modal's veil. `src/presence-contract.test.ts` holds every
+reduced preference paints the resting frame with no travel (including a setting
+turned on mid-entry), the accordion grows from zero to its measured height, and
+the tab pill lands exactly on the next trigger's box. A press through a leaving
+box is measured on the context menu and on a dismissed modal's veil.
+`src/presence-contract.test.ts` holds every
 floating host in the package to the two rules that make it possible — a host
 that composes the presence seam paints `pointerEvents` from it, and a deferred
 `anchored` host drops its occlusion with it. The live playground proves the fade
