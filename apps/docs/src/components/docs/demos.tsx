@@ -1880,6 +1880,213 @@ export const SettingsSections = () => {
   );
 };`;
 
+const workspaceSlugPattern = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+/**
+ * The caller owns the value and the moment validation runs, so this preview
+ * keeps the message until the next submit: typing does not clear it.
+ */
+const FieldValidation = () => {
+  const [value, setValue] = useState("");
+  const [error, setError] = useState<string | undefined>();
+  const [created, setCreated] = useState(false);
+  const input = useRef<HTMLInputElement | null>(null);
+
+  const submit = () => {
+    if (value.trim() === "") {
+      setError("A workspace URL is required");
+      setCreated(false);
+      input.current?.focus();
+      return;
+    }
+    if (!workspaceSlugPattern.test(value)) {
+      setError("Use lowercase letters, numbers and single hyphens");
+      setCreated(false);
+      input.current?.focus();
+      return;
+    }
+    setError(undefined);
+    setCreated(true);
+  };
+
+  return (
+    <form
+      className="gx-field-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        submit();
+      }}
+    >
+      <div
+        className={
+          error === undefined
+            ? "gx-field-block"
+            : "gx-field-block gx-field-block-invalid"
+        }
+      >
+        <label className="gx-field-label" htmlFor="gx-field-demo-slug">
+          Workspace URL <span className="gx-field-required">*</span>
+        </label>
+        <input
+          className="gx-field"
+          id="gx-field-demo-slug"
+          onChange={(event) => {
+            setValue(event.target.value);
+            setCreated(false);
+          }}
+          ref={input}
+          value={value}
+        />
+        {error === undefined ? (
+          <p className="gx-field-desc">
+            {created
+              ? "Available — this URL is free."
+              : "Lowercase words joined by hyphens. Try hunter-license."}
+          </p>
+        ) : (
+          <p className="gx-field-error" role="alert">
+            {error}
+          </p>
+        )}
+      </div>
+      <button className="gx-btn gx-btn-primary" type="submit">
+        Create workspace
+      </button>
+      <p className="gx-field-note">
+        Enter submits too: the form owns the submit, the field only paints.
+      </p>
+    </form>
+  );
+};
+
+/** The four resting states of a field, including a disabled group. */
+const FieldStates = () => (
+  <div className="gx-field-states">
+    <div className="gx-field-block">
+      <label className="gx-field-label" htmlFor="gx-field-demo-email">
+        Email
+      </label>
+      <input
+        className="gx-field"
+        defaultValue="hunter@example.com"
+        id="gx-field-demo-email"
+      />
+      <p className="gx-field-desc">We never share it.</p>
+    </div>
+    <div className="gx-field-block">
+      <label className="gx-field-label" htmlFor="gx-field-demo-required">
+        Workspace URL <span className="gx-field-required">*</span>
+      </label>
+      <input
+        className="gx-field"
+        id="gx-field-demo-required"
+        placeholder="hunter-license"
+      />
+      <p className="gx-field-desc">Lowercase words joined by hyphens.</p>
+    </div>
+    <div className="gx-field-block gx-field-block-invalid">
+      <label className="gx-field-label" htmlFor="gx-field-demo-invalid">
+        Workspace URL
+      </label>
+      <input
+        className="gx-field"
+        defaultValue="Hunter License"
+        id="gx-field-demo-invalid"
+      />
+      <p className="gx-field-error" role="alert">
+        Use lowercase letters, numbers and single hyphens
+      </p>
+    </div>
+    <fieldset className="gx-field-set" disabled>
+      <legend className="gx-field-legend">Team plan</legend>
+      <div className="gx-field-block">
+        <label className="gx-field-label" htmlFor="gx-field-demo-seats">
+          Seats
+        </label>
+        <input
+          className="gx-field"
+          defaultValue="12"
+          id="gx-field-demo-seats"
+        />
+        <p className="gx-field-desc">Managed by your administrator.</p>
+      </div>
+    </fieldset>
+  </div>
+);
+
+const fieldValidationSource = `import { Effect, Option, Schema } from "effect";
+import { useState } from "react";
+import { Field, FieldInput } from "@gpuixui/components/field";
+import { validate } from "@gpuixui/components/validation/logic";
+
+const WorkspaceSlug = Schema.NonEmptyString.check(
+  Schema.isPattern(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
+    identifier: "WorkspaceSlugPattern",
+    title: "Workspace URL",
+    message: "Use lowercase letters, numbers and single hyphens",
+  }),
+);
+
+export const WorkspaceForm = () => {
+  const [slug, setSlug] = useState("");
+  const [error, setError] = useState<string>();
+
+  const submit = () => {
+    // The caller decides when: this runs on submit, never on a keystroke.
+    const message = Effect.runSync(validate(WorkspaceSlug)(slug));
+    setError(Option.getOrUndefined(message));
+  };
+
+  return (
+    <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
+      <Field
+        label="Workspace URL"
+        description="Lowercase words joined by hyphens."
+        error={error}
+        required
+      >
+        <FieldInput
+          value={slug}
+          onChange={(event) => setSlug(event.value ?? "")}
+        />
+      </Field>
+      <Button type="submit">Create workspace</Button>
+    </form>
+  );
+};`;
+
+const fieldStatesSource = `import { Field, FieldInput } from "@gpuixui/components/field";
+import { Fieldset } from "@gpuixui/components/fieldset";
+
+export const AccountFields = () => (
+  <>
+    <Field label="Email" description="We never share it">
+      <FieldInput />
+    </Field>
+
+    <Field
+      label="Workspace URL"
+      description="Lowercase words joined by hyphens."
+      required
+    >
+      <FieldInput />
+    </Field>
+
+    <Field
+      label="Workspace URL"
+      error="Use lowercase letters, numbers and single hyphens"
+    >
+      <FieldInput defaultValue="Hunter License" />
+    </Field>
+
+    <Fieldset legend="Team plan" disabled>
+      <Field label="Seats" description="Managed by your administrator">
+        <FieldInput defaultValue="12" />
+      </Field>
+    </Fieldset>
+  </>
+);`;
+
 export const demos: Readonly<Record<string, Demo>> = {
   "accordion-demo": { render: AccordionDemo, source: accordionDemoSource },
   "accordion-composition": {
@@ -1920,6 +2127,11 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: DropdownMenuDemo,
     source: dropdownMenuSource,
   },
+  "field-validation": {
+    render: FieldValidation,
+    source: fieldValidationSource,
+  },
+  "field-states": { render: FieldStates, source: fieldStatesSource },
   "layout-shell": {
     render: LayoutShell,
     source: shellSource,

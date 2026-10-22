@@ -3430,7 +3430,38 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 122/122
+`[x]` `[██████████]` 123/123
+
+`[x]` Curate the **Field** page and hold its one message slot and its state paint
+to the source — `/docs/components/field` served the package page (strategy 4: no
+preview, no install block, no copyable source), so the one component that carries
+the mission's "input update/validation" interaction had no rendering a reader
+could press. The page shadows `packages/components/docs/field.mdx` and teaches
+the two decisions rather than the shape: the caller owns the value and the moment
+validation runs (there is no keystroke path), and one message slot shows the
+error **instead of** the description, announced as `role="alert"`. It also states
+the paint (`destructive` edge and ring, the message in
+`statusTone(theme, "destructive").foreground` rather than the solid fill, the
+disabled `disabled`/`disabledForeground` pair with no fade), the required marker
+that keeps the accessible name, and the runtime's three absent attributes. Two
+browser previews: `field-validation` runs the submit-time workflow (an empty or
+bad value raises the message, typing leaves it until the next submit, Enter
+submits through the form) and `field-states` shows default, required, invalid and
+a disabled `Fieldset`. `component-page-truth.test.ts` gained the page's registry
+entry and `hold the field's one message slot and its state paint to the source`,
+which derives the claims from `field.tsx` and `validation/logic.ts` (the branch
+order of the two slots, `aria-label="Required"`, `${text}. Required`, the
+destructive edge and `keyboardRing(theme, isInvalid)`, `readOnly`/`tabIndex -1`,
+the neutral disabled roles, no quoted `aria-*` attributes, the default decode
+beside `errors: "all"` and `Arr.dedupe`) and holds the page to the substantive
+sentences. The curated-source registry gained `field`, `meta.json` a Forms group,
+the index/`/docs/theming` switch list/strategy "Curated today" line and the
+README ledger name the page, and the package-docs curated set shadows it.
+Directions measured: restoring "fades the whole control" fails the retraction
+case by name; the full docs suite is green (73 files / 675 tests) with
+`check-types` and `build` green. Verified in the dev server: the page renders
+both previews, the status strip prints `done · partial` and 7 native tests, and
+`?platform=win32` repaints the surface (`--background` `#202020`).
 
 `[x]` Read the **dialog recipe without a quoted regex** so `check:tests` can see
 the preview-truth case — `component-preview.test.ts`'s `says the overlay preview

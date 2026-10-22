@@ -127,6 +127,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/dropdown-menu.tsx",
   },
   {
+    file: "field.mdx",
+    row: "Inline validation",
+    suite: "packages/components/src/behaviour/field.test.tsx",
+    shadowed: "packages/components/docs/field.mdx",
+    source: "packages/components/src/field.tsx",
+  },
+  {
     file: "popover.mdx",
     row: "Popovers",
     suite: "packages/components/src/behaviour/popover.test.tsx",
@@ -353,6 +360,73 @@ describe("the curated component pages", () => {
     // animates. Neither is a behaviour the component or the runtime has.
     expect(text).not.toContain("closes after confirming");
     expect(text).not.toContain("spins beside the label");
+  });
+
+  it("hold the field's one message slot and its state paint to the source", () => {
+    // The field's two safety decisions are structural, not visual: one message
+    // slot (an error must replace the description, never stack under it), and
+    // the caller owning the moment validation runs (no keystroke path). The
+    // paint is read from the component and the app's message walk from the
+    // validation module, so a page teaching "describe the error" neither can
+    // drift from the code that ships.
+    const field = pages.find((page) => page.file === "field.mdx");
+    expect(field, "the field page is not in the curated set").toBeDefined();
+    if (field === undefined) return;
+
+    const source = read(field.source);
+    const logic = read("packages/components/src/validation/logic.ts");
+
+    // One slot: the description's branch and the error's branch, in that order.
+    const choice = source.indexOf("error === undefined ?");
+    const description = source.indexOf("<FieldDescription>");
+    const error = source.indexOf("<FieldError>");
+    expect(choice).toBeGreaterThan(-1);
+    expect(description).toBeGreaterThan(choice);
+    expect(error).toBeGreaterThan(description);
+    expect(source).toContain('role="alert"');
+
+    // The required marker is a label, not part of the name.
+    expect(source).toContain('aria-label="Required"');
+    expect(source).toContain("${text}. Required");
+
+    // The invalid edge and the message's measured role.
+    expect(source).toContain("theme.colors.destructive");
+    expect(source).toContain('statusTone(theme, "destructive").foreground');
+    expect(source).toContain("keyboardRing(theme, isInvalid)");
+
+    // Disabled: neutral roles and no tab stop, not a whole-control fade.
+    expect(source).toContain("readOnly: true, tabIndex: -1");
+    expect(source).toContain("theme.colors.disabled");
+    expect(source).toContain("theme.colors.disabledForeground");
+    expect(source).toContain('cursor: "not-allowed"');
+    expect(source).not.toContain("opacity");
+
+    // The runtime attributes the page says are absent really are.
+    expect(source).not.toContain('"aria-describedby"');
+    expect(source).not.toContain('"aria-invalid"');
+    expect(source).not.toContain('"aria-required"');
+
+    // The two message readers: the first message, and every distinct one. The
+    // default read is `validate`'s; only `validateAll` asks for every error.
+    expect(logic).toContain("SchemaIssue.makeFormatterDefault");
+    expect(logic).toContain("Schema.decodeUnknownResult(schema)(value)");
+    expect(logic).toContain(
+      'Schema.decodeUnknownResult(schema, { errors: "all" })(value)',
+    );
+    expect(logic).toContain("Arr.dedupe");
+
+    const text = body(field).replace(/\s+/g, " ");
+    expect(text).toContain("one message slot");
+    expect(text).toContain("replaces the description");
+    expect(text).toContain("does not fade itself");
+    expect(text).toContain(
+      "No `aria-describedby`, `aria-invalid` or `aria-required`",
+    );
+    expect(text).toContain("7 native behaviour tests");
+    expect(text).toContain("There is no auto-validate on every keystroke");
+    // The retracted shapes: a field that validates itself, or a faded control.
+    expect(text).not.toContain("validates on every keystroke and");
+    expect(text).not.toContain("fades the whole control");
   });
 
   it("describe the alert's tone paint and the announcement it does not claim", () => {

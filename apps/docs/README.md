@@ -49,6 +49,7 @@ components/command-menu.mdx  Curated: the palette's matcher, group ranking and k
 components/confirm-dialog.mdx Curated: Cancel first, confirm never closes, the frozen busy mark
 components/dialog.mdx        Curated: a real confirmation workflow
 components/dropdown-menu.mdx Curated: highlighted row is the focused row
+components/field.mdx        Curated: one message slot, submit-time validation, no fade
 components/popover.mdx       Curated: anchored placement
 components/tabs.mdx          Curated: the measured indicator
 primitives/index.mdx         The Tier 1 section index (its pages come from the packages)
@@ -352,7 +353,7 @@ suite actually runs.
 
 The copies are checked on every page the site mounts, not only the curated ones:
 `src/lib/page-snippets.test.ts` resolves each `@gpuixui/*` import in every `ts`
-and `tsx` fence — 105 pages, the site's own 32 plus the 73 the packages ship —
+and `tsx` fence — 131 pages, the site's own 39 plus the 92 the packages ship —
 against the package source, so a renamed export fails the docs suite instead of
 reaching a reader as working code. One defect on a page this app does not own is
 recorded with its owner in that guard, and the entry fails once the page is

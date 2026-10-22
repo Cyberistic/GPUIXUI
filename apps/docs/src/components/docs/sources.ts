@@ -6,6 +6,7 @@ import commandMenu from "../../../../../packages/components/src/command-menu.tsx
 import confirmDialog from "../../../../../packages/components/src/confirm-dialog.tsx?raw";
 import dialog from "../../../../../packages/components/src/dialog.tsx?raw";
 import dropdownMenu from "../../../../../packages/components/src/dropdown-menu.tsx?raw";
+import field from "../../../../../packages/components/src/field.tsx?raw";
 import popover from "../../../../../packages/components/src/popover.tsx?raw";
 import tabs from "../../../../../packages/components/src/tabs.tsx?raw";
 
@@ -24,6 +25,7 @@ export const componentSources = {
   confirmDialog,
   dialog,
   dropdownMenu,
+  field,
   popover,
   tabs,
 } as const;

@@ -1,0 +1,212 @@
+---
+title: Field and inline validation
+description: A label, control and one message slot around a single input — the caller owns the value and the moment validation runs.
+---
+
+`Field` is the structure around one control: a label, the input, and **one**
+message slot. It is not a form library — it owns no value, no submit, no
+cross-field rule and no async validation. `validate` turns a `Schema` into a
+user-facing message; the application decides **when** to call it. There is no
+auto-validate on every keystroke.
+
+The field absorbs one runtime gap: `@gpuix/native@0.11.0` has no
+`aria-describedby`, so the message travels as the control's `aria-description`.
+A reader hears the message; a program cannot reference it by id.
+
+<ComponentPreview name="field-validation" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Field" />
+
+<ComponentSource name="field" file="packages/components/src/field.tsx" />
+
+## Usage
+
+```tsx
+import { Effect, Option, Schema } from "effect";
+import { useState } from "react";
+import { Field, FieldInput } from "@gpuixui/components/field";
+import { validate } from "@gpuixui/components/validation/logic";
+
+const WorkspaceSlug = Schema.NonEmptyString.check(
+  Schema.isPattern(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
+    identifier: "WorkspaceSlugPattern",
+    title: "Workspace URL",
+    message: "Use lowercase letters, numbers and single hyphens",
+  }),
+);
+
+export const WorkspaceForm = () => {
+  const [slug, setSlug] = useState("");
+  const [error, setError] = useState<string>();
+
+  const submit = () => {
+    const message = Effect.runSync(validate(WorkspaceSlug)(slug));
+    setError(Option.getOrUndefined(message));
+  };
+
+  return (
+    <Field
+      label="Workspace URL"
+      description="Lowercase words joined by hyphens."
+      error={error}
+      required
+    >
+      <FieldInput
+        value={slug}
+        onChange={(event) => setSlug(event.value ?? "")}
+      />
+    </Field>
+  );
+};
+```
+
+`Effect.runSync` is an **application boundary** decision. A larger app composes
+the effect instead, and a `Form` around the field owns the submit lifecycle —
+`Field` only paints what it is told.
+
+## States
+
+<ComponentPreview name="field-states" />
+
+| State | What the field paints |
+| ----- | --------------------- |
+| resting | the `input` fill and `inputForeground`, a `borderWidth.thin` edge in `border` |
+| required | a destructive `*` in the label row; the accessible name stays the label |
+| invalid | the edge in `colors.destructive`; the message replaces the description |
+| disabled | the neutral `disabled`/`disabledForeground` pair, no fade, no tab stop |
+
+The invalid state is **not** a separate message area: one slot shows either the
+description or the error, never both, so the row's height changes once.
+
+## Composition
+
+| Part | Renders | Responsibility |
+| ---- | ------- | -------------- |
+| `Field` | a column | the label row, the control slot and the one message slot |
+| `FieldLabel` | a `text` in a row | the visible label and the required marker |
+| `FieldDescription` | a `text` | supporting copy while the field is valid |
+| `FieldError` | a `text` with `role="alert"` | the message while the field is invalid |
+| `FieldInput` | the runtime `<input>` | the value, the caret and the field's own state |
+| `Fieldset` | a `div` with `role="group"` | one legend over several fields |
+
+`Field` accepts only the control as its child — it renders the label and the
+message itself, and a sibling part inside it is named by the parts contract
+rather than silently laid out. Use `Fieldset` for a group, with `disabled`
+reaching the controls that opt in.
+
+`FieldInput` is the runtime's own `<input>` host, not the
+[`Input`](/docs/primitives/input) primitive: the field needs the host's
+`aria-description`, read-only and tab-order handles, and the primitive's wrapper
+does not carry the field's message.
+
+## Keyboard
+
+| Key | Effect |
+| ---- | ------ |
+| `Tab` | reaches an enabled input; a disabled one leaves the tab order |
+| typing | reaches the caller through `onChange`, the current value as `event.value` |
+| `Enter` | no field behaviour: a surrounding `Form` or the app's handler decides |
+| `Escape` | no field behaviour |
+
+The ring is the runtime's keyboard-only `focusVisible` outline, declared at rest:
+a `Tab` paints it and a click does not. The `focused` flag handed to `style` is
+presentational — it arrives on every focus path, and it is not the cue.
+
+## API reference
+
+Every part takes the GPUix host props and merges `style` last.
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Field` | `label` | `string` — the visible label and the input's name | required |
+| `Field` | `description` | `string` — hidden while `error` is present | — |
+| `Field` | `error` | `string` — the message, which also paints the control invalid | — |
+| `Field` | `required` | `boolean` — appends the `*` marker | `false` |
+| `Field` | `className` | `string` — joined after the recipe | — |
+| `Field` | `children` | the control; only `FieldInput` is accepted | — |
+| `FieldLabel` | `required` | `boolean` — the marker without changing the name | `false` |
+| `FieldDescription` | `children` | `ReactNode` | — |
+| `FieldError` | `children` | `ReactNode` | — |
+| `FieldInput` | `invalid` | `boolean` — overrides the field's own error as the validity signal | the field's state |
+| `FieldInput` | `disabled` | `boolean` — also inferred from a disabled `Fieldset` | `false` |
+| `FieldInput` | `style` | `StateStyle<{ disabled, focused, invalid }>` | the recipe |
+| `Fieldset` | `legend` | `string` — the visible heading and the group's name | required |
+| `Fieldset` | `disabled` | `boolean` — reaches the controls that honour it | `false` |
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| label | the `label` type role in `colors.foreground` |
+| required marker | `colors.destructive` |
+| description | the `caption` role in `colors.mutedForeground` |
+| message | the `caption` role in `statusTone(theme, "destructive").foreground` |
+| input | `colors.input` / `colors.inputForeground`, edge `colors.border` |
+| invalid input | the edge in `colors.destructive` and the ring in the same role |
+| disabled input | `colors.disabled` / `colors.disabledForeground` |
+
+The message deliberately avoids the solid `destructive` fill: that role is a
+**fill**, and `contrastPairs` measures it as a mark, not as text. The tone's
+`foreground` is the role measured at the body floor on the page and a card, so a
+brand that moves the palette moves a readable message.
+
+A disabled field does not fade itself. It paints the theme's neutral disabled
+pair, because a fade composites the label into the fill it sits on and a control
+that refuses every key should not advertise the same colour as one that works.
+
+## Accessibility and limitations
+
+- The input's accessible name is the field's label; the message and the required
+  note travel as `aria-description`.
+- **No `aria-describedby`, `aria-invalid` or `aria-required`** in
+  `@gpuix/native@0.11.0`: the association is a description rather than an id
+  reference, and invalidity is carried by the edge, the message and
+  `role="alert"`. That is a real screen-reader limitation, not a styling choice.
+- `FieldError` is the one message slot and is announced as an alert when it
+  replaces the description.
+- The required marker carries `aria-label="Required"` and the marker itself is
+  appended to the description text, so the name stays exactly the label.
+- No form semantics: no submit, no validation timing, no async rule and no
+  cross-field comparison inside the component.
+- The `*` marker is the only required signal besides the description text; there
+  is no `aria-required` to set.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the parts, the message slot and the field's state |
+| `@gpuix/react` | the host element and the input's props |
+| `@gpuix/react/floating` | `mergeStyles` / `resolveStyle` for `style` by state |
+| `@gpuixui/tw` | the `FIELD_*` class recipes |
+| `effect` | `Option` for the optional message |
+
+`@gpuixui/tokens` is reached through this package's `internal/theme.ts`, which
+re-exports the token helpers; the component imports no token module directly.
+
+## Related
+
+- **Input** — the primitive's styled text field, without the label and message.
+- **Fieldset** — several fields under one legend, one disabled state.
+- **Form** — the submit lifecycle around a set of fields.
+- **Alert** — a page-level message rather than a field message.
+- **Dialog** — a blocking form surface; compose the same fields inside it.
+
+## Status
+
+`done` · runtime support `partial`.
+
+7 native behaviour tests in `packages/components/src/behaviour/field.test.tsx`
+prove the label, description and control rendering, the error replacing the
+description with `role="alert"`, the measured message colour rather than the
+solid fill, the required marker with a clean accessible name, the destructive
+edge in both themes, typed text reaching `onChange`, and a disabled field
+leaving the tab order and accepting no typing. The validation suite covers the
+message walk, `errors: "all"` for every message, deduplication and the valid
+case.
+
+The runtime support is `partial` for one reason: the missing `aria-describedby`
+and `aria-invalid` make the association a description rather than an id, which a
+screen reader can read but a program cannot reference.

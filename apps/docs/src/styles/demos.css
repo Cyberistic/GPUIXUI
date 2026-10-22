@@ -1215,6 +1215,103 @@
   color: var(--foreground);
 }
 
+/* ---- field: mirrors components/src/field.tsx ----
+   The label is the `label` role in `foreground`, the description the `caption`
+   role in `mutedForeground`, and the message the `caption` role in
+   `destructiveSoftForeground` — the tone's page role, not the solid fill the
+   library reserves for the control's own edge. The invalid edge is
+   `destructive`; a disabled field paints the neutral `disabled` pair rather
+   than fading itself. */
+.gx-field-form,
+.gx-field-states {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: min(360px, 100%);
+}
+
+.gx-field-states {
+  gap: 18px;
+}
+
+.gx-field-form .gx-btn {
+  align-self: flex-start;
+}
+
+.gx-field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-field-label {
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--foreground);
+}
+
+.gx-field-required {
+  margin-left: 2px;
+  color: var(--destructive);
+}
+
+.gx-field-block .gx-field {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.gx-field-block-invalid .gx-field {
+  border-color: var(--destructive);
+}
+
+.gx-field-desc,
+.gx-field-error,
+.gx-field-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.gx-field-desc {
+  color: var(--muted-foreground);
+}
+
+.gx-field-error {
+  color: var(--destructive-soft-foreground);
+}
+
+.gx-field-note {
+  color: var(--placeholder);
+}
+
+.gx-field-set {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 1px);
+}
+
+.gx-field-legend {
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-field-set:disabled .gx-field {
+  background: var(--disabled);
+  color: var(--disabled-foreground);
+  cursor: not-allowed;
+}
+
+.gx-field-set:disabled .gx-field-legend {
+  color: var(--disabled-foreground);
+}
+
 @media (max-width: 640px) {
   .gx-demo {
     padding: 28px 16px;
