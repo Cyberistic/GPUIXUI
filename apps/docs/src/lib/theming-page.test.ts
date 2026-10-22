@@ -218,6 +218,7 @@ describe("the theme page", () => {
     expect(audit).toContain("selectionFailures");
     expect(audit).toContain("indicatorFailures");
     expect(audit).toContain("disabledFadeFailures");
+    expect(audit).toContain("keyboardDimFailures");
     expect(audit).toContain("cannot paint");
     expect(audit).toContain("localStorage");
   });
@@ -258,6 +259,7 @@ describe("the theme page's copy-theme note", () => {
         "selectionFailures",
         "indicatorFailures",
         "disabledFadeFailures",
+        "keyboardDimFailures",
       ].filter((name) => !note.includes(name)),
     ).toEqual([]);
   });

@@ -248,8 +248,8 @@ export function ThemeEditorSurface({
             colour separates from its plot and from its neighbours under every
             colour-vision deficiency, every selection wash stays visible with
             readable text inside it, every indicator mark is findable on the
-            strip it is drawn on, and every disabled control keeps its faded
-            label.
+            strip it is drawn on, every disabled control keeps its faded label,
+            and every control the keyboard dim touches keeps a visible one.
           </p>
         ) : (
           <>

@@ -435,6 +435,29 @@ describe("theme-editor audit readout", () => {
     expect(audit.passed).toBe(false);
   });
 
+  it("reports a control the keyboard dim erases while another control has focus", () => {
+    // The runtime paints every other focusable at 40% while one holds keyboard
+    // focus, so a filled action's label composites into its own dimmed fill.
+    // The audit gained that tenth report, and the readout read nine: a reader
+    // whose action vanished while Tab was elsewhere still saw a passing line.
+    const brand = extendTheme(themes.light, {
+      colors: {
+        primary: themes.light.colors.background,
+        primaryForeground: themes.light.colors.background,
+      },
+    });
+    const audit = auditTheme(brand);
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "dim",
+    );
+
+    expect(findings.map((finding) => finding.text)).toContain(
+      "primary dimmed on background — 1.00:1 (needs 1.05:1)",
+    );
+    expect(audit.keyboardDim.length).toBeGreaterThan(0);
+    expect(audit.passed).toBe(false);
+  });
+
   it("reports a wash the reader cannot find at all", () => {
     // A selection at zero opacity paints the surface itself: the reader cannot
     // see what they selected, and the body floor never comes into it.

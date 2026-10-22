@@ -47,7 +47,7 @@ cannot. The bridge exists only for this preview.
 The readout under the preview runs `auditTheme` on the theme the edits resolve to
 — the same gate `@gpuixui/tokens` tells a theme author to run before shipping, so
 an edit is measured against exactly the contract the library holds itself to. One
-call reports nine independent failures:
+call reports ten independent failures:
 
 - **Roles** the renderer cannot paint. GPUix ignores a colour string it cannot
   parse and keeps the previous value or paints black, so the editor names the role
@@ -120,13 +120,23 @@ call reports nine independent failures:
   label that clears 4.5:1 enabled can fall to 1.04:1 disabled. The editor does
   not edit the disabled roles, but every filled action is one of these pairs, so
   an action-fill edit can erase a disabled label.
+- **The keyboard dim**: while one control holds keyboard focus the runtime paints
+  every other focusable at 40% of itself, so a filled action's label composites
+  into its own dimmed fill — as low as 1.27:1 in a shipped palette — and a
+  reader who tabs away loses the words of the control beside them.
+  `keyboardDimFailures` holds each of those pairs to 1.05:1, deliberately not a
+  readability floor: the dim is the runtime's where-can-Tab-go cue, so the claim
+  is only that the label is still a label. A control whose text must stay
+  readable opts out with `keyboardFocusDim: false`, which the library's filled
+  actions do. The editor does not edit the dim, but every filled action is one of
+  these pairs, so an action-fill edit can erase one.
 
 The same role check guards the URL and `localStorage`: a persisted state that
 carries a value the renderer cannot paint is rejected, and the editor falls back
 to the selected style instead of restoring an edit that would paint black in
-silence. A theme that merely misses a contrast, decorative, series, selection or
-disabled-fade floor is a design choice the readout reports, not a malformed
-state.
+silence. A theme that merely misses a contrast, decorative, series, selection,
+disabled-fade or keyboard-dim floor is a design choice the readout reports, not
+a malformed state.
 
 ## Copy theme
 
@@ -135,5 +145,5 @@ the preview resolved — in the exact format `@gpuixui/tokens` consumes, plus a
 one-line usage note. Running the same audit on the result is up to the consumer;
 `auditTheme` and the reports it folds — `invalidColorRoles`, `invalidShadowColors`,
 `invalidNumbers`, `contrastFailures`, `decorativeFailures`, `seriesFailures`,
-`selectionFailures`, `indicatorFailures` and `disabledFadeFailures` — are public
-for exactly that.
+`selectionFailures`, `indicatorFailures`, `disabledFadeFailures` and
+`keyboardDimFailures` — are public for exactly that.

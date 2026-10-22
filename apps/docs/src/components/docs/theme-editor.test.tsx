@@ -43,6 +43,9 @@ describe("the theme editor", () => {
       "every indicator mark is findable on the strip it is drawn on",
     );
     expect(builtIn).toContain("every disabled control keeps its faded label");
+    expect(builtIn).toContain(
+      "every control the keyboard dim touches keeps a visible one",
+    );
   });
 
   it("renders one control per editable role", () => {

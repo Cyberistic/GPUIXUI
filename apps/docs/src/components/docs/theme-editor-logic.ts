@@ -10,6 +10,7 @@ import {
   type InvalidColorRole,
   type InvalidNumber,
   type InvalidShadowColor,
+  type KeyboardDimFailure,
   type NumberRule,
   type SelectionFailure,
   type SeriesDistinctnessFailure,
@@ -154,7 +155,8 @@ export type AuditKind =
   | "deficiency"
   | "selection"
   | "indicator"
-  | "disabled";
+  | "disabled"
+  | "dim";
 
 /** One audit finding, already worded for the readout. */
 export interface AuditFinding {
@@ -306,6 +308,21 @@ export const formatDisabledFade = ({
 }: DisabledFadeFailure): string =>
   `${fill} disabled on ${over} — ${measured(ratio, floor)}`;
 
+/**
+ * A control the keyboard dim erases, e.g. `primary dimmed on card — 1.27:1
+ * (needs 1.05:1)`. While one control has keyboard focus the runtime paints
+ * every other focusable at 40%, so a filled action's label composites into its
+ * own dimmed fill; the floor is only that the label stays a label, because a
+ * control that must stay readable opts out with `keyboardFocusDim: false`.
+ */
+export const formatKeyboardDim = ({
+  fill,
+  over,
+  ratio,
+  floor,
+}: KeyboardDimFailure): string =>
+  `${fill} dimmed on ${over} — ${measured(ratio, floor)}`;
+
 /** Every finding the audit reports, in the one list the readout prints. */
 export const auditFindings = (
   report: ThemeAudit,
@@ -353,6 +370,10 @@ export const auditFindings = (
   ...report.disabledFade.map((failure) => ({
     kind: "disabled" as const,
     text: formatDisabledFade(failure),
+  })),
+  ...report.keyboardDim.map((failure) => ({
+    kind: "dim" as const,
+    text: formatKeyboardDim(failure),
   })),
 ];
 
