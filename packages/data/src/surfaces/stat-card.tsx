@@ -13,6 +13,7 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { statusTone } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
@@ -41,15 +42,23 @@ export interface StatCardProps extends Omit<Props, "children"> {
   readonly className?: string;
 }
 
-/** The colour a trend's direction paints. */
+/**
+ * The colour a trend's direction paints.
+ *
+ * A trend's words are **text on the card**, so they take the status tone's
+ * readable role (`statusTone(...).foreground`, held to the body floor on
+ * `card`), never the solid fill role — a fill is measured at the 3:1 mark floor
+ * and can fall under the text floor on the page (the base light `success` is
+ * 4.26:1 on the page, one authored look 3.92:1).
+ */
 export const trendTone = (
   direction: StatTrend["direction"],
   theme: ReturnType<typeof useTheme>,
 ): string =>
   direction === "up"
-    ? theme.colors.success
+    ? statusTone(theme, "success").foreground
     : direction === "down"
-      ? theme.colors.destructive
+      ? statusTone(theme, "destructive").foreground
       : theme.colors.mutedForeground;
 
 /** A card that shows one derived reading. */

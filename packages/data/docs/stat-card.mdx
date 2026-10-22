@@ -53,13 +53,17 @@ pointer and key handlers) and **merges `style` last**.
 | the reading | `foreground`, at the registry's `2xl` step (24/32, weight 600) |
 | the label and the hint | `mutedForeground`, at the registry's `xs` step |
 | the unit | `mutedForeground`, beside the reading |
-| a rising trend | the `success` role |
-| a falling trend | the `destructive` role |
+| a rising trend | `statusTone(theme, "success").foreground` |
+| a falling trend | `statusTone(theme, "destructive").foreground` |
 | a flat trend | `mutedForeground` |
 
-A trend is a **mark**, not a label: `success` and `destructive` are the roles
-a filled action carries, and the tokens package measures both as marks on the
-`card` fill, so a brand's own palette is held to the same floor.
+A trend is **text on the card**, so it reads the status tone's readable role
+(`statusTone(...).foreground`), which the tokens contract holds to the body
+floor on `card` and `background`. The solid `success` / `destructive` fills are
+marks — measured at the 3:1 floor — and the base light `success` is 4.26:1 on
+the page, so a card painted there would ship a trend nobody can read.
+`src/surfaces/stat-card.test.ts` sweeps both surfaces over every shipped,
+high-contrast, platform and authored style.
 
 ## Accessibility
 
@@ -80,7 +84,9 @@ a filled action carries, and the tokens package measures both as marks on the
 
 `src/behaviour/surfaces.test.tsx` runs in the real GPUix renderer: the width
 action moves the card's reading from 9600 to 19200 **in the same frame**, with
-no timer and no second copy of the number. Run it with:
+no timer and no second copy of the number. `src/surfaces/stat-card.test.ts`
+holds the trend's painter to the readable status role on both surfaces a card
+stands on, across the sixteen shipped styles. Run them with:
 
 ```sh
 nub run --filter @gpuixui/data test:behaviour
