@@ -12,6 +12,11 @@
  * (`core/scroll.ts` decides the target). The handler only runs for a key whose
  * target is the scroller itself, so a field inside keeps its own arrow keys.
  *
+ * That stop is also a named `group`, because a node reaches the accessibility
+ * tree only with a role: an unnamed viewport used to be a tab stop assistive
+ * technology could not see. `label` names it, unnamed it is
+ * `DEFAULT_SCROLL_NAME`, and `focusable={false}` adds neither.
+ *
  * The root is the frame: its padding, radius and border stay outside the
  * scroller. `ScrollAreaViewport` carries the overflow axes, `onScroll` (wheel
  * deltas) and `onScrollChange` (the absolute offset, whatever moved it).
@@ -63,6 +68,15 @@ interface ScrollPart {
   /** The keyboard handler the viewport component installs. */
   readonly onScrollKey: ((event: KeyEvent) => void) | undefined;
 }
+
+/**
+ * What an unnamed viewport that is a tab stop is called.
+ *
+ * A tab stop a reader cannot reach with assistive technology is a stop nobody
+ * can describe, and ARIA asks a focusable scroll region to be named. `label`
+ * overrides this; it is fixed English like the OTP field's cell names.
+ */
+export const DEFAULT_SCROLL_NAME = "Scroll region";
 
 const ScrollPartContext = createContext<ScrollPart | null>(null);
 
@@ -134,7 +148,12 @@ export interface ScrollAreaProps extends ScrollSpec {
    * `true`; set `false` when the content inside carries its own scroll contract.
    */
   readonly focusable?: boolean;
-  /** Names the scroll region (`role="group"`) for assistive technology. */
+  /**
+   * The scroller is a tab stop, and a tab stop whose element has no role is
+   * absent from the accessibility tree — so the viewport is always a `group`
+   * while it can take focus. `label` names it; unnamed it is
+   * `DEFAULT_SCROLL_NAME`. Set `focusable` to `false` to add neither.
+   */
   readonly label?: string;
   readonly style?: StyleDesc;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
@@ -201,7 +220,9 @@ export const renderScrollAreaViewport = (
   if ((scrollbarWidth ?? part.scrollbarWidth) !== undefined) {
     viewport.scrollbarWidth = scrollbarWidth ?? part.scrollbarWidth;
   }
-  const name = accessibleName(label ?? part.label);
+  const name =
+    accessibleName(label ?? part.label) ??
+    ((focusable ?? part.focusable) ? DEFAULT_SCROLL_NAME : undefined);
   return (
     <div
       ref={instance}

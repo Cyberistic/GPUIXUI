@@ -84,7 +84,7 @@ callbacks, thumb and keyboard behaviour unless it overrides them.
 | `scrollbarColor` | `string` | `colors.scrollbar` | the viewport thumb's colour |
 | `scrollbarWidth` | `number` | platform's | the viewport thumb's thickness in px |
 | `focusable` | `boolean` | `true` | whether the viewport is a tab stop and answers the scroll keys |
-| `label` | `string` | none | names the region (`role="group"` + `aria-label`) |
+| `label` | `string` | `"Scroll region"` while the viewport is a tab stop | names the region (`role="group"` + `aria-label`); a non-focusable viewport has no region at all unless named |
 | `style` | `StyleDesc` | — | merged last on the frame; put the bounded size here |
 | `className` | `string` | — | Tailwind classes, joined last on the frame |
 | `children` | `ReactNode` | — | viewport content, or a composed `ScrollAreaViewport` |
@@ -119,9 +119,15 @@ tab stop for content that carries its own scroll contract.
 
 ## Accessibility
 
-With a `label` the viewport is a named `group`, so assistive technology hears
-"Rows, group" when it lands there. Without one it has no role: the content inside
-is what gets traversed, and an unnamed scroll region is not announced as one.
+The viewport is a `group`, and it carries a name even when the caller gives
+none: `"Scroll region"`. That is not decoration — GPUix builds an accessibility
+node only for an element with a role, so an unnamed viewport was a **tab stop
+the accessibility tree could not hold** (measured on 0.11.0: the window had 12
+tab stops and 11 nodes). Pass `label` to replace the default with the region's
+own name, e.g. `"Rows"` for a table's scroller. `focusable={false}` with no
+label adds neither the stop nor the node, which is what a purely visual
+scroller wants.
+
 The keyboard contract above is what makes the scroller usable without a pointer.
 
 ## Theming
@@ -142,6 +148,9 @@ scrollbar's paint is otherwise the platform's. The keyboard step is the theme's
   transform/animation path for a scroll position.
 - **No virtualisation.** A long list mounts every row. `packages/data-grid` owns
   the virtual-list work when it lands.
+- **The default region name is fixed English.** `"Scroll region"` names a
+  viewport the caller did not label; a caller that needs its own words passes
+  `label`.
 
 ## Verification
 
@@ -149,14 +158,17 @@ scrollbar's paint is otherwise the platform's. The keyboard step is the theme's
   Home/End, the start clamp, the axes a region does not scroll, and a key the
   region does not own.
 - `src/components/presentational.test.tsx` — the viewport is a tab stop with the
-  area's absolute-offset callback; `focusable={false}` drops the stop and the
-  role; the frame's padding/radius stay off the viewport.
+  area's absolute-offset callback; an unnamed one is the named `group`
+  `"Scroll region"`; a named one keeps its group without a stop; `focusable={false}`
+  with no label drops the stop, the role and the name; the frame's
+  padding/radius stay off the viewport.
 - `runtime/layout.runtime.test.tsx` — a wheel with `deltaY -100` leaves the
   viewport's offset at `y -100` and the caller's `onScroll` receives `-100`;
   keyboard Down/PageDown/Home/End move the painted offset; `onScrollChange`
   reports it; a focused field inside keeps its Down key (the scroller stays at
   `0`); the renderer retains `scrollbarColor` (`colors.scrollbar`) and
-  `scrollbarWidth`.
+  `scrollbarWidth`; an unnamed viewport reaches the accessibility tree as a
+  focusable group.
 
 ```sh
 nub run --filter @gpuixui/primitives test

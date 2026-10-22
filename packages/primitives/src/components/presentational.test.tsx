@@ -26,6 +26,7 @@ import { renderButton } from "./Button.js";
 import { renderButtonGroup } from "./ButtonGroup.js";
 import { labelledBy, renderLabel } from "./Label.js";
 import {
+  DEFAULT_SCROLL_NAME,
   renderScrollArea,
   renderScrollAreaViewport,
   scrollPart,
@@ -213,6 +214,29 @@ describe("layout containers", () => {
     expect(expectSome(hostProp(viewport, "aria-label"))).toBe("Properties");
   });
 
+  it("names the unnamed viewport that takes the tab stop", () => {
+    const viewport = renderScrollAreaViewport(
+      {},
+      scrollPart({ axis: "vertical" }, testTheme),
+    );
+    // A tab stop with no role is a node the accessibility tree cannot hold, so
+    // the unnamed viewport is a named group rather than a silent stop.
+    expect(expectSome(hostProp(viewport, "role"))).toBe("group");
+    expect(expectSome(hostProp(viewport, "aria-label"))).toBe(
+      DEFAULT_SCROLL_NAME,
+    );
+  });
+
+  it("keeps a named region as a group without a tab stop", () => {
+    const viewport = renderScrollAreaViewport(
+      { focusable: false },
+      scrollPart({ axis: "vertical", label: "Properties" }, testTheme),
+    );
+    expect(hostProp(viewport, "tabIndex")).toStrictEqual(Option.none());
+    expect(expectSome(hostProp(viewport, "role"))).toBe("group");
+    expect(expectSome(hostProp(viewport, "aria-label"))).toBe("Properties");
+  });
+
   it("opts out of the tab stop without losing the absolute-offset callback", () => {
     const onScrollChange = () => {};
     const viewport = renderScrollAreaViewport(
@@ -221,6 +245,7 @@ describe("layout containers", () => {
     );
     expect(hostProp(viewport, "tabIndex")).toStrictEqual(Option.none());
     expect(hostProp(viewport, "role")).toStrictEqual(Option.none());
+    expect(hostProp(viewport, "aria-label")).toStrictEqual(Option.none());
     expect(hostProp(viewport, "onScrollChange")).toStrictEqual(
       Option.some(onScrollChange),
     );

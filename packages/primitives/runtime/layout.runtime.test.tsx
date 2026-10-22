@@ -17,7 +17,10 @@ import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
-import { ScrollArea } from "../src/components/ScrollArea.js";
+import {
+  ScrollArea,
+  DEFAULT_SCROLL_NAME,
+} from "../src/components/ScrollArea.js";
 import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
@@ -291,6 +294,31 @@ it("tints and sizes the platform's scrollbar", async () => {
   );
   expect(style["scrollbarColor"]).toBe(testTheme.colors.scrollbar);
   expect(style["scrollbarWidth"]).toBe(9);
+});
+
+it("announces the scroll region that takes the tab stop", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        viewportTestId="s"
+      >
+        {card("tall", 200, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  // GPUix builds an accessibility node only for an element with a role, so an
+  // unnamed viewport was a tab stop the tree could not hold: measured on
+  // 0.11.0, the window had 12 tab stops and 11 nodes. The region is a named
+  // group now; `label` replaces the default name.
+  const node = Option.getOrElse(
+    a11yNode(runtime.a11y(), { role: "Group", label: DEFAULT_SCROLL_NAME }),
+    () =>
+      expect.fail("the unnamed scroll region reached no accessibility node"),
+  );
+  expect(node.aria?.on_action).toContain("Focus");
 });
 
 it("publishes a heading's level, and leaves body copy plain", async () => {
