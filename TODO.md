@@ -509,7 +509,30 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 58/58
+`[x]` `[██████████]` 59/59
+
+`[x]` Land the `message-scroller-lifecycle` live probe and measure **a shipped
+      scroller that must not yank its reader** — the component's pin rule
+      (`message-scroller/logic.ts`) was a `TestRenderer` fact, so no window had
+      proven the two channels it depends on: `scrollIntoView` painting in the
+      press's frame and a hit-tested wheel reaching `onScroll`. Two transcripts
+      share one geometry (28px rows, a 200px viewport, a 1px tail): the shipped
+      `MessageScroller` starts pinned at the end (`-137`), follows a two-row
+      page to `-193` with the appended row inside the viewport, unpins on a
+      `+400` wheel (`changes=1`, clamped at `0`) and offers `Jump to latest`, a
+      page while away leaves the offset at `0` and counts `2 new messages` while
+      the arrived row waits below the viewport, the jump press re-pins
+      (`changes=2`, `-249`) and removes the control, and a `-10000` wheel at the
+      end re-pins (`changes=4`, `-305`). The second transcript is a plain
+      scroller that always follows: the same wheel and append move it to `-137`,
+      so "the offset did not move" is not a dead-input reading. 42 checks,
+      `--only message-scroller-lifecycle`, green on 0.11.0. Two negative
+      controls measured (the mount's `-137` expected after the append:
+      `expected -137 ± 2, got -193`; the shipped transcript controlled
+      `pinned`: `a wheel past the top clamps the offset at zero — expected 0 ± 1,
+      got -193`, the yank the rule prevents; exit `1` each). Evidence:
+      `apps/playground/README.md` §`message-scroller-lifecycle`,
+      `.artifacts/live/message-scroller-*.png`
 
 `[x]` Land the `drag-reorder` live probe and measure **a row that keeps the
       pointer** — `drag-between-panes` measured the non-captured half (the

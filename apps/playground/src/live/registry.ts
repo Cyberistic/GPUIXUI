@@ -169,6 +169,12 @@ export const liveRegistry = [
     capability: "scroll",
   },
   {
+    id: "message-scroller-lifecycle",
+    title:
+      "Scroll: the shipped MessageScroller follows a page while pinned, leaves an unpinned reader's offset alone, counts arrivals and returns on jump",
+    capability: "scroll",
+  },
+  {
     id: "split-pane-lifecycle",
     title:
       "Panel: a window's divider drag resizes its pane, clamps at the caller's bounds, and ignores a drag on the pane",

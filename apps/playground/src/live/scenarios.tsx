@@ -47,6 +47,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  MessageScroller,
+  MessageScrollerItem,
+  MessageScrollerJumpToLatest,
+  MessageScrollerViewport,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -138,6 +142,15 @@ import {
   type PageDirection,
 } from "./loading-row.js";
 import { listAnchorOf } from "./host.js";
+import {
+  TRANSCRIPT_PAGE_ROWS,
+  TRANSCRIPT_ROW_HEIGHT,
+  TRANSCRIPT_START_ROWS,
+  TRANSCRIPT_TAIL_HEIGHT,
+  TRANSCRIPT_THRESHOLD,
+  TRANSCRIPT_VIEWPORT_HEIGHT,
+  scrollRange,
+} from "./message-scroller.js";
 import {
   TREE_ALL_DIRECTORIES,
   TREE_INDENT,
@@ -1285,8 +1298,7 @@ const DragReorderProbe = (): ReactNode => {
   const move = useCallback(
     (event: EventPayload) => {
       if (Option.isNone(pressed.current)) return;
-      const hits =
-        renderer?.getElementsAt?.(event.x ?? 0, event.y ?? 0) ?? [];
+      const hits = renderer?.getElementsAt?.(event.x ?? 0, event.y ?? 0) ?? [];
       const target = rowAt(hits, handles.current);
       over.current = target;
       setReadout((current) => ({
@@ -1299,45 +1311,42 @@ const DragReorderProbe = (): ReactNode => {
     [renderer],
   );
 
-  const release = useCallback(
-    (row: string) => {
-      const started = pressed.current;
-      pressed.current = Option.none();
-      if (Option.isNone(started)) return;
-      // Another row heard a release while this list was being dragged: the
-      // pointer was not captured, which is the runtime fact the probe reports.
-      if (!Option.exists(started, (name) => name === row)) {
-        setReadout((current) => ({ ...current, heard: current.heard + 1 }));
-        return;
-      }
-      const target = over.current;
-      over.current = Option.none();
-      setReadout((current) => ({
-        ...current,
-        from: started,
-        over: target,
-        drops: Option.isSome(target) ? current.drops + 1 : current.drops,
-        misses: Option.isNone(target) ? current.misses + 1 : current.misses,
-      }));
-      Option.match(target, {
-        onNone: () => {},
-        onSome: (name) =>
-          setOrder((current) =>
-            Option.match(
-              Option.all([
-                Arr.findFirstIndex(current, (candidate) => candidate === row),
-                Arr.findFirstIndex(current, (candidate) => candidate === name),
-              ]),
-              {
-                onNone: () => current,
-                onSome: ([from, to]) => moveRow(current, from, to),
-              },
-            ),
+  const release = useCallback((row: string) => {
+    const started = pressed.current;
+    pressed.current = Option.none();
+    if (Option.isNone(started)) return;
+    // Another row heard a release while this list was being dragged: the
+    // pointer was not captured, which is the runtime fact the probe reports.
+    if (!Option.exists(started, (name) => name === row)) {
+      setReadout((current) => ({ ...current, heard: current.heard + 1 }));
+      return;
+    }
+    const target = over.current;
+    over.current = Option.none();
+    setReadout((current) => ({
+      ...current,
+      from: started,
+      over: target,
+      drops: Option.isSome(target) ? current.drops + 1 : current.drops,
+      misses: Option.isNone(target) ? current.misses + 1 : current.misses,
+    }));
+    Option.match(target, {
+      onNone: () => {},
+      onSome: (name) =>
+        setOrder((current) =>
+          Option.match(
+            Option.all([
+              Arr.findFirstIndex(current, (candidate) => candidate === row),
+              Arr.findFirstIndex(current, (candidate) => candidate === name),
+            ]),
+            {
+              onNone: () => current,
+              onSome: ([from, to]) => moveRow(current, from, to),
+            },
           ),
-      });
-    },
-    [],
-  );
+        ),
+    });
+  }, []);
 
   return (
     <div
@@ -3433,6 +3442,402 @@ const dragReorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       missed,
       "drops=2",
     );
+  });
+
+/** One transcript row, sized so the probe can predict the content height. */
+const TranscriptRow = ({
+  testId,
+  children,
+}: {
+  readonly testId: string;
+  readonly children: ReactNode;
+}): ReactNode => {
+  const theme = useTheme();
+  return (
+    <MessageScrollerItem
+      testId={testId}
+      style={{ height: TRANSCRIPT_ROW_HEIGHT, paddingBottom: 0 }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {children}
+      </text>
+    </MessageScrollerItem>
+  );
+};
+
+/**
+ * The input proof: a plain scroller that follows the tail on every render.
+ *
+ * The real scroller must leave an unpinned reader's offset alone, and "the
+ * offset did not move" is also what a probe reads when its append control is
+ * dead. This control appends the same page through the same verbs and always
+ * follows, so its offset *does* move — proving the wheel and the append reached
+ * a scroller before the real transcript's unchanged offset is believed.
+ */
+const FollowingControl = ({ count }: { readonly count: number }): ReactNode => {
+  const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const tail = useRef<PublicInstance | null>(null);
+
+  useLayoutEffect(() => {
+    const instance = tail.current;
+    if (instance !== null && renderer?.scrollIntoView !== undefined) {
+      renderer.scrollIntoView(instance.id);
+    }
+  });
+
+  return (
+    <div
+      testId="ms-control-viewport"
+      style={{
+        height: TRANSCRIPT_VIEWPORT_HEIGHT,
+        overflowY: "scroll",
+        flexDirection: "column",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      {Array.from({ length: count }, (_, index) => (
+        <div
+          key={index}
+          testId={`ms-control-row-${index}`}
+          style={{ height: TRANSCRIPT_ROW_HEIGHT, flexShrink: 0 }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.foreground,
+            }}
+          >
+            {`control ${index}`}
+          </text>
+        </div>
+      ))}
+      <div
+        ref={tail}
+        style={{ height: TRANSCRIPT_TAIL_HEIGHT, flexShrink: 0 }}
+      />
+    </div>
+  );
+};
+
+/**
+ * `message-scroller-lifecycle` — the shipped `MessageScroller` in a real window.
+ *
+ * The component's rules are `TestRenderer` facts so far: a pinned transcript
+ * follows an appended row with `scrollIntoView`, an unpinned one keeps the
+ * reader's offset and counts what arrived, and the way back re-pins. The window
+ * is where the two scroll channels meet React: `scrollIntoView` has to paint
+ * synchronously, `onScroll` has to report the wheel before the rule folds it,
+ * and the jump control has to repaint the viewport on the following frame.
+ *
+ * Two transcripts share the geometry. The real one measures the shipped rules;
+ * the control (`FollowingControl`) is a plain scroller that always follows, so
+ * the "the reader was not yanked" check has a measured non-zero delta beside it.
+ */
+const MessageScrollerProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [count, setCount] = useState(TRANSCRIPT_START_ROWS);
+  const [controlCount, setControlCount] = useState(TRANSCRIPT_START_ROWS);
+  const [pinned, setPinned] = useState(true);
+  const [changes, setChanges] = useState(0);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        gap: 8,
+      }}
+    >
+      <text
+        testId="ms-state"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`pinned=${pinned} changes=${changes} rows=${count}`}
+      </text>
+      <div style={{ display: "flex", gap: 8 }}>
+        <Pressable
+          testId="ms-append"
+          onClick={() => setCount((current) => current + TRANSCRIPT_PAGE_ROWS)}
+        >
+          Append two
+        </Pressable>
+        <Pressable
+          testId="ms-append-control"
+          onClick={() =>
+            setControlCount((current) => current + TRANSCRIPT_PAGE_ROWS)
+          }
+        >
+          Append to control
+        </Pressable>
+      </div>
+      <div style={{ display: "flex", flexDirection: "row", gap: 16 }}>
+        <div style={{ width: 420 }}>
+          <MessageScroller
+            label="Conversation"
+            threshold={TRANSCRIPT_THRESHOLD}
+            onPinnedChange={(next) => {
+              setPinned(next);
+              setChanges((current) => current + 1);
+            }}
+          >
+            <MessageScrollerViewport
+              testId="ms-viewport"
+              style={{ height: TRANSCRIPT_VIEWPORT_HEIGHT }}
+            >
+              {Array.from({ length: count }, (_, index) => (
+                <TranscriptRow key={index} testId={`ms-row-${index}`}>
+                  {`message ${index}`}
+                </TranscriptRow>
+              ))}
+            </MessageScrollerViewport>
+            <MessageScrollerJumpToLatest testId="ms-jump" />
+          </MessageScroller>
+        </div>
+        <div style={{ width: 420 }}>
+          <FollowingControl count={controlCount} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/** The offset `testId` holds, failing by name when the element is no scroller. */
+const scrollY = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+): Effect.Effect<number, Smoke.SmokeAssertionError | Smoke.SmokeHostError> =>
+  Effect.gen(function* () {
+    const offset = yield* ctx.expectSome(
+      `${testId} is a scroller`,
+      Option.fromNullishOr(yield* ctx.host.scrollOffset(testId)),
+    );
+    return offset.y;
+  });
+
+/** Whether `testId` painted at all. */
+const paintedAt = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+): Effect.Effect<boolean, Smoke.SmokeHostError> =>
+  Effect.map(ctx.host.bounds(testId), (bounds) => bounds !== null);
+
+/** Whether a row sits wholly inside the viewport's painted box. */
+const rowInside = (
+  ctx: Smoke.AsyncSmokeContext,
+  row: string,
+  viewport: string,
+): Effect.Effect<boolean, Smoke.SmokeAssertionError | Smoke.SmokeHostError> =>
+  Effect.gen(function* () {
+    const box = yield* paintedBox(ctx, row);
+    const frame = yield* paintedBox(ctx, viewport);
+    return (
+      box.y >= frame.y - 1 && box.y + box.height <= frame.y + frame.height + 1
+    );
+  });
+
+const messageScrollerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("ms-state");
+    yield* Effect.sleep(SETTLE);
+
+    // 1. A fresh transcript follows the end.
+    yield* ctx.expectEqual(
+      "a transcript starts pinned with nothing unseen",
+      yield* ctx.host.text("ms-state"),
+      `pinned=true changes=0 rows=${TRANSCRIPT_START_ROWS}`,
+    );
+    yield* ctx.expectNear(
+      "the mount scrolls to the end of the transcript",
+      yield* scrollY(ctx, "ms-viewport"),
+      -scrollRange(TRANSCRIPT_START_ROWS),
+      2,
+    );
+    yield* ctx.expectEqual(
+      "the last message is inside the viewport",
+      yield* rowInside(
+        ctx,
+        `ms-row-${TRANSCRIPT_START_ROWS - 1}`,
+        "ms-viewport",
+      ),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a pinned reader sees no jump control",
+      yield* paintedAt(ctx, "ms-jump"),
+      false,
+    );
+    yield* ctx.host.capture("message-scroller-end");
+
+    // 2. An appended page is followed while pinned.
+    yield* ctx.host.click("ms-append");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the append keeps the transcript pinned",
+      yield* ctx.host.text("ms-state"),
+      `pinned=true changes=0 rows=${TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS}`,
+    );
+    yield* ctx.expectNear(
+      "the pinned transcript follows the page by its own height",
+      yield* scrollY(ctx, "ms-viewport"),
+      -scrollRange(TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS),
+      2,
+    );
+    yield* ctx.expectEqual(
+      "the appended message is inside the viewport",
+      yield* rowInside(
+        ctx,
+        `ms-row-${TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS - 1}`,
+        "ms-viewport",
+      ),
+      true,
+    );
+    yield* ctx.host.capture("message-scroller-followed");
+
+    // 3. Scrolling away unpins and offers the way back.
+    yield* ctx.host.wheel("ms-viewport", 0, 400);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "scrolling up unpins the reader",
+      yield* ctx.host.text("ms-state"),
+      `pinned=false changes=1 rows=${TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS}`,
+    );
+    yield* ctx.expectNear(
+      "a wheel past the top clamps the offset at zero",
+      yield* scrollY(ctx, "ms-viewport"),
+      0,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "an unpinned reader is offered the way back",
+      yield* paintedAt(ctx, "ms-jump"),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "nothing has arrived yet, so the control names no count",
+      yield* ctx.host.text("ms-jump"),
+      "Jump to latest",
+    );
+    yield* ctx.host.capture("message-scroller-unpinned");
+
+    // 4. A page while unpinned is counted, not followed.
+    const before = yield* scrollY(ctx, "ms-viewport");
+    yield* ctx.host.click("ms-append");
+    yield* Effect.sleep(SETTLE);
+    const after = yield* scrollY(ctx, "ms-viewport");
+    yield* ctx.expectEqual(
+      "the unpinned transcript did not move",
+      after,
+      before,
+    );
+    yield* ctx.expectEqual(
+      "the page did not pin the reader",
+      yield* ctx.host.text("ms-state"),
+      `pinned=false changes=1 rows=${TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS * 2}`,
+    );
+    yield* ctx.expectEqual(
+      "the control counts the two rows that arrived unseen",
+      yield* ctx.host.text("ms-jump"),
+      "2 new messages",
+    );
+    yield* ctx.expectEqual(
+      "the arrived page waits below the viewport",
+      yield* rowInside(
+        ctx,
+        `ms-row-${TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS * 2 - 1}`,
+        "ms-viewport",
+      ),
+      false,
+    );
+    yield* ctx.host.capture("message-scroller-unpinned-arrivals");
+
+    // 5. The control proves the verbs above reach a scroller: it always
+    //    follows, so the same page moves its offset back to its end.
+    yield* ctx.host.wheel("ms-control-viewport", 0, 400);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "the control scroller starts at its top",
+      yield* scrollY(ctx, "ms-control-viewport"),
+      0,
+      1,
+    );
+    yield* ctx.host.click("ms-append-control");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "a following control is yanked back to its end",
+      yield* scrollY(ctx, "ms-control-viewport"),
+      -scrollRange(TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS),
+      2,
+    );
+
+    // 6. Jumping returns to the newest row and clears the count.
+    yield* ctx.host.click("ms-jump");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "jumping pins the reader again",
+      yield* ctx.host.text("ms-state"),
+      `pinned=true changes=2 rows=${TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS * 2}`,
+    );
+    yield* ctx.expectNear(
+      "jumping scrolls to the transcript's end",
+      yield* scrollY(ctx, "ms-viewport"),
+      -scrollRange(TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS * 2),
+      2,
+    );
+    yield* ctx.expectEqual(
+      "the jump control leaves once the reader is back",
+      yield* paintedAt(ctx, "ms-jump"),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "the newest message is inside the viewport",
+      yield* rowInside(
+        ctx,
+        `ms-row-${TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS * 2 - 1}`,
+        "ms-viewport",
+      ),
+      true,
+    );
+    yield* ctx.host.capture("message-scroller-jumped");
+
+    // 7. A wheel back to the end re-pins without the control.
+    yield* ctx.host.wheel("ms-viewport", 0, 400);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click("ms-append");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the second page is counted while the reader is away",
+      yield* ctx.host.text("ms-jump"),
+      "2 new messages",
+    );
+    yield* ctx.host.wheel("ms-viewport", 0, -10000);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a wheel to the end pins the reader",
+      yield* ctx.host.text("ms-state"),
+      `pinned=true changes=4 rows=${TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS * 3}`,
+    );
+    yield* ctx.expectNear(
+      "the wheel lands on the transcript's end",
+      yield* scrollY(ctx, "ms-viewport"),
+      -scrollRange(TRANSCRIPT_START_ROWS + TRANSCRIPT_PAGE_ROWS * 3),
+      2,
+    );
+    yield* ctx.expectEqual(
+      "the way back is gone once the end is visible",
+      yield* paintedAt(ctx, "ms-jump"),
+      false,
+    );
+    yield* ctx.host.capture("message-scroller-rerolled");
   });
 
 /**
@@ -8096,6 +8501,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "scroll-lifecycle",
     view: () => <ScrollProbe />,
     steps: scrollSteps,
+  },
+  "message-scroller-lifecycle": {
+    id: "message-scroller-lifecycle",
+    view: () => <MessageScrollerProbe />,
+    steps: messageScrollerSteps,
   },
   "split-pane-lifecycle": {
     id: "split-pane-lifecycle",

@@ -37,9 +37,10 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-thirty-three probes a real window can prove, of which eight mount shipped
+thirty-five probes a real window can prove, of which nine mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
-the command palette, the tabs, the popover and the modal focus rule), five mount
+the command palette, the tabs, the popover, the message scroller and the modal
+focus rule), five mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider, Text and Tooltip), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
@@ -1423,6 +1424,46 @@ reports `-100000`, not the distance actually travelled), while
 `onScrollChange`'s `scrollX`/`scrollY` is the clamped absolute pair the
 renderer holds — which is what `ScrollArea`'s `onScrollChange` forwards.
 Evidence: `.artifacts/live/scroll-end.png`.
+
+### `message-scroller-lifecycle` — measured on 0.11.0 here
+
+The shipped `MessageScroller` in a real window: the first proof that its pin
+rule survives a window's scroll channels. The headless suite drives the
+renderer's wheel and `scrollIntoView` directly; here the wheel is a hit-tested
+input, `scrollIntoView` has to paint in the press's frame, and the jump control
+is a real press. Two transcripts share one geometry (28px rows, a 200px
+viewport, a 1px tail): the shipped one measures the rules, and a plain scroller
+that always follows proves the same verbs reach a scroller.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | `pinned=true`, no jump control, the offset is `-137`, and the last row is wholly inside the viewport |
+| press "Append two" | still pinned; the offset follows to `-193` (exactly one 56px page) and the appended row is inside the viewport |
+| wheel `+400` | unpins (`changes=1`), clamps at `0`, and the jump control appears as `Jump to latest` |
+| press "Append two" while away | the offset stays `0`, the state is still `pinned=false`, the control reads `2 new messages`, and the arrived page waits below the viewport |
+| the control transcript | its wheel lands at `0` and its append scrolls it to `-137` — the same verbs move a following scroller |
+| press the jump control | pinned again (`changes=2`), the offset is `-249`, the control leaves, and the newest row is inside the viewport |
+| wheel `+400`, append, wheel `-10000` | the page is counted (`2 new messages`); the wheel re-pins (`changes=4`, nothing unseen), the offset is `-305`, and the way back is gone |
+
+42 checks, `--only message-scroller-lifecycle`, green on 0.11.0.
+
+The control is the probe's input proof: an offset that "did not move" is also
+what a dead append handler or a wheel aimed at nothing reads. The plain scroller
+follows on every render, so the same presses move it to `-137`; a page that
+arrives without a render fails that check before the shipped transcript's
+unchanged offset is believed.
+
+Two negative controls measured, each exit `1`: expecting the mount's `-137`
+after the append fails `the pinned transcript follows the page by its own
+height` (`expected -137 ± 2, got -193`), and controlling the shipped transcript
+`pinned` makes the wheel-up land back at the end instead of `0` (`a wheel past
+the top clamps the offset at zero: expected 0 ± 1, got -193`) — the yank the
+unpinned rule exists to prevent.
+
+Evidence: `.artifacts/live/message-scroller-end.png`,
+`message-scroller-followed.png`, `message-scroller-unpinned.png`,
+`message-scroller-unpinned-arrivals.png`, `message-scroller-jumped.png`,
+`message-scroller-rerolled.png`.
 
 ### `split-pane-lifecycle` — measured on 0.11.0 here
 
