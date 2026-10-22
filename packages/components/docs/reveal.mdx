@@ -38,13 +38,15 @@ notice that a press dismisses, the contents of a disclosure, a toast. A closed
 reveal paints nothing at all, so nothing inside it keeps running; re-opening
 before the exit finishes retargets the same instance instead of remounting it.
 
-While the exit runs the box stays painted but paints the seam's no-press guard
-(`presenceStyle` in `internal/presence.tsx`): a surface that is leaving must not
-block the control it uncovers. That is the strongest guard the runtime offers —
-`0.11.0`'s `pointerEvents` does not inherit and removes only the declaring
-element's own hitbox, so a filled control *inside* a fading box keeps its own
-and the runtime has no `inert`. Do not put a destructive action in a reveal that
-is closing; put it outside the reveal.
+A reveal is a **wrapper**, not an overlay: while it is open it paints no pointer
+rule at all, so it never puts a hitbox over the content it wraps. While the exit
+runs it paints the seam's no-press guard (`presenceStyle` in
+`internal/presence.tsx`): a surface that is leaving must not block the control it
+uncovers. That is the strongest guard the runtime offers — `0.11.0`'s
+`pointerEvents` does not inherit and removes only the declaring element's own
+hitbox, so a filled control *inside* a fading box keeps its own and the runtime
+has no `inert`. Do not put a destructive action in a reveal that is closing; put
+it outside the reveal.
 
 ## Directions, distance and delay
 

@@ -145,13 +145,14 @@ The form's layout uses `spacing.lg`; the summary uses `caption` type in
 
 ## Verification
 
-`src/behaviour/form.test.tsx` runs in the real GPUix renderer (9 tests): idle
+`src/behaviour/form.test.tsx` runs in the real GPUix renderer (10 tests): idle
 state, a valid submit delivering the decoded instance, an invalid submit showing
 every message and never submitting, one alert with separate message nodes,
 revalidation on an edit after a failed submit (a fixed field clears, a still-bad
-one updates), no messages before the first submit, `pending` blocking a submit, a
-consumer `style` winning while every message paints the tone's readable role in
-both themes, and the named form landmark. `src/form/validator.test.ts` holds the
+one updates), a corrected value submitting after a schema failure, no messages
+before the first submit, `pending` blocking a submit, a consumer `style` winning
+while every message paints the tone's readable role in both themes, and the named
+form landmark. `src/form/validator.test.ts` holds the
 core adoption where `window` and `document` are undefined.
 
 ```sh

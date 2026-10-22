@@ -38,12 +38,13 @@ subtree unmounts after its exit tween, so a timer or a request inside it stops.
 A content change while the reveal is open re-measures and continues from the
 height on screen, which is what a disclosure holding a growing list needs.
 
-A collapse keeps the body painted for its exit tween and paints the seam's
-no-press guard (`presenceStyle` in `internal/presence.tsx`), so the shrinking
-box stops blocking what the section uncovers. The limit is the runtime's:
-`pointerEvents` does not inherit in `0.11.0` and removes only the declaring
-element's hitbox, so a filled control inside the collapsing body keeps its own
-and there is no `inert` to ask for.
+While it is open the box paints no pointer rule at all, so the clipping wrapper
+never puts a hitbox over the content it holds. A collapse keeps the body painted
+for its exit tween and paints the seam's no-press guard (`presenceStyle` in
+`internal/presence.tsx`), so the shrinking box stops blocking what the section
+uncovers. The limit is the runtime's: `pointerEvents` does not inherit in
+`0.11.0` and removes only the declaring element's hitbox, so a filled control
+inside the collapsing body keeps its own and there is no `inert` to ask for.
 
 ## Motion and reduced motion
 

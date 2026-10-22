@@ -279,8 +279,6 @@ export const presenceStyle = (
   present: boolean,
   rest: "target" | "wrapper" = "target",
 ): StyleDesc =>
-  present
-    ? rest === "target"
-      ? { pointerEvents: "auto" }
-      : {}
-    : { pointerEvents: "none" };
+  present && rest === "wrapper"
+    ? {}
+    : { pointerEvents: present ? "auto" : "none" };
