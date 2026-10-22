@@ -4918,6 +4918,9 @@ paused on a green, pushed `HEAD`; plan 118 carries the measurement.
 
 ## Interlocks (cross-workstream dependencies)
 
+| Re-anchor the **data-display controller rules** to the table-core migration — the data workstream is moving `useTable` onto `@tanstack/table-core` (`src/grid-core.ts`, and `filter/logic.ts`/`sort/logic.ts` are being replaced in the working tree, measured 2026-10-23). `apps/docs/src/lib/lane-page.test.ts`'s `retains a released selection and names the call that drops it` reads `use-table.ts` for `clearSelection(selection)`, which the migrated controller no longer writes (it writes `clearSelection(chosen)` and derives the visible selection through the core), and `/docs/data-display`'s **A release is a view, not a write** bullet describes the reducer implementation. Both are docs-site's paths, but the honest wording depends on the migration's final shape | data (the migration) + docs-site (`lane-page.test.ts`, `/docs/data-display`) | **open** — when the migration lands, re-read the controller's retention and `clear()` paths, re-word the lane page's rule (and the virtual-window clamp sentence if it moved with it), and re-anchor the guard to the new call shape. Until then `master` is consistent and the failure appears only against the uncommitted tree |
+
+
 Work that this workstream needs but does not own. Another agent owns each row.
 
 | Need | Owner | Status |
@@ -5486,6 +5489,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 `[ ]` Consistency, keyboard, themes, composability pass
 `[ ]` Performance and packaging
+  - [x] The **components test suite's `motion-claims` case read the tree
+    17 980 times** — the record resolver re-read `src/inventory.ts`, every
+    record module and its import graph per record, and each page walk re-read
+    the graph again, so the case spent ~2.7 s in isolation and exceeded the
+    suite's 5 s default under load (the full `packages/components` run failed
+    there on 2026-10-23 while every case passed alone). `readText`, `importsOf`
+    and `recordFiles` now cache one pass of the tree, and the reachability
+    search marks a module visited for the whole search instead of per path.
+    The case's first pass dropped to **118 reads / 81 ms**; its new guard walks
+    the tree twice and requires the second walk to read nothing, with a
+    `100 < walked < 400` bound — uncached, the guard measured 36 159 against a
+    24 112 first pass and the case took 3.4 s. Directions measured: without the
+    caches the guard fails by name (`expected 36159 to be 24112`); with them the
+    file is 6/6 in 81 ms and `nub run --filter @gpuixui/components test` is
+    **101 files / 874 tests** green.
 `[x]` Docs truth pass against the implementation
   - [x] `packages/primitives/docs` cites `@gpuix/native@0.10.0` 19 times across 14 pages (owner: primitives). Re-verify each claim against 0.11.0 rather than replacing the version string: this workstream has already found three closed gaps (`aria-description` on a trigger, `scrollbarColor`/`scrollbarWidth` on a scroller, `role`/`aria-level` for headings) and several still-true ones (no `aria-valuenow`, no `aria-checked`, no pointer capture). Record the version each verdict was taken on. — **landed**: every remaining verdict was re-read against the installed `@gpuix/native` 0.11.0 typings (`host.d.ts`): the aria set is still exactly label/description/id/expanded/selected/valuetext/level, so no `aria-valuenow`/`checked`/`pressed`/`labelledby`/`disabled`; `onPaste`, pointer capture, `transform`, a fade mask and `gridColumn`/`gridRow` are still absent; **two claims failed and were corrected rather than relabelled** — `StyleDesc` now accepts `borderStyle: "dashed"` and a linear-gradient `background`, so `box.mdx`/`COMPONENTS.md` no longer call those runtime absences (they are `Box` API gaps, pass them through `style`), and `@gpuix/react` 0.11.0 now publishes a headless `./button` (`Button`/`buttonProps`), so `button.mdx`/`Button.tsx` no longer say it does not exist; 13 docs pages, both `label` comments, seven source headers, the README's capability table (scrollbar tint is present, `./button` published) and `MIGRATION.md` now name 0.11.0. `src/runtime-version.test.ts` walks every docs page, source, runtime suite, example, `README.md` and `MIGRATION.md` and fails on any `@gpuix/<pkg>`/`GPUix` version that is not the workspace pin (both directions measured: a 0.10.0 in `Meter.tsx` and the README table fails by file name), with a floor so a scan that stopped matching cannot pass. The README's own runtime count was stale too and now reads the measured 15 files / 146 tests
   - [x] `packages/components` cited the **previous runtime** in 148 places across
