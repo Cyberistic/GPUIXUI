@@ -136,6 +136,24 @@ describe("the theme page", () => {
     expect(audit).toContain("own font size");
   });
 
+  it("names the row height the pressable rule also holds", () => {
+    // `invalidNumbers` holds a `density.rowHeight` to the same 24px floor as a
+    // control height: a dense list row is built at exactly that height and takes
+    // the press. The bullet named only the control height, so a row the report
+    // refuses was described by nothing.
+    const audit = section(page("themes.mdx"), "The theme audit");
+    const failures = auditTheme(
+      extendTheme(themes.light, { density: { rowHeight: 20 } }),
+    ).invalidNumbers;
+
+    expect(failures).toEqual([
+      { group: "density", path: "rowHeight", value: 20, rule: "pressable" },
+    ]);
+    expect(audit).toContain("rowHeight");
+    expect(audit).toContain("{targetSize.minimum}");
+    expect(audit).not.toContain("A control height is also the box");
+  });
+
   it("measures both the body text and the secondary line a reader can select", () => {
     // The bullet described "the four content surfaces body text can be selected
     // from" at 7:1. `selectionPairs` grew to seven when a `mutedForeground` line

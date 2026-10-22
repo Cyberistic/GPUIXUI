@@ -63,9 +63,10 @@ call reports nine independent failures:
   boundary on its way to native, so `NaN` and `Infinity` arrive as `null` and the
   property is dropped, while a negative or zero size is accepted and lays an
   element out at no height: a theme that is not the one the reader described,
-  with nothing painted wrong enough to notice. A control height is also the box a
-  pointer presses, so it is held to the library's {targetSize.minimum}px target
-  floor — a shorter control lays out, but a reader cannot reliably hit it. A type
+  with nothing painted wrong enough to notice. A control height — and a list row,
+  which a `dense` row builds at exactly `density.rowHeight` — is also the box a
+  pointer presses, so both are held to the library's {targetSize.minimum}px target
+  floor: a shorter one lays out, but a reader cannot reliably hit it. A type
   role's leading must also reach its own font size, because a shorter line height
   puts the next baseline inside this line's glyphs; that is the one rule about two
   tokens, so it is measured on the pair.
