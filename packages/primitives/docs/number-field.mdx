@@ -70,7 +70,7 @@ import {
 | `defaultValue` | `number` | none | start value; the field shows empty without one |
 | `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange`; the new name runs when both are passed |
 | `onValueChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
-| `min` / `max` | `number` | none | bound the value; absent means unbounded |
+| `min` / `max` | `number` | none | bound the value; absent means unbounded, and an inverted pair is the range it means (swapped, as a slider does) |
 | `step` | `number` | `1` | arrow step |
 | `precision` | `number` | `0` | decimals shown on commit |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | field height and padding |
@@ -241,6 +241,11 @@ so a caller that composes its own parts still gets the hint.
   arrow. `core/value.ts` states the same rule for a slider. A bound that is
   itself non-finite is not a bound, so one bad `max` cannot take the value with
   it.
+- **An inverted pair is the range it means.** A `min` above its `max` is swapped
+  (`min: 100, max: 0` reads as `0…100`), the same rule `core/value.ts` applies to
+  a slider. Without it every value clamped to the lower number and both steppers
+  read as inert — a field that could not be edited at all
+  (`normalizeNumberRange`, `core/number.test.ts` and `NumberField.test.tsx`).
 - **Decimal text only, unless the caller reads its own format.** `1,5`, `0x10`
   and `Infinity` are rejected rather than guessed at; a grouped or locale display
   reaches the field through the `formatValue`/`parseValue` pair, because the
@@ -265,7 +270,8 @@ so a caller that composes its own parts still gets the hint.
 - `src/core/number.test.ts` — decimal-only parsing, clamping, precision,
   noisy-free decimal steps (ten 0.1 steps reach 1 exactly), a large integer step
   that rounding must not erase, Home/End only with a bound, a value that is not a
-  number read as a bound, the `formatValue`/`parseValue` reading (a grouped and a
+  number read as a bound, an inverted pair read as the range it means, the
+  `formatValue`/`parseValue` reading (a grouped and a
   comma-decimal parser, the decimal fallback, a blank field, an unpaintable
   answer, and the grouped draft a controlled owner echoes), and fixed-decimal
   text that keeps no negative zero and expands past the platform's `1e21`
@@ -275,7 +281,8 @@ so a caller that composes its own parts still gets the hint.
   noise, and an unreadable travel or scale.
 - `src/components/NumberField.test.tsx` — the draft value, the key contract, the
   raw edit report, the submit channel (commit first, no listener while
-  disabled), steppers as presentation, one tab stop, disabled/invalid,
+  disabled), steppers as presentation, an inverted pair whose steppers still
+  move, one tab stop, disabled/invalid,
   the four part names in a caller's composition, the input part carrying the
   draft, name and keys, the ring on the input rather than the wrapper, the
   value opted out of the keyboard dim (a caller's `style` puts it back), and the

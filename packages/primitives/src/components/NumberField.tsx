@@ -44,6 +44,7 @@ import {
   decideNumberKey,
   formatNumber,
   initNumberDraft,
+  normalizeNumberRange,
   numberDraftText,
   parseNumberText,
   scrubNumber,
@@ -141,11 +142,12 @@ export const numberRange = (props: {
   readonly min?: number;
   readonly max?: number;
   readonly step?: number;
-}): NumberRange => ({
-  min: props.min,
-  max: props.max,
-  step: props.step ?? 1,
-});
+}): NumberRange =>
+  normalizeNumberRange({
+    min: props.min,
+    max: props.max,
+    step: props.step ?? 1,
+  });
 
 /** What the rendered field needs from the component that owns its state. */
 export interface NumberFieldHandlers {
@@ -314,8 +316,8 @@ export const numberFieldPart = (
     handlers,
     scrub,
     interaction: props,
-    atMin: props.min !== undefined && current <= props.min,
-    atMax: props.max !== undefined && current >= props.max,
+    atMin: range.min !== undefined && current <= range.min,
+    atMax: range.max !== undefined && current >= range.max,
   };
 };
 

@@ -69,14 +69,25 @@ export const parseNumberText = (
  * The bounds a range can actually use.
  *
  * A bound that cannot be laid out is not a bound: `Math.min(NaN, value)` is
- * `NaN`, so one `max: NaN` would otherwise take the field's value with it.
+ * `NaN`, so one `max: NaN` would otherwise take the field's value with it. An
+ * inverted pair is the range it means, the same answer `core/value.ts` gives a
+ * slider — otherwise every value clamps to the lower end and both steppers are
+ * inert, a field that cannot be edited at all.
  */
+export const normalizeNumberRange = (range: NumberRange): NumberRange => {
+  const min = Number.isFinite(range.min) ? range.min : undefined;
+  const max = Number.isFinite(range.max) ? range.max : undefined;
+  return min !== undefined && max !== undefined && min > max
+    ? { min: max, max: min, step: range.step }
+    : { min, max, step: range.step };
+};
+
 const numericBounds = (
   range: NumberRange,
-): { readonly min: number | undefined; readonly max: number | undefined } => ({
-  min: Number.isFinite(range.min) ? range.min : undefined,
-  max: Number.isFinite(range.max) ? range.max : undefined,
-});
+): { readonly min: number | undefined; readonly max: number | undefined } => {
+  const { min, max } = normalizeNumberRange(range);
+  return { min, max };
+};
 
 /**
  * The number a range paints for a value it was given.

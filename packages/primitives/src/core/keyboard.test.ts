@@ -95,8 +95,12 @@ describe("decideMove", () => {
     expect(decideMove(1, 3, "down", "horizontal")).toEqual(Option.none());
   });
 
-  it("has nowhere to go in an empty group", () => {
+  it("has nowhere to go in an empty or a one-option group", () => {
     expect(decideMove(0, 0, "down", "vertical")).toEqual(Option.none());
+    // `Arr.range(1, 0)` is `[1]`, so the old candidate list made the only option
+    // its own neighbour and consumed an arrow the group could not act on.
+    expect(decideMove(0, 1, "down", "vertical")).toEqual(Option.none());
+    expect(decideMove(0, 1, "right", "horizontal")).toEqual(Option.none());
   });
 
   it("skips an item that cannot be chosen", () => {

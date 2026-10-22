@@ -122,7 +122,9 @@ export const decideMove = (
   orientation: Orientation,
   isDisabled: (index: number) => boolean = () => false,
 ): Option.Option<number> => {
-  if (count <= 0) return Option.none();
+  // A single option has nowhere to move: `Arr.range(1, 0)` answers `[1]`, which
+  // would make the option its own neighbour and consume an arrow it cannot act on.
+  if (count <= 1) return Option.none();
   const { forward, backward } = ARROW_KEYS[orientation];
   if (key !== forward && key !== backward) return Option.none();
   const step = key === forward ? 1 : -1;

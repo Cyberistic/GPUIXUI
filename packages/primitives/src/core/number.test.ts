@@ -16,6 +16,7 @@ import {
   decideNumberKey,
   formatNumber,
   initNumberDraft,
+  normalizeNumberRange,
   numberDraftText,
   parseNumberText,
   parseNumericText,
@@ -110,6 +111,31 @@ describe("parseNumberText", () => {
     expect(
       parseNumberText("twelve", () => Option.some(Number.POSITIVE_INFINITY)),
     ).toStrictEqual(Option.none());
+  });
+});
+
+describe("normalizeNumberRange", () => {
+  it("reads an inverted pair as the range it means", () => {
+    // The bug guarded: `clampNumeric` applied `min` and then `max`, so
+    // `min: 100, max: 0` clamped every value to 0 and both steppers read as
+    // inert — a field that could not be edited. A slider already swaps the pair.
+    expect(normalizeNumberRange({ min: 100, max: 0, step: 2 })).toStrictEqual({
+      min: 0,
+      max: 100,
+      step: 2,
+    });
+    expect(clampNumeric(50, { min: 100, max: 0, step: 1 })).toBe(50);
+    expect(stepNumber(50, { min: 100, max: 0, step: 1 }, 1)).toBe(51);
+  });
+
+  it("still drops a bound it cannot lay out", () => {
+    expect(
+      normalizeNumberRange({ min: Number.NaN, max: 10, step: 1 }),
+    ).toStrictEqual({
+      min: undefined,
+      max: 10,
+      step: 1,
+    });
   });
 });
 

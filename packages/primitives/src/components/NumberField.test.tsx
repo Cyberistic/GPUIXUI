@@ -27,7 +27,7 @@ import {
 } from "./NumberField.js";
 import type { FieldState } from "./Input.js";
 import type { FocusState } from "./internal.js";
-import { changeEvent, keyEvent } from "./testing/event.js";
+import { changeEvent, clickEvent, keyEvent } from "./testing/event.js";
 import {
   elementChildren,
   expectSome,
@@ -133,6 +133,18 @@ describe("NumberField", () => {
     expect(part.current).toBe(0);
     expect(part.atMin).toBe(true);
     expect(part.atMax).toBe(false);
+  });
+
+  it("reads inverted bounds as the range they mean, so the steppers work", () => {
+    // The bug guarded: the part compared the raw props, so `min: 100, max: 0`
+    // clamped every value to 0 and both steppers read as blocked. The range is
+    // the one the core arithmetic uses — swapped, the same rule a slider follows.
+    const onValue = vi.fn();
+    const { up } = partsOf(
+      render({ min: 100, max: 0 }, 50, "50", idle, { onValue }),
+    );
+    expectSome(hostHandler(up, "onClick"))(clickEvent);
+    expect(onValue).toHaveBeenCalledWith(51);
   });
 
   it("moves one step with the arrow keys and a page at a time", () => {

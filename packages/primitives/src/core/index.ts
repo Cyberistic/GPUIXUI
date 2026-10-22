@@ -52,6 +52,7 @@ export {
   clampNumeric,
   decideNumberKey,
   formatNumber,
+  normalizeNumberRange,
   parseNumberText,
   parseNumericText,
   SCRUB_PIXELS_PER_STEP,
