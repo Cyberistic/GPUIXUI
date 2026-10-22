@@ -14,6 +14,10 @@
  * `renderToStaticMarkup` renders the **first** frame and runs no effect, which
  * is the frame the defect lives in: the effect that samples the retained value
  * lands after it.
+ *
+ * The reduced preference is a second first-frame bug: `reducedMotion` removed
+ * the tween's duration but not its start, so a hook mounted with `initial` under
+ * reduced published the value the journey would have left from for one commit.
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
@@ -53,6 +57,57 @@ const TWEENFrame = ({
 const COASTFrame = ({ initial }: { readonly initial?: number }) => {
   const { value } = useInertia(400, coast, { initial });
   return <>{String(value)}</>;
+};
+
+/** The frame a hook publishes when the reader asked for no journey. */
+const ReducedFrame = ({
+  target,
+  initial,
+}: {
+  readonly target: number;
+  readonly initial?: number;
+}) => {
+  const { value } = useMotion(target, tween(300), {
+    initial,
+    reducedMotion: true,
+  });
+  return <>{String(value)}</>;
+};
+
+/** The tween hook's frame when the reader asked for no journey. */
+const ReducedTWEENFrame = ({
+  target,
+  initial,
+}: {
+  readonly target: number;
+  readonly initial?: number;
+}) => {
+  const { value } = useTransition(target, { durationMs: 300 }, {
+    initial,
+    reducedMotion: true,
+  });
+  return <>{String(value)}</>;
+};
+
+/** A bounded coast whose rest is 400 × 350 ms, clamped to 50. */
+const boundedCoast = inertia(350, { min: 0, max: 50 });
+
+/** The coasting hook's frame when the reader asked for no journey. */
+const ReducedCOASTFrame = () => {
+  const { value } = useInertia(400, boundedCoast, {
+    initial: 0,
+    reducedMotion: true,
+  });
+  return <>{String(value)}</>;
+};
+
+/** Whether the hook reports a run the reduced mount skipped. */
+const ReducedCompletion = ({ initial }: { readonly initial?: number }) => {
+  const { complete } = useMotion(100, tween(300), {
+    initial,
+    reducedMotion: true,
+  });
+  return <>{String(complete)}</>;
 };
 
 describe("the first published frame", () => {
@@ -98,5 +153,30 @@ describe("the first published frame", () => {
     expect(renderToStaticMarkup(<COASTFrame initial={40} />)).toBe("40");
     expect(renderToStaticMarkup(<COASTFrame />)).toBe("0");
     expect(renderToStaticMarkup(<COASTFrame initial={Number.NaN} />)).toBe("0");
+  });
+
+  it("is the resting frame under the reduced preference, not the start it skips", () => {
+    // The preference removes the journey, not only its duration. A hook mounted
+    // with `initial` under reduced published that start — for one commit, before
+    // its effect completed the run — so a reduced count-up or width change
+    // flashed the value it was supposed to arrive from. The first frame is the
+    // frame the preference names: the target, or a coast's projected rest (400
+    // × 350 ms clamped to 50 here).
+    expect(
+      renderToStaticMarkup(<ReducedFrame target={100} initial={0} />),
+    ).toBe("100");
+    expect(
+      renderToStaticMarkup(<ReducedTWEENFrame target={100} initial={0} />),
+    ).toBe("100");
+    expect(renderToStaticMarkup(<ReducedCOASTFrame />)).toBe("50");
+    // The skipped run still completes; a mount that asked for no journey does
+    // not report one.
+    expect(renderToStaticMarkup(<ReducedCompletion initial={0} />)).toBe("true");
+    expect(renderToStaticMarkup(<ReducedCompletion initial={100} />)).toBe(
+      "false",
+    );
+    expect(renderToStaticMarkup(<ReducedCompletion />)).toBe("false");
+    // The animated control keeps the start: the preference is what changed.
+    expect(renderToStaticMarkup(<Frame target={100} initial={0} />)).toBe("0");
   });
 });

@@ -13,6 +13,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type SetStateAction,
@@ -22,6 +23,7 @@ import {
   MotionValue,
   easeOut,
   layoutSpring,
+  project,
   springTransition,
   tween,
   type Easing,
@@ -40,6 +42,14 @@ export interface MotionState {
 
 /** Hook options. */
 export interface MotionOptions {
+  /**
+   * The reader's reduced-motion preference. Default `false`.
+   *
+   * A reduced hook paints its resting frame in the **first** render — the
+   * target, or a coast's projected rest — and ignores `initial`, because that
+   * value is the start of a journey the preference removed. A mount that
+   * skipped such a run reports it as complete.
+   */
   readonly reducedMotion?: boolean;
   /**
    * The value the **first** run starts from. Default: the target, so a hook
@@ -120,6 +130,37 @@ const startValue = (target: number, initial: number | undefined): number => {
 };
 
 /**
+ * The value a hook paints in its first render.
+ *
+ * The reduced preference removes the journey, not only its duration, so a mount
+ * under it paints the resting frame even when the caller named an `initial`:
+ * that value is the start of a run the reader asked not to see. The retained
+ * value starts at the same frame, so the effect's first sample cannot repaint
+ * the start for a commit.
+ */
+const firstValue = (
+  target: number,
+  initial: number | undefined,
+  reducedMotion: boolean,
+): number => startValue(target, reducedMotion ? undefined : initial);
+
+/**
+ * Whether a reduced mount skips a journey the caller named.
+ *
+ * The skipped run still completes — the preference removes the journey, not its
+ * outcome — so the first frame carries the completion edge a run would.
+ */
+const skipsJourney = (
+  target: number,
+  initial: number | undefined,
+  reducedMotion: boolean,
+): boolean =>
+  reducedMotion &&
+  initial !== undefined &&
+  Number.isFinite(initial) &&
+  initial !== startValue(target, undefined);
+
+/**
  * The retained-motion hook: animates `target` with `transition` on a monotonic
  * `performance.now()` clock. `transition` must be a stable reference (pass a
  * memoized value or one of {@link useSpring}/{@link useTransition}).
@@ -129,12 +170,26 @@ export const useMotion = (
   transition: Transition,
   options: MotionOptions = {},
 ): MotionState => {
-  const [start] = useState(() => startValue(target, options.initial));
+  const reducedMotion = reduced(options);
+  const [start] = useState(() =>
+    firstValue(target, options.initial, reducedMotion),
+  );
   const [motion] = useState(() => new MotionValue(start));
   const [origin] = useState(() => performance.now());
-  const [frame, setFrame] = useState<MotionFrame>(() => initialFrame(start));
+  const [frame, setFrame] = useState<MotionFrame>(() => {
+    const first = initialFrame(start);
+    return skipsJourney(target, options.initial, reducedMotion)
+      ? { ...first, complete: true }
+      : first;
+  });
+  /** The mount already paints the resting frame, so there is no run to start. */
+  const skipped = useRef(skipsJourney(target, options.initial, reducedMotion));
 
   useEffect(() => {
+    if (skipped.current) {
+      skipped.current = false;
+      return;
+    }
     publish(setFrame, settleBefore(motion, origin, reduced(options)));
     motion.animate(target, transition);
     let handle: ReturnType<typeof setTimeout> | undefined;
@@ -203,13 +258,29 @@ export const useInertia = (
   inertia: Inertia,
   options: MotionOptions = {},
 ): MotionState => {
-  const [from] = useState(() => startValue(0, options.initial));
-  const [motion] = useState(() => new MotionValue(from));
+  const reducedMotion = reduced(options);
+  const [offset] = useState(() => startValue(0, options.initial));
+  const [rest] = useState(() => project(inertia, offset, velocity));
+  const [motion] = useState(() => new MotionValue(offset));
   const [start] = useState(() => performance.now());
-  const [frame, setFrame] = useState<MotionFrame>(() => initialFrame(from));
+  const [frame, setFrame] = useState<MotionFrame>(() => {
+    if (reducedMotion && rest !== offset) {
+      return { ...initialFrame(rest), complete: true };
+    }
+    return initialFrame(reducedMotion ? rest : offset);
+  });
+  /** The first paint shows the projected rest; the release point is skipped. */
+  const skippingStart = useRef(reducedMotion);
 
   useEffect(() => {
-    publish(setFrame, settleBefore(motion, start, reduced(options)));
+    const sampled = settleBefore(motion, start, reduced(options));
+    if (skippingStart.current && sampled.value === offset) {
+      // The mount painted the rest the preference names, so the release offset
+      // is not a frame the reader should see for a commit.
+    } else {
+      skippingStart.current = false;
+      publish(setFrame, sampled);
+    }
     motion.coast(inertia, velocity);
     let handle: ReturnType<typeof setTimeout> | undefined;
     const tick = (): void => {

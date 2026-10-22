@@ -87,13 +87,19 @@ easing })` tweens; `useInertia(velocity, inertia)` coasts with momentum from
 it a stable `transition` (`instant`, `tween`, or `springTransition`).
 
 Pass `options.reducedMotion` from your platform's reduced-motion preference; it
-completes immediately at the target. `options.initial` gives the first run a
-start value — `useTransition(1284, { durationMs: 320 }, { initial: 0 })` counts
+completes at the target, and the **first render** already paints that frame.
+`options.initial` gives the first run a start value — `useTransition(1284, { durationMs: 320 }, { initial: 0 })` counts
 up on mount, and `useInertia(400, inertia(), { initial: dragOffset })` coasts
 from the offset a gesture released at — and is read once, because the
 presentation on screen is the truth after it. A start or a target it cannot read
 is no value: the start is the target, so the first published frame is a number
 the runtime can paint rather than the `NaN` it draws as nothing.
+
+Under the reduced preference there is **no first run to start**: a hook mounted
+with `initial` paints the frame the preference names in its first render — the
+target, or a coast's projected rest — and reports the skipped run as complete.
+The `initial` belongs to an animated mount, so a reduced count-up or a reduced
+drag release never flashes the value it was supposed to arrive from.
 
 The hooks own one clock, so they **sample once before retargeting**: a run that
 has come to rest is not advanced while nothing moves, and handing the retained
@@ -161,6 +167,10 @@ target (the start is `0`). The retained `MotionValue` repaired the same value on
 its own, so the hook and the value it drives could disagree about the frame the
 caller sees first. `useInertia` reads the same option as the offset the coast
 accumulates from; an unreadable one is no offset, so the coast starts at `0`.
+The reduced preference is read at the same boundary: a reduced mount paints the
+resting frame — the target, or the coast's projected rest — rather than the
+`initial` the run it removed would have started from, and reports that skipped
+run as complete.
 
 ## The runtime's declarative timing
 
