@@ -288,12 +288,14 @@ directly; the component reads roles, never colours.
 `done` in `COMPONENTS.md` with a `partial` runtime verdict: GPUix publishes the
 headless combobox, so focus, the active row and the keyboard are supported
 rather than reimplemented, while the ranking, the row paint and the value
-semantics are this package's. The behaviour is held by **22 native behaviour
+semantics are this package's. The behaviour is held by **25 native behaviour
 tests** in `packages/components/src/behaviour/combobox.test.tsx` — open and input
 focus, both placement cases, ranking, arrow + `Enter`, the empty state, single
 and multiple selection, the disabled row's paint, Escape over a dialog, the
-pointer path and the create row's five rules — and the ranking, toggle and
-create round trip by `packages/components/src/combobox/logic.test.ts`. Three
+pointer path, the create row's five rules, the 4-point travel it enters on from
+either side and the resting frame it paints first under reduced motion — and the
+ranking, toggle and create round trip by
+`packages/components/src/combobox/logic.test.ts`. Three
 limits are recorded above rather than hidden: there is no
 `aria-activedescendant`, no async options and no grouping, and the create row is
 single-select only.

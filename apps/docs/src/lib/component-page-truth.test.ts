@@ -898,7 +898,12 @@ describe("the curated component pages", () => {
     expect(text).toContain("280px");
     expect(text).toContain("No `aria-activedescendant`");
     expect(text).toContain("offered only when nothing matches");
-    expect(text).toContain("22 native behaviour tests");
+    // The count is the suite's, not a transcription: the behaviour suite grew
+    // the popup's entrance cases while the page still printed 22, and only the
+    // generic case above noticed. Derived, the page cannot lag a new case.
+    expect(text).toContain(
+      `${nativeCases("packages/components/src/behaviour/combobox.test.tsx")} native behaviour tests`,
+    );
     expect(text).toContain("`partial`");
     // The retracted shapes: a runtime ranking, or a faded disabled row.
     expect(text).not.toContain("the runtime ranks");

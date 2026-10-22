@@ -15,6 +15,7 @@ import {
 } from "./component-index";
 import { componentIndex } from "./component-index-data";
 import { packageCollections } from "./collection-routes";
+import { laneView, summarize } from "./inventory";
 import { inventory } from "./inventory-data";
 import { statusForPage } from "./inventory-status";
 import { readPublishedModules, repoRoot } from "./public-symbols-source";
@@ -682,6 +683,30 @@ describe("the real index", () => {
         (term) => filterEntries(componentIndex, term).length === 0,
       ),
     ).toEqual([]);
+  });
+
+  it("never calls a pending lane shipped, so a reader is not sent to a page that is not there", () => {
+    // The intro said the Tier 2 set was "dialogs, menus, tabs, pickers,
+    // **tables** and the rest of the feedback layer", while `COMPONENTS.md`
+    // records every Tier 3 table row as `todo` — a top-level page promising a
+    // component the inventory says does not exist. The claim is held to the
+    // inventory rather than to a fixed sentence: when the Tables row ships this
+    // case stops constraining the word, and until then the page may only point
+    // a reader at the data lane's page.
+    const page = readFileSync(
+      new URL("../../content/docs/components/index.mdx", import.meta.url),
+      "utf8",
+    );
+    const intro = page.slice(0, page.indexOf("<ComponentIndex"));
+    const lane = laneView(inventory, "data-display");
+    expect(lane.rows.length, "the data lane has no rows").toBeGreaterThan(0);
+    const shipped = summarize(lane.rows).shipped;
+
+    expect(
+      shipped === 0 && /\btables\b/i.test(intro),
+      "the Components index calls tables part of the shipped set",
+    ).toBe(false);
+    if (shipped === 0) expect(intro).toContain("/docs/data-display");
   });
 
   it("lists only parts the library actually exports", () => {
