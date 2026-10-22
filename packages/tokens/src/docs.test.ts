@@ -614,3 +614,250 @@ describe("the emphasis pair the extension example raises", () => {
     );
   });
 });
+
+/** A placement as the page states it: the pair, and the ratio the reader is shown. */
+interface VerifiedPlacement {
+  /** The pair as the contract names it — the half of the sentence a palette cannot move. */
+  readonly pair: string;
+  readonly ratio: number;
+}
+
+const tightest = <Placement extends VerifiedPlacement>(
+  placements: ReadonlyArray<Placement>,
+): Placement => {
+  expect(placements.length).toBeGreaterThan(0);
+  return placements.reduce((a, b) => (b.ratio < a.ratio ? b : a));
+};
+
+/** The ratio a sentence prints after `needle`, or `undefined` when it prints none. */
+const printedRatio = (text: string, needle: string): number | undefined => {
+  const at = text.indexOf(needle);
+  if (at < 0) {
+    return undefined;
+  }
+  const match = /(\d+\.\d+):1/.exec(text.slice(at + needle.length));
+  return match?.[1] === undefined ? undefined : Number(match[1]);
+};
+
+const words = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+] as const;
+
+/** The spelled count the catalogue prints, or the numeral past the list. */
+const word = (count: number): string => words[count] ?? String(count);
+
+/**
+ * The verification section is the page a reader checks a contract against, and
+ * it made two claims the tables had outgrown: the mark contract was described as
+ * "eight roles on the four strips" after `indicatorSurfaces` carried nine (the
+ * four resting strips, the four washes a row wears and a field's `input` fill),
+ * with the tightest placement named as Luna light's 3.30:1 after macOS dark's
+ * primary on a list row's `accent` had taken the place at 3.06:1; and the
+ * decorative paragraph listed eight of the eleven surface kinds and called the
+ * tightest **skeleton** "the tightest of every placement" after a look's progress
+ * rail had become the closest placement in the table.
+ *
+ * Every sentence below is derived from the table that produces it — the kinds,
+ * the strips, the counts and the tightest pair with its ratio — so a palette or a
+ * contract that moves can fail here instead of leaving the page teaching the
+ * previous answer. The prose names the placement in human terms ("Aero's dark
+ * progress rail"); the guard holds the mechanical half, which is what a reader
+ * verifies.
+ */
+describe("the verification section's contracts", () => {
+  const verification = section("## Verification");
+
+  const styles = [
+    Tokens.lightTheme,
+    Tokens.darkTheme,
+    Tokens.highContrastLightTheme,
+    Tokens.highContrastDarkTheme,
+    ...Tokens.platformNames.flatMap((name) => [
+      Tokens.platformTheme(Tokens.themes.light, name),
+      Tokens.platformTheme(Tokens.themes.dark, name),
+    ]),
+    ...Tokens.retroNames.flatMap((look) => [
+      Tokens.retroTheme(Tokens.themes.light, look),
+      Tokens.retroTheme(Tokens.themes.dark, look),
+    ]),
+  ];
+
+  const decorativePlacements = styles.flatMap((theme) =>
+    Tokens.decorativeSurfaces.flatMap(
+      ({ surface, role, over, alpha, level }) => {
+        const paintedOver = theme.colors[over];
+        const paintedRole =
+          level === undefined
+            ? theme.colors[role]
+            : theme.elevation[level][0]?.color;
+        const ratio =
+          paintedOver === undefined || paintedRole === undefined
+            ? undefined
+            : Tokens.contrastRatio(
+                Tokens.blend(
+                  paintedOver,
+                  paintedRole,
+                  alpha ?? Tokens.alphaOf(paintedRole),
+                ),
+                paintedOver,
+              );
+        return ratio === undefined
+          ? []
+          : [{ surface, pair: `\`${role}\` on \`${over}\``, ratio }];
+      },
+    ),
+  );
+
+  const markPlacements = styles.flatMap((theme) =>
+    Tokens.indicatorRoles.flatMap((role) =>
+      Tokens.indicatorSurfaces.flatMap((over) => {
+        const ratio = Tokens.contrastRatio(
+          theme.colors[role],
+          theme.colors[over],
+        );
+        return ratio === undefined
+          ? []
+          : [{ pair: `\`${role}\` on \`${over}\``, ratio }];
+      }),
+    ),
+  );
+
+  const seriesPlacements = styles.flatMap((theme) =>
+    Tokens.seriesColors(theme).flatMap((swatch, index) =>
+      Tokens.seriesSurfaces.flatMap((over) => {
+        const ratio = Tokens.contrastRatio(swatch, theme.colors[over]);
+        return ratio === undefined
+          ? []
+          : [
+              {
+                index,
+                over,
+                pair: `series ${index + 1} on \`${over}\``,
+                ratio,
+              },
+            ];
+      }),
+    ),
+  );
+
+  const decorativeKinds = [
+    ...new Set(Tokens.decorativeSurfaces.map(({ surface }) => surface)),
+  ];
+
+  it("lists every kind of decorative surface the table measures", () => {
+    // The phrase each kind is written as on the page. A kind the table gains has
+    // no phrase here until the page is told, which is the point of the mapping.
+    const phrases: Readonly<Record<string, string>> = {
+      divider: "divider",
+      skeleton: "skeleton",
+      scrim: "veil",
+      statusTint: "status tint",
+      statusEdge: "status edge",
+      scrollbar: "scrollbar thumb",
+      stateWash: "state wash",
+      filledAction: "filled action",
+      track: "bar rail",
+      disabledFace: "disabled face",
+      elevation: "elevation placement",
+    };
+    const kinds = [
+      ...new Set(Tokens.decorativeSurfaces.map(({ surface }) => surface)),
+    ];
+    const missing = kinds.filter(
+      (kind) => !verification.includes(phrases[kind] ?? kind),
+    );
+
+    expect(decorativeKinds.length).toBe(Object.keys(phrases).length);
+    expect(missing).toEqual([]);
+  });
+
+  it("prints the tightest skeleton, not the tightest of every surface", () => {
+    const skeletons = decorativePlacements.filter(
+      ({ surface }) => surface === "skeleton",
+    );
+    const closest = tightest(skeletons);
+    const printed = printedRatio(verification, closest.pair);
+
+    expect(verification).not.toContain("the tightest of every placement");
+    expect(verification).toContain(`the tightest skeleton`);
+    // The page prints three decimals, so an exact read is the comparison: a
+    // palette that moves by a thousandth is a different placement and fails.
+    expect(printed).toBe(Number(closest.ratio.toFixed(3)));
+  });
+
+  it("prints the tightest surface, which is no longer the skeleton", () => {
+    const closest = tightest(decorativePlacements);
+    const printed = printedRatio(verification, closest.pair);
+
+    expect(verification).toContain(
+      `The tightest of the ${word(decorativeKinds.length)} surface kinds`,
+    );
+    expect(verification).toContain(closest.pair);
+    expect(printed).toBe(Number(closest.ratio.toFixed(3)));
+  });
+
+  it("counts the marks and names every strip they are measured on", () => {
+    expect(verification).toContain(
+      `the ${word(Tokens.indicatorRoles.length)} roles on the ${word(Tokens.indicatorSurfaces.length)} surfaces`,
+    );
+    const unnamed = Tokens.indicatorSurfaces.filter(
+      (surface) => !verification.includes(`\`${surface}\``),
+    );
+
+    expect(unnamed).toEqual([]);
+    // The retracted count: four resting strips were all the table carried when
+    // the sentence was written.
+    expect(verification).not.toContain("eight roles on the four strips");
+  });
+
+  it("prints the tightest mark on the wash that took the place", () => {
+    const closest = tightest(markPlacements);
+
+    expect(verification).toContain(closest.pair);
+    // The mark's ratio is printed to two decimals, the precision its range needs.
+    expect(printedRatio(verification, closest.pair)).toBe(
+      Number(closest.ratio.toFixed(2)),
+    );
+  });
+
+  it("names the tightest chart swatch", () => {
+    const closest = tightest(seriesPlacements);
+
+    // The sentence names the swatch, the surface and the ratio it was measured
+    // at, so a moved palette or a new plot strip fails here rather than leaving
+    // the page printing the previous tightest.
+    expect(verification).toContain(
+      `series ${closest.index + 1} at ${closest.ratio.toFixed(2)}:1 on its \`${closest.over}\` strip`,
+    );
+  });
+
+  it("counts the selection pairs it measures, body and secondary", () => {
+    const body = Tokens.selectionPairs.filter(({ floor }) => floor === "body");
+    const pairs = body.map(
+      ({ foreground, background }) => `\`${foreground}\` on \`${background}\``,
+    );
+
+    expect(verification).toContain(
+      `the ${word(body.length)} body roles, ${pairs.join(", ")}`,
+    );
+    expect(verification).toContain(
+      "`mutedForeground` on `background`, a card and a popover",
+    );
+    expect(verification).toContain(`all ${styles.length}`);
+    // The retracted count: four content surfaces were all the table carried
+    // when the sentence was written.
+    expect(verification).not.toContain("the four body roles");
+  });
+});

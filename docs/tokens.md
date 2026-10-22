@@ -3288,18 +3288,21 @@ the documented brand theme, so a documented brand that loses its on-colour fails
 the suite.
 
 `packages/tokens/src/decorative.test.ts` covers the surfaces that carry no text:
-every divider, skeleton, veil, status-edge, scrollbar, state-wash, filled-action
-and elevation placement is measured, the edge is held to the share `statusTone`
-paints, the veil and the shadow are composited rather than skipped, a surface
-that matches its page or cannot be measured is reported, and every shipped,
-platform and authored theme clears the 1.05:1 floor. It found two platform styles whose inherited
+every divider, skeleton, veil, status tint, status edge, scrollbar thumb, state
+wash, filled action, bar rail, disabled face and elevation placement is
+measured, the edge is held to the share `statusTone` paints, the veil and the
+shadow are composited rather than skipped, a surface that matches its page or
+cannot be measured is reported, and every shipped, platform and authored theme
+clears the 1.05:1 floor. It found two platform styles whose inherited
 skeleton matched their own surfaces — macOS light on `muted` at 1.045:1, Linux
 dark on `card` at 1.004:1 — which now carry a `skeleton` of their own; the
 floating strip the contract later gained found three more on the fill a loading
 dialog paints (`popover`) — macOS dark 1.049:1, Linux dark 1.031:1 and Windows
-dark 1.039:1 — so those carry a `skeleton` too, and the tightest of every
-placement is the authored Luna dark look's dialog at 1.054:1. The
-state-wash half found five aliases: the base dark theme's `hover` was its
+dark 1.039:1 — so those carry a `skeleton` too, and the tightest skeleton is the
+authored Luna dark look's dialog — `skeleton` on `popover` — at 1.054:1. The
+tightest of the eleven surface kinds is the authored Aero look's dark progress
+rail — `muted` on `popover` — at 1.052:1. The state-wash half found five
+aliases: the base dark theme's `hover` was its
 `popover` (a hovered menu row painted nothing), the base light theme's was its
 `muted` toolbar, and macOS light, Windows light and Linux dark were within one
 step of the strips they tint, so those five palettes carry a wash a reader can
@@ -3312,9 +3315,11 @@ placement leaves the table or a face is reverted.
 
 `packages/tokens/src/selection.test.ts` covers the wash behind a selected run:
 `selectionPairs` names the surfaces text is selected from and keeps the text role
-each one already carries — the four body roles, plus `mutedForeground` on the
-page, a card and a popover — `selectionFailures` composites the role over each
-surface, and a theme passes only when the wash is visible against what it covers
+each one already carries — the five body roles, `inputForeground` on `input`,
+`foreground` on `background`, `cardForeground` on `card`, `popoverForeground` on
+`popover`, `foreground` on `muted`, plus `mutedForeground` on `background`, a
+card and a popover — `selectionFailures` composites the role over each surface,
+and a theme passes only when the wash is visible against what it covers
 (1.05:1) and the text inside it keeps the floor its unselected pair meets (body
 7:1, secondary 4.5:1). It reports the pre-fix Linux dark wash at 6.63:1 and the
 pre-fix secondary value on macOS light at 4.30:1 by name, a brand whose wash is
@@ -3327,17 +3332,20 @@ boundary floor on the four plot surfaces, every pair to 0.06 in OKLab, and
 every pair to 0.05 again after protanopia, deuteranopia and tritanopia are
 simulated. It reports the red/green pair a deuteranope sees 0.024 apart, a
 swatch that is the card it is drawn on, a repeated pair and a translucent
-swatch, names the tightest placement over every shipped style (Aero light's
-series 4 at 3.05:1 on its muted strip), and it executes the example's legend and
-reported lines.
+swatch, names the tightest placement over every shipped style (Aero light's series 4 at
+3.05:1 on its `muted` strip), and it executes the example's legend and reported
+lines.
 
 `packages/tokens/src/indicator.test.ts` covers the marks a component paints: the
-eight roles on the four strips are held to the theme's non-text floor in all 16
-shipped, platform and authored themes, the tightest placement is named (Luna
-light's `success` on its muted strip at 3.30:1), the solid `warning` role is
-measured as 1.78:1 on the page so the reason a status mark paints the tone's
-readable role is a measurement rather than an opinion, a translucent mark and a
-caller's stricter floor are reported, and each status tone must have a mark role.
+eight roles on the nine surfaces — `background`, `card`, `popover` and `muted` at
+rest, the four washes a row wears (`hover`, `active`, `accent`, `selected`) and a
+field's own `input` fill — are held to the theme's non-text floor in all 16
+shipped, platform and authored themes, the tightest placement is named (macOS
+dark's `primary` on `accent`, the wash a list row tints under its own pointer, at
+3.06:1), the solid `warning` role is measured as 1.78:1 on the page so the
+reason a status mark paints the tone's readable role is a measurement rather
+than an opinion, a translucent mark and a caller's stricter floor are reported,
+and each status tone must have a mark role.
 
 `packages/tokens/src/elevation.test.ts` covers the shadow scale: one shadow per
 level with exactly the runtime's five fields, the role's hue and strength per
