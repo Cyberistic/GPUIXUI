@@ -37,7 +37,8 @@ export const resolveDensePlatformTheme = (
  * and it owns the accent **family**, because `accent`, `selected` and
  * `selection` are surfaces derived from the accent: leaving them on the
  * platform's blue paints a violet button inside a blue popover and a blue-tinted
- * selection.
+ * selection. `selected` is a step stronger than `accent`, because a chosen row
+ * is repainted `accent` when the pointer arrives.
  */
 export const resolveHouseTheme = (mode: ThemeMode): Theme =>
   extendTheme(platformTheme(themes[mode], "win32"), {
@@ -64,7 +65,10 @@ export const resolveHouseTheme = (mode: ThemeMode): Theme =>
         : {
             accent: "#E5DDFF",
             accentForeground: "#3E2E9E",
-            selected: "#E2D9FF",
+            // The chosen row is repainted `accent` under the pointer, so the
+            // two must differ: a step deeper keeps the selection readable and
+            // the click visible.
+            selected: "#D8CDFF",
             selectedForeground: "#372680",
             selection: "#6A45F03D",
           }),

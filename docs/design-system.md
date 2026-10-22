@@ -92,7 +92,7 @@ theme's `foreground` until the least readable of the eight surfaces it can sit o
 and the `accent`/`selected` washes a row paints under an action) clears the
 floor the theme's variant asks for — 4.5:1 default, 7:1 high contrast. A run
 that knows its surface asks for it: a link inside an `Alert`'s description sits
-on that message's `xSoft` tint, where the shared colour is under the floor in 29
+on that message's `xSoft` tint, where the shared colour is under the floor in 27
 of the 64 tint placements (macOS dark on `warningSoft` measures 3.43:1), so it
 paints `brandTextOn(theme, surface)`. The message's own copy keeps the tone's
 readable role. The same rule covers status text: a required marker or a field
@@ -420,7 +420,16 @@ row and it wears the other two washes: `list.tsx` fills `selected` once a row is
 chosen and tints `accent` under the pointer, and a destructive status caption
 (`Text tone="destructive"`) keeps the tone's readable role, so that role is
 measured on both — the tightest shipped placement is the Luna look's chosen row
-at 7.97:1.
+at 7.97:1. It is also a **pointer** surface: the row fills `selected` once chosen
+and tints `accent` under the pointer, so the fill a click repaints is the one the
+row already wears. `decorativeFailures` measures that replacement like every
+other wash, and it found **eleven of the sixteen** shipped styles with no step at
+all — the four base and high-contrast palettes at 1.00:1 — so each carries a
+`selected` one step stronger than its accent (macOS light moves its `accent`
+instead, and every text role measured on those fills keeps its floor), and the
+base dark theme's chosen row is the tightest at 1.05:1. The press that follows a hover
+is the same defect one state over, and it needs a derived step rather than a
+palette edit — `TODO.md` → Interlocks.
 
 A **filled role's pointer feedback** is derived, never a lifted alpha: a
 half-alpha fill shows the surface behind the control, so the same face reads as
@@ -687,9 +696,9 @@ selection moves the fill toward the text instead of away from it. Measured, the
 wash costs contrast in every one of the 80 placements on those two tones and
 leaves 39 of them under the floor the unwashed pair already met — the selected
 row's title, now at the body floor on the same role, accounts for the increase.
-The tightest is Windows XP (Luna) dark's secondary line on a selected row at
-3.78:1; the tightest body placement is the base dark theme's selected row title
-at 5.33:1. One translucent role cannot be strong
+The tightest is Windows XP (Luna) light's secondary line on a selected row at
+3.68:1; the tightest body placement is the base dark theme's selected row title
+at 5.11:1. One translucent role cannot be strong
 enough for the page and weak enough for a saturated fill, so a selectable run
 belongs on a content tone and a state row that needs selectable text paints it
 on one. The exclusion is measured: `selection.test.ts` reads the tones the box
@@ -712,9 +721,9 @@ combobox row tints `hover` under the pointer and `active` while pressed; a
 **list** row tints `accent`, keeps `active` while the press is down and fills
 `selected` once chosen — and its `leading` slot is documented for an `Avatar`,
 whose presence dot is a mark. The selected wash was measured by nothing, and
-Luna light's shared success step landed at 2.99:1 on it: a conversation's
+Luna light's shared success step landed at 2.82:1 on it: a conversation's
 presence dot vanished exactly when the reader selected that conversation. The
-look carries the next green step as its `success` (4.37:1 there). The tightest
+look carries the next green step as its `success` (4.12:1 there). The tightest
 placement in the whole set is now macOS dark's primary mark on a list row's
 `accent` wash, at 3.06:1.
 

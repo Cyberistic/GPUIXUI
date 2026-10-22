@@ -167,7 +167,7 @@ tool never has to copy the palette out of this page.
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
 | `hover` | `#E4E9F0` | `#272D37` | hover wash for ghost surfaces |
 | `active` | `#D6DBE4` | `#333A46` | pressed wash |
-| `selected` | `#E0E3FF` | `#2E2370` | selected row or item |
+| `selected` | `#DADDF8` | `#322773` | selected row or item |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface |
 | `disabledForeground` | `#A1A9B7` | `#545D6C` | disabled text |
@@ -472,7 +472,7 @@ placed there paints the tone's tint, not the page — and the tints are
 deliberately **not** in `brandTextSurfaces`, because a tint is one tone away
 from the page and a single colour measured on all of them would be dragged away
 from the brand everywhere. Measured, the shared colour is under its floor in
-**29 of the 64** tint placements across the sixteen styles (the count and every
+**27 of the 64** tint placements across the sixteen styles (the count and every
 cell below are computed by `brand-text.test.ts`, so they move with the
 palettes):
 
@@ -675,7 +675,7 @@ getTheme("light"); // the default light theme, unchanged
 | `overlay` | `#000000A6` | `#000000CC` | modal scrim |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
-| `selected` | `#E0E3FF` | `#231B59` | selected row or item |
+| `selected` | `#D9DCF7` | `#27205C` | selected row or item |
 | `selectedForeground` | `#2E2370` | `#E0E3FF` | text on `selected` |
 | `disabled` | `#F2F2F2` | `#1A1A1A` | disabled surface |
 | `disabledForeground` | `#5A5A5A` | `#8A8A8A` | disabled text |
@@ -757,9 +757,9 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 | `primary` | `#0A6CD6` | `#0A84FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#59C9FF` |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` |
 | `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
-| `accent` | `#CCE0F9` | `#1A3D60` | `#D2E4F7` | `#1B3E60` | `#CFE6F9` | `#1B3A50` |
-| `accentForeground` | `#09457F` | `#B2D3F9` | `#12457F` | `#BBD9F7` | `#003E6F` | `#C9E9FF` |
-| `selected` | `#D3E5FB` | `#0D3A66` | `#CFE3F9` | `#1B3F60` | `#CCE4F7` | `#123C57` |
+| `accent` | `#CADEF7` | `#1A3D60` | `#D2E4F7` | `#1B3E60` | `#CFE6F9` | `#1B3A50` |
+| `accentForeground` | `#08407A` | `#B2D3F9` | `#12457F` | `#BBD9F7` | `#003E6F` | `#C9E9FF` |
+| `selected` | `#D3E5FB` | `#0C3864` | `#CADDF3` | `#1F4363` | `#C8E0F3` | `#143E59` |
 | `selectedForeground` | `#0B3D6B` | `#C7E0FF` | `#0F3E74` | `#CFE4FA` | `#093A5C` | `#CDEBFF` |
 | `destructiveSoftForeground` | base | base | base | base | `#5C1619` | base |
 | `placeholder` | base | `#8A93A3` | base | `#8A93A3` | base | `#8A93A3` |
@@ -1493,7 +1493,7 @@ held to the body floor, so a brand whose accent foreground measured 4.68:1
 shipped a navigation or suggestion label under the page's reading floor. It is
 measured at the body floor now; macOS was the only shipped style under it
 (6.53:1 light, 6.74:1 dark), so both foregrounds take the smallest step that
-clears it, the tightest being Light · macOS at 7.19:1. A row
+clears it, the tightest being Dark · macOS at 7.22:1. A row
 **floating on a popover** keeps that
 surface's role rather than the page's — a menu or combobox row is
 `popoverForeground` — and a destructive row paints the tone's readable role, so
@@ -1622,7 +1622,7 @@ whose edge matched the row it sits in therefore shipped an outlined action with
 no outline in the one place a list puts it, with every strip the control rests on
 passing. Both washes joined the boundary pairs, and every shipped, high-contrast,
 platform and authored style clears the floor, the tightest being the authored
-Windows XP look's selected row at 3.18:1. `contrast.test.ts`'s `the edge of a control inside a row's wash` suite
+Windows XP look's selected row at 3.07:1. `contrast.test.ts`'s `the edge of a control inside a row's wash` suite
 reads the slot, both washes and the default action's edge, reports an edge equal
 to its wash at 1.00:1 and sweeps all 16 styles.
 
@@ -1919,7 +1919,7 @@ how a status edge is measured at the alpha its component actually uses:
 | statusTint | each tone's `xSoft` | `background`, `card`, `popover`, `muted` |
 | statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, the same four strips, and the washes `hover`, `active`, `selected`, `accent` |
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
-| stateWash | `hover`, `active`, `selected`, `accent` | `background`, `card`, `popover`, `muted` |
+| stateWash | `hover`, `active`, `selected`, `accent` | `background`, `card`, `popover`, `muted`; `accent` over `selected` (the pointer repaints a chosen row) |
 | filledAction | `secondary` | `background`, `card`, `popover`, `muted` |
 | track | `muted` | `background`, `card`, `popover` (never `muted` itself) |
 | disabledFace | `disabled` | `primary`, `secondary`, `destructive`, `accent`, `input` |
@@ -1968,7 +1968,7 @@ wash is a pale surface too, so the boundary is what keeps the pill a pill. The
 edge is therefore measured on the four washes as well, and every shipped,
 high-contrast, platform and authored style clears the floor on the tint it bounds
 and on every strip a message or a badge crosses. The tightest strip is Luna
-light's `warning` edge on the `active` wash at 1.09:1.
+light's `warning` edge on the `selected` wash at 1.08:1.
 
 A **state wash** is the one entry a component paints *behind* content rather than
 around it, so it has two jobs and two contracts: the text on it keeps the floors
@@ -1982,6 +1982,28 @@ now carries a wash that clears the floor on all four strips, and `accent` /
 `selected` on `muted` in the light themes were deepened for the same reason. The
 strips are the four surfaces a row can sit on; a filled action's own hover is a
 derived fill (`filledHover`) and is measured by the contrast table instead.
+
+A wash is also measured against **the wash it replaces**, because the strips are
+the page under a row and not the state a row is in. A selectable list row fills
+`selected` once chosen and tints `accent` under the pointer (`list.tsx`), so a
+chosen row is repainted `accent` when the pointer arrives: a theme whose two
+roles are one value has a selection that answers nothing. Measured, that was
+**eleven of the sixteen** shipped styles — the four base and high-contrast
+palettes at exactly 1.00:1, and macOS dark 1.036:1, Linux light 1.011:1, Linux
+dark 1.012:1, Windows light 1.021:1, Windows dark 1.024:1, Luna light 1.003:1
+and Aero light 1.022:1 — while macOS light's 1.050:1 sat on the floor. Each
+style now moves the role that had the room by the smallest step that clears, its
+`selected` fill in twelve of them and macOS light's `accent`, because `selected`
+is the stronger state: a chosen row deepens, it does not fade. Every step also
+had to keep the text roles measured on those fills and the accent face's own
+7:1 label, so the four base palettes moved `selected` by three or two percent
+rather than a ramp step. The chosen row's pointer step is now measured on all
+sixteen styles, and the base dark theme's chosen row is the tightest at 1.05:1.
+The **press** that follows a hover is the same defect one state over and is
+recorded with its measurement in `TODO.md` → Interlocks: separating `active`
+from the two washes it replaces needs a move that macOS dark's pinned accent
+label and primary mark do not allow, so it wants a derived step rather than a
+palette edit.
 
 A **filled action** is the same defect one control over. `secondary` is the one
 filled variant with no brand colour and no border — `packages/primitives` paints
@@ -2169,10 +2191,10 @@ is down, and fills `selected` once the row is chosen, while its `leading` slot i
 documented as the place for an `Avatar` — and a presence dot is a mark, painted
 `success`, `destructive`, `mutedForeground` or a tone's readable role. A dot on
 the row a reader had chosen was measured by nothing, and the placement found
-**Luna light**: the shared success step measured 2.99:1 on the look's lighter
+**Luna light**: the shared success step measured 2.82:1 on the look's lighter
 selected wash, so a conversation's presence dot disappeared exactly when the
 reader selected it. The look carries `palette.green[700]` as its `success`
-(4.37:1 there) and every other shipped style already cleared the floor.
+(4.12:1 there) and every other shipped style already cleared the floor.
 
 `indicatorFailures(theme, floors?)` names each mark and strip that misses the
 floor, reports one it cannot measure (a translucent role) rather than skipping
@@ -3040,9 +3062,9 @@ across the sixteen shipped, high-contrast, platform and authored styles, the
 wash costs contrast in **every one of the 80 placements** on those two tones (it
 never once helps) and leaves **39 of the 80 under the floor the unwashed pair
 already met** — the selected row's title, now held to the body floor on the same
-role, accounts for the increase. The tightest is Windows XP (Luna) dark's secondary
-line on a selected row at **3.78:1** against 4.5, with the tightest body
-placement the base dark theme's selected row title at **5.33:1** against 7. No
+role, accounts for the increase. The tightest is Windows XP (Luna) light's secondary
+line on a selected row at **3.68:1** against 4.5, with the tightest body
+placement the base dark theme's selected row title at **5.11:1** against 7. No
 share can serve both jobs: one strong enough to be seen
 on the page is exactly what erases text on a saturated fill, and one weak enough
 to keep that text readable is invisible on the page. So a selectable run belongs
@@ -3366,8 +3388,9 @@ floating strip the contract later gained found three more on the fill a loading
 dialog paints (`popover`) — macOS dark 1.049:1, Linux dark 1.031:1 and Windows
 dark 1.039:1 — so those carry a `skeleton` too, and the tightest skeleton is the
 authored Luna dark look's dialog — `skeleton` on `popover` — at 1.054:1. The
-tightest of the eleven surface kinds is the authored Aero look's dark progress
-rail — `muted` on `popover` — at 1.052:1. The state-wash half found five
+tightest of the eleven surface kinds is the base dark theme's chosen row — `accent`
+on `selected` — at 1.052:1 (the Aero look's dark progress rail, `muted` on
+`popover`, is a hair behind it). The state-wash half found five
 aliases: the base dark theme's `hover` was its
 `popover` (a hovered menu row painted nothing), the base light theme's was its
 `muted` toolbar, and macOS light, Windows light and Linux dark were within one

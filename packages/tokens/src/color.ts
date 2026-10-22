@@ -245,7 +245,7 @@ export const lightColors = {
   overlay: "#00000073",
   hover: "#E4E9F0",
   active: "#D6DBE4",
-  selected: palette.iris[100],
+  selected: "#DADDF8",
   selectedForeground: palette.iris[800],
   disabled: palette.neutral[100],
   disabledForeground: palette.neutral[400],
@@ -306,7 +306,7 @@ export const darkColors = {
   overlay: "#000000A6",
   hover: "#272D37",
   active: "#333A46",
-  selected: palette.iris[900],
+  selected: "#322773",
   selectedForeground: palette.iris[200],
   disabled: palette.neutral[850],
   disabledForeground: palette.neutral[600],
@@ -366,7 +366,7 @@ export const highContrastLightColors = {
   overlay: "#000000A6",
   hover: "#E8E8E8",
   active: "#D6D6D6",
-  selected: "#E0E3FF",
+  selected: "#D9DCF7",
   selectedForeground: "#2E2370",
   // Not `secondary`'s own value: the two shipped as `#E8E8E8`, so a disabled
   // action wore the fill of the enabled tonal action beside it and only its
@@ -425,7 +425,7 @@ export const highContrastDarkColors = {
   overlay: "#000000CC",
   hover: "#2E2E2E",
   active: "#3D3D3D",
-  selected: "#231B59",
+  selected: "#27205C",
   selectedForeground: "#E0E3FF",
   // Not `secondary`'s value: both shipped as `#2E2E2E`, so an unavailable
   // action and the enabled tonal action beside it painted the same box in the

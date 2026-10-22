@@ -81,6 +81,7 @@ import {
   decorativeSurfacesAreVisible,
   edgeLessBrand,
   flatActionBrand,
+  flatSelectionBrand,
   flatShadowBrand,
   flatSkeletonBrand,
   panelShadowBrand,
@@ -98,6 +99,7 @@ import {
   lightTheme,
   platformTheme,
   themes,
+  type Theme,
 } from "./theme.js";
 
 const shippedThemes = [
@@ -355,8 +357,8 @@ describe("decorative surfaces", () => {
       );
     expect(tightest.theme).toBe("Light · Windows XP (Luna)");
     expect(tightest.tone).toBe("warning");
-    expect(tightest.over).toBe("active");
-    expect(tightest.ratio).toBeCloseTo(1.09, 2);
+    expect(tightest.over).toBe("selected");
+    expect(tightest.ratio).toBeCloseTo(1.08, 2);
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(
@@ -531,6 +533,135 @@ describe("decorative surfaces", () => {
           surface === "stateWash" && role === "hover" && over === "muted",
       ),
     ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+  });
+
+  it("measures the wash a chosen row is repainted with", () => {
+    // A chosen list row is not painted on a strip any more: the pointer
+    // repaints the fill the row already wears, so the wash that replaces a
+    // wash is the placement. The four strips above cannot see it — they are
+    // the page under a row, not the state a row is in.
+    expect(measured("stateWash", "accent", "selected")).toBe(true);
+  });
+
+  it("reads the painters that repaint a chosen row", () => {
+    // The placement is the shipped composition: `list.tsx` fills a chosen row
+    // `selected` and tints `accent` under the pointer, so a palette that puts
+    // the two on one value leaves the state that a reader's click produced
+    // invisible.
+    const list = readFileSync(
+      new URL("../../components/src/list.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(list).toContain("hover: { backgroundColor: theme.colors.accent }");
+    expect(list).toContain("backgroundColor: theme.colors.selected");
+  });
+
+  it("reports a chosen row the pointer cannot repaint", () => {
+    // The shipped defect: `accent` and `selected` were the same value in the
+    // four base and high-contrast palettes, so hovering a chosen row repainted
+    // it with itself at 1.00:1 — a selection with no feedback at all.
+    const failures = decorativeFailures(flatSelectionBrand);
+
+    expect(
+      failures.find(
+        ({ surface, role, over }) =>
+          surface === "stateWash" && role === "accent" && over === "selected",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+  });
+
+  it("reports the chosen rows that did not answer the pointer before this step", () => {
+    // Measured on the values the styles carried: the four base and
+    // high-contrast palettes painted the hover in the selection's own fill
+    // (1.00:1), and six platform or look styles sat between 1.003 and 1.036 — a
+    // tint that is visible on its own strip and no step at all once the row is
+    // chosen. macOS light's 1.050 was the one that cleared.
+    const before: ReadonlyArray<readonly [string, Theme, string, number]> = [
+      ["Light", lightTheme, "#E0E3FF", 1],
+      ["Dark", darkTheme, "#2E2370", 1],
+      ["High contrast light", highContrastLightTheme, "#E0E3FF", 1],
+      ["High contrast dark", highContrastDarkTheme, "#231B59", 1],
+      ["Dark · macOS", platformTheme(darkTheme, "darwin"), "#0D3A66", 1.036],
+      ["Light · Linux", platformTheme(lightTheme, "linux"), "#CFE3F9", 1.011],
+      ["Dark · Linux", platformTheme(darkTheme, "linux"), "#1B3F60", 1.012],
+      ["Light · Windows", platformTheme(lightTheme, "win32"), "#CCE4F7", 1.021],
+      ["Dark · Windows", platformTheme(darkTheme, "win32"), "#123C57", 1.024],
+      [
+        "Light · Windows XP (Luna)",
+        retroTheme(lightTheme, "luna"),
+        "#BDD4F0",
+        1.003,
+      ],
+      [
+        "Light · Windows 7 (Aero)",
+        retroTheme(lightTheme, "aero"),
+        "#C2E0F8",
+        1.022,
+      ],
+    ];
+
+    const reported = before.map(([name, theme, selected, ratio]) => {
+      const failure = decorativeFailures(
+        extendTheme(theme, { colors: { selected } }),
+      ).find(
+        (entry) =>
+          entry.surface === "stateWash" &&
+          entry.role === "accent" &&
+          entry.over === "selected",
+      );
+      return [name, failure?.ratio?.toFixed(3), ratio.toFixed(3)];
+    });
+
+    expect(reported).toEqual(
+      before.map(([name, , , ratio]) => [
+        name,
+        ratio.toFixed(3),
+        ratio.toFixed(3),
+      ]),
+    );
+    // The shipped styles carry the step, so the same placement is silent for
+    // every one of them — the failing table above is history, not a deviation.
+    expect(
+      before.filter(([, theme]) =>
+        decorativeFailures(theme).some(
+          (entry) => entry.surface === "stateWash" && entry.over === "selected",
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("clears the floor on every shipped style, with the base dark theme tightest", () => {
+    // The contract's own sweep: 16 styles, the step a chosen row paints. The
+    // tightest is the base dark palette at 1.05:1, so a palette edit that closed
+    // the gap cannot pass on the value alone.
+    const every = [
+      ...shippedThemes,
+      ...platformThemes,
+      ...retroNames.flatMap((look) => [
+        retroTheme(lightTheme, look),
+        retroTheme(darkTheme, look),
+      ]),
+    ];
+    const cells = every.map((theme) => ({
+      label: theme.name,
+      ratio: contrastRatio(theme.colors.accent, theme.colors.selected) ?? 0,
+    }));
+    const tightest = cells.reduce((best, cell) =>
+      cell.ratio < best.ratio ? cell : best,
+    );
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+
+    expect(cells.filter(({ ratio }) => ratio < decorativeFloor)).toEqual([]);
+    expect(tightest.label).toBe("Dark");
+    expect(tightest.ratio.toFixed(2)).toBe("1.05");
+    expect(read("../../../docs/tokens.md")).toContain(
+      "the base dark theme's chosen row is the tightest at 1.05:1",
+    );
+    expect(read("../../../docs/design-system.md")).toContain(
+      "the base dark theme's chosen row is the tightest at 1.05:1",
+    );
   });
 
   it("reports a scrollbar thumb that matches the strip it moves along", () => {
@@ -1094,7 +1225,10 @@ describe("decorative surfaces", () => {
     //
     // Measuring every level also shows *why* the deepest level is not enough: at
     // `sm` the card's weaker lift cannot clear the selected/accent washes or the
-    // lighter message tints either, so seven cells fail where `lg` has three.
+    // lighter message tints either, so seven cells fail where `lg` has four. The
+    // chosen row joins the list because its fill moved a step to answer the
+    // pointer (see the state-wash suite), which brought it inside this tint's
+    // reach at every level.
     const before = extendTheme(highContrastDarkTheme, {
       colors: { shadow: "#2E2E2EB3" },
     });
@@ -1104,7 +1238,7 @@ describe("decorative surfaces", () => {
         .filter((failure) => failure.level === level)
         .map(({ over }) => over);
 
-    expect(failures).toHaveLength(13);
+    expect(failures).toHaveLength(15);
     expect(byLevel("sm")).toEqual([
       "secondary",
       "selected",
@@ -1114,8 +1248,18 @@ describe("decorative surfaces", () => {
       "successSoft",
       "destructiveSoft",
     ]);
-    expect(byLevel("md")).toEqual(["secondary", "hover", "destructiveSoft"]);
-    expect(byLevel("lg")).toEqual(["secondary", "hover", "destructiveSoft"]);
+    expect(byLevel("md")).toEqual([
+      "secondary",
+      "selected",
+      "hover",
+      "destructiveSoft",
+    ]);
+    expect(byLevel("lg")).toEqual([
+      "secondary",
+      "selected",
+      "hover",
+      "destructiveSoft",
+    ]);
     expect(
       failures
         .filter(({ over }) => over === "secondary" || over === "hover")

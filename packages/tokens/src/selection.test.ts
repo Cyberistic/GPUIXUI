@@ -475,11 +475,11 @@ describe("the tones the wash is painted on", () => {
     // floor it now carries is what the wash costs it on its own fill.
     expect(under.length).toBe(39);
     expect(tightest.pair).toBe("mutedForeground on selected");
-    expect(tightest.theme).toBe("Dark · Windows XP (Luna)");
-    expect(tightest.washed).toBeCloseTo(3.78, 2);
+    expect(tightest.theme).toBe("Light · Windows XP (Luna)");
+    expect(tightest.washed).toBeCloseTo(3.68, 2);
     expect(tightestBody.pair).toBe("selectedForeground on selected");
     expect(tightestBody.theme).toBe("Dark");
-    expect(tightestBody.washed).toBeCloseTo(5.33, 2);
+    expect(tightestBody.washed).toBeCloseTo(5.11, 2);
   });
 
   it("states the scope and the numbers on every surface", () => {
@@ -492,8 +492,8 @@ describe("the tones the wash is painted on", () => {
     const printed = `${under.length} of the ${placements.length} placements`;
 
     expect(catalogue).toContain(printed);
-    expect(catalogue).toContain("3.78");
-    expect(catalogue).toContain("5.33");
+    expect(catalogue).toContain("3.68");
+    expect(catalogue).toContain("5.11");
     expect(catalogue).toContain("saturated");
     expect(design).toContain("saturated");
     expect(design).toContain("content tone");

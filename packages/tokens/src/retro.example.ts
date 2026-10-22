@@ -36,7 +36,9 @@ export const resolveRetroBrand = (mode: ThemeMode): Theme =>
       ring: mode === "dark" ? "#4FA9E0" : "#0F7BB8",
       accent: mode === "dark" ? "#163A4E" : "#BFE1F9",
       accentForeground: mode === "dark" ? "#BFE2F5" : "#0A3A56",
-      selected: mode === "dark" ? "#1B445C" : "#BEE0F5",
+      // A chosen row is repainted `accent` under the pointer: the light
+      // selection is a step deeper than the hover so the click is visible.
+      selected: mode === "dark" ? "#1B445C" : "#B4D9F1",
       selectedForeground: mode === "dark" ? "#CDECFF" : "#0A3550",
       selection: mode === "dark" ? "#0F7BB84D" : "#0F7BB83D",
     },

@@ -161,7 +161,7 @@ describe("a mark on the row a reader chose", () => {
         ratio === undefined ? "unmeasurable" : ratio.toFixed(2),
       );
 
-    expect(marked).toEqual(["2.99"]);
+    expect(marked).toEqual(["2.82"]);
     expect(indicatorFailures(retroTheme(themes.light, "luna"))).toEqual([]);
   });
 
