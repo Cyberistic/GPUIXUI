@@ -24,9 +24,11 @@ import {
   FADE_BACKING_RGBA,
   FADE_DURATION_MS,
   FADE_LEVEL,
+  FADE_PARTIAL_MS,
+  FADE_REST_MS,
   FADE_SAMPLE_INSET,
-  fadeRead,
   fadeSample,
+  isBacking,
   isFading,
   isSurface,
   surfaceFadeColour,
@@ -75,14 +77,16 @@ describe("the surface-fade fixture", () => {
     );
   });
 
-  it("reads the partial frame before the level ends and the settled one after", () => {
-    const partial = fadeRead("partial");
-    const settled = fadeRead("settled");
-    expect(partial.atMs + partial.tolerance).toBeLessThan(FADE_DURATION_MS);
-    expect(settled.atMs - settled.tolerance).toBeGreaterThanOrEqual(
-      FADE_DURATION_MS,
+  it("advances the frozen clock into the level for the partial frame and past it for the rest", () => {
+    expect(FADE_PARTIAL_MS).toBeGreaterThan(0);
+    expect(FADE_PARTIAL_MS).toBeLessThan(FADE_DURATION_MS);
+    expect(FADE_REST_MS).toBeGreaterThan(FADE_DURATION_MS);
+    expect(FADE_REST_MS).toBeGreaterThan(FADE_PARTIAL_MS);
+    // A third in leaves most of the fade ahead of the read, so a fade that is
+    // skipped shows as the surface and one that lasts longer stays mixed.
+    expect(FADE_PARTIAL_MS * 2).toBeLessThan(
+      FADE_DURATION_MS + FADE_PARTIAL_MS,
     );
-    expect(settled.atMs).toBeGreaterThan(partial.atMs);
   });
 
   it("samples inside the surface's own box, clear of its left edge", () => {
@@ -133,6 +137,11 @@ describe("the surface-fade fixture", () => {
     expect(isSurface(colour(), surface)).toBe(true);
     expect(isSurface(colour({ b: surface.b + 1 }), surface)).toBe(false);
     expect(isSurface(colour({ a: 254 }), surface)).toBe(false);
+  });
+
+  it("reads the unpainted page as the backing, not as the surface", () => {
+    expect(isBacking(FADE_BACKING_RGBA, FADE_BACKING_RGBA)).toBe(true);
+    expect(isBacking(surface, FADE_BACKING_RGBA)).toBe(false);
   });
 
   it("keeps the page a colour the palette's surface cannot be mistaken for", () => {

@@ -70,6 +70,14 @@ it, and a probe counts exact colours with `Pixels.countColour`. The inflate
 function is injected by the runner, so this package still imports no platform
 or GPUix module.
 
+A tween is measured on the **motion clock**, not on wall time: a paint on a
+software renderer can block longer than the tween, so "capture at 107 ms" races
+the frame it names. The optional `clockPause`/`clockFastForward`/`clockResume`
+verbs freeze the clock the renderer computes motion states from, advance it by an
+exact offset and hand the frame back to live time — the same reading every run.
+They are optional because only a window has one; the offscreen renderer exposes
+a clock too, but no scenario has needed to drive it.
+
 Keys are two verbs on purpose. `key(keystroke)` presses through the automation
 protocol, which a window delivers as a **key down only** (measured: a probe
 listening on `onKeyDown`/`onKeyUp` saw `space` arrive once, as a press). A

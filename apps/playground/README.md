@@ -1202,33 +1202,42 @@ the shipped `Dialog` opens over a page the probe fills white, and every reading
 is the pixel at one point inside the content's own left padding, where nothing
 but the surface paints.
 
+The reading is taken on the renderer's **motion clock**, not on wall time. A
+software renderer can block a paint longer than the 320 ms tween (measured: a
+first paint of the dialog held the JS thread ~1 s), so "capture 107 ms after the
+press" raced the frame it named — the wall-clock probe passed on a warm run and
+read a resting surface on a cold one. The automation surface exposes the clock
+the motion states are computed from, so the probe freezes it before the press,
+advances it by an exact offset and captures the frame at that progress; the paint
+can take as long as it likes, the progress cannot drift.
+
 | Step | Check |
 | ---- | ----- |
 | mount | the palette resolves the surface colour, and a closed dialog paints no bounds |
-| press the trigger | the readout reaches `opens=1` before any pixel is read |
-| read at 107 ms past the press (a third of the 320 ms level) | the read landed inside the level (`107 ± 80`), and the pixel is a **mix** of the surface and the page: `rgba(163, 164, 165, 255)` on one run, `rgba(195, 196, 197, 255)` on another — the frame the fade produced, not a cut |
-| read past the level (`460 ± 140`) | the read landed after the level, and the pixel is the surface's own colour exactly: `rgba(34, 39, 48, 255)` = `#222730`, the dark palette's `popover` |
-| press the reduce control, `Escape` | the surface unpaints and the readout reads `preference=reduced` |
-| read at the same 107 ms past the second press | the pixel is **already** the surface's own colour — the journey is removed, not the resting frame |
-| read past the level again | still exactly the surface colour; `opens=2 closes=1` |
+| freeze the clock, press the trigger | the readout reaches `opens=1`, the content paints a box, and the first frame is the **page** (`rgba(255, 255, 255, 255)`) — the mount is at opacity 0 and the clock cannot move it |
+| advance to 107 ms (a third of the level) | the clock reports exactly `+107`, and the pixel is a **mix** of the surface and the page: `rgba(141, 142, 145, 255)` — the frame the fade produced, not a cut |
+| advance to 400 ms (past the level) | the pixel is the surface's own colour exactly: `rgba(34, 39, 48, 255)` = `#222730`, the dark palette's `popover` |
+| resume, press the reduce control, `Escape` | the surface unpaints and the readout reads `preference=reduced` |
+| freeze again, open again | the pixel is **already** the surface's own colour under the same frozen clock — the journey is removed, not the resting frame; `opens=2 closes=1` |
 
-24 checks. The two read windows are asserted, not assumed: the partial read's
-window ends before the level does and the settled read's starts after it, so a
-capture that is early measures the tween and one that is late measures a resting
-surface — both fail by name rather than passing quietly. The fixture's own suite
-(`src/live/fade.test.ts`, 7 cases) holds the duration to `motionLevels.slow`, the
-level to the dialog's `useSurfaceTiming("slow")`, both read windows to the level
-in both directions, and the partial-frame predicate to the page and the surface.
+23 checks. The frozen clock is also what makes the reduced half a real control:
+an animated surface under the same frozen clock stays at opacity 0, so a
+preference the runtime ignored could never paint the surface there. The fixture's
+own suite (`src/live/fade.test.ts`, 8 cases) holds the duration to
+`motionLevels.slow`, the level to the dialog's `useSurfaceTiming("slow")`, both
+clock offsets to the level in both directions, and the partial-frame predicate to
+the page and the surface.
 
 Negative control, measured: rendering the surface under `MotionProvider
-preference="reduced"` for the first phase fails `partway through its level the
-surface is a mix of surface and page` (`expected true, got false`, exit `1`).
-Captures: `.artifacts/live/fade-{partial,settled,reduced-partial,reduced-settled}.png`.
+preference="reduced"` for the first phase fails `a frozen mount paints the page,
+not the surface` (`expected true, got false`, exit `1`) — the frozen frame is the
+resting one, which is exactly the difference the preference makes.
+Captures: `.artifacts/live/fade-{frozen,partial,settled,reduced}.png`.
 
 The probe also paid for a decoder fix: one 1800×1040 capture took **4.2 s** to
 decode because the PNG filter was dispatched per byte. Resolving it once per row
 (`packages/testing/src/pixels.ts`) takes the same frame in **254 ms**, and the
-five-capture probe from 24 s to 5 s. `pixels.test.ts` gained the three filters
+capture-bound probe from 24 s to 6 s. `pixels.test.ts` gained the three filters
 that had no decoded-byte case (Up, Average, Paeth) and the unknown-filter
 rejection; swapping Average and Paeth in the table fails both cases by name.
 

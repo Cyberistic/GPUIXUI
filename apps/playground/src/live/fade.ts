@@ -9,15 +9,19 @@
  * over it; the sampled point sits inside the content surface's own padding,
  * where nothing but the surface paints.
  *
- * Three readings bracket the claim instead of timing one frame:
+ * Reading that frame against **wall time** does not work: a paint on a software
+ * renderer can block longer than the 320 ms tween, so a "read at 107 ms" races
+ * the frame it names. The renderer's automation surface exposes the clock the
+ * motion states are computed from, so the probe freezes it, advances it by an
+ * exact number of milliseconds and captures the frame at that progress:
  *
- * - partway through the level the pixel is a **mix** of the surface and the page
+ * - at a third of the level the pixel is a **mix** of the surface and the page
  *   behind it, so the fade is painted rather than skipped;
  * - past the level the pixel is the surface's **own colour**, so the fade ends
  *   where the seam says it does;
- * - under a reduced preference partway through the level the pixel is already
- *   the surface's own colour, so the journey, not the resting frame, is what
- *   the timing removes.
+ * - under a reduced preference the same frozen clock already paints the
+ *   surface's own colour, so the journey, not the resting frame, is what the
+ *   timing removes.
  *
  * A fade that is too short fails the first, one that runs long fails the second,
  * and a preference that is ignored fails the third.
@@ -39,20 +43,17 @@ export const FADE_LEVEL = "slow";
  */
 export const FADE_DURATION_MS = 320;
 
-/** When the fade is read for a partial frame: a third of the way through. */
+/** How far the frozen clock is advanced for the partial frame: a third in. */
 export const FADE_PARTIAL_MS = Math.round(FADE_DURATION_MS / 3);
 
-/** The slack a capture is allowed past its target before the read is late. */
-export const FADE_CAPTURE_SLACK_MS = 80;
-
 /**
- * How far past the level the settled read happens.
+ * How far the frozen clock is advanced for the resting frame: past the level.
  *
- * Two frames and one capture: the tween's last frame is scheduled for the
- * level's own duration, so a read exactly at it can still see the frame before
- * the resting one.
+ * The tween's last frame is scheduled for the level's own duration, so a read
+ * at exactly it can still carry the frame before the resting one; the extra
+ * frame clears it.
  */
-export const FADE_SETTLE_MARGIN_MS = 140;
+export const FADE_REST_MS = FADE_DURATION_MS + 80;
 
 /** The page the probe paints behind the surface: no theme role, so no drift. */
 export const FADE_BACKING = "#FFFFFF";
@@ -69,9 +70,9 @@ export const FADE_BACKING_RGBA = new Pixels.Rgba({
  * How far inside the surface's left edge the point sits.
  *
  * The content recipe's padding is 24px, so 12px is inside the surface's own
- * paint at every height, clear of the ring at the edge and of any child.
- * `fade.test.ts` reads the compiled recipe and fails when the padding drops to
- * this inset.
+ * paint at every height, clear of the ring at the edge and of any child. The
+ * settled-frame check would fail on a child's colour if this stopped being true,
+ * and `fade.test.ts` holds the point inside the box it is given.
  */
 export const FADE_SAMPLE_INSET = 12;
 
@@ -131,27 +132,6 @@ export const isSurface = (sample: Pixels.Rgba, surface: Pixels.Rgba): boolean =>
   sample.b === surface.b &&
   sample.a === surface.a;
 
-/** When a reading of the fade is taken, as a window past the press. */
-export interface FadeRead {
-  /** The millisecond the read is due at. */
-  readonly atMs: number;
-  /** How early or late the read may be and still be inside its window. */
-  readonly tolerance: number;
-}
-
-/**
- * When each reading of the fade happens.
- *
- * The partial read's window ends before the level does, or it would measure a
- * resting surface; the settled read's window starts at the level, or it would
- * measure the tween. `fade.test.ts` holds both windows to the level in both
- * directions, so a capture that is early or late is a failed check rather than
- * an empty measurement.
- */
-export const fadeRead = (kind: "partial" | "settled"): FadeRead =>
-  kind === "partial"
-    ? { atMs: FADE_PARTIAL_MS, tolerance: FADE_CAPTURE_SLACK_MS }
-    : {
-        atMs: FADE_DURATION_MS + FADE_SETTLE_MARGIN_MS,
-        tolerance: FADE_SETTLE_MARGIN_MS,
-      };
+/** Whether a sampled pixel is the unpainted page, alpha included. */
+export const isBacking = (sample: Pixels.Rgba, backing: Pixels.Rgba): boolean =>
+  isSurface(sample, backing);

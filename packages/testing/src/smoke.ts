@@ -549,6 +549,23 @@ export interface AsyncSmokeHost {
    * evidence; every colour a probe claims to see must be read from it.
    */
   readonly pixels: (name: string) => Effect.Effect<Pixels, SmokeHostError>;
+  /**
+   * Freezes the renderer's motion clock and answers the frozen instant.
+   *
+   * A hosted surface whose whole claim is a tween cannot be measured against
+   * wall time: a paint on a software renderer can block longer than the tween,
+   * so a "read at 107 ms" races the frame it names. The renderer's automation
+   * surface exposes the clock the motion states are computed from, so a probe
+   * can freeze it, advance it by an exact number of milliseconds and capture the
+   * frame at that progress. Optional because only a window has one.
+   */
+  readonly clockPause?: () => Effect.Effect<number, SmokeHostError>;
+  /** Advances a frozen motion clock by `deltaMs`; see {@link clockPause}. */
+  readonly clockFastForward?: (
+    deltaMs: number,
+  ) => Effect.Effect<number, SmokeHostError>;
+  /** Returns the motion clock to live time; see {@link clockPause}. */
+  readonly clockResume?: () => Effect.Effect<number, SmokeHostError>;
 }
 
 /** What a live-window probe is handed to act on and to assert against. */

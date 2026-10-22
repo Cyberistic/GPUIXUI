@@ -337,5 +337,24 @@ export const createLiveHost = ({
         }
         return frame;
       }),
+    clockPause: () =>
+      call("clockPause", () => app.clock.pause()).pipe(
+        Effect.mapError(
+          (cause) => new Smoke.SmokeHostError({ verb: "clockPause", cause }),
+        ),
+      ),
+    clockFastForward: (deltaMs) =>
+      call("clockFastForward", () => app.clock.fastForward(deltaMs)).pipe(
+        Effect.mapError(
+          (cause) =>
+            new Smoke.SmokeHostError({ verb: "clockFastForward", cause }),
+        ),
+      ),
+    clockResume: () =>
+      call("clockResume", () => app.clock.resume()).pipe(
+        Effect.mapError(
+          (cause) => new Smoke.SmokeHostError({ verb: "clockResume", cause }),
+        ),
+      ),
   };
 };

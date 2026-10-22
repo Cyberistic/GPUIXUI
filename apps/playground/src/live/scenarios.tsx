@@ -15,7 +15,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Clock, Duration, Effect, Match, pipe } from "effect";
+import { Duration, Effect, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
@@ -180,14 +180,14 @@ import { captureScale, describeColour, framePoint } from "./frame.js";
 import {
   FADE_BACKING,
   FADE_BACKING_RGBA,
-  FADE_CAPTURE_SLACK_MS,
-  fadeRead,
+  FADE_PARTIAL_MS,
+  FADE_REST_MS,
   fadeSample,
+  isBacking,
   isFading,
   isSurface,
   surfaceFadeColour,
   type FadeBox,
-  type FadeRead,
 } from "./fade.js";
 import { moveRow, rowAt, type RowHandle } from "./reorder.js";
 import { settleNumber, settleUntil } from "./settle.js";
@@ -4768,10 +4768,16 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
  *
  * The seam is a `motion` description, and no window exposes one, so the surface
  * is measured where it paints: a point inside the content's own padding, over a
- * page the probe fills white. Partway through the level the pixel is a mix of
- * the surface and the page; past it the pixel is the surface's own colour.
- * Swapping the preference then repeats the reading with the journey removed, so
- * the resting frame is proved to survive the shorter timing.
+ * page the probe fills white. The reading is taken on the renderer's **motion
+ * clock** rather than on wall time — a software renderer can block a paint
+ * longer than the tween, and a read "at 107 ms" would then name a frame the
+ * renderer had not produced. Freeze, advance by an exact offset, let the frame
+ * paint, capture: the same read is repeatable.
+ *
+ * Partway through the level the pixel is a mix of the surface and the page; past
+ * it the pixel is the surface's own colour. The frozen clock then repeats the
+ * reading under a reduced preference, where the resting frame paints with no
+ * journey at all — so the timing, not the paint, is what the preference removes.
  */
 const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
@@ -4779,6 +4785,18 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const surface = yield* ctx.expectSome(
       "the palette names the surface colour",
       surfaceFadeColour(palettes.dark.colors.popover),
+    );
+    const pauseClock = yield* ctx.expectSome(
+      "the window exposes a motion clock",
+      Option.fromNullishOr(ctx.host.clockPause),
+    );
+    const fastForward = yield* ctx.expectSome(
+      "the clock can be advanced",
+      Option.fromNullishOr(ctx.host.clockFastForward),
+    );
+    const resumeClock = yield* ctx.expectSome(
+      "the clock can be resumed",
+      Option.fromNullishOr(ctx.host.clockResume),
     );
     yield* ctx.expectEqual(
       "a closed dialog paints no surface",
@@ -4788,8 +4806,8 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    /** The box the surface rests in; the sample point is computed from it. */
-    const restBox = (): Effect.Effect<
+    /** The surface's painted box right now; frozen time keeps it the sampled frame's. */
+    const currentBox = (): Effect.Effect<
       FadeBox,
       Smoke.SmokeAssertionError | Smoke.SmokeHostError
     > =>
@@ -4803,50 +4821,41 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     /**
      * The colour at the sample point of a capture.
      *
-     * The device scale is read from the frame itself: a capture that is not the
+     * The device scale is read from a frame once: a capture that is not the
      * window's box cannot be sampled at a logical point, and saying so is better
      * than reading a pixel from another part of the window.
      */
-    const sampleOf = (
-      name: string,
+    const sampleIn = (
+      frame: Pixels.Pixels,
       box: FadeBox,
+      scale: number,
+    ): Option.Option<Pixels.Rgba> => {
+      const point = framePoint(fadeSample(box), scale);
+      return Option.fromNullishOr(Pixels.pixelAt(frame, point.x, point.y));
+    };
+
+    /** Captures `name` and samples it, once the paint has caught up with the clock. */
+    const captureSample = (
+      name: string,
+      scale: number,
     ): Effect.Effect<
       Pixels.Rgba,
       Smoke.SmokeAssertionError | Smoke.SmokeHostError
     > =>
       Effect.gen(function* () {
-        const frame = yield* ctx.host.pixels(name);
-        const size = yield* ctx.host.windowSize();
-        const scale = yield* ctx.expectSome(
-          "the capture is the window at a whole device scale",
-          captureScale(frame, size),
-        );
-        const point = framePoint(fadeSample(box), scale);
+        yield* ctx.host.capture(name);
+        const box = yield* currentBox();
         return yield* ctx.expectSome(
           `the ${name} capture holds the sample point`,
-          Option.fromNullishOr(Pixels.pixelAt(frame, point.x, point.y)),
+          sampleIn(yield* ctx.host.pixels(name), box, scale),
         );
-      });
-
-    /** Sleeps until `read` is due past `pressedAt`, captures, and reports when. */
-    const captureAt = (
-      pressedAt: number,
-      read: FadeRead,
-      name: string,
-    ): Effect.Effect<number, Smoke.SmokeHostError> =>
-      Effect.gen(function* () {
-        const elapsed = (yield* Clock.currentTimeMillis) - pressedAt;
-        yield* elapsed < read.atMs
-          ? Effect.sleep(Duration.millis(read.atMs - elapsed))
-          : Effect.void;
-        const at = (yield* Clock.currentTimeMillis) - pressedAt;
-        yield* ctx.host.capture(name);
-        return at;
       });
 
     // ── Animated: the surface arrives on a painted fade ─────────────────────
+    // The clock is frozen before the press, so the mount's first frame is
+    // opacity 0 and stays there until the probe advances it.
+    const frozenAt = yield* pauseClock();
     yield* ctx.host.click("fade-trigger");
-    const opened = yield* Clock.currentTimeMillis;
     yield* ctx.expectContains(
       "the press opens the dialog",
       yield* settleUntil(ctx.host.text("fade-readout"), (value) =>
@@ -4854,44 +4863,56 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
       "opens=1 closes=0",
     );
-    const partialAt = yield* captureAt(
-      opened,
-      fadeRead("partial"),
-      "fade-partial",
+    yield* ctx.host.waitFor("fade-surface");
+    yield* ctx.host.capture("fade-frozen");
+    const frozen = yield* ctx.host.pixels("fade-frozen");
+    const size = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frozen, size),
     );
-    yield* ctx.expectNear(
-      "the partial read lands inside the level",
-      partialAt,
-      fadeRead("partial").atMs,
-      FADE_CAPTURE_SLACK_MS,
+    const frozenSample = yield* ctx.expectSome(
+      "the fade-frozen capture holds the sample point",
+      sampleIn(frozen, yield* currentBox(), scale),
     );
-    const settledAt = yield* captureAt(
-      opened,
-      fadeRead("settled"),
-      "fade-settled",
-    );
-    yield* ctx.expectNear(
-      "the settled read lands past the level",
-      settledAt,
-      fadeRead("settled").atMs,
-      fadeRead("settled").tolerance,
+    yield* ctx.expectEqual(
+      "a frozen mount paints the page, not the surface",
+      isBacking(frozenSample, FADE_BACKING_RGBA),
+      true,
     );
 
-    const box = yield* restBox();
-    const partial = yield* sampleOf("fade-partial", box);
-    const settled = yield* sampleOf("fade-settled", box);
+    const partialAt = yield* fastForward(FADE_PARTIAL_MS);
+    yield* ctx.expectEqual(
+      "the clock advances by the partial offset",
+      Math.round(partialAt - frozenAt),
+      FADE_PARTIAL_MS,
+    );
+    const partial = yield* settleUntil(
+      captureSample("fade-partial", scale),
+      (sample) => isFading(sample, FADE_BACKING_RGBA, surface),
+    );
     yield* ctx.expectEqual(
       "partway through its level the surface is a mix of surface and page",
       isFading(partial, FADE_BACKING_RGBA, surface),
       true,
+    );
+
+    yield* fastForward(FADE_REST_MS - FADE_PARTIAL_MS);
+    const settled = yield* settleUntil(
+      captureSample("fade-settled", scale),
+      (sample) => isSurface(sample, surface),
     );
     yield* ctx.expectEqual(
       "past its level the surface rests on its own colour",
       isSurface(settled, surface),
       true,
     );
+    yield* resumeClock();
 
     // ── Reduced: the journey is gone, the resting frame is not ──────────────
+    // Freezing the clock is what makes this a control: an animated surface
+    // under the same frozen clock stays at opacity 0, so a preference the
+    // runtime ignored could never paint the surface here.
     yield* ctx.host.key("escape");
     yield* ctx.expectEqual(
       "Escape unpaints the surface",
@@ -4906,42 +4927,23 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
       "preference=reduced",
     );
+    yield* pauseClock();
     yield* ctx.host.click("fade-trigger");
-    const reducedAt = yield* Clock.currentTimeMillis;
-    const reducedPartialAt = yield* captureAt(
-      reducedAt,
-      fadeRead("partial"),
-      "fade-reduced-partial",
+    yield* ctx.host.waitFor("fade-surface");
+    const reduced = yield* settleUntil(
+      captureSample("fade-reduced", scale),
+      (sample) => isSurface(sample, surface),
     );
-    yield* ctx.expectNear(
-      "the reduced read lands inside the level too",
-      reducedPartialAt,
-      fadeRead("partial").atMs,
-      FADE_CAPTURE_SLACK_MS,
-    );
-    yield* captureAt(reducedAt, fadeRead("settled"), "fade-reduced-settled");
-    const reducedBox = yield* restBox();
-    const reducedPartial = yield* sampleOf("fade-reduced-partial", reducedBox);
     yield* ctx.expectEqual(
-      "a reduced surface is already at rest partway through the level",
-      isSurface(reducedPartial, surface),
+      "a reduced surface paints at rest under the same frozen clock",
+      isSurface(reduced, surface),
       true,
     );
-    const reducedSettled = yield* sampleOf("fade-reduced-settled", reducedBox);
-    yield* ctx.expectEqual(
-      "a reduced surface still paints at its resting colour",
-      isSurface(reducedSettled, surface),
-      true,
-    );
+    yield* resumeClock();
     yield* ctx.expectContains(
       "both opens reached onOpenChange",
       yield* ctx.host.text("fade-readout"),
       "opens=2 closes=1",
-    );
-    yield* ctx.expectEqual(
-      "the reduced surface paints a box",
-      reducedBox.width > 0 && reducedBox.height > 0,
-      true,
     );
   });
 
