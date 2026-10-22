@@ -34,6 +34,7 @@ import {
   lightTheme,
   nativeTextTheme,
   statusTone,
+  syntaxColors,
   targetSize,
   textStyle,
   type BoxShadow,
@@ -41,6 +42,8 @@ import {
   type NativeTextFill,
   type PlatformName,
   type StatusTone,
+  type SyntaxColors,
+  type SyntaxRole,
   type TextRole,
   type Theme,
   type ThemeColors,
@@ -64,6 +67,7 @@ export {
   lightTheme,
   nativeTextTheme,
   statusTone,
+  syntaxColors,
   targetSize,
   textStyle,
 };
@@ -73,6 +77,8 @@ export type {
   NativeTextFill,
   PlatformName,
   StatusTone,
+  SyntaxColors,
+  SyntaxRole,
   TextRole,
   Theme,
 };

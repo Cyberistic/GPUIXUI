@@ -1,14 +1,12 @@
 /**
- * CodeBlock: source, terminal output or a log in the runtime's own code host.
+ * CodeBlock: source, terminal output or a log, highlighted by `@tanstack/highlight`.
  *
- * `<code>` is a native text host. It highlights the source from its own
- * tree-sitter grammar, numbers the rows, lays every line out at one height and
- * scrolls horizontally by itself, so this package does not re-implement any of
- * that. The host paints **no surface of its own** — no fill, border, radius,
- * padding or language header — so `CodeBlock` owns the card around it, and hands
- * the host the palette the token package maps (`nativeTextTheme`): the code ink,
- * the gutter's ink and the block's type scale are the roles the contrast
- * contract measures on the page fill the block paints.
+ * `@tanstack/highlight` is a pure tokenizer — no DOM, no HTML — so the block
+ * feeds it a source and a language id, maps each token class to the token
+ * package's syntax role and paints **one `<text>` run per token**, the only
+ * coloured-text primitive the runtime has. There is no `code` host behind
+ * this: the block owns the highlighting, the line numbers and the horizontal
+ * scroll, because the runtime paints text runs, not markup.
  *
  * The block arrives with the house entrance — a fade and a 4 px rise, the same
  * seam every overlay uses — because it is a block a reader meets on arrival. A
@@ -39,8 +37,9 @@ import {
   useSurfaceTiming,
 } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { nativeTextTheme, useTheme } from "./internal/theme.js";
+import { syntaxColors, textStyle, useTheme } from "./internal/theme.js";
 import { CopyButton } from "./copy-button.js";
+import { codeLines } from "./code-block/tokenize.js";
 import {
   codeBlockDescription,
   codeBlockHeader,
@@ -57,7 +56,7 @@ const CODE_BLOCK_HEADER =
   "flex flex-row items-center justify-between gap-2 px-3 py-1.5";
 /** Header chrome: the file name and the language label share one small mono role. */
 const CODE_BLOCK_LABEL = "text-xs font-mono text-muted-foreground";
-/** The body's padding; the code host paints none of its own. */
+/** The body's padding; the runs paint inside it. */
 const CODE_BLOCK_BODY = "px-3 py-2";
 /** The placeholder an empty source paints instead of a bare surface. */
 const CODE_BLOCK_EMPTY = "text-sm font-mono text-muted-foreground";
@@ -66,6 +65,9 @@ const CODE_BLOCK_RULE = "h-px bg-border";
 
 /** How far the block rises as it arrives, in pixels. */
 const CODE_BLOCK_RISE = 4;
+
+/** A monospace digit's advance as a share of the code type size. */
+const MONO_DIGIT = 0.6;
 
 /** What a code block paints at one frame. */
 export interface CodeBlockState {
@@ -76,7 +78,7 @@ export interface CodeBlockState {
 
 /** {@link CodeBlock} props. */
 export interface CodeBlockProps extends Omit<Props, "children" | "style"> {
-  /** The source to show. Lines are split, numbered and highlighted by the host. */
+  /** The source to show. Tokenized into runs and split into lines here. */
   readonly code: string;
   /** The header's title. Defaults to `path`; a block with neither paints no title. */
   readonly title?: string;
@@ -84,10 +86,10 @@ export interface CodeBlockProps extends Omit<Props, "children" | "style"> {
   readonly path?: string;
   /**
    * The language alias (`"tsx"`, `"rust"`, `"bash"`). Defaults to the path's
-   * extension when the host is known to highlight it.
+   * extension when the tokenizer knows it; anything else paints plain text.
    */
   readonly language?: string;
-  /** Number every row from 1 in the gutter. Default `false`. */
+  /** Number every row from 1 in a gutter the block paints. Default `false`. */
   readonly lineNumbers?: boolean;
   /**
    * Cap the block's height in pixels, scrolling the rows vertically. Omit it and
@@ -120,10 +122,10 @@ export interface CodeBlockProps extends Omit<Props, "children" | "style"> {
  * A syntax-highlighted code block with a header, an optional gutter and a copy
  * action.
  *
- * The block is one part: a surface, a header and the runtime's code host. It
+ * The block is one part: a surface, a header and a column of text-run rows. It
  * publishes a `group` named by its title (or "Code") and described by its line
- * count, because the host paints its own text and exposes no accessible node of
- * its own.
+ * count, because the runs are presentational — a reader cannot read the code
+ * itself, only how much of it there is.
  */
 export const CodeBlock = ({
   code,
@@ -166,6 +168,18 @@ export const CodeBlock = ({
     Option.isSome(header.title) ||
     Option.isSome(header.language) ||
     onCopy !== undefined;
+
+  // The palette and the type scale the runs paint in, and the rows themselves.
+  const syntax = syntaxColors(theme);
+  const metrics = textStyle(theme, "codeBlock");
+  const lines = codeLines(
+    code,
+    Option.getOrElse(header.language, () => ""),
+  );
+  const gutterWidth =
+    Math.ceil(
+      String(Math.max(1, lines.length)).length * metrics.fontSize * MONO_DIGIT,
+    ) + theme.spacing.sm;
 
   return (
     <div
@@ -243,23 +257,66 @@ export const CodeBlock = ({
       <div style={recipeStyle(CODE_BLOCK_BODY, theme)}>
         {content ? (
           <div
-            style={
+            style={mergeStyles(
+              { overflowX: "auto" },
               capped === undefined
-                ? {}
-                : { height: capped, overflowY: "scroll" }
-            }
+                ? undefined
+                : { height: capped, overflowY: "scroll" },
+            )}
           >
-            <code
+            <div
               testId={`${base}-source`}
-              code={code}
-              language={Option.getOrUndefined(header.language)}
-              path={Option.getOrUndefined(header.title)}
-              showLineNumbers={lineNumbers}
-              // The page fill is what the block paints, so the host's ink, gutter
-              // and type scale are the pairs the contrast contract measures there.
-              theme={nativeTextTheme(theme, "background")}
-              style={{ width: "100%" }}
-            />
+              style={{ display: "flex", flexDirection: "column" }}
+            >
+              {lines.map((line, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    minHeight: metrics.lineHeight,
+                  }}
+                >
+                  {lineNumbers ? (
+                    <div
+                      style={{
+                        width: gutterWidth,
+                        flexShrink: 0,
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "flex-end",
+                        paddingRight: theme.spacing.sm,
+                      }}
+                    >
+                      <text
+                        role="presentation"
+                        style={{ ...metrics, color: theme.colors.placeholder }}
+                      >
+                        {String(index + 1)}
+                      </text>
+                    </div>
+                  ) : null}
+                  <div style={{ display: "flex", flexDirection: "row" }}>
+                    {line.map((run, runIndex) => (
+                      <text
+                        key={runIndex}
+                        role="presentation"
+                        style={{
+                          ...metrics,
+                          color:
+                            run.role === undefined
+                              ? theme.colors.foreground
+                              : syntax[run.role],
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {run.text}
+                      </text>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <text
@@ -281,9 +338,10 @@ export const codeBlockMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "the source is painted by the runtime's `<code>` host, whose text publishes no accessible node: a reader gets the block's name and line count, not the code",
-    "syntax colours are the theme's palette — nativeTextTheme hands the host syntaxColors(theme), held structurally by the tokens' syntax.test.ts — while the runtime's tokenizer decides which run is a token; a brand owns the palette by carrying `syntax`, which replaces the table whole, and a window's highlighted pixels are still owed",
-    "no per-line highlight, wrap toggle or diff markers through the host's API — a diff goes to the runtime's `<diff>` host",
+    "the code text is painted as presentational runs, so a reader gets the block's name and line count, not the code",
+    "the tokenizer is `@tanstack/highlight`, whose grammar decides which run is a token; the token package's `syntaxColors(theme)` decides the colour — a brand owns the palette by carrying `syntax`, which replaces the table whole",
+    "a language the tokenizer does not ship (`@tanstack/highlight` has no `c` grammar, for example) paints plain text, and the gutter width is the block's own estimate, not the runtime's metrics",
+    "no per-line highlight, wrap toggle or diff markers — a diff goes to the runtime's `<diff>` host",
     "no clipboard write exists in 0.11.0, so the copy action calls the caller's `onCopy` and acknowledges the press, not a finished write",
     "a capped block scrolls by wheel and scrollbar only; it is not a keyboard scroll region",
   ],
