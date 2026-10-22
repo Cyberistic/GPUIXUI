@@ -7065,11 +7065,15 @@ fails the case by name; restored, the file is 44/44 and
       The bullet now names that composition and what `ScrollArea` is instead
       (the frame around content that is already mounted).
       `src/docs.test.ts` gains `names only package paths that exist`: every
-      `packages/<name>` any primitives page cites must be a real workspace
-      directory, and the page's limitations must point at `VirtualList` /
-      `@gpuixui/data`. Directions measured: restoring the dead bullet fails by
-      name (`scroll-area.mdx: names packages/data-grid, which does not exist`),
-      and with the fix the file is 31/31.
+      workspace path any file in the two packages names must be a real
+      directory (the walk covers docs, source, runtime suites, examples and both
+      READMEs, not only the page that had drifted), and the page's limitations
+      must point at `VirtualList` / `@gpuixui/data`. Directions measured:
+      restoring the dead bullet fails by name
+      (`scroll-area.mdx: names packages/data-grid, which does not exist`), a
+      dead path planted in `core/scroll.ts`'s comment is reported as
+      `packages/primitives/src/core/scroll.ts: names packages/nope, which does
+      not exist`, and with both restored the file is 31/31.
 
 ## Swarm-owned blockers (fix these)
 
