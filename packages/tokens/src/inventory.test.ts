@@ -156,6 +156,30 @@ describe("design-system inventory", () => {
 
     expect(unproven).toEqual([]);
   });
+
+  it("cannot name a landed target size as remaining", () => {
+    // The bug this guards: the Target sizes row kept saying `Rating`'s padded
+    // star box was remaining after `ratingStarClass` adopted `min-target`, so a
+    // reader was sent to work that had already shipped. One direction reads the
+    // row, the other reads the recipe the row describes.
+    const targetSizes = rows.find((row) => row.capability === "Target sizes");
+    const recipe = readFileSync(
+      new URL("../../primitives/src/recipe/index.ts", import.meta.url),
+      "utf8",
+    );
+    const star = recipe.slice(
+      recipe.indexOf("export const ratingStarClass"),
+      recipe.indexOf("export const ratingGroupClass"),
+    );
+
+    const remaining = targetSizes?.notes.split("Remaining:").at(1) ?? "";
+    const starBox = star
+      .split("\n")
+      .find((line) => line.includes('"flex items-center'));
+
+    expect(remaining).not.toContain("Rating");
+    expect(starBox).toContain("min-target");
+  });
 });
 
 describe("citation resolution", () => {

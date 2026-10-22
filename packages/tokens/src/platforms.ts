@@ -92,8 +92,11 @@ export interface PlatformStyle extends PlatformType {
  * base fill, and the dark popovers sit 1.039–1.049:1 from it. The `linux` and
  * `win32` dark sets carry a 24% `selection` — the base dark theme's share —
  * rather than 30%, because a stronger wash over their lighter cards left the
- * text it selects at 6.6:1, under the body floor (`selection.ts`). A role a set
- * omits keeps the base theme's value.
+ * text it selects at 6.6:1, under the body floor (`selection.ts`). Windows light
+ * also deepens the destructive status text to red 900: its pressed wash is
+ * darker than the base theme's, and the shared red 800 label measured 6.93:1 on
+ * a pressed destructive row, under the body floor. A role a set omits keeps the
+ * base theme's value.
  */
 export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
   darwin: {
@@ -224,6 +227,10 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         accentForeground: "#003E6F",
         selected: "#CCE4F7",
         selectedForeground: "#093A5C",
+        // The pressed wash is darker here than the base theme's, so the shared
+        // red 800 label landed at 6.93:1 on a pressed destructive row. The
+        // deeper 900 keeps the row readable without flattening hover into press.
+        destructiveSoftForeground: "#5C1619",
         selection: "#0067C03D",
       },
       dark: {

@@ -19,7 +19,9 @@
  * `selection` is a 24% tint, not the 30% Aero can carry: its lighter card left
  * the selected text under the body floor (`selection.ts`). Both modes carry
  * their own `secondary` — the face a tonal action rests on — because each look's
- * muted strip and window sit at their own lightness (`decorative.ts`).
+ * muted strip and window sit at their own lightness (`decorative.ts`). Luna light
+ * also deepens the destructive status text to red 900, because its warm pressed
+ * wash left a destructive row at 6.77:1, under the body floor.
  */
 
 import type { ThemeColors } from "./color.js";
@@ -67,6 +69,9 @@ const lunaColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     accentForeground: "#123A66",
     selected: "#BDD4F0",
     selectedForeground: "#0E2F57",
+    // Luna's pressed wash is warm and dark, so the shared red 800 label landed
+    // at 6.77:1 on a pressed destructive row; red 900 keeps it readable there.
+    destructiveSoftForeground: "#5C1619",
     selection: "#316AC53D",
     placeholder: "#5C6470",
     disabled: "#E4E0CE",

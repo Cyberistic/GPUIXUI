@@ -195,6 +195,143 @@ describe("text on the state washes", () => {
 });
 
 /**
+ * Guards the roles a *floating* row keeps while a wash is painted under it.
+ * The wash suite above measured the page-level roles (`foreground`,
+ * `mutedForeground`); a menu or combobox row on a popover keeps the surface's
+ * own role instead — `popoverForeground` — and a destructive row paints the
+ * tone's readable role, so neither was measured on `hover` or `active` even
+ * though `menuRowStyle` paints both under the row. The pair found two shipped
+ * misses: Windows light at 6.93:1 and Luna light at 6.77:1 on the pressed wash,
+ * both under the body floor.
+ */
+describe("the resting role of a floating row on the wash it tints", () => {
+  const roles = ["popoverForeground", "destructiveSoftForeground"] as const;
+
+  it("measures both floating-row roles on both washes", () => {
+    const missing = ["hover", "active"].flatMap((background) =>
+      roles
+        .filter(
+          (foreground) =>
+            !contrastPairs.some(
+              (pair) =>
+                pair.foreground === foreground &&
+                pair.background === background &&
+                pair.floor === "body",
+            ),
+        )
+        .map((foreground) => `${foreground}/${background}`),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the roles the menu painters actually use", () => {
+    // The pair only means something if a row still rests in those roles. The
+    // recipe supplies the surface text role and `menuRowStyle` paints the two
+    // washes and the destructive tone, so both files are read rather than
+    // assumed.
+    const recipes = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+    const menuRow = readFileSync(
+      new URL("../../components/src/menu/item.tsx", import.meta.url),
+      "utf8",
+    );
+    const menuItem = recipes.slice(
+      recipes.indexOf("export const MENU_ITEM ="),
+      recipes.indexOf("export const MENU_LABEL ="),
+    );
+    const row = menuRow.slice(menuRow.indexOf("export const menuRowStyle"));
+
+    expect(menuItem).toContain("text-popover-foreground");
+    expect(row).toContain("{ backgroundColor: theme.colors.hover }");
+    expect(row).toContain("{ backgroundColor: theme.colors.active }");
+    expect(row).toContain('statusTone(theme, "destructive").foreground');
+  });
+
+  it("reports the pressed wash the two light looks shipped before this pair", () => {
+    // Rebuilt from the base red 800 so the numbers are the ones the palettes
+    // shipped, not the red 900 both looks now carry.
+    const before = (theme: { readonly colors: typeof lightColors }) => ({
+      colors: {
+        ...theme.colors,
+        destructiveSoftForeground: lightColors.destructiveSoftForeground,
+      },
+    });
+    const pressed = (theme: { readonly colors: typeof lightColors }) =>
+      contrastFailures(before(theme)).find(
+        ({ foreground, background }) =>
+          foreground === "destructiveSoftForeground" && background === "active",
+      );
+
+    const windows = pressed(platformTheme(lightTheme, "win32"));
+    const luna = pressed(retroTheme(lightTheme, "luna"));
+
+    expect(windows?.floor).toBe(contrastFloors.body);
+    expect(windows?.ratio).toBeCloseTo(6.93, 2);
+    expect(luna?.floor).toBe(contrastFloors.body);
+    expect(luna?.ratio).toBeCloseTo(6.77, 2);
+
+    // The catalogue states both numbers, so the page and the measurement move
+    // together.
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    );
+    expect(page).toContain(`at ${windows?.ratio.toFixed(2)}:1`);
+    expect(page).toContain(`at ${luna?.ratio.toFixed(2)}:1`);
+  });
+
+  it("reports a popover's own text painted into its hover wash", () => {
+    const broken = {
+      colors: { ...lightColors, popoverForeground: lightColors.hover },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "popoverForeground" && background === "hover",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
+  });
+
+  it("clears the body floor in every shipped theme, with the base themes tightest", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const measured = shipped.flatMap((theme) =>
+      ["hover", "active"].flatMap((background) =>
+        roles.map((foreground) => ({
+          name: `${theme.name}/${foreground}/${background}`,
+          ratio:
+            contrastRatio(theme.colors[foreground], theme.colors[background]) ??
+            0,
+        })),
+      ),
+    );
+    const tightest = measured.reduce((low, next) =>
+      next.ratio < low.ratio ? next : low,
+    );
+
+    expect(measured.filter(({ ratio }) => ratio < contrastFloors.body)).toEqual(
+      [],
+    );
+    // The base light theme's red 800 on its pressed wash, so the shared value
+    // stays: only the two darker washes needed a deeper role.
+    expect(tightest.name).toBe("Light/destructiveSoftForeground/active");
+    expect(tightest.ratio.toFixed(2)).toBe("7.25");
+  });
+});
+
+/**
  * Guards the one state the contract used to skip entirely. `disabled` and
  * `disabledForeground` are painted as a pair by a disabled field, a select's
  * value and a fieldset legend, and **no** pair measured them — so a palette edit

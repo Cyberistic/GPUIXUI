@@ -294,7 +294,12 @@ A state wash is a surface with text on it, so it is measured like one: the
 resting `foreground` clears the body floor on `hover`, `active` and `accent`,
 and `mutedForeground` clears the secondary floor on all three. A ghost button or
 a menu row tints its surface and leaves its label in its resting role, so a wash
-that drifted toward its text would be unreadable with nothing else noticing.
+that drifted toward its text would be unreadable with nothing else noticing. A
+row floating on a popover keeps the *surface's* role instead — a menu row rests
+in `popoverForeground`, a destructive row in the tone's readable role — so both
+are measured on the same washes; that check found the two light looks' pressed
+washes at 6.93:1 and 6.77:1, and both now deepen `destructiveSoftForeground` to
+red 900 rather than flatten press into hover.
 
 It is also measured as a surface, because a wash with no contrast against the row
 it tints is a state nobody sees: `decorativeFailures` holds each of `hover`,
@@ -424,7 +429,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | on-colour text, placeholder | 4.5:1 | 7:1 |
 | brand text — a link or text action — on background, card, popover, muted and the hover/active washes it tints (`brandText`) | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
-| status text on `background`/`card`/`popover` (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
+| status text on `background`/`card`/`popover` and on the `hover`/`active` wash a floating row tints (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own `disabled` fill, on `background`/`card`/`popover` and on a `muted` toolbar or `secondary` panel (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
 | focus ring (on background, card, popover, muted and secondary) and `borderStrong` on those strips, on the field, and on the `hover`/`active` wash a bordered control tints | 3:1 | 4.5:1 |

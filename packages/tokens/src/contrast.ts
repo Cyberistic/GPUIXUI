@@ -235,6 +235,23 @@ export const contrastPairs: readonly ContrastPair[] = [
   { foreground: "mutedForeground", background: "hover", floor: "secondary" },
   { foreground: "mutedForeground", background: "active", floor: "secondary" },
   { foreground: "mutedForeground", background: "accent", floor: "secondary" },
+  // A row floating on a popover keeps the *surface's* text role, not the page's:
+  // a menu or combobox row is `popoverForeground`, and a destructive row is the
+  // tone's readable role. So a wash painted under either is a surface those
+  // roles are measured on — the row tints `hover` under the pointer and
+  // `active` while it is pressed.
+  { foreground: "popoverForeground", background: "hover", floor: "body" },
+  { foreground: "popoverForeground", background: "active", floor: "body" },
+  {
+    foreground: "destructiveSoftForeground",
+    background: "hover",
+    floor: "body",
+  },
+  {
+    foreground: "destructiveSoftForeground",
+    background: "active",
+    floor: "body",
+  },
   { foreground: "placeholder", background: "input", floor: "secondary" },
   { foreground: "borderStrong", background: "background", floor: "boundary" },
   { foreground: "borderStrong", background: "card", floor: "boundary" },

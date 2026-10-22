@@ -563,7 +563,10 @@ Each styled platform repaints the roles that give it its identity — including 
 control face, the `secondary` fill a tonal action rests on, because a button's
 surface has to be visible on that platform's own window. Every other
 role — the status families, the soft tones, `foreground`, `mutedForeground`,
-`inputForeground` — keeps the base theme's value.
+`inputForeground` — keeps the base theme's value, with one exception: Windows
+light deepens `destructiveSoftForeground` to red 900 (`#5C1619`), because its
+pressed wash is darker than the base theme's and the shared red 800 label
+measured 6.93:1 on a pressed destructive row, under the body floor (§Contrast).
 
 | Role | macOS light | macOS dark | Linux light | Linux dark | Windows light | Windows dark |
 | ---- | ----------- | ---------- | ----------- | ---------- | ------------- | ------------ |
@@ -584,6 +587,7 @@ role — the status families, the soft tones, `foreground`, `mutedForeground`,
 | `accentForeground` | `#0A4A8F` | `#A9CCF7` | `#12457F` | `#BBD9F7` | `#003E6F` | `#C9E9FF` |
 | `selected` | `#D3E5FB` | `#0D3A66` | `#CFE3F9` | `#1B3F60` | `#CCE4F7` | `#123C57` |
 | `selectedForeground` | `#0B3D6B` | `#C7E0FF` | `#0F3E74` | `#CFE4FA` | `#093A5C` | `#CDEBFF` |
+| `destructiveSoftForeground` | base | base | base | base | `#5C1619` | base |
 | `placeholder` | base | `#8A93A3` | base | `#8A93A3` | base | `#8A93A3` |
 
 `platformStyles[platform].colors[mode]` is that table: a partial `ThemeColors`, so
@@ -929,7 +933,7 @@ value is translucent or not hex — a translucent colour's ratio depends on the
 surface behind it, so a single number would be a guess.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 61 pairs cover the text role
+— an empty array means the theme is readable. The 65 pairs cover the text role
 on each surface it can sit on: body and popover text, the text typed into an
 `input`, secondary text on `background`, `card`, `muted`, `popover` and a
 selected row, every status and soft-status pair, each status tone's readable text
@@ -946,7 +950,15 @@ edge below. A wash — `hover`,
 `active`, `accent` — is a surface too: a ghost button or a menu row tints it and
 leaves its label in the
 resting `foreground`, and secondary text keeps `mutedForeground`, so both
-roles are measured on all three. A **bordered** control is the third case: the
+roles are measured on all three. A row **floating on a popover** keeps that
+surface's role rather than the page's — a menu or combobox row is
+`popoverForeground` — and a destructive row paints the tone's readable role, so
+the table measures both on the `hover` and `active` wash `menuRowStyle` paints
+under them. That pair found two shipped misses: Windows light's pressed wash
+left the destructive row at 6.93:1 and Luna light's at 6.77:1, under the body
+floor. Both looks now carry red 900 (`#5C1619`) as `destructiveSoftForeground`;
+the base light theme's red 800 clears its own pressed wash at 7.25:1, so the
+shared value stays. A **bordered** control is the third case: the
 secondary action paints `borderStrong` and keeps that edge while the same
 element's fill moves to the wash, so the edge is measured there too. It found
 four shipped misses — the base light theme's pressed secondary button at
