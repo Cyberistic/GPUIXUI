@@ -289,12 +289,12 @@ const TOGGLE_PAINT: Readonly<
   default: {
     rest: "text-foreground border-0 hover:bg-hover active:bg-active",
     pressed:
-      "bg-accent text-accent-foreground border-0 hover:bg-accent/90 active:bg-accent/80",
+      "bg-accent text-accent-foreground border-0 hover:fill-accent active:fill-accent-pressed",
   },
   outline: {
     rest: "text-foreground border border-strong hover:bg-hover active:bg-active",
     pressed:
-      "bg-accent text-accent-foreground border border-strong hover:bg-accent/90 active:bg-accent/80",
+      "bg-accent text-accent-foreground border border-strong hover:fill-accent active:fill-accent-pressed",
   },
 };
 
@@ -308,9 +308,9 @@ export const toggleClass = (
   cn(
     BUTTON_BASE,
     TOGGLE_PAINT[variant][pressed ? "pressed" : "rest"],
-    // A toggle's pressed accent is a wash, not one of the three filled actions
-    // (`filledAction`), so it has no measured pair to wear and keeps the fade.
-    UNFILLED_DISABLED,
+    // A pressed toggle wears the accent face, which the disabled contract
+    // measures like a filled action; at rest it has no fill to collapse into.
+    pressed ? FILLED_DISABLED : UNFILLED_DISABLED,
     options.square === true ? BUTTON_SQUARE[size] : BUTTON_SIZE[size],
   );
 

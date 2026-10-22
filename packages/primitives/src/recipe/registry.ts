@@ -12,12 +12,7 @@
  */
 
 import type { StyleDesc } from "@gpuix/react";
-import type {
-  ControlSize,
-  FilledAction,
-  TextRole,
-  Theme,
-} from "@gpuixui/tokens";
+import type { ControlSize, FilledRole, TextRole, Theme } from "@gpuixui/tokens";
 import {
   brandText,
   filledHover,
@@ -133,13 +128,13 @@ const roleSize = (
  */
 const filledFill = (
   theme: Theme,
-  action: FilledAction,
+  role: FilledRole,
   value: string | undefined,
 ): StyleDesc | undefined =>
   value === undefined
-    ? { backgroundColor: filledHover(theme, action) }
+    ? { backgroundColor: filledHover(theme, role) }
     : value === "pressed"
-      ? { backgroundColor: filledPressed(theme, action) }
+      ? { backgroundColor: filledPressed(theme, role) }
       : undefined;
 
 /** The primitives' compiler: built-in utilities plus the theme-scale steps. */
@@ -190,6 +185,9 @@ export const recipeTw = createTw({
     "fill-secondary": (theme, value) => filledFill(theme, "secondary", value),
     "fill-destructive": (theme, value) =>
       filledFill(theme, "destructive", value),
+    // A pressed toggle's face is the accent role rather than one of the three
+    // actions, and the tokens' `FilledRole` owns that fourth face.
+    "fill-accent": (theme, value) => filledFill(theme, "accent", value),
     "ml-0": () => ({ marginLeft: 0 }),
     "mr-0": () => ({ marginRight: 0 }),
     "mt-0": () => ({ marginTop: 0 }),

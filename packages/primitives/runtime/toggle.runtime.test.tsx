@@ -96,6 +96,24 @@ it("refuses activation when disabled and stays out of the tab order", async () =
   expect(runtime.focused()).toStrictEqual(Option.some("b"));
 });
 
+it("paints a disabled pressed toggle in the measured neutral pair", async () => {
+  // A pressed toggle is a filled face, so the 50% fade is not the disabled
+  // contract: the neutral pair `contrastPairs` measures is (the unit suite's
+  // `wears the measured neutral pair while disabled and pressed`).
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Toggle testId="t" label="Bold" pressed disabled />
+    </Surface>,
+  );
+  const style = Option.getOrElse(runtime.element("t"), () =>
+    expect.fail("the runtime retained no toggle"),
+  ).style;
+  expect(style["backgroundColor"]).toBe(testTheme.colors.disabled);
+  expect(style["color"]).toBe(testTheme.colors.disabledForeground);
+  expect(style["opacity"]).toBeUndefined();
+});
+
 it("declares the keyboard ring and paints no shadow on a press", async () => {
   const runtime = await openWindow();
   runtime.render(

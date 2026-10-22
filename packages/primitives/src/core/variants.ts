@@ -16,7 +16,6 @@
 
 import type { StyleDesc } from "@gpuix/react";
 import {
-  alpha,
   brandText,
   filledHover,
   filledPressed,
@@ -240,8 +239,11 @@ const togglePressedBase = (
   background: (theme) => theme.colors.accent,
   foreground: (theme) => theme.colors.accentForeground,
   border,
-  hover: (theme) => ({ backgroundColor: alpha(theme.colors.accent, 0.9) }),
-  active: (theme) => ({ backgroundColor: alpha(theme.colors.accent, 0.8) }),
+  // A pressed toggle is a filled face, so its feedback is the theme's derived
+  // accent fill — opaque, and clamped where the label would lose its floor. The
+  // half-alpha lift it used showed the surface behind the mode.
+  hover: (theme) => ({ backgroundColor: filledHover(theme, "accent") }),
+  active: (theme) => ({ backgroundColor: filledPressed(theme, "accent") }),
 });
 
 /**

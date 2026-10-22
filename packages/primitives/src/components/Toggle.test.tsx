@@ -9,7 +9,17 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import {
+  contrastFloorsFor,
+  contrastRatio,
+  darkTheme,
+  disabledAction,
+  filledHover,
+  filledPressed,
+  lightTheme,
+} from "@gpuixui/tokens";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderToggle, type ToggleState } from "./Toggle.js";
@@ -19,6 +29,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyle,
   hostStyleRecord,
   hostStyleString,
 } from "./testing/element.js";
@@ -45,6 +56,93 @@ describe("Toggle", () => {
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("not pressed");
     expect(expectSome(hostProp(element, "tabIndex"))).toBe(0);
     expect(hostProp(element, "aria-pressed")).toStrictEqual(Option.none());
+  });
+
+  it("forwards a tooltip trigger's pointer pair and description", () => {
+    // Bug guarded: a mode in a toolbar is described by a tip, and GPUix's
+    // `TooltipTrigger asChild` merges its handlers into the child element while
+    // the runtime delivers a hover only to the element that registered the
+    // listener — so a toggle without the pair opened on focus but never on
+    // hover, and the tip's description stopped at the component.
+    const entered = vi.fn();
+    const left = vi.fn();
+    const element = renderToggle(
+      {
+        label: "Bold",
+        onMouseEnter: entered,
+        onMouseLeave: left,
+        "aria-description": "  Bolds the selection  ",
+      },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(Option.getOrUndefined(hostHandler(element, "onMouseEnter"))).toBe(
+      entered,
+    );
+    expect(Option.getOrUndefined(hostHandler(element, "onMouseLeave"))).toBe(
+      left,
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Bolds the selection",
+    );
+  });
+
+  it("paints a pressed toggle's feedback as an opaque, derived fill", () => {
+    // The bug: the hover and press lifted the accent's alpha (`0.9` / `0.8`),
+    // so the surface behind the control showed through and the label could not
+    // be measured on the fill at all. A pressed toggle is a filled face; it
+    // moves to the theme's derived accent fill, which the label reads on.
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      const element = renderToggle(
+        { pressed: true, label: "Bold" },
+        theme,
+        state(true),
+        idle,
+        vi.fn(),
+      );
+      expect(expectSome(hostStyle(element, "hover"))).toEqual({
+        backgroundColor: filledHover(theme, "accent"),
+      });
+      expect(expectSome(hostStyle(element, "active"))).toEqual({
+        backgroundColor: filledPressed(theme, "accent"),
+      });
+      Arr.forEach(
+        [filledHover(theme, "accent"), filledPressed(theme, "accent")],
+        (fill) => {
+          // Opaque: a translucent value has no ratio at all.
+          expect(contrastRatio(fill, theme.colors.background)).toBeDefined();
+          expect(
+            contrastRatio(theme.colors.accentForeground, fill) ?? 0,
+          ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).secondary);
+        },
+      );
+    });
+  });
+
+  it("wears the measured neutral pair while disabled and pressed", () => {
+    // A disabled pressed toggle is a filled face. The 50% fade composites its
+    // label into whatever is behind the control, while the neutral pair
+    // `contrastPairs` measures is the paint the design system names for a
+    // filled control off the page.
+    const theme = lightTheme;
+    const element = renderToggle(
+      { pressed: true, disabled: true, label: "Bold" },
+      theme,
+      state(true),
+      idle,
+      vi.fn(),
+    );
+    const pair = disabledAction(theme);
+    expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
+      pair.backgroundColor,
+    );
+    expect(expectSome(hostStyleString(element, "color"))).toBe(pair.color);
+    expect(hostStyle(element, "opacity")).toStrictEqual(Option.none());
+    expect(expectSome(hostStyle(element, "hover"))).toEqual({
+      backgroundColor: pair.backgroundColor,
+    });
   });
 
   it("publishes its plain text child when it has no label", () => {

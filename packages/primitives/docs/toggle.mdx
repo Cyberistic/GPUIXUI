@@ -37,13 +37,17 @@ Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start)
 | `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
 | `label` | `string` | none | accessible name; required when icon-only |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the toggle's own; yours runs first |
+| `onMouseEnter` / `onMouseLeave` | host handlers | none | forwarded to the host; the pair a `Tooltip` trigger needs |
+| `aria-description` | `string` | none | supplementary description; `Tooltip` passes the tip here |
 | `style` | `StateStyle<ToggleState>` | — | resolved against the live state and merged last |
 | `children` | `ReactNode` | — | the visible label |
 | `testId` | `string` | — | stable locator |
 
 The five host handlers are `InteractionProps`: your handler runs first with the
 runtime's own event and the toggle still changes. A disabled toggle installs no
-`onClick` at all; its keys and focus stay observable.
+`onClick` at all; its keys and focus stay observable. The pointer pair and
+`aria-description` are `TooltipTriggerProps`, so `<Tooltip><Toggle … /></Tooltip>`
+opens the tip on hover and focus and announces it as the mode's description.
 
 Pressing paints `colors.accent` with `colors.accentForeground` — the role the
 theme reserves for a selected surface — so pressed, hover and focus are three
@@ -79,8 +83,14 @@ Rest and pressed are two rows of `core/variants.ts`' `toggleVariants`, so the
 docs and the component read one table. Rest paints no fill (or a `borderStrong`
 edge for `outline`, the role the design system holds to the 3:1 control-boundary
 floor — not the decorative `border` a divider uses); pressed paints
-`colors.accent`/`colors.accentForeground`; hover and
-press lift the accent's alpha like a filled button. Nothing names a literal.
+`colors.accent`/`colors.accentForeground`. A pressed toggle is a **filled face**,
+so its hover and press are the theme's derived opaque fills —
+`filledHover(theme, "accent")` / `filledPressed(theme, "accent")` — not an alpha
+lift of the accent: the surface behind the mode must not show through, and the
+label keeps its contrast floor on both fills. A **disabled pressed** toggle wears
+the neutral `disabled`/`disabledForeground` pair, the paint the design system
+names for a filled control anywhere off the page, instead of fading. Nothing
+names a literal.
 
 `style` takes a `StateStyle<ToggleState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused, selected }` and returns one. `selected` is the
@@ -92,21 +102,26 @@ decision, so a callback is the last word on a property the recipe also sets.
 - No `aria-pressed` (above).
 - No `loading` state: a toggle sets a mode instantly; a toggle that waits for a
   request should disable itself and show the result elsewhere.
+- A disabled pressed toggle paints the neutral pair rather than the accent, so
+  it reads unavailable rather than dimmed-on.
 - `square` sizes the button; it does not size the icon — pass an icon whose size
   matches the control (`theme.iconSize`).
 
 ## Verification
 
 - `src/components/Toggle.test.tsx` — role and value text, no `aria-pressed`,
-  the pressed paint from the accent role, the outline border, click/Enter/Space
-  activation, held keys, disabled, the focus ring, and a `style` callback that
-  receives the live state and wins over the recipe.
+  the pressed paint from the accent role, the derived opaque hover/press fills
+  and the label floors on them, the disabled pressed neutral pair, the outline
+  border, click/Enter/Space activation, held keys, disabled, the focus ring, the
+  forwarded tooltip trigger pair, and a `style` callback that receives the live
+  state and wins over the recipe.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus run
   before the toggle's own action, once each.
 - `runtime/toggle.runtime.test.tsx` — a real click flips the announced state and
   repaints the accent fill; Enter down and Space up each activate once; a
-  disabled toggle leaves the tab order; the ring follows focus. Measured
-  2026-10-17 (measured in a window).
+  disabled pressed toggle paints the neutral pair with no opacity left; a
+  disabled toggle leaves the tab order; the ring follows focus. Measured in a
+  window on 0.11.0.
 - The disabled **handler** guard is proven at the element-tree level: a
   tabIndex-less toggle cannot be focused natively, so the runtime test can only
   prove the tab order.

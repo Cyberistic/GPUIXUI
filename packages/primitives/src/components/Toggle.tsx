@@ -12,7 +12,9 @@
  *
  * The paint is the shared control recipe with `core/variants.ts`' toggle
  * variants, and the activation/keyboard contract is `Button`'s — Enter on key
- * down, Space on key up, a held key ignored.
+ * down, Space on key up, a held key ignored. It forwards the `Tooltip` trigger
+ * pair (`TooltipTriggerProps`), because a mode in a toolbar is described by a
+ * tip rather than by occupying a label.
  *
  * The resting appearance is a Tailwind recipe (`recipe/toggleClass`), compiled
  * through `@gpuixui/tw`; the caller's `className` is joined last so it wins
@@ -41,10 +43,11 @@ import {
   useFocus,
   type FocusState,
   type InteractionProps,
+  type TooltipTriggerProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface ToggleProps extends InteractionProps {
+export interface ToggleProps extends InteractionProps, TooltipTriggerProps {
   /** Controlled pressed state. Omit to let the toggle own it. */
   readonly pressed?: boolean;
   readonly defaultPressed?: boolean;
@@ -123,10 +126,13 @@ export const renderToggle = (
     <div
       role="button"
       aria-label={accessibleName(props.label) ?? childrenName(props.children)}
+      aria-description={accessibleName(props["aria-description"])}
       aria-valuetext={pressedValueText(state.current)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onClick={composePress(props.disabled === true, props.onClick, toggle)}
+      onMouseEnter={props.onMouseEnter}
+      onMouseLeave={props.onMouseLeave}
       onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKey("down"))}
       onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKey("up"))}
       onFocus={composeEvent<EventPayload>(props.onFocus, focus.onFocus)}
