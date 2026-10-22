@@ -67,8 +67,10 @@ export const surfaceBudget = {
   // are generated from their measured boxes. 153 → 155 for ImageZoom
   // (`image-zoom.tsx` and the frame/pan rule beside it). 155 → 157 for MotionGrid
   // (`motion-grid.tsx` and the slot/frame rule beside it), the grid whose cells
-  // retarget their insets on a reorder.
-  modules: 157,
+  // retarget their insets on a reorder. 157 → 160 for SlidingText
+  // (`sliding-text.tsx`, the slide rule beside it, and `internal/text-swap.ts`,
+  // the half RollingText now reads its state machine and timing from too).
+  modules: 160,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB

@@ -23,16 +23,15 @@ import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import { Match } from "effect";
 import { useEffect, useState } from "react";
-import {
-  initialRoll,
-  requestRoll,
-  rollFrames,
-  rollHalves,
-  settleRoll,
-  type RollDirection,
-  type RollPhase,
-} from "./rolling-text/logic.js";
+import { rollFrames, type RollDirection } from "./rolling-text/logic.js";
 import { useMotionPreference } from "./internal/presence.js";
+import {
+  initialSwap,
+  requestSwap,
+  settleSwap,
+  swapHalves,
+  type SwapPhase,
+} from "./internal/text-swap.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
 
@@ -41,7 +40,7 @@ export interface RollingTextState {
   /** The value painted now, which is also the accessible name. */
   readonly text: string;
   /** `"leaving"` while the old value travels out, `"entering"` for the new one. */
-  readonly phase: RollPhase;
+  readonly phase: SwapPhase;
   readonly direction: RollDirection;
   readonly reducedMotion: boolean;
 }
@@ -81,16 +80,16 @@ export const RollingText = ({
 }: RollingTextProps) => {
   const theme = useTheme();
   const preference = useMotionPreference();
-  const timing = rollHalves(level, preference);
-  const [roll, setRoll] = useState(() => initialRoll(text));
+  const timing = swapHalves(level, preference);
+  const [roll, setRoll] = useState(() => initialSwap(text));
 
   useEffect(() => {
-    setRoll((current) => requestRoll(current, text, preference === "reduced"));
+    setRoll((current) => requestSwap(current, text, preference === "reduced"));
   }, [text, preference]);
 
   useEffect(() => {
     if (roll.phase !== "leaving") return;
-    const handle = setTimeout(() => setRoll(settleRoll), timing.swapMs);
+    const handle = setTimeout(() => setRoll(settleSwap), timing.swapMs);
     return () => clearTimeout(handle);
   }, [roll.phase, roll.pending, timing.swapMs]);
 

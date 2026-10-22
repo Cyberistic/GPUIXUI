@@ -348,6 +348,7 @@ the honest parts.
 | Auto height | `AutoHeight` | — | plan 600 |
 | Rotating text | `RotatingText` | — | plan 600 |
 | Rolling text | `RollingText` | — | plan 600 |
+| Sliding text | `SlidingText` (one part) | — | plan 600 |
 | Sliding number | `SlidingNumber` | — | plan 600 |
 | Reveal | `Reveal` | — | plan 600 |
 | Scroll fade | `ScrollFade` (one part) | — | plan 600 |
