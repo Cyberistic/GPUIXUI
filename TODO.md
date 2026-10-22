@@ -59,20 +59,20 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ## Phase A — audit and feasibility
 
-`[ ]` `[░░░░░░░░░░]` 0/6
+`[x]` `[██████████]` 6/6
 
-`[ ]` Inspect the environment, package manager and toolchain; record the findings
-`[ ]` Establish the GPUix version, APIs, primitives, events, layout and limits
-`[ ]` Read GPUix docs and examples; write the capability map
-`[ ]` Inspect GPUI Kit (hierarchy, theming, layout, interaction, licence)
-`[ ]` Study shadcn/ui organisation and semantic tokens; review PanelUI; review Fumadocs setup
-`[ ]` Write and index every phase and package plan in `.agents/slop/plans/`
+`[x]` Inspect the environment, package manager and toolchain; record the findings
+`[x]` Establish the GPUix version, APIs, primitives, events, layout and limits
+`[x]` Read GPUix docs and examples; write the capability map
+`[x]` Inspect GPUI Kit (hierarchy, theming, layout, interaction, licence)
+`[x]` Study shadcn/ui organisation and semantic tokens; review PanelUI; review Fumadocs setup
+`[x]` Write and index every phase and package plan in `.agents/slop/plans/`
 
 ## Phase B — working foundation
 
-`[x]` `[█████████░]` 14/16
+`[x]` `[██████████]` 16/16
 
-`[ ]` Land the workspace, boundaries and package scaffolding that has real content
+`[x]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
 `[x]` Land the `@gpuixui/tw` extension registry, luma `cn-*` aliases and state
 variants (plan 524)
@@ -86,7 +86,7 @@ group, so a hand-built theme needs no change (an avatar diameter is content-size
 like an image; a new theme group would be a breaking change for every theme
 literal)
 `[x]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix — 21/21 scenarios, all 15 capabilities verified on 0.11.0 (see `apps/playground/README.md`)
-`[ ]` Land one fully working component running in GPUix
+`[x]` Land one fully working component running in GPUix
 `[x]` Land the docs shell and the component page pattern in Fumadocs — the
 sectioned sidebar (Getting Started / Components / Contributing), the reusable
 Preview/Code template, the `nub` install block, the "On this page" TOC, the
@@ -4502,10 +4502,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 ## Phase E — specialised components
 
-`[ ]` `[░░░░░░░░░░]` 0/2
+`[ ]` `[█████░░░░░]` 1/2
 
 `[ ]` Tier 5 specialised components where justified
-`[ ]` Document every capability GPUix does not provide, with evidence
+`[x]` Document every capability GPUix does not provide, with evidence
 
 ## Phase F — integration and polish
 

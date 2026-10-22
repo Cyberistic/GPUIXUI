@@ -156,3 +156,9 @@ component call sites adopt the outline in their own workstream.
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [600](./600-animated-primitives.md) | Animated primitives: gap analysis and phases | D | motion, tw, runtime | planned |
+
+### Data workstream
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [610](./610-tier3-data.md) | Tier 3 data presentation: the `@gpuixui/data` package | D | components, primitives, tw, tokens, motion | planned |

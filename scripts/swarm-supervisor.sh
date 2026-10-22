@@ -27,7 +27,7 @@ set -uo pipefail
 REPO="${GPUIXUI_REPO:-$HOME/GPUIXUI}"
 OPENCODE="${OPENCODE_BIN:-$HOME/.opencode/bin/opencode}"
 MODELS="$REPO/scripts/swarm-model.sh"
-MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-6}"
+MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-7}"
 
 export PATH="$HOME/.opencode/bin:$HOME/.nub/bin:$HOME/.nub/node-shim:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
@@ -39,7 +39,7 @@ LOCK="$STATE/supervisor.lock"
 
 # One workstream per agent, each with its own tree so two writers never share a
 # checkout. The descriptions keep the five from colliding.
-WORKSTREAMS="tokens-theme primitives components docs-site playground motion"
+WORKSTREAMS="tokens-theme primitives components docs-site playground motion data"
 
 workstream_scope() {
   case "$1" in
@@ -63,6 +63,9 @@ workstream_scope() {
       ;;
     motion)
       echo "motion: wire @gpuixui/motion into the existing surfaces first (Dialog, Drawer, Popover, DropdownMenu, CommandMenu, Toast, Accordion, Tabs, PreviewCard), following shadcn and Base UI enter/exit patterns, then implement the animated primitives in plan 600. You own packages/motion and the motion wiring inside packages/components. Never animate transform (runtime issue 102): fade plus offset only."
+      ;;
+    data)
+      echo "data presentation: open packages/data (@gpuixui/data) and implement plan 610 — table core, sorting, selection, filtering, column configuration and resizing, virtualization, tree views and expandable rows, SVG charts, and the data surfaces (key-value, stat card, property panel, toolbar, advanced filter). You own packages/data and the data probes in apps/playground. The runtime has no sticky positioning, no transform and no canvas drawing: follow the measured rules in plan 610."
       ;;
     *)
       echo "the next unclaimed task."
