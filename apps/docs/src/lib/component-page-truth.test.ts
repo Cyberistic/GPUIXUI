@@ -905,6 +905,16 @@ describe("the curated component pages", () => {
       `${nativeCases("packages/components/src/behaviour/combobox.test.tsx")} native behaviour tests`,
     );
     expect(text).toContain("`partial`");
+
+    // The entrance is the component's, not the page's memory: the source asks
+    // for the 4px travel from the side it opened at at the `normal` level, and
+    // there is no exit because the headless content renders nothing while closed.
+    expect(source).toContain("fadeFromAnchor(side, 4)");
+    expect(source).toContain('useSurfaceTiming("normal")');
+    expect(text).toContain("4px of travel");
+    expect(text).toContain("no exit tween");
+    expect(text).toContain('preference="reduced"');
+
     // The retracted shapes: a runtime ranking, or a faded disabled row.
     expect(text).not.toContain("the runtime ranks");
     expect(text).not.toContain("faded disabled");

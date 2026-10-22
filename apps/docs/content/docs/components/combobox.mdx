@@ -135,6 +135,20 @@ decide whether to select it, so `onCreate` and `onValueChange` are separate
 contracts. The row is offered only when nothing matches, so it never competes
 with a real result.
 
+## Motion
+
+The popup enters on the house entrance: a fade plus **4px of travel out from the
+side it opens at**, at the `normal` timing level (200 ms, ease-out). A popup below
+its trigger starts above its resting place and moves down; one the component flips
+above starts below and moves up, so the travel comes from the side the popup was
+asked to open at, not from the side it settled on.
+
+There is **no exit tween**: GPUix's headless `ComboboxContent` renders nothing
+while the root is closed, so a closing popup has no box left to keep mounted for
+one and leaves with the state that closed it. Under
+`<MotionProvider preference="reduced">` the duration is zero, so the resting frame
+paints in the frame the popup appears.
+
 ## Keyboard
 
 | Key | Result |
@@ -288,7 +302,7 @@ directly; the component reads roles, never colours.
 `done` in `COMPONENTS.md` with a `partial` runtime verdict: GPUix publishes the
 headless combobox, so focus, the active row and the keyboard are supported
 rather than reimplemented, while the ranking, the row paint and the value
-semantics are this package's. The behaviour is held by **25 native behaviour
+semantics are this package's. The behaviour is held by **26 native behaviour
 tests** in `packages/components/src/behaviour/combobox.test.tsx` — open and input
 focus, both placement cases, ranking, arrow + `Enter`, the empty state, single
 and multiple selection, the disabled row's paint, Escape over a dialog, the

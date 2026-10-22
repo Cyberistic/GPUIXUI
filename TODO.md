@@ -6050,12 +6050,25 @@ numbers).
       `docs/combobox.mdx` §Motion,
       §Limitations and §Verification, the row in `docs/component-api.md` §11, and
       the `Comboboxes` inventory row.
-`[ ]` Add the combobox popup's **§Motion** to the curated page
+`[x]` Add the combobox popup's **§Motion** to the curated page
       (`apps/docs/content/docs/components/combobox.mdx`) — the package page
       (`packages/components/docs/combobox.mdx` §Motion) and the per-surface table
       in `docs/component-api.md` §11 carry the entry-only rule, and the curated
       page only embeds the source, so a reader of the site learns the popup's
-      arrival nowhere. Owner: docs-site.
+      arrival nowhere. Owner: docs-site. **Landed 2026-10-22** — the page gains
+      `## Motion` between Creating a value and Keyboard: the 4px travel out from
+      the side it opens at at the `normal` level, the component's flip meaning the
+      travel follows the side it was asked to open at, the entry-only rule (the
+      headless content renders nothing while closed and leaves no box to keep for
+      an exit) and `MotionProvider preference="reduced"` painting the resting
+      frame. `component-page-truth.test.ts`'s combobox case reads
+      `fadeFromAnchor(side, 4)` and `useSurfaceTiming("normal")` out of the source
+      and holds the page's `4px of travel`, `no exit tween` and
+      `preference="reduced"` to them; the same case now derives the **26** native
+      cases (the popup-entrance suite grew one), which the page printed as 25.
+      Direction measured: deleting the section fails the combobox case by name;
+      restored, `component-page-truth.test.ts` and `component-page.test.ts` are
+      44/44 green.
 `[x]` Hold the **leaving-surface pointer contract** across the family, not one surface at
       a time. Fixing the context menu exposed two more gaps and no guard: the
       submenu's `anchored` host kept `occlude` for its leap (a deferred host's box
