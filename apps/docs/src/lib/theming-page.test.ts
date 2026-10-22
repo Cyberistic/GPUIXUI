@@ -65,6 +65,9 @@ const section = (body: string, heading: string): string => {
   return start === -1 ? "" : body.slice(start, end === -1 ? undefined : end);
 };
 
+/** A name as the pages print it, so a list can be built from the package. */
+const backticked = (name: string): string => "`" + name + "`";
+
 /** One brand snippet on the page, resolved from what the page writes. */
 interface BrandSnippet {
   /** The mode the snippet's `createTheme` starts from. */
@@ -363,9 +366,7 @@ describe("the theming pages' indicator strips", () => {
   // caret. A reader editing an action fill was told a mark is measured on a set
   // the package no longer uses. The count is interpolated and the printed list
   // is the package's own array, so an eighth strip fails here by page name.
-  const printed = `(${indicatorSurfaces
-    .map((surface) => `\`${surface}\``)
-    .join(", ")})`;
+  const printed = `(${indicatorSurfaces.map(backticked).join(", ")})`;
   const pages = [
     { name: "themes.mdx", heading: "The theme audit" },
     { name: "theming.mdx", heading: "Indicator marks" },
@@ -599,9 +600,7 @@ describe("the theming pages' series surfaces", () => {
   // five categorical colours" while `/docs/theming` derived the length. A
   // surface or a scale length added to the package would leave one page
   // describing a contract the library no longer runs.
-  const printed = `(${seriesSurfaces
-    .map((surface) => `\`${surface}\``)
-    .join(", ")})`;
+  const printed = `(${seriesSurfaces.map(backticked).join(", ")})`;
   /** Prose wraps, so the list's own line breaks are not a defect. */
   const flat = (text: string): string => text.replace(/\s+/g, " ");
   const pages = [
