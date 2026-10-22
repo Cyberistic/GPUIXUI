@@ -22,6 +22,7 @@
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { auditTheme } from "./audit.js";
 import { darkColors, lightColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
@@ -88,6 +89,39 @@ describe("the dim a focused field casts", () => {
       );
       expect(text, `${name} no longer gives the runtime's reason`).toContain(
         "typing is keyboard input too",
+      );
+    });
+  });
+});
+
+describe("the dim the gate and the actions have adopted", () => {
+  it("says the report is in the gate and the filled actions opt out", () => {
+    // The inventory row claimed both were still interlock rows after the fold
+    // and the two adoptions landed. The report is read from the gate's own
+    // keys, and each package's opt-out from the constant it declares.
+    const audit = auditTheme(lightTheme);
+    expect(Object.keys(audit)).toContain("keyboardDim");
+    expect(audit.keyboardDim).toEqual([]);
+
+    const sources = {
+      primitives: readFileSync(
+        new URL("../../primitives/src/core/focus.ts", import.meta.url),
+        "utf8",
+      ),
+      components: readFileSync(
+        new URL("../../components/src/internal/button.tsx", import.meta.url),
+        "utf8",
+      ),
+    };
+    expect(sources.primitives).toContain("keyboardFocusDim: false");
+    expect(sources.components).toContain("keyboardFocusDim: false");
+
+    Object.entries(dimSurfaces()).forEach(([name, text]) => {
+      expect(text, `${name} no longer names the gate report`).toContain(
+        "`audit.keyboardDim`",
+      );
+      expect(text, `${name} no longer names the opt-out`).toContain(
+        "keyboardFocusDim: false",
       );
     });
   });
