@@ -60,9 +60,7 @@ const CarouselPreview = ({
   loop = false,
   controls = true,
 }: CarouselPreviewProps) => {
-  const [active, setActive] = useState(() =>
-    goToIndex(initial, slides.length),
-  );
+  const [active, setActive] = useState(() => goToIndex(initial, slides.length));
   const count = slides.length;
   const step = (delta: 1 | -1): void =>
     setActive((current) => stepIndex({ active: current, count, delta, loop }));
@@ -274,10 +272,7 @@ const numbers = (count: number): ReadonlyArray<Slide> =>
     copy: "Every dot is a press target; the active one is a wider pill.",
   }));
 
-const stateGroup = (
-  label: string,
-  preview: ReactNode,
-): ReactNode => (
+const stateGroup = (label: string, preview: ReactNode): ReactNode => (
   <>
     <p className="gx-demo-label">{label}</p>
     {preview}
@@ -292,7 +287,12 @@ export const CarouselStates = () => (
     )}
     {stateGroup(
       "Wraps at both ends",
-      <CarouselPreview initial={2} label="Looping release notes" loop slides={edgeSlides} />,
+      <CarouselPreview
+        initial={2}
+        label="Looping release notes"
+        loop
+        slides={edgeSlides}
+      />,
     )}
     {stateGroup(
       "Dots only, five slides",

@@ -46,9 +46,11 @@ describe("the carousel preview", () => {
     // resolves it into the range before painting. An empty track paints no
     // slide, so the index it resolves to is the only one that cannot point at
     // one.
-    expect([resolveActive(2, 4), resolveActive(9, 4), resolveActive(-3, 4)]).toEqual([
-      2, 3, 0,
-    ]);
+    expect([
+      resolveActive(2, 4),
+      resolveActive(9, 4),
+      resolveActive(-3, 4),
+    ]).toEqual([2, 3, 0]);
     expect(resolveActive(3, 0)).toBe(0);
   });
 
@@ -97,9 +99,9 @@ describe("the carousel preview", () => {
     expect(disabled(0, -1, true)).toBe(false);
     expect(disabled(2, 1, true)).toBe(false);
     // An empty track has nothing to step to at either end.
-    expect(
-      controlDisabled({ active: 0, count: 0, delta: 1, loop: true }),
-    ).toBe(true);
+    expect(controlDisabled({ active: 0, count: 0, delta: 1, loop: true })).toBe(
+      true,
+    );
   });
 
   it("keeps one roving stop, on the slide the reader is looking at", () => {

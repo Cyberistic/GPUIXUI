@@ -185,7 +185,9 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
     for (const failure of failures) console.error(`FAIL ${failure}`);
     return 1;
   }
-  console.log("PASS the preview hydrates and its press path moves the carousel");
+  console.log(
+    "PASS the preview hydrates and its press path moves the carousel",
+  );
   return 0;
 };
 

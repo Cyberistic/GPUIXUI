@@ -56,14 +56,17 @@ export const resolveActive = (active: number, count: number): number =>
  * end it reached, which is why a control there is disabled. This is the
  * component's own expression, not a second opinion about it.
  */
-export const stepIndex = ({ active, count, delta, loop }: StepInput): number => {
+export const stepIndex = ({
+  active,
+  count,
+  delta,
+  loop,
+}: StepInput): number => {
   if (count === 0) return 0;
   const current = resolveActive(active, count);
   const next = current + delta;
   if (next >= 0 && next < count) return next;
-  return loop
-    ? (next + count) % count
-    : Math.min(Math.max(next, 0), count - 1);
+  return loop ? (next + count) % count : Math.min(Math.max(next, 0), count - 1);
 };
 
 /** The slide a dot names, clamped the same way the root clamps a value. */
@@ -98,7 +101,8 @@ export const controlDisabled = ({
   count,
   delta,
   loop,
-}: StepInput): boolean => count === 0 || (!loop && atEdge(active, count, delta));
+}: StepInput): boolean =>
+  count === 0 || (!loop && atEdge(active, count, delta));
 
 /** Which dot is the group's one tab stop: the active slide's. */
 export const rovingStop = (active: number): number => active;

@@ -122,10 +122,7 @@ const segmentOf = (text: string, max: number): number | null => {
  * segment therefore completes a value with the other read as zero — typing `9`
  * in hours reports `09:00` while the minutes segment still shows nothing.
  */
-export const composeValue = (
-  hours: string,
-  minutes: string,
-): string | null => {
+export const composeValue = (hours: string, minutes: string): string | null => {
   if (hours === "" && minutes === "") return null;
   const hour = segmentOf(hours, 23);
   const minute = segmentOf(minutes, 59);
@@ -147,8 +144,7 @@ export const editSegment = (
   const digits = digitsOf(raw);
   if (digits === "") return emptyTime();
   const max = segment === "hours" ? 23 : 59;
-  const text =
-    Number(digits) > max ? pad(clampSegment(digits, max)) : digits;
+  const text = Number(digits) > max ? pad(clampSegment(digits, max)) : digits;
   const next: TimeText =
     segment === "hours"
       ? { hours: text, minutes: state.minutes }
@@ -178,13 +174,14 @@ export const stepSegment = (
   direction: -1 | 1,
   minuteStep?: number,
 ): TimeState => {
-  const base =
-    (state.value === null ? null : parseTime(state.value)) ?? {
-      hours: 0,
-      minutes: 0,
-    };
+  const base = (state.value === null ? null : parseTime(state.value)) ?? {
+    hours: 0,
+    minutes: 0,
+  };
   const delta =
-    segment === "hours" ? 60 * direction : normalizeStep(minuteStep) * direction;
+    segment === "hours"
+      ? 60 * direction
+      : normalizeStep(minuteStep) * direction;
   const next = addMinutes(base, delta);
   return {
     hours: pad(next.hours),

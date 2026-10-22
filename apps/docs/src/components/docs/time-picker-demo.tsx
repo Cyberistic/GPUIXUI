@@ -225,7 +225,11 @@ const TimePickerStates = () => {
         <span className="gx-time-state-label">
           Empty — the HH/MM hints, and no clear control
         </span>
-        <PreviewTimeField label="Empty time" onChange={setEmpty} value={empty} />
+        <PreviewTimeField
+          label="Empty time"
+          onChange={setEmpty}
+          value={empty}
+        />
         <span className="gx-time-state-note" role="status">
           {describeValue(empty)}
         </span>

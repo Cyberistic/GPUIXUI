@@ -91,7 +91,9 @@ describe("the clock", () => {
 
     expect(minutes.length).toBe(1440);
     expect(
-      minutes.filter((time) => parseTime(formatTime(time))?.hours !== time.hours),
+      minutes.filter(
+        (time) => parseTime(formatTime(time))?.hours !== time.hours,
+      ),
     ).toEqual([]);
     expect(
       minutes.filter(
@@ -222,7 +224,9 @@ describe("the arrow keys", () => {
     expect(normalizeStep(15.9)).toBe(15);
     expect(normalizeStep(60)).toBe(59);
     // The native module owns the same rule; a change there must move here.
-    expect(nativeClock).toContain("Math.min(59, Math.max(1, Math.floor(step)))");
+    expect(nativeClock).toContain(
+      "Math.min(59, Math.max(1, Math.floor(step)))",
+    );
   });
 });
 
