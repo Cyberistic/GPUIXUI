@@ -23,11 +23,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { platformTheme } from "@gpuixui/tokens";
-import {
-  CAROUSEL_TRACK,
-  classesToStyle,
-  cn,
-} from "@gpuixui/tw";
+import { CAROUSEL_TRACK, classesToStyle, cn } from "@gpuixui/tw";
 import { describe, expect, it } from "vitest";
 import { actionOnColor } from "./internal/button.js";
 import { recipeStyle } from "./internal/recipe.js";
@@ -49,8 +45,7 @@ const section = (heading: string): string => {
 };
 
 /** The compiled surface of the track recipe. */
-const track = (theme = lightTheme) =>
-  recipeStyle(cn(CAROUSEL_TRACK), theme);
+const track = (theme = lightTheme) => recipeStyle(cn(CAROUSEL_TRACK), theme);
 
 /** The number a `const` in the carousel source is declared with. */
 const constant = (name: string): number | undefined => {
@@ -106,9 +101,7 @@ describe("the Carousel page", () => {
     // The control is pinned to one variant, so its chevron and its fill are one
     // decision: `actionOnColor` answers the fill's on-colour for that variant.
     expect(source).toContain('const CONTROL_VARIANT = "secondary" as const;');
-    expect(source).toContain(
-      "color={actionOnColor(theme, CONTROL_VARIANT)}",
-    );
+    expect(source).toContain("color={actionOnColor(theme, CONTROL_VARIANT)}");
     expect(actionOnColor(lightTheme, "secondary")).toBe(
       lightTheme.colors.secondaryForeground,
     );
@@ -135,9 +128,7 @@ describe("the Carousel page", () => {
 
     const text = page.replace(/\s+/g, " ");
     expect(text).toContain(`${rest ?? 0}px drawing`);
-    expect(text).toContain(
-      `${targetSize.minimum} × ${targetSize.minimum} px`,
-    );
+    expect(text).toContain(`${targetSize.minimum} × ${targetSize.minimum} px`);
     // The active dot is wider, not only a different hue.
     expect(text).toContain("wider pill");
   });

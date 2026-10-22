@@ -89,7 +89,9 @@ Every part takes the GPUix host props and merges `style` last.
 
 ## Theming
 
-Page buttons are `controlHeight(theme, "sm")` square, `radius.sm`; the current
+Page buttons are `controlHeight(theme, "sm")` square, `radius.md` — the corner
+the package's local `Button` reads from the theme, so a platform switch reshapes
+them; the current
 page paints `colors.primary` with `colors.primaryForeground`, others are ghost
 buttons with `colors.mutedForeground`. The ellipsis uses `colors.mutedForeground`
 and a caption type role.

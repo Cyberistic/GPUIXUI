@@ -3680,6 +3680,30 @@ a workaround for two live sessions sharing one worktree; see
       Verification), the example (a half-scored review card), the inventory
       record and the `COMPONENTS.md` Rating row.
 
+`[x]` `packages/components`: nine package pages taught a **theme radius role for
+      a part the fixed registry paints**, and one taught the wrong step in the
+      other direction. The package compiles its resting appearance against
+      `@gpuixui/tw`'s fixed shadcn scale (ADR 0006), so a recipe's `rounded-md`
+      is 6px on every platform while `combobox`, `date-picker`, `field`,
+      `hotkey-recorder`, `mention-input`, `navigation-menu`, `preview-card`,
+      `tabs`, `time-picker` and `toast` said `radius.md`/`radius.lg`/
+      `radius.sm`, which the platform styles move (Windows `md` is 4, macOS `lg`
+      is 10) — a reader who tuned the named role repainted nothing. The reverse
+      was also wrong: pagination's page buttons are the package's local `Button`,
+      which reads `theme.radius.md`, and the page said `radius.sm`. Each page now
+      prints the corner it paints and, where the painter really reads the theme,
+      says so. Proof: `src/page-radius-truth.test.ts` (4 cases) compiles every
+      named recipe in light, dark and macOS and holds the page's printed pixel
+      corner, reads the painter for each declared theme role, and — the closed
+      class — refuses a page whose `## Theming` names a `radius.*` role without a
+      declared claim, so a new page cannot teach one. Directions measured: the
+      sweep reported all 15 wrong claims before the edits; moving `KEYCAP` to
+      `rounded-md` fails the paint case, pointing pagination's claim at
+      `pagination.tsx` fails the painter case, and a `radius.xl` in
+      `badge.mdx` fails the undeclared case by page name. Docs: the twelve pages
+      above (`field`, `combobox`, `tabs` and `toast` are shadowed by curated
+      pages but still ship).
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21

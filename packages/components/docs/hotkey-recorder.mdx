@@ -62,8 +62,10 @@ floor.
 
 ## Theming
 
-The field uses `background`, `border`, `radius.md`, `controlHeight(theme, "md")`
-and `focusRing(theme)`; keycaps use the shared [`Keycap`](/docs/components/keyboard-shortcuts)
+The field uses `background`, `border`, the registry's fixed 6px corner
+(`rounded-md`, ADR 0006), `controlHeight(theme, "md")` and `focusRing(theme)`;
+the clear control takes the smaller fixed 4px step (`rounded-sm`); keycaps use
+the shared [`Keycap`](/docs/components/keyboard-shortcuts)
 roles; the clear control shows an `accent` hover. A custom theme changes it with
 no code change — see [Theming](/docs/theming).
 

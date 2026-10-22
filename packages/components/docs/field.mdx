@@ -94,7 +94,8 @@ Labels use the `label` type role in `colors.foreground`; descriptions the
 at the body floor on `background` and `card`, rather than the solid
 `destructive` fill, which no contrast pair measures as text. The input paints
 `colors.input` / `colors.inputForeground`,
-a `borderWidth.thin` border in `colors.border`, `radius.md`, and swaps the border
+a `borderWidth.thin` border in `colors.border`, the registry's fixed 6px corner
+(`rounded-md`, ADR 0006), and swaps the border
 to `colors.destructive` when invalid. The input declares the keyboard-only
 `focusVisible` outline at rest: `colors.ring` while the value is valid, and the
 destructive role while it is invalid. A read-only input leaves the tab order and

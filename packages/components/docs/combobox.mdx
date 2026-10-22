@@ -164,11 +164,11 @@ Every part takes the GPUix host props and merges `style` last.
 ## Theming
 
 The trigger paints `colors.background`, a `borderWidth.thin` border in
-`colors.borderStrong`, `radius.md`, `controlHeight(theme, "md")` and
-`colors.mutedForeground` for the placeholder. The popup paints
-`colors.popover`, `radius.md`, the `md` elevation, a `maxHeight` of 280 with
-scrolling, and rows highlight with `colors.hover`. The selected check is
-`colors.primary`.
+`colors.borderStrong`, the registry's fixed 6px corner (`rounded-md`, ADR 0006)
+and `controlHeight(theme, "md")`, with `colors.mutedForeground` for the
+placeholder. The popup paints `colors.popover`, the same fixed 6px corner, the
+`md` elevation, a `maxHeight` of 280 with scrolling, and rows highlight with
+`colors.hover`. The selected check is `colors.primary`.
 
 ## Style by state
 

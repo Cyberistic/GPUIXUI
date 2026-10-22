@@ -110,7 +110,8 @@ component remembers the selection.
 ## Theming
 
 The rail paints `colors.background`, a `borderWidth.thin` border in `colors.border`
-and `radius.md`. One element — `tabs-indicator` — paints the selected surface in
+and the registry's fixed 6px corner (`rounded-md`, ADR 0006). One element —
+`tabs-indicator` — paints the selected surface in
 `colors.selected` behind the selected trigger; unselected triggers are
 transparent with `colors.mutedForeground` and hover with `colors.hover`, and the
 selected label takes `colors.foreground`. Trigger height is

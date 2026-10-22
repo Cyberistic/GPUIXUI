@@ -83,8 +83,9 @@ duration, so the resting frame paints in the frame the list appears
 
 ## Theming
 
-The field uses `background`, `border`, `radius.md`, `controlHeight(theme, "md")`
-and `focusRing`; the list uses `popover`, `border` and `radius.md`; the
+The field uses `background`, `border`, the registry's fixed 6px corner
+(`rounded-md`, ADR 0006), `controlHeight(theme, "md")` and `focusRing`; the list
+uses `popover`, `border` and the same fixed 6px corner; the
 highlighted row uses `accent`/`accentForeground`. A custom theme changes both —
 see [Theming](/docs/theming).
 

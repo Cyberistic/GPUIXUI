@@ -143,8 +143,9 @@ Every part takes the GPUix host props and merges `style` last.
 ## Theming
 
 The trigger paints `colors.background`, a `borderWidth.thin` border in
-`colors.borderStrong` and `radius.md`. The surface paints `colors.popover` with
-`colors.border` and `radius.md`. The selected day is `colors.primary` on
+`colors.borderStrong` and the registry's fixed 6px corner (`rounded-md`, ADR
+0006). The surface paints `colors.popover` with `colors.border` and the same
+fixed 6px corner. The selected day is `colors.primary` on
 `colors.primaryForeground`; today keeps a `colors.primary` outline; hover uses
 `colors.hover`; an unavailable day uses `colors.mutedForeground` and no hover; the
 focus ring is `colors.ring`.
