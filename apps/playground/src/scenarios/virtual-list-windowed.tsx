@@ -258,7 +258,8 @@ export const virtualListWindowedScenario: ScenarioBody = {
       );
       yield* ctx.expectEqual(
         "the range event is absolute and never runs ahead of the paint",
-        rangeStart > 0 && rangeStart <= Option.getOrElse(Arr.head(scrolled), () => -1),
+        rangeStart > 0 &&
+          rangeStart <= Option.getOrElse(Arr.head(scrolled), () => -1),
         true,
       );
       yield* ctx.expectEqual(

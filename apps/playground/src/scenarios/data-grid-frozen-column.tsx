@@ -185,7 +185,9 @@ export const dataGridFrozenColumnScenario: ScenarioBody = {
           Option.map(boundsOf(testId), (bounds) => bounds.x),
           () => -1,
         );
-      const offsetOf = (testId: string): Effect.Effect<Smoke.Offset, Smoke.SmokeAssertionError> =>
+      const offsetOf = (
+        testId: string,
+      ): Effect.Effect<Smoke.Offset, Smoke.SmokeAssertionError> =>
         ctx.expectSome(
           `${testId} reports a scroll offset`,
           Option.fromNullishOr(ctx.host.scrollOffset(testId)),
@@ -194,7 +196,11 @@ export const dataGridFrozenColumnScenario: ScenarioBody = {
       // 1. Both panes start aligned at the top.
       const frozenStart = yield* offsetOf("frozen");
       const bodyStart = yield* offsetOf("grid-body");
-      yield* ctx.expectEqual("the frozen pane starts at the top", frozenStart.y, 0);
+      yield* ctx.expectEqual(
+        "the frozen pane starts at the top",
+        frozenStart.y,
+        0,
+      );
       yield* ctx.expectEqual("the grid starts at the top", bodyStart.y, 0);
       yield* ctx.expectNear(
         "the first row sits at the same y in both panes",
@@ -263,7 +269,12 @@ export const dataGridFrozenColumnScenario: ScenarioBody = {
       ctx.host.wheel("grid-body", -200, 0);
       ctx.host.advance(50);
       const bodyPan = yield* offsetOf("grid-body");
-      yield* ctx.expectNear("a horizontal wheel pans the grid", bodyPan.x, -200, 2);
+      yield* ctx.expectNear(
+        "a horizontal wheel pans the grid",
+        bodyPan.x,
+        -200,
+        2,
+      );
       yield* ctx.expectNear(
         "the grid's row moved left with the pan",
         xOf(`body-row-${row}`),
