@@ -8,7 +8,7 @@
  * couple of states), not as a `Theme`: the mapping from one to the other is
  * this module.
  *
- * Two rules keep the mapping honest.
+ * Three rules keep the mapping honest.
  *
  * It **names roles it was given**. A palette role maps to the semantic role of
  * the same name, except `accent`, which is what a platform calls the fill our
@@ -44,8 +44,7 @@
  * the palette it reads actually changed.
  */
 
-import type { ThemeColors } from "./color.js";
-import { alpha, alphaOf } from "./color.js";
+import { alpha, alphaOf, type ThemeColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { extendTheme, getTheme, type Theme, type ThemeMode } from "./theme.js";
 
