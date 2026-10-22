@@ -51,6 +51,12 @@ import {
   searchWorkflowSource,
 } from "./search-input-demo";
 import {
+  SwitchStates,
+  SwitchWorkflow,
+  switchStatesSource,
+  switchWorkflowSource,
+} from "./switch-demo";
+import {
   TooltipDemo,
   TooltipStates,
   tipStatesSource,
@@ -2444,6 +2450,11 @@ export const demos: Readonly<Record<string, Demo>> = {
   "checkbox-workflow": {
     render: CheckboxWorkflow,
     source: checkboxWorkflowSource,
+  },
+  "switch-states": { render: SwitchStates, source: switchStatesSource },
+  "switch-workflow": {
+    render: SwitchWorkflow,
+    source: switchWorkflowSource,
   },
   "card-composition": {
     render: CardComposition,

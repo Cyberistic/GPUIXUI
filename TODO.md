@@ -3673,7 +3673,58 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 133/133
+`[x]` `[██████████]` 134/134
+
+`[x]` Curate the **Switch** page and hold its slide, its band and its knob guard
+to the source — `/docs/components/switch` served only the primitives package page
+(strategy 4: no preview), so the library's "takes effect now" control had nothing
+a reader could press and its slide lived only in a source comment. The curated
+page sits at the components route beside Checkbox; the primitive page stays at
+`/docs/primitives/switch`. It teaches what a drawing cannot show: the knob
+slides on a **`left` inset** (150 ms `easeOut`, `initial={false}` so the first
+paint is at rest, `reducedMotion` paints the same two insets with a zero
+duration because the runtime exposes no preference), the 24px **press band**
+carries the role, tab stop, focus and ring around a pill one icon-step tall, and
+`decorative()` strips pointer blocking from the track **and** the thumb, so a
+press on the band, the pill or the centre each report one change. It states the
+off paint (`muted` fill, `borderStrong` edge — never `input`), the checked
+accent with the derived opaque `filledHover`/`filledPressed`, the destructive
+invalid edge, and that a disabled switch suppresses feedback and installs no
+press path. Two browser previews: `switch-workflow` (sync settings — a master, a
+dependent that is disabled **and cleared** under an off master, a reduce-motion
+preference that lands the very knob beside it) and `switch-states` (three sizes,
+both accents, invalid, disabled, a knob glyph, reduced motion). The settings
+arithmetic lives in `src/components/docs/switch-preview.ts` so it is testable:
+`switch-preview.test.ts` (8 cases) fails when an off master leaves the dependent
+on, a dependent turns on under an off master, a restored master guesses the
+dependent back on, the motion preference is lost, or the slide duration stops
+matching `Switch.tsx`'s `THUMB_SLIDE`. The keyboard edges Checkbox and Switch
+share were hoisted to `selection-preview.ts` (Checkbox re-exports them, so no
+call site moved). `component-page-truth.test.ts` gained the page and `holds the
+switch's slide, its band and its knob guard to the source`, which reads
+`Switch.tsx` (role, `aria-valuetext`, no `aria-checked`, the band and ring, the
+`decorative` track, the throw from an orphaned `SwitchThumb`), `core/selection.ts`
+(`minHeight: targetSize.minimum`, the `left` offset, the muted/strong paint),
+`internal.ts` (`decorative`), the `SWITCH_*` recipes and the preview CSS, and
+**computes every size-table cell** with `switchTrackStyle`/`switchThumbStyle` so
+the printed 25×14/28×16/35×20 pills, 10/12/16 knobs and 9/10/13 travels cannot
+drift. `component-source.test.ts` now compares the accordion's content with the
+file the page labels instead of the import's variable name, because `switch` is
+a reserved word (`switch: switchSource`). The sidebar (`meta.json` Forms), the
+Components index sentence, `/docs/theming`'s switch list, the strategy's
+"Curated today" line, `sources.ts` and the app README ledger name the page.
+Directions measured: an off master that keeps the dependent fails two preview
+cases by name; replacing the `left` inset with a transform fails the truth case
+by name; a stale `29 × 16px` cell fails with the cell quoted; a relabelled
+`file=` now fails the content comparison. The full docs suite is 749/751; the
+two failures are other workstreams' uncommitted work — an in-tree
+`search-input.test.tsx` at 9 cases while its page still prints 7, and the two
+`link-integrity` links inside untracked components pages — `check-types`,
+`check:tests` and `build` are green. Verified in the dev server:
+`/docs/components/switch` answers `200` with its title, both previews, the
+sidebar's current mark, and `/api/search?query=switch` returns the page and its
+headings. No native scenario applies (a docs page has no runtime path), so no
+scenario ids were run; the component's own evidence stays with its rows.
 
 `[x]` Curate the **Search input** page and hold its Escape rule, its clear target
 and its fixed metrics to the source — `/docs/components/search-input` served the

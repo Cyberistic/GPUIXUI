@@ -5,6 +5,7 @@ import {
   highContrastLightColors,
   lightTheme,
 } from "@gpuixui/tokens";
+import { switchThumbStyle, switchTrackStyle } from "@gpuixui/primitives/core";
 import { describe, expect, it } from "vitest";
 import { pageUrl, propsOf } from "./component-index";
 import { packageCollections } from "./collection-routes";
@@ -163,6 +164,12 @@ const pages: ReadonlyArray<CuratedPage> = [
     file: "select.mdx",
     row: "Selects",
     source: "packages/primitives/src/components/Select.tsx",
+  },
+  {
+    file: "switch.mdx",
+    row: "Switches",
+    suite: "packages/primitives/runtime/switch.runtime.test.tsx",
+    source: "packages/primitives/src/components/Switch.tsx",
   },
   {
     file: "search-input.mdx",
@@ -1220,6 +1227,110 @@ describe("the curated component pages", () => {
     expect(text).toContain("`filledHover`");
     expect(text).toContain("`filledPressed`");
     expect(text).toContain("`iconSize`");
+  });
+
+  it("holds the switch's slide, its band and its knob guard to the source", () => {
+    // A switch page can drift in four silent ways: it can promise an
+    // `aria-checked` the runtime does not have, call the slide a transform the
+    // runtime cannot paint, hide the 24px band that makes the one-icon-tall
+    // pill pressable, or print geometry from memory. The first three are read
+    // from the painter; the size table is compared with the style helpers the
+    // component itself calls.
+    const page = pages.find((candidate) => candidate.file === "switch.mdx");
+    expect(page, "the switch page is not in the curated set").toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    const selection = read("packages/primitives/src/core/selection.ts");
+    const internal = read("packages/primitives/src/components/internal.ts");
+    const recipe = read("packages/primitives/src/recipe/index.ts");
+
+    expect(source).toContain('role="switch"');
+    expect(source).toContain(
+      'aria-valuetext={state.current ? "checked" : "unchecked"}',
+    );
+    // No `aria-checked` attribute (the module's comment names the absence).
+    expect(source).not.toContain("aria-checked=");
+    expect(source).toContain("aria-description=");
+    expect(source).toContain("switchTargetStyle(spec)");
+    expect(source).toContain("controlRing(theme,");
+    expect(source).toContain(
+      "tabIndex={props.disabled === true ? undefined : 0}",
+    );
+    expect(source).toContain("composePress(props.disabled === true");
+
+    // The band is the token floor, and the pill and knob are decorative: the
+    // shared helper is what strips their mouse-blocking hitbox.
+    expect(selection).toContain("minHeight: targetSize.minimum");
+    expect(internal).toContain('{ pointerEvents: "none" }');
+    expect(selection).toContain('pointerEvents: "none"');
+
+    // The slide: a `left` inset the runtime interpolates, a rest-first paint
+    // and a zero-duration landing under the caller's preference.
+    expect(source).toContain(
+      'const THUMB_SLIDE: MotionTransition = { duration: 0.15, ease: "easeOut" };',
+    );
+    expect(source).toContain("stillTransition(THUMB_SLIDE, reducedMotion)");
+    expect(source).toContain("initial={false}");
+    expect(source).toContain("animate={{ left }}");
+    expect(selection).toContain("left: switchThumbOffset(spec, theme)");
+
+    // The off pill's fill and edge, and a checked pill's derived opaque fills.
+    expect(selection).toContain("theme.colors.muted");
+    expect(selection).toContain("theme.colors.borderStrong");
+    expect(selection).toContain("feedbackFill(spec, theme,");
+    expect(recipe).toContain("hover:bg-hover active:bg-active");
+    expect(recipe).toContain("switch-thumb-on-${size}");
+    expect(recipe).toContain("pointer-events-none");
+    expect(source).toContain(
+      'throw new Error("SwitchThumb must be used inside Switch")',
+    );
+
+    // The size table is the component's arithmetic, not a memory: every pill,
+    // knob and travel cell is computed from the theme through the same helper
+    // the component calls.
+    const text = body(page).replace(/\s+/g, " ");
+    const inset = lightTheme.spacing["2xs"];
+    const rows = (["sm", "md", "lg"] as const).map((size) => {
+      const spec = {
+        state: "checked" as const,
+        size,
+        accent: "primary" as const,
+      };
+      const track = switchTrackStyle(spec, lightTheme);
+      const thumb = switchThumbStyle(spec, lightTheme);
+      const left = typeof thumb.left === "number" ? thumb.left : Number.NaN;
+      const label = size === "md" ? "`md` (default)" : `\`${size}\``;
+      return `| ${label} | ${track.width} × ${track.height}px | ${thumb.width}px | ${left - inset}px | 24px high |`;
+    });
+    expect(rows.filter((row) => !text.includes(row))).toEqual([]);
+
+    // The preview paints that geometry from the theme's steps, not literals.
+    const css = read("apps/docs/src/styles/demos.css");
+    const switchCss = css.slice(
+      css.indexOf("/* ---- switch:"),
+      css.indexOf("/* ---- tooltip:"),
+    );
+    expect(switchCss).toContain("min-height: var(--target-size)");
+    expect(switchCss).toContain("width: calc(var(--icon-size-md) * 1.75)");
+    expect(switchCss).toContain("width: calc(var(--icon-size-md) - 4px)");
+    expect(switchCss).toContain("transition: left 150ms ease-out");
+    expect(switchCss).not.toContain("width: 28px");
+
+    expect(text).toContain("@gpuix/native@0.11.0");
+    expect(text).toContain("`aria-valuetext`");
+    expect(text).toContain("no `aria-checked`");
+    expect(text).toContain("24px");
+    expect(text).toContain("key **up**");
+    expect(text).toContain("key **down**");
+    expect(text).toContain("held key");
+    expect(text).toContain("`left` inset");
+    expect(text).toContain("`reducedMotion`");
+    expect(text).toContain("`borderStrong`");
+    expect(text).toContain("`filledHover`");
+    expect(text).toContain("`filledPressed`");
+    expect(text).toContain("`iconSize`");
+    expect(text).toContain('`pointerEvents: "none"`');
   });
 
   it("hold the search field's clear rule and its fixed metrics to the source", () => {

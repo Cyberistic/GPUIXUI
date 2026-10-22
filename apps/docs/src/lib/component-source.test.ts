@@ -26,6 +26,9 @@ const sourceRegistry = new URL(
   import.meta.url,
 );
 
+/** The registry keyed by plain strings, so a page's name needs no assertion. */
+const registry: Readonly<Record<string, string>> = componentSources;
+
 /** Every curated page that shows a component's source. */
 const mentions = (): ReadonlyArray<{
   readonly page: string;
@@ -88,13 +91,20 @@ describe("the component source accordions", () => {
   });
 
   it("label the file the registry actually imports", () => {
-    const paths = registryPaths();
+    // Compare the text the accordion prints with the file the page labels,
+    // rather than the import's variable name: the registry's keys are not
+    // always identifiers (`switch` is reserved) and an entry may rename its
+    // import (`switch: switchSource`). Content equality is the property a
+    // reader relies on: the block under the label is that file.
     const mismatched = mentions().flatMap(({ page, name, file }) => {
-      const registered = paths.get(name);
-      return registered === file
+      const registered = registry[name];
+      const printed = readFileSync(new URL(file, repo), "utf8");
+      return registered === printed
         ? []
         : [
-            `${page}: "${name}" prints ${file}, the registry imports ${registered ?? "nothing"}`,
+            `${page}: "${name}" prints ${file}, the registry holds ${
+              registered === undefined ? "nothing" : "another file"
+            }`,
           ];
     });
 

@@ -13,26 +13,7 @@
  * trusted, because Space on the wrong edge is a double toggle.
  */
 
-/** Which edge of a key event a preview receives. */
-export type KeyPhase = "down" | "up";
-
-/**
- * Whether a key edge activates the box — the rule `decideActivation` applies.
- *
- * Enter toggles on key **down**, Space on key **up**, and a held key's repeat
- * events do nothing. Space is the edge that also calls `preventDefault()`, so a
- * scroll container does not move while the box waits for the release.
- */
-export const activates = (
-  key: string,
-  phase: KeyPhase,
-  held = false,
-): boolean => {
-  if (held) return false;
-  if (key === "Enter") return phase === "down";
-  if (key === " ") return phase === "up";
-  return false;
-};
+export { activates, type KeyPhase } from "./selection-preview";
 
 /** One notification channel a reader can switch on. */
 export interface Channel {

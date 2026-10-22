@@ -2317,6 +2317,218 @@
   line-height: 1.6;
 }
 
+/* ---- switch: mirrors primitives/src/components/Switch.tsx ----
+   `switchTrackStyle`/`switchThumbStyle` over `core/selection.ts`: the pill is
+   one icon-step tall and 1.75 steps wide, the knob is the pill's height less
+   two 2xs insets, and the band (`switchTargetStyle`) is the 24px target floor
+   around it. The pill and the knob are `decorative()` — `pointerEvents: none`
+   — so the band owns the role, the tab stop and the ring. The knob's `left` is
+   the slide: the runtime has no transform but interpolates an inset, and
+   `reducedMotion` paints the landing with no duration. */
+.gx-switch-scene {
+  align-items: stretch;
+  gap: 10px;
+  min-height: 260px;
+  padding: 24px;
+}
+
+.gx-switch-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 360px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-switch-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.gx-switch-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-switch-title {
+  color: var(--foreground);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.gx-switch-hint {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-switch-readout {
+  margin: 0;
+  color: var(--placeholder);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.gx-switch-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.gx-switch-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.gx-switch {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--target-size);
+  cursor: pointer;
+}
+
+.gx-switch:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-switch[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gx-switch-track {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: calc(var(--icon-size-md) * 1.75);
+  height: var(--icon-size-md);
+  border: 1px solid var(--border-strong);
+  border-radius: 9999px;
+  background: var(--muted);
+  pointer-events: none;
+}
+
+.gx-switch[data-size="sm"] .gx-switch-track {
+  width: calc(var(--icon-size-sm) * 1.75);
+  height: var(--icon-size-sm);
+}
+
+.gx-switch[data-size="lg"] .gx-switch-track {
+  width: calc(var(--icon-size-lg) * 1.75);
+  height: var(--icon-size-lg);
+}
+
+.gx-switch[data-invalid] .gx-switch-track[data-state="unchecked"] {
+  border-color: var(--destructive);
+}
+
+.gx-switch[data-state="unchecked"]:not([data-disabled]):hover .gx-switch-track {
+  background: var(--hover);
+}
+
+.gx-switch[data-state="unchecked"]:not([data-disabled]):active
+  .gx-switch-track {
+  background: var(--active);
+}
+
+.gx-switch-track[data-state="checked"] {
+  border-color: transparent;
+  background: var(--primary);
+}
+
+.gx-switch[data-accent="destructive"] .gx-switch-track[data-state="checked"] {
+  background: var(--destructive);
+}
+
+.gx-switch[data-state="checked"]:not([data-disabled]):hover .gx-switch-track {
+  background: var(--primary-hover);
+}
+
+.gx-switch[data-state="checked"]:not([data-disabled]):active .gx-switch-track {
+  background: var(--primary-pressed);
+}
+
+.gx-switch[data-accent="destructive"][data-state="checked"]:not(
+    [data-disabled]
+  ):hover
+  .gx-switch-track {
+  background: var(--destructive-hover);
+}
+
+.gx-switch[data-accent="destructive"][data-state="checked"]:not(
+    [data-disabled]
+  ):active
+  .gx-switch-track {
+  background: var(--destructive-pressed);
+}
+
+.gx-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--icon-size-md) - 4px);
+  height: calc(var(--icon-size-md) - 4px);
+  border-radius: 9999px;
+  background: var(--foreground);
+  color: var(--background);
+  pointer-events: none;
+  transition: left 150ms ease-out;
+}
+
+.gx-switch[data-size="sm"] .gx-switch-thumb {
+  width: calc(var(--icon-size-sm) - 4px);
+  height: calc(var(--icon-size-sm) - 4px);
+}
+
+.gx-switch[data-size="lg"] .gx-switch-thumb {
+  width: calc(var(--icon-size-lg) - 4px);
+  height: calc(var(--icon-size-lg) - 4px);
+}
+
+.gx-switch-track[data-state="checked"] .gx-switch-thumb {
+  left: calc(100% - (var(--icon-size-md) - 4px) - 2px);
+  background: var(--primary-foreground);
+  color: var(--primary);
+}
+
+.gx-switch[data-size="sm"]
+  .gx-switch-track[data-state="checked"]
+  .gx-switch-thumb {
+  left: calc(100% - (var(--icon-size-sm) - 4px) - 2px);
+}
+
+.gx-switch[data-size="lg"]
+  .gx-switch-track[data-state="checked"]
+  .gx-switch-thumb {
+  left: calc(100% - (var(--icon-size-lg) - 4px) - 2px);
+}
+
+.gx-switch[data-accent="destructive"]
+  .gx-switch-track[data-state="checked"]
+  .gx-switch-thumb {
+  background: var(--destructive-foreground);
+  color: var(--destructive);
+}
+
+.gx-switch-glyph {
+  font-size: 8px;
+  line-height: 1;
+}
+
 /* ---- tooltip: mirrors primitives/src/components/Tooltip.tsx's recipe ----
    `bg-popover text-popover-foreground rounded-sm border border-border` and
    `pl-sm pr-sm pt-xs pb-xs type-size-caption whitespace-nowrap`: padding is

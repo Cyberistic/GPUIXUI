@@ -250,6 +250,30 @@ describe("preview style sheets", () => {
     expect(clear).not.toContain("width: 18px");
   });
 
+  it("reads a switch's band, pill and knob from the theme's steps", () => {
+    // The shipped pill is one icon-step tall and 1.75 steps wide, the knob is
+    // that height less two `spacing.2xs` insets, and the band is the 24px
+    // target floor around it (`core/selection.ts`). A preview carrying 28px
+    // would stop resizing with the platform's icon steps.
+    const css = read("../styles/demos.css");
+
+    expect(block(css, ".gx-switch")).toContain(
+      "min-height: var(--target-size)",
+    );
+    expect(block(css, ".gx-switch-track")).toContain(
+      "width: calc(var(--icon-size-md) * 1.75)",
+    );
+    expect(block(css, ".gx-switch-track")).toContain(
+      "height: var(--icon-size-md)",
+    );
+    expect(block(css, ".gx-switch-thumb")).toContain(
+      "width: calc(var(--icon-size-md) - 4px)",
+    );
+    expect(block(css, ".gx-switch-thumb")).toContain(
+      "transition: left 150ms ease-out",
+    );
+  });
+
   it("carry no library colour literal outside the defaults", () => {
     const values = Object.values(darkColours).map((value) =>
       value.toLowerCase(),

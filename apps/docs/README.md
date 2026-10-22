@@ -56,6 +56,7 @@ components/list.mdx         Curated: one roving tab stop, type-ahead, the range 
 components/popover.mdx       Curated: anchored placement
 components/search-input.mdx  Curated: the Escape rule, the 24px clear target, the fixed metrics
 components/select.mdx        Curated: the 320px list, the row that reveals itself
+components/switch.mdx        Curated: the left-inset slide, the 24px band, the cleared dependent
 components/tabs.mdx          Curated: the measured indicator
 components/toast.mdx         Curated: the bounded queue, one action, the hold
 components/tooltip.mdx       Curated: the tip's clock, the traversal that never opens it
@@ -103,8 +104,11 @@ src/components/docs/menu-preview.ts       The menu preview's row model and arrow
 src/components/docs/command-preview.ts    The palette preview's matcher and group ranking
 src/components/docs/select-preview.ts     The select preview's data and arrow arithmetic
 src/components/docs/select-demo.tsx       The select's two browser renderings and their source strings
+src/components/docs/selection-preview.ts   The key edges a checkbox and a switch share
 src/components/docs/search-input-preview.ts The search preview's filter, count and Escape rule
 src/components/docs/search-input-demo.tsx The search field's two browser renderings and their source strings
+src/components/docs/switch-preview.ts      The switch preview's dependent-setting rule and its slide duration
+src/components/docs/switch-demo.tsx        The switch's two browser renderings and their source strings
 src/components/docs/tooltip-preview.ts    The tip's clock: delay, close grace, reopen window, traversal
 src/components/docs/tooltip-demo.tsx      The tooltip's two browser renderings and their source strings
 src/components/docs/sources.ts            The real source files the Code tab shows

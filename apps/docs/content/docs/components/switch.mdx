@@ -1,0 +1,223 @@
+---
+title: Switch
+description: An immediate on/off — a pill and a knob that slides on its left inset, inside the 24px press band the runtime's key events reach.
+---
+
+`Switch` is the "takes effect now" control: a pill with a knob that reports a
+boolean the moment it is pressed, rather than a choice submitted with a form
+(that is [Checkbox](/docs/components/checkbox)). It shares `core/selection.ts`'s
+metrics and key contract with the checkbox, so the two line up on one row, but
+it has two positions rather than three and it paints a track instead of a box.
+
+<ComponentPreview name="switch-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/primitives" importName="Switch" />
+
+<ComponentSource
+  name="switch"
+  file="packages/primitives/src/components/Switch.tsx"
+/>
+
+## Usage
+
+```tsx
+import { Switch } from "@gpuixui/primitives";
+import { useState } from "react";
+
+export const Theme = () => {
+  const [dark, setDark] = useState(false);
+
+  return (
+    <Switch
+      checked={dark}
+      label="Dark theme"
+      onCheckedChange={setDark}
+    />
+  );
+};
+```
+
+A visible `Label` beside the switch is **text only**: 0.11.0 has no
+`aria-labelledby`, so the control is named by its own `label` prop. Pass the
+same string, or spread `labelledBy(name)`, and the reader hears one name rather
+than a label pointing at nothing.
+
+## Sizes and states
+
+<ComponentPreview name="switch-states" />
+
+| Size | Pill (track) | Knob | Travel | Press band |
+| ---- | ------------ | ---- | ------ | ---------- |
+| `sm` | 25 × 14px | 10px | 9px | 24px high |
+| `md` (default) | 28 × 16px | 12px | 10px | 24px high |
+| `lg` | 35 × 20px | 16px | 13px | 24px high |
+
+The pill is one icon-step tall and a fixed 1.75 steps wide, so a switch matches
+the checkbox beside it at every size. The **band** is the control: it is the
+24px floor WCAG 2.2 sets for a small target, it keeps the pill's width and grows
+vertically, and it owns the role, the tab stop, the focus and the ring. The pill
+and the knob are `decorative()` — `pointerEvents: "none"` — so a press on the
+band and a press on the knob each report exactly one change. That guard is
+load-bearing: a painted child owns a mouse-blocking hitbox in GPUI, and a knob
+that took the press made the switch untoggleable (measured in
+`runtime/controls.runtime.test.tsx`).
+
+An off pill is the `muted` fill with the measured boundary edge
+(`borderStrong`), never the `input` role — that is a field fill and the card's
+own white in the light theme. Pointer feedback is a `hover`/`active` wash under
+the knob, so an invalid switch keeps its `destructive` edge while the pointer
+is on it. A checked pill paints its accent, and its hover and press are the
+theme's derived **opaque** fills (`filledHover`/`filledPressed`) with the edge
+transparent, because the knob and any glyph sit on that fill.
+
+Disabled adds half opacity, removes the feedback recipes and installs no press
+handler; a disabled switch is painted with `suppressSelectionFeedback`, so the
+knob does not answer a hover it cannot act on.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Switch` | the press band, the state, the name, the help and the keyboard edges |
+| `SwitchThumb` | the knob; `children` are its content |
+
+`Switch`'s children are the thumb's content, drawn inside the knob's
+`pointerEvents: "none"` guard, so a glyph cannot swallow the press.
+`SwitchThumb` reads the switch it belongs to from context and throws
+`SwitchThumb must be used inside Switch` when there is none — the two are one
+control, not two components. The switch forwards the `TooltipTriggerProps` pair
+(`onMouseEnter`/`onMouseLeave` and the tip's `aria-description`) onto the press
+band, because a switch in a toolbar is described by a tip; its own `description`
+wins the shared channel.
+
+The settings panel above is app composition: the dependent switch is disabled
+and **cleared** while the master is off, so an off master never leaves a
+setting reading as on. The component knows nothing about that rule.
+
+## Keyboard
+
+| Key | Contract |
+| ---- | -------- |
+| `Space` | toggles on key **up**; the press calls `preventDefault()` so a scroller does not move while the switch waits for the release |
+| `Enter` | toggles on key **down** |
+| held key | repeat events do nothing |
+| `Tab` | reaches the band unless the switch is disabled |
+
+`Space` toggles on the release and `Enter` on the press; there is no third
+value and no form submission — the caller stores the boolean the switch reports.
+A disabled switch removes the tab stop and its press handler; its keys and focus
+stay observable to the caller.
+
+## API reference
+
+### `Switch`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `checked` | `boolean` | — | controlled state; omit to let the switch keep its own |
+| `defaultChecked` | `boolean` | `false` | initial state when uncontrolled |
+| `onCheckedChange` | `(next: boolean) => void` | none | the next boolean, only when it changed |
+| `onChange` | `(next: boolean) => void` | none | deprecated alias for `onCheckedChange`; the new name wins when both are passed |
+| `children` | `ReactNode` | none | a glyph on the knob |
+| `disabled` | `boolean` | `false` | refuses pointer and keys and leaves the tab order |
+| `invalid` | `boolean` | `false` | an off pill takes the destructive edge |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | the pill's height from `iconSize`; the band stays 24px |
+| `accent` | `"primary" \| "destructive"` | `"primary"` | the checked fill and the knob's on-colour |
+| `label` | `string` | none | the accessible name; a visible `Label` does not supply it |
+| `description` | `string` | none | announced help (`aria-description`); wins over a tooltip's text |
+| `reducedMotion` | `boolean` | `false` | the knob lands on its position instead of sliding there |
+| `style` | `StateStyle<SwitchState>` | — | resolved against the live state and merged last |
+| `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `testId` | `string` | — | stable locator |
+| `ref` / `onLayout` | host address | none | the press band is the addressed element: focus it, measure it, and name it for automation with `aria-id` |
+| `onMouseEnter` / `onMouseLeave` | `TooltipTriggerProps` | none | forwarded to the press band, so a switch can be a `Tooltip` trigger; the tip's `aria-description` lands on the same help channel |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the switch's own; yours runs first |
+
+`SwitchState` is `{ disabled, focused, checked, invalid }`, handed to the
+`style` callback after the recipe, so a callback can paint a property the
+recipe does not. `className` is compiled through `@gpuixui/tw` first, then the
+callback's `style` is merged last.
+
+### `SwitchThumb`
+
+The knob. `Switch` renders it; a caller's `children` are its content.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactNode` | the plain filled knob | a glyph on the knob |
+| `className` | `string` | — | compiled through the recipe, joined after the thumb's rules |
+| `style` | `StyleDesc` | — | merged last |
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| off pill | `muted` fill, `borderStrong` edge |
+| off knob | `foreground` |
+| checked pill | `primary` / `destructive` |
+| checked knob | `primaryForeground` / `destructiveForeground` |
+| pill hover and press | `hover`/`active` while off; `filledHover`/`filledPressed` while on (edge transparent) |
+| invalid off pill | `destructive` edge |
+| press band ring | `ring` at `borderWidth.strong`, painted after Tab and never after a mouse press |
+| disabled switch | `disabledOpacity`, with the feedback recipes suppressed |
+
+The knob's position is a **`left` inset**, not a transform: the runtime has no
+`transform`, but it interpolates an inset, so the thumb slides 150 ms
+`easeOut`. `initial={false}` keeps the first paint at rest — only a state change
+animates. `reducedMotion` uses `stillTransition`, which paints the same two
+insets with a zero duration, because the runtime exposes no reduced-motion
+preference and the caller supplies its own. The selected platform's density and
+icon steps resize the pill and knob together; the band never drops below 24px.
+
+## Accessibility and limitations
+
+- The runtime's role is **`switch`**. State is announced through
+  **`aria-valuetext`** — `checked` or `unchecked` — because
+  `@gpuix/native@0.11.0` has no `aria-checked`; a browser preview may show
+  `aria-checked`, the native switch does not.
+- No `aria-labelledby` and no label-inside composition: the switch's own
+  `label` is its name, and its `description` is its help (`aria-description`;
+  there is no `aria-describedby`).
+- `disabled` removes the tab stop and the press handler; there is no
+  `aria-disabled` and no loading or pending state. Disable the switch while a
+  request is in flight.
+- The slide is the caller's preference, not the runtime's: there is no
+  `transform`, and `reducedMotion` is a prop rather than an OS query.
+- A glyph on the knob is decoration, not a state label; it is painted inside
+  the knob's pointer guard and takes no press.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the band, the state machine, the track, the knob and the key decisions |
+| `effect` | `Predicate` for the thumb's numeric inset |
+| `@gpuix/react` | the host event, style and motion types |
+| `@gpuix/react/floating` | `resolveStyle` for the state callback |
+| `@gpuixui/tw` | the recipe registry and `cn` conflict resolution |
+
+## Related
+
+- **Checkbox** — a submitted choice, possibly indeterminate.
+- **Radio group** — one choice from a set.
+- **Toggle** — a momentary pressed mode.
+- **Tooltip** — a short description for a switch in a toolbar.
+- **Label** — the visible name and its description.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `partial` runtime verdict: the control is
+whole, but 0.11.0 has no `aria-checked`, so the state travels as
+`aria-valuetext`, and a visible `Label` cannot name the switch. The slide is
+proven in `runtime/switch.runtime.test.tsx` — 3 native tests: the knob is at
+rest in the click's frame and at the far edge once the motion clock advances,
+both positions keep the same gap to each edge, and the checked pill paints its
+fill and stays at rest while disabled. A negative control was measured: without
+`motion` the knob paints at the far edge immediately. The press band is 24px in
+`runtime/selection-targets.runtime.test.tsx` (both press paths), the role,
+announced value, custom glyph hit test and both activation edges are in
+`runtime/controls.runtime.test.tsx`, and the name, help, tooltip and address
+paths are in `Switch.test.tsx`, `runtime/labelling.runtime.test.tsx` and
+`runtime/fields.runtime.test.tsx`.
