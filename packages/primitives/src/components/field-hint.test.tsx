@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import type { StyleDesc } from "@gpuix/react";
 import { disabledOpacity } from "@gpuixui/tokens";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -252,6 +253,47 @@ describe("the published hint seam", () => {
       origin: "field",
     });
     expect(frame.pointerEvents).toBe("none");
+  });
+
+  it("follows a host package's own resolved style", () => {
+    // A host another package paints owns its chrome and its type, so the hint
+    // measures from that style rather than from this package's density — the
+    // reason `@gpuixui/components` can call this seam without changing what its
+    // hinted hosts paint (only the disabled ink follows this package's rule).
+    const style: StyleDesc = {
+      borderWidth: 2,
+      paddingLeft: 10,
+      paddingRight: 8,
+      paddingTop: 6,
+      fontSize: 15,
+      lineHeight: 20,
+      fontFamily: "Inter",
+      textAlign: "left",
+    };
+    const frame = hintFrame(testTheme, {
+      origin: "host",
+      align: "center",
+      style,
+    });
+    expect(frame.paddingLeft).toBe(12);
+    expect(frame.paddingRight).toBe(8);
+    expect(frame.paddingTop).toBe(0);
+    expect(frame.pointerEvents).toBe("none");
+
+    const top = hintFrame(testTheme, { origin: "host", align: "top", style });
+    expect(top.paddingTop).toBe(8);
+
+    const hint = expectSome(
+      fieldHint({ placeholder: "Search" }, testTheme, "", {
+        origin: "host",
+        align: "center",
+        style,
+      }),
+    );
+    expect(styleOf(hint).fontSize).toBe(15);
+    expect(styleOf(hint).lineHeight).toBe(20);
+    expect(styleOf(hint).fontFamily).toBe("Inter");
+    expect(styleOf(hint).textAlign).toBe("left");
   });
 
   it("documents the seam where a consumer reads the package", () => {

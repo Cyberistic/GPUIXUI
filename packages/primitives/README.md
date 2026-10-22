@@ -111,8 +111,10 @@ paints the same hint rather than keeping a copy:
 - `renderFieldHint` — `renderFieldHint(hint, testId)` paints one `<text>` named
   `${testId}-hint`.
 
-`spec` is `{ size, align, origin }`: `origin: "field"` measures from the
-field's border box and `"content"` from a host already inside that chrome.
+`spec` is either `{ size, align, origin }` with `origin: "field"` (measured from
+the field's border box) or `"content"` (a host already inside that chrome), or
+`{ origin: "host", align, style }` for a host another package paints, whose own
+resolved style owns the insets and the type.
 
 ## Documentation and examples
 

@@ -39,17 +39,55 @@ export interface HintField {
   readonly disabled?: boolean;
 }
 
-/** Where the hint is measured from. */
-export interface HintSpec {
-  readonly size: ControlSize;
-  readonly align: FieldHintAlign;
-  /**
-   * `field` is a field that draws its own border and padding (`Input`,
-   * `TextArea`); `content` is a host already inside that chrome
-   * (`NumberField`'s input, which its root insets).
-   */
-  readonly origin: "field" | "content";
+/**
+ * Where the hint is measured from.
+ *
+ * `field` is a field that draws its own border and padding (`Input`,
+ * `TextArea`); `content` is a host already inside that chrome (`NumberField`'s
+ * input, which its root insets). `host` is a host another package paints: its
+ * resolved style owns the chrome and the type, so the hint follows both.
+ */
+export type HintSpec =
+  | {
+      readonly origin: "field" | "content";
+      readonly size: ControlSize;
+      readonly align: FieldHintAlign;
+    }
+  | {
+      readonly origin: "host";
+      readonly align: FieldHintAlign;
+      readonly style?: StyleDesc | undefined;
+    };
+
+interface HintInsets {
+  readonly border: number;
+  readonly paddingLeft: number;
+  readonly paddingRight: number;
+  readonly paddingTop: number;
 }
+
+const pixels = (value: number | undefined): number => value ?? 0;
+
+/** The insets a hint frame takes from the box it sits in. */
+const hintInsets = (theme: PrimitiveTheme, spec: HintSpec): HintInsets => {
+  if (spec.origin === "host") {
+    const style = spec.style ?? {};
+    return {
+      border: pixels(style.borderWidth),
+      paddingLeft: pixels(style.paddingLeft),
+      paddingRight: pixels(style.paddingRight),
+      paddingTop: pixels(style.paddingTop),
+    };
+  }
+  const field = spec.origin === "field";
+  const padding = field ? theme.density.controlPaddingX[spec.size] : 0;
+  return {
+    border: field ? theme.borderWidth.thin : 0,
+    paddingLeft: padding,
+    paddingRight: padding,
+    paddingTop: padding,
+  };
+};
 
 /**
  * The frame a hint paints in, over the empty host.
@@ -58,9 +96,7 @@ export interface HintSpec {
  * the host underneath, exactly as it does through the runtime's own hint.
  */
 export const hintFrame = (theme: PrimitiveTheme, spec: HintSpec): StyleDesc => {
-  const field = spec.origin === "field";
-  const padding = field ? theme.density.controlPaddingX[spec.size] : 0;
-  const border = field ? theme.borderWidth.thin : 0;
+  const insets = hintInsets(theme, spec);
   return {
     position: "absolute",
     top: 0,
@@ -70,13 +106,24 @@ export const hintFrame = (theme: PrimitiveTheme, spec: HintSpec): StyleDesc => {
     display: "flex",
     flexDirection: "row",
     alignItems: spec.align === "center" ? "center" : "flex-start",
-    paddingLeft: border + padding,
-    paddingRight: padding,
-    paddingTop: spec.align === "top" ? border + padding : 0,
+    paddingLeft: insets.border + insets.paddingLeft,
+    paddingRight: insets.paddingRight,
+    paddingTop: spec.align === "top" ? insets.border + insets.paddingTop : 0,
     overflow: "hidden",
     pointerEvents: "none",
   };
 };
+
+/** The hint's type: the field's body role, or the host's own resolved metrics. */
+const hintType = (theme: PrimitiveTheme, spec: HintSpec): StyleDesc =>
+  spec.origin === "host"
+    ? {
+        fontSize: spec.style?.fontSize,
+        lineHeight: spec.style?.lineHeight,
+        fontFamily: spec.style?.fontFamily,
+        textAlign: spec.style?.textAlign,
+      }
+    : recipeTw.classesToStyle("type-body font-sans", theme).style;
 
 /**
  * A field's hint, or nothing when it has no placeholder or already has a value.
@@ -97,10 +144,11 @@ export const fieldHint = (
       text,
       frame: hintFrame(theme, spec),
       textStyle: mergeStyle(
-        recipeTw.classesToStyle(
-          "type-body font-sans whitespace-nowrap text-ellipsis",
-          theme,
-        ).style,
+        mergeStyle(
+          recipeTw.classesToStyle("whitespace-nowrap text-ellipsis", theme)
+            .style,
+          hintType(theme, spec),
+        ),
         props.disabled === true
           ? { color: theme.colors.placeholder, opacity: disabledOpacity }
           : { color: theme.colors.placeholder },
