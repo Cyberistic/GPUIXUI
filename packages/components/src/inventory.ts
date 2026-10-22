@@ -11,6 +11,7 @@ import { accordionMeta } from "./accordion.js";
 import { alertMeta } from "./alert.js";
 import { autoHeightMeta } from "./auto-height.js";
 import { avatarMeta } from "./avatar.js";
+import { avatarGroupMeta } from "./avatar-group.js";
 import { badgeMeta } from "./badge.js";
 import { breadcrumbMeta } from "./breadcrumb.js";
 import { carouselMeta } from "./carousel.js";
@@ -86,6 +87,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   autoHeightMeta,
   alertMeta,
   avatarMeta,
+  avatarGroupMeta,
   badgeMeta,
   breadcrumbMeta,
   carouselMeta,

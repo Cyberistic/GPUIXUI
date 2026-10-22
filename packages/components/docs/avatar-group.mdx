@@ -1,0 +1,152 @@
+---
+title: Avatar group
+description: A facepile — overlapping avatars with one chip for the members it does not show.
+---
+
+`AvatarGroup` turns a list of people into a row of overlapping faces and, when a
+cap is given, one chip that counts and names the rest. It composes the
+[Avatar](/docs/components/avatar) component rather than painting its own discs, so
+the initials fallback, the presence dot and the four sizes behave exactly as they
+do on a single avatar.
+
+## Usage
+
+```tsx
+import { AvatarGroup } from "@gpuixui/components/avatar-group";
+
+<AvatarGroup
+  members={[
+    { name: "Ada Lovelace", status: "online" },
+    { name: "Grace Hopper", status: "busy" },
+    { name: "Alan Turing" },
+    { name: "Katherine Johnson" },
+    { name: "Jean Bartik" },
+  ]}
+  max={3}
+  label="Project team"
+/>;
+```
+
+That row paints three faces and a `+2` chip. The faces are the **first** members
+in list order — a facepile reads in the order it is written, so the tail is what
+goes behind the chip.
+
+## How the row is laid out
+
+Each disc is an absolutely positioned wrapper inside one relatively positioned
+row, and the row's width is arithmetic over the diameter and the overlap:
+
+```
+step = diameter − overlap
+row  = diameter + step × (discs − 1)
+```
+
+Because the row reserves its final width on the first frame, an arrival never
+reflows the page. The default overlap is a quarter of the face's diameter, so
+every size tucks the same way. A caller's `overlap` is clamped to one pixel short
+of the diameter — an overlap wider than a face would both hide every face and
+paint the row backwards.
+
+The ring around each disc is what separates two overlapping faces. It is painted
+in the theme's `background` role by default; a group on a card or a popover
+passes the surface it sits on:
+
+```tsx
+import { AvatarGroup } from "@gpuixui/components/avatar-group";
+import { useTheme } from "@gpuixui/components";
+
+const theme = useTheme();
+
+<AvatarGroup members={team} ringColor={theme.colors.card} />;
+```
+
+## The arrival
+
+A face arrives with the house entrance — an **opacity run plus a few pixels of
+rise** on a relative `top`, staggered by `@gpuixui/motion`'s rule — because the
+runtime has no `transform` style key (upstream issue `#102`). `rise` sets the
+distance (default 6 px), `stepMs` the gap between two faces (default 40 ms) and
+`level` the duration (default `normal`, 200 ms).
+
+A member's key is its **name**. Appending a member therefore mounts only the new
+face; removing one does not remount the faces after it — neither replays an
+arrival the reader has already seen. Because the key is the name, two people
+sharing one name cannot both animate in; disambiguate the names or key the group
+by the list you pass.
+
+Under `MotionProvider preference="reduced"` the duration **and** the delay go to
+zero, so the resting row paints in the frame it appears. The preference is the
+application's to supply — the runtime exposes no reduced-motion query.
+
+```tsx
+import { AvatarGroup } from "@gpuixui/components/avatar-group";
+import { MotionProvider } from "@gpuixui/components";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <AvatarGroup members={team} max={4} />
+</MotionProvider>;
+```
+
+## Accessibility
+
+The row is a `role="group"` whose name is the member count (`5 avatars`) unless
+`label` names it. Every visible face keeps the [Avatar](/docs/components/avatar)
+node it has: an image node named after the person. The overflow chip is one more
+image node whose name is the count **and** the hidden names — `2 more: Katherine
+Johnson, Jean Bartik` — because the chip carries no interaction, so its label is
+the only way a reader learns who it stands for. `0.11.0` publishes no `aria-hidden`
+and the group adds no tab stop.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `members` | `ReadonlyArray<AvatarGroupMember>` | — | `{ name, src?, status? }`, in reading order. A member's key is its `name`. |
+| `max` | `number` | everyone | Faces shown before the chip; `0` shows only the chip. A negative or unreadable cap shows everyone. |
+| `size` | `"xs" \| "sm" \| "md" \| "lg"` | `"md"` | The face diameter, from the token scale. |
+| `overlap` | `number` | quarter of the diameter | Pixels each disc tucks under the previous one, clamped to `diameter − 1`. |
+| `ringColor` | `string` | theme `background` | The role the separating ring paints; pass the surface the group sits on. |
+| `label` | `string` | `${count} avatars` | The group's accessible name. A blank value falls back to the count. |
+| `stepMs` | `number` | `40` | Milliseconds between two arrivals; `0` arrives at once. |
+| `rise` | `number` | `6` | Pixels a face rises from. A negative or unreadable value falls back to 6. |
+| `level` | `MotionLevel` | `"normal"` | The arrival's duration (200 ms at `normal`). |
+| `className` | `string` | — | A Tailwind class string for the row, joined last. |
+| `style` | `StyleDesc \| ((state) => StyleDesc)` | — | The row's style, or a function of `{ total, visible, hidden, reducedMotion }`. |
+
+`AvatarGroup` takes the whole GPUix host-prop surface (`testId`, `role`,
+`aria-*`) on the row. The discs carry internal `testId`s
+(`avatar-group-disc-0`, …) and the chip is `avatar-group-overflow`.
+
+## Limitations
+
+- **Inset travel, no scale.** A face fades and rises; the runtime paints no
+  transform (issue `#102`), so there is no zoom or pop.
+- **Names are identities.** Two members with the same name share a key, so the
+  second cannot animate in on its own. This is a deliberate trade: keying by
+  position would replay the whole row whenever an earlier member left.
+- **The chip is not interactive.** It names the hidden members but does not open
+  them: `0.11.0` has no anchored popup to grow a facepile into. Compose a
+  [Popover](/docs/components/popover) around the group when a reader must reach
+  every member.
+- **The ring is caller-supplied on non-page surfaces.** A group on a card or a
+  popover passes `ringColor`, because the component cannot measure the surface
+  behind it.
+- **Discs are absolute.** A face is positioned, not flow layout, so the group's
+  row is the only box that participates in the caller's layout.
+
+## Verification
+
+Nine native behaviour cases in `src/behaviour/avatar-group.test.tsx` measure the
+row in the real renderer: the overlap and reserved width, the capped tail and its
+named chip, the rise on a paused motion clock, the stagger in the seconds the
+runtime reads, a stable box during the arrival, an appended face that does not
+replay the row, a removed one that does not remount the rest, the reduced
+preference, and the group's accessible name. The arithmetic is
+`src/avatar-group/logic.test.ts` (15 tests).
+
+## Related
+
+- [Avatar](/docs/components/avatar) — the single face this row composes.
+- [Reveal](/docs/components/reveal) — the same house entrance as a component.
+- [Popover](/docs/components/popover) — where a reader goes to reach every
+  member the chip counts.

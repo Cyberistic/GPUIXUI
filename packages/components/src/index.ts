@@ -10,6 +10,7 @@ export * from "./alert.js";
 export * from "./accordion.js";
 export * from "./auto-height.js";
 export * from "./avatar.js";
+export * from "./avatar-group.js";
 export * from "./badge.js";
 export * from "./breadcrumb.js";
 export * from "./carousel.js";

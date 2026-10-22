@@ -16,6 +16,7 @@ import { AccordionExample } from "./accordion.example.js";
 import { AlertExample } from "./alert.example.js";
 import { AutoHeightExample } from "./auto-height.example.js";
 import { AvatarExample } from "./avatar.example.js";
+import { AvatarGroupExample } from "./avatar-group.example.js";
 import { BadgeExample } from "./badge.example.js";
 import { BreadcrumbExample } from "./breadcrumb.example.js";
 import { CardExample } from "./card.example.js";
@@ -75,6 +76,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   alert: AlertExample,
   "auto-height": AutoHeightExample,
   avatar: AvatarExample,
+  "avatar-group": AvatarGroupExample,
   badge: BadgeExample,
   breadcrumb: BreadcrumbExample,
   card: CardExample,
