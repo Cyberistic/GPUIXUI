@@ -485,7 +485,27 @@ describe("theme-editor audit readout", () => {
     );
 
     expect(findings.map((finding) => finding.text)).toEqual([
-      `typography bodyStrong.fontWeight — ${String(themes.light.typography.body.fontWeight)} cannot be laid out (needs a weight that exceeds the body text it emphasises)`,
+      `typography bodyStrong.fontWeight — ${String(themes.light.typography.body.fontWeight)} cannot be laid out (needs the size and leading the body text sets, and a weight that exceeds it)`,
+    ]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("words an emphasis whose size drifted from the body's", () => {
+    // The same rule holds the pair to one measure, so a brand that raises only
+    // `body`'s size reports `bodyStrong.fontSize` — a 15px paragraph under a
+    // 14px card title. The sentence must name the shared measure the size
+    // missed rather than the weight, which this brand leaves correct.
+    const audit = auditTheme(
+      extendTheme(themes.light, {
+        typography: { body: { fontSize: 15 } },
+      }),
+    );
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "number",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual([
+      `typography bodyStrong.fontSize — ${String(themes.light.typography.bodyStrong.fontSize)} cannot be laid out (needs the size and leading the body text sets, and a weight that exceeds it)`,
     ]);
     expect(audit.passed).toBe(false);
   });

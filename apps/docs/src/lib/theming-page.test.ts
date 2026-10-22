@@ -269,11 +269,11 @@ describe("the theme page", () => {
   });
 
   it("names the emphasis rule the number report can return", () => {
-    // `bodyStrong` shares `body`'s size and leading, so the weight is the whole
-    // difference between reading and emphasis — and the number report gained an
-    // `emphasis` rule for a brand that forwards one weight to every role. The
-    // bullet described two pair rules, so a theme whose strong text painted like
-    // body text was described by nothing.
+    // `bodyStrong` is `body`'s emphasis and the report holds the pair to one
+    // size, one leading and a heavier weight — so a brand that raises only the
+    // body's size sets a larger paragraph under a smaller title, and the bullet
+    // has to say which measure the pair shares rather than teaching the weight
+    // as the whole rule. The flat-weight brand is the other direction.
     const audit = section(page("themes.mdx"), "The theme audit");
     const flat = auditTheme(
       extendTheme(themes.light, {
@@ -282,10 +282,22 @@ describe("the theme page", () => {
         },
       }),
     );
+    const drifted = auditTheme(
+      extendTheme(themes.light, {
+        typography: {
+          body: { fontSize: themes.light.typography.body.fontSize + 1 },
+        },
+      }),
+    );
 
     expect(flat.invalidNumbers.map(({ rule }) => rule)).toEqual(["emphasis"]);
+    expect(drifted.invalidNumbers.map(({ path }) => path)).toEqual([
+      "bodyStrong.fontSize",
+    ]);
     expect(audit).toContain("bodyStrong");
+    expect(audit).toContain("one size and one leading");
     expect(audit).toContain("three rules about a");
+    expect(audit).not.toContain("its weight is the whole difference");
     expect(audit).not.toContain("two rules about a pair of tokens");
   });
 
