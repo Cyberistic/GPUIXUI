@@ -165,6 +165,12 @@ short, never the carrier of meaning.
   row cites must be a registered probe in `apps/playground` and appear in this
   list, so a row cannot cite a probe that does not exist or a probe the record
   does not owe.
+- The record's own evidence column is held to that registry too: every
+  kebab-case token a §3 row names in backticks must be a probe a playground
+  registry declares, unless it is a value the row quotes as its measurement (a
+  `textOverflow` value, a key chord, a row marker) and is listed with its
+  reason. A mistyped id in the durable record would otherwise send a plan to a
+  probe that does not exist, and the page's citations would stay green.
 - The five absences the typings alone prove — links (`href`), `fieldset`,
   `onContextMenu`, `onPaste` and the closed `aria-*` set — are held from both
   sides too: a row dropped from this file, a page row dropped from

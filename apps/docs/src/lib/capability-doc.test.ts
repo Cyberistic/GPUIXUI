@@ -712,6 +712,51 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(unowed, "the record's §5 owes no line for these probes").toEqual([]);
   });
 
+  it("names a registered probe in every evidence cell of the record", () => {
+    // §3's evidence is the record's only pointer to the measurement behind a
+    // verdict, and a plan reads §3 rather than the page. The page's citations
+    // were held to the registry above; the document's own were not, so a typo
+    // here sent a plan to a probe that does not exist and no test noticed.
+    // A kebab-case token is a probe id unless it is one of the values a row
+    // quotes as its measurement, and `aria-*` is the attribute set the rows
+    // discuss rather than a probe name.
+    const quotedValues = new Map([
+      ["ellipsis-start", "a `textOverflow` value the truncation row quotes"],
+      ["cmd-k", "a key chord the clipboard probe pressed"],
+      ["wrow-60", "a row marker the windowed list probe checked for"],
+    ]);
+
+    const evidenceTokens = rows.flatMap((row) =>
+      [...row.evidence.matchAll(/`([^`]+)`/g)]
+        .map((match) => match[1] ?? "")
+        .filter((token) => /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/.test(token))
+        .filter((token) => !token.startsWith("aria-"))
+        .map((token) => ({ label: row.label, token })),
+    );
+    const registered = registeredProbes();
+
+    // A scan that stopped matching would pass the case below without reading.
+    expect(
+      evidenceTokens.filter(({ token }) => registered.has(token)).length,
+    ).toBeGreaterThanOrEqual(25);
+
+    const unknown = evidenceTokens
+      .filter(({ token }) => !registered.has(token))
+      .filter(({ token }) => !quotedValues.has(token))
+      .map(
+        ({ label, token }) =>
+          `"${label}" cites \`${token}\`, which no playground registry declares`,
+      );
+    expect(unknown).toEqual([]);
+
+    const stale = [...quotedValues].filter(
+      ([token]) => !evidenceTokens.some((entry) => entry.token === token),
+    );
+    expect(
+      stale.map(([token]) => `${token} is not quoted — drop the exception`),
+    ).toEqual([]);
+  });
+
   it("records the typings gaps a component composes around", () => {
     // `COMPONENTS.md`'s rows relied on five absences the record never named, so
     // a plan reading only the record could pass `href`, `fieldset`, `onPaste`
