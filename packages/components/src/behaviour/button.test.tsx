@@ -336,6 +336,41 @@ describe("Button", () => {
       },
     );
   });
+
+  it("paints every variant's label in the role its own fill carries", () => {
+    // A glyph inside the action takes this same role, so the pair is stated
+    // once: a chevron is the label drawn in vectors, not a second colour.
+    Arr.forEach(
+      [
+        ["primary", "primaryForeground"],
+        ["danger", "destructiveForeground"],
+        ["secondary", "secondaryForeground"],
+        ["ghost", "foreground"],
+      ] as const,
+      ([variant, role]) => {
+        Arr.forEach(
+          [
+            ["dark", darkTheme],
+            ["light", lightTheme],
+          ] as const,
+          ([mode, theme]) => {
+            const button = renderComponent(
+              <Button testId="button" variant={variant}>
+                Save
+              </Button>,
+              mode,
+            );
+
+            expect(button.renderer.findByTestId("button")?.style.color).toBe(
+              theme.colors[role],
+            );
+
+            button.unmount();
+          },
+        );
+      },
+    );
+  });
 });
 
 describe("IconButton", () => {

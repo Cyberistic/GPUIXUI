@@ -7,7 +7,9 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { contrastFloorsFor, contrastRatio } from "@gpuixui/tokens";
 import { useState } from "react";
 import {
   Carousel,
@@ -16,7 +18,7 @@ import {
   CarouselTrack,
 } from "../carousel.js";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
-import { darkTheme } from "../internal/theme.js";
+import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -241,5 +243,44 @@ describe("Carousel", () => {
     expect(light.renderer.findByTestId("carousel")).toBeDefined();
     expect(light.renderer.findByTestId("slide-0")?.style.display).toBe("flex");
     light.unmount();
+  });
+
+  it("paints the chevron in the control's own label role", () => {
+    // The bug this guards: a glyph painted in a role chosen for another fill.
+    // `secondaryForeground` on the `primary` fill measures 1.42:1 in Windows
+    // dark, so the arrow would be invisible; on the `secondary` fill the pair
+    // the control actually paints is 7.2–17.1:1 in every shipped style.
+    Arr.forEach(
+      [
+        ["dark", darkTheme],
+        ["light", lightTheme],
+      ] as const,
+      ([mode, theme]) => {
+        const gallery = renderComponent(<Gallery value={0} />, mode);
+
+        try {
+          const control = gallery.renderer.findByTestId("next");
+          const glyph = control?.children
+            .map((id) => gallery.renderer.getElement(id))
+            .find((child) => child?.type === "svg");
+
+          const label = String(control?.style.color);
+          const fill = String(control?.style.backgroundColor);
+          const painted = String(glyph?.style.color);
+
+          // The glyph is the control's label in vectors, not a colour of its own.
+          expect(painted).toBe(label);
+          expect(painted).toBe(theme.colors.secondaryForeground);
+
+          // And the painted pair — read back off the renderer, not the theme —
+          // clears the floor a non-text mark needs.
+          expect(contrastRatio(painted, fill) ?? 0).toBeGreaterThanOrEqual(
+            contrastFloorsFor(theme).boundary,
+          );
+        } finally {
+          gallery.unmount();
+        }
+      },
+    );
   });
 });

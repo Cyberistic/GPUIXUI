@@ -68,12 +68,28 @@ export interface IconButtonProps extends Props {
  */
 const keepLabel = (): StyleDesc => ({ keyboardFocusDim: false });
 
-/** One variant's fill, text colour and interaction states. */
-const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc =>
-  Match.value(value).pipe(
+/**
+ * The role a variant paints its label in: the on-colour of the fill it owns.
+ *
+ * A glyph inside an action is the control's label drawn in vectors, not a mark
+ * with a colour of its own, so it takes the same role. Any other choice names a
+ * colour picked for a different fill — `secondaryForeground` on a `primary` fill
+ * measures 1.42:1 in Windows dark, and a chevron painted that way is invisible.
+ */
+export const actionOnColor = (theme: Theme, variant: ButtonVariant): string =>
+  Match.value(variant).pipe(
+    Match.when("primary", () => theme.colors.primaryForeground),
+    Match.when("danger", () => theme.colors.destructiveForeground),
+    Match.when("secondary", () => theme.colors.secondaryForeground),
+    Match.when("ghost", () => theme.colors.foreground),
+    Match.exhaustive,
+  );
+
+/** One variant's fill and interaction states; its label takes {@link actionOnColor}. */
+const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc => ({
+  ...Match.value(value).pipe(
     Match.when("primary", () => ({
       backgroundColor: theme.colors.primary,
-      color: theme.colors.primaryForeground,
       // An opaque fill derived from the action role: a half-alpha fill lets the
       // surface behind the button through, so one button reads two colours.
       hover: { backgroundColor: filledHover(theme, "primary") },
@@ -82,14 +98,12 @@ const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc =>
     })),
     Match.when("danger", () => ({
       backgroundColor: theme.colors.destructive,
-      color: theme.colors.destructiveForeground,
       hover: { backgroundColor: filledHover(theme, "destructive") },
       active: { backgroundColor: filledPressed(theme, "destructive") },
       ...keepLabel(),
     })),
     Match.when("secondary", () => ({
       backgroundColor: theme.colors.secondary,
-      color: theme.colors.secondaryForeground,
       borderWidth: theme.borderWidth.thin,
       // A control is recognised by its edge, so it paints the measured boundary
       // role: `border` is decorative and is also the `secondary` fill in both
@@ -100,12 +114,13 @@ const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc =>
       ...keepLabel(),
     })),
     Match.when("ghost", () => ({
-      color: theme.colors.foreground,
       hover: { backgroundColor: theme.colors.hover },
       active: { backgroundColor: theme.colors.active },
     })),
     Match.exhaustive,
-  );
+  ),
+  color: actionOnColor(theme, value),
+});
 
 /** The control's box: type, height and padding from the theme, then its variant. */
 const controlStyle = (

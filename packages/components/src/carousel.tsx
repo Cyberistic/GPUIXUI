@@ -28,7 +28,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Button } from "./internal/button.js";
+import { Button, actionOnColor } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { isFirst, isLast, isLeft, isRight } from "./internal/key.js";
 import {
@@ -250,6 +250,14 @@ export interface CarouselControlProps extends Omit<Props, "children"> {
   readonly disabled?: boolean;
 }
 
+/**
+ * The controls' fill, pinned rather than left to `Button`'s default so the
+ * chevron's on-colour and the fill it sits on are one decision. The pair is
+ * `secondaryForeground` on `secondary`, which `contrastPairs` measures in every
+ * shipped style.
+ */
+const CONTROL_VARIANT = "secondary" as const;
+
 /** A previous/next control. It is disabled at an edge unless the carousel loops. */
 export const CarouselControl = ({
   direction,
@@ -266,6 +274,7 @@ export const CarouselControl = ({
   return (
     <Button
       {...rest}
+      variant={CONTROL_VARIANT}
       aria-label={name}
       disabled={disabled || count === 0 || (atEdge && !loop)}
       onClick={() => step(direction === "next" ? 1 : -1)}
@@ -273,7 +282,7 @@ export const CarouselControl = ({
       <Icon
         name={direction === "next" ? "chevron-right" : "chevron-left"}
         size="md"
-        color={theme.colors.secondaryForeground}
+        color={actionOnColor(theme, CONTROL_VARIANT)}
       />
     </Button>
   );

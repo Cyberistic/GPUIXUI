@@ -30,7 +30,7 @@ import {
   DialogTitle,
 } from "./dialog.js";
 import type { PartChildren } from "./internal/parts.js";
-import { Button } from "./internal/button.js";
+import { Button, actionOnColor } from "./internal/button.js";
 import { useTheme } from "./internal/theme.js";
 
 /** How much emphasis the confirm action carries. */
@@ -85,10 +85,7 @@ export const ConfirmDialog = ({
   );
   // The busy mark sits on the action's own fill, so it takes the label's role
   // rather than a colour of its own: the same pair `contrastPairs` measures.
-  const busyColor =
-    variant === "danger"
-      ? theme.colors.destructiveForeground
-      : theme.colors.primaryForeground;
+  const busyColor = actionOnColor(theme, variant);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} dismissible={!loading}>

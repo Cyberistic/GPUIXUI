@@ -70,9 +70,15 @@ merges `style` last.
 
 ## Theming
 
-The track uses `card` with a `border` edge and `radius.lg`; controls use the
-local Button roles. Slides have no surface of their own. A custom theme changes
-the frame with no code change — see [Theming](/docs/theming).
+The track uses `card` with a `border` edge and `radius.lg`; controls are
+**secondary actions**, so each sits on the theme's `secondary` fill with the edge
+the boundary role draws. The chevron is that control's label in vectors: it
+paints `secondaryForeground`, the on-colour of the fill it sits on, and never a
+role chosen for another fill — `secondaryForeground` on `primary` is 1.42:1 in
+Windows dark. `contrastPairs` measures the pair it paints, and its `hover` and
+`active` washes, on every shipped style. Slides have no surface of their own. A
+custom theme changes the frame with no code change — see
+[Theming](/docs/theming).
 
 ## Accessibility
 
@@ -94,18 +100,20 @@ the frame with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (8 tests):
+`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (9 tests):
 every slide mounted and one displayed, control stepping, edge clamping, loop
 wrapping, arrows and Home/End, a controlled carousel, region naming and disabled
-edges, and a style callback receiving `{ active, index }` in both themes.
+edges, a style callback receiving `{ active, index }` in both themes, and the
+chevron read back off the renderer against the label role and the mark floor of
+the fill it sits on.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
 ```
 
 It needs a host with a GPUix native binding — macOS arm64, Linux x64, Windows
-x64, or this Intel Mac, where plan 140's locally built `darwin-x64` binding is
-installed.
+x64, or this Intel Mac, where the locally built `darwin-x64` binding is installed
+(`apps/playground/README.md` §The binding on this host).
 
 ## Related
 
