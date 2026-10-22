@@ -71,9 +71,11 @@ call reports ten independent failures:
   floor: a shorter one lays out, but a reader cannot reliably hit it. A type
   role's leading must also reach its own font size, because a shorter line height
   puts the next baseline inside this line's glyphs, and a control height must
-  contain the leading of the tallest label a control paints (`label` or `body`),
-  because the box is exactly that height and a shorter one clips the text it
-  exists to show. A third pair sits inside the type scale: `bodyStrong` shares
+  contain the leading of the text it paints (`label` or `body`) and the glyph it
+  draws (`iconSize.md`, the step an `Icon` defaults to and a square action is
+  built at), because the box is exactly that height — a shorter one clips the
+  text it exists to show or overflows the icon it carries. A third pair sits
+  inside the type scale: `bodyStrong` shares
   `body`'s size and leading by design, so its weight is the whole difference
   between reading and emphasis, and a brand that forwards one weight to every
   role paints the two identically. Those are the report's three rules about a

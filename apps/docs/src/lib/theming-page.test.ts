@@ -177,6 +177,26 @@ describe("the theme page", () => {
     expect(audit).toContain("`label` or `body`");
   });
 
+  it("names the glyph a control's box also has to contain", () => {
+    // The fit rule reads the taller of `label`'s leading, `body`'s leading and
+    // `iconSize.md`, because the same box is the glyph a square action draws.
+    // The page stated only the text half, so an icon that outgrew its control
+    // was a report the page described by nothing.
+    const audit = section(page("themes.mdx"), "The theme audit");
+    const failures = auditTheme(
+      extendTheme(themes.light, {
+        density: "compact",
+        iconSize: { md: 26, lg: 28, xl: 30 },
+      }),
+    ).invalidNumbers;
+
+    expect(failures).toEqual([
+      { group: "density", path: "controlHeight.sm", value: 24, rule: "fits" },
+    ]);
+    expect(audit).toContain("`iconSize.md`");
+    expect(audit).toContain("glyph");
+  });
+
   it("names the row height the pressable rule also holds", () => {
     // `invalidNumbers` holds a `density.rowHeight` to the same 24px floor as a
     // control height: a dense list row is built at exactly that height and takes

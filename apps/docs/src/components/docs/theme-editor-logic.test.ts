@@ -415,8 +415,31 @@ describe("theme-editor audit readout", () => {
     );
 
     expect(findings.map((finding) => finding.text)).toEqual([
-      "density controlHeight.sm — 28 cannot be laid out (needs a height that contains the tallest label it carries)",
+      "density controlHeight.sm — 28 cannot be laid out (needs a height that contains the tallest label or icon it carries)",
     ]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("words a control height too short for the glyph it draws", () => {
+    // The same box is the glyph a square action carries: an `Icon` defaults to
+    // `iconSize.md` and an `IconButton` is a square at its control height, so a
+    // 26px icon in `compact`'s 24px `sm` control overflows while the label still
+    // fits. That is the fit rule's other half, and the readout must say a
+    // control carries more than text.
+    const audit = auditTheme(
+      extendTheme(themes.light, {
+        density: "compact",
+        iconSize: { md: 26, lg: 28, xl: 30 },
+      }),
+    );
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "number",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual([
+      "density controlHeight.sm — 24 cannot be laid out (needs a height that contains the tallest label or icon it carries)",
+    ]);
+    expect(audit.contrast).toEqual([]);
     expect(audit.passed).toBe(false);
   });
 
