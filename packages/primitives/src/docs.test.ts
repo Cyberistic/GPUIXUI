@@ -1139,6 +1139,26 @@ describe("the primitives docs page contract", () => {
     expect(api).toContain("focus ring");
   });
 
+  it("describes a group option's caption the way the shared row paints it", () => {
+    // Bug guarded: `checkbox-group.mdx` said the caption sat *under* the name,
+    // while `optionBody` paints one row (name, then caption) and the radio and
+    // toggle pages say "beside". A reader styling a two-line checkbox row got a
+    // one-line row, and the three pages taught two layouts for one component.
+    const row = readFileSync(
+      fileURLToPath(new URL("../src/components/group.tsx", import.meta.url)),
+      "utf8",
+    );
+    expect(row).toContain('"flex flex-row items-center gap-sm"');
+    Arr.forEach(
+      ["checkbox-group.mdx", "radio-group.mdx", "toggle-group.mdx"],
+      (page) => {
+        const text = read(page);
+        expect(text, page).toContain("a caption beside the name");
+        expect(text, page).not.toContain("under the name");
+      },
+    );
+  });
+
   it("gives both value controls their second axis", () => {
     // The bug guarded: `orientation` reached the root but not the parts, so a
     // vertical slider laid a horizontal rail, grew its fill sideways and pulled
