@@ -1,7 +1,36 @@
 import { useState } from "react";
+import { packageCollections } from "../../lib/collection-routes";
+import { componentIndex } from "../../lib/component-index-data";
 import { notPublished, publicApi } from "../../lib/public-api-data";
 import { publicSymbolIndex } from "../../lib/public-symbols-data";
-import { filterSymbols } from "../../lib/public-symbols";
+import { docsUrlFor, filterSymbols } from "../../lib/public-symbols";
+
+/**
+ * A symbol's name, linked to the page that documents it when its package mounts
+ * one. The module path below says where the name is declared either way, so the
+ * link is a shortcut rather than the only provenance on the row.
+ */
+function SymbolName({
+  name,
+  module: modulePath,
+}: {
+  readonly name: string;
+  readonly module: string;
+}) {
+  const url = docsUrlFor(modulePath, packageCollections, componentIndex);
+  const className = "font-mono text-xs text-foreground";
+  return url === undefined ? (
+    <span className={className}>{name}</span>
+  ) : (
+    <a
+      className={`${className} underline underline-offset-2`}
+      href={url}
+      title={`Open the ${name} page`}
+    >
+      {name}
+    </a>
+  );
+}
 
 /**
  * The workspace's public surface, rendered from the packages themselves.
@@ -133,9 +162,7 @@ export function ApiReference() {
                         key={`${row.module}${row.name}`}
                       >
                         <td className="px-3 py-2">
-                          <span className="font-mono text-xs text-foreground">
-                            {row.name}
-                          </span>
+                          <SymbolName module={row.module} name={row.name} />
                           <span className="mt-1 block font-mono text-[0.65rem] text-muted-foreground">
                             {row.module}
                           </span>

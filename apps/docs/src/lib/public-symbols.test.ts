@@ -7,7 +7,7 @@ import {
   repoRoot,
   scanExports,
 } from "./public-symbols-source";
-import { buildSymbolIndex, filterSymbols } from "./public-symbols";
+import { buildSymbolIndex, docsUrlFor, filterSymbols } from "./public-symbols";
 
 /**
  * The public symbol index.
@@ -224,5 +224,51 @@ describe("the index model", () => {
 
     expect(filterSymbols(built.packages, "theme")).toHaveLength(1);
     expect(filterSymbols(built.packages, "nothing")).toHaveLength(0);
+  });
+});
+
+describe("the page a symbol's module ships with", () => {
+  const collections = [
+    { dir: "packages/primitives/docs", route: "/docs/primitives" },
+    { dir: "packages/components/docs", route: "/docs/components" },
+  ];
+  const pages = [
+    { url: "/docs/primitives/otp-field" },
+    { url: "/docs/components/card" },
+  ];
+
+  it("kebab-cases the declaring file, acronyms included", () => {
+    expect(
+      docsUrlFor(
+        "packages/primitives/src/components/OTPField.tsx",
+        collections,
+        pages,
+      ),
+    ).toBe("/docs/primitives/otp-field");
+    expect(
+      docsUrlFor("packages/components/src/card.tsx", collections, pages),
+    ).toBe("/docs/components/card");
+  });
+
+  it("refuses a helper, a bare index and a page the site does not mount", () => {
+    expect(
+      docsUrlFor("packages/primitives/src/core/style.ts", collections, pages),
+    ).toBeUndefined();
+    expect(
+      docsUrlFor("packages/components/src/menu/index.tsx", collections, pages),
+    ).toBeUndefined();
+    // A file whose page was removed must not become a 404 in a link.
+    expect(
+      docsUrlFor("packages/components/src/accordion.tsx", collections, pages),
+    ).toBeUndefined();
+  });
+
+  it("refuses a package with no docs collection, and a path outside packages/", () => {
+    expect(
+      docsUrlFor("packages/tokens/src/theme.ts", collections, pages),
+    ).toBeUndefined();
+    expect(
+      docsUrlFor("apps/docs/src/lib/site.ts", collections, pages),
+    ).toBeUndefined();
   });
 });

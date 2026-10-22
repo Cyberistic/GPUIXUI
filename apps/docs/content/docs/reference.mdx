@@ -44,6 +44,13 @@ export.
   declaration this page cannot read.
 - **Summary** is the first sentence of the symbol's doc comment, so the page
   says what the name is for without the reader opening the file.
+- A symbol whose package mounts a page is **linked** to it: the page is named
+  after the file that declares the name (`IconButton.tsx` →
+  `/docs/primitives/icon-button`), so every part a compound component exports
+  lands on the page that documents its props. A symbol declared in a helper, or
+  in a package with no docs collection, stays plain text — a link to a page the
+  site does not serve would be worse than none, and the module path beside the
+  name is always the provenance.
 
 ## Where the signatures live
 

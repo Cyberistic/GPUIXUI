@@ -597,7 +597,7 @@ public surface, so it is generated twice over and held to both sources.
   that declares it and its doc comment. The browser bundle carries the index,
   not the two megabytes of TypeScript it came from.
 
-Two rules keep that honest:
+Three rules keep that honest:
 
 - **A page that needs something heavy imports it itself.** The shared MDX
   surface (`apps/docs/src/components/mdx.tsx`) holds the small components; the
@@ -606,6 +606,13 @@ Two rules keep that honest:
 - **The index is read at build time, so it is as fresh as the build.** A new
   export appears on the next build rather than the next edit — the price of not
   shipping the workspace source to every reader.
+- **A symbol links the page its file ships with.** `docsUrlFor` maps the
+  declaring module to the page named after it (`IconButton.tsx` →
+  `/docs/primitives/icon-button`, acronyms included) and returns nothing unless
+  the site mounts that page, so a helper or a package with no docs collection
+  keeps its plain name and module path rather than a link to a 404.
+  `api-reference.test.tsx` holds every rendered link to the mounted page list and
+  `public-symbols.test.ts` the mapping's refusals.
 
 `src/lib/public-symbols-source.ts` does the reading. It scans a module's export
 statements the way the compiler sees them — an `export` inside a comment, a

@@ -89,6 +89,64 @@ export interface PublicSymbolIndex {
   readonly count: number;
 }
 
+/** A mounted package collection: its directory and where its pages render. */
+export interface DocsCollection {
+  /** `packages/primitives/docs` */
+  readonly dir: string;
+  /** `/docs/primitives` */
+  readonly route: string;
+}
+
+/**
+ * The page that documents a symbol, when its package mounts one.
+ *
+ * A symbol's `module` is the file that declares it, and a component's page is
+ * named after that file — `packages/primitives/src/components/IconButton.tsx`
+ * is `/docs/primitives/icon-button`, and every part a compound component
+ * exports from `card.tsx` lands on the card page, which is where its props are
+ * documented. The page decides whether it exists: a helper in `src/core/` has
+ * no page, and a link to a page the site does not serve would be worse than no
+ * link at all. This is a convenience for the reader, not a completeness claim:
+ * the module path is still printed.
+ */
+export const docsUrlFor = (
+  module: string,
+  collections: ReadonlyArray<DocsCollection>,
+  pages: ReadonlyArray<{ readonly url: string }>,
+): string | undefined => {
+  const file = /^packages\/([^/]+)\/(.+)$/.exec(module);
+  if (file === null) return undefined;
+  const [, packageName, rest] = file;
+  if (packageName === undefined || rest === undefined) return undefined;
+
+  const collection = collections.find(
+    (candidate) => candidate.dir === `packages/${packageName}/docs`,
+  );
+  if (collection === undefined) return undefined;
+
+  const base = rest
+    .split("/")
+    .at(-1)
+    ?.replace(/\.(?:tsx|ts)$/, "");
+  if (base === undefined || base === "" || base === "index") return undefined;
+
+  const url = `${collection.route}/${kebabCase(base)}`;
+  return pages.some((page) => page.url === url) ? url : undefined;
+};
+
+/**
+ * `OTPField` → `otp-field`, `Button` → `button`.
+ *
+ * A page's file is kebab-case while the declaration it documents is PascalCase.
+ * The acronym rule is the one that matters here: the page for `OTPField` is
+ * `otp-field`, not `o-t-p-field` and not `otpfield`.
+ */
+const kebabCase = (name: string): string =>
+  name
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1-$2")
+    .toLowerCase();
+
 /**
  * A PascalCase name is a component in this workspace.
  *
