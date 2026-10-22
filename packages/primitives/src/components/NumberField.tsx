@@ -62,6 +62,7 @@ import {
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import type { FieldState } from "./Input.js";
+import { fieldHint, renderFieldHint } from "./Input.js";
 import {
   composeEvent,
   mergeRefs,
@@ -152,6 +153,8 @@ export interface NumberFieldPart {
   readonly autoFocus: boolean | undefined;
   /** The address the caller gave the field; it lands on the input, not the chrome. */
   readonly address: FieldHostProps;
+  /** The field's stable locator, which its hint derives from. */
+  readonly testId: string | undefined;
   /** The announced help, already blank-filtered. */
   readonly description: string | undefined;
   /** The caller's Enter report; the field's commit runs before it. */
@@ -187,6 +190,7 @@ export const numberFieldPart = (
     label: accessibleName(props.label),
     autoFocus: disabled ? undefined : props.autoFocus,
     address: props,
+    testId: props.testId,
     description: accessibleName(props.description),
     onSubmit: disabled ? undefined : props.onSubmit,
     current: state.current,
@@ -217,6 +221,15 @@ export interface NumberFieldInputProps {
   readonly testId?: string;
 }
 
+/** The input's positioning frame, so its hint can sit over the empty host. */
+const NUMBER_INPUT_FRAME: StyleDesc = {
+  position: "relative",
+  flexGrow: 1,
+  flexShrink: 1,
+  minWidth: 0,
+  height: "100%",
+};
+
 /** The field's text box. */
 export const renderNumberFieldInput = (
   { className, style, testId }: NumberFieldInputProps,
@@ -241,54 +254,68 @@ export const renderNumberFieldInput = (
       invalid: part.invalid,
     }),
   );
+  const addressed = testId ?? part.testId;
+  const hint = fieldHint(part, part.theme, part.text, {
+    size: part.size,
+    align: "center",
+    origin: "content",
+  });
   return (
-    <input
-      ref={mergeRefs(handlers.registerInput, part.address.ref)}
-      testId={testId}
-      value={part.text}
-      placeholder={part.placeholder}
-      readOnly={disabled}
-      autoFocus={part.autoFocus}
-      tabIndex={disabled ? -1 : undefined}
-      theme={nativeTextTheme(part.theme)}
-      aria-label={part.label}
-      aria-description={part.description}
-      aria-id={part.address["aria-id"]}
-      onLayout={part.address.onLayout}
-      style={mergeStyle(chrome, style)}
-      onChange={(event: EventPayload) => {
-        if (disabled) return;
-        handlers.onTextChange(event.value ?? "");
-      }}
-      onSubmit={
-        part.disabled
-          ? undefined
-          : (event: EventPayload) => {
-              handlers.onCommit();
-              part.onSubmit?.(event);
-            }
-      }
-      onClick={part.interaction.onClick}
-      onKeyDown={composeEvent<KeyEvent>(part.interaction.onKeyDown, (event) => {
-        if (disabled) return;
-        Option.match(
-          decideNumberKey(part.current, part.range, event.key ?? ""),
-          {
-            onNone: () => {},
-            onSome: handlers.onValue,
+    <div style={NUMBER_INPUT_FRAME}>
+      <input
+        ref={mergeRefs(handlers.registerInput, part.address.ref)}
+        testId={testId}
+        value={part.text}
+        readOnly={disabled}
+        autoFocus={part.autoFocus}
+        tabIndex={disabled ? -1 : undefined}
+        theme={nativeTextTheme(part.theme)}
+        aria-label={part.label}
+        aria-description={part.description}
+        aria-id={part.address["aria-id"]}
+        onLayout={part.address.onLayout}
+        style={mergeStyle({ width: "100%" }, mergeStyle(chrome, style))}
+        onChange={(event: EventPayload) => {
+          if (disabled) return;
+          handlers.onTextChange(event.value ?? "");
+        }}
+        onSubmit={
+          part.disabled
+            ? undefined
+            : (event: EventPayload) => {
+                handlers.onCommit();
+                part.onSubmit?.(event);
+              }
+        }
+        onClick={part.interaction.onClick}
+        onKeyDown={composeEvent<KeyEvent>(
+          part.interaction.onKeyDown,
+          (event) => {
+            if (disabled) return;
+            Option.match(
+              decideNumberKey(part.current, part.range, event.key ?? ""),
+              {
+                onNone: () => {},
+                onSome: handlers.onValue,
+              },
+            );
           },
-        );
+        )}
+        onKeyUp={part.interaction.onKeyUp}
+        onFocus={composeEvent<EventPayload>(
+          part.interaction.onFocus,
+          focus.onFocus,
+        )}
+        onBlur={composeEvent<EventPayload>(part.interaction.onBlur, () => {
+          focus.onBlur();
+          handlers.onCommit();
+        })}
+      />
+      {Option.match(hint, {
+        onNone: () => null,
+        onSome: (hint) => renderFieldHint(hint, addressed),
       })}
-      onKeyUp={part.interaction.onKeyUp}
-      onFocus={composeEvent<EventPayload>(
-        part.interaction.onFocus,
-        focus.onFocus,
-      )}
-      onBlur={composeEvent<EventPayload>(part.interaction.onBlur, () => {
-        focus.onBlur();
-        handlers.onCommit();
-      })}
-    />
+    </div>
   );
 };
 

@@ -49,12 +49,18 @@ const lastValue = (values: ReadonlyArray<number>): number =>
     expect.fail("the field reported no change at all"),
   );
 
-/** The native `<input>` inside the field's chrome. */
+/** The native `<input>` inside the field's chrome and its hint frame. */
 const inputOf = (runtime: Runtime, testId: string) =>
   Option.getOrElse(
     Option.flatMap(runtime.element(testId), (element) =>
-      Option.flatMap(Option.fromNullishOr(element.children[0]), (id) =>
-        Option.fromNullishOr(runtime.renderer.getElement(id)),
+      Option.flatMap(Option.fromNullishOr(element.children[0]), (frameId) =>
+        Option.flatMap(
+          Option.fromNullishOr(runtime.renderer.getElement(frameId)),
+          (frame) =>
+            Option.flatMap(Option.fromNullishOr(frame.children[0]), (id) =>
+              Option.fromNullishOr(runtime.renderer.getElement(id)),
+            ),
+        ),
       ),
     ),
     () => expect.fail(`the NumberField ${testId} painted no input`),

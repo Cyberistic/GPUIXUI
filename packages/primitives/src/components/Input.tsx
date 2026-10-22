@@ -15,6 +15,9 @@ import type { ReactElement } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
+import { disabledOpacity } from "@gpuixui/tokens";
+import { pipe } from "effect";
+import * as Option from "effect/Option";
 import { accessibleName } from "../core/a11y.js";
 import type { ValueState } from "../core/state.js";
 import { nativeTextTheme } from "../core/style.js";
@@ -116,6 +119,115 @@ export const fieldChrome = (
   );
 };
 
+/** Which line of a field a hint sits on. */
+export type FieldHintAlign = "center" | "top";
+
+/** A field's painted hint. */
+export interface FieldHint {
+  readonly text: string;
+  readonly frame: StyleDesc;
+  readonly textStyle: StyleDesc;
+}
+
+/** Where the hint is measured from. */
+export interface HintSpec {
+  readonly size: ControlSize;
+  readonly align: FieldHintAlign;
+  /**
+   * `field` is a field that draws its own border and padding (`Input`,
+   * `TextArea`); `content` is a host already inside that chrome
+   * (`NumberField`'s input, which its root insets).
+   */
+  readonly origin: "field" | "content";
+}
+
+/**
+ * The frame a hint paints in, over the empty host.
+ *
+ * The frame sits inside the field and takes no pointer input: a press lands on
+ * the host underneath, exactly as it does through the runtime's own hint.
+ */
+export const hintFrame = (theme: PrimitiveTheme, spec: HintSpec): StyleDesc => {
+  const field = spec.origin === "field";
+  const padding = field ? theme.density.controlPaddingX[spec.size] : 0;
+  const border = field ? theme.borderWidth.thin : 0;
+  return {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: spec.align === "center" ? "center" : "flex-start",
+    paddingLeft: border + padding,
+    paddingRight: padding,
+    paddingTop: spec.align === "top" ? border + padding : 0,
+    overflow: "hidden",
+    pointerEvents: "none",
+  };
+};
+
+/**
+ * A field's hint, or nothing when it has no placeholder or already has a value.
+ *
+ * The runtime shapes an empty host's placeholder in a fixed `#8F8F8F`
+ * (`custom_elements/input.rs` at the pinned `@gpuix/native@0.11.0`), so
+ * `textFaint` — the role the contrast contract measures on both field fills —
+ * never reaches it and no theme can move it. The field therefore gives the host
+ * no placeholder and paints the hint itself in the measured `placeholder` role.
+ *
+ * A blank placeholder is no hint, and the hint fades with the field's own
+ * disabled paint (`disabledOpacity`, the share the field chrome fades by).
+ */
+export const fieldHint = (
+  props: Pick<FieldProps, "placeholder" | "disabled">,
+  theme: PrimitiveTheme,
+  value: string,
+  spec: HintSpec,
+): Option.Option<FieldHint> =>
+  pipe(
+    Option.fromNullishOr(props.placeholder),
+    Option.filter((text) => text.length > 0 && value.length === 0),
+    Option.map((text) => ({
+      text,
+      frame: hintFrame(theme, spec),
+      textStyle: mergeStyle(
+        recipeTw.classesToStyle(
+          "type-body font-sans whitespace-nowrap text-ellipsis",
+          theme,
+        ).style,
+        props.disabled === true
+          ? { color: theme.colors.placeholder, opacity: disabledOpacity }
+          : { color: theme.colors.placeholder },
+      ),
+    })),
+  );
+
+/** The hint element: one label the reader sees and assistive technology reads. */
+export const renderFieldHint = (
+  hint: FieldHint,
+  testId: string | undefined,
+): ReactElement => (
+  <div style={hint.frame}>
+    <text
+      testId={testId === undefined ? undefined : `${testId}-hint`}
+      style={hint.textStyle}
+    >
+      {hint.text}
+    </text>
+  </div>
+);
+
+/**
+ * The frame a field's hint needs.
+ *
+ * The field element keeps **all** its chrome — border, fill, radius, ring — so
+ * the runtime still paints the keyboard outline around the box it tracks focus
+ * for; the frame only positions the hint.
+ */
+export const fieldFrame: StyleDesc = { position: "relative" };
+
 /** The props an `<input>`/`<textarea>` shares, from the spec and its state. */
 export const fieldHostProps = (
   props: FieldProps,
@@ -133,7 +245,8 @@ export const fieldHostProps = (
     "aria-id": controlId,
     onLayout,
     value: state.current,
-    placeholder: props.placeholder,
+    // The host's own hint is a fixed grey the theme cannot reach (measured on
+    // `@gpuix/native@0.11.0`; see `fieldHint`), so the field paints the hint.
     readOnly: props.readOnly === true || props.disabled === true,
     autoFocus: props.disabled === true ? undefined : props.autoFocus,
     // A disabled field declares no ring and refuses every key, so a stop there
@@ -177,5 +290,18 @@ export const Input = (props: InputProps): ReactElement => {
     props.defaultValue ?? "",
     valueChange(props),
   );
-  return renderInput(props, theme, field.value, focus, field.set);
+  const hint = fieldHint(props, theme, field.value.current, {
+    size: props.size ?? "md",
+    align: "center",
+    origin: "field",
+  });
+  return (
+    <div style={fieldFrame}>
+      {renderInput(props, theme, field.value, focus, field.set)}
+      {Option.match(hint, {
+        onNone: () => null,
+        onSome: (hint) => renderFieldHint(hint, props.testId),
+      })}
+    </div>
+  );
 };

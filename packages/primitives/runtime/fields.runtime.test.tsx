@@ -961,10 +961,12 @@ it("opens a Tooltip that mounts default-open, with no interaction", async () => 
   expect(runtime.allText()).toContain("A hint");
 });
 
-it("paints the theme's hint for an empty field and replaces it with the value", async () => {
-  // The claim this measures: the native field's hint is the theme's
-  // `placeholder` role, not the runtime's default, and it is a hint — the
-  // value replaces it once there is one.
+it("paints the theme's placeholder role for an empty field, not the runtime's grey", async () => {
+  // The claim this measures: the hint is the theme's `placeholder` role, not
+  // the runtime's default. The bug it guards: an empty host shapes its own
+  // placeholder with a fixed `#8F8F8F` (`custom_elements/input.rs` at the
+  // pinned 0.11.0), so the field gives the host no placeholder at all and
+  // paints the words itself in the role the contrast contract measures.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -1003,12 +1005,18 @@ it("paints the theme's hint for an empty field and replaces it with the value", 
       bg: theme["bg"],
     };
   };
-  expect(hostOf("hint").customProps?.placeholder).toBe("Find a project");
+  // The host keeps the seam — its value, caret and fill come from it — but it
+  // is given no hint to shape in its own grey.
+  expect(hostOf("hint").customProps?.placeholder).toBeUndefined();
   expect(themeOf("hint")).toEqual({
     text: testTheme.colors.inputForeground,
     textFaint: testTheme.colors.placeholder,
     bg: testTheme.colors.input,
   });
+  const painted = Option.getOrElse(runtime.element("hint-hint"), () =>
+    expect.fail("the empty field painted no hint"),
+  );
+  expect(painted.style.color).toBe(testTheme.colors.placeholder);
   const hints = (): number =>
     Arr.length(
       Arr.filter(runtime.paintedText(), (line) => line === "Find a project"),

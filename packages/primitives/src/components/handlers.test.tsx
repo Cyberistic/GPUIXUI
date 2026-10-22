@@ -604,7 +604,8 @@ describe("a caller's handlers on a field with several elements", () => {
       { focused: false, onFocus: vi.fn(), onBlur: vi.fn() },
       handlers,
     );
-    const [input, column] = bodyOf(element);
+    const [part, column] = bodyOf(element);
+    const input = elementChildren(part ?? expect.fail("no input"))[0];
     const up = column === undefined ? undefined : elementChildren(column)[0];
     expectSome(hostHandler(input ?? expect.fail("no input"), "onClick"))(
       clickEvent,
@@ -641,8 +642,13 @@ describe("a caller's handlers on a field with several elements", () => {
         registerInput: () => {},
       },
     );
+    const [part] = bodyOf(element);
     expectSome(
-      hostHandler(bodyOf(element)[0] ?? expect.fail("no input"), "onClick"),
+      hostHandler(
+        elementChildren(part ?? expect.fail("no input"))[0] ??
+          expect.fail("no input"),
+        "onClick",
+      ),
     )(clickEvent);
     expect(onClick).toHaveBeenCalledOnce();
     expect(onValue).not.toHaveBeenCalled();

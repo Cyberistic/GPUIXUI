@@ -113,6 +113,18 @@ measures, rather than the runtime's accent-at-35% default. Focus is the shared
 keyboard outline (`keyboardRing`), declared at rest and painted after Tab, not
 after a click.
 
+**The hint is painted, not handed to the host.** At the pinned
+`@gpuix/native@0.11.0` an empty `<input>`/`<textarea>` shapes its own placeholder
+with a fixed `#8F8F8F` (`custom_elements/input.rs`), so `nativeTextTheme`'s
+`textFaint` never reaches it and no theme value can move it — that grey measures
+**2.84:1** on a white field. `Input` therefore gives the host **no**
+`placeholder` prop and paints the caller's words over the empty host in the
+`placeholder` role, inset to the field's own text origin and taking no pointer
+input, so a press through the hint still focuses the field. The hint fades with
+the field's disabled paint (`disabledOpacity`). A theme's `placeholder` role is
+now the colour the reader sees, and it is the role `contrastPairs` holds to the
+secondary floor on the field's fill.
+
 An `invalid` field keeps its `input` fill and paints only the **edge** — the
 border and the focus line — in `destructive`. The solid role is designed to
 carry `destructiveForeground`; behind the value it leaves `inputForeground` at
@@ -142,6 +154,10 @@ it back.
   025). The component forwards `readOnly`, drops the field from the tab order
   and guards its handlers; the accessibility difference is the limitation above.
 - No masks, formatting or prefix/suffix slots.
+- The hint is the field's own `<text>`, not the host's placeholder property:
+  `0.11.0` exposes no `aria-placeholder` channel this library can set, so the
+  hint reads as a label beside the field rather than as the field's placeholder.
+  It is one line, clipped at the field's edge; a multi-line hint is not available.
 - No `aria-describedby`: help is a string the field carries as
   `aria-description`, so a visible help line and the announced one are written
   twice. `invalid` still paints an edge rather than announcing the error.
@@ -162,14 +178,24 @@ it back.
   negative cases).
 - `runtime/fields.runtime.test.tsx` — runtime keystrokes reach `onValueChange` with
   the accumulated text; Enter reaches `onSubmit`; a controlled field reports each
-  edit; an empty field paints its hint in the theme's `placeholder` role and a
-  value replaces it, with the whole text theme (`text`, `textFaint`, `bg`) read
-  back off the host input (negative control measured: dropping the `theme` prop
-  fails with `hint handed the runtime no text theme`), and the `selection` wash
+  edit; the field hands the host the whole text theme (`text`, `textFaint`,
+  `bg`) but **no** `placeholder`, because the hint is painted in the
+  `placeholder` role (negative control measured: dropping the `theme` prop fails
+  with `hint handed the runtime no text theme`), and the `selection` wash
   reaches both a selectable `Text` and the field. The field's `description` and
   `aria-id` are read back off its `TextInput` node in the accessibility tree, the
   caller's `ref` receives the runtime's own instance, and a disabled field with a
   tab order is skipped by the traversal.
+- `src/components/field-hint.test.tsx` — the hint's contract in the element tree:
+  no placeholder reaches any host, the words paint in the `placeholder` role at
+  the body metrics, a value or a blank placeholder shows none, the hint fades by
+  the same share as the field chrome, and the frame is paint-only at the field's
+  own text origin.
+- `runtime/field-hint.runtime.test.tsx` — the same hint measured in a window:
+  its painted colour is the theme's `placeholder`, its box starts at the field's
+  text origin and sits inside the field, a press through it focuses the host, a
+  typed value removes it and a cleared controlled value brings it back, and the
+  `TextArea`/`NumberField` hint sits on the first row and inside its input.
 
 ```sh
 nub run --filter @gpuixui/primitives test

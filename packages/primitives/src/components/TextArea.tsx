@@ -9,9 +9,16 @@
 
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import * as Option from "effect/Option";
 import type { ValueState } from "../core/state.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { fieldHostProps, type FieldProps } from "./Input.js";
+import {
+  fieldFrame,
+  fieldHint,
+  fieldHostProps,
+  renderFieldHint,
+  type FieldProps,
+} from "./Input.js";
 import {
   useControlState,
   useFocus,
@@ -70,5 +77,18 @@ export const TextArea = (props: TextAreaProps): ReactElement => {
     props.defaultValue ?? "",
     valueChange(props),
   );
-  return renderTextArea(props, theme, field.value, focus, field.set);
+  const hint = fieldHint(props, theme, field.value.current, {
+    size: props.size ?? "md",
+    align: "top",
+    origin: "field",
+  });
+  return (
+    <div style={fieldFrame}>
+      {renderTextArea(props, theme, field.value, focus, field.set)}
+      {Option.match(hint, {
+        onNone: () => null,
+        onSome: (hint) => renderFieldHint(hint, props.testId),
+      })}
+    </div>
+  );
 };

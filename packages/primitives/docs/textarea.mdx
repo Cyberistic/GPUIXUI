@@ -77,6 +77,12 @@ changes — and the same `StateStyle<FieldState>` (`{ disabled, focused, invalid
 keyboard dim (`keyboardFocusDim: false`), because the text being read is content
 rather than chrome; see `Input` §Theming for the measurement.
 
+The hint is painted for the same reason as `Input`'s: the runtime shapes a
+textarea's placeholder in a fixed `#8F8F8F` no token reaches, so the field gives
+the host none and paints the caller's words in the `placeholder` role on its
+**first row** (inset by the border and one density padding), taking no pointer
+input. See `Input` §Theming for the measurement and the faded disabled hint.
+
 ## Limitations
 
 - **No `onSubmit`** — by design; see `runtime/fields.runtime.test.tsx`.
@@ -85,6 +91,8 @@ rather than chrome; see `Input` §Theming for the measurement.
 - `disabled` is read-only at the host plus tab-order and handler guards, because
   GPUix has no `disabled` prop; assistive technology hears a
   read-only field.
+- The hint is the field's own `<text>` (one line, clipped at the field's edge),
+  not the host's placeholder property — see `Input` §Limitations.
 
 ## Verification
 
@@ -99,6 +107,9 @@ rather than chrome; see `Input` §Theming for the measurement.
   accepted; a probe measured that adding `onSubmit` costs the
   newline, which is why it is not in the type; typing reports `onValueChange`
   and not the deprecated alias when both are passed.
+- `src/components/field-hint.test.tsx` and `runtime/field-hint.runtime.test.tsx`
+  — the hint is painted in the `placeholder` role rather than handed to the host,
+  and a textarea's sits on its first row.
 
 ```sh
 nub run --filter @gpuixui/primitives test

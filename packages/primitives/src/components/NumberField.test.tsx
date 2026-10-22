@@ -75,12 +75,17 @@ const render = (
 const bodyOf = (element: ReactElement): ReactElement =>
   elementChildren(element)[0] ?? expect.fail("the number field drew nothing");
 
+/** The native input inside the part's positioning frame. */
+const inputOf = (part: ReactElement): ReactElement =>
+  elementChildren(part)[0] ?? expect.fail("the input part drew nothing");
+
 /** The native input, the spin column, and the two step buttons. */
 const partsOf = (element: ReactElement) => {
-  const [input, column] = elementChildren(bodyOf(element));
+  const [part, column] = elementChildren(bodyOf(element));
+  const input = inputOf(part ?? expect.fail("the number field has no input"));
   const [up, down] = column === undefined ? [] : elementChildren(column);
   return {
-    input: input ?? expect.fail("the number field has no input"),
+    input,
     up: up ?? expect.fail("the number field has no increment"),
     down: down ?? expect.fail("the number field has no decrement"),
   };
@@ -238,9 +243,11 @@ describe("NumberField parts", () => {
 
   it("gives the input part the field's draft, name and keys", () => {
     const onValue = vi.fn();
-    const input = renderNumberFieldInput(
-      { testId: "qty" },
-      partOf({ label: "Quantity", min: 0, max: 100 }, { onValue }),
+    const input = inputOf(
+      renderNumberFieldInput(
+        { testId: "qty" },
+        partOf({ label: "Quantity", min: 0, max: 100 }, { onValue }),
+      ),
     );
     expect(expectSome(hostProp(input, "value"))).toBe("50");
     expect(expectSome(hostProp(input, "aria-label"))).toBe("Quantity");
@@ -275,9 +282,8 @@ describe("NumberField styles", () => {
     // `style` merges last and can put the dim back.
     const { input } = partsOf(render({}, 50, "50", focused));
     expect(expectSome(hostStyle(input, "keyboardFocusDim"))).toBe(false);
-    const overridden = renderNumberFieldInput(
-      { style: { keyboardFocusDim: true } },
-      partOf({}),
+    const overridden = inputOf(
+      renderNumberFieldInput({ style: { keyboardFocusDim: true } }, partOf({})),
     );
     expect(expectSome(hostStyle(overridden, "keyboardFocusDim"))).toBe(true);
   });

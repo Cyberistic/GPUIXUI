@@ -160,13 +160,21 @@ focusable element to 40% and composites the value into the field's own fill
 (`keyboardDimFailures`). `NumberFieldInput`'s `style` merges last, so a caller
 can put the cue back.
 
+A `placeholder` is painted by the field, not the host: the runtime shapes an
+empty input's hint in a fixed `#8F8F8F` no token reaches (see `Input` §Theming),
+so `NumberFieldInput` renders no `placeholder` prop and paints the words in the
+`placeholder` role inside the input's own box — left of the steppers, where the
+value will be typed. `NumberFieldInput` is a positioning frame around the host,
+so a caller that composes its own parts still gets the hint.
+
 ## Limitations
 
 - **Decimal text only.** `1,5`, `0x10` and `Infinity` are rejected rather than
   guessed at; a locale decimal needs `formatValue` for display and parsing
   before the value reaches the field.
 - **No `type="number"`, `inputMode` or `maxLength`.** The host input takes
-  `value`, `placeholder`, `readOnly`, `theme` and its events — nothing else.
+  `value`, `readOnly`, `theme` and its events — nothing else, and the hint is the
+  field's own painted `<text>` (one line, clipped at the field's edge).
 - **No drag-to-scrub.** The runtime has the coordinates, bounds and pointer
   capture for it (a track that listens to `mouseDown` and `mouseMove` keeps its
   moves outside its box — measured by the `pointer-capture` probe), so this is a
@@ -191,6 +199,10 @@ can put the cue back.
   value opted out of the keyboard dim (a caller's `style` puts it back).
 - `src/components/keyboard-dim.test.tsx` — every field node keeps its content
   lit, and a `Toggle`/`Slider` keep the cue.
+- `src/components/field-hint.test.tsx` and `runtime/field-hint.runtime.test.tsx`
+  — the input part paints the hint in the `placeholder` role inside its own box
+  and hands the host no placeholder, measured both in the element tree and in a
+  window.
 - `runtime/number-field.runtime.test.tsx` — real typing through the native input
   reports `12`; `1.5` with `precision={2}`; `999` against `max=100` reports
   `100`; arrow/PageDown step; a hit-tested stepper press steps and refocuses;
