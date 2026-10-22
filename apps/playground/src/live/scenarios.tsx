@@ -52,6 +52,10 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
+  DatePicker,
+  DatePickerCalendar,
+  DatePickerContent,
+  DatePickerTrigger,
   Dialog,
   DialogClose,
   DialogContent,
@@ -175,6 +179,31 @@ import {
   otpKeysChannels,
   otpKeysReadout,
 } from "./otp-keys.js";
+
+import {
+  DATE_PICKER_AFTER,
+  DATE_PICKER_CHOSEN_LABEL,
+  DATE_PICKER_CLEAR,
+  DATE_PICKER_CONTENT,
+  DATE_PICKER_EMPTY_ANCHOR,
+  DATE_PICKER_EMPTY_TRIGGER,
+  DATE_PICKER_MAX,
+  DATE_PICKER_MIN,
+  DATE_PICKER_MONTH,
+  DATE_PICKER_MONTH_LABEL,
+  DATE_PICKER_NEXT,
+  DATE_PICKER_PLACEHOLDER,
+  DATE_PICKER_PROBE,
+  DATE_PICKER_READOUT,
+  DATE_PICKER_ROUTES,
+  DATE_PICKER_TODAY,
+  DATE_PICKER_TODAY_LABEL,
+  DATE_PICKER_TRIGGER,
+  DATE_PICKER_UNAVAILABLE,
+  datePickerCell,
+  formatDatePickerReadout,
+} from "./date-picker.js";
+
 import {
   ALPHA_BASE,
   ALPHA_OVER,
@@ -20760,6 +20789,388 @@ const buttonActivationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * The shipped `DatePicker`, driven by a reader's own keys in a real window.
+ *
+ * The component's key contract is proved offscreen against a `TestRenderer`,
+ * where the key is delivered to the grid's `onKeyDown` directly. A window is a
+ * different path in three ways: the key lands on the **focused day cell** and
+ * has to reach the grid above it, the runtime moves focus only when component
+ * code calls `focusElement`, and the cell a move lands on is a `tabIndex` -1
+ * `div` inside an anchored surface that a `Popover` owns. The probe therefore
+ * reads the focused cell's `testId` after every key rather than the component's
+ * state, and the app's `onValueChange` is the second record — a navigation that
+ * silently chose a day would move it.
+ *
+ * The field is controlled by the probe (the app owns the value), `today` is
+ * pinned so the grid is deterministic, and both bounds sit inside the month so
+ * the month controls and the last week's clamp are measurable.
+ */
+const DatePickerProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [value, setValue] = useState<string | null>(DATE_PICKER_TODAY);
+  const [changes, setChanges] = useState(0);
+  return (
+    <div
+      testId={DATE_PICKER_PROBE}
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The shipped DatePicker: arrows move the focused day and clamp to the
+        bounds, Enter chooses, Escape and Clear return the focus.
+      </text>
+      <div
+        style={{
+          width: 320,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.md,
+        }}
+      >
+        <DatePicker
+          value={value}
+          onValueChange={(next) => {
+            setValue(next);
+            setChanges((count) => count + 1);
+          }}
+          today={DATE_PICKER_TODAY}
+          min={DATE_PICKER_MIN}
+          max={DATE_PICKER_MAX}
+          clearable
+        >
+          <DatePickerTrigger label="Due date" />
+          <DatePickerContent>
+            <DatePickerCalendar />
+          </DatePickerContent>
+        </DatePicker>
+        <Pressable testId={DATE_PICKER_AFTER}>
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            After the field
+          </text>
+        </Pressable>
+        {/*
+          A second instance that is never given a day: the first open of an empty
+          picker is the only place its "nothing chosen" anchor shows, and a
+          reopened instance would inherit the day the first one held.
+        */}
+        <DatePicker
+          today={DATE_PICKER_TODAY}
+          min={DATE_PICKER_MIN}
+          max={DATE_PICKER_MAX}
+        >
+          <DatePickerTrigger
+            label="Empty due date"
+            placeholder="No day chosen"
+            testId={DATE_PICKER_EMPTY_TRIGGER}
+          />
+          <DatePickerContent>
+            <DatePickerCalendar />
+          </DatePickerContent>
+        </DatePicker>
+      </div>
+      <Readout testId={DATE_PICKER_READOUT}>
+        {formatDatePickerReadout({ value, changes })}
+      </Readout>
+    </div>
+  );
+};
+
+const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(DATE_PICKER_TRIGGER);
+    const readout = () => ctx.host.text(DATE_PICKER_READOUT);
+    const month = () => ctx.host.text(DATE_PICKER_MONTH);
+
+    // The surface's box paints before its calendar does: an anchored popover
+    // mounts the wrapper, measures it and then lays the content out, so the
+    // month header is the part that says the grid exists.
+    const open = () =>
+      Effect.gen(function* () {
+        yield* ctx.host.click(DATE_PICKER_TRIGGER);
+        yield* ctx.host.waitFor(DATE_PICKER_MONTH);
+        yield* Effect.sleep(SETTLE);
+      });
+
+    // The closed field: the day the app holds, no surface, no change.
+    yield* ctx.expectEqual(
+      "the field starts on the day the app holds",
+      yield* ctx.host.text(DATE_PICKER_TRIGGER),
+      DATE_PICKER_TODAY_LABEL,
+    );
+    yield* ctx.expectEqual(
+      "a closed picker paints no surface",
+      yield* settleGone(ctx, DATE_PICKER_CONTENT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the app has recorded no change yet",
+      yield* readout(),
+      formatDatePickerReadout({ value: DATE_PICKER_TODAY, changes: 0 }),
+    );
+
+    // The open surface: the month of the day the picker calls today, and the
+    // focus on a day cell rather than on the surface itself.
+    yield* open();
+    yield* ctx.expectEqual(
+      "a press opens the month of the day the picker calls today",
+      yield* month(),
+      DATE_PICKER_MONTH_LABEL,
+    );
+    yield* ctx.expectEqual(
+      "the surface opens on a day cell, not on its surface",
+      yield* focusedAfterPaint(ctx),
+      datePickerCell(DATE_PICKER_TODAY),
+    );
+
+    // The measured route, from the fixture's cumulative table. A key that does
+    // not reach the grid leaves the focus on the previous cell, which names the
+    // gesture rather than the component.
+    yield* Effect.forEach(
+      DATE_PICKER_ROUTES,
+      (route) =>
+        Effect.gen(function* () {
+          yield* ctx.host.key(route.key);
+          yield* ctx.expectEqual(
+            `${route.caption} (from ${datePickerCell(route.from)})`,
+            yield* focusedAfterPaint(ctx),
+            datePickerCell(route.to),
+          );
+        }),
+      { concurrency: 1 },
+    );
+    // Navigation moves the focus, never the value.
+    yield* ctx.expectEqual(
+      "moving the focus chooses nothing",
+      yield* readout(),
+      formatDatePickerReadout({ value: DATE_PICKER_TODAY, changes: 0 }),
+    );
+    yield* ctx.host.capture("date-picker-open");
+
+    // Enter chooses the focused cell, the way the platform's radio-like grid
+    // does: the surface goes, the trigger repaints and the focus returns.
+    yield* ctx.host.key("enter");
+    yield* ctx.expectEqual(
+      "Enter chooses the focused day and dismisses the surface",
+      yield* settleGone(ctx, DATE_PICKER_CONTENT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the trigger paints the day that was chosen",
+      yield* ctx.host.text(DATE_PICKER_TRIGGER),
+      DATE_PICKER_CHOSEN_LABEL,
+    );
+    yield* ctx.expectEqual(
+      "the app records one value change",
+      yield* readout(),
+      formatDatePickerReadout({ value: DATE_PICKER_MAX, changes: 1 }),
+    );
+    yield* ctx.expectEqual(
+      "the chosen field hands the focus back to its trigger",
+      yield* focusedAfterPaint(ctx),
+      DATE_PICKER_TRIGGER,
+    );
+    yield* ctx.host.capture("date-picker-chosen");
+
+    // A second open anchors on the chosen day, and the page keys clamp against
+    // the bounds instead of stepping onto an unavailable day.
+    yield* open();
+    yield* ctx.expectEqual(
+      "a reopened picker anchors on the chosen day",
+      yield* focusedAfterPaint(ctx),
+      datePickerCell(DATE_PICKER_MAX),
+    );
+    yield* ctx.expectEqual(
+      "the clear action paints while a day is chosen",
+      yield* settlePainted(ctx, DATE_PICKER_CLEAR),
+      true,
+    );
+    yield* ctx.host.key("pageup");
+    yield* ctx.expectEqual(
+      "PageUp lands on the earliest available day",
+      yield* focusedAfterPaint(ctx),
+      datePickerCell(DATE_PICKER_MIN),
+    );
+    yield* ctx.host.key("pagedown");
+    yield* ctx.expectEqual(
+      "PageDown lands back on the latest available day",
+      yield* focusedAfterPaint(ctx),
+      datePickerCell(DATE_PICKER_MAX),
+    );
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "Escape dismisses the surface without choosing",
+      yield* settleGone(ctx, DATE_PICKER_CONTENT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the value Escape leaves is the one that was chosen",
+      yield* readout(),
+      formatDatePickerReadout({ value: DATE_PICKER_MAX, changes: 1 }),
+    );
+    yield* ctx.expectEqual(
+      "Escape returns the focus to the trigger",
+      yield* focusedAfterPaint(ctx),
+      DATE_PICKER_TRIGGER,
+    );
+
+    // Clear is the other close path, and it reports the absence rather than a
+    // value: the trigger is a placeholder again and the focus is on it.
+    yield* open();
+    yield* ctx.host.click(DATE_PICKER_CLEAR);
+    yield* ctx.expectEqual(
+      "Clear dismisses the surface",
+      yield* settleGone(ctx, DATE_PICKER_CONTENT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "Clear reports no day",
+      yield* readout(),
+      formatDatePickerReadout({ value: null, changes: 2 }),
+    );
+    yield* ctx.expectEqual(
+      "the cleared field is a placeholder again",
+      yield* ctx.host.text(DATE_PICKER_TRIGGER),
+      DATE_PICKER_PLACEHOLDER,
+    );
+    yield* ctx.expectEqual(
+      "Clear returns the focus to the trigger",
+      yield* focusedAfterPaint(ctx),
+      DATE_PICKER_TRIGGER,
+    );
+    yield* ctx.host.capture("date-picker-cleared");
+
+    // A picker with no day anchors on the month's first day, not on the day it
+    // calls today (the measured limit the fixture names).
+    yield* open();
+    yield* ctx.expectEqual(
+      "an empty picker anchors on the month's first day, not on today (measured limit)",
+      yield* focusedAfterPaint(ctx),
+      datePickerCell(DATE_PICKER_EMPTY_ANCHOR),
+    );
+
+    // A day past the last bound is painted and refuses the press: the surface
+    // stays and the value does not move.
+    yield* ctx.host.click(datePickerCell(DATE_PICKER_UNAVAILABLE));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a day past the last bound does not dismiss the surface",
+      yield* settlePainted(ctx, DATE_PICKER_CONTENT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a day past the last bound chooses nothing",
+      yield* readout(),
+      formatDatePickerReadout({ value: null, changes: 2 }),
+    );
+    yield* ctx.host.key("escape");
+    yield* settleGone(ctx, DATE_PICKER_CONTENT);
+
+    // The empty instance's first open. It is a second mount, so its anchor is
+    // measured rather than inherited from the driven picker.
+    yield* ctx.host.click(DATE_PICKER_EMPTY_TRIGGER);
+    yield* ctx.host.waitFor(DATE_PICKER_MONTH);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an empty picker's first open focuses the month's first day (measured limit: the anchor it documents is today)",
+      yield* focusedAfterPaint(ctx),
+      datePickerCell(DATE_PICKER_EMPTY_ANCHOR),
+    );
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "the empty picker closes on Escape and keeps its trigger focused",
+      yield* settleGone(ctx, DATE_PICKER_CONTENT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the empty picker still holds no day",
+      yield* ctx.host.text(DATE_PICKER_EMPTY_TRIGGER),
+      "No day chosen",
+    );
+    yield* ctx.expectEqual(
+      "Escape hands the empty picker's focus back to its own trigger",
+      yield* focusedAfterPaint(ctx),
+      DATE_PICKER_EMPTY_TRIGGER,
+    );
+
+    // Both bounds sit inside March 2026, so neither neighbour month holds a
+    // selectable day: the control is disabled at the bound's month.
+    yield* open();
+    yield* ctx.host.click(DATE_PICKER_NEXT);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the next-month control refuses at the bound's month",
+      yield* month(),
+      DATE_PICKER_MONTH_LABEL,
+    );
+    // The press itself: a disabled control leaves the Tab order but the runtime
+    // still focuses the element a pointer pressed, so the reader's place is the
+    // control they just refused (`button-activation-lifecycle` measured the same
+    // focus rule on a disabled `Button`). The nav sits beside the grid rather
+    // than inside it, so every later key has nowhere to go until the surface is
+    // reopened — the measured limit the interlock row in `TODO.md` carries.
+    yield* ctx.expectEqual(
+      "a refused month control leaves the surface open",
+      yield* settlePainted(ctx, DATE_PICKER_CONTENT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a press parks the focus on the refused control",
+      yield* focusedAfterPaint(ctx),
+      DATE_PICKER_NEXT,
+    );
+    yield* ctx.host.key("right");
+    yield* ctx.expectEqual(
+      "the grid no longer takes an arrow while the nav holds the focus (measured limit)",
+      yield* focusedAfterPaint(ctx),
+      DATE_PICKER_NEXT,
+    );
+    yield* ctx.expectEqual(
+      "a refused month control chooses nothing",
+      yield* readout(),
+      formatDatePickerReadout({ value: null, changes: 2 }),
+    );
+    // Escape is the dismiss stack's, not the grid's, so it still closes and
+    // returns the focus; the next open restores a day cell.
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "the surface still closes after a refused press",
+      yield* settleGone(ctx, DATE_PICKER_CONTENT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "and hands the focus back to the field",
+      yield* focusedAfterPaint(ctx),
+      DATE_PICKER_TRIGGER,
+    );
+    yield* open();
+    yield* ctx.expectEqual(
+      "reopening a cleared picker restores the focus to a day, at the empty anchor",
+      yield* focusedAfterPaint(ctx),
+      datePickerCell(DATE_PICKER_EMPTY_ANCHOR),
+    );
+    yield* ctx.host.key("escape");
+    yield* settleGone(ctx, DATE_PICKER_CONTENT);
+  });
+
+/**
  * A grid whose first column is drag-resized in a real window.
  *
  * Tier 3's **Resizable columns** row cites only the headless
@@ -21588,5 +21999,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "button-activation-lifecycle",
     view: () => <ButtonActivationProbe />,
     steps: buttonActivationSteps,
+  },
+  "date-picker-lifecycle": {
+    id: "date-picker-lifecycle",
+    view: () => <DatePickerProbe />,
+    steps: datePickerSteps,
   },
 };

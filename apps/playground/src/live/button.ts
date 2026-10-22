@@ -173,20 +173,8 @@ const route = (
  * control waits for the release; and the Space release is the activation.
  */
 const byGesture: Record<ButtonGesture, ActivationRoute> = {
-  click: route(
-    "click",
-    "a pointer press on the enabled button",
-    1,
-    1,
-    "click",
-  ),
-  "enter-press": route(
-    "enter-press",
-    "Enter's press",
-    1,
-    2,
-    "keyDown:enter",
-  ),
+  click: route("click", "a pointer press on the enabled button", 1, 1, "click"),
+  "enter-press": route("enter-press", "Enter's press", 1, 2, "keyDown:enter"),
   "enter-release": route(
     "enter-release",
     "Enter's release",
@@ -194,13 +182,7 @@ const byGesture: Record<ButtonGesture, ActivationRoute> = {
     2,
     "keyDown:enter",
   ),
-  "space-press": route(
-    "space-press",
-    "Space's press",
-    1,
-    2,
-    "keyDown:enter",
-  ),
+  "space-press": route("space-press", "Space's press", 1, 2, "keyDown:enter"),
   "space-release": route(
     "space-release",
     "Space's release",

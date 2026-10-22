@@ -106,9 +106,9 @@ describe("the button-activation fixture", () => {
   });
 
   it("prints the counters, the point and the refusals", () => {
-    expect(
-      formatCounts({ host: 1, activates: 2, last: "keyDown:enter" }),
-    ).toBe("host=1 activates=2 last=keyDown:enter");
+    expect(formatCounts({ host: 1, activates: 2, last: "keyDown:enter" })).toBe(
+      "host=1 activates=2 last=keyDown:enter",
+    );
     // A pointer activation carries the press point, rounded to whole pixels; a
     // key activation carries none, and the readout says so rather than `0`.
     expect(
@@ -117,12 +117,10 @@ describe("the button-activation fixture", () => {
         Option.some({ x: 411.6, y: 268.2 }),
       ),
     ).toBe("host=1 activates=1 last=click x=412 y=268");
-    expect(
-      formatActivation({ host: 0, activates: 0, last: "none" }),
-    ).toBe("host=0 activates=0 last=none x=none y=none");
-    expect(formatRefusals({ disabled: 0, busy: 0 })).toBe(
-      "disabled=0 busy=0",
+    expect(formatActivation({ host: 0, activates: 0, last: "none" })).toBe(
+      "host=0 activates=0 last=none x=none y=none",
     );
+    expect(formatRefusals({ disabled: 0, busy: 0 })).toBe("disabled=0 busy=0");
   });
 
   it("reads a field back out of a readout, and refuses its absence", () => {
@@ -132,9 +130,9 @@ describe("the button-activation fixture", () => {
     expect(fieldOf(text, "activates")).toEqual(Option.some(1));
     // The word `none` is absent, not zero: a probe must not compare a cleared
     // readout with a real coordinate.
-    expect(
-      fieldOf("host=0 activates=0 last=none x=none y=none", "x"),
-    ).toEqual(Option.none());
+    expect(fieldOf("host=0 activates=0 last=none x=none y=none", "x")).toEqual(
+      Option.none(),
+    );
     expect(fieldOf(text, "z")).toEqual(Option.none());
     expect(fieldOf("x=notanumber", "x")).toEqual(Option.none());
   });
@@ -148,7 +146,7 @@ describe("the button-activation fixture", () => {
     // The readout a row must leave is built from the row, not typed into the
     // probe: a hardcoded expectation would survive an edit to the table.
     expect(probe).toContain("${route.caption} leaves ${formatCounts(route)}");
-    expect(probe).toContain("formatCounts(buttonRoute(\"space-release\"))");
+    expect(probe).toContain('formatCounts(buttonRoute("space-release"))');
     expect(probe).toContain("formatRefusals({ disabled: 0, busy: 0 })");
     expect(probe).toContain("BUTTON_TAB_ORDER");
     // The tab order is the stops a traversal reaches, and the disabled button is

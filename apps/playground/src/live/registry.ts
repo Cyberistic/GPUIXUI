@@ -480,6 +480,12 @@ export const liveRegistry = [
       "Input: the shipped Button activates on Enter's press and Space's release, carries the press point, and a disabled or busy button refuses every route",
     capability: "input",
   },
+  {
+    id: "date-picker-lifecycle",
+    title:
+      "Input: the shipped DatePicker opens on a day cell, moves real focus by key and clamps to its bounds, chooses on Enter, and Escape and Clear return the focus",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

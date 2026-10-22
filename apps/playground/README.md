@@ -42,12 +42,13 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-74 probes a real window can prove, of which fifteen mount shipped
+75 probes a real window can prove, of which sixteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
-combobox, the nested overlay stack and the modal focus rule), seven mount
+combobox, the date picker, the nested overlay stack and the modal focus rule),
+seven mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip and
 the Button), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
@@ -782,7 +783,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 | button activation | `button-activation-lifecycle` | a pointer press activates once and carries the press point; Enter activates on its press and Space on its release; a disabled or busy button refuses every route, and only the disabled one leaves the tab order |
 | dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape and per outside press, outside-in |
 | menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
-| input update/validation | `text-input`, `validation-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both |
+| input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
 | theme switching | `theme-switch-lifecycle` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density |
 | table sort/selection | `table-lifecycle`, `modifier-select-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort; a modified press carries its chord, so shift ranges from the anchor, cmd toggles one record and cmd-shift adds the range |
@@ -4210,6 +4211,74 @@ components package's stand-in routes both to `onClick`, so the migration that
 hands its eight `onClick` call sites to the primitives' `Button` must map them to
 `onActivate` or keyboard activation silently stops arriving.
 
+### `date-picker-lifecycle` — measured on 0.11.0 here
+
+**Does the one calendar the library ships behave the same in a window?** GPUix
+publishes no date input, so `DatePicker` is the library's calendar, and its key
+table was proved against a `TestRenderer` where a key goes straight to the grid's
+`onKeyDown`. A window is a different path: the key lands on the **focused day
+cell**, it has to reach the grid above it, and the runtime moves focus only when
+component code calls `focusElement`. The probe mounts the shipped picker twice —
+one holding a day, one empty — pins `today` and both bounds inside March 2026,
+and reads the focused cell's `testId` after every gesture plus the value the app
+was handed.
+
+| Gesture | Focused cell | What it proves |
+| ------- | ------------ | -------------- |
+| press the trigger | `date-day-2026-03-11` | the surface opens on the day the picker calls today, not on its own box; the header reads `March 2026` |
+| ArrowRight moves one day forward | `date-day-2026-03-12` | a day cell receives the key and the grid above it acts |
+| ArrowDown moves one week forward | `date-day-2026-03-19` | a week forward |
+| ArrowLeft moves one day back | `date-day-2026-03-18` | a day back |
+| ArrowUp moves one week back | `date-day-2026-03-11` | a week back |
+| Home reaches the week's first day | `date-day-2026-03-09` | the row's Monday |
+| End reaches the week's last day | `date-day-2026-03-15` | the row's Sunday |
+| a week forward crosses into the next row | `date-day-2026-03-22` | the grid's rows are real tabs, not a flat count |
+| a week past the last bound lands on it | `date-day-2026-03-27` | `max` clamps the move instead of painting an unavailable day |
+| a day past the last bound stays on it | `date-day-2026-03-27` | and so does a one-day step |
+| `enter` | `date-picker-trigger` | the focused day is chosen, the surface goes, and the focus returns; the trigger paints `27 March 2026` |
+| reopen | `date-day-2026-03-27` | a reopened picker anchors on the chosen day, and Clear paints |
+| `pageup` | `date-day-2026-03-02` | a page step clamps to the earliest bound |
+| `pagedown` | `date-day-2026-03-27` | and back to the latest |
+| `escape` | `date-picker-trigger` | the surface closes without choosing and the focus comes back |
+| Clear | `date-picker-trigger` | the value is `null`, the trigger is the `Pick a date` placeholder, and the focus comes back |
+| press the disabled next-month control | `date-next` | a refused control still takes the pointer's focus — the measured limit below |
+
+Navigation never moves the value: the readout stays `value=2026-03-11 changes=0`
+through all nine keys, `Enter` makes it `value=2026-03-27 changes=1`, Escape
+leaves it there, and Clear is the second and last change. A day past `max`
+(`2026-03-30`) is painted and refuses the press: the surface stays and the value
+does not move.
+
+Two measured limits, both from an empty picker. Its first open focuses the
+month's **first day**, not the day the picker calls today — the open effect sets
+the anchor and the same commit's focus effect reads the state before it, so the
+grid falls back to `startOfMonth`. And a press on a **disabled** month control
+parks the focus on that control: the button leaves the Tab order, but the runtime
+still focuses the element a pointer pressed, and the nav row is a sibling of the
+grid rather than a child, so every later arrow has nowhere to go until the
+surface is reopened (Escape still closes it — the dismiss stack is not the grid's
+— and the next open restores a day cell). The interlock rows in `TODO.md` carry
+both halves.
+
+45 checks, `--only date-picker-lifecycle`, green on 0.11.0 (~24 s). Fixture:
+`src/live/date-picker.ts` (the cumulative route, the pinned days, the cell ids and
+the readout) + `date-picker.test.ts` (8 cases: every route re-derived from
+`effect/DateTime` and clamped to the bounds, the month's neighbours holding no
+selectable day, both labels re-derived from `Intl` in UTC, the readout, the probe
+held to the table, and this section). Evidence:
+`.artifacts/live/date-picker-{open,chosen,cleared}.png`.
+
+Two negative controls measured, exit `1` each, restored green. Crediting the
+first `right` with the wrong day (`2026-03-13`) fails
+`ArrowRight moves one day forward (from date-day-2026-03-11)` with **`expected
+"date-day-2026-03-13", got "date-day-2026-03-12"`**, so the check reads the
+window's focused cell rather than restating the table; `date-picker.test.ts`'s
+`derives every landing day from the calendar` fails the same edit before a window
+is opened (**`expected "ArrowRight moves one day forward: 2026-03-13", got
+"…: 2026-03-12"`**). And asserting that the refused control leaves the focus on a
+day fails with **`expected "date-day-2026-03-11", got "date-next"`** — the
+measured limit is reported, not assumed away.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -4427,8 +4496,8 @@ narrower. Each deviation is deliberate and measured:
   `elevation-paint`, `opacity-paint`, `movable-tabs-lifecycle`,
   `slider-vertical-lifecycle`, `modifier-select-lifecycle`, `rtl-text`,
   `syntax-palette`, `press-routing-lifecycle`, `list-row-press`,
-  `column-resize-lifecycle` and `button-activation-lifecycle` (sixteen probes,
-  each run alone).
+  `column-resize-lifecycle`, `button-activation-lifecycle` and
+  `date-picker-lifecycle` (seventeen probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
