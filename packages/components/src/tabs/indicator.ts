@@ -12,6 +12,13 @@
  * width. Measured 2026-10-21 in the behaviour suite: with the rail's 1px border
  * and 4px padding, a `left: 0, top: 0` child paints 1px inside the rail box, and
  * the probe's box plus this delta lands the pill exactly on the trigger.
+ *
+ * The two boxes are window coordinates, so they must come from the same paint:
+ * a rail the window moved is subtracted at its new place, not the one it was
+ * measured at when the tab set mounted. The probe therefore fills the padding
+ * box rather than sitting in its corner — the runtime reports a layout whose box
+ * it can see change, so a rail that resizes (and re-measures its triggers)
+ * reports the origin again in that same round.
  */
 
 import type { EventPayload } from "@gpuix/react";

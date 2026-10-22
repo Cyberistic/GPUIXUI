@@ -15,10 +15,12 @@
  *
  * The selected surface is **one** element for the whole set (`tabs-indicator`),
  * not a background on each trigger. It is measured rather than assumed: each
- * trigger reports its painted box through `onLayout`, the rail reports where its
- * absolute children start from (`tabs-origin`), and `tabs/indicator.ts` turns the
- * pair into the pill's offsets. So the pill follows a trigger that resizes, and
- * a caller's rail padding or border cannot leave it short.
+ * trigger reports its painted box through `onLayout`, the rail reports the box
+ * its absolute children resolve against (`tabs-origin`) on every paint where
+ * that box changes — a window resize or a pane opening above the rail moves the
+ * origin too — and `tabs/indicator.ts` turns the pair into the pill's offsets.
+ * So the pill follows a trigger that resizes, and a caller's rail padding or
+ * border cannot leave it short.
  *
  * Measured limitations: the pill **slides** by retargeting the box's
  * `left`/`top`/`width`/`height` (a `normal` motion target), because
@@ -426,10 +428,11 @@ export interface TabsListProps extends Omit<Props, "children"> {
  * selected surface every trigger paints over.
  *
  * The surface is placed from two measurements rather than guessed: the
- * `tabs-origin` probe is a 1×1 swatch at the rail's absolute origin (whatever
- * box the runtime resolves that against, borders and padding included), and each
- * trigger reports its own painted box. Together they give the pill's offsets
- * exactly, so a caller's rail padding cannot leave it short.
+ * `tabs-origin` probe fills the box the rail's absolute children resolve
+ * against (borders and padding included) and reports it again whenever that box
+ * changes, and each trigger reports its own painted box. Together they give the
+ * pill's offsets exactly, so a caller's rail padding cannot leave it short and a
+ * rail the window moved cannot leave the pill behind.
  */
 export const TabsList = ({
   label,
@@ -485,7 +488,12 @@ export const TabsList = ({
     );
   };
 
-  /** The origin is a property of the rail's containing block: take it once. */
+  /**
+   * The origin is the box the pill's absolute children resolve against, in
+   * window coordinates — so the rail moving (a window resize, a pane opening
+   * above it) makes the newest report the origin. An unmoved box keeps the
+   * previous state, so repainting the same rail costs no render.
+   */
   const noteOrigin = (event: EventPayload): void =>
     pipe(
       measuredBox(event),
@@ -493,7 +501,11 @@ export const TabsList = ({
         onNone: () => undefined,
         onSome: (box) =>
           setOrigin((current) =>
-            Option.isNone(current) ? Option.some(box) : current,
+            Option.match(current, {
+              onNone: () => Option.some(box),
+              onSome: (previous) =>
+                sameBox(previous, box) ? current : Option.some(box),
+            }),
           ),
       }),
     );
@@ -534,11 +546,15 @@ export const TabsList = ({
         onLayout={noteOrigin}
         style={{
           position: "absolute",
+          // The box an absolute child resolves against — the rail's padding
+          // box. It fills that box rather than sitting in one corner, because
+          // the runtime reports a layout it can see change: a rail that resizes
+          // must report the origin again, or a trigger it re-measured would be
+          // subtracted from a box the rail no longer starts at.
           left: 0,
           top: 0,
-          width: 1,
-          height: 1,
-          backgroundColor: theme.colors.background,
+          right: 0,
+          bottom: 0,
           pointerEvents: "none",
         }}
       />

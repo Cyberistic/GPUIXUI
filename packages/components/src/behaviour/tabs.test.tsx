@@ -222,6 +222,54 @@ describe("Tabs", () => {
     tabs.unmount();
   });
 
+  it("follows the rail when the window moves it, not the origin it first reported", () => {
+    // A rail is measured in window coordinates, so a pane opening above the tab
+    // set moves it without changing the rail's own layout. The origin was taken
+    // once, at mount: a trigger that re-measures after the move is then
+    // subtracted from a box the rail no longer starts at, and the pill is
+    // painted away from its tab by however far the rail travelled.
+    const Shifted = ({
+      inset,
+      danger,
+    }: {
+      readonly inset: number;
+      readonly danger: string;
+    }) => (
+      <div style={{ paddingLeft: inset, paddingTop: inset }}>
+        <Tabs defaultValue="danger" testId="shifted-root">
+          <TabsList testId="shifted-list">
+            <TabsTrigger testId="shifted-profile" value="profile">
+              Profile
+            </TabsTrigger>
+            <TabsTrigger testId="shifted-danger" value="danger">
+              {danger}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+    );
+
+    const tabs = renderComponent(<Shifted inset={0} danger="Danger" />);
+    settleMotion(tabs);
+    expect(requireBounds(tabs, "tabs-indicator")).toEqual(
+      requireBounds(tabs, "shifted-danger"),
+    );
+
+    // The rail moves down and right, and the longer label makes the selected
+    // trigger report its new box in the same pass. The runtime delivers the new
+    // rail box and the trigger's box in the round that follows, which is the
+    // paint the pill is placed from.
+    tabs.rerender(<Shifted inset={120} danger="Danger!" />);
+    settleMotion(tabs);
+    settleMotion(tabs);
+
+    expect(requireBounds(tabs, "tabs-indicator")).toEqual(
+      requireBounds(tabs, "shifted-danger"),
+    );
+
+    tabs.unmount();
+  });
+
   it("lets a press on the surface reach the trigger under it", () => {
     const onProfileClick = vi.fn();
     const tabs = renderComponent(
