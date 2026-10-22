@@ -6043,7 +6043,9 @@ numbers).
       `MotionProvider preference="reduced"` the first frame is the resting one.
       Directions measured: with the `motion` prop removed, `travels out from the
       side it opens at` fails on `expected 0 to be 4` and the two later cases fail
-      on the leaked root; restored, 25/25. Docs: `docs/combobox.mdx` §Motion,
+      on the leaked root; with the transition forced to `0.2` the reduced case
+      fails by name while the other two stay green; restored, 25/25. Docs:
+      `docs/combobox.mdx` §Motion,
       §Limitations and §Verification, the row in `docs/component-api.md` §11, and
       the `Comboboxes` inventory row.
 `[ ]` Add the combobox popup's **§Motion** to the curated page
