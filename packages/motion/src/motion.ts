@@ -156,13 +156,21 @@ export class MotionValue {
     return this.velocity;
   }
 
-  /** Assigns a value and cancels animation without momentum. */
+  /**
+   * Assigns a value and cancels animation without momentum.
+   *
+   * The retired declaration goes with the run: a coast released afterwards
+   * starts from this value even when its release speed and inertia match the
+   * last gesture, because the coast still on screen is no longer this one.
+   */
   set(value: number): void {
     const safe = finite(value, this.value);
     this.value = safe;
     this.velocity = 0;
+    this.initialVelocity = 0;
     this.from = safe;
     this.target = safe;
+    this.mode = { kind: "transition", transition: instant };
     this.active = false;
     this.completed = false;
   }

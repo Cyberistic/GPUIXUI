@@ -170,6 +170,24 @@ describe("MotionValue", () => {
     expect(after.active).toBe(false);
   });
 
+  it("starts a new coast after a set, even with the same release", () => {
+    // The no-op is for the coast still on screen. `set` assigns a presentation
+    // and cancels the run, so a release with the same speed afterwards is a new
+    // gesture and starts from the value that was set. `set` used to leave the
+    // retired coast's declaration behind, so the guard matched the idle mode and
+    // the gesture never coasted at all.
+    const value = new MotionValue(0);
+    value.coast(inertia(350), 400);
+    expect(value.sample(5_000).value).toBeCloseTo(140, 3);
+
+    value.set(80);
+    value.coast(inertia(350), 400);
+    const after = value.sample(5_100);
+    expect(after.active).toBe(true);
+    // The 80 ms presentation plus the same 140 ms projection, a tenth of the way.
+    expect(after.value).toBeCloseTo(80 + 140 * (1 - Math.E ** -0.285714), 3);
+  });
+
   it("starts a new coast when the release velocity changes", () => {
     // The no-op is for the *same* declaration. A faster release is a new
     // gesture, so it starts from the presentation on screen.

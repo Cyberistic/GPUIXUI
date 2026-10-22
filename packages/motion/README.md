@@ -69,7 +69,9 @@ re-declaring the inertia already in flight with the same release velocity is a
 no-op, so a render that builds `inertia()` again does not relaunch the run from
 the sample on screen with the speed it has since lost. A new gesture (another
 release velocity, a changed time constant or bound) starts where the surface is,
-and so does a coast after `set`/`animate`.
+and so does a coast after `set`/`animate`: `set` retires the run it cancelled, so
+a release with the same speed afterwards is a new gesture rather than a
+re-declaration of one that is no longer on screen.
 
 ## React hooks
 
