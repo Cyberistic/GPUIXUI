@@ -264,6 +264,27 @@ describe("TimePicker", () => {
     time.unmount();
   });
 
+  it("refuses every edit path on a disabled field", () => {
+    // The bug this guards: a read-only host still receives keys and a press
+    // still moves focus, so a disabled picker stepped its own value with the
+    // arrow keys and reported it to the caller.
+    const onValueChange = vi.fn();
+    const time = renderComponent(
+      <Time defaultValue="09:30" disabled onValueChange={onValueChange} />,
+    );
+
+    const hours = time.renderer.findByTestId("time-hours");
+    time.renderer.focusElement(hours?.id ?? -1);
+    time.renderer.simulateKeystrokes("up");
+    time.renderer.simulateKeystrokes("down");
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(segmentValue(time, "hours")).toBe("09");
+    expect(segmentValue(time, "minutes")).toBe("30");
+
+    time.unmount();
+  });
+
   it("renders no clear control when the part is not composed", () => {
     const time = renderComponent(
       <Time defaultValue="09:30" clearable showClear={false} />,

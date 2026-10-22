@@ -177,7 +177,9 @@ cue: the flag is presentational, and nothing here depends on the event
   enter a time.
 - **No `aria-disabled`** in 0.11.0. `disabled` makes both inputs `readOnly`,
   removes the clear control, dims the field and takes the segments out of the
-  tab order; it does not announce a disabled state.
+  tab order; the field also refuses every edit path of its own — a read-only
+  host still receives keys, so the arrow step stops at the root's guard rather
+  than moving the caller's value. It does not announce a disabled state.
 - **Fixed 24-hour display.** No AM/PM and no locale: the repo has no i18n layer,
   and a 12-hour toggle would need a real message catalogue. No seconds and no
   timezone either — the value is a time of day, not an instant.
@@ -193,12 +195,13 @@ and a round-trip of all 1440 minutes, hour carry in both directions, midnight
 wrapping, day wrap, strict and clamping segment parsers, padding, step
 normalisation, the last-two-digits rule and segment composition.
 
-`src/behaviour/time-picker.test.tsx` (10 tests) covers typed hours reaching
+`src/behaviour/time-picker.test.tsx` (11 tests) covers typed hours reaching
 `onValueChange`, typed minutes completing the value, out-of-range clamping,
 arrow carry and midnight wrap, `minuteStep`, blur padding, the clear rules and
-the disabled state, the controlled contract, the segments laid out where the
-caller put them, and no clear control when the part is not composed. The theme
-matrix adds the both-theme surface assertion.
+the disabled state (which refuses the arrow step as well as the clear control),
+the controlled contract, the segments laid out where the caller put them, and no
+clear control when the part is not composed. The theme matrix adds the
+both-theme surface assertion.
 
 ```sh
 nub run --filter @gpuixui/components test

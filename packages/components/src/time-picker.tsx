@@ -193,6 +193,7 @@ export const TimePicker = ({
   const emit = (next: string | null): void => setSelected(next);
 
   const edit = (segment: TimeSegment, raw: string): void => {
+    if (disabled) return;
     const digits = digitsOf(raw);
     if (digits === "") {
       setHoursText("");
@@ -222,6 +223,7 @@ export const TimePicker = ({
   };
 
   const handleKeyDown = (segment: TimeSegment, event: EventPayload): void => {
+    if (disabled) return;
     Match.value(event.key).pipe(
       Match.when("up", () => shift(segment === "hours" ? 60 : step)),
       Match.when("down", () => shift(segment === "hours" ? -60 : -step)),
@@ -458,6 +460,7 @@ export const timePickerMeta = {
     "two labelled text segments instead of a spinbutton: 0.11.0 has no aria-valuenow",
     "minuteStep affects the arrow keys only; typed minutes accept 00..59",
     "disabled is readOnly plus dimming: 0.11.0 has no aria-disabled",
+    "a disabled field refuses every edit path — its own guard stops the arrow step, which a read-only host still delivers",
     "no seconds and no timezone: the value is a time of day, not an instant",
   ],
   docs: "docs/time-picker.mdx",
