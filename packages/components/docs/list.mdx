@@ -190,6 +190,15 @@ selected, without duplicates. Selecting the same set again reports nothing new.
 Single mode still has no second click that clears the value; a multiple list
 clears by toggling its last selected row.
 
+A range **keeps the anchor**: `Shift`+click extends from the row the last plain or
+toggle press left, so a second `Shift`+click extends from that same row rather
+than from the row it just selected. A plain press replaces the set and becomes the
+anchor; a `Cmd`/`Ctrl` press toggles one row and moves it. That is the contract a
+window measured — `apps/playground/README.md` §`modifier-select-lifecycle` drives
+real chorded clicks through the host's `clickWith` verb and reads the painted
+`selected` fill back (22 checks on 0.11.0) — so a file list, tree or grid that
+composes these rows should reuse it instead of inventing an anchor of its own.
+
 **Not built**: no drag reorder and no `aria-multiselectable` (see Accessibility).
 
 ## API

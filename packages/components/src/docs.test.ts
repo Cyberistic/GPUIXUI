@@ -192,6 +192,31 @@ describe("component pages", () => {
   });
 });
 
+describe("the selection chord the list page teaches", () => {
+  // The contract a file list, tree or grid would otherwise reimplement: a range
+  // press extends from the anchor and keeps it, a plain or toggle press moves it.
+  // A window measured the rule with real chorded clicks, so the page has to
+  // point at that measurement instead of asserting a rule nobody drove.
+  const probe = "modifier-select-lifecycle";
+  const selection = section(read("list.mdx"), "## Selection") ?? "";
+  const playgroundReadme = readFileSync(
+    fileURLToPath(
+      new URL("../../../apps/playground/README.md", import.meta.url),
+    ),
+    "utf8",
+  );
+
+  it("states the anchor rule a composed grid would otherwise reimplement", () => {
+    expect(selection).toMatch(/keeps the anchor/i);
+    expect(selection).toMatch(/moves it/i);
+  });
+
+  it("cites the window that measured the chord", () => {
+    expect(selection).toContain(probe);
+    expect(playgroundReadme).toMatch(new RegExp(`^#{1,4} \`${probe}\``, "m"));
+  });
+});
+
 /** The capability record a page's accessibility claim is derived from. */
 const capabilityRecord = readFileSync(
   fileURLToPath(
