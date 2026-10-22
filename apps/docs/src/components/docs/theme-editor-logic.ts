@@ -194,15 +194,21 @@ export const formatContrastFailure = ({
 }: ContrastFailure): string =>
   `${foreground} on ${background} — ${measured(ratio, floor)}`;
 
-/** A decorative surface as a line, e.g. `divider: border on background — 1.00:1 (needs 1.05:1)`. */
+/**
+ * A decorative surface as a line, e.g. `divider: border on background — 1.00:1
+ * (needs 1.05:1)`. An elevation failure names its level — `elevation sm: shadow
+ * on card — …` — because a card's lift, a menu's and a dialog's are three
+ * decisions a reader edits separately.
+ */
 export const formatDecorativeFailure = ({
   surface,
   role,
   over,
   ratio,
   floor,
+  level,
 }: DecorativeFailure): string =>
-  `${surface}: ${role} on ${over} — ${measured(ratio, floor)}`;
+  `${surface}${level === undefined ? "" : ` ${level}`}: ${role} on ${over} — ${measured(ratio, floor)}`;
 
 /**
  * A role the renderer would ignore. A value it cannot parse is quoted; an

@@ -100,9 +100,12 @@ call reports eleven independent failures:
   a `disabledFace` is the fill a control wears while it is unavailable — measured
   face against face with the enabled action it replaces, because a disabled
   control wearing an enabled fill tells the reader it is available — and an
-  `elevation` is the shadow a raised surface drops — measured at the scale's
-  deepest level, because if the strongest step cannot differ from the strip the
-  whole scale is flat there. Each is held to {decorativeFloor}:1 against the
+  `elevation` is the shadow a raised surface drops — measured at **each** level
+  a surface is raised to, because a card's `sm` lift is weaker than a menu's
+  `md` and a dialog's `lg`: a deeper step that separates says nothing about a
+  shallower one, so a scale whose `sm` disappears over a card reports that step
+  by name rather than the level above it. Each is held to {decorativeFloor}:1
+  against the
   strip it sits on: editing `border` towards `background` is how a card loses
   its edge, a `hover` equal to `popover` is a row that never looks hovered, and
   neither is a contrast pair.

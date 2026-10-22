@@ -41,13 +41,14 @@ export interface MessagesProviderProps {
 export const MessagesProvider = ({
   messages,
   children,
-}: MessagesProviderProps): ReactElement => (
-  <MessagesContext.Provider
-    value={resolveMessages(messages, useContext(MessagesContext))}
-  >
-    {children}
-  </MessagesContext.Provider>
-);
+}: MessagesProviderProps): ReactElement => {
+  const inherited = useContext(MessagesContext);
+  return (
+    <MessagesContext.Provider value={resolveMessages(messages, inherited)}>
+      {children}
+    </MessagesContext.Provider>
+  );
+};
 
 /**
  * The words controls announce in this tree.

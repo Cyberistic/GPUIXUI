@@ -307,6 +307,42 @@ describe("theme-editor audit readout", () => {
     expect(audit.passed).toBe(false);
   });
 
+  it("names the elevation level a shadow cannot lift off, one line per decision", () => {
+    // `decorativeFailures` measures every level a surface is raised to, and a
+    // card's `sm` lift, a menu's `md` and a dialog's `lg` are three decisions a
+    // reader edits separately. A shadow painted the page's own colour cannot
+    // separate the surface from the strip it falls on, so the readout must name
+    // the level rather than print one line per strip that hides which step it is
+    // about.
+    const flat = extendTheme(themes.dark, {
+      colors: { shadow: themes.dark.colors.background },
+    });
+    const audit = auditTheme(flat);
+    const failed = audit.decorative.filter(
+      (failure) => failure.surface === "elevation",
+    );
+    const levels = Array.from(
+      new Set(failed.map((failure) => failure.level)),
+    ).filter((level) => level !== undefined);
+    // More than one level has a decision to report, so one collapsed line would
+    // hide at least one of them.
+    expect(levels.length).toBeGreaterThan(1);
+
+    const lines = auditFindings(audit)
+      .filter((finding) => finding.kind === "decorative")
+      .map((finding) => finding.text)
+      .filter((text) => text.startsWith("elevation "));
+
+    expect(lines).toHaveLength(failed.length);
+    const unnamed = levels.filter(
+      (level) => !lines.some((line) => line.startsWith(`elevation ${level}:`)),
+    );
+    expect(unnamed, "no line names these levels").toEqual([]);
+    // The level is what makes two strips under two levels two lines, not one
+    // repeated decision.
+    expect(new Set(lines).size).toBeGreaterThan(levels.length);
+  });
+
   it("reports an elevation shadow the renderer cannot paint, which no colour role covers", () => {
     // A level passed in `elevation` replaces the whole array, colours and all —
     // the tint is the caller's then, not the `shadow` role's. The runtime

@@ -333,6 +333,32 @@ describe("the theme page", () => {
     );
   });
 
+  it("holds the elevation claim to the levels the report measures", () => {
+    // The bullet said an `elevation` is measured at "the scale's deepest
+    // level, because if the strongest step cannot differ from the strip the
+    // whole scale is flat there" — the claim the token pages retracted, because
+    // a weaker level is *less* visible, so a card's `sm` lift needs its own
+    // measurement. The failure also carries `level` now, so the readout names
+    // the step a reader edits.
+    const audit = section(page("themes.mdx"), "The theme audit");
+    const levels = [
+      ...new Set(
+        decorativeSurfaces
+          .filter(({ surface }) => surface === "elevation")
+          .flatMap(({ level }) => (level === undefined ? [] : [level])),
+      ),
+    ];
+
+    expect(levels.length).toBeGreaterThan(1);
+    expect(audit).toContain("**each** level");
+    expect(
+      levels.filter((level) => !audit.includes(`\`${level}\``)),
+      "the elevation sentence does not name these levels",
+    ).toEqual([]);
+    expect(audit).not.toContain("deepest level");
+    expect(audit).not.toContain("the strongest step cannot differ");
+  });
+
   it("says what the readout prints for a role or a wash that is not there", () => {
     // A theme restored from storage can predate a role the library added, so a
     // report carries `value: undefined`; and a theme with no `selection` role has
