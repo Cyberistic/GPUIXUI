@@ -865,9 +865,10 @@ instead of letting the audit pass. The shipped presets sit at or above it —
 `compact` `sm` is exactly `targetSize.minimum` — so no palette or metric moves
 for a theme that keeps them.
 
-`rowHeight` is the same box one level down. A list row is a press target — it
-takes a `tabIndex`, a press and a hover wash — and a `dense` row is built at
-exactly `density.rowHeight` (`packages/components/src/list.tsx`), with the
+`rowHeight` is the same box one level down. A list row is a press target — every
+row answers a press, and a selectable one also takes a `tabIndex` and a hover
+wash — while a `dense` row is built at exactly `density.rowHeight`
+(`packages/components/src/list.tsx`), with the
 library reserving no hit-area padding on top of the row either. So the same
 `pressable` rule holds it: a brand that shaves the rows to 20px ships a target a
 reader cannot reliably hit while every control height is right, and

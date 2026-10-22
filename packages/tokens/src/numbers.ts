@@ -17,11 +17,11 @@
  * claim `docs/design-system.md` §6 makes about the shipped presets, held here
  * for a brand's density too.
  *
- * A row height is the same box one step down. A list row is a press target — it
- * takes a `tabIndex`, a press and a hover wash — and a `dense` row is built at
- * exactly `density.rowHeight` (`packages/components/src/list.tsx`), so a theme
- * that shaves the row ships a target under the floor even when every control
- * height is right.
+ * A row height is the same box one step down. A list row is a press target —
+ * every row answers a press, and a selectable one also takes a `tabIndex` and a
+ * hover wash — while a `dense` row is built at exactly `density.rowHeight`
+ * (`packages/components/src/list.tsx`), so a theme that shaves the row ships a
+ * target under the floor even when every control height is right.
  *
  * A type role carries two numbers that only mean something together: a leading
  * shorter than the role's own size puts the next baseline inside this line's
