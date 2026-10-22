@@ -78,6 +78,39 @@ describe("phases", () => {
   });
 });
 
+describe("a level or phase the table does not carry", () => {
+  // The house surface arrival: the level a surface enters and leaves on.
+  const house = { duration: 0.2, ease: "easeInOut" } as const;
+
+  it("takes the house timing instead of painting a NaN duration", () => {
+    // The bug this guards: the level may come from a persisted setting a
+    // release no longer ships, so a key the table does not carry read
+    // `undefined / 1000` — a `NaN` duration the runtime drops, leaving the
+    // surface on its own default timing while the caller believes it asked for
+    // `normal`.
+    // @ts-expect-error — a persisted level the library did not type-check.
+    expect(motionTiming("elapsed")).toEqual(house);
+  });
+
+  it("keeps a reduced run instant whatever the level", () => {
+    // The fallback must not resurrect the journey the preference removes.
+    // @ts-expect-error — the same untrusted level.
+    expect(motionTiming("elapsed", { preference: "reduced" })).toEqual({
+      duration: 0,
+    });
+  });
+
+  it("eases between two resting states for a phase it does not name", () => {
+    // A phase read from the same persisted setting: an absent curve reaches
+    // the runtime as `ease: undefined`.
+    // @ts-expect-error — a persisted phase the library did not type-check.
+    expect(motionTiming("fast", { phase: "settle" })).toEqual({
+      duration: 0.16,
+      ease: motionEasings.standard,
+    });
+  });
+});
+
 describe("reduced motion", () => {
   it("collapses the run to an instant assignment with no easing", () => {
     // No easing, because a duration-zero transition with a named curve is still

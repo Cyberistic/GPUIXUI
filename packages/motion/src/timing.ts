@@ -76,6 +76,27 @@ export interface MotionTimingOptions {
 }
 
 /**
+ * The milliseconds a level names.
+ *
+ * The level may be a persisted choice an application reads back — a string the
+ * library did not type-check — so a key the table does not carry must not reach
+ * the runtime as `undefined / 1000`. It takes the house **surface arrival**
+ * (`normal`), the timing a component that asked for nothing would move with.
+ */
+const levelMs = (level: MotionLevel): number =>
+  Number.isFinite(motionLevels[level])
+    ? motionLevels[level]
+    : motionLevels.normal;
+
+/**
+ * The phase a timing eases with. A phase the table does not carry takes
+ * `standard`, the curve between two resting states, rather than handing the
+ * runtime an absent `ease`.
+ */
+const phaseOf = (phase: MotionPhase): MotionPhase =>
+  phase in motionEasings ? phase : "standard";
+
+/**
  * A level and phase as the runtime's timing, in seconds.
  *
  * Under the reduced preference the duration is zero and no easing is named:
@@ -90,7 +111,7 @@ export const motionTiming = (
   const phase = options.phase ?? "standard";
   if (options.preference === "reduced") return { duration: 0 };
   return {
-    duration: motionLevels[level] / 1000,
-    ease: motionEasings[phase],
+    duration: levelMs(level) / 1000,
+    ease: motionEasings[phaseOf(phase)],
   };
 };
