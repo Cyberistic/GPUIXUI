@@ -33,7 +33,10 @@ export const brandLightTheme = createTheme({
   colors: {
     primary: "#6A45F0",
     primaryForeground: "#FFFFFF",
-    ring: "#7C5CFF",
+    // The brand's ring is measured on the soft status tints an `Alert` can paint
+    // behind a focused action: `#7C5CFF` read 2.93:1 on the light red tint, so
+    // the smallest step that clears all four is used.
+    ring: "#7A57FA",
   },
 });
 

@@ -146,7 +146,7 @@ const aeroColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     borderStrong: "#5A768F",
     primary: "#1F6FB5",
     primaryForeground: "#FFFFFF",
-    ring: "#2A80C4",
+    ring: "#287ABA",
     accent: "#C6E2F9",
     accentForeground: "#0B3F66",
     selected: "#C2E0F8",

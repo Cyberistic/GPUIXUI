@@ -1814,7 +1814,7 @@ describe("the ring on the fill it hugs", () => {
     ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
   });
 
-  it("keeps the ring findable on every fill in every shipped, platform and authored theme", () => {
+  it("keeps the ring findable on every fill in every shipped, platform and authored style", () => {
     const shipped = [
       ...Object.values(themes),
       ...Object.values(highContrastThemes),
@@ -1825,11 +1825,103 @@ describe("the ring on the fill it hugs", () => {
         Object.values(themes).map((theme) => retroTheme(theme, look)),
       ),
     ];
+    const hidden = shipped.flatMap((theme) =>
+      fills.filter((background) => {
+        const ratio = contrastRatio(
+          theme.colors.ring,
+          theme.colors[background],
+        );
+        return ratio === undefined || ratio < contrastFloorsFor(theme).boundary;
+      }),
+    );
+
+    expect(hidden).toEqual([]);
+  });
+});
+
+/**
+ * Guards the ring on a **message's own tint**. The table measured the ring on
+ * every strip a control rests on and on the fill it hugs, and on none of the
+ * four soft status tints a message paints — while an `Alert`'s documented action
+ * is the default `Button`, which declares the keyboard ring at rest, so a focus
+ * cue inside the one component built to be noticed was measured by nothing.
+ *
+ * Measured, the light ring on iris 500 read **2.94:1** on `infoSoft` and
+ * **2.84:1** on `destructiveSoft`, and the high-contrast ring **4.41:1** and
+ * **4.16:1** against its 4.5:1 floor; the authored Aero light look carried its
+ * own blue at the same 2.84. The two base rings move one ramp step deeper
+ * (`iris[600]`, `iris[800]`) and Aero takes the smallest step that clears, so
+ * the pairs close the gap instead of documenting it.
+ */
+describe("the ring on a message's own tint", () => {
+  const tints = [
+    "infoSoft",
+    "successSoft",
+    "warningSoft",
+    "destructiveSoft",
+  ] as const;
+
+  it("measures the ring on every soft status tint", () => {
+    const missing = tints
+      .filter(
+        (background) =>
+          !contrastPairs.some(
+            (pair) =>
+              pair.foreground === "ring" &&
+              pair.background === background &&
+              pair.floor === "boundary",
+          ),
+      )
+      .map((background) => `ring/${background}`);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the painters that put a ring on a tint", () => {
+    // The pairs only mean something while an alert still paints a tone's soft
+    // fill behind a container and the default action still declares the
+    // keyboard ring — the two halves the composition is made of.
+    const alert = readFileSync(
+      new URL("../../components/src/alert.tsx", import.meta.url),
+      "utf8",
+    );
+    const button = readFileSync(
+      new URL("../../components/src/internal/button.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(alert).toContain("ALERT_TONES");
+    expect(declaresKeyboardRing(button), "internal/button.tsx").toBe(true);
+  });
+
+  it("reports a ring that disappears into the tint it surrounds", () => {
+    const broken = { colors: { ...lightColors, ring: lightColors.infoSoft } };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "ring" && background === "infoSoft",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
+  });
+
+  it("keeps every ring placement findable and prints the tightest", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const rings = contrastPairs.filter((pair) => pair.foreground === "ring");
     const placements = shipped.flatMap((theme) =>
-      fills.map((background) => ({
-        name: `${theme.name}/ring/${background}`,
-        ratio: contrastRatio(theme.colors.ring, theme.colors[background]),
-        floor: contrastFloorsFor(theme).boundary,
+      rings.map((pair) => ({
+        name: `${theme.name}/ring/${pair.background}`,
+        ratio: contrastRatio(theme.colors.ring, theme.colors[pair.background]),
+        floor: contrastFloorsFor(theme)[pair.floor],
       })),
     );
     const hidden = placements.filter(
@@ -1840,8 +1932,8 @@ describe("the ring on the fill it hugs", () => {
     );
 
     expect(hidden).toEqual([]);
-    expect(tightest.name).toBe("Light/ring/active");
-    expect(tightest.ratio?.toFixed(2)).toBe("3.04");
+    expect(tightest.name).toBe("Light · Windows 7 (Aero)/ring/destructiveSoft");
+    expect(tightest.ratio?.toFixed(2)).toBe("3.09");
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(
@@ -1849,7 +1941,9 @@ describe("the ring on the fill it hugs", () => {
         new URL("../../../docs/tokens.md", import.meta.url),
         "utf8",
       ).replace(/\s+/g, " "),
-    ).toContain(`pressed wash at ${tightest.ratio?.toFixed(2)}:1`);
+    ).toContain(
+      `Aero look's red message tint at ${tightest.ratio?.toFixed(2)}:1`,
+    );
   });
 });
 

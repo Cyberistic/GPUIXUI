@@ -591,7 +591,12 @@ gap: a programmatic focus before any keyboard input does not paint it, which is
 exactly how a mouse-opened dialog or menu focuses its content. That path keeps
 `focusRing(theme)`, the zero-offset, zero-blur shadow spread by
 `borderWidth.strong`, painted while the overlay holds focus. Both draw outside
-the border box, so neither reflows the layout.
+the border box, so neither reflows the layout. The ring is read on every strip a
+control sits on — the page, a card, a popover, a toolbar, a secondary panel, the
+`input`/`selected`/`hover`/`active`/`accent` fill it hugs, and the soft status
+tint an action inside a message is drawn on, where the light ring used to read
+2.84:1 on the red tint; the tightest placement is the Aero look's red message
+tint at 3.09:1 against the 3:1 boundary floor.
 
 What a *control* declares is `controlFocusRing(theme, { disabled, invalid })`:
 the same outline while it can act, the `destructive` role while it failed
@@ -627,7 +632,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | disabled text on its own `disabled` fill, on `background`/`card`/`popover` and on a `muted` toolbar or `secondary` panel (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
 | a filled role's derived pointer step (`filledHover` / `filledPressed` through `actionFeedbackPlacements`) against the fill it replaces | 1.05:1 | 1.05:1 |
-| focus ring (on background, card, popover, muted and secondary, and on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs) and `borderStrong` on those same strips (a floating surface included), on the field, on a soft status tint (an action inside a message), and on the `hover`/`active` wash a bordered control tints, and on the `accent`/`selected` wash a row paints under the same action | 3:1 | 4.5:1 |
+| focus ring on background, card, popover, muted and secondary, on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs, and on the four soft status tints an action inside a message draws it on; and `borderStrong` on those same strips (a floating surface included), on the field, on a soft status tint, on the `hover`/`active` wash a bordered control tints, and on the `accent`/`selected` wash a row paints under the same action | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the four washes a row wears (`hover`/`active` on a menu or combobox row; `accent`/`selected` on a list row) | 3:1 | 4.5:1 |
 | soft status surface and its edge against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |

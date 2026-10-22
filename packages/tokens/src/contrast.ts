@@ -446,6 +446,19 @@ export const contrastPairs: readonly ContrastPair[] = [
     background: "destructiveSoft",
     floor: "boundary",
   },
+  // A focused control draws its **ring** on the same strip its edge is measured
+  // on — `outlineOffset: 0` puts the line on the border box, so its outer side
+  // is the tint — and the ring is measured on every strip a control sits on
+  // except these four. An `Alert`'s documented action is the default `Button`,
+  // which declares the keyboard ring at rest, so a focus cue inside the one
+  // component built to be noticed was measured by nothing: on iris 500 the light
+  // ring read 2.94:1 on `infoSoft` and 2.84:1 on `destructiveSoft`, and the
+  // high-contrast ring 4.41:1 and 4.16:1 against its 4.5:1 floor. Both palettes
+  // move one ramp step deeper rather than the pairs being dropped.
+  { foreground: "ring", background: "infoSoft", floor: "boundary" },
+  { foreground: "ring", background: "successSoft", floor: "boundary" },
+  { foreground: "ring", background: "warningSoft", floor: "boundary" },
+  { foreground: "ring", background: "destructiveSoft", floor: "boundary" },
   // A failed validation swaps a control's edge — and the focus line it paints
   // while invalid — to the `destructive` role, so that role is a boundary on
   // every strip a control sits on. The page, card, popover and `muted` strips

@@ -235,7 +235,12 @@ export const lightColors = {
   input: palette.neutral[0],
   inputForeground: palette.neutral[900],
   placeholder: "#606A79",
-  ring: palette.iris[500],
+  // The ring is a boundary, and a control sits on a message's own `xSoft`
+  // tint as well as on the page (an `Alert`'s action is the default `Button`).
+  // On iris 500 it measured 2.94:1 on `infoSoft` and 2.84:1 on
+  // `destructiveSoft` — under the 3:1 a focus cue needs. One ramp step deeper
+  // clears all four tints and every strip the ring is measured on.
+  ring: palette.iris[600],
   selection: "#7567F23D",
   overlay: "#00000073",
   hover: "#E4E9F0",
@@ -348,7 +353,10 @@ export const highContrastLightColors = {
   input: "#FFFFFF",
   inputForeground: "#000000",
   placeholder: "#4A4F58",
-  ring: "#4C39B5",
+  // iris 700 missed the high-contrast 4.5:1 boundary on two tints (4.41:1 on
+  // `infoSoft`, 4.16:1 on `destructiveSoft`); the next step clears both at
+  // 5.47:1.
+  ring: "#3B2C8F",
   selection: "#7567F24D",
   overlay: "#000000A6",
   hover: "#E8E8E8",

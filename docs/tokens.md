@@ -162,7 +162,7 @@ tool never has to copy the palette out of this page.
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
 | `placeholder` | `#606A79` | `#858E9F` | placeholder text |
-| `ring` | `#7567F2` | `#A7A9FF` | focus ring |
+| `ring` | `#5F4BDB` | `#A7A9FF` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF3D` | text selection wash (24% alpha) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
 | `hover` | `#E4E9F0` | `#272D37` | hover wash for ghost surfaces |
@@ -663,7 +663,7 @@ getTheme("light"); // the default light theme, unchanged
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input |
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
-| `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
+| `ring` | `#3B2C8F` | `#C7CBFF` | focus ring |
 | `selection` | `#7567F24D` | `#C7CBFF42` | text selection wash (30% light, 26% dark) |
 | `overlay` | `#000000A6` | `#000000CC` | modal scrim |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
@@ -1392,7 +1392,7 @@ named colour, an `hsl()`-family function). Shorthand hex is measured.
 — an empty array means the theme is readable. The floors are the theme's own
 variant's unless one is passed, which is the rule `auditTheme` applies: a brand
 derived from a high-contrast theme is measured at 7:1 for secondary text without
-the caller remembering to say so. The 97 pairs cover the text role
+the caller remembering to say so. The 101 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1528,11 +1528,26 @@ in. The five fills (`input`, `selected`, `hover`, `active`, `accent`) joined the
 ring's pairs at the boundary floor, so a brand whose ring is the colour of the
 row it surrounds is reported at 1.00:1 instead of shipping a focused row with no
 visible focus. Every shipped, high-contrast, platform and authored theme clears
-its variant's floor, the tightest being the base light theme's pressed wash at
-3.04:1 — thin headroom, recorded rather than widened, because the ring is a 2px
-line on a state the reader's own pointer created. `contrast.test.ts`'s `the ring
-on the fill it hugs` suite reads both painters, reports the two erased rings and
-sweeps all 16 styles, so the pairs cannot outlive the paint.
+its variant's floor. `contrast.test.ts`'s `the ring
+on the fill it hugs` suite reads both painters and reports the two erased rings,
+so the pairs cannot outlive the paint.
+
+A **message's own tint** is the ring's last strip, and the same one the edge
+reaches. An `Alert` fills its tone's soft role and its documented action is a
+plain `Button`, which declares the keyboard ring at rest — so the focus cue is
+drawn on a tint, exactly as the edge is. Nothing measured it: the light ring
+read **2.94:1** on `infoSoft` and **2.84:1** on `destructiveSoft`, the
+high-contrast ring **4.41:1** and **4.16:1** against its 4.5:1 floor, and the
+authored Aero light look's own blue the same 2.84. Both base rings move one ramp
+step deeper (light `iris[600]` `#5F4BDB`, high contrast `iris[800]` `#3B2C8F`)
+and Aero light takes the smallest step that clears (`#287ABA`), which closes all
+four placements rather than documenting them. The tightest shipped ring
+placement overall is now the Aero look's red message tint at 3.09:1, so the
+number this page prints is the one the whole ring contract measures.
+`contrast.test.ts`'s `the ring on a message's own tint` suite holds the
+coverage, reads the alert's composer and the button's ring, reports a ring
+painted in the tint it sits on at 1.00:1, and sweeps every ring placement in
+all 16 styles.
 
 A **trailing action** is the boundary's last strip — and the same two washes the
 ring already had. A list row hands its `trailing` slot to an explicit action,
