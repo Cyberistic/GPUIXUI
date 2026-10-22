@@ -12,6 +12,18 @@ export { alpha } from "@gpuixui/tokens";
 export { accessibleName } from "./a11y.js";
 
 export {
+  defaultMessages,
+  pressWord,
+  resolveMessages,
+  selectionWord,
+} from "./messages.js";
+export type {
+  PressWords,
+  PrimitiveMessages,
+  SelectionWords,
+} from "./messages.js";
+
+export {
   decideAbsolute,
   decideActivation,
   decideMove,

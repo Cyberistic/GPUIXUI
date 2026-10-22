@@ -29,6 +29,7 @@ import {
   swallowKeyDefault,
 } from "../core/keyboard.js";
 import { rovingIndex } from "../core/roving.js";
+import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import type {
   SelectionAccent,
   SelectionSpec,
@@ -71,6 +72,8 @@ import {
   type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
+import { selectionValueText } from "./Checkbox.js";
+import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export type RadioOption = GroupOption;
@@ -173,6 +176,7 @@ export const renderRadioGroup = (
   activeIndex: number,
   focus: RadioGroupFocus,
   handlers: RadioGroupHandlers,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const { orientation = "vertical", size = "md", accent = "primary" } = props;
   const options = radioItems(props);
@@ -299,7 +303,7 @@ export const renderRadioGroup = (
             role="radio"
             aria-label={optionName(option)}
             aria-id={addressed ? props["aria-id"] : undefined}
-            aria-valuetext={current === "checked" ? "checked" : "unchecked"}
+            aria-valuetext={selectionValueText(current, messages.selection)}
             tabIndex={disabled ? undefined : index === stopIndex ? 0 : -1}
             onLayout={addressed ? props.onLayout : undefined}
             onClick={composePress(disabled, props.onClick, () => {
@@ -340,6 +344,7 @@ export const renderRadioGroup = (
 /** A group of radio buttons. */
 export const RadioGroup = (props: RadioGroupProps): ReactElement => {
   const theme = useTheme();
+  const messages = useMessages();
   const focus = useRovingFocus();
   const selected = useControlState(
     props.value,
@@ -358,5 +363,6 @@ export const RadioGroup = (props: RadioGroupProps): ReactElement => {
     initialActiveIndex(options, selected.value.current),
     focus,
     { onSelect: selected.set, ...focus, typeAhead },
+    messages,
   );
 };

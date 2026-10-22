@@ -86,7 +86,7 @@ and a scroller should not change which element scrolls.
 | `scrollbarColor` | `string` | `colors.scrollbar` | the viewport thumb's colour |
 | `scrollbarWidth` | `number` | platform's | the viewport thumb's thickness in px |
 | `focusable` | `boolean` | `true` | whether the viewport is a tab stop and answers the scroll keys |
-| `label` | `string` | `"Scroll region"` while the viewport is a tab stop | names the region (`role="group"` + `aria-label`); a non-focusable viewport has no region at all unless named |
+| `label` | `string` | the provider's `messages.scrollRegion` (`"Scroll region"`) while the viewport is a tab stop | names the region (`role="group"` + `aria-label`); a non-focusable viewport has no region at all unless named |
 | `style` | `StyleDesc` | — | merged last on the frame; put the bounded size here |
 | `className` | `string` | — | Tailwind classes, joined last on the frame |
 | `children` | `ReactNode` | — | viewport content, or a composed `ScrollAreaViewport` |
@@ -176,12 +176,13 @@ removes the ring with the stop.
 ## Accessibility
 
 The viewport is a `group`, and it carries a name even when the caller gives
-none: `"Scroll region"`. That is not decoration — GPUix builds an accessibility
-node only for an element with a role, so an unnamed viewport was a **tab stop
-the accessibility tree could not hold** (measured on 0.11.0: the window had 12
-tab stops and 11 nodes). Pass `label` to replace the default with the region's
-own name, e.g. `"Rows"` for a table's scroller. `focusable={false}` with no
-label adds neither the stop nor the node, which is what a purely visual
+none: the provider's `messages.scrollRegion` (`"Scroll region"` unless the
+interface names its own words). That is not decoration — GPUix builds an
+accessibility node only for an element with a role, so an unnamed viewport was a
+**tab stop the accessibility tree could not hold** (measured on 0.11.0: the
+window had 12 tab stops and 11 nodes). Pass `label` to replace the default with
+the region's own name, e.g. `"Rows"` for a table's scroller. `focusable={false}`
+with no label adds neither the stop nor the node, which is what a purely visual
 scroller wants.
 
 The keyboard contract above is what makes the scroller usable without a pointer,
@@ -206,9 +207,6 @@ scrollbar's paint is otherwise the platform's. The keyboard step is the theme's
   transform/animation path for a scroll position.
 - **No virtualisation.** A long list mounts every row. `packages/data-grid` owns
   the virtual-list work when it lands.
-- **The default region name is fixed English.** `"Scroll region"` names a
-  viewport the caller did not label; a caller that needs its own words passes
-  `label`.
 
 ## Verification
 

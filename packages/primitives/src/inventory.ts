@@ -154,7 +154,6 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "No Scrollbar/Thumb/Corner parts: the platform paints one native thumb",
       "No fade mask at the edges",
       "No smooth scrolling: a key jumps the offset",
-      "The default region name is fixed English ('Scroll region')",
     ],
     source: [
       "src/components/ScrollArea.tsx",

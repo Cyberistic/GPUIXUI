@@ -6,9 +6,10 @@
  * "snap"), and it lives in a toolbar beside other actions.
  *
  * **The accessibility limitation:** `@gpuix/native` 0.11.0 has no `aria-pressed`, so the
- * state reaches assistive technology through `aria-valuetext` (`"pressed"` /
- * `"not pressed"`), the same channel Checkbox and Switch use. A screen reader
- * hears a button with a value, not a pressed button; the docs page says so.
+ * state reaches assistive technology through `aria-valuetext` (the provider's
+ * `messages.press` words, shipped as `"pressed"` / `"not pressed"`), the same
+ * channel Checkbox and Switch use. A screen reader hears a button with a value,
+ * not a pressed button; the docs page says so.
  *
  * The paint is the shared control recipe with `core/variants.ts`' toggle
  * variants, and the activation/keyboard contract is `Button`'s — Enter on key
@@ -28,6 +29,12 @@ import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
+import {
+  defaultMessages,
+  pressWord,
+  type PressWords,
+  type PrimitiveMessages,
+} from "../core/messages.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
@@ -49,6 +56,7 @@ import {
   type TooltipTriggerProps,
 } from "./internal.js";
 import { Spinner } from "./Spinner.js";
+import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface ToggleProps
@@ -93,8 +101,10 @@ export interface ToggleProps
 }
 
 /** The state a toggle announces: there is no `aria-pressed` to carry it. */
-export const pressedValueText = (pressed: boolean): string =>
-  pressed ? "pressed" : "not pressed";
+export const pressedValueText = (
+  pressed: boolean,
+  words: PressWords = defaultMessages.press,
+): string => pressWord(pressed, words);
 
 /** What a `Toggle` tells a `style` callback. `pressed` is `selected`. */
 export interface ToggleState {
@@ -110,6 +120,7 @@ export const renderToggle = (
   state: ValueState<boolean>,
   focus: FocusState,
   onPressedChange: (pressed: boolean) => void,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const { size = "md", variant = "default" } = props;
   const busy = props.disabled === true || props.loading === true;
@@ -161,7 +172,7 @@ export const renderToggle = (
             accessibleName(props["aria-description"]))
       }
       aria-id={props["aria-id"]}
-      aria-valuetext={pressedValueText(state.current)}
+      aria-valuetext={pressedValueText(state.current, messages.press)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onLayout={props.onLayout}
@@ -193,11 +204,12 @@ export const renderToggle = (
 /** A button whose action has a persistent on/off state. */
 export const Toggle = (props: ToggleProps): ReactElement => {
   const theme = useTheme();
+  const messages = useMessages();
   const focus = useFocus();
   const state = useControlState(
     props.pressed,
     props.defaultPressed ?? false,
     props.onPressedChange,
   );
-  return renderToggle(props, theme, state.value, focus, state.set);
+  return renderToggle(props, theme, state.value, focus, state.set, messages);
 };

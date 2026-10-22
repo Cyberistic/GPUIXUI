@@ -125,7 +125,8 @@ also scroll while the control waits for the release.
   press on its padding each toggle exactly once.
 - State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
   `mixed`), because `@gpuix/native` 0.11.0 has no `aria-checked` (see
-  `docs/gpuix-capabilities.md`).
+  `docs/gpuix-capabilities.md`). The words are the provider's
+  `messages.selection` table, so a localised interface announces its own.
 - `disabled` removes the tab stop; there is no `aria-disabled`.
 - The visible name is a separate `Label`, but it does not name the box: there is
   no `aria-labelledby`, so the box's own `label` prop is its accessible name —

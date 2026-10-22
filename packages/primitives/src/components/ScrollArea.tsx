@@ -55,12 +55,14 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
+import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { scrollTarget } from "../core/scroll.js";
 import type { ScrollSpec } from "../core/style.js";
 import type { PrimitiveTheme, RadiusStep, SpaceStep } from "../core/theme.js";
 import { scrollClass, scrollFrameClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeRefs, mergeStyle } from "./internal.js";
+import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** The scroll behaviour every viewport shares. */
@@ -84,9 +86,10 @@ interface ScrollPart {
  *
  * A tab stop a reader cannot reach with assistive technology is a stop nobody
  * can describe, and ARIA asks a focusable scroll region to be named. `label`
- * overrides this; it is fixed English like the OTP field's cell names.
+ * overrides this; the fallback is the provider's `messages` table, so a
+ * localised interface names the region in its own language.
  */
-export const DEFAULT_SCROLL_NAME = "Scroll region";
+export const DEFAULT_SCROLL_NAME = defaultMessages.scrollRegion;
 
 const ScrollPartContext = createContext<ScrollPart | null>(null);
 
@@ -234,6 +237,7 @@ export const renderScrollAreaViewport = (
   }: ScrollAreaViewportProps,
   part: ScrollPart,
   instance?: (element: PublicInstance | null) => void,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const resolved = recipeTw.classesToStyle(
     cn(scrollClass(axis ?? part.axis), className),
@@ -252,7 +256,7 @@ export const renderScrollAreaViewport = (
   }
   const name =
     accessibleName(label ?? part.label) ??
-    (focusablePort ? DEFAULT_SCROLL_NAME : undefined);
+    (focusablePort ? messages.scrollRegion : undefined);
   // The keyboard contract needs the id and the caller needs the element, so
   // both are written instead of one replacing the other.
   const attach =
@@ -337,11 +341,13 @@ export const ScrollAreaViewport = (
   props: ScrollAreaViewportProps,
 ): ReactElement => {
   const area = useScrollPart("ScrollAreaViewport");
+  const messages = useMessages();
   const keyboard = useScrollKeyboard(props.axis ?? area.axis, area.theme);
   return renderScrollAreaViewport(
     props,
     { ...area, onScrollKey: keyboard.onKeyDown },
     keyboard.instance,
+    messages,
   );
 };
 

@@ -2,9 +2,10 @@
  * `Checkbox` — an independent yes/no.
  *
  * GPUix exposes **no `aria-checked`** (see `docs/gpuix-capabilities.md`), so the state is reported
- * through `aria-valuetext` (`"checked"` / `"unchecked"` / `"mixed"`), which is
- * the supported way to make a checkbox legible to assistive technology. The
- * same three states are one paint resolved by `core/selection.ts`.
+ * through `aria-valuetext` (the provider's `messages.selection` words, shipped as
+ * `"checked"` / `"unchecked"` / `"mixed"`), which is the supported way to make a
+ * checkbox legible to assistive technology. The same three states are one paint
+ * resolved by `core/selection.ts`.
  *
  * Two parts (`docs/component-api.md` §8): the box, and `CheckboxIndicator` —
  * the mark — so a caller can replace the glyph without rebuilding the control.
@@ -29,6 +30,12 @@ import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
 import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
+import {
+  defaultMessages,
+  selectionWord,
+  type PrimitiveMessages,
+  type SelectionWords,
+} from "../core/messages.js";
 import {
   selectionMarkColor,
   selectionTargetStyle,
@@ -58,6 +65,7 @@ import {
   type TooltipTriggerProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+import { useMessages } from "./MessagesProvider.js";
 
 /** What a part reads from the box it belongs to. */
 interface CheckboxPart {
@@ -118,8 +126,10 @@ export interface CheckboxState {
 }
 
 /** What a checkbox announces: there is no `aria-checked` to carry it. */
-export const selectionValueText = (state: SelectionState): string =>
-  state === "indeterminate" ? "mixed" : state;
+export const selectionValueText = (
+  state: SelectionState,
+  words: SelectionWords = defaultMessages.selection,
+): string => selectionWord(state, words);
 
 /** The state a checkbox is in, from its props. */
 export const checkboxState = (props: CheckboxProps): SelectionState =>
@@ -190,6 +200,7 @@ export const renderCheckbox = (
   state: ValueState<boolean>,
   focus: FocusState,
   onValueChange: (next: boolean) => void,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const current: SelectionState =
     props.indeterminate === true
@@ -252,7 +263,7 @@ export const renderCheckbox = (
         accessibleName(props["aria-description"])
       }
       aria-id={props["aria-id"]}
-      aria-valuetext={selectionValueText(current)}
+      aria-valuetext={selectionValueText(current, messages.selection)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onLayout={props.onLayout}
@@ -279,11 +290,12 @@ export const renderCheckbox = (
 /** A checkbox. */
 export const Checkbox = (props: CheckboxProps): ReactElement => {
   const theme = useTheme();
+  const messages = useMessages();
   const focus = useFocus();
   const state = useControlState(
     props.checked,
     props.defaultChecked ?? false,
     checkedChange(props),
   );
-  return renderCheckbox(props, theme, state.value, focus, state.set);
+  return renderCheckbox(props, theme, state.value, focus, state.set, messages);
 };

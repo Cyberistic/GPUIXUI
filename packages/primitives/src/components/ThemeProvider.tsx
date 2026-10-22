@@ -3,8 +3,9 @@
  *
  * The values live in `@gpuixui/tokens/react`'s context, the same one
  * `@gpuixui/components` reads, so a tree that mixes the two packages wraps once
- * and cannot paint two palettes. This module adds the density override and the
- * package's fail-loud rule; it owns no palette of its own.
+ * and cannot paint two palettes. This module adds the density override, the
+ * words seam (`messages`) and the package's fail-loud rule; it owns no palette
+ * of its own.
  */
 
 import type { ReactElement, ReactNode } from "react";
@@ -13,8 +14,10 @@ import {
   useTheme as useTokensTheme,
   useThemePresence,
 } from "@gpuixui/tokens/react";
+import type { PrimitiveMessages } from "../core/messages.js";
 import type { Density, PrimitiveTheme } from "../core/index.js";
 import { withDensity } from "./internal.js";
+import { MessagesProvider } from "./MessagesProvider.js";
 
 /** Thrown when a primitive renders with no theme provider above it. */
 export class MissingThemeProviderError extends Error {
@@ -37,6 +40,13 @@ export interface ThemeProviderProps {
    * so this package owns no second copy of the presets.
    */
   readonly density?: Density;
+  /**
+   * The words the controls below announce — a localised interface's copy. A
+   * named group replaces its default group whole (`selection`, `press`), and a
+   * group left out keeps the default; `MessagesProvider` does the merge, so a
+   * nested provider can extend a table instead of replacing it.
+   */
+  readonly messages?: Partial<PrimitiveMessages>;
   readonly children: ReactNode;
 }
 
@@ -46,15 +56,18 @@ export interface ThemeProviderProps {
  *
  * A component boundary, not domain logic: a missing provider is a programming
  * error (a defect), which is exactly what React's error boundary models, so it
- * throws rather than returning `Option` for every component to unwrap.
+ * throws rather than returning `Option` for every component to unwrap. The
+ * words an interface announces ride the same wrapper (`messages`), because a
+ * caller wrapping a tree once should not have to wrap it twice for copy.
  */
 export const ThemeProvider = ({
   theme,
   density,
+  messages,
   children,
 }: ThemeProviderProps): ReactElement => (
   <TokensThemeProvider theme={withDensity(theme, density)}>
-    {children}
+    <MessagesProvider messages={messages}>{children}</MessagesProvider>
   </TokensThemeProvider>
 );
 

@@ -35,6 +35,7 @@ import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import { decideActivation, swallowKeyDefault } from "../core/keyboard.js";
+import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { stillTransition } from "../core/motion.js";
 import {
   switchTargetStyle,
@@ -63,6 +64,8 @@ import {
   type InteractionProps,
   type TooltipTriggerProps,
 } from "./internal.js";
+import { selectionValueText } from "./Checkbox.js";
+import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** What a part reads from the switch it belongs to. */
@@ -191,6 +194,7 @@ export const renderSwitch = (
   state: ValueState<boolean>,
   focus: FocusState,
   onValueChange: (next: boolean) => void,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const spec: SelectionSpec = {
     state: state.current ? "checked" : "unchecked",
@@ -245,7 +249,7 @@ export const renderSwitch = (
         accessibleName(props["aria-description"])
       }
       aria-id={props["aria-id"]}
-      aria-valuetext={state.current ? "checked" : "unchecked"}
+      aria-valuetext={selectionValueText(spec.state, messages.selection)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onLayout={props.onLayout}
@@ -281,11 +285,12 @@ export const renderSwitch = (
 /** A switch that toggles immediately. */
 export const Switch = (props: SwitchProps): ReactElement => {
   const theme = useTheme();
+  const messages = useMessages();
   const focus = useFocus();
   const state = useControlState(
     props.checked,
     props.defaultChecked ?? false,
     checkedChange(props),
   );
-  return renderSwitch(props, theme, state.value, focus, state.set);
+  return renderSwitch(props, theme, state.value, focus, state.set, messages);
 };

@@ -42,6 +42,17 @@ Density is a multiplier over the theme's metrics, never a second palette:
 only. Building density presets is `@gpuixui/tokens`' job, so this package owns no
 second copy of them.
 
+The **words** a control announces are interface copy, so they ride the provider
+too: `messages={{ selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" } }}`
+names the selection states, `press` the toggle states, `scrollRegion` a focusable
+scroller's default name and `codeDigit` a code cell's sentence — once for the
+whole tree, because this runtime announces state through `aria-valuetext` and has
+no `aria-checked`/`aria-pressed`/`aria-busy`. A named group replaces its default
+group whole and a group left out keeps the default. `MessagesProvider` is the
+same seam without a theme, for a sub-tree in another language — it extends the
+table above it rather than resetting it — and `useMessages` reads the resolved
+table. Reference: [`docs/theme-provider.mdx`](./docs/theme-provider.mdx) §Words.
+
 No colour, space, radius or font literal may appear outside `src/core/` and its
 test fixture — the theme is the only source of those values.
 
@@ -65,9 +76,10 @@ the exact steps and the native-style-prop → utility-class mapping are in
 
 Import one action from `@gpuixui/primitives/button` when the package root is too
 much to load. The subpath publishes `Button`, `IconButton` and their prop types
-from a re-export seam (`src/button.ts`) and reaches five component modules — the
-two actions, `Spinner`, `ThemeProvider` and the shared `internal.ts` — where the
-root barrel reaches 53 own modules and every other component. Plan 160 measured
+from a re-export seam (`src/button.ts`) and reaches six component modules — the
+two actions, `Spinner`, `ThemeProvider`, `MessagesProvider` and the shared
+`internal.ts` — where the root barrel reaches 53 own modules and every other
+component. Plan 160 measured
 the barrel at 52 modules / 416 KiB from `@gpuixui/components`, which is why that
 package kept a local button stand-in until this route existed. The seam is a
 route, not a second implementation: `IconButton` is still `Button` with a
@@ -82,7 +94,7 @@ required name.
 **Selection** `Checkbox` `CheckboxGroup` `RadioGroup` `Switch` `Rating`
 **Value** `Slider` `RangeSlider` `Meter`
 **Feedback** `Progress` `Spinner` `Skeleton` `Tooltip` `TooltipProvider`
-**Theming** `ThemeProvider`
+**Theming** `ThemeProvider` `MessagesProvider` `useMessages`
 
 Every component is themed by a resolver in `core/style.ts` (`controlStyle`,
 `surfaceStyle`, `textStyle`, `ruleStyle`, `progress*Style`) or `core/selection.ts`;

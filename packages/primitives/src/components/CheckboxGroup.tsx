@@ -6,9 +6,10 @@
  * The group still holds **one** tab stop, and that stop skips a disabled option
  * — a group whose value was a disabled option used to have no reachable stop.
  *
- * The state reaches assistive technology through `aria-valuetext` (`"checked"` /
- * `"unchecked"`) because `@gpuix/native` 0.11.0 has no `aria-checked`; each row
- * is a named checkbox and the container is a named `group`. There is no
+ * The state reaches assistive technology through `aria-valuetext` (the
+ * provider's `messages.selection` words, shipped as `"checked"` / `"unchecked"`)
+ * because `@gpuix/native` 0.11.0 has no `aria-checked`; each row is a named
+ * checkbox and the container is a named `group`. There is no
  * `aria-multiselectable`, so the group role does not claim one.
  *
  * Options arrive as data (`options`) or as `<CheckboxGroupItem>` children; both
@@ -29,6 +30,7 @@ import {
   decideMove,
   swallowKeyDefault,
 } from "../core/keyboard.js";
+import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { rovingIndex } from "../core/roving.js";
 import {
   toggleSelection,
@@ -69,6 +71,7 @@ import {
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+import { useMessages } from "./MessagesProvider.js";
 
 export type CheckboxGroupOption = GroupOption;
 
@@ -152,6 +155,7 @@ export const renderCheckboxGroup = (
   preferredIndex: Option.Option<number>,
   focus: GroupFocus,
   handlers: CheckboxGroupHandlers,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const { orientation = "vertical", size = "md", accent = "primary" } = props;
   const options = checkboxGroupItems(props);
@@ -273,7 +277,7 @@ export const renderCheckboxGroup = (
             role="checkbox"
             aria-label={optionName(option)}
             aria-id={addressed ? props["aria-id"] : undefined}
-            aria-valuetext={selectionValueText(current)}
+            aria-valuetext={selectionValueText(current, messages.selection)}
             tabIndex={
               disabled
                 ? undefined
@@ -309,6 +313,7 @@ export const renderCheckboxGroup = (
 /** A group of independent checkboxes with one tab stop. */
 export const CheckboxGroup = (props: CheckboxGroupProps): ReactElement => {
   const theme = useTheme();
+  const messages = useMessages();
   const focus = useRovingFocus();
   const selected = useControlState<ReadonlyArray<string>>(
     props.value,
@@ -341,5 +346,6 @@ export const CheckboxGroup = (props: CheckboxGroupProps): ReactElement => {
       registerItem: focus.registerItem,
       typeAhead,
     },
+    messages,
   );
 };

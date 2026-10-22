@@ -49,6 +49,38 @@ never produce a second palette. Build presets with tokens' `extendTheme`; this
 package owns no copy of them. Selection boxes stay icon-sized by design, so
 density never stretches a checkbox or a switch.
 
+## Words
+
+A control's state is announced in words (`aria-valuetext`), because this runtime
+has no `aria-checked`, `aria-pressed` or `aria-busy`. Those words are interface
+copy, not values, so the provider carries them:
+
+```tsx
+import { ThemeProvider, Toggle } from "@gpuixui/primitives";
+
+<ThemeProvider
+  theme={theme}
+  messages={{
+    selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" },
+    press: { pressed: "enfoncé", notPressed: "relâché" },
+    scrollRegion: "Zone de défilement",
+    codeDigit: (index, label) => `${label ?? "Code"} chiffre ${index + 1}`,
+  }}
+>
+  <Toggle label="Gras" />
+</ThemeProvider>;
+```
+
+A table is a **complete group per state set**: naming `selection` means owning
+all three words, because a half-translated set reads as a bug. A group left out
+keeps the shipped English, so naming `press` alone changes nothing else.
+`MessagesProvider` is the same seam without a theme — a sub-tree that speaks
+another language wraps in it, and a nested provider **extends** the table above
+it rather than resetting it. `useMessages()` returns the resolved table for a
+component of your own that announces a state, and `selectionValueText`,
+`pressedValueText` and `otpCellLabel` are the word functions, taking a table when
+you compute a word yourself.
+
 ## Contrast and platform
 
 Contrast is another theme, not a component prop:
@@ -79,10 +111,13 @@ import { platformTheme, lightTheme } from "@gpuixui/tokens";
 | ---- | ---- | ------- | ----------- |
 | `theme` | `PrimitiveTheme` | — (required) | every colour, size, radius and font a primitive paints |
 | `density` | `Density` | `theme.density` | swaps the numeric metrics group; colours stay |
+| `messages` | `Partial<PrimitiveMessages>` | the shipped English | the words a control announces, grouped per state set |
 | `children` | `ReactNode` | — | the tree that may render primitives |
 
 `useTheme(): PrimitiveTheme` returns the active theme from the shared context and
 throws `MissingThemeProviderError` when no provider is above it.
+`useMessages(): PrimitiveMessages` returns the words table — the shipped English
+when no provider names any, so a control never falls back word by word.
 
 ## Keyboard
 
@@ -93,7 +128,9 @@ Not interactive. It renders no element of its own.
 No role, no announcement. It only supplies values; the accessibility tree is
 whatever the components below it produce. Because there is no silent default, a
 missing provider is a **visible crash in development**, not a wrong palette
-shipped to a user.
+shipped to a user. The words an interface announces are the one exception with a
+default: a missing provider still speaks the shipped English rather than
+announcing nothing.
 
 ## Theming
 
@@ -109,6 +146,11 @@ re-render with a different `theme` prop — verified natively by
 - There is no built-in light/dark toggle and no persistence: theme choice is
   application state, owned by the app.
 - Providers do not merge: the nearest `ThemeProvider` supplies the whole theme.
+  The words are the exception and merge per group, because a nested dialog that
+  names its own two words must not silence the page around it.
+- Every control whose state is spoken takes its words from this seam, not from a
+  per-control prop: one vocabulary for the tree, and no way for a checkbox deep
+  in a form to be forgotten. A control that needs a *name* still takes `label`.
 
 ## Verification
 
@@ -117,6 +159,16 @@ re-render with a different `theme` prop — verified natively by
   package's own, a scan holds a second **theme** context out of the package
   (the part contexts are not theme contexts), and the seam asks
   `useThemePresence()` rather than keeping a marker of its own.
+- `src/components/messages.test.tsx` — the words table: the shipped defaults, a
+  named group replacing its default whole, a group left out keeping the default,
+  a nested provider extending the table above it, and **every** render path
+  (checkbox, checkbox group, radio group, switch, toggle, toggle group, scroll
+  region, code cell) announcing the table it is handed — plus the compatibility
+  direction, that a tree naming no words announces exactly the shipped ones.
+- `runtime/messages.runtime.test.tsx` — the same seam in a real window: a
+  provider's French table reaches eight controls' accessibility nodes, a nested
+  `MessagesProvider` extends the outer table instead of resetting it, and an
+  unnamed tree still announces the English words.
 - `src/core/theme.test.ts` — the colour-literal scan and density metrics.
 - `runtime/theme.runtime.test.tsx` — a primitive paints the dark background
   under `@gpuixui/tokens/react`'s provider **alone** (the mixed-tree case that

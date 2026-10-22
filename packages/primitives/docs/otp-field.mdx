@@ -91,7 +91,7 @@ import { OTPField, OTPFieldInput, Separator, Stack } from "@gpuixui/primitives";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | cell height and width, from the density scale |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border on every cell |
-| `label` | `string` | none | group name; each cell is named `<label> digit N` |
+| `label` | `string` | none | group name; each cell is named `<label> digit N` (the sentence is the provider's `messages.codeDigit`) |
 | `description` | `string` | none | announced help, carried by **every** cell (`aria-description`); a blank one publishes nothing |
 | `ref` / `aria-id` / `onLayout` | host address | none | land on the **first cell**, the element a form focuses |
 | `autoFocus` | `boolean` | `false` | focuses the first cell on mount |
@@ -138,7 +138,8 @@ and does not delete a second character.
 
 - The field is a named `Group` and each cell is a named `TextInput`
   ("Verification code digit 1" …). A screen reader can read every cell and the
-  group's name.
+  group's name. The cell sentence is the provider's `messages.codeDigit`, so a
+  localised interface names its own cells.
 - There is no `aria-labelledby` in `@gpuix/native` 0.11.0, so each cell carries its own
   `aria-label` written from the group's `label`; a `Label` beside the field is
   the visible name.

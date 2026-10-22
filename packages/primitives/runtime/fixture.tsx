@@ -19,6 +19,7 @@ import { Effect } from "effect";
 import type { ReactNode } from "react";
 import { Box } from "../src/components/Box.js";
 import { ThemeProvider } from "../src/components/ThemeProvider.js";
+import type { PrimitiveMessages } from "../src/core/messages.js";
 import { testTheme, testThemeDark } from "../src/core/testing/theme.fixture.js";
 import type { Density, PrimitiveTheme } from "../src/core/theme.js";
 import { createRuntime, type Runtime } from "./harness.js";
@@ -35,14 +36,17 @@ export interface SurfaceProps {
   readonly children: ReactNode;
   readonly theme?: PrimitiveTheme;
   readonly density?: Density;
+  /** The words the controls announce; the shipped English by default. */
+  readonly messages?: Partial<PrimitiveMessages>;
 }
 
 export const Surface = ({
   children,
   theme = testTheme,
   density,
+  messages,
 }: SurfaceProps): ReactNode => (
-  <ThemeProvider theme={theme} density={density}>
+  <ThemeProvider theme={theme} density={density} messages={messages}>
     <Box tone="background" padding="lg" testId={SURFACE}>
       {children}
     </Box>

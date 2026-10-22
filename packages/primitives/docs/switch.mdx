@@ -89,7 +89,8 @@ also scroll while the control waits for the release.
   (WCAG 2.2 SC 2.5.8). The track is decoration with `pointerEvents: "none"`, so
   a press on the track and a press on the band each toggle exactly once.
 - State is announced through **`aria-valuetext`** (`checked` / `unchecked`);
-  there is no `aria-checked` in `@gpuix/native` 0.11.0.
+  there is no `aria-checked` in `@gpuix/native` 0.11.0. The words are the
+  provider's `messages.selection` table.
 - `disabled` removes the tab stop; no `aria-disabled`.
 - The name comes from `label`; there is no `aria-labelledby`.
 - The help a visible `Label description` paints is announced through

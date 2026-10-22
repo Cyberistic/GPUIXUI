@@ -116,7 +116,8 @@ and the prefix accumulates for half a second so `un` can mean *Underline*.
   paints instead of announcing nothing.
 - The pressed state is announced through **`aria-valuetext`** (`pressed` /
   `not pressed`), because `@gpuix/native` 0.11.0 has no `aria-pressed`. A screen
-  reader hears a button with a value, not a pressed button.
+  reader hears a button with a value, not a pressed button. The words are the
+  provider's `messages.press` table.
 - `disabled` removes an option's tab stop and the group's; there is no
   `aria-disabled`.
 - No `aria-describedby`, so an option's `description` is painted text only.

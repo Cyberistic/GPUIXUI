@@ -129,9 +129,12 @@ describe("the action subpath", () => {
     expect(closure.has(join(packageRoot, "src", "index.ts"))).toBe(false);
     // A new name here is a new module every consumer of the route loads, so it
     // has to be a deliberate change rather than a convenience re-export.
+    // `MessagesProvider` rides the theme wrapper (`ThemeProvider` hands it the
+    // words an interface announces), and it is a context plus one merge.
     expect(modulesIn(componentsRoot, closure)).toEqual([
       "Button.tsx",
       "IconButton.tsx",
+      "MessagesProvider.tsx",
       "Spinner.tsx",
       "ThemeProvider.tsx",
       "internal.ts",

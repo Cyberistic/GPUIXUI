@@ -1,0 +1,146 @@
+/**
+ * The words a control announces, in a real window.
+ *
+ * `messages.test.tsx` proves each pure render function announces the table it is
+ * handed; this suite proves the other half — that `useMessages` carries the
+ * provider's table to the element GPUI paints, and that the a11y dump reads the
+ * translated word. It is the same seam `loadingLabel` needed: a localised
+ * interface must not hear English from its own controls.
+ *
+ * One window per test (`runtime/fixture.tsx`), and every window here names a
+ * different vocabulary, so a component that quietly kept a literal would report
+ * the English word and fail by name.
+ */
+
+import { expect, it } from "vitest";
+import * as Option from "effect/Option";
+import { Checkbox } from "../src/components/Checkbox.js";
+import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
+import type { PrimitiveMessages } from "../src/core/messages.js";
+import { MessagesProvider } from "../src/components/MessagesProvider.js";
+import { OTPField } from "../src/components/OTPField.js";
+import { RadioGroup } from "../src/components/RadioGroup.js";
+import { ScrollArea } from "../src/components/ScrollArea.js";
+import { Stack } from "../src/components/Stack.js";
+import { Switch } from "../src/components/Switch.js";
+import { Text } from "../src/components/Text.js";
+import { Toggle } from "../src/components/Toggle.js";
+import { ToggleGroup } from "../src/components/ToggleGroup.js";
+import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
+import { openWindow, Surface } from "./fixture.js";
+
+/** A caller's table: what a French interface announces. */
+const french: PrimitiveMessages = {
+  selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" },
+  press: { pressed: "enfoncé", notPressed: "relâché" },
+  scrollRegion: "Zone de défilement",
+  codeDigit: (index, label) => `${label ?? "Code"} chiffre ${index + 1}`,
+};
+
+/** The word the accessibility node named `label` announces. */
+const announced = (runtime: Runtime, label: string): string =>
+  Option.getOrElse(a11yValueOf(runtime.a11y(), { label }), () =>
+    expect.fail(`no accessibility node announced ${label}`),
+  );
+
+/** Whether a node with this role and name is in the painted tree. */
+const named = (runtime: Runtime, role: string, label: string): boolean =>
+  Option.isSome(a11yNode(runtime.a11y(), { role, label }));
+
+it("announces every control's state in the caller's words", async () => {
+  // The bug: `checked`, `mixed`, `pressed`, `Scroll region` and `Code digit N`
+  // were English literals in the components, so the provider's table reached
+  // nothing and a localised interface heard its own controls speak English.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface messages={french}>
+      <Stack direction="column" gap="sm">
+        <Checkbox testId="check" label="Notify" defaultChecked />
+        <CheckboxGroup
+          label="Channels"
+          options={[{ value: "email", label: "Email" }]}
+          defaultValue={["email"]}
+        />
+        <RadioGroup
+          label="Size"
+          options={[{ value: "a", label: "Alpha" }]}
+          defaultValue="a"
+        />
+        <Switch testId="switch" label="Wi-Fi" defaultChecked />
+        <Toggle testId="toggle" label="Bold" defaultPressed />
+        <ToggleGroup
+          label="Align"
+          type="single"
+          defaultValue="left"
+          options={[{ value: "left", label: "Left" }]}
+        />
+        <ScrollArea
+          axis="vertical"
+          testId="scroller"
+          viewportTestId="scroller-port"
+          style={{ height: 60 }}
+        >
+          <Text>rows</Text>
+        </ScrollArea>
+        <OTPField length={2} />
+      </Stack>
+    </Surface>,
+  );
+
+  expect(announced(runtime, "Notify")).toBe("coché");
+  expect(announced(runtime, "Email")).toBe("coché");
+  expect(announced(runtime, "Alpha")).toBe("coché");
+  expect(announced(runtime, "Wi-Fi")).toBe("coché");
+  expect(announced(runtime, "Bold")).toBe("enfoncé");
+  expect(announced(runtime, "Left")).toBe("enfoncé");
+  // The scroll region names itself from the table, and a code cell names its
+  // position in the caller's sentence.
+  expect(named(runtime, "Group", "Zone de défilement")).toBe(true);
+  expect(named(runtime, "TextInput", "Code chiffre 1")).toBe(true);
+});
+
+it("lets a nested provider extend the table instead of resetting it", async () => {
+  // The bug: the nested provider replaced the table whole, so a dialog that
+  // named its own two words silenced the page's selection words around it.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface messages={french}>
+      <MessagesProvider
+        messages={{ press: { pressed: "appuyé", notPressed: "relâché" } }}
+      >
+        <Stack direction="column" gap="sm">
+          <Toggle testId="toggle" label="Italic" defaultPressed />
+          <Checkbox testId="check" label="Preview" defaultChecked />
+        </Stack>
+      </MessagesProvider>
+    </Surface>,
+  );
+
+  expect(announced(runtime, "Italic")).toBe("appuyé");
+  // Not reset to English: the selection group came from the outer provider.
+  expect(announced(runtime, "Preview")).toBe("coché");
+});
+
+it("keeps the shipped words when a caller names none", async () => {
+  // The compatibility direction: adopting the seam changes nothing on a screen
+  // that names no words.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Checkbox testId="check" label="Notify" defaultChecked />
+        <ScrollArea
+          axis="vertical"
+          testId="scroller"
+          viewportTestId="scroller-port"
+          style={{ height: 60 }}
+        >
+          <Text>rows</Text>
+        </ScrollArea>
+      </Stack>
+    </Surface>,
+  );
+
+  expect(announced(runtime, "Notify")).toBe("checked");
+  expect(named(runtime, "Group", "Scroll region")).toBe(true);
+});

@@ -59,6 +59,7 @@ import {
 } from "../core/otp.js";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing, keepContent } from "../core/focus.js";
+import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -77,6 +78,7 @@ import {
   type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
+import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface OTPFieldProps
@@ -105,7 +107,7 @@ export interface OTPFieldProps
   readonly disabled?: boolean;
   /** Validation failed: every cell takes the destructive border. */
   readonly invalid?: boolean;
-  /** The group's name; each cell is announced as "<label> digit N". */
+  /** The group's name; each cell is announced by `messages.codeDigit`. */
   readonly label?: string;
   /** Focus the first cell on mount. */
   readonly autoFocus?: boolean;
@@ -142,7 +144,8 @@ export interface OTPFieldHandlers {
 export const otpCellLabel = (
   label: string | undefined,
   index: number,
-): string => `${accessibleName(label) ?? "Code"} digit ${index + 1}`;
+  messages: PrimitiveMessages = defaultMessages,
+): string => messages.codeDigit(index, accessibleName(label));
 
 /** What every cell part reads from the OTP field that owns it. */
 export interface OTPFieldPart {
@@ -238,6 +241,7 @@ export interface OTPFieldInputProps {
 export const renderOtpFieldInput = (
   { index, className, style, testId }: OTPFieldInputProps,
   part: OTPFieldPart,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const { disabled, focus, handlers } = part;
   // The address is the cell a form can focus: the first one. The later cells
@@ -258,7 +262,7 @@ export const renderOtpFieldInput = (
       autoFocus={index === 0 ? part.autoFocus : undefined}
       tabIndex={disabled ? -1 : index === part.rovingIndex ? 0 : -1}
       theme={nativeTextTheme(part.theme)}
-      aria-label={otpCellLabel(part.label, index)}
+      aria-label={otpCellLabel(part.label, index, messages)}
       aria-description={part.description}
       aria-id={address["aria-id"]}
       onLayout={address.onLayout}
@@ -294,8 +298,10 @@ export const renderOtpFieldInput = (
 };
 
 /** One cell of a code, inside an `OTPField`. */
-export const OTPFieldInput = (props: OTPFieldInputProps): ReactElement =>
-  renderOtpFieldInput(props, useOtpFieldPart("OTPFieldInput"));
+export const OTPFieldInput = (props: OTPFieldInputProps): ReactElement => {
+  const part = useOtpFieldPart("OTPFieldInput");
+  return renderOtpFieldInput(props, part, useMessages());
+};
 
 export const renderOtpField = (
   props: OTPFieldProps,
@@ -303,6 +309,7 @@ export const renderOtpField = (
   state: ValueState<string>,
   focus: OTPFieldFocus,
   handlers: OTPFieldHandlers,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const part = otpFieldPart(props, theme, state, focus, handlers);
   const disabled = part.disabled;
@@ -327,7 +334,7 @@ export const renderOtpField = (
       <OtpFieldPartContext.Provider value={part}>
         {props.children ??
           Arr.map(part.cells, (_cell, index) =>
-            renderOtpFieldInput({ index }, part),
+            renderOtpFieldInput({ index }, part, messages),
           )}
       </OtpFieldPartContext.Provider>
     </div>
@@ -337,6 +344,7 @@ export const renderOtpField = (
 /** A one-time code in `length` cells. */
 export const OTPField = (props: OTPFieldProps): ReactElement => {
   const theme = useTheme();
+  const messages = useMessages();
   const { renderer } = useGpuix();
   const limit = otpLength(props.length ?? 6);
   const cellIds = useRef<Map<number, number>>(new Map());
@@ -416,5 +424,5 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
       else cellIds.current.set(index, instance.id);
     },
   };
-  return renderOtpField(props, theme, state.value, focus, handlers);
+  return renderOtpField(props, theme, state.value, focus, handlers, messages);
 };

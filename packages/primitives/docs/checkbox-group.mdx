@@ -125,7 +125,9 @@ leaves the value alone, because a typed key must never be a hidden press.
   rather than an empty one — an icon-only row then falls back to the content it
   paints instead of announcing nothing.
 - State is announced through **`aria-valuetext`** (`checked` / `unchecked`),
-  because `@gpuix/native` 0.11.0 has no `aria-checked`.
+  because `@gpuix/native` 0.11.0 has no `aria-checked`. The words are the
+  provider's `messages.selection` table, so a localised interface announces its
+  own.
 - There is no `aria-multiselectable` in 0.11.0, so nothing claims the group is
   multi-select — the checkbox roles carry that meaning.
 - `disabled` removes an option's tab stop and the group's; there is no

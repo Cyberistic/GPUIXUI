@@ -121,7 +121,8 @@ character so a fast `qx` still means `x`.
 - Roles: `RadioGroup` and `RadioButton` in AccessKit.
 - The group's name comes from `label`.
 - Each option announces its selected state through **`aria-valuetext`**
-  (`checked` / `unchecked`); there is no `aria-checked`.
+  (`checked` / `unchecked`); there is no `aria-checked`. The words are the
+  provider's `messages.selection` table.
 - An option's own `label` is its accessible name — trimmed, and absent when
   blank, so an icon-only row falls back to the content it paints instead of
   publishing an empty name; the visible text beside the circle is a separate

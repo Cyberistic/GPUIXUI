@@ -79,7 +79,8 @@ toggle waits for the release.
   `aria-valuetext` — `"pressed"` or `"not pressed"` — exactly like `Checkbox`
   uses that channel for its state. A screen reader therefore hears a button with
   a value, not a pressed button. That is the limitation of the runtime, and the
-  component does not pretend otherwise.
+  component does not pretend otherwise. The words are the provider's
+  `messages.press` table.
 - The name comes from `label` or a plain text child; a blank label is omitted.
   Give an icon-only toggle a `label` — the icon is decorative.
 - A tooltip's tip and a caller's help share the `aria-description` channel:

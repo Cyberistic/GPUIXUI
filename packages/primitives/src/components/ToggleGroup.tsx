@@ -9,8 +9,8 @@
  *
  * **The accessibility limitation:** `@gpuix/native` 0.11.0 has no
  * `aria-pressed`, so each option announces its state through `aria-valuetext`
- * (`"pressed"` / `"not pressed"`), exactly like `Toggle`. The group is a named
- * `group`.
+ * (the provider's `messages.press` words, shipped as `"pressed"` /
+ * `"not pressed"`), exactly like `Toggle`. The group is a named `group`.
  *
  * Arrow keys move focus only — a toggle is a button, so moving focus must not
  * change what the next action does. `Space`/`Enter` toggles the focused option.
@@ -32,6 +32,7 @@ import {
   swallowKeyDefault,
 } from "../core/keyboard.js";
 import { rovingIndex } from "../core/roving.js";
+import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { toggleSelection } from "../core/selection.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ToggleVariant } from "../core/variants.js";
@@ -62,6 +63,7 @@ import {
   type HelpProps,
   type InteractionProps,
 } from "./internal.js";
+import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** How many options a toggle group can hold on at once. */
@@ -198,6 +200,7 @@ export const renderToggleGroup = (
   preferredIndex: Option.Option<number>,
   focus: GroupFocus,
   handlers: ToggleGroupHandlers,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const {
     orientation = "horizontal",
@@ -312,7 +315,7 @@ export const renderToggleGroup = (
             role="button"
             aria-label={optionName(option)}
             aria-id={addressed ? props["aria-id"] : undefined}
-            aria-valuetext={pressedValueText(pressed)}
+            aria-valuetext={pressedValueText(pressed, messages.press)}
             tabIndex={
               disabled
                 ? undefined
@@ -343,6 +346,7 @@ export const renderToggleGroup = (
 /** A group of related modes with one tab stop. */
 export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
   const theme = useTheme();
+  const messages = useMessages();
   const focus = useRovingFocus();
   const mode = props.type ?? "multiple";
   /** Report in the shape the caller's `type` implies. */
@@ -382,5 +386,6 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
       registerItem: focus.registerItem,
       typeAhead,
     },
+    messages,
   );
 };
