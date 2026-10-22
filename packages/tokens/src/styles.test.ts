@@ -291,4 +291,18 @@ describe("action state example", () => {
     expect(states.hover.color).toBe(states.resting.color);
     expect(states.pressed.color).toBe(states.resting.color);
   });
+
+  it("paints its disabled state with the neutral pair, not a faded fill", () => {
+    // The fade is a page mechanism: on a card it lands under the disabled floor
+    // (`disabled.test.ts`). The example therefore teaches the pair, which keeps
+    // its label readable and does not depend on what is painted behind it.
+    const states = filledActionStyles(lightTheme, "primary");
+    expect(states.disabled).toEqual({
+      backgroundColor: lightTheme.colors.disabled,
+      color: lightTheme.colors.disabledForeground,
+    });
+    expect(states.disabled.backgroundColor).not.toBe(
+      states.resting.backgroundColor,
+    );
+  });
 });

@@ -22,6 +22,7 @@
 
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { fadedPair } from "./fade.js";
 import * as Tokens from "./index.js";
 
 const read = (path: string): string =>
@@ -270,6 +271,60 @@ describe("filled action adoption claim", () => {
     expect(limitation).not.toContain(
       "component packages still paint a translucent hover",
     );
+  });
+});
+
+describe("the fade's page scope", () => {
+  /** The two pages that teach the disabled state. */
+  const pages: Readonly<Record<string, string>> = {
+    "docs/tokens.md": catalogue,
+    "docs/design-system.md": designSystem,
+  };
+
+  it("prints the range the fade misses on a card", () => {
+    // The scope is a measurement, not a preference: the pages print the four
+    // light styles where the faded `primary` label lands under the floor on its
+    // own card. Deriving the range keeps a palette edit from leaving a printed
+    // number behind.
+    const measured = (
+      [
+        ["macOS", Tokens.platformTheme(Tokens.themes.light, "darwin")],
+        ["Linux", Tokens.platformTheme(Tokens.themes.light, "linux")],
+        ["Windows XP", Tokens.retroTheme(Tokens.lightTheme, "luna")],
+        ["Windows 7", Tokens.retroTheme(Tokens.lightTheme, "aero")],
+      ] as const
+    ).map(([name, theme]) => {
+      const faded = fadedPair(
+        theme.colors,
+        { fill: "primary", label: "primaryForeground", over: "card" },
+        Tokens.disabledOpacity,
+      );
+      return { name, ratio: Tokens.contrastRatio(faded.label, faded.fill) };
+    });
+
+    const ratios = measured
+      .map(({ ratio }) => ratio)
+      .filter((ratio): ratio is number => ratio !== undefined);
+
+    expect(ratios.length).toBe(measured.length);
+    ratios.forEach((ratio) => {
+      expect(ratio).toBeLessThan(Tokens.contrastFloors.disabled);
+    });
+
+    const range = `${Math.min(...ratios).toFixed(2)}:1–${Math.max(...ratios).toFixed(2)}:1`;
+
+    Object.entries(pages).forEach(([page, text]) => {
+      expect(text, page).toContain(range);
+      measured.forEach(({ name }) => {
+        expect(text, `${page}: ${name}`).toContain(name);
+      });
+    });
+  });
+
+  it("names the paint that replaces it off the page", () => {
+    Object.entries(pages).forEach(([page, text]) => {
+      expect(text, page).toContain("disabledAction(theme)");
+    });
   });
 });
 

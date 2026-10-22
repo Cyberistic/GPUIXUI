@@ -15,6 +15,12 @@
  * cannot express more (a high-contrast filled action still lands near 2:1), and
  * a contract that demanded more would be measuring a mechanism the library does
  * not have. That gap is the argument for the role pair, not a second floor.
+ *
+ * A fade is also a property of the strip behind it, not of the control: measured
+ * on the shipped palettes, a faded filled action keeps the floor on the page and
+ * lands at 1.47:1–1.49:1 on a card in the four light styles whose page is lighter
+ * than their card. So the fade is a **page** mechanism for a filled action, and
+ * {@link disabledAction} is the paint a disabled action wears anywhere else.
  */
 
 import { type ThemeColors } from "./color.js";
@@ -37,6 +43,10 @@ export type DisabledFadePair = FadePair;
  * The controls that fade rather than swap roles: the three filled actions and a
  * field, whose fill only replaces `input` on the content surfaces a field can
  * sit on.
+ *
+ * The filled actions are measured on the page only, because that is the strip
+ * the fade keeps the floor on — see {@link disabledAction} for the paint a
+ * disabled action wears on a card, a popover or a group strip.
  */
 export const disabledFadePairs: readonly DisabledFadePair[] = [
   { fill: "primary", label: "primaryForeground", over: "background" },
@@ -76,3 +86,33 @@ export function disabledFadeFailures(
       : [{ ...pair, ratio, floor }];
   });
 }
+
+/** The paint a disabled action wears off the page. */
+export interface DisabledActionStyle {
+  /** The fill: the theme's neutral `disabled` role, not the action's own. */
+  readonly backgroundColor: string;
+  /** The label: `disabledForeground`, measured against that fill. */
+  readonly color: string;
+}
+
+/**
+ * The paint a disabled filled action wears where the fade is not the contract.
+ *
+ * A fade composites the fill with whatever is behind it, so the same action is a
+ * different colour on the page and on a card — and on a card it is under the
+ * floor. This is the alternative the design system calls the contract: the
+ * neutral pair `contrastPairs` already measures on every surface a control sits
+ * on. A control that can appear on a card or a popover paints this and removes
+ * its fade; one that only ever sits on the page may keep fading.
+ *
+ * @example
+ * ```tsx
+ * <div style={disabled ? disabledAction(theme) : undefined} />
+ * ```
+ */
+export const disabledAction = (theme: {
+  readonly colors: ThemeColors;
+}): DisabledActionStyle => ({
+  backgroundColor: theme.colors.disabled,
+  color: theme.colors.disabledForeground,
+});

@@ -1053,6 +1053,29 @@ The report is part of `auditTheme`, as `audit.disabledFade`, so a brand's gate
 catches a label that fades into its own fill even though every enabled pair
 passes.
 
+**The fade is a page mechanism.** A fade composites the fill with whatever is
+behind it, so its result belongs to the strip the control sits on rather than to
+the control. Measured, the same faded `primary` label that keeps the floor on the
+page lands at **1.47:1–1.49:1** on a card in the four light styles whose page is
+lighter than their card — Linux, macOS, Windows XP (Luna) and Windows 7 (Aero) —
+so `disabledFadePairs` measures the three filled actions on `background` only. A
+disabled action on a card, a popover or a group strip paints the neutral pair
+instead:
+
+```ts
+import { disabledAction, type Theme } from "@gpuixui/tokens";
+
+disabledAction(theme);
+// { backgroundColor: theme.colors.disabled, color: theme.colors.disabledForeground }
+```
+
+That is the pair `contrastPairs` already measures — the label on its own fill, on
+the three page surfaces and on the two group strips — so the replacement is a
+measured state rather than a second composite nothing checks. A **field** keeps
+fading on `background`, `card` and `popover`: its fill is `input`, and the faded
+label clears the floor on all three. Adopting the pair in the recipes and the
+primitive cores is the interlock in `TODO.md`.
+
 #### The dim a control paints while Tab is elsewhere
 
 `@gpuix/native` fades **every other focusable element** while one control has

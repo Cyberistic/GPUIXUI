@@ -13,12 +13,18 @@
 
 import { describe, expect, it } from "vitest";
 import { blend, lightColors } from "./color.js";
-import { contrastFloors, highContrastFloors } from "./contrast.js";
 import {
+  contrastFloors,
+  contrastRatio,
+  highContrastFloors,
+} from "./contrast.js";
+import {
+  disabledAction,
   disabledFadeFailures,
   disabledFadePairs,
   disabledOpacity,
 } from "./disabled.js";
+import { fadedPair } from "./fade.js";
 import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
 import {
@@ -149,5 +155,67 @@ describe("disabledFadeFailures", () => {
     ).map(({ fill }) => fill);
 
     expect(faded).toEqual(["primary", "destructive"]);
+  });
+});
+
+describe("the fade's page scope", () => {
+  it("measures a filled action on the page only", () => {
+    // A fade's result is a property of the strip behind it, so a filled action
+    // is measured where the fade keeps the floor. A card placement would fail
+    // four shipped light styles (the case below), so the table cannot gain one.
+    const offPage = disabledFadePairs
+      .filter(({ fill }) => fill !== "input")
+      .filter(({ over }) => over !== "background")
+      .map(({ fill, over }) => `${fill}/${over}`);
+
+    expect(offPage).toEqual([]);
+  });
+
+  it("measures the card the fade does not carry", () => {
+    // The premise of the scope: the same faded `primary` label clears the floor
+    // on the page and lands under it on the card of the four light styles whose
+    // page is lighter than their card. A palette that fixes the card makes the
+    // scope's documentation wrong, so this case fails with the new numbers.
+    const cards = [
+      ["macOS light", platformTheme(themes.light, "darwin")],
+      ["Linux light", platformTheme(themes.light, "linux")],
+      ["Windows 7 (Aero) light", retroTheme(lightTheme, "aero")],
+      ["Windows XP (Luna) light", retroTheme(lightTheme, "luna")],
+    ] as const;
+
+    const ratios = cards.map(([name, theme]) => {
+      const faded = fadedPair(
+        theme.colors,
+        { fill: "primary", label: "primaryForeground", over: "card" },
+        disabledOpacity,
+      );
+      const ratio = contrastRatio(faded.label, faded.fill);
+      expect(ratio, name).toBeLessThan(contrastFloors.disabled);
+      return ratio;
+    });
+
+    expect(ratios.map((ratio) => ratio?.toFixed(3) ?? "unmeasurable")).toEqual([
+      "1.491",
+      "1.468",
+      "1.485",
+      "1.480",
+    ]);
+  });
+
+  it("replaces the fade with the pair the contract already measures", () => {
+    // The alternative the design system calls the contract: the neutral pair a
+    // disabled field paints. Its label is not near the floor in any theme — it
+    // is the pair `contrastPairs` measures on every surface a control sits on.
+    [...shipped, ...styled, ...looks].forEach((theme) => {
+      const paint = disabledAction(theme);
+      expect(paint, theme.name).toEqual({
+        backgroundColor: theme.colors.disabled,
+        color: theme.colors.disabledForeground,
+      });
+      expect(
+        contrastRatio(paint.color, paint.backgroundColor),
+        theme.name,
+      ).toBeGreaterThanOrEqual(contrastFloors.disabled);
+    });
   });
 });

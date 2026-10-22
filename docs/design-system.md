@@ -343,6 +343,17 @@ is recorded in `TODO.md` → Interlocks. The fade is measured by the gate as
 whose label composites into its own faded fill fails by name even while every
 enabled pair passes.
 
+**The fade is also a page mechanism.** Its result belongs to the strip behind the
+control, and a filled action's does not survive the move onto a card: measured,
+the faded `primary` label lands at **1.47:1–1.49:1** on the card of the four
+light styles whose page is lighter than their card — Linux, macOS, Windows XP
+(Luna) and Windows 7 (Aero) — under the floor the page clears. So the fade is
+measured on `background` for a filled action, and a disabled action on a card, a
+popover or a group strip paints the neutral pair instead: `disabledAction(theme)`
+is `disabled` behind `disabledForeground`, the pair the contrast table already
+measures on every surface a control sits on. Replacing the fade in the recipes
+and the primitive cores remains the interlock in `TODO.md` → Interlocks.
+
 **Keyboard focus dims every other control, and that is a paint too.** While one
 element has keyboard focus, `@gpuix/native` multiplies every other focusable
 element's opacity by `keyboardFocusDimOpacity` (`0.4`, on by default and per

@@ -427,6 +427,12 @@ a control can use, fading itself by `disabledOpacity` (the `disabled:opacity-50`
 in the recipes), is measured by `disabledFadeFailures`, which composites the
 label over the faded fill; it clears the default floor in every theme but cannot
 reach a high-contrast theme's 3:1, which is why the role pair is the contract.
+The fade is also a **page** mechanism: its result belongs to the strip behind the
+control, and a faded `primary` label lands at 1.47:1–1.49:1 on the card of the
+four light styles whose page is lighter than their card (Linux, macOS, Windows XP
+Luna, Windows 7 Aero). So a filled action is measured on the page only, and
+`disabledAction(theme)` is the paint a disabled action wears anywhere else —
+`disabled` behind `disabledForeground`, the pair the table already measures.
 
 ```ts
 import { auditTheme } from "@gpuixui/tokens";
@@ -491,6 +497,10 @@ Each report is also a function of its own:
   applies (`disabledOpacity`) and lists a label that disappears into the faded
   fill; the role pair is measured by `contrastFailures`, this is the other
   mechanism.
+- `disabledAction(theme)` is the paint a disabled filled action wears where the
+  fade is not the contract — the neutral `disabled` fill behind
+  `disabledForeground`, rather than a translucent control whose label follows the
+  surface behind it.
 - `indicatorFailures(theme, floors?)` lists every progress fill, spinner dot,
   slider fill or presence mark that cannot be found on the strip it is drawn on,
   and reports one it cannot measure. A status mark paints the tone's readable
