@@ -21,6 +21,7 @@ import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
+import * as primitives from "./index.js";
 
 const docsDir = new URL("../docs/", import.meta.url);
 
@@ -57,6 +58,28 @@ const bodyOf = (source: string, heading: string): Option.Option<string> =>
   Option.map(
     Arr.findFirst(sections(source), (section) => section.heading === heading),
     (section) => section.body,
+  );
+
+/** The names a page's snippets import from this package, aliases resolved. */
+const importedNames = (source: string): ReadonlyArray<string> =>
+  Arr.flatMap(
+    [
+      ...source.matchAll(
+        /import\s+(?:type\s+)?\{([^}]*)\}\s+from\s+"@gpuixui\/primitives"/g,
+      ),
+    ],
+    (match) =>
+      Arr.filter(
+        Arr.map((match[1] ?? "").split(","), (specifier) =>
+          (
+            specifier
+              .trim()
+              .replace(/^type\s+/, "")
+              .split(/\s+as\s+/)[0] ?? ""
+          ).trim(),
+        ),
+        Str.isNonEmpty,
+      ),
   );
 
 /** Every page must document these sections, in this order (README §Page contract). */
@@ -142,6 +165,24 @@ const contract: ReadonlyArray<{
 describe("the primitives docs page contract", () => {
   it("has at least one page", () => {
     expect(Arr.length(pages)).toBeGreaterThan(0);
+  });
+
+  it("imports only names the package exports", () => {
+    // The bug guarded: `tooltip.mdx` taught `import { Icon, Tooltip } from
+    // "@gpuixui/primitives"`, and this package does not export `Icon` — it is
+    // `@gpuixui/icons`. A reader copying that snippet got a build error, and
+    // nothing in the repo read the page's imports.
+    expect(
+      Arr.flatMap(pages, (page) =>
+        Arr.filterMap(importedNames(read(page)), (name) =>
+          name in primitives
+            ? Result.failVoid
+            : Result.succeed(
+                `${page}: imports ${name}, which @gpuixui/primitives does not export`,
+              ),
+        ),
+      ),
+    ).toEqual([]);
   });
 
   Arr.forEach(contract, ({ it: title, check }) => {

@@ -10,14 +10,21 @@ a wrapper, not a reimplementation.
 ## Usage
 
 ```tsx
-import { Icon, Tooltip } from "@gpuixui/primitives";
+import { Icon } from "@gpuixui/icons";
+import { Tooltip, useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
 
 <Tooltip content="Booked revenue, net of refunds." side="bottom">
   <div
     tabIndex={0}
     style={{ display: "flex", padding: 2 }}
   >
-    <Icon name="info" color={colour} size="sm" />
+    <Icon
+      name="info"
+      size={theme.iconSize.sm}
+      color={theme.colors.mutedForeground}
+    />
   </div>
 </Tooltip>;
 ```
@@ -70,6 +77,13 @@ from. Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
 `tooltipStyle` uses the `popover` surface, `radius.sm`, `elevation.overlay`, the
 `caption` type and one spacing step of inset; content is `whiteSpace: nowrap`.
 
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react/tooltip` | the anchored layer, the hover/focus wiring and dismissal, which this wrapper themes rather than reimplements |
+| `@gpuixui/icons` | the `info` glyph in the usage snippet; any `24×24` SVG works, and the icon is optional |
+
 ## Limitations
 
 - A `Tab` traversal does not open the tip in a real window (above): hover is
@@ -89,6 +103,9 @@ from. Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
 - `src/components/Tooltip.test.tsx` — a string tip and an explicit `description`
   reach the host trigger, a non-text tip without one invents nothing, and a
   component trigger is not cloned with a prop it may ignore.
+- `src/docs.test.ts` — every snippet's `@gpuixui/primitives` import resolves to a
+  real export of the package, which is how this page's `Icon` (an
+  `@gpuixui/icons` glyph) stopped being taught as a primitive.
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus in
   the `TestRenderer`, dismisses on click, keeps its content inside the anchoring
   frame, paints the popover role, and the a11y tree reports the tip as the
