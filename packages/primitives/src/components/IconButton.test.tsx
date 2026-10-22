@@ -126,7 +126,8 @@ describe("IconButton", () => {
     });
     press(disabled, "enter", "down");
     expect(onActivate).toHaveBeenCalledTimes(2);
-    expect(hostProp(disabled, "tabIndex")).toStrictEqual(Option.none());
+    // Out of the Tab order, still addressable from code — `Button`'s contract.
+    expect(hostProp(disabled, "tabIndex")).toStrictEqual(Option.some(-1));
   });
 
   it("squares its corners inside an attached group", () => {

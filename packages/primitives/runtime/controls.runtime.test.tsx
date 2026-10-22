@@ -256,11 +256,17 @@ it("paints a checked Checkbox's feedback as the theme's opaque derived fill", as
   );
 });
 
-it("skips a disabled busy Button in the tab order", async () => {
+it("skips a disabled busy Button in the tab order, and focuses it from code", async () => {
   // The bug: `loading` won the tab-stop condition, so a button that was
   // disabled **and** busy stayed a stop — while the disabled rule declares no
   // ring, so a Tab traversal landed on a control with no cue that refuses every
   // key. `disabled={pending} loading={pending}` is the common pair.
+  //
+  // The second direction is the stop the disabled button *keeps*: it paints
+  // `-1`, which the runtime builds as `tab_stop(false)`, so Tab skips it while
+  // `focusElement` still reaches it. A trigger's focus target and a
+  // `ConfirmDialog`'s cancel target depend on that; without the property the
+  // element has no focus handle other than its event listeners'.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -272,8 +278,14 @@ it("skips a disabled busy Button in the tab order", async () => {
       </Stack>
     </Surface>,
   );
+  const stop = Option.flatMap(runtime.element("busy"), (element) =>
+    Option.fromNullishOr(element.customProps?.tabIndex),
+  );
+  expect(stop).toStrictEqual(Option.some(-1));
   runtime.focusNext();
   expect(runtime.focused()).toStrictEqual(Option.some("after"));
+  runtime.focus("busy");
+  expect(runtime.focused()).toStrictEqual(Option.some("busy"));
 });
 
 it("paints a disabled filled Button with the measured pair, not a fade", async () => {

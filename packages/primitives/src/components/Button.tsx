@@ -231,11 +231,13 @@ export const renderButton = (
       }
       tabIndex={
         // A busy button stays focusable so a keyboard reader is not dropped
-        // mid-action; a disabled one leaves the tab order whether or not it is
-        // also busy, because it declares no ring and refuses every key — a stop
-        // with no cue. The two props together are the common
-        // `disabled={pending} loading={pending}` pair.
-        disabled === true ? undefined : 0
+        // mid-action. A disabled one paints `-1`: out of the Tab order, because
+        // it declares no ring and refuses every key, but still addressable from
+        // code — a trigger's focus target and a caller that focuses a control
+        // after an error both need that stop, and the runtime builds a `-1`
+        // element's focus handle with `tab_stop(false)`. The two props together
+        // are the common `disabled={pending} loading={pending}` pair.
+        disabled === true ? -1 : 0
       }
       testId={testId}
       onClick={composePress(busy, onClick, activate)}

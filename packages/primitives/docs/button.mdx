@@ -9,11 +9,11 @@ description: The primary action — clickable and keyboard-activatable, with bus
 adds the recipe, `loading`, and the parts contract on top, so the keyboard rules
 it ships are the ones its tests and runtime probes measure. **The headless
 primitive is not adopted, and that is a decision with a reason**: `buttonProps`
-keeps a disabled button in the tab order (`tabIndex: -1`) where this component
-removes the stop, exposes only `{ disabled }` to its `style` callback where this
-one reports focus too, and has no `loading`/`Spinner` state or
-`aria-description="Loading"`. Its Space release also fires without the held-key
-guard this component applies. The measured comparison is in `TODO.md` §Salvage.
+exposes only `{ disabled }` to its `style` callback where this one reports focus
+too, and has no `loading`/`Spinner` state or `aria-description` carrying the busy
+word. Its Space release also fires without the held-key guard this component
+applies. Both paint a disabled action's `tabIndex` as `-1`, so the tab stop is
+not a difference. The measured comparison is in `TODO.md` §Salvage.
 
 ## Usage
 
@@ -70,8 +70,8 @@ keeps the text floor on both fills.
 
 - `square` — equal width and height, no horizontal padding: an icon-only button.
 - `fullWidth` — stretches to its parent.
-- `disabled` — refuses click and keys, and leaves the tab order, even while it
-  is also `loading`. A filled
+- `disabled` — refuses click and keys and leaves the Tab order (`tabIndex: -1`,
+  so code can still focus it), even while it is also `loading`. A filled
   action (`primary`, `secondary`, `destructive`) paints the neutral pair —
   `disabled` behind `disabledForeground`, the roles `contrastPairs` measures on
   every surface a control sits on — rather than fading itself; an `outline`,
@@ -79,7 +79,7 @@ keeps the text floor on both fills.
 - `loading` — shows a spinner in the variant's own on-colour (a busy primary
   button paints `primaryForeground`, not a brand dot on a brand fill), announces
   the busy word (default `Loading`), refuses activation, and **stays focusable** —
-  unless it is also `disabled`, which wins the tab stop because a disabled control
+  unless it is also `disabled`, which wins, because a disabled control
   declares no ring. `loadingLabel` is that word: it reaches both the description
   and the spinner's name, and a blank one announces nothing, for an interface
   that says the state elsewhere. A disabled busy button
@@ -96,7 +96,7 @@ keeps the text floor on both fills.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
 | `square` | `boolean` | `false` | icon-only geometry |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
-| `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
+| `disabled` | `boolean` | `false` | blocks activation; out of the Tab order but focusable from code (`tabIndex: -1`) |
 | `loading` | `boolean` | `false` | spinner, busy description, blocks activation |
 | `loadingLabel` | `string` | `"Loading"` | the busy word, announced as the description and the spinner's name; a blank one announces nothing |
 | `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot; forwarded to `Spinner` |
@@ -172,9 +172,10 @@ so no host prop can replace the behaviour.
 `disabled` and `loading` refuse both. A `disabled` button is not tabbable; a
 `loading` one is, so a keyboard user is not dropped from the page mid-action.
 The two together follow `disabled`: a button that is disabled *and* busy leaves
-the tab order, because the disabled rule paints no ring and the stop would be a
-cue-less control.
-A Space **press** calls `preventDefault()`, so the platform default (scrolling a
+the Tab order, because the disabled rule paints no ring and the stop would be a
+cue-less control — and it paints `tabIndex: -1`, so the runtime still builds a
+focus handle for it (`tab_stop(false)`) and a caller can focus it from code. A
+Space **press** calls `preventDefault()`, so the platform default (scrolling a
 container) does not run while activation waits for the release.
 
 ## Accessibility
@@ -186,8 +187,9 @@ container) does not run while activation waits for the release.
   this runtime has no `aria-busy`. The same word names the spinner, and a blank
   one announces neither, so an interface that reports the state in its own live
   region is not told it twice in English.
-- There is no `aria-disabled`: a disabled button is removed from the tab order
-  instead, which is the strongest truthful alternative.
+- There is no `aria-disabled`: a disabled button leaves the Tab order
+  (`tabIndex: -1`, so it is still reachable from code) instead, which is the
+  strongest truthful alternative.
 - Focus is a **keyboard-only outline**: the button declares `focusVisible`
   (`controlRing` from `core/focus.ts`, `colors.ring` at `borderWidth.strong`)
   at rest, and the runtime paints it after keyboard input only. A mouse click
@@ -277,8 +279,8 @@ the dim back with `style`, which merges last.
 - Overlaps the runtime's headless `Button`: `@gpuix/react` 0.11.0 ships
   `Button`/`buttonProps`, and this component predates it. Adoption was evaluated
   and declined — `buttonProps` lacks `loading`, the focused `style` state and the
-  held-key guard, and keeps a disabled button in the tab order; the comparison is
-  in `TODO.md` §Salvage, so nobody re-litigates it from memory.
+  held-key guard; the comparison is in `TODO.md` §Salvage, so nobody
+  re-litigates it from memory.
 
 ## Verification
 
@@ -297,7 +299,9 @@ the dim back with `style`, which merges last.
   action's hover and press painting the theme's **opaque** derived fills with
   the label still clearing the text floor on both, and the disabled paint: the
   neutral pair on every filled variant with the fade's under-floor card as the
-  premise, while an unfilled action keeps the fade; a trigger's host props
+  premise, while an unfilled action keeps the fade; the disabled stop
+  (`tabIndex: -1`, so Tab skips it and code can still reach it, including while
+  it is also busy); a trigger's host props
   (`ref`, `aria-expanded`/`aria-selected`, `onLayout`) reaching the element while
   the component still writes its own role and tab stop, and the activation
   event: a click hands `onActivate` its own payload with the press point, Enter
@@ -308,7 +312,9 @@ the dim back with `style`, which merges last.
   hands `onActivate` the runtime's own payload with coordinates inside the
   button, while Enter hands it the key payload; Enter
   on down, Space on up, a held key ignored; disabled and loading refuse both and
-  a busy button still announces its role and name; a filled button's painted
+  a busy button still announces its role and name; a disabled busy button paints
+  `tabIndex: -1` while a Tab traversal skips it and `focusElement` still lands on
+  it — the two halves of the stop; a filled button's painted
   `keyboardFocusDim: false` and a ghost button's absent declaration are read off
   the runtime's style report; a filled button's **hover** is read back off that
   report as the theme's opaque derived fill, not a lifted alpha, and a disabled

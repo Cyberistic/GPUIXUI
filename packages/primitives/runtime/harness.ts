@@ -93,6 +93,11 @@ export interface Runtime {
   readonly focused: () => Option.Option<string>;
   /** Whatever holds native focus — the only way to observe an element with no `testId`. */
   readonly focusedElement: () => Option.Option<TestElement>;
+  /**
+   * Move native focus to an element from code, the way an app calls
+   * `focusElement` — the route a `tabIndex: -1` element is reachable by.
+   */
+  readonly focus: (testId: string) => void;
   /** Move the pointer over an element's centre — how a tooltip opens. */
   readonly hover: (testId: string) => void;
   /** A real hit-tested click at the element's centre. */
@@ -278,6 +283,17 @@ export const createRuntime = (
           Option.fromNullishOr(renderer.getFocusedElementId()),
           (id) => Option.fromNullishOr(renderer.getElement(id)),
         ),
+      // `focusElement` is a raw native call like `focusNext`, so the resulting
+      // focus event has to be drained and dispatched before React sees it.
+      focus: (testId) =>
+        Option.match(idOf(renderer, testId), {
+          onNone: () => {},
+          onSome: (id) => {
+            renderer.focusElement(id);
+            renderer.dispatchNativeEvents();
+            renderer.flush();
+          },
+        }),
       hover: (testId) =>
         Option.match(pointAt(testId), {
           onNone: () => {},

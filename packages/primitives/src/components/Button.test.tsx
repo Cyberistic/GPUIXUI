@@ -409,17 +409,23 @@ describe("Button", () => {
     });
   });
 
-  it("takes a disabled button out of the tab order", () => {
-    // The bug: `loading` won the tab-stop condition, so a button that was
-    // disabled **and** busy (the `disabled={pending} loading={pending}` pair)
-    // stayed in the tab order — while the disabled rule declares no ring, so
-    // Tab landed on a control with no cue that refuses every key.
+  it("keeps a disabled button out of the Tab order, and reachable from code", () => {
+    // The bug this guards: `loading` won the tab-stop condition, so a button
+    // that was disabled **and** busy (the `disabled={pending} loading={pending}`
+    // pair) stayed in the Tab order — while the disabled rule declares no ring,
+    // so Tab landed on a control with no cue that refuses every key.
+    //
+    // The stop it paints is `-1` rather than no stop at all: the runtime builds
+    // a `-1` element's focus handle with `tab_stop(false)`, so it is still out
+    // of the Tab order while a caller can focus it — the stop a trigger's focus
+    // target and a `ConfirmDialog`'s cancel target need. `packages/components`'
+    // stand-in always painted `-1` and three of its behaviour cases assert it.
     expect(hostProp(resting({ disabled: true }), "tabIndex")).toStrictEqual(
-      Option.none(),
+      Option.some(-1),
     );
     expect(
       hostProp(resting({ disabled: true, loading: true }), "tabIndex"),
-    ).toStrictEqual(Option.none());
+    ).toStrictEqual(Option.some(-1));
     // Loading alone still keeps its stop: the action is the reader's place.
     expect(hostProp(resting({ loading: true }), "tabIndex")).toStrictEqual(
       Option.some(0),

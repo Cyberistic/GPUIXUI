@@ -44,7 +44,8 @@ takes a theme role rather than inheriting the button's text colour.
 reads as chrome, not as a row of filled buttons. `size` is `sm` / `md` / `lg` and
 sets both sides of the square from `density.controlHeight`.
 
-- `disabled` — refuses a press and both keys, and leaves the tab order. A filled
+- `disabled` — refuses a press and both keys and leaves the Tab order
+  (`tabIndex: -1`, so code can still focus it). A filled
   `variant` wears the same neutral pair a `Button` does; the default `ghost`
   keeps the fade, since it has no fill to collapse into.
 - `loading` — paints a spinner, announces the busy word (default `Loading`),
@@ -61,7 +62,7 @@ sets both sides of the square from `density.controlHeight`.
 | `icon` | `ReactNode` | required | the glyph painted inside the button |
 | `variant` | `ButtonVariant` | `"ghost"` | the paint from `core/variants.ts` |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | square side from `density.controlHeight` |
-| `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
+| `disabled` | `boolean` | `false` | blocks activation; out of the Tab order but focusable from code (`tabIndex: -1`) |
 | `loading` | `boolean` | `false` | spinner, busy description, blocks activation |
 | `loadingLabel` | `string` | `"Loading"` | the busy word, announced as the description and the spinner's name |
 | `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot; forwarded to `Spinner` |
@@ -102,7 +103,8 @@ action: the runtime's `click` payload (with the press point) for a pointer, the
   `Icon` stays `role="presentation"`.
 - `loading` sets `aria-description` to `loadingLabel` (default `Loading`); this
   runtime has no `aria-busy`.
-- There is no `aria-disabled`: a disabled action leaves the tab order instead.
+- There is no `aria-disabled`: a disabled action leaves the Tab order
+  (`tabIndex: -1`, still reachable from code) instead.
 - Focus is the keyboard-only outline `Button` declares at rest
   (`keyboardRing` → `focusVisible`), so a Tab paints it and a mouse press does
   not.
@@ -159,8 +161,8 @@ after the recipe, so a callback is the last word:
   theme role, never a hex literal.
 - `runtime/icon-button.runtime.test.tsx` — the accessibility tree names the
   action with no image node, the painted box is a 32px square at `md`, a press
-  and Enter each activate once, disabled refuses and leaves the tab order, and a
-  busy action stays focusable.
+  and Enter each activate once, disabled refuses and leaves the Tab order while
+  keeping the `-1` stop `Button` paints, and a busy action stays focusable.
 - `runtime/examples.runtime.test.tsx` — the layer-toolbar example paints.
 - Both directions measured: dropping `square` fails the square case in both
   suites (`expected 1256 to be 32`), and blanking the label fails the name case.
