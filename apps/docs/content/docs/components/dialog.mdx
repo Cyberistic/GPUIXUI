@@ -141,7 +141,7 @@ they render a host element plus, for the buttons, the button `variant` and
 | ---- | ----- |
 | veil | `overlay` — the theme's scrim, not a literal black |
 | surface | `popover` and `popoverForeground` |
-| edge and lift | a 1px `foreground` ring at 5% (`ring-1`); the recipe's `shadow-xl` is superseded by that ring, so the surface has no lift |
+| edge and lift | two shadows: the theme's `elevation.lg` lift beneath the recipe's 1px `foreground` ring at 5% (`ring-1`). The ring is the recipe's only shadow utility — its `shadow-xl` is superseded — so `overlaySurfaceStyle` restores the level the slot had swallowed |
 | corners | 32px — the recipe's `rounded-4xl`, a fixed shadcn metric rather than the theme's radius scale |
 | heading / copy | `popoverForeground` / `mutedForeground` |
 | close control | the `foreground` glyph on a `mutedForeground` control, the `hover` fill on hover |

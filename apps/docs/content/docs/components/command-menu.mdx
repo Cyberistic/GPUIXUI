@@ -147,8 +147,10 @@ under its heading.
 ## Theming
 
 The surface is the dialog's: `popover`, a 32px radius (the recipe's
-`rounded-4xl`, a fixed shadcn metric) and a 1px `foreground` ring at 5% — the
-recipe's `shadow-xl` is superseded by that ring, so the surface has no lift. The
+`rounded-4xl`, a fixed shadcn metric) and two shadows — the theme's
+`elevation.lg` lift beneath a 1px `foreground` ring at 5%. The ring is the
+recipe's only shadow utility (its `shadow-xl` is superseded), so
+`overlaySurfaceStyle` restores the level the slot had swallowed. The
 input paints `input` / `inputForeground` with a `borderWidth.thin` border in
 `border` and `radius.md`. Rows are the shared menu rows — `hover` for the
 highlight with the 2px `accent` bar — so a palette row and a menu row look like

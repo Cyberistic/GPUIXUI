@@ -363,12 +363,14 @@ describe("the curated component pages", () => {
     expect(text).not.toContain("radius.lg");
   });
 
-  it("describe the single shadow the overlay recipes paint", () => {
-    // `StyleDesc` carries one `boxShadow` slot (the native API also accepts a
-    // list), and the shadcn recipes list `ring-1` after `shadow-*`, so the last
-    // shadow utility wins: a dialog, popover or menu paints a 1px
-    // `foreground` ring at 5% and no elevation. The four curated overlay pages
-    // claimed a border and an elevation step.
+  it("describe the two shadows the overlay surfaces paint", () => {
+    // `@gpuixui/tw` writes `shadow-*` and `ring-*` through the one `boxShadow`
+    // slot and applies the ring after the utilities, so a compiled overlay
+    // recipe is a 1px `foreground` ring at 5% and **no lift**. The runtime
+    // paints a shadow list, and `overlaySurfaceStyle` restores the theme's level
+    // beside that edge — so the four curated overlay pages state two shadows,
+    // and they taught "no lift" after the seam landed. The level is read from
+    // the component that names it, so a page cannot describe a different one.
     const recipes = read("packages/tw/src/recipes.ts");
     const recipe = (name: string): string =>
       new RegExp(`export const ${name} =\\s*\\n?\\s*"([^"]+)"`).exec(
@@ -396,23 +398,74 @@ describe("the curated component pages", () => {
       "the recipe paints its elevation because the ring no longer comes last",
     ).toEqual([]);
 
-    const overlay = (file: string): string =>
-      read(`apps/docs/content/docs/components/${file}`).replace(/\s+/g, " ");
-    const overlays = [
-      "dialog.mdx",
-      "popover.mdx",
-      "dropdown-menu.mdx",
-      "command-menu.mdx",
+    // The seam that puts the level back, and the components that name one.
+    const seam = read("packages/components/src/internal/overlay.ts");
+    expect(seam, "the overlay seam lost its elevation argument").toContain(
+      "elevation?: ElevationLevel",
+    );
+    expect(
+      seam,
+      "the seam stopped restoring the level beside the edge",
+    ).toContain("boxShadow: [shadow, ...painted]");
+
+    const passedLevel = (source: string, surface: string): string => {
+      const flat = source.replace(/\s+/g, " ");
+      return (
+        new RegExp(`overlaySurfaceStyle\\(${surface},[^()]*?"(sm|md|lg)"`).exec(
+          flat,
+        )?.[1] ?? ""
+      );
+    };
+
+    const surfaces = [
+      {
+        file: "dialog.mdx",
+        source: "packages/components/src/dialog.tsx",
+        surface: "DIALOG_CONTENT",
+      },
+      {
+        file: "popover.mdx",
+        source: "packages/components/src/popover.tsx",
+        surface: "POPOVER_CONTENT",
+      },
+      {
+        file: "dropdown-menu.mdx",
+        source: "packages/components/src/menu/surface.tsx",
+        surface: "MENU_CONTENT",
+      },
+      {
+        // The palette is the dialog's surface, so the level is the dialog's too.
+        file: "command-menu.mdx",
+        source: "packages/components/src/dialog.tsx",
+        surface: "DIALOG_CONTENT",
+      },
     ];
 
-    expect(
-      overlays.filter((file) => !overlay(file).includes("has no lift")),
-      "these pages do not state where the recipe's ring leaves the elevation",
-    ).toEqual([]);
-    expect(
-      overlays.filter((file) => overlay(file).includes("elevation step")),
-      "these pages still claim an elevation the recipe does not paint",
-    ).toEqual([]);
+    const overlay = (file: string): string =>
+      read(`apps/docs/content/docs/components/${file}`).replace(/\s+/g, " ");
+
+    const unnamed = surfaces
+      .filter(
+        ({ source, surface }) => passedLevel(read(source), surface) === "",
+      )
+      .map(({ source, surface }) => `${source} names no level for ${surface}`);
+    expect(unnamed, "an overlay surface paints no elevation level").toEqual([]);
+
+    const stale = surfaces
+      .filter(({ file, source, surface }) => {
+        const level = passedLevel(read(source), surface);
+        const page = overlay(file);
+        return (
+          page.includes(`elevation.${level}`) === false ||
+          page.includes("has no lift") ||
+          page.includes("elevation step")
+        );
+      })
+      .map(({ file, source, surface }) => {
+        const level = passedLevel(read(source), surface);
+        return `${file}: does not state the theme's elevation.${level} that ${surface} paints`;
+      });
+    expect(stale).toEqual([]);
 
     expect(overlay("popover.mdx")).not.toContain("10% in the dark theme");
     expect(overlay("popover.mdx")).toContain("keyboardRing(theme)");

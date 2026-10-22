@@ -105,7 +105,7 @@ is an ordinary button — `Enter` and `Space` toggle it.
 | Part | Reads |
 | ---- | ----- |
 | surface | `popover` and `popoverForeground` |
-| edge and lift | a 1px `foreground` ring at 5% (`ring-1`); the recipe's `shadow-lg` is superseded by that ring, so the surface has no lift |
+| edge and lift | two shadows: the theme's `elevation.lg` lift beneath the recipe's 1px `foreground` ring at 5% (`ring-1`). The ring is the recipe's only shadow utility — its `shadow-lg` is superseded — so `overlaySurfaceStyle` restores the level the slot had swallowed |
 | corners | 24px — the recipe's `rounded-3xl`, a fixed shadcn metric rather than the theme's radius scale |
 | trigger | the button roles, plus `keyboardRing(theme)` — the `focusVisible` outline, so a press paints none |
 
