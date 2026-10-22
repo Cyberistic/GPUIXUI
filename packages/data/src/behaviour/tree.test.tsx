@@ -19,6 +19,7 @@ import { darkTheme } from "@gpuixui/tokens";
 import * as Option from "effect/Option";
 import { TreeExample } from "../../examples/tree.example.js";
 import {
+  after,
   clickCentreOf,
   focusedTestId,
   pressKey,
@@ -138,7 +139,7 @@ describe("the file tree", () => {
     expect(focusedTestId(root)).toEqual(Option.some("tree-row-row.tsx"));
   });
 
-  it("reveals a deep row by opening the path to it", () => {
+  it("reveals a deep row by opening the path to it, and takes the focus off the press", async () => {
     const root = mount();
 
     // `row.tsx` is two closed folders deep when the reveal runs.
@@ -147,9 +148,20 @@ describe("the file tree", () => {
 
     expect(readout(root)).toContain("active=row.tsx");
     expect(root.renderer.findByTestId("tree-row-row.tsx")).toBeDefined();
-    // The reveal is the caller's move, not the tree's key handler: the focus
-    // follows the committed cursor, so a search hit or a "show this file"
-    // command leaves the reader on the row it revealed.
+
+    // A window hands the **press's** focus to the control it landed on after
+    // the commit, which is what a reveal has to survive (`data-tree-lifecycle`
+    // measured the button keeping it). Simulate that landing...
+    const button = root.renderer.findByTestId("tree-reveal");
+    if (button === undefined)
+      throw new Error("behaviour: no tree-reveal button");
+    root.renderer.focusElement(button.id);
+    root.renderer.flush();
+    expect(focusedTestId(root)).toEqual(Option.some("tree-reveal"));
+
+    // ...and the revealed row takes it on the next tick.
+    await after(5);
+    root.renderer.flush();
     expect(focusedTestId(root)).toEqual(Option.some("tree-row-row.tsx"));
   });
 });

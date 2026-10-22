@@ -4420,10 +4420,12 @@ names the gesture rather than the component.
 
 The reveal row is the one the component owns: the app's action changes the tree's
 cursor through its controlled props, so `TreeView` compares the committed cursor
-with the last row it focused and calls `focusElement` after the newly opened rows
-attach their instances — a search hit or a "show this file" command leaves a
-keyboard reader on the row it revealed. The first paint is the baseline, so
-mounting a tree does not steal focus. The collapse/expand rows are the other
+with the last row it focused and calls `focusElement` for it. The press that
+asked for the reveal leaves its focus on the **button** after the commit (the
+runtime moves focus on the press), so a caller-driven cursor re-takes the row on
+the next tick — a search hit or a "show this file" command leaves a keyboard
+reader on the row it revealed. The first paint is the baseline, so mounting a
+tree does not steal focus. The collapse/expand rows are the other
 shape: batch actions move the row set, not the cursor, and the readout prints the
 key the controller still holds.
 

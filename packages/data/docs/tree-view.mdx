@@ -60,8 +60,11 @@ hands back a whole cursor, which is what `useExpandedRows` stores.
 search hit or a "show this file" action needs. Because the move comes from the
 **caller**, not from the tree's own key handler, the focus follows the committed
 cursor: the layout effect compares it with the last row the tree focused and
-calls `focusElement` after the newly opened rows have attached their instances
-(`data-tree-lifecycle`). The first paint is the baseline, so mounting a tree
+calls `focusElement` for it. A caller's reveal answers a press on another
+control, and the runtime hands that control the press's focus **after** the
+commit (`data-tree-lifecycle` measured the Reveal button keeping it), so the
+tree re-takes the row on the next tick; a move the tree's own keys produced is
+focused in the same commit. The first paint is the baseline, so mounting a tree
 does not take focus from the rest of the window. `expandAll`, `collapseAll`,
 `toggle` and `setExpanded` are the rest of the controller.
 
@@ -150,9 +153,11 @@ cursor, wrapping, the 500 ms window).
 renderer: a press opens the folder it lands on, a child insets 16px under its
 parent, the arrows move native focus with the cursor, Right opens and Left
 closes, the active row paints the selection pair, a typed prefix moves the
-cursor, and a reveal opens the path to a deep row **and leaves native focus on
-it** (measured: without the committed-cursor focus the revealed row paints while
-the focus stays on the Reveal button).
+cursor, and a reveal opens the path to a deep row **and takes native focus off
+the press**: the case presses Reveal, hands the button the press's focus the way
+the window does, and expects the revealed row to hold it on the next tick
+(measured: without the deferred re-focus the row paints while the button keeps
+the focus).
 
 ```sh
 nub run --filter @gpuixui/data test

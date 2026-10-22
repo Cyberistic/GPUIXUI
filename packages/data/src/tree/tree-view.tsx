@@ -50,6 +50,7 @@ import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -238,9 +239,29 @@ export const TreeView = <T,>({
    * (`virtual-tree-lifecycle`).
    */
   const focused = useRef<Option.Option<string>>(resolved.active);
+  /**
+   * Whether the current cursor came from this tree's own keys or presses.
+   *
+   * A move the tree produced is already the one the reader made, so the row is
+   * focused in the same commit. A move the **caller** produced (a reveal from a
+   * search hit) answers a press on some other control, and the runtime hands
+   * that control the press's focus **after** the commit — measured: a reveal
+   * from a button left the focus on the button. So a caller-driven cursor takes
+   * the row on the next tick, once the press's focus has landed.
+   */
+  const fromKeys = useRef(false);
+  const deferred = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(
+    () => () => {
+      if (deferred.current !== undefined) clearTimeout(deferred.current);
+    },
+    [],
+  );
 
   const commit = useCallback(
     (next: TreeCursor) => {
+      fromKeys.current = true;
       if (cursor === undefined) setUncontrolled(next);
       onCursorChange?.(next);
     },
@@ -271,12 +292,27 @@ export const TreeView = <T,>({
       Option.getOrUndefined(focused.current)
     )
       return;
+    const ours = fromKeys.current;
+    fromKeys.current = false;
     focused.current = resolved.active;
     Option.match(resolved.active, {
       onNone: () => {},
       onSome: (key) => {
-        const id = elements.current.get(key);
-        if (id !== undefined) renderer?.focusElement?.(id);
+        const focusRow = () => {
+          const id = elements.current.get(key);
+          if (id !== undefined) renderer?.focusElement?.(id);
+        };
+        focusRow();
+        if (ours) return;
+        // The caller's reveal answered a press on another control, and the
+        // runtime focuses that control after this commit. Re-take the row on the
+        // next tick, and once more through the ref in case the row was mounted
+        // by this same commit.
+        if (deferred.current !== undefined) clearTimeout(deferred.current);
+        deferred.current = setTimeout(() => {
+          deferred.current = undefined;
+          focusRow();
+        }, 0);
       },
     });
   });
