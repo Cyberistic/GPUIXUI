@@ -138,7 +138,13 @@ export const FieldLabel = ({
         {children}
       </text>
       {required ? (
-        <text aria-label="Required" style={recipeStyle(FIELD_REQUIRED, theme)}>
+        <text
+          aria-label="Required"
+          style={{
+            ...recipeStyle(FIELD_REQUIRED, theme),
+            color: statusTone(theme, "destructive").foreground,
+          }}
+        >
           *
         </text>
       ) : null}

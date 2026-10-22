@@ -29,7 +29,7 @@ import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { useCallback, useState, type ReactNode } from "react";
 import { recipeStyle } from "./internal/recipe.js";
-import { useTheme } from "./internal/theme.js";
+import { statusTone, useTheme } from "./internal/theme.js";
 import { validateAll } from "./validation/logic.js";
 
 /** What the render prop receives. */
@@ -106,7 +106,13 @@ export const Form = <T,>({
         onNonEmpty: (messages) => (
           <div role="alert" style={recipeStyle(FORM_ERRORS, theme)}>
             {Arr.map(messages, (message) => (
-              <text key={message} style={recipeStyle(FORM_ERROR, theme)}>
+              <text
+                key={message}
+                style={{
+                  ...recipeStyle(FORM_ERROR, theme),
+                  color: statusTone(theme, "destructive").foreground,
+                }}
+              >
                 {message}
               </text>
             ))}

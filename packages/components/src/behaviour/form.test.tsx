@@ -209,8 +209,8 @@ describe("Form", () => {
     form.unmount();
   });
 
-  it("lets a consumer's style win and paints the summary destructively in both themes", () => {
-    const assertTheme = (theme: TestTheme, destructive: string): void => {
+  it("lets a consumer's style win and paints every message in the readable role", () => {
+    const assertTheme = (theme: TestTheme, readable: string): void => {
       const form = renderComponent(
         <Harness
           value={invalid}
@@ -223,15 +223,17 @@ describe("Form", () => {
       expect(form.renderer.findByTestId("form")?.style.gap).toBe(99);
 
       clickCentreOf(form, "submit");
-      expect(styledMessage(form, addressMessage)?.style.color).toBe(
-        destructive,
-      );
+      expect(
+        expectedMessages.map(
+          (message) => styledMessage(form, message)?.style.color,
+        ),
+      ).toEqual(expectedMessages.map(() => readable));
 
       form.unmount();
     };
 
-    assertTheme("dark", darkTheme.colors.destructive);
-    assertTheme("light", lightTheme.colors.destructive);
+    assertTheme("dark", darkTheme.colors.destructiveSoftForeground);
+    assertTheme("light", lightTheme.colors.destructiveSoftForeground);
   });
 
   it("is a named form landmark", () => {

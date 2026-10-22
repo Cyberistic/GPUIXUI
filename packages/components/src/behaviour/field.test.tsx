@@ -81,6 +81,25 @@ describe("Field", () => {
     form.unmount();
   });
 
+  it("paints the required marker in the status tone's measured page role", () => {
+    const assertTheme = (name: TestTheme, theme: typeof darkTheme): void => {
+      const form = renderComponent(<Form required />, name);
+      const leaf = form.renderer.findByText("*");
+      const painted =
+        leaf?.parentId == null
+          ? undefined
+          : form.renderer.getElement(leaf.parentId)?.style.color;
+
+      expect(painted).toBe(theme.colors.destructiveSoftForeground);
+      expect(painted).not.toBe(theme.colors.destructive);
+
+      form.unmount();
+    };
+
+    assertTheme("dark", darkTheme);
+    assertTheme("light", lightTheme);
+  });
+
   it("paints an invalid control with the destructive role in both themes", () => {
     const assertTheme = (theme: TestTheme, destructive: string): void => {
       const form = renderComponent(<Form error="Required" />, theme);

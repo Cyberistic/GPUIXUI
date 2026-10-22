@@ -133,12 +133,13 @@ cue: the flag is presentational, and nothing here depends on the event
 
 ## Verification
 
-`src/behaviour/field.test.tsx` runs in the real GPUix renderer (7 tests): label,
+`src/behaviour/field.test.tsx` runs in the real GPUix renderer (8 tests): label,
 description and control rendering; the error replacing the description with
 `role="alert"`; the error text painted in the tone's measured page role rather
-than the solid fill; the required marker and clean accessible name; the
-destructive border in both themes; typed text reaching `onChange`; and a
-disabled field leaving the tab order and accepting no typing.
+than the solid fill; the required marker painted in that same readable role,
+with a clean accessible name; the destructive border in both themes; typed text
+reaching `onChange`; and a disabled field leaving the tab order and accepting no
+typing.
 
 `src/validation/logic.test.ts` covers the message walk, `errors: "all"`,
 deduplication and the valid case.
