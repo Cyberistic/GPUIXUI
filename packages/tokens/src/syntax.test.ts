@@ -294,6 +294,78 @@ describe("the syntax palette", () => {
     expect(syntaxSurfaces).toContain("background");
   });
 
+  it("prints the paint the window measured, not only the host object", () => {
+    // A host object carrying `syntax` is a source read: the runtime owns the
+    // tokenizer and the paint, so a light block could still highlight for a dark
+    // canvas with every case above green. The playground's probe is the paint,
+    // and the two pages that teach the palette must cite it with the readings it
+    // printed rather than promise a measurement.
+    const catalogue = read("../../../docs/tokens.md");
+    const inventory = read("../../../COMPONENTS.md");
+    const probe = read("../../../apps/playground/README.md");
+    const measured = probe.slice(probe.indexOf("### `syntax-palette`"));
+    expect(measured).not.toBe("");
+
+    // The id the pages cite is a registered scenario, so a renamed or deleted
+    // probe cannot read as evidence.
+    expect(read("../../../apps/playground/src/live/registry.ts")).toContain(
+      '"syntax-palette"',
+    );
+
+    /** The probe's row for one block: the keyword it painted and its solid pixels. */
+    const block = (label: string) => {
+      const line = measured
+        .split("\n")
+        .find((text) => text.startsWith(`| ${label} |`));
+      const found = /`(#[0-9A-Fa-f]{6})`[^|]*\| \*\*(\d+)\*\*/.exec(line ?? "");
+      expect(line, label).toBeDefined();
+      expect(found, label).not.toBeNull();
+      return { keyword: found?.[1] ?? "", pixels: Number(found?.[2]) };
+    };
+
+    const light = block("light fill");
+    const dark = block("dark fill");
+    const control = block("dark fill, no `syntax`");
+    // The table's colours are the tables' own, and the control is the runtime's
+    // palette — a fallback that matched a shipped ink would prove nothing.
+    expect(light.keyword).toBe(lightSyntax.keyword);
+    expect(dark.keyword).toBe(darkSyntax.keyword);
+    expect([lightSyntax.keyword, darkSyntax.keyword]).not.toContain(
+      control.keyword,
+    );
+
+    const paletteStart = catalogue.indexOf("## Syntax palette");
+    const palette = catalogue.slice(
+      paletteStart,
+      catalogue.indexOf("\n## ", paletteStart),
+    );
+    const adoptionStart = palette.indexOf("**Adoption.**");
+    const adoption = palette.slice(adoptionStart);
+    const row =
+      inventory
+        .split("\n")
+        .find((text) => text.startsWith("| Syntax palette |")) ?? "";
+
+    const pages = [
+      ["docs/tokens.md", adoption],
+      ["COMPONENTS.md", row],
+    ] as const;
+    const readings = [light, dark, control];
+
+    pages.forEach(([page, text]) => {
+      expect(text, page).toContain("syntax-palette");
+      expect(text, page).toContain("29");
+      readings.forEach(({ keyword, pixels }) => {
+        expect(text, page).toContain(keyword);
+        expect(text, page).toContain(String(pixels));
+      });
+      // The retracted promise: the detail page and the inventory row used to
+      // send a reader to a probe that had not run.
+      expect(text, page).not.toContain("not yet measured in a window");
+      expect(text, page).not.toContain("recorded in `TODO.md`");
+    });
+  });
+
   it("executes the documented brand, whose two tokens keep every other key", () => {
     expect(housePalette.keyword).toBe("#7A1F5C");
     expect(housePalette.string).toBe("#0B5E4A");

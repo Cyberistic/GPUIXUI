@@ -2502,9 +2502,17 @@ brand and audits it; see
 `syntax`, and the components package's `CodeBlock` already passes that object
 (`theme={nativeTextTheme(theme, "background")}`), so a code block highlights in
 the theme's palette with no component change. The ink itself is painted by the
-runtime's text engine; the palette reaching it is held structurally by
-[`src/syntax.test.ts`](../packages/tokens/src/syntax.test.ts), and a window
-measurement of the highlighted pixels is recorded in `TODO.md` → Interlocks.
+runtime's text engine, so the palette reaching it is measured on painted pixels,
+not only on the host object: the playground's `syntax-palette` probe paints one
+four-line TypeScript source three times in a window on `0.11.0` (**29** checks)
+and counts each block's own box. The light block paints **756** solid `#3B2C8F`
+pixels and none of the dark keyword, the dark block **896** `#A7A9FF` and none of
+the light one, and a third block handed the same seam **without** `syntax` paints
+**832** of the runtime's own `#8F96ED` — so the colour travels with the theme
+object rather than being resolved once for the window, and the fallback a theme
+without a palette would inherit is real. `syntax.test.ts` holds the host object
+and the tables; the probe is the paint. Evidence:
+[`apps/playground/README.md` §`syntax-palette`](../apps/playground/README.md).
 
 ## Spacing
 
