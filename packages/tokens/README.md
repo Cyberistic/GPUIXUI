@@ -489,7 +489,7 @@ const audit = auditTheme(brandTheme);
 audit.passed; // true when nothing below reports
 audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
-audit.invalidNumbers; // [] — every size, length and shadow is layable, every leading reaches its size, every control height and row height is pressable, and the strong body role outweighs the body it emphasises
+audit.invalidNumbers; // [] — every size, length and shadow is layable, every weight and leading is usable, every control height and row height is pressable, and the strong body role outweighs the body it emphasises
 audit.contrast; // [] — every measured pair meets its floor
 audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face, disabled face and shadow is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
@@ -548,7 +548,12 @@ Each report is also a function of its own:
   more than the body it emphasises: the two share a size and a leading, so the
   weight is the whole difference, and a brand that forwards one stored weight to
   every role paints a card title as plain text — reported as `emphasis` on
-  `bodyStrong.fontWeight`, the number that has to change. The strong border must
+  `bodyStrong.fontWeight`, the number that has to change. A type role's weight
+  must also be finite: the runtime clamps a real number into its 1–1000 range, so
+  a variable font's 450 paints, while a weight the theme computed to `NaN` or
+  `Infinity` is dropped before native and the role paints at the runtime's
+  default weight — reported as `finite` on the role's `fontWeight`, which is the
+  shape a theme restored from storage arrives in. The strong border must
   paint: it
   is the width of both focus rings, so a zero there leaves the outline and the
   fallback shadow invisible while every colour report stays clean.

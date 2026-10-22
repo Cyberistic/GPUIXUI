@@ -118,3 +118,26 @@ export const flatEmphasisTheme = extendTheme(lightTheme, {
 
 /** What the gate reports for it: the strong role's weight, by name. */
 export const flatEmphasisAudit = auditTheme(flatEmphasisTheme);
+
+/**
+ * A theme restored from a stored preference whose weight came from a scale
+ * factor with no base: the heading's `fontWeight` is `NaN`, the batch serialises
+ * it to `null`, and the runtime drops the property — so the largest role in the
+ * scale paints at the runtime's default weight while every size, leading and
+ * colour is the library's. The type cannot express the value, which is why the
+ * report reads the number rather than the type.
+ */
+const storedTypography = {
+  ...lightTheme.typography,
+  h1: { ...lightTheme.typography.h1, fontWeight: Number.NaN },
+};
+
+/** The stored theme, shaped like the theme it was restored from. */
+export const droppedWeightTheme = {
+  ...lightTheme,
+  name: "Dropped weight",
+  typography: storedTypography,
+};
+
+/** What the gate reports for it: the heading's weight, as a number it cannot serialise. */
+export const droppedWeightAudit = auditTheme(droppedWeightTheme);

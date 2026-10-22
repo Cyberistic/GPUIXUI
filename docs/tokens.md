@@ -977,6 +977,7 @@ by group, path, value and the rule it missed:
 | `iconSize` | `xs`…`xl` | finite, `> 0` |
 | `typography` | every role's size | finite, `> 0` |
 | `typography` | every role's leading | finite, `> 0`, and at least the role's size (`leading`) |
+| `typography` | every role's weight | finite — the runtime clamps a real number into its 1–1000 range (`fontWeight`) |
 | `typography` | `bodyStrong`'s weight | finite, and heavier than `body`'s (`emphasis`) |
 | `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`), and at least the text and the icon it carries (`fits`) |
 | `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`) |
@@ -1050,6 +1051,16 @@ positive. `invalidNumbers` compares the pair and reports the leading as
 `leading`; a leading exactly equal to the size passes, because lines that touch
 are tight rather than overlapping.
 
+A role's weight is the third number it carries, and the only one whose loss does
+not move a size: the runtime clamps a real number into its 1–1000 range
+(`parse_font_weight` in the pinned `@gpuix/native@0.11.0` source), so a variable
+font's `450` is a design decision and paints, while a weight a theme computes to
+`NaN`/`Infinity` arrives as `null`, is dropped, and the role paints at the
+runtime's default weight — a heading silently loses its emphasis with every
+other number usable. `invalidNumbers` reads the weight as `finite` rather than
+as one of the four steps the type scale declares, and a theme restored from
+storage is exactly the shape that can carry a weight the type cannot express.
+
 Two **roles** only mean something together for the same reason. `bodyStrong`
 shares `body`'s size and leading by design, so its weight is the whole
 difference between reading and emphasis — a card title, a lead-in, a line a
@@ -1095,15 +1106,27 @@ invalidNumbers(
 // [{ group: "typography", path: "bodyStrong.fontWeight", value: 400, rule: "emphasis" }]
 invalidNumbers(extendTheme(lightTheme, { borderWidth: { strong: 0 } }));
 // [{ group: "borderWidth", path: "strong", value: 0, rule: "positive" }]
+
+// A theme restored from storage: the type cannot express a NaN weight.
+const stored = {
+  ...lightTheme,
+  typography: {
+    ...lightTheme.typography,
+    h1: { ...lightTheme.typography.h1, fontWeight: Number.NaN },
+  },
+};
+invalidNumbers(stored);
+// [{ group: "typography", path: "h1.fontWeight", value: NaN, rule: "finite" }]
 ```
 
-`src/numbers.example.ts` holds seven brands: one whose corner radius came from a
+`src/numbers.example.ts` holds eight brands: one whose corner radius came from a
 scale factor nobody set, one whose "dense" preset shaves two control heights and
 a row under the pressable floor, one whose type scale multiplied the leadings
 under the sizes, one that grew its body leading past the smallest control it
 still ships, one that enlarged its `md` icon past the same box, one whose weight
-scale flattened `bodyStrong` into `body`, and one that zeroed the strong border
-and so left the focus ring nothing to paint. `numbers.test.ts` runs all seven
+scale flattened `bodyStrong` into `body`, one that zeroed the strong border
+and so left the focus ring nothing to paint, and one restored from storage with
+a heading weight the batch drops. `numbers.test.ts` runs all eight
 audits, proves none of the
 colour reports can see their defects, and holds all 16 shipped, platform and
 authored themes to an empty report — the shipped scale's tightest role is the

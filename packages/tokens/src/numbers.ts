@@ -58,6 +58,16 @@
  * hugs, so a brand can keep every colour report clean while the focus cue paints
  * nothing. The decorative `thin` divider may be zero; the strong width may not.
  *
+ * A type role carries three numbers, and the third was inspected by nothing:
+ * `fontWeight` is a positive real number the runtime clamps into its 1–1000
+ * range, so a weight the theme computes to `NaN`/`Infinity` is serialised as
+ * `null`, dropped, and the role paints at the runtime's default weight — a
+ * heading silently loses its emphasis while every other number is usable. The
+ * weight is read as `finite` rather than as one of the four steps the type
+ * declares: the runtime accepts any number in its range, so a variable font's
+ * 450 is a design choice, and only a value that cannot survive the batch is the
+ * report's business.
+ *
  * `invalidColorRoles` covers the values the renderer cannot parse as a colour;
  * this covers the ones it cannot lay out or press.
  */
@@ -65,7 +75,7 @@
 import type { BoxShadow, Elevation } from "./elevation.js";
 import { controlSizes, targetSize, type ControlSize } from "./scale.js";
 import type { Theme } from "./theme.js";
-import type { TextStyle } from "./typography.js";
+import type { TextRole, Typography } from "./typography.js";
 
 /** A group of numeric tokens, in the order the catalogue lists them. */
 export type NumberGroup =
@@ -80,7 +90,9 @@ export type NumberGroup =
 /**
  * What makes a number usable.
  *
- * - `finite` — any real number, including a negative shadow offset;
+ * - `finite` — any real number, including a negative shadow offset, and a font
+ *   weight, which the runtime clamps into its 1–1000 range: only a value the
+ *   serialised batch drops (`NaN`, `Infinity`) is unusable there;
  * - `nonNegative` — a length that cannot go below zero but may be zero
  *   (`radius.none`, a hairline divider, a shadow with no blur);
  * - `positive` — a size a reader has to see (a type size, an icon, the strong
@@ -136,11 +148,30 @@ export interface InvalidNumber {
   readonly rule: NumberRule;
 }
 
+/** The numbers one type role carries, in the shape a stored theme can carry them. */
+interface TextStyleNumbers {
+  readonly fontSize: number;
+  readonly lineHeight: number;
+  readonly fontWeight: number;
+}
+
+/**
+ * The type scale as the report reads it. The families are dropped to the two
+ * names it needs, and each role's numbers are opened to `number` rather than
+ * the declared `FontWeight` union: the report exists for a theme restored from
+ * storage, which is exactly a theme carrying a weight the type cannot express.
+ */
+type TypographyNumbers = Omit<Typography, TextRole> & {
+  readonly [role in TextRole]: TextStyleNumbers;
+};
+
 /** The fields the number audit reads: every group of a theme except its colours. */
 export type NumberSource = Pick<
   Theme,
-  "spacing" | "radius" | "borderWidth" | "iconSize" | "typography" | "density"
+  "spacing" | "radius" | "borderWidth" | "iconSize" | "density"
 > & {
+  /** Opened so a stored weight the type cannot express is still inspected. */
+  readonly typography: TypographyNumbers;
   /**
    * A level the theme does not carry is the shadow report's business
    * (`invalidShadowColors`), not a number this report can inspect, so a stored
@@ -199,14 +230,14 @@ const inspectBorderWidths = (
   ...inspect("borderWidth", "strong", borderWidth.strong, "positive"),
 ];
 
-/** The size and leading of every text role, and the leading against its size. */
-const isTextStyle = (value: unknown): value is TextStyle =>
+/** The size and leading of every text role, the leading against its size, and the weight. */
+const isTextStyle = (value: unknown): value is TextStyleNumbers =>
   typeof value === "object" && value !== null && "fontSize" in value;
 
 const isShadowList = (value: unknown): value is readonly BoxShadow[] =>
   Array.isArray(value);
 
-/** The size and leading of every text role, and the leading against its size. */
+/** Every number a text role carries, and the two comparisons between them. */
 const inspectType = (
   typography: NumberSource["typography"],
 ): readonly InvalidNumber[] =>
@@ -221,6 +252,12 @@ const inspectType = (
         `${role}.lineHeight`,
         value.lineHeight,
         "positive",
+      ),
+      ...inspect(
+        "typography",
+        `${role}.fontWeight`,
+        value.fontWeight,
+        "finite",
       ),
     ];
     // Only comparable when both numbers are usable; an unusable one is already
@@ -254,6 +291,14 @@ const inspectEmphasis = (
   typography: NumberSource["typography"],
 ): readonly InvalidNumber[] => {
   const { body, bodyStrong } = typography;
+  // An unusable weight is already the single-value report's: comparing it would
+  // report one broken value twice, under a rule that says nothing about it.
+  if (
+    !Number.isFinite(body.fontWeight) ||
+    !Number.isFinite(bodyStrong.fontWeight)
+  ) {
+    return [];
+  }
   return bodyStrong.fontWeight > body.fontWeight
     ? []
     : [
@@ -360,8 +405,10 @@ const inspectShadow = (
  * shorter than its type stacks the next line into the current one, a control
  * height below the leading of the label or value it paints — or below the
  * `iconSize.md` glyph it draws — clips the text or the icon, a
- * zero `borderWidth.strong` leaves the focus ring nothing to paint, and a
- * `bodyStrong` no heavier than `body` paints an emphasis as plain reading — all
+ * zero `borderWidth.strong` leaves the focus ring nothing to paint, a
+ * `bodyStrong` no heavier than `body` paints an emphasis as plain reading, and a
+ * text role's `fontWeight` that is not finite is dropped so the role paints at
+ * the runtime's default weight — all
  * reported by path instead of shipping as a default.
  *
  * @example
@@ -399,6 +446,15 @@ const inspectShadow = (
  * // [{ group: "typography", path: "bodyStrong.fontWeight", value: 400, rule: "emphasis" }]
  * invalidNumbers(extendTheme(lightTheme, { borderWidth: { strong: 0 } }));
  * // [{ group: "borderWidth", path: "strong", value: 0, rule: "positive" }]
+ * const stored = {
+ *   ...lightTheme,
+ *   typography: {
+ *     ...lightTheme.typography,
+ *     h1: { ...lightTheme.typography.h1, fontWeight: Number.NaN },
+ *   },
+ * };
+ * invalidNumbers(stored);
+ * // [{ group: "typography", path: "h1.fontWeight", value: NaN, rule: "finite" }]
  * ```
  */
 export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {

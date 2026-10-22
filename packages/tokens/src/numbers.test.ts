@@ -46,6 +46,8 @@ import {
 } from "./index.js";
 import {
   crushedTypeAudit,
+  droppedWeightAudit,
+  droppedWeightTheme,
   flatEmphasisAudit,
   flatEmphasisTheme,
   grownIconAudit,
@@ -259,6 +261,75 @@ describe("the strong role outweighs the body it emphasises", () => {
   });
 });
 
+describe("a type role's weight is a number the batch can carry", () => {
+  /** A theme restored from storage, in the shape the report reads. */
+  const stored = (role: "h1" | "bodyStrong", fontWeight: number) => ({
+    ...lightTheme,
+    typography: {
+      ...lightTheme.typography,
+      [role]: { ...lightTheme.typography[role], fontWeight },
+    },
+  });
+
+  it("reports a heading weight the serialised batch would drop", () => {
+    // `NaN` becomes `null`, the renderer drops the property, and the largest
+    // role in the scale paints at the runtime's default weight.
+    expect(invalidNumbers(stored("h1", Number.NaN))).toEqual([
+      {
+        group: "typography",
+        path: "h1.fontWeight",
+        value: Number.NaN,
+        rule: "finite",
+      },
+    ]);
+  });
+
+  it("reports an unusable strong weight once, as a number rather than as emphasis", () => {
+    // The emphasis rule compares two weights; an unusable one is the
+    // single-value report's, so one broken value does not produce two lines.
+    expect(invalidNumbers(stored("bodyStrong", Number.NaN))).toEqual([
+      {
+        group: "typography",
+        path: "bodyStrong.fontWeight",
+        value: Number.NaN,
+        rule: "finite",
+      },
+    ]);
+  });
+
+  it("leaves a weight between the declared steps to the runtime's clamp", () => {
+    // A variable font's 450 is a real number in the runtime's 1–1000 range, so
+    // it paints; only a value JSON cannot carry is the report's business.
+    expect(invalidNumbers(stored("h1", 450))).toEqual([]);
+  });
+
+  it("fails the gate on a stored heading, with no colour report involved", () => {
+    expect(droppedWeightAudit.invalidNumbers).toEqual([
+      {
+        group: "typography",
+        path: "h1.fontWeight",
+        value: Number.NaN,
+        rule: "finite",
+      },
+    ]);
+    expect(droppedWeightAudit.invalidRoles).toEqual([]);
+    expect(droppedWeightAudit.invalidShadows).toEqual([]);
+    expect(droppedWeightAudit.contrast).toEqual([]);
+    expect(droppedWeightAudit.decorative).toEqual([]);
+    expect(droppedWeightAudit.indicators).toEqual([]);
+    expect(droppedWeightAudit.passed).toBe(false);
+  });
+
+  it("executes the documented example", () => {
+    expect(
+      droppedWeightAudit.invalidNumbers.map(({ path, rule }) => [path, rule]),
+    ).toEqual([["h1.fontWeight", "finite"]]);
+    expect(droppedWeightTheme.typography.h1.fontWeight).toBeNaN();
+    expect(droppedWeightAudit.contrast).toEqual([]);
+    expect(droppedWeightAudit.passed).toBe(false);
+  });
+});
+
 describe("the documents name the number rules", () => {
   const page = (path: string): string =>
     readFileSync(new URL(path, import.meta.url), "utf8");
@@ -354,6 +425,26 @@ describe("the documents name the number rules", () => {
     );
     expect(design).toContain(
       "the strong body role must weigh more than the body it emphasises",
+    );
+  });
+
+  it("prints the weight rule in the catalogue, with a report the code actually returns", () => {
+    const catalogue = page("../../../docs/tokens.md");
+    const [failure] = invalidNumbers(droppedWeightTheme);
+
+    expect(failure).toBeDefined();
+    expect(catalogue).toContain(
+      "| `typography` | every role's weight | finite — the runtime clamps a real number into its 1–1000 range (`fontWeight`) |",
+    );
+    // The snippet is the real report, not an illustration of one; `NaN` prints
+    // as itself in the page's own comment.
+    expect(catalogue).toContain(
+      `// [{ group: "typography", path: "${failure?.path}", value: NaN, rule: "${failure?.rule}" }]`,
+    );
+    const design = page("../../../docs/design-system.md");
+    expect(design).toContain("a type role's weight must be finite");
+    expect(design).toContain(
+      "`invalidNumbers` reports the role's `fontWeight` as `finite`",
     );
   });
 
