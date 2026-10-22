@@ -32,7 +32,7 @@
  * activation.
  */
 
-import { useState, type ReactElement, type ReactNode } from "react";
+import { useContext, useState, type ReactElement, type ReactNode } from "react";
 import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
@@ -47,6 +47,7 @@ import {
 import { buttonClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
+  AttachedGroup,
   childrenName,
   composeEvent,
   composePress,
@@ -131,6 +132,7 @@ export const renderButton = (
   props: ButtonProps,
   theme: PrimitiveTheme,
   focus: ButtonFocus,
+  attached = false,
 ): ReactElement => {
   const {
     variant = "primary",
@@ -193,8 +195,9 @@ export const renderButton = (
     paintsFilledSurface(variant) ? mergeStyle(base, keepContent) : base,
     controlRing(theme, { disabled }),
   );
+  const shape = attached ? mergeStyle(own, { borderRadius: 0 }) : own;
   const style = mergeStyle(
-    own,
+    shape,
     resolveStyle(callerStyle, {
       disabled: disabled === true,
       focused: focus.focused,
@@ -247,9 +250,14 @@ export const renderButton = (
 export const Button = (props: ButtonProps): ReactElement => {
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
-  return renderButton(props, theme, {
-    focused,
-    onFocus: () => setFocused(true),
-    onBlur: () => setFocused(false),
-  });
+  return renderButton(
+    props,
+    theme,
+    {
+      focused,
+      onFocus: () => setFocused(true),
+      onBlur: () => setFocused(false),
+    },
+    useContext(AttachedGroup),
+  );
 };

@@ -2093,6 +2093,26 @@ a workaround for two live sessions sharing one worktree; see
       `docs/scroll-area.mdx` §Usage/§Verification and the Progress/Meter
       verification lists; the Scrollable containers, Progress and Meter
       inventory rows record it
+`[x]` `packages/primitives`: an **attached `ButtonGroup` did not attach** — the
+      group rounded and clipped the **container** while every child kept the
+      recipe's `rounded-md`, so two adjacent fills left a notch at each seam
+      where the page showed through and the row never read as one control; the
+      page claimed the middle radii were "hidden by the clip", which clipping
+      cannot do. The group now tells the actions it wraps that the container
+      owns the silhouette (`AttachedGroup`, default false), `Button` and
+      `IconButton` square their own `borderRadius` while attached, and a
+      caller's `style` still merges last so an end can be rounded on purpose.
+      Proof: `Button.test.tsx`/`IconButton.test.tsx`'s `squares its own corners
+      inside an attached group` (alone, attached, caller override) and
+      `runtime/controls.runtime.test.tsx`'s `squares an attached group's
+      children so its seams do not show the page`, which reads `borderRadius: 0`
+      off both attached children and the theme's `md` off separated ones. Both
+      directions measured: with the provider forced false the window case reads
+      `Option.some(6)` where `0` is required. Docs in `docs/button-group.mdx`
+      §Modes/§Theming/§Limitations/§Verification, `docs/button.mdx` and
+      `docs/icon-button.mdx` §Theming, the Button groups inventory record (which
+      no longer denies reshaping a `Button`/`IconButton`) and the `COMPONENTS.md`
+      row
 `[x]` `packages/primitives`: the provider owns **no** theme of its own — it was
       the last package with a private theme context, so a page mixing
       `@gpuixui/primitives` with `@gpuixui/components` had to wrap twice and the

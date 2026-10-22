@@ -7,7 +7,14 @@
  * rotate or interpolate a colour (see `docs/gpuix-capabilities.md`).
  */
 
-import { Children, useEffect, useState, type ReactNode, type Ref } from "react";
+import {
+  Children,
+  createContext,
+  useEffect,
+  useState,
+  type ReactNode,
+  type Ref,
+} from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type {
@@ -130,6 +137,19 @@ export const mergeRefs = <Instance>(
     });
   };
 };
+
+/**
+ * Whether an action is attached to its neighbours in a `ButtonGroup`.
+ *
+ * An attached group cannot reshape its children: the runtime has no
+ * `:first-child`/`:last-child` and a ref exposes no style mutation. So the group
+ * tells the actions it attaches that the container owns the silhouette, and each
+ * action squares its own corners; the group's `overflow: hidden` and radius then
+ * clip the two outer corners. Without it two adjacent rounded fills leave a
+ * notch at every seam, where the page shows through. Defaults to false, so an
+ * action outside a group keeps its recipe radius.
+ */
+export const AttachedGroup = createContext(false);
 
 /**
  * The host props an action hands to its element unchanged.

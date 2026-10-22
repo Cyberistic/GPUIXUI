@@ -21,7 +21,7 @@
  * `aria-expanded` exactly like `Button`.
  */
 
-import type { ReactElement, ReactNode } from "react";
+import { useContext, type ReactElement, type ReactNode } from "react";
 import type { EventPayload } from "@gpuix/react";
 import type { StateStyle } from "@gpuix/react/floating";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -33,6 +33,7 @@ import {
   type ButtonState,
 } from "./Button.js";
 import {
+  AttachedGroup,
   useFocus,
   type ActionHostProps,
   type InteractionProps,
@@ -128,11 +129,12 @@ export const renderIconButton = (
   props: IconButtonProps,
   theme: PrimitiveTheme,
   focus: ButtonFocus,
-): ReactElement => renderButton(iconButtonProps(props), theme, focus);
+  attached = false,
+): ReactElement => renderButton(iconButtonProps(props), theme, focus, attached);
 
 /** A square, icon-only action that carries its name. */
 export const IconButton = (props: IconButtonProps): ReactElement => {
   const theme = useTheme();
   const focus = useFocus();
-  return renderIconButton(props, theme, focus);
+  return renderIconButton(props, theme, focus, useContext(AttachedGroup));
 };

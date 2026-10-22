@@ -583,6 +583,36 @@ it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", 
   expect(await gapOf("separated")).toBe(testTheme.spacing.sm);
 });
 
+it("squares an attached group's children so its seams do not show the page", async () => {
+  // The bug: `attached` only rounded and clipped the container, so each child
+  // kept the recipe's radius and two adjacent rounded fills left a notch at
+  // every seam where the page showed through.
+  const radii = async (mode: "attached" | "separated") => {
+    const runtime = await openWindow();
+    runtime.render(
+      <Surface>
+        <ButtonGroup mode={mode} testId="g">
+          <Button testId="one">One</Button>
+          <Button testId="two">Two</Button>
+        </ButtonGroup>
+      </Surface>,
+    );
+    return Arr.map(["one", "two"] as const, (id) =>
+      Option.flatMap(runtime.element(id), (element) =>
+        Option.fromNullishOr(element.style.borderRadius),
+      ),
+    );
+  };
+  expect(await radii("attached")).toStrictEqual([
+    Option.some(0),
+    Option.some(0),
+  ]);
+  expect(await radii("separated")).toStrictEqual([
+    Option.some(testTheme.radius.md),
+    Option.some(testTheme.radius.md),
+  ]);
+});
+
 it("names a ButtonGroup for assistive technology", async () => {
   const runtime = await openWindow();
   runtime.render(

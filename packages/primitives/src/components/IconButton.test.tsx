@@ -129,6 +129,24 @@ describe("IconButton", () => {
     expect(hostProp(disabled, "tabIndex")).toStrictEqual(Option.none());
   });
 
+  it("squares its corners inside an attached group", () => {
+    // The bug: an icon action in an attached group kept its own radius, so the
+    // seam to its neighbour showed the page through.
+    const radius = (attached: boolean): unknown =>
+      expectSome(
+        hostStyleRecord(
+          renderIconButton(
+            { label: "Delete", icon: glyph },
+            testTheme,
+            { focused: false },
+            attached,
+          ),
+        ),
+      )["borderRadius"];
+    expect(radius(false)).toBe(testTheme.radius.md);
+    expect(radius(true)).toBe(0);
+  });
+
   it("forwards the activation event Button reports", () => {
     // The bug guarded: an icon trigger is the one a toolbar uses for its
     // overflow action, and `onActivate` reached it with no payload, so the

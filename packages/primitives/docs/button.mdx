@@ -200,6 +200,10 @@ role decision, so a callback is the last word on a property the recipe also sets
 <Button style={(state) => ({ opacity: state.focused ? 1 : 0.9 })}>Save</Button>
 ```
 
+Inside an attached `ButtonGroup` the button squares its own corners: the group
+owns the silhouette and its radius plus `overflow: hidden` clip the two ends.
+Your `style` still merges last, so an end you want rounded is yours to paint.
+
 `loading` is not in the state: a busy button reports `disabled`, because it
 refuses activation.
 

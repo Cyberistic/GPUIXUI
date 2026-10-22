@@ -3,9 +3,11 @@
  *
  * `attached` removes the gap so the buttons read as a single segmented control;
  * `separated` keeps the theme's gap. The runtime has no `:first-child`/`:last-child`
- * and a component cannot restyle a child's `borderRadius` without cloning it, so
- * `attached` rounds the **group** and clips it rather than reshaping each button.
- * Pass `square`/`radius` to the buttons when you need the ends alone rounded.
+ * and a ref exposes no style mutation, so `attached` tells the actions it wraps
+ * (`AttachedGroup`) that the **group** owns the silhouette: each one squares its
+ * own corners and the group's radius plus `overflow: hidden` clip the two ends.
+ * Without that, two adjacent rounded fills leave a notch at every seam where the
+ * page shows through.
  *
  * The resting appearance is a Tailwind recipe (`recipe/buttonGroupClass`),
  * compiled through `@gpuixui/tw`; the caller's `className` is joined last so it
@@ -19,7 +21,7 @@ import { accessibleName } from "../core/a11y.js";
 import type { PrimitiveTheme, SpaceStep } from "../core/theme.js";
 import { buttonGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle } from "./internal.js";
+import { mergeStyle, AttachedGroup } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export const BUTTON_GROUP_MODES = ["attached", "separated"] as const;
@@ -65,7 +67,9 @@ export const renderButtonGroup = (
       testId={testId}
       style={mergeStyle(resolved.style, style)}
     >
-      {children}
+      <AttachedGroup.Provider value={mode === "attached"}>
+        {children}
+      </AttachedGroup.Provider>
     </div>
   );
 };

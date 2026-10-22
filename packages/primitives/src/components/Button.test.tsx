@@ -249,6 +249,37 @@ describe("Button", () => {
     );
   });
 
+  it("squares its own corners inside an attached group", () => {
+    // The bug: an attached group only rounded and clipped the container, so two
+    // adjacent rounded fills left a notch at every seam and the page showed
+    // through — the buttons did not read as one control.
+    const radius = (attached: boolean): unknown =>
+      expectSome(
+        hostStyleRecord(
+          renderButton(
+            { children: "One" },
+            testTheme,
+            { focused: false },
+            attached,
+          ),
+        ),
+      )["borderRadius"];
+    expect(radius(false)).toBe(testTheme.radius.md);
+    expect(radius(true)).toBe(0);
+    // The ends are the container's; a caller who wants one rounded says so.
+    const rounded = expectSome(
+      hostStyleRecord(
+        renderButton(
+          { children: "One", style: { borderRadius: 3 } },
+          testTheme,
+          { focused: false },
+          true,
+        ),
+      ),
+    );
+    expect(rounded["borderRadius"]).toBe(3);
+  });
+
   it("hands a trigger's own element the host props it opens with", () => {
     // Bug guarded (plan 160's measured Phase 1 STOP): six triggers pass a `ref`
     // so the surface they open can be anchored, five pass `aria-expanded`,

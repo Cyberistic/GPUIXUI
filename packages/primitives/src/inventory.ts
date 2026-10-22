@@ -211,7 +211,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "Only the container is rounded; children keep their own radius",
+      "Only this package's actions square their corners; another component inside an attached group keeps its radius",
       "No overflow-to-menu behaviour for a group wider than its parent",
     ],
     source: ["src/components/ButtonGroup.tsx"],

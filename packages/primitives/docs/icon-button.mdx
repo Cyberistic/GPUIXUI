@@ -111,6 +111,8 @@ action: the runtime's `click` payload (with the press point) for a pointer, the
 The paint is `Button`'s recipe (`recipe/buttonClass` with `square`), so every
 variant maps to colour **roles**, never literals, and the square side comes from
 `density`. Ghost is the resting look: the button paints no fill until hover.
+Inside an attached `ButtonGroup` the action squares its own corners, exactly as a
+text `Button` does: the group owns the silhouette.
 
 `style` takes a `StateStyle<ButtonState>` (`{ disabled, focused }`) and merges
 after the recipe, so a callback is the last word:
