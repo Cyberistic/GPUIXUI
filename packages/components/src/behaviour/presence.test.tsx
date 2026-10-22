@@ -773,14 +773,18 @@ describe("the preference", () => {
 
 describe("a leaving subtree", () => {
   /**
-   * The bug this guards: `Reveal` stayed mounted for its exit tween without the
-   * no-press guard every overlay paints, so its box kept a hitbox while it
-   * faded. The measured limit is the runtime's: `pointerEvents` does not
-   * inherit and inserts no hitbox for the element that declares it only, so a
-   * control *inside* a leaving box keeps its own hitbox (GPUix `AGENTS.md`, and
-   * measured in this renderer: a simulated click is dispatched by bounds, so a
-   * headless suite cannot measure routing at all). What this case can hold is
-   * the guard itself; the live probes measure where a press lands.
+   * The bug this guards: a reveal is a **wrapper**, not a surface. `auto` on it
+   * inserts the runtime's blocking hitbox between the control that paints under
+   * it and the content it wraps (`press-routing-lifecycle` measured the rule:
+   * a hitbox from the topmost down to the first painted fill), so a wrapped
+   * glyph would stop the press that belongs to its action — and a leaving
+   * reveal that kept the hitbox did the same while it faded. The wrapper
+   * therefore paints nothing at rest and `none` while it leaves. The measured
+   * limit is the runtime's: `pointerEvents` does not inherit and inserts no
+   * hitbox for the element that declares it only, so a control *inside* a
+   * leaving box keeps its own hitbox (GPUix `AGENTS.md`; the headless renderer
+   * dispatches a simulated click by bounds, so routing is the live probes'
+   * claim, not this one). What this case can hold is the guard itself.
    */
   const leaving = (page: ReturnType<typeof renderComponent>) =>
     page.renderer.findByTestId("reveal")?.style.pointerEvents;
@@ -795,7 +799,8 @@ describe("a leaving subtree", () => {
     );
     try {
       settleMotion(page);
-      expect(leaving(page)).toBe("auto");
+      // At rest the wrapper adds no hitbox over the content it wraps.
+      expect(leaving(page)).toBeUndefined();
 
       page.rerender(
         <Page>

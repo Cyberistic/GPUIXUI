@@ -105,7 +105,7 @@ export const AutoHeight = ({
           {
             width: "100%",
             overflow: "hidden",
-            ...presenceStyle(presence.present),
+            ...presenceStyle(presence.present, "wrapper"),
           },
           recipeStyle(cn(className), theme),
         ),

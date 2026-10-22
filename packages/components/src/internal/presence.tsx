@@ -260,15 +260,27 @@ export const presenceMotion = (
 });
 
 /**
- * The input rule a surface paints for its current presence.
+ * The pointer rule a surface paints for its current presence.
  *
  * A surface stays painted for its exit tween, so it is still a box with
  * controls in it. The press that dismissed it belongs to whatever now lies
- * underneath, so a leaving surface takes none: its whole subtree is out of the
- * pointer until the tween ends and it unmounts. Every surface the seam keeps
- * mounted composes this, because a box that keeps taking presses is a control
- * nobody can see.
+ * underneath, so a leaving surface takes none until its tween ends and it
+ * unmounts.
+ *
+ * `rest` is what the surface is while it is open, and the two answers are not
+ * interchangeable. An overlay is a **target**: it blocks the pointer (and the
+ * wheel) behind it, which is what `"auto"` buys over the implicit hitbox its
+ * fill already inserts. A reveal is a **wrapper**: it paints no surface of its
+ * own, so `"auto"` would put a hitbox over the content it wraps — a glyph
+ * wrapped by a reveal would swallow the press meant for its control — and it
+ * paints nothing at rest.
  */
-export const presenceStyle = (present: boolean): StyleDesc => ({
-  pointerEvents: present ? "auto" : "none",
-});
+export const presenceStyle = (
+  present: boolean,
+  rest: "target" | "wrapper" = "target",
+): StyleDesc =>
+  present
+    ? rest === "target"
+      ? { pointerEvents: "auto" }
+      : {}
+    : { pointerEvents: "none" };

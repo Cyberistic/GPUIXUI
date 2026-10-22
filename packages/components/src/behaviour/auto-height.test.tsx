@@ -129,13 +129,17 @@ describe("AutoHeight", () => {
 
 describe("the press a close uncovers", () => {
   /**
-   * The bug this guards: a collapse stays mounted for its exit tween, so its
-   * box was still a target while the section shrank. The measured limit is the
-   * runtime's: `pointerEvents` does not inherit and removes only the declaring
-   * element's hitbox, so a control inside the fading box keeps its own (GPUix
-   * `AGENTS.md`; the headless renderer dispatches a simulated click by bounds,
-   * so routing is the live probes' claim, not this one). This case holds the
-   * guard the surface owes.
+   * The bug this guards: a collapse is a **wrapper**, not a surface. `auto` on
+   * its clipping box inserts the runtime's blocking hitbox between the control
+   * that paints under it and the content it wraps, so a control inside an open
+   * section could lose the press to the box; and a collapse stays mounted for
+   * its exit tween, so it was still that boundary while the section shrank. The
+   * box therefore paints nothing at rest and `none` while it leaves. The
+   * measured limit is the runtime's: `pointerEvents` does not inherit and
+   * removes only the declaring element's hitbox, so a control inside the fading
+   * box keeps its own (GPUix `AGENTS.md`; the headless renderer dispatches a
+   * simulated click by bounds, so routing is the live probes' claim, not this
+   * one). This case holds the guard the surface owes.
    */
   const guard = (page: ReturnType<typeof renderComponent>) =>
     page.renderer.findByTestId("box")?.style.pointerEvents;
@@ -146,7 +150,8 @@ describe("the press a close uncovers", () => {
       page.renderer.clockPause();
       opened(page);
       await waitFor(() => expect(height(page)).toBe(80));
-      expect(guard(page)).toBe("auto");
+      // Open, the clipping box adds no hitbox of its own.
+      expect(guard(page)).toBeUndefined();
 
       page.rerender(<Reveal open={false} />);
       settle(page);

@@ -114,7 +114,7 @@ export const Reveal = ({
         mergeStyles(
           // A leaving subtree is still painted for its exit tween but takes no
           // presses: the press the close was for belongs to what it covered.
-          presenceStyle(presence.present),
+          presenceStyle(presence.present, "wrapper"),
           resolveStyle(style, state),
         ),
       )}
