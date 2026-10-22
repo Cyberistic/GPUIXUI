@@ -25,7 +25,7 @@ import {
 } from "@gpuixui/tw";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
-import { isActivation, isDismiss, isEnter } from "./internal/key.js";
+import { activationHandlers, isDismiss, isEnter } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -158,9 +158,7 @@ export const InlineEdit = ({
         {...rest}
         ref={setDisplay}
         onClick={start}
-        onKeyDown={(event: KeyEvent) => {
-          if (isActivation(event)) start();
-        }}
+        {...activationHandlers(start)}
         onFocus={(event) => onFocus?.(event)}
         onBlur={(event) => onBlur?.(event)}
         style={mergeStyles(

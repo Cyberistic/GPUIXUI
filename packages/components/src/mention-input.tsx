@@ -36,7 +36,7 @@ import {
   type ReactElement,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
-import { isActivation, isDismiss, isDown, isUp } from "./internal/key.js";
+import { activationHandlers, isDismiss, isDown, isUp } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -337,9 +337,7 @@ export const MentionInputItem = ({
       tabIndex={0}
       {...rest}
       onMouseDown={() => select(value)}
-      onKeyDown={(event: EventPayload) => {
-        if (isActivation(event)) select(value);
-      }}
+      {...activationHandlers(() => select(value))}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(MENTION_INPUT_ITEM, className), theme), {
           backgroundColor: highlighted ? theme.colors.accent : undefined,

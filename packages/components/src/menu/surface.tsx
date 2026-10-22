@@ -9,7 +9,7 @@
  * opened inside a dialog closes only the menu.
  */
 
-import type { EventPayload, Props, StyleDesc } from "@gpuix/react";
+import type { KeyEvent, Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { MENU_CONTENT } from "@gpuixui/tw";
 import { Match, pipe } from "effect";
@@ -26,6 +26,7 @@ import {
   isLast,
   isTab,
   isUp,
+  swallowsDefault,
   typedChar,
 } from "../internal/key.js";
 import { overlaySurfaceStyle } from "../internal/overlay.js";
@@ -38,17 +39,25 @@ export const menuSurfaceStyle = (theme: Theme, className?: string): StyleDesc =>
   overlaySurfaceStyle(MENU_CONTENT, className, theme);
 
 /**
- * The key handler a menu surface installs. It is a hook-free function so both
- * menu roots — the anchored Dropdown and the pointer-positioned Context menu —
- * can install exactly the same rules.
+ * The two key handlers a menu surface installs. They are hook-free functions so
+ * both menu roots — the anchored Dropdown and the pointer-positioned Context
+ * menu — can install exactly the same rules.
+ *
+ * The halves are the shared activation contract: movement and type-ahead are
+ * press-only, Enter activates on the press, Space on the release, and the Space
+ * press is swallowed so it cannot also scroll the page behind the menu.
  */
-export const menuKeyHandler = (
+export const menuKeyHandlers = (
   menu: MenuContextValue,
-): ((event: EventPayload) => void) => {
-  const step = (event: EventPayload): void => {
+): {
+  readonly onKeyDown: (event: KeyEvent) => void;
+  readonly onKeyUp: (event: KeyEvent) => void;
+} => ({
+  onKeyDown: (event: KeyEvent): void => {
     // A nested surface (a submenu) has already acted on this event; 0.11.0 has
     // no stopPropagation, so the claim is how this menu stays out of it.
     if (isEventClaimed(event)) return;
+    if (swallowsDefault(event, "down")) event.preventDefault();
     pipe(
       typedChar(event),
       Option.match({
@@ -60,7 +69,10 @@ export const menuKeyHandler = (
             Match.when(isUp, () => menu.step({ _tag: "Move", delta: -1 })),
             Match.when(isFirst, () => menu.step({ _tag: "First" })),
             Match.when(isLast, () => menu.step({ _tag: "Last" })),
-            Match.when(isActivation, menu.activateActive),
+            Match.when(
+              (press) => isActivation(press, "down"),
+              menu.activateActive,
+            ),
             Match.when(isDismiss, (value) => {
               dismissTopLayer(value);
             }),
@@ -70,9 +82,12 @@ export const menuKeyHandler = (
           ),
       }),
     );
-  };
-  return step;
-};
+  },
+  onKeyUp: (event: KeyEvent): void => {
+    if (isEventClaimed(event)) return;
+    if (isActivation(event, "up")) menu.activateActive();
+  },
+});
 
 /** {@link MenuSurface} props: a labelled menu box. */
 export interface MenuSurfaceProps extends Props {
@@ -92,13 +107,14 @@ export const MenuSurface = ({
   label,
   children,
   onKeyDown,
+  onKeyUp,
   className,
   style,
   ...rest
 }: MenuSurfaceProps) => {
   const theme = useTheme();
   const menu = useMenuContext();
-  const keys = menuKeyHandler(menu);
+  const keys = menuKeyHandlers(menu);
 
   return (
     <div
@@ -108,8 +124,12 @@ export const MenuSurface = ({
       autoFocus
       {...rest}
       onKeyDown={(event) => {
-        keys(event);
+        keys.onKeyDown(event);
         onKeyDown?.(event);
+      }}
+      onKeyUp={(event) => {
+        keys.onKeyUp(event);
+        onKeyUp?.(event);
       }}
       style={mergeStyles(
         mergeStyles(menuSurfaceStyle(theme, className), {

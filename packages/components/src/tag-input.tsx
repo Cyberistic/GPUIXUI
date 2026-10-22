@@ -30,7 +30,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { createContext, useContext, useState } from "react";
-import { isActivation, isEnter } from "./internal/key.js";
+import { activationHandlers, isEnter } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -251,9 +251,7 @@ export const TagInputChip = ({
           aria-label={`Remove ${value}`}
           tabIndex={0}
           onClick={() => remove(value)}
-          onKeyDown={(event: KeyEvent) => {
-            if (isActivation(event)) remove(value);
-          }}
+          {...activationHandlers(() => remove(value))}
           style={mergeStyles(recipeStyle(TAG_INPUT_CHIP_REMOVE, theme), {
             width: targetSize.minimum,
             height: targetSize.minimum,

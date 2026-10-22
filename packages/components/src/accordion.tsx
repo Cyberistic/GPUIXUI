@@ -50,7 +50,14 @@ import {
   upsertValue,
   type ValueItem,
 } from "./internal/collection.js";
-import { isActivation, isDown, isFirst, isLast, isUp } from "./internal/key.js";
+import {
+  isActivation,
+  isDown,
+  isFirst,
+  isLast,
+  isUp,
+  swallowsDefault,
+} from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -390,6 +397,7 @@ export interface AccordionTriggerState {
 export const AccordionTrigger = ({
   onClick,
   onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   className,
@@ -428,14 +436,21 @@ export const AccordionTrigger = ({
 
   const handleKeyDown = (event: KeyEvent): void => {
     if (disabled) return;
+    // The press half of Space starts the gesture; the release flips the section.
+    if (swallowsDefault(event, "down")) event.preventDefault();
     Match.value(event).pipe(
-      Match.when(isActivation, flip),
+      Match.when((press) => isActivation(press, "down"), flip),
       Match.when(isDown, () => moveFrom(value, 1)),
       Match.when(isUp, () => moveFrom(value, -1)),
       Match.when(isFirst, () => jumpTo("first")),
       Match.when(isLast, () => jumpTo("last")),
       Match.orElse(() => undefined),
     );
+  };
+
+  const handleKeyUp = (event: KeyEvent): void => {
+    if (disabled) return;
+    if (isActivation(event, "up")) flip();
   };
 
   return (
@@ -456,6 +471,10 @@ export const AccordionTrigger = ({
       onKeyDown={(event: KeyEvent) => {
         handleKeyDown(event);
         onKeyDown?.(event);
+      }}
+      onKeyUp={(event: KeyEvent) => {
+        handleKeyUp(event);
+        onKeyUp?.(event);
       }}
       onFocus={(event) => {
         setFocused(true);

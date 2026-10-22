@@ -46,7 +46,7 @@ import {
   type ReactNode,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
-import { isActivation } from "./internal/key.js";
+import { activationHandlers } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -395,9 +395,7 @@ export const TimePickerClear = ({
       testId={`${testId}-clear`}
       tabIndex={0}
       onClick={clear}
-      onKeyDown={(event: EventPayload) => {
-        if (isActivation(event)) clear();
-      }}
+      {...activationHandlers(clear)}
       style={mergeStyles(recipeStyle(TIME_PICKER_CLEAR, theme), {
         ...keyboardRing(theme),
         width: targetSize.minimum,

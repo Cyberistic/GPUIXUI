@@ -35,6 +35,7 @@ import {
   clickCentreOf,
   focusedTestId,
   hoverCentreOf,
+  pressKey,
   requireBounds,
 } from "../internal/interaction.js";
 import { List, ListItem, ListItemDescription, ListItemTitle } from "../list.js";
@@ -483,9 +484,9 @@ describe("List", () => {
     const list = renderComponent(multiCatalog(onValueChange));
 
     list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
-    list.renderer.simulateKeystrokes("space");
+    pressKey(list, "space");
     list.renderer.simulateKeystrokes("down");
-    list.renderer.simulateKeystrokes("space");
+    pressKey(list, "space");
 
     expect(onValueChange).toHaveBeenLastCalledWith(["a", "c"]);
 
@@ -497,7 +498,7 @@ describe("List", () => {
     const list = renderComponent(multiCatalog(onValueChange));
 
     list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
-    list.renderer.simulateKeystrokes("space");
+    pressKey(list, "space");
     list.renderer.simulateKeystrokes("shift-down");
 
     expect(focusedTestId(list)).toEqual(Option.some("row-c"));
@@ -765,7 +766,7 @@ describe("List", () => {
 
     list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
     list.renderer.simulateKeystrokes("down");
-    list.renderer.simulateKeystrokes("space");
+    pressKey(list, "space");
 
     expect(onValueChange).toHaveBeenLastCalledWith("c");
     expect(onActivate).not.toHaveBeenCalled();

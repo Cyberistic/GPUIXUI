@@ -8,7 +8,7 @@
  * the item that follows them, so hiding an item hides its separator too.
  */
 
-import type { KeyEvent, Props } from "@gpuix/react";
+import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import {
@@ -31,7 +31,7 @@ import {
   type ReactNode,
 } from "react";
 import { collapse, type Crumb } from "./breadcrumb/logic.js";
-import { isActivation } from "./internal/key.js";
+import { activationHandlers } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -237,6 +237,7 @@ export const BreadcrumbLink = ({
   current = false,
   onClick,
   onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   className,
@@ -258,10 +259,7 @@ export const BreadcrumbLink = ({
         onClick?.(event);
         onSelect?.();
       }}
-      onKeyDown={(event: KeyEvent) => {
-        if (isActivation(event)) onSelect?.();
-        onKeyDown?.(event);
-      }}
+      {...activationHandlers(() => onSelect?.(), { onKeyDown, onKeyUp })}
       onFocus={(event) => onFocus?.(event)}
       onBlur={(event) => onBlur?.(event)}
       style={mergeStyles(

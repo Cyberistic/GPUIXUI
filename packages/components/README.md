@@ -143,6 +143,21 @@ keep their label while a `ghost` action keeps the where-can-Tab-go cue.
 the collapse with `keyboardDimFailures`; `docs/component-api.md` §3 states the
 rule.
 
+## Keyboard activation
+
+Enter activates on the press; **Space activates on the release**, and the press
+`preventDefault()`s. That split is the platform's button rule, and it matters
+here for two measured reasons: the runtime would otherwise treat one keystroke as
+both the action and a scroll of the region behind the control, and a press a
+reader cancels before releasing would already have acted. `internal/key.ts` owns
+the decisions — `isActivation(event, phase)`, `swallowsDefault(event, phase)`,
+and `activationHandlers(activate, observe)` for a plain control — and every
+composite that keeps its key handler on a container (the tabs rail, the list
+root, an accordion header, the menu surface, the calendar grid) installs the same
+two halves. `src/behaviour/activation-release.test.tsx` holds each of them to it;
+a suite that presses Space with `simulateKeystrokes` gets only the press, so use
+`pressKey` from `src/internal/interaction.ts` for the whole gesture.
+
 Two kinds of metric keep density, because they must stay aligned with the
 density-driven controls beside them: a list row's height
 (`theme.density.rowHeight`), and a control's height/side — the accordion

@@ -15,10 +15,10 @@
  * dimming — assistive technology sees a button that does nothing.
  */
 
-import type { KeyEvent, Props, StyleDesc } from "@gpuix/react";
+import type { Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
-import { isActivation } from "./key.js";
+import { activationHandlers } from "./key.js";
 import {
   controlHeight,
   controlPaddingX,
@@ -128,21 +128,22 @@ const controlStyle = (
 
 /**
  * Click and key activation, muted when the control is disabled. A disabled
- * control keeps its own `onKeyDown` so a wrapper can still see keys bubble.
+ * control keeps its own key handlers so a wrapper can still see keys bubble.
+ *
+ * The key half is the shared contract: Enter acts on the press, Space on the
+ * release, and the Space press is swallowed so it cannot also scroll the region
+ * the control sits in.
  */
 const activation = (
   disabled: boolean,
   onClick: Props["onClick"],
-  onKeyDown: Props["onKeyDown"],
-): Pick<Props, "onClick" | "onKeyDown"> =>
+  observe: Pick<Props, "onKeyDown" | "onKeyUp">,
+): Pick<Props, "onClick" | "onKeyDown" | "onKeyUp"> =>
   disabled
-    ? { onClick: undefined, onKeyDown }
+    ? observe
     : {
         onClick,
-        onKeyDown: (event: KeyEvent) => {
-          if (isActivation(event)) onClick?.(event);
-          onKeyDown?.(event);
-        },
+        ...activationHandlers((event) => onClick?.(event), observe),
       };
 
 /** A control's look when it is disabled: dimmed, and out of the tab order. */
@@ -161,6 +162,7 @@ export const Button = ({
   disabled = false,
   onClick,
   onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   style,
@@ -173,7 +175,7 @@ export const Button = ({
       role="button"
       tabIndex={disabled ? -1 : 0}
       {...rest}
-      {...activation(disabled, onClick, onKeyDown)}
+      {...activation(disabled, onClick, { onKeyDown, onKeyUp })}
       onFocus={(event) => onFocus?.(event)}
       onBlur={(event) => onBlur?.(event)}
       style={mergeStyles(
@@ -198,6 +200,7 @@ export const IconButton = ({
   disabled = false,
   onClick,
   onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   style,
@@ -212,7 +215,7 @@ export const IconButton = ({
       aria-label={label}
       tabIndex={disabled ? -1 : 0}
       {...rest}
-      {...activation(disabled, onClick, onKeyDown)}
+      {...activation(disabled, onClick, { onKeyDown, onKeyUp })}
       onFocus={(event) => onFocus?.(event)}
       onBlur={(event) => onBlur?.(event)}
       style={mergeStyles(

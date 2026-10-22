@@ -32,8 +32,7 @@ import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
-import { isEventClaimed } from "./internal/event-claim.js";
-import { isActivation, isDown, isUp } from "./internal/key.js";
+import { isActivation, isDown, isUp, swallowsDefault } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -57,7 +56,7 @@ import {
   type MenuCloseReason,
 } from "./menu/state.js";
 import { MenuSub, MenuSubContent, MenuSubTrigger } from "./menu/sub.js";
-import { menuKeyHandler, menuSurfaceStyle } from "./menu/surface.js";
+import { menuKeyHandlers, menuSurfaceStyle } from "./menu/surface.js";
 
 /** The rules a {@link DropdownMenuContent} follows. */
 interface DropdownContextValue {
@@ -184,6 +183,7 @@ export const DropdownMenu = ({
 export const DropdownMenuTrigger = ({
   onClick,
   onKeyDown,
+  onKeyUp,
   ref,
   disabled = false,
   ...rest
@@ -209,9 +209,16 @@ export const DropdownMenuTrigger = ({
         if (!disabled && !open) {
           if (isDown(event)) openAt("first");
           else if (isUp(event)) openAt("last");
-          else if (isActivation(event)) openAt("first");
+          else if (swallowsDefault(event, "down")) event.preventDefault();
+          else if (isActivation(event, "down")) openAt("first");
         }
         onKeyDown?.(event);
+      }}
+      onKeyUp={(event) => {
+        // Space's release is an activation, so a keyboard open lands on the
+        // first row exactly like Enter's press does.
+        if (!disabled && !open && isActivation(event, "up")) openAt("first");
+        onKeyUp?.(event);
       }}
       onClick={(event) => {
         onClick?.(event);
@@ -259,6 +266,7 @@ export const DropdownMenuContent = ({
   collisionPadding = 8,
   children,
   onKeyDown,
+  onKeyUp,
   onMouseDownOutside,
   style,
   ref,
@@ -267,7 +275,7 @@ export const DropdownMenuContent = ({
   const theme = useTheme();
   const { open, trigger, pendingFocus } = useDropdownContext();
   const menu = useMenuContext();
-  const keys = menuKeyHandler(menu);
+  const keys = menuKeyHandlers(menu);
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
   const placement = usePlacement({
@@ -310,9 +318,12 @@ export const DropdownMenuContent = ({
         dismissTopLayer(event);
       }}
       onKeyDown={(event) => {
-        if (isEventClaimed(event)) return;
-        keys(event);
+        keys.onKeyDown(event);
         onKeyDown?.(event);
+      }}
+      onKeyUp={(event) => {
+        keys.onKeyUp(event);
+        onKeyUp?.(event);
       }}
       style={mergeStyles(
         mergeStyles(menuSurfaceStyle(theme, className), {

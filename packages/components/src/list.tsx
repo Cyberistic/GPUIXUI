@@ -15,7 +15,12 @@
  *   keyboard focus and not after a click (measured on 0.11.0).
  */
 
-import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import type {
+  EventPayload,
+  KeyEvent,
+  Props,
+  PublicInstance,
+} from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
   mergeStyles,
@@ -64,6 +69,7 @@ import {
   isLast,
   isSelectAll,
   isUp,
+  swallowsDefault,
   typedChar,
 } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
@@ -289,6 +295,7 @@ export const List = (props: ListProps) => {
     dense = false,
     className,
     onKeyDown,
+    onKeyUp,
     children,
     style,
     ...rest
@@ -517,13 +524,14 @@ export const List = (props: ListProps) => {
     setAnchor(Option.some(row.value));
   });
 
-  const handleKeyDown = (event: EventPayload): void => {
+  const originOf = (event: EventPayload): Option.Option<string> =>
+    keyOrigin(rows, active, Option.fromNullishOr(event.elementId));
+
+  const handleKeyDown = (event: KeyEvent): void => {
     if (!selectable) return;
-    const origin = keyOrigin(
-      rows,
-      active,
-      Option.fromNullishOr(event.elementId),
-    );
+    // The press half of Space starts the gesture; the release selects.
+    if (swallowsDefault(event, "down")) event.preventDefault();
+    const origin = originOf(event);
     const extend = multiple && event.modifiers?.shift === true;
 
     // Adopt a row that holds focus without having reported it, so the highlight
@@ -548,7 +556,10 @@ export const List = (props: ListProps) => {
               if (selectable) selectActive(origin);
               activateActive(origin);
             }),
-            Match.when(isActivation, () => selectActive(origin)),
+            Match.when(
+              (press) => isActivation(press, "down"),
+              () => selectActive(origin),
+            ),
             Match.when(isSelectAll, selectEveryRow),
             Match.when(isDown, () => moveBy(1, extend, origin)),
             Match.when(isUp, () => moveBy(-1, extend, origin)),
@@ -558,6 +569,11 @@ export const List = (props: ListProps) => {
           ),
       }),
     );
+  };
+
+  const handleKeyUp = (event: KeyEvent): void => {
+    if (!selectable) return;
+    if (isActivation(event, "up")) selectActive(originOf(event));
   };
 
   const tabbable = useMemo(
@@ -602,6 +618,10 @@ export const List = (props: ListProps) => {
         onKeyDown={(event) => {
           handleKeyDown(event);
           onKeyDown?.(event);
+        }}
+        onKeyUp={(event) => {
+          handleKeyUp(event);
+          onKeyUp?.(event);
         }}
         style={mergeStyles(recipeStyle(cn(LIST_ROOT, className), theme), style)}
       >

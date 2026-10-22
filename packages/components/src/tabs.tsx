@@ -24,7 +24,12 @@
  * named by its value and the trigger/panel relationship is positional.
  */
 
-import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import type {
+  EventPayload,
+  KeyEvent,
+  Props,
+  PublicInstance,
+} from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
   mergeStyles,
@@ -66,6 +71,7 @@ import {
   isLeft,
   isRight,
   isUp,
+  swallowsDefault,
 } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
@@ -416,6 +422,7 @@ export const TabsList = ({
   label,
   className,
   onKeyDown,
+  onKeyUp,
   children,
   style,
   ...rest
@@ -446,11 +453,12 @@ export const TabsList = ({
       Option.map((row) => row.value),
     );
 
-  const handleKeyDown = (event: EventPayload): void => {
+  const handleKeyDown = (event: KeyEvent): void => {
+    if (swallowsDefault(event, "down")) event.preventDefault();
     Match.value(event).pipe(
       Match.when(isFirst, () => jumpTo("first")),
       Match.when(isLast, () => jumpTo("last")),
-      Match.when(isActivation, selectActive),
+      Match.when((press) => isActivation(press, "down"), selectActive),
       Match.orElse((value) =>
         pipe(
           direction(value),
@@ -489,6 +497,10 @@ export const TabsList = ({
       onKeyDown={(event) => {
         handleKeyDown(event);
         onKeyDown?.(event);
+      }}
+      onKeyUp={(event) => {
+        if (isActivation(event, "up")) selectActive();
+        onKeyUp?.(event);
       }}
       style={mergeStyles(
         mergeStyles(

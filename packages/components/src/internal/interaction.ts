@@ -69,6 +69,22 @@ export const sizeOf = (
     height,
   }));
 
+/**
+ * Press and release `key` on the focused element: one key gesture, both halves.
+ *
+ * A control activates **Space on the release** (a platform button's rule), and
+ * `simulateKeystrokes` delivers only the press of a named key, so a suite that
+ * wants Space's activation has to send the release itself.
+ */
+export const pressKey = (root: ComponentTestRoot, key: string): void => {
+  const focused = root.renderer.getFocusedElementId();
+  if (focused === null) {
+    throw new Error("behaviour: no focused element to press a key on");
+  }
+  root.renderer.nativeSimulateKeyDown(focused, key);
+  root.renderer.nativeSimulateKeyUp(focused, key);
+};
+
 /** The `testId` of whatever holds focus, `None` when nothing does. */
 export const focusedTestId = (root: ComponentTestRoot): Option.Option<string> =>
   Option.flatMap(

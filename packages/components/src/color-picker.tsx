@@ -9,7 +9,7 @@
  * value. Alpha, HSL/RGB fields and an eyedropper are not in v1.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -27,7 +27,7 @@ import * as Option from "effect/Option";
 import { useLayoutEffect, useState } from "react";
 import { normalizeHex, sameHex } from "./color/hex.js";
 import { useControllableState } from "./internal/controllable.js";
-import { isActivation } from "./internal/key.js";
+import { activationHandlers } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
@@ -148,9 +148,9 @@ export const ColorPicker = ({
               onClick={() => {
                 if (!disabled) choose(swatch);
               }}
-              onKeyDown={(event: EventPayload) => {
-                if (!disabled && isActivation(event)) choose(swatch);
-              }}
+              {...activationHandlers(() => {
+                if (!disabled) choose(swatch);
+              })}
               style={mergeStyles(recipeStyle(COLOR_PICKER_CELL, theme), {
                 width: controlHeight(theme, "sm"),
                 height: controlHeight(theme, "sm"),

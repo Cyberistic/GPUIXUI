@@ -7,7 +7,7 @@
  * instead of promising an animation the runtime cannot measure yet.
  */
 
-import type { KeyEvent, Props } from "@gpuix/react";
+import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -21,7 +21,7 @@ import {
 } from "@gpuixui/tw";
 import { createContext, useContext, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
-import { isActivation } from "./internal/key.js";
+import { activationHandlers } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -104,6 +104,7 @@ export interface CollapsibleTriggerState {
 export const CollapsibleTrigger = ({
   onClick,
   onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   className,
@@ -135,10 +136,7 @@ export const CollapsibleTrigger = ({
         onClick?.(event);
         toggle();
       }}
-      onKeyDown={(event: KeyEvent) => {
-        if (isActivation(event)) toggle();
-        onKeyDown?.(event);
-      }}
+      {...activationHandlers(toggle, { onKeyDown, onKeyUp })}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);

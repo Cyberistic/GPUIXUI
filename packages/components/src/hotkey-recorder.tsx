@@ -32,7 +32,12 @@ import {
   toTanstackPlatform,
 } from "@gpuixui/keyboard";
 import { useRef, useState } from "react";
-import { isActivation, isDismiss } from "./internal/key.js";
+import {
+  activationHandlers,
+  isActivation,
+  isDismiss,
+  swallowsDefault,
+} from "./internal/key.js";
 import { Keycap } from "./keyboard-shortcuts.js";
 import { recipeStyle } from "./internal/recipe.js";
 import {
@@ -81,6 +86,7 @@ export const HotkeyRecorder = ({
   testId,
   onClick,
   onKeyDown,
+  onKeyUp,
   onBlur,
   ...rest
 }: HotkeyRecorderProps) => {
@@ -88,6 +94,9 @@ export const HotkeyRecorder = ({
   const [recording, setRecording] = useState(false);
   // A press on the clear control must not also start recording on the root.
   const skipStart = useRef(false);
+  // A chord capture owns the keyup that follows it: Space is a chord while
+  // recording, not the other half of an activation.
+  const captured = useRef(false);
 
   const start = (): void => {
     if (disabled) return;
@@ -121,6 +130,7 @@ export const HotkeyRecorder = ({
         if (recording) {
           // A recorded chord must not also reach the application or the system.
           event.preventDefault();
+          captured.current = true;
           if (isDismiss(event)) {
             setRecording(false);
             return;
@@ -133,7 +143,16 @@ export const HotkeyRecorder = ({
           }
           return;
         }
-        if (isActivation(event)) start();
+        if (swallowsDefault(event, "down")) event.preventDefault();
+        if (isActivation(event, "down")) start();
+      }}
+      onKeyUp={(event: KeyEvent) => {
+        onKeyUp?.(event);
+        if (captured.current) {
+          captured.current = false;
+          return;
+        }
+        if (!disabled && isActivation(event, "up")) start();
       }}
       onFocus={(event) => rest.onFocus?.(event)}
       onBlur={(event) => {
@@ -171,9 +190,7 @@ export const HotkeyRecorder = ({
           testId={testId === undefined ? undefined : `${testId}-clear`}
           tabIndex={0}
           onClick={clear}
-          onKeyDown={(event: KeyEvent) => {
-            if (isActivation(event)) clear();
-          }}
+          {...activationHandlers(clear)}
           style={mergeStyles(recipeStyle(HOTKEY_RECORDER_CLEAR, theme), {
             width: targetSize.minimum,
             height: targetSize.minimum,

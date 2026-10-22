@@ -9,7 +9,11 @@
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  pressKey,
+} from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
   Collapsible,
@@ -77,7 +81,7 @@ describe("Collapsible", () => {
     section.renderer.simulateKeystrokes("enter");
     expect(section.renderer.findByTestId("content")).toBeDefined();
 
-    section.renderer.simulateKeystrokes("space");
+    pressKey(section, "space");
     expect(section.renderer.findByTestId("content")).toBeUndefined();
 
     section.unmount();
@@ -92,7 +96,7 @@ describe("Collapsible", () => {
     clickCentreOf(section, "trigger");
     section.renderer.focusElement(trigger?.id ?? -1);
     section.renderer.simulateKeystrokes("enter");
-    section.renderer.simulateKeystrokes("space");
+    pressKey(section, "space");
 
     expect(section.renderer.findByTestId("content")).toBeUndefined();
 

@@ -70,7 +70,11 @@ describe("Button", () => {
     button.renderer.nativeSimulateKeyDown(element.id, "enter");
     expect(onClick).toHaveBeenCalledTimes(1);
 
+    // Space activates on the release, the way a platform button does: the press
+    // starts the gesture and the release finishes it.
     button.renderer.nativeSimulateKeyDown(element.id, "space");
+    expect(onClick).toHaveBeenCalledTimes(1);
+    button.renderer.nativeSimulateKeyUp(element.id, "space");
     expect(onClick).toHaveBeenCalledTimes(2);
 
     button.unmount();
@@ -95,6 +99,8 @@ describe("Button", () => {
 
     button.renderer.nativeSimulateKeyDown(element.id, "space");
     button.renderer.nativeSimulateKeyDown(element.id, "space", true);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    button.renderer.nativeSimulateKeyUp(element.id, "space");
     expect(onClick).toHaveBeenCalledTimes(2);
 
     button.unmount();

@@ -21,7 +21,7 @@
  * of day is the separate TimePicker.
  */
 
-import type { EventPayload, PublicInstance } from "@gpuix/react";
+import type { KeyEvent, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { mergeStyles, type FloatingContentProps } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
@@ -80,6 +80,7 @@ import {
   isPageUp,
   isRight,
   isUp,
+  swallowsDefault,
 } from "./internal/key.js";
 import {
   assertParts,
@@ -451,7 +452,18 @@ export const DatePickerCalendar = ({
     focusActive(clampToBounds(addDays(startOfMonth(target), day - 1), bounds));
   };
 
-  const handleKeyDown = (event: EventPayload): void => {
+  const chooseActive = (): void => {
+    pipe(
+      active,
+      Option.match({
+        onNone: () => undefined,
+        onSome: choose,
+      }),
+    );
+  };
+
+  const handleKeyDown = (event: KeyEvent): void => {
+    if (swallowsDefault(event, "down")) event.preventDefault();
     Match.value(event).pipe(
       Match.when(isLeft, () => moveDays(-1)),
       Match.when(isRight, () => moveDays(1)),
@@ -461,15 +473,7 @@ export const DatePickerCalendar = ({
       Match.when(isLast, () => moveToWeekEdge("last")),
       Match.when(isPageUp, () => moveMonths(-1)),
       Match.when(isPageDown, () => moveMonths(1)),
-      Match.when(isActivation, () => {
-        pipe(
-          active,
-          Option.match({
-            onNone: () => undefined,
-            onSome: choose,
-          }),
-        );
-      }),
+      Match.when((press) => isActivation(press, "down"), chooseActive),
       Match.orElse(() => undefined),
     );
   };
@@ -516,6 +520,9 @@ export const DatePickerCalendar = ({
         role="grid"
         aria-label={label}
         onKeyDown={handleKeyDown}
+        onKeyUp={(event) => {
+          if (isActivation(event, "up")) chooseActive();
+        }}
         style={recipeStyle(DATE_PICKER_GRID, theme)}
       >
         <div role="row" style={{ display: "flex", flexDirection: "row" }}>

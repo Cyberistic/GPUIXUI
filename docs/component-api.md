@@ -21,7 +21,7 @@ history. No landed component currently deviates.
 | Typed-by-position children (§1) | **adopted with a render check** — `PartChildren` narrows children to elements and conditionals (text is a compile error); part identity is enforced by `internal/parts.ts` at render, because React 19's JSX types are not nominal (plan 304 §2) |
 | Controlled/uncontrolled names (§2) | **adopted** — `value`/`defaultValue`/`onValueChange` across the landed components |
 | State-aware `style`/`children(state)` (§3) | **adopted for `style`** — eleven parts export a `<Part>State` and accept `StateStyle<<Part>State>` from `@gpuix/react/floating` (plan 305); `children(state)` is not offered, and button-shaped triggers keep a plain `StyleDesc` until `@gpuixui/primitives` owns the button |
-| Shared keyboard contract (§4) | **adopted per component** — Enter and Space activate, and a **repeat** (`event.isHeld`) never does, so one keypress runs one action; Space-on-**up** and `defaultPrevented` still wait on `packages/primitives`' keyboard module, which is not yet a dependency of this package (interlock) |
+| Shared keyboard contract (§4) | **adopted** — Enter activates on the press, Space on the release, a **repeat** (`event.isHeld`) never does, and a Space press swallows the platform default so one keystroke cannot also scroll the region behind the control. `defaultPrevented` is not read: this package's handlers run before a caller's, so an earlier handler cannot have set it |
 | Accessibility subset (§5) | **adopted** — every component's docs record the gaps |
 
 ## 1. Compound parts
@@ -143,12 +143,26 @@ Keyboard behaviour is the shared contract in
 - every component's docs page records its own key table, drawn from
   `base-gpui`'s `## Keyboard interaction` section.
 
-This package has adopted the first rule's **repeat** half: `isActivation`
-(`internal/key.ts`) refuses a key event whose `isHeld` is true, so holding Enter
-or Space runs one action instead of one per platform repeat — the guard
-`@gpuix/react`'s own headless button uses. Space-on-up and `defaultPrevented`
-still need the primitives' module, so the package activates Space on the press
-until that interlock lands.
+This package has adopted the rule whole, without importing the primitives'
+module: `internal/key.ts` carries the same three decisions as pure predicates —
+`isActivation(event, phase)`, `swallowsDefault(event, phase)`, and the
+`activationHandlers(activate, observe)` pair that installs both halves on a plain
+control.
+
+- **Enter** activates on the press, so a held key does not fire repeatedly.
+- **Space** activates on the **release**, the way a platform button does, and
+  the press `preventDefault()`s: otherwise one keystroke would also scroll the
+  scroll region the control sits in, and a press a reader cancels before
+  releasing would already have acted.
+- A **repeat** (`event.isHeld`) is never an activation, so holding either key
+  runs one action.
+
+`defaultPrevented` is the one part of the contract this package does not read:
+its handlers run before a caller's, so nothing can have set it by then. The
+composites that own a key handler on a container — the tabs rail, the list root,
+an accordion header, the menu surface, the calendar grid — install the same two
+halves, and `src/behaviour/activation-release.test.tsx` holds each of them to the
+split, alongside `src/internal/key.test.ts` for the decisions themselves.
 
 ## 5. Accessibility — the supported subset only
 

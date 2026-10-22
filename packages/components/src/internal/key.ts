@@ -7,25 +7,66 @@
  * `KeyEvent` at the boundary; these predicates stay on the base shape.
  */
 
-import type { EventPayload } from "@gpuix/react";
+import type { EventPayload, KeyEvent, Props } from "@gpuix/react";
 import { pipe } from "effect";
 import * as Option from "effect/Option";
+
+/** The half of a key event a decision is made for. */
+export type KeyPhase = "down" | "up";
 
 /**
  * Enter or Space: the two keys that activate a focused control.
  *
- * A **repeat** is not an activation. The platform sends key-down again while a
- * key is held, so without the `isHeld` guard holding Enter runs the focused
- * menu row's action repeatedly and holding Space toggles a selection back —
- * `@gpuix/react`'s own headless button guards `!event.isHeld` for the same
- * reason.
+ * The halves are not interchangeable, and that is the platform convention
+ * (`docs/component-api.md` §4): **Enter** activates on the press, **Space** on
+ * the release, so a Space press starts the gesture without also scrolling the
+ * container behind the control and a press a reader cancels before releasing
+ * runs nothing. That is why `phase` is required — a handler that activates on
+ * a Space press answers "no" here.
  *
- * TODO: activate Space on key **up**, as the shared keyboard contract does
- * (`docs/component-api.md` §4). That needs the primitives' keyboard module,
- * which this package does not depend on yet (TODO.md → Interlocks).
+ * A **repeat** is not an activation either way. The platform sends key-down
+ * again while a key is held, so without the `isHeld` guard holding Enter runs
+ * the focused menu row's action repeatedly and holding Space toggles a
+ * selection back — `@gpuix/react`'s own headless button guards `!event.isHeld`
+ * for the same reason.
  */
-export const isActivation = (event: EventPayload): boolean =>
-  event.isHeld !== true && (event.key === "enter" || event.key === "space");
+export const isActivation = (event: EventPayload, phase: KeyPhase): boolean => {
+  if (event.isHeld === true) return false;
+  if (event.key === "enter") return phase === "down";
+  return event.key === "space" && phase === "up";
+};
+
+/**
+ * Whether the platform must not run its own action for this key event.
+ *
+ * Only a Space **press**: the control acts on the release, so the press would
+ * otherwise scroll a container (or be typed into a field) on the way there.
+ * Enter's default *is* the activation a press runs.
+ */
+export const swallowsDefault = (
+  event: EventPayload,
+  phase: KeyPhase,
+): boolean => event.key === "space" && phase === "down";
+
+/**
+ * The two key handlers a plain activating control installs: the Space press is
+ * swallowed, and the activation runs on whichever half carries it. `observe`
+ * is the caller's own handlers, which still see every event.
+ */
+export const activationHandlers = (
+  activate: (event: KeyEvent) => void,
+  observe: Pick<Props, "onKeyDown" | "onKeyUp"> = {},
+): Pick<Props, "onKeyDown" | "onKeyUp"> => ({
+  onKeyDown: (event: KeyEvent) => {
+    if (swallowsDefault(event, "down")) event.preventDefault();
+    if (isActivation(event, "down")) activate(event);
+    observe.onKeyDown?.(event);
+  },
+  onKeyUp: (event: KeyEvent) => {
+    if (isActivation(event, "up")) activate(event);
+    observe.onKeyUp?.(event);
+  },
+});
 
 /** Enter alone: a row action. Space stays a selection key. */
 export const isEnter = (event: EventPayload): boolean => event.key === "enter";
