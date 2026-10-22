@@ -44,6 +44,7 @@ The package documents its own surfaces on this site:
 | Key-value | [Key-value](/docs/data-display/key-value) | one object as label/value rows, with no copy of it |
 | Property panel | [Property panel](/docs/data-display/property-panel) | editable and read-only rows over the same object |
 | Metric | [Stat card](/docs/data-display/stat-card) | a derived reading, its unit and its trend |
+| Virtualization | [Virtualization](/docs/data-display/virtualization) | `VirtualList` over the runtime's `<virtual-list>`, `VirtualTable`/`VirtualTableBody` under the fixed header, and `useVirtualRows` for the window arithmetic |
 | Charts | [Charts](/docs/data-display/charts) | one `<svg>` mask per series, with the axis, labels and legend as text beside the plot |
 
 Everything else in the lane is composed one tier down:
@@ -138,11 +139,14 @@ re-deriving them.
 - **Keyboard** — a roving tab stop over rows and a header that is reachable, or
   a grid composite; the runtime has real focus but no `aria-colindex`, so a
   screen reader gets the row name and its selected state, not a cell address.
-- **Virtualization** — `<virtual-list>` has two modes, and a table needs the
+- **Virtualization** — [`VirtualList`](/docs/data-display/virtualization) is the
+  typed seam over `<virtual-list>`, which has two modes, and a table needs the
   second. The **children** form retains every row and skips only the off-screen
   build and paint; the **`itemCount`** form (`itemCount` +
   `estimatedItemHeight` + `windowStart`) mounts the slice the app renders, so a
-  table of 100 000 rows keeps a 60-row window (`virtual-list-windowed`). Two
+  table of 100 000 rows keeps a 60-row window (`virtual-list-windowed`).
+  `VirtualTable`/`VirtualTableBody` put that window under the table's measured
+  fixed header, and `useVirtualRows` owns the arithmetic. Two
   rules make that mode work: size the window wider than the viewport plus
   **overdraw**, because `onVisibleRange` reports **absolute** indices
   one gesture behind the paint (`20..27` while the paint reached `40..46`); and

@@ -765,6 +765,45 @@ describe("the data-display page's shipped rows", () => {
     expect(dataPage).toContain("frozen-table.example.tsx");
   });
 
+  it("links the page that explains the windowed surfaces it lists", () => {
+    // `packages/data/docs/virtualization.mdx` explains the two windowed
+    // surfaces and their arithmetic, and the lane page named only the probes
+    // that measured them — a reader had no route to the page. The link, the
+    // names it promises and the page itself are read here.
+    const index = readFileSync(
+      new URL("../../../../packages/data/src/index.ts", import.meta.url),
+      "utf8",
+    );
+    expect(index).toContain(
+      'export { VirtualList, visibleRange } from "./virtual/list.js";',
+    );
+    expect(index).toContain(
+      'export { VirtualTable, VirtualTableBody } from "./virtual/table.js";',
+    );
+    expect(index).toContain(
+      'export { useVirtualRows } from "./virtual/use-virtual-rows.js";',
+    );
+
+    const packagePage = readFileSync(
+      new URL(
+        "../../../../packages/data/docs/virtualization.mdx",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    expect(packagePage).toContain("title: Virtualization");
+    expect(
+      ["VirtualList", "VirtualTable", "useVirtualRows"].filter(
+        (part) => !packagePage.includes(part),
+      ),
+    ).toEqual([]);
+
+    expect(dataPage).toContain("](/docs/data-display/virtualization)");
+    expect(dataPage).toContain("`VirtualList`");
+    expect(dataPage).toContain("`VirtualTable`/`VirtualTableBody`");
+    expect(dataPage).toContain("`useVirtualRows`");
+  });
+
   it("calls the lane whole only when the inventory does", () => {
     // The lane's premise is read from the inventory: while a row is pending the
     // page has to say so, and once none is it must not keep a stale `todo` — a
