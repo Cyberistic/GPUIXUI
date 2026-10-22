@@ -640,6 +640,24 @@ describe("the primitives docs page contract", () => {
     ).toEqual([]);
   });
 
+  it("teaches every group of the words table", () => {
+    // The bug guarded: `PrimitiveMessages` grew `star` and `starName` for the
+    // rating's fill vocabulary and its star sentence, and the page that teaches
+    // the seam listed only the five groups it shipped with — so a caller could
+    // not discover the words a rating speaks. Every group is a required field of
+    // the default table, so the table itself is the complete list to teach.
+    const words = Option.getOrElse(
+      bodyOf(read("theme-provider.mdx"), "Words"),
+      () => "",
+    );
+    expect(
+      Arr.filter(
+        R.keys(primitives.defaultMessages),
+        (group) => !words.includes(`\`${group}\``),
+      ),
+    ).toEqual([]);
+  });
+
   it("lists only props its module graph declares", () => {
     // The bug guarded: the Switches inventory row promised a `loading` prop
     // while `SwitchProps` declares none (see `inventory.test.ts`'s `keeps the

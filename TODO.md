@@ -2874,10 +2874,15 @@ a workaround for two live sessions sharing one worktree; see
       Directions measured: restoring either literal fails the unit case by name
       (`expected [ '1 of 3', … ] to deeply equal [ 'étoile 1 sur 3', … ]`) and
       the window case (`no accessibility node announced étoile 1 sur 2`).
-      `nub run --filter @gpuixui/primitives test`: 51 files / 899 tests;
+      `nub run --filter @gpuixui/primitives test`: 51 files / 900 tests;
       `test:runtime`: 21 files / 267 tests. Docs: `docs/rating.mdx`
       §API/§Accessibility/§Verification, `docs/theme-provider.mdx` §Words/
-      §Verification, the package README and the `COMPONENTS.md` Rating row
+      §Verification, the package README and the `COMPONENTS.md` Rating row.
+      The page cannot drift again: `src/docs.test.ts`'s `teaches every group of
+      the words table` reads `defaultMessages` and requires §Words to name every
+      entry (both directions measured — dropping `scrollRegion` reports
+      `[ 'scrollRegion' ]`, and the pre-task page reports
+      `[ 'star', 'starName' ]`)
 `[x]` `packages/primitives`: give `ButtonGroup` its **second axis** — the shadcn
       reference takes `orientation`, and the primitive only ever laid a row, so a
       column of attached actions had to be hand-built outside the group and lost

@@ -75,7 +75,10 @@ import { ThemeProvider, Toggle } from "@gpuixui/primitives";
 
 A table is a **complete group per state set**: naming `selection` means owning
 all three words, because a half-translated set reads as a bug. A group left out
-keeps the shipped English, so naming `press` alone changes nothing else.
+keeps the shipped English, so naming `press` alone changes nothing else. The
+table carries six entries — `selection` and `press` (the state sets), `star` and
+`starName` (a rating's fill words and its star sentence), `scrollRegion` (a
+focusable scroller's name) and `codeDigit` (a code cell's sentence).
 `MessagesProvider` is the same seam without a theme — a sub-tree that speaks
 another language wraps in it, and a nested provider **extends** the table above
 it rather than resetting it. `useMessages()` returns the resolved table for a
@@ -176,6 +179,9 @@ re-render with a different `theme` prop — verified natively by
   outer table instead of resetting it, and an unnamed tree still announces the
   English words.
 - `src/core/theme.test.ts` — the colour-literal scan and density metrics.
+- `src/docs.test.ts` — `teaches every group of the words table`: a group added to
+  `PrimitiveMessages` without a line under §Words fails by name, so the seam a
+  caller reads about is the whole table.
 - `runtime/theme.runtime.test.tsx` — a primitive paints the dark background
   under `@gpuixui/tokens/react`'s provider **alone** (the mixed-tree case that
   used to throw); both palettes paint only their own colours; a live theme
