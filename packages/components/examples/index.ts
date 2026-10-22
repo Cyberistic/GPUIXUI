@@ -22,6 +22,7 @@ import { BreadcrumbExample } from "./breadcrumb.example.js";
 import { CardExample } from "./card.example.js";
 import { CarouselExample } from "./carousel.example.js";
 import { ChatExample } from "./chat.example.js";
+import { CodeBlockExample } from "./code-block.example.js";
 import { CollapsibleExample } from "./collapsible.example.js";
 import { ColorPickerExample } from "./color-picker.example.js";
 import { ComboboxExample } from "./combobox.example.js";
@@ -85,6 +86,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   card: CardExample,
   carousel: CarouselExample,
   chat: ChatExample,
+  "code-block": CodeBlockExample,
   collapsible: CollapsibleExample,
   "color-picker": ColorPickerExample,
   combobox: ComboboxExample,

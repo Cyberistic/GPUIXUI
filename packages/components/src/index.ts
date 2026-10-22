@@ -16,6 +16,7 @@ export * from "./breadcrumb.js";
 export * from "./carousel.js";
 export * from "./card.js";
 export * from "./chat.js";
+export * from "./code-block.js";
 export * from "./collapsible.js";
 export * from "./color-picker.js";
 export * from "./combobox.js";

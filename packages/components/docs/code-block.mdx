@@ -1,0 +1,195 @@
+---
+title: Code block
+description: Source, terminal output or a log in the runtime's own syntax-highlighted code host.
+---
+
+`CodeBlock` paints code with the runtime's native code host: it highlights the
+source from the language's grammar, lays every line out at one height, numbers
+the rows on request and scrolls long lines horizontally by itself. The component
+owns the card around it — the header, the padding, the edge and the copy action —
+because the host paints no surface of its own.
+
+## Usage
+
+```tsx
+import { CodeBlock } from "@gpuixui/components/code-block";
+
+<CodeBlock
+  code={source}
+  title="src/app.tsx"
+  language="tsx"
+  lineNumbers
+/>;
+```
+
+The language alias is what the host highlights with. When it is omitted, the
+block reads `path`'s extension (`src/app.tsx` → `tsx`, `run.sh` → `bash`) and
+stays quiet for an extension no highlighter knows.
+
+## Header
+
+```tsx
+// The path is the title, and its extension the language label.
+<CodeBlock code={source} path="src/theme.ts" />
+
+// A caller's title and language win over the path.
+<CodeBlock code={output} title="Install" language="bash" />
+```
+
+The header paints only when it has something to say — a title, a language or a
+copy action. A block with none is the bare card.
+
+## Line numbers
+
+```tsx
+<CodeBlock code={source} language="ts" lineNumbers />
+```
+
+Numbers are the host's: it numbers from 1 in its own gutter, and the numbers are
+not part of the accessible name or the text the host paints.
+
+## Long sources
+
+The block paints every row it is given unless `height` caps it, in which case the
+rows scroll vertically. For a snippet inside a page, cap it:
+
+```tsx
+<CodeBlock code={log} title="build.log" language="bash" height={240} />
+```
+
+A block with no cap that is longer than the page is better wrapped in
+[`ScrollFade`](/docs/components/scroll-fade), which paints the edges as the
+reader scrolls and takes the surface colour the card sits on:
+
+```tsx
+import { ScrollFade } from "@gpuixui/components/scroll-fade";
+import { useTheme } from "@gpuixui/components";
+
+const theme = useTheme();
+
+<ScrollFade style={{ height: 240 }} color={theme.colors.background}>
+  <CodeBlock code={log} language="bash" />
+</ScrollFade>;
+```
+
+## Empty source
+
+An empty or whitespace-only source paints a placeholder instead of an empty
+card, and says so to assistive readers:
+
+```tsx
+<CodeBlock code="" emptyLabel="Paste a snippet to inspect" />
+```
+
+## Copy action
+
+```tsx
+import { useState } from "react";
+import { CodeBlock } from "@gpuixui/components/code-block";
+
+const [mirror, setMirror] = useState("");
+
+// The runtime publishes no clipboard write, so the caller owns the path: the
+// source lands in a read-only field the platform lets a reader copy from.
+<>
+  <CodeBlock code={source} path="src/app.tsx" onCopy={setMirror} />
+  <input value={mirror} readOnly />
+</>;
+```
+
+`@gpuix/native@0.11.0` publishes **no clipboard write** (measured in the
+capability record). The block therefore does not pretend: `onCopy` receives the
+source and the caller decides how it reaches the clipboard — commonly by writing
+it into a read-only field the platform lets a reader copy from. The action
+acknowledges the **press** for 1.2 s and returns to its copy name; it does not
+claim a write finished.
+
+## Motion
+
+The block arrives with the house entrance — a fade and a 4 px rise — the same
+seam every overlay uses. `level` picks the house duration (`fast` 160 ms,
+`normal` 200 ms, `slow` 320 ms, `notice` 500 ms) and `level="none"` paints it at
+rest:
+
+```tsx
+import { CodeBlock, MotionProvider } from "@gpuixui/components";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <CodeBlock code={source} level="none" />
+</MotionProvider>;
+```
+
+The runtime exposes no reduced-motion preference, so the application owns it;
+`MotionProvider preference="reduced"` zeroes the duration and the block paints
+the resting frame in the frame it appears. There is no scale, slide or blur — the
+runtime has no `transform` (upstream issue #102) and no filter.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `code` | `string` | — | The source. Lines, numbers and highlighting are the host's. |
+| `title` | `string` | — | The header's title. Falls back to `path`. |
+| `path` | `string` | — | The file the snippet came from: a fallback title and the language hint. |
+| `language` | `string` | path's extension | The host's language alias (`"tsx"`, `"rust"`, `"bash"`). |
+| `lineNumbers` | `boolean` | `false` | Number every row in the host's gutter. |
+| `height` | `number` | — | Cap the rows in pixels and scroll them vertically. |
+| `level` | `MotionLevel \| "none"` | `"normal"` | The entrance's duration; `"none"` paints at rest. |
+| `emptyLabel` | `string` | `"No code"` | What an empty source paints. |
+| `copyLabel` | `string` | `"Copy"` | The copy action's name. |
+| `copiedLabel` | `string` | `"Copied"` | The name the action carries after a press. |
+| `onCopy` | `(code: string) => void` | — | The clipboard path. Omit it and no copy action paints. |
+| `className` | `string` | — | A Tailwind class string for the card, merged last. |
+| `style` | `StateStyle<CodeBlockState>` | — | The card's style, or a function of `{ hasCode, acknowledged, reducedMotion }`. |
+
+`CodeBlockState` is exported for a state-aware `style`. The internal parts carry
+`<testId>-title`, `-language`, `-copy`, `-source`, `-empty`; the `testId` (default
+`code-block`) lands on the card.
+
+## Accessibility
+
+The card is a `group` named by its title (or "Code") and described by its line
+count and language — for example `12 lines of tsx`. That description is the only
+account of the source a reader gets: the code host paints its own text and
+publishes no accessible node, so a screen reader cannot read the code itself.
+The copy action is a focusable button whose name changes to `copiedLabel` while
+it acknowledges the press.
+
+## Limitations
+
+- **The code text is not exposed to assistive technology.** The host paints it
+  natively; the block publishes the name and the line count instead.
+- **Syntax colours are the runtime's own palette.** No token group owns syntax
+  capture colours yet, so a brand's roles reach the card, the ink and the gutter,
+  not the keywords.
+- **No per-line highlight, wrap toggle or diff markers.** The host's API has none;
+  a diff belongs in the runtime's own `<diff>` host.
+- **No clipboard write.** The copy action calls `onCopy` and acknowledges the
+  press; the write is the caller's.
+- **A capped block is not a keyboard scroll region.** It scrolls by wheel and
+  scrollbar; a keyboard reader scrolls the page instead.
+- **Long lines scroll horizontally inside the host.** They never wrap, and the
+  runtime has no wrap switch for the code host.
+
+## Verification
+
+`src/behaviour/code-block.test.tsx` renders the block in the real GPUix renderer
+(9 tests): the source painted through the `code` host, the path as the title and
+its extension as the language, the accessible name and line description, the
+placeholder an empty source paints, the copy press and its acknowledgement
+window, the 4 px entrance measured on the motion clock with `level="none"` and
+the reduced preference at rest, the height cap, and the group the accessibility
+tree receives. The decisions are `src/code-block/logic.test.ts` (14 tests): the
+extension map, the header's fallbacks and blank values, the row count for every
+line ending and trailing newline, the empty source, and the name and description
+text.
+
+## Related
+
+- [Scroll fade](/docs/components/scroll-fade) — the edges a long block fades while
+  the reader scrolls it.
+- [Reveal](/docs/components/reveal) — the entrance this block shares.
+- [Message](/docs/components/message) — the same no-clipboard honesty in a
+  message's copy action.
+- [Empty state](/docs/components/empty-state) — the page-level empty case, where a
+  code block shows a placeholder for a missing snippet.
