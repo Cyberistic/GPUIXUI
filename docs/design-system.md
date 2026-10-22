@@ -222,8 +222,19 @@ against the default 4/6/8/12.
 
 It changes control height, horizontal padding and row height only. Type sizes
 and the spacing scale stay fixed, so a density switch cannot reflow text
-unexpectedly. Components read `controlHeight(theme, size)` and
-`controlPaddingX(theme, size)` instead of hardcoding numbers.
+unexpectedly.
+
+**Only control geometry follows it in both packages.** The primitives compile
+their recipes against a density-driven registry, so a control's box, side and
+padding are the theme's. The components package compiles against `@gpuixui/tw`'s
+default registry — shadcn's fixed metrics — and keeps density only where a box has
+to line up with the density-driven controls beside it: a control's
+`controlHeight` (the fields, the accordion trigger, tabs, the stepper, the
+pickers, the recorders) and a list row's `rowHeight`. A card's padding, a menu
+panel or a tab is a fixed number of pixels there, so a brand that wants them
+denser names the numbers in `className` or `style` (ADR 0006). Each package's
+compile seam is where that choice lives, and `density-adoption.test.ts` reads
+both.
 
 The two halves still have to fit together:
 

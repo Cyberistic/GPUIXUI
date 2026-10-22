@@ -2694,6 +2694,21 @@ squarer than a macOS one. `full` stays rounded everywhere.
 Density changes control height, horizontal padding and row height only. Type
 and spacing are unaffected.
 
+**What reads it.** The primitives compile their recipes against a registry that
+resolves a control's height, side and horizontal padding from the theme
+(`theme.density.controlHeight[size]` and `controlPaddingX` in
+`packages/primitives/src/recipe/registry.ts`), so a density switch resizes them.
+The components package compiles against `@gpuixui/tw`'s **default** registry —
+shadcn's fixed metrics (`h-9` = 36, `px-4` = 16) — by decision (ADR 0006), and
+keeps density for the one thing that has to line up with the controls beside it:
+a control's box (`controlHeight`, in the fields, the accordion trigger, tabs, the
+stepper, the pickers and the recorders) and a list row (`rowHeight`,
+`packages/components/src/list.tsx`). Everything else in those components is a
+fixed number of pixels, so a `density` override does not resize a card's padding,
+a menu panel or a tab; a consumer who wants that names it in `className` or
+`style`. `density-adoption.test.ts` reads both seams, so neither half is
+described from memory.
+
 | Preset | `controlHeight` sm/md/lg | `controlPaddingX` sm/md/lg | `rowHeight` |
 | ------ | ------------------------ | -------------------------- | ----------- |
 | `compact` | 24 / 28 / 32 | 6 / 8 / 10 | 28 |
