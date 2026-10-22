@@ -1,27 +1,26 @@
-# 600 — Animate UI animated primitives: gap analysis and phases
+# 600 — Animated primitives: gap analysis and phases
 
 | Field | Value |
 | ----- | ----- |
 | Status | planned |
 | Phase | D — after the core component tiers |
-| Reference | `references/animate-ui` (`imskyleen/animate-ui`, MIT + Commons Clause) |
 | Feeds | the `motion` workstream and the components inventory |
 | Depends on | `@gpuixui/motion`, `@gpuixui/tw`, the runtime capability matrix |
 
-The reference is read for **patterns and API shape only**. The Commons Clause
-forbids redistributing its source, so every primitive here is re-implemented on
-GPUix primitives; nothing is copied.
+The catalogue below is a **gap list of generic animated primitives** worth
+having in a GPUix component library. Every primitive is designed from scratch
+against the GPUix runtime and `@gpuixui/motion`; no third-party source is copied.
 
 ## 1. What we already ship
 
-The non-animated v1 surface is the same shadcn set we have already ported:
+The non-animated surface is the same shadcn set we have already ported:
 accordion, avatar, breadcrumb, button, calendar, card, checkbox, dropdown-menu,
 hover-card, input, label, popover, resizable, scroll-area, select, separator,
 sheet, sidebar, skeleton, slider, switch, tabs, toggle, tooltip.
 
-Direct overlaps with the animated catalogue: **Button**, **Tooltip**, **Tabs**,
-**OTPField** (`input-otp`), **Avatar** (no group), and the overlay family
-(`Dialog`, `Drawer`, `Popover`, `DropdownMenu`, `CommandMenu`, `Toast`).
+Overlaps with the animated catalogue: **Button**, **Tooltip**, **Tabs**,
+**OTPField**, **Avatar** (no group), and the overlay family (`Dialog`, `Drawer`,
+`Popover`, `DropdownMenu`, `CommandMenu`, `Toast`).
 
 ## 2. Gaps — 47 primitives, grouped
 
@@ -62,8 +61,8 @@ declined rather than planned.
 This is the prerequisite: without a house animation style the animated
 primitives have nothing to compose with.
 
-| Surface | Reference behaviour | GPUix mapping |
-| ------- | ------------------- | ------------- |
+| Surface | Behaviour | GPUix mapping |
+| ------- | --------- | ------------- |
 | Dialog / Drawer | fade + small scale on enter, reverse on exit | **no `transform`** — fade `opacity` + offset `top`/`left` by 4–8px |
 | Popover / Dropdown / Command | fade + slide toward the anchor, side-aware | fade + offset on the anchored layer |
 | Toast | slide in from the edge + fade, slide out on dismiss | animate `left`/`right` + `opacity` |
