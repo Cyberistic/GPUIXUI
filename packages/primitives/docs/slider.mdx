@@ -90,9 +90,13 @@ lie in it.
 
 | Part | Props | Paints |
 | ---- | ----- | ------ |
-| `SliderTrack` | `children` | the rail; the other parts go inside it |
-| `SliderIndicator` | `index?` | the fill that leads to thumb `index` (default `0`) |
-| `SliderThumb` | `index?`, `children` | a thumb, with an optional glyph inside it |
+| `SliderTrack` | `children`, `style`, `className`, `testId` | the rail; the other parts go inside it |
+| `SliderIndicator` | `index?`, `style`, `className` | the fill that leads to thumb `index` (default `0`) |
+| `SliderThumb` | `index?`, `children`, `style`, `className` | a thumb, with an optional glyph inside it |
+
+Every part joins its `className` after the recipe and merges `style` last, so a
+caller restyles the rail or a thumb without rebuilding it; `SliderTrack` also
+takes the part's `testId`.
 
 A slider with a custom composition keeps the root's role, keys, pointer
 handling and `aria-valuetext` — only the paint moves into the caller's parts.
@@ -164,8 +168,8 @@ ends, until it is released. Measured in a real window (`pointer-capture`,
 - `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint;
   the thumb's centre at 0/50/100 % (fill width, thumb size and its half-thumb
   offset, track inset); a custom composition replacing the default; a glyph
-  inside a thumb; the second range segment's width; a `style` callback
-  receiving the live state and winning.
+  inside a thumb; the second range segment's width; a caller's rail `className`,
+  `style` and `testId`; a `style` callback receiving the live state and winning.
 - `runtime/value.runtime.test.tsx` — a real click at 25% reports 25, the thumb is
   centred within 1 px at 0/50/100, the ring follows focus, disabled is skipped
   by Tab, a `max: 10` / `step: 3` slider still reaches 10 by key and by press

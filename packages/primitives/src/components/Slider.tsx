@@ -238,15 +238,26 @@ const useSliderPart = (name: string): SliderPart => {
 export interface SliderTrackProps {
   /** The indicators and thumbs. Omit for an empty rail. */
   readonly children?: ReactNode;
+  readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+  /** Stable locator for the rail, when the root's `testId` is not enough. */
+  readonly testId?: string;
 }
 
 /** The rail a slider's parts sit in. The slider paints nothing else. */
 export const renderSliderTrack = (
-  props: SliderTrackProps,
+  { children, className, style, testId }: SliderTrackProps,
   part: SliderPart,
 ): ReactElement => (
-  <div style={recipeTw.classesToStyle(sliderRailClass, part.theme).style}>
-    {props.children}
+  <div
+    testId={testId}
+    style={mergeStyle(
+      recipeTw.classesToStyle(cn(sliderRailClass, className), part.theme).style,
+      style,
+    )}
+  >
+    {children}
   </div>
 );
 

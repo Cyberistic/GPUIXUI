@@ -22,6 +22,7 @@ import {
   renderSlider,
   renderSliderIndicator,
   renderSliderThumb,
+  renderSliderTrack,
   SliderIndicator,
   SliderThumb,
   SliderTrack,
@@ -467,6 +468,20 @@ describe("the slider parts", () => {
     expect(
       expectSome(elementProp(elementChildren(thumb)[0] ?? glyph, "name")),
     ).toBe("star");
+  });
+
+  it("lets a caller restyle the rail", () => {
+    // The gap guarded: `SliderTrack` was the one part with no styling seam — it
+    // took only `children`, so a rail could not be restyled apart from the root
+    // (a thicker rail, a different role) while the fill and the thumb both took
+    // `className` and `style`.
+    const element = renderSliderTrack(
+      { className: "gap-sm", style: { padding: 7 }, testId: "rail" },
+      paint([0.5]),
+    );
+    expect(expectSome(hostProp(element, "testId"))).toBe("rail");
+    expect(expectSome(hostStyle(element, "padding"))).toBe(7);
+    expect(expectSome(hostStyle(element, "gap"))).toBe(testTheme.spacing.sm);
   });
 
   it("replaces the default composition when the caller supplies parts", () => {
