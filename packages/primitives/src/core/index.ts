@@ -155,6 +155,7 @@ export { controlRing, keyboardRing, keepContent } from "./focus.js";
 export type { RingState } from "./focus.js";
 
 export {
+  BORDER_STYLES,
   controlFocusStyle,
   controlStyle,
   fieldTextStyle,
@@ -188,6 +189,7 @@ export {
   toneColor,
 } from "./style.js";
 export type {
+  BorderStyle,
   ControlSpec,
   ControlVariant,
   NativeTextFill,
