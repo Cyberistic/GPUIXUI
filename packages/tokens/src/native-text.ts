@@ -19,6 +19,12 @@
  * and mention fields, the chat composer, the inline edit, the colour picker's
  * hex field) paints the page role, so the host has to be told which one its
  * values and placeholder sit on.
+ *
+ * The palette is not the only thing a host takes from this object: a `<code>`
+ * host sizes its block from the runtime theme's `metrics`, so the type scale's
+ * block role (`typography.codeBlock`) reaches it the same way. The runtime's
+ * own code metrics are 12.5/18 (`packages/native/src/theme.rs`'s `Metrics`),
+ * which is not this library's scale.
  */
 
 import type { Theme, ThemeMode } from "./theme.js";
@@ -32,6 +38,19 @@ export const nativeTextFills = ["input", "background"] as const;
 
 /** One fill a field paints. */
 export type NativeTextFill = (typeof nativeTextFills)[number];
+
+/**
+ * The layout numbers a native text host takes from the theme.
+ *
+ * A `<code>` host lays its block out with the runtime theme's code metrics
+ * rather than with `StyleDesc`, so the type scale reaches it through here.
+ */
+export interface NativeTextMetrics {
+  /** Code type size in pixels, from `typography.codeBlock`. */
+  readonly codeTextSize: number;
+  /** Code line height in pixels, from `typography.codeBlock`. */
+  readonly codeLineHeight: number;
+}
 
 /**
  * The subset of GPUix's `GpuixTheme` this package fills in. Structurally
@@ -56,6 +75,8 @@ export interface NativeTextTheme {
   readonly fontSans: string;
   /** Monospace family, from `typography.mono`. */
   readonly fontMono: string;
+  /** Code block type, from {@link NativeTextMetrics}. */
+  readonly metrics: NativeTextMetrics;
 }
 
 /**
@@ -85,5 +106,14 @@ export function nativeTextTheme(
     caret: theme.colors.primary,
     fontSans: theme.typography.sans,
     fontMono: theme.typography.mono,
+    // A `<code>` host sizes its block from the runtime theme, not from a style
+    // property, so the scale's block role is handed over here. The runtime's
+    // own default is 12.5/18 (`packages/native/src/theme.rs`'s `Metrics`), which
+    // is not this library's type scale: without this a brand's `codeBlock` role
+    // stops at the code host while every other role reaches it.
+    metrics: {
+      codeTextSize: theme.typography.codeBlock.fontSize,
+      codeLineHeight: theme.typography.codeBlock.lineHeight,
+    },
   };
 }

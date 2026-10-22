@@ -1833,6 +1833,7 @@ host.text; // inputForeground
 host.textFaint; // placeholder
 host.caret; // primary
 host.fontSans; // typography.sans
+host.metrics.codeTextSize; // typography.codeBlock.fontSize
 ```
 
 | Host field | Role |
@@ -1843,6 +1844,16 @@ host.fontSans; // typography.sans
 | `textFaint` | `placeholder` |
 | `accent` / `caret` | `primary` |
 | `fontSans` / `fontMono` | `typography.sans` / `typography.mono` |
+| `metrics.codeTextSize` / `codeLineHeight` | `typography.codeBlock`'s size / leading |
+
+A `<code>` host is the one host whose **type** also comes from the theme object:
+the runtime sizes a code block from the theme's own metrics rather than from a
+style property, and its default is 12.5/18
+(`packages/native/src/theme.rs`'s `Metrics` at the pinned `@gpuix/native@0.11.0`)
+— not this library's scale. The seam hands over `typography.codeBlock`'s size and
+leading, so a brand's block role reaches the host instead of stopping at it; the
+gutter widths and the syntax palette stay the runtime's, because this package
+has no tokens for them (§Limitations).
 
 A field paints one of **two** fills, and the host has to be told which, because
 the roles above are measured against it. A plain field paints `input`; a
@@ -2720,6 +2731,12 @@ or dropped is named rather than passing silently.
   re-lays the text out against it (measured: 44px → 81px). The guideline stays
   "create the renderer, register, then render" because that first frame is the
   one the reader sees — the fallback is not permanent.
+- The native text host's **syntax palette** and its **diff and markdown
+  metrics** are not filled by `nativeTextTheme`: the runtime reads `syntax` and
+  those numbers from its own theme struct, and this package ships no syntax
+  scale, diff roles or markdown type roles. A `<code>` host takes its block type
+  from `typography.codeBlock` and paints plain text, so highlighting and a
+  markdown surface stay a consumer's decision rather than a themed one.
 - `@gpuix/native@0.11.0`'s `focusVisible` outline is measured for Tab input and
   for a programmatic focus **after** a Tab, but not for a programmatic focus
   before any key. A mouse-opened dialog or menu therefore keeps `focusRing`'s

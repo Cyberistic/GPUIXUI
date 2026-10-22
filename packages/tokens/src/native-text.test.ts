@@ -33,6 +33,7 @@ import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
 import {
   darkTheme,
+  extendTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
   lightTheme,
@@ -73,6 +74,10 @@ describe("nativeTextTheme", () => {
       caret: lightTheme.colors.primary,
       fontSans: lightTheme.typography.sans,
       fontMono: lightTheme.typography.mono,
+      metrics: {
+        codeTextSize: lightTheme.typography.codeBlock.fontSize,
+        codeLineHeight: lightTheme.typography.codeBlock.lineHeight,
+      },
     });
   });
 
@@ -135,10 +140,43 @@ describe("nativeTextTheme", () => {
       "caret",
       "fontMono",
       "fontSans",
+      "metrics",
       "text",
       "textFaint",
       "textMuted",
     ]);
+  });
+
+  it("gives a code host the scale's own block type", () => {
+    // A `<code>` host lays its block out from the runtime theme's `metrics`, not
+    // from a style property, so a seam that fills only the palette paints the
+    // runtime's 12.5/18 code block whatever the theme says. The role is read
+    // from the theme rather than retyped, so a brand's scale follows.
+    const host = nativeTextTheme(lightTheme);
+
+    expect(host.metrics).toEqual({
+      codeTextSize: lightTheme.typography.codeBlock.fontSize,
+      codeLineHeight: lightTheme.typography.codeBlock.lineHeight,
+    });
+    const brand = extendTheme(lightTheme, {
+      typography: { codeBlock: { fontSize: 14, lineHeight: 22 } },
+    });
+    expect(nativeTextTheme(brand).metrics).toEqual({
+      codeTextSize: 14,
+      codeLineHeight: 22,
+    });
+    // Every shipped style resolves its own scale, in both fills.
+    const drifted = shipped.flatMap(({ label, theme }) =>
+      nativeTextFills.flatMap((fill) => {
+        const { metrics } = nativeTextTheme(theme, fill);
+        return metrics.codeTextSize === theme.typography.codeBlock.fontSize &&
+          metrics.codeLineHeight === theme.typography.codeBlock.lineHeight
+          ? []
+          : [`${label} ${fill}`];
+      }),
+    );
+
+    expect(drifted).toEqual([]);
   });
 
   it("paints the value, placeholder and caret at their floors on every shipped theme and fill", () => {
@@ -220,6 +258,22 @@ describe("nativeTextTheme", () => {
     expect(catalogue).toContain(
       `The tightest placement over both fills is the base dark theme's placeholder on its own field fill at ${tightest.toFixed(2)}:1`,
     );
+  });
+
+  it("teaches the code host's type, not only its palette", () => {
+    // A `<code>` host is the one host whose type comes from the theme object, so
+    // a reader has to know both what the seam fills in and why the runtime's own
+    // number is not the library's scale.
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(catalogue).toContain(
+      "| `metrics.codeTextSize` / `codeLineHeight` | `typography.codeBlock`'s size / leading |",
+    );
+    expect(catalogue).toContain("its default is 12.5/18");
+    expect(catalogue).toContain("syntax palette");
   });
 });
 
