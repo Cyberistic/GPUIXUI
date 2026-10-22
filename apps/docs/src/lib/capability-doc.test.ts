@@ -483,23 +483,64 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(image?.[2]).toContain("useLayoutEffect");
   });
 
-  it("records the chart surface a probe painted, with its two limits", () => {
+  it("records the chart surface a probe painted, with its two routes", () => {
     // `Canvas drawing` says "render svg" and `Inline SVG painting` says one tint
     // per element, which together read as "a plot is drawable but for a stack of
     // masks". `chart-raster` measured the two routes a multi-colour plot actually
     // has — a pixel buffer that keeps each pixel's own colour and SVG bytes that
-    // keep their `fill`s — plus the two facts that decide how a chart is built:
-    // a translucent bar over another bar is unmeasured, and the buffer scales to
-    // the element's box.
+    // keep their `fill`s.
     const chart = rowFor("Raster and vector chart surfaces");
     expect(chart?.verdict).toBe("supported");
     expect(chart?.evidence).toContain("chart-raster");
     expect(chart?.evidence).toContain("setImagePixels");
     expect(chart?.evidence).toContain("setImage");
-    expect(chart?.evidence).toContain("translucent");
-    expect(chart?.evidence).toContain("layout size");
     expect(chart?.workaround).toContain("layout effect");
     expect(chart?.workaround).toContain("<text>");
+  });
+
+  it("records the translucent mark and the resize a chart probe measured", () => {
+    // The row ended on two limits — a translucent bar over another bar was
+    // unmeasured, and the element scales its buffer to its box. `chart-raster`
+    // now measures both: the buffer's alpha is straight, so a half-alpha mark
+    // composites onto the mark below it and onto the card, and a resize
+    // re-scales the buffer with no second `setImagePixels`. A reader planning a
+    // stacked series or a chart in a splitter needs the numbers, not the
+    // retired limits.
+    const chart = rowFor("Raster and vector chart surfaces");
+    expect(chart?.evidence).toContain("33 checks");
+    expect(chart?.evidence).toContain("straight alpha");
+    expect(chart?.evidence).toContain("rgba(132, 96, 152, 255)");
+    expect(chart?.evidence).toContain("rgba(15, 83, 157, 255)");
+    expect(chart?.evidence).toContain("rgba(130, 63, 88, 255)");
+    expect(chart?.evidence).toContain("1.5×");
+    expect(chart?.evidence).not.toContain("unmeasured");
+    expect(chart?.evidence).not.toContain("19 checks");
+
+    // The numbers are the fixture's, not a transcription: the alpha share, the
+    // three operands and the prediction all live in `chart.ts`, and the two
+    // assertions the probe reads its frame with name the same facts.
+    const fixture = read("apps/playground/src/live/chart.ts");
+    expect(fixture).toContain("ALPHA_SHARE = 0x80");
+    expect(fixture).toContain("ALPHA_OVER = rgb(0x0a, 0x84, 0xff)");
+    expect(fixture).toContain("ALPHA_BASE = rgb(0xff, 0x3b, 0x30)");
+    expect(fixture).toContain("compositeOver");
+    const steps = read("apps/playground/src/live/scenarios.tsx");
+    expect(steps).toContain(
+      "a half-alpha mark over another mark composites onto it",
+    );
+    expect(steps).toContain(
+      "the buffer scales with the box, so the bar grows by the same share",
+    );
+    expect(steps).toContain('"chart-resize"');
+
+    // The page carries the same rule, because a table plan reads the site
+    // before it reads the record.
+    const page = measuredRow("Chart surfaces");
+    expect(page?.[1]).toContain("0x80");
+    expect(page?.[1]).toContain("rgba(132, 96, 152, 255)");
+    expect(page?.[1]).toContain("1.5×");
+    expect(page?.[2]).toContain("straight alpha");
+    expect(page?.[1]).not.toContain("unmeasured");
   });
 
   it("publishes the chart surface on /docs/runtime", () => {
