@@ -10,6 +10,7 @@
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
+  Keycap,
   KeyboardShortcut,
   KeyboardShortcuts,
   KeyboardShortcutsGroup,
@@ -146,6 +147,30 @@ describe("KeyboardShortcuts", () => {
       lightTheme.colors.mutedForeground,
     );
     light.unmount();
+  });
+
+  it("keeps a keycap out of the pointer, and lets a style callback opt back in", () => {
+    // The bug this guards: a keycap paints a fill, and a filled child is the
+    // boundary the hit test stops counting at (`press-routing-lifecycle`), so a
+    // chord drawn inside a press target — the recorder's own box, a menu row —
+    // would take the press the target never hears.
+    const sheet = renderComponent(<Sheet />);
+    expect(keycapOf(sheet, "new", 0)?.style.pointerEvents).toBe("none");
+    sheet.unmount();
+
+    const light = renderComponent(<Sheet />, "light");
+    expect(keycapOf(light, "new", 0)?.style.pointerEvents).toBe("none");
+    light.unmount();
+
+    const opted = renderComponent(
+      <Keycap testId="cap" style={{ pointerEvents: "auto" }}>
+        K
+      </Keycap>,
+    );
+    expect(opted.renderer.findByTestId("cap")?.style.pointerEvents).toBe(
+      "auto",
+    );
+    opted.unmount();
   });
 
   it("lets a row style win and hands it the formatted keys", () => {

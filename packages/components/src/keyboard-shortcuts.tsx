@@ -148,7 +148,14 @@ export interface KeycapState {
   readonly label: string;
 }
 
-/** One key cap. Compose several for a chord that is not an accelerator. */
+/** One key cap. Compose several for a chord that is not an accelerator.
+ *
+ * Display-only, so it takes no pointer input: a cap paints a fill, and a filled
+ * child is the boundary the runtime's hit test stops counting at, so a chord
+ * drawn inside a press target — the recorder's own box, a menu row — would take
+ * the press the target never hears. A style callback is merged last and can hand
+ * the pointer back.
+ */
 export const Keycap = ({
   children,
   className,
@@ -162,7 +169,9 @@ export const Keycap = ({
     <div
       {...rest}
       style={mergeStyles(
-        recipeStyle(cn(KEYCAP, className), theme),
+        mergeStyles(recipeStyle(cn(KEYCAP, className), theme), {
+          pointerEvents: "none",
+        }),
         resolveStyle(style, { label }),
       )}
     >
