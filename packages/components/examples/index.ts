@@ -53,6 +53,8 @@ import { PreviewCardExample } from "./preview-card.example.js";
 import { RevealExample } from "./reveal.example.js";
 import { RollingTextExample } from "./rolling-text.example.js";
 import { RotatingTextExample } from "./rotating-text.example.js";
+import { ScrollFadeExample } from "./scroll-fade.example.js";
+import { ScrollProgressExample } from "./scroll-progress.example.js";
 import { SearchInputExample } from "./search-input.example.js";
 import { SplittingTextExample } from "./splitting-text.example.js";
 import { StepperExample } from "./stepper.example.js";
@@ -106,6 +108,8 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   reveal: RevealExample,
   "rolling-text": RollingTextExample,
   "rotating-text": RotatingTextExample,
+  "scroll-fade": ScrollFadeExample,
+  "scroll-progress": ScrollProgressExample,
   "search-input": SearchInputExample,
   "splitting-text": SplittingTextExample,
   stepper: StepperExample,

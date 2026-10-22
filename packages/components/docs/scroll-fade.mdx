@@ -1,0 +1,92 @@
+---
+title: Scroll fade
+description: A scroll box that fades the edge hiding more content, using a two-stop gradient.
+---
+
+`ScrollFade` paints a gradient over the top or bottom edge of a scroll box
+while there is content beyond it. The bottom strip appears when the box
+overflows, moves away at the end, and the top strip appears once the reader has
+scrolled. Content that fits the box paints neither, because a fade over nothing
+is a lie about more to read.
+
+The gradient is the runtime's own `linear-gradient` background — two stops, one
+opaque in the surface colour and one clear — so the hint is a real surface rather
+than a shadow approximation.
+
+## Usage
+
+```tsx
+import { ScrollFade } from "@gpuixui/components/scroll-fade";
+
+<ScrollFade color={theme.colors.card} style={{ height: 240 }}>
+  {notes.map((note) => (
+    <Note key={note.id} note={note} />
+  ))}
+</ScrollFade>;
+```
+
+`color` is the surface the fade settles into: the theme's `background` role by
+default, or the card, popover or muted fill the box sits on. A fade in the wrong
+role leaves a visible band over the content.
+
+## When an edge fades
+
+The box reports the clamped offset (`onScrollChange`) and the painted heights of
+the viewport and its content (`onLayout`). The top edge fades when the reader has
+moved away from the start; the bottom edge fades until the end is reached. Both
+conditions also require the content to actually overflow the box.
+
+A list that grows while it is open repaints the hint without the caller doing
+anything, and shrinking it removes the hint.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `color` | `string` | theme `background` | The surface the opaque stop uses. |
+| `edgeSize` | `number` | `32` | The strip's height in pixels; an unusable value falls back. |
+| `className` | `string` | — | A Tailwind class string for the box, merged last. |
+| `style` | `StyleDesc` | — | The box's style. Give it a bounded height. |
+
+The component renders the scroll box and its two decorative strips. The caller's
+host props (`testId`, `aria-*`, pointer handlers) land on the scroller. The
+strips take no pointer input, so a press on the row under a fade reaches the row.
+
+## Accessibility
+
+The fade is decoration: it never changes what is readable, only how obvious the
+rest of the content is. It is not announced, and it is not the only cue — the
+scrollbar and the content itself remain. The box scrolls with the wheel and its
+native scrollbar; it is **not** a keyboard scroll region. Use `ScrollArea` from
+`@gpuixui/primitives` when a reader must move it with arrow keys.
+
+## Limitations
+
+- **No keyboard scrolling.** See above; the keyboard contract lives in
+  `ScrollArea`.
+- **Vertical only.** The hint is measured on the vertical travel. A horizontal
+  rail would need the same two-stop gradient on `left`/`right` and `scrollX`.
+- **No animation.** The strips toggle with the offset in the frame it changes.
+  The runtime cannot animate a gradient, and a scroll position is a direct
+  reading rather than an arrival, so `MotionProvider` has nothing to reduce.
+- **The strips paint over the content.** A row that must sit exactly on the
+  edge is under a 24–32px gradient by design; inset the content or shorten the
+  fade when that matters.
+
+## Related
+
+- [Scroll progress](/docs/components/scroll-progress) — the same measurement as
+  a reading line.
+- [Reveal](/docs/components/reveal) — content that arrives rather than a
+  region that hints at more.
+- [Scroll area](/docs/primitives/scroll-area) — the keyboard-reachable scroll
+  region.
+
+## Verification
+
+`src/behaviour/scroll-fade.test.tsx` runs in the real GPUix renderer (5 tests):
+the bottom edge at the start, both in the middle and the top at the end; no
+edge over content that fits; each gradient's direction, colour, height and lack
+of pointer input; a list that grows under the reader; and a non-finite edge size
+falling back to the house value. The geometry and gradient frames are the unit
+suite beside the rule (`src/scroll/metrics.test.ts`, 9 tests).

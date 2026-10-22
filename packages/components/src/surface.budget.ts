@@ -34,10 +34,12 @@ export const surfaceBudget = {
   // (`splitting-text.tsx` and the split rule beside it), 100 → 102 for
   // HighlightText (`highlight-text.tsx` and the mark rule beside it), 102 → 104
   // for RollingText (`rolling-text.tsx` and the roll rule beside it), 104 → 106
-  // for Reveal (`reveal.tsx` and the direction rule beside it).
-  modules: 106,
+  // for Reveal (`reveal.tsx` and the direction rule beside it). 106 → 110 for
+  // the scroll readings (`scroll-fade.tsx`, `scroll-progress.tsx`, the shared
+  // scroll/metrics.ts rule and internal/scroll-surface.tsx, plan 600).
+  modules: 110,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
-  bytes: 690 * 1024,
+  bytes: 720 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
 } as const;

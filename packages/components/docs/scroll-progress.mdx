@@ -1,0 +1,96 @@
+---
+title: Scroll progress
+description: A reading line over a scroll box that follows how far through its content the reader is.
+---
+
+`ScrollProgress` is a scroll box with a thin line on one edge. The line is the
+fraction the reader has travelled: `0%` at the top, `100%` when the last row is
+in view. It is measured from the runtime's own numbers — the clamped scroll
+offset and the painted height of both the box and its content — so a window
+resize, a growing list or a shrink-to-fit change moves the reading without the
+caller doing anything.
+
+## Usage
+
+```tsx
+import { ScrollProgress } from "@gpuixui/components/scroll-progress";
+
+<ScrollProgress label="Settings read" style={{ height: 240 }}>
+  {settings.map((setting) => (
+    <SettingsRow key={setting.id} setting={setting} />
+  ))}
+</ScrollProgress>;
+```
+
+Give the component a bounded height — a `style` height, a class, or a flex
+parent that bounds it. Without one the box grows to its content, and a box that
+fits its content has nothing to report.
+
+## How the fraction is measured
+
+`onScrollChange` reports the clamped absolute offset (`0` at the start, negative
+as it scrolls) and `onLayout` reports the viewport's and the content's painted
+heights. The travel is `contentHeight - viewportHeight`, and the fraction is the
+offset divided by it, clamped to `0…1`. The percentage is rounded to the nearest
+whole point, because a bar cannot paint a fraction of a pixel.
+
+A list that grows while it is open is re-measured: the content box reports its
+new height, and the line drops to the new fraction at the same offset. Content
+that fits the box reads `0%` rather than inventing a journey.
+
+## API
+
+| Prop | Default | Effect |
+| ---- | ------- | ------ |
+| `side` | `"bottom"` | The edge the line sits on. |
+| `thickness` | `3` | The line's height in pixels. |
+| `color` | `theme.colors.primary` | The travelled portion. |
+| `trackColor` | `theme.colors.muted` | The untravelled track. |
+
+The line is painted over the box with `pointerEvents: "none"`, so it never
+stands between the reader and a row. A non-finite or non-positive thickness
+falls back to the default instead of reaching the runtime as `NaN`.
+
+## Accessibility
+
+The track is a `progressbar` whose `aria-valuetext` is the percentage, so
+assistive technology hears the reading rather than a decorative rule. `0.11.0`
+has no `aria-valuenow`, so the percentage travels as text; pass `label` to name
+what is being read, or the reading is announced by value alone.
+
+The box scrolls with the wheel and its native scrollbar. It is **not** a
+keyboard scroll region — use `ScrollArea` from `@gpuixui/primitives` when a
+reader must move it with arrow keys, and wire its `onScrollChange` to a
+presentational reading if you also want the line.
+
+## Limitations
+
+- **No keyboard scrolling.** The viewport is not a tab stop and does not answer
+  arrows; that contract belongs to `ScrollArea`, whose viewport is measured
+  already and whose `onLayout` this component cannot reach.
+- **No tween.** The line follows the offset in the frame it changes. A scroll
+  position is a direct reading, not an arrival, so `MotionProvider` has nothing
+  to reduce.
+- **Vertical only.** The travel is measured on `offsetY`; a horizontal rail
+  needs the same rule on `scrollX`.
+- **No `aria-valuenow`.** The runtime publishes `aria-valuetext` only, so the
+  reading is a formatted percentage rather than a number with bounds.
+
+## Related
+
+- [Scroll fade](/docs/components/scroll-fade) — the same measurement as an edge
+  hint instead of a line.
+- [Message scroller](/docs/components/message-scroller) — a transcript that
+  follows new content instead of reporting its position.
+- [Scroll area](/docs/primitives/scroll-area) — the keyboard-reachable scroll
+  region.
+
+## Verification
+
+`src/behaviour/scroll-progress.test.tsx` runs in the real GPUix renderer (6
+tests): the start, half way and end of a 560px travel; zero on content that
+fits; the line on the named edge with no pointer input; the `progressbar` role,
+name and percentage; a list that grows under the reader; and a non-finite
+thickness falling back to the house value. The arithmetic and the gradient
+frames are the unit suite beside the rule (`src/scroll/metrics.test.ts`, 9
+tests).

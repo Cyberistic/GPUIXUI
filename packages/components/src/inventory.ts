@@ -47,6 +47,8 @@ import { previewCardMeta } from "./preview-card.js";
 import { revealMeta } from "./reveal.js";
 import { rollingTextMeta } from "./rolling-text.js";
 import { rotatingTextMeta } from "./rotating-text.js";
+import { scrollFadeMeta } from "./scroll-fade.js";
+import { scrollProgressMeta } from "./scroll-progress.js";
 import { searchInputMeta } from "./search-input.js";
 import { splittingTextMeta } from "./splitting-text.js";
 import { stepperMeta } from "./stepper.js";
@@ -116,6 +118,8 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   revealMeta,
   rollingTextMeta,
   rotatingTextMeta,
+  scrollFadeMeta,
+  scrollProgressMeta,
   searchInputMeta,
   splittingTextMeta,
   stepperMeta,

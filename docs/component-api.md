@@ -339,6 +339,8 @@ the honest parts.
 | Rotating text | `RotatingText` | — | plan 600 |
 | Rolling text | `RollingText` | — | plan 600 |
 | Reveal | `Reveal` | — | plan 600 |
+| Scroll fade | `ScrollFade` (one part) | — | plan 600 |
+| Scroll progress | `ScrollProgress` (one part) | — | plan 600 |
 | Splitting text | `SplittingText` (one part) | — | plan 600 |
 | Highlight text | `HighlightText` (one part) | — | plan 600 |
 

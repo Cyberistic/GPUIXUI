@@ -78,13 +78,14 @@ alone 168 ms, one family through its subpath (`@gpuixui/components/badge`)
 528 ms, the barrel 876 ms. The digit belongs to a shared machine — one run
 measured 1.96 s while other agents were building — but the shape is the point:
 the barrel costs about 350 ms more than the one family a consumer asked for,
-because it loads the other 38 too. A consumer that needs one or two components
-should import the subpath; one that wants the package's shared vocabulary can
-keep the root.
+because it loads the rest of the package too. A consumer that needs one or two
+components should import the subpath; one that wants the package's shared
+vocabulary can keep the root.
 
 `src/surface.test.ts` holds the graph: the module count is exact, the byte
-ceiling is 600 KiB and the package list is exact, so a family that reaches a new
-dependency fails by name instead of quietly adding load time to every consumer.
+ceiling is the recorded budget and the package list is exact, so a family that
+reaches a new dependency fails by name instead of quietly adding load time to
+every consumer.
 `src/surface.budget.ts` is the record; regenerate it with the command above and
 state what moved.
 
