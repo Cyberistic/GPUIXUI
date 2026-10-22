@@ -69,6 +69,7 @@ the licence is noted and attributed in `LICENSES/`.
 | [GPUix](https://gpuix.dev) | the native renderer — GPU, no DOM | — |
 | [open-gpui](https://github.com/Latias94/open-gpui) (`crates/motion`) | spring/sequence physics, ported to TS | Apache-2.0 |
 | [gpui-motion](https://github.com/1bye/gpui-motion) | broader motion API surface — easing variants and inertia — borrowed as spec | MIT |
+| [animate-ui](https://github.com/imskyleen/animate-ui) | animated primitive catalogue and motion patterns — re-implemented on GPUix, never copied | MIT + Commons Clause |
 
 ## References
 
@@ -81,6 +82,7 @@ edited:
 - GPUI Kit — https://github.com/longbridge/gpui-kit
 - shadcn/ui — https://github.com/shadcn-ui/ui
 - Fumadocs — https://github.com/fuma-nama/fumadocs
+- animate-ui — https://github.com/imskyleen/animate-ui, `main` @ `e6cea6b` (MIT + Commons Clause: patterns only; clone at `references/animate-ui`)
 - PanelUI — https://panelui.dev/docs/components (documentation only: no public
   source repository, so it is read as documentation and not cloned)
 
