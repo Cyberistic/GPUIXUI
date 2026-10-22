@@ -69,7 +69,7 @@ the exact steps and the native-style-prop → utility-class mapping are in
 **Fields** `Input` `TextArea` `NumberField` `OTPField` `Select`
 **Selection** `Checkbox` `CheckboxGroup` `RadioGroup` `Switch` `Rating`
 **Value** `Slider` `RangeSlider` `Meter`
-**Feedback** `Progress` `Spinner` `Skeleton` `Tooltip`
+**Feedback** `Progress` `Spinner` `Skeleton` `Tooltip` `TooltipProvider`
 **Theming** `ThemeProvider`
 
 Every component is themed by a resolver in `core/style.ts` (`controlStyle`,
