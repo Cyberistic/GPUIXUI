@@ -29,13 +29,15 @@ import {
 import { decorativeFloor } from "./decorative.js";
 import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
-import { selectionFailures, selectionPairs } from "./selection.js";
+import { selectionFailures, selectionOn, selectionPairs } from "./selection.js";
 import {
   invisibleSelectionBrand,
   report,
   selectionWashesAreReadable,
+  tintSelectionWashes,
   unreadableSelectionBrand,
 } from "./selection.example.js";
+import { statusTones } from "./styles.js";
 import {
   darkTheme,
   extendTheme,
@@ -499,6 +501,201 @@ describe("the tones the wash is painted on", () => {
     expect(design).toContain("content tone");
     expect(readme).toContain("saturated");
     expect(inventory).toContain("saturated");
+  });
+});
+
+/**
+ * The wash a status message's own copy can carry.
+ *
+ * The bug this guards: `selection` is authored for the content tones, and a
+ * selectable run inside an `Alert` sits on the tone's `xSoft` tint — a content
+ * tone, but one the designed wash cannot serve. Every light tint carries it; 30
+ * of the 32 dark placements fall under the body floor (Windows dark's
+ * `warningSoft` at 5.21:1), because the accent a dark wash is drawn from is
+ * lighter than the tint and moves it toward the near-white text. Nothing painted
+ * or measured that placement, so selectable message copy shipped unreadable with
+ * every report empty. `selectionOn` derives the wash for the surface the run
+ * actually paints on.
+ */
+describe("the wash a status message can carry", () => {
+  const styles = [...shippedThemes, ...platformThemes, ...retroThemes];
+  const softTints = statusTones.map((tone) => `${tone}Soft` as const);
+
+  /** The two jobs, measured on the composite a reader sees. */
+  const over = (
+    theme: (typeof styles)[number],
+    tint: (typeof softTints)[number],
+    wash: string,
+  ) => {
+    const fill = theme.colors[tint];
+    const composed = blend(fill, wash, alphaOf(wash));
+    const floors =
+      theme.contrast === "high" ? highContrastFloors : contrastFloors;
+    return {
+      theme,
+      tint,
+      body: contrastRatio(theme.colors.foreground, composed) ?? 0,
+      visible: contrastRatio(composed, fill) ?? 0,
+      floor: floors.body,
+    };
+  };
+
+  it("paints the alert's copy on the tint it measures", () => {
+    const recipes = read("../../tw/src/recipes.ts");
+    const alert = read("../../components/src/alert.tsx");
+    const description =
+      /export const ALERT_DESCRIPTION =\s*"([^"]*)"/.exec(recipes)?.[1] ?? "";
+
+    // The description overrides the tone's readable role with the page ink and
+    // the root fills the tone's soft surface, so the pair is the placement.
+    expect(description).toContain("text-foreground");
+    expect(alert).toContain("color={theme.colors.foreground}");
+    statusTones.forEach((tone) => {
+      expect(recipes).toContain(`bg-${tone}Soft`);
+    });
+    expect(softTints).toHaveLength(statusTones.length);
+  });
+
+  it("finds the designed wash burying the copy on the dark tints", () => {
+    const before = styles.flatMap((theme) =>
+      softTints.map((tint) => ({
+        mode: theme.mode,
+        ...over(theme, tint, theme.colors.selection),
+      })),
+    );
+    const under = before.filter(({ body, floor }) => body < floor);
+    const tightest = under.reduce((a, b) => (b.body < a.body ? b : a));
+
+    // The light palettes are far enough from the ink; the dark ones are not:
+    // the wash only ever moves those fills toward the near-white text.
+    expect(under.filter(({ mode }) => mode === "light")).toEqual([]);
+    expect(under).toHaveLength(30);
+    expect(tightest.tint).toBe("warningSoft");
+    expect(tightest.theme.name).toBe("Dark · Windows");
+    expect(tightest.body).toBeCloseTo(5.21, 2);
+  });
+
+  it("derives a wash the copy can be selected with", () => {
+    const after = styles.flatMap((theme) =>
+      softTints.map((tint) => over(theme, tint, selectionOn(theme, tint))),
+    );
+    const broken = after.filter(
+      ({ body, floor, visible }) => body < floor || visible < decorativeFloor,
+    );
+    const tightestBody = after.reduce((a, b) => (b.body < a.body ? b : a));
+    const tightestWash = after.reduce((a, b) =>
+      b.visible < a.visible ? b : a,
+    );
+
+    // Every one of the 64 placements resolves; nothing is excluded, because the
+    // wash is asked to serve the surface it is painted on.
+    expect(broken).toEqual([]);
+    expect(after).toHaveLength(styles.length * softTints.length);
+    expect(tightestBody.body).toBeCloseTo(7, 1);
+    expect(tightestWash.visible).toBeCloseTo(decorativeFloor, 1);
+  });
+
+  it("keeps the designed wash wherever it already carries the surface", () => {
+    const content = [
+      "input",
+      "background",
+      "card",
+      "popover",
+      "muted",
+    ] as const;
+    const lights = styles.filter((theme) => theme.mode === "light");
+
+    styles.forEach((theme) => {
+      content.forEach((surface) => {
+        expect(selectionOn(theme, surface)).toBe(theme.colors.selection);
+      });
+    });
+    expect(lights.length).toBeGreaterThan(0);
+    lights.forEach((theme) => {
+      softTints.forEach((tint) => {
+        expect(selectionOn(theme, tint)).toBe(theme.colors.selection);
+      });
+    });
+  });
+
+  it("keeps the designed share and moves only toward the page", () => {
+    styles.forEach((theme) => {
+      softTints.forEach((tint) => {
+        const wash = selectionOn(theme, tint);
+        const steps = Array.from({ length: 51 }, (_, index) =>
+          blend(theme.colors.selection, theme.colors.background, index / 50),
+        );
+
+        // The result is the same translucent role, not an opaque fill, and it
+        // is a step on the line from the design to the page.
+        expect(alphaOf(wash)).toBeCloseTo(alphaOf(theme.colors.selection), 5);
+        expect(steps).toContain(wash);
+      });
+    });
+  });
+
+  it("keeps the designed wash when no step can serve the surface", () => {
+    // A fully transparent wash cannot be made visible by moving its hue, so the
+    // cue is not invented: the theme's own role is returned and the gate reports
+    // the pair it breaks.
+    expect(selectionOn(invisibleSelectionBrand, "infoSoft")).toBe(
+      invisibleSelectionBrand.colors.selection,
+    );
+    expect(selectionFailures(invisibleSelectionBrand)).not.toEqual([]);
+  });
+
+  it("executes the example's per-tone washes", () => {
+    const washes = tintSelectionWashes(darkTheme);
+
+    expect(Object.keys(washes)).toEqual([...statusTones]);
+    expect(washes.warning).toBe(selectionOn(darkTheme, "warningSoft"));
+    // A dark tint moves the wash; a light one keeps the designed role.
+    expect(washes.warning).not.toBe(darkTheme.colors.selection);
+    expect(tintSelectionWashes(lightTheme).warning).toBe(
+      lightTheme.colors.selection,
+    );
+  });
+
+  it("states the tint contract and its numbers on every page", () => {
+    const catalogue = read("../../../docs/tokens.md");
+    const design = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+    const inventory = read("../../../COMPONENTS.md");
+    const derived = styles.flatMap((theme) =>
+      softTints.map((tint) => ({
+        mode: theme.mode,
+        ...over(theme, tint, selectionOn(theme, tint)),
+      })),
+    );
+    const tightestBody = derived.reduce((a, b) => (b.body < a.body ? b : a));
+    const tightestWash = derived.reduce((a, b) =>
+      b.visible < a.visible ? b : a,
+    );
+    const steps = derived
+      .filter(({ mode }) => mode === "dark")
+      .map(({ theme, tint }) => {
+        const wash = selectionOn(theme, tint);
+        return Array.from({ length: 51 }, (_, index) =>
+          blend(theme.colors.selection, theme.colors.background, index / 50),
+        ).indexOf(wash);
+      });
+    const reach = `${Math.max(...steps) * 2}%`;
+
+    [catalogue, readme, inventory].forEach((page) => {
+      expect(page).toContain("selectionOn");
+      expect(page).toContain("30 of the 32");
+      expect(page).toContain("5.21");
+    });
+    // The page prints the values the sweep measures, so a palette edit that
+    // moves the tightest placement cannot leave the catalogue teaching an old one.
+    expect(tightestBody.body.toFixed(2)).toBe("7.00");
+    expect(tightestWash.visible.toFixed(2)).toBe(decorativeFloor.toFixed(2));
+    expect(tightestWash.theme.name).toBe("Dark · Windows 7 (Aero)");
+    expect(tightestWash.tint).toBe("warningSoft");
+    expect(catalogue).toContain(`${tightestBody.body.toFixed(2)}:1`);
+    expect(catalogue).toContain(`${tightestWash.visible.toFixed(2)}:1`);
+    expect(catalogue).toContain(`${reach} of the way`);
+    expect(design).toContain("selectionOn");
   });
 });
 

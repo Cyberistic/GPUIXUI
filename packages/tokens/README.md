@@ -476,6 +476,17 @@ row, 3.68:1; tightest body placement: the base dark theme's selected row title,
 tones the box resolves so one cannot be added without a measurement or a
 recorded reason.
 
+A **status message's own tint** is the third answer: an `Alert`'s description is
+a container, so its copy can be selectable, and the fill behind it is the tone's
+`xSoft` role. The designed wash cannot serve it — every light tint carries it,
+but 30 of the 32 dark placements fall under the body floor (Windows dark's
+`warningSoft` at 5.21:1), because the accent is lighter than the tint and moves
+it toward the near-white text. `selectionOn(theme, surface)` derives the wash
+for that surface: the theme's own selection moved toward the page by the
+smallest 2% step that keeps the wash visible and the text readable, at the same
+share. All 64 tint placements resolve (light tints keep the designed role); a
+surface no step can serve keeps the designed wash and the gate reports it.
+
 ## Platform styles
 
 `platformStyles` decides each platform once — its families, corner radii, control

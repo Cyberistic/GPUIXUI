@@ -803,6 +803,45 @@ green (43 files / 2 434 tests), `check-types` clean.
       offset case; restored, the tokens suite is 42 files / 2 435 tests, the
       primitives focus files 56/56 and the components behaviour file 8/8.
 
+`[x]` Derive the **wash a status message's own copy can be selected with** —
+      `selection` is authored for the content tones, and an `Alert`'s description
+      is a container: it may hold an action, so it may hold a selectable run, and
+      the fill behind its copy is the tone's `xSoft` role. Nothing measured that
+      placement. Measured, every light tint carries the designed wash, but **30 of
+      the 32 dark tint placements fall under the body floor** — the worst is
+      Windows dark's `warningSoft` at **5.21:1** — because the accent a dark wash
+      is drawn from is *lighter* than the tint and moves it toward the near-white
+      text. No share fixes it: one weak enough for the tint is invisible on the
+      page (the same trade the saturated `accent`/`selected` tones leave out), and
+      the sweep confirms it — the tightest body ratio climbs only from 5.23:1 to
+      6.99:1 as the dark share falls from 24% to 2%, where the wash is already
+      below the 1.05:1 perceptibility floor. So the wash is derived per surface
+      instead: `selectionOn(theme, surface, floors?)` returns the theme's own
+      selection moved **toward the page** (the role furthest from body ink in both
+      modes) by the smallest 2% step that keeps the wash a 1.05:1 cue and the copy
+      at the theme's body floor on *that* surface, at the same translucent share —
+      the mirror of `pointerWash`'s move toward the text. All 64 tint placements
+      resolve: the light tints keep the designed role (step 0), the dark ones move
+      as far as 70% of the way to the page, the tightest resolved body is
+      **7.00:1**, and the tightest cue is **1.05:1** in the two authored looks.
+      A surface no step can serve (a fully transparent wash) keeps the theme's own
+      role rather than inventing one, and `selectionFailures` reports the pair it
+      breaks; a role the renderer cannot measure is returned unchanged rather than
+      replaced by a guess. `selection.test.ts`'s `the wash a status message can
+      carry` suite (8 cases) holds the alert's painters and the 30/5.21 premise,
+      the 64-placement sweep, the identity on the five content tones and every
+      light tint, the share and direction (a step on the line from the design to
+      the page), the no-step brand, the executed `tintSelectionWashes` example and
+      the numbers the three pages print, all derived rather than literal.
+      Directions measured: with `selectionOn` returning `theme.colors.selection`,
+      the 64-placement sweep, the executed example and the page case fail by name;
+      the identity and share cases stay green because they hold the property the
+      fallback preserves. A stale 30/5.21 in any of the three pages, or a stale
+      tightest value in the catalogue, fails the page case. Docs in
+      `docs/tokens.md` §Text selection (+ its new tint subsection),
+      `docs/design-system.md` §8, the package README and the `Text selection wash`
+      inventory row. Adoption by the Alert is the interlock row below.
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 117/117
@@ -4743,6 +4782,30 @@ green (43 files / 2 434 tests), `check-types` clean.
       (`expected 1256 to be 16`); restored, 31 icons unit / 7 runtime green.
       Docs: `docs/icon.mdx` §Sizes and §Verification.
 
+`[x]` `packages/components`: **`Pagination` painted a trail labelled `NaN`** —
+      `pageCount` is usually arithmetic over a response
+      (`Math.ceil(total / pageSize)`), and `pageWindow` passed a count it could
+      not read straight into the window: `Math.max(0, Math.trunc(NaN))` is `NaN`,
+      so the root's `pageCount <= 0` guard was **false** and the control painted
+      a page, an ellipsis and a `NaN` label; an unreadable `page` or `siblingCount`
+      produced `NaN` bounds the same way. `pagination/logic.ts` now owns
+      `paginationRange` — a non-finite count is no count (the control renders
+      nothing), an unreadable page is page 1, and an unreadable sibling count is
+      the default 1 — and both the root and `pageWindow` read it, so the two
+      cannot disagree. Proof: `pagination/logic.test.ts` gains `renders no pages
+      for a count it cannot read` and `reads an unreadable page or sibling count
+      as its default` (measured failing on `HEAD` with `[ { kind: 'page', page: 1 }, …(2) ]`
+      returned for a `NaN` count), and the behaviour suite's no-pages case mounts
+      a `NaN` count (measured showing a `div`) while the current-page case mounts
+      `page={NaN}` / `siblingCount={Infinity}` and requires page 1 in the primary
+      fill with no `NaN` in the painted text (measured `expected undefined to be
+      '#A7A9FF'`). The suite keeps its 10 cases, so the curated page's count
+      stays true. Docs: `docs/pagination.mdx` §Window rule/§API/§Verification and
+      the `COMPONENTS.md` Pagination row; the curated page carries the same two
+      rows (docs-site, in the same window). Directions measured: both unit cases
+      and both behaviour cases fail with `HEAD`'s logic + component and pass
+      with the fix; `check-types`, `check:tests` and `oxfmt` clean.
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21
@@ -5192,6 +5255,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Focus the **row a reveal lands on** — `data-tree-lifecycle` measured on 0.11.0 that the tree's own reveal (`tree.reveal("row.tsx")` from a button, the shape a search hit or a "show this file" command needs) opens the path and moves the cursor to `row.tsx` while the **focus stays on the button**: the tree's focus effect runs on the cursor change, but the revealed rows are newly mounted in that same commit, so their instance refs are not registered yet and `focusElement` goes nowhere. The keyboard paths are all correct (Right/Left/Down/type-ahead each leave the focus on the cursor's row), so this is the app-driven path only. Move the focus after the revealed subtree commits (a layout effect keyed on the rows, or `focusElement` in the tree once the row's ref arrives), add a native behaviour case for it, and state the rule on the Tier 3 **Tree views** row and `/docs/data-display`; the probe then asserts the revealed row's focus instead of the button's | data (the tree, the inventory row and the data-display page) | **resolved 2026-10-23 (data half)** — the cause was simpler than the row guessed: `TreeView` only armed its focus when **its own** handler moved the cursor (`pendingFocus` in `commit`), and `tree.reveal` moves the cursor from the caller, so the effect never ran. The tree now keeps the last row it focused and a layout effect compares it with the committed cursor, calling `focusElement` after the newly opened rows have attached their instances; the first paint is the baseline, so mounting a tree does not steal focus. `src/behaviour/tree.test.tsx`'s reveal case now asserts `focusedTestId` is the revealed row (measured: without the committed-cursor focus it fails, the focus still on the Reveal button). The Tier 3 **Tree views** row and `packages/data/docs/tree-view.mdx` state the rule. The `/docs/data-display` sentence is docs-site's path and is recorded with the other lane-row task |
 | Separate a **filled action's focus ring** from the face it hugs — `keyboardFocusRing` draws its outline at `outlineOffset: 0`, flush against the fill, and the ring's fill-hugging pairs stop at the neutral faces: `ring` *is* the brand, so a focused primary or danger action paints its focus line in its own fill (measured **1.00–1.38:1** on `primary`, **1.00–1.54:1** on `destructive` in all sixteen styles), and the derived `filledHover`/`filledPressed` of `secondary`/`accent` fall under the boundary floor in 8 and 6 of the sixteen. It is **unsatisfiable** rather than unmet: at offset 0 one colour must clear the floor against both the page and the fill, and the feasible luminance set is empty in 8 of the sixteen styles for `primary` (9 for `destructive`), while where one exists it is ≥0.11 of relative luminance from the brand — so no palette can close it, and `ring-fill.test.ts` holds the exception instead. The fix is a ring separated from the fill: an `outlineOffset` above zero (the shape shadcn calls a ring offset, with the strip showing through the gap) or a two-tone ring (an on-colour line inside the brand one). The **geometry has to be measured in a window first** — the `focus-visible` probe only ever painted offset 0, so a probe should paint a control at offset 2 and assert the gap and that the ring still takes no layout space | tokens-theme (the offset or the two-tone list) | **resolved 2026-10-23** — the tokens half chooses the **offset**: `keyboardFocusRing`'s `focusVisible` line now sits `outlineOffset: theme.borderWidth.strong` (2 points in every shipped style), so the strip behind the control shows through the gap and the ring is read against that strip. A two-tone ring was the other route and the runtime cannot paint one: `focusVisible` is a single outline. `ring-fill.test.ts` is rewritten around the resolution — it holds the offset in every style (and that a widened border widens the gap), keeps the measured premise that forced it (a flush line is drawn in a filled action's own colour, 1.00–1.38:1 on `primary` and 1.00–1.54:1 on `destructive` in all sixteen styles; no luminance clears both the page and a brand face in 8/9 of them), proves the two brand faces are no longer ring surfaces while the fourteen strips a control can sit on or inside are, sweeps all sixteen styles to the printed 3.09 tightest (the Aero look's red message tint), and reads the probe — `apps/playground/src/live/ring-offset.ts`'s `RING_OFFSET` must equal the token's offset, and the scenario paints it. `contrast.ts`'s five pairs are reframed as the surfaces a control sits inside rather than "the fill it hugs", and its suite is renamed `the ring on the strip behind the control`. Both pages, the README and the `Contrast contract`/design-system table row teach the resolution and cite `focus-ring-offset` (28 checks: the ring paints three points out with the strip showing through the gap, and control and sibling keep their boxes); `docs/tokens.md` §Limitations records the unmeasured case — a control flush against a clipping ancestor could lose the outer part of the line, which the probe did not measure. The geometry is a token, so no consumer changed: the three assertion literals that pinned `outlineOffset: 0` in `packages/primitives` (`core/focus.test.ts`, `core/style.test.ts`) and `packages/components` (`behaviour/focus-ring.test.tsx`) now read the theme's `borderWidth.strong`. Directions measured: `focus.test.ts`'s offset case fails at 0 before the change, and `ring-fill.test.ts` fails at `expected 0 to be 2` with the old helper; restored, the tokens suite is 42 files / 2 435 tests, the primitives files 56/56 and the components behaviour file 8/8. **The consumer half is measured too (2026-10-23):** the playground's `action-ring` mounts the shipped primitives `Button` — whose `primary` fill *is* the `ring` role — and reads the patched ring on the frame: `Tab` paints `ring` three points out, the page one point out, and the fill two points inside, with both actions and their sibling keeping their boxes (39 checks, `.artifacts/live/action-ring-*.png`). A caller `style` with `outlineOffset: 0` fails `a brand-filled action paints the ring and its own fill as the same role` (`expected false, got true`, exit `1`), so the proof is the paint and not the helper's shape |
 | Paint the **stat card's trend** from the measured status-text role — `packages/data/src/surfaces/stat-card.tsx`'s `trendTone` returned `success` / `destructive`, the **solid fill roles**, for a text label on the card; the tokens contract measures a solid fill at the 3:1 mark floor while status text is `statusTone(theme, tone).foreground` at the body floor, and the base light `success` falls to 4.26:1 on the page (3.92:1 in one authored look) | data (owns `src/surfaces/stat-card.tsx`) | **resolved 2026-10-23** — `trendTone` asks `statusTone(theme, "success"/"destructive").foreground`; `src/surfaces/stat-card.test.ts` (3 cases) holds the painter, the 64-placement sweep over the sixteen styles (up/down on `card` and `background` at `contrastFloorsFor(theme).body`) and the measured premise that a solid role can pass on a card and fail on a page. Directions measured: reverting the painter fails the role and sweep cases by name. The `Statistic / metric cards` row carries the rule |
+| Set the **derived selection wash on a status message's root** — `@gpuixui/tokens` now ships `selectionOn(theme, surface)` because the designed wash buries a selectable run on a `xSoft` tint in 30 of its 32 dark placements (Windows dark's `warningSoft` 5.21:1), and `selectionColor` **inherits down a subtree**, so the container that knows the tone is the place to set it. The components package's `selectionWash(theme)` takes no surface and every selectable field declares it, while `Alert`'s root paints `bg-<tone>Soft` and sets none — so a selectable run inside an alert (its description is a container and may hold an action) gets the designed wash. The fix is one line on the alert's root: `selectionColor: selectionOn(theme, \`${tone}Soft\`)`, measured back in the renderer on a dark style | components (owns `alert.tsx`, `internal/theme.ts`) | open — the tokens half is measured and tested (`selectionOn`, `selection.test.ts`'s `the wash a status message can carry`); this row records the painter's half |
 
 ## Phase D — data and workspace components
 
@@ -5456,6 +5520,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 
 `[x]` `[██████████]` 179/179
+
+`[x]` Route the **curated Table page** to the pinned column that ships beside
+it — `FrozenTable` landed in `@gpuixui/data` with `/docs/data-display/frozen-columns`,
+but `/docs/components/table` (where a grid is designed) stopped its Composition
+table at `VirtualTable` and its Related list had no route to the new page, so a
+pinned column looked unbuilt. The Composition table gains a `FrozenTable` row
+(two vertical scrollers, mirrored both ways) and Related links the page.
+`component-page-truth.test.ts` gained `names the pinned column that ships beside
+the table`, reading the package root's export and the package page's title
+beside the table page's name, link and mirror sentence. Direction measured:
+deleting the row fails it by name; restored, 41/41.
 
 `[x]` Stop the **preview policy** claiming a frame directory the repository
 ignores — both probe paragraphs in `docs/preview-strategy.md` said the frames

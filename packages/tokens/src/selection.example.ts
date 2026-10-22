@@ -4,7 +4,7 @@
  * so the call site the catalogue documents is a real one.
  */
 
-import { alpha, selectionFailures, type Theme } from "./index.js";
+import { alpha, selectionFailures, selectionOn, type Theme } from "./index.js";
 import { extendTheme, lightTheme } from "./theme.js";
 
 /** Whether every selectable pair keeps its wash visible and its text readable. */
@@ -29,3 +29,16 @@ export const report = (theme: Theme): ReadonlyArray<string> =>
         ratio === undefined ? "unmeasurable" : ratio.toFixed(2)
       }`,
   );
+
+/**
+ * The wash each status tone's own copy can be selected with, on that tone's
+ * tint. The designed `selection` cannot serve a dark tint, so a message hands
+ * the surface it paints on to `selectionOn`.
+ */
+export const tintSelectionWashes = (theme: Theme) =>
+  ({
+    info: selectionOn(theme, "infoSoft"),
+    success: selectionOn(theme, "successSoft"),
+    warning: selectionOn(theme, "warningSoft"),
+    destructive: selectionOn(theme, "destructiveSoft"),
+  }) as const;

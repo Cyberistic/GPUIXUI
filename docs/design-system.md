@@ -772,6 +772,19 @@ belongs on a content tone and a state row that needs selectable text paints it
 on one. The exclusion is measured: `selection.test.ts` reads the tones the box
 resolves and fails when one is neither measured nor recorded.
 
+A **status message's tint** is a content tone the designed wash still cannot
+serve. An `Alert`'s description is a container — it may hold an action, so it may
+hold a selectable run — and the fill behind its copy is the tone's `xSoft` role.
+Every light tint carries the designed wash, but 30 of the 32 dark placements fall
+under the body floor (Windows dark's `warningSoft` at 5.21:1), because the accent
+a dark wash is drawn from is lighter than the tint and moves it toward the
+near-white text — and no share can be both that weak and visible on the page.
+`selectionOn(theme, surface)` is the answer: the theme's own selection moved
+toward the page by the smallest 2% step that keeps the wash a 1.05:1 cue and the
+copy at the theme's body floor on that surface, at the same share. All 64 tint
+placements resolve — the light tints keep the designed role — and a surface no
+step can serve keeps the designed wash, which the gate reports.
+
 The **second field fill** was the last surface a field's text had no pair on:
 a composite field paints the page role, so its value and placeholder sit on
 `background` while the table measured only `input`. Measuring it found Aero

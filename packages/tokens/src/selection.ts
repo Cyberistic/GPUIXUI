@@ -55,6 +55,21 @@
  * the wash is measured on it or it is recorded here with its reason, and it
  * holds the eighty placements and their floors, so a palette that made the wash
  * help there would fail until the decision was re-read.
+ *
+ * **A status message's own tint is a third answer.** An `Alert`'s description is
+ * a container — it may hold an action, so it may hold a selectable run — and the
+ * fill behind its copy is the tone's `xSoft` role, which is a *content* tone
+ * rather than a saturated one. The designed wash still cannot serve it: every
+ * light tint carries it (the pale tints are far from the body ink), but **30 of
+ * the 32 dark tint placements fall under the body floor**, the worst being
+ * Windows dark's `warningSoft` at **5.21:1**, because the accent a dark wash is
+ * drawn from is *lighter* than the tint and moves it toward the near-white text.
+ * No single share fixes that — one weak enough for the tint is invisible on the
+ * page — so the wash is derived per surface instead: {@link selectionOn} moves
+ * the theme's own selection toward the page, away from the body ink, until both
+ * jobs hold. Every shipped style and every tint resolves (the light tints keep
+ * the theme's own wash), so a message's copy can be selectable without the
+ * cascade that would follow from repainting four tint roles in eight styles.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
@@ -65,7 +80,7 @@ import {
   type ContrastPair,
 } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
-import type { ThemeContrast } from "./theme.js";
+import type { Theme, ThemeContrast } from "./theme.js";
 
 /**
  * The text pairs a reader can select, and the surface each keeps its role on.
@@ -145,6 +160,22 @@ const washOver = (
 };
 
 /**
+ * The granularity of a derived wash: 2% of the way from the theme's own
+ * selection toward the page per step, so a wash stays as close to the designed
+ * one as the surface allows.
+ */
+const WASH_STEPS = 50;
+
+/**
+ * The role a surface paints its body copy in, read from the pair table so a
+ * content surface's own text role is used rather than the page's.
+ */
+const bodyRoleOn = (surface: keyof ThemeColors): keyof ThemeColors =>
+  selectionPairs.find(
+    (pair) => pair.background === surface && pair.floor === "body",
+  )?.foreground ?? "foreground";
+
+/**
  * Every selection wash in a theme that misses one of its two floors.
  *
  * The role is composited over each surface first, so the translucent wash is
@@ -204,4 +235,66 @@ export function selectionFailures(
     }
     return failures;
   });
+}
+
+/**
+ * The wash a selectable run paints on one **known** surface.
+ *
+ * {@link selectionFailures} measures the theme's one designed wash on the
+ * content tones, which is where it was authored to work. A run on a surface that
+ * wash cannot serve — a message's own `xSoft` tint, where the dark palettes leave
+ * the designed wash at 5.21:1 — asks this instead: the theme's own selection,
+ * moved toward the page (away from the body ink) by the smallest 2% step that
+ * keeps the wash visible and the text readable on *that* surface. The page is
+ * the anchor because it is the role furthest from body text in both modes, so a
+ * step toward it can only lower the wash's interference with the ink.
+ *
+ * It returns the theme's own selection where that already carries the surface
+ * (every light status tint, and every content tone in the shipped styles), and a
+ * selection the renderer cannot measure is returned unchanged rather than
+ * replaced by a guess. A surface no step can serve — a theme whose wash is fully
+ * transparent, for instance — keeps the theme's own wash: the cue is not
+ * removed, and {@link selectionFailures} reports the pair it breaks.
+ *
+ * The text floor follows the theme's own contrast variant (7:1 in both, through
+ * `contrastFloorsFor`), the same rule the gate uses.
+ *
+ * @example
+ * ```tsx
+ * import { selectionOn, statusTone, type Theme } from "@gpuixui/tokens";
+ *
+ * const message = (theme: Theme) => {
+ *   const tone = statusTone(theme, "warning");
+ *   return (
+ *     <text
+ *       style={{
+ *         backgroundColor: tone.background,
+ *         selectionColor: selectionOn(theme, "warningSoft"),
+ *       }}
+ *     />
+ *   );
+ * };
+ * ```
+ */
+export function selectionOn(
+  theme: Theme,
+  surface: keyof ThemeColors,
+  floors: ContrastFloors = contrastFloorsFor(theme),
+): string {
+  const fill = theme.colors[surface];
+  const text = theme.colors[bodyRoleOn(surface)];
+  const carries = (wash: string): boolean => {
+    const composed = blend(fill, wash, alphaOf(wash));
+    const legible = contrastRatio(text, composed);
+    const visible = contrastRatio(composed, fill);
+    return (
+      (legible === undefined || legible >= floors.body) &&
+      (visible === undefined || visible >= decorativeFloor)
+    );
+  };
+  return (
+    Array.from({ length: WASH_STEPS + 1 }, (_, step) =>
+      blend(theme.colors.selection, theme.colors.background, step / WASH_STEPS),
+    ).find(carries) ?? theme.colors.selection
+  );
 }
