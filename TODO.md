@@ -5278,11 +5278,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
     test` is 912/912 with `check-types`, `oxlint`, `check:tests` and `build`
     clean. **Still open:** the mounted collection (next bullet); the collection
     is now needed for a page per data surface, not for the example registry.
-  - [ ] Mount a `@gpuixui/data` docs collection on the site and write a page per
+  - [x] Mount a `@gpuixui/data` docs collection on the site and write a page per
     data surface — the `apps/docs` collection route (`collection-routes.ts`), a
     sidebar section and the `/docs/data-display` link. The package cannot ship
     `packages/data/docs` first: `package-docs.test.ts` fails a docs directory no
-    collection mounts. Owner: docs-site.
+    collection mounts. Owner: docs-site. **Landed** — `collection-routes.ts`
+    declares the `data` origin (`packages/data/docs` at `/docs/data-display`, a
+    "data surface" page kind), the sidebar lists the section and the lane page
+    links every page (Advanced filtering, Toolbar, Tree views, Expandable rows,
+    Key-value, Property panel, Stat card, Charts); `package-docs.test.ts` holds
+    the mount, the frontmatter and the MDX rules for all eight pages.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
