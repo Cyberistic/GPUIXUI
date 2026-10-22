@@ -726,9 +726,10 @@ describe("the curated component pages", () => {
       /\s+/g,
       " ",
     );
-    const typeahead = read(
-      "packages/components/src/internal/typeahead.ts",
-    ).replace(/\s+/g, " ");
+    const typeahead = read("packages/components/src/typeahead.ts").replace(
+      /\s+/g,
+      " ",
+    );
     const surface = read("packages/components/src/menu/surface.tsx").replace(
       /\s+/g,
       " ",
@@ -1164,7 +1165,7 @@ describe("the curated component pages", () => {
 
     const source = read(list.source);
     const collection = read("packages/components/src/internal/collection.ts");
-    const typeahead = read("packages/components/src/internal/typeahead.ts");
+    const typeahead = read("packages/components/src/typeahead.ts");
     const selection = read("packages/components/src/list/selection.ts");
     const recipes = read("packages/tw/src/recipes.ts");
 
@@ -1181,7 +1182,9 @@ describe("the curated component pages", () => {
     // Arrows skip a disabled row and wrap; type-ahead searches after the row.
     expect(collection).toContain("nextEnabled");
     expect(collection).toContain("enabledIndexes");
-    expect(typeahead).toContain("matchPrefix");
+    // The prefix searches the rows after the current one, then wraps.
+    expect(typeahead).toContain("export const typeaheadMatchIndex");
+    expect(typeahead).toContain("candidate.index > fromIndex");
     const window = /Duration\.millis\((\d+)\)/.exec(typeahead)?.[1];
     expect(window, "typeahead no longer declares its window").toBeDefined();
 

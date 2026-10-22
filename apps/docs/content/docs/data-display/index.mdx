@@ -163,6 +163,16 @@ re-deriving them.
   sat near row 900 mounted five rows in a nine-row viewport and left half the
   table blank until the next wheel, and a record the set no longer holds stayed
   in the tree (`virtual-table-lifecycle`).
+- **A reveal lands the focus, not only the cursor** — a "show this file" command
+  or a search hit moves a tree's cursor from the **caller**, and `TreeView`
+  re-takes native focus for the row it lands on: `data-tree-lifecycle` pressed
+  the reveal action and read **9 rows · active=row.tsx** with the focus on the
+  revealed row, while the button that asked for it keeps the press's focus until
+  the next tick, because the runtime hands the pressed control the focus after
+  the commit. The first paint is the baseline, so mounting a tree does not steal
+  focus. Batch actions are the other shape: collapse and expand move the row set
+  and leave the cursor on the key the controller still holds
+  (`data-tree-lifecycle`).
 - **A find bar offsets by matches, not rows** — a search over a virtualized
   table searches a document the runtime never holds, and `getPaintedHighlights()`
   reports only the mounted window, so a row index cannot place the cursor.

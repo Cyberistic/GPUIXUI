@@ -804,6 +804,40 @@ describe("the data-display page's shipped rows", () => {
     expect(dataPage).toContain("`useVirtualRows`");
   });
 
+  it("says where a tree reveal leaves the focus", () => {
+    // `TreeView` follows the committed cursor: a reveal moves it from the
+    // caller, and the component re-takes native focus for the row it lands on.
+    // The lane page taught a reveal only as a window move, so a search hit was
+    // documented as painting a row without saying where a keyboard reader ends
+    // up. The counts are the fixture's, not a transcription.
+    const fixture = readFileSync(
+      new URL("../../../../apps/playground/src/live/data-tree.ts", import.meta.url),
+      "utf8",
+    );
+    const revealed = Number(
+      /export const DATA_TREE_ROWS_REVEALED = (\d+);/.exec(fixture)?.[1] ?? NaN,
+    );
+    const key = /export const DATA_TREE_REVEALED = "([a-z.]+)";/.exec(
+      fixture,
+    )?.[1];
+    expect(revealed, "the fixture no longer declares the revealed row count")
+      .toBeGreaterThan(0);
+    expect(key, "the fixture no longer names the revealed row").toBeDefined();
+
+    const readme = readFileSync(
+      new URL("../../../../apps/playground/README.md", import.meta.url),
+      "utf8",
+    );
+    expect(readme).toContain("### `data-tree-lifecycle` — measured on 0.11.0");
+    expect(readme).toContain(
+      "leaves native focus on the revealed row",
+    );
+
+    expect(dataPage).toContain("data-tree-lifecycle");
+    expect(dataPage).toContain(`${revealed} rows · active=${key}`);
+    expect(dataPage).toContain("reveal");
+  });
+
   it("calls the lane whole only when the inventory does", () => {
     // The lane's premise is read from the inventory: while a row is pending the
     // page has to say so, and once none is it must not keep a stale `todo` — a

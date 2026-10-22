@@ -24,7 +24,7 @@ import {
  * after a pointer press steals focus from where the reader pressed, and a
  * type-ahead that does not advance makes `s` stick on the first row beginning
  * with `s`. The last case reads the shipped `context-menu.tsx` and
- * `internal/typeahead.ts`, so this model cannot drift from them.
+ * `typeahead.ts`, so this model cannot drift from them.
  */
 
 const component = readFileSync(
@@ -37,7 +37,7 @@ const component = readFileSync(
 
 const typeahead = readFileSync(
   new URL(
-    "../../../../../packages/components/src/internal/typeahead.ts",
+    "../../../../../packages/components/src/typeahead.ts",
     import.meta.url,
   ),
   "utf8",
