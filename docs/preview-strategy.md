@@ -363,6 +363,18 @@ frame), so a multi-series chart is one stacked element per colour. The dashboard
 page teaches that and its recipe takes the colour per layer; the evidence is
 `docs/gpuix-capabilities.md` §Inline SVG painting.
 
+**A block's source is code too.** A recipe is a `source` string in
+`src/components/docs/blocks.tsx`, not a fence, so the page-snippet walk never
+read it: a renamed export would leave every block's Code tab teaching an import
+that no longer resolves while the build stayed green. `src/lib/block-source.test.ts`
+walks the registry instead — it resolves each block's `source` through the
+workspace symbol index, follows a constant the registry imports from another
+module (the dashboard's lives in `dashboard.tsx`), and fails a block whose source
+is nearly empty, because a Code tab that prints nothing is the same lie as a
+wrong import. Directions measured: `Input` → `Inputt` in `loginSource` fails
+`login-01: @gpuixui/primitives does not export Inputt`, and emptying that
+constant fails the near-empty case.
+
 ## The examples page
 
 `/docs/examples` is the registry of the worked examples the packages ship. It is
