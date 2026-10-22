@@ -453,6 +453,129 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(chart?.[2]).toContain("<text>");
   });
 
+  it("records where a generated svg path paints, and the box it needs", () => {
+    // The one-tint row says `<svg source>` paints; it says nothing about where
+    // the path lands in the element that shows it, which is the question a
+    // generated pattern field (`hexagon`, `topography`) rests on. `svg-pattern`
+    // measured the placement: a view box is scaled by the element's width alone,
+    // clipped at its own edge, centred rather than fitted, and re-laid-out on a
+    // resize — and a non-square element shows a content area it does not clip.
+    // The numbers below are derived from the probe's own geometry, so a fixture
+    // edit cannot leave the record teaching the previous frame.
+    const pattern = read("apps/playground/src/live/pattern.ts");
+    // A form that stops matching reads as `NaN`, which the floors below name.
+    const number = (source: string, form: RegExp): number =>
+      Number(form.exec(source)?.[1] ?? Number.NaN);
+
+    const tile = number(pattern, /export const TILE = (\d+)/);
+    const inset = number(
+      pattern,
+      /export const SQUARE = \{ inset: (\d+), stroke: (\d+) \}/,
+    );
+    const stroke = number(
+      pattern,
+      /export const SQUARE = \{ inset: \d+, stroke: (\d+) \}/,
+    );
+    const squareWidth = number(
+      pattern,
+      /export const SQUARE_BOX = \{ width: (\d+), height: (\d+) \}/,
+    );
+    const resizedWidth = number(
+      pattern,
+      /export const SQUARE_RESIZED_BOX = \{ width: (\d+), height: (\d+) \}/,
+    );
+    const wide =
+      /export const WIDE = \{ width: (\d+), height: (\d+), stroke: (\d+) \}/.exec(
+        pattern,
+      );
+    const tall =
+      /export const TALL = \{ width: (\d+), height: (\d+), stroke: (\d+) \}/.exec(
+        pattern,
+      );
+    const strokes = number(pattern, /export const COMB = \{\s*strokes: (\d+)/);
+
+    // The width-only rule, read from the function that states it.
+    expect(pattern).toContain("export const patternScale = (width: number)");
+    expect(pattern).toContain("width / TILE");
+
+    const inkFraction = (tile - 2 * inset + stroke) / tile;
+    const squareInk = Math.round(inkFraction * squareWidth);
+    const resizedInk = Math.round(inkFraction * resizedWidth);
+    const wideWidth = Number(wide?.[1] ?? Number.NaN);
+    const wideStroke = Number(wide?.[3] ?? Number.NaN);
+    const tallWidth = Number(tall?.[1] ?? Number.NaN);
+    const tallStroke = Number(tall?.[3] ?? Number.NaN);
+    const wideThickness = Math.round((wideStroke * wideWidth) / tile);
+    const tallThickness = Math.round((tallStroke * tallWidth) / tile);
+
+    // Floors: the arithmetic read the fixture, so an empty match cannot pass.
+    expect([tile, squareWidth, wideWidth, tallWidth, strokes]).toEqual([
+      100, 200, 300, 100, 20,
+    ]);
+    expect([squareInk, resizedInk, wideThickness, tallThickness]).toEqual([
+      140, 210, 30, 10,
+    ]);
+
+    const readme = read("apps/playground/README.md");
+    const section = readme.slice(readme.indexOf("### `svg-pattern`"));
+    const checks = number(section, /(\d+) checks, `--only svg-pattern`/);
+    expect(checks).toBeGreaterThan(0);
+
+    const svg = rowFor("Inline SVG painting");
+    expect(svg?.verdict).toBe("supported, with limits");
+    expect(svg?.evidence).toContain("svg-pattern");
+    expect(svg?.evidence).toContain(`${checks} checks`);
+    expect(svg?.evidence).toContain("width alone");
+    expect(svg?.evidence).toContain(`${squareInk}×${squareInk}`);
+    expect(svg?.evidence).toContain(`${wideWidth}×${wideThickness}`);
+    expect(svg?.evidence).toContain(`${tallWidth}×${tallThickness}`);
+    expect(svg?.evidence).toContain("clips");
+    expect(svg?.evidence).toContain(`${strokes}/${strokes}`);
+    expect(svg?.evidence).toContain(`${resizedInk} wide`);
+    expect(svg?.evidence).toContain("above and below");
+    expect(svg?.workaround).toContain("near-square");
+    expect(svg?.workaround).toContain("width");
+  });
+
+  it("publishes the generated-pattern placement on /docs/runtime", () => {
+    const pattern = read("apps/playground/src/live/pattern.ts");
+    const squareWidth = Number(
+      /export const SQUARE_BOX = \{ width: (\d+)/.exec(pattern)?.[1],
+    );
+    const resizedWidth = Number(
+      /export const SQUARE_RESIZED_BOX = \{ width: (\d+)/.exec(pattern)?.[1],
+    );
+    const tile = Number(/export const TILE = (\d+)/.exec(pattern)?.[1]);
+    const inset = Number(
+      /export const SQUARE = \{ inset: (\d+), stroke: \d+ \}/.exec(
+        pattern,
+      )?.[1],
+    );
+    const stroke = Number(
+      /export const SQUARE = \{ inset: \d+, stroke: (\d+) \}/.exec(
+        pattern,
+      )?.[1],
+    );
+    const squareInk = Math.round(
+      ((tile - 2 * inset + stroke) / tile) * squareWidth,
+    );
+    const resizedInk = Math.round(
+      ((tile - 2 * inset + stroke) / tile) * resizedWidth,
+    );
+
+    const svg = measuredRow("Inline SVG");
+    expect(
+      svg,
+      "the page's measured table has no inline-SVG row",
+    ).toBeDefined();
+    expect(svg?.[1]).toContain("svg-pattern");
+    expect(svg?.[1]).toContain("width alone");
+    expect(svg?.[1]).toContain(`${squareInk}×${squareInk}`);
+    expect(svg?.[1]).toContain(`${resizedInk} wide`);
+    expect(svg?.[1]).toContain("above and below");
+    expect(svg?.[2]).toContain("near-square");
+  });
+
   it("records the window chrome a probe painted, with its two limits", () => {
     // A Tier 4 toolbar or status bar has to know whether the runtime already
     // reserves the titlebar. Nothing said; `window-chrome` measured that it does
