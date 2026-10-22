@@ -11,6 +11,7 @@ import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { targetSize } from "@gpuixui/tokens";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
@@ -27,6 +28,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyle,
   hostStyleRecord,
   hostStyleString,
 } from "./testing/element.js";
@@ -188,6 +190,15 @@ describe("Rating", () => {
       ];
     });
     expect(ringed).toStrictEqual(Arr.map(Arr.range(0, 4), () => [true, false]));
+  });
+
+  it("reserves the pressable-target floor around every star", () => {
+    // The bug: the glyph plus a 2px hairline was the whole press target (20px at
+    // `md`, 18px at `sm`), under WCAG 2.2 SC 2.5.8's 24px floor.
+    Arr.forEach(starsOf(render({}, 3)), (star) => {
+      expect(expectSome(hostStyle(star, "minWidth"))).toBe(targetSize.minimum);
+      expect(expectSome(hostStyle(star, "minHeight"))).toBe(targetSize.minimum);
+    });
   });
 
   it("hands a style callback the live state and lets its result win", () => {

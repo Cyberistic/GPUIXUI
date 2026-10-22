@@ -13,6 +13,7 @@
 
 import type { StyleDesc } from "@gpuix/react";
 import type { ControlSize, TextRole, Theme } from "@gpuixui/tokens";
+import { targetSize } from "@gpuixui/tokens";
 import { createTw } from "@gpuixui/tw";
 import { switchThumbOffset } from "../core/selection.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
@@ -300,6 +301,12 @@ export const recipeTw = createTw({
     },
     "w-stepper-column": (theme) => ({
       width: theme.iconSize.md + theme.spacing.sm,
+    }),
+    // The pressable-target floor (WCAG 2.2 SC 2.5.8) a drawn control sits in.
+    // A fixed minimum, like `targetSize` itself — not a theme group.
+    "min-target": () => ({
+      minWidth: targetSize.minimum,
+      minHeight: targetSize.minimum,
     }),
     "h-space": (theme, value) => {
       const step = spacingStep(value);

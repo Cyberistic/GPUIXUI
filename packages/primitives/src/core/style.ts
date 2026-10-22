@@ -13,7 +13,7 @@
  */
 
 import type { GpuixTheme, StyleDesc } from "@gpuix/react";
-import { elevationShadow } from "@gpuixui/tokens";
+import { elevationShadow, targetSize } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type {
@@ -591,7 +591,13 @@ export interface RatingStarSpec {
   readonly readOnly?: boolean;
 }
 
-/** One star's hit area: the icon plus a hairline of padding for the ring. */
+/**
+ * One star's hit area: the icon plus a hairline of padding for the ring.
+ *
+ * The glyph is icon-sized, so the padding alone would leave a 20px press target
+ * at `md`; the box reserves the WCAG 2.2 SC 2.5.8 floor instead and centres the
+ * glyph in it (`targetSize.minimum`), the same rule a checkbox's target uses.
+ */
 export const ratingStarStyle = (
   spec: RatingStarSpec,
   theme: PrimitiveTheme,
@@ -602,6 +608,8 @@ export const ratingStarStyle = (
     alignItems: "center",
     justifyContent: "center",
     padding: theme.spacing["2xs"],
+    minWidth: targetSize.minimum,
+    minHeight: targetSize.minimum,
     borderRadius: theme.radius.full,
     cursor: interactive ? "pointer" : "not-allowed",
   };

@@ -10,6 +10,7 @@
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { targetSize } from "@gpuixui/tokens";
 import { Button } from "../src/components/Button.js";
 import { Rating } from "../src/components/Rating.js";
 import { Stack } from "../src/components/Stack.js";
@@ -239,6 +240,27 @@ it("is one tab stop: Tab enters the rating and the next Tab leaves it", async ()
   runtime.focusNext();
   // Every other star is tabIndex -1, so the group contributes one stop, not five.
   expect(runtime.focused()).toStrictEqual(Option.some("b"));
+});
+
+it("gives every star a pressable target of at least the floor", async () => {
+  // The smallest glyph is the strongest case: `sm` draws a 14px icon, so the
+  // padding alone was an 18px press target. The star box must reserve the
+  // 24px WCAG 2.2 SC 2.5.8 floor around it.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" size="sm" defaultValue={3} />
+    </Surface>,
+  );
+  Arr.forEach(Arr.range(1, 5), (index) => {
+    const label = `${index} of 5`;
+    const bounds = Option.getOrElse(
+      runtime.boundsOfId(byLabel(runtime, label).id),
+      () => expect.fail(`${label} painted no box`),
+    );
+    expect(bounds.width).toBeGreaterThanOrEqual(targetSize.minimum);
+    expect(bounds.height).toBeGreaterThanOrEqual(targetSize.minimum);
+  });
 });
 
 it("refuses input and leaves the tab order when disabled", async () => {

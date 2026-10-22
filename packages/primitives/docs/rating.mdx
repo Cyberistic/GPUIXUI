@@ -90,7 +90,13 @@ an empty one `colors.mutedForeground`, using two icons of the same geometry:
 `star-filled` and `star`. The ring declares the destructive colour too while
 invalid. The filled icon is still monochrome — its `#000` fill is what GPUix
 retints — so a theme change repaints both states. The star size is
-`theme.iconSize[size]` and the focus ring is the shared `focusRing`.
+`theme.iconSize[size]`, and the ring is the shared `keyboardRing`
+(`focusVisible`, painted after Tab and not after a click).
+
+Each star's press target reserves `targetSize.minimum` (24px, WCAG 2.2
+SC 2.5.8) in both axes — the glyph is centred inside it, so `sm` draws a 14px
+star in a 24px target rather than an 18px one. The box is the control: it holds
+the role, the focus, the ring and the press.
 
 `style` takes a `StateStyle<RatingState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, readOnly, focused, invalid }` for the group. It merges
@@ -125,7 +131,8 @@ recipe also sets.
   `Space` chooses the focused star on the release and not on the press; Delete
   clears; filled stars paint `colors.primary` (destructive while invalid, with
   the empty stars still muted); Tab enters on the rating and the next Tab leaves
-  the group; disabled refuses input.
+  the group; disabled refuses input; and every star's painted box is at least
+  the 24px pressable floor (measured at `sm`, the smallest glyph).
 
 ```sh
 nub run --filter @gpuixui/primitives test
