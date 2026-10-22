@@ -6336,7 +6336,46 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 190/190
+`[x]` `[██████████]` 191/191
+
+`[x]` Curate the **Badge** page and hold its press route and outline edge to
+the source — `/docs/components/badge` served only the package page (strategy 4:
+no preview), so the pill every list row, card header and table status column
+carries had nothing a reader could press. The curated page shadows
+`packages/components/docs/badge.mdx` and teaches what a drawing cannot show: a
+badge is never a control (no role, no tab stop, no press — an action is a
+`Button` with the pill's styling); the pill declares `pointerEvents: "none"`
+because a filled child is the boundary the hit test stops counting at, and the
+two measured routes are printed (`selected=badge` for the shipped pill,
+`selected=none` for the `badge-eager` control whose caller hands the pointer
+back); `outline` is the label variant, not a state, and its edge is
+`borderStrong` because the decorative `border` measures ~1.00:1 on a row's
+`accent` wash (~1.06:1 on `selected`) against the 3:1 a boundary needs; the two
+sizes are the registry's fixed `text-xs` 12/16 and `text-sm` 14/20 steps plus
+the 2px padding, so 20px/24px and a theme change repaints rather than resizes.
+Two browser previews: `badge-workflow` (a deployments panel with a filter,
+selectable rows and an eager-pill control that makes both press routes
+reachable) and `badge-states` (all seven variants, both sizes, the five states,
+and the outline pill on the page, a hover wash and a selected row). Rules live
+in `src/components/docs/badge-preview.ts`: `badge-preview.test.ts` (12 cases)
+compiles the component's own `BADGE_*` recipe through `classesToStyle` (so the
+heights, fills, inks and 30% edges are derived, not remembered), reads
+`badge.tsx` for the pointer refusal and the caller-style merge, and reads the
+`list-row-press` fixture for both routes; `badge-demo.test.tsx` (8 cases) holds
+the rendered markup, the row-scoped press target and the style sheet.
+`component-page-truth.test.ts` gains `holds the badge's press route and its
+outline edge to the source`, which reads the painter, the recipe block and the
+probe's `selects` values together and refuses a page that calls the badge a
+button. The page is in the sidebar (Surfaces), the Components index,
+`/docs/theming`'s switch list, the strategy's "Curated today" line, `sources.ts`,
+the app README ledger, `package-docs.test.ts`'s curated set and
+`component-page-truth.test.ts`'s curated set. Directions measured: flipping the
+eager route to `row` failed the press case (`expected 'row' to be 'none'`),
+giving the preview pill `pointer-events: auto` failed the declaration case in
+both files, and a wrong variant role failed `fill is not <role>`. `nub run --filter @gpuixui/docs test`
+green for these files (1059 passed overall at that point), `check-types` and
+`check:tests` green. No native scenario applies — a docs page has no runtime
+path, and `list-row-press` is already committed evidence.
 
 `[x]` Curate the **Avatar** page and hold its fallback, its dot roles and its one
 accessible node to the source — `/docs/components/avatar` served only the package
@@ -8662,6 +8701,7 @@ numbers).
 `[x]` `@gpuixui/motion`: **a re-declared coast relaunched the run** — `MotionValue.coast` restarted from the sample on screen with the *release* velocity every time it was called, so `useInertia(velocity, inertia())` (the form the README prints) relaunched on every render: the decay was reset to full speed before it could lose any, the value travelled past its projected rest, and the run never settled. It is the inertiatic twin of the re-declared-tween rule `transitionEquals` already held. A coast is now compared by the physics a sample reads (`sameInertia`, in the private `src/inertia-read.ts` beside `tauOf`/`boundsOf`, so the retained value and the sampler cannot drift) and the release velocity: the identical declaration is a no-op, while a new gesture (another release velocity, a changed time constant or bound) starts from the presentation, as does a coast after `set`/`animate`. Proof: four cases in `motion.test.ts` — the same declaration continues the 200 ms trajectory instead of launching a fresh one from the 100 ms sample (`69.59` → `60.94`), a re-declaration after rest stays at `140` (was `174.79`), and the two directions that must still restart (a `700` release, a `700 ms` time constant). Directions measured: with the guard removed both no-op cases fail by name; with `sameInertia` forced `true` the changed-inertia case fails (`60.94` where `72.07` is required); restored, 10 files / 105 tests green, `check-types`, lint and `check:tests` clean. Docs: the `coast` JSDoc, the `useInertia` JSDoc and `packages/motion/README.md` §The single entry point / §React hooks.
 `[x]` `@gpuixui/motion`: **a hand-built tween restarted on every render** — `Transition` is exported and structural, so a caller can declare one without `tween()`, and a duration computed before a measurement is often `NaN` (`{ kind: "tween", durationMs: measured * 10, easing }`). The sampler repaired that to the house 300 ms, but `transitionEquals` compared the raw field (`NaN === NaN` is false), so two declarations that ran identically read as different: `MotionValue.animate` stood down from the no-op and re-armed the run from the sample on screen on every render, so a surface that repainted crawled toward its target instead of finishing. The equality check now reads the duration the sampler runs — an unreadable one is `DEFAULT_TWEEN_MS`, a zero or a negative one is no duration at all — the twin of the rule `physicsEquals` already follows. The declared `tween()` stores the same value, so `tween(-20)` is an instant declaration of 0 rather than a negative field nobody paints. Proof: `motion.test.ts`'s `does not restart a run for a re-declared duration it cannot read` (a hand-built `NaN` tween sampled at 150 ms is `0.5`; re-declaring it must still complete by 300 ms) measured failing at `HEAD` with `expected 0.75 to be 1` and `complete` false, plus `transitionEquals`'s `compares a tween by the duration the sampler runs` (NaN vs NaN, NaN vs `tween(300)`, infinity vs 300, `tween(0)` vs `tween(-20)`, and a runnable pair that must differ). Restored: 10 files / 108 tests, `check-types` clean. Docs: the `transitionEquals` and `tween` JSDoc and `packages/motion/README.md` §The single entry point / §Inputs the runtime can paint.
 `[x]` `@gpuixui/motion`: **a coast after `set` never started** — the re-declaration guard added above compares the coast on screen (an inertia mode, the release speed, the physics a sample reads) and stands down only when `animate` replaces that mode, so `set` — which assigns a presentation and cancels the run — left the retired declaration behind: `coast` → `set` → the same release matched the guard and returned, and the value sat at the set frame with `active` false and no completion. Both the `coast` JSDoc and the README promise "a coast after `set`/`animate`" starts where the surface is, and `animate` did (it replaces the mode); `set` did not, so the promise was true of one arm and false of the other. `set` now retires the run with the value — mode back to `instant`, retained release velocity cleared — so a release with the last gesture's speed is a new gesture. Proof: `motion.test.ts`'s `starts a new coast after a set, even with the same release` — a coast rests at `140`, `set(80)`, the same `inertia(350)`/`400` release coasts again, and the sample 100 ms later is `active` and on the trajectory (`80 + 140·(1−e^−0.285714) ≈ 114.79`); measured failing at `HEAD` with `expected false to be true` and the value held at `80`. Restored: 10 files / 106 tests, `check-types` clean. Docs: the `set` JSDoc, the `coast` JSDoc and `packages/motion/README.md` §The single entry point.
+`[x]` `@gpuixui/motion`: **a phase the table does not own reached the runtime as a method** — `phaseOf` guarded with `phase in motionEasings`, which is true for every name `Object.prototype` carries, so a persisted `phase: "toString"` — the exact shape the house fallback exists for — passed the guard and the lookup handed the runtime `Object.prototype.toString` where a curve belongs: `motionTiming("fast", { phase: "toString" })` returned `{ duration: 0.16, ease: [Function toString] }` while every existing case stayed green. Both table lookups now read their **own** keys (`namesLevel`/`namesPhase` over `Object.hasOwn`), so a level or phase the table does not name — including a prototype member — takes the house fallback (`normal`, 200 ms, and the between-states curve) instead of a `NaN` duration or a function. Proof: `timing.test.ts`'s `reads a phase from the table's own keys, not the ones it inherits` (four inherited names) measured failing at `HEAD` on the exact payload (`+ "ease": [Function toString]`); restored, 10 files / 112 tests green, `check-types`, lint, `fmt` and `check:tests` clean. Docs: `packages/motion/README.md` §The runtime's declarative timing.
 `[x]` Phase 0: wire `@gpuixui/motion` into Dialog, Drawer, Popover, DropdownMenu, CommandMenu, Toast, Accordion, Tabs and PreviewCard (shadcn/Base UI enter-exit patterns; fade + offset, never `transform`) — the timing policy is `motionTiming` in `@gpuixui/motion`, the frames and mount window are `packages/components/src/internal/presence.tsx`, the preference is `MotionProvider`, and `src/behaviour/presence.test.tsx` measures the movement and exit in the real renderer
 `[x]` Close the popup family the nine Phase 0 surfaces left out: `NavigationMenuContent` was the
       last anchored panel in `packages/components` that popped into place, so it now enters and

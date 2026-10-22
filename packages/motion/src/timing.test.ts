@@ -109,6 +109,29 @@ describe("a level or phase the table does not carry", () => {
       ease: motionEasings.standard,
     });
   });
+
+  it("reads a phase from the table's own keys, not the ones it inherits", () => {
+    // The bug this guards: `phase in motionEasings` is true for every name on
+    // `Object.prototype`, so a persisted phase of `"toString"`,
+    // `"constructor"` or `"hasOwnProperty"` passed the guard and the lookup
+    // handed the runtime that method where a curve belongs — a function, not an
+    // easing, which is exactly the absent-easing failure the fallback above
+    // exists to prevent, reached through the prototype chain instead of a
+    // missing key.
+    const inherited = [
+      "toString",
+      "__proto__",
+      "constructor",
+      "hasOwnProperty",
+    ];
+    inherited.forEach((phase) => {
+      // @ts-expect-error — a persisted phase the library did not type-check.
+      expect(motionTiming("fast", { phase })).toEqual({
+        duration: 0.16,
+        ease: motionEasings.standard,
+      });
+    });
+  });
 });
 
 describe("reduced motion", () => {

@@ -76,6 +76,21 @@ export interface MotionTimingOptions {
 }
 
 /**
+ * Whether the table itself names a level.
+ *
+ * The tables are looked up by their **own** keys. `key in table` also answers
+ * true for every name `Object.prototype` carries (`toString`, `constructor`,
+ * `__proto__`), so a persisted name would pass the guard and the lookup would
+ * hand the runtime a method where a number or a curve belongs.
+ */
+const namesLevel = (level: string): level is MotionLevel =>
+  Object.hasOwn(motionLevels, level);
+
+/** Whether the easing table itself names a phase. */
+const namesPhase = (phase: string): phase is MotionPhase =>
+  Object.hasOwn(motionEasings, phase);
+
+/**
  * The milliseconds a level names.
  *
  * The level may be a persisted choice an application reads back — a string the
@@ -84,7 +99,7 @@ export interface MotionTimingOptions {
  * (`normal`), the timing a component that asked for nothing would move with.
  */
 const levelMs = (level: MotionLevel): number =>
-  Number.isFinite(motionLevels[level])
+  namesLevel(level) && Number.isFinite(motionLevels[level])
     ? motionLevels[level]
     : motionLevels.normal;
 
@@ -94,7 +109,7 @@ const levelMs = (level: MotionLevel): number =>
  * runtime an absent `ease`.
  */
 const phaseOf = (phase: MotionPhase): MotionPhase =>
-  phase in motionEasings ? phase : "standard";
+  namesPhase(phase) ? phase : "standard";
 
 /**
  * A level and phase as the runtime's timing, in seconds.

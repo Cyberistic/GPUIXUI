@@ -205,11 +205,13 @@ states. `preference` is the application's — the runtime exposes no
 reduced-motion query — and the reduced branch keeps the frames, so a component
 still paints its resting state.
 
-The tables are read at runtime, so a level or phase an application reads back
-from storage and a release no longer carries takes the house fallback — the
-surface arrival `normal` (200 ms) and the between-states curve — instead of
-handing the runtime a `NaN` duration or an absent easing. A reduced run is
-still an instant assignment whatever the tables hold.
+The tables are read by their **own** keys, so a level or phase an application
+reads back from storage and a release no longer carries — including a name that
+belongs to `Object.prototype` rather than to the table — takes the house
+fallback: the surface arrival `normal` (200 ms) and the between-states curve,
+instead of handing the runtime a `NaN` duration, an absent easing, or a method
+where a curve belongs. A reduced run is still an instant assignment whatever the
+tables hold.
 
 Import the subpath, not the barrel: a consumer that only needs a timing should
 not load the spring and timeline maths (`@gpuixui/components` imports exactly
