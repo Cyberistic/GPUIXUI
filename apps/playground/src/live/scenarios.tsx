@@ -16,7 +16,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Duration, Effect, Match, pipe } from "effect";
+import { Duration, Effect, flow, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
@@ -109,6 +109,7 @@ import {
 } from "@gpuix/react";
 import type {
   ImgInstance,
+  KeyEvent,
   NativeWindowInsets,
   PublicInstance,
   StyleDesc,
@@ -154,6 +155,15 @@ import {
   otpPasteOver,
   otpPasteReadout,
 } from "./otp-paste.js";
+import {
+  OTP_KEYS_CHANNELS,
+  OTP_KEYS_FIELD,
+  OTP_KEYS_LENGTH,
+  OTP_KEYS_READOUT,
+  otpKeysCellId,
+  otpKeysChannels,
+  otpKeysReadout,
+} from "./otp-keys.js";
 import {
   BAR_PIXEL,
   MARGIN_PIXEL,
@@ -9989,6 +9999,267 @@ const otpPasteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("otp-pasted");
   });
 
+/**
+ * The shipped `OTPField`'s key contract in a window.
+ *
+ * The field's header says the native text editor consumes Left/Right/Home/End/
+ * Backspace on key **down**, so its own navigation runs on key **up**, and that a
+ * Backspace whose native edit already emptied a cell must not clear the cell
+ * before it too. Both were measured in the offscreen renderer; a window
+ * dispatches keys differently, so the probe types a code into the shipped field,
+ * logs both channels and asserts the focus, the code and the guard.
+ */
+const OtpKeysProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [code, setCode] = useState("");
+  const [completes, setCompletes] = useState(0);
+  const [edits, setEdits] = useState(0);
+  const [down, setDown] = useState<ReadonlyArray<string>>([]);
+  const [up, setUp] = useState<ReadonlyArray<string>>([]);
+  const log =
+    (set: Dispatch<SetStateAction<ReadonlyArray<string>>>) =>
+    (event: KeyEvent): void => {
+      const key = event.key;
+      if (key !== undefined) set((seen) => Arr.append(seen, key));
+    };
+  return (
+    <div
+      testId="otp-keys-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.xl,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The shipped code field's keys: typing moves the focus, an arrow arrives
+        on key up, and one Backspace clears one cell.
+      </text>
+      <PrimitiveThemeProvider theme={palettes.dark}>
+        <OTPField
+          testId={OTP_KEYS_FIELD}
+          label="Code"
+          length={OTP_KEYS_LENGTH}
+          value={code}
+          onValueChange={(next) => {
+            setCode(next);
+            setEdits((count) => count + 1);
+          }}
+          onComplete={() => setCompletes((count) => count + 1)}
+          onKeyDown={log(setDown)}
+          onKeyUp={log(setUp)}
+        />
+      </PrimitiveThemeProvider>
+      <text
+        testId={OTP_KEYS_READOUT}
+        style={{ ...textStyle(theme, "code"), color: theme.colors.foreground }}
+      >
+        {otpKeysReadout({ value: code, completes, edits, down, up })}
+      </text>
+      <text
+        testId={OTP_KEYS_CHANNELS}
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {otpKeysChannels({ value: code, completes, edits, down, up })}
+      </text>
+    </div>
+  );
+};
+
+const otpKeysSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(OTP_KEYS_READOUT);
+    yield* Effect.sleep(SETTLE);
+    const focusedCell = (): Effect.Effect<string, Smoke.SmokeHostError> =>
+      Effect.map(
+        ctx.host.focused(),
+        flow(
+          Option.fromNullishOr,
+          Option.getOrElse(() => "none"),
+        ),
+      );
+    const readout = (code: string, completes: number, edits: number) =>
+      otpKeysReadout({
+        value: code,
+        completes,
+        edits,
+        down: [],
+        up: [],
+      });
+
+    yield* ctx.expectEqual(
+      "the code starts empty",
+      yield* ctx.host.text(OTP_KEYS_READOUT),
+      readout("", 0, 0),
+    );
+    yield* ctx.expectEqual(
+      "neither key channel has seen anything",
+      yield* ctx.host.text(OTP_KEYS_CHANNELS),
+      "down= up=",
+    );
+
+    // Type a two-character code: each edit moves the focus to the next cell.
+    yield* ctx.host.click(otpKeysCellId(0));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the first cell takes the focus",
+      yield* focusedCell(),
+      otpKeysCellId(0),
+    );
+    yield* ctx.host.key("1");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "typing one character fills the first cell and moves on",
+      yield* ctx.host.text(OTP_KEYS_READOUT),
+      readout("1", 0, 1),
+    );
+    yield* ctx.expectEqual(
+      "the next cell takes the focus",
+      yield* focusedCell(),
+      otpKeysCellId(1),
+    );
+    yield* ctx.host.key("2");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the second character fills the second cell",
+      yield* ctx.host.text(OTP_KEYS_READOUT),
+      readout("12", 0, 2),
+    );
+    yield* ctx.expectEqual(
+      "the third cell takes the focus",
+      yield* focusedCell(),
+      otpKeysCellId(2),
+    );
+
+    // An arrow on key down alone must not move the field: the native editor
+    // consumes it and the field's navigation is the key-up contract.
+    yield* ctx.host.key("left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow that is only pressed leaves the focus where it was",
+      yield* focusedCell(),
+      otpKeysCellId(2),
+    );
+    yield* ctx.host.keyUp("left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "releasing the arrow moves the focus one cell left",
+      yield* focusedCell(),
+      otpKeysCellId(1),
+    );
+    yield* ctx.expectContains(
+      "the key-up channel is the one that carries the arrow",
+      yield* ctx.host.text(OTP_KEYS_CHANNELS),
+      "up=left",
+    );
+
+    // A real press is a down and an up: one move per pair, not two.
+    yield* ctx.host.key("left");
+    yield* ctx.host.keyUp("left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "one press of the arrow moves the focus once",
+      yield* focusedCell(),
+      otpKeysCellId(0),
+    );
+
+    // Home and End are the same key-up contract.
+    yield* ctx.host.key("end");
+    yield* ctx.host.keyUp("end");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "End puts the focus in the last cell",
+      yield* focusedCell(),
+      otpKeysCellId(OTP_KEYS_LENGTH - 1),
+    );
+    yield* ctx.host.key("home");
+    yield* ctx.host.keyUp("home");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Home puts the focus back in the first cell",
+      yield* focusedCell(),
+      otpKeysCellId(0),
+    );
+
+    // Move onto the second cell before pressing Backspace there.
+    yield* ctx.host.key("right");
+    yield* ctx.host.keyUp("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow key moves onto the second cell",
+      yield* focusedCell(),
+      otpKeysCellId(1),
+    );
+
+    // A window's automation sends a named key down but no text edit: a
+    // printable character is inserted, while Backspace produces no `onChange`,
+    // so the platform's native delete cannot be driven from this harness. The
+    // field then refuses to delete twice: the cell is filled, so its key-up
+    // handler leaves the code alone.
+    yield* ctx.host.key("backspace");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a window's automation Backspace runs no native edit",
+      yield* ctx.host.text(OTP_KEYS_READOUT),
+      readout("12", 0, 2),
+    );
+    yield* ctx.host.keyUp("backspace");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the key-up of a filled cell deletes nothing",
+      yield* ctx.host.text(OTP_KEYS_READOUT),
+      readout("12", 0, 2),
+    );
+    yield* ctx.expectContains(
+      "the key-up handler did see the Backspace it refused",
+      yield* ctx.host.text(OTP_KEYS_CHANNELS),
+      "up=left,left,end,home,right,backspace",
+    );
+    yield* ctx.expectEqual(
+      "the refused Backspace leaves the focus where it was",
+      yield* focusedCell(),
+      otpKeysCellId(1),
+    );
+
+    // The empty cell is where the key-up owns the delete: a press there clears
+    // the cell before it and moves onto the cleared cell.
+    yield* ctx.host.key("right");
+    yield* ctx.host.keyUp("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow key moves onto the empty third cell",
+      yield* focusedCell(),
+      otpKeysCellId(2),
+    );
+    yield* ctx.host.key("backspace");
+    yield* ctx.host.keyUp("backspace");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Backspace in an empty cell clears the cell before it",
+      yield* ctx.host.text(OTP_KEYS_READOUT),
+      readout("1", 0, 3),
+    );
+    yield* ctx.expectEqual(
+      "the focus moves onto the cell it cleared",
+      yield* focusedCell(),
+      otpKeysCellId(1),
+    );
+    yield* ctx.host.capture("otp-keys");
+  });
+
 /** The line the selection probe selects: a word a failure can name. */
 const SELECTION_LINE = "hello live selection world";
 
@@ -16687,6 +16958,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "otp-paste-lifecycle",
     view: () => <OtpPasteProbe />,
     steps: otpPasteSteps,
+  },
+  "otp-keys-lifecycle": {
+    id: "otp-keys-lifecycle",
+    view: () => <OtpKeysProbe />,
+    steps: otpKeysSteps,
   },
   "select-lifecycle": {
     id: "select-lifecycle",

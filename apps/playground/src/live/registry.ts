@@ -235,6 +235,12 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "otp-keys-lifecycle",
+    title:
+      "Input: a shipped OTPField's arrows move on key up, Home/End reach the ends, and one Backspace clears one cell in a window",
+    capability: "input",
+  },
+  {
     id: "selection-lifecycle",
     title:
       "Text: a real pointer drag over the shipped Text paints the selection, getSelectedText reports it, Cmd+C copies it, and a default node opts out",

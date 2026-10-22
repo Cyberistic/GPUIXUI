@@ -665,7 +665,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 92/92
+`[x]` `[██████████]` 93/93
 
 `[x]` Hold **`Pixels.hexToRgba` to the whole value, not its prefix** — the
       documented contract is "a hex colour, or `null` when malformed", and the
@@ -2355,6 +2355,33 @@ a workaround for two live sessions sharing one worktree; see
       record and the React key warning the probe surfaced are the interlock rows
       below.
 
+`[x]` Measure the **key contract a shipped `OTPField` runs in a window** — the
+      field's header rests on two window facts nothing had measured: the native
+      editor consumes Left/Right/Home/End/Backspace on key **down**, so the
+      field's navigation runs on key **up**, and a Backspace whose native edit
+      already emptied a cell must not clear the cell before it too. The live
+      `otp-keys-lifecycle` probe types a code into the shipped six-cell field,
+      logs both key channels through its own handlers, and reads the value, the
+      cells and native focus: typing fills a cell and moves on, `left` pressed
+      alone does not move the focus (the key-down log holds only the typed
+      characters) while its release moves one cell, one full press moves once,
+      `Home`/`End` reach the ends, a filled cell's `Backspace` key-up **deletes
+      nothing** when no native edit ran, and `Backspace` in the empty third cell
+      clears the second and lands the focus on it. 21 checks, `--only
+      otp-keys-lifecycle`, green on 0.11.0 (1.2 s). Fixture: `src/live/otp-keys.ts`
+      + `otp-keys.test.ts` (6 cases: the code and channel readouts, the cell ids,
+      the registry row, the printed count, and the four assertions that carry the
+      contract). Negative control measured: expecting the arrow's key **down** to
+      move the focus fails `an arrow that is only pressed leaves the focus where
+      it was` (`expected "otp-keys-field-cell-2", got "otp-keys-field-cell-3"`),
+      exit `1`, restored green. Measured harness limit: a window's `key()` inserts
+      printable text but runs **no native edit for a named key**, so the native
+      delete half stays proven by `packages/primitives/runtime/otp.runtime.test.tsx`;
+      the README states it beside the probe. Evidence:
+      `apps/playground/README.md` §`otp-keys-lifecycle`,
+      `.artifacts/live/otp-keys.png`. Publishing the automation limit on
+      `/docs/testing` is the interlock below.
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 3/3
@@ -3836,6 +3863,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Drop the **curated field page's required-marker role** — `apps/docs/content/docs/components/field.mdx` §Theming prints "required marker | `colors.destructive`", and the package now paints that marker in `statusTone(theme, "destructive").foreground` (`packages/components/src/field.tsx`), the readable status role the same table gives the message and `contrastPairs` measures as text. The page's own paragraph below it therefore contradicts its table, and `component-page-truth.test.ts` does not read the marker's colour, so it passes | docs-site (`apps/docs/content/docs/components/field.mdx`; `component-page-truth.test.ts` should hold the row to the painter) | **resolved** — the Theming row names `statusTone(theme, "destructive").foreground`, the paragraph says the marker and the message avoid the fill for the same reason, and `component-page-truth.test.ts`'s field case reads both the row and the marker's element (the painter must resolve the tone's role and not the fill). Directions measured: restoring the fill in the page row fails on the row's text, and painting the marker with `theme.colors.destructive` fails `the required marker no longer paints the tone's readable role` |
 | Publish the **paste a shipped `OTPField` receives** — the capability record's clipboard row says "the platform's paste runs inside a focused field and reaches `onChange` with the new value … so an `OTPField`'s paste is unverified". The playground's `otp-paste-lifecycle` (10 checks, 0.11.0) measured it: a six-character marker copied from a shipped `Input` with `cmd-a`/`cmd-c` and pasted with `cmd-v` fills all six cells from the first, reports one edit and one completion, and leaves the focus in the sixth cell; a nine-character paste truncates to six and does **not** complete twice; a paste over the third cell keeps the first two. The record should move the `OTPField` half from unverified to measured and cite the probe, and `/docs/runtime`'s owed-probe list should name its id | docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) | open — measured 2026-10-22, evidence `apps/playground/README.md` §`otp-paste-lifecycle` |
 | Give the **`OTPField` default cells a key** — the probe surfaced `Each child in a list should have a unique "key" prop … Check the render method of OTPField` on 0.11.0 in a real window, from the default `Arr.map(part.cells, …)` cell list. The probe is green, so this is a render warning rather than a behaviour defect, but it pollutes every window log that mounts the shipped field and points at a list whose cells hold the code | primitives (`packages/primitives/src/components/OTPField.tsx`) | open — measured 2026-10-22 by `--only otp-paste-lifecycle` |
+| State the **window automation's edit limit** — `/docs/testing`'s `key` row says the verb sends a key **down** (so a release-activated control needs `keyUp`), and `otp-keys-lifecycle` measured the other half a probe author needs: `key()` inserts a printable character but produces **no native text edit for a named key**, so `Backspace`/`Delete` cannot be driven through the platform's editor from a window. The same probe shows the consequence is a refusal rather than a wrong edit — a filled `OTPField` cell deletes nothing when no native edit ran — and the native single-delete guard is proven in `packages/primitives/runtime/otp.runtime.test.tsx`. The page's row should say both, or the next window probe plans a deletion it cannot drive | docs-site (`apps/docs/content/docs/testing.mdx` + `testing-page.test.ts`) | open — measured 2026-10-22 by `--only otp-keys-lifecycle` |
 
 ## Phase D — data and workspace components
 

@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-60 probes a real window can prove, of which fifteen mount shipped
+61 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -2016,6 +2016,45 @@ handle paste itself. The probe also surfaced a React warning in the field's
 default cell list (`Each child in a list should have a unique "key" prop`),
 recorded as an interlock for the package that owns the field.
 
+### `otp-keys-lifecycle` — measured on 0.11.0 here
+
+A code field is almost entirely keyboard: six cells, one code, and the arrows and
+Backspace move between them. `OTPField`'s header records two window facts it was
+built on — the native text editor consumes Left/Right/Home/End/Backspace on key
+**down**, so the field's own navigation runs on key **up**, and a Backspace whose
+native edit already emptied a cell must not also clear the cell before it — and
+the offscreen renderer cannot settle the first, because it delivers keys
+differently. This probe types into the shipped field, logs both key channels
+through its own handlers, and reads the value, the cells and native focus.
+
+| State | Measured |
+| ----- | -------- |
+| at rest | empty code, six empty cells, no completion, no edit, neither key channel |
+| a character typed | the first cell fills, the edit is counted, and the focus moves to the next cell |
+| a second character | the second cell fills and the third takes the focus |
+| `left` pressed but not released | the focus stays on the third cell — the native editor took the key down, and the caller's key-down log has only the typed characters |
+| the same arrow released | the focus moves one cell left, and the caller's handler sees it on the **key-up** channel |
+| one full press (`left`, `end`, `home`, `right`) | the focus moves **once** per press |
+| `Backspace` in a filled cell | the automation runs no native edit, and the field's key-up **refuses to delete twice**: the code and the focus are unchanged while the handler logs the key |
+| `Backspace` in the empty third cell | the key-up clears the cell before it, the code becomes `1`, and the focus lands on the cleared cell |
+
+21 checks, `--only otp-keys-lifecycle`, green on 0.11.0 (1.2 s). Negative
+control measured: expecting the arrow's **key down** to move the focus fails
+`an arrow that is only pressed leaves the focus where it was` with
+`expected "otp-keys-field-cell-2", got "otp-keys-field-cell-3"`, so the key-up
+split is measured rather than assumed. Evidence:
+`.artifacts/live/otp-keys.png`.
+
+One honest limit: a window's automation `key()` inserts a printable character
+but produces **no native text edit for a named key**, so `Backspace` cannot be
+driven through the platform's own editor here. The probe therefore measures the
+two halves a window can show — the field refuses a filled cell, and it clears
+across an empty one — while the single-delete guard's native half stays proven
+by `packages/primitives/runtime/otp.runtime.test.tsx` in the `TestRenderer`,
+where the runtime's own `keyDown` reaches the input and the guard has a native
+edit to avoid duplicating. The capability record's `onPaste` note is unaffected:
+paste is a text edit and `otp-paste-lifecycle` drives it end to end.
+
 ### `selection-lifecycle` — measured on 0.11.0 here
 
 Text selection had one proof, and it was synthetic: the headless
@@ -3595,8 +3634,8 @@ narrower. Each deviation is deliberate and measured:
   were one-shot frame reads in the probes — see §A probe waits for a settled
   paint, which records all three measured shapes and the waits that replaced
   them. The full live suite is the release gate, and this line is its result.
-  Measured alone since then: `inspector-lifecycle` and
-  `otp-paste-lifecycle` (two probes, each run alone).
+  Measured alone since then: `inspector-lifecycle`,
+  `otp-paste-lifecycle` and `otp-keys-lifecycle` (three probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
