@@ -132,7 +132,7 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
 | --- | -------- |
 | No table element | GPUix 0.11.0's element set has `div`, `text`, `img`, `svg`, `canvas`, `input`, `textarea`, `anchored`, `code`, `diff`, `markdown`, `virtual-list` — no table |
 | No cell-level accessibility | `role`, `aria-label`, `aria-selected` and `aria-level` exist; `aria-colindex`, `aria-rowindex` and `aria-describedby` do not |
-| Charts | No chart component; the drawing surface is measured. `<svg source>` paints its markup as **one tint**, so a multi-series chart is one stacked `<svg>` per colour, and `<text>` inside the markup paints; `<img>` paints a path, URL or data-URL PNG and a pixel buffer from a layout effect; `<canvas>` is measured **blank**, so the fill behind it shows through. There is no gradient or per-shape palette inside one element |
+| Charts | No chart component; every drawing route is measured. `<svg source>` paints its markup as **one tint**, so a multi-series chart is one stacked `<svg>` per colour, and `<text>` inside the markup paints; a `setImagePixels` buffer keeps each pixel's own colour — three series inside one element — and its transparent margin composites onto the card behind it, uploaded from a layout effect; `setImage` decoding SVG **bytes** keeps every `fill`, which `<svg source>` cannot; `<canvas>` is measured **blank**, so the fill behind it shows through. Two limits: a translucent bar over another bar is unmeasured, and a buffer scales to its element's box, so a chart is drawn at its layout size |
 | Hierarchical data | A tree view needs a `<virtual-list>` plus our own flattening; hierarchical virtualization is ours. `virtual-tree-lifecycle` measured the shape: one `<virtual-list>` child per visible node, 4 000 rows from 40 open directories, arrows moving native focus through `renderer.focusElement`, and a reveal by index |
 | Resizable columns | Pointer events and `col-resize`/`row-resize` cursors exist; no column model, so the resize is application state |
 
@@ -145,7 +145,8 @@ The full runtime table is on [Runtime](/docs/runtime).
 - **Table, tree and toolbar components** → `@gpuixui/components`, each with a
   native behaviour suite and a page under `packages/components/docs`.
 - A **statistic card or a chart** → a Block until the behaviour is reusable; a
-  chart composes the measured surface — one tinted `<svg>` layer per series, or
-  an `<img>` pixel buffer uploaded from a layout effect — so it waits on a
-  reusable chart component, not on a drawing surface.
+  chart composes a measured route — one tinted `<svg>` layer per series, a
+  `setImagePixels` buffer uploaded from a layout effect, or SVG bytes through
+  `setImage` — so it waits on a reusable chart component, not on a drawing
+  surface.
 - A **column layout in one app** → the app, or a Block, not a library prop.

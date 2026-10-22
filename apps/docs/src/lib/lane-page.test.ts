@@ -130,6 +130,23 @@ describe("the data-display page's drawing claims", () => {
     expect(rowFor(record, "Image painting")).toContain("layout effect");
   });
 
+  it("names the two routes a multi-colour plot measured", () => {
+    // The row sent a chart to "one stacked `<svg>` per colour" and a pixel
+    // buffer, while `chart-raster` measured the two routes that actually carry a
+    // palette: a buffer keeps each pixel's own colour inside one element, and
+    // `setImage` on SVG bytes keeps every `fill` — which the stacked `<svg>`
+    // route cannot, because each element is a single tint. A planner reading
+    // only the lane page would build the weaker shape.
+    const chart = rowFor(record, "Raster and vector chart surfaces");
+
+    expect(chart).toContain("supported");
+    expect(chart).toContain("chart-raster");
+    expect(charts).toContain("setImagePixels");
+    expect(charts).toContain("setImage");
+    expect(charts).toContain("bytes");
+    expect(charts).toContain("translucent");
+  });
+
   it("does not send a chart to a surface that does not exist", () => {
     expect(dataPage).not.toContain(
       "until a native drawing surface is verified",
