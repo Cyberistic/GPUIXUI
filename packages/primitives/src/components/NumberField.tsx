@@ -103,6 +103,13 @@ export interface NumberFieldProps
   readonly label?: string;
   readonly placeholder?: string;
   readonly autoFocus?: boolean;
+  /**
+   * Enter in the input. A single-line GPUix `<input>` binds Enter to the
+   * runtime's own Submit action, so it never reaches `onKeyDown`: the field
+   * commits its draft first (reformatting it to `precision`) and then reports
+   * here. No listener is installed while `disabled`.
+   */
+  readonly onSubmit?: (event: EventPayload) => void;
   /** Overrides the display text; the value still parses with `core/number.ts`. */
   readonly formatValue?: (value: number) => string;
   /** Extra style, resolved against the field's live state and merged last. */
@@ -147,6 +154,8 @@ export interface NumberFieldPart {
   readonly address: FieldHostProps;
   /** The announced help, already blank-filtered. */
   readonly description: string | undefined;
+  /** The caller's Enter report; the field's commit runs before it. */
+  readonly onSubmit: ((event: EventPayload) => void) | undefined;
   /** The committed value, which the arrow keys step from. */
   readonly current: number;
   readonly range: NumberRange;
@@ -179,6 +188,7 @@ export const numberFieldPart = (
     autoFocus: disabled ? undefined : props.autoFocus,
     address: props,
     description: accessibleName(props.description),
+    onSubmit: disabled ? undefined : props.onSubmit,
     current: state.current,
     range: numberRange(props),
     focus,
@@ -250,18 +260,24 @@ export const renderNumberFieldInput = (
         if (disabled) return;
         handlers.onTextChange(event.value ?? "");
       }}
+      onSubmit={
+        part.disabled
+          ? undefined
+          : (event: EventPayload) => {
+              handlers.onCommit();
+              part.onSubmit?.(event);
+            }
+      }
       onClick={part.interaction.onClick}
       onKeyDown={composeEvent<KeyEvent>(part.interaction.onKeyDown, (event) => {
         if (disabled) return;
-        const key = event.key ?? "";
-        if (key === "enter") {
-          handlers.onCommit();
-          return;
-        }
-        Option.match(decideNumberKey(part.current, part.range, key), {
-          onNone: () => {},
-          onSome: handlers.onValue,
-        });
+        Option.match(
+          decideNumberKey(part.current, part.range, event.key ?? ""),
+          {
+            onNone: () => {},
+            onSome: handlers.onValue,
+          },
+        );
       })}
       onKeyUp={part.interaction.onKeyUp}
       onFocus={composeEvent<EventPayload>(

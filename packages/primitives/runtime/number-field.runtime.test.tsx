@@ -10,7 +10,7 @@
  */
 
 import { useState, type ReactNode } from "react";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
@@ -290,6 +290,28 @@ it("leaves the caret keys to the host's text field", async () => {
   // The up arrow does arrive, so the field above was not simply deaf.
   runtime.renderer.nativeSimulateKeyDown(input.id, "up");
   expect(lastValue(field.values)).toBe(51);
+});
+
+it("commits the draft on Enter and reports it through onSubmit", async () => {
+  // The bug guarded: a single-line GPUix `<input>` binds Enter to the runtime's
+  // own Submit action, so Enter never reaches `onKeyDown` — the field's commit
+  // branch was unreachable in a window and a form could not send from it.
+  const submitted = vi.fn();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Amount"
+      autoFocus
+      precision={2}
+      onSubmit={submitted}
+    />,
+  );
+  runtime.type("1 . 5");
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "enter");
+  runtime.flush();
+  expect(textOf(runtime, "Amount")).toBe("1.50");
+  expect(submitted).toHaveBeenCalledTimes(1);
 });
 
 it("shows the value its owner pushes", async () => {

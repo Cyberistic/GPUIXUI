@@ -124,8 +124,22 @@ describe("NumberField", () => {
     expect(onValue).toHaveBeenCalledWith(60);
     expectSome(hostHandler(input, "onKeyDown"))(keyEvent("end"));
     expect(onValue).toHaveBeenCalledWith(100);
-    expectSome(hostHandler(input, "onKeyDown"))(keyEvent("enter"));
+  });
+
+  it("commits before it reports Enter, and installs no listener while disabled", () => {
+    const onCommit = vi.fn();
+    const onSubmit = vi.fn();
+    const { input } = partsOf(
+      render({ onSubmit }, 5, "5", idle, { onCommit }),
+    );
+    expectSome(hostHandler(input, "onSubmit"))(changeEvent(""));
     expect(onCommit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+
+    const disabled = partsOf(
+      render({ disabled: true, onSubmit: vi.fn() }, 5, "5"),
+    );
+    expect(hostProp(disabled.input, "onSubmit")).toStrictEqual(Option.none());
   });
 
   it("leaves an unrelated key to the form", () => {

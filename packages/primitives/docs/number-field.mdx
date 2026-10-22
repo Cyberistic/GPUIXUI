@@ -77,6 +77,7 @@ import {
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border |
 | `label` | `string` | none | accessible name |
+| `onSubmit` | `(event: EventPayload) => void` | — | Enter in the input: the draft commits first, then this reports; no listener is installed while `disabled` |
 | `description` | `string` | none | announced help on the input (`aria-description`); a blank one publishes nothing |
 | `ref` / `aria-id` / `onLayout` | host address | none | land on the inner `<input>`, the element a form focuses — not the chrome |
 | `placeholder` | `string` | none | empty-field hint |
@@ -100,6 +101,9 @@ and only refuses the action.
 While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
 the caret never jumps. Every edit that parses reports the clamped number
 through `onValueChange`; on blur or `Enter` the draft is reformatted to `precision`.
+Enter is the runtime's own **Submit** action on a single-line `<input>` — it never
+arrives as a keydown — so the field commits from that action and reports the same
+event through `onSubmit`, which is how a form sends from the field.
 
 A step is exact at decimal precision: stepping `0.2` by `0.1` reports `0.3`, not
 the binary `0.30000000000000004`, because the move is rounded to the finer of
@@ -113,7 +117,7 @@ the value's and the step's decimal places. An integer step is untouched.
 | `ArrowDown` | − one step |
 | `PageUp` / `PageDown` | ± ten steps |
 | `Home` / `End` | `min` / `max` — only when the field has that bound |
-| `Enter` | commit and reformat |
+| `Enter` | commit and reformat; reports `onSubmit` (the runtime's Submit action, not a keydown) |
 
 `ArrowLeft` and `ArrowRight` are the host text editor's: they move the caret
 inside the draft, because a numeric field that stepped its value when the caret
@@ -171,6 +175,8 @@ can put the cue back.
 - **`autoFocus` paints no ring on mount.** A focus that arrives without keyboard
   input (mount, programmatic) does not paint `focusVisible`, so the input's ring
   appears at the first Tab. The same is true of `Input`.
+- **Enter is not a keydown.** The host binds it to Submit before a key handler
+  sees it, so `onKeyDown` cannot observe Enter; `onSubmit` is the channel.
 
 ## Verification
 
@@ -178,7 +184,8 @@ can put the cue back.
   noisy-free decimal steps (ten 0.1 steps reach 1 exactly), a large integer step
   that rounding must not erase, Home/End only with a bound.
 - `src/components/NumberField.test.tsx` — the draft value, the key contract, the
-  raw edit report, steppers as presentation, one tab stop, disabled/invalid,
+  raw edit report, the submit channel (commit first, no listener while
+  disabled), steppers as presentation, one tab stop, disabled/invalid,
   the four part names in a caller's composition, the input part carrying the
   draft, name and keys, the ring on the input rather than the wrapper, and the
   value opted out of the keyboard dim (a caller's `style` puts it back).
@@ -189,7 +196,10 @@ can put the cue back.
   `100`; arrow/PageDown step; a hit-tested stepper press steps and refocuses;
   the chrome declares the keyboard ring and a press paints none; a disabled
   field refuses text, keys and clicks; a caller's composition of the input and
-  both steppers reads the field's live value (a real press on each steps it).
+  both steppers reads the field's live value (a real press on each steps it);
+  **Enter arrives as the runtime's Submit action** — the draft reformats to
+  `precision` and `onSubmit` reports once (measured 2026-10-22; without the
+  field's listener the text stayed `1.5` and the report never came).
   Measured in a window 2026-10-17.
 
 ```sh

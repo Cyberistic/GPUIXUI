@@ -515,6 +515,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "Decimal text only: grouping separators and Infinity are rejected",
       "No type=number, inputMode or drag-to-scrub",
       "autoFocus paints no ring on mount",
+      "Enter is the runtime's Submit action, not a keydown; onSubmit is the channel",
     ],
     source: [
       "src/components/NumberField.tsx",
