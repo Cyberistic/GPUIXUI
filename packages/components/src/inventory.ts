@@ -45,6 +45,7 @@ import { paginationMeta } from "./pagination.js";
 import { popoverMeta } from "./popover.js";
 import { previewCardMeta } from "./preview-card.js";
 import { revealMeta } from "./reveal.js";
+import { rippleButtonMeta } from "./ripple-button.js";
 import { rollingTextMeta } from "./rolling-text.js";
 import { rotatingTextMeta } from "./rotating-text.js";
 import { scrollFadeMeta } from "./scroll-fade.js";
@@ -116,6 +117,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   popoverMeta,
   previewCardMeta,
   revealMeta,
+  rippleButtonMeta,
   rollingTextMeta,
   rotatingTextMeta,
   scrollFadeMeta,

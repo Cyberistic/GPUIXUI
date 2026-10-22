@@ -51,6 +51,7 @@ import { PaginationExample } from "./pagination.example.js";
 import { PopoverExample } from "./popover.example.js";
 import { PreviewCardExample } from "./preview-card.example.js";
 import { RevealExample } from "./reveal.example.js";
+import { RippleButtonExample } from "./ripple-button.example.js";
 import { RollingTextExample } from "./rolling-text.example.js";
 import { RotatingTextExample } from "./rotating-text.example.js";
 import { ScrollFadeExample } from "./scroll-fade.example.js";
@@ -106,6 +107,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   popover: PopoverExample,
   "preview-card": PreviewCardExample,
   reveal: RevealExample,
+  "ripple-button": RippleButtonExample,
   "rolling-text": RollingTextExample,
   "rotating-text": RotatingTextExample,
   "scroll-fade": ScrollFadeExample,

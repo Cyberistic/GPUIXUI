@@ -45,6 +45,7 @@ export * from "./pagination.js";
 export * from "./popover.js";
 export * from "./preview-card.js";
 export * from "./reveal.js";
+export * from "./ripple-button.js";
 export * from "./rolling-text.js";
 export * from "./rotating-text.js";
 export * from "./scroll-fade.js";

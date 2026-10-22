@@ -4,7 +4,7 @@
  * The module count is exact: the entry's graph is the package's import cost, and
  * a new family, a moved module or a deleted one must be a deliberate change to
  * this record rather than an accident of a commit. The byte ceiling carries a
- * little headroom over the measured size (682,665 bytes on 2026-10-22) so prose
+ * little headroom over the measured size (714 KiB on 2026-10-22) so prose
  * edits do not need a bump while a bulk addition does.
  *
  * `packages` is every package the package's **own** modules import. A new name
@@ -37,9 +37,12 @@ export const surfaceBudget = {
   // for Reveal (`reveal.tsx` and the direction rule beside it). 106 → 110 for
   // the scroll readings (`scroll-fade.tsx`, `scroll-progress.tsx`, the shared
   // scroll/metrics.ts rule and internal/scroll-surface.tsx, plan 600).
-  modules: 110,
+  // 110 → 112 for RippleButton (`ripple-button.tsx` and its geometry rule).
+  modules: 112,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
-  bytes: 720 * 1024,
+  // 714 KiB measured on 2026-10-22 with RippleButton; the ceiling keeps the
+  // headroom a prose edit needs while a bulk addition still has to state itself.
+  bytes: 760 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
 } as const;
