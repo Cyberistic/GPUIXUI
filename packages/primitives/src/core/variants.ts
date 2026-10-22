@@ -61,11 +61,17 @@ const washed: Pick<ControlVariant, "hover" | "active"> = {
   active: (theme) => ({ backgroundColor: theme.colors.active }),
 };
 
-/** Border only: reads as a button on a surface without competing for weight. */
+/**
+ * Border only: reads as a button on a surface without competing for weight.
+ *
+ * The edge is `borderStrong`, the role `contrastPairs` holds to the 3:1
+ * boundary floor on every strip a control sits on; the decorative `border` role
+ * is for dividers and card edges, where a control's shape is not a requirement.
+ */
 const outline: ControlVariant = {
   background: undefined,
   foreground: (theme) => theme.colors.foreground,
-  border: (theme) => theme.colors.border,
+  border: (theme) => theme.colors.borderStrong,
   ...washed,
 };
 
@@ -173,7 +179,7 @@ const toggleRest: ControlVariant = {
 const toggleOutlineRest: ControlVariant = {
   background: undefined,
   foreground: (theme) => theme.colors.foreground,
-  border: (theme) => theme.colors.border,
+  border: (theme) => theme.colors.borderStrong,
   ...washed,
 };
 
@@ -206,7 +212,7 @@ export const toggleVariants: Readonly<
   },
   outline: {
     rest: toggleOutlineRest,
-    pressed: togglePressedBase((theme) => theme.colors.border),
+    pressed: togglePressedBase((theme) => theme.colors.borderStrong),
   },
 };
 

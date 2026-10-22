@@ -40,7 +40,7 @@ const BUTTON_VARIANT: Readonly<Record<ButtonVariant, string>> = {
   secondary:
     "bg-secondary text-secondary-foreground border-0 hover:bg-secondary/90 active:bg-secondary/80",
   outline:
-    "text-foreground border border-border hover:bg-hover active:bg-active",
+    "text-foreground border border-strong hover:bg-hover active:bg-active",
   ghost: "text-foreground border-0 hover:bg-hover active:bg-active",
   destructive:
     "bg-destructive text-destructive-foreground border-0 hover:bg-destructive/90 active:bg-destructive/80",
@@ -262,9 +262,9 @@ const TOGGLE_PAINT: Readonly<
       "bg-accent text-accent-foreground border-0 hover:bg-accent/90 active:bg-accent/80",
   },
   outline: {
-    rest: "text-foreground border border-border hover:bg-hover active:bg-active",
+    rest: "text-foreground border border-strong hover:bg-hover active:bg-active",
     pressed:
-      "bg-accent text-accent-foreground border border-border hover:bg-accent/90 active:bg-accent/80",
+      "bg-accent text-accent-foreground border border-strong hover:bg-accent/90 active:bg-accent/80",
   },
 };
 

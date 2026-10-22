@@ -76,8 +76,10 @@ toggle waits for the release.
 ## Theming
 
 Rest and pressed are two rows of `core/variants.ts`' `toggleVariants`, so the
-docs and the component read one table. Rest paints no fill (or a border for
-`outline`); pressed paints `colors.accent`/`colors.accentForeground`; hover and
+docs and the component read one table. Rest paints no fill (or a `borderStrong`
+edge for `outline`, the role the design system holds to the 3:1 control-boundary
+floor — not the decorative `border` a divider uses); pressed paints
+`colors.accent`/`colors.accentForeground`; hover and
 press lift the accent's alpha like a filled button. Nothing names a literal.
 
 `style` takes a `StateStyle<ToggleState>` — a `StyleDesc`, or a callback that

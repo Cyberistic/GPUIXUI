@@ -11,7 +11,9 @@
 
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { contrastFloors, contrastRatio, darkTheme, lightTheme } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton, type ButtonState } from "./Button.js";
 import type { ButtonVariant } from "../core/variants.js";
@@ -95,6 +97,35 @@ describe("Button", () => {
     expect(
       hostProp(resting({ label: "   ", children: "Save" }), "aria-label"),
     ).toStrictEqual(Option.some("Save"));
+  });
+
+  it("draws an outlined action's edge in the measured boundary role", () => {
+    // The bug: the outline variant painted `border`, the decorative role a
+    // divider uses — 1.16:1 on the light page against the design system's 3:1
+    // control-boundary claim. `borderStrong` is the role the boundary pairs
+    // measure on every strip a control sits on.
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      const element = renderButton(
+        { variant: "outline", children: "Cancel" },
+        theme,
+        { focused: false },
+      );
+      const edge = expectSome(hostStyleString(element, "borderColor"));
+      expect(edge).toBe(theme.colors.borderStrong);
+      Arr.forEach(
+        ["background", "card", "popover", "muted", "secondary"] as const,
+        (surface) => {
+          expect(
+            contrastRatio(edge, theme.colors[surface]) ?? 0,
+          ).toBeGreaterThanOrEqual(contrastFloors.boundary);
+        },
+      );
+      // The premise: the role it replaced cannot carry a control's shape.
+      expect(
+        contrastRatio(theme.colors.border, theme.colors.background) ??
+          Infinity,
+      ).toBeLessThan(contrastFloors.boundary);
+    });
   });
 
   it("stays focusable while loading but refuses to activate", () => {

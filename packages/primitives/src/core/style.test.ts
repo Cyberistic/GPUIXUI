@@ -84,14 +84,16 @@ describe("controlStyle", () => {
     expect(controlStyle(spec(), repainted).backgroundColor).toBe("#FF00FF");
   });
 
-  it("leaves an outline control unpainted but bordered", () => {
+  it("leaves an outline control unpainted but keeps its measured edge", () => {
     const style = controlStyle(
       spec({ variant: buttonVariants.outline }),
       testTheme,
     );
     expect(style.backgroundColor).toBeUndefined();
     expect(style.borderWidth).toBe(testTheme.borderWidth.thin);
-    expect(style.borderColor).toBe(testTheme.colors.border);
+    // A control's shape is functional: `borderStrong` is the role the boundary
+    // pairs measure, not the decorative `border` a divider paints.
+    expect(style.borderColor).toBe(testTheme.colors.borderStrong);
   });
 
   it("sizes the control from the theme's density, not from a literal", () => {

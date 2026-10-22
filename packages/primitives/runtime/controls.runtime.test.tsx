@@ -99,6 +99,29 @@ it("activates a Button on a real click", async () => {
   expect(calls()).toBe(1);
 });
 
+it("paints an outlined Button's edge in the measured boundary role", async () => {
+  // The bug: the outline variant painted `border`, the decorative role a
+  // divider uses, so a control's shape sat at 1.16:1 on the light page. The
+  // runtime's own style report is the proof that the painted colour is the
+  // role, not a class name in a string.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Button testId="b" variant="outline">
+        Cancel
+      </Button>
+    </Surface>,
+  );
+  const edge = Option.getOrElse(
+    Option.flatMap(runtime.element("b"), (element) =>
+      Option.fromNullishOr(element.style.borderColor),
+    ),
+    () => expect.fail("the runtime retained no outlined button"),
+  );
+  expect(edge).toBe(testTheme.colors.borderStrong);
+  expect(edge).not.toBe(testTheme.colors.border);
+});
+
 it("activates a Button on Enter down, and not again on the key up", async () => {
   const { runtime, calls } = await renderButton();
   runtime.keyDown("b", "enter");

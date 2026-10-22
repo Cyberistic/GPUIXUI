@@ -89,7 +89,7 @@ describe("Toggle", () => {
     );
   });
 
-  it("keeps the border of the outline variant while pressed", () => {
+  it("keeps the outline variant's measured edge while pressed", () => {
     const element = renderToggle(
       { variant: "outline", pressed: true },
       testTheme,
@@ -97,8 +97,10 @@ describe("Toggle", () => {
       idle,
       vi.fn(),
     );
+    // A bordered control keeps its boundary role while the fill moves; the
+    // decorative `border` role is for dividers, not a control's shape.
     expect(expectSome(hostStyleString(element, "borderColor"))).toBe(
-      testTheme.colors.border,
+      testTheme.colors.borderStrong,
     );
   });
 
