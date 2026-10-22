@@ -470,6 +470,26 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("ref");
   });
 
+  it("records the Select reveal gap a window and a runtime suite measured", () => {
+    // `Select` is named in §2 as provided, so the record read as "a Select is
+    // just a wrapper". A window measured the overlay half (`select-lifecycle`)
+    // and the primitives' runtime suite measured the half a keyboard user
+    // loses: the runtime sets no max height, its scroll-button parts are empty,
+    // and an arrow never reveals the row it highlights.
+    const select = rowFor("Select option reveal");
+    expect(select?.verdict).toBe("supported, with limits");
+    expect(select?.evidence).toContain("select-lifecycle");
+    expect(select?.evidence).toContain("320px");
+    expect(select?.evidence).toContain("ArrowDown");
+    expect(select?.workaround).toContain("Combobox");
+
+    const page = measuredRow("Select option reveal");
+    expect(page, "the page's measured table has no Select row").toBeDefined();
+    expect(page?.[1]).toContain("select-lifecycle");
+    expect(page?.[1]).toContain("320px");
+    expect(page?.[2]).toContain("320px");
+  });
+
   it("records the clipboard gap and the one place the platform still provides it", () => {
     // The binding publishes no clipboard API, so a component cannot offer
     // "copy" — but a window measured that the platform's own keys still run
@@ -635,6 +655,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("virtual-list-windowed");
     expect(runtimePage).toContain("virtual-list-rows");
     expect(runtimePage).toContain("data-grid-frozen-column");
+    expect(runtimePage).toContain("select-lifecycle");
     expect(runtimePage).toContain("portal-layer");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
