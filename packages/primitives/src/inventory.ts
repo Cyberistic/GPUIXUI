@@ -346,9 +346,8 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "The trigger is a named combobox; 0.11.0's option rows are plain divs, so the open list is not announced",
+      "The trigger and the rows are announced; the open state is not (GPUix owns it, so the trigger publishes no expanded state)",
       "Options are data: grouped, but no rich options or compound escape hatch",
-      "Group captions are painted, not announced (SelectGroup has no role)",
       "No search or type-ahead and no multi-select",
       "A long list is capped at 320px and scrolls on the wheel; the highlighted row reveals itself by painted-box arithmetic (the runtime never does)",
       "Open animation, positioning and dismissal are the runtime's",

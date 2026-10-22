@@ -217,22 +217,32 @@ export const selectItemStyle =
       resolveStyle(caller, state),
     );
 
-/** One row's content: the label and the selected mark, pure in its arguments. */
+/**
+ * One row's content: the label, the selected mark, and the row's announcement.
+ *
+ * 0.11.0's `SelectItem` is a plain `div` with no role, and a role-less element
+ * never reaches the accessibility tree — so the content inside it carries the
+ * row's `option` role, its name and the selected state. The state comes from
+ * the callback GPUix hands this row, which is the only place it is reported, so
+ * an uncontrolled Select still needs no mirror of its value.
+ */
 export const renderSelectRow = (
   option: SelectOption,
   theme: PrimitiveTheme,
-  selected: boolean,
+  state: SelectItemState,
 ): ReactElement => (
-  <div style={recipeTw.classesToStyle(selectItemRowClass, theme).style}>
+  <div
+    role="option"
+    aria-label={accessibleName(option.label)}
+    aria-selected={state.selected}
+    style={recipeTw.classesToStyle(selectItemRowClass, theme).style}
+  >
     {option.label}
     {/*
-      The selected mark comes from the state GPUix reports for this row, so an
-      uncontrolled Select needs no mirror of its value. It is decorative — the
-      row's own selection is painted, and the runtime announces a Select's
-      trigger rather than its rows (0.11.0's `SelectItem` is a plain `div`) — so
-      the mark carries no second name.
+      The selected mark is decorative: the row's `aria-selected` is the state,
+      so the glyph carries no second name.
     */}
-    {selected ? (
+    {state.selected ? (
       <Icon name="check" size="sm" color={theme.colors.popoverForeground} />
     ) : null}
   </div>
@@ -319,7 +329,7 @@ const SelectRow = ({
           instance={instance}
           scroller={scroller}
         >
-          {renderSelectRow(option, theme, state.selected)}
+          {renderSelectRow(option, theme, state)}
         </RevealOnHighlight>
       )}
     </SelectItem>
@@ -388,8 +398,9 @@ export const renderSelect = (
         // see: a named `combobox`. GPUix renders it as a `div` with a tab stop
         // and no role, and a role-less node is absent from the accessibility
         // tree — measured on 0.11.0, a Select with a `label` produced no node
-        // at all (the wrapper's `aria-label` landed on a plain `div`). The
-        // option rows stay unannounced (their parts are plain `div`s too).
+        // at all (the wrapper's `aria-label` landed on a plain `div`). The rows
+        // announce themselves from inside GPUix's role-less item parts
+        // (`renderSelectRow`).
         role="combobox"
         aria-label={accessibleName(label)}
         style={selectTriggerStyle(spec, theme, triggerStyle)}
@@ -399,6 +410,11 @@ export const renderSelect = (
       <SelectContent
         ref={scroller}
         side={side}
+        // The rows are `option` nodes, so their container is what holds them:
+        // without the role the options would sit under the role-less floating
+        // layer. The list is unnamed — the trigger is the named control — and
+        // the role paints nothing, so the measured 320px surface is unchanged.
+        role="listbox"
         style={selectContentStyle(theme)}
       >
         {Arr.map(options, (entry, index) =>
@@ -407,7 +423,15 @@ export const renderSelect = (
               {index === 0 ? null : (
                 <SelectSeparator style={selectSeparatorStyle(theme)} />
               )}
-              <SelectGroup>
+              {/*
+                The caption names the run it heads: 0.11.0's `SelectGroup` is a
+                plain `div`, so the `group` role and the caption are what a
+                reader hears before the group's options.
+              */}
+              <SelectGroup
+                role="group"
+                aria-label={accessibleName(entry.label)}
+              >
                 <SelectLabel style={selectLabelStyle(theme)}>
                   {entry.label}
                 </SelectLabel>

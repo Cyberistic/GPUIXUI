@@ -317,7 +317,10 @@ describe("Select", () => {
     // rely on colour had no mark. The mark is read off the row the state
     // produces, so an uncontrolled Select needs no mirror of its value.
     const marks = elementChildren(
-      renderSelectRow({ value: "beta", label: "Beta" }, testTheme, true),
+      renderSelectRow({ value: "beta", label: "Beta" }, testTheme, {
+        ...rest,
+        selected: true,
+      }),
     );
     expect(marks).toHaveLength(1);
     const mark = marks[0] ?? expect.fail("the selected row painted no mark");
@@ -327,9 +330,32 @@ describe("Select", () => {
     );
     expect(
       elementChildren(
-        renderSelectRow({ value: "alpha", label: "Alpha" }, testTheme, false),
+        renderSelectRow({ value: "alpha", label: "Alpha" }, testTheme, rest),
       ),
     ).toStrictEqual([]);
+  });
+
+  it("announces the row it paints, and its selection", () => {
+    // The bug guarded: GPUix's `SelectItem` is a plain `div` with no role, so
+    // the open list painted no option node at all and a reader who could not
+    // see the popup could not pick from it. The content inside the item now
+    // carries the role, the option's name and the state the runtime reports.
+    const chosen = renderSelectRow(
+      { value: "beta", label: "Beta" },
+      testTheme,
+      { ...rest, selected: true },
+    );
+    expect(expectSome(elementProp(chosen, "role"))).toBe("option");
+    expect(expectSome(elementProp(chosen, "aria-label"))).toBe("Beta");
+    expect(expectSome(elementProp(chosen, "aria-selected"))).toBe(true);
+    expect(
+      expectSome(
+        elementProp(
+          renderSelectRow({ value: "alpha", label: "Alpha" }, testTheme, rest),
+          "aria-selected",
+        ),
+      ),
+    ).toBe(false);
   });
 
   it("hands the trigger style callback its live state and lets its result win", () => {

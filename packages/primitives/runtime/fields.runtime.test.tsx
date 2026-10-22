@@ -494,13 +494,56 @@ it("announces a Select's trigger as its named control", async () => {
   );
   expect(Arr.contains(actions, "Click")).toBe(true);
   expect(Arr.contains(actions, "Focus")).toBe(true);
-  // The rows stay out of the tree: 0.11.0's item parts are plain `div`s, so
-  // this pins the recorded limitation and will fail when that changes.
+});
+
+it("announces a Select's options, their selection and their group", async () => {
+  // The bug guarded: GPUix 0.11.0's `SelectItem`, `SelectGroup` and
+  // `SelectLabel` are plain `div`s with no role, so an open list painted no
+  // option node at all — a reader who could not see the popup could not pick
+  // from it, and the row's checked mark was the only statement of the choice.
+  // The row content now carries the role, the name and the state the runtime
+  // reports for it, the list holds the options, and a group's caption names the
+  // run it heads.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        label="Fruit"
+        placeholder="Pick one"
+        triggerTestId="fruit-trigger"
+        itemTestId={(value) => `fruit-${value}`}
+        defaultValue="apple"
+        options={[
+          {
+            label: "Citrus",
+            options: [
+              { value: "apple", label: "Apple" },
+              { value: "pear", label: "Pear" },
+            ],
+          },
+        ]}
+      />
+    </Surface>,
+  );
   runtime.click("fruit-trigger");
   runtime.flush();
+  const dump = runtime.a11y();
+  const option = (label: string) =>
+    a11yNode(dump, { role: "ListBoxOption", label });
+  expect(Option.isSome(option("Apple"))).toBe(true);
+  expect(Option.isSome(option("Pear"))).toBe(true);
   expect(
-    Option.isSome(a11yNode(runtime.a11y(), { role: "ListBoxOption" })),
-  ).toBe(false);
+    Option.isSome(a11yNode(dump, { role: "Group", label: "Citrus" })),
+  ).toBe(true);
+  expect(Option.isSome(a11yNode(dump, { role: "ListBox" }))).toBe(true);
+  // The state is the one the runtime reports for the row, read back off the
+  // tree — so an uncontrolled Select announces its choice without a mirror.
+  const selected = (label: string) =>
+    Option.flatMap(option(label), (node) =>
+      Option.fromNullishOr(node.aria?.selected),
+    );
+  expect(selected("Apple")).toStrictEqual(Option.some(true));
+  expect(selected("Pear")).toStrictEqual(Option.some(false));
 });
 
 it("lifts a Select's list like every other floating surface", async () => {

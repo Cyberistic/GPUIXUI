@@ -110,15 +110,20 @@ list's painted boxes), which also works for a row nested in a group.
 - **Pass `label`.** The trigger is a combobox either way, so a Select without
   one publishes an unnamed control rather than no node. Pass `label`: without it
   the node exists and has no name.
-- **The option rows are not announced.** 0.11.0's `SelectItem`, `SelectGroup`
-  and `SelectLabel` are plain `div`s with no role, so opening the list adds no
-  `option` or `listbox` node: a reader hears the trigger's name and value, not
-  the choices. The rows are painted and take pointer and keyboard input, so a
-  visible Select is usable with a label; a set of choices that must be read one
-  by one is a `RadioGroup`.
+- **The option rows are announced.** 0.11.0's `SelectItem`, `SelectGroup` and
+  `SelectLabel` are plain `div`s with no role, so the wrapper announces the list
+  from inside them: the list is a `ListBox`, every row is an `option` with the
+  option's label as its name and `aria-selected` carrying the state GPUix
+  reports for it, and a named group is a `Group` named by its caption. Measured
+  in a window (`runtime/fields.runtime.test.tsx`): opening a list with a chosen
+  option publishes its rows, the chosen one reads `selected` and the others do
+  not, and the group's caption names the run it heads. The rows take pointer and
+  keyboard input as before — the announcement is a role and a name, not a second
+  control.
 - **The expanded state is not published.** The wrapper does not own the open
   state (GPUix does), so the trigger reads as a combobox whose popup is neither
-  `expanded` nor `collapsed`.
+  `expanded` nor `collapsed`; the rows themselves are absent while the list is
+  closed.
 - Disabled items are painted from the `disabled` state GPUix reports and cannot
   be committed.
 
@@ -132,7 +137,7 @@ states (`selected`, `hover`, `disabledForeground`). A selected row also paints a
 `popoverForeground` role at its end: the row's children are a function of the
 state GPUix reports, so an uncontrolled select needs no mirror of its value and
 the mark cannot disagree with the selection. It is decorative — the mark is
-`role="presentation"`, and the row itself is not an accessibility node (see
+`role="presentation"` and the row's `aria-selected` is the state (see
 [Accessibility](#accessibility)). The trigger
 declares the shared keyboard outline at rest (`keyboardRing`, destructive while
 `invalid`), so the runtime paints it after Tab and not after a mouse press; a
@@ -156,13 +161,10 @@ state of its own.
 ## Limitations
 
 - **Options are data.** No rich option content and no compound escape hatch in
-  the public API; use `RadioGroup` for rich options. Group captions are painted,
-  not announced: 0.11.0's `SelectGroup`/`SelectLabel` carry no role, so a reader
-  who hears a row does not hear which group it belongs to.
-- **The list itself is silent to assistive technology.** The trigger is a named
-  `combobox`, but the rows are plain `div`s in 0.11.0, so a reader who cannot see
-  the popup cannot pick from it. `RadioGroup` is the announced choice control;
-  this Select is for a pointer or sighted keyboard user.
+  the public API; use `RadioGroup` for rich options.
+- **No `expanded` state.** The open state is GPUix's, so the combobox node does
+  not say whether its list is open; while closed, the rows are unmounted and
+  absent from the tree.
 - A group's name has no semantic effect on the keyboard; the arrows walk the
   flat list in render order.
 - The list's dismissal and positioning are GPUix's; this package cannot change
@@ -190,8 +192,10 @@ state of its own.
   role, destructive while invalid, absent while disabled), the hint's
   `placeholder` role and a chosen value's value role, the list's `lg` lift (held
   to `elevationShadow(theme, "lg")`, not a literal shadow), list surface and item
-  states, both state-aware callbacks receiving their live state and winning, and
-  the selected row's mark coming from the state the runtime reports. Group cases:
+  states, both state-aware callbacks receiving their live state and winning, the
+  selected row's mark coming from the state the runtime reports, and a row's
+  announcement (`role="option"`, its label as the name, `aria-selected` from the
+  state). Group cases:
   the flat list in render order, the caption's muted role and one-pixel rule, the
   group/rule/group tree, and a grouped row being a row of its own.
 - `src/core/scroll.test.ts` — the reveal arithmetic: a row below the fold moves
@@ -199,8 +203,11 @@ state of its own.
   already inside (or ending on the fold) is `None`, a row taller than the list
   aligns its top, and the horizontal offset is kept.
 - `runtime/fields.runtime.test.tsx` — the trigger reaches the accessibility tree
-  as a named `ComboBox` with the Click and Focus actions, while the open list
-  adds no option node (the pinned limitation); it opens, paints its options and
+  as a named `ComboBox` with the Click and Focus actions; the open list is a
+  `ListBox` holding an `option` per row, the chosen row reads `selected` and the
+  others do not, and a group's caption names a `Group` (negative controls
+  measured: without the row's `role` the tree holds no `ListBoxOption`, and
+  without the group's it holds no `Group`); it opens, paints its options and
   commits a clicked option in the real renderer; the trigger and an option row are
   addressed by `triggerTestId`/`itemTestId` rather than by walking children and
   searching the painted text (negative control measured: without the forwarding,
