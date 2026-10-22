@@ -8,8 +8,8 @@
  * `disabled`). The open state, dismissal and arrow navigation stay GPUix's.
  *
  * The options are data rather than compound children because the trigger needs
- * their labels; the `SelectItem` composition below is the shadcn escape hatch
- * for anything the data shape cannot express.
+ * their labels, and an option is a value, a label and a disabled flag: there is
+ * no richer row content and no compound `SelectItem` escape hatch.
  *
  * The resting appearance is a Tailwind recipe (`recipe/selectTriggerClass`,
  * `recipe/selectContentClass`, `recipe/selectItemClass`), compiled through

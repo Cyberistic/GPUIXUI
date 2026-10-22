@@ -10,6 +10,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { type ReactElement } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -412,6 +413,30 @@ describe("Select locators", () => {
         Option.isNone(elementProp(item, "testId")),
       ),
     ).toEqual([true]);
+  });
+});
+
+describe("Select's source prose", () => {
+  const source = readFileSync(new URL("./Select.tsx", import.meta.url), "utf8");
+
+  it("does not promise a compound escape hatch the file does not ship", () => {
+    // The bug guarded: the header told a reader "the `SelectItem` composition
+    // below is the shadcn escape hatch", while the file exports none — the only
+    // `SelectItem` is GPUix's own, used internally by the data-driven row. A
+    // reader went looking for a composition that has never existed.
+    expect(source).not.toContain("shadcn escape hatch");
+    expect(source).toContain("no compound `SelectItem` escape hatch");
+    expect(source).not.toMatch(/export (?:const|function) SelectItem\b/);
+  });
+
+  it("says a highlighted row reveals itself instead of losing the tail", () => {
+    // The bug guarded: `selectContentStyle`'s JSDoc said an arrow never reveals
+    // its own row and a keyboard user with more options than fit "cannot reach
+    // the tail", while `RevealOnHighlight` below it ships and
+    // `runtime/fields.runtime.test.tsx` measures twenty ArrowDowns keeping the
+    // row inside the 320px box.
+    expect(source).not.toContain("cannot reach the tail");
+    expect(source).toContain("reveals itself");
   });
 });
 
