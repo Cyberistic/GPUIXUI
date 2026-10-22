@@ -1,0 +1,148 @@
+---
+title: Charts
+description: Bar, stacked, line, donut and sparkline charts drawn as stacked SVG masks, one per series.
+---
+
+GPUix has no chart host, no canvas and no transform. The measured drawing route
+(`chart-raster`) is a raster buffer with each pixel's own colour, or SVG bytes
+whose `fill`s are kept — but an `<svg source>` element is rasterised into **one**
+tinted mask: a five-layer icon paints five layers in one colour.
+
+`@gpuixui/data` takes the route that measurement leaves: **one `<svg>` per
+series**, each carrying that series' whole geometry in the plot's viewBox and
+tinted through `style.color`, stacked in paint order inside one relatively
+positioned plot. The axis, the category labels and the legend are ordinary
+`<text>` and boxes beside the plot. Nothing paints a surface, so a chart sits on
+a card, a page or a dialog without a second palette.
+
+## Usage
+
+```tsx
+import { BarChart, DonutChart, LineChart, Sparkline, StackedBar } from "@gpuixui/data";
+
+<BarChart
+  aria-label="Revenue against cost by quarter"
+  labels={["Q1", "Q2", "Q3", "Q4"]}
+  series={[
+    { key: "revenue", label: "Revenue", values: [32, 48, 41, 60] },
+    { key: "cost", label: "Cost", values: [18, 22, 26, 24] },
+  ]}
+  width={320}
+  height={140}
+/>
+
+<LineChart aria-label="Churn" labels={QUARTERS} series={[churn]} />
+<StackedBar aria-label="Revenue and cost" labels={QUARTERS} series={[revenue, cost]} />
+<DonutChart aria-label="Traffic by source" data={sources} size={160} />
+<Sparkline aria-label="Revenue trend" values={revenue.values} />
+```
+
+The full screen is `packages/data/examples/chart.example.tsx`, mounted by the
+native playground as the `chart` example.
+
+## The shapes
+
+| Chart | What it paints |
+| ----- | -------------- |
+| `BarChart` | one bar per category, every series standing side by side in the slot |
+| `StackedBar` | the first series on the floor and each later one on the series before it; the scale is measured over the totals, so a stack reads as one bar |
+| `LineChart` | one path per series through its points, left to right |
+| `DonutChart` | one ring segment per datum, from twelve o'clock; a single datum filling the ring is drawn as two halves |
+| `Sparkline` | one line, no axis, no labels, no legend — the shape a stat card's trend takes |
+
+`ChartLegend` is exported on its own for a caller that lays its own legend out;
+each chart paints one by default when it has two or more series (or, for a
+donut, always unless `legend={false}`).
+
+## Sizing
+
+A chart draws at a definite size: `width`/`height` (bar, stacked and line) or
+`size` (donut), with `320 × 160` as the default plot. A chart that should follow
+a splitter is given the width the caller measured — the component does not
+re-mask on every layout pass.
+
+## The numbers
+
+`chart/logic.ts` is pure arithmetic, so a chart can be drawn from Effect or a
+store without the component:
+
+- `niceCeiling` rounds a maximum to 1, 2 or 5 times a power of ten, so the axis
+  reads `0, 25, 50, 75, 100` rather than raw values;
+- `axisTicks(scale, count)` divides that scale evenly;
+- `barSlot`, `barMarks`, `groupedBarMarks`, `stackedBarMarks`, `linePath`,
+  `donutSegments` and `donutMarks` return the shapes in the plot's pixel space;
+- `chartMarkup(marks, box)` writes the one-tint SVG document a layer paints;
+- `seriesColour(palette, index)` cycles the theme's categorical scale.
+
+A value that is `NaN`, infinite or negative reads as `0` and paints nothing — a
+one-pixel bar would claim a value the data does not have. A zero value keeps its
+category slot in a bar chart so the labels still line up, and a zero datum
+paints no ring segment at all.
+
+## Theming
+
+Charts read `seriesColors(theme)` — the five authored categorical swatches, each
+measured for contrast on every plot surface, for distinctness against every
+other swatch, and under simulated colour-vision deficiencies. A theme that
+repaints its `series` scale repaints every chart, and a caller can name a colour
+only on a `Sparkline` (`color`).
+
+Axis and category labels are the `text-xs` step in `mutedForeground`; the legend
+prints each series' words beside its swatch, so the colour repeats what the text
+says.
+
+## Accessibility
+
+- A chart's frame is `role="group"`; give it an `aria-label` (`aria-label="Revenue by quarter"`).
+- Each series layer is `role="img"` with the series' label, so the plot is not
+  one unnamed image.
+- The legend is text: a reader who cannot separate two hues still reads the
+  series.
+- The pinned runtime has no `aria-describedby` and no long-description channel;
+  put the summary in visible text (a `StatCard`'s reading, a caption) when the
+  numbers must be read exactly.
+
+## Limitations
+
+- The SVG element is one tint, so every shape inside one series is that series'
+  colour; two colours inside one layer need two layers.
+- No tooltips, hover readouts or zoom. The runtime publishes no hover position
+  on an `<svg>`, and a mark is not an element that can answer a press; a table
+  beside the chart is the honest way to read exact values.
+- No animation between data sets: the runtime has no transform, and a mask swap
+  is one paint.
+- Labels are laid out by the chart, not measured: a category label wider than
+  its slot is clipped by the row rather than wrapped.
+- The docs site cannot render these live — they are GPUix host trees, not DOM.
+  The code above is the real source.
+
+## Verification
+
+`src/chart/logic.test.ts` (10 tests) holds the scale (rounded ceilings, even
+ticks, values that cannot be drawn), the bar and grouped marks (a zero keeps its
+slot and paints nothing), the stack (each series stands on the one before it),
+the line (a single point paints a run, an empty series paints nothing), the ring
+(a full circle is two halves, a zero total paints nothing), the markup (no `NaN`,
+one tint) and the palette cycle.
+
+`src/behaviour/chart.test.tsx` (7 tests) mounts the shipped example in the real
+renderer: one mask per series in its own categorical colour, every layer
+stretched over its plot, legend swatches painting the plot's colours, every
+category and axis tick painted, a zero datum painting no slice, and a sparkline
+in the first series colour.
+
+```sh
+nub run --filter @gpuixui/data test
+nub run --filter @gpuixui/data test:behaviour
+```
+
+The drawing route itself is measured in a window by `chart-raster`
+(`apps/playground/README.md`): a raster buffer keeps each pixel's own colour, a
+transparent margin composites onto the card behind it, and SVG bytes keep every
+`fill`.
+
+## Related
+
+- **Statistic / metric cards** — the reading a sparkline sits beside.
+- **Tables** — the exact values behind a chart.
+- **Data toolbars** — the controls above a chart.

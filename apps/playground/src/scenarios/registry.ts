@@ -158,6 +158,12 @@ export const registry = [
     capability: "table",
   },
   {
+    id: "data-charts-core",
+    title:
+      "@gpuixui/data: one tinted SVG mask per chart series, with legend, axis and a zero datum",
+    capability: "table",
+  },
+  {
     id: "data-grid-fixed-header",
     title:
       "Table: a fixed header with one shared horizontal scroll (no sticky in the runtime)",

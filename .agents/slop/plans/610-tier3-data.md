@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | in progress — phases 1–5 and 7 landed 2026-10-22 (`packages/data`; headless probes `data-table-core`, `data-tree-core`, `data-expandable-rows-core`; package suite 98 cases + 42 native behaviour cases) |
+| Status | in progress — phases 1–7 landed 2026-10-22/23 (`packages/data`; headless probes `data-table-core`, `data-tree-core`, `data-expandable-rows-core`, `data-charts-core`; package suite 108 cases + 49 native behaviour cases). Remaining: frozen columns (a documented two-pane composition) |
 | Phase | D — data and workspace |
 | Owner | the `data` workstream |
 | Depends on | `@gpuixui/components`, `@gpuixui/primitives`, `@gpuixui/tw`, `@gpuixui/tokens`, `@gpuixui/motion` |
@@ -158,7 +158,19 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
 - Evidence: `nub run --filter @gpuixui/data test` (98) and `test:behaviour` (42)
   green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
   and `--only data-tree-core` and `--only data-expandable-rows-core` (1/1 each).
-  Phase 6 and frozen columns are the open TODO rows.
+  Frozen columns are the open TODO row.
+- **Phase 6 (charts) landed**: `packages/data/src/chart/` — the geometry
+  (`chart/logic.ts`: `niceCeiling`, `axisTicks`, `barMarks`/`groupedBarMarks`/
+  `stackedBarMarks`, `linePath`, `donutSegments`, `chartMarkup`, `seriesColour`)
+  and the five parts plus `ChartLegend`. **One `<svg>` per series** is the route
+  `chart-raster` leaves: an `<svg source>` is one tinted mask, so each series
+  carries its geometry in the plot's viewBox and is tinted through `style.color`;
+  the axis, labels and legend are text and boxes beside the plot. Colours come
+  from `seriesColors(theme)`. A value that is NaN, infinite or negative paints
+  nothing; a zero keeps its bar slot and paints no ring segment; a full ring is
+  two halves. 10 unit cases hold the geometry and 7 behaviour cases mount the
+  shipped example in the real renderer; headless `data-charts-core` is 1/1 on
+  0.11.0.
 - **Phase 7 (the data surfaces) landed**: `packages/data/src/surfaces/` —
   `KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar` and `AdvancedFilter`,
   over one object that none of them copies. The advanced filter's state is a
@@ -177,7 +189,7 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   ship in `packages/data/docs/`. Directions measured: dropping the label
   column's width, reporting the search at once, and swapping the sides of a
   `contains` each fail their case. The suite is 85 unit / 29 behaviour green.
-  Phase 6 and the frozen columns are the open TODO rows.
+  Frozen columns are the open TODO row.
 
 ## 5. Acceptance
 

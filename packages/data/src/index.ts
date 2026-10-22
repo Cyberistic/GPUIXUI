@@ -56,6 +56,53 @@ export type {
   TableExpandableRowProps,
 } from "./table/expandable.js";
 
+export {
+  CHART_AXIS_WIDTH,
+  ChartLegend,
+  DEFAULT_CHART_HEIGHT,
+  DEFAULT_CHART_WIDTH,
+  BarChart,
+  DonutChart,
+  LineChart,
+  Sparkline,
+  StackedBar,
+} from "./chart/chart.js";
+export type {
+  BarChartProps,
+  ChartDatum,
+  ChartLegendItem,
+  ChartLegendProps,
+  ChartProps,
+  DonutChartProps,
+  LineChartProps,
+  SparklineProps,
+  StackedBarProps,
+} from "./chart/chart.js";
+
+export {
+  axisTicks,
+  barMarks,
+  barSlot,
+  chartMarkup,
+  chartMaxOf,
+  chartScale,
+  donutMarks,
+  donutSegments,
+  drawableValue,
+  groupedBarMarks,
+  linePath,
+  niceCeiling,
+  seriesColour,
+  seriesMax,
+  stackedBarMarks,
+} from "./chart/logic.js";
+export type {
+  BarSlot,
+  ChartBox,
+  ChartMark,
+  ChartSeries,
+} from "./chart/logic.js";
+
 export { TableSortHeader, sortGlyph } from "./sort/header.js";
 export type { TableSortHeaderProps } from "./sort/header.js";
 export { directionOf, sortLabel, sortRows, toggleSort } from "./sort/logic.js";

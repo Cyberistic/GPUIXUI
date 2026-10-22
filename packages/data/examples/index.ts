@@ -9,6 +9,7 @@
  */
 
 import type { ComponentType } from "react";
+import { ChartExample } from "./chart.example.js";
 import { ExpandableRowsExample } from "./expandable-rows.example.js";
 import { SurfacesExample } from "./surfaces.example.js";
 import { TableExample } from "./table.example.js";
@@ -21,6 +22,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   table: TableExample,
   tree: TreeExample,
   "expandable-rows": ExpandableRowsExample,
+  chart: ChartExample,
   "virtual-list": VirtualListExample,
   "virtual-table": VirtualTableExample,
   surfaces: SurfacesExample,
