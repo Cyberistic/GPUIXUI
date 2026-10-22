@@ -2416,6 +2416,52 @@ describe("the curated component pages", () => {
     expect(text).not.toContain("press handler is still bound");
   });
 
+  it("refuse a disabled time field's edits, not only its tab stop", () => {
+    // `disabled` made both segments readOnly, dropped the clear control and the
+    // tab stops — and left the root's key handler and edit path live. A
+    // read-only host still receives keys, so `ArrowUp` on a disabled field
+    // stepped `09:30` to `10:30` and reported it to the caller (measured in the
+    // test renderer on 2026-10-23). The guards in `edit` and `handleKeyDown`
+    // are what let the page call the field inert, so the page is held to them.
+    const page = pages.find(
+      (candidate) => candidate.file === "time-picker.mdx",
+    );
+    expect(
+      page,
+      "the time-picker page is not in the curated set",
+    ).toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    const between = (start: string, end: string): string => {
+      const from = source.indexOf(start);
+      const to = source.indexOf(end, from + start.length);
+      return from === -1 || to === -1 ? "" : source.slice(from, to);
+    };
+    expect(
+      between("const edit =", "const handleKeyDown ="),
+      "time-picker.tsx's edit path no longer refuses a disabled field",
+    ).toContain("if (disabled) return;");
+    expect(
+      between("const handleKeyDown =", "const normalize ="),
+      "time-picker.tsx's key handler no longer refuses a disabled field",
+    ).toContain("if (disabled) return;");
+
+    expect(
+      page.suite,
+      "the time-picker page prints no native suite",
+    ).toBeDefined();
+    if (page.suite === undefined) return;
+    expect(read(page.suite)).toContain(
+      "refuses every edit path on a disabled field",
+    );
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("refuses every edit path");
+    expect(text).toContain("read-only host still receives keys");
+    expect(text).toContain("arrow step stops at the root's guard");
+  });
+
   it("holds the time field's clock, its clamp and its hint seam to the source", () => {
     // A time field can drift in four silent ways: an arrow that carries at the
     // hour but not at midnight, a typed segment that clamps the value while its
