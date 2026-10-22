@@ -228,6 +228,46 @@ it("scrolls a focused ScrollArea with the keyboard", async () => {
   ).toBe(true);
 });
 
+it("declares the keyboard ring on the scroll region that takes the stop", async () => {
+  // The bug guarded: the viewport is a tab stop with a keyboard contract
+  // (arrows, PageUp/PageDown, Home/End) and was the one focusable primitive in
+  // the package with no `focusVisible` declaration — so a keyboard reader who
+  // Tabbed into a scroller had no cue that the focus had moved. The runtime
+  // paints the outline only on an element that declares it.
+  const runtime = await openWindow();
+  const declaresRing = (): boolean =>
+    Option.match(runtime.element("s"), {
+      onNone: () => false,
+      onSome: (element) => {
+        const style = runtime.renderer.getElement(element.id)?.style;
+        return style !== undefined && Object.hasOwn(style, "focusVisible");
+      },
+    });
+  const area = (focusable: boolean) => (
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        viewportTestId="s"
+        label="Rows"
+        focusable={focusable}
+      >
+        {card("tall", 200, 400)}
+      </ScrollArea>
+    </Surface>
+  );
+
+  runtime.render(area(true));
+  expect(declaresRing()).toBe(true);
+  runtime.focusNext();
+  expect(runtime.focused()).toStrictEqual(Option.some("s"));
+
+  // `focusable={false}` removes the stop, so it owes neither the ring nor the
+  // cue — the same split every other focusable primitive uses.
+  runtime.render(area(false));
+  expect(declaresRing()).toBe(false);
+});
+
 it("leaves a field's own arrow keys alone inside a ScrollArea", async () => {
   const runtime = await openWindow();
   runtime.render(

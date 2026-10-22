@@ -227,6 +227,28 @@ describe("layout containers", () => {
     );
   });
 
+  it("declares the keyboard ring on the viewport that takes the stop", () => {
+    // The bug guarded: the viewport was a tab stop with a keyboard contract
+    // (arrows, PageUp/PageDown, Home/End) and declared no `focusVisible`, so a
+    // keyboard reader who Tabbed into a scroller saw no cue at all — the one
+    // focusable primitive in the package without a ring. The declaration sits
+    // on the element that holds the focus, and a non-focusable viewport owes
+    // neither the ring nor the stop.
+    const focusable = renderScrollAreaViewport(
+      {},
+      scrollPart({ axis: "vertical" }, testTheme),
+    );
+    expect(styleProp(focusable, "focusVisible")).not.toStrictEqual(
+      Option.none(),
+    );
+    const inert = renderScrollAreaViewport(
+      { focusable: false },
+      scrollPart({ axis: "vertical" }, testTheme),
+    );
+    expect(styleProp(inert, "focusVisible")).toStrictEqual(Option.none());
+    expect(hostProp(inert, "tabIndex")).toStrictEqual(Option.none());
+  });
+
   it("keeps a named region as a group without a tab stop", () => {
     const viewport = renderScrollAreaViewport(
       { focusable: false },

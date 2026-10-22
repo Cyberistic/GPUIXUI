@@ -117,6 +117,13 @@ key from the focused element, so a field inside the area keeps its own arrow
 keys (and Home/End keep their caret meaning). `focusable={false}` removes the
 tab stop for content that carries its own scroll contract.
 
+The viewport is a tab stop, so it **declares the keyboard ring** (`controlRing` →
+`focusVisible`) at rest, like every other focusable primitive: the runtime paints
+the outline after a `Tab` and never after a mouse press, so a keyboard reader can
+see where the focus landed. The declaration sits on the viewport — the element
+that holds the focus — never on the frame around it, and `focusable={false}`
+removes the ring with the stop.
+
 ## Accessibility
 
 The viewport is a `group`, and it carries a name even when the caller gives
@@ -128,7 +135,9 @@ own name, e.g. `"Rows"` for a table's scroller. `focusable={false}` with no
 label adds neither the stop nor the node, which is what a purely visual
 scroller wants.
 
-The keyboard contract above is what makes the scroller usable without a pointer.
+The keyboard contract above is what makes the scroller usable without a pointer,
+and the `focusVisible` outline is what makes the stop visible: a tab stop with no
+cue is a place a keyboard reader arrives without knowing.
 
 ## Theming
 
@@ -160,7 +169,8 @@ scrollbar's paint is otherwise the platform's. The keyboard step is the theme's
 - `src/components/presentational.test.tsx` — the viewport is a tab stop with the
   area's absolute-offset callback; an unnamed one is the named `group`
   `"Scroll region"`; a named one keeps its group without a stop; `focusable={false}`
-  with no label drops the stop, the role and the name; the frame's
+  with no label drops the stop, the role and the name; the viewport declares the
+  keyboard ring and a non-focusable one declares none; the frame's
   padding/radius stay off the viewport.
 - `runtime/layout.runtime.test.tsx` — a wheel with `deltaY -100` leaves the
   viewport's offset at `y -100` and the caller's `onScroll` receives `-100`;
@@ -168,7 +178,8 @@ scrollbar's paint is otherwise the platform's. The keyboard step is the theme's
   reports it; a focused field inside keeps its Down key (the scroller stays at
   `0`); the renderer retains `scrollbarColor` (`colors.scrollbar`) and
   `scrollbarWidth`; an unnamed viewport reaches the accessibility tree as a
-  focusable group.
+  focusable group; the focusable viewport declares `focusVisible` and `Tab`
+  lands on it, while a non-focusable one declares none.
 
 ```sh
 nub run --filter @gpuixui/primitives test

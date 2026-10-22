@@ -45,6 +45,7 @@ import type {
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { accessibleName } from "../core/a11y.js";
+import { controlRing } from "../core/focus.js";
 import { scrollTarget } from "../core/scroll.js";
 import type { ScrollSpec } from "../core/style.js";
 import type { PrimitiveTheme, RadiusStep, SpaceStep } from "../core/theme.js";
@@ -210,6 +211,7 @@ export const renderScrollAreaViewport = (
     cn(scrollClass(axis ?? part.axis), className),
     part.theme,
   );
+  const focusablePort = focusable ?? part.focusable;
   const viewport: StyleDesc = {
     flexGrow: 1,
     flexShrink: 1,
@@ -222,18 +224,28 @@ export const renderScrollAreaViewport = (
   }
   const name =
     accessibleName(label ?? part.label) ??
-    ((focusable ?? part.focusable) ? DEFAULT_SCROLL_NAME : undefined);
+    (focusablePort ? DEFAULT_SCROLL_NAME : undefined);
   return (
     <div
       ref={instance}
       role={name === undefined ? undefined : "group"}
       aria-label={name}
-      tabIndex={(focusable ?? part.focusable) ? 0 : undefined}
+      tabIndex={focusablePort ? 0 : undefined}
       testId={testId}
       onScroll={onScroll ?? part.onScroll}
       onScrollChange={onScrollChange ?? part.onScrollChange}
       onKeyDown={part.onScrollKey}
-      style={mergeStyle(mergeStyle(viewport, resolved.style), style)}
+      style={mergeStyle(
+        mergeStyle(
+          mergeStyle(viewport, resolved.style),
+          // A tab stop owes a visible cue: the runtime paints `focusVisible`
+          // only on an element that declares it, so a keyboard reader landing
+          // in the scroller would otherwise see nothing. The declaration sits on
+          // the element that holds the focus, never on the frame around it.
+          focusablePort ? controlRing(part.theme, {}) : undefined,
+        ),
+        style,
+      )}
     >
       {children}
     </div>
