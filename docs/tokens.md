@@ -1847,8 +1847,8 @@ host.metrics.codeTextSize; // typography.codeBlock.fontSize
 | `metrics.codeTextSize` / `codeLineHeight` | `typography.codeBlock`'s size / leading |
 
 A `<code>` host is the one host whose **type** also comes from the theme object:
-the runtime sizes a code block from the theme's own metrics rather than from a
-style property, and its default is 12.5/18
+the runtime sizes a code block from the theme's own metrics — an element's
+`style` still wins where it sets a size — and its default is 12.5/18
 (`packages/native/src/theme.rs`'s `Metrics` at the pinned `@gpuix/native@0.11.0`)
 — not this library's scale. The seam hands over `typography.codeBlock`'s size and
 leading, so a brand's block role reaches the host instead of stopping at it; the

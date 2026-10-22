@@ -676,12 +676,12 @@ time picker paints inside a field's `input` root and a number field's stepper
 chevrons, so a brand with a tinted fill cannot bury either in silence.
 
 A `<code>` host is the one host whose **type** also comes from the theme object:
-the runtime sizes a code block from the theme's own `metrics` rather than from a
-style property, so the seam hands over `typography.codeBlock`'s size and leading
-(`host.metrics.codeTextSize` / `codeLineHeight`). The runtime's own code block is
-12.5/18, which is not this library's scale, so without the seam a brand's
-`codeBlock` role would stop at the code host. The gutter widths and the syntax
-palette stay the runtime's: the package has no tokens for them.
+the runtime sizes a code block from the theme's own `metrics` when an element's
+`style` does not set the size, so the seam hands over `typography.codeBlock`'s
+size and leading (`host.metrics.codeTextSize` / `codeLineHeight`). The runtime's
+own code block is 12.5/18, which is not this library's scale, so without the
+seam a brand's `codeBlock` role would stop at the code host. The gutter widths
+and the syntax palette stay the runtime's: the package has no tokens for them.
 
 ## For documentation sites
 
