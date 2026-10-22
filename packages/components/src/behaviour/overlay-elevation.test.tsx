@@ -27,7 +27,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../dropdown-menu.js";
-import { elevationShadow, lightTheme, type Theme } from "../internal/theme.js";
+import {
+  darkTheme,
+  elevationShadow,
+  lightTheme,
+  type Theme,
+} from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
 
@@ -85,15 +90,17 @@ describe("a floating surface is raised", () => {
 
   Arr.forEach(cases, (surface) => {
     it(`${surface.name} paints the theme's lift beside its ring`, () => {
-      const page = renderComponent(surface.node, "light");
-      try {
-        expect(
-          page.renderer.findByTestId("surface")?.style.boxShadow,
-          `${surface.name} paints a hairline and no elevation`,
-        ).toEqual(lifted(lightTheme, surface.recipe));
-      } finally {
-        page.unmount();
-      }
+      Arr.forEach([lightTheme, darkTheme], (theme) => {
+        const page = renderComponent(surface.node, theme.mode);
+        try {
+          expect(
+            page.renderer.findByTestId("surface")?.style.boxShadow,
+            `${surface.name} paints a hairline and no elevation (${theme.name})`,
+          ).toEqual(lifted(theme, surface.recipe));
+        } finally {
+          page.unmount();
+        }
+      });
     });
   });
 });
