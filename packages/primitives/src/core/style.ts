@@ -252,7 +252,7 @@ export interface TextSpec {
   readonly tone: TextTone;
   readonly align?: "start" | "center" | "end";
   readonly truncate?: boolean;
-  /** Maximum visible lines. GPUix clips after this many. */
+  /** Maximum visible lines: a box at the role's leading, clipped below it. */
   readonly clamp?: number;
   /** Selectable text: off by default for chrome, on for content. */
   readonly selectable?: boolean;
@@ -260,6 +260,16 @@ export interface TextSpec {
 
 /** Roles whose family is the monospace face. */
 const MONO_ROLES: ReadonlyArray<TextRole> = ["code", "codeBlock"];
+
+/**
+ * The line count a clamp asks for, floored to at least one.
+ *
+ * A count that never arrived (`NaN`) or a non-positive one would resolve a
+ * zero-height box that paints nothing; one line is the minimum a clamp can
+ * mean, the same floor the grid's track count takes.
+ */
+export const clampLines = (clamp: number): number =>
+  Number.isFinite(clamp) ? Math.max(1, Math.floor(clamp)) : 1;
 
 export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
   const role = theme.typography[spec.role];
@@ -282,8 +292,12 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
     style.textOverflow = "ellipsis";
   }
   if (spec.clamp !== undefined) {
+    // `lineClamp` is declared by 0.11.0 and paints every line (measured by the
+    // playground's `text-truncation` probe), so the cut is a definite box: the
+    // line count times the role's own leading, with a hidden overflow.
     style.whiteSpace = "normal";
-    style.lineClamp = spec.clamp;
+    style.height = role.lineHeight * clampLines(spec.clamp);
+    style.overflow = "hidden";
   }
   return style;
 };

@@ -71,7 +71,7 @@ colour and the caller's `className`/`style` still win.
 | `tone` | `TextTone` | `"default"` | colour role |
 | `align` | `"start" \| "center" \| "end"` | runtime default | horizontal alignment |
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
-| `clamp` | `number` | none | clip after N lines |
+| `clamp` | `number` | none | cut to a box N lines tall at the role's own leading |
 | `selectable` | `boolean` | `false` | `userSelect: "text"` plus the theme's `selection` wash; off for chrome, on for content |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
@@ -107,6 +107,16 @@ content. A selectable run also declares
 for visibility and for the text it carries — instead of the runtime's default of
 the theme accent at 35%, a colour no pair measures.
 
+**A clamp is a box, not a runtime style.** GPUix 0.11.0 declares `lineClamp` and
+paints every line for it: the playground's `text-truncation` probe measured a
+five-line paragraph under `lineClamp: 2` painting all five, on the `<text>` and on
+its container. So `clamp` resolves a definite height — the line count times the
+role's own leading — with `overflow: "hidden"`, and the recipe's class carries
+the role (`clamp-body-2`, `clamp-h1-2`) because two roles have two leadings. A
+count that is not a number, or is zero or below, reads as one line rather than a
+zero-height box that paints nothing; a hand-written class naming an unknown role
+is reported as unsupported instead of painting an uncut paragraph.
+
 ## Limitations
 
 - No paragraph or list semantics: only the heading and code roles above are
@@ -116,27 +126,30 @@ the theme accent at 35%, a colour no pair measures.
 - No rich text: one run, one role. Composition is several `Text` nodes in a
   `Stack`.
 - No responsive type scale or fluid sizing.
-- `truncate` needs a bounded width to truncate against.
-- **Identical copy shares one layout per window.** GPUI lays a string out once
-  and reuses that layout for the same text, so `clamp` follows the first
-  identical string painted: a two-line node and a one-line node with the same
-  copy both paint two lines. Give duplicate copy a distinct string (one changed
-  word is enough), or clamp only one of them. Measured on 0.11.0 — the native
-  suite pins both the correct case and the limitation, so a runtime fix fails
-  that case and removes this note.
+- `truncate` and `clamp` need a bounded width to wrap against. A clamp without a
+  width the parent limits wraps to the line it would have taken anyway.
+- GPUI lays a string out once per window and reuses that layout for identical
+  copy, which decides **where the string wraps**. That no longer decides the
+  clamp: each node's box is its own line count, so a two-line and a one-line
+  `clamp` over the same copy paint two and one lines
+  (`runtime/layout.runtime.test.tsx`).
 
 ## Verification
 
 - `src/core/variants.test.ts` — every role resolves from the theme.
+- `src/core/style.test.ts` — the clamp's box (height, hidden overflow, no
+  `lineClamp`) and the one-line floor for a count that cannot be laid out.
 - `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp,
   selectable, the heading/code semantics (level and name, with body copy left
   plain), the status role an error paints, and a brand-toned run's derived
   colour clearing the floor on every surface a link sits on.
+- `src/recipe/recipe.test.ts` — the clamp's height resolved from the role its
+  class names, and an unknown role reported as unsupported.
 - `runtime/layout.runtime.test.tsx` — the string is painted, its box height
   equals the role's line height, and the a11y tree reports a heading's level
   (`h1` = 1, `h3` = 3) with body copy carrying no heading role; a clamp over
-  unique copy lands on its own line count, and identical copy shares the first
-  layout (the pinned limitation above).
+  unique copy lands on its own line count, and two clamps over identical copy
+  each keep their own box.
 
 ```sh
 nub run --filter @gpuixui/primitives test

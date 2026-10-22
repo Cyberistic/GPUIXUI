@@ -20,6 +20,7 @@ import type {
   StackSpec,
 } from "../core/layout.js";
 import type { SelectionAccent, SelectionState } from "../core/selection.js";
+import { clampLines } from "../core/style.js";
 import type {
   ProgressTone,
   ScrollSpec,
@@ -192,7 +193,11 @@ export const textClass = (options: TextRecipeOptions): string =>
     options.align === undefined ? undefined : ALIGN_CLASS[options.align],
     options.selectable === true ? "select-text" : "select-none",
     options.truncate === true && "whitespace-nowrap text-ellipsis",
-    options.clamp === undefined ? undefined : `line-clamp-${options.clamp}`,
+    // The role travels in the class name because a clamp's height is that
+    // role's own leading: `clamp-body-2` and `clamp-h1-2` are different boxes.
+    options.clamp === undefined
+      ? undefined
+      : `clamp-${ROLE_CLASS[options.role]}-${clampLines(options.clamp)}`,
   );
 
 // ── Stack ────────────────────────────────────────────────────────────

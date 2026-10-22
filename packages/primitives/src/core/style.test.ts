@@ -8,6 +8,7 @@ import {
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  clampLines,
   controlFocusStyle,
   controlStyle,
   fieldTextStyle,
@@ -297,9 +298,25 @@ describe("textStyle", () => {
     const truncated = text({ role: "body", tone: "default", truncate: true });
     expect(truncated.whiteSpace).toBe("nowrap");
     expect(truncated.textOverflow).toBe("ellipsis");
+    // `lineClamp` paints every line in 0.11.0 (measured by the playground's
+    // `text-truncation` probe), so a clamp is a definite box instead: the role's
+    // leading times the line count, with the overflow hidden.
     const clamped = text({ role: "body", tone: "default", clamp: 2 });
-    expect(clamped.lineClamp).toBe(2);
+    expect(clamped.height).toBe(2 * testTheme.typography.body.lineHeight);
+    expect(clamped.overflow).toBe("hidden");
+    expect(clamped.lineClamp).toBeUndefined();
     expect(clamped.whiteSpace).toBe("normal");
+  });
+
+  it("reads a clamp it cannot lay out as one line", () => {
+    // A count from a measurement that never arrived is not a zero-height box.
+    expect(
+      text({ role: "body", tone: "default", clamp: Number.NaN }).height,
+    ).toBe(testTheme.typography.body.lineHeight);
+    expect(text({ role: "body", tone: "default", clamp: 0 }).height).toBe(
+      testTheme.typography.body.lineHeight,
+    );
+    expect(clampLines(2.9)).toBe(2);
   });
 
   it("switches font family for code roles", () => {

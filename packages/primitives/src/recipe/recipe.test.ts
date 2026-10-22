@@ -292,6 +292,8 @@ describe("Text recipe", () => {
       { role: "body", tone: "default", align: "end" },
       { role: "body", tone: "default", truncate: true },
       { role: "body", tone: "default", clamp: 3 },
+      { role: "body", tone: "default", clamp: 0 },
+      { role: "body", tone: "default", clamp: Number.NaN },
       { role: "body", tone: "default", selectable: true },
     ];
     Arr.forEach(cases, (spec) => {
@@ -309,6 +311,26 @@ describe("Text recipe", () => {
         ).style,
       ).toEqual(textStyle(spec, testTheme));
     });
+  });
+
+  it("resolves a clamp's box from the role its class names", () => {
+    // A clamp is a definite height at the role's leading, not `lineClamp`: the
+    // runtime declares that field and paints every line (the `text-truncation`
+    // probe measured a five-line paragraph under `clamp={2}`). The role is in
+    // the class name, so a wrong parse would cut the paragraph at another
+    // role's leading while every single-line case still passed.
+    Arr.forEach(roles, (role) => {
+      const style = recipeTw.classesToStyle(
+        textClass({ role, tone: "default", clamp: 2 }),
+        testTheme,
+      ).style;
+      expect(style.height).toBe(2 * testTheme.typography[role].lineHeight);
+      expect(style.overflow).toBe("hidden");
+      expect(style.lineClamp).toBeUndefined();
+    });
+    const unknown = recipeTw.classesToStyle("clamp-unknown-2", testTheme);
+    expect(unknown.style.height).toBeUndefined();
+    expect(unknown.unsupported).toContain("clamp-unknown-2");
   });
 });
 

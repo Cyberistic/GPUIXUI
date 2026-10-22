@@ -20,6 +20,9 @@ import {
   targetSize,
 } from "@gpuixui/tokens";
 import { createTw } from "@gpuixui/tw";
+import { pipe } from "effect";
+import * as Option from "effect/Option";
+import * as Str from "effect/String";
 import { switchThumbOffset } from "../core/selection.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
 
@@ -111,6 +114,39 @@ const roleSize = (
 ): Pick<StyleDesc, "fontSize" | "lineHeight"> => {
   const type = theme.typography[role];
   return { fontSize: type.fontSize, lineHeight: type.lineHeight };
+};
+
+/** The shape of a `clamp-<role>-<lines>` class. */
+const CLAMP_TOKEN = /^(.+)-(\d+)$/;
+
+/**
+ * The box a clamped run paints: its role's leading times the line count.
+ *
+ * A clamp is not a style the runtime paints — `lineClamp` cuts nothing in
+ * 0.11.0 — so the height is definite and the overflow hidden, which is the
+ * composition the `text-truncation` probe measured painting the requested
+ * lines. An unknown role or a count that is not a number resolves to nothing,
+ * so a typo lands in the compiler's `unsupported` list instead of painting an
+ * uncut paragraph.
+ */
+const clampStyle = (
+  theme: Theme,
+  value: string | undefined,
+): StyleDesc | undefined => {
+  const token = pipe(
+    Option.fromNullishOr(value),
+    Option.flatMap(Str.match(CLAMP_TOKEN)),
+  );
+  if (Option.isNone(token)) return undefined;
+  const [, key = "", count = "0"] = token.value;
+  const role = TEXT_ROLE[key];
+  return role === undefined
+    ? undefined
+    : {
+        whiteSpace: "normal",
+        overflow: "hidden",
+        height: theme.typography[role].lineHeight * Math.max(1, Number(count)),
+      };
 };
 
 /**
@@ -291,10 +327,11 @@ export const recipeTw = createTw({
       const role = value === undefined ? undefined : TEXT_ROLE[value];
       return role === undefined ? undefined : roleSize(theme, role);
     },
-    "line-clamp": (_theme, value) =>
-      value === undefined
-        ? undefined
-        : { whiteSpace: "normal", lineClamp: Number(value) },
+    // A clamped run's box: the line count times the role's own leading, with a
+    // hidden overflow. `lineClamp` is declared by 0.11.0 and paints every line
+    // (measured by the playground's `text-truncation` probe), so the cut has to
+    // be a definite box. The role is in the class name for that reason.
+    clamp: clampStyle,
 
     // Derived geometry: a number resolves to a square (`width` + `height`);
     // a non-square value returns the shape it means. All read the theme's

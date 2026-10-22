@@ -498,9 +498,7 @@ it("paints the type scale, not just the style", async () => {
   expect(h1.height).toBeGreaterThan(body.height);
 });
 
-it("clamps a Text after its own line count, when the copy is unique", async () => {
-  // The control for the limitation below: a string the window has not laid out
-  // before gets its own layout, so the clamp is the caller's.
+it("clamps a Text after its own line count", async () => {
   const runtime = await openWindow();
   const line = testTheme.typography.body.lineHeight;
   const long =
@@ -523,13 +521,13 @@ it("clamps a Text after its own line count, when the copy is unique", async () =
   expect(boundsOf(runtime, "two").height).toBe(2 * line);
 });
 
-it("shares one layout between identical strings, so a later clamp follows the first", async () => {
-  // **A measured runtime limitation, pinned rather than worked around.** GPUI
-  // lays a string out once per window and reuses that layout for the same copy,
-  // so `clamp` is decided by the first identical string painted: here the
-  // two-line node is first and the one-line node beside it paints two lines.
-  // If a runtime upgrade fixes the cache, this test fails and the limitation
-  // comes off `docs/text.mdx` §Limitations.
+it("clamps each node to its own line count, even sharing one string layout", async () => {
+  // **The clamp is the node's box, not the string's layout.** GPUI lays a
+  // string out once per window and reuses that layout for identical copy, which
+  // used to decide the clamp too: a two-line node and a one-line node with the
+  // same copy both painted two lines. The clamp is a definite height with a
+  // hidden overflow, so the box — and therefore the lines painted — belongs to
+  // each node while the shared layout only decides where the string wraps.
   const runtime = await openWindow();
   const line = testTheme.typography.body.lineHeight;
   const same =
@@ -545,7 +543,7 @@ it("shares one layout between identical strings, so a later clamp follows the fi
     </Surface>,
   );
   expect(boundsOf(runtime, "first").height).toBe(2 * line);
-  expect(boundsOf(runtime, "duplicate").height).toBe(2 * line);
+  expect(boundsOf(runtime, "duplicate").height).toBe(line);
 });
 
 it("addresses a Text element by the testId the caller gave it", async () => {

@@ -218,7 +218,7 @@ Geometry, colour and type map to the classes below. Columns are the
 | `textAlign` | `text-start` `text-center` `text-end` | `center` built-in, `start`/`end` registry |
 | `textOverflow: "ellipsis"` | `text-ellipsis` | registry |
 | `whiteSpace` | `whitespace-nowrap` | built-in |
-| `lineClamp: n` | `line-clamp-<n>` | registry family |
+| `height`/`overflow` (a text clamp) | `clamp-<role>-<n>` (`clamp-body-2`, `clamp-h1-2`) | registry family → `n * theme.typography[role].lineHeight` and `overflow: hidden`; `lineClamp` is not painted because 0.11.0 declares it and paints every line |
 | `opacity` | `opacity-<n>` | built-in |
 | `textDecoration: "underline"` | `underline` | built-in |
 | `overflowX` / `overflowY` | `overflow-x-*` `overflow-y-*` | registry |

@@ -445,12 +445,26 @@ describe("type", () => {
   });
 
   it("clamps after a line count and truncates on one line", () => {
+    // The bug: `clamp` resolved `lineClamp`, which GPUix 0.11.0 declares and
+    // paints every line for (measured by the playground's `text-truncation`
+    // probe: `clamp={2}` over five lines painted five). A clamp has to be a
+    // definite box at the role's leading with the overflow hidden.
     const clamped = renderText({ clamp: 3 }, testTheme);
-    expect(numberIn(clamped, "lineClamp")).toStrictEqual(Option.some(3));
+    expect(numberIn(clamped, "height")).toStrictEqual(
+      Option.some(3 * testTheme.typography.body.lineHeight),
+    );
+    expect(expectSome(stringIn(clamped, "overflow"))).toBe("hidden");
     expect(expectSome(stringIn(clamped, "whiteSpace"))).toBe("normal");
+    expect(numberIn(clamped, "lineClamp")).toStrictEqual(Option.none());
+    // The height follows the role, not a fixed leading.
+    const heading = renderText({ role: "h1", clamp: 1 }, testTheme);
+    expect(numberIn(heading, "height")).toStrictEqual(
+      Option.some(testTheme.typography.h1.lineHeight),
+    );
     const truncated = renderText({ truncate: true }, testTheme);
     expect(expectSome(stringIn(truncated, "whiteSpace"))).toBe("nowrap");
     expect(stringIn(truncated, "lineClamp")).toStrictEqual(Option.none());
+    expect(numberIn(truncated, "height")).toStrictEqual(Option.none());
   });
 
   it("paints an error in the measured status text role, not the solid fill", () => {
