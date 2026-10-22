@@ -435,11 +435,14 @@ measures. A **filled action** paints it too: `paintsFilledSurface` (`primary`,
 `packages/primitives/src/core/style.ts`, the recipe's disabled bucket is
 `disabled:bg-disabled disabled:text-disabled-foreground`, and a menu row
 (`packages/components/src/menu/item.tsx`) paints `disabledForeground`. The
-deviation that remains fades the whole control with a 50% opacity: the
+deviation that remains fades the control with a 50% opacity: the
 `disabled:opacity-50` utility in the `@gpuixui/tw` recipes, the `opacity = 0.5`
-a field, a slider and a rating's part still take, and the components package's
-own `Button` (`packages/components/src/internal/button.tsx`, `opacity: 0.5`).
-An unfilled action has no fill to collapse into and keeps the fade. That share
+a field, a slider and a rating's part still take in
+`packages/primitives/src/core/style.ts`, and the components package's own
+`Button` for its unfilled variants (`packages/components/src/internal/button.tsx`,
+`opacity: disabledOpacity`) — its filled variants wear `disabledAction(theme)`
+and pin their hover and press to the resting fill. An unfilled action has no
+fill to collapse into and keeps the fade. That share
 is `disabledOpacity`, and
 `disabledFadeFailures` measures the fade by compositing it — twice, because the
 label is faded over the *faded* fill. Measured: a filled action's label lands at

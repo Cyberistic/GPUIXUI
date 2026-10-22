@@ -298,12 +298,33 @@ describe("the pages that teach the disabled state", () => {
       "a menu row's own `opacity`",
       "Adopting the pair in the recipes and the primitive cores",
       "Replacing the fade in the recipes and the primitive cores remains",
+      "(`packages/components/src/internal/button.tsx`, `opacity: 0.5`)",
     ];
 
     Object.entries(pages).forEach(([page, text]) => {
       retracted.forEach((sentence) => {
         expect(text, `${page}: ${sentence}`).not.toContain(sentence);
       });
+    });
+  });
+
+  it("names the components Button's two disabled paths, not a whole-control fade", () => {
+    // The components `Button` splits: a filled variant wears the measured pair,
+    // a ghost keeps `disabledOpacity`. The page that calls the whole Button a
+    // 50% fade sends a reader to repaint a state its filled variants already
+    // paint as the contract, so the sentence is read against the branch itself.
+    const branch = painters.componentButton.slice(
+      painters.componentButton.indexOf("const disabledStyle"),
+      painters.componentButton.indexOf("const paintsSurface"),
+    );
+    expect(branch).toContain("paintsSurface(variant) ? disabledAction(theme)");
+    expect(branch).toContain("opacity: disabledOpacity");
+
+    Object.entries(pages).forEach(([page, text]) => {
+      expect(text, page).toContain("filled variant");
+      expect(text, page).toContain("`disabledAction(theme)`");
+      expect(text, page).toContain("`disabledOpacity`");
+      expect(text, page).toContain("keeps the fade");
     });
   });
 });

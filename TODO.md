@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 96/96
+`[x]` `[██████████]` 98/98
 
 `[x]` Measure a **control's edge and a message's boundary on a floating surface** — a dialog's footer holds the `secondary` cancel action (`ConfirmDialog`'s `Button` takes the default variant, which paints `borderStrong`) on the `popover` fill `DIALOG_CONTENT` paints, and a popover holding a form holds the same control; `contrastPairs` measured `borderStrong` on `background`, `card`, `input`, `muted`, `secondary`, `hover` and `active` and on `popover` only for the **ring**, so the edge drawn around the same focused control was the one boundary strip nothing checked. The status edge had the mirror gap: each tone's `xSoft` tint is measured on the four strips a message sits on (page, card, popover, muted toolbar) while its edge was measured on the tint and the two page surfaces, so a warning alert in a confirmation dialog's body and a soft badge in a muted sidebar had a measured tint and an unmeasured boundary. One pair joined `contrastPairs` (81 → 82, boundary floor) and eight placements joined `decorativeSurfaces` (`statusEdge` on `popover` and `muted`, four tones each). No palette moved: every shipped, high-contrast, platform and authored style already cleared both, the tightest being the base dark theme's edge on its popover at 3.95:1 and Luna light's `warning` edge on its muted toolbar at 1.11:1. `contrast.test.ts`'s boundary suite holds the coverage, reads the composition the pair exists for (the default-variant `Button`, `borderStrong`, `DIALOG_CONTENT`/`POPOVER_CONTENT`'s `bg-popover`), sweeps all 16 styles and reads the catalogue's printed 3.95; `decorative.test.ts` holds the coverage, derives the edge strips from the tint's own placements so a message's boundary is measured wherever its surface is, reports a tone painted in the strip it bounds, and sweeps the new strips to the printed 1.11. Directions measured: removing the pair fails the coverage case and the docs count; reverting the edge placements fails three decorative cases by name; a stale printed `3.96` and `1.12` each fail their sweep. Docs in `docs/tokens.md` §Contrast/§Decorative surfaces, `docs/design-system.md` §7/§9, the package README, the `Contrast contract`/`Status tones` inventory rows.
 
@@ -543,9 +543,11 @@ a workaround for two live sessions sharing one worktree; see
 
 `[x]` Fit a control's box to the **icon it draws**, not only to the text — `fits` compared a control height with the `label` and `body` leadings a control paints and nothing else, while the same box is the glyph a control carries: `Icon` defaults to `md` (`packages/icons/src/icon.tsx`), a selection box and a spinner's dot take that step (`packages/primitives/src/core/selection.ts`, `…/Spinner.tsx`), and an `IconButton` is a square at its control height. A brand from a 24px icon grid — `extendTheme(lightTheme, { density: "compact", iconSize: { md: 26, lg: 28, xl: 30 } })` — keeps every value finite, positive, ordered and pressable, and centres a 26px glyph in `compact`'s 24px `sm` box, where it clips or overflows the action; the gate passed while every control painted a glyph taller than itself. The `fits` ceiling is now `max(label.lineHeight, body.lineHeight, iconSize.md)` for every control size, with `iconSize.lg`/`xl` deliberately excluded (they are the toolbar, navigation and empty-state steps, not the glyph inside an action), an icon exactly the box height accepted, an unlayable icon left to the `iconSize` report rather than a second `fits` line, and a box already under the pressable floor still reported once. No API, gate shape or count changed — the rule and the report are the same, and `packages/tokens` still ships zero runtime dependencies. No shipped, high-contrast, platform or authored style moved: the shipped ceiling is 20px (`body`'s leading) against a 24px smallest box. `numbers.test.ts` gains `a control's box fits the icon it draws` (6 cases: the glyph report by path, the `md`-not-`xl` read, the equal-height pass, the unlayable icon, the gate failing with every colour report empty, and the preset sweep against `iconSize.md`); `numbers.example.ts` gains `grownIconTheme`/`grownIconAudit` as the seventh brand, `docs/tokens.md` §Numbers gains the paragraph and a snippet whose report the code returns, and `docs/design-system.md` §6/§9, the package README and the `Token numbers` row move with it. Directions measured: removing the icon half fails four cases by name (the example, the `md`-not-`xl` case, the gate case and the catalogue case), and the docs sentences fail in the opposite direction until the pages move.
 
+`[x]` Correct the **design-system page that still called the components `Button` a whole-control fade** — `docs/design-system.md` §8 kept the Button in "the deviation that remains" with `opacity: 0.5` after the painter split: `packages/components/src/internal/button.tsx`'s `disabledStyle` returns `disabledAction(theme)` for a variant that `paintsSurface`, and only a ghost keeps `disabledOpacity`, so the page sent a reader to fade a filled action the token pages already describe as the measured pair. The paragraph now names the unfilled variants as the Button's fade, keeps the file and the constant, and keeps the primitives' own `opacity = 0.5` parts and `@gpuixui/tw`'s `disabled:opacity-50` on the remaining list. `disabled.test.ts` gains `names the components Button's two disabled paths, not a whole-control fade`, which reads the Button's branch (`paintsSurface(variant) ? disabledAction(theme)` beside `opacity: disabledOpacity`) and requires both pages to carry the split and the `disabledOpacity` constant, and the retracted list gains the old sentence. Directions measured: restoring the stale §8 sentence fails the retraction case and the split case; the corrected page is 17/17.
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 72/72
+`[x]` `[██████████]` 73/73
 
 `[x]` Prove the **surface fade** the presence seam paints and record the frames
       — the `surface-fade` live probe opens the shipped `Dialog` over a white
@@ -1704,6 +1706,35 @@ a workaround for two live sessions sharing one worktree; see
       virtualized document; publishing the finding in the capability record and
       the Tier 3/4 rows is the interlock below
 
+`[x]` Land the `workspace-restore` live probe and measure **the arrangement a
+      dock gets back** — Tier 4's *persistent panel state* is app-owned (the
+      runtime publishes no storage), and no probe had measured the restore half:
+      a pane given a restored width, a document mounted from a restored value,
+      and a saved scroll applied on the first layout. A 900×520 window changes a
+      sidebar (160 → 0), a caller-owned document width (240 → 360, four presses
+      stopping at the bound), the document (`explorer` → `output`) and the
+      inspector's scroll (0 → 120), writes them as a schema string, and
+      re-mounts the workspace from it: `mount=2 source=stored` paints 0 / 360 /
+      the rest of the row, `document=output`, the pane's layout pass reports 360
+      and the scroll lands at −120. The same run measures the boundary: `not a
+      workspace` opens `source=default` at 160 / 240 / explorer / 0, and a stored
+      `sidebar:-5 document:9999 scroll:-30` restores clamped to 0 / 360 / 0, so a
+      stale width cannot leave the inspector off the frame. 30 checks, `--only
+      workspace-restore`, green on 0.11.0; the mount is a **re-mount** rather
+      than a relaunch because one window per process is the binding's rule.
+      `src/live/workspace-restore.ts` holds the `WorkspaceLayout` schema,
+      encode/decode, the default/restore boundary and the clamp, with
+      `workspace-restore.test.ts` (7 cases). Two negative controls measured,
+      exit `1` each and restored: restoring the default fails `a restore
+      re-mounts the workspace from its saved string` (got
+      `sidebar=160 document=240 tab=explorer scroll=0`), and skipping the saved
+      scroll fails `the saved scroll paints where it was saved` (`expected -120 ±
+      1, got 0`). Evidence: `apps/playground/README.md` §`workspace-restore`,
+      `.artifacts/live/{workspace-changed,workspace-restored,workspace-default,
+      workspace-clamped}.png`; publishing it in the capability record and the
+      Tier 4 Workspace layouts / Persistent panel state rows is the interlock
+      below
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 3/3
@@ -2426,6 +2457,24 @@ a workaround for two live sessions sharing one worktree; see
       { outlineWidth: 2, …(2) }`, green with the declaration. Docs:
       `docs/carousel.mdx` §Accessibility/§Verification and the `COMPONENTS.md`
       row. Behaviour 14 across the two suites, unit and `check-types` green
+    - [x] Announce an avatar's person **once** and its presence at all — the
+      page promised "a single `role=\"img\"` node … a screen reader never reads
+      'AL' as a word" and the renderer measured the opposite on 0.11.0: with a
+      picture the tree held **two** image nodes named "Ada Lovelace" (the root
+      and the `<img alt={name}>`), and with the initials fallback a `label` node
+      reading "AL" sat beside the name; the presence dot was colour-only and
+      announced nothing. The root is now the one node — `alt=""` +
+      `role="presentation"` on the picture and `role="presentation"` on the
+      initials, both measured to drop the node while the text still paints — and
+      `status` is published as the root's `aria-description` (`busy`), with an
+      explicit caller `aria-description` replacing it because 0.11.0 has one
+      description channel. `src/internal/a11y.ts` gains `description` so a suite
+      can read it. `avatar.test.tsx` (10) gains `names the avatar once, whatever
+      paints inside it` and `announces the presence state beside the name`; both
+      directions measured — before the fix the first read `labels: [ 'AL' ]`
+      (and the picture case two image nodes) and the second
+      `[ undefined, undefined, 'Team lead' ]`. Docs: `docs/avatar.mdx`
+      §Presence/§Accessibility/§Verification and the `COMPONENTS.md` row
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
@@ -2766,9 +2815,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Read the elevation level list from the package — `@gpuixui/tokens` exports `elevationLevels` (the order a surface is raised through, the order `invalidShadowColors` reports and the order `invalidScales` walks), and `apps/docs/src/components/docs/token-scales.tsx` re-declared the same four keys locally, so a level added to the package would leave the docs scale table one step behind | docs-site | **resolved** — the specimen imports `elevationLevels` from `@gpuixui/tokens` and has no local list. `token-scales.test.tsx` gained two guards: `lists every elevation level the theme has` now expects the package order exactly (`toEqual(Object.keys(theme.elevation))`) and `paints the levels in the package's order` reads the rendered `data-token` rows in order, so a different or partial list cannot pass; `reads the elevation order from the package, not a local list` reads the component source and fails on a local `const elevationLevels` or a missing import. Direction measured: restoring the local array fails by name (`expected … to match /\belevationLevels\b/` on the import slice); restored, 9/9 green and `check-types` clean |
 
-| Correct the token page that still calls the components' `Button` a whole-control fade — `docs/design-system.md` §8 keeps it in "the deviation that remains" with `opacity: 0.5`, while a **filled** variant now paints `disabledAction(theme)` and only the **unfilled** (ghost/icon) path keeps `disabledOpacity`, so the only whole-control fade left is `@gpuixui/tw`'s recipes. The correction keeps `packages/components/src/internal/button.tsx` named (the ghost path, which `disabled.test.ts`'s `names the two painters that still fade` requires) and moves the Button into the unfilled sentence | tokens-theme | **half resolved** — `docs/tokens.md` §The fade a disabled control paints already reads "The components package's own `Button` splits the same way: a filled variant wears `disabledAction(theme)` and pins its hover and press to the resting fill, while a ghost keeps the fade" (commit `850e46ec`), so only `docs/design-system.md` §8 is stale |
+| Correct the token page that still calls the components' `Button` a whole-control fade — `docs/design-system.md` §8 keeps it in "the deviation that remains" with `opacity: 0.5`, while a **filled** variant now paints `disabledAction(theme)` and only the **unfilled** (ghost/icon) path keeps `disabledOpacity`, so the only whole-control fade left is `@gpuixui/tw`'s recipes. The correction keeps `packages/components/src/internal/button.tsx` named (the ghost path, which `disabled.test.ts`'s `names the two painters that still fade` requires) and moves the Button into the unfilled sentence | tokens-theme | **resolved** — `docs/tokens.md` §The fade a disabled control paints already read "The components package's own `Button` splits the same way: a filled variant wears `disabledAction(theme)` and pins its hover and press to the resting fill, while a ghost keeps the fade" (commit `850e46ec`); `docs/design-system.md` §8 now says the same and keeps `packages/components/src/internal/button.tsx` named as the **unfilled** painter (`opacity: disabledOpacity`), with the primitives' own `opacity = 0.5` parts and `@gpuixui/tw`'s `disabled:opacity-50` as the remaining whole-control fades. `disabled.test.ts` gains `names the components Button's two disabled paths, not a whole-control fade`, which reads the Button's own branch (`paintsSurface(variant) ? disabledAction(theme)` beside `opacity: disabledOpacity`) and requires both pages to name the split, and the retracted list gains the old `Button` sentence. Directions measured: restoring the old §8 sentence fails the retraction case (`docs/design-system.md: (…, \`opacity: 0.5\`)`) and the split case, and the corrected page passes 17/17 |
 
 | Word the `fits` rule's **icon half** in the theme editor — `@gpuixui/tokens`' `invalidNumbers` holds a control height to `max(label.lineHeight, body.lineHeight, iconSize.md)` now, because the same box is the glyph a control carries, while `apps/docs/src/components/docs/theme-editor-logic.ts`'s `numberRequirement` still reads `fits: "a height that contains the tallest label it carries"`. A brand whose only defect is a 26px `md` icon in `compact`'s 24px `sm` box fails the gate `/docs/themes` calls "the whole audit" and the readout words the reason without the icon | docs-site | open — the rule value, report shape and gate keys are unchanged, so the docs suite typechecks; only the sentence (`a height that contains the tallest label or icon it carries`) and its case in `theme-editor-logic.test.ts` need the icon. The tokens half is `docs/tokens.md` §Numbers and `docs/design-system.md` §6/§9 |
+
+| Publish the **workspace restore** measurement a dock owes — the live `workspace-restore` probe measured the app-owned half of Tier 4's *persistent panel state*: a schema-encoded arrangement (sidebar width, caller-owned document width, chosen document, inspector scroll) handed back to a re-mounted workspace paints 0 / 360 / `output` / −120 (`mount=2 source=stored`), the pane's layout pass reports the restored 360, a string that is not a layout opens the default (`source=default`), and a stored `sidebar:-5 document:9999 scroll:-30` restores clamped to 0 / 360 / 0. Nothing in `docs/gpuix-capabilities.md`, `/docs/runtime` or the Tier 4 **Workspace layouts** / **Persistent panel state** rows (`?`) states that the runtime has no storage and the restore is app-owned, or that a re-mount is the honest stand-in for a relaunch (one window per process) | docs-site (the capability record + `/docs/runtime`) and components (the two Tier 4 rows) | open — publish the row, add `workspace-restore` to §5's owed-probe list, and name the rule (persist the arrangement, decode it at the boundary with a schema, clamp a stored width to the pane's bounds, restore scroll on the first layout) where a workspace is designed. Evidence: `apps/playground/README.md` §`workspace-restore`, 30 checks, two negative controls, `.artifacts/live/workspace-restored.png` |
 
 ## Phase D — data and workspace components
 
@@ -3530,10 +3581,11 @@ numbers).
   - `[x]` `counting-number` — `CountingNumber` interpolates on `@gpuixui/motion`'s tween (mount run from `from`, retarget from the number on screen, `format`/`decimals`), `src/counting-number/logic.ts` + its unit suite, `src/behaviour/counting-number.test.tsx` (6), `docs/counting-number.mdx`, the example and the row; the hook gained `MotionOptions.initial`, documented in `packages/motion/README.md`
   - `[x]` `rotating-text` — `RotatingText` cycles a phrase list on an interval with a `fast` fade (stops fading under reduced motion, keeps rotating), controlled/uncontrolled index and a clamp for a shrunk list; `src/behaviour/rotating-text.test.tsx` (5), `docs/rotating-text.mdx`, the example and the row
   - `[x]` `splitting-text` — `SplittingText` splits a phrase into words or code points and gives each unit its own fade + relative-`top` rise (measured in the renderer: 12 px → 0 on a paused clock), staggered by `@gpuixui/motion`'s rule across explicit lines; a unit's key is its text, so a re-render replays only what changed, and the reduced preference drops the delay with the duration; `src/splitting-text/logic.ts` + its unit suite, `src/behaviour/splitting-text.test.tsx` (7), `docs/splitting-text.mdx`, the example and the row; `@gpuixui/motion` gained a `./timeline` subpath so a component reaches `stagger` without the physics barrel
-  - `[ ]` morphing, swapping, sliding, rolling, scrolling/sliding number, gradient, highlight — `gradient-text` needs a gradient the runtime's text host does not paint; the rest are leaf text effects
+  - `[x]` `highlight-text` — `HighlightText` marks a query's matches (or explicit UTF-16 ranges) with the runtime's own `highlight` layer and sweeps the translucent wash one code point at a time, measured through `getPaintedHighlights()` (the wash is a quad, so no text read can see it); a mark grows as one range because abutting quads would show their seams, `caseSensitive`/`wholeWord` narrow the literal query, and the default wash is the measured `selection` role; reduced motion and `stepMs={0}` paint every mark on the first frame; `src/highlight-text/logic.ts` + its unit suite, `src/behaviour/highlight-text.test.tsx` (7), `docs/highlight-text.mdx`, the example and the row
+  - `[ ]` morphing, swapping, sliding, rolling, scrolling/sliding number, gradient — `gradient-text` needs a gradient the runtime's text host does not paint; the rest are leaf text effects
 `[~]` Reveal and scroll: blur, fade, zoom, slide, highlight, auto-height, scroll-fade, scroll-progress
   - `[x]` `auto-height` — `AutoHeight` measures its content through `onLayout` and tweens the clipping box to it (mount window, re-measure, reduced motion), `src/behaviour/auto-height.test.tsx` (4), `docs/auto-height.mdx`, the example and the inventory row; `CollapsibleContent` now uses it, so the recorded "mounts instantly" limitation is closed
-  - `[ ]` blur, fade, zoom, slide, highlight, scroll-fade, scroll-progress — `scroll-progress` needs a scroll offset the runtime does not publish per the capability record; check it before planning
+  - `[ ]` blur, fade, zoom, slide, scroll-fade, scroll-progress — the text highlight landed as `highlight-text` above; `scroll-progress` needs a scroll offset the runtime does not publish per the capability record; check it before planning
 `[ ]` Interaction effects: magnetic, tilt, click, ripple-button, icon-button, flip-button, liquid-button, shine
 `[ ]` Media and collections: image-zoom, avatar-group, pinned-list, motion-grid, particles
 `[ ]` Backgrounds: bubble, fireworks, glyph, gradient, gravity-stars, hexagon, hole, stars, topography
