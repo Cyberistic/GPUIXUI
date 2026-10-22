@@ -117,6 +117,7 @@ describe("the package docs collections", () => {
     "/docs/components/field",
     "/docs/components/form",
     "/docs/components/list",
+    "/docs/components/pagination",
     "/docs/components/popover",
     "/docs/components/search-input",
     "/docs/components/tabs",

@@ -57,6 +57,7 @@ components/dropdown-menu.mdx Curated: highlighted row is the focused row
 components/field.mdx        Curated: one message slot, submit-time validation, no fade
 components/form.mdx         Curated: the submit lifecycle, derived messages, no field-to-message map
 components/list.mdx         Curated: one roving tab stop, type-ahead, the range that skips a row
+components/pagination.mdx   Curated: the derived window, the gap-of-one rule, the clamped page
 components/popover.mdx       Curated: anchored placement
 components/search-input.mdx  Curated: the Escape rule, the 24px clear target, the fixed metrics
 components/select.mdx        Curated: the 320px list, the row that reveals itself
@@ -113,6 +114,8 @@ src/components/docs/drawer-preview.ts     The drawer preview's edge box, dismiss
 src/components/docs/drawer-demo.tsx       The drawer's two browser renderings and their source strings
 src/components/docs/list-preview.ts       The list preview's arrow order, type-ahead and selection rules
 src/components/docs/list-demo.tsx         The list's two browser renderings and their source strings
+src/components/docs/pagination-preview.ts The pagination preview's window rule, clamp and page slice
+src/components/docs/pagination-demo.tsx   The pagination's two browser renderings and their source strings
 src/components/docs/menu-preview.ts       The menu preview's row model and arrow arithmetic
 src/components/docs/command-preview.ts    The palette preview's matcher and group ranking
 src/components/docs/select-preview.ts     The select preview's data and arrow arithmetic

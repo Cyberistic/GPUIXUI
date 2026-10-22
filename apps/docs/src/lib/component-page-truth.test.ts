@@ -175,6 +175,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/list.tsx",
   },
   {
+    file: "pagination.mdx",
+    row: "Pagination",
+    suite: "packages/components/src/behaviour/pagination.test.tsx",
+    shadowed: "packages/components/docs/pagination.mdx",
+    source: "packages/components/src/pagination.tsx",
+  },
+  {
     file: "popover.mdx",
     row: "Popovers",
     suite: "packages/components/src/behaviour/popover.test.tsx",
@@ -639,6 +646,64 @@ describe("the curated component pages", () => {
     // before its tween, neither of which the code paints.
     expect(text).not.toContain("rounded-4xl");
     expect(text).not.toContain("unmounts immediately");
+  });
+
+  it("holds the pagination window, its square pages and its gap rule to the source", () => {
+    // A pagination control is arithmetic a drawing cannot show: a crop that
+    // grows at the edges still looks like one, and an ellipsis over a single
+    // hidden page only reads wrong once the reader counts. The page prints the
+    // crops, the gap-of-one rule and the two knobs, so both the window function
+    // and the painter that realises it are read here rather than trusted.
+    const pagination = pages.find((page) => page.file === "pagination.mdx");
+    expect(
+      pagination,
+      "the pagination page is not in the curated set",
+    ).toBeDefined();
+    if (pagination === undefined) return;
+
+    const source = read(pagination.source);
+    const logic = read("packages/components/src/pagination/logic.ts");
+    const button = read("packages/components/src/internal/button.tsx");
+
+    // One window function with both knobs, and the branch that keeps a
+    // single hidden page as the page itself.
+    expect(source).toContain(
+      "pageWindow({ page: current, pageCount, siblingCount, showEdges })",
+    );
+    expect(logic).toContain(
+      "if (siblings + 5 >= pageCount) return pages(1, pageCount);",
+    );
+    expect(logic).toContain("if (hidden === 1) return [page(low + 1)];");
+    expect(logic).toContain("const showStart = left > 2;");
+
+    // The page button is the `sm` control height square; the current page is the
+    // primary fill with `aria-selected`, because 0.11.0 has no `aria-current`;
+    // a disabled control leaves the tab order rather than only dimming.
+    expect(source).toContain('const height = controlHeight(theme, "sm");');
+    expect(source).toContain("minWidth: height");
+    expect(source).toContain("aria-selected={isCurrent}");
+    expect(source).toContain('variant={isCurrent ? "primary" : "ghost"}');
+    expect(source).toContain('label="More pages"');
+    expect(source).toContain('role="navigation"');
+    expect(source).toContain('aria-label="Pagination"');
+    expect(button).toContain("tabIndex={disabled ? -1 : 0}");
+
+    const text = body(pagination).replace(/\s+/g, " ");
+    // The crops the page prints, and the rule that explains them.
+    expect(text).toContain("1 2 3 4 5 … 10");
+    expect(text).toContain("1 … 4 5 6 … 10");
+    expect(text).toContain("1 … 6 7 8 9 10");
+    expect(text).toContain("two or more");
+    expect(text).toContain("never draws `1 … 2 3 4 5 6 7 8`");
+    // The absent attribute and the substitution, plus the retracted claim the
+    // displaced page still makes: a ghost label is `foreground`, not the muted
+    // role the ellipsis paints.
+    expect(text).toContain('No `aria-current="page"`');
+    expect(text).toContain("aria-selected");
+    expect(text).not.toContain("ghost buttons with `colors.mutedForeground`");
+    expect(button).toContain(
+      'Match.when("ghost", () => theme.colors.foreground)',
+    );
   });
 
   it("hold the select's list cap and its reveal to the source", () => {
@@ -1575,7 +1640,9 @@ describe("the curated component pages", () => {
     // library's `input` is the field fill (the card's own white in the base
     // light theme, which would paint no edge). Its corner is the recipe's
     // fixed step, not the theme's radius.
-    const track = recipes.slice(recipes.indexOf("export const CAROUSEL_TRACK ="));
+    const track = recipes.slice(
+      recipes.indexOf("export const CAROUSEL_TRACK ="),
+    );
     expect(track.split("\n").slice(0, 2).join(" ")).toContain("border-input");
     expect(track.split("\n").slice(0, 2).join(" ")).toContain("rounded-lg");
     expect(utilities).toContain(
@@ -1609,9 +1676,16 @@ describe("the curated component pages", () => {
     expect(text).not.toContain("slides between");
     expect(text).not.toContain("translates");
 
-    // The preview paints the same decisions from the theme's variables.
+    // The preview paints the same decisions from the theme's variables. The
+    // section ends at the next sheet heading rather than at EOF, so a preview
+    // appended below it is not read as part of the carousel.
     const css = read("apps/docs/src/styles/demos.css");
-    const carouselCss = css.slice(css.indexOf("/* ---- carousel:"));
+    const carouselStart = css.indexOf("/* ---- carousel:");
+    const carouselEnd = css.indexOf("/* ----", carouselStart + 1);
+    const carouselCss = css.slice(
+      carouselStart,
+      carouselEnd === -1 ? undefined : carouselEnd,
+    );
     const cardRule =
       /\.gx-carousel-card \{([\s\S]*?)\n\}/.exec(carouselCss)?.[1] ?? "";
     expect(cardRule).toContain("border: 1px solid var(--border)");
@@ -1789,12 +1863,20 @@ describe("the curated component pages", () => {
     const source = read(page.source);
     const clock = read("packages/components/src/time-picker/time.ts");
     // One clock: typing, arrows and midnight all go through `addMinutes`.
-    expect(clock).toContain("(((time.hours * 60 + time.minutes + amount) % 1440) + 1440) % 1440");
-    expect(source).toContain('Match.when("up", () => shift(segment === "hours" ? 60 : step))');
-    expect(source).toContain('Match.when("down", () => shift(segment === "hours" ? -60 : -step))');
+    expect(clock).toContain(
+      "(((time.hours * 60 + time.minutes + amount) % 1440) + 1440) % 1440",
+    );
+    expect(source).toContain(
+      'Match.when("up", () => shift(segment === "hours" ? 60 : step))',
+    );
+    expect(source).toContain(
+      'Match.when("down", () => shift(segment === "hours" ? -60 : -step))',
+    );
     // The text clamps in the same edit as the value, and erasing clears both.
-    expect(source).toContain("Number(digits) > max ? padSegment(clamped) : digits");
-    expect(source).toContain("if (digits === \"\") {");
+    expect(source).toContain(
+      "Number(digits) > max ? padSegment(clamped) : digits",
+    );
+    expect(source).toContain('if (digits === "") {');
     expect(source).toContain("composeIsoTime(nextHours, nextMinutes)");
     // A disabled field is read-only, dimmed and out of the tab order; there is
     // no `aria-disabled` in 0.11.0 for the page to promise.

@@ -1,0 +1,206 @@
+---
+title: Pagination
+description: Previous and next controls around a stable-width page window.
+---
+
+`Pagination` is the footer of a paged result set. It is **controlled**: the app
+owns the page, the control clamps it into range and derives one crop of page
+numbers around it, so the rail keeps its width as a reader pages instead of
+growing at the edges.
+
+<ComponentPreview name="pagination-workflow" />
+
+The rows are the app's; the control only reports the page it wants. Five rows a
+page, twenty-three deployments, so the last page is short — and the footer and
+the rows read the same state.
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Pagination" />
+
+<ComponentSource
+  name="pagination"
+  file="packages/components/src/pagination.tsx"
+/>
+
+## Usage
+
+```tsx
+import { useState } from "react";
+import {
+  Pagination,
+  PaginationList,
+  PaginationNext,
+  PaginationPrevious,
+} from "@gpuixui/components/pagination";
+
+const PAGE_SIZE = 5;
+
+export const DeploymentPages = ({ deployments }: { deployments: string[] }) => {
+  const [page, setPage] = useState(1);
+  const pageCount = Math.ceil(deployments.length / PAGE_SIZE);
+  const rows = deployments.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  return (
+    <>
+      <DeploymentList rows={rows} />
+      <Pagination page={page} pageCount={pageCount} onPageChange={setPage}>
+        <PaginationPrevious />
+        <PaginationList />
+        <PaginationNext />
+      </Pagination>
+    </>
+  );
+};
+```
+
+Previous, the list and Next are separate parts: put a page-size select between
+the list and Next, or a "jump to page" field beside them. Every part reads the
+root, so none of them takes its own `page` prop.
+
+## The page window
+
+The window is derived once from `page`, `pageCount` and the two knobs, and the
+same crop is painted at every width:
+
+| Input | Window |
+| ----- | ------ |
+| `pageCount <= 0` | nothing rendered |
+| a list that fits (`siblingCount + 5` or fewer pages) | every page |
+| page 1 of 10 | `1 2 3 4 5 … 10` |
+| page 5 of 10 | `1 … 4 5 6 … 10` |
+| page 10 of 10 | `1 … 6 7 8 9 10` |
+| page 8 of 8 | `1 … 4 5 6 7 8` |
+
+An ellipsis stands only where it hides **two or more** pages. One hidden page is
+rendered as the number it is: the number and the ellipsis take the same slot, and
+the number is one press closer. That is why a crop whose only gap is one page
+collapses into the trail — and why a window never draws `1 … 2 3 4 5 6 7 8`.
+
+<ComponentPreview name="pagination-states" />
+
+Each tile is live: pressing a number re-crops that rail rather than re-labelling
+a picture. `siblingCount` (default `1`) widens the crop around the current page,
+and `showEdges={false}` drops the first and last page entirely — useful when the
+control sits beside a "first / last" pair of its own.
+
+## Composition
+
+| Part | Renders | Paints |
+| ---- | ------- | ------ |
+| `Pagination` | `div`, `role="navigation"`, `aria-label="Pagination"` | the row layout; owns the clamped page and the window |
+| `PaginationPrevious` | a ghost `Button` | a chevron and "Prev"; disabled on the first page |
+| `PaginationList` | the derived window | one item per page and one gap mark per ellipsis |
+| `PaginationItem` | a `Button` | `sm` square; the current page is primary and carries `aria-selected` |
+| `PaginationEllipsis` | a `div` | a muted "…" named "More pages"; not focusable |
+| `PaginationNext` | a ghost `Button` | "Next" and a chevron; disabled on the last page |
+
+A part outside `Pagination` throws rather than reading a missing root, and a
+bare `PaginationItem` is allowed beside the list — it reads the root's page, so a
+"jump to current" shortcut does not need a second context.
+
+## Keyboard
+
+| Key | Where | Contract |
+| --- | ----- | -------- |
+| `Tab` / `Shift+Tab` | the control | one stop per enabled control; a disabled Prev/Next is out of the order, not merely dimmed |
+| `Enter` | a page or step | acts on the key **down**, once |
+| `Space` | a page or step | acts on the key **up**, once, and does not scroll the page |
+| — | the current page | focusable and named, but pressing it paints nothing and reports nothing |
+| — | an ellipsis | not a tab stop and not a control |
+
+Every page button is named `Page N`, so a screen reader announces the number
+rather than the glyph. A step is named `Previous page` / `Next page`.
+
+## API reference
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
+pointer and key handlers) and merges `style` last.
+
+| Part | Prop | Type | Default | Consequence |
+| ---- | ---- | ---- | ------- | ----------- |
+| `Pagination` | `page` | `number` (required) | — | the current page, 1-based; clamped into `[1, pageCount]` |
+| `Pagination` | `pageCount` | `number` (required) | — | pages that exist; zero or fewer renders nothing |
+| `Pagination` | `onPageChange` | `(page: number) => void` (required) | — | a step or a page press; the app owns the value |
+| `Pagination` | `siblingCount` | `number` | `1` | pages shown either side of the current one |
+| `Pagination` | `showEdges` | `boolean` | `true` | keep the first and last page visible |
+| `Pagination` | `children` | parts | — | `PaginationPrevious`, `PaginationList`, `PaginationNext` |
+| `PaginationItem` | `page` | `number` (required) | — | the page this button goes to; the item outside the list reads the root's page |
+| `PaginationItem` | `style` | `StateStyle<PaginationItemState>` | recipe | a style or a function of `{ active }` |
+| `PaginationPrevious` / `PaginationNext` | — | — | — | step by one; disabled at their end |
+| `PaginationList` / `PaginationEllipsis` | `className` | `string` | — | an extra recipe class, joined last |
+
+`PaginationItemState` is `{ active: boolean }`, where `active` is true for the
+current page — the hook for a caller's own emphasis.
+
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| the rail | `spacing.sm` between controls, through the theme's spacing scale |
+| page buttons | `density.controlHeight.sm` square, `radius.md` corner |
+| the current page | `primary` fill with `primaryForeground` |
+| other pages and the steps | ghost: `foreground` type, `hover`/`active` washes on the pointer |
+| a disabled step | the ghost fade (`disabledOpacity`, `0.5`), out of the tab order |
+| the ellipsis | `mutedForeground` and a caption type role |
+| the focus ring | `ring`, on the keyboard path |
+
+The corner is the theme's `radius.md`, so a platform switch reshapes the page
+buttons; the height is the platform's `sm` control height, so density moves it
+too. The list's type is the `label` role, and the gap mark is a caption.
+
+## Accessibility and limitations
+
+- The root is `role="navigation"` with the name `Pagination`; each page button
+  carries `aria-label="Page N"`, each step `Previous page`/`Next page`, and each
+  gap mark `More pages`.
+- **No `aria-current="page"`** in `@gpuix/native@0.11.0` (`HostProps` publishes
+  `aria-selected`, not `aria-current`), so the current page carries
+  `aria-selected` plus the primary fill. It is the same substitution Breadcrumb,
+  Stepper and Timeline use.
+- The control is controlled-only on purpose: the result set and the page live
+  together, and a second uncontrolled copy would drift from the rows.
+- There is no page-size control. Put one beside the rail — the count belongs to
+  the query, not to the footer.
+- A gap mark is not focusable and answers no key, which is what an ellipsis is
+  for; it is not a "jump" affordance.
+- `pageCount <= 0` renders nothing rather than an empty rail, so an empty result
+  set has no footer to explain.
+- The preview is a browser rendering of this recipe. The shipped control is a
+  GPUix host tree, and the Code tab and source accordion are the real usage.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | the host props every part takes |
+| `@gpuix/react/floating` | `mergeStyles`, so a caller `style` merges last |
+| `@gpuixui/icons` | the two chevrons and the ellipsis mark |
+| `@gpuixui/tw` | the `PAGINATION_*` recipes and `cn` |
+| `effect` | the window's array folds |
+| this package | the local `Button` every control is built on |
+
+The window arithmetic is a pure function in this package (`pagination/logic.ts`),
+so it is testable without a renderer.
+
+## Related
+
+- **Breadcrumb** — position in a hierarchy rather than a result set.
+- **List** — the rows a page shows.
+- **Data toolbar** — page size, filters and sort belong together.
+- **Stepper** — a sequence the reader walks, not a set they page.
+
+## Status
+
+`done` in `COMPONENTS.md` with a **`partial`** runtime verdict: a compound of
+host `div`s and the local `Button`, with no runtime feature to miss beyond the
+absent `aria-current`. 10 native behaviour tests in
+`packages/components/src/behaviour/pagination.test.tsx` hold the disabled edges,
+the page (not index) reported, the current page's no-op, Previous/Next stepping,
+the ellipsis staying out of the tab order, Enter activation, `pageCount: 0`, the
+current fill in both themes, the part order and an item outside the list reading
+the root. 15 window tests in `packages/components/src/pagination/logic.test.ts`
+hold the table above, including the sweep that fails an ellipsis whose
+neighbours differ by one or less. `pagination-preview.test.ts` holds this page's
+drawing to the component's own `pageWindow` over every page, sibling count and
+edge setting.

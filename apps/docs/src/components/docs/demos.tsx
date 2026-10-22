@@ -69,6 +69,12 @@ import {
   selectStatesSource,
 } from "./select-demo";
 import {
+  PaginationStates,
+  PaginationWorkflow,
+  paginationStatesSource,
+  paginationWorkflowSource,
+} from "./pagination-demo";
+import {
   SearchStates,
   SearchWorkflow,
   searchStatesSource,
@@ -2548,6 +2554,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   },
   "list-demo": { render: ListDemo, source: listDemoSource },
   "list-multiple": { render: ListMultiple, source: listMultipleSource },
+  "pagination-states": {
+    render: PaginationStates,
+    source: paginationStatesSource,
+  },
+  "pagination-workflow": {
+    render: PaginationWorkflow,
+    source: paginationWorkflowSource,
+  },
   "popover-demo": { render: PopoverDemo, source: popoverSource },
   "select-states": { render: SelectStates, source: selectStatesSource },
   "select-workflow": { render: SelectDemo, source: selectDemoSource },

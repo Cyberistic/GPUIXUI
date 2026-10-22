@@ -14,6 +14,7 @@ import drawer from "../../../../../packages/components/src/drawer.tsx?raw";
 import field from "../../../../../packages/components/src/field.tsx?raw";
 import form from "../../../../../packages/components/src/form.tsx?raw";
 import list from "../../../../../packages/components/src/list.tsx?raw";
+import pagination from "../../../../../packages/components/src/pagination.tsx?raw";
 import popover from "../../../../../packages/components/src/popover.tsx?raw";
 import searchInput from "../../../../../packages/components/src/search-input.tsx?raw";
 import select from "../../../../../packages/primitives/src/components/Select.tsx?raw";
@@ -46,6 +47,7 @@ export const componentSources = {
   field,
   form,
   list,
+  pagination,
   popover,
   searchInput,
   select,

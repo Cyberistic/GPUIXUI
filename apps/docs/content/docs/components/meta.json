@@ -31,6 +31,7 @@
     "command-menu",
     "---Navigation---",
     "accordion",
-    "tabs"
+    "tabs",
+    "pagination"
   ]
 }
