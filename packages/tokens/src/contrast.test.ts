@@ -208,6 +208,123 @@ describe("text on the state washes", () => {
 });
 
 /**
+ * Guards the label a **secondary action** keeps while its fill moves.
+ *
+ * The wash suite above measured the page's `foreground` and the
+ * `mutedForeground` second line, and the filled-action suite measures a
+ * `primary`/`destructive` label on its derived fill. A secondary action is
+ * neither: it rests on the `secondary` role and, in the components package's
+ * `Button`, moves to the `hover`/`active` role on a pointer while keeping
+ * `secondaryForeground` — so both washes carried a label no pair measured, and
+ * a brand whose secondary label drifted toward its own wash shipped.
+ */
+describe("the secondary action's label on the wash it tints", () => {
+  const washes = ["hover", "active"] as const;
+
+  it("measures the label on both washes", () => {
+    const missing = washes
+      .filter(
+        (background) =>
+          !contrastPairs.some(
+            (pair) =>
+              pair.foreground === "secondaryForeground" &&
+              pair.background === background &&
+              pair.floor === "secondary",
+          ),
+      )
+      .map((background) => `secondaryForeground/${background}`);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the painter the pair exists for", () => {
+    // The pair only means something while a control rests in that role and
+    // tints those washes: the components package's `Button` is the painter.
+    const button = readFileSync(
+      new URL("../../components/src/internal/button.tsx", import.meta.url),
+      "utf8",
+    );
+    const secondary = button.slice(
+      button.indexOf('Match.when("secondary"'),
+      button.indexOf('Match.when("ghost"'),
+    );
+
+    expect(secondary).toContain("color: theme.colors.secondaryForeground");
+    expect(secondary).toContain(
+      "hover: { backgroundColor: theme.colors.hover }",
+    );
+    expect(secondary).toContain(
+      "active: { backgroundColor: theme.colors.active }",
+    );
+  });
+
+  it("reports a label painted into the wash it tints", () => {
+    const broken = (wash: "hover" | "active") => ({
+      colors: {
+        ...lightColors,
+        secondaryForeground: lightColors[wash],
+      },
+    });
+
+    const reported = washes.map((wash) =>
+      contrastFailures(broken(wash)).find(
+        (pair) =>
+          pair.foreground === "secondaryForeground" && pair.background === wash,
+      ),
+    );
+
+    expect(reported).toMatchObject(
+      washes.map((wash) => ({
+        background: wash,
+        ratio: 1,
+        floor: contrastFloors.secondary,
+      })),
+    );
+  });
+
+  it("clears the floor in every shipped, platform and authored theme", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const placements = shipped.flatMap((theme) =>
+      washes.map((background) => ({
+        name: `${theme.name}/${background}`,
+        ratio: contrastRatio(
+          theme.colors.secondaryForeground,
+          theme.colors[background],
+        ),
+        floor: contrastFloorsFor(theme).secondary,
+      })),
+    );
+    const hidden = placements.filter(
+      ({ ratio, floor }) => ratio === undefined || ratio < floor,
+    );
+    const tightest = placements.reduce((low, next) =>
+      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+    );
+
+    expect(hidden).toEqual([]);
+    expect(tightest.name).toBe("Dark · Windows XP (Luna)/active");
+    expect(printedRatio(tightest.ratio)).toBe("7.88:1");
+    // The catalogue prints the number this suite measures, so a palette edit
+    // moves the sentence instead of leaving a stale claim.
+    expect(
+      readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(`pressed wash at ${tightest.ratio?.toFixed(2)}:1`);
+  });
+});
+
+/**
  * Guards the body role on a container's own surface.
  *
  * `Box`/`surfaceStyle` paints six content tones, and the default `Text` inside

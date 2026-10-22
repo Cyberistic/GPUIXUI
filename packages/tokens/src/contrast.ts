@@ -249,6 +249,21 @@ export const contrastPairs: readonly ContrastPair[] = [
   { foreground: "mutedForeground", background: "hover", floor: "secondary" },
   { foreground: "mutedForeground", background: "active", floor: "secondary" },
   { foreground: "mutedForeground", background: "accent", floor: "secondary" },
+  // A *secondary action* is the one filled control whose label is neither the
+  // page's `foreground` nor a derived fill's on-colour: it rests on the
+  // `secondary` role and, in the components package's `Button`, moves to
+  // `hover`/`active` on a pointer while keeping `secondaryForeground`. The two
+  // washes carried a readable label no pair measured.
+  {
+    foreground: "secondaryForeground",
+    background: "hover",
+    floor: "secondary",
+  },
+  {
+    foreground: "secondaryForeground",
+    background: "active",
+    floor: "secondary",
+  },
   // A selected row is the fourth wash, and the one a row's *title* is painted
   // on: the components' `ListItemTitle` recipe is `text-foreground` and the row
   // fills `selected` behind it, while the primitives compose the same pair from

@@ -331,6 +331,10 @@ resting `foreground` clears the body floor on `hover`, `active` and `accent`,
 and `mutedForeground` clears the secondary floor on all three. A ghost button or
 a menu row tints its surface and leaves its label in its resting role, so a wash
 that drifted toward its text would be unreadable with nothing else noticing. A
+secondary action is the one filled control whose label is neither the page's
+`foreground` nor a derived fill's on-colour: it rests on `secondary` and moves to
+`hover`/`active` while keeping `secondaryForeground`, so that label is measured
+on both washes, tightest on Windows XP (Luna) dark's pressed wash at 7.88:1. A
 row floating on a popover keeps the *surface's* role instead — a menu row rests
 in `popoverForeground`, a destructive row in the tone's readable role — so both
 are measured on the same washes; that check found the two light looks' pressed
@@ -490,6 +494,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | secondary text on background/card/muted/popover and on a selected row | 4.5:1 | 7:1 |
 | a selected row's title on its own selection, and the `selectedForeground` it hands its children on the `hover`/`active`/`accent` wash it tints | 7:1 / 4.5:1 | 7:1 / 7:1 |
 | on-colour text, placeholder | 4.5:1 | 7:1 |
+| a secondary action's label (`secondaryForeground`) on the `hover`/`active` wash it tints | 4.5:1 | 7:1 |
 | brand text — a link or text action — on background, card, popover, muted and the hover/active washes it tints (`brandText`) | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text on `background`/`card`/`popover` and on the `hover`/`active` wash a floating row tints (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |

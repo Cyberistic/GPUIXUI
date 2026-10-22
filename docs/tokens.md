@@ -1102,7 +1102,7 @@ so a single number would be a guess — or carries no channels here at all (a
 named colour, an `hsl()`-family function). Shorthand hex is measured.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 76 pairs cover the text role
+— an empty array means the theme is readable. The 78 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input`, secondary text on `background`, `card`, `muted`, `popover` and a
@@ -1123,7 +1123,13 @@ edge below. A wash — `hover`,
 `active`, `accent` — is a surface too: a ghost button or a menu row tints it and
 leaves its label in the
 resting `foreground`, and secondary text keeps `mutedForeground`, so both
-roles are measured on all three. A row **floating on a popover** keeps that
+roles are measured on all three. A **secondary action** is the one filled
+control whose label is neither the page's `foreground` nor a derived fill's
+on-colour: it rests on `secondary` and moves to the `hover`/`active` role while
+keeping `secondaryForeground`, so that label is measured on both washes too.
+Every shipped, high-contrast, platform and authored style clears the floor, the
+tightest being Windows XP (Luna) dark's pressed wash at 7.88:1. A row
+**floating on a popover** keeps that
 surface's role rather than the page's — a menu or combobox row is
 `popoverForeground` — and a destructive row paints the tone's readable role, so
 the table measures both on the `hover` and `active` wash `menuRowStyle` paints
