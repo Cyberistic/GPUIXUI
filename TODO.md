@@ -6022,6 +6022,26 @@ numbers).
       `docs/mention-input.mdx` §Motion, the per-surface table in
       `docs/component-api.md` §11 (marked entry-only) and the Mention input
       inventory row.
+`[x]` Close the **combobox popup**, the last anchored panel in `packages/components` that popped
+      into place: `ComboboxContent` composed no motion seam at all, while every other
+      floating surface faded and travelled, so the searchable picker was the one
+      panel whose arrival was a jump. It now enters on the house entrance — a fade
+      plus 4px of travel **out from the side the placement measured** (`normal`,
+      200 ms, ease-out), read from `usePlacement` rather than assumed, so a popup
+      the component flipped above its trigger enters from *below*. There is **no
+      exit tween** and that is measured rather than omitted: GPUix's own
+      `ComboboxContent` returns `null` while the root is closed, so the box is
+      unmounted the moment the state closes and there is nothing to keep mounted
+      for a fade. `behaviour/combobox.test.tsx` gains `the popup's entrance` (3
+      cases, paused clock): a below popup rests 4px below its first frame, a
+      near-bottom popup (which the component flips above its trigger) rests 4px
+      *above* its first frame — so a hardcoded side fails — and under
+      `MotionProvider preference="reduced"` the first frame is the resting one.
+      Directions measured: with the `motion` prop removed, `travels out from the
+      side it opens at` fails on `expected 0 to be 4` and the two later cases fail
+      on the leaked root; restored, 25/25. Docs: `docs/combobox.mdx` §Motion,
+      §Limitations and §Verification, the row in `docs/component-api.md` §11, and
+      the `Comboboxes` inventory row.
 `[x]` Hold the **leaving-surface pointer contract** across the family, not one surface at
       a time. Fixing the context menu exposed two more gaps and no guard: the
       submenu's `anchored` host kept `occlude` for its leap (a deferred host's box

@@ -138,6 +138,18 @@ it is single-select only, and `children` still compose the same parts.
 Selecting a created query does not call `onValueChange`; add the option and set
 the value from `onCreate` for a controlled combobox.
 
+## Motion
+
+The popup arrives on the house entrance: a fade plus **4px of travel out from the
+side it opens at** (`normal`, 200 ms, ease-out). A popup below its trigger starts
+above its resting place and moves down; one placed above starts below and moves
+up, so the side the component corrects the runtime's placement to is the side the
+travel comes from. There is **no exit tween** — GPUix's own `ComboboxContent`
+renders nothing while the root is closed, so a closing popup has no box left to
+keep mounted for one; it leaves with the state that closed it.
+`MotionProvider preference="reduced"` removes the duration, so the resting frame
+paints in the frame the popup appears (`docs/component-api.md` §11).
+
 ## API
 
 Every part takes the GPUix host props and merges `style` last.
@@ -198,13 +210,15 @@ pair holds — the same rule the menu row follows.
   window but does not flip it, so the component opens it on the opposite side
   when snapping would cover the trigger; `align="center"` is measured from the
   trigger rather than using the runtime's containing-block centre.
+- The popup has an **entry tween only**: the runtime's content unmounts when the
+  root closes, so there is no box left to fade out.
 - `align="center"` is clamped by the snap margin near a window edge.
 - The trigger is a `div` with button semantics (the `@gpuixui/primitives`
   stand-in), not a native button element.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (22 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (25 tests):
 open + input focus, a centred popup and a near-bottom popup that opens above its
 trigger, filtering, ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
@@ -215,12 +229,13 @@ its own popup inside a dialog, prefix-before-substring ranking, both themes, the
 pointer path — selecting an option, toggling several while skipping a disabled
 one, closing on an outside press — a caller-supplied empty state, the trigger's
 placeholder/name coming from the part, the search field's hint painted rather
-than handed to the host, and the create row: offered for an
+than handed to the host, the create row — offered for an
 unmatched query, reported once with the trimmed query while the selection stays
 put, suppressed when an option matches, the query is blank, no handler is given,
-or the mode is multiple. `src/behaviour/focus-ring.test.tsx` holds the trigger and
-the search field to the keyboard outline, and a disabled trigger to declaring
-none.
+or the mode is multiple — and the popup's entrance, measured on a paused clock
+for both placements and under the reduced preference.
+`src/behaviour/focus-ring.test.tsx` holds the trigger and the search field to the
+keyboard outline, and a disabled trigger to declaring none.
 
 `src/combobox/logic.test.ts` covers the ranking table, `labelOf`,
 `toggledSelection` and the create-row round trip.

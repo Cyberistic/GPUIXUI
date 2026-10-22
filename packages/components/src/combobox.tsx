@@ -82,6 +82,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { fadeFromAnchor, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -440,7 +441,12 @@ export interface ComboboxContentProps extends FloatingContentProps {
   readonly children?: PartChildren;
 }
 
-/** The popup. It renders while the combobox is open, anchored by GPUix. */
+/**
+ * The popup. It renders while the combobox is open, anchored by GPUix, and
+ * arrives on the house entrance: a fade plus 4px of travel out from the side it
+ * was measured at. There is no exit tween — the runtime's own content unmounts
+ * the moment the root closes, so there is no box left to fade.
+ */
 export const ComboboxContent = ({
   side = "bottom",
   align = "start",
@@ -466,7 +472,14 @@ export const ComboboxContent = ({
     trigger,
     surface,
   });
+  const timing = useSurfaceTiming("normal");
   assertParts(comboboxContent, children);
+
+  // The house entrance, entry only: GPUix's own `ComboboxContent` renders
+  // nothing while the root is closed, so there is no box to keep mounted for an
+  // exit tween. The travel points out from the side the surface was measured at,
+  // which is why the placement is read here rather than assumed.
+  const frames = fadeFromAnchor(placement.side, 4);
 
   return (
     <HeadlessContent
@@ -478,6 +491,11 @@ export const ComboboxContent = ({
       collisionPadding={collisionPadding}
       ref={setSurface}
       {...rest}
+      motion={{
+        initial: frames.initial,
+        animate: frames.animate,
+        transition: timing.enter,
+      }}
       onMouseDownOutside={(event) => {
         noteOutsidePress();
         onMouseDownOutside?.(event);
@@ -709,6 +727,7 @@ export const comboboxMeta = {
     "create-new is single-select only, is offered when the query matches no option, and reports the query — the caller adds the option and owns the selection",
     "no async options",
     'the popup placement is corrected by the component: the runtime snaps but does not flip, and align="center" is measured from the trigger',
+    "the popup has an entry tween only (a fade plus 4px out from its measured side): the runtime's ComboboxContent renders nothing while closed, so a closing popup cannot stay mounted for an exit",
   ],
   docs: "docs/combobox.mdx",
   example: "examples/combobox.example.tsx",

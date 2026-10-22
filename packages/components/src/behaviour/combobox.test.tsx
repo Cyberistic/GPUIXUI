@@ -39,6 +39,7 @@ import {
   ComboboxTrigger,
   type ComboboxOption,
 } from "../combobox.js";
+import { MotionProvider } from "../motion.js";
 
 const options: ReadonlyArray<ComboboxOption> = [
   { value: "calendar", label: "Calendar", description: "Scheduling" },
@@ -590,6 +591,65 @@ describe("Combobox", () => {
       ],
     ).toBe("Reviewer");
 
+    picker.unmount();
+  });
+});
+
+/** Let the runtime's frame loop publish what the last commit queued. */
+const frame = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, 30));
+
+describe("the popup's entrance", () => {
+  it("travels out from the side it opens at", async () => {
+    // The bugs this guards: a popup that pops into place while every other
+    // anchored panel fades and travels, and an entrance that always moves down
+    // although the popup opened above its trigger.
+    const picker = renderComponent(<Picker />);
+    picker.renderer.clockPause();
+    await open(picker);
+    const entering = requireBounds(picker, "combobox-content").y;
+
+    picker.renderer.clockFastForward(400);
+    await frame();
+    const resting = requireBounds(picker, "combobox-content").y;
+
+    // Below its trigger, the popup starts above its resting place and moves down.
+    expect(resting - entering).toBe(4);
+    picker.unmount();
+  });
+
+  it("enters from below when it opens above its trigger", async () => {
+    const picker = renderComponent(<LowPicker />);
+    picker.renderer.clockPause();
+    await open(picker);
+
+    const trigger = requireBounds(picker, "combobox-trigger");
+    const entering = requireBounds(picker, "combobox-content");
+    // The measured placement put it above the trigger that opened it.
+    expect(entering.y).toBeLessThan(trigger.y);
+
+    picker.renderer.clockFastForward(400);
+    await frame();
+    const resting = requireBounds(picker, "combobox-content");
+    // Above its trigger, the popup starts below its resting place and moves up.
+    expect(entering.y - resting.y).toBe(-4);
+    picker.unmount();
+  });
+
+  it("paints the resting frame on the first frame under reduced motion", async () => {
+    const picker = renderComponent(
+      <MotionProvider preference="reduced">
+        <Picker />
+      </MotionProvider>,
+    );
+    picker.renderer.clockPause();
+    await open(picker);
+    const first = requireBounds(picker, "combobox-content").y;
+
+    picker.renderer.clockFastForward(400);
+    await frame();
+
+    expect(requireBounds(picker, "combobox-content").y).toBe(first);
     picker.unmount();
   });
 });
