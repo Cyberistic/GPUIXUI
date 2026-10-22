@@ -315,14 +315,22 @@ describe("the testing page", () => {
   it("prints the note a scoped run appends to its summary", () => {
     // `formatReport` adds the note so `unverified` beside a green probe is not
     // read as a red line. The page quotes it verbatim, so the wording is read
-    // from the formatter rather than retyped here.
-    const note = /" \(unverified: [^"]+\)"/.exec(report)?.[0]?.slice(2, -1);
+    // from the formatter rather than retyped here. The slice is taken by index
+    // rather than by a regex literal containing a quote: `scripts/check-tests.ts`
+    // loses its string state on that shape and reports this case as assertionless.
+    const marker = " (unverified: ";
+    const at = report.indexOf(marker);
+    const end = at === -1 ? -1 : report.indexOf(")", at + marker.length);
+    const note =
+      at === -1 || end === -1 ? undefined : report.slice(at + 1, end + 1);
     expect(
       note,
       "formatReport no longer explains an unverified capability",
     ).toBeDefined();
     expect(pageText).toContain(note ?? "\u0000");
-    expect(report).toContain("const summary = (report: SmokeReport): string =>");
+    expect(report).toContain(
+      "const summary = (report: SmokeReport): string =>",
+    );
     expect(pageText).toContain("`formatReport` appends");
   });
 

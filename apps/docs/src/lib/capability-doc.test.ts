@@ -1182,6 +1182,77 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(clipboard?.[2]).toContain("read-only field");
   });
 
+  it("records the code a paste fills, with the readouts the probe asserts", () => {
+    // A one-time code arrives by paste, and the record's paste row could only
+    // say the field's behaviour was unverified. `otp-paste-lifecycle` measured it
+    // in a window: one multi-character `onChange` distributed forward from the
+    // receiving cell. The readouts below are read out of the probe rather than
+    // restated, so a probe that moves to two completions cannot leave the record
+    // quoting the old one.
+    const code = rowFor("Paste into a code field");
+    expect(code?.verdict).toBe("supported, with limits");
+    expect(code?.evidence).toContain("otp-paste-lifecycle");
+    expect(code?.evidence).toContain("onChange");
+    expect(code?.evidence).toContain("forward");
+    expect(code?.workaround).toContain("OTPField");
+    expect(code?.workaround).toContain("onComplete");
+
+    const probe = read("apps/playground/src/live/otp-paste.ts");
+    const length = Number(/OTP_PASTE_LENGTH = (\d+)/.exec(probe)?.[1] ?? 0);
+    expect(length, "the probe no longer declares its cell count").toBe(6);
+    expect(code?.evidence).toContain("first of six cells");
+    expect(code?.evidence).toContain("nine-character");
+
+    const steps = read("apps/playground/src/live/scenarios.tsx");
+    const start = steps.indexOf("const otpPasteSteps");
+    const scenario = steps.slice(start, steps.indexOf("\nconst ", start + 1));
+    expect(scenario, "the probe's steps are not in scenarios.tsx").not.toBe("");
+
+    // The three readouts the probe asserts: one edit and one completion for a
+    // full paste, a second edit with no second completion over a full code, and
+    // a third edit for the paste over the third cell. They are read out of the
+    // probe's own assertions, so a probe that moves cannot leave the record
+    // quoting the old number.
+    expect(scenario).toMatch(/completes: 1,\s*edits: 1/);
+    expect(scenario).toMatch(/completes: 1,\s*edits: 2/);
+    expect(scenario).toContain("edits: 3");
+    const readouts = ["completes=1", "edits=1", "edits=2", "edits=3"];
+    const unprinted = readouts.filter(
+      (readout) => !(code?.evidence ?? "").includes(readout),
+    );
+    expect(unprinted, "the record prints no readout the probe asserts").toEqual(
+      [],
+    );
+
+    // A longer paste truncating is the half that reads the field's distribution
+    // and not a text prop, so the record has to keep the truncation rule.
+    expect(code?.evidence).toContain("truncates at six");
+    expect(scenario).toContain("truncates to six cells");
+  });
+
+  it("publishes the pasted code on /docs/runtime", () => {
+    const code = measuredRow("Pasted code in a field");
+    expect(
+      code,
+      "the page's measured table has no pasted-code row",
+    ).toBeDefined();
+    expect(code?.[1]).toContain("otp-paste-lifecycle");
+    expect(code?.[1]).toContain("completes=1 edits=1");
+    expect(code?.[1]).toContain("edits=3");
+    expect(code?.[2]).toContain("onComplete");
+  });
+
+  it("retires the unverified paste from the paste-event row", () => {
+    // The row used to end "an `OTPField`'s paste is unverified", which a window
+    // has since measured. The absence it records stays: there is still no
+    // `onPaste`, and the field is still the honest route.
+    const paste = rowFor("Paste event");
+    expect(paste?.verdict).toBe("not supported");
+    expect(paste?.workaround).not.toContain("unverified");
+    expect(paste?.workaround).toContain("OTPField");
+    expect(paste?.workaround).toContain("insert-at-selection");
+  });
+
   it("records the pointer selection a window measured, with the probe behind it", () => {
     // The only selection proof was synthetic: the headless `text-selection`
     // scenario drives the renderer's own `dragSelect`, so "a drag selects" had
@@ -1446,6 +1517,9 @@ describe("docs/gpuix-capabilities.md", () => {
     const quotedValues = new Map([
       ["ellipsis-start", "a `textOverflow` value the truncation row quotes"],
       ["cmd-k", "a key chord the clipboard probe pressed"],
+      ["cmd-a", "a key chord the pasted-code probe pressed"],
+      ["cmd-c", "a key chord the pasted-code probe pressed"],
+      ["cmd-v", "a key chord the pasted-code probe pressed"],
       ["wrow-60", "a row marker the windowed list probe checked for"],
       ["row-alpha", "a row marker the reorder probe dragged"],
       ["row-delta", "a row marker the reorder probe dropped onto"],
@@ -1992,6 +2066,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("content-surfaces");
     expect(runtimePage).toContain("selection-lifecycle");
     expect(runtimePage).toContain("clipboard-lifecycle");
+    expect(runtimePage).toContain("otp-paste-lifecycle");
     expect(runtimePage).toContain("virtual-tree-lifecycle");
     expect(runtimePage).toContain("virtual-list-windowed");
     expect(runtimePage).toContain("virtual-list-rows");
