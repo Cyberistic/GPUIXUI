@@ -74,6 +74,7 @@ number (`h-9`).
 | `gap-2` | `gap: 8` |
 | `rounded-lg` | `borderRadius: 8` |
 | `border` | `borderWidth: 1` |
+| `border-input` | `borderColor` — the `border` role (shadcn's name for the same edge) |
 | `border-strong` | `borderColor` — the 3:1 boundary role |
 | `bg-card` | `backgroundColor` — the `card` role |
 | `text-foreground` | `color` — the `foreground` role |
@@ -84,6 +85,13 @@ number (`h-9`).
 The colour names are the token roles, not Tailwind's palette: `bg-destructive` is
 the theme's destructive role, and `dark:` classes are skipped because the theme
 already carries both modes.
+
+`border-input` is the one shadcn name that misleads here. shadcn's `--input` is a
+border, while this library's `input` role is the field's **fill** (`bg-input`), so
+the class keeps shadcn's meaning and both registries resolve it to the `border`
+role — an edge is never the fill it surrounds. A control whose edge **is** the
+control, such as an empty checkbox, radio or switch track, takes `border-strong`,
+the measured 3:1 boundary: the fill role measured 1.00:1 on a card.
 
 ### What the library's registry adds
 
@@ -103,11 +111,6 @@ already carries both modes.
 | `fill-primary` | `filledHover(theme, "primary")` |
 | `fill-primary-pressed` | `filledPressed(theme, "primary")` |
 | `select-text` | selectable text plus the measured `selection` wash |
-| `border-input` | the field's **fill** role, not the border role |
-
-That last row is the one deliberate difference between the registries: shadcn's
-`--input` is a border, while this library's `input` role is the field's surface,
-so the primitives' registry remaps the class.
 
 ## The three tiers
 

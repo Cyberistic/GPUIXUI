@@ -68,7 +68,10 @@ describe("the styling page", () => {
   it("resolves every theme step through the registry the primitives compile with", () => {
     const rows = classesUnder("What the library's registry adds");
 
-    expect(rows.length).toBeGreaterThanOrEqual(15);
+    // A floor, so a scan that stopped matching cannot pass; the table holds 14
+    // additions now that `border-input` moved to the shared table.
+    expect(rows.length).toBeGreaterThanOrEqual(14);
+    expect(rows).toContain("type-body");
     const failures = rows.flatMap((className) => {
       const result = recipeTw.classesToStyle(className, theme);
       if (result.unsupported.length > 0) {
@@ -130,15 +133,27 @@ describe("the styling page", () => {
     });
   });
 
-  it("keeps the deliberate border-input difference between the two registries", () => {
-    // shadcn's `--input` is a border; this library's `input` role is a fill.
+  it("resolves border-input to a border in both registries, and says why", () => {
+    // shadcn's `--input` is a border; this library's `input` role is the field's
+    // *fill*. The class keeps shadcn's meaning, so both registries resolve it to
+    // the `border` role — the primitives' override that painted the fill was
+    // removed when the empty selection box took the measured boundary. The page
+    // has to explain the collision rather than teach a remap that no longer
+    // exists.
     expect(classesToStyle("border-input", theme).style.borderColor).toBe(
       theme.colors.border,
     );
     expect(
       recipeTw.classesToStyle("border-input", theme).style.borderColor,
-    ).toBe(theme.colors.input);
+    ).toBe(theme.colors.border);
+    expect(theme.colors.border).not.toBe(theme.colors.input);
+
+    const registry = readRepo("packages/primitives/src/recipe/registry.ts");
+    expect(registry).toContain("`border-input` is deliberately not overridden");
     expect(page).toContain("`border-input`");
+    expect(page).toContain("`border` role");
+    expect(page).toContain("`border-strong`");
+    expect(page).not.toContain("the field's **fill** role, not the border role");
   });
 
   it("refuses every class it calls refused, for the reason it names", () => {
