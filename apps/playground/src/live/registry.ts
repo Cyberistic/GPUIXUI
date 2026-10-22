@@ -439,6 +439,12 @@ export const liveRegistry = [
     capability: "layout",
   },
   {
+    id: "image-box",
+    title:
+      "Content: a loaded bitmap replaces a style's aspect ratio, two definite dimensions pin the box against it, and an unsized image paints its intrinsic edge",
+    capability: "content",
+  },
+  {
     id: "elevation-paint",
     title:
       "Content: a box shadow paints the band its offset covers, a blur fades past the edge, a spread paints every side, an inset paints inside, a list paints every entry, and the shipped levels shade the page",

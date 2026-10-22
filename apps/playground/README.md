@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-85 probes a real window can prove, of which eighteen mount shipped
+86 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -3724,6 +3724,50 @@ What it settles:
 The capability record's **`aspectRatio`** row owes this page (docs-site owns
 that file; the row in `TODO.md` → Interlocks records it).
 
+### `image-box` — measured on 0.11.0 here
+
+**What box an `<img>` paints.** An image is the one element whose intrinsic
+ratio the runtime owns: `@gpuix/native` hands the decoded bitmap to GPUI, which
+fills the element's own `aspect_ratio` from it once it loads, while
+`aspectRatio` on the style is the contract `Box` documents. The two meet on a
+thumbnail, a preview card or a crop area, and a window's layout report is the
+only place to see which wins. The fixture paints the 8×8 data-URL PNG
+`content.ts` carries — a square bitmap, so its ratio is exactly 1 — four ways.
+
+| Image | Measured |
+| ----- | -------- |
+| `imagebox-intrinsic` — no size and no ratio | **8×8**, the bitmap's intrinsic edge |
+| `imagebox-ratio` — `width: 120`, `aspectRatio: 2` | **120×120**: the loaded bitmap's square ratio **replaces** the style's 2, so the height the style asks for (60) never paints |
+| `imagebox-width` — `width: 120` alone | **120×120**: a definite width takes the bitmap's ratio, which is the same answer the style ratio got |
+| `imagebox-both` — `width: 120`, `height: 60` | **120×60**: two definite dimensions pin the box, because the runtime hands the element the declared width ÷ height and the loaded bitmap cannot jump it |
+
+12 checks, `--only image-box`, green on 0.11.0 (~0.5 s). Fixture:
+`src/live/image-box.ts` — the four ids, the bitmap edge, the width/height/ratio
+the styles declare, `heightAtBitmapRatio` and `IMAGE_BOX_CASES`;
+`image-box.test.ts` (8 cases) holds the arithmetic (the style asks for 60 where
+the bitmap paints 120), the case table, the fixture's own expressions, and this
+section's heading, count and geometry. One direction measured: pinning
+`imagebox-both` to its width alone paints **120×120** and
+`imagebox-both paints the height its case expects` fails with
+`expected 60 ± 1, got 120` (exit `1`); restored green.
+
+What it settles:
+
+1. **A bitmap owns its ratio.** Once an image loads, its own ratio is what the
+   element carries, so an `aspectRatio` on the style is not a crop, a fit or a
+   reservation — it is replaced. A thumbnail must not rely on it.
+2. **Declare both dimensions for a stable box.** `width` **and** `height` in
+   pixels is the one shape the runtime compensates for: it hands the element the
+   declared ratio, so a portrait, landscape or square bitmap all paint the same
+   box and `objectFit` decides what fills it.
+3. **An unsized image is its intrinsic size**, so a preview that must not jump
+   before the bytes arrive needs a reserved box, not an empty wrapper.
+4. **`width` alone is the bitmap's aspect ratio**, which for a photo is its own
+   shape — convenient for a single image, wrong for a grid of thumbnails.
+
+The capability record's **Image painting** row owes this page (docs-site owns
+that file; the row in `TODO.md` → Interlocks records it).
+
 ### `elevation-paint` — measured on 0.11.0 here
 
 **What a `boxShadow` paints.** The library's whole elevation contract is this one
@@ -4958,8 +5002,8 @@ narrower. Each deviation is deliberate and measured:
   `date-picker-lifecycle`, `data-table-lifecycle`, `virtual-table-lifecycle` and
   `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`,
   `action-ring`, `surface-origin`, `hover-routing-lifecycle`,
-  `multi-step-form-lifecycle` and `aspect-ratio-paint`
-  (twenty-seven probes, each run alone).
+  `multi-step-form-lifecycle`, `aspect-ratio-paint` and `image-box`
+  (twenty-eight probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

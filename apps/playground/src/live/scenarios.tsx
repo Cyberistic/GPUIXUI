@@ -810,6 +810,15 @@ import {
   ASPECT_WIDTH,
   type AspectExpectation,
 } from "./aspect-ratio.js";
+import {
+  IMAGE_BOX_CASES,
+  IMAGE_BOX_IDS,
+  IMAGE_HEIGHT,
+  IMAGE_INTRINSIC_SIZE,
+  IMAGE_RATIO,
+  IMAGE_WIDTH,
+  type ImageBoxExpectation,
+} from "./image-box.js";
 import { bandPoint, leftOf, RING_OFFSET } from "./ring-offset.js";
 import {
   decodeReadout,
@@ -20119,6 +20128,136 @@ const aspectRatioSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * What box an `<img>` paints, and what a style can make it paint.
+ *
+ * An image is the one element whose intrinsic ratio the runtime owns: GPUI
+ * fills the element's own `aspect_ratio` from the decoded bitmap once it loads,
+ * and the runtime hands the element the declared width ÷ height only when both
+ * dimensions are definite pixels. A thumbnail, a preview card or a crop area
+ * composes around which one wins, and a window's layout report is the only
+ * place to read it.
+ */
+const ImageBoxProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const page = {
+    width: window.width,
+    height: window.height,
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.background,
+    display: "flex" as const,
+    flexDirection: "column" as const,
+    gap: theme.spacing.xl,
+  };
+  const row = {
+    display: "flex" as const,
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: theme.spacing.xl,
+  };
+  const image = (id: string, style?: object) => (
+    <img
+      testId={id}
+      src={IMAGE_DATA_URL}
+      alt="A solid square from a data URL"
+      objectFit="fill"
+      style={style}
+    />
+  );
+  return (
+    <div testId="image-box-probe" style={page}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        An image owns its own ratio once it loads, so a declared aspect ratio is
+        replaced by the bitmap&apos;s unless both dimensions are definite. A
+        thumbnail declares both; a width alone gets the bitmap&apos;s square.
+      </text>
+      <div style={row}>
+        {image(IMAGE_BOX_IDS.intrinsic)}
+        {image(IMAGE_BOX_IDS.ratio, {
+          width: IMAGE_WIDTH,
+          aspectRatio: IMAGE_RATIO,
+        })}
+        {image(IMAGE_BOX_IDS.width, { width: IMAGE_WIDTH })}
+        {image(IMAGE_BOX_IDS.both, {
+          width: IMAGE_WIDTH,
+          height: IMAGE_HEIGHT,
+        })}
+      </div>
+    </div>
+  );
+};
+
+const imageBoxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(IMAGE_BOX_IDS.ratio);
+    // A bitmap arrives after the first layout, so each box is read once it has
+    // a size and that size holds; a poll bounded at ~2 s still fails on the
+    // value it settled on.
+    const settled = (id: string) =>
+      Effect.gen(function* () {
+        const read = Effect.map(ctx.host.bounds(id), Option.fromNullishOr);
+        const box = yield* settleUntil(
+          read,
+          Option.exists((found) => found.width > 0 && found.height > 0),
+        );
+        return yield* ctx.expectSome(`${id} reports its painted box`, box);
+      });
+
+    yield* Effect.forEach(
+      IMAGE_BOX_CASES,
+      (expectation: ImageBoxExpectation) =>
+        Effect.gen(function* () {
+          const box = yield* settled(expectation.id);
+          yield* ctx.expectNear(
+            `${expectation.id} paints the width its case expects`,
+            box.width,
+            expectation.width,
+            1,
+          );
+          yield* ctx.expectNear(
+            `${expectation.id} paints the height its case expects`,
+            box.height,
+            expectation.height,
+            1,
+          );
+        }),
+      { concurrency: 1, discard: true },
+    );
+
+    const ratio = yield* settled(IMAGE_BOX_IDS.ratio);
+    const both = yield* settled(IMAGE_BOX_IDS.both);
+    yield* ctx.expectNear(
+      "the style ratio is replaced by the loaded bitmap's own",
+      ratio.height,
+      ratio.width,
+      1,
+    );
+    yield* ctx.expectNear(
+      "two definite dimensions keep the box the style asked for",
+      both.height,
+      IMAGE_HEIGHT,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the bitmap's ratio and the declared box paint different heights",
+      ratio.height > both.height,
+      true,
+    );
+    const intrinsic = yield* settled(IMAGE_BOX_IDS.intrinsic);
+    yield* ctx.expectNear(
+      "an unsized image paints the bitmap's intrinsic edge",
+      intrinsic.width,
+      IMAGE_INTRINSIC_SIZE,
+      1,
+    );
+  });
+
+/**
  * What a `boxShadow` paints, one property per box.
  *
  * The library's whole elevation contract is this one `StyleDesc` field: a card,
@@ -24733,6 +24872,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "aspect-ratio-paint",
     view: () => <AspectRatioProbe />,
     steps: aspectRatioSteps,
+  },
+  "image-box": {
+    id: "image-box",
+    view: () => <ImageBoxProbe />,
+    steps: imageBoxSteps,
   },
   "elevation-paint": {
     id: "elevation-paint",
