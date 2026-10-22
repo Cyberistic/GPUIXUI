@@ -433,6 +433,12 @@ export const liveRegistry = [
     capability: "content",
   },
   {
+    id: "aspect-ratio-paint",
+    title:
+      "Layout: an aspect ratio derives the axis a box leaves open, two definite dimensions leave it unconsulted, and a row's stretch gives it no width",
+    capability: "layout",
+  },
+  {
     id: "elevation-paint",
     title:
       "Content: a box shadow paints the band its offset covers, a blur fades past the edge, a spread paints every side, an inset paints inside, a list paints every entry, and the shipped levels shade the page",

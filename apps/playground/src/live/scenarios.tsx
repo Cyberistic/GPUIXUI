@@ -798,6 +798,18 @@ import {
   isColour,
   type PaintPoint,
 } from "./box-paint.js";
+import {
+  ASPECT_CASES,
+  ASPECT_COLUMN_WIDTH,
+  ASPECT_HEIGHT,
+  ASPECT_IDS,
+  ASPECT_PORTRAIT_RATIO,
+  ASPECT_PORTRAIT_WIDTH,
+  ASPECT_RATIO,
+  ASPECT_ROW_HEIGHT,
+  ASPECT_WIDTH,
+  type AspectExpectation,
+} from "./aspect-ratio.js";
 import { bandPoint, leftOf, RING_OFFSET } from "./ring-offset.js";
 import {
   decodeReadout,
@@ -19966,6 +19978,147 @@ const boxPaintSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * What `aspectRatio` actually fills.
+ *
+ * The field is documented as "width divided by height, applied to whichever axis
+ * is not definite" and every proof of it is an offscreen style report. A window
+ * reports no style, so the fixture mounts one box per answer a component needs:
+ * a definite width, a definite height, a portrait ratio, both dimensions
+ * definite, and a child that inherits one definite axis from its container's
+ * stretch — one column and one row.
+ */
+const AspectRatioProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const page = {
+    width: window.width,
+    height: window.height,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
+    display: "flex" as const,
+    flexDirection: "column" as const,
+    gap: theme.spacing.md,
+  };
+  const row = {
+    display: "flex" as const,
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: theme.spacing.lg,
+  };
+  const box = (id: string, style: object) => (
+    <div
+      testId={id}
+      style={{ backgroundColor: theme.colors.primary, ...style }}
+    />
+  );
+  return (
+    <div testId="aspect-ratio-probe" style={page}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A box with an aspect ratio fills the axis its container leaves open: a
+        definite width derives a height, a definite height derives a width, two
+        definite dimensions keep their own, and a stretched child takes the
+        container&apos;s axis before the ratio derives the other.
+      </text>
+      <div style={row}>
+        {box(ASPECT_IDS.width, {
+          width: ASPECT_WIDTH,
+          aspectRatio: ASPECT_RATIO,
+        })}
+        {box(ASPECT_IDS.portrait, {
+          width: ASPECT_PORTRAIT_WIDTH,
+          aspectRatio: ASPECT_PORTRAIT_RATIO,
+        })}
+        {box(ASPECT_IDS.height, {
+          height: ASPECT_HEIGHT,
+          aspectRatio: ASPECT_RATIO,
+        })}
+        {box(ASPECT_IDS.both, {
+          width: ASPECT_WIDTH,
+          height: ASPECT_HEIGHT,
+          aspectRatio: ASPECT_RATIO,
+        })}
+      </div>
+      <div style={row}>
+        <div
+          testId={ASPECT_IDS.columnParent}
+          style={{ width: ASPECT_COLUMN_WIDTH }}
+        >
+          {box(ASPECT_IDS.column, { aspectRatio: ASPECT_RATIO })}
+        </div>
+        <div
+          testId={ASPECT_IDS.rowParent}
+          style={{
+            height: ASPECT_ROW_HEIGHT,
+            width: ASPECT_COLUMN_WIDTH,
+            display: "flex" as const,
+            flexDirection: "row" as const,
+            alignItems: "stretch" as const,
+          }}
+        >
+          {box(ASPECT_IDS.row, { aspectRatio: ASPECT_RATIO })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const aspectRatioSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(ASPECT_IDS.width);
+    const boxOf = (id: string) =>
+      Effect.gen(function* () {
+        return yield* ctx.expectSome(
+          `${id} reports its painted box`,
+          Option.fromNullishOr(yield* ctx.host.bounds(id)),
+        );
+      });
+    const assertCase = (expectation: AspectExpectation) =>
+      Effect.gen(function* () {
+        const box = yield* boxOf(expectation.id);
+        yield* ctx.expectNear(
+          `${expectation.id} paints the width its case expects`,
+          box.width,
+          expectation.width,
+          1,
+        );
+        yield* ctx.expectNear(
+          `${expectation.id} paints the height its case expects`,
+          box.height,
+          expectation.height,
+          1,
+        );
+      });
+    yield* Effect.forEach(ASPECT_CASES, assertCase, {
+      concurrency: 1,
+      discard: true,
+    });
+
+    // A stretched child is the composition a card or a thumbnail uses: the
+    // container's axis is definite before the ratio derives the other.
+    const column = yield* boxOf(ASPECT_IDS.column);
+    const columnParent = yield* boxOf(ASPECT_IDS.columnParent);
+    yield* ctx.expectNear(
+      "a child stretched by a column takes its container's width",
+      column.width,
+      columnParent.width,
+      1,
+    );
+    const rowChild = yield* boxOf(ASPECT_IDS.row);
+    const rowParent = yield* boxOf(ASPECT_IDS.rowParent);
+    yield* ctx.expectNear(
+      "a child stretched by a row takes its container's height",
+      rowChild.height,
+      rowParent.height,
+      1,
+    );
+  });
+
+/**
  * What a `boxShadow` paints, one property per box.
  *
  * The library's whole elevation contract is this one `StyleDesc` field: a card,
@@ -24575,6 +24728,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "box-paint",
     view: () => <BoxPaintProbe />,
     steps: boxPaintSteps,
+  },
+  "aspect-ratio-paint": {
+    id: "aspect-ratio-paint",
+    view: () => <AspectRatioProbe />,
+    steps: aspectRatioSteps,
   },
   "elevation-paint": {
     id: "elevation-paint",

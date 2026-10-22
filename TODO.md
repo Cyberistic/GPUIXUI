@@ -948,7 +948,7 @@ fill fails three cases by name (both full-object comparisons, printing
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 120/120
+`[x]` `[██████████]` 121/121
 
 `[x]` Measure **whether a filled child takes its row's hover away** — every
       list, table and tree row paints its pointer feedback through the runtime's
@@ -3418,6 +3418,33 @@ fill fails three cases by name (both full-object comparisons, printing
       `packages/components/src/internal/surface-box.tsx`, which the components
       workstream owns.
 
+`[x]` Measure what **`aspectRatio` fills** — the field is documented as "width
+      divided by height, applied to whichever axis is not definite", every
+      proof of it is an offscreen style report, and a window reports no style, so
+      no box had been measured. The `aspect-ratio-paint` live probe mounts one
+      box per answer a component needs and reads each painted box on 0.11.0: a
+      definite width **160** derives a height **80**; `width: 100` at ratio
+      **0.5** paints **100×200**, so a ratio below one is a portrait box and not
+      a smaller one; `height: 60` derives a width **120**; two definite
+      dimensions (**160×60**) keep both and leave the ratio unconsulted; a child
+      stretched by a **240**-wide column paints **240×120**; and a child
+      stretched by an **80**-tall row paints **0×80** — the row's stretch gives
+      it the height but the ratio derives **no width** from it, so a row child
+      must declare its height (then the definite-height case is the rule). 14
+      checks, `--only aspect-ratio-paint`, green on 0.11.0 (~0.4 s), capability
+      `layout` reported `unverified` alone as a scoped run should. Fixture
+      `src/live/aspect-ratio.ts` (the six ids, the two container ids, the ratio
+      and container sizes, `heightForWidth`/`widthForHeight`, `ASPECT_CASES`) +
+      `aspect-ratio.test.ts` (8 cases: both arithmetic directions including the
+      portrait flip, the table held to the constants, every axis answer
+      covered, the fixture asked for each property, the printed geometry, the
+      ids apart and the registry entry). Negative control measured, exit `1`:
+      dropping `aspectRatio` from the width box paints **160×0** and fails
+      `aspect-width paints the height its case expects`
+      (`expected 80 ± 1, got 0`); restored green. Evidence:
+      `apps/playground/README.md` §`aspect-ratio-paint`. Publishing it in the
+      capability record's **`aspectRatio`** row is the Interlocks row below.
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 3/3
@@ -5604,6 +5631,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Repair a **`Form` whose second submit is swallowed** — the shipped `Form` decodes the caller's record only on the submit path form-core allows, and a schema failure reported on a field path leaves that field's meta invalid for good: the first failure writes `accepted` (or any schema-named field) into `fieldMeta`, the next submit's `validateAllFields` runs no field validator for it, so `isFieldsValid` stays false and `_handleSubmit` returns before re-running `validators.onSubmit`. Measured in the playground's `multi-step-form-lifecycle` on 0.11.0: after the first (successful) submit, un-accepting the review and submitting again is refused, and re-accepting and submitting a third time still never reaches the caller — `attempts=3 valid=false submitting=false can=false fieldsValid=false errors=0` while the core's own values decode with the class. Any form built on the documented owned-value pattern (the Form example included) dies after one invalid submit | components (`src/form.tsx`, `src/form/validator.ts`, the Form page and `src/behaviour/form.test.tsx`) | **open — measured 2026-10-23 by the playground.** The probe asserts the limit so the claim cannot go stale (its last check fails when the retry is repaired, and the README section must flip with it). The fix is to keep the form-level messages out of `fieldMeta` (one form-level error beside the per-field summary) or to clear the stale `onSubmit` field errors before `validateAllFields`, then add a behaviour case that submits an invalid value, corrects it, and asserts the second submit reaches `onSubmit`. Evidence: `apps/playground/README.md` §`multi-step-form-lifecycle`, `.artifacts/live/multi-step-retry.png` |
 
 | Measure the **type a document host actually paints** — `nativeTextTheme` hands a `<code>`/`<markdown>` host the scale's own `metrics` (`codeTextSize`/`codeLineHeight`, the body and heading sizes, and now a fence's language strip `mdCodeHeaderTextSize` from `typography.caption`, where the runtime's own is `11`), and that hand-off is read from the pinned source (`MetricsOverride` is `rename_all = "camelCase"`) rather than from a frame: no probe has compared a painted block's glyph height against the theme's `codeBlock` role, so a brand that rescales its code role is promised a paint nobody measured. Record the measured heights for a block, a diff row and a fenced card's language strip in one theme whose `codeBlock`/`caption` roles are unmistakable (20/24 and 18), and keep the control that a host handed no `theme` paints the runtime's own numbers | playground (`apps/playground` live probes, a `document-type` scenario) | open — a new probe; the seam's numbers are a source read until it lands |
+| Publish the **`aspectRatio` paint** — the capability record calls the field supported because `StyleDesc` declares it, and the playground's `aspect-ratio-paint` (14 checks, 0.11.0) now measures what it fills: a definite width of **160** derives a height of **80**, `width: 100` at ratio **0.5** paints **100×200** (a portrait box, not a smaller one), `height: 60` derives a width of **120**, two definite dimensions (**160×60**) keep both, a child stretched by a 240-wide column paints **240×120**, and a child stretched by an 80-tall row paints **0×80** — the row's stretch supplies the height but the ratio derives no width from it, so a row child must declare the axis the ratio should derive from. §3's row should carry the verdict, the values and that row limit, and `/docs/runtime#measured-in-a-window` should publish it | docs-site (capability record + `/docs/runtime`) | open — the probe is green and documented in `apps/playground/README.md` §`aspect-ratio-paint`; the record row still says only "`StyleDesc.aspectRatio` — width divided by height" |
 
 ## Phase D — data and workspace components
 

@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-84 probes a real window can prove, of which eighteen mount shipped
+85 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -3673,6 +3673,57 @@ What it settles:
 The capability record's **Two-stop linear gradients** and **Per-corner radii,
 per-side border widths, a two-value `borderStyle`** rows now cite this probe.
 
+### `aspect-ratio-paint` — measured on 0.11.0 here
+
+**What `aspectRatio` fills.** The field is documented as "width divided by
+height, applied to whichever axis is not definite" and the library's `Box` hands
+it through, but every proof of it was an offscreen style report — a window
+reports no style, so only a painted box says which dimension the ratio fills.
+The probe mounts one box per answer a component needs: a definite width, a
+definite height, a portrait ratio, both dimensions definite, and a child whose
+container's stretch makes one axis definite first.
+
+| Box | Measured |
+| --- | -------- |
+| `aspect-width` — `width: 160`, `aspectRatio: 2` | **160×80**, so the ratio derives the height from the definite width |
+| `aspect-portrait` — `width: 100`, `aspectRatio: 0.5` | **100×200**, so a ratio below one makes the box taller, not smaller |
+| `aspect-height` — `height: 60`, `aspectRatio: 2` | **120×60**, so the ratio derives the width from the definite height |
+| `aspect-both` — `width: 160`, `height: 60`, `aspectRatio: 2` | **160×60**: two definite dimensions leave the ratio unconsulted rather than resizing one |
+| `aspect-column` — no size inside a 240-wide column | **240×120**: the column's stretch makes the width definite and the ratio derives the height |
+| `aspect-row` — no size inside an 80-tall row | **0×80**: the row's stretch gives the child its height, but the ratio derives **no width** from it, so a row child must declare its height (then `aspect-height` is the rule) |
+
+14 checks, `--only aspect-ratio-paint`, green on 0.11.0 (~0.4 s). Fixture:
+`src/live/aspect-ratio.ts` — the six ids, the container ids, the ratio and
+container sizes, `heightForWidth`/`widthForHeight` and `ASPECT_CASES`, the
+expectation table the probe walks; `aspect-ratio.test.ts` (8 cases) holds the
+arithmetic in both directions (a ratio below one included), holds the table to
+the constants, refuses a case that asks for an axis the table does not cover,
+and holds this section's heading, count and printed geometry. One direction
+measured: with the ratio dropped from the width-derived box it paints **160×0**
+and `aspect-width paints the height its height axis derives` fails with
+`expected 80 ± 1, got 0` (exit `1`); restored green.
+
+What it settles:
+
+1. **The ratio is a dimension, not a decoration.** A definite width derives a
+   height and a definite height derives a width, so a thumbnail, an image
+   preview or a card can reserve one axis and let the ratio own the other.
+2. **Two definite dimensions win.** A box that already has a width and a height
+   keeps both; a component that changes the ratio at runtime must also leave one
+   axis open, or nothing moves.
+3. **A stretched child takes its container's axis only on the axis the container
+   makes definite.** A child stretched by a column takes the width and the ratio
+   derives the height (**240×120**); a child stretched by a row keeps the row's
+   height but paints **no width**, so the ratio derived nothing — a row child
+   must declare its height and let the ratio derive the width, which is the
+   `aspect-height` case. That asymmetry is the measured fact a card or a
+   thumbnail composes around, not an inference from CSS.
+4. **A ratio below one is a portrait box**, not a smaller one — the long axis is
+   the height.
+
+The capability record's **`aspectRatio`** row owes this page (docs-site owns
+that file; the row in `TODO.md` → Interlocks records it).
+
 ### `elevation-paint` — measured on 0.11.0 here
 
 **What a `boxShadow` paints.** The library's whole elevation contract is this one
@@ -4906,9 +4957,9 @@ narrower. Each deviation is deliberate and measured:
   `column-resize-lifecycle`, `button-activation-lifecycle` and
   `date-picker-lifecycle`, `data-table-lifecycle`, `virtual-table-lifecycle` and
   `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`,
-  `action-ring`, `surface-origin`, `hover-routing-lifecycle` and
-  `multi-step-form-lifecycle`
-  (twenty-six probes, each run alone).
+  `action-ring`, `surface-origin`, `hover-routing-lifecycle`,
+  `multi-step-form-lifecycle` and `aspect-ratio-paint`
+  (twenty-seven probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
