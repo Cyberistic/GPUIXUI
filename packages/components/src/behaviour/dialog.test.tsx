@@ -7,6 +7,9 @@
  * the wrong overlay; Tab escaping a modal; a dialog that cannot be made
  * uninterruptible; and a surface that ignores the theme. A caller `ref` on the
  * content was discarded in favour of the internal one.
+ *
+ * Leaving-surface regression: the exit tween stayed hit-testable, so a press
+ * aimed at the control underneath was swallowed until the surface unmounted.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -138,6 +141,26 @@ describe("Dialog", () => {
     dialog.renderer.simulateKeystrokes("escape");
 
     expect(focusedTestId(dialog)).toEqual(Option.some("open"));
+    await waitFor(() =>
+      expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
+    );
+
+    dialog.unmount();
+  });
+
+  it("stops taking presses while it leaves", async () => {
+    const onBehind = vi.fn();
+    const dialog = renderComponent(<Workspace onBehind={onBehind} />);
+    clickCentreOf(dialog, "open");
+
+    dialog.renderer.simulateKeystrokes("escape");
+
+    // The surface is still mounted for its exit tween (the check above waits
+    // for it to leave); a press in that window belongs to the control under it.
+    expect(dialog.renderer.findByTestId("dialog")).toBeDefined();
+    clickCentreOf(dialog, "behind");
+    expect(onBehind).toHaveBeenCalledTimes(1);
+
     await waitFor(() =>
       expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
     );

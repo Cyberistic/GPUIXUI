@@ -26,6 +26,10 @@
  * Submenu regression: a pointer press on a submenu row counted as an outside
  * press on the parent surface, so both levels closed before the click landed and
  * `onSelect` never ran. Only the keyboard path was covered.
+ *
+ * Leaving-surface regression: the exit tween stayed hit-testable, so a press
+ * inside the surface's own box was swallowed instead of reaching the control
+ * underneath.
  */
 
 import * as Arr from "effect/Array";
@@ -476,6 +480,56 @@ describe("DropdownMenu", () => {
     clickCentreOf(menu, "trigger");
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
     clickCentreOf(menu, "trigger");
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
+
+    menu.unmount();
+  });
+
+  it("stops taking presses while it leaves", async () => {
+    const onBehind = vi.fn();
+    const menu = renderComponent(
+      <div style={{ position: "relative", width: 800, height: 600 }}>
+        <Button
+          testId="behind"
+          onClick={onBehind}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: 800,
+            height: 600,
+          }}
+        >
+          Behind
+        </Button>
+        <div style={{ position: "absolute", left: 40, top: 40 }}>
+          <DropdownMenu>
+            <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+            <DropdownMenuContent testId="menu" label="File actions">
+              <DropdownMenuItem testId="rename" onSelect={() => undefined}>
+                Rename
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>,
+    );
+
+    clickCentreOf(menu, "trigger");
+    const surface = requireBounds(menu, "menu");
+    menu.renderer.simulateKeystrokes("escape");
+
+    // The surface is still mounted for its exit tween at its own coordinates;
+    // a press inside that box belongs to the control under it now.
+    expect(menu.renderer.findByTestId("menu")).toBeDefined();
+    menu.renderer.nativeSimulateClick(
+      surface.x + surface.width / 2,
+      surface.y + surface.height / 2,
+    );
+    expect(onBehind).toHaveBeenCalledTimes(1);
+
     await waitFor(() =>
       expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
     );

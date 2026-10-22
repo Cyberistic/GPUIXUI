@@ -160,9 +160,10 @@ button. Every part merges `style` last.
 
 ## Verification
 
-`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (14 tests): the
-veil measured at the window bounds, a click on a control behind it blocked, focus
-entering and returning, Escape and backdrop dismissal, Tab wrapping at both ends,
+`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (15 tests): the
+veil measured at the window bounds, a click on a control behind it blocked, a
+leaving surface no longer taking presses, focus entering and returning, Escape
+and backdrop dismissal, Tab wrapping at both ends,
 `role`/`aria-label` in the accessibility dump, both themes reading
 `colors.popover`/`colors.overlay`, a non-dismissible dialog ignoring both
 dismissals, a controlled dialog staying closed, the caller's own close control,
