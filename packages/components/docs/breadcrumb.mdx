@@ -49,10 +49,13 @@ import {
 ## Collapse rule
 
 `maxItems` below 3 is clamped to 3, so the trail can always show its start, a gap
-and its end. When the trail fits, every entry renders. Otherwise the control
-keeps the first entry, an ellipsis, and the last `maxItems - 2` entries. A hidden
-entry takes its separator with it — the list pairs each separator with the item
-that follows it.
+and its end. A budget it cannot read — `NaN`, the shape a measured width takes
+when the measurement never arrives — reads as that minimum, because a `NaN`
+budget would otherwise hide the whole tail and leave a trailing ellipsis where
+the current page belongs; an infinite budget means no limit. When the trail fits,
+every entry renders. Otherwise the control keeps the first entry, an ellipsis,
+and the last `maxItems - 2` entries. A hidden entry takes its separator with it —
+the list pairs each separator with the item that follows it.
 
 `BreadcrumbList` reads its **direct** children to do this, which is why the parts
 are plain elements rather than wrappers: a custom component around an item is
@@ -69,7 +72,7 @@ Every part takes the GPUix host props and merges `style` last.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Breadcrumb` | `div role="navigation"` | `maxItems?: number` (below 3 clamps to 3; absent = no collapse), `separator?: ReactNode` (default `/`) |
+| `Breadcrumb` | `div role="navigation"` | `maxItems?: number` (below 3 clamps to 3, `NaN` reads as 3; absent = no collapse), `separator?: ReactNode` (default `/`) |
 | `BreadcrumbList` | `div role="list"` | — (reads its direct children) |
 | `BreadcrumbItem` | `div role="listitem"` | — |
 | `BreadcrumbLink` | `div role="link"` | `onSelect?: () => void`, `current?: boolean` |
@@ -104,8 +107,8 @@ Enter activation, collapsing the middle while keeping both ends, the ellipsis
 staying out of the tab order, and exactly the current page announced as
 selected in the accessibility tree.
 
-`src/breadcrumb/logic.test.ts` covers the collapse arithmetic for lengths 0–8 and
-budgets 3–6.
+`src/breadcrumb/logic.test.ts` covers the collapse arithmetic for lengths 0–8,
+budgets 3–6, a `NaN` budget (the minimum) and an infinite one (no limit).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

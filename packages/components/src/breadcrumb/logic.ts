@@ -24,8 +24,14 @@ const minimum = 3;
  */
 export const collapse = <A>(
   items: ReadonlyArray<A>,
-  maxItems: number,
+  requested: number,
 ): ReadonlyArray<Crumb<A>> => {
+  // A budget is often arithmetic over a measured width (`Math.floor(w / 96)`),
+  // so a measurement that never arrived reaches this as `NaN`; `NaN` would pass
+  // every length comparison, hide the whole tail and leave a trailing ellipsis
+  // where the current page belongs. The minimum is the budget it reads as then;
+  // an infinite budget still means no limit.
+  const maxItems = Number.isNaN(requested) ? minimum : requested;
   const budget = Math.max(minimum, Math.trunc(maxItems));
   if (Arr.length(items) <= budget) return Arr.map(items, crumb);
   return [

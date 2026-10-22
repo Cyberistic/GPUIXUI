@@ -68,6 +68,20 @@ describe("collapse", () => {
     ]);
   });
 
+  it("reads a budget it cannot read as the minimum", () => {
+    // `Math.floor(width / 96)` over a width that never arrived is NaN; a budget
+    // that hides the tail would leave an ellipsis where the current page is.
+    expect(collapse(items("a", "b", "c", "d", "e"), Number.NaN)).toEqual([
+      crumb("a"),
+      { kind: "ellipsis" },
+      crumb("e"),
+    ]);
+    // An infinite budget is a readable "no limit", not the minimum.
+    expect(
+      collapse(items("a", "b", "c", "d"), Number.POSITIVE_INFINITY),
+    ).toEqual([crumb("a"), crumb("b"), crumb("c"), crumb("d")]);
+  });
+
   it("renders one ellipsis at most", () => {
     const ellipses = collapse(items("a", "b", "c", "d", "e", "f"), 3).filter(
       (entry) => entry.kind === "ellipsis",
