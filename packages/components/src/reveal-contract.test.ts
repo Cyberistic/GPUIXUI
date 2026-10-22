@@ -10,55 +10,110 @@
  * compose `AutoHeight`, and this suite keeps the rule in one module: no source
  * may both measure a body and tween its height, and both disclosure parts must
  * import the reveal.
+ *
+ * **The tree is read once, and an entry a concurrent writer removed is skipped**
+ * — five sessions write this package, so a listing can name a file that is gone
+ * at open time. `presence-contract.test.ts` measured that race (106 throws in a
+ * five-second run against a directory another process was writing) and its walk
+ * tolerates exactly one case: `ENOENT` between listing and read. Any other
+ * failure still fails this suite, and a source floor keeps an empty scan from
+ * satisfying the rule below by accident.
  */
 
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 
 const packageRoot = new URL("../", import.meta.url);
 
+/** One source file and the text read from it in the same pass. */
+interface Source {
+  readonly path: string;
+  readonly body: string;
+}
+
+/** True for an entry another session removed between the listing and the read. */
+const vanished = (error: unknown): boolean =>
+  P.isObject(error) && "code" in error && error.code === "ENOENT";
+
+/** Read one listed entry; a vanished one is skipped, anything else throws. */
+const readSource = (path: string): Option.Option<Source> =>
+  Result.match(
+    Result.try(() =>
+      readFileSync(fileURLToPath(new URL(path, packageRoot)), "utf8"),
+    ),
+    {
+      onSuccess: (body) => Option.some({ path, body }),
+      onFailure: (error): Option.Option<Source> => {
+        if (vanished(error)) return Option.none();
+        // A suite that cannot read the tree it judges is broken, not empty.
+        throw error;
+      },
+    },
+  );
+
 /** Every readable source file under `relative`, recursively, minus suites. */
-const sourcesUnder = (relative: string): ReadonlyArray<string> => {
+const scan = (relative: string): ReadonlyArray<Source> => {
   const directory = fileURLToPath(new URL(relative, packageRoot));
   return Arr.flatMap(
     readdirSync(directory, { withFileTypes: true }),
     (entry) => {
       const path = `${relative}${entry.name}`;
-      if (entry.isDirectory()) return sourcesUnder(`${path}/`);
+      if (entry.isDirectory()) return scan(`${path}/`);
       if (!/\.tsx?$/.test(entry.name)) return [];
       if (Str.includes(".test.")(entry.name)) return [];
-      return [path];
+      return Option.match(readSource(path), {
+        onNone: () => [],
+        onSome: (source) => [source],
+      });
     },
   );
 };
 
-const read = (relative: string): string =>
-  readFileSync(fileURLToPath(new URL(relative, packageRoot)), "utf8");
+const sources = scan("src/");
+
+/** The body of one scanned source, or a broken suite when it is absent. */
+const bodyOf = (path: string): string =>
+  Option.getOrElse(
+    Option.map(
+      Arr.findFirst(sources, (source) => source.path === path),
+      (source) => source.body,
+    ),
+    () => {
+      throw new Error(`reveal contract: ${path} was not read`);
+    },
+  );
 
 /** Whether a source mentions `needle` at all. */
-const mentions = (relative: string, needle: string): boolean =>
-  Str.includes(needle)(read(relative));
-
-const sources = sourcesUnder("src/");
+const mentions = (path: string, needle: string): boolean =>
+  Str.includes(needle)(bodyOf(path));
 
 /** Where the reveal lives, and the parts that must compose it. */
 const reveal = "src/auto-height.tsx";
 const consumers = ["src/accordion.tsx", "src/collapsible.tsx"] as const;
 
 describe("the measured reveal", () => {
+  it("reads the tree it judges", () => {
+    // A scan that read nothing must not satisfy the rules below.
+    expect(Arr.length(sources)).toBeGreaterThan(100);
+    expect(Arr.map(consumers, bodyOf)).toHaveLength(consumers.length);
+  });
+
   it("has one implementation, so its rules cannot drift apart", () => {
     // Measuring a body and tweening its height is `AutoHeight`'s job. A second
     // copy reads the same `onLayout` and paints the same frames, and the two
     // then have to be fixed twice.
-    const offenders = Arr.filter(sources, (file) => {
-      const body = read(file);
-      return (
-        Str.includes("onLayout")(body) && Str.includes("presenceMotion(")(body)
-      );
-    });
+    const offenders = Arr.filterMap(sources, (source) =>
+      Str.includes("onLayout")(source.body) &&
+      Str.includes("presenceMotion(")(source.body)
+        ? Result.succeed(source.path)
+        : Result.failVoid,
+    );
     expect(offenders).toEqual([reveal]);
   });
 
