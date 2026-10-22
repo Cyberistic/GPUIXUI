@@ -179,6 +179,25 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("ref");
   });
 
+  it("re-anchors a paginated list whose loading void is the anchor", () => {
+    // The page taught a table how to virtualize and how to hold a header, and
+    // said nothing about a page arriving into a list whose top row is the
+    // loading void — the case a message scroller or a log viewer has, where the
+    // runtime anchors on the void and the splice replaces the reader's screen.
+    // `loading-row-correction` measured both edges and the guard; the page has
+    // to carry the rule where a table is designed.
+    const loading = rowFor(record, "Loading-row restore");
+
+    expect(loading).toContain("supported, with limits");
+    expect(loading).toContain("loading-row-correction");
+    expect(loading).toContain("getListScrollTop");
+    expect(loading).toContain("flushSync");
+    expect(dataPage).toContain("loading-row-correction");
+    expect(dataPage).toContain("getListScrollTop");
+    expect(dataPage).toContain("at-end sentinel");
+    expect(dataPage).toContain("flushSync");
+  });
+
   it("teaches the windowed mode a large table needs, and its two rules", () => {
     // The page said a virtualized table is "a different composition" and left
     // it there, so a table of 100 000 rows had nothing telling it which mode to

@@ -507,6 +507,36 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("**open** row height");
   });
 
+  it("records the loading-row restore a paginated list owes", () => {
+    // A paginated history paints a void row at the edge a page arrives from, and
+    // `<virtual-list>` anchors on the row at the viewport top — so the void *is*
+    // the anchor and the splice replaces the screen the reader was reading.
+    // `loading-row-correction` measured both edges, the guard that must not
+    // correct a message anchor, and the two mechanics a consumer gets wrong:
+    // the scroll has to be queued after the splice, and an at-end anchor is an
+    // index rather than an offset. The record said none of it.
+    const loading = rowFor("Loading-row restore");
+    expect(loading?.verdict).toBe("supported, with limits");
+    expect(loading?.evidence).toContain("loading-row-correction");
+    expect(loading?.evidence).toContain("y=80");
+    expect(loading?.evidence).toContain("guarded=1");
+    expect(loading?.evidence).toContain("corrected=2");
+    expect(loading?.evidence).toContain("getListScrollTop");
+    expect(loading?.evidence).toContain("itemIndex == row count");
+    expect(loading?.workaround).toContain("flushSync");
+    expect(loading?.workaround).toContain("moves the reader twice");
+
+    const page = measuredRow("Loading-row restore");
+    expect(
+      page,
+      "the page's measured table has no loading-row row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("loading-row-correction");
+    expect(page?.[1]).toContain("y=80");
+    expect(page?.[1]).toContain("corrected=2");
+    expect(page?.[2]).toContain("flushSync");
+  });
+
   it("records the dock reflow signal, with the stale pass and the unchanged pane", () => {
     // A fixed-width split cannot re-clamp when its parent shrinks, and the stated
     // way out — a dock passing its own bounds through `onLayout` — had never been
@@ -1021,6 +1051,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("tab-overflow");
     expect(runtimePage).toContain("drag-autoscroll");
     expect(runtimePage).toContain("window-shortcut-lifecycle");
+    expect(runtimePage).toContain("loading-row-correction");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });

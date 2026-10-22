@@ -89,6 +89,16 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   `onVisibleRange` — read the painted rows or the list's anchor, and never
   paginate from that event across a row-count change
   (`virtual-tree-lifecycle`).
+- **An arriving page owes a re-anchor while a loading void is the anchor** — a
+  paginated table, log or feed paints a void row at the edge a page arrives
+  from, and `<virtual-list>` anchors on that row, so the splice replaces the
+  screen the reader was reading. Read `getListScrollTop` before the commit and
+  re-anchor after it: under a top void
+  `scrollToItem(voidRow + 1 + pageRows, offset - edgeHeight)`, and at the
+  at-end sentinel (`itemIndex == row count`) the page's first row takes the
+  void's index at `edgeHeight - viewportHeight`. Correct only while the void is
+  the anchor — a message anchor's index moves across the splice on its own — and
+  `flushSync` the splice before the scroll (`loading-row-correction`).
 - **A fixed header is a sibling, not a sticky row** — the runtime paints no
   `position: "sticky"`: a sticky child scrolls with its scroller, measured by
   `data-grid-fixed-header`. The header sits outside the row scroller, and both
