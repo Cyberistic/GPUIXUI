@@ -1104,10 +1104,15 @@ describe("docs/gpuix-capabilities.md", () => {
     // The printed frame size is arithmetic on the probe's own grid and cell, so
     // a changed cell cannot leave the record teaching the previous frame.
     const probe = read("apps/playground/src/terminal/run.ts");
-    const grid = /TERMINAL_GRID = \{ columns: (\d+), rows: (\d+) \}/.exec(probe);
-    const resized =
-      /RESIZED_GRID = \{ columns: (\d+), rows: (\d+) \}/.exec(probe);
-    const cell = /TERMINAL_CELL = \{ width: (\d+), height: (\d+) \}/.exec(probe);
+    const grid = /TERMINAL_GRID = \{ columns: (\d+), rows: (\d+) \}/.exec(
+      probe,
+    );
+    const resized = /RESIZED_GRID = \{ columns: (\d+), rows: (\d+) \}/.exec(
+      probe,
+    );
+    const cell = /TERMINAL_CELL = \{ width: (\d+), height: (\d+) \}/.exec(
+      probe,
+    );
     const columns = Number(grid?.[1] ?? 0);
     const rows = Number(grid?.[2] ?? 0);
     const resizedColumns = Number(resized?.[1] ?? 0);
@@ -1125,7 +1130,9 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(terminal?.evidence).toContain(
       `${resizedColumns * cellWidth}×${resizedRows * cellHeight}`,
     );
-    expect(terminal?.evidence).toContain(`${resizedColumns}×${resizedRows} grid`);
+    expect(terminal?.evidence).toContain(
+      `${resizedColumns}×${resizedRows} grid`,
+    );
 
     const asserted = [
       "the frame is the pty grid at one cell per character",
@@ -1165,6 +1172,58 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("kitty or Ghostty");
     expect(page?.[2]).toContain("stty");
     expect(page?.[2]).toContain("host element");
+  });
+
+  it("records what paints a field's hint and its value, with the probe behind it", () => {
+    // `nativeTextTheme` hands a host `text` and `textFaint`, and both the token
+    // page and its snippet taught that following the seam alone paints a
+    // readable field. A window measured the opposite: the hint is the runtime's
+    // own grey and a value paints the element's `color`, so the seam's `text`
+    // reaches `<code>`/`<diff>`/`<markdown>` and not an `<input>`. The row's
+    // constants are read out of the probe, so a moved floor cannot leave the
+    // record quoting the previous one.
+    const ink = rowFor("Native text host ink");
+    expect(ink?.verdict).toBe("supported, with limits");
+    expect(ink?.evidence).toContain("field-ink");
+    expect(ink?.evidence).toContain("`placeholder`");
+    expect(ink?.evidence).toContain("inputForeground");
+    expect(ink?.evidence).toContain("darker than its own fill");
+    expect(ink?.workaround).toContain("inputForeground");
+    expect(ink?.workaround).toContain("placeholder");
+
+    const probe = read("apps/playground/src/live/field-ink.ts");
+    const declared = (name: string): string => {
+      const marker = `export const ${name} =`;
+      const at = probe.indexOf(marker);
+      if (at === -1) return "";
+      const end = probe.indexOf(";", at);
+      return probe
+        .slice(at + marker.length, end === -1 ? undefined : end)
+        .trim();
+    };
+    const number = (name: string): number =>
+      Number(declared(name).replace(/[^\d.]/g, ""));
+
+    expect(declared("RUNTIME_HINT_HEX")).toBe('"#8F8F8F"');
+    const floor = number("INK_PEAK_FLOOR");
+    const tolerance = number("INK_PEAK_TOLERANCE");
+    expect(floor).toBeGreaterThan(0);
+    expect(tolerance).toBeGreaterThan(0);
+    expect(ink?.evidence).toContain(`(${floor})`);
+    expect(ink?.evidence).toContain(`(${tolerance})`);
+    expect(ink?.evidence).toContain("#8F8F8F");
+
+    const page = measuredRow("Text input ink");
+    expect(
+      page,
+      "the page's measured table has no text-input-ink row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("field-ink");
+    expect(page?.[1]).toContain("#8F8F8F");
+    expect(page?.[1]).toContain(`(${floor})`);
+    expect(page?.[1]).toContain(`(${tolerance})`);
+    expect(page?.[2]).toContain("inputForeground");
+    expect(page?.[2]).toContain("placeholder");
   });
 
   it("cites only registered probes, and owes every one of them in the record", () => {
