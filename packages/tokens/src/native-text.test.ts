@@ -801,4 +801,42 @@ describe("the adoption both packages carry", () => {
       "the components package's fields pass no host theme",
     );
   });
+
+  it("paints the hint instead of handing the host one", () => {
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const seam = readFileSync(
+      new URL("../../primitives/src/components/hint.tsx", import.meta.url),
+      "utf8",
+    );
+
+    // The page taught an owed adoption ("the fields pass the host's placeholder
+    // today") after every hinted host had moved to the painted seam.
+    expect(catalogue).toContain("render the hint through the published");
+    expect(catalogue).toContain("`fieldHint`/`renderFieldHint`");
+    expect(catalogue).not.toContain(
+      "The components package's fields pass the host's",
+    );
+    expect(catalogue).not.toContain("adopting the painted hint is recorded");
+
+    // The seam is the paint the page names, and every host that takes a
+    // placeholder paints through it — bare of the exceptions the page records.
+    expect(seam).toContain("export const fieldHint");
+    const hinted = sources.filter(
+      ({ text }) =>
+        /<(input|textarea)[\s>]/.test(text) && text.includes("placeholder"),
+    );
+
+    expect(hinted.length).toBeGreaterThanOrEqual(7);
+    expect(
+      hinted
+        .filter(({ file }) => file !== "inline-edit.tsx")
+        .filter(({ text }) => !text.includes("fieldHint("))
+        .map(({ file }) => file),
+    ).toEqual([]);
+    expect(catalogue).toContain("`InlineEdit`");
+    expect(catalogue).toContain("`ColorPicker`'s hex field is never empty");
+  });
 });

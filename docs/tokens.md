@@ -2687,10 +2687,15 @@ package), so no token reaches it and no theme change can move it: the runtime's
 grey measures **2.84:1** on a white field and 4.72:1 on the base dark fill. The
 `placeholder` role is still the faint role the library paints itself — a number
 field's unavailable steppers are `colors.placeholder` — and the one the contrast
-table holds on both fills, so a component that needs a themed placeholder paints
-the text itself while its field is empty instead of handing the host one. The
-components package's fields pass the host's `placeholder` today; adopting the
-painted hint is recorded in `TODO.md` → Interlocks.
+table holds on both fills, so a field that needs a themed hint paints the text
+itself while it is empty instead of handing the host one. Both packages do: the
+primitives' `Input`/`TextArea` and every hinted host in `packages/components` —
+`FieldInput`, `SearchInput`, `TagInputField`, `MentionInput`, `ChatComposer`,
+both `TimePickerSegment`s, `CommandMenuInput` and `ComboboxInput` — render the
+hint through the published `fieldHint`/`renderFieldHint` seam
+(`@gpuixui/primitives/hint`) in the `placeholder` role, faded with the field by
+`disabledOpacity`. `InlineEdit` paints its own display text and `ColorPicker`'s
+hex field is never empty, so neither has a host hint to replace.
 
 A field paints one of **two** fills, and the host has to be told which, because
 the roles above are measured against it. A plain field paints `input`; a
@@ -3370,10 +3375,23 @@ export const messagePaint = (theme: Theme, tone: StatusTone) => {
 };
 ```
 
-**Adoption.** The role reaches a window through the runtime's `selectionColor`
-property, which inherits down a subtree. Setting it on selectable text and
-fields is the component packages' work, recorded in `TODO.md` → Interlocks; the
-runtime's own default is the theme accent at 35%, which is not this role.
+**Adoption.** Both packages paint it. A selectable `Text` and every field in
+`packages/primitives` set the runtime's `selectionColor` from the role —
+`select-text` resolves to `theme.colors.selection`, beside
+`userSelect: "text"` — and `packages/components` exports
+`selectionWash(theme)` from its theme seam, which every selectable host spreads:
+`FieldInput`, `SearchInput`, both `TimePickerSegment`s, `TagInputField`,
+`MentionInput`, `ColorPicker`'s hex field, `CommandMenuInput`, `ChatComposer`
+and the input `InlineEdit` swaps in, read back off the renderer by
+`src/behaviour/selection.test.tsx`. The property inherits down a subtree, so a
+container that paints a status tint does not use the page role: `Alert`'s root
+declares `messageSelection(theme, tone)`, which is `selectionOn` against the
+tone's own soft role. The runtime's own default is the theme accent at 35%,
+which is not this role.
+
+**Still open:** `ComboboxInput` renders GPUix's own input and spreads no
+`selectionWash`, so its selected run keeps that accent default; recorded in
+`TODO.md` → Interlocks.
 
 **Not measured, deliberately:** a field's `placeholder`. It is painted only
 while the field is empty, so there is no run for a reader to select.

@@ -755,3 +755,73 @@ describe("the floors a selection report uses", () => {
     expect(selectionFailures(brand, contrastFloors)).toEqual([]);
   });
 });
+
+/**
+ * The adoption half of the contract.
+ *
+ * A measured role is only a role if a host paints it, and the catalogue spent a
+ * release telling a reader that setting `selectionColor` was "the component
+ * packages' work, recorded in `TODO.md` → Interlocks" after both packages had
+ * done it. The page is read against the painters that put the role on a host, so
+ * the sentence cannot outlive either state: a page that calls the work owed
+ * fails while the hosts paint it, and a host that drops the wash fails while the
+ * page says it paints it.
+ */
+describe("the adoption both packages paint", () => {
+  const catalogue = read("../../../docs/tokens.md");
+
+  /** One `## ` section of the catalogue, flattened so a sentence can be read. */
+  const section = (heading: string): string => {
+    const start = catalogue.indexOf(`${heading}\n`);
+    const end = catalogue.indexOf("\n## ", start + heading.length + 1);
+    return catalogue
+      .slice(start, end === -1 ? undefined : end)
+      .replace(/\s+/g, " ");
+  };
+
+  it("says both packages paint the role, not that adoption is owed", () => {
+    const text = section("## Text selection");
+
+    expect(text).toContain("Both packages paint it");
+    expect(text).toContain("`selectionWash(theme)`");
+    expect(text).toContain("`select-text`");
+    expect(text).toContain("`messageSelection(theme, tone)`");
+    expect(text).not.toContain("is the component packages' work");
+    expect(text).not.toContain("recorded in `TODO.md` → Interlocks;");
+  });
+
+  it("reads the seams the page names", () => {
+    const primitiveStyle = read("../../primitives/src/core/style.ts");
+    const primitiveRecipe = read("../../primitives/src/recipe/registry.ts");
+    const componentsSeam = read("../../components/src/internal/theme.ts");
+    const field = read("../../components/src/field.tsx");
+    const alert = read("../../components/src/alert.tsx");
+
+    // The primitives: one declaration for a selectable host's style, and the
+    // `select-text` utility the field recipes carry.
+    expect(primitiveStyle).toContain(
+      "style.selectionColor = theme.colors.selection;",
+    );
+    expect(primitiveRecipe).toContain('"select-text"');
+    expect(primitiveRecipe).toContain("selectionColor: theme.colors.selection");
+    // The components: one seam, a host that spreads it, and the alert's
+    // per-surface derivation.
+    expect(componentsSeam).toContain("export const selectionWash");
+    expect(componentsSeam).toContain("selectionColor: theme.colors.selection");
+    expect(field).toContain("...selectionWash(theme)");
+    expect(alert).toContain("messageSelection(theme, value)");
+  });
+
+  it("names the host that still keeps the runtime's default", () => {
+    // `ComboboxInput` renders GPUix's own input and never spreads the wash, so
+    // the page's deviation is a measured one rather than a stale sentence: the
+    // day the host adopts the role, this case fails until the page moves.
+    const combobox = read("../../components/src/combobox.tsx");
+    const text = section("## Text selection");
+
+    expect(combobox).toContain("ComboboxInput as HeadlessInput");
+    expect(combobox).not.toContain("selectionWash");
+    expect(text).toContain("`ComboboxInput`");
+    expect(text).toContain("Still open:");
+  });
+});
