@@ -302,6 +302,13 @@ describe("the colour spaces the contracts report rather than guess", () => {
     expect(catalogue).toContain(
       'contrastRatio("hsl(0 0% 100%)", "#000"); // 21',
     );
+    // A printed ratio is derived from the same computation, so a palette or
+    // seam change cannot leave the page teaching a value the helper no longer
+    // returns.
+    const named = contrastRatio("rebeccapurple", "#FFFFFF") ?? 0;
+    expect(catalogue).toContain(
+      `contrastRatio("rebeccapurple", "#FFFFFF"); // ${named.toFixed(2)}`,
+    );
   });
 
   it("keeps the shipped palettes in the long hex form the tables print", () => {
