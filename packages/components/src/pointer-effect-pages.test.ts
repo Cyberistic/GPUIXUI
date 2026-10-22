@@ -39,9 +39,8 @@ const section = (page: string, heading: string): string => {
 /** The `COMPONENTS.md` row whose first cell is `name`. */
 const row = (name: string): string =>
   Option.getOrElse(
-    Arr.findFirst(
-      inventory.split("\n"),
-      (line) => line.startsWith(`| ${name} |`),
+    Arr.findFirst(inventory.split("\n"), (line) =>
+      line.startsWith(`| ${name} |`),
     ),
     () => {
       throw new Error(`COMPONENTS.md has no row named ${name}`);

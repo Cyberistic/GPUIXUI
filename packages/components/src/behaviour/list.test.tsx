@@ -575,8 +575,10 @@ describe("List", () => {
       backgroundColor: macOSLight.colors.active,
     });
     expect(
-      contrastRatio(pressWash(macOSLight, "accent"), macOSLight.colors.accent) ??
-        0,
+      contrastRatio(
+        pressWash(macOSLight, "accent"),
+        macOSLight.colors.accent,
+      ) ?? 0,
     ).toBeGreaterThanOrEqual(decorativeFloor);
     // The premise: the role the row used to paint cannot be seen on its hover.
     expect(

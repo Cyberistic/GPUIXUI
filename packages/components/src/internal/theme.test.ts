@@ -229,7 +229,11 @@ describe("pressWash", () => {
         Tokens.retroTheme(lightTheme, "aero"),
         "accent",
       ],
-      ["Light · macOS hover", Tokens.platformTheme(lightTheme, "darwin"), "hover"],
+      [
+        "Light · macOS hover",
+        Tokens.platformTheme(lightTheme, "darwin"),
+        "hover",
+      ],
     ] as const;
 
     Arr.forEach(repaired, ([name, theme, replaced]) => {

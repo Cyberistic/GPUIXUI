@@ -517,10 +517,7 @@ export const DatePickerCalendar = ({
 
   return (
     <>
-      <div
-        style={recipeStyle(DATE_PICKER_NAV, theme)}
-        onKeyDown={moveByKey}
-      >
+      <div style={recipeStyle(DATE_PICKER_NAV, theme)} onKeyDown={moveByKey}>
         <IconButton
           label="Previous month"
           size="sm"
@@ -553,7 +550,8 @@ export const DatePickerCalendar = ({
         onKeyDown={handleKeyDown}
         onKeyUp={(event) => {
           if (isActivation(event, "up")) chooseActive();
-        }}        style={recipeStyle(DATE_PICKER_GRID, theme)}
+        }}
+        style={recipeStyle(DATE_PICKER_GRID, theme)}
       >
         <div role="row" style={{ display: "flex", flexDirection: "row" }}>
           {Arr.map(weekdayLabels(weekStartsOn), (name) => (

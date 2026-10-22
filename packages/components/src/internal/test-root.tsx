@@ -10,12 +10,7 @@
 
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
 import type { ReactNode } from "react";
-import {
-  darkTheme,
-  lightTheme,
-  ThemeProvider,
-  type Theme,
-} from "./theme.js";
+import { darkTheme, lightTheme, ThemeProvider, type Theme } from "./theme.js";
 
 const testThemes = { light: lightTheme, dark: darkTheme } as const;
 
