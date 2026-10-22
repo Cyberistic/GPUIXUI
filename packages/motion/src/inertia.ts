@@ -5,11 +5,24 @@
  * deceleration toward the projected rest position `value + velocity * tau`,
  * clamped to `[min, max]` when bounds are configured. The first slice clamps at
  * a bound with zero velocity; the boundary spring from the source is deferred.
+ *
+ * `Inertia` is structural, so a caller may build one without {@link inertia}:
+ * the samplers repair what they are handed — a time constant that cannot run
+ * takes the house 350 ms, a bound that cannot be read is dropped and an inverted
+ * pair is swapped, and a non-finite position or velocity reads as a standstill.
+ * Without that, `tau: NaN` answered `NaN` from {@link project} and a coast never
+ * settled, painting `NaN` into every frame.
  */
 
 /** Time constant (seconds) plus optional hard bounds. */
 export interface Inertia {
   readonly tau: number;
+  readonly min: number | null;
+  readonly max: number | null;
+}
+
+/** The bounds a sample clamps to. */
+interface Bounds {
   readonly min: number | null;
   readonly max: number | null;
 }
@@ -24,6 +37,25 @@ export interface InertiaSample {
 const DEFAULT_TAU_MS = 350;
 const REST_SPEED = 0.001;
 
+/** The time constant a sample can run with: the house one for a value it cannot. */
+const tauOf = (tau: number): number =>
+  Number.isFinite(tau) && tau > 0 ? tau : DEFAULT_TAU_MS / 1000;
+
+/** Bounds a sample can clamp to: unreadable ones dropped, an inverted pair swapped. */
+const boundsOf = (min: number | null, max: number | null): Bounds => {
+  const low = min !== null && Number.isFinite(min) ? min : null;
+  const high = max !== null && Number.isFinite(max) ? max : null;
+  return low !== null && high !== null && low > high
+    ? { min: high, max: low }
+    : { min: low, max: high };
+};
+
+const clampTo = (value: number, { min, max }: Bounds): number => {
+  if (min !== null && value < min) return min;
+  if (max !== null && value > max) return max;
+  return value;
+};
+
 /**
  * Builds inertia from a time constant (ms) and optional bounds. Non-finite or
  * non-positive `tauMs` falls back to 350 ms; inverted bounds are swapped.
@@ -32,30 +64,24 @@ export const inertia = (
   tauMs = DEFAULT_TAU_MS,
   bounds?: { readonly min?: number; readonly max?: number },
 ): Inertia => {
-  const tau =
-    Number.isFinite(tauMs) && tauMs > 0 ? tauMs / 1000 : DEFAULT_TAU_MS / 1000;
-  let min = bounds?.min;
-  let max = bounds?.max;
-  if (min !== undefined && !Number.isFinite(min)) min = undefined;
-  if (max !== undefined && !Number.isFinite(max)) max = undefined;
-  if (min !== undefined && max !== undefined && min > max) {
-    [min, max] = [max, min];
-  }
-  return { tau, min: min ?? null, max: max ?? null };
+  const limits = boundsOf(bounds?.min ?? null, bounds?.max ?? null);
+  return { tau: tauOf(tauMs / 1000), min: limits.min, max: limits.max };
 };
 
-const clamp = (value: number, inertia: Inertia): number => {
-  if (inertia.min !== null && value < inertia.min) return inertia.min;
-  if (inertia.max !== null && value > inertia.max) return inertia.max;
-  return value;
-};
+/** A number the formula can read, or the standstill it means. */
+const finiteOr = (value: number, fallback: number): number =>
+  Number.isFinite(value) ? value : fallback;
 
 /** The resting position an inertial release would settle on, clamped to bounds. */
 export const project = (
   inertia: Inertia,
   position: number,
   velocity: number,
-): number => clamp(position + velocity * inertia.tau, inertia);
+): number =>
+  clampTo(
+    finiteOr(position, 0) + finiteOr(velocity, 0) * tauOf(inertia.tau),
+    boundsOf(inertia.min, inertia.max),
+  );
 
 /**
  * Samples exponential deceleration at an explicit elapsed time. The trajectory
@@ -70,13 +96,17 @@ export const sampleInertia = (
   elapsedMs: number,
 ): InertiaSample => {
   const t = (Number.isNaN(elapsedMs) ? 0 : Math.max(elapsedMs, 0)) / 1000;
-  const decay = Math.exp(-t / inertia.tau);
-  const rest = from + velocity * inertia.tau;
-  const value = clamp(from + (rest - from) * (1 - decay), inertia);
-  const outVelocity = velocity * decay;
+  const position = finiteOr(from, 0);
+  const speed = finiteOr(velocity, 0);
+  const tau = tauOf(inertia.tau);
+  const limits = boundsOf(inertia.min, inertia.max);
+  const decay = Math.exp(-t / tau);
+  const rest = position + speed * tau;
+  const value = clampTo(position + (rest - position) * (1 - decay), limits);
+  const outVelocity = speed * decay;
   const atBound =
-    (inertia.min !== null && value <= inertia.min) ||
-    (inertia.max !== null && value >= inertia.max);
+    (limits.min !== null && value <= limits.min) ||
+    (limits.max !== null && value >= limits.max);
   const settled = atBound || Math.abs(outVelocity) <= REST_SPEED;
   return { value, velocity: atBound ? 0 : outVelocity, settled };
 };

@@ -74,6 +74,20 @@ describe("MotionValue", () => {
     expect(sample.active).toBe(true);
   });
 
+  it("settles a coast whose inertia has no usable time constant", () => {
+    // `Inertia` is structural, so a caller can hand `coast` a `tau` the decay
+    // cannot read. The retained value used to take `NaN` as its target, paint
+    // `NaN` every frame and never report completion.
+    const value = new MotionValue(0);
+    value.coast({ tau: Number.NaN, min: null, max: null }, 100);
+
+    const done = value.sample(4_500);
+    expect(Number.isFinite(done.value)).toBe(true);
+    expect(done.value).toBeCloseTo(35, 3);
+    expect(done.active).toBe(false);
+    expect(done.complete).toBe(true);
+  });
+
   it("falls back from a tween duration that cannot run", () => {
     // A `NaN` duration divides the clock into `NaN`: every sample is `NaN` (the
     // runtime paints a null inset) and the run never reports completion, so the

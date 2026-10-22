@@ -108,6 +108,13 @@ run (`NaN` or an infinity) falls back to `DEFAULT_TWEEN_MS` (300 ms), and a zero
 or negative one is an instant assignment. `MotionValue.sample` keeps its own
 rule: an unusable clock holds the last sample rather than jumping to the end.
 
+The inertia inputs are repaired the same way, because `Inertia` is structural: a
+time constant that cannot run takes the house 350 ms, a bound that cannot be read
+is dropped while the readable one beside it still clamps, an inverted pair is
+swapped, and a non-finite position or velocity reads as a standstill. A coast
+therefore always projects a finite rest and settles, instead of painting `NaN` and
+sampling forever.
+
 ## The runtime's declarative timing
 
 GPUix executes a tween over a duration and an easing it is told. That timing is

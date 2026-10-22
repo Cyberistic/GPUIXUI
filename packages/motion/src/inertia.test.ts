@@ -2,9 +2,14 @@
  * Guards momentum decay: exponential approach to the projected rest position,
  * and hard clamping to configured bounds with zero velocity. Reverting the
  * decay or clamp formula fails these assertions.
+ *
+ * The last suite guards the totality the package promises: `Inertia` is a
+ * structural interface a caller may build by hand, so a time constant or a bound
+ * the formulas cannot read must be repaired by the samplers rather than
+ * reaching them — otherwise `project` answers `NaN` and the value never settles.
  */
 import { describe, expect, it } from "vitest";
-import { inertia, project, sampleInertia } from "./inertia.js";
+import { inertia, project, sampleInertia, type Inertia } from "./inertia.js";
 
 describe("inertia", () => {
   it("projects the resting position and clamps to bounds", () => {
@@ -53,5 +58,63 @@ describe("inertia", () => {
     // return `NaN` from every field instead of the release frame.
     const release = sampleInertia(inertia(350), 0, 100, 0);
     expect(sampleInertia(inertia(350), 0, 100, Number.NaN)).toEqual(release);
+  });
+});
+
+describe("an inertia built by hand", () => {
+  // `Inertia` is an exported structural interface, so `inertia()`'s repair is
+  // not the only path into the formulas: `{ tau: NaN, min: null, max: null }`
+  // type-checks. It used to answer `NaN` from `project`, and a `MotionValue`
+  // coasting on it painted `NaN` into its target and never settled.
+  const unreadable = (tau: number): Inertia => ({
+    tau,
+    min: null,
+    max: null,
+  });
+
+  it("takes the house time constant for one that cannot run", () => {
+    // 350 ms of decay at 100 px/s covers 35 px.
+    [Number.NaN, Number.POSITIVE_INFINITY, 0, -0.35].forEach((tau) => {
+      expect(project(unreadable(tau), 0, 100)).toBeCloseTo(35, 5);
+      expect(sampleInertia(unreadable(tau), 0, 100, 350)).toEqual(
+        sampleInertia(inertia(350), 0, 100, 350),
+      );
+    });
+  });
+
+  it("settles a coast it could not have run before", () => {
+    const frame = sampleInertia(unreadable(Number.NaN), 0, 100, 4_500);
+    expect(Number.isFinite(frame.value)).toBe(true);
+    expect(frame.value).toBeCloseTo(35, 3);
+    expect(Math.abs(frame.velocity)).toBeLessThanOrEqual(0.001);
+    expect(frame.settled).toBe(true);
+  });
+
+  it("reads an unreadable release frame as a standstill", () => {
+    const house = inertia(350);
+    expect(sampleInertia(house, Number.NaN, 100, 350)).toEqual(
+      sampleInertia(house, 0, 100, 350),
+    );
+    expect(sampleInertia(house, 0, Number.NaN, 350)).toEqual({
+      value: 0,
+      velocity: 0,
+      settled: true,
+    });
+  });
+
+  it("drops a bound it cannot read, not the one beside it", () => {
+    // The repair must be per bound: dropping the pair (or reading `NaN` as a
+    // floor) would release a projection past the readable `max`.
+    const hand = { tau: 0.35, min: Number.NaN, max: 10 };
+    expect(project(hand, 0, 100)).toBe(10);
+    expect(sampleInertia(hand, 0, 100, 120).value).toBeLessThanOrEqual(10);
+  });
+
+  it("swaps an inverted pair the sampler is handed", () => {
+    // `inertia()` swaps; a hand-built pair must read as the same range, or a
+    // negative release clamps to the wrong end.
+    const hand = { tau: 0.35, min: 10, max: 0 };
+    expect(project(hand, 0, 100)).toBe(10);
+    expect(project(hand, 20, -100)).toBe(0);
   });
 });
