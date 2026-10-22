@@ -28,6 +28,20 @@ import { Button, Stack } from "@gpuixui/primitives";
 </Stack>;
 ```
 
+A consumer that needs one action and not the whole package imports it from
+`@gpuixui/primitives/button`, which publishes `Button`, `IconButton` and their
+prop types without the root barrel:
+
+```tsx
+import { Button, type ButtonProps } from "@gpuixui/primitives/button";
+```
+
+The route reaches five component modules; the barrel reaches 53 own modules and
+every other primitive. Plan 160 measured the barrel at 52 modules / 416 KiB from
+`@gpuixui/components`, which is why that package kept a second button until the
+subpath existed. The subpath is a route, not a second implementation — the
+component and its rules are the ones on this page.
+
 ## Variants
 
 | `variant` | Rest | Hover / press |
@@ -262,6 +276,10 @@ the dim back with `style`, which merges last.
 
 ## Verification
 
+- `src/button-entry.test.ts` — the `@gpuixui/primitives/button` route: the two
+  exports and their identity with the components, the prop types a consumer
+  builds on, the manifest entry, and the import closure staying at the action's
+  five component modules rather than reaching the barrel.
 - `src/core/keyboard.test.ts` — the Enter/Space/held rules as pure decisions.
 - `src/components/Button.test.tsx` — tree-level props, busy blocking, the
   loading description, a busy filled button handing its spinner the fill's

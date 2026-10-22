@@ -16,6 +16,10 @@
     "./hint": {
       "types": "./src/components/hint.tsx",
       "default": "./src/components/hint.tsx"
+    },
+    "./button": {
+      "types": "./src/button.ts",
+      "default": "./src/button.ts"
     }
   },
   "scripts": {
