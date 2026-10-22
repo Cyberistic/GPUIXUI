@@ -499,6 +499,55 @@ describe("the motion page", () => {
     expect(pageText).toContain("cannot be painted or animated");
   });
 
+  it("describes the tab pill as the slide the component ships", () => {
+    // The Related list called the shared indicator one that "jumps rather than
+    // slides", which stopped being true when the pill became a measured motion
+    // target: `TabsList` retargets the indicator's box from the box on screen,
+    // so a move across tabs sweeps. The limit that remains is the runtime's
+    // missing `transform` — a box interpolation rather than a scaled layer. The
+    // curated page is read too, so the two pages cannot disagree about the same
+    // component.
+    const tabs = readRepo("packages/components/src/tabs.tsx");
+    const tabsPage = readRepo(
+      "apps/docs/content/docs/components/tabs.mdx",
+    ).replace(/\s+/g, " ");
+
+    expect(tabs).toContain('useSurfaceTiming("normal")');
+    expect(tabs).toContain("initial: false");
+    expect(tabs).toContain("animate: indicatorBox(");
+    expect(tabsPage).toContain("The pill **slides**");
+
+    const related = section("Related");
+    expect(related).toContain("[Tabs](/docs/components/tabs)");
+    expect(related).toContain("**slides**");
+    expect(related).toContain("`transform`");
+    expect(related).not.toContain("jumps rather than");
+  });
+
+  it("keeps the switch's slide while the caller's preference can skip it", () => {
+    // The reduced-motion paragraph said the switch "paints its two states
+    // without the slide", which reads as a control that never travels — while
+    // the thumb is the one primitive that tweens and only the caller's
+    // `reducedMotion` lands it instead. The duration the page prints is read
+    // from the constant the component composes, so an edit there cannot leave
+    // the page teaching a travel it no longer makes.
+    const control = readRepo("packages/primitives/src/components/Switch.tsx");
+    const stated =
+      /const THUMB_SLIDE: MotionTransition = \{\s*duration: ([\d.]+),/.exec(
+        control,
+      )?.[1];
+    expect(stated).toBeDefined();
+    expect(control).toContain("animate={{ left }}");
+    expect(control).toContain("stillTransition(THUMB_SLIDE, reducedMotion)");
+    expect(control).toContain("initial={false}");
+
+    expect(pageText).toContain(
+      `slides its thumb for ${Math.round(Number(stated) * 1000)} ms`,
+    );
+    expect(pageText).toContain("landing in place of travelling");
+    expect(pageText).not.toContain("paints its two states without the slide");
+  });
+
   it("prints the house levels and phases the timing module declares", () => {
     // `motionTiming` is what every animated surface passes to the runtime, so
     // its two tables are the page's most-copied numbers. A level edited in

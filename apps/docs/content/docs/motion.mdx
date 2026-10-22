@@ -296,8 +296,9 @@ one. Every hook takes `reducedMotion`, and `MotionValue.sample(elapsed, true)`
 finishes an active run immediately at its target with zero velocity, including
 an inertial coast. The library never guesses the preference; the same split
 appears in the primitives, where `Button` and `IconButton` take a
-`reducedMotion` prop for the busy spinner and `Switch` paints its two states
-without the slide.
+`reducedMotion` prop for the busy spinner and `Switch` slides its thumb for
+150 ms by default, landing in place of travelling only when the caller passes
+`reducedMotion`.
 
 ## What the runtime measured
 
@@ -355,6 +356,8 @@ notices a port has to carry are recorded in
   against; motion itself carries no colour.
 - [Switch](/docs/primitives/switch) — the shipped control whose thumb slides
   through the runtime's `motion.div`.
-- [Tabs](/docs/components/tabs) — the shared indicator that jumps rather than
-  slides, because there is no `transform`.
+- [Tabs](/docs/components/tabs) — the shared indicator that **slides**: its
+  box is a `normal` (200 ms) motion target retargeted from the box on screen.
+  There is no `transform`, so the runtime interpolates the box rather than
+  scaling a layer.
 - [License and attribution](/docs/license) — the two motion records above.
