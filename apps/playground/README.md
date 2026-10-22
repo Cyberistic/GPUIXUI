@@ -3438,8 +3438,12 @@ What a release records:
 A failing probe exits `1` and still writes its report and captures, so a release
 blocker stays visible. Exit `2` is **not** a pass: it means the host had no
 window and the suite produced no evidence — re-run it on a host that can open
-one. While iterating, select only the probes a change touches with
-`--only <id>` (repeatable); the full suite is for the gate.
+one. The full run is also the only report in which **every** capability is
+`verified`: a scoped `--only` run prints the capability it touched as
+`unverified`, so a release report carrying an `unverified` capability is a
+suite that did not run whole, not a green one. While iterating, select only the
+probes a change touches with `--only <id>` (repeatable); the full suite is for
+the gate.
 
 A probe's `durationMs` includes its **mount**, and a mount swaps the previous
 probe's tree out of the same window. A probe that follows one which painted
