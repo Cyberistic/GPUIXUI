@@ -750,10 +750,12 @@ than throwing — `invalidColorRoles` returns the role with `value: undefined`,
 `invalidShadowColors` returns the level once at position `0` with no colour, and
 every contract that measures a pair reports it unmeasurable — so the gate returns
 a failing report that names the role instead of a `TypeError`
-(`docs/tokens.md` §Paint-ready values). A numeric group is not treated this way:
-adding one is a breaking change rather than an additive one, so the gate refuses
-a theme missing one and names the group, because the components read every step
-in it — such a theme is rebuilt from a shipped one with `extendTheme`.
+(`docs/tokens.md` §Paint-ready values). A numeric group — and every numeric step
+inside one — is not treated this way: adding either is a breaking change rather
+than an additive one, because the components read every step, so the gate refuses
+a theme missing one and names the group or the path (`typography.codeBlock`,
+`density.controlHeight.sm`); such a theme is rebuilt from a shipped one with
+`extendTheme`.
 
 A value it cannot **lay out** is the third: a style batch is JSON, so `NaN` and
 `Infinity` arrive as `null`, the property is dropped, and the element paints as

@@ -19,21 +19,29 @@
  * a stored theme older than the library is one audit line rather than a crash.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   auditTheme,
   colorRoles,
-  isPaintableColor,
+  defaultDensity,
+  densityNames,
+  densityPresets,
+  extendTheme,
   invalidColorRoles,
+  invalidNumbers,
   invalidShadowColors,
+  isPaintableColor,
   lightElevation,
   lightTheme,
   platformNames,
   platformTheme,
   retroNames,
   retroTheme,
+  textStyle,
   themes,
   type BoxShadow,
+  type Density,
   type ElevationLevel,
   type Theme,
   type ThemeColors,
@@ -240,5 +248,167 @@ describe("an absent numeric group", () => {
 
     expect(() => auditTheme(stored)).not.toThrow();
     expect(auditTheme(stored).passed).toBe(false);
+  });
+});
+
+/**
+ * The bug this holds: a stored theme can predate a **step** inside a group it
+ * still carries — the release that grew the type scale added `codeBlock`, and
+ * `density` gained a metric before that — and the gate passed it. The reports
+ * cannot see the absence because they walk the steps a theme carries
+ * (`invalidNumbers` reads `Object.entries`), so `auditTheme` returned
+ * `passed: true` for a theme no component can paint: `textStyle(theme,
+ * "codeBlock")` reads `typography.codeBlock.fontSize`, which is a `TypeError` at
+ * the first paint that asks for the role, and a missing `lineHeight` is a
+ * property the serialised batch drops, so the role paints at the runtime's
+ * leading with every report empty.
+ *
+ * The decision is the group rule one level down: a step is what the components
+ * read, so the gate refuses a theme missing one and names the path instead of
+ * reporting a number that is not there. The required list is derived from the
+ * scales this release ships, so a step added to one is required without a second
+ * list to edit.
+ */
+describe("an absent numeric step", () => {
+  /** A theme as storage hands it back: the type says complete, the value is not. */
+  const stored = (overrides: Partial<Record<keyof Theme, unknown>>): Theme =>
+    ({ ...lightTheme, ...overrides }) as Theme;
+
+  /** The refusal's message, or `undefined` when the gate read the theme. */
+  const refusedWith = (theme: Theme): string | undefined => {
+    try {
+      auditTheme(theme);
+      return undefined;
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  };
+
+  it("is a theme no report describes and no paint survives", () => {
+    const missingRole = stored({
+      typography: omit(lightTheme.typography, "codeBlock"),
+    });
+
+    // The number report walks the steps a theme carries, so it is silent about
+    // one that is not there; the first paint that asks for the role throws.
+    expect(invalidNumbers(missingRole)).toEqual([]);
+    expect(() => textStyle(missingRole, "codeBlock")).toThrow(TypeError);
+    expect(refusedWith(missingRole)).toContain(
+      "`typography.codeBlock` is missing",
+    );
+  });
+
+  it("names a path in every group it can lose one from", () => {
+    const stripped: ReadonlyArray<readonly [string, Theme]> = [
+      ["spacing.md", stored({ spacing: omit(lightTheme.spacing, "md") })],
+      ["radius.full", stored({ radius: omit(lightTheme.radius, "full") })],
+      [
+        "borderWidth.strong",
+        stored({ borderWidth: omit(lightTheme.borderWidth, "strong") }),
+      ],
+      ["iconSize.md", stored({ iconSize: omit(lightTheme.iconSize, "md") })],
+      [
+        "typography.sans",
+        stored({ typography: omit(lightTheme.typography, "sans") }),
+      ],
+      [
+        "typography.codeBlock",
+        stored({ typography: omit(lightTheme.typography, "codeBlock") }),
+      ],
+      [
+        "typography.body.lineHeight",
+        stored({
+          typography: {
+            ...lightTheme.typography,
+            body: omit(lightTheme.typography.body, "lineHeight"),
+          },
+        }),
+      ],
+      [
+        "density.controlHeight.sm",
+        stored({
+          density: {
+            ...lightTheme.density,
+            controlHeight: omit(lightTheme.density.controlHeight, "sm"),
+          },
+        }),
+      ],
+      [
+        "density.controlPaddingX.lg",
+        stored({
+          density: {
+            ...lightTheme.density,
+            controlPaddingX: omit(lightTheme.density.controlPaddingX, "lg"),
+          },
+        }),
+      ],
+      [
+        "density.rowHeight",
+        stored({ density: omit(lightTheme.density, "rowHeight") }),
+      ],
+    ];
+
+    const wrong = stripped.filter(
+      ([path, theme]) =>
+        !refusedWith(theme)?.includes(`\`${path}\` is missing`),
+    );
+
+    expect(wrong.map(([path]) => path)).toEqual([]);
+    // Every entry is refused by the step rule, not by a group or a crash.
+    expect(
+      stripped.filter(([, theme]) =>
+        refusedWith(theme)?.includes("every numeric step"),
+      ),
+    ).toHaveLength(stripped.length);
+  });
+
+  it("names every missing step at once, in documentation order", () => {
+    const two = stored({
+      spacing: omit(lightTheme.spacing, "md"),
+      density: omit(lightTheme.density, "rowHeight"),
+    });
+
+    expect(refusedWith(two)).toContain(
+      "`spacing.md`, `density.rowHeight` are missing",
+    );
+  });
+
+  it("reads every shipped style and every preset, which are complete", () => {
+    const presets = densityNames.map((density) =>
+      extendTheme(lightTheme, { density }),
+    );
+    const styles = [...shipped, ...presets];
+
+    expect(() => styles.forEach((theme) => auditTheme(theme))).not.toThrow();
+    expect(styles.filter((theme) => !auditTheme(theme).passed)).toEqual([]);
+  });
+
+  it("derives its steps from a preset every other preset mirrors", () => {
+    // The required list is `defaultDensity`'s shape, so a preset that gained or
+    // lost a metric would carry a step the gate never asks about.
+    const steps = (density: Density) => [
+      Object.keys(density.controlHeight),
+      Object.keys(density.controlPaddingX),
+    ];
+
+    expect(
+      densityNames.filter(
+        (name) =>
+          JSON.stringify(steps(densityPresets[name])) !==
+          JSON.stringify(steps(defaultDensity)),
+      ),
+    ).toEqual([]);
+  });
+
+  it("is taught on both token pages", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const catalogue = read("../../../docs/tokens.md");
+    const designSystem = read("../../../docs/design-system.md");
+
+    expect(catalogue).toContain("a theme must carry every numeric step:");
+    expect(catalogue).toContain("`typography.codeBlock`");
+    expect(catalogue).toContain("`density.controlHeight.sm`");
+    expect(designSystem).toContain("every numeric step");
   });
 });

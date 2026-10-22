@@ -522,6 +522,17 @@ audit.keyboardDim; // [] — every label the runtime's keyboard dim fades is sti
 // Otherwise each entry names both roles, the measured ratio and the floor.
 ```
 
+A theme restored from storage can be **incomplete**. A missing colour role or
+elevation level is a line in the report, but a missing **numeric step** is not
+something the reports can describe: `invalidNumbers` walks the steps a theme
+carries, so it says nothing about one that is not there, while
+`textStyle(theme, "codeBlock")` reads `typography.codeBlock.fontSize` and throws
+at the first paint that asks for the role. So `auditTheme` refuses a theme missing
+a step — or a whole numeric group — and names the path (`typography.codeBlock`,
+`density.controlHeight.sm`); such a theme is rebuilt from a shipped one with
+`extendTheme`. The required steps are derived from the scales the package ships,
+so a role or metric added to one is required on the next release.
+
 `keyboardDimFailures(theme, floor?)` is the tenth report (`audit.keyboardDim`):
 it measures the dim the runtime paints on every other focusable while one has
 keyboard focus, at `decorativeFloor` (see §Keyboard focus dim). The dim and the

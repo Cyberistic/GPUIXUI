@@ -941,9 +941,9 @@ contracts that measure a pair or a placement take the same colour source: a pair
 whose role is absent is reported **unmeasurable** (`ratio: undefined`) rather
 than skipped — a pair nobody can verify is not a pass — so `auditTheme` on a
 theme restored from storage returns a line naming the role and a failing gate,
-never a `TypeError`. A numeric group is the exception: adding one is a breaking
-change rather than an additive one, so the gate **refuses** a theme missing one
-and names it —
+never a `TypeError`. A numeric group is the exception, and so is a **step**
+inside one: adding either is a breaking change rather than an additive one, so
+the gate **refuses** the theme and names it —
 
 ```
 a theme must carry every numeric group: `typography` is missing. A group is a
@@ -951,8 +951,21 @@ breaking change, so a theme stored by an older release must be rebuilt from a
 shipped one with `extendTheme`.
 ```
 
+```
+a theme must carry every numeric step: `typography.codeBlock` is missing. A step
+is what the components read, so a theme stored by an older release must be rebuilt
+from a shipped one with `extendTheme`.
+```
+
 — because the components read every step in a group, and a stored theme that
-lost one cannot be painted with the numbers an audit would have passed.
+lost one cannot be painted with the numbers an audit would have passed:
+`textStyle(theme, "codeBlock")` reads `typography.codeBlock.fontSize`, so an
+absent role throws at the first paint that asks for it, while `invalidNumbers`
+walks the steps a theme carries and says nothing about one that is not there. A
+missing `density.controlHeight.sm` and a single absent `typography.body.lineHeight`
+are refused the same way, by path. The required list is derived from the scales
+this package ships, so a role or a metric added to one is required on the next
+release without a second list to edit.
 
 **The measurement dialect is hex.** `contrastRatio`, `alphaOf`, `blend`,
 `selectionFailures` and the decorative contracts read hex in every length the

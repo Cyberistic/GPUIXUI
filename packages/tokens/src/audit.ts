@@ -40,6 +40,13 @@ import {
   type InvalidNumber,
   type NumberSource,
 } from "./numbers.js";
+import {
+  borderWidth,
+  defaultDensity,
+  iconSize,
+  radius,
+  spacing,
+} from "./scale.js";
 import { selectionFailures, type SelectionFailure } from "./selection.js";
 import {
   seriesFailures,
@@ -47,6 +54,7 @@ import {
   type SeriesReport,
 } from "./series.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
+import { typography as shippedTypography } from "./typography.js";
 
 /**
  * The numeric groups a theme must carry. Every other group is additive — a
@@ -64,6 +72,11 @@ const numericGroups = [
   "density",
 ] as const;
 
+/** A theme indexed by its numeric groups — what the presence checks read. */
+type NumericGroupSource = {
+  readonly [group in (typeof numericGroups)[number]]?: unknown;
+};
+
 /**
  * Refuse a theme that is missing a numeric group, naming it.
  *
@@ -73,9 +86,7 @@ const numericGroups = [
  * group their release lost. Throwing is deliberate — this is an invariant of the
  * gate's input rather than a theme state the reports can describe.
  */
-const requireGroups = (theme: {
-  readonly [group in (typeof numericGroups)[number]]?: unknown;
-}): void => {
+const requireGroups = (theme: NumericGroupSource): void => {
   const missing = numericGroups.filter((group) => theme[group] === undefined);
   if (missing.length === 0) {
     return;
@@ -86,6 +97,98 @@ const requireGroups = (theme: {
       .join(", ")} ${
       missing.length === 1 ? "is" : "are"
     } missing. A group is a breaking change, so a theme stored by an older release must be rebuilt from a shipped one with \`extendTheme\`.`,
+  );
+};
+
+/** One token a numeric group must carry: `spacing.md`, `typography.body`. */
+interface RequiredStep {
+  /** The group it lives in. */
+  readonly group: (typeof numericGroups)[number];
+  /** Its path inside that group. */
+  readonly path: string;
+  /**
+   * The fields it must carry once it is there — a type role's numbers. Absent
+   * for a token that is a value, such as a spacing step or a font family.
+   */
+  readonly fields?: readonly string[];
+}
+
+/** Every key of a flat record of tokens, with an optional nesting prefix. */
+const recordSteps = (
+  group: RequiredStep["group"],
+  record: object,
+  prefix = "",
+): readonly RequiredStep[] =>
+  Object.keys(record).map((key) => ({ group, path: `${prefix}${key}` }));
+
+/**
+ * Every step a theme must carry, derived from the scales this release ships, so
+ * a step added to one is required on the next release without a second list to
+ * edit. The families are steps too: `textStyle` hands the runtime
+ * `fontFamily: undefined` for a theme missing one, and the batch drops it.
+ */
+const requiredSteps: readonly RequiredStep[] = [
+  ...recordSteps("spacing", spacing),
+  ...recordSteps("radius", radius),
+  ...recordSteps("borderWidth", borderWidth),
+  ...recordSteps("iconSize", iconSize),
+  ...Object.entries(shippedTypography).map(
+    ([role, value]): RequiredStep =>
+      typeof value === "string"
+        ? { group: "typography", path: role }
+        : { group: "typography", path: role, fields: Object.keys(value) },
+  ),
+  ...recordSteps("density", defaultDensity.controlHeight, "controlHeight."),
+  ...recordSteps("density", defaultDensity.controlPaddingX, "controlPaddingX."),
+  { group: "density", path: "rowHeight" },
+];
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+/** The value at a dotted `path`, or `undefined` when a key on the way is absent. */
+const readPath = (source: unknown, path: string): unknown =>
+  path
+    .split(".")
+    .reduce<unknown>(
+      (value, key) =>
+        isRecord(value) && key in value ? value[key] : undefined,
+      source,
+    );
+
+/**
+ * Refuse a theme that is missing a step of a group it carries, naming every
+ * path.
+ *
+ * The group rule one level up covers a stored theme that predates a whole scale;
+ * this covers the theme that predates a step inside it, which fails the same way:
+ * `textStyle(theme, "codeBlock")` reads `typography.codeBlock.fontSize`, so an
+ * absent role is a `TypeError` at the first paint that asks for it, and an absent
+ * `lineHeight` is a property the serialised batch drops, so the role paints at
+ * the runtime's leading. Neither is a report — `invalidNumbers` walks the steps a
+ * theme carries, so it returns nothing for a step that is not there — which is
+ * why the gate refuses the theme instead of passing it. An absent role is named
+ * once, rather than once per field it would have carried.
+ */
+const requireSteps = (theme: NumericGroupSource): void => {
+  const missing = requiredSteps.flatMap(({ group, path, fields }) => {
+    const step = readPath(theme[group], path);
+    if (step === undefined) {
+      return [`${group}.${path}`];
+    }
+    return (fields ?? [])
+      .filter((field) => readPath(step, field) === undefined)
+      .map((field) => `${group}.${path}.${field}`);
+  });
+  if (missing.length === 0) {
+    return;
+  }
+  throw new Error(
+    `a theme must carry every numeric step: ${missing
+      .map((path) => `\`${path}\``)
+      .join(", ")} ${
+      missing.length === 1 ? "is" : "are"
+    } missing. A step is what the components read, so a theme stored by an older release must be rebuilt from a shipped one with \`extendTheme\`.`,
   );
 };
 
@@ -147,10 +250,12 @@ export interface ThemeAudit {
  * predate a colour role or an elevation level the library has added since, so
  * `invalidRoles` and `invalidShadows` name the absence and the contracts that
  * measure a pair report it unmeasurable; `passed` is false either way. A
- * **numeric group** is the one absence the reports cannot describe — the
- * components read every step in it — so a theme missing one is refused with an
- * error naming the group, because a group is a breaking change rather than an
- * additive one and such a theme must be rebuilt from a shipped one.
+ * **numeric step** is the one absence the reports cannot describe — the
+ * components read every step, and `invalidNumbers` walks the steps a theme
+ * carries, so it says nothing about one that is not there while the first paint
+ * that asks for it throws — so a theme missing a group, or a step inside one, is
+ * refused with an error naming the path. Such a theme must be rebuilt from a
+ * shipped one: a step is a breaking change rather than an additive one.
  *
  * `passed` is the only passing result — a report nobody checked is not a pass.
  *
@@ -171,6 +276,7 @@ export function auditTheme(
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): ThemeAudit {
   requireGroups(theme);
+  requireSteps(theme);
   const invalidRoles = invalidColorRoles(theme);
   const invalidShadows = invalidShadowColors(theme);
   const numbers = invalidNumbers(theme);
