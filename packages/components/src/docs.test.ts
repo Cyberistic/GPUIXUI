@@ -22,7 +22,9 @@
 
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { pipe } from "effect";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 
@@ -187,5 +189,47 @@ describe("component pages", () => {
 
   it("reads the pages it is meant to check", () => {
     expect(pages.length).toBeGreaterThanOrEqual(39);
+  });
+});
+
+/** The capability record a page's accessibility claim is derived from. */
+const capabilityRecord = readFileSync(
+  fileURLToPath(
+    new URL("../../../docs/gpuix-capabilities.md", import.meta.url),
+  ),
+  "utf8",
+);
+
+describe("the announcement an alert page may promise", () => {
+  it("rests on the record's verdict, not on a screen reader's behaviour", () => {
+    const verdict = pipe(
+      Arr.findFirst(capabilityRecord.split("\n"), (line) =>
+        line.startsWith("| Live regions"),
+      ),
+      Option.match({
+        onNone: () => "",
+        onSome: (row) => row,
+      }),
+    );
+    // The page's sentence is only true while the runtime publishes no live
+    // region; when that changes, both the page and this case must move.
+    expect(
+      verdict,
+      "docs/gpuix-capabilities.md no longer records Live regions as unsupported",
+    ).toContain("not supported");
+    expect(verdict).toContain("aria-live");
+  });
+
+  it("calls the role a marker and names the gap", () => {
+    const page = read("alert.mdx");
+    // The retracted claim: `role="alert"` is a role, not a live region.
+    expect(page).not.toContain("a live region, announced when it appears");
+    expect(page).toContain("marker");
+    expect(page).toMatch(/no\s+`aria-live`/);
+  });
+
+  it("tells the reader what to do instead", () => {
+    // No mechanism means the copy has to carry the change, or the focus does.
+    expect(read("alert.mdx")).toContain("move the focus");
   });
 });

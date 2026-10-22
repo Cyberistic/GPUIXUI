@@ -107,21 +107,26 @@ this is a code guarantee rather than a behaviour-suite assertion.)
 
 ## Accessibility
 
-- The root is `role="alert"` — a live region, announced when it appears. An alert
-  that appears out of nowhere mid-sentence should be used sparingly.
+- The root is `role="alert"` — a **marker in the accessibility tree**, not a
+  promise of an announcement: the pinned runtime's `aria-*` set is closed with no
+  `aria-live`, so nothing is announced when the alert appears
+  (`docs/gpuix-capabilities.md` → Live regions). Make the `AlertTitle` say what
+  changed, or move the focus to the message, when the change must be noticed.
 - The dismiss control is a focusable `role="button"` with `label` as its
   accessible name, activated by Enter or Space as well as a click. Its `testId` is
   `alert-dismiss`.
-- `AlertIcon` is decorative: it is not announced, so the title must say what the
+- `AlertIcon` is decorative: it carries no role, so the title must say what the
   state is.
 - Colour is never the only signal — every alert has an `AlertTitle`.
 - A part outside its root fails loudly instead of rendering with the wrong tone.
 
 ## Limitations
 
-- **The live-region announcement itself cannot be verified here.** The test
-  renderer exposes the accessibility tree (the suite asserts `role="alert"`), but
-  a real screen reader's announcement needs a real window.
+- **No live-region announcement is possible on 0.11.0.** `role="alert"` reaches
+  the accessibility tree (the suite asserts it), but the runtime publishes no
+  `aria-live`, so an alert is not read out when it appears; a real screen reader's
+  announcement has no mechanism to measure. What to do instead: put the state in
+  the title and move the focus to the message when the reader must notice it.
 - The dismiss control is this package's local stand-in for
   `@gpuixui/primitives`' `IconButton` (`TODO.md` → Interlocks); it is replaced when
   that package lands.
