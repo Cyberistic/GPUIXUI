@@ -44,6 +44,12 @@ export const liveRegistry = [
     capability: "focus",
   },
   {
+    id: "focus-ring-offset",
+    title:
+      "Focus: an outline offset leaves a gap of the page and takes no layout space",
+    capability: "focus",
+  },
+  {
     id: "keyboard-focus-dim",
     title: "Focus: the runtime dims other focusables, and one element opts out",
     capability: "focus",

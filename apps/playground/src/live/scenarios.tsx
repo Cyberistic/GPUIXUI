@@ -778,6 +778,7 @@ import {
   isColour,
   type PaintPoint,
 } from "./box-paint.js";
+import { bandPoint, leftOf, RING_OFFSET } from "./ring-offset.js";
 import {
   aroundBox,
   ELEVATION_BLUR,
@@ -877,6 +878,94 @@ const FocusVisibleProbe = (): ReactNode => {
       <Sample testId="press-ring" label="press target" />
       <Sample testId="tab-ring" label="tab target" />
       <Sample testId="programmatic-ring" label="programmatic target" />
+    </div>
+  );
+};
+
+/** One focusable sample whose outline sits `offset` points outside its box. */
+const OffsetRingSample = ({
+  testId,
+  offset,
+  label,
+}: {
+  readonly testId: string;
+  readonly offset: number;
+  readonly label: string;
+}): ReactNode => {
+  const theme = useTheme();
+  const ring = keyboardFocusRing(theme);
+  return (
+    <div
+      testId={testId}
+      tabIndex={0}
+      role="button"
+      style={{
+        width: 240,
+        padding: theme.spacing.lg,
+        borderRadius: theme.radius.md,
+        backgroundColor: theme.colors.muted,
+        ...ring,
+        focusVisible: { ...ring.focusVisible, outlineOffset: offset },
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {label}
+      </text>
+    </div>
+  );
+};
+
+/**
+ * Two identical controls, one with the ring flush to its border box and one
+ * with the theme's gap, plus a sibling that must not move when either appears.
+ *
+ * The gap is read on the page between the two: offset 2 puts the line three
+ * points out, so the point one point out is the page and the sibling's `y` is
+ * the layout proof.
+ */
+const FocusRingOffsetProbe = (): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      testId="focus-ring-offset-probe"
+      style={{
+        width: 720,
+        height: 360,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.lg,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        An outline takes no layout space; offset 2 leaves the page behind it.
+      </text>
+      <OffsetRingSample testId="ring-flush" offset={0} label="flush ring" />
+      <OffsetRingSample
+        testId="ring-offset"
+        offset={RING_OFFSET}
+        label="offset ring"
+      />
+      <div
+        testId="ring-neighbour"
+        style={{
+          width: 240,
+          height: theme.spacing.xl,
+          borderRadius: theme.radius.sm,
+          backgroundColor: theme.colors.card,
+        }}
+      />
     </div>
   );
 };
@@ -3413,6 +3502,185 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "programmatic focus after a key paints the focus ring",
       (yield* paintedPixels(ctx, "programmatic-after-keyboard", ring)) > 0,
       true,
+    );
+  });
+
+/** A box as one comparable scalar, so a moved control names its new box. */
+const boxText = (box: Smoke.Bounds): string =>
+  `${box.x},${box.y},${box.width},${box.height}`;
+
+/**
+ * The colour at `point`, failing by name when the point is outside the capture.
+ *
+ * A missing sample is not a mismatch: a probe that reads `None` cannot tell a
+ * gap from a frame that cropped the control, so the read is its own check.
+ */
+const colourAtPoint = (
+  ctx: Smoke.AsyncSmokeContext,
+  frame: Pixels.Pixels,
+  point: Point,
+  scale: number,
+  label: string,
+): Effect.Effect<Pixels.Rgba, Smoke.SmokeAssertionError> =>
+  ctx.expectSome(label, colourAt(frame, point, scale));
+
+/** Whether `sample` is the paint `expected` within the frame's tolerance. */
+const expectPaint = (
+  ctx: Smoke.AsyncSmokeContext,
+  label: string,
+  sample: Pixels.Rgba,
+  expected: Pixels.Rgba,
+): Effect.Effect<void, Smoke.SmokeAssertionError> =>
+  ctx.expectEqual(label, differs(sample, expected), false);
+
+const focusRingOffsetSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("focus-ring-offset-probe");
+    const theme = palettes.dark;
+    const ring = yield* ctx.expectSome(
+      "the theme names a ring colour",
+      Option.fromNullishOr(Pixels.hexToRgba(theme.colors.ring)),
+    );
+    const page = yield* ctx.expectSome(
+      "the theme names the page fill",
+      Option.fromNullishOr(Pixels.hexToRgba(theme.colors.background)),
+    );
+    const line = theme.borderWidth.strong;
+
+    const flushBefore = yield* paintedBox(ctx, "ring-flush");
+    const offsetBefore = yield* paintedBox(ctx, "ring-offset");
+    const neighbourBefore = yield* paintedBox(ctx, "ring-neighbour");
+
+    const window = yield* ctx.host.windowSize();
+    yield* ctx.host.capture("ring-offset-rest");
+    const rest = yield* ctx.host.pixels("ring-offset-rest");
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(rest, window),
+    );
+    const restBand = yield* colourAtPoint(
+      ctx,
+      rest,
+      bandPoint(offsetBefore, RING_OFFSET, line),
+      scale,
+      "the rest frame holds the band the offset ring will paint",
+    );
+    yield* expectPaint(
+      ctx,
+      "a control at rest paints no outline outside its box",
+      restBand,
+      page,
+    );
+
+    // A press focuses the flush sample without entering keyboard mode, then Tab
+    // walks to the offset sample and paints only its ring.
+    yield* ctx.host.click("ring-flush");
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab carries focus to the offset control",
+      yield* focusedAfterPaint(ctx),
+      "ring-offset",
+    );
+    yield* ctx.host.capture("ring-offset");
+    const offsetFrame = yield* ctx.host.pixels("ring-offset");
+
+    yield* ctx.expectEqual(
+      "the offset control paints a ring",
+      (yield* paintedPixels(ctx, "ring-offset", ring)) > 0,
+      true,
+    );
+    yield* expectPaint(
+      ctx,
+      "the ring is painted in the middle of the band the offset names",
+      yield* colourAtPoint(
+        ctx,
+        offsetFrame,
+        bandPoint(offsetBefore, RING_OFFSET, line),
+        scale,
+        "the offset frame holds the ring's band",
+      ),
+      ring,
+    );
+    yield* expectPaint(
+      ctx,
+      "the page shows through the gap between the box and the ring",
+      yield* colourAtPoint(
+        ctx,
+        offsetFrame,
+        leftOf(offsetBefore, RING_OFFSET / 2),
+        scale,
+        "the offset frame holds the gap",
+      ),
+      page,
+    );
+    yield* expectPaint(
+      ctx,
+      "the offset ring paints nothing beyond the band it names",
+      yield* colourAtPoint(
+        ctx,
+        offsetFrame,
+        leftOf(offsetBefore, RING_OFFSET + line + 2),
+        scale,
+        "the offset frame holds the point beyond the band",
+      ),
+      page,
+    );
+
+    // The outline is a paint, not layout: the focused control and its sibling
+    // report the same boxes as before the ring appeared.
+    yield* ctx.expectEqual(
+      "the ring does not move the control it surrounds",
+      boxText(yield* paintedBox(ctx, "ring-offset")),
+      boxText(offsetBefore),
+    );
+    yield* ctx.expectEqual(
+      "the ring takes no space in the layout beside the control",
+      boxText(yield* paintedBox(ctx, "ring-neighbour")),
+      boxText(neighbourBefore),
+    );
+
+    // Tab wraps to the flush sample: the same outline at offset 0 sits on the
+    // border box, so the points the offset ring painted swap their paint.
+    yield* ctx.host.key("tab");
+    yield* ctx.expectEqual(
+      "Tab wraps to the flush control",
+      yield* focusedAfterPaint(ctx),
+      "ring-flush",
+    );
+    yield* ctx.host.capture("ring-flush");
+    yield* ctx.expectEqual(
+      "the flush control paints a ring",
+      (yield* paintedPixels(ctx, "ring-flush", ring)) > 0,
+      true,
+    );
+    yield* expectPaint(
+      ctx,
+      "a flush ring is painted on the control's own edge",
+      yield* colourAtPoint(
+        ctx,
+        yield* ctx.host.pixels("ring-flush"),
+        bandPoint(flushBefore, 0, line),
+        scale,
+        "the flush frame holds the ring's band",
+      ),
+      ring,
+    );
+    yield* expectPaint(
+      ctx,
+      "a flush ring leaves the page where the offset ring would paint",
+      yield* colourAtPoint(
+        ctx,
+        yield* ctx.host.pixels("ring-flush"),
+        bandPoint(flushBefore, RING_OFFSET, line),
+        scale,
+        "the flush frame holds the point the offset band would use",
+      ),
+      page,
+    );
+    yield* ctx.expectEqual(
+      "the flush ring does not move its own control",
+      boxText(yield* paintedBox(ctx, "ring-flush")),
+      boxText(flushBefore),
     );
   });
 
@@ -23011,6 +23279,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "focus-visible",
     view: () => <FocusVisibleProbe />,
     steps: focusVisibleSteps,
+  },
+  "focus-ring-offset": {
+    id: "focus-ring-offset",
+    view: () => <FocusRingOffsetProbe />,
+    steps: focusRingOffsetSteps,
   },
   "keyboard-focus-dim": {
     id: "keyboard-focus-dim",

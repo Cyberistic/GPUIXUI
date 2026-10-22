@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-79 probes a real window can prove, of which eighteen mount shipped
+80 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -876,6 +876,32 @@ Three consequences, which is what plan `053` needed:
    programmatic ring stays for that path.
 3. `keyboardFocusDim` is on by default and tracks the same keyboard-input state:
    it dims other focusables exactly when the ring appears.
+
+### `focus-ring-offset` — measured on 0.11.0 here
+
+The tokens contract measures the ring `keyboardFocusRing` draws at
+`outlineOffset: 0` and records that a focused filled action paints it in its own
+fill; a ring separated from the fill is the fix, but only if the runtime honours
+the offset **and** the line still takes no layout space. The probe paints two
+identical 240 pt controls — one flush, one at `RING_OFFSET` 2 — plus a
+non-focusable sibling, drives the ring with `Tab` and reads the frame.
+
+- **The offset is honoured.** After `Tab` the offset control paints the theme's
+  `ring` in the middle of its band — offset 2 plus the 2 pt
+  `borderWidth.strong` line, three points out — and the point one point out is
+  the page. That gap is the whole reason to move the line.
+- **A flush ring has no gap.** `Tab` again wraps to the flush control; its ring
+  sits on the border box's own edge, and the point three points out is the page,
+  so the two samples cannot be confused for one another.
+- **The outline is a paint, not layout.** The focused control, the other control
+  and the sibling report identical `x,y,width,height` before and after the ring
+  appears — the promise `host.d.ts` makes for `outline*`.
+- **It can fail.** Painting the "offset" sample at offset 0 fails
+  `the ring is painted in the middle of the band the offset names`
+  (`expected false, got true`, exit `1`).
+
+Captures: `.artifacts/live/ring-offset-rest.png`, `ring-offset.png` and
+`ring-flush.png`.
 
 ### `keyboard-focus-dim` — measured on 0.11.0 here
 
@@ -4679,8 +4705,8 @@ narrower. Each deviation is deliberate and measured:
   `syntax-palette`, `press-routing-lifecycle`, `list-row-press`,
   `column-resize-lifecycle`, `button-activation-lifecycle` and
   `date-picker-lifecycle`, `data-table-lifecycle`, `virtual-table-lifecycle` and
-  `data-tree-lifecycle`, `keyboard-scroll-lifecycle` (twenty-one probes, each run
-  alone).
+  `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`
+  (twenty-two probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
