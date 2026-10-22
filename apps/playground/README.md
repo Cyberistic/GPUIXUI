@@ -37,10 +37,10 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-thirty-six probes a real window can prove, of which ten mount shipped
+thirty-seven probes a real window can prove, of which eleven mount shipped
 `@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
-the command palette, the tabs, the popover, the message scroller, the combobox
-and the modal focus rule), five mount
+the command palette, the tabs, the list, the popover, the message scroller, the
+combobox and the modal focus rule), five mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider, Text and Tooltip), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
@@ -950,23 +950,25 @@ the pill covers the selected trigger, not that a screenshot looks right.
 | Step | Check |
 | ---- | ----- |
 | mount | `value=overview changes=0`; the pill is within 2px of the trigger's `x`, `width` and `height`; `tabs-panel-reports` has no bounds |
-| `Tab` | focus is `tabs-overview`; the trigger's own `onFocus` counter is **0** |
+| `Tab` | focus is `tabs-overview`; the trigger's `onFocus` counter is **1** (re-measured 2026-10-22 — a traversal does deliver the event at HEAD; the earlier run read the frame before it arrived) |
 | first `right` | focus is `tabs-reports`, `value=reports changes=1`, the reports panel paints and the overview panel has no bounds; the pill moved to the reports trigger |
 | second `right` | focus is `tabs-archive` — the disabled `settings` is skipped — `value=archive changes=2` |
 | `Home` / `End` | `value=overview changes=3`, then `value=archive changes=4` |
 | press `tabs-reports` | `value=reports changes=5`, the pill follows the pressed trigger |
 | press `tabs-settings` | the readout does not change — a disabled tab ignores a press |
 
-**The runtime gap this probe found, and the fix it now measures.** A window
-focuses the trigger on a `Tab` traversal (the renderer's focus id is
-`tabs-overview`) but does not run React's `onFocus` (the counter stays `0`), so
-a row seeded only from `onFocus` is empty and the first arrow re-anchored at the
-first enabled tab. The probe originally asserted that defect; `@gpuixui/components`
-fixed it in `moveOrigin` (`src/tabs/logic.ts`), which anchors a move on the
-trigger that sent the key (`event.elementId`), then the recorded row, then the
-selection. The probe now asserts the fixed direction, and the `focuses=0` check
-stays: it is the measurement the key-origin anchor exists for. A unit suite
-cannot make it: the `TestRenderer`'s `focusElement` does fire `onFocus`.
+**The bug this probe found, and the fix it measures.** The probe was written
+when a window's `Tab` traversal focused a trigger without running React's
+`onFocus`: a row seeded only from `onFocus` was empty and the first arrow
+re-anchored at the first enabled tab. `@gpuixui/components` fixed it in
+`moveOrigin` (`src/tabs/logic.ts`), which anchors a move on the trigger that
+sent the key (`event.elementId`), then the recorded row, then the selection.
+Re-measured on 2026-10-22 at HEAD, the traversal **does** deliver `onFocus`
+(the counter is `1`), so the anchor is no longer the only thing carrying the
+origin — but it is still what makes the first arrow move off the traversal's
+tab rather than the selection, and the probe asserts that direction. The
+components' page and the capability record still state the old gap; that is an
+interlock row in `TODO.md` (owner: components, docs-site).
 
 27 checks, `--only tabs-lifecycle`, green on 0.11.0; the paint guards
 `paintedBox` adds are counted in that number. Negative controls measured:
@@ -999,6 +1001,47 @@ listens to both `mouseDown` and `mouseMove`.
 (`expected a string containing "centred=true", got "value=0 changes=0
 centred=false"`, exit `1`).
 
+### `list-lifecycle` — measured on 0.11.0 here
+
+The shipped `List` selection model in a window. The list is the keyboard and
+selection foundation the menus and tabs reuse: a roving tab stop, arrow moves
+that skip disabled rows, Enter/Space activation, Home/End, type-ahead, and
+`Cmd+A` / `Shift+Arrow` in multiple mode. Its 38 behaviour tests run in a
+`TestRenderer`; a window is where a key event has to bubble from the **focused
+row** to the list, which is the origin rule `list/origin.ts` exists for.
+
+Two lists share the five rows (`ada`, `grace`, a disabled `alan`, `linus`,
+`margaret`), one single-select and one multiple-select, each with its own
+readout.
+
+| State | Measured |
+| ----- | -------- |
+| a press on `Grace` | `selected=grace changes=1 activates=1` and the focus is the pressed row |
+| `down` | focus moves to `Linus` — the disabled `alan` is skipped — and the selection does not move |
+| `Enter` | selects the focused row and runs its action (`selected=linus changes=2 activates=2`) |
+| `up`, then `Space` and its release | `selected=grace changes=3`; the action count stays `2`, because Space selects and never activates |
+| `Home` / `End` / `Enter` | focus reaches `Ada`, then `Margaret`, and Enter selects the row End reached (`changes=4 activates=3`) |
+| typing `g` | focus jumps to `Grace` without selecting; the next Enter acts from there (`changes=5 activates=4`) |
+| a press on disabled `Alan` | selection and activation do not change, though the pointer **does** focus the row; `Enter` still chooses nothing and `down` leaves it for `Linus` |
+| multiple: press `Ada` | `selected=ada changes=1` (a plain press replaces) |
+| `Shift+down` | extends from the pressed row (`selected=ada,grace changes=2`) |
+| `Cmd+A` | selects every enabled row (`selected=ada,grace,linus,margaret changes=3`) |
+| a press on `Grace` | replaces the select-all (`selected=grace changes=4`) |
+| a press on disabled `Alan` | leaves it (`changes=4`) |
+
+23 checks, `--only list-lifecycle`, green on 0.11.0. The disabled-row detail is
+the measured part worth keeping: a row that cannot be chosen can still take the
+pointer's focus, because the press focuses whatever has a tab index — the
+component refuses only the selection and activation, and the arrow path leaves
+the row.
+
+Two negative controls measured, each exit `1`: enabling `alan` fails
+`down skips the disabled row` (`expected "single-row-linus", got
+"single-row-alan"`), and dropping the list's `onActivate` fails the press check
+(`expected "selected=grace changes=1 activates=1", got "… activates=0"`).
+Evidence: `.artifacts/live/list-single.png`,
+`.artifacts/live/list-multiple.png`.
+
 ### `tooltip-lifecycle` — measured on 0.11.0 here
 
 The shipped `Tooltip` (`@gpuixui/primitives`) in a window. A tooltip has no state
@@ -1012,24 +1055,26 @@ tip's text is painted.
 | Step | Check |
 | ---- | ----- |
 | mount | the tip's text is not painted; `enters=0 leaves=0` |
-| `Tab` | focus lands on `tooltip-trigger` — and the tip stays **closed** (the measured gap below) |
+| `Tab` | focus lands on `tooltip-trigger` and the tip **opens** (re-measured 2026-10-22; the earlier run read the frame before `onFocus` arrived) |
+| `Escape` after the traversal | closes the tip and leaves the focus on the trigger |
 | hover the trigger | `enters=1`, the tip paints its content, and the layout report puts it **above** the trigger on `side="top"`, overlapping it horizontally |
 | hover a sibling | `leaves=1` and the tip stops painting — leaving closes it (80ms close timer) |
 | hover again, `Escape` | the tip paints again, then Escape dismisses it while the focus stays on the trigger |
 
-12 checks, `--only tooltip-lifecycle`, green on 0.11.0; capture
+14 checks, `--only tooltip-lifecycle`, green on 0.11.0; capture
 `.artifacts/live/tooltip-open.png`. Negative control, measured: mounting the
 trigger without the `Tooltip` wrapper fails
 `a hover opens the tip with its own content` (`expected true, got false`,
 exit `1`).
 
-**Measured gap — a tooltip does not open on keyboard focus in a window.** The
-`Tab` traversal focuses the trigger (`getFocusedElementId` reports it) but React's
-`onFocus` never runs — the same runtime gap the `tabs-lifecycle` probe found. The
-GPUix tooltip opens on `onFocus`, so the documented "hover or keyboard focus"
-path loses its second half in a real window; the tip's text still reaches a
-screen reader, because the wrapper publishes it as the trigger's
-`aria-description`. Recorded as an interlock in `TODO.md` (owner: primitives).
+**Corrected measurement — keyboard focus does open the tip.** The old section
+reported a gap: a `Tab` traversal focused the trigger while React's `onFocus`
+never ran, so the tip stayed closed. Re-measured on 2026-10-22 at HEAD, the
+event **does** arrive, so the documented "hover or keyboard focus" path is real
+in a window; the earlier check read the frame before the event was delivered.
+The `tabs-lifecycle` probe measured the same change (its `focuses` counter is
+now `1`). The component docs and the capability record still describe the old
+gap and are recorded as an interlock in `TODO.md` (owner: primitives, docs-site).
 
 `AsyncSmokeHost` gained `hover(testId)` for this: the automation protocol's own
 `hover` moves the pointer onto the element's centre without pressing, which is

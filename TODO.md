@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 80/80
+`[x]` `[██████████]` 81/81
 
 `[x]` Measure the **text a selected row keeps** — `contrastPairs` held a selection's second line (`mutedForeground`/`selected`) and the page roles on the `hover`/`active`/`accent` washes, and **nothing** measured the pair the components paint for the row's *title*: `LIST_ITEM_TITLE`'s recipe is `text-foreground` (`packages/tw/src/recipes.ts`) and `list.tsx` fills `selected` behind it, so a brand that brings its selection close to its page erases the label it just selected while the secondary line beside it still passes; the row also sets `color: selectedForeground` and tints a wash under itself (`accent` hovered, `active` pressed), so the role it hands its children was a pair on no wash. Four pairs joined `contrastPairs` (65 → 69) — `foreground`/`selected` at the body floor and `selectedForeground` on `hover`, `active` and `accent` at the secondary floor. Every shipped, high-contrast, platform and authored theme already cleared both (tightest: the base dark theme's pressed wash at 7.31:1), so no palette moved; the pairs close the gap a brand could fall into. `contrast.test.ts`'s `the text a selected row keeps` suite holds the coverage, reads both painters so the pair cannot outlive the paint, reports a `selected` set to `foreground` at 1.00:1 and a wash matching `selectedForeground`, and sweeps all 16 styles to the floor with the printed number; `docs.test.ts` reads the catalogue's 69. Directions measured: removing the four pairs fails three cases by name plus the catalogue count, and a stale printed `7.32` fails the sweep case. Docs in `docs/tokens.md` §Contrast, `docs/design-system.md` §8/§9 and the `Contrast contract` row. The List's own title still overrides the row's `selectedForeground`, so its adoption is the interlock row below
 
@@ -511,9 +511,34 @@ a workaround for two live sessions sharing one worktree; see
 
 `[x]` Measure the **ring on the fill it hugs** — `contrastPairs` held the ring to the strips a control *rests* on (page, card, popover, `muted`, `secondary`) and to nothing the same element paints behind itself: `list.tsx` fills `selected`, tints `accent` while hovered and `active` while pressed, and declares the keyboard ring on that row; a ghost or outline action tints the same two washes under its ring; and a field's ring borders the field's own `input` fill, which is not the page it sits on. `outlineOffset: 0` draws the line on the border box, so its inner side touches the fill and its outer side the strip behind it, and a ring that matches the row it surrounds is a focus state nobody sees. Five pairs joined `contrastPairs` (69 → 74) at `contrastFloors.boundary`: `ring` on `input`, `selected`, `hover`, `active` and `accent`. **It found the documented house theme**: its dark ring `#8A6EFF` sat at **2.96:1** on its own `selected` wash (`#3E317E`), so a focused selected row painted its focus line in the row's colour; the ring is now the light violet `#9B8CFF` (3.90:1 there, and it clears the floor on all five fills), which is also the value the other documented brand already used. Every shipped, high-contrast, platform and authored theme clears its variant's floor, the tightest being the base light theme's pressed wash at **3.04:1** — recorded rather than widened, because the ring is a 2px line on a state the reader's own pointer created. `contrast.test.ts`'s `the ring on the fill it hugs` suite reads both painters (so the pairs cannot outlive the paint), reports a ring painted the selected fill and one the pressed wash hides at 1.00:1, and sweeps all 16 styles while holding the catalogue's printed 3.04 to the same computation. Directions measured: removing one pair fails the coverage case, the erased-ring case and the printed count by name; a stale printed `3.05` fails the sweep case; reverting the house ring fails `platforms.test.ts`'s both-modes case. Docs in `docs/tokens.md` §Contrast, `docs/design-system.md` §9, the package README's platform snippet and the `Contrast contract` inventory row.
 
+`[x]` Measure the **fully opaque alpha byte** a theme can write — `alpha(color, 1)` is the package's own helper and returns `#RRGGBBFF`; the renderer paints it and `invalidColorRoles` accepts it, while `src/hex.ts` read any alpha byte as a share, so **every pair a role written that way touched** was reported unmeasurable and the gate failed a palette it passes in six digits — the same false-failure class as the shorthand, one form further on. An `FF` byte is no share, so `measuredHex` now reports no alpha for it and the colour measures as its six-digit twin (any byte below `FF` still marks a translucent value; `alphaOf` still reads `1`, and `blend` now returns the measurable six-digit form for an opaque base instead of carrying an opaque byte forward). `color.test.ts`'s `the hex dialect the contracts measure` gains `measures a fully opaque alpha byte` (long, bare, 4-digit and `alpha(..., 1)` forms through `contrastRatio`, `alphaOf` and `blend`), and `audit.test.ts` gains `a brand whose colours carry a fully opaque alpha byte`, which rewrites every opaque role of the high-contrast light palette through `alpha(..., 1)` (leaving the three designed shares — `selection`, `overlay`, `shadow` — alone) and proves the audit's contrast report is empty and `passed` matches the six-digit theme's. Three directions measured: before the fix the dialect case and both audit cases fail (`expected undefined to be close to 21`, `passed` false), and the fix leaves 1628 tokens tests green. Docs in `docs/tokens.md` §`alpha`/§`alphaOf`/§Paint-ready values/§Limitations, `docs/design-system.md` §9, the package README and the `Colour grammar` row
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 60/60
+`[x]` `[██████████]` 61/61
+
+`[x]` Land the `list-lifecycle` live probe and measure **the selection model
+      every menu and tab reuses** — the shipped `List` had 38 `TestRenderer`
+      tests and no window proof of the path that matters: a key event bubbling
+      from the focused row to the list, which is the origin rule
+      `list/origin.ts` exists for. Measured on 0.11.0: a press selects and
+      focuses `grace` (`selected=grace changes=1 activates=1`); `down` skips the
+      disabled `alan` and moves focus to `linus` without selecting; `Enter`
+      selects the focused row and runs its action; `Space` selects on the
+      release and never activates; `Home`/`End` reach the edges and Enter acts
+      on the row they reached; typing `g` jumps focus to `grace` without
+      selecting and the next Enter acts from there; a press on the disabled
+      `alan` can still focus the row but selects/activates nothing and `down`
+      leaves it. Multiple mode: a plain press replaces (`selected=ada`),
+      `Shift+down` extends (`selected=ada,grace`), `Cmd+A` selects every enabled
+      row, and a press replaces that selection. 23 checks,
+      `--only list-lifecycle`, green on 0.11.0. Two negative controls measured
+      (enabling `alan`: `down skips the disabled row — expected
+      "single-row-linus", got "single-row-alan"`; dropping `onActivate`:
+      `activates=0`, exit `1` each). `src/live/list.test.ts` (2 cases) holds the
+      row order and the type-ahead letter the checks stand on. Evidence:
+      `apps/playground/README.md` §`list-lifecycle`,
+      `.artifacts/live/list-*.png`
 
 `[x]` Land the `combobox-lifecycle` live probe and measure **the picker a
       window had never driven** — the shipped `Combobox` wraps GPUix's headless

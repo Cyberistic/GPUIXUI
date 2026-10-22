@@ -97,9 +97,15 @@ export const liveRegistry = [
     capability: "input",
   },
   {
+    id: "list-lifecycle",
+    title:
+      "Input: the shipped List selects and focuses by press, moves by arrow over a disabled row, selects on Enter and Space, and extends with Shift and Cmd+A",
+    capability: "input",
+  },
+  {
     id: "tooltip-lifecycle",
     title:
-      "Overlay: the shipped Tooltip opens on hover above its trigger, closes on leave and dismisses on Escape, while a keyboard focus does not open it",
+      "Overlay: the shipped Tooltip opens on hover and on a keyboard focus above its trigger, closes on leave and dismisses on Escape",
     capability: "overlay",
   },
   {

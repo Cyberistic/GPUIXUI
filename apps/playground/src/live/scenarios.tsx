@@ -50,6 +50,9 @@ import {
   DialogTitle,
   DialogTrigger,
   DropdownMenu,
+  List,
+  ListItem,
+  ListItemTitle,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
@@ -149,6 +152,7 @@ import {
 } from "./loading-row.js";
 import { REVIEWERS } from "./combobox.js";
 import { listAnchorOf } from "./host.js";
+import { LIST_ROWS, TYPEAHEAD_LETTER, type ListRow } from "./list.js";
 import {
   TRANSCRIPT_PAGE_ROWS,
   TRANSCRIPT_ROW_HEIGHT,
@@ -2987,26 +2991,26 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     // Keyboard first, from the window's own traversal: Tab enters the list on
     // the roving tab stop.
     yield* ctx.host.key("tab");
-    yield* Effect.sleep(SETTLE);
+    yield* Effect.sleep(Duration.millis(150));
     yield* ctx.expectEqual(
       "Tab stops on the selected trigger",
       yield* focusedId(ctx),
       "tabs-overview",
     );
-    // Measured on 0.11.0: the window focuses the element but delivers no React
-    // `onFocus`, so the list's `active` row stays empty after a traversal. The
-    // component anchors an arrow move on the trigger that sent the key
-    // (`tabs/logic.ts`), which is what makes the first arrow move off the
-    // traversal's tab instead of re-anchoring at the first enabled one.
+    // Re-measured 2026-10-22: a window's `Tab` traversal **does** deliver React's
+    // `onFocus` at HEAD, so the trigger's counter is 1. The earlier probe read
+    // the frame before the event arrived and recorded 0; the component's
+    // key-origin anchor still matters, because it is what makes the first arrow
+    // move off the traversal's tab rather than re-anchor on the selection.
     yield* ctx.expectEqual(
-      "a traversal delivers no onFocus to the trigger",
+      "a traversal delivers onFocus to the trigger",
       yield* ctx.host.text("tabs-focus-readout"),
-      "focuses=0",
+      "focuses=1",
     );
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
-      "the first arrow moves off the traversal's tab without an onFocus",
+      "the first arrow moves off the traversal's tab",
       yield* focusedId(ctx),
       "tabs-reports",
     );
@@ -4124,6 +4128,285 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/** One row of the list probe: a value, a title and the disabled flag. */
+const ListRowItem = ({
+  row,
+  prefix,
+}: {
+  readonly row: ListRow;
+  readonly prefix: string;
+}): ReactNode => (
+  <ListItem
+    value={row.value}
+    textValue={row.title}
+    disabled={row.disabled}
+    testId={`${prefix}-row-${row.value}`}
+  >
+    <ListItemTitle>{row.title}</ListItemTitle>
+  </ListItem>
+);
+
+/**
+ * `list-lifecycle` — the shipped `List` selection model in a real window.
+ *
+ * The list is the keyboard and selection foundation the menus and tabs reuse:
+ * a roving tab stop, arrow moves that skip disabled rows, Enter/Space
+ * activation (Space on the release), Home/End, type-ahead, and `Cmd+A` /
+ * `Shift+Arrow` in multiple mode. Its 38 behaviour tests run in a
+ * `TestRenderer`; the window is where the key event has to bubble from the
+ * focused row to the list, which is the origin rule `keyOrigin` exists for.
+ */
+const ListProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [single, setSingle] = useState("");
+  const [singleChanges, setSingleChanges] = useState(0);
+  const [activations, setActivations] = useState(0);
+  const [multi, setMulti] = useState<ReadonlyArray<string>>([]);
+  const [multiChanges, setMultiChanges] = useState(0);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: 340,
+          gap: 6,
+        }}
+      >
+        <text
+          testId="list-single-readout"
+          style={{
+            ...textStyle(theme, "code"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          {`selected=${single === "" ? "none" : single} changes=${singleChanges} activates=${activations}`}
+        </text>
+        <List
+          testId="list-single"
+          selectionMode="single"
+          onValueChange={(value) => {
+            setSingle(value);
+            setSingleChanges((current) => current + 1);
+          }}
+          onActivate={() => setActivations((current) => current + 1)}
+        >
+          {Arr.map(LIST_ROWS, (row) => (
+            <ListRowItem key={row.value} row={row} prefix="single" />
+          ))}
+        </List>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: 340,
+          gap: 6,
+        }}
+      >
+        <text
+          testId="list-multi-readout"
+          style={{
+            ...textStyle(theme, "code"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          {`selected=${multi.length === 0 ? "none" : Arr.join(multi, ",")} changes=${multiChanges}`}
+        </text>
+        <List
+          testId="list-multi"
+          selectionMode="multiple"
+          onValueChange={(values) => {
+            setMulti(values);
+            setMultiChanges((current) => current + 1);
+          }}
+        >
+          {Arr.map(LIST_ROWS, (row) => (
+            <ListRowItem key={row.value} row={row} prefix="multi" />
+          ))}
+        </List>
+      </div>
+    </div>
+  );
+};
+
+const listSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("list-single-readout");
+    yield* Effect.sleep(SETTLE);
+
+    // 1. A press selects and focuses the row it landed on.
+    yield* ctx.expectEqual(
+      "the single list starts with nothing selected",
+      yield* ctx.host.text("list-single-readout"),
+      "selected=none changes=0 activates=0",
+    );
+    yield* ctx.host.click("single-row-grace");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press selects the row and reports one activation",
+      yield* ctx.host.text("list-single-readout"),
+      "selected=grace changes=1 activates=1",
+    );
+    yield* ctx.expectEqual(
+      "a press focuses the row",
+      yield* focusedId(ctx),
+      "single-row-grace",
+    );
+
+    // 2. An arrow moves real focus and skips the disabled row.
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "down skips the disabled row",
+      yield* focusedId(ctx),
+      "single-row-linus",
+    );
+    yield* ctx.expectEqual(
+      "an arrow moves focus without changing the selection",
+      yield* ctx.host.text("list-single-readout"),
+      "selected=grace changes=1 activates=1",
+    );
+
+    // 3. Enter selects the row focus landed on.
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Enter selects the focused row and runs its action",
+      yield* ctx.host.text("list-single-readout"),
+      "selected=linus changes=2 activates=2",
+    );
+
+    // 4. Space selects on the release, and never runs the action.
+    yield* ctx.host.key("up");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("space");
+    yield* ctx.host.keyUp("space");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Space on the release selects the focused row",
+      yield* ctx.host.text("list-single-readout"),
+      "selected=grace changes=3 activates=2",
+    );
+
+    // 5. Home/End move to the edges; Enter acts on what focus names.
+    yield* ctx.host.key("home");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Home focuses the first enabled row",
+      yield* focusedId(ctx),
+      "single-row-ada",
+    );
+    yield* ctx.host.key("end");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "End focuses the last enabled row",
+      yield* focusedId(ctx),
+      "single-row-margaret",
+    );
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Enter selects the row End reached",
+      yield* ctx.host.text("list-single-readout"),
+      "selected=margaret changes=4 activates=3",
+    );
+
+    // 6. A typed letter jumps focus, and the next Enter acts from there.
+    yield* ctx.host.key(TYPEAHEAD_LETTER);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "type-ahead focuses the matching row",
+      yield* focusedId(ctx),
+      "single-row-grace",
+    );
+    yield* ctx.expectEqual(
+      "the typed jump does not select",
+      yield* ctx.host.text("list-single-readout"),
+      "selected=margaret changes=4 activates=3",
+    );
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Enter acts on the row the typed jump reached",
+      yield* ctx.host.text("list-single-readout"),
+      "selected=grace changes=5 activates=4",
+    );
+
+    // 7. A disabled row can take the pointer's focus but is never chosen.
+    yield* ctx.host.click("single-row-alan");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a disabled row ignores the press",
+      yield* ctx.host.text("list-single-readout"),
+      "selected=grace changes=5 activates=4",
+    );
+    yield* ctx.expectEqual(
+      "the pointer can still focus a disabled row",
+      yield* focusedId(ctx),
+      "single-row-alan",
+    );
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Enter cannot choose the focused disabled row",
+      yield* ctx.host.text("list-single-readout"),
+      "selected=grace changes=5 activates=4",
+    );
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow leaves the disabled row for the next enabled one",
+      yield* focusedId(ctx),
+      "single-row-linus",
+    );
+    yield* ctx.host.capture("list-single");
+
+    // 8. Multiple mode: a plain press replaces, Shift extends, Cmd+A selects.
+    yield* ctx.expectEqual(
+      "the multiple list starts empty",
+      yield* ctx.host.text("list-multi-readout"),
+      "selected=none changes=0",
+    );
+    yield* ctx.host.click("multi-row-ada");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a plain press replaces the selection",
+      yield* ctx.host.text("list-multi-readout"),
+      "selected=ada changes=1",
+    );
+    yield* ctx.host.key("shift-down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Shift+down extends from the pressed row",
+      yield* ctx.host.text("list-multi-readout"),
+      "selected=ada,grace changes=2",
+    );
+    yield* ctx.host.key("cmd-a");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Cmd+A selects every enabled row",
+      yield* ctx.host.text("list-multi-readout"),
+      "selected=ada,grace,linus,margaret changes=3",
+    );
+    yield* ctx.host.click("multi-row-grace");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a plain press after select-all replaces it",
+      yield* ctx.host.text("list-multi-readout"),
+      "selected=grace changes=4",
+    );
+    yield* ctx.host.click("multi-row-alan");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a disabled row is not selected",
+      yield* ctx.host.text("list-multi-readout"),
+      "selected=grace changes=4",
+    );
+    yield* ctx.host.capture("list-multiple");
+  });
+
 /**
  * Opens the shipped Dialog by press, proves focus entered the surface and that
  * Escape closes it and returns focus, then closes it with its own `DialogClose`.
@@ -4273,8 +4556,8 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
- * Drives the shipped `Tooltip` through the two paths it opens on and the way it
- * leaves: the pointer entering the trigger, a focus from component code, and a
+ * Drives the shipped `Tooltip` through the paths it opens on and the way it
+ * leaves: a `Tab` traversal's focus, the pointer entering the trigger, and a
  * pointer leaving or an Escape dismissing it.
  *
  * A window reports no style and a tooltip has no readout, so the checks are the
@@ -4296,10 +4579,10 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "enters=0 leaves=0",
     );
 
-    // The keyboard path first: the trigger is the probe's first tab stop, so a
-    // traversal has to land on it. The tip then staying closed is the measured
-    // gap — the wrapper opens on React's `onFocus`, and a window does not
-    // deliver that for a traversal (`tabs-lifecycle` measured the same gap).
+    // The keyboard path: the trigger is the probe's first tab stop. A window
+    // delivers React's `onFocus` for a traversal at HEAD (re-measured
+    // 2026-10-22; the earlier probe read the frame before it arrived), so the
+    // tip opens. Escape then closes it, so the pointer path starts from closed.
     yield* ctx.host.key("tab");
     yield* Effect.sleep(TOOLTIP_CLOSE_SETTLE);
     yield* ctx.expectEqual(
@@ -4308,9 +4591,21 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "tooltip-trigger",
     );
     yield* ctx.expectEqual(
-      "a keyboard focus does not open the tip",
+      "a keyboard focus opens the tip",
+      yield* painted,
+      true,
+    );
+    yield* ctx.host.key("escape");
+    yield* Effect.sleep(TOOLTIP_CLOSE_SETTLE);
+    yield* ctx.expectEqual(
+      "Escape closes the tip the keyboard opened",
       yield* painted,
       false,
+    );
+    yield* ctx.expectEqual(
+      "the trigger keeps the focus after Escape",
+      yield* focusedId(ctx),
+      "tooltip-trigger",
     );
 
     // The pointer path. The tip opens immediately (the wrapper's provider has a
@@ -8715,6 +9010,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "checkbox-toggle",
     view: () => <CheckboxProbe />,
     steps: checkboxSteps,
+  },
+  "list-lifecycle": {
+    id: "list-lifecycle",
+    view: () => <ListProbe />,
+    steps: listSteps,
   },
   "tabs-lifecycle": {
     id: "tabs-lifecycle",
