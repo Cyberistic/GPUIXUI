@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 153/153
+`[x]` `[██████████]` 154/154
 
 `[x]` Hold the painter guards to the **press a row derives**, and measure the veil and the shadow on it — the components and primitives adopted `pressWash`/`pointerWash` for a row's press (a list row's `active` role sat under the 1.05:1 floor beside the `accent` it replaces in six styles), and eight token cases still read the retired literal: `contrast.test.ts`'s menu, list, selected-row and ring painters, `decorative.test.ts`'s badge-on-a-wash and surface-origin readers, and `indicator.test.ts`'s two mark painters each required `backgroundColor: theme.colors.active`, which no painter writes any more, so the suite was red on `master` (8 failed / 2 404 passed) with every case failing on the paint it exists to protect. Each now holds the derived expression and the wash it replaces (`active: { backgroundColor: pressWash(theme, "accent") }`, the menu row's `pressWash(theme, "hover")`), and the origin reader asks each role for its own paint, so a row that stops pressing fails by name. **The paint became the measured one**: a context menu, confirmation dialog or command palette opens *from* the row the press landed on, so the veil recedes the derived press and every raised level's shadow falls on it — the decorative table names the `active` role, while the row wears a wash the derivation moved toward `foreground`, the colour a veil is built from. `pointer-wash.test.ts` gains `keeps the veil and every raised level visible over the press a row derives`: two replaced washes per style, each measured for the veil and all three raised levels — 128 measurements over the 16 shipped, high-contrast, platform and authored styles — all clean, the tightest being High contrast dark at **1.08:1**, plus a brand whose `shadow` *is* its derived press, which reports 1.00 and fails the case. Directions measured: reverting the list painter's press to the bare role fails 7 cases by name (the six guards and `pointer-wash.test.ts`'s own painter case); with the derived paint restored, 39 files / 2 413 tests green, `check-types` clean. No palette and no source paint moved — the findings were in the guards and the composition nobody measured. `packages/data`'s table row derives its press from `pointerWash` directly rather than the components' seam, which is its owner's call.
 `[x]` Report **a type role the theme lost** instead of throwing a bare `TypeError` — a stored theme older than a role is the one way a complete theme becomes incomplete, and `auditTheme` already refuses it by path (`requireSteps`), but the two public reports the pages tell a brand to run did not keep the sibling rule: `invalidNumbers` reads the emphasis pair (`bodyStrong` against `body`) and a control's fit (`label`/`body` leadings) directly, so a theme missing either threw `TypeError: Cannot read properties of undefined (reading 'fontWeight')` / `(reading 'lineHeight')`, and `invalidScales` read `typography[role].fontSize` at every rung but the two mono roles, throwing `(reading 'fontSize')` on any absent one — while `docs/tokens.md` §Paint-ready values promised `invalidNumbers` "walks the steps a theme carries and says nothing about one that is not there". Both reports now skip a role the theme does not carry, the same rule the elevation ladder already follows: the emphasis and the fit skip a missing member, and a type role that is gone stops being a rung so the steps either side are compared with each other. `NumberSource.typography` and `ScaleSource.typography` say `Partial` — the shape storage hands back — and no shipped style moved. `numbers.test.ts` gains `a theme that lost a type role` (3 cases: four absent roles, a shortened control still reported, the gate's own refusal named) and `scales.test.ts` gains `a type role the theme does not carry` (3: the absent rung skipped, the ladder compared across the gap to the printed `previous`, the page's clause). Directions measured: with the two guards reverted, four cases fail by name with those exact `TypeError`s. Docs in `docs/tokens.md` §Numbers/§Scale order, the package README §Incomplete themes and the reports list.
@@ -841,6 +841,38 @@ green (43 files / 2 434 tests), `check-types` clean.
       `docs/tokens.md` §Text selection (+ its new tint subsection),
       `docs/design-system.md` §8, the package README and the `Text selection wash`
       inventory row. Adoption by the Alert is the interlock row below.
+
+`[x]` Follow a **system palette** — `paletteToTokens(palette, base)` maps the
+      colours a desktop hands an application (a page, an ink, an accent, a quiet
+      strip, a border, an error colour and a selection wash; `SystemPalette`, every
+      field optional) onto the roles of the same name, with `accent` as the
+      `primary` fill and `danger` as `destructive`; an unnamed role keeps the base
+      theme's value and no colour is blended. The one decision it makes is which
+      of the palette's own inks reads on a filled role, chosen by `contrastRatio`
+      — measured, a pale violet accent carries the near-black page as its ink
+      while the same accent on a paper page carries the paper's body ink, and
+      neither is the base theme's on-colour. `paletteMode` reads light/dark from
+      the page's own lightness (white versus black contrast), so a palette with no
+      base follows its own page. `watchSystemTheme` is the follow the pinned
+      runtime can support — it has no file watcher — so it polls a reader that
+      decodes the platform's file, applies the first read immediately, re-applies
+      only when the palette changed (a stable key over its values) and applies the
+      base theme when the reader answers `undefined`, which is how a deleted theme
+      file returns the window to the application's own; `SystemThemeTimer`
+      (default `intervalTimer`) is the injection point, so a test ticks by hand.
+      `system-theme.test.ts` (15 cases) holds the mapping, the ink choice by
+      measurement, the no-new-colour rule, the empty palette's identity, the mode
+      inference, the base's variant/density, one apply per change, the deleted
+      file, the stop, the default timer and the executed
+      `system-theme.example.ts`. Directions measured: making `inkOn` return the
+      palette's first ink fails the ink case by name; removing the watcher's
+      change key fails three cases (`does not re-apply…`, `re-applies once per
+      change`, `returns the base theme when the file is gone, once`). Docs in
+      `docs/tokens.md` §System palettes, the package README and the
+      `System palettes` inventory row. **Remaining:** the consumer owns the
+      platform file's decoder (Omarchy's `colors.toml`, a macOS appearance, a
+      Windows accent) and the live Linux follow — `omarchy-theme-set` repainting a
+      running window — is the playground's probe to record (plan 433 Recipe B).
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 

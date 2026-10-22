@@ -582,6 +582,36 @@ const brand = extendTheme(retroTheme(themes.dark, "aero"), {
 
 A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 
+## System palettes
+
+A system palette is what a desktop offers the application — a page, an ink, an
+accent, a quiet strip, a border, an error colour, a selection wash — and
+`paletteToTokens(palette, base)` turns it into a theme. `SystemPalette` is that
+shape (every field optional), `paletteMode(palette)` reads the mode off the
+page's own lightness, and `watchSystemTheme` follows a palette through a poll
+because the runtime has no file watcher:
+
+```ts
+import { darkTheme, watchSystemTheme } from "@gpuixui/tokens";
+
+const stop = watchSystemTheme({
+  read: () => readSystemPalette(), // your decoder; `undefined` when absent
+  base: darkTheme,
+  onChange: setTheme,
+  every: 2000,
+});
+```
+
+A palette names roles, and each maps to the role of the same name (`accent` is
+the `primary` fill, `danger` is `destructive`); an unnamed role keeps the base
+theme's value. The mapper chooses each filled role's on-colour by measuring the
+palette's own page and ink — it never blends a new colour — and the first read is
+applied at once while an unchanged palette calls nothing. `auditTheme` is the
+contract: a partial palette is a mix and a palette whose ink cannot read on its
+own accent is reported, not repaired. The consumer owns the platform file's
+decoder; the live Linux follow is the playground's to record. Runnable call sites
+are in [`src/system-theme.example.ts`](./src/system-theme.example.ts).
+
 ## Checking a theme
 
 `auditTheme(theme)` is the gate: it runs every check a browser build gets from

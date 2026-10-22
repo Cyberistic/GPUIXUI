@@ -959,6 +959,93 @@ The runnable version is `resolveRetroBrand` in
 accent family too — `accent`, `selected` and `selection` are derived from the
 accent — and `retro.test.ts` holds the result to the same contracts.
 
+## System palettes
+
+A desktop application is expected to wear the colours the reader already chose
+for their system, the way a native window does. A platform hands those over as a
+small palette — a page, an ink, an accent, a quiet strip, a border, an error
+colour, a selection wash — not as a `Theme`. `SystemPalette` is that shape, and
+`paletteToTokens(palette, base)` turns it into a theme:
+
+```tsx
+import {
+  getTheme,
+  paletteMode,
+  paletteToTokens,
+  type SystemPalette,
+} from "@gpuixui/tokens";
+
+const palette: SystemPalette = readSystemPalette(); // your decoder
+const theme = paletteToTokens(palette, getTheme(paletteMode(palette) ?? "light"));
+```
+
+The mapping has two rules, and both matter more than they look.
+
+- **A role maps to the role of the same name.** `background`, `foreground`,
+  `muted`, `border`, `danger` and `selection` land on their roles; `accent` is
+  what a platform calls the fill this library calls `primary`, and `danger` is
+  its `destructive`. Every role the palette does not name keeps the base
+  theme's value, so a palette of two colours gives a page and an ink rather than
+  a half-built theme.
+- **No colour is invented.** The one decision the mapper makes is which ink a
+  filled role carries — the palette's page or its body ink, whichever measures
+  further from the fill (`contrastRatio`, never a blend). A palette whose ink
+  cannot read on its own accent is what the gate is for: run
+  `auditTheme(theme)` and read the pairs the palette cannot serve. The mapper
+  does not quietly repair a palette.
+
+`paletteMode(palette)` reads the mode from the page itself: a page that white
+contrasts with more than black is dark. Use it to hand the matching built-in
+theme to `paletteToTokens` (and to keep the app's mode switch honest), or omit
+`base` and the mapper does it for you. The base still owns everything the
+palette does not name — a card, a modal, a state wash — so a palette of only a
+page and an ink is a recolour, not a new design system.
+
+### Following a change
+
+The pinned runtime has no file watcher, so the follow is a documented poll.
+`watchSystemTheme` takes a reader that decodes the platform's file, a base theme,
+a callback and the interval (milliseconds), and returns the stop:
+
+```ts
+import { darkTheme, watchSystemTheme } from "@gpuixui/tokens";
+
+const stop = watchSystemTheme({
+  read: () => readSystemPalette(), // `undefined` when the file is gone
+  base: darkTheme,
+  onChange: setTheme,
+  every: 2000,
+});
+```
+
+It applies the first read immediately, then re-applies only when the palette it
+read actually changed — a poll that keeps reading the same file calls nothing —
+and an `undefined` read applies the base theme, which is how a deleted system
+theme returns the window to the application's own. `read` is the boundary: decode
+the platform's file there, and answer `undefined` rather than throw when it is
+missing or unreadable. A throw is a defect in that boundary, and this seam does
+not hide it.
+
+`every` is a plain millisecond count because this package carries no runtime
+dependency; swap `timer` for a `SystemThemeTimer` if the application schedules
+its own work, or use the exported `intervalTimer` (the default) to follow the
+documented `setInterval`. `SystemThemeTimer` is that injection point, so a test
+drives a tick by hand instead of waiting.
+
+The runnable call sites are in
+[`src/system-theme.example.ts`](../packages/tokens/src/system-theme.example.ts):
+`followPalette` maps a palette onto the mode its page implies, and
+`followDesktop` is the poll. `system-theme.test.ts` holds the mapper to the
+palette's own values, the ink choice to measurement, the watcher to one apply per
+change, and the deleted file to the base theme.
+
+**Limits.** A partial palette is a mix: the roles it does not name are the base
+theme's, measured by the gate like any other theme. Decoding Omarchy's
+`colors.toml` (or a macOS appearance, or a Windows accent) belongs to the
+consumer's boundary — this package names the semantic shape, not a file format —
+and the live Linux proof, where `omarchy-theme-set` changes a running window's
+colours, is the playground's to record.
+
 ## Checking your own theme
 
 A theme fails silently in eleven independent ways, and `auditTheme(theme)` is
