@@ -5,6 +5,11 @@
  * The shape follows shadcn/ui: cropping keeps a stable width around the current
  * page rather than a window that grows at the edges, so the control does not
  * jump in size as the user pages through.
+ *
+ * An ellipsis is only worth its width when it stands for **two or more** pages:
+ * one hidden page is rendered as itself, because the number and the ellipsis
+ * occupy the same slot and the number is one press closer. That also means a
+ * crop that would hide a single page collapses into the full trail.
  */
 
 import * as Arr from "effect/Array";
@@ -41,6 +46,23 @@ const pages = (from: number, to: number): ReadonlyArray<PageItem> =>
   Arr.map(Arr.range(from, Math.max(from, to)), page);
 
 /**
+ * What stands in for the pages strictly between `low` and `high` (both shown):
+ * nothing when there are none, the page itself when there is one, an ellipsis
+ * otherwise. Every branch of the window goes through here, so an ellipsis can
+ * never be drawn over a gap that is empty or a single page wide.
+ */
+const between = (
+  low: number,
+  high: number,
+  side: "start" | "end",
+): ReadonlyArray<PageItem> => {
+  const hidden = high - low - 1;
+  if (hidden <= 0) return [];
+  if (hidden === 1) return [page(low + 1)];
+  return [ellipsis(side)];
+};
+
+/**
  * The entries to render, ascending, with no repeated page and always including
  * the current page. A list that fits (`siblingCount + 5` or fewer pages) is
  * rendered in full.
@@ -68,22 +90,16 @@ export const pageWindow = ({
   if (showStart && showEnd) {
     return [
       page(1),
-      ellipsis("start"),
+      ...between(1, left, "start"),
       ...pages(left, right),
-      ellipsis("end"),
+      ...between(right, pageCount, "end"),
       page(pageCount),
     ];
   }
   if (showStart) {
-    return [
-      page(1),
-      ellipsis("start"),
-      ...pages(Math.max(pageCount - (2 + 2 * siblings), 2), pageCount),
-    ];
+    const from = Math.max(pageCount - (2 + 2 * siblings), 2);
+    return [page(1), ...between(1, from, "start"), ...pages(from, pageCount)];
   }
-  return [
-    ...pages(1, Math.min(3 + 2 * siblings, pageCount - 2)),
-    ellipsis("end"),
-    page(pageCount),
-  ];
+  const to = Math.min(3 + 2 * siblings, pageCount - 2);
+  return [...pages(1, to), ...between(to, pageCount, "end"), page(pageCount)];
 };

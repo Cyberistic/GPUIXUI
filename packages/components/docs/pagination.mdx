@@ -53,8 +53,11 @@ window and `PaginationNext`.
 
 `siblingCount` widens the window around the current page (default 1).
 `showEdges={false}` drops the first and last page and renders only the siblings.
-An out-of-range `page` is clamped; an ellipsis replaces a gap of two or more,
-while a gap of one renders the page itself.
+An out-of-range `page` is clamped. An ellipsis is only drawn over a gap of two or
+more pages: a gap of one renders the page itself, because the number and the
+ellipsis take the same slot and the number is one press closer — so a crop whose
+only gap is one page renders the whole trail, and an ellipsis never stands
+between two neighbours with nothing between them.
 
 ## Layout and states
 
@@ -122,7 +125,10 @@ Previous/Next stepping, the ellipsis not being a tab stop, Enter activation,
 item outside the list reading the root's page.
 
 `src/pagination/logic.test.ts` covers the window table above, including clamping,
-wide siblings and unique ascending pages.
+wide siblings and unique ascending pages. It also sweeps every page of 1–12 pages
+at 0–4 siblings and fails an ellipsis whose neighbours differ by one or less —
+the window that drew `1 … 2 3 4 5 6 7 8` for page 8 of 8, wider than the trail it
+was cropping.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
