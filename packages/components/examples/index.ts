@@ -27,6 +27,7 @@ import { CommandMenuExample } from "./command-menu.example.js";
 import { ConfirmDialogExample } from "./confirm-dialog.example.js";
 import { ContextMenuExample } from "./context-menu.example.js";
 import { CountdownExample } from "./countdown.example.js";
+import { CountingNumberExample } from "./counting-number.example.js";
 import { DatePickerExample } from "./date-picker.example.js";
 import { DialogExample } from "./dialog.example.js";
 import { DrawerExample } from "./drawer.example.js";
@@ -73,6 +74,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "confirm-dialog": ConfirmDialogExample,
   "context-menu": ContextMenuExample,
   countdown: CountdownExample,
+  "counting-number": CountingNumberExample,
   "date-picker": DatePickerExample,
   dialog: DialogExample,
   drawer: DrawerExample,

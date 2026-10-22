@@ -84,7 +84,10 @@ easing })` tweens; `useInertia(velocity, inertia)` coasts with momentum.
 it a stable `transition` (`instant`, `tween`, or `springTransition`).
 
 Pass `options.reducedMotion` from your platform's reduced-motion preference; it
-completes immediately at the target.
+completes immediately at the target. `options.initial` gives the first run a
+start value — `useTransition(1284, { durationMs: 320 }, { initial: 0 })` counts
+up on mount — and is read once, because the presentation on screen is the truth
+after it.
 
 ## The runtime's declarative timing
 

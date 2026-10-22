@@ -322,6 +322,7 @@ the honest parts.
 | Component | Parts | base-gpui guide | Source |
 | --------- | ----- | --------------- | ------ |
 | Typing text | `TypingText` | — | plan 600 |
+| Counting number | `CountingNumber` | — | plan 600 |
 
 **Planned Tier 2 additions** — none. The last reserved family, Chat and
 Message (plan `207`), landed with its parts unchanged, so every part table above
@@ -409,3 +410,24 @@ reduced preference paints the resting frame with no travel, the accordion grows
 from zero to its measured height, and the tab pill lands exactly on the next
 trigger's box. The live playground proves the fade itself (a window reports
 painted bounds, not painted opacity).
+
+## 12. Native text hosts
+
+An `<input>` or `<textarea>` is drawn by the runtime's text engine rather than by
+the style system, so its value, placeholder, caret and selection wash arrive
+through a `theme` prop. A host given none layers them on GPUix's **built-in dark
+palette**, which is why a light field used to paint a hint and a caret chosen for
+a dark surface.
+
+Every field in this package hands its host `nativeTextTheme(theme, fill)` from
+`@gpuixui/tokens`, with `input` for a plain field and `background` for a
+composite field that paints the page role as its own fill:
+
+| Fill | Components |
+| ---- | ---------- |
+| `input` | `FieldInput`, `TimePickerSegment`, `CommandMenuInput`, `ComboboxInput` |
+| `background` | `SearchInput`, `TagInputField`, `MentionInput`, `InlineEdit`, `ColorPicker`'s hex field, `ChatComposer` |
+
+The roles are measured on both fills by `packages/tokens/src/native-text.test.ts`;
+`packages/components/src/behaviour/native-text.test.tsx` holds every host's
+wiring and the fill the field actually paints.

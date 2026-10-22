@@ -35,6 +35,12 @@ export interface MotionState {
 /** Hook options. */
 export interface MotionOptions {
   readonly reducedMotion?: boolean;
+  /**
+   * The value the **first** run starts from. Default: the target, so a hook
+   * mounted at rest paints without an entry run. Read once at mount; a later
+   * change is ignored because the current presentation is the truth after it.
+   */
+  readonly initial?: number;
 }
 
 /** Tween parameters accepted by {@link useTransition}. */
@@ -62,16 +68,17 @@ export const useMotion = (
   transition: Transition,
   options: MotionOptions = {},
 ): MotionState => {
-  const [motion] = useState(() => new MotionValue(target));
-  const [start] = useState(() => performance.now());
-  const [frame, setFrame] = useState<MotionFrame>(() => initialFrame(target));
+  const [start] = useState(() => options.initial ?? target);
+  const [motion] = useState(() => new MotionValue(start));
+  const [origin] = useState(() => performance.now());
+  const [frame, setFrame] = useState<MotionFrame>(() => initialFrame(start));
 
   useEffect(() => {
     motion.animate(target, transition);
     let handle: ReturnType<typeof setTimeout> | undefined;
     const tick = (): void => {
       const next = motion.sample(
-        performance.now() - start,
+        performance.now() - origin,
         options.reducedMotion === true,
       );
       setFrame(next);
@@ -81,7 +88,7 @@ export const useMotion = (
     return () => {
       if (handle !== undefined) clearTimeout(handle);
     };
-  }, [motion, target, transition, start, options.reducedMotion]);
+  }, [motion, target, transition, origin, options.reducedMotion]);
 
   return {
     value: frame.value,

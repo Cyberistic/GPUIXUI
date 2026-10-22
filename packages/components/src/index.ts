@@ -21,6 +21,7 @@ export * from "./command-menu.js";
 export * from "./confirm-dialog.js";
 export * from "./context-menu.js";
 export * from "./countdown.js";
+export * from "./counting-number.js";
 export * from "./date-picker.js";
 export * from "./dialog.js";
 export * from "./drawer.js";
