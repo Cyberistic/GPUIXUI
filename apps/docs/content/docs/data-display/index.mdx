@@ -246,6 +246,16 @@ re-deriving them.
   a key typed in an editable cell reaches the row's `onKeyDown`
   (`field-cell → hits=row-key`) while the field keeps it, so the row reads the
   event's own `elementId` before acting on an arrow (`press-routing-lifecycle`).
+- **A fill takes the row's hover too, so a decorative child opts out** — a row's
+  pointer feedback is the runtime's native `style.hover`, and its hovered set
+  comes from the same hit test the press takes: `hover-routing-lifecycle`
+  measured that an unfilled `<text>` label leaves the row its enter event and
+  its hover fill, while a `<text>` or a `<div>` that paints a fill takes both,
+  and `pointerEvents: "none"` puts the row back in the pointer's path while the
+  child still hears its own listener. So a status badge, a metric or a chip
+  inside a selectable row declares `pointerEvents: "none"` when it is
+  decorative; one that must answer the pointer paints the row's `hover` itself
+  (`hover-routing-lifecycle`).
 - **A column's divider arms the capture, and its width is read at each press** —
   a desktop resize is the split pane's drag rotated, and a window measured the
   reader's path (`column-resize-lifecycle`): a 6px divider that listens to both

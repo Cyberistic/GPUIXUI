@@ -263,6 +263,42 @@ const pressCases: ReadonlyArray<PressCase> = Array.from(
   ),
 }));
 
+/**
+ * The composite-row hover table `hover-routing-lifecycle` holds a window to.
+ *
+ * `HOVER_CASES` is the fixture's expectation on the same four child shapes the
+ * press probe mounts, read from the same file shape, so neither the record nor
+ * the page can print a reading the window did not take.
+ */
+interface HoverCase {
+  readonly id: string;
+  readonly rowEnter: boolean;
+  readonly childEnter: boolean;
+  readonly painted: boolean;
+}
+
+/** The record's spelling of one hover case. */
+const hoverSpelling = (entry: HoverCase): string =>
+  `row-enter=${entry.rowEnter ? 1 : 0} child-enter=${
+    entry.childEnter ? 1 : 0
+  } paint=${entry.painted ? "yes" : "no"}`;
+
+const hoverSource = read(
+  "apps/playground/src/live/hover-routing.ts",
+).replaceAll('"', "~");
+
+const hoverCases: ReadonlyArray<HoverCase> = Array.from(
+  hoverSource.matchAll(/^ {2}~([a-z-]+)~: \{\n([\s\S]*?)\n {2}\},/gm),
+).map((match) => {
+  const measured = match[2] ?? "";
+  return {
+    id: match[1] ?? "",
+    rowEnter: measured.includes("\n    rowEnter: true,"),
+    childEnter: measured.includes("\n    childEnter: true,"),
+    painted: measured.includes("\n    painted: true,"),
+  };
+});
+
 describe("docs/gpuix-capabilities.md", () => {
   it("parses every row of the limits table", () => {
     expect(malformed).toEqual([]);
@@ -1221,6 +1257,58 @@ describe("docs/gpuix-capabilities.md", () => {
         .map(({ id }) => id),
       "the page prints a route the fixture does not measure",
     ).toEqual([]);
+  });
+
+  it("records the hover a filled child takes away from its row", () => {
+    // A row's pointer feedback is the runtime's native `style.hover`
+    // refinement, and its hovered set comes from the same hit test the press
+    // takes — so a Badge or a metric inside a selectable row can take the row's
+    // hover while leaving its press. `hover-routing-lifecycle` measured the four
+    // child shapes; `HOVER_CASES` is the fixture's expectation, so the record
+    // and the page print its readings rather than a transcription of them.
+    const hover = rowFor("Composite-row hover routing");
+    expect(hover?.verdict).toBe("supported, with limits");
+    expect(hover?.evidence).toContain("hover-routing-lifecycle");
+    expect(hover?.evidence).toContain("HOVER_CASES");
+    expect(hover?.evidence).toContain("same hit test");
+    expect(hover?.workaround).toContain('pointerEvents: "none"');
+    expect(hover?.workaround).toContain("onMouseEnter");
+
+    expect(hoverCases.length).toBe(4);
+    // The rule the table states: the fill the row paints is exactly whether it
+    // heard the enter, for every child shape.
+    expect(
+      hoverCases.filter((entry) => entry.painted === entry.rowEnter).length,
+      "a case's painted fill and its row enter disagree",
+    ).toBe(hoverCases.length);
+    // And the child hears its own listener in every case, inert or not.
+    expect(hoverCases.filter((entry) => entry.childEnter).length).toBe(
+      hoverCases.length,
+    );
+
+    const printed = hoverCases.map(
+      (entry) => `\`${entry.id} → ${hoverSpelling(entry)}\``,
+    );
+    expect(
+      printed.filter((entry) => !(hover?.evidence ?? "").includes(entry)),
+      "the record prints a hover reading the fixture does not measure",
+    ).toEqual([]);
+
+    const page = measuredRow("Composite-row hover routing");
+    expect(
+      page,
+      "the page's measured table has no hover-routing row",
+    ).toBeDefined();
+    expect(
+      printed.filter((entry) => !(page?.[1] ?? "").includes(entry)),
+      "the page prints a hover reading the fixture does not measure",
+    ).toEqual([]);
+    expect(page?.[2]).toContain("pointerEvents");
+
+    // The lane page where a table row is designed carries the same rule.
+    const lane = read("apps/docs/content/docs/data-display/index.mdx");
+    expect(lane).toContain("hover-routing-lifecycle");
+    expect(lane).toContain('pointerEvents: "none"');
   });
 
   it("records the chord a desktop list selects with, and the count a probe cannot send", () => {
@@ -2489,8 +2577,14 @@ describe("docs/gpuix-capabilities.md", () => {
       const found = new RegExp(
         `export const ${name} = \\{ width: (\\d+), height: (\\d+) \\} as const;`,
       ).exec(fixture);
-      expect(found, `the fixture's ${name} is no longer a literal`).not.toBeNull();
-      return { width: Number(found?.[1] ?? NaN), height: Number(found?.[2] ?? NaN) };
+      expect(
+        found,
+        `the fixture's ${name} is no longer a literal`,
+      ).not.toBeNull();
+      return {
+        width: Number(found?.[1] ?? NaN),
+        height: Number(found?.[2] ?? NaN),
+      };
     };
 
     const vertical = box("VERTICAL_VIEWPORT");
