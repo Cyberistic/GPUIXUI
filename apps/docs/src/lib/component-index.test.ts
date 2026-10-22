@@ -452,9 +452,9 @@ describe("the real index", () => {
 
     expect(curated.length).toBeGreaterThanOrEqual(4);
     expect(curated.filter((page) => !page.preview)).toEqual([]);
-    expect(componentIndex.filter((row) => row.preview).map((row) => row.url)).toEqual(
-      curated.map((page) => page.url).toSorted(),
-    );
+    expect(
+      componentIndex.filter((row) => row.preview).map((row) => row.url),
+    ).toEqual(curated.map((page) => page.url).toSorted());
   });
 
   it("finds a component by a part name, which the sidebar cannot show", () => {
