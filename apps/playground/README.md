@@ -1407,6 +1407,54 @@ Negative controls measured: revealing index `0` instead of 3000 fails
 green (`--only virtual-tree-lifecycle`). Evidence:
 `.artifacts/live/vtree-expanded.png`, `.artifacts/live/vtree-revealed.png`.
 
+### `portal-layer` — measured on 0.11.0 here
+
+`@gpuix/react` publishes `createPortal`, and nothing in the repo had rendered
+one in a window: the styled `Dialog` and `Drawer` use an `anchored` veil, the
+menus a local surface, and the components page calls wrapping the headless
+dialog "a future migration". The probe answers the three questions a detached
+tab, a dialog or a toast viewport asks of a portal — does it paint, does it
+escape the clip, and does input survive the host boundary — and it does so with
+both pixel evidence and the runtime's paint report.
+
+| Step | Check |
+| ---- | ----- |
+| at rest | the clipping box, a control box and the portal target all paint; the sibling beyond the clip's edge still reports a box, and its `x` lies outside the clip |
+| the capture | the control box's cyan fill paints (>0 px), the clipped sibling's magenta fill paints **0** px, and the portalled card's green fill paints |
+| paint report | the portalled card's text is in `getPaintedText` |
+| bounds | the card paints inside its **target's** box, not where the caller sits |
+| context | the card reads `ctx=portal-context` from the provider above the caller — the context crosses the host boundary |
+| pointer | a press on a control inside the portal reaches its `onClick` (`presses=1`) |
+| keys | focusing the portal's field and typing `h`, `i` reaches `onChange` (`typed=hi`) |
+| detach | removing the portal unpaints the card and drops it from the tree |
+| reattach | adding it back paints it again |
+
+19 checks. Two measured facts decide how a component should use it:
+
+- **A clip is a pixel fact, not a text fact.** `getPaintedText` still listed the
+  clipped sibling's `clipped away` line although no pixel of it reached the
+  frame, so a component that asks the paint report whether it is visible gets
+  the wrong answer at a clip boundary. The probe therefore proves the clip from
+  a capture: the same box paints cyan when unclipped and 0 px of magenta when
+  clipped.
+- **The clipping box has to be the child's containing block.** The first
+  version of the probe put an absolutely positioned child inside an unpositioned
+  `overflow: hidden` box; the child painted at the root's coordinates, unclipped
+  — the same containing-block rule CSS has. A consumer that clips a subtree and
+  positions inside it needs `position: "relative"` on the clipping box.
+
+Negative controls measured: dropping `overflow: "hidden"` from the clipping box
+fails `the clipped sibling paints no pixel` with `expected 0, got 23780`;
+pointing the portal at the clipping box instead of the layer fails
+`the card paints inside its target's box` — exit `1` each, restored green
+(`--only portal-layer`). Evidence: `.artifacts/live/portal-attached.png`,
+`.artifacts/live/portal-reattached.png`.
+
+What it still does not prove: a **detached tab in its own window**. The binding
+opens one window per process, and there is no drag host feature, so a portal
+moves a tab to another layer in the same window — the piece that was missing —
+not to a new OS window.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session

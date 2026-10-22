@@ -7,7 +7,14 @@
  * shared `Smoke` ones, so both suites emit one report shape.
  */
 import type { ReactNode } from "react";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Duration, Effect, Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -62,7 +69,7 @@ import {
   Tooltip,
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
-import { useGpuix, useWindowSize, motion } from "@gpuix/react";
+import { createPortal, useGpuix, useWindowSize, motion } from "@gpuix/react";
 import type { ImgInstance, PublicInstance } from "@gpuix/react";
 import { FloatingLayer } from "@gpuix/react/floating";
 import {
@@ -6120,6 +6127,359 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * Two opaque fills counted in the frame: the clipped card's and the portalled
+ * card's. A paint report lists laid-out glyphs, a capture lists what a reader
+ * sees, and only the capture can tell a clipped box from a painted one.
+ */
+const CLIPPED_FILL = "#FF00FF";
+const CONTROL_FILL = "#00FFFF";
+const PORTAL_FILL = "#00FF00";
+
+/**
+ * The context a portalled card reads back.
+ *
+ * A portal renders into another host element but stays in the caller's React
+ * tree, so a theme, a locale or an app store has to survive the move.
+ */
+const PortalContext = createContext("no-context");
+
+/** The card a detached tab or a dialog would move into its own layer. */
+const PortalCard = ({
+  onPress,
+  typed,
+  onType,
+}: {
+  readonly onPress: () => void;
+  readonly typed: string;
+  readonly onType: (value: string) => void;
+}): ReactNode => {
+  const theme = useTheme();
+  const inherited = useContext(PortalContext);
+  return (
+    <div
+      testId="portal-card"
+      style={{
+        position: "absolute",
+        left: 20,
+        top: 20,
+        width: 240,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.xs,
+        padding: theme.spacing.md,
+        backgroundColor: PORTAL_FILL,
+        borderWidth: theme.borderWidth.thin,
+        borderColor: theme.colors.border,
+        borderRadius: theme.radius.sm,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        portalled card
+      </text>
+      <text
+        testId="portal-context"
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`ctx=${inherited}`}
+      </text>
+      <div
+        testId="portal-action"
+        tabIndex={0}
+        role="button"
+        onClick={onPress}
+        style={{
+          padding: theme.spacing.xs,
+          borderRadius: theme.radius.sm,
+          backgroundColor: theme.colors.muted,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.foreground,
+          }}
+        >
+          press inside the portal
+        </text>
+      </div>
+      <input
+        testId="portal-field"
+        value={typed}
+        placeholder="type inside the portal"
+        onChange={(event) => onType(event.value ?? "")}
+        style={{
+          color: theme.colors.inputForeground,
+          backgroundColor: theme.colors.input,
+          padding: theme.spacing.xs,
+          borderRadius: theme.radius.sm,
+        }}
+      />
+    </div>
+  );
+};
+
+/**
+ * `createPortal` in a window: the published escape hatch an overlay or a
+ * detached tab needs when its own ancestor clips.
+ *
+ * The probe puts one card beyond a clipped box's edge (laid out, not painted)
+ * and the same card through a portal into a sibling layer (painted), then
+ * measures context, pointer input and keys across the portal boundary.
+ */
+const PortalProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [layer, setLayer] = useState<PublicInstance | null>(null);
+  const [attached, setAttached] = useState(true);
+  const [presses, setPresses] = useState(0);
+  const [typed, setTyped] = useState("");
+
+  return (
+    <PortalContext.Provider value="portal-context">
+      <div
+        testId="portal-probe"
+        style={{
+          position: "relative",
+          width: 720,
+          height: 440,
+          padding: theme.spacing.xl,
+          backgroundColor: theme.colors.background,
+        }}
+      >
+        <div
+          testId="portal-clip"
+          style={{
+            position: "relative",
+            width: 200,
+            height: 100,
+            overflow: "hidden",
+            backgroundColor: theme.colors.card,
+          }}
+        >
+          <div
+            testId="portal-clipped"
+            style={{
+              position: "absolute",
+              left: 240,
+              top: 20,
+              width: 200,
+              padding: theme.spacing.sm,
+              backgroundColor: CLIPPED_FILL,
+            }}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "body"),
+                color: theme.colors.foreground,
+              }}
+            >
+              clipped away
+            </text>
+          </div>
+        </div>
+        <div
+          testId="portal-unclipped"
+          style={{
+            position: "absolute",
+            left: 20,
+            top: 280,
+            width: 200,
+            padding: theme.spacing.sm,
+            backgroundColor: CONTROL_FILL,
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            unclipped card
+          </text>
+        </div>
+        <div
+          testId="portal-layer"
+          ref={setLayer}
+          style={{
+            position: "absolute",
+            left: 420,
+            top: 150,
+            width: 280,
+            height: 160,
+            backgroundColor: theme.colors.card,
+            borderWidth: theme.borderWidth.thin,
+            borderColor: theme.colors.border,
+            borderRadius: theme.radius.md,
+          }}
+        />
+        {layer === null
+          ? null
+          : attached
+            ? createPortal(
+                <PortalCard
+                  onPress={() => setPresses((count) => count + 1)}
+                  typed={typed}
+                  onType={setTyped}
+                />,
+                layer,
+              )
+            : null}
+        <div style={{ position: "absolute", left: 20, top: 130 }}>
+          <PrimitiveThemeProvider theme={palettes.dark}>
+            <Button
+              testId="portal-toggle"
+              size="sm"
+              variant="secondary"
+              onActivate={() => setAttached((current) => !current)}
+            >
+              {attached ? "Detach" : "Attach"}
+            </Button>
+          </PrimitiveThemeProvider>
+        </div>
+        <div style={{ position: "absolute", left: 20, top: 190 }}>
+          <Readout testId="portal-readout">
+            {`attached=${attached} presses=${presses} typed=${typed}`}
+          </Readout>
+        </div>
+      </div>
+    </PortalContext.Provider>
+  );
+};
+
+const portalSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("portal-card");
+    yield* Effect.sleep(SETTLE);
+
+    // 1. The clipped ancestor lays the sibling out and paints none of it; the
+    //    same content through the portal paints — the whole reason a detached
+    //    tab or an overlay moves into its own layer.
+    const clip = yield* ctx.expectSome(
+      "the clipping box painted",
+      Option.fromNullishOr(yield* ctx.host.bounds("portal-clip")),
+    );
+    const clipped = yield* ctx.expectSome(
+      "the clipped sibling still has a box",
+      Option.fromNullishOr(yield* ctx.host.bounds("portal-clipped")),
+    );
+    yield* ctx.expectEqual(
+      "the clipped sibling sits outside the box that clips it",
+      clipped.x > clip.x + clip.width,
+      true,
+    );
+    const clippedFill = yield* ctx.expectSome(
+      "the clipped fill parses",
+      Option.fromNullishOr(Pixels.hexToRgba(CLIPPED_FILL)),
+    );
+    const portalFill = yield* ctx.expectSome(
+      "the portal fill parses",
+      Option.fromNullishOr(Pixels.hexToRgba(PORTAL_FILL)),
+    );
+    const controlFill = yield* ctx.expectSome(
+      "the control fill parses",
+      Option.fromNullishOr(Pixels.hexToRgba(CONTROL_FILL)),
+    );
+    yield* ctx.host.capture("portal-attached");
+    yield* ctx.expectEqual(
+      "the same box paints when nothing clips it",
+      (yield* paintedPixels(ctx, "portal-attached", controlFill)) > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the clipped sibling paints no pixel",
+      yield* paintedPixels(ctx, "portal-attached", clippedFill),
+      0,
+    );
+    yield* ctx.expectEqual(
+      "the portalled card paints its own fill",
+      (yield* paintedPixels(ctx, "portal-attached", portalFill)) > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the portalled card paints its text",
+      Arr.contains(yield* ctx.host.paintedText(), "portalled card"),
+      true,
+    );
+
+    // 2. It paints where its target is, not where the caller is.
+    const layer = yield* ctx.expectSome(
+      "the portal target painted",
+      Option.fromNullishOr(yield* ctx.host.bounds("portal-layer")),
+    );
+    const card = yield* ctx.expectSome(
+      "the portalled card painted",
+      Option.fromNullishOr(yield* ctx.host.bounds("portal-card")),
+    );
+    yield* ctx.expectEqual(
+      "the card paints inside its target's box",
+      card.x >= layer.x && card.y >= layer.y,
+      true,
+    );
+
+    // 3. The portal keeps the caller's React context across the host boundary.
+    yield* ctx.expectEqual(
+      "the portalled card reads the caller's context",
+      yield* ctx.host.text("portal-context"),
+      "ctx=portal-context",
+    );
+
+    // 4. Pointer input reaches portalled content.
+    yield* ctx.host.click("portal-action");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press reaches a control inside the portal",
+      yield* ctx.host.text("portal-readout"),
+      "presses=1",
+    );
+
+    // 5. So do native focus and keys: the field is not in the caller's subtree.
+    yield* ctx.host.click("portal-field");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("h");
+    yield* ctx.host.key("i");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "keys reach a field inside the portal",
+      yield* ctx.host.text("portal-readout"),
+      "typed=hi",
+    );
+
+    // 6. Removing the portal unpaints it and drops it from the tree.
+    yield* ctx.host.capture("portal-attached");
+    yield* ctx.host.click("portal-toggle");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "detaching unpaints the card",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds("portal-card")),
+      ),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "detaching removes its text",
+      Arr.contains(yield* ctx.host.paintedText(), "portalled card"),
+      false,
+    );
+
+    // 7. And it can be attached again: a tab moved out and back.
+    yield* ctx.host.click("portal-toggle");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "reattaching paints the card again",
+      Arr.contains(yield* ctx.host.paintedText(), "portalled card"),
+      true,
+    );
+    yield* ctx.host.capture("portal-reattached");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -6267,5 +6627,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "virtual-tree-lifecycle",
     view: () => <VirtualTreeProbe />,
     steps: virtualTreeSteps,
+  },
+  "portal-layer": {
+    id: "portal-layer",
+    view: () => <PortalProbe />,
+    steps: portalSteps,
   },
 };
