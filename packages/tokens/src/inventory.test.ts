@@ -173,12 +173,14 @@ describe("design-system inventory", () => {
     );
 
     const remaining = targetSizes?.notes.split("Remaining:").at(1) ?? "";
-    const starBox = star
-      .split("\n")
-      .find((line) => line.includes('"flex items-center'));
+    // Read the recipe's class strings whole rather than one hard-coded line:
+    // the star box may gain a utility (the `relative` wrapper the glyph's
+    // clipping needs) without the guard mistaking a new class order for a lost
+    // floor, while losing `min-target` still fails.
+    const starClasses = (star.match(/"[^"]*"/g) ?? []).join(" ");
 
     expect(remaining).not.toContain("Rating");
-    expect(starBox).toContain("min-target");
+    expect(starClasses).toContain("min-target");
   });
 });
 

@@ -2002,10 +2002,11 @@ A mark still has one job: a reader has to find it from across a panel. So it is
 held to the theme's non-text floor — `contrastFloors.boundary`, 3:1 (4.5:1 in a
 high-contrast theme) — on every strip a bar or dot is drawn on.
 
-The 8 mark roles, on the 7 strips, are `indicatorRoles` and `indicatorSurfaces`
-— `background`, `card`, `popover` and a `muted` toolbar strip at rest, the
-`hover` and `active` wash a row tints under itself while the pointer is on it,
-and a field's own `input` fill, where the native text host paints its caret
+The 8 mark roles, on the 9 strips, are `indicatorRoles` and `indicatorSurfaces`
+— `background`, `card`, `popover` and a `muted` toolbar strip at rest, the four
+washes a row wears (`hover` and `active` while the pointer is on it or pressed,
+`accent` under the pointer on a list row and `selected` once it is chosen), and a
+field's own `input` fill, where the native text host paints its caret
 (`nativeTextTheme` hands the runtime `primary` as the caret):
 
 | Mark | Role |
@@ -2032,7 +2033,7 @@ indicatorFailures(lightTheme); // [] — every shipped mark is visible
 // [{ role: "primary", surface: "background", ratio: 1.04, floor: 3 }]
 ```
 
-The two washes are not decoration: a checked menu item's tick and a combobox's
+The washes are not decoration: a checked menu item's tick and a combobox's
 selected check are painted `primary`, and both rows set `hover` on the pointer
 and `active` while pressed, so the mark is read on those strips rather than on
 the popover it rests on. That pair found the documented **Aero brand**: its
@@ -2041,6 +2042,17 @@ that vanished as soon as the reader pointed at its row — so the brand owns
 `primary` per mode now (`#0F5E8C` with white in light, `#4FA9E0` with the
 near-black it carries in dark).
 
+A **list row** is the second registry and the other two washes. `list.tsx` tints
+`accent` under the pointer, keeps `active` while the press that opened a surface
+is down, and fills `selected` once the row is chosen, while its `leading` slot is
+documented as the place for an `Avatar` — and a presence dot is a mark, painted
+`success`, `destructive`, `mutedForeground` or a tone's readable role. A dot on
+the row a reader had chosen was measured by nothing, and the placement found
+**Luna light**: the shared success step measured 2.99:1 on the look's lighter
+selected wash, so a conversation's presence dot disappeared exactly when the
+reader selected it. The look carries `palette.green[700]` as its `success`
+(4.37:1 there) and every other shipped style already cleared the floor.
+
 `indicatorFailures(theme, floors?)` names each mark and strip that misses the
 floor, reports one it cannot measure (a translucent role) rather than skipping
 it, and is part of [`auditTheme`](#checking-your-own-theme). The floor is the
@@ -2048,10 +2060,10 @@ theme's own variant's — `contrastFloorsFor(theme).boundary` — so a high-cont
 brand is held to 4.5:1 without the caller naming a floor set; an explicit floor
 set still overrides it. Every shipped,
 high-contrast, platform and authored theme passes; the tightest placement is
-Luna light's `success` mark on the pressed wash its own pointer paints, at
-3.05:1. `indicator.test.ts` holds the sweep, the rule, the two washes and their
-painters, the Aero pre-fix values, the unmeasurable case, the variant default and
-a caller's stricter floor.
+macOS dark's `primary` mark on the `accent` a list row tints under its own
+pointer, at 3.06:1. `indicator.test.ts` holds the sweep, the rule, the four
+washes and their painters, the Aero pre-fix values, the Luna dot, the
+unmeasurable case, the variant default and a caller's stricter floor.
 
 ### Every role is measured
 

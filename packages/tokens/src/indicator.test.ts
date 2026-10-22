@@ -27,6 +27,7 @@ import {
   indicatorRoles,
   indicatorSurfaces,
   lightTheme,
+  palette,
   platformNames,
   platformTheme,
   retroNames,
@@ -90,12 +91,109 @@ describe("every shipped theme shows its marks", () => {
           : low,
       );
 
-    // A pressed row's wash is the tightest strip in the whole set: Luna light's
-    // success mark against the wash its own pointer paints is 3.05:1.
-    expect(tightest.role).toBe("success");
-    expect(tightest.surface).toBe("active");
-    expect(tightest.theme).toBe("Light · Windows XP (Luna)");
-    expect(tightest.ratio).toBeCloseTo(3.05, 2);
+    // A wash a row wears is the tightest strip in the whole set: macOS dark's
+    // primary mark against the `accent` a list row tints under its own pointer
+    // is 3.06:1, the least headroom over the 3:1 floor in the 16 styles.
+    expect(tightest.role).toBe("primary");
+    expect(tightest.surface).toBe("accent");
+    expect(tightest.theme).toBe("Dark · macOS");
+    expect(tightest.ratio).toBeCloseTo(3.06, 2);
+  });
+});
+
+/**
+ * Guards the mark a **list row** carries on the wash it wears.
+ *
+ * The mark contract measured the two washes a menu or combobox row tints
+ * (`hover`/`active`) and neither of the two a list row wears: `list.tsx` tints
+ * `accent` under the pointer, keeps `active` while the press that opened a
+ * surface is down, and fills `selected` once the row is chosen, while its
+ * `leading` slot is documented as the place for an `Avatar` (`docs/list.mdx`) —
+ * and an avatar's presence dot is a mark. Nothing measured the dot on the row a
+ * reader had chosen, and Luna light's success fill measured 2.99:1 on the look's
+ * selected wash: a presence dot that disappears exactly when the conversation it
+ * belongs to is selected.
+ */
+describe("a mark on the row a reader chose", () => {
+  it("measures the two washes a list row wears", () => {
+    expect(indicatorSurfaces).toEqual(
+      expect.arrayContaining(["accent", "selected"]),
+    );
+  });
+
+  it("holds the painters the strips exist for", () => {
+    const list = readFileSync(
+      new URL("../../components/src/list.tsx", import.meta.url),
+      "utf8",
+    );
+    const avatar = readFileSync(
+      new URL("../../components/src/avatar.tsx", import.meta.url),
+      "utf8",
+    );
+
+    // The row: a hover tints `accent`, the pointer's press `active`, and a
+    // chosen row fills `selected`.
+    expect(list).toContain("hover: { backgroundColor: theme.colors.accent }");
+    expect(list).toContain("active: { backgroundColor: theme.colors.active }");
+    expect(list).toContain("backgroundColor: theme.colors.selected");
+    // The dot: every state paints a role the mark table measures.
+    expect(avatar).toContain("theme.colors.success");
+    expect(avatar).toContain("theme.colors.destructive");
+    expect(avatar).toContain("theme.colors.mutedForeground");
+    expect(avatar).toContain('statusTone(theme, "warning").foreground');
+    expect(
+      (["success", "destructive", "mutedForeground"] as const).filter(
+        (role) => !indicatorRoles.includes(role),
+      ),
+    ).toEqual([]);
+  });
+
+  it("reports the presence dot Luna light lost on its selected row", () => {
+    // The value the look carried before this step: the shared success step.
+    const before = extendTheme(retroTheme(themes.light, "luna"), {
+      colors: { success: palette.green[600] },
+    });
+    const marked = indicatorFailures(before)
+      .filter(
+        ({ role, surface }) => role === "success" && surface === "selected",
+      )
+      .map(({ ratio }) =>
+        ratio === undefined ? "unmeasurable" : ratio.toFixed(2),
+      );
+
+    expect(marked).toEqual(["2.99"]);
+    expect(indicatorFailures(retroTheme(themes.light, "luna"))).toEqual([]);
+  });
+
+  it("reports a mark painted in the row's own wash", () => {
+    const brand = extendTheme(lightTheme, {
+      colors: { selected: lightTheme.colors.success },
+    });
+    const marked = indicatorFailures(brand)
+      .filter(
+        ({ role, surface }) => role === "success" && surface === "selected",
+      )
+      .map(({ ratio }) =>
+        ratio === undefined ? "unmeasurable" : ratio.toFixed(2),
+      );
+
+    expect(marked).toEqual(["1.00"]);
+  });
+
+  it("keeps a mark visible on the rows' washes in all 16 styles", () => {
+    const rows = shipped.flatMap((theme) =>
+      indicatorFailures(theme)
+        .filter(({ surface }) => surface === "accent" || surface === "selected")
+        .map(
+          ({ role, surface, ratio }) =>
+            `${theme.name} ${role}/${surface} ${ratio}`,
+        ),
+    );
+
+    expect(rows).toEqual([]);
+    // The catalogue prints the tightest placement, so the page and the sweep
+    // cannot disagree about how much headroom the row washes leave.
+    expect(catalogue).toContain("3.06:1");
   });
 });
 
@@ -267,6 +365,8 @@ describe("the floors an indicator report uses", () => {
     ).toEqual([
       { role: "primary", surface: "hover", floor: 4.5 },
       { role: "primary", surface: "active", floor: 4.5 },
+      { role: "primary", surface: "accent", floor: 4.5 },
+      { role: "primary", surface: "selected", floor: 4.5 },
     ]);
   });
 

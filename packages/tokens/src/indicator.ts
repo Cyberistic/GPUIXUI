@@ -47,15 +47,23 @@ export const indicatorRoles = [
 
 /**
  * The strips a mark is drawn on: the page, a card, a floating surface and a
- * muted toolbar strip at rest, plus the two washes a row tints under itself
- * while the pointer is over it. Each is a surface the library already paints a
- * bar or a dot on, and each is where the mark has to be found.
+ * muted toolbar strip at rest, the four washes a row wears while the pointer or
+ * the reader's choice is on it, and a field's own fill. Each is a surface the
+ * library already paints a bar or a dot on, and each is where the mark has to be
+ * found.
  *
- * The washes are not decoration: a menu item's tick
- * (`packages/components/src/menu/item.tsx`) and a combobox's selected check
- * (`packages/components/src/combobox.tsx`) are both painted `primary`, and both
- * rows set `hover` on the pointer and `active` while pressed — so the mark is
- * read on those strips, not on the popover it rests on.
+ * The washes are not decoration. A **menu or combobox row** paints its checked
+ * tick (`packages/components/src/menu/item.tsx`,
+ * `packages/components/src/combobox.tsx`) and washes itself `hover` on the
+ * pointer and `active` while pressed, so the tick is read on those two strips
+ * rather than on the popover it rests on. A **list row** is the second registry
+ * and the other two washes: `list.tsx` tints `accent` under the pointer, keeps
+ * `active` while the press that opened a surface is down, and fills `selected`
+ * once the row is chosen, while its `leading` slot is documented as the place
+ * for an `Avatar` (`docs/list.mdx`) — and an avatar's presence dot is a mark,
+ * painted `success`, `destructive`, `mutedForeground` or a tone's readable role
+ * (`avatar.tsx`). A dot on the row a reader has chosen was measured by nothing,
+ * and it found Luna light's success fill at 2.99:1 on the look's selected wash.
  */
 export const indicatorSurfaces = [
   "background",
@@ -64,6 +72,8 @@ export const indicatorSurfaces = [
   "muted",
   "hover",
   "active",
+  "accent",
+  "selected",
   // A field's own fill carries its caret, and a field is a surface a mark is
   // drawn on: `nativeTextTheme` hands the runtime `primary` as the caret on the
   // fill the field paints. It was the one mark surface no placement named.

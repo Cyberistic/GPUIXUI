@@ -669,7 +669,10 @@ Each report is also a function of its own:
   surface behind it.
 - `indicatorFailures(theme, floors?)` lists every progress fill, spinner dot,
   slider fill or presence mark that cannot be found on the strip it is drawn on,
-  and reports one it cannot measure. The floor defaults to the theme's own
+  and reports one it cannot measure. The strips include the four washes a row
+  wears: `hover`/`active` on a menu or combobox row, `accent`/`selected` on a
+  list row — where a dot in the row's `leading` slot sits once the reader has
+  chosen it. The floor defaults to the theme's own
   variant (4.5:1 high contrast). A status mark paints the tone's readable
   role, never its solid fill; see §Checking a theme.
 

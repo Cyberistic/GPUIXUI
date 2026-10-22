@@ -75,6 +75,12 @@ const lunaColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     accentForeground: "#123A66",
     selected: "#BDD4F0",
     selectedForeground: "#0E2F57",
+    // A presence dot is a mark on the row it sits in, and a list row fills
+    // `selected` once it is chosen: the shared success step measured 2.99:1
+    // there, under the 3:1 a non-text mark needs. The look's selected wash is
+    // lighter than the base theme's iris tint, so it takes the next green step
+    // (`indicator.test.ts` holds both the pre-fix value and the shipped one).
+    success: palette.green[700],
     // Luna's beige page sits at the same lightness a pale status tint has
     // (`#ECE9D8` is 1.00:1 from the base blue soft fill), and its muted strip
     // is deeper still, so a tint that clears the default page vanishes here.

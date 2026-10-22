@@ -629,7 +629,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | a filled role's derived pointer step (`filledHover` / `filledPressed` through `actionFeedbackPlacements`) against the fill it replaces | 1.05:1 | 1.05:1 |
 | focus ring (on background, card, popover, muted and secondary, and on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs) and `borderStrong` on those same strips (a floating surface included), on the field, on a soft status tint (an action inside a message), and on the `hover`/`active` wash a bordered control tints, and on the `accent`/`selected` wash a row paints under the same action | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
-| an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the `hover`/`active` wash a row tints under the pointer | 3:1 | 4.5:1 |
+| an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the four washes a row wears (`hover`/`active` on a menu or combobox row; `accent`/`selected` on a list row) | 3:1 | 4.5:1 |
 | soft status surface and its edge against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, elevation shadow (at its deepest level) | 1.05:1 | 1.05:1 |
 | a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
@@ -678,7 +678,19 @@ faint role then had to clear the same floor on a **chrome stripe**: a `<diff>`
 hunk header is `muted` and its text is the faint role, which measured 4.03:1 on
 the dark base's own toolbar, so the whole faint scale moved a step. The caret
 joined the mark contract on the same fill: `indicatorSurfaces` names `input` as
-its seventh strip, because the native text host paints the caret there.
+its last strip, because the native text host paints the caret there.
+
+The mark contract names the **four washes a row wears**, because a tick or a dot
+is read on the row it sits in and not on the surface the row rests on. A menu or
+combobox row tints `hover` under the pointer and `active` while pressed; a
+**list** row tints `accent`, keeps `active` while the press is down and fills
+`selected` once chosen — and its `leading` slot is documented for an `Avatar`,
+whose presence dot is a mark. The selected wash was measured by nothing, and
+Luna light's shared success step landed at 2.99:1 on it: a conversation's
+presence dot vanished exactly when the reader selected that conversation. The
+look carries the next green step as its `success` (4.37:1 there). The tightest
+placement in the whole set is now macOS dark's primary mark on a list row's
+`accent` wash, at 3.06:1.
 
 A field's own fill holds a **third** text role besides the value and the
 placeholder: the muted line. A time picker paints its separator and its clear
