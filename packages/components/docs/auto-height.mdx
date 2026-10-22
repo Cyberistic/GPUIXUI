@@ -68,7 +68,7 @@ import { MotionProvider } from "@gpuixui/components";
 ## Composition
 
 - Pair it with a button carrying `aria-expanded` and an `onClick`, or with the
-  `Collapsible` family (which wraps this rule for its own parts).
+  `Collapsible` and `Accordion` families, whose bodies are this primitive.
 - Do not put a `%` height on a child: the clipped box is the containing block,
   and the reveal's own height is the animation target.
 - State that must survive a close belongs outside the reveal, because the
@@ -89,8 +89,8 @@ import { MotionProvider } from "@gpuixui/components";
 
 - [Collapsible](/docs/components/collapsible) — a trigger and a body composed
   with this rule.
-- [Accordion](/docs/components/accordion) — the stacked, one-or-many variant of
-  the same measured reveal.
+- [Accordion](/docs/components/accordion) — the stacked, one-or-many variant,
+  whose body is this primitive too.
 - [Motion](/docs/motion) — the timing the reveal uses, and the levels it names.
 
 ## Verification
