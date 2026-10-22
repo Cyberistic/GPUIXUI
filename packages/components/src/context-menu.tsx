@@ -308,7 +308,15 @@ export const ContextMenuContent = ({
   if (!presence.mounted) return null;
 
   return (
-    <anchored position={point} deferred priority={1} occlude>
+    <anchored
+      position={point}
+      deferred
+      priority={1}
+      // The occlusion is what makes the open menu a target; a leaving menu is
+      // still painted for its tween but must not block the press underneath.
+      occlude={presence.present}
+      style={{ pointerEvents: presence.present ? "auto" : "none" }}
+    >
       <MenuSurface
         {...rest}
         motion={presenceMotion(fadeFromAnchor("bottom", 4), presence)}
@@ -320,10 +328,15 @@ export const ContextMenuContent = ({
           dismissTopLayer(event);
         }}
         style={mergeStyles(
-          // The anchored host does no layout of its own; the surface carries the
-          // floating look. `position: relative` keeps it a positioned box for the
-          // anchored layer's own measurement.
-          { position: "relative" },
+          {
+            // The anchored host does no layout of its own; the surface carries the
+            // floating look. `position: relative` keeps it a positioned box for the
+            // anchored layer's own measurement.
+            position: "relative",
+            // A leaving box is still painted for its exit tween, but the press the
+            // dismissal was for belongs to the control underneath it.
+            pointerEvents: presence.present ? "auto" : "none",
+          },
           style,
         )}
       >

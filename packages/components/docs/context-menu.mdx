@@ -119,10 +119,12 @@ the click put it. A press elsewhere closes both levels.
 ## Motion
 
 The surface fades and travels 4px down from the pointer (`normal`, 200 ms), and
-stays mounted for its exit tween. The submenu parts are the dropdown's shared
-ones, so a second level enters from its row's side and keeps its box for the
-exit the same way. `MotionProvider` supplies the reduced-motion preference
-(`docs/component-api.md` §11).
+stays mounted for its exit tween without taking a press: its anchored host stops
+occluding the moment it closes, so a press inside the fading box belongs to the
+control underneath rather than needing a second click. The submenu parts are the
+dropdown's shared ones, so a second level enters from its row's side and keeps
+its box for the exit the same way. `MotionProvider` supplies the reduced-motion
+preference (`docs/component-api.md` §11).
 
 ## API
 

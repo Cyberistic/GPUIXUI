@@ -5,8 +5,9 @@
  * from its edge; a surface that vanishes on dismiss instead of running its exit
  * (and focus that leaves a duration late because the surface stayed mounted); a
  * reduced-motion run that still animates; an accordion that mounts its body
- * instantly; and a tab pill that jumps between triggers although both boxes
- * were measured.
+ * instantly; a tab pill that jumps between triggers although both boxes
+ * were measured; and a context menu whose exit tween still swallowed a press
+ * meant for the control underneath it.
  *
  * A headless assertion can read **geometry** (the native tree reports bounds, not
  * the painted opacity), so every case moves the surface on purpose: the offset
@@ -15,7 +16,7 @@
  * the entry frame is exact rather than however far the frame loop had got.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
 import type { TestRoot } from "@gpuix/react/testing";
@@ -25,6 +26,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../accordion.js";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "../context-menu.js";
 import { Button } from "../internal/button.js";
 import {
   Dialog,
@@ -353,6 +360,75 @@ describe("a submenu", () => {
 
     page.renderer.simulateKeystrokes("left");
     await waitFor(() => expect(painted(page.renderer, "submenu")).toBe(false));
+    page.unmount();
+  });
+});
+
+describe("a context menu", () => {
+  /** A row over a full-surface control, so a press through the ghost lands. */
+  const OverlapPage = ({ onBehind }: { readonly onBehind: () => void }) => (
+    <Page>
+      <div style={{ position: "relative", width: 600, height: 400 }}>
+        <Button
+          testId="behind"
+          onClick={onBehind}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: 600,
+            height: 400,
+          }}
+        >
+          Behind
+        </Button>
+        <ContextMenu>
+          <ContextMenuTrigger testId="row" style={{ width: 200, height: 32 }}>
+            <text>Project</text>
+          </ContextMenuTrigger>
+          <ContextMenuContent testId="menu" label="Project actions">
+            <ContextMenuItem>Open</ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+      </div>
+    </Page>
+  );
+
+  const originOf = (
+    page: ReturnType<typeof renderComponent>,
+    testId: string,
+  ): {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+  } =>
+    Option.getOrElse(boundsOf(page, testId), () => {
+      throw new Error(`behaviour: "${testId}" painted no box`);
+    });
+
+  it("stays painted for its exit without taking the pointer", async () => {
+    const onBehind = vi.fn();
+    const page = renderComponent(<OverlapPage onBehind={onBehind} />);
+    const row = originOf(page, "row");
+    // The pointer sits inside the row's lower half, so the menu hangs below it.
+    page.renderer.nativeSimulateClick(row.x + 10, row.y + row.height / 2, 2);
+    await waitFor(() => expect(painted(page.renderer, "menu")).toBe(true));
+    const menu = originOf(page, "menu");
+    const presses = onBehind.mock.calls.length;
+
+    page.renderer.simulateKeystrokes("escape");
+    await delay();
+
+    // The box is still painted while it fades, but it is no longer a target...
+    const leaving = page.renderer.findByTestId("menu");
+    expect(leaving).toBeDefined();
+    expect(leaving?.style.pointerEvents).toBe("none");
+    // ...so a press inside its box belongs to the control underneath.
+    page.renderer.nativeSimulateClick(menu.x + menu.width / 2, menu.y + 20);
+    expect(onBehind.mock.calls.length).toBe(presses + 1);
+
+    await waitFor(() => expect(painted(page.renderer, "menu")).toBe(false));
     page.unmount();
   });
 });
