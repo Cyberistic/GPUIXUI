@@ -1319,7 +1319,8 @@ describe("the text a composite field keeps on its own fill", () => {
 
   const measured = (foreground: string, background: string): boolean =>
     contrastPairs.some(
-      (pair) => pair.foreground === foreground && pair.background === background,
+      (pair) =>
+        pair.foreground === foreground && pair.background === background,
     );
 
   it("measures the value and the placeholder on the page role", () => {
@@ -1346,9 +1347,7 @@ describe("the text a composite field keeps on its own fill", () => {
 
     composites.forEach(([field, control]) => {
       expect(recipe(tw, field), field).toContain("bg-background");
-      expect(recipe(tw, control), control).toContain(
-        "text-input-foreground",
-      );
+      expect(recipe(tw, control), control).toContain("text-input-foreground");
     });
 
     // The plain field paints the other fill, through its own style rather than
@@ -1419,14 +1418,12 @@ describe("the text a composite field keeps on its own fill", () => {
     ];
 
     styles.forEach((theme) => {
-      const failures = contrastFailures(
-        theme,
-        contrastFloorsFor(theme),
-      ).filter(({ foreground, background }) =>
-        foreground === "placeholder"
-          ? background === "background" || background === "input"
-          : foreground === "inputForeground" &&
-            (background === "background" || background === "input"),
+      const failures = contrastFailures(theme, contrastFloorsFor(theme)).filter(
+        ({ foreground, background }) =>
+          foreground === "placeholder"
+            ? background === "background" || background === "input"
+            : foreground === "inputForeground" &&
+              (background === "background" || background === "input"),
       );
       expect(failures, theme.name).toEqual([]);
     });
