@@ -27,12 +27,28 @@ import type {
   TextTone,
 } from "../core/style.js";
 import type { ElevationLevel, RadiusStep, SpaceStep } from "../core/theme.js";
+import { paintsFilledSurface } from "../core/variants.js";
 import type { ButtonVariant, ToggleVariant } from "../core/variants.js";
 
 // ── Button ───────────────────────────────────────────────────────────
 
 const BUTTON_BASE =
-  "flex flex-row items-center justify-center gap-sm rounded-md type-label cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+  "flex flex-row items-center justify-center gap-sm rounded-md type-label cursor-pointer disabled:cursor-not-allowed";
+
+/**
+ * A disabled control's paint.
+ *
+ * A filled action wears the neutral pair (`disabled` behind `disabledForeground`
+ * — `disabledAction` in `@gpuixui/tokens`), the same roles `contrastPairs`
+ * measures on every surface a control sits on. The old 50% fade composited the
+ * label into the card behind it and landed at 1.47:1–1.49:1 on four light
+ * styles, so the state was invisible exactly where people read it. A control
+ * with no fill of its own — an `outline`, `ghost` or `link` action, a toggle —
+ * has nothing to collapse into and keeps the fade.
+ */
+const FILLED_DISABLED =
+  "disabled:bg-disabled disabled:text-disabled-foreground";
+const UNFILLED_DISABLED = "disabled:opacity-50";
 
 /**
  * A filled action's feedback is a **derived, opaque** fill.
@@ -82,6 +98,7 @@ export const buttonClass = (
   cn(
     BUTTON_BASE,
     BUTTON_VARIANT[variant],
+    paintsFilledSurface(variant) ? FILLED_DISABLED : UNFILLED_DISABLED,
     options.square === true ? BUTTON_SQUARE[size] : BUTTON_SIZE[size],
     options.fullWidth === true && "w-full",
   );
@@ -291,6 +308,9 @@ export const toggleClass = (
   cn(
     BUTTON_BASE,
     TOGGLE_PAINT[variant][pressed ? "pressed" : "rest"],
+    // A toggle's pressed accent is a wash, not one of the three filled actions
+    // (`filledAction`), so it has no measured pair to wear and keeps the fade.
+    UNFILLED_DISABLED,
     options.square === true ? BUTTON_SQUARE[size] : BUTTON_SIZE[size],
   );
 

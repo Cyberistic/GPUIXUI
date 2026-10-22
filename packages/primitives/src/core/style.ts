@@ -13,7 +13,12 @@
  */
 
 import type { GpuixTheme, StyleDesc } from "@gpuix/react";
-import { elevationShadow, targetSize } from "@gpuixui/tokens";
+import {
+  disabledAction,
+  elevationShadow,
+  targetSize,
+  type FilledAction,
+} from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type {
@@ -50,6 +55,16 @@ export interface ControlVariant {
   readonly background: Paint;
   readonly foreground: ColorRef;
   readonly border: Paint;
+  /**
+   * The action whose fill this variant paints, when the fill is one of the
+   * three filled actions.
+   *
+   * A field paints a fill too, but its fill is a content surface rather than an
+   * action, so it declares nothing here. The distinction decides the disabled
+   * paint: a filled action wears the measured neutral pair, a field or an
+   * unfilled control fades.
+   */
+  readonly filledAction?: FilledAction;
   /**
    * Declared verbatim in `style.hover`. A variant must give some feedback — a
    * change of fill, of border or of decoration — so this is not optional.
@@ -121,9 +136,23 @@ export const controlStyle = (
 
   if (spec.disabled === true) {
     // A disabled control must not respond to the pointer at all.
-    style.opacity = 0.5;
-    style.hover = { backgroundColor: rest };
-    style.active = { backgroundColor: rest };
+    //
+    // A filled action wears the neutral pair `contrastPairs` measures on every
+    // surface a control sits on: a 50% fade composites the label into whatever
+    // is behind it and lands at 1.47:1–1.49:1 on the card of four light styles
+    // (`disabled.test.ts` in `@gpuixui/tokens`). A field is measured on every
+    // content surface it sits on and clears the floor there, and an unfilled
+    // control has no fill to collapse into, so both keep the fade.
+    const pair =
+      variant.filledAction === undefined ? undefined : disabledAction(theme);
+    if (pair === undefined) {
+      style.opacity = 0.5;
+    } else {
+      style.backgroundColor = pair.backgroundColor;
+      style.color = pair.color;
+    }
+    style.hover = { backgroundColor: style.backgroundColor };
+    style.active = { backgroundColor: style.backgroundColor };
   } else {
     style.hover = variant.hover(theme);
     style.active = variant.active(theme);

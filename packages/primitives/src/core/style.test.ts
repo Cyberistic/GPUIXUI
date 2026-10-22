@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { darkTheme, elevationShadow, lightTheme } from "@gpuixui/tokens";
+import {
+  darkTheme,
+  disabledAction,
+  elevationShadow,
+  lightTheme,
+} from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -124,13 +129,34 @@ describe("controlStyle", () => {
     );
   });
 
-  it("removes pointer feedback while disabled, and dims", () => {
+  it("replaces a disabled filled action's fade with the measured neutral pair", () => {
+    // The bug: a disabled filled action faded itself to 50%, which composites
+    // the label into whatever is behind the control — 1.47:1–1.49:1 on the
+    // card of four light styles (`disabled.test.ts` in `@gpuixui/tokens`). The
+    // neutral pair is the one `contrastPairs` measures on every surface a
+    // control sits on.
     const style = controlStyle(spec({ disabled: true }), testTheme);
     expect(style.cursor).toBe("not-allowed");
-    expect(style.opacity).toBeLessThan(1);
+    const pair = disabledAction(testTheme);
+    expect(style.backgroundColor).toBe(pair.backgroundColor);
+    expect(style.color).toBe(pair.color);
+    expect(style.opacity).toBeUndefined();
     // The press, or the hover, must not look like it did anything.
     expect(style.hover?.backgroundColor).toBe(style.backgroundColor);
     expect(style.active?.backgroundColor).toBe(style.backgroundColor);
+  });
+
+  it("keeps the fade where there is no filled action to collapse", () => {
+    // A field is measured on every content surface it sits on and clears the
+    // floor there; an unfilled control has no fill to swap for the pair.
+    Arr.forEach([fieldVariant, buttonVariants.ghost] as const, (variant) => {
+      const style = controlStyle(spec({ variant, disabled: true }), testTheme);
+      expect(style.opacity).toBe(0.5);
+      // The label is not swapped for the disabled role: the fade is the state.
+      expect(style.color).not.toBe(testTheme.colors.disabledForeground);
+      expect(style.hover?.backgroundColor).toBe(style.backgroundColor);
+      expect(style.active?.backgroundColor).toBe(style.backgroundColor);
+    });
   });
 
   it("switches the border and the ring to the destructive role when invalid", () => {

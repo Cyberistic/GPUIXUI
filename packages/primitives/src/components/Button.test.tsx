@@ -14,20 +14,26 @@ import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  blend,
   brandText,
   brandTextSurfaces,
   contrastFloors,
   contrastFloorsFor,
   contrastRatio,
   darkTheme,
+  disabledAction,
+  disabledOpacity,
   filledHover,
   filledPressed,
   keyboardDimFailures,
   lightTheme,
+  platformTheme,
+  retroTheme,
+  themes,
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton, type ButtonState } from "./Button.js";
-import type { ButtonVariant } from "../core/variants.js";
+import { buttonVariants, type ButtonVariant } from "../core/variants.js";
 import { keyEvent } from "./testing/event.js";
 import {
   elementChildren,
@@ -288,6 +294,85 @@ describe("Button", () => {
           },
         );
       });
+    });
+  });
+
+  it("paints a disabled filled action with the measured pair, not a fade", () => {
+    // The bug: a disabled filled action faded itself. A fade composites the
+    // label into whatever sits behind the control, so on the card of the four
+    // light platform/look styles it lands at 1.47:1–1.49:1 — under the disabled
+    // floor — while the neutral pair (`disabledAction`) is the pair
+    // `contrastPairs` measures on every surface a control sits on.
+    const cards = [
+      ["macOS light", platformTheme(themes.light, "darwin")],
+      ["Linux light", platformTheme(themes.light, "linux")],
+      ["Windows 7 (Aero) light", retroTheme(lightTheme, "aero")],
+      ["Windows XP (Luna) light", retroTheme(lightTheme, "luna")],
+    ] as const;
+
+    Arr.forEach(cards, ([name, theme]) => {
+      // The fade's composite: the control shows half its fill over the card,
+      // and the label fades the same way over that faded fill.
+      const fadedFill = blend(
+        theme.colors.primary,
+        theme.colors.card,
+        1 - disabledOpacity,
+      );
+      const fadedLabel = blend(
+        theme.colors.primaryForeground,
+        fadedFill,
+        1 - disabledOpacity,
+      );
+      // The premise: the fade is under the floor on the card, which is where a
+      // dialog's action lives. A palette that fixes it makes this case fail.
+      expect(contrastRatio(fadedLabel, fadedFill), name).toBeLessThan(
+        contrastFloors.disabled,
+      );
+    });
+
+    const filled = ["primary", "secondary", "destructive"] as const;
+    const surfaces = [
+      "background",
+      "card",
+      "popover",
+      "muted",
+      "secondary",
+    ] as const;
+
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      const pair = disabledAction(theme);
+      Arr.forEach(filled, (variant) => {
+        const element = renderButton(
+          { variant, disabled: true, children: "Save" },
+          theme,
+          { focused: false },
+        );
+        expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
+          pair.backgroundColor,
+        );
+        expect(expectSome(hostStyleString(element, "color"))).toBe(pair.color);
+        // No fade is left on top of the opaque pair.
+        expect(hostStyle(element, "opacity")).toStrictEqual(Option.none());
+        // The pair reads on every surface a disabled action can sit on.
+        Arr.forEach(surfaces, (surface) => {
+          expect(
+            contrastRatio(pair.color, theme.colors[surface]) ?? 0,
+          ).toBeGreaterThanOrEqual(contrastFloors.disabled);
+        });
+      });
+    });
+  });
+
+  it("keeps the fade on a disabled action with no fill to collapse", () => {
+    // `outline`, `ghost` and `link` paint no fill of their own, so the neutral
+    // pair would turn each into a grey box instead of the action it is.
+    Arr.forEach(["outline", "ghost", "link"] as const, (variant) => {
+      const element = resting({ variant, disabled: true, children: "Cancel" });
+      expect(expectSome(hostStyle(element, "opacity"))).toBe(0.5);
+      // The label keeps its resting role; the fade is the whole state.
+      expect(expectSome(hostStyleString(element, "color"))).toBe(
+        buttonVariants[variant].foreground(testTheme),
+      );
     });
   });
 

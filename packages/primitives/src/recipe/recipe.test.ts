@@ -56,6 +56,7 @@ import {
   BUTTON_VARIANTS,
   buttonVariants,
   fieldVariant,
+  paintsFilledSurface,
   TOGGLE_VARIANTS,
   toggleVariants,
   type ButtonVariant,
@@ -129,6 +130,29 @@ describe("Button recipe", () => {
         testTheme,
       ),
     );
+  });
+
+  it("paints a disabled action the way the resolver does", () => {
+    // The disabled bucket is a second paint the recipe owns, and it has to agree
+    // with `controlStyle` exactly as the resting style does: a filled action
+    // wears the measured neutral pair, an action with no fill fades.
+    Arr.forEach(BUTTON_VARIANTS, (variant) => {
+      const compiled = recipeTw.classesToStyle(
+        buttonClass(variant, "md"),
+        testTheme,
+      );
+      const merged = mergeStyle(compiled.style, compiled.disabled);
+      const oracle = controlStyle(
+        { variant: buttonVariants[variant], size: "md", disabled: true },
+        testTheme,
+      );
+      expect(merged.backgroundColor, variant).toBe(oracle.backgroundColor);
+      expect(merged.color, variant).toBe(oracle.color);
+      expect(merged.opacity, variant).toBe(oracle.opacity);
+      expect(merged.opacity, variant).toBe(
+        paintsFilledSurface(variant) ? undefined : 0.5,
+      );
+    });
   });
 
   it("resolves the semantic roles against the shipped themes", () => {

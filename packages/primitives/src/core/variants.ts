@@ -45,10 +45,15 @@ export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
  * (`alpha(primary, 0.9)`) let the surface behind the control through, so the
  * same action read as two colours on a card and on a dialog — and a
  * translucent fill cannot be measured for label contrast at all.
+ *
+ * The action is also what marks the variant as a **filled action**, which is
+ * the split the disabled paint reads: a filled action wears the neutral pair, a
+ * field or an unfilled control fades (`core/style.ts`).
  */
 const filled = (
   action: FilledAction,
-): Pick<ControlVariant, "hover" | "active"> => ({
+): Pick<ControlVariant, "hover" | "active" | "filledAction"> => ({
+  filledAction: action,
   hover: (theme) => ({ backgroundColor: filledHover(theme, action) }),
   active: (theme) => ({ backgroundColor: filledPressed(theme, action) }),
 });
@@ -164,7 +169,7 @@ export const variantSpinnerAccent = (variant: ButtonVariant): SpinnerAccent =>
  * variant inherits the rule.
  */
 export const paintsFilledSurface = (variant: ButtonVariant): boolean =>
-  buttonVariants[variant].background !== undefined;
+  buttonVariants[variant].filledAction !== undefined;
 
 /**
  * A field: an input, a textarea, a select trigger.

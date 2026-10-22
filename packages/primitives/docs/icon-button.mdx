@@ -42,7 +42,9 @@ takes a theme role rather than inheriting the button's text colour.
 reads as chrome, not as a row of filled buttons. `size` is `sm` / `md` / `lg` and
 sets both sides of the square from `density.controlHeight`.
 
-- `disabled` — refuses a press and both keys, and leaves the tab order.
+- `disabled` — refuses a press and both keys, and leaves the tab order. A filled
+  `variant` wears the same neutral pair a `Button` does; the default `ghost`
+  keeps the fade, since it has no fill to collapse into.
 - `loading` — paints a spinner, announces `Loading`, refuses activation, and
   **stays focusable** so a keyboard user is not dropped mid-action.
 

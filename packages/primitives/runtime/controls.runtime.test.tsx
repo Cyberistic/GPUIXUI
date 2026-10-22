@@ -20,6 +20,7 @@ import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import { alpha, filledHover, filledPressed } from "@gpuixui/tokens";
+import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
@@ -174,6 +175,40 @@ it("paints a filled Button's hover as the theme's opaque derived fill", async ()
   expect(bucketFill(style, "hover")).not.toBe(
     alpha(testTheme.colors.primary, 0.9),
   );
+});
+
+it("paints a disabled filled Button with the measured pair, not a fade", async () => {
+  // The bug: a disabled filled action faded itself to 50%, which composites the
+  // label into the surface behind the control — under the disabled floor on the
+  // card of four light styles. The neutral pair is opaque, so the runtime's own
+  // style report shows the fill and the label it paints on the card.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box tone="card" padding="md">
+        <Stack direction="row">
+          <Button testId="filled" disabled>
+            Save
+          </Button>
+          <Button testId="ghost" variant="ghost" disabled>
+            Cancel
+          </Button>
+        </Stack>
+      </Box>
+    </Surface>,
+  );
+  const styleOf = (testId: string): Record<string, unknown> =>
+    Option.getOrElse(
+      Option.flatMap(runtime.element(testId), (element) =>
+        Option.fromNullishOr(runtime.renderer.getElement(element.id)?.style),
+      ),
+      () => expect.fail(`the runtime retained no ${testId}`),
+    );
+  expect(styleOf("filled").backgroundColor).toBe(testTheme.colors.disabled);
+  expect(styleOf("filled").color).toBe(testTheme.colors.disabledForeground);
+  expect(styleOf("filled").opacity).toBeUndefined();
+  // An unfilled action has no fill to collapse into and keeps the fade.
+  expect(styleOf("ghost").opacity).toBe(0.5);
 });
 
 it("keeps a filled Button's label while another control has keyboard focus", async () => {
