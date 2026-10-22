@@ -1,0 +1,245 @@
+---
+title: List
+description: A vertical collection of rows with one roving tab stop, single or multiple selection, type-ahead and an optional row action.
+---
+
+`List` presents rows. With `selectionMode="single"` it becomes a `listbox`: the
+arrows move a roving tab stop, a click selects, and the whole list is one tab
+stop instead of one per row. `multiple` keeps that keyboard model and adds the
+desktop selection modifiers. It is the keyboard and selection foundation the
+menus and tabs reuse, and the rules below were measured on
+`@gpuix/native@0.11.0`.
+
+<ComponentPreview name="list-demo" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="List" />
+
+<ComponentSource name="list" file="packages/components/src/list.tsx" />
+
+## Usage
+
+```tsx
+import {
+  List,
+  ListItem,
+  ListItemDescription,
+  ListItemTitle,
+} from "@gpuixui/components/list";
+
+const files = [
+  { value: "readme", title: "README.md", description: "The project's front door" },
+  { value: "design", title: "Design notes", description: "docs/design-notes.md" },
+];
+
+export const FileList = ({ open }: { open: (value: string) => void }) => (
+  <List defaultValue="readme" onActivate={open} selectionMode="single">
+    {files.map((file) => (
+      <ListItem key={file.value} textValue={file.title} value={file.value}>
+        <ListItemTitle>{file.title}</ListItemTitle>
+        <ListItemDescription>{file.description}</ListItemDescription>
+      </ListItem>
+    ))}
+  </List>
+);
+```
+
+A list with no `selectionMode` is a plain list: the rows paint, but nothing is
+focusable, so only a click can run an `onActivate`.
+
+## Modes
+
+| `selectionMode` | Role | Tab stop | Keyboard |
+| --------------- | ---- | -------- | -------- |
+| `none` (default) | `list` / `listitem` | none — rows are not focusable | none |
+| `single` | `listbox` / `option` | exactly one row | arrows, `Home`/`End`, `Enter`, `Space`, type-ahead |
+| `multiple` | `listbox` / `option` | exactly one row | the same, plus the selection modifiers |
+
+The props are a discriminated union: a `single` list takes a `string` and a
+`multiple` list an array, so the compiler refuses a mismatched value instead of
+the list guessing.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `List` | the collection: mode, value, the roving tab stop and every key |
+| `ListItem` | one row: value, `textValue`, disabled state, and its leading/trailing slots |
+| `ListItemTitle` | the row's one line, in the role the row's fill is measured with |
+| `ListItemDescription` | the second, muted line |
+
+`ListItem` used outside a `List` throws at the boundary, which is a programming
+error rather than a state to recover from.
+
+## Keyboard
+
+| Key | Effect |
+| ---- | ------ |
+| `↓` / `↑` | move the focus to the next / previous enabled row, wrapping |
+| `Home` / `End` | the first / last enabled row |
+| `Enter` | select the focused row, then run `onActivate` when the list takes one |
+| `Space` | select the focused row only; never activates |
+| a letter | jump to the next row whose `textValue` starts with the typed prefix |
+
+In `multiple` mode `Space`/`Enter` toggle the focused row, `Shift+↓`/`Shift+↑`
+extend a range from the anchor, a plain arrow move re-anchors without changing
+the selection, and `Cmd+A`/`Ctrl+A` select every enabled row.
+
+**A key acts on the row that sent it.** The runtime delivers a focused row's key
+to the list's own `onKeyDown`, and a traversal focuses a row **without running
+its `onFocus`** on this host, so the element that sent the key — not a stored
+"current row" — is the move origin. A key that arrives at the list root has no
+row of its own and moves from the recorded row.
+
+## Type-ahead
+
+The prefix matches `ListItem`'s `textValue` (not the rendered title), case
+insensitively, from the row **after** the current one and wrapping. A repeated
+letter therefore cycles the rows that start with it, which is the desktop
+convention. The prefix lives for 500ms as a lazy comparison against the
+monotonic clock — nothing runs while the list is idle.
+
+A row without `textValue` is not searched, and a disabled row is skipped.
+
+## Selection
+
+Controlled and uncontrolled both work.
+
+```tsx
+// Uncontrolled: the list remembers.
+<List selectionMode="single" defaultValue="readme" onValueChange={log} />;
+
+// Controlled: the app remembers, and the list never moves its own value.
+<List selectionMode="single" onValueChange={setFile} value={file} />;
+```
+
+<ComponentPreview name="list-multiple" />
+
+In `multiple` mode a plain click selects only that row, `Cmd`/`Ctrl`-click
+toggles it and `Shift`-click selects the enabled range from the anchor. The
+reported values keep the order they were chosen, never contain duplicates, and
+never include a disabled row. A controlled list reports the change and leaves
+`aria-selected` where the consumer put it.
+
+## Activation
+
+Selection is state; activation is an action — open a file, load a record. Pass
+`onActivate` (single and `none` only) and `Enter` or a click runs it after the
+selection:
+
+| Gesture | Result |
+| ------- | ------ |
+| `Enter` (single) | selects, then activates |
+| `Space` (single) | selects only |
+| click (single) | selects, then activates |
+| click (`none`) | activates immediately — there is no selection to make |
+| any gesture on a disabled row | nothing |
+
+A multiple list **rejects** `onActivate` at the type level: a click while
+building a range would run an action by accident. There is no double-click
+action — the host events carry no reliable signal — so a mouse-only action is
+the row's `trailing` slot holding a real control.
+
+## API reference
+
+`List` and `ListItem` take the GPUix host props and merge `style` last.
+
+### List
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `selectionMode` | `"none" \| "single" \| "multiple"` | `"none"` |
+| `value` | `string` (single) · `ReadonlyArray<string>` (multiple) — controlled | — |
+| `defaultValue` | the same shape, initial selection when uncontrolled | `""` · `[]` |
+| `onValueChange` | `(value: string) => void` (single) · `(values: ReadonlyArray<string>) => void` (multiple) | — |
+| `onActivate` | `(value: string) => void` — single and `none` only; absent from the multiple variant | — |
+| `dense` | `boolean` — a row at `density.rowHeight` instead of `rowHeight + spacing.md` | `false` |
+
+### ListItem
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `value` | `string` (required) | — |
+| `textValue` | `string` — the text type-ahead matches; omit and the row is not searched | — |
+| `disabled` | `boolean` | `false` |
+| `leading` | `ReactNode` — an icon, avatar or marker | — |
+| `trailing` | `ReactNode` — metadata, a badge or an action | — |
+| `style` | `StyleDesc` or a function of `{ active, disabled, selected }` | — |
+
+`ListItemTitle` and `ListItemDescription` take the host props and `style`; both
+are clipped to one line and can never stretch the row.
+
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| row, rest | no fill; title `foreground`, description `mutedForeground` |
+| row, hover | `accent` fill, `accentForeground` text |
+| row, selected | `selected` fill; the title takes `selectedForeground` |
+| row, disabled | `disabledForeground` title and description; `mutedForeground` title when it is also selected |
+| row, keyboard focus | the runtime's `focusVisible` outline in the `ring` role |
+| row height | `density.rowHeight + spacing.md` (40px at the default density), or `density.rowHeight` when `dense` |
+
+A selected row's title takes the row's **on-colour**, not the page's body role:
+the wash is a saturated fill and the token contract measures
+`selectedForeground` on it. Its description keeps `mutedForeground`, the pair
+measured on that same fill at the secondary floor.
+
+A disabled row keeps every fill it would paint — including a selection wash it
+already holds — and carries its state in the text roles. It never fades by
+opacity, because that composites the wash into the strip behind it; the pointer
+gets `not-allowed` instead.
+
+## Accessibility and limitations
+
+- `role="list"`/`listitem` without a mode, `listbox`/`option` with one, and
+  `aria-selected` on every row in both selectable modes.
+- **No `aria-multiselectable`** in `0.11.0`: the mode is learned from the rows'
+  own `aria-selected` values, not from the listbox.
+- The row ring is keyboard-only: the runtime paints `focusVisible` after a
+  keyboard focus and not after a click, and every row declares it at rest.
+- Rows are one tab stop, not one per row.
+- **No drag reorder, group headers, nested rows or virtualisation.** A long
+  collection belongs in a `virtual-list`, which is a separate component.
+- Activation is a callback, not a link: no `href`, no navigation service, so an
+  activatable row is not announced as a link.
+- Keyboard activation needs a selection mode; with `none` the rows are not
+  focusable. A multiple list has no activation at all.
+- Type-ahead reads `textValue`, because the row is a composition the list
+  cannot read back.
+- Rows are addressed by `value`, never by index.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `this package` | the collection registry, the selection arithmetic, the origin rule and the row parts |
+| `@gpuix/react` | the host tree and the renderer's `focusElement` |
+| `@gpuix/react/floating` | `mergeStyles`/`resolveStyle` for the state-aware row style |
+| `@gpuixui/tw` | the `list*` class recipes, compiled through the package registry |
+| `effect` | `Option` for the registry, `Array` for the row sets and `Match` for the key dispatch |
+
+`@gpuixui/tokens` is reached through this package's theme provider, not imported
+directly; the component reads roles, never colours.
+
+## Related
+
+- **Virtual list** — the same rows with only the window mounted.
+- **Card** — the surface a list usually sits in.
+- **Tabs** — reuses the same item registry with a horizontal roving stop.
+- **Dropdown menu** — actions rather than a selection.
+- **Select** — a field-shaped picker over options data, with a popover.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `yes` runtime verdict: the runtime accepts
+focus, key events and `focusElement`, so the roving stop and the selection model
+are composed from provided primitives rather than guessed. The behaviour is held
+by **40 native behaviour tests** in
+`packages/components/src/behaviour/list.test.tsx`, with the navigation
+arithmetic in `src/internal/collection.test.ts`, the typed prefix in
+`src/internal/typeahead.test.ts`, the multiple-selection rules in
+`src/list/selection.test.ts` and the move origin in `src/list/origin.test.ts`.
+Three limits are recorded above rather than hidden: no `aria-multiselectable`,
+no link role on activation, and no drag reorder or virtualisation.

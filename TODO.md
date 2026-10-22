@@ -3585,7 +3585,45 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 127/127
+`[x]` `[██████████]` 128/128
+
+`[x]` Curate the **List** page and hold its roving stop, its range and its
+disabled paint to the source — `/docs/components/list` served the package page
+(strategy 4: no preview), so the library's row collection had nothing a reader
+could press even though it is the keyboard and selection foundation the menus
+and tabs reuse. The curated page shadows `packages/components/docs/list.mdx` and
+teaches what a drawing cannot show: one tab stop rather than one per row, arrows
+that skip a disabled row and act on the row that **sent** the key (a traversal
+focuses without running `onFocus`, so a stored row can be stale), a typed prefix
+that searches **after** the current row so a repeated letter cycles, a range that
+never includes a disabled row, and a disabled row that keeps every fill and names
+its text roles rather than fading (a fade composites the selection wash it just
+painted). Two browser previews: `list-demo` (a workspace file list: arrows,
+`Home`/`End`, type-ahead, `Enter` opens while `Space` only selects, a disabled
+row) and `list-multiple` (assign reviewers: plain/Cmd/Shift clicks and the
+range). The rules live in `src/components/docs/list-preview.ts` so they are
+testable: `list-preview.test.ts` (10 cases) fails when an arrow stops on a
+disabled row, type-ahead searches from the top, the range takes a disabled row,
+or a repeated letter starts a new prefix. `component-page-truth.test.ts` gained
+the page and `hold the list's roving stop, its range and its disabled paint to
+the source`, which reads `list.tsx` (the mode role, the single tab stop,
+`aria-selected`, `rowHeight + spacing.md`, `selected`/`selectedForeground`,
+`disabledForeground`, `not-allowed`), `internal/collection.ts`,
+`internal/typeahead.ts` (its `Duration.millis` window, printed from the source),
+`list/selection.ts`, and the `LIST_ITEM` recipe. The sidebar gained a
+**Collections** group, and the Components index sentence, `/docs/theming`'s
+switch list, the strategy's "Curated today" line, `sources.ts` and the app README
+ledger name the page; `package-docs.test.ts` took the shadow. The bridge also
+publishes `--row-height` and `--spacing-md` so the preview's rows follow the
+platform density, held by `theme-css.test.ts` (the `.gx-demo` defaults and a row
+geometry case). Directions measured: rewording the type-ahead origin fails
+`expected … to contain '**after** the current one'`, and searching from the top
+in the preview fails `expected 'design' to be 'diagram'`. The full docs suite is
+709 tests with the one pre-existing `link-integrity` failure on the two
+**untracked** components pages owned by the components workstream; `check-types`
+and `build` are green. Verified in the dev server: `/docs/components/list`
+renders both previews, and `?platform=darwin` shrinks a row (`--row-height` 28px
+against the default 32px).
 
 `[x]` Curate the **Combobox** page and hold its ranking and its create row to
 the source — `/docs/components/combobox` served the package page (strategy 4: no

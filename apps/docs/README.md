@@ -51,6 +51,7 @@ components/confirm-dialog.mdx Curated: Cancel first, confirm never closes, the f
 components/dialog.mdx        Curated: a real confirmation workflow
 components/dropdown-menu.mdx Curated: highlighted row is the focused row
 components/field.mdx        Curated: one message slot, submit-time validation, no fade
+components/list.mdx         Curated: one roving tab stop, type-ahead, the range that skips a row
 components/popover.mdx       Curated: anchored placement
 components/select.mdx        Curated: the 320px list, the row that reveals itself
 components/tabs.mdx          Curated: the measured indicator
@@ -91,6 +92,8 @@ src/components/docs/preview-surface.tsx   A preview carrying the resolved theme'
 src/components/docs/demos.tsx             The browser renderings and their source strings
 src/components/docs/combobox-preview.ts The combobox preview's ranking, highlight and selection model
 src/components/docs/combobox-demo.tsx     The combobox's two browser renderings and their source strings
+src/components/docs/list-preview.ts       The list preview's arrow order, type-ahead and selection rules
+src/components/docs/list-demo.tsx         The list's two browser renderings and their source strings
 src/components/docs/menu-preview.ts       The menu preview's row model and arrow arithmetic
 src/components/docs/command-preview.ts    The palette preview's matcher and group ranking
 src/components/docs/select-preview.ts     The select preview's data and arrow arithmetic

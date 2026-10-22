@@ -9,17 +9,23 @@ import {
   type ReactNode,
 } from "react";
 import {
+  ComboboxDemo,
+  ComboboxMultiple,
+  comboboxDemoSource,
+  comboboxMultipleSource,
+} from "./combobox-demo";
+import {
   commandMatches,
   firstEnabled,
   nextEnabled,
   type CommandAction,
 } from "./command-preview";
 import {
-  ComboboxDemo,
-  ComboboxMultiple,
-  comboboxDemoSource,
-  comboboxMultipleSource,
-} from "./combobox-demo";
+  ListDemo,
+  ListMultiple,
+  listDemoSource,
+  listMultipleSource,
+} from "./list-demo";
 import {
   enabledEntries,
   highlightAfter,
@@ -2456,6 +2462,8 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: shellSource,
     composition: true,
   },
+  "list-demo": { render: ListDemo, source: listDemoSource },
+  "list-multiple": { render: ListMultiple, source: listMultipleSource },
   "popover-demo": { render: PopoverDemo, source: popoverSource },
   "select-states": { render: SelectStates, source: selectStatesSource },
   "select-workflow": { render: SelectDemo, source: selectDemoSource },

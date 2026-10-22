@@ -5,6 +5,8 @@
     "button",
     "---Surfaces---",
     "card",
+    "---Collections---",
+    "list",
     "---Feedback---",
     "alert",
     "toast",

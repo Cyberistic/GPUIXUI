@@ -81,6 +81,8 @@ const darkDensity: Readonly<Record<string, number>> = {
   "control-padding-x-sm": themes.dark.density.controlPaddingX.sm,
   "control-padding-x-md": themes.dark.density.controlPaddingX.md,
   "control-padding-x-lg": themes.dark.density.controlPaddingX.lg,
+  "row-height": themes.dark.density.rowHeight,
+  "spacing-md": themes.dark.spacing.md,
 };
 
 describe("theme bridge", () => {
@@ -102,6 +104,8 @@ describe("theme bridge", () => {
     expect(vars["--control-padding-x-sm"]).toBe(
       `${themes.dark.density.controlPaddingX.sm}px`,
     );
+    expect(vars["--row-height"]).toBe(`${themes.dark.density.rowHeight}px`);
+    expect(vars["--spacing-md"]).toBe(`${themes.dark.spacing.md}px`);
   });
 
   it("carries the platform density, so a preview's controls change size", () => {
@@ -197,6 +201,15 @@ describe("preview style sheets", () => {
       .map((selector) => `${selector}: no --control-height`);
 
     expect(fixed).toEqual([]);
+  });
+
+  it("read a list row's height from the density and its spacing", () => {
+    // A row is `density.rowHeight + spacing.md` in the component, so a preview
+    // cannot carry 40px: macOS compact and Linux spacious must both resize it.
+    const row = block(read("../styles/demos.css"), ".gx-list-row");
+
+    expect(row).toContain("--row-height");
+    expect(row).toContain("--spacing-md");
   });
 
   it("carry no library colour literal outside the defaults", () => {

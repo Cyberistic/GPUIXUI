@@ -46,6 +46,8 @@
   --control-padding-x-sm: 8px;
   --control-padding-x-md: 10px;
   --control-padding-x-lg: 12px;
+  --row-height: 32px;
+  --spacing-md: 8px;
 
   display: flex;
   flex-wrap: wrap;
@@ -1957,5 +1959,147 @@
 }
 
 .gx-combobox-states {
+  max-width: 480px;
+}
+
+/* ---- list: mirrors components/src/list.tsx's LIST_ITEM paint ----
+   A row is `density.rowHeight + spacing.md` tall, `selected` fills it with
+   `selectedForeground` for the title, and hover is the `accent` wash. A disabled
+   row keeps every fill and carries the state in its **text** roles: an opacity
+   would composite the selection wash it just painted into the strip behind it. */
+.gx-demo-list {
+  width: 100%;
+  justify-content: center;
+}
+
+.gx-list-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(460px, 100%);
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-list-heading {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.gx-list-meta {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.gx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-list-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: calc(var(--row-height) + var(--spacing-md));
+  padding: 0 12px;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-list-row:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-list-row[data-selected="true"] {
+  background: var(--selected);
+  color: var(--selected-foreground);
+}
+
+.gx-list-row[data-selected="true"]:hover:not(:disabled) {
+  background: var(--selected);
+  color: var(--selected-foreground);
+}
+
+.gx-list-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-list-row:disabled {
+  cursor: not-allowed;
+}
+
+.gx-list-text {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.gx-list-title {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-list-description {
+  overflow: hidden;
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-list-trailing {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-list-row[data-selected="true"] .gx-list-trailing {
+  color: var(--selected-foreground);
+}
+
+.gx-list-row:disabled .gx-list-title {
+  color: var(--disabled-foreground);
+}
+
+.gx-list-row:disabled[data-selected="true"] .gx-list-title {
+  color: var(--muted-foreground);
+}
+
+.gx-list-row:disabled .gx-list-description,
+.gx-list-row:disabled .gx-list-trailing {
+  color: var(--disabled-foreground);
+}
+
+.gx-list-readout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--placeholder);
+}
+
+.gx-list-readout b {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.gx-list-multiple {
   max-width: 480px;
 }

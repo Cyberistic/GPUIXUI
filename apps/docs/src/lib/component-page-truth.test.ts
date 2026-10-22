@@ -141,6 +141,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/field.tsx",
   },
   {
+    file: "list.mdx",
+    row: "Lists / list items",
+    suite: "packages/components/src/behaviour/list.test.tsx",
+    shadowed: "packages/components/docs/list.mdx",
+    source: "packages/components/src/list.tsx",
+  },
+  {
     file: "popover.mdx",
     row: "Popovers",
     suite: "packages/components/src/behaviour/popover.test.tsx",
@@ -587,6 +594,74 @@ describe("the curated component pages", () => {
     expect(text).not.toContain("the runtime ranks");
     expect(text).not.toContain("faded disabled");
     expect(text).not.toContain("loads options asynchronously");
+  });
+
+  it("hold the list's roving stop, its range and its disabled paint to the source", () => {
+    // A list looks like rows, so the page has to get right what a screenshot
+    // cannot show: one tab stop rather than one per row, arrows that skip a
+    // disabled row and act on the row that sent the key, a range that never
+    // includes a disabled row, a typed prefix that searches *after* the current
+    // row, and a disabled row that keeps its fills and names its text roles
+    // instead of fading. Each is read from the module that ships it.
+    const list = pages.find((page) => page.file === "list.mdx");
+    expect(list, "the list page is not in the curated set").toBeDefined();
+    if (list === undefined) return;
+
+    const source = read(list.source);
+    const collection = read("packages/components/src/internal/collection.ts");
+    const typeahead = read("packages/components/src/internal/typeahead.ts");
+    const selection = read("packages/components/src/list/selection.ts");
+    const recipes = read("packages/tw/src/recipes.ts");
+
+    // One stop, on the active row; the role follows the mode.
+    expect(source).toContain('role={selectable ? "option" : "listitem"}');
+    expect(source).toContain(
+      "tabIndex={selectable ? (isTabbable ? 0 : -1) : undefined}",
+    );
+    expect(source).toContain('"aria-selected": isSelected');
+    // The row's height is the density plus one spacing step.
+    expect(source).toContain("theme.density.rowHeight + theme.spacing.md");
+    expect(source).toContain("theme.density.rowHeight");
+
+    // Arrows skip a disabled row and wrap; type-ahead searches after the row.
+    expect(collection).toContain("nextEnabled");
+    expect(collection).toContain("enabledIndexes");
+    expect(typeahead).toContain("matchPrefix");
+    const window = /Duration\.millis\((\d+)\)/.exec(typeahead)?.[1];
+    expect(window, "typeahead no longer declares its window").toBeDefined();
+
+    // A range never takes a disabled row, and select-all is the enabled set.
+    expect(selection).toContain("Arr.filter((row) => !row.disabled)");
+    expect(selection).toContain("export const range");
+
+    // The paint: a selected row's title takes the row's on-colour, and a
+    // disabled row names its roles rather than fading.
+    expect(source).toContain("theme.colors.selectedForeground");
+    expect(source).toContain("theme.colors.disabledForeground");
+    expect(source).toContain('cursor: disabled ? "not-allowed" : "pointer"');
+    const rowPaint = source.slice(
+      source.indexOf("...(isSelected"),
+      source.indexOf("...(isSelected") + 200,
+    );
+    expect(rowPaint).toContain("theme.colors.selected");
+    expect(source).not.toContain("opacity: disabled");
+    const at = recipes.indexOf("export const LIST_ITEM =");
+    const item =
+      at === -1 ? "" : recipes.slice(at, recipes.indexOf("\n\n", at));
+    expect(item).toContain("flex-row");
+    expect(recipes).toContain("export const LIST_ITEM_TITLE");
+
+    const text = body(list).replace(/\s+/g, " ");
+    expect(text).toContain("one tab stop");
+    expect(text).toContain(`${window}ms`);
+    expect(text).toContain("**after** the current one");
+    expect(text).toContain("No `aria-multiselectable`");
+    expect(text).toContain("without running its `onFocus`");
+    expect(text).toContain("never fades by opacity");
+    expect(text).toContain("40 native behaviour tests");
+    // The retracted shapes: a stop per row, or a faded disabled row.
+    expect(text).not.toContain("one tab stop per row");
+    expect(text).not.toContain("disabled rows are dimmed");
   });
 
   it("hold the toast queue's bounds and its card paint to the source", () => {

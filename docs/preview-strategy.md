@@ -229,7 +229,7 @@ command that cannot resolve on the section a reader follows first.
 A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source.
 Curated today: Accordion, Alert, Button, Card, Combobox, Command menu,
-Confirmation dialog, Dialog, Dropdown menu, Field and inline validation,
+Confirmation dialog, Dialog, Dropdown menu, Field and inline validation, List,
 Popover, Select, Tabs, Toast.
 `src/lib/component-preview.test.ts` holds the preview registry from both sides:
 every `<ComponentPreview name>` on a page names a registered demo, and every demo
