@@ -75,10 +75,11 @@ The track uses `card` with a `border` edge and `radius.lg`; controls are
 the boundary role draws. The chevron is that control's label in vectors: it
 paints `secondaryForeground`, the on-colour of the fill it sits on, and never a
 role chosen for another fill — `secondaryForeground` on `primary` is 1.42:1 in
-Windows dark. `contrastPairs` measures the pair it paints, and its `hover` and
-`active` washes, on every shipped style. Slides have no surface of their own. A
-custom theme changes the frame with no code change — see
-[Theming](/docs/theming).
+Windows dark. `contrastPairs` measures the pair it paints on every shipped style,
+and the control's pointer states are the theme's derived opaque step from that
+same fill (`filledHover`/`filledPressed`), each held to the perceptibility floor
+against the fill it replaces. Slides have no surface of their own. A custom
+theme changes the frame with no code change — see [Theming](/docs/theming).
 
 ## Accessibility
 

@@ -11,12 +11,15 @@
  * control with no accessible name; a filled action whose hover was a
  * half-alpha fill, so the same button read two colours on two surfaces; and an
  * outlined action that drew its edge in the decorative `border` role — the same
- * value as the fill it outlined — so the control had no outline at all.
+ * value as the fill it outlined — so the control had no outline at all; and an
+ * outlined action's pointer state painted the `hover`/`active` wash that is its
+ * own fill in several shipped styles, so it never answered the pointer.
  */
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  actionFeedbackFailures,
   contrastFloors,
   contrastRatio,
   disabledAction,
@@ -309,23 +312,61 @@ describe("Button", () => {
     );
   });
 
-  it("keeps the measured hover roles on a secondary action", () => {
-    const button = renderComponent(
-      <Button testId="button" variant="secondary">
-        Save
-      </Button>,
+  it("paints a secondary action's pointer step in a fill that changes", () => {
+    // The bug: the outlined action swapped its fill for the `hover` / `active`
+    // washes, and in several shipped styles that wash *is* the `secondary`
+    // fill — hovered 1.000:1 in High contrast light, High contrast dark and
+    // Light · macOS, and the base light hover at 1.036:1 — so a control a
+    // reader picks for clarity answered the pointer with no visible change
+    // (`action-feedback.test.ts` in `@gpuixui/tokens` measures 15 of the
+    // variant's 32 placements under the floor). The step is now the same
+    // derivation the filled roles use, read off the renderer here.
+    Arr.forEach(
+      [
+        ["light", lightTheme],
+        ["dark", darkTheme],
+      ] as const,
+      ([mode, theme]) => {
+        const button = renderComponent(
+          <Button testId="button" variant="secondary">
+            Save
+          </Button>,
+          mode,
+        );
+
+        hoverCentreOf(button, "button");
+
+        // Read the paint, then give the one window back before asserting: a
+        // failed expectation must name one case, not strand the renderer for
+        // every test after it.
+        const style = button.renderer.findByTestId("button")?.style;
+
+        button.unmount();
+
+        // Both states are the theme's derived step from the fill they replace,
+        // and never the wash the bug painted.
+        expect(style?.hover, mode).toMatchObject({
+          backgroundColor: filledHover(theme, "secondary"),
+        });
+        expect(style?.active, mode).toMatchObject({
+          backgroundColor: filledPressed(theme, "secondary"),
+        });
+        expect(style?.hover, mode).not.toMatchObject({
+          backgroundColor: theme.colors.hover,
+        });
+
+        // The measured claim: the contract that holds a pointer step to the
+        // perceptibility floor has nothing to report for this role, so each
+        // state reads as a different fill rather than the one it replaces.
+        expect(
+          Arr.filter(
+            actionFeedbackFailures(theme),
+            ({ role }) => role === "secondary",
+          ),
+          mode,
+        ).toEqual([]);
+      },
     );
-
-    hoverCentreOf(button, "button");
-
-    expect(button.renderer.findByTestId("button")?.style.hover).toMatchObject({
-      backgroundColor: darkTheme.colors.hover,
-    });
-    expect(button.renderer.findByTestId("button")?.style.active).toMatchObject({
-      backgroundColor: darkTheme.colors.active,
-    });
-
-    button.unmount();
   });
 
   it("keeps a filled action's label while another control holds keyboard focus", () => {

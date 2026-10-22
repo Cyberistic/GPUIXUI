@@ -118,13 +118,17 @@ const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc => ({
       // role: `border` is decorative and is also the `secondary` fill in both
       // shipped themes, so an outline control drew its outline in its own fill.
       borderColor: theme.colors.borderStrong,
-      hover: { backgroundColor: theme.colors.hover },
-      active: { backgroundColor: theme.colors.active },
+      // The same derivation as the filled roles, from the action's own colour:
+      // the `hover`/`active` washes are the `secondary` fill in several styles,
+      // so the pointer painted the fill it was replacing (`action-feedback.test.ts`
+      // in `@gpuixui/tokens` measures 15 of 32 placements under the floor).
+      hover: { backgroundColor: filledHover(theme, "secondary") },
+      active: { backgroundColor: filledPressed(theme, "secondary") },
       ...keepLabel(),
     })),
     Match.when("ghost", () => ({
-      hover: { backgroundColor: theme.colors.hover },
-      active: { backgroundColor: theme.colors.active },
+      hover: { backgroundColor: filledHover(theme, "secondary") },
+      active: { backgroundColor: filledPressed(theme, "secondary") },
     })),
     Match.exhaustive,
   ),
