@@ -110,9 +110,7 @@ export const tipAfter = (
       };
     case "enter-tip":
       // The pointer crossed the gap: the close the trigger scheduled is off.
-      return state.timer?.opens === false
-        ? { ...state, timer: null }
-        : state;
+      return state.timer?.opens === false ? { ...state, timer: null } : state;
     case "press":
       return { open: false, held: true, timer: null };
     case "escape":
@@ -140,7 +138,10 @@ export const tipAfter = (
  * A scheduled close is worded as open, because the tip is still painted while
  * the grace runs — the one state a screenshot cannot distinguish.
  */
-export const describeTip = (state: TipState, timing: TipTiming = tipTiming): string => {
+export const describeTip = (
+  state: TipState,
+  timing: TipTiming = tipTiming,
+): string => {
   if (state.timer?.opens === true) {
     return `opening in ${state.timer.after} ms`;
   }

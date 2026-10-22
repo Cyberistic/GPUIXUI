@@ -39,7 +39,10 @@ const ClockedTip = () => {
 
   useEffect(() => {
     if (state.timer === null) return;
-    const timer = setTimeout(() => send({ type: "elapsed" }), state.timer.after);
+    const timer = setTimeout(
+      () => send({ type: "elapsed" }),
+      state.timer.after,
+    );
     return () => clearTimeout(timer);
   }, [state]);
 

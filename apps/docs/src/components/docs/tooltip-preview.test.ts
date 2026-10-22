@@ -36,7 +36,11 @@ const slow: TipTiming = { delay: 600, closeGrace: 80, skipDelay: 300 };
 const run = (
   events: ReadonlyArray<TipEvent>,
   timing: TipTiming = slow,
-): TipState => events.reduce<TipState>((state, event) => tipAfter(state, event, timing), closedTip);
+): TipState =>
+  events.reduce<TipState>(
+    (state, event) => tipAfter(state, event, timing),
+    closedTip,
+  );
 
 const opened = tipAfter(
   tipAfter(closedTip, { type: "enter" }, slow),
@@ -99,9 +103,7 @@ describe("the tooltip preview", () => {
     // Crossing the gap onto the tip cancels the close.
     expect(tipAfter(leaving, { type: "enter-tip" }, slow).timer).toBeNull();
     // Without the crossing, the grace ends and the tip goes.
-    expect(
-      tipAfter(leaving, { type: "elapsed" }, slow).open,
-    ).toBe(false);
+    expect(tipAfter(leaving, { type: "elapsed" }, slow).open).toBe(false);
   });
 
   it("holds the tip shut after a press until the pointer leaves", () => {
@@ -129,9 +131,11 @@ describe("the tooltip preview", () => {
 
   it("words the state a reader can watch", () => {
     expect(describeTip(closedTip)).toBe("closed");
-    expect(describeTip(tipAfter(closedTip, { type: "enter" }, slow), slow)).toBe(
-      "opening in 600 ms",
+    expect(
+      describeTip(tipAfter(closedTip, { type: "enter" }, slow), slow),
+    ).toBe("opening in 600 ms");
+    expect(describeTip(opened, slow)).toBe(
+      "open — a press or Escape closes it",
     );
-    expect(describeTip(opened, slow)).toBe("open — a press or Escape closes it");
   });
 });
