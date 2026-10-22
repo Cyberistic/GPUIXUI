@@ -194,9 +194,7 @@ const bandedPixels = (layers: ReadonlyArray<BandPaint>): Uint8Array =>
 
 /** The opaque mark the translucent series is drawn over. */
 export const alphaBasePixels = (): Uint8Array =>
-  bandedPixels([
-    { band: alphaBands.base, colour: ALPHA_BASE, alpha: 0xff },
-  ]);
+  bandedPixels([{ band: alphaBands.base, colour: ALPHA_BASE, alpha: 0xff }]);
 
 /** The layer over it: half alpha over the base, opaque at the right. */
 export const alphaOverPixels = (): Uint8Array =>
@@ -220,11 +218,7 @@ export const ALPHA_POINTS = {
  * `under`. The API documents straight alpha, so this is the prediction the
  * probe holds a real frame to.
  */
-export const compositeOver = (
-  over: Rgb,
-  under: Rgb,
-  alpha: number,
-): Rgb => {
+export const compositeOver = (over: Rgb, under: Rgb, alpha: number): Rgb => {
   const share = (value: number): number => Math.round(value);
   return {
     r: share((over.r * alpha + under.r * (0xff - alpha)) / 0xff),

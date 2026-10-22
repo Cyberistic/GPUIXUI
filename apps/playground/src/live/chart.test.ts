@@ -126,7 +126,9 @@ describe("the chart-raster fixture", () => {
     // The base stops where the translucent over-mark continues: the sample
     // over the card would otherwise be a second read of the red mark.
     expect(pixelAt(under, ALPHA_POINTS.overBacking)).toBe("rgba(0, 0, 0, 0)");
-    expect(ALPHA_POINTS.overBase.x).toBeGreaterThanOrEqual(alphaBands.base.left);
+    expect(ALPHA_POINTS.overBase.x).toBeGreaterThanOrEqual(
+      alphaBands.base.left,
+    );
     expect(ALPHA_POINTS.overBase.x).toBeLessThan(alphaBands.base.right);
     expect(ALPHA_POINTS.opaque.x).toBeGreaterThanOrEqual(
       alphaBands.opaque.left,
@@ -152,9 +154,9 @@ describe("the chart-raster fixture", () => {
     expect(compositeOver(ALPHA_OVER, ALPHA_BASE, 0)).toEqual(ALPHA_BASE);
     // The prediction is not symmetric: a probe that swapped the operands would
     // read a different colour.
-    expect(
-      compositeOver(ALPHA_OVER, ALPHA_BASE, ALPHA_SHARE),
-    ).not.toEqual(compositeOver(ALPHA_BASE, ALPHA_OVER, ALPHA_SHARE));
+    expect(compositeOver(ALPHA_OVER, ALPHA_BASE, ALPHA_SHARE)).not.toEqual(
+      compositeOver(ALPHA_BASE, ALPHA_OVER, ALPHA_SHARE),
+    );
   });
 
   it("converts a buffer pixel to a fraction of the painted box", () => {
