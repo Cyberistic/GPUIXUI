@@ -246,7 +246,11 @@ const ChartFrame = ({
               height,
             }}
           >
-            {axisTicks(scale, ticks).map((tick) => (
+            {/**
+             * A column reads top to bottom, so the ceiling paints first: the
+             * axis and the bars then share one floor.
+             */}
+            {Arr.map(Arr.reverse(axisTicks(scale, ticks)), (tick) => (
               <text
                 key={`tick-${tick}`}
                 testId={

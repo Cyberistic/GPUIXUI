@@ -50,6 +50,10 @@ takes `values: number[]`, `width` (`120`), `height` (`32`) and `color`.
 A `StackedBar`'s axis and its bars both read the category totals, so a tall stack
 never prints an axis under it.
 
+The axis column reads from the top down: its ceiling is the topmost label and
+its floor sits on the plot's floor — the same edge the bars stand on — so a
+bar's top is read against the number beside it.
+
 ## Limitations
 
 - One tint per layer: two colours inside one series need two layers.

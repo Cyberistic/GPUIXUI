@@ -10,6 +10,8 @@
  * - a zero value painting a slice (a layer that claims a value the data does
  *   not have);
  * - an axis that prints raw maxima instead of its ticks;
+ * - an axis whose numbers descend down the page (its floor at the top), so a
+ *   reader takes the bar's top for the smallest value;
  * - a stacked bar's axis measured over the widest series rather than the
  *   totals, so every stack claims a value the axis does not name;
  * - a sparkline drawn from a different colour than the chart's first series.
@@ -132,6 +134,21 @@ describe("the charts", () => {
     expect(root.renderer.findByTestId("chart-bars-tick-0")).toBeDefined();
     expect(root.renderer.findByTestId("chart-bars-tick-100")).toBeDefined();
     expect(requireStyle(root, "chart-bars-plot").height).toBe(140);
+  });
+
+  it("puts the top of the scale at the top of the axis", () => {
+    const root = mount();
+
+    const floor = requireBounds(root, "chart-bars-tick-0");
+    const ceiling = requireBounds(root, "chart-bars-tick-100");
+    const plot = requireBounds(root, "chart-bars-plot");
+
+    // A column reads top to bottom, so the scale's ceiling is the topmost
+    // label and its floor sits on the plot's floor — the same edge the bars
+    // stand on. Ascending order paints the axis upside down: every bar's top
+    // is then read against a value below it.
+    expect(ceiling.y).toBeLessThan(floor.y);
+    expect(floor.y - ceiling.y).toBeGreaterThan(plot.height / 2);
   });
 
   it("paints one slice per datum and skips a value of zero", () => {
