@@ -1102,8 +1102,9 @@ so a single number would be a guess — or carries no channels here at all (a
 named colour, an `hsl()`-family function). Shorthand hex is measured.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 74 pairs cover the text role
-on each surface it can sit on: body and popover text, the text typed into an
+— an empty array means the theme is readable. The 76 pairs cover the text role
+on each surface it can sit on: body text on a container's own `muted` or
+`popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input`, secondary text on `background`, `card`, `muted`, `popover` and a
 selected row, the selected row's title on that selection and the
 `selectedForeground` it hands its children on the `hover`/`active`/`accent` wash

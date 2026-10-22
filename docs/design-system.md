@@ -485,7 +485,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |
-| body text on background/card/popover | 7:1 | 7:1 |
+| body text on background/card/popover/muted and on the accent and selected washes | 7:1 | 7:1 |
 | text typed into an input, on `input` | 7:1 | 7:1 |
 | secondary text on background/card/muted/popover and on a selected row | 4.5:1 | 7:1 |
 | a selected row's title on its own selection, and the `selectedForeground` it hands its children on the `hover`/`active`/`accent` wash it tints | 7:1 / 4.5:1 | 7:1 / 7:1 |

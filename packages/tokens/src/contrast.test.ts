@@ -208,6 +208,137 @@ describe("text on the state washes", () => {
 });
 
 /**
+ * Guards the body role on a container's own surface.
+ *
+ * `Box`/`surfaceStyle` paints six content tones, and the default `Text` inside
+ * one keeps `foreground` — a `muted` panel, a popover, a message bubble
+ * (`MESSAGE_BUBBLES.user` is `bg-muted`). Only `background`, `card`, `accent`
+ * and `selected` were measured, while `docs/design-system.md` already claimed
+ * body text on a popover, so a brand whose `muted` drifted toward its body role
+ * erased the copy inside it and passed every suite.
+ */
+describe("the body role on a box's own surface", () => {
+  const style = readFileSync(
+    new URL("../../primitives/src/core/style.ts", import.meta.url),
+    "utf8",
+  );
+  const declared = [
+    ...(
+      /\bSURFACE_TONES = \[([\s\S]*?)\] as const/.exec(style)?.[1] ?? ""
+    ).matchAll(/"([a-z]+)"/g),
+  ].flatMap(([, tone]) => (tone === undefined ? [] : [tone]));
+  /**
+   * A container's content tones; `none` paints nothing and `skeleton` is a
+   * decorative placeholder rather than a surface copy sits on.
+   */
+  const contentTones = [
+    "background",
+    "card",
+    "popover",
+    "muted",
+    "accent",
+    "selected",
+  ] as const satisfies ReadonlyArray<keyof ThemeColors>;
+
+  it("reads the tones the container itself resolves from", () => {
+    expect(declared).toEqual(["none", ...contentTones, "skeleton"]);
+  });
+
+  it("measures the body role on every content tone", () => {
+    const missing = contentTones.filter(
+      (background) =>
+        !contrastPairs.some(
+          (pair) =>
+            pair.foreground === "foreground" &&
+            pair.background === background &&
+            pair.floor === "body",
+        ),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the surface a shipped bubble actually paints", () => {
+    const recipes = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+    const bubbles = recipes.slice(
+      recipes.indexOf("export const MESSAGE_BUBBLES"),
+      recipes.indexOf("export const MESSAGE_AUTHOR"),
+    );
+
+    // The bubble sets no colour of its own, and `Text`'s default tone is the
+    // body role — so the pair above is the one a user message paints.
+    expect(bubbles).toContain('user: "bg-muted"');
+    expect(style).toContain("default: (theme) => theme.colors.foreground");
+  });
+
+  it("reports copy a surface swallows", () => {
+    const flatMuted = {
+      colors: { ...lightColors, muted: lightColors.foreground },
+    };
+    const flatPopover = {
+      colors: { ...lightColors, popover: lightColors.foreground },
+    };
+
+    expect(
+      contrastFailures(flatMuted).find(
+        ({ foreground, background }) =>
+          foreground === "foreground" && background === "muted",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
+    expect(
+      contrastFailures(flatPopover).find(
+        ({ foreground, background }) =>
+          foreground === "foreground" && background === "popover",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
+  });
+
+  it("clears the body floor on every shipped style", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const hidden = shipped.flatMap((theme) =>
+      contentTones
+        .map((background) => ({
+          name: `${theme.name}/${background}`,
+          ratio: contrastRatio(
+            theme.colors.foreground,
+            theme.colors[background],
+          ),
+          floor: contrastFloorsFor(theme).body,
+        }))
+        .filter(({ ratio, floor }) => ratio === undefined || ratio < floor),
+    );
+
+    expect(hidden).toEqual([]);
+  });
+
+  it("prints the surfaces the design system says body text is measured on", () => {
+    const row = readFileSync(
+      new URL("../../../docs/design-system.md", import.meta.url),
+      "utf8",
+    )
+      .split("\n")
+      .find((line) => line.startsWith("| body text on"));
+
+    expect(row, "docs/design-system.md has no body-text row").toBeDefined();
+    contentTones.forEach((tone) => {
+      expect(row).toContain(tone === "background" ? "background" : tone);
+    });
+  });
+});
+
+/**
  * Guards the roles a *floating* row keeps while a wash is painted under it.
  * The wash suite above measured the page-level roles (`foreground`,
  * `mutedForeground`); a menu or combobox row on a popover keeps the surface's

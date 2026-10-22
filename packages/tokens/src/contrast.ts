@@ -120,6 +120,12 @@ export interface ContrastPair {
 export const contrastPairs: readonly ContrastPair[] = [
   { foreground: "foreground", background: "background", floor: "body" },
   { foreground: "foreground", background: "card", floor: "body" },
+  // A container paints a surface and the default `Text` inside it keeps
+  // `foreground`: `surfaceStyle`'s `muted` and `popover` tones both carry body
+  // copy (a message bubble is `bg-muted`, a panel is a popover), and no pair
+  // measured either — the design system already claimed the popover.
+  { foreground: "foreground", background: "popover", floor: "body" },
+  { foreground: "foreground", background: "muted", floor: "body" },
   { foreground: "cardForeground", background: "card", floor: "body" },
   { foreground: "popoverForeground", background: "popover", floor: "body" },
   { foreground: "inputForeground", background: "input", floor: "body" },
