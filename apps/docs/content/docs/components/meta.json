@@ -5,6 +5,8 @@
     "button",
     "---Surfaces---",
     "card",
+    "---Feedback---",
+    "alert",
     "---Overlays---",
     "dialog",
     "popover",

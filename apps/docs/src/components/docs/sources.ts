@@ -1,3 +1,4 @@
+import alert from "../../../../../packages/components/src/alert.tsx?raw";
 import button from "../../../../../packages/primitives/src/components/Button.tsx?raw";
 import card from "../../../../../packages/components/src/card.tsx?raw";
 import commandMenu from "../../../../../packages/components/src/command-menu.tsx?raw";
@@ -13,6 +14,7 @@ import tabs from "../../../../../packages/components/src/tabs.tsx?raw";
  * page honest without making the native package a browser dependency.
  */
 export const componentSources = {
+  alert,
   button,
   card,
   commandMenu,

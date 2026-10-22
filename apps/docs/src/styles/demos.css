@@ -94,6 +94,100 @@
   color: var(--placeholder);
 }
 
+/* ---- alert: mirrors components/src/alert.tsx's ALERT_* recipes ----
+   `flex flex-row items-start gap-3 p-3 rounded-md border`, the tone's soft
+   fill, its readable foreground and its solid role at 30% for the edge. */
+.gx-alert {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  width: 460px;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.gx-alert-info {
+  background: var(--info-soft);
+  color: var(--info-soft-foreground);
+  border-color: color-mix(in srgb, var(--info) 30%, transparent);
+}
+
+.gx-alert-success {
+  background: var(--success-soft);
+  color: var(--success-soft-foreground);
+  border-color: color-mix(in srgb, var(--success) 30%, transparent);
+}
+
+.gx-alert-warning {
+  background: var(--warning-soft);
+  color: var(--warning-soft-foreground);
+  border-color: color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+.gx-alert-danger {
+  background: var(--destructive-soft);
+  color: var(--destructive-soft-foreground);
+  border-color: color-mix(in srgb, var(--destructive) 30%, transparent);
+}
+
+.gx-alert-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 0;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.gx-alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-grow: 1;
+}
+
+.gx-alert-title {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+/* The description keeps the page foreground: body prose has to stay readable
+   on the tint rather than match the tone (`ALERT_DESCRIPTION`). */
+.gx-alert-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--foreground);
+}
+
+.gx-alert-action {
+  margin-top: 8px;
+}
+
+.gx-alert-dismiss {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  padding: 0;
+  font-weight: 400;
+}
+
+.gx-alert-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gx-alert-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
 /* ---- button: mirrors primitives/core/style.ts ---- */
 .gx-btn {
   display: inline-flex;

@@ -3118,6 +3118,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Publish the **window's selection event** in the capability record — the live `window-selection-lifecycle` probe measured the only route the runtime publishes (`render(<App/>, { onSelectionChange })`): a pointer drag raises the app's counter with the run `getSelectedText()` reports, `clearSelection()` raises it again with no run, and a non-selectable node raises nothing (11 checks, green three runs; negative control `expected true, got false` without the root handler). `docs/gpuix-capabilities.md`'s §3 has a **Text selection** row for the paint and the copy gesture but no row for the **event**, and `/docs/runtime`'s measured table does not list it — so a plan for a selection-aware toolbar, an inspector or a command palette reads only that `getSelectedText()` exists and cannot know the app is told when it changes. Also record the limit the payload carries: joined text only, no ranges or pane identity | docs-site (the record + `/docs/runtime`) | **resolved** — §3 gains **Window selection event** (`supported, with limits`): `render(<App/>, { onSelectionChange })` is the one app-level route, a pointer drag reports the run `getSelectedText()` returns, `clearSelection()` reports **again** with no run (`last=none`) so a toolbar can hide itself, a non-selectable line reports nothing, and dropping the root handler is the negative control (13 checks). Both limits are recorded — the payload is the joined text only (`EventPayload.value`, absent on the empty change) and there are no offsets or ranges, so "comment on this line" is a line press. `/docs/runtime#measured-in-a-window` publishes the row, §5's owed-probe list names `window-selection-lifecycle`, and `/docs/data-display` carries the rule where a table is designed (**A selection toolbar is told, and told when it empties** — hide on the empty change rather than a timeout, one root handler, no pane identity). `capability-doc.test.ts` (+2 cases) holds the record and the page, and `lane-page.test.ts` the data-display rule; four directions measured: removing the record row fails the verdict case (`expected undefined to be 'supported, with limits'`) and the lane case (`no row named Window selection event`), removing the page row fails `the page's measured table has no window-selection row`, dropping the id from §5 fails ``cites only registered probes…`` naming it, and removing the lane bullet fails its case by name. Suite 72 files / 645 tests, `check-types` green. Evidence: `apps/playground/README.md` §`window-selection-lifecycle` |
 | The curated **Card** page teaches the outline in the `input` role — `/docs/components/card`'s Variants table says "a 1px edge in the **`input`** role, not the `border` role", and its Theming table says "outline and footer edge | the `input` role". Compiled through `@gpuixui/tw`, the card's `border-input` resolves to `lightTheme.colors.border` (`#E1E5EC`), while the `input` role is `#FFFFFF` — the card's own fill — because the compiler maps the shadcn class to a border role on purpose (shadcn's `--input` is a border, this library's `input` is the field fill). `component-page-truth.test.ts` reads the recipe string, so it cannot see the remap | docs-site (`apps/docs/content/docs/components/card.mdx`, `component-page-truth.test.ts`) | open — state the `border` role in both tables, keep the shadcn remap as the reason, and hold the page to the compiled style (as `packages/components/src/card-page.test.ts` now does) rather than the class name; evidence: compiled `borderColor` `#E1E5EC`, `input` `#FFFFFF`, `border` `#E1E5EC` |
+| Retract the **alert's announced live region** in the package page — `packages/components/docs/alert.mdx` says the root is "`role=\"alert\"` — a live region, announced when it appears", while the runtime's aria set is closed with no live-region attribute and nothing measured an announcement (the record's **Live regions** row is `not supported`, and the inventory row already says the announcement is not verifiable here). The curated page at `/docs/components/alert` shadows it on the site and states the marker rule, so this is the copy that ships inside the package and is read from the repo | components (owns `packages/components/docs/alert.mdx`) | open — retract the announcement claim, keep the role-as-marker sentence, and cite the record's Live regions row; the site's curated page is the wording to match |
 
 ## Phase D — data and workspace components
 
@@ -3173,7 +3174,32 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 107/107
+`[x]` `[██████████]` 108/108
+
+`[x]` Curate the **Alert** page and retract the announcement its package page
+claimed — `/docs/components/alert` served `packages/components/docs/alert.mdx`,
+which says the root is "a live region, announced when it appears" while the
+runtime's aria set has no live region and no probe measured an announcement, so
+the site was selling a screen-reader behaviour the library cannot keep. The
+curated page shadows it and is the honest one: the four tones read from
+`ALERT_TONES` cell by cell (`infoSoft`/`infoSoftForeground`/`info` at 30%, and so
+on), the description keeping `foreground`, the dismiss glyph taking `foreground`
+rather than the tone, the fixed 12px padding/6px corners against ADR 0006, the
+part context that throws outside its root, the dismiss key contract, and the role
+as a **marker** with the missing live region stated plainly. Two browser previews
+(`alert-tones`, `alert-composition` — the warning alert dismisses and comes back,
+the danger alert carries a retry action), the real source accordion, and the
+sidebar's new **Feedback** group. Guards: a new `component-page-truth` case holds
+the page's tone table to the recipe, the `role="alert"`/`alert-dismiss` painters
+and the record's `not supported` live-region row, and the existing curated-page,
+preview-registry, displacement, ledger and sidebar guards picked the page up.
+Directions measured: restoring "announced when it appears" fails by name, and
+changing the danger surface cell to `redSoft` fails the table comparison. Suite 72
+files / 651 tests, `check-types` and `build` green. Verified in the dev server:
+`/docs/components/alert` renders both previews and the dismiss control, the
+sidebar groups it under **Feedback**, `/docs/components` marks it **Browser
+preview**, and `/api/search?query=AlertDismiss` returns the page. The package
+page's retraction is the interlock row below.
 
 `[x]` Publish **right-to-left layout** as the missing input it is — plan 435c
 asks for an RTL toggle beside the platform switch and an RTL statement on every

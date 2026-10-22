@@ -73,6 +73,13 @@ interface CuratedPage {
 
 const pages: ReadonlyArray<CuratedPage> = [
   {
+    file: "alert.mdx",
+    row: "Alerts",
+    suite: "packages/components/src/behaviour/alert.test.tsx",
+    shadowed: "packages/components/docs/alert.mdx",
+    source: "packages/components/src/alert.tsx",
+  },
+  {
     file: "button.mdx",
     row: "Buttons",
     source: "packages/primitives/src/components/Button.tsx",
@@ -209,6 +216,85 @@ describe("the curated component pages", () => {
     });
 
     expect(wrong).toEqual([]);
+  });
+
+  it("describe the alert's tone paint and the announcement it does not claim", () => {
+    // The package page the curated page displaces said the root is "a live
+    // region, announced when it appears". The runtime's aria set has no live
+    // region, and no probe measured an announcement, so the site must not sell
+    // one: the role is a marker. The tone paint is read from the recipe too, so
+    // a palette move cannot leave the table teaching old roles.
+    const alert = pages.find((page) => page.file === "alert.mdx");
+    expect(alert, "the alert page is not in the curated set").toBeDefined();
+    if (alert === undefined) return;
+
+    const recipes = read("packages/tw/src/recipes.ts");
+    const base = /export const ALERT_BASE =\s*"([^"]*)"/.exec(recipes)?.[1] ?? "";
+    const tones =
+      /export const ALERT_TONES = \{([\s\S]*?)\} as const;/.exec(recipes)?.[1] ??
+      "";
+
+    expect(base).toContain("p-3");
+    expect(base).toContain("rounded-md");
+    expect(tones).toContain("bg-infoSoft");
+    expect(tones).toContain("bg-destructiveSoft");
+    expect(tones).toContain("border-destructive/30");
+
+    // The page's tone table is read against the recipe, cell by cell: a role
+    // renamed in `ALERT_TONES` cannot leave the table teaching the old paint.
+    const text = body(alert).replace(/\s+/g, " ");
+    const declared = new Map(
+      [...tones.matchAll(/(\w+):\s*"bg-(\w+) text-(\w+) border-(\w+)\/30"/g)].map(
+        (match) => [
+          match[1] ?? "",
+          {
+            surface: match[2] ?? "",
+            title: match[3] ?? "",
+            edge: match[4] ?? "",
+          },
+        ] as const,
+      ),
+    );
+    const printed = new Map(
+      [
+        ...body(alert).matchAll(
+          /^\| `(\w+)`(?: \(default\))? \| `(\w+)` \| `(\w+)` \| `(\w+)` at 30% \|$/gm,
+        ),
+      ].map((match) => [
+        match[1] ?? "",
+        {
+          surface: match[2] ?? "",
+          title: match[3] ?? "",
+          edge: match[4] ?? "",
+        },
+      ] as const),
+    );
+
+    expect(declared.size).toBe(4);
+    expect(printed.size).toBe(declared.size);
+    expect(
+      [...printed].filter(
+        ([tone, cells]) =>
+          cells.surface !== declared.get(tone)?.surface ||
+          cells.title !== declared.get(tone)?.title ||
+          cells.edge !== declared.get(tone)?.edge,
+      ),
+    ).toEqual([]);
+
+    const source = read(alert.source);
+    expect(source).toContain('role="alert"');
+    expect(source).toContain('testId="alert-dismiss"');
+
+    const live = read("docs/gpuix-capabilities.md")
+      .split("\n")
+      .find((line) => line.startsWith("| Live regions")) ?? "";
+    expect(live).toContain("not supported");
+
+    expect(text).toContain('role="alert"');
+    expect(text).toContain("no live-region attribute");
+    expect(text).toContain("does not claim one");
+    expect(text).not.toContain("announced when it appears");
+    expect(text).toContain("`foreground`");
   });
 
   it("describe the selected surface the source paints", () => {

@@ -1136,7 +1136,199 @@ export function Palette() {
   );
 }`;
 
+/** One browser rendering of an alert, mirroring `ALERT_*`'s parts. */
+const PreviewAlert = ({
+  tone,
+  title,
+  description,
+  icon,
+  action,
+  onDismiss,
+}: {
+  readonly tone: "info" | "success" | "warning" | "danger";
+  readonly title: string;
+  readonly description: string;
+  readonly icon?: string;
+  readonly action?: ReactNode;
+  readonly onDismiss?: () => void;
+}) => (
+  <div className={`gx-alert gx-alert-${tone}`} role="alert">
+    {icon === undefined ? null : (
+      <div aria-hidden="true" className="gx-alert-icon">
+        {icon}
+      </div>
+    )}
+    <div className="gx-alert-content">
+      <p className="gx-alert-title">{title}</p>
+      <p className="gx-alert-desc">
+        {description}
+        {action}
+      </p>
+    </div>
+    {onDismiss === undefined ? null : (
+      <button
+        aria-label="Dismiss"
+        className="gx-btn gx-btn-ghost gx-alert-dismiss"
+        onClick={onDismiss}
+        type="button"
+      >
+        ×
+      </button>
+    )}
+  </div>
+);
+
+const alertTones: ReadonlyArray<{
+  readonly tone: "info" | "success" | "warning" | "danger";
+  readonly title: string;
+  readonly description: string;
+}> = [
+  {
+    tone: "info",
+    title: "Update available",
+    description: "0.11.0 is ready. Installing restarts the app.",
+  },
+  {
+    tone: "success",
+    title: "Theme saved",
+    description: "The workspace uses the new palette.",
+  },
+  {
+    tone: "warning",
+    title: "3 tokens are missing",
+    description: "The platform themes fall back to the default palette.",
+  },
+  {
+    tone: "danger",
+    title: "Upload failed",
+    description: "The connection closed before the file arrived.",
+  },
+];
+
+const AlertTones = () => (
+  <div className="gx-alert-stack">
+    {alertTones.map((alert) => (
+      <PreviewAlert key={alert.tone} {...alert} />
+    ))}
+  </div>
+);
+
+const AlertComposition = () => {
+  const [shown, setShown] = useState(true);
+  return (
+    <div className="gx-alert-stack">
+      {shown ? (
+        <PreviewAlert
+          tone="warning"
+          icon="!"
+          title="3 tokens are missing"
+          description="The platform themes fall back to the default palette."
+          onDismiss={() => setShown(false)}
+        />
+      ) : (
+        <div className="gx-alert-actions">
+          <button
+            className="gx-btn gx-btn-ghost"
+            onClick={() => setShown(true)}
+            type="button"
+          >
+            Show the alert again
+          </button>
+        </div>
+      )}
+      <PreviewAlert
+        tone="danger"
+        title="Upload failed"
+        description="Nothing left the machine."
+        action={
+          <button
+            className="gx-btn gx-btn-secondary gx-btn-sm gx-alert-action"
+            type="button"
+          >
+            Try again
+          </button>
+        }
+      />
+    </div>
+  );
+};
+
+const alertTonesSource = `import {
+  Alert,
+  AlertContent,
+  AlertDescription,
+  AlertTitle,
+} from "@gpuixui/components/alert";
+
+const messages = [
+  { tone: "info", title: "Update available", body: "0.11.0 is ready. Installing restarts the app." },
+  { tone: "success", title: "Theme saved", body: "The workspace uses the new palette." },
+  { tone: "warning", title: "3 tokens are missing", body: "The platform themes fall back to the default palette." },
+  { tone: "danger", title: "Upload failed", body: "The connection closed before the file arrived." },
+] as const;
+
+export const Alerts = () => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    {messages.map((message) => (
+      <Alert key={message.tone} tone={message.tone}>
+        <AlertContent>
+          <AlertTitle>{message.title}</AlertTitle>
+          <AlertDescription>{message.body}</AlertDescription>
+        </AlertContent>
+      </Alert>
+    ))}
+  </div>
+);`;
+
+const alertCompositionSource = `import {
+  Alert,
+  AlertContent,
+  AlertDescription,
+  AlertDismiss,
+  AlertIcon,
+  AlertTitle,
+} from "@gpuixui/components/alert";
+import { Button } from "@gpuixui/primitives";
+import { useState } from "react";
+
+export const UploadAlerts = () => {
+  const [shown, setShown] = useState(true);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {shown ? (
+        <Alert tone="warning">
+          <AlertIcon>!</AlertIcon>
+          <AlertContent>
+            <AlertTitle>3 tokens are missing</AlertTitle>
+            <AlertDescription>
+              The platform themes fall back to the default palette.
+            </AlertDescription>
+          </AlertContent>
+          <AlertDismiss onDismiss={() => setShown(false)} />
+        </Alert>
+      ) : null}
+      <Alert tone="danger">
+        <AlertContent>
+          <AlertTitle>Upload failed</AlertTitle>
+          <AlertDescription>
+            <Button onClick={retry} size="sm" variant="secondary">
+              Try again
+            </Button>
+          </AlertDescription>
+        </AlertContent>
+      </Alert>
+    </div>
+  );
+};`;
+
 export const demos: Readonly<Record<string, Demo>> = {
+  "alert-tones": { render: AlertTones, source: alertTonesSource },
+  "alert-composition": {
+    render: AlertComposition,
+    source: alertCompositionSource,
+    composition: true,
+  },
   "button-variants": { render: ButtonRow, source: buttonSource },
   "button-sizes": { render: ButtonSizes, source: sizeSource },
   "button-states": { render: ButtonStates, source: stateSource },

@@ -1,0 +1,169 @@
+---
+title: Alert
+description: A persistent, in-flow message about the state the reader is looking at.
+---
+
+`Alert` reports something about the current state: a warning about missing data,
+a failure with a retry, a notice that stays until the condition changes. It sits
+**in the flow** and occupies its own place in the layout. It is not a toast (it
+does not time out or float) and not a dialog (it does not block or take focus).
+
+The root paints the tone and carries the role; the parts fill it and read the
+tone from that root, so a part is never given a second `tone` prop.
+
+Measured on `@gpuix/native@0.11.0`. The preview is a browser rendering of the
+recipe; the Code tab and the source accordion are the real usage.
+
+<ComponentPreview name="alert-tones" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Alert" />
+
+<ComponentSource name="alert" file="packages/components/src/alert.tsx" />
+
+## Usage
+
+```tsx
+import {
+  Alert,
+  AlertContent,
+  AlertDescription,
+  AlertTitle,
+} from "@gpuixui/components/alert";
+
+<Alert tone="warning">
+  <AlertContent>
+    <AlertTitle>3 tokens are missing</AlertTitle>
+    <AlertDescription>
+      The platform themes fall back to the default palette.
+    </AlertDescription>
+  </AlertContent>
+</Alert>;
+```
+
+Only the root is required; the parts you compose are the message. Add `AlertIcon`
+and `AlertDismiss` only when the message needs them, and put an action inside
+`AlertDescription` — it is a container, not a line of text.
+
+## Variants
+
+`tone` is the only variant. There is no `size`: an alert is a body block, so its
+metrics are fixed rather than part of the density scale.
+
+| `tone` | Surface | Title and icon | Edge |
+| ------ | ------- | -------------- | ---- |
+| `info` (default) | `infoSoft` | `infoSoftForeground` | `info` at 30% |
+| `success` | `successSoft` | `successSoftForeground` | `success` at 30% |
+| `warning` | `warningSoft` | `warningSoftForeground` | `warning` at 30% |
+| `danger` | `destructiveSoft` | `destructiveSoftForeground` | `destructive` at 30% |
+
+The four tones are the shared status palette: Badge, the toast viewport and the
+alert read the same `statusTone` roles from `@gpuixui/tokens`, so a status cannot
+look different in two places. The **description stays in `foreground`** rather
+than the tone's colour, because body prose has to remain readable on the tint.
+
+## Composition
+
+| Part | Renders | Paints |
+| ---- | ------- | ------ |
+| `Alert` | `div`, `role="alert"` | the tone surface, the edge and the row layout |
+| `AlertIcon` | `div` | the tone's readable colour; no role of its own |
+| `AlertContent` | `div` | the growing column between icon and dismiss |
+| `AlertTitle` | `text`, `bodyStrong`'s weight | the tone's readable colour |
+| `AlertDescription` | `div` | `foreground`; may hold an action |
+| `AlertDismiss` | the package's `IconButton` | a focusable dismiss control |
+
+The tone travels through React context: a part rendered outside `Alert` throws
+`Alert parts must be used inside Alert` rather than painting the wrong tone.
+Place the parts directly inside their parent — the seam names the misplaced part
+instead of nesting it silently.
+
+<ComponentPreview name="alert-composition" />
+
+## Keyboard
+
+| Key | Where | Contract |
+| --- | ----- | -------- |
+| `Enter` | the dismiss control | dismisses once |
+| `Space` | the dismiss control | dismisses once |
+| — | the alert itself | not focusable and takes no keys; it is not a dialog and has no `Escape` |
+
+There is no automatic timeout and no focus move: the alert stays until the state
+it describes changes or the reader dismisses it. A message that must not be
+missed is a dialog; a message that leaves on its own is a toast.
+
+## API reference
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
+pointer and key handlers) and merges `style` last.
+
+| Part | Prop | Type | Default | Consequence |
+| ---- | ---- | ---- | ------- | ----------- |
+| `Alert` | `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` | the surface, edge and readable colour every part inherits |
+| `Alert` | `children` | parts | — | the composition; a part outside the root throws |
+| `AlertDismiss` | `onDismiss` | `() => void` (required) | — | runs on click, `Enter` or `Space`; there is no optional dismiss |
+| `AlertDismiss` | `label` | `string` | `"Dismiss"` | the control's accessible name |
+
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| surface | the tone's `xSoft` role |
+| title and icon | the tone's `xSoftForeground` role |
+| edge | the tone's solid role at 30% |
+| description | `foreground` |
+| dismiss glyph | `foreground`, not the tone |
+| corners | the fixed registry's 6px `md` step |
+
+Two consequences follow. Repainting a tone in `@gpuixui/tokens` repaints every
+alert, badge and toast together — that is the point of the shared status scale.
+Changing the theme's `radius`, `density` or platform does **not** reshape the
+alert: it compiles against the default registry's fixed metrics (ADR 0006), so a
+platform switch repaints the palette and the families but keeps 12px padding and
+6px corners. Pass `className` or `style` to own the metrics.
+
+## Accessibility and limitations
+
+- The root carries `role="alert"`, and the runtime publishes the role into the
+  accessibility tree. The role is a **marker**: the runtime has no live-region
+  attribute, and nothing measured an announcement, so the site does not claim one.
+  Move the focus to the message, or make the title say what changed
+  ([Accessibility](/docs/accessibility)).
+- `AlertIcon` is a slot with no role of its own, and the dismiss glyph is
+  decorative; the dismiss control's name comes from `label`, not from the glyph.
+- Colour is never the only signal: every alert needs an `AlertTitle`, and the
+  title should name the state rather than repeat the body.
+- The dismiss control is this package's local `IconButton`; a caller that needs a
+  different control can compose its own button instead of `AlertDismiss`.
+- The preview above is a browser rendering of the recipe. The shipped alert is a
+  GPUix host tree; the Code tab and the source accordion are the real usage.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | the host props the parts take |
+| `@gpuix/react/floating` | `mergeStyles`, so a caller `style` merges last |
+| `@gpuixui/icons` | the dismiss glyph |
+| `@gpuixui/tw` | the `ALERT_*` recipes and `cn` |
+
+No overlay, no service and no global state: the tone is a React context inside
+one alert.
+
+## Related
+
+- **Badge** — the same status palette, for a compact label.
+- **Toast** — the transient version of this message.
+- **Card** — the surface an alert usually sits inside.
+- **Empty state** — the full-panel "nothing here yet" composition.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `yes` runtime verdict: a compound of `div`s and
+a `<text>` over a tone context, with no runtime feature to miss. 11 native
+behaviour tests in `packages/components/src/behaviour/alert.test.tsx` hold the
+part order, each tone's surface and title colour, the description keeping the page
+foreground, the optional icon, the dismiss control's name and activation by click,
+`Enter` and `Space`, and a caller `style` winning. The role reaches the tree; the
+announcement does not, and the inventory records the same limit.
