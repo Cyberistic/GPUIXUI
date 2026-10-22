@@ -3609,6 +3609,23 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       two layouts for one row. The page says "beside"; `docs.test.ts` reads the
       shared row's `flex-row` and requires all three pages to use the same words
       and refuse "under the name" (measured failing on the old page).
+`[x]` `packages/primitives`: **an option whose `value` was `""` could never paint
+      checked** — `""` is `defaultValue`'s default, and the state reader also
+      refused it as a choice, so such an option held the tab stop, accepted a
+      press that reported `""`, and still read unchecked while the group's value
+      *was* `""`. The value is compared as the value it is. `RadioGroup.test.tsx`
+      holds the paint (measured failing on the old guard) and
+      `docs/radio-group.mdx` §Limitations/§Verification states that `""` is a
+      value like any other and a "no choice" state is explicit.
+`[ ]` `packages/primitives`: a **blur over an empty `NumberField` invents a visible
+      value** — an untouched field with no `value`/`defaultValue` paints `"0"` on
+      blur, and clearing a field that had one restores the old number, with no
+      `onValueChange` either way, because `commitNumberDraft` always marks the
+      draft touched and the value channel is a bare `number`. The field needs a
+      decided absence story (an `onValueChange(undefined)`/`Option` channel, or a
+      documented rule that an empty box keeps the last value) before the paint
+      and the draft can change; `core/number.ts`'s draft tests and
+      `NumberField.test.tsx` are where it lands.
 `[x]` `packages/primitives`: `NumberField` gained the **drag-to-scrub** its
       docs recorded as unbuilt — a press on either stepper that travels scrubs
       the value one `step` per `SCRUB_PIXELS_PER_STEP` (4px) of vertical travel
