@@ -147,6 +147,17 @@ export const registry = [
     capability: "table",
   },
   {
+    id: "data-tree-core",
+    title:
+      "@gpuixui/data: a tree with expansion, native focus, type-ahead and a reveal",
+    capability: "table",
+  },
+  {
+    id: "data-expandable-rows-core",
+    title: "@gpuixui/data: a row that opens a detail panel under itself",
+    capability: "table",
+  },
+  {
     id: "data-grid-fixed-header",
     title:
       "Table: a fixed header with one shared horizontal scroll (no sticky in the runtime)",

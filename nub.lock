@@ -314,6 +314,9 @@ importers:
       '@gpuixui/components':
         specifier: workspace:*
         version: link:../components
+      '@gpuixui/icons':
+        specifier: workspace:*
+        version: link:../icons
       '@gpuixui/primitives':
         specifier: workspace:*
         version: link:../primitives

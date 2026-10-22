@@ -1,0 +1,159 @@
+---
+title: Tree views
+description: Expandable rows of a hierarchy, with one tab stop, arrow-key navigation, type-ahead and a painter that respects the measured runtime rules.
+---
+
+`TreeView` paints a tree of rows a reader opens, closes and walks. It is a
+column of `div` rows — the same row the table paints — because GPUix has no tree
+element, and it composes with `useExpandedRows`, the controller that holds the
+expansion set and the cursor.
+
+The flattening is pure: a node paints only when its **own** entry is open, and
+a key is painted once, so a caller's cycle or a duplicated sibling cannot hang
+the walk or paint two rows that answer to one cursor.
+
+## Usage
+
+```tsx
+import { TreeView, useExpandedRows } from "@gpuixui/data";
+
+const tree = useExpandedRows({
+  roots: files,
+  keyOf: (node) => node.name,
+  childrenOf: (node) => node.children ?? [],
+  labelOf: (node) => node.name,
+  initialExpanded: ["src"],
+});
+
+<TreeView
+  aria-label="Workspace files"
+  height={260}
+  rows={tree.rows}
+  cursor={tree.cursor}
+  onCursorChange={tree.setCursor}
+  labelOf={(node) => node.name}
+  onActivate={(row) => open(row.node)}
+/>;
+```
+
+The full screen is `packages/data/examples/tree.example.tsx`, which the native
+playground mounts as the `tree` example.
+
+## Behaviour
+
+The keys are the desktop tree's contract, provided by `treeCursorMove`:
+
+| Key | Effect |
+| --- | --- |
+| `Up` / `Down` | move the cursor over the painted rows, clamping at both ends |
+| `Home` / `End` | the first and last painted row |
+| `Right` | open a closed branch; on an open branch, step into its first child |
+| `Left` | close an open branch; otherwise step out to the parent |
+| `Enter` / `Space` | flip the branch under the cursor |
+| a printable character | type-ahead: the first row **after** the cursor whose label starts with the prefix, wrapping |
+
+A press on a folder opens it and reports the row through `onActivate`, so one
+handler serves files and folders. The expansion set is the caller's: a press
+hands back a whole cursor, which is what `useExpandedRows` stores.
+
+`reveal(key)` opens the path to a node and moves the cursor to it — the shape a
+search hit or a "show this file" action needs. `expandAll`, `collapseAll`,
+`toggle` and `setExpanded` are the rest of the controller.
+
+## Measured rules
+
+`virtual-tree-lifecycle` measured the composition on `@gpuix/native@0.11.0`:
+
+- **a nested row insets by 16px per level** — `TREE_INDENT`, applied as the
+  row's `paddingLeft`, so depth is visible without painting a guide line;
+- **the arrows move real native focus**, so the tree holds **one** tab stop
+  rather than one per row. The focus call runs in a layout effect **after** the
+  row's `tabIndex` commits: a call from the key handler moved nothing, because
+  the row was still outside the tab order;
+- **`scrollToItem` reveals a row that was never mounted**, and `onVisibleRange`
+  reports indices computed against the spliced child list after a row-count
+  change — so a virtualized tree reads the painted rows or the list anchor, not
+  the reported range.
+
+`press-routing-lifecycle` adds the press rule: a painted child is where GPUI's
+hit test stops, so the chevron is an `<svg>` with `pointerEvents: "none"` and
+the row answers the press. A control that must take its own press — a checkbox
+in a file tree's row — paints, which is what makes it take it.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `rows` | `TreeRow<T>[]` | — | the visible rows, in paint order (already flattened) |
+| `labelOf` | `(node: T) => string` | — | the row's accessible name and what type-ahead matches |
+| `cursor` | `TreeCursor` | — | the caller's cursor; omit it for an uncontrolled tree |
+| `onCursorChange` | `(cursor: TreeCursor) => void` | — | reports every cursor a key or a press produces |
+| `defaultCursor` | `TreeCursor` | nothing open | the uncontrolled tree's start |
+| `onActivate` | `(row: TreeRow<T>) => void` | — | a press or Enter on a row |
+| `renderRow` | `(row: TreeRow<T>) => ReactNode` | `labelOf` as text | paints a row's content after its inset and chevron |
+| `height` | `number` | — | a definite height; the rows scroll inside it |
+| `testId` | `string` | — | the tree; each row is `${testId}-row-${key}` and its chevron slot `${testId}-row-${key}-slot` |
+
+`useExpandedRows` takes `roots`, `keyOf`, `childrenOf`, `labelOf`,
+`initialExpanded` and `initialActive`, and returns `rows`, `cursor`, `expanded`,
+`active`, `setCursor`, `setActive`, `toggle`, `setExpanded`, `expandAll`,
+`collapseAll`, `reveal`, `pressKey` and `typeAhead`.
+
+## Theming
+
+The rows compile a `@gpuixui/tw` recipe against the default registry. The active
+row paints the theme's `selected` fill and `selectedForeground` label, and the
+pointer moves it a step onto `accent` — a chosen row that paints one flat colour
+answers nothing. The chevron paints `mutedForeground`, or `selectedForeground`
+on the active row. Row height is the active density's `rowHeight`; the depth
+inset is `TREE_INDENT` (16).
+
+## Accessibility
+
+- The frame is `role="tree"` and each row `role="treeitem"`, with `aria-level`,
+  `aria-selected` and `aria-expanded` on a branch. Set `aria-label` on the tree.
+- One tab stop: a `Tab` into the tree lands on the cursor's row, and the arrows
+  move from there.
+- `aria-expanded` is supported by the pinned runtime; there is no
+  `aria-activedescendant`, so the tree uses roving `tabIndex` instead of keeping
+  focus on one container.
+- A row's name is its `labelOf`, so a renderer that paints an icon and a label
+  still announces the label.
+
+## Limitations
+
+- One active row. A tree that chooses several composes `selection/logic` over
+  the flattened keys; the package does not ship a multi-select tree.
+- The tree does not virtualize itself. A large tree composes `VirtualList` in
+  children mode over `rows` — the flattening is already flat — and the depth
+  inset is all a row needs.
+- A row that changes height while painted re-measures on the next frame
+  (`virtual-list-expand`), so a tree with expanding *row bodies* sizes its
+  viewport against the open height.
+- The docs site cannot render this component live — it is a GPUix host tree,
+  not DOM. The code above is the real source.
+
+## Verification
+
+`src/tree/logic.test.ts` (13 tests) holds the flattening (a branch opens only on
+its own entry, a duplicated key and a cycle paint once, a reveal opens the
+path), the key contract (clamping, Right opening then stepping in, Left closing
+before leaving, Enter/Space flipping) and the type-ahead (search after the
+cursor, wrapping, the 500 ms window).
+
+`src/behaviour/tree.test.tsx` (7 tests) mounts the shipped example in the real
+renderer: a press opens the folder it lands on, a child insets 16px under its
+parent, the arrows move native focus with the cursor, Right opens and Left
+closes, the active row paints the selection pair, a typed prefix moves the
+cursor, and a reveal opens the path to a deep row.
+
+```sh
+nub run --filter @gpuixui/data test
+nub run --filter @gpuixui/data test:behaviour
+```
+
+## Related
+
+- **Table** — the same row composition with columns and a fixed header.
+- **Expandable rows** — the flat-list version of folding a panel open.
+- **Virtualized lists** — the window a large tree composes.

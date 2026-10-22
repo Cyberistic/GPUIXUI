@@ -18,6 +18,8 @@ import {
   TABLE_CAPTION,
   TABLE_CELL,
   TABLE_COLUMN_DIVIDER,
+  TABLE_DETAIL_CELL,
+  TABLE_DETAIL_ROW,
   TABLE_EMPTY,
   TABLE_HEADER,
   TABLE_HEADER_CELL,
@@ -42,6 +44,8 @@ const recipes: ReadonlyArray<readonly [string, string]> = [
   ["cell", TABLE_CELL],
   ["caption", TABLE_CAPTION],
   ["empty", TABLE_EMPTY],
+  ["detail row", TABLE_DETAIL_ROW],
+  ["detail cell", TABLE_DETAIL_CELL],
   ["skeleton bar", TABLE_SKELETON_BAR],
 ];
 

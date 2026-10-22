@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | in progress — phases 1–4 and 7 landed 2026-10-22 (`packages/data`; `data-table-core` probe 1/1, package suite 85 cases + 29 native behaviour cases) |
+| Status | in progress — phases 1–5 and 7 landed 2026-10-22 (`packages/data`; headless probes `data-table-core`, `data-tree-core`, `data-expandable-rows-core`; package suite 98 cases + 42 native behaviour cases) |
 | Phase | D — data and workspace |
 | Owner | the `data` workstream |
 | Depends on | `@gpuixui/components`, `@gpuixui/primitives`, `@gpuixui/tw`, `@gpuixui/tokens`, `@gpuixui/motion` |
@@ -142,9 +142,23 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   The window's arithmetic is **`@tanstack/virtual-core`'s**, driven without a
   DOM; a reveal moves the window to the row's own position in the same render
   and the body scrolls after that commit.
-- Evidence: `nub run --filter @gpuixui/data test` (63) and `test:behaviour` (24)
+- **Phase 5 (trees and expansion) landed**: `packages/data/src/tree/` — the pure
+  model (`flattenTree`, `branchKeys`, `expandAll`/`collapseAll`, `expandedPath`/
+  `expandTo`, `treeCursorMove`, the type-ahead buffer and `typeAheadRow`), the
+  `useExpandedRows` controller and `TreeView`. The measured rules are in the
+  paint: a 16px depth inset (`TREE_INDENT`), **one** tab stop whose arrows move
+  native focus in a layout effect after the `tabIndex` commit
+  (`virtual-tree-lifecycle`), and a chevron that takes no press
+  (`press-routing-lifecycle`). `TableExpandableRow`/`TableDetailRow` open a
+  **sibling** detail row because 0.11.0 has no row span; `virtual-list-expand`'s
+  rule (a painted row grows and the rows below shift) is why an expanding row
+  belongs in the plain table or the list's children mode, not a fixed-estimate
+  window. 13 unit + 12 behaviour cases, two docs pages and two examples; headless
+  `data-tree-core` and `data-expandable-rows-core` are 1/1 on 0.11.0.
+- Evidence: `nub run --filter @gpuixui/data test` (98) and `test:behaviour` (42)
   green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
-  1/1. Phases 5–7 and frozen columns are the open TODO rows.
+  and `--only data-tree-core` and `--only data-expandable-rows-core` (1/1 each).
+  Phase 6 and frozen columns are the open TODO rows.
 - **Phase 7 (the data surfaces) landed**: `packages/data/src/surfaces/` —
   `KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar` and `AdvancedFilter`,
   over one object that none of them copies. The advanced filter's state is a
@@ -163,7 +177,7 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   ship in `packages/data/docs/`. Directions measured: dropping the label
   column's width, reporting the search at once, and swapping the sides of a
   `contains` each fail their case. The suite is 85 unit / 29 behaviour green.
-  Phases 5–6 and the frozen columns are the open TODO rows.
+  Phase 6 and the frozen columns are the open TODO rows.
 
 ## 5. Acceptance
 

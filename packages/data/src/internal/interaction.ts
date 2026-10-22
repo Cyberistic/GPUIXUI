@@ -66,6 +66,30 @@ export const typeInto = (
   Arr.forEach(text.split(""), (key) => root.renderer.simulateKeystrokes(key));
 };
 
+/**
+ * Focus `testId`, then send one keystroke: a character or a named key
+ * (`"down"`, `"right"`, `"enter"`, `"space"`).
+ */
+export const pressKey = (
+  root: DataTestRoot,
+  testId: string,
+  keystroke: string,
+): void => {
+  const element = root.renderer.findByTestId(testId);
+  if (element === undefined) {
+    throw new Error(`behaviour: no element with testId "${testId}"`);
+  }
+  root.renderer.focusElement(element.id);
+  root.renderer.nativeSimulateKeystrokes(element.id, keystroke);
+};
+
+/** The test id of the element holding native focus, when it carries one. */
+export const focusedTestId = (root: DataTestRoot): Option.Option<string> =>
+  Option.flatMap(
+    Option.fromNullishOr(root.renderer.getFocusedElementId()),
+    (id) => Option.fromNullishOr(root.renderer.getElement(id)?.testId),
+  );
+
 /** Every painted string, joined by a space. */
 export const paintedText = (root: DataTestRoot): string =>
   Arr.join(root.renderer.getAllText(), " ");

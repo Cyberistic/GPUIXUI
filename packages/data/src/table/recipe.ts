@@ -60,6 +60,19 @@ export const TABLE_COLUMN_DIVIDER =
 /** A body cell is a box with the same inset as its header. */
 export const TABLE_CELL = "px-3 py-2 text-sm";
 
+/**
+ * The row an expanded row opens into.
+ *
+ * It is a **sibling** of the row it describes, not a cell inside it: a detail
+ * panel is as wide as the table's content and its own height pushes the rows
+ * below it, which a cell inside a fixed row could not do.
+ */
+export const TABLE_DETAIL_ROW =
+  "flex flex-row items-stretch shrink-0 bg-muted text-muted-foreground";
+
+/** The detail's one cell: it fills the content width, so no column spans. */
+export const TABLE_DETAIL_CELL = "px-3 py-3 text-sm";
+
 /** The caption below the rows. */
 export const TABLE_CAPTION = "px-3 py-2 text-xs text-muted-foreground";
 

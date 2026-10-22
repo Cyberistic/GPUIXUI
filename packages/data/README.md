@@ -3,10 +3,11 @@
 Data presentation rendered by GPUix through React — the table core, the
 sort/selection/filter controller it runs on, column configuration with resizing,
 the virtualized list over the runtime's own `<virtual-list>`, the virtualized
-table that composes it with a fixed header, and the **data surfaces** (a
-key-value list, a statistic card, a property panel, a toolbar and the advanced
-filter's predicate tree). Plan 610 owns the phases still to land (trees and
-charts).
+table that composes it with a fixed header, the **tree** with its expansion and
+cursor model, the **expandable table row** that opens a detail panel under
+itself, and the **data surfaces** (a key-value list, a statistic card, a property
+panel, a toolbar and the advanced filter's predicate tree). Plan 610 owns the
+phase still to land (charts).
 
 ## Why a package
 
@@ -30,7 +31,9 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | A hidden row's selection must be cleared | `table-filter-lifecycle` | `narrowTable` releases it in the same commit; `useTable` does the same for a sort/filter change. |
 | Column changes are app state | `table-columns-lifecycle` | Hiding a column takes its width out of the content and shifts every later column by exactly that width; a move changes the order and not the width. The header and the cells read one `columns.visible` list. |
 | A resize divider arms the capture | `column-resize-lifecycle` | `TableColumnDivider` listens to `onMouseDown` **and** `onMouseMove`, holds the press in a ref, and reads the width at each press. Its width is clamped to the column's own bounds. |
-| A press stops at the first painted child | `press-routing-lifecycle` | A cell control that must hand a press to its row declares `pointerEvents: "none"`; a filled child is the hit-test boundary, not the innermost handler. |
+| A press stops at the first painted child | `press-routing-lifecycle` | A cell control that must hand a press to its row declares `pointerEvents: "none"`; a filled child is the hit-test boundary, not the innermost handler. A tree's chevron is an `<svg>` that takes no press, so the row answers; a checkbox in a row paints, so it takes its own. |
+| Arrow keys move real native focus | `virtual-tree-lifecycle` | A tree holds **one** tab stop and moves `renderer.focusElement` in a layout effect **after** the `tabIndex` commit. A call from the key handler moved nothing: the row was still outside the tab order. A 16px depth inset is the hierarchy's only paint. |
+| A painted row that grows re-measures | `virtual-list-expand` | An expandable row opens a **sibling** detail row (no row span on 0.11.0): the rows below shift by the growth, and a fixed-estimate `itemCount` window cannot express it — use the plain table or the list's children mode. |
 | A list builds only a window | `virtual-list-lifecycle`, `virtual-list-windowed` | `VirtualList` wraps the host element: children mode retains every React child and skips build/paint off screen; `itemCount` + `estimatedItemHeight` + `windowStart` retains only the app's slice. A list sizes its viewport from a definite height. |
 | `onVisibleRange` lags the paint | `virtual-list-windowed` | The reported range is **not** the window's source: the window follows the runtime's **scroll anchor** (`getListScrollTop`), which is exact even while the row heights are estimates. A window built from the reported range paints blank rows. |
 | A reveal moves the window first | `virtual-list-windowed` | `useVirtualRows` moves the window to the row's own position in the same render, and the body scrolls to it in the layout effect after that commit. |
@@ -47,6 +50,8 @@ src/
   columns/    visibility, order, resize bounds, ColumnMenu, TableColumnDivider
   virtual/    VirtualList over the runtime's <virtual-list>, both modes;
               VirtualTable, useVirtualRows, the window calculator
+  tree/       the flattening, the cursor contract, type-ahead, TreeView and
+              useExpandedRows
   surfaces/   KeyValue, StatCard, PropertyPanel, DataToolbar, AdvancedFilter
               and the predicate tree they read
   use-table   the uncontrolled controller joining sort, selection and filter
@@ -173,10 +178,52 @@ The row must paint exactly `rowHeight`: the window's positions come from the
 runtime's estimate, so a taller row would push the rows below it out of place.
 A row of a different height uses `VirtualList` in children mode instead.
 
+A **tree** is a flattened column of rows with one tab stop. `useExpandedRows`
+holds the expansion set and the cursor; `TreeView` paints the rows and owns the
+keys, the native focus and the type-ahead buffer:
+
+```tsx
+const tree = useExpandedRows({ roots: files, keyOf, childrenOf, labelOf });
+
+<TreeView
+  aria-label="Workspace files"
+  height={260}
+  rows={tree.rows}
+  cursor={tree.cursor}
+  onCursorChange={tree.setCursor}
+  labelOf={(node) => node.name}
+  onActivate={(row) => open(row.node)}
+/>
+```
+
+Up/Down/Home/End move the cursor (and the platform focus); Right opens a branch
+or steps into it; Left closes it or steps out; a printable character jumps to the
+first row after the cursor whose label starts with the prefix. `reveal(key)` opens
+the path to a node and moves the cursor to it.
+
+An **expandable row** opens a detail panel under itself. The panel is a sibling
+row, not a spanning cell — 0.11.0 has no row span — so it is as wide as the
+table's content and pushes the rows below it:
+
+```tsx
+<TableExpandableRow
+  expanded={HashSet.has(open, file.id)}
+  onToggle={() => setOpen((current) => toggleExpanded(current, file.id))}
+  cells={<><TableCell width={200}>{file.name}</TableCell></>}
+  detail={<KeyValue entries={detailOf(file)} />}
+/>
+```
+
+The header needs a matching expander track (`<TableHeaderCell width={32} />`).
+An expanding row belongs in the plain table or the list's children mode: a
+fixed-estimate `itemCount` window would misplace every row below it.
+
 The full screens — the files table with filter, sort headers, column menu and
-keyboard walk, the 2 000-row list, the 1 000-row virtualized table and the
-**data surfaces** over one object — are `examples/table.example.tsx`,
-`examples/virtual-list.example.tsx`, `examples/virtual-table.example.tsx` and
+keyboard walk, the 2 000-row list, the 1 000-row virtualized table, the
+workspace **tree**, the **expandable-rows** table and the **data surfaces** over
+one object — are `examples/table.example.tsx`,
+`examples/virtual-list.example.tsx`, `examples/virtual-table.example.tsx`,
+`examples/tree.example.tsx`, `examples/expandable-rows.example.tsx` and
 `examples/surfaces.example.tsx`.
 
 ## The data surfaces
@@ -240,9 +287,11 @@ in the primitives' registry and a column width is data.
 | Resizable columns (`TableColumnDivider`) | shipped, window-verified |
 | Virtualized lists (`VirtualList`, both host modes) | shipped, window-verified |
 | Virtualized table (`VirtualTable`, `useVirtualRows`) | shipped, window-verified |
+| Trees (`TreeView`, `useExpandedRows`, `tree/logic`) | shipped, window-verified |
+| Expandable rows (`TableExpandableRow`, `TableDetailRow`) | shipped, window-verified |
 | Data surfaces (`KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar`, `AdvancedFilter`) | shipped, window-verified |
 | Pinned / frozen columns | composition, not shipped (`data-grid-frozen-column`) |
-| Trees, charts | plan 610 phases 5–6 |
+| Charts | plan 610 phase 6 |
 
 ## Commands
 

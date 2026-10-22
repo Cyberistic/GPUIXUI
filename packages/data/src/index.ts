@@ -46,6 +46,16 @@ export type {
   TableViewportProps,
 } from "./table/table.js";
 
+export {
+  DEFAULT_EXPANDER_WIDTH,
+  TableDetailRow,
+  TableExpandableRow,
+} from "./table/expandable.js";
+export type {
+  TableDetailRowProps,
+  TableExpandableRowProps,
+} from "./table/expandable.js";
+
 export { TableSortHeader, sortGlyph } from "./sort/header.js";
 export type { TableSortHeaderProps } from "./sort/header.js";
 export { directionOf, sortLabel, sortRows, toggleSort } from "./sort/logic.js";
@@ -209,3 +219,42 @@ export type {
   FilterTree,
   NotClause,
 } from "./surfaces/logic.js";
+
+export {
+  TREE_INDENT,
+  TYPE_AHEAD_WINDOW_MS,
+  TreeKey,
+  branchKeys,
+  collapseAll,
+  cursorRow,
+  emptyCursor,
+  expandAll,
+  expandTo,
+  expandedPath,
+  findRow,
+  flattenTree,
+  idleTypeAhead,
+  isExpanded,
+  isTreeKey,
+  setExpanded,
+  toggleExpanded,
+  treeCursorMove,
+  treeKeys,
+  typeAheadPress,
+  typeAheadRow,
+} from "./tree/logic.js";
+export type {
+  TreeCursor,
+  TreeRow,
+  TreeSpec,
+  TypeAheadBuffer,
+} from "./tree/logic.js";
+
+export { TREE_INSET, TreeView } from "./tree/tree-view.js";
+export type { TreeViewProps } from "./tree/tree-view.js";
+
+export { useExpandedRows } from "./tree/use-expanded.js";
+export type {
+  ExpandedRowsController,
+  UseExpandedRowsOptions,
+} from "./tree/use-expanded.js";

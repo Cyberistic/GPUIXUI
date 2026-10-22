@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Data presentation — tables, sorting, selection, filtering, virtualisation, trees and charts — rendered by GPUix through React.",
+  "description": "Data presentation \u2014 tables, sorting, selection, filtering, virtualisation, trees and charts \u2014 rendered by GPUix through React.",
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
@@ -18,6 +18,7 @@
   "dependencies": {
     "@gpuix/react": "catalog:",
     "@gpuixui/components": "workspace:*",
+    "@gpuixui/icons": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "@gpuixui/tw": "workspace:*",
