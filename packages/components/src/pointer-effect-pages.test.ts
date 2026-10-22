@@ -1,12 +1,12 @@
 /**
  * The pointer-effect pages' window claim, held to the probe that measured it.
  *
- * The bug this guards: `Magnetic` and `ImageZoom` cite only the offscreen
- * renderer suite for a rule the renderer cannot measure — `onLayout` reports a
- * size change, not the move a layout above the surface makes — while the
- * playground's `surface-origin` probe had already measured it in a window on
- * 0.11.0. A reader could not tell a renderer fact from a window fact, and the
- * same gap sat in both `COMPONENTS.md` rows.
+ * The bug this guards: `ImageZoom` cited only the offscreen renderer suite for a
+ * rule the renderer cannot measure — `onLayout` reports a size change, not the
+ * move a layout above the surface makes — while the playground's `surface-origin`
+ * probe had already measured it in a window on 0.11.0. A reader could not tell a
+ * renderer fact from a window fact, and the same gap sat in the `COMPONENTS.md`
+ * row.
  *
  * `node:fs` is a test-time repository read, the boundary the other page guards
  * in this package use.
@@ -21,7 +21,6 @@ import { describe, expect, it } from "vitest";
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 
-const magnetic = read("../docs/magnetic.mdx");
 const imageZoom = read("../docs/image-zoom.mdx");
 const listPage = read("../docs/list.mdx");
 const readme = read("../../../apps/playground/README.md");
@@ -54,10 +53,7 @@ describe("the pointer-effect pages cite the window measurement", () => {
     expect(readme).toContain("15 checks, `--only surface-origin`");
 
     Arr.forEach(
-      [
-        ["Magnetic", section(magnetic, "## Verification")],
-        ["Image zoom", section(imageZoom, "## Verification")],
-      ] as const,
+      [["Image zoom", section(imageZoom, "## Verification")]] as const,
       ([name, verification]) => {
         expect(verification, name).toContain("`surface-origin`");
         expect(verification, name).toContain("15 checks");

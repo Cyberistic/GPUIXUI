@@ -126,8 +126,12 @@ const anchorsOf = (source: string): ReadonlySet<string> => {
   return new Set(seen.keys());
 };
 
-// A curated page shadows the package page at its URL, so the first page read
-// (the site's) owns the anchors a `#hash` link resolves against.
+// A `#hash` link is a self-anchor: it resolves against the page that wrote it.
+// A curated page shadows the package page at its URL, so a path+hash link
+// resolves against the served page's headings (the site's page wins).
+const anchorsByFile = new Map(
+  pages.map((page) => [page.file, anchorsOf(page.source)]),
+);
 const anchors = new Map<string, ReadonlySet<string>>();
 for (const page of pages) {
   if (!anchors.has(page.url)) anchors.set(page.url, anchorsOf(page.source));
@@ -188,7 +192,8 @@ const deadReason = (link: Link): string | undefined => {
   const known = anchors.get(url);
 
   if (route === "" && hash !== undefined && hash !== "") {
-    return known?.has(hash) === true
+    const self = anchorsByFile.get(link.from);
+    return self?.has(hash) === true
       ? undefined
       : `no heading #${hash} on ${url}`;
   }
