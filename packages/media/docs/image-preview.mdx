@@ -1,0 +1,90 @@
+---
+title: ImagePreview
+description: An image surface with a loading state, an error state, a caption and a pointer zoom.
+---
+
+`ImagePreview` wraps the shipped `ImageZoom` (`@gpuixui/components/image-zoom`)
+with the two states an `<img>` surface owes its reader — **loading** and
+**error** — plus a caption. It is a **controlled** preview: the runtime's `<img>`
+host reports neither load completion nor failure (there is no `onLoad`/`onError`),
+so the caller tells the preview which state it is in.
+
+```tsx
+import { ImagePreview } from "@gpuixui/media";
+
+<ImagePreview
+  src={bytesReady ? "data:image/png;base64,…" : ""}
+  alt="The dashboard screenshot"
+  status={fetchFailed ? "error" : bytesReady ? "loaded" : "loading"}
+  caption="Figure 1 — the revenue dashboard"
+  onRetry={() => refetch()}
+/>;
+```
+
+## Anatomy
+
+| Prop | Required | Notes |
+| ---- | -------- | ----- |
+| `src` | yes | A path, data URL or http(s) URL |
+| `alt` | yes | The picture's accessible name |
+| `status` | no | `"loading" \| "loaded" \| "error"`. Default: `"error"` for a blank `src`, else `"loaded"` |
+| `caption` | no | A line under the frame |
+| `onRetry` | no | Shown as a button in the error state |
+
+The zoom is `ImageZoom`, so `width`, `height`, `scale` and `radius` are the zoom
+frame's own; `zoom={false}` swaps in a plain `<img>` for a static preview.
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `src` | `string` (required) | — |
+| `alt` | `string` (required) | — |
+| `status` | `ImagePreviewStatus` | `"error"` for blank `src`, else `"loaded"` |
+| `caption` | `string` | — |
+| `loadingLabel` | `string` | `"Loading"` |
+| `errorLabel` | `string` | `"Could not load image"` |
+| `retryLabel` | `string` | `"Retry"` |
+| `onRetry` | `() => void` | — |
+| `width` / `height` | `number` | `240` / `160` |
+| `zoom` | `boolean` | `true` |
+| `scale` | `number` | `ImageZoom`'s `1.6` |
+| `radius` | `number` | `theme.radius.md` |
+
+## Accessibility
+
+- The loading state is a `Spinner` (`role="status"`), announced as
+  `loadingLabel`.
+- The error state is ordinary content: an error glyph, `errorLabel`, and the
+  optional retry `Button`. The glyph is decorative.
+- The loaded state owns the name: `ImageZoom` (or the plain `<img>`) carries
+  `alt`. The root is a layout `div` and adds no second name.
+
+## Theming
+
+The frame's wash is `colors.muted`, the caption `colors.mutedForeground`, the
+error glyph `colors.destructive`, and the spacing comes from `spacing.*`. No
+literal colours.
+
+## Limitations
+
+- **No load/error signal**: the `<img>` host has no `onLoad`/`onError` (verified,
+  `docs/gpuix-capabilities.md` §Image painting), so `status` is caller-driven and
+  the only error the component detects itself is a blank `src`.
+- The docs site cannot render this live; the code above is the real source.
+
+## Verification
+
+`src/image-preview.test.tsx` (3 tests): a blank `src` paints the error state; a
+real `src` paints the `ImageZoom` picture, not the error (the negative control);
+and `status="loading"` paints the loading state.
+
+```sh
+nub run --filter @gpuixui/media test
+```
+
+## Related
+
+- **Image zoom** — the magnifier this composes.
+- **FileUpload** — the queue an image that arrives as an upload belongs to.
+- **DropZone** — the drop target that can hand files to a queue.

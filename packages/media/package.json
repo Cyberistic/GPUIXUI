@@ -1,0 +1,42 @@
+{
+  "name": "@gpuixui/media",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Image, upload and drop surfaces \u2014 a preview with a pointer zoom, a file queue with retry and remove, and a drop zone \u2014 rendered by GPUix through React.",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./examples": "./examples/index.ts",
+    "./image-preview": "./src/image-preview.tsx",
+    "./drop-zone": "./src/drop-zone.tsx",
+    "./file-upload": "./src/file-upload.tsx",
+    "./upload/queue": "./src/upload/queue.ts",
+    "./*": "./src/*.tsx"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gpuix/react": "catalog:",
+    "@gpuixui/components": "workspace:*",
+    "@gpuixui/icons": "workspace:*",
+    "@gpuixui/primitives": "workspace:*",
+    "@gpuixui/tokens": "workspace:*",
+    "@gpuixui/tw": "workspace:*",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@gpuixui/config": "workspace:*",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

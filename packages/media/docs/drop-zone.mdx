@@ -1,0 +1,79 @@
+---
+title: DropZone
+description: A labelled drop target that reports dropped files and offers a pick action.
+---
+
+`DropZone` accepts an OS file drop and reports `{ files }`, or offers a **pick**
+button wired to the caller's file picker. The drop rides the runtime's
+`onFileDrop` (the `FileDrop::Entered` then `Submit` pair a Finder drag produces),
+whose payload is absolute paths — so the zone maps each path to `{ name, path }`
+and hands `onDrop({ files })`.
+
+```tsx
+import { DropZone } from "@gpuixui/media";
+
+<DropZone
+  label="Drop files here"
+  description="or pick them from the platform"
+  onDrop={({ files }) => addFiles(files.map((file) => file.path))}
+  onPick={() => renderer.promptForPaths({ allowMultiple: true })}
+/>;
+```
+
+## Anatomy
+
+| Part | Required | Notes |
+| ---- | -------- | ----- |
+| `label` | yes | The zone's visible and accessible name |
+| `description` | no | Why the reader should drop or pick |
+| `onDrop` | yes | Receives `{ files }` in drop order |
+| `onPick` | no | The picker; omit for no button |
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `label` | `string` (required) | — |
+| `onDrop` | `(payload: DropPayload) => void` (required) | — |
+| `description` | `string` | — |
+| `onPick` | `() => void` | — |
+| `pickLabel` | `string` | `"Choose files"` |
+| `disabled` | `boolean` | `false` |
+
+## Accessibility
+
+The root is `role="group"` named by `label`; the pick button is a real control
+and keeps its own focus and keyboard behaviour.
+
+## Theming
+
+The resting zone is `colors.muted` with a `borderStrong` dashed edge; the
+highlight swaps to `colors.accent` and `colors.ring`. No literal colours.
+
+## Limitations
+
+- **No drag preview, no drag-over event**: the runtime has no drag image, no
+  cross-application payload, and no `dragEnter`/`dragOver`/`dragLeave`
+  (`docs/gpuix-capabilities.md` §Drag reorder). The highlight is the
+  **pointer-over** wash (`onMouseEnter`/`onMouseLeave`) — the closest honest
+  signal the host gives — not a true "a drag is over me".
+- **No drop event in every host**: a *live* OS drop is not automatable and the
+  offscreen renderer is the only one with a simulated drop. The **pick** action
+  (`promptForPaths`) is the guaranteed path.
+- A drop is swallowed while a text field holds the platform's input session; a
+  press elsewhere ends it first.
+
+## Verification
+
+`src/drop-zone.test.tsx` (4 tests): `onFileDrop` reports `{ files }` with
+basenames; the highlight swaps the border role; the pick button routes to the
+caller; and a disabled zone refuses a drop (the negative control).
+
+```sh
+nub run --filter @gpuixui/media test
+```
+
+## Related
+
+- **FileUpload** — the queue a drop usually feeds.
+- **ImagePreview** — the surface a dropped image usually lands on.

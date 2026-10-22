@@ -1,0 +1,87 @@
+---
+title: FileUpload
+description: A queue of files with per-file state, progress, retry and remove.
+---
+
+`FileUpload` owns a queue of files and their lifecycle — `idle | uploading |
+done | error` — but **not** the transfer: the caller supplies
+`upload(file, onProgress)`, which resolves on success and rejects on failure. The
+component adds files from the controlled `files` prop, auto-starts them, and
+exposes **retry** (errored only) and **remove** per row.
+
+```tsx
+import { FileUpload, type UploadFunction } from "@gpuixui/media";
+
+const upload: UploadFunction = async (file, onProgress) => {
+  await transfer(file.path, (fraction) => onProgress(fraction));
+};
+
+<FileUpload
+  upload={upload}
+  files={files}
+  onRemoveFile={(id) => setFiles(files.filter((file) => file.id !== id))}
+/>;
+```
+
+## The state machine
+
+`upload/queue.ts` is pure and Effect-native, so a caller can drive a queue from
+Effect or a store without the component:
+
+```ts
+import { complete, enqueue, fail, reportProgress, start } from "@gpuixui/media/upload/queue";
+
+let queue = enqueue(emptyQueue, [{ id: "a", name: "a.txt" }]);
+queue = start(queue, "a");                          // idle → uploading, token 1
+queue = reportProgress(queue, "a", 1, 0.5);          // monotonic, clamped 0…1
+queue = complete(queue, "a", 1);                     // → done
+```
+
+- A `start` on an **idle** file starts it, on an **errored** file retries it,
+  and leaves an **uploading** or **done** file alone.
+- Progress only ever advances; a stale token (a removed file or a superseded
+  attempt) is ignored.
+- `remove` drops the file, cancelling its attempt — later reports are no-ops.
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `upload` | `UploadFunction` (required) | — |
+| `files` | `ReadonlyArray<UploadFile>` (required) | — |
+| `onRemoveFile` | `(id: string) => void` | — |
+| `label` | `string` | `"Upload files"` |
+| `emptyLabel` | `string` | `"No files"` |
+| `retryLabel` | `string` | `"Retry"` |
+| `removeLabel` | `string` | `"Remove"` |
+
+## Theming
+
+Done paints `colors.success`, error `colors.destructive`, the idle glyph
+`colors.mutedForeground`, and the progress bar is the `Progress` primitive. No
+literal colours.
+
+## Limitations
+
+- The transfer is the caller's; the package owns no network and no platform
+  prompt, so there is nothing here that dials a host.
+- The progress bar is `Progress`'s determinate bar (the runtime has no
+  `aria-valuenow`, so the value rides `aria-valuetext`).
+- The docs site cannot render this live; the code above is the real source.
+
+## Verification
+
+`src/upload/queue.test.ts` (7 tests) holds the state machine — retry only an
+errored file, monotonic progress, stale-token and remove-cancel guards — and
+`src/file-upload.test.tsx` (3 tests) holds the view: retry is offered and routed
+for an errored file, absent for a done file (the negative control), and remove
+routes for a finished file.
+
+```sh
+nub run --filter @gpuixui/media test
+```
+
+## Related
+
+- **DropZone** — the drop target that feeds this queue.
+- **ImagePreview** — the surface an uploaded image lands on.
