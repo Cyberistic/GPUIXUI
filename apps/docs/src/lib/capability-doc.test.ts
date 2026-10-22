@@ -346,7 +346,8 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(capture?.[2]).toContain("onMouseMove");
   });
 
-  it("records what a chart or an image can draw, with the probe that measured it", () => {    // `<svg>` is in `ElementType` and `setImagePixels` is on the renderer, so the
+  it("records what a chart or an image can draw, with the probe that measured it", () => {
+    // `<svg>` is in `ElementType` and `setImagePixels` is on the renderer, so the
     // typings made both look like general-purpose drawing. `content-surfaces`
     // measured that an SVG paints as one tint and that a pixel buffer only
     // reaches the frame from a layout effect — the two facts a chart or an image
@@ -405,7 +406,10 @@ describe("docs/gpuix-capabilities.md", () => {
 
   it("publishes the chart surface on /docs/runtime", () => {
     const chart = measuredRow("Chart surfaces");
-    expect(chart, "the page's measured table has no chart-surface row").toBeDefined();
+    expect(
+      chart,
+      "the page's measured table has no chart-surface row",
+    ).toBeDefined();
     expect(chart?.[1]).toContain("chart-raster");
     expect(chart?.[1]).toContain("setImagePixels");
     expect(chart?.[2]).toContain("layout effect");
@@ -430,7 +434,10 @@ describe("docs/gpuix-capabilities.md", () => {
 
   it("publishes the window chrome on /docs/runtime", () => {
     const chrome = measuredRow("Window chrome");
-    expect(chrome, "the page's measured table has no window-chrome row").toBeDefined();
+    expect(
+      chrome,
+      "the page's measured table has no window-chrome row",
+    ).toBeDefined();
     expect(chrome?.[1]).toContain("window-chrome");
     expect(chrome?.[1]).toContain("first row");
     expect(chrome?.[1]).toContain("100ms");
@@ -452,7 +459,10 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(single?.workaround).toContain("createPortal");
 
     const page = measuredRow("Second window");
-    expect(page, "the page's measured table has no second-window row").toBeDefined();
+    expect(
+      page,
+      "the page's measured table has no second-window row",
+    ).toBeDefined();
     expect(page?.[1]).toContain("window-backdrop");
     expect(page?.[2]).toContain("createPortal");
   });
