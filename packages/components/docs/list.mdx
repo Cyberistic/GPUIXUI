@@ -293,6 +293,19 @@ the strip behind it (1.03:1 on several shipped styles, under the 1.05:1 the
 un-faded wash clears everywhere). A caller's `style` is the last word, including
 on a selected title.
 
+**A filled child takes the row's pointer feedback.** The runtime's `hover`
+refinement uses the same hit test the press takes, so a child that paints a fill —
+a badge, an avatar, a status pill in the `leading` slot — becomes the row's hover
+edge: the row's `accent` wash does not paint and the child hears its own
+`onMouseEnter`, while one that paints nothing leaves both to the row. The
+playground's `hover-routing-lifecycle` measured the rule on 0.11.0 (56 checks):
+`text-unfilled` leaves the row `enter=1` and paint `yes`, `text-filled` and
+`div-filled` leave the row `enter=0` and paint `no`, and a `pointerEvents: "none"`
+child puts the row back in the pointer's path (`enter=1`, paint `yes`) while the
+child still hears its own listener. Give a decorative child that opt-out, or
+paint the pointer state on the child when it must answer itself. Evidence:
+`apps/playground/README.md` §`hover-routing-lifecycle`.
+
 ## Style by state
 
 `ListItem.style` takes a `StyleDesc` or a function of `ListItemState`
