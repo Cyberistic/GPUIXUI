@@ -81,13 +81,16 @@ delivered to the focused element.
 ## Theming
 
 `fieldChrome` uses `fieldVariant` (the `input` role) and the density metrics;
-`fieldTextStyle` and `nativeTextTheme` set the font, caret, selection and hint
-colours the native element paints with — `text` is the `inputForeground` role,
-`textFaint` is the `placeholder` role the empty-state hint paints in, and the
-`select-text` recipe utility declares `selectionColor: theme.colors.selection`,
-the wash the token contract measures, rather than the runtime's accent-at-35%
-default. Focus is the shared keyboard outline (`keyboardRing`), declared at rest
-and painted after Tab, not after a click.
+`fieldTextStyle` sets the field's own text metrics and selection wash, and
+`nativeTextTheme` — re-exported from `@gpuixui/tokens` so the field and the
+token contract share one mapping — hands the host the theme's mode and families,
+the `inputForeground` value role, the `placeholder` hint role and the `primary`
+caret. It takes the fill the value sits on (`input` for these fields), because
+the token contract measures both field fills. The `select-text` recipe utility
+declares `selectionColor: theme.colors.selection`, the wash the token contract
+measures, rather than the runtime's accent-at-35% default. Focus is the shared
+keyboard outline (`keyboardRing`), declared at rest and painted after Tab, not
+after a click.
 
 An `invalid` field keeps its `input` fill and paints only the **edge** — the
 border and the focus line — in `destructive`. The solid role is designed to

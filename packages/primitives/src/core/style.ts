@@ -11,7 +11,7 @@
  * without a rendering runtime.
  */
 
-import type { GpuixTheme, StyleDesc } from "@gpuix/react";
+import type { StyleDesc } from "@gpuix/react";
 import {
   disabledAction,
   elevationShadow,
@@ -200,21 +200,18 @@ export const fieldTextStyle = (theme: PrimitiveTheme): StyleDesc => ({
 /**
  * The native text theme for an `<input>`/`<textarea>`/`<code>` element.
  *
- * GPUix's native text components take their own `theme` prop; mapping the
- * design system onto it here keeps a field's placeholder, caret and selection
- * in the same palette as everything else.
+ * GPUix's native text components take their own `theme` prop, and a host given
+ * none layers its text on the runtime's built-in dark palette. The mapping is
+ * owned and measured by `@gpuixui/tokens` (`nativeTextTheme`), including the
+ * fill its value and placeholder sit on; this package re-exports that one
+ * function so a field and the token contract cannot disagree.
  */
-export const nativeTextTheme = (theme: PrimitiveTheme): GpuixTheme => ({
-  appearance: theme.mode,
-  bg: theme.colors.input,
-  text: theme.colors.inputForeground,
-  textMuted: theme.colors.mutedForeground,
-  textFaint: theme.colors.placeholder,
-  accent: theme.colors.primary,
-  caret: theme.colors.primary,
-  fontSans: theme.typography.sans,
-  fontMono: theme.typography.mono,
-});
+export {
+  nativeTextFills,
+  nativeTextTheme,
+  type NativeTextFill,
+  type NativeTextTheme,
+} from "@gpuixui/tokens";
 
 // ── Text ─────────────────────────────────────────────────────────────
 

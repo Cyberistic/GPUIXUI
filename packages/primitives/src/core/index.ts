@@ -126,6 +126,7 @@ export {
   controlFocusStyle,
   controlStyle,
   fieldTextStyle,
+  nativeTextFills,
   nativeTextTheme,
   numberInputStyle,
   numberStepperColumnStyle,
@@ -154,6 +155,8 @@ export {
 export type {
   ControlSpec,
   ControlVariant,
+  NativeTextFill,
+  NativeTextTheme,
   OtpCellSpec,
   ProgressSpec,
   ProgressTone,
