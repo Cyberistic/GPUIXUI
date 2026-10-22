@@ -570,12 +570,25 @@ const raisedLevels = [
  */
 const messageTintStrips = statusTones.map((tone) => `${tone}Soft` as const);
 
+/**
+ * The strips a raised surface casts its shadow on.
+ *
+ * A surface opens *from* a control, not only from a row: a popover or menu
+ * opened by a filled action keeps that action on screen under the surface, so
+ * the shadow falls on the action's own face. `secondary` and `accent` are the
+ * two faces the table already names (`secondary` as a filled action's fill and
+ * a segmented panel, `accent` as a wash); `primary` and `destructive` are the
+ * two brand faces, measured here as **strips** even though they are indicator
+ * marks rather than decorative roles of their own.
+ */
 const elevationStrips = [
   "background",
   "card",
   "popover",
   "muted",
   "secondary",
+  "primary",
+  "destructive",
   "input",
   "selected",
   "active",
@@ -620,6 +633,12 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   { surface: "scrim", role: "overlay", over: "popover" },
   { surface: "scrim", role: "overlay", over: "muted" },
   { surface: "scrim", role: "overlay", over: "secondary" },
+  // A filled action is part of the window too: a dialog opened over a page
+  // holds that page's primary and danger actions behind the same veil. A veil
+  // painted in the brand's own fill leaves the one control the reader may be
+  // about to press at full brightness.
+  { surface: "scrim", role: "overlay", over: "primary" },
+  { surface: "scrim", role: "overlay", over: "destructive" },
   { surface: "scrim", role: "overlay", over: "input" },
   // A chosen row is part of that window too: opening a confirmation dialog over
   // the row the reader just selected is the library's own pattern, so the veil

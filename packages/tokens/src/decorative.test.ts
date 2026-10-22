@@ -89,7 +89,12 @@ import {
   report,
   unavailableActionBrand,
 } from "./decorative.example.js";
-import { statusEdgeAlpha, statusTone, statusTones } from "./styles.js";
+import {
+  statusEdgeAlpha,
+  statusTone,
+  statusTones,
+  filledRoles,
+} from "./styles.js";
 import { platformNames, platformStyles } from "./platforms.js";
 import { retroNames, retroStyles, retroTheme } from "./retro.js";
 import {
@@ -208,6 +213,8 @@ describe("decorative surfaces", () => {
       "popover",
       "muted",
       "secondary",
+      "primary",
+      "destructive",
       "input",
       "selected",
       "hover",
@@ -215,6 +222,54 @@ describe("decorative surfaces", () => {
     ].filter((over) => !measured("scrim", "overlay", over));
 
     expect(missing).toEqual([]);
+  });
+
+  it("measures every face a filled action can wear under the veil and the shadow", () => {
+    // A surface opens *from* a control, so the control's own fill is still on
+    // screen underneath it: a dialog over a page holds the page's primary and
+    // danger actions behind the veil, and a popover opened from one casts its
+    // shadow onto that same fill. `filledRoles` is the library's declaration of
+    // the faces an action can wear, so a face added there fails here until the
+    // veil and the shadow name it — the two tables move together.
+    const missing = filledRoles.flatMap((role) => [
+      ...(measured("scrim", "overlay", role) ? [] : [`scrim/${role}`]),
+      ...(measured("elevation", "shadow", role) ? [] : [`elevation/${role}`]),
+    ]);
+
+    expect(filledRoles).toEqual([
+      "primary",
+      "secondary",
+      "destructive",
+      "accent",
+    ]);
+    expect(missing).toEqual([]);
+  });
+
+  it("reports a veil painted in the primary action's face", () => {
+    // The primary fill is a brand colour a theme can also choose for its veil;
+    // the control behind the dialog would then be exactly as bright as before.
+    const broken = extendTheme(lightTheme, {
+      colors: { overlay: lightTheme.colors.primary },
+    });
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, over }) => surface === "scrim" && over === "primary",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+  });
+
+  it("reports a shadow tinted with the danger action's face", () => {
+    // A level's colour is its share of the `shadow` role, so a brand whose
+    // shadow is its danger fill paints a menu's lift in the fill of the button
+    // it opened from.
+    const broken = extendTheme(lightTheme, {
+      colors: { shadow: lightTheme.colors.destructive },
+    });
+
+    expect(
+      elevationFailures(broken).find(({ over }) => over === "destructive"),
+    ).toMatchObject({ over: "destructive", floor: decorativeFloor, ratio: 1 });
   });
 
   it("reports a veil that cannot recede the sidebar it covers", () => {
@@ -1170,9 +1225,9 @@ describe("decorative surfaces", () => {
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8");
 
-    expect(range("sm")).toBe("1.08–1.28:1");
-    expect(range("md")).toBe("1.13–1.59:1");
-    expect(range("lg")).toBe("1.17–1.87:1");
+    expect(range("sm")).toBe("1.08–1.82:1");
+    expect(range("md")).toBe("1.13–2.81:1");
+    expect(range("lg")).toBe("1.17–3.75:1");
     const printed = `the card's lift reads ${range("sm")}, the menu's ${range("md")} and the dialog's ${range("lg")}`;
     // Whitespace-normalised: the page wraps prose, and a line break inside the
     // sentence is not a drift in the numbers.
@@ -1184,8 +1239,8 @@ describe("decorative surfaces", () => {
 
   it("prints the tightest placement over every shipped style and level", () => {
     // The printed value is the whole contract's tightest cell, not the base
-    // theme's: 16 styles × 3 levels × 14 strips, the weakest shadow over the
-    // darkest strip it can fall on.
+    // theme's: 16 styles × 3 levels × every strip the table names, the weakest
+    // shadow over the darkest strip it can fall on.
     const every = [
       ...shippedThemes,
       ...platformThemes,
@@ -1221,7 +1276,15 @@ describe("decorative surfaces", () => {
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8");
 
-    expect(cells).toHaveLength(every.length * raisedLevels.length * 14);
+    const strips = new Set(
+      decorativeSurfaces
+        .filter(({ surface }) => surface === "elevation")
+        .map(({ over }) => over),
+    );
+
+    expect(cells).toHaveLength(
+      every.length * raisedLevels.length * strips.size,
+    );
     expect(tightest).toMatchObject({
       label: "Dark · Windows 7 (Aero)",
       level: "sm",
@@ -1357,7 +1420,10 @@ describe("decorative surfaces", () => {
     // level over the deep red message tint: a pale or deep tint is not in the
     // page's lightness band, so a `lg` shadow is visible over it while the card's
     // `sm` lift is not. That is the measurement that makes "the deepest level is
-    // a ceiling" false for the levels below it.
+    // a ceiling" false for the levels below it. The two filled action faces are
+    // the other exception: a brand fill is far from the page's lightness, so a
+    // page-coloured tint is visible over `primary` and `destructive` at every
+    // level — measured, not exempted.
     const broken = extendTheme(lightTheme, {
       colors: { shadow: lightTheme.colors.background },
     });
@@ -1367,7 +1433,7 @@ describe("decorative surfaces", () => {
       ({ surface }) => surface === "elevation",
     );
 
-    expect(failures).toHaveLength(cells.length - 1);
+    expect(failures).toHaveLength(cells.length - 7);
     expect(
       failures.every(
         ({ ratio, floor }) =>
@@ -1386,11 +1452,11 @@ describe("decorative surfaces", () => {
           ),
       ),
     ).toEqual([
-      expect.objectContaining({
-        surface: "elevation",
-        level: "lg",
-        over: "destructiveSoft",
-      }),
+      ...raisedLevels.flatMap((level) => [
+        expect.objectContaining({ level, over: "primary" }),
+        expect.objectContaining({ level, over: "destructive" }),
+      ]),
+      expect.objectContaining({ level: "lg", over: "destructiveSoft" }),
     ]);
   });
 

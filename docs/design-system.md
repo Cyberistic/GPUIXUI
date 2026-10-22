@@ -364,8 +364,9 @@ shadows are stronger because contrast between surfaces is lower — but stronger
 not the same as visible. **Every** level a component raises a surface to is held
 to the perceptibility floor against the strips it can fall on — the page, card,
 popover and
-toolbar, the segmented `secondary` panel and a field's `input` fill the veil
-already names, every wash a surface can open over (the
+toolbar, the segmented `secondary` panel, the `primary` and `destructive` faces
+a filled action wears and a field's `input` fill the veil already names, every
+wash a surface can open over (the
 `selected` a chosen row holds, the `accent` a list row tints under the pointer,
 the `active` a row keeps while the press is down and the `hover` a click leaves
 on the trigger it was opened from) and the four soft tints a message is painted
@@ -383,8 +384,8 @@ a pure-black page, so every level was 1.00:1 there and a dialog or a full-width
 card had no shadow, and the grey that replaced it matched the same theme's
 `secondary` face, so a dialog over a segmented panel still painted 1.00:1. Its
 tint is lighter than the faces it can fall on now: the card's lift reads
-1.08–1.28:1, the menu's 1.13–1.59:1 and the dialog's 1.17–1.87:1 across all
-fourteen strips.
+1.08–1.82:1, the menu's 1.13–2.81:1 and the dialog's 1.17–3.75:1 across all
+sixteen strips.
 
 A level is a rung on the same kind of ladder as a radius: the surface a reader
 raises must cast a shadow that reaches further below its box than the level

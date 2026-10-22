@@ -1963,7 +1963,7 @@ how a status edge is measured at the alpha its component actually uses:
 | ------- | ---- | ------------- |
 | divider | `border` | `background`, `card`, `popover`, `muted` |
 | skeleton | `skeleton` | `background`, `card`, `popover`, `muted` |
-| scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `input`, `selected`, `active`, `accent`, `hover`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` |
+| scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `primary`, `destructive`, `input`, `selected`, `active`, `accent`, `hover`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` |
 | statusTint | each tone's `xSoft` | `background`, `card`, `popover`, `muted` |
 | statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, the same four strips, and the washes `hover`, `active`, `selected`, `accent` |
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
@@ -2146,16 +2146,19 @@ defect.
 
 This is the **perceptibility** claim, not the 3:1 control-boundary claim: a
 component that needs a hard edge paints `borderStrong` on the strips
-`contrastPairs` measures. `primary` and `destructive` are not in this table
-because a brand fill is also the role a progress bar, a slider's span or a
-spinner's lit dot paints, so `indicatorFailures` holds them to the non-text
-floor on the same four strips.
+`contrastPairs` measures. `primary` and `destructive` are not **painted roles** in
+this table because a brand fill is also the role a progress bar, a slider's span
+or a spinner's lit dot paints, so `indicatorFailures` holds them to the
+non-text floor on the same four strips; they are measured as **strips** the veil
+and a raised surface cover, because a filled action stays under a dialog or a
+popover opened from it.
 
 A veiled page's **void** is not measured: a black page cannot be darkened by any
 scrim, and a high-contrast theme separates its dialog with a border instead. The
 strips a modal actually covers are: a card, a floating surface, the `muted`
-toolbar of a sidebar, a segmented `secondary` panel, a field's `input` fill and
-the `selected` wash a chosen row wears. The veil was measured on the first two
+toolbar of a sidebar, a segmented `secondary` panel, **the faces a filled action
+wears** (`primary` and `destructive` as well as `secondary`), a field's `input`
+fill and the `selected` wash a chosen row wears. The veil was measured on the first two
 only — the strips of the page's own content — so a window whose sidebar sat
 behind a modal had a measured card and an undimmed toolbar, and a brand's dark
 `muted` surface could ship a veil that receded nothing. The chosen row is the
@@ -2192,8 +2195,10 @@ share in its alpha byte and a brand can supply a level whole; the strips are the
 four a raised surface floats over (`background`, `card`, `popover`, `muted`), the
 two window fills the veil already names — a segmented `secondary` panel, which is
 also a tonal action's face, and a field's own `input` fill, which a picker's panel
-overlaps — every wash a surface can open over, and the four
-soft status tints a message is painted on. A context menu opens over the row the
+overlaps — **every face a filled action can wear** (`primary` and `destructive`
+beside those two), because a surface opens *from* a control and casts its lift
+onto the trigger the reader is still holding, every wash a surface can open over,
+and the four soft status tints a message is painted on. A context menu opens over the row the
 reader right-clicked, so its shadow lands on that row's own fill; a submenu opens
 from the menu row whose submenu was chosen, so the shadow lands on that row's
 `hover` wash (`menu/item.tsx`), and a dialog or popover opened by a click falls
@@ -2210,9 +2215,9 @@ matched the same theme's `secondary` face, so a dialog opened over a segmented
 panel painted a shadow the panel could not show (**1.00:1**) while the page, card,
 popover, toolbar and wash placements all passed. The tint is now a grey lighter
 than the faces it can fall on (`#4A4A4AB3`), and every raised level clears the
-floor on all fourteen strips: the card's lift reads 1.08–1.28:1, the menu's
-1.13–1.59:1 and the dialog's 1.17–1.87:1. Across every shipped, high-contrast,
-platform and authored style the tightest of the 588 placements is 1.06:1 — the
+floor on all sixteen strips: the card's lift reads 1.08–1.82:1, the menu's
+1.13–2.81:1 and the dialog's 1.17–3.75:1. Across every shipped, high-contrast,
+platform and authored style the tightest of the 672 placements is 1.06:1 — the
 authored Windows 7 (Aero) dark card lift on a field's own fill. The
 one-shadow-per-level rule and the role-owned tint remain `elevation.test.ts`'s.
 
@@ -2913,9 +2918,9 @@ Two differently named tokens are easy to mix up here:
 
 - `overlay` is the **modal scrim colour** (`#00000073` light, `#000000A6` dark),
   painted behind a modal's content and measured as a decorative surface over
-  `card`, `popover`, `muted`, `secondary`, `input`, `selected`, `active`,
-  `accent`, `hover`, `infoSoft`, `successSoft`, `warningSoft` and
-  `destructiveSoft` (`decorative.ts`) — the strips a window actually holds
+  `card`, `popover`, `muted`, `secondary`, `primary`, `destructive`, `input`,
+  `selected`, `active`, `accent`, `hover`, `infoSoft`, `successSoft`,
+  `warningSoft` and `destructiveSoft` (`decorative.ts`) — the strips a window actually holds
   behind a modal, including the row the reader has chosen, the row the pointer
   or a press has tinted when the surface opens over it, the control the click
   left hovered, and the message a confirmation was opened from — not the page's

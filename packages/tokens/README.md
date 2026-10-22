@@ -712,7 +712,8 @@ Each report is also a function of its own:
 - `decorativeFailures(theme, floor?)` lists every subtle surface — a divider, a
   skeleton fill (on the page, a card, a muted list and the fill a loading dialog
   paints), the modal veil (on the content strips a window holds behind it:
-  a card, a popover, a `muted` toolbar, a `secondary` panel, a field's `input`
+  a card, a popover, a `muted` toolbar, a `secondary` panel, the `primary` and
+  `destructive` faces a filled action wears, a field's `input`
   fill, and the washes a surface can open over —
   `selected`, `accent`, `active` and the `hover` a click leaves on its trigger —
   with the page's void exempt because
@@ -788,8 +789,8 @@ on and its edge on those same four and on the four washes a row tints under a
 badge (read at the share `statusEdgeAlpha` that `statusTone` paints), the
 scrollbar thumb, `hover`/`active`/`selected`/`accent`
 and the `secondary` fill on the four strips a control can sit on, and every
-raised elevation level (`sm`, `md`, `lg`) composited over those four plus the
-washes a row can be
+raised elevation level (`sm`, `md`, `lg`) composited over those four, the
+`primary`/`destructive` faces a filled action wears, and the washes a row can be
 wearing when a context menu opens over it (`selected`, `hover`, `accent`,
 `active`). A shadow failure names the level. Nothing escapes the
 contract either:

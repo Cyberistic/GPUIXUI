@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 151/151
+`[x]` `[██████████]` 152/152
 
 `[x]` Hold the painter guards to the **press a row derives**, and measure the veil and the shadow on it — the components and primitives adopted `pressWash`/`pointerWash` for a row's press (a list row's `active` role sat under the 1.05:1 floor beside the `accent` it replaces in six styles), and eight token cases still read the retired literal: `contrast.test.ts`'s menu, list, selected-row and ring painters, `decorative.test.ts`'s badge-on-a-wash and surface-origin readers, and `indicator.test.ts`'s two mark painters each required `backgroundColor: theme.colors.active`, which no painter writes any more, so the suite was red on `master` (8 failed / 2 404 passed) with every case failing on the paint it exists to protect. Each now holds the derived expression and the wash it replaces (`active: { backgroundColor: pressWash(theme, "accent") }`, the menu row's `pressWash(theme, "hover")`), and the origin reader asks each role for its own paint, so a row that stops pressing fails by name. **The paint became the measured one**: a context menu, confirmation dialog or command palette opens *from* the row the press landed on, so the veil recedes the derived press and every raised level's shadow falls on it — the decorative table names the `active` role, while the row wears a wash the derivation moved toward `foreground`, the colour a veil is built from. `pointer-wash.test.ts` gains `keeps the veil and every raised level visible over the press a row derives`: two replaced washes per style, each measured for the veil and all three raised levels — 128 measurements over the 16 shipped, high-contrast, platform and authored styles — all clean, the tightest being High contrast dark at **1.08:1**, plus a brand whose `shadow` *is* its derived press, which reports 1.00 and fails the case. Directions measured: reverting the list painter's press to the bare role fails 7 cases by name (the six guards and `pointer-wash.test.ts`'s own painter case); with the derived paint restored, 39 files / 2 413 tests green, `check-types` clean. No palette and no source paint moved — the findings were in the guards and the composition nobody measured. `packages/data`'s table row derives its press from `pointerWash` directly rather than the components' seam, which is its owner's call.
 `[x]` Report **a type role the theme lost** instead of throwing a bare `TypeError` — a stored theme older than a role is the one way a complete theme becomes incomplete, and `auditTheme` already refuses it by path (`requireSteps`), but the two public reports the pages tell a brand to run did not keep the sibling rule: `invalidNumbers` reads the emphasis pair (`bodyStrong` against `body`) and a control's fit (`label`/`body` leadings) directly, so a theme missing either threw `TypeError: Cannot read properties of undefined (reading 'fontWeight')` / `(reading 'lineHeight')`, and `invalidScales` read `typography[role].fontSize` at every rung but the two mono roles, throwing `(reading 'fontSize')` on any absent one — while `docs/tokens.md` §Paint-ready values promised `invalidNumbers` "walks the steps a theme carries and says nothing about one that is not there". Both reports now skip a role the theme does not carry, the same rule the elevation ladder already follows: the emphasis and the fit skip a missing member, and a type role that is gone stops being a rung so the steps either side are compared with each other. `NumberSource.typography` and `ScaleSource.typography` say `Partial` — the shape storage hands back — and no shipped style moved. `numbers.test.ts` gains `a theme that lost a type role` (3 cases: four absent roles, a shortened control still reported, the gate's own refusal named) and `scales.test.ts` gains `a type role the theme does not carry` (3: the absent rung skipped, the ladder compared across the gap to the printed `previous`, the page's clause). Directions measured: with the two guards reverted, four cases fail by name with those exact `TypeError`s. Docs in `docs/tokens.md` §Numbers/§Scale order, the package README §Incomplete themes and the reports list.
@@ -735,6 +735,39 @@ black light ring fails three cases, the 0.11 distance among them. Docs in `docs/
 `docs/design-system.md` §8/§9 (the table row now names the exception) and the
 package README §Focus, all three held by the suite. The fix is the Interlocks row
 below.
+
+`[x]` Measure the **veil and the shadow over the faces a filled action wears** —
+a surface opens *from* a control, so that control's own fill is still on screen
+underneath it: a dialog over a page holds the page's primary and danger actions
+behind the veil, and a popover or menu opened from one casts its shadow onto the
+trigger's fill. `decorativeSurfaces` named `secondary` (as a segmented panel and
+a tonal action) and `accent` (as a wash) but not `primary`/`destructive` in
+either list, so a brand whose veil or shadow tint was its primary fill shipped a
+dialog that left the action the reader was about to press at full brightness and
+a menu whose lift landed on an undimmed brand face while every named strip passed;
+`filledRoles` is the library's own declaration of the faces an action can wear,
+and the test derives the coverage from it, so a face added there fails until both
+tables name it. Two strips joined `scrim` (`5 → 7` between its window fills) and
+two joined the elevation strips (`14 → 16`), riding the existing `decorative`
+report and audit gate with no new API, no new report and no docs-site readout
+change. **No palette moved**: every shipped, high-contrast, platform and authored
+style already clears the 1.05:1 floor on both faces at every level; the printed
+high-contrast dark ranges move because the new strips span the brand faces'
+lightness — the card's lift 1.08–1.82:1, the menu's 1.13–2.81:1 and the dialog's
+1.17–3.75:1 over sixteen strips — and the contract's tightest cell is still the
+Aero dark card lift on a field's fill at 1.06:1 (672 cells). `decorative.test.ts`
+gains three cases: `measures every face a filled action can wear under the veil
+and the shadow` (derived from `filledRoles`), `reports a veil painted in the
+primary action's face` and `reports a shadow tinted with the danger action's
+face`, and the flat-shadow brand case now names the brand faces as the measured
+exception (a page-coloured tint is visible over a mid-tone fill at every level).
+Directions measured: dropping the two scrim placements fails the coverage and the
+`filledRoles` case by name; dropping the elevation strips fails the same case and
+the level/strip coverage; a primary-coloured veil or a destructive-tinted shadow
+reports `1.00:1`. Docs in `docs/tokens.md` §Decorative surfaces/§Elevation/§
+Layering, `docs/design-system.md` §7, the package README and the **Elevation**/
+**Contrast contract** inventory rows. `nub run --filter @gpuixui/tokens test`
+green (43 files / 2 434 tests), `check-types` clean.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
