@@ -13,41 +13,95 @@
  * opened from, so it must paint `pointerEvents` from its presence while it
  * leaves. An `anchored` host must make `occlude` conditional for the same
  * reason: the occlusion is a native mouse block that no style value can undo.
+ *
+ * **The scan reads each entry in the same pass that lists it**, and skips one a
+ * concurrent writer removed. Five sessions write this tree, so a listing can
+ * name a file that is gone by the time it is opened: reproduced 2026-10-22 with
+ * the same list-then-open walk over a directory another process was writing,
+ * which threw `ENOENT: no such file or directory, open '…/tmp-6.tsx'` **106
+ * times in one five-second run**. That is the class this suite once failed with
+ * (a single occurrence in a full-package run, stack through the walk). Every
+ * other failure — a permission error, a missing directory — still fails the
+ * suite rather than shrinking the scan, and a source floor keeps a scan that
+ * read nothing from passing the contract vacuously.
  */
 
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 
 const packageRoot = new URL("../", import.meta.url);
 
+/** One source file and the text read from it in the same pass. */
+interface Source {
+  readonly path: string;
+  readonly body: string;
+}
+
+/** What a scan read, and what it could not read for a reason worth failing. */
+interface Scan {
+  readonly sources: ReadonlyArray<Source>;
+  readonly failures: ReadonlyArray<string>;
+}
+
+const empty: Scan = { sources: [], failures: [] };
+
+/** True for an entry another session removed between the listing and the read. */
+const vanished = (error: unknown): boolean =>
+  P.isObject(error) && "code" in error && error.code === "ENOENT";
+
+/** Merge two scans, keeping their order. */
+const merge = (left: Scan, right: Scan): Scan => ({
+  sources: [...left.sources, ...right.sources],
+  failures: [...left.failures, ...right.failures],
+});
+
+/** A failed read, unless it is the vanished-entry case the scan tolerates. */
+const failure = (path: string, error: unknown): Scan =>
+  vanished(error)
+    ? empty
+    : { sources: [], failures: [`${path}: ${String(error)}`] };
+
+/** Read one listed entry. */
+const readEntry = (path: string): Scan =>
+  Result.match(
+    Result.try(() =>
+      readFileSync(fileURLToPath(new URL(path, packageRoot)), "utf8"),
+    ),
+    {
+      onSuccess: (body) => ({ sources: [{ path, body }], failures: [] }),
+      onFailure: (error) => failure(path, error),
+    },
+  );
+
 /** Every readable source file under `relative`, recursively, minus suites. */
-const sourcesUnder = (relative: string): ReadonlyArray<string> => {
+const scan = (relative: string): Scan => {
   const directory = fileURLToPath(new URL(relative, packageRoot));
-  return Arr.flatMap(
-    readdirSync(directory, { withFileTypes: true }),
-    (entry) => {
-      const path = `${relative}${entry.name}`;
-      if (entry.isDirectory()) return sourcesUnder(`${path}/`);
-      if (!/\.tsx?$/.test(entry.name)) return [];
-      if (Str.includes(".test.")(entry.name)) return [];
-      return [path];
+  return Result.match(
+    Result.try(() => readdirSync(directory, { withFileTypes: true })),
+    {
+      onSuccess: (entries) =>
+        Arr.reduce(entries, empty, (scanned, entry) => {
+          const path = `${relative}${entry.name}`;
+          if (entry.isDirectory()) return merge(scanned, scan(`${path}/`));
+          if (!/\.tsx?$/.test(entry.name)) return scanned;
+          if (Str.includes(".test.")(entry.name)) return scanned;
+          return merge(scanned, readEntry(path));
+        }),
+      onFailure: (error) => failure(relative, error),
     },
   );
 };
 
-const read = (relative: string): string =>
-  readFileSync(fileURLToPath(new URL(relative, packageRoot)), "utf8");
-
-const sources = sourcesUnder("src/");
+const { sources, failures } = scan("src/");
 
 /** A floating host plus the presence seam: a surface that can cover a control. */
-const floating = Arr.filter(sources, (file) => {
-  const body = read(file);
+const floating = Arr.filter(sources, ({ body }) => {
   return (
     Str.includes("useSurfacePresence(")(body) &&
     (Str.includes("<FloatingLayer")(body) || Str.includes("<anchored")(body))
@@ -73,14 +127,27 @@ const tags = (body: string, host: string): ReadonlyArray<string> => {
 };
 
 describe("the pointer contract", () => {
+  it("reads every listed source, tolerating only a vanished entry", () => {
+    // The read that used to throw is the one path a concurrent writer can
+    // empty: a file listed a moment ago and gone at open time.
+    expect(readEntry("src/__vanished_between_listing_and_read__.tsx")).toEqual(
+      empty,
+    );
+    expect(readEntry("src/alert.tsx").sources).toHaveLength(1);
+
+    expect(failures).toEqual([]);
+    // A scan that read nothing cannot satisfy the contract below by accident.
+    expect(sources.length).toBeGreaterThan(100);
+  });
+
   it("covers every floating surface, so the rule cannot pass on an empty tree", () => {
     // A floor rather than the exact count: a new surface joins the rule.
     expect(Arr.length(floating)).toBeGreaterThanOrEqual(6);
   });
 
   it("a floating surface takes no press while it leaves", () => {
-    const offenders = Arr.filterMap(floating, (file) =>
-      guard.test(read(file)) ? Result.failVoid : Result.succeed(file),
+    const offenders = Arr.filterMap(floating, ({ path, body }) =>
+      guard.test(body) ? Result.failVoid : Result.succeed(path),
     );
     expect(offenders).toEqual([]);
   });
@@ -93,13 +160,12 @@ describe("the pointer contract", () => {
     // exempt — its `<anchored>` is a zero-size anchor at the window origin and
     // its backdrop child owns the box, which `presence.test.tsx` measures a press
     // through while the modal leaves.
-    const offenders = Arr.flatMap(floating, (file) => {
-      const body = read(file);
+    const offenders = Arr.flatMap(floating, ({ path, body }) => {
       return Arr.filterMap(tags(body, "anchored"), (tag) =>
         Str.includes("occlude")(tag) &&
         Str.includes("deferred")(tag) &&
         !occludeGuard.test(tag)
-          ? Result.succeed(`${file}: <anchored occlude> is not conditional`)
+          ? Result.succeed(`${path}: <anchored occlude> is not conditional`)
           : Result.failVoid,
       );
     });

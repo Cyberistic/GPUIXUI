@@ -3805,7 +3805,7 @@ a workaround for two live sessions sharing one worktree; see
       above (`field`, `combobox`, `tabs` and `toast` are shadowed by curated
       pages but still ship).
 
-`[ ]` `packages/components`: `src/presence-contract.test.ts`'s
+`[x]` `packages/components`: `src/presence-contract.test.ts`'s
       `an anchored surface drops its occlusion with its presence` failed **once**
       in a full-package run (2026-10-22, while this workstream was adding a test
       file) with a stack through the Effect `Array` internals from its
@@ -3815,7 +3815,26 @@ a workaround for two live sessions sharing one worktree; see
       reproduced in 10 isolated runs of the file nor in the six full runs that
       followed, so the message itself was never captured; the honest fix is a
       scan that skips an entry that vanished between the listing and the read,
-      which needs the error in hand first. Owner: components.
+      which needs the error in hand first. Owner: components. **Resolved
+      2026-10-22 with the error class captured.** The same list-then-open walk
+      was raced against a process creating and removing `*.tsx` entries in a
+      scratch directory: **106 failures in one 5 s run**, every one
+      `ENOENT: no such file or directory, open '…/tmp-6.tsx'` — the listed-then-
+      gone class, not an Effect fault. The scan now reads each entry **in the
+      same pass that lists it** (`readEntry` → `Result.try`, merged into a
+      `Scan` of sources and failures) and drops only an `ENOENT` read; a
+      permission error, a vanished directory or any other failure is collected
+      as a `failures` entry that its own case asserts empty, so the scan cannot
+      shrink silently. The suite gained `reads every listed source, tolerating
+      only a vanished entry`: a path that is not there yields an empty scan (the
+      old throwing read fails here with `ENOENT`), a real file yields one source,
+      `failures` is `[]` and `sources.length > 100` keeps an empty scan from
+      passing the floating-surface floor by accident. Direction measured:
+      making `vanished` always `false` fails the new case with
+      `expected { sources: [], …(1) } to deeply equal { sources: [], failures: [] }`.
+      `nub run --filter @gpuixui/components test` is 810/810 and `check-types`
+      clean. `node:fs` stays synchronous and test-time, the boundary the file
+      header and `inventory.test.ts` already state.
 
 ## Blockers (project-level, with evidence)
 
