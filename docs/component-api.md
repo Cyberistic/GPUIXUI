@@ -337,6 +337,7 @@ the honest parts.
 | Counting number | `CountingNumber` | — | plan 600 |
 | Auto height | `AutoHeight` | — | plan 600 |
 | Rotating text | `RotatingText` | — | plan 600 |
+| Rolling text | `RollingText` | — | plan 600 |
 | Splitting text | `SplittingText` (one part) | — | plan 600 |
 | Highlight text | `HighlightText` (one part) | — | plan 600 |
 

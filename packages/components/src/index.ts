@@ -44,6 +44,7 @@ export * from "./navigation-menu.js";
 export * from "./pagination.js";
 export * from "./popover.js";
 export * from "./preview-card.js";
+export * from "./rolling-text.js";
 export * from "./rotating-text.js";
 export * from "./search-input.js";
 export * from "./splitting-text.js";
