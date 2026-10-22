@@ -44,6 +44,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { fadeFromAnchor, useSurfaceTiming } from "./internal/presence.js";
 import {
   applyMention,
   mentionQuery,
@@ -274,6 +275,12 @@ const isItemElement = (child: unknown): child is ItemElement =>
   child.type === MentionInputItem &&
   typeof (child.props as { readonly value?: unknown }).value === "string";
 
+/**
+ * The list's entry: the house fade plus 4px of travel out from the field's
+ * bottom edge, the offset every anchored panel uses.
+ */
+const listFrames = fadeFromAnchor("bottom", 4);
+
 /** The ranked suggestion surface, rendered only while a query is open. */
 export const MentionInputList = ({
   className,
@@ -283,6 +290,7 @@ export const MentionInputList = ({
 }: MentionInputListProps) => {
   const theme = useTheme();
   const { query, highlighted, maxVisible, reportVisible } = useMention();
+  const timing = useSurfaceTiming("normal");
   assertParts(mentionList, children);
 
   const items = Children.toArray(children).filter(isItemElement);
@@ -310,6 +318,15 @@ export const MentionInputList = ({
       align="start"
       sideOffset={4}
       collisionPadding={8}
+      // The surfaces' entrance, entry only: the list is rendered from the query
+      // in the text, so closing it removes it with the query rather than leaving
+      // a box behind to fade. `MotionProvider preference="reduced"` paints it at
+      // rest in the frame it appears.
+      motion={{
+        initial: listFrames.initial,
+        animate: listFrames.animate,
+        transition: timing.enter,
+      }}
       role="group"
       aria-label="Mentions"
       {...rest}

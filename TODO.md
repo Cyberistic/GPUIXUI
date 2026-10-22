@@ -5674,6 +5674,20 @@ numbers).
       surface takes no presses, `docs/context-menu.mdx` §Motion names the dropped
       occlusion, and the Context menus inventory row carries it.
 `[x]` **playground**: the four live probes the motion wiring moved now read the
+`[x]` Animate the **mention suggestions** — `MentionInputList` was the last anchored
+      panel in the package that popped into place: it rendered a `FloatingLayer`
+      with no `motion` at all while every other panel composed the seam. It now
+      arrives on the house entrance — a fade plus 4px of travel out from the
+      field's bottom edge (`normal`, 200 ms, ease-out) — and has **no exit
+      tween**, because the list is rendered from the `@` query in the text: when
+      the query closes, the list leaves with it rather than staying mounted over
+      the field. `behaviour/mention-input.test.tsx` gains one case with a paused
+      clock: the row's painted `y` moves 4px into place, and under
+      `MotionProvider preference="reduced"` the first frame is the resting one.
+      Directions measured: at `HEAD` the case fails `expected 0 to be 4`. Docs:
+      `docs/mention-input.mdx` §Motion, the per-surface table in
+      `docs/component-api.md` §11 (marked entry-only) and the Mention input
+      inventory row.
       frame a user is left with, and the auto-focus case follows the modal fix.
       `popover-lifecycle` takes its gap from a settled `y` (the 200ms entry first
       read `expected 6 ± 1, got 0.5`); `context-menu-lifecycle` settles **both**

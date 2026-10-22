@@ -15,8 +15,13 @@ import {
   MentionInputItem,
   MentionInputList,
 } from "../mention-input.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  requireBounds,
+} from "../internal/interaction.js";
 import { nodesWithRole } from "../internal/a11y.js";
+import { MotionProvider } from "../motion.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -145,6 +150,33 @@ describe("MentionInput", () => {
     expect(onMention).toHaveBeenCalledWith("anna");
 
     mention.unmount();
+  });
+
+  it("arrives on the house entrance, and paints at rest when motion is reduced", async () => {
+    const mention = renderComponent(<Harness />);
+    mention.renderer.clockPause();
+    type(mention, "@");
+    // The frame loop publishes the mounted list on the next tick.
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const entering = requireBounds(mention, "row-ana");
+    mention.renderer.clockFastForward(400);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const rest = requireBounds(mention, "row-ana");
+    // The list starts 4px above its resting place and travels down into it.
+    expect(rest.y - entering.y).toBe(4);
+    mention.unmount();
+
+    const reduced = renderComponent(
+      <MotionProvider preference="reduced">
+        <Harness />
+      </MotionProvider>,
+    );
+    reduced.renderer.clockPause();
+    type(reduced, "@");
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    // No journey: the first painted frame is the resting one.
+    expect(requireBounds(reduced, "row-ana").y).toBe(rest.y);
+    reduced.unmount();
   });
 
   it("closes on Escape without changing the text", () => {
