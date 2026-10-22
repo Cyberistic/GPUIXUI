@@ -50,6 +50,7 @@ components/checkbox.mdx      Curated: the three states, the 24px target, the mix
 components/combobox.mdx      Curated: the ranked list, the disabled row, the create row
 components/command-menu.mdx  Curated: the palette's matcher, group ranking and keys
 components/confirm-dialog.mdx Curated: Cancel first, confirm never closes, the frozen busy mark
+components/date-picker.mdx   Curated: the six-row grid, inclusive bounds, the clamped key path
 components/dialog.mdx        Curated: a real confirmation workflow
 components/drawer.mdx        Curated: the edge box, the dismiss stack, the exit frame
 components/dropdown-menu.mdx Curated: highlighted row is the focused row
@@ -103,6 +104,8 @@ src/components/docs/carousel-preview.ts   The carousel preview's clamp, loop rul
 src/components/docs/carousel-demo.tsx     The carousel's two browser renderings and their source strings
 src/components/docs/combobox-preview.ts The combobox preview's ranking, highlight and selection model
 src/components/docs/combobox-demo.tsx     The combobox's two browser renderings and their source strings
+src/components/docs/date-picker-preview.ts The picker preview's grid, month arithmetic and clamped key moves
+src/components/docs/date-picker-demo.tsx  The date picker's two browser renderings and their source strings
 src/components/docs/drawer-preview.ts     The drawer preview's edge box, dismiss stack and filter rules
 src/components/docs/drawer-demo.tsx       The drawer's two browser renderings and their source strings
 src/components/docs/list-preview.ts       The list preview's arrow order, type-ahead and selection rules

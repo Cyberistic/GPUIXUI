@@ -39,6 +39,12 @@ import {
   listMultipleSource,
 } from "./list-demo";
 import {
+  DatePickerStates,
+  DatePickerWorkflow,
+  datePickerStatesSource,
+  datePickerWorkflowSource,
+} from "./date-picker-demo";
+import {
   DrawerSides,
   DrawerWorkflow,
   drawerSidesSource,
@@ -2508,6 +2514,14 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: confirmStatesSource,
   },
   "dialog-demo": { render: DialogDemo, source: dialogSource },
+  "date-picker-workflow": {
+    render: DatePickerWorkflow,
+    source: datePickerWorkflowSource,
+  },
+  "date-picker-states": {
+    render: DatePickerStates,
+    source: datePickerStatesSource,
+  },
   "drawer-sides": { render: DrawerSides, source: drawerSidesSource },
   "drawer-workflow": { render: DrawerWorkflow, source: drawerWorkflowSource },
   "dropdown-menu-demo": {

@@ -3357,3 +3357,249 @@
   font-size: 11px;
   line-height: 16px;
 }
+
+/* ---- date picker: mirrors components/src/date-picker.tsx ----
+ *
+ * The trigger is a field in the `background` role with a `borderStrong` edge and
+ * `radius.md`; the surface is `popover` with the `border` role. The grid cell is
+ * the component's fixed 34px square, the chosen day is `primary` on
+ * `primaryForeground`, today keeps a `primary` edge (0.11.0 has no
+ * `aria-current`), an unavailable day is `mutedForeground` without a wash, and
+ * the pointer wash is the theme's `hover` role. No literal colours: the platform
+ * switch repaints every one of these through `PreviewSurface`.
+ */
+
+.gx-date-scene {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 470px;
+  padding: 40px 24px;
+}
+
+.gx-date-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(280px, 100%);
+}
+
+.gx-date-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  width: min(280px, 100%);
+}
+
+.gx-date-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-align: left;
+}
+
+.gx-date-trigger:hover:not(:disabled) {
+  border-color: var(--ring);
+}
+
+.gx-date-trigger:focus-visible,
+.gx-date-cell:focus-visible,
+.gx-date-navbtn:focus-visible,
+.gx-date-clear:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-date-trigger:disabled {
+  border-color: transparent;
+  background: var(--disabled);
+  color: var(--disabled-foreground);
+  cursor: not-allowed;
+}
+
+.gx-date-value[data-placeholder] {
+  color: var(--placeholder);
+}
+
+.gx-date-caret {
+  width: 12px;
+  height: 12px;
+  color: var(--muted-foreground);
+  flex: none;
+}
+
+.gx-date-surface {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
+  box-shadow: 0 18px 44px var(--shadow);
+}
+
+.gx-date-surface[data-inline] {
+  position: static;
+  margin-top: -2px;
+  box-shadow: none;
+}
+
+.gx-date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.gx-date-navbtn {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.gx-date-navbtn:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-date-navbtn:disabled {
+  color: var(--placeholder);
+  cursor: not-allowed;
+}
+
+.gx-date-month {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.gx-date-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-date-row {
+  display: flex;
+  gap: 2px;
+}
+
+.gx-date-weekday {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 22px;
+  color: var(--muted-foreground);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gx-date-cell {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.gx-date-cell[data-blank] {
+  cursor: default;
+}
+
+.gx-date-cell[data-unavailable] {
+  color: var(--muted-foreground);
+  cursor: not-allowed;
+}
+
+.gx-date-cell[data-today] {
+  border-color: var(--primary);
+}
+
+.gx-date-cell[data-selected] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-date-cell:hover:not([data-blank]):not([data-unavailable]):not(
+  [data-selected]
+) {
+  background: var(--hover);
+}
+
+.gx-date-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.gx-date-clear {
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+}
+
+.gx-date-clear:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-date-readout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--placeholder);
+}
+
+.gx-date-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 24px;
+  width: min(620px, 100%);
+}
+
+.gx-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .gx-date-gallery {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

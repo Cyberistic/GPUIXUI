@@ -133,6 +133,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/confirm-dialog.tsx",
   },
   {
+    file: "date-picker.mdx",
+    row: "Date pickers",
+    suite: "packages/components/src/behaviour/date-picker.test.tsx",
+    shadowed: "packages/components/docs/date-picker.mdx",
+    source: "packages/components/src/date-picker.tsx",
+  },
+  {
     file: "dialog.mdx",
     row: "Dialogs",
     suite: "packages/components/src/behaviour/dialog.test.tsx",
