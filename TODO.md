@@ -3620,8 +3620,12 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       the lit dot backwards (1 → 0). The fade now spans the row (`count - 1`
       places, floor 0.2) and the timer advances one step per dot. `loading.test.ts`
       holds the floor, the exact three-dot fade and a turn that lights each dot
-      once. Docs: `docs/spinner.mdx` §Theming/§Verification and the Loading
-      indicators row.
+      once. Both numbers are published from `core/` (`SPINNER_DOTS`,
+      `SPINNER_FADE_FLOOR` beside the existing `SPINNER_SEGMENTS`), because the
+      inventory row and the page name them; `loading.test.ts` holds that export
+      by identity (measured: dropping it from the core entry fails
+      `expected undefined to be 3`). Docs: `docs/spinner.mdx`
+      §Theming/§Verification and the Loading indicators row.
 `[x]` `packages/primitives`: an **inverted `min`/`max` pair made `NumberField`
       uneditable** — `clampNumeric` applied `min` then `max`, so `min: 100,
       max: 0` clamped every value to 0 and both steppers read as blocked, while

@@ -17,6 +17,10 @@ import {
   spinnerDotStyle,
   spinnerDots,
 } from "./loading.js";
+import {
+  SPINNER_DOTS as coreSpinnerDots,
+  SPINNER_FADE_FLOOR as coreSpinnerFloor,
+} from "./index.js";
 import { testTheme } from "./testing/theme.fixture.js";
 
 /**
@@ -196,6 +200,17 @@ describe("spinnerDots", () => {
     // on that fill rather than on the action's own.
     expect(colourOf("on-disabled")).toBe(testTheme.colors.disabledForeground);
     expect(colourOf("muted")).toBe(testTheme.colors.mutedForeground);
+  });
+});
+
+describe("the spinner's own numbers", () => {
+  it("publishes the row length and the fade floor from the core entry", () => {
+    // The inventory row and the page name both numbers, so a consumer reading
+    // them must be able to import them: a constant the package exports from its
+    // source file but not from its public core entry is a name that resolves in
+    // the repo and not in a consumer's program.
+    expect(coreSpinnerDots).toBe(SPINNER_DOTS);
+    expect(coreSpinnerFloor).toBe(SPINNER_FADE_FLOOR);
   });
 });
 

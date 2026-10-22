@@ -145,6 +145,8 @@ export {
   skeletonSize,
   skeletonStyle,
   SPINNER_ACCENTS,
+  SPINNER_DOTS,
+  SPINNER_FADE_FLOOR,
   SPINNER_SEGMENTS,
   spinnerDotStyle,
   spinnerDots,
