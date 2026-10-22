@@ -268,6 +268,75 @@ it("scrolls a focused ScrollArea with the keyboard", async () => {
   ).toBe(true);
 });
 
+it("pages a sideways ScrollArea by the width it shows", async () => {
+  // The bug guarded: a page step was the scroller's height and moved only the
+  // vertical axis, so `axis="horizontal"` had no key that moved more than a
+  // line — PageUp/PageDown were dropped as "not this container's axis". The
+  // page a reader sees sideways is the width in view, not a height it never
+  // paints.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="horizontal"
+        style={{ height: 60, width: 200 }}
+        viewportTestId="s"
+        label="Columns"
+      >
+        {card("wide", 600, 40)}
+      </ScrollArea>
+    </Surface>,
+  );
+  const row = testTheme.density.rowHeight;
+  const width = boundsOf(runtime, "s").width;
+  expect(width).toBe(200);
+  // The wheel proves the region really scrolls sideways on this runtime.
+  runtime.wheel("s", -100, 0);
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: -100, y: 0 }),
+  );
+  runtime.keyDown("s", "right");
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: -100 - row, y: 0 }),
+  );
+  runtime.keyDown("s", "pagedown");
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: -100 - row - width, y: 0 }),
+  );
+  runtime.keyDown("s", "pageup");
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: -100 - row, y: 0 }),
+  );
+});
+
+it("pages a two-axis ScrollArea down without moving its sideways offset", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="both"
+        style={{ height: 60, width: 200 }}
+        viewportTestId="s"
+        label="Sheet"
+      >
+        {card("sheet", 600, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.wheel("s", -100, 0);
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: -100, y: 0 }),
+  );
+  runtime.keyDown("s", "pagedown");
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: -100, y: -60 }),
+  );
+});
+
 it("declares the keyboard ring on the scroll region that takes the stop", async () => {
   // The bug guarded: the viewport is a tab stop with a keyboard contract
   // (arrows, PageUp/PageDown, Home/End) and was the one focusable primitive in

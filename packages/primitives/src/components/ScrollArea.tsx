@@ -317,7 +317,10 @@ const useScrollKeyboard = (axis: ScrollSpec["axis"], theme: PrimitiveTheme) => {
         event.key ?? "",
         axis,
         { x: offsets?.[0] ?? 0, y: offsets?.[1] ?? 0 },
-        { line: theme.density.rowHeight, page: box.height },
+        {
+          line: theme.density.rowHeight,
+          page: { width: box.width, height: box.height },
+        },
       ),
       {
         onNone: () => {},

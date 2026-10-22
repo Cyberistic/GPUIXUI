@@ -961,6 +961,46 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("teaches the axis a page key moves, and reads it off the tree", () => {
+    // Bug guarded: a page step carried one number — the scroller's height — and
+    // moved only the vertical axis, so `axis="horizontal"` dropped
+    // PageUp/PageDown entirely while this page promised "one measured viewport
+    // per PageUp/PageDown" for every axis. A reader sizing a sideways region
+    // was told about a key that did nothing.
+    const readSource = (path: string): string =>
+      readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
+    const keyboard = Option.getOrElse(
+      bodyOf(read("scroll-area.mdx"), "Keyboard"),
+      () => "",
+    ).replace(/\s+/g, " ");
+    const logic = readSource("./core/scroll.ts");
+    const area = readSource("./components/ScrollArea.tsx");
+
+    expect({
+      pageVertical: keyboard.includes(
+        "PageUp/PageDown page the **vertical** axis",
+      ),
+      pageSideways: keyboard.includes(
+        "the **horizontal** one of a region that scrolls nothing else",
+      ),
+      pageWidth: keyboard.includes("pages by the width in view"),
+      logicAxis: logic.includes("const pageAxis"),
+      logicWidth: logic.includes("metrics.page.width"),
+      areaBox: area.includes("page: { width: box.width, height: box.height }"),
+      retractedAxis: logic.includes("const acts ="),
+      retractedBox: area.includes("page: box.height"),
+    }).toEqual({
+      pageVertical: true,
+      pageSideways: true,
+      pageWidth: true,
+      logicAxis: true,
+      logicWidth: true,
+      areaBox: true,
+      retractedAxis: false,
+      retractedBox: false,
+    });
+  });
+
   it("is indexed by the package's own page table", () => {
     const index = read("README.md");
     const linked = Arr.filterMap(

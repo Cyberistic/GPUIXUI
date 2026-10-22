@@ -9,6 +9,8 @@
  *
  * The keys mirror a native scroll region: an arrow moves one row, PageUp/PageDown
  * one measured viewport, Home returns to the start and End goes to the end.
+ * A page is the viewport's own side, so a sideways region pages by its width
+ * rather than by a height it does not show.
  */
 
 import { Match } from "effect";
@@ -24,10 +26,10 @@ export interface ScrollOffset {
 
 /** Where a line and a page step come from: the theme's row, the scroller's own box. */
 export interface ScrollMetrics {
-  /** One row of content — the theme's `rowHeight`. */
+  /** One line of content — the theme's `rowHeight`. */
   readonly line: number;
-  /** One viewport — the scroller's measured height. */
-  readonly page: number;
+  /** The scroller's measured box: a page is the side of it the move travels along. */
+  readonly page: { readonly width: number; readonly height: number };
 }
 
 /** A painted box, in window pixels. */
@@ -69,20 +71,50 @@ const MOVES: Record<string, Move> = {
 const scrolls = (axis: ScrollSpec["axis"], side: "x" | "y"): boolean =>
   axis === "both" || axis === (side === "x" ? "horizontal" : "vertical");
 
-/** The next offset on one axis; never past the start, and the runtime clamps the end. */
+/**
+ * The axis PageUp/PageDown move.
+ *
+ * A page is a screenful: the vertical axis when the container scrolls it, and
+ * the horizontal one when that is all it scrolls, because a sideways region
+ * would otherwise have no key that moves more than a line. `None` is a
+ * container that scrolls neither — a page has nowhere to go.
+ */
+const pageAxis = (axis: ScrollSpec["axis"]): Option.Option<"x" | "y"> =>
+  scrolls(axis, "y")
+    ? Option.some("y")
+    : scrolls(axis, "x")
+      ? Option.some("x")
+      : Option.none();
+
+/**
+ * The next offset on one axis.
+ *
+ * Never past the start; the runtime clamps the end. A page key is a vertical
+ * key (`PageUp`/`PageDown`), so its direction comes from the move's `y` on
+ * either axis.
+ */
 const next = (
   current: number,
-  direction: -1 | 0 | 1,
   move: Move,
+  side: "x" | "y",
   metrics: ScrollMetrics,
-): number =>
-  Match.value(move.size).pipe(
+): number => {
+  const direction =
+    move.size === "page" ? move.y : side === "x" ? move.x : move.y;
+  return Match.value(move.size).pipe(
     Match.when("end", () => SCROLL_END),
     Match.when("start", () => 0),
-    Match.when("page", () => Math.min(0, current + direction * metrics.page)),
+    Match.when("page", () =>
+      Math.min(
+        0,
+        current +
+          direction * (side === "x" ? metrics.page.width : metrics.page.height),
+      ),
+    ),
     Match.when("line", () => Math.min(0, current + direction * metrics.line)),
     Match.exhaustive,
   );
+};
 
 /**
  * Where a key sends a scroll region, given where it is.
@@ -98,16 +130,21 @@ export const scrollTarget = (
   metrics: ScrollMetrics,
 ): Option.Option<ScrollOffset> =>
   Option.flatMap(R.get(MOVES, key), (move) => {
-    const scrollsX = scrolls(axis, "x");
-    const scrollsY = scrolls(axis, "y");
-    const acts =
-      move.size === "start" ||
-      (move.x !== 0 && scrollsX) ||
-      (move.y !== 0 && scrollsY);
-    return acts
+    const paged = move.size === "page" ? pageAxis(axis) : Option.none();
+    /** Whether this move travels along `side`, and the container scrolls it. */
+    const takes = (side: "x" | "y"): boolean =>
+      scrolls(axis, side) &&
+      Match.value(move.size).pipe(
+        Match.when("start", () => true),
+        Match.when("end", () => true),
+        Match.when("page", () => Option.contains(paged, side)),
+        Match.when("line", () => (side === "x" ? move.x !== 0 : move.y !== 0)),
+        Match.exhaustive,
+      );
+    return takes("x") || takes("y")
       ? Option.some({
-          x: scrollsX ? next(current.x, move.x, move, metrics) : current.x,
-          y: scrollsY ? next(current.y, move.y, move, metrics) : current.y,
+          x: takes("x") ? next(current.x, move, "x", metrics) : current.x,
+          y: takes("y") ? next(current.y, move, "y", metrics) : current.y,
         })
       : Option.none();
   });

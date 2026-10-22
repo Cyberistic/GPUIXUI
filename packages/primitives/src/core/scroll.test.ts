@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { SCROLL_END, revealScroll, scrollTarget } from "./scroll.js";
 
-const metrics = { line: 32, page: 60 } as const;
+const metrics = { line: 32, page: { width: 80, height: 60 } } as const;
 const at = (x: number, y: number) => ({ x, y });
 
 /** A box in window pixels: the row's height is the only part a reveal reads. */
@@ -40,6 +40,22 @@ describe("scrollTarget", () => {
     expect(
       scrollTarget("pageup", "vertical", at(0, -70), metrics),
     ).toStrictEqual(Option.some(at(0, -10)));
+  });
+
+  it("pages a sideways region by its width, not by a height it never shows", () => {
+    // The bug guarded: a page carried one number — the scroller's height — and
+    // paged only the vertical axis, so a horizontal region answered
+    // PageUp/PageDown with `None` and a reader could move one line at a time.
+    expect(
+      scrollTarget("pagedown", "horizontal", at(-10, 0), metrics),
+    ).toStrictEqual(Option.some(at(-90, 0)));
+    expect(
+      scrollTarget("pageup", "horizontal", at(-90, 0), metrics),
+    ).toStrictEqual(Option.some(at(-10, 0)));
+    // A two-axis region pages the axis a reader thinks of as the screen: y.
+    expect(
+      scrollTarget("pagedown", "both", at(-40, -10), metrics),
+    ).toStrictEqual(Option.some(at(-40, -70)));
   });
 
   it("leaves an axis the container does not scroll alone", () => {
