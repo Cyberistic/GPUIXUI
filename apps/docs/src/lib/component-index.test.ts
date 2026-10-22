@@ -537,6 +537,34 @@ describe("the real index", () => {
     expect(missing).toEqual([]);
   });
 
+  it("leaves a lane's status to its rows", () => {
+    // The page said the data lane was partial — "column configuration,
+    // virtualisation, a tree view, charts and the inspector surfaces are still
+    // `todo`" — after every one of those rows had shipped. The rows carry the
+    // inventory's verdict, so the page must not keep a second copy that only
+    // the reader notices is stale.
+    const source = readFileSync(
+      new URL("apps/docs/content/docs/components/index.mdx", root),
+      "utf8",
+    );
+    const tier3 = inventory.rows.filter((row) => row.tier === 3);
+    const shipped = tier3.filter((row) => row.status !== "todo");
+
+    expect(shipped.length).toBeGreaterThan(10);
+    expect(source).toContain("](/docs/data-display)");
+    expect(source).not.toContain("still `todo`");
+
+    // The Table page carried the same list: "the rows that remain — a tree, a
+    // chart surface — are recorded as gaps", after both shipped. It names the
+    // pages a grid composes with instead.
+    const tablePage = readFileSync(
+      new URL("apps/docs/content/docs/components/table.mdx", root),
+      "utf8",
+    );
+    expect(tablePage).not.toContain("recorded as gaps");
+    expect(tablePage).not.toContain("the rows that remain");
+  });
+
   it("starts with the primitives and ends with the data surfaces", () => {
     // The sections are the sidebar's order, read off the rows instead of
     // retyped: a package that lands after the components appends a section,
