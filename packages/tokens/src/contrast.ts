@@ -307,21 +307,14 @@ export const contrastPairs: readonly ContrastPair[] = [
   { foreground: "mutedForeground", background: "hover", floor: "secondary" },
   { foreground: "mutedForeground", background: "active", floor: "secondary" },
   { foreground: "mutedForeground", background: "accent", floor: "secondary" },
-  // A *secondary action* is the one filled control whose label is neither the
-  // page's `foreground` nor a derived fill's on-colour: it rests on the
-  // `secondary` role and, in the components package's `Button`, moves to
-  // `hover`/`active` on a pointer while keeping `secondaryForeground`. The two
-  // washes carried a readable label no pair measured.
-  {
-    foreground: "secondaryForeground",
-    background: "hover",
-    floor: "secondary",
-  },
-  {
-    foreground: "secondaryForeground",
-    background: "active",
-    floor: "secondary",
-  },
+  // A *secondary action* rests on the `secondary` role (measured above) and now
+  // moves to a **derived** fill on a pointer — `filledHover`/`filledPressed` of
+  // `secondary` — so its label's pointer contrast is `styles.test.ts`'s filled
+  // role contract, not a role pair: a derived fill is not a role this table can
+  // name. It carried `secondaryForeground` on the `hover`/`active` washes while
+  // the variant swapped those washes in; the wash is the fill it replaced in
+  // several styles (15 of its 32 placements under the floor), so those two pairs
+  // retired with the paint.
   // An unfilled control paints no fill of its own, so the **group strip** it
   // sits in is its background: the design system's segmented `secondary` panel
   // (the strip `ring`, `borderStrong` and a disabled label are already measured

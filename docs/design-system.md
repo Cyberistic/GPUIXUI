@@ -411,14 +411,12 @@ contrast table measures role pairs and a derived fill is not a role. That found
 Windows dark's `#60CDFF` primary hovered at 1.05:1 (a primary button that never
 answered the pointer; the platform carries `#59C9FF` now, 1.059:1) and it holds
 the catalogue's one-hue brand, whose page copy and `primary` are the same navy so
-its hover lands on its own fill. The components package's `Button` paints the
-derived fills for `primary` and `danger` but its **`secondary` variant still
-swaps in the `hover` / `active` washes**, so 15 of the variant's 32 pointer
-placements sit under the floor: hovered, **1.000:1** in High contrast light,
-High contrast dark and Light · macOS, and pressed **1.000:1** in Dark · Windows,
-with the base light theme's hover at 1.036:1. That branch belongs to the
-components package (`TODO.md` → Interlocks); the derived fill clears the floor in
-all 16 shipped styles.
+its hover lands on its own fill. The components package's `Button` derives the fills for all three actions, and
+its **`secondary` variant** does too: it swapped in the `hover` / `active` washes
+until the contract measured **15 of its 32 pointer placements** under the floor —
+hovered **1.000:1** in High contrast light, High contrast dark and Light · macOS,
+pressed **1.000:1** in Dark · Windows — because a wash is often the fill it
+replaces. The derived step clears the floor in all 16 shipped styles.
 
 A **selected row** is the fourth wash, and the one a row's *title* is painted on.
 `ListItemTitle` overrides its recipe's colour with the row's own role

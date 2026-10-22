@@ -1345,7 +1345,7 @@ named colour, an `hsl()`-family function). Shorthand hex is measured.
 — an empty array means the theme is readable. The floors are the theme's own
 variant's unless one is passed, which is the rule `auditTheme` applies: a brand
 derived from a high-contrast theme is measured at 7:1 for secondary text without
-the caller remembering to say so. The 99 pairs cover the text role
+the caller remembering to say so. The 97 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -3247,25 +3247,22 @@ or dropped is named rather than passing silently.
 - Motion — durations, easings, springs, inertia — lives in `@gpuixui/motion`,
   not here: a second copy would duplicate the package that owns reduced-motion
   policy. No component consumes it yet.
-- The derived fills are adopted by both packages' buttons — with one measured
-  exception. `packages/primitives`' recipes ask their own registry for
+- The derived fills are adopted by both packages' buttons.
+  `packages/primitives`' recipes ask their own registry for
   `hover:fill-<action>` and `active:fill-<action>-pressed`
   (`packages/primitives/src/recipe/index.ts`); a filled checkbox or radio paints
   the same two helpers (`packages/primitives/src/core/selection.ts`), so its mark
   sits on an opaque fill; a pressed `Toggle` takes them for its `accent` face
   (`packages/primitives/src/core/variants.ts`); and the components package's
-  `Button` derives `primary` and `danger`. **The `secondary` variant does not**:
-  it swaps the fill to the `hover` / `active` washes and keeps
-  `secondaryForeground` (`packages/components/src/internal/button.tsx`), so its
-  pointer feedback is as visible as those two roles happen to be against the
-  `secondary` fill. Measured, 15 of the variant's 32 pointer placements sit under
-  the 1.05:1 perceptibility floor: hovered it is **1.000:1** in High contrast
-  light, High contrast dark and Light · macOS — the variants a reader selects for
-  clarity — and pressed it is **1.000:1** in Dark · Windows, while the base light
-  theme's hover reads only 1.036:1. The fixed paint is one branch onto
-  `filledHover` / `filledPressed`, which clears the floor in all 16 styles; it is
-  the components package's half, recorded in `TODO.md` → Interlocks. The
-  `@gpuixui/tw` `button` recipe the components package compiles against still
+  `Button` derives all three actions, its `secondary` variant included
+  (`packages/components/src/internal/button.tsx`). That variant swapped the fill
+  for the `hover` / `active` role washes until the contract measured **15 of its
+  32 pointer placements** under the 1.05:1 floor — hovered 1.000:1 in High
+  contrast light, High contrast dark and Light · macOS, pressed 1.000:1 in
+  Dark · Windows — because a wash is often the fill it replaces. It derives
+  `filledHover`/`filledPressed` from its own fill now and clears the floor in
+  all 16 styles.
+  The `@gpuixui/tw` `button` recipe the components package compiles against still
   lifts the fill's alpha (`hover:bg-primary/90` in `packages/tw/src/recipes.ts`) —
   the other owning package's half.
 - A field's **resting edge** is the decorative `border` role rather than the

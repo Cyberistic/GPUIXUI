@@ -498,124 +498,66 @@ describe("text on the state washes", () => {
 /**
  * Guards the label a **secondary action** keeps while its fill moves.
  *
- * The wash suite above measured the page's `foreground` and the
- * `mutedForeground` second line, and the filled-action suite measures a
- * `primary`/`destructive` label on its derived fill. A secondary action is
- * neither: it rests on the `secondary` role and, in the components package's
- * `Button`, moves to the `hover`/`active` role on a pointer while keeping
- * `secondaryForeground` — so both washes carried a label no pair measured, and
- * a brand whose secondary label drifted toward its own wash shipped.
+ * The wash suite above measures the page's `foreground` and the
+ * `mutedForeground` second line, and the filled-action suite measures every
+ * filled role's label on its derived fills. A secondary action rests on the
+ * `secondary` role — measured above — and moves to a **derived** fill on a
+ * pointer (`filledHover`/`filledPressed(theme, "secondary")`), so its pointer
+ * label is the filled-role contract's. It carried `secondaryForeground` on the
+ * `hover`/`active` role washes while the variant swapped them in, and a wash is
+ * the fill it replaces in several styles, so those two pairs retired with the
+ * paint and this suite holds the pair that remains and the painter.
  */
-describe("the secondary action's label on the wash it tints", () => {
-  const washes = ["hover", "active"] as const;
+describe("the secondary action's label on the fill it paints", () => {
+  const button = readFileSync(
+    new URL("../../components/src/internal/button.tsx", import.meta.url),
+    "utf8",
+  );
+  const secondary = button.slice(
+    button.indexOf('Match.when("secondary", () => ({'),
+    button.indexOf('Match.when("ghost", () => ({'),
+  );
 
-  it("measures the label on both washes", () => {
-    const missing = washes
-      .filter(
-        (background) =>
-          !contrastPairs.some(
-            (pair) =>
-              pair.foreground === "secondaryForeground" &&
-              pair.background === background &&
-              pair.floor === "secondary",
-          ),
-      )
-      .map((background) => `secondaryForeground/${background}`);
-
-    expect(missing).toEqual([]);
+  it("measures the label on the resting fill", () => {
+    expect(
+      contrastPairs.some(
+        (pair) =>
+          pair.foreground === "secondaryForeground" &&
+          pair.background === "secondary" &&
+          pair.floor === "secondary",
+      ),
+    ).toBe(true);
   });
 
-  it("holds the painter the pair exists for", () => {
-    // The pair only means something while a control rests in that role and
-    // tints those washes: the components package's `Button` is the painter.
-    const button = readFileSync(
-      new URL("../../components/src/internal/button.tsx", import.meta.url),
-      "utf8",
-    );
-    const secondary = button.slice(
-      button.indexOf('Match.when("secondary", () => ({'),
-      button.indexOf('Match.when("ghost", () => ({'),
-    );
-
+  it("holds the painter to the derived fills rather than a wash", () => {
     // The label is the variant's own on-colour: the action colour resolver the
-    // four variants share names it, and the control style applies that resolver
-    // (so a glyph can inherit the label instead of naming a colour from another
-    // fill).
+    // variants share names it, so a glyph can inherit the label instead of
+    // naming a colour from another fill. Both pointer states are the derivation
+    // from that fill — a role wash is the fill it replaces in several styles.
     expect(button).toContain(
       'Match.when("secondary", () => theme.colors.secondaryForeground)',
     );
     expect(button).toContain("color: actionOnColor(theme, value)");
-    expect(secondary).toContain(
-      "hover: { backgroundColor: theme.colors.hover }",
-    );
-    expect(secondary).toContain(
-      "active: { backgroundColor: theme.colors.active }",
+    expect(secondary).toContain('filledHover(theme, "secondary")');
+    expect(secondary).toContain('filledPressed(theme, "secondary")');
+    expect(secondary, "the wash the fix replaced").not.toContain(
+      "backgroundColor: theme.colors.hover",
     );
   });
 
-  it("reports a label painted into the wash it tints", () => {
-    const broken = (wash: "hover" | "active") => ({
-      colors: {
-        ...lightColors,
-        secondaryForeground: lightColors[wash],
-      },
-    });
-
-    const reported = washes.map((wash) =>
-      contrastFailures(broken(wash)).find(
+  it("no longer measures a label on a wash the action stopped painting", () => {
+    // A pair nobody paints reads as a contract while it guards nothing: the
+    // retired pairs would pass on a palette whose wash is its own fill, because
+    // the action no longer moves to that role at all.
+    const retired = (["hover", "active"] as const).filter((background) =>
+      contrastPairs.some(
         (pair) =>
-          pair.foreground === "secondaryForeground" && pair.background === wash,
+          pair.foreground === "secondaryForeground" &&
+          pair.background === background,
       ),
     );
 
-    expect(reported).toMatchObject(
-      washes.map((wash) => ({
-        background: wash,
-        ratio: 1,
-        floor: contrastFloors.secondary,
-      })),
-    );
-  });
-
-  it("clears the floor in every shipped, platform and authored theme", () => {
-    const shipped = [
-      ...Object.values(themes),
-      ...Object.values(highContrastThemes),
-      ...platformNames.flatMap((platform) =>
-        Object.values(themes).map((theme) => platformTheme(theme, platform)),
-      ),
-      ...retroNames.flatMap((look) =>
-        Object.values(themes).map((theme) => retroTheme(theme, look)),
-      ),
-    ];
-    const placements = shipped.flatMap((theme) =>
-      washes.map((background) => ({
-        name: `${theme.name}/${background}`,
-        ratio: contrastRatio(
-          theme.colors.secondaryForeground,
-          theme.colors[background],
-        ),
-        floor: contrastFloorsFor(theme).secondary,
-      })),
-    );
-    const hidden = placements.filter(
-      ({ ratio, floor }) => ratio === undefined || ratio < floor,
-    );
-    const tightest = placements.reduce((low, next) =>
-      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
-    );
-
-    expect(hidden).toEqual([]);
-    expect(tightest.name).toBe("Dark · Windows XP (Luna)/active");
-    expect(printedRatio(tightest.ratio)).toBe("7.88:1");
-    // The catalogue prints the number this suite measures, so a palette edit
-    // moves the sentence instead of leaving a stale claim.
-    expect(
-      readFileSync(
-        new URL("../../../docs/tokens.md", import.meta.url),
-        "utf8",
-      ).replace(/\s+/g, " "),
-    ).toContain(`pressed wash at ${tightest.ratio?.toFixed(2)}:1`);
+    expect(retired).toEqual([]);
   });
 });
 
@@ -1832,14 +1774,21 @@ describe("the ring on the fill it hugs", () => {
       "utf8",
     );
 
+    // The combobox row is the painter of the `hover` wash under a ring: its rows
+    // are focusable, declare the ring and tint `hover` while the keyboard moves
+    // the highlight. The button declares the ring too, but its pointer states
+    // are derived fills now, not washes.
+    const combobox = readFileSync(
+      new URL("../../components/src/combobox.tsx", import.meta.url),
+      "utf8",
+    );
+
     expect(declaresKeyboardRing(row), "list.tsx").toBe(true);
     expect(row).toContain("backgroundColor: theme.colors.selected");
     expect(row).toContain("hover: { backgroundColor: theme.colors.accent }");
     expect(row).toContain("active: { backgroundColor: theme.colors.active }");
-    expect(button).toContain("hover: { backgroundColor: theme.colors.hover }");
-    expect(button).toContain(
-      "active: { backgroundColor: theme.colors.active }",
-    );
+    expect(combobox).toContain("backgroundColor: theme.colors.hover");
+    expect(declaresKeyboardRing(combobox), "combobox.tsx").toBe(true);
     expect(declaresKeyboardRing(button), "internal/button.tsx").toBe(true);
   });
 

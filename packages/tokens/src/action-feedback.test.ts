@@ -245,59 +245,27 @@ describe("the pointer feedback a filled role paints", () => {
   });
 });
 
-describe("the secondary variant's pointer feedback", () => {
-  // The one shipped painter that does not use the derived fills: the
-  // components package's `secondary` variant swaps its fill to the `hover` /
-  // `active` washes, and in several styles that wash *is* the fill.
+describe("the secondary variant paints the derived fills", () => {
+  // The variant swapped its fill to the `hover` / `active` role washes, and a
+  // wash is often the fill it replaces: 15 of its 32 pointer placements sat
+  // under the floor, 1.000:1 in the variants a reader selects for clarity. It
+  // derives both states from the `secondary` fill now, like the other actions,
+  // so its label keeps an opaque step the filled-role contract measures.
   const button = read("../../components/src/internal/button.tsx");
-  const placements = everyStyle.flatMap(([name, theme]) =>
-    (["hover", "active"] as const).map((state) => ({
-      name,
-      state,
-      ratio: contrastRatio(theme.colors[state], theme.colors.secondary),
-    })),
+  const secondary = button.slice(
+    button.indexOf('Match.when("secondary", () => ({'),
+    button.indexOf('Match.when("ghost", () => ({'),
   );
-  const erased = placements.filter(
-    ({ ratio }) => ratio !== undefined && ratio < decorativeFloor,
-  );
-  const invisible = erased.filter(
-    ({ ratio }) => ratio !== undefined && ratio < 1.0005,
-  );
-  const names = (states: ReadonlyArray<string>): ReadonlySet<string> =>
-    new Set(
-      invisible
-        .filter(({ state }) => states.includes(state))
-        .map(({ name }) => name),
+
+  it("paints both pointer states from the fill it replaces", () => {
+    expect(secondary).toContain('filledHover(theme, "secondary")');
+    expect(secondary).toContain('filledPressed(theme, "secondary")');
+    expect(secondary, "the wash the fix replaced").not.toContain(
+      "backgroundColor: theme.colors.hover",
     );
-
-  it("holds the pages to the wash it paints", () => {
-    expect(button).toContain("backgroundColor: theme.colors.hover");
-    expect(button).toContain("backgroundColor: theme.colors.active");
-
-    const count = `${erased.length} of the variant's ${placements.length} pointer placements`;
-    [catalogue, designSystem, inventory, readme].forEach((document) => {
-      expect(document.replace(/\s+/g, " ")).toContain(count);
-    });
   });
 
-  it("prints the steps that land on the fill", () => {
-    // The measured headline: the hover is the fill in the variants a reader
-    // selects for clarity, and the press is the fill in Windows dark.
-    expect(names(["hover"])).toEqual(
-      new Set(["High contrast light", "High contrast dark", "Light · macOS"]),
-    );
-    expect(names(["active"])).toEqual(new Set(["Dark · Windows"]));
-
-    const base = contrastRatio(lightColors.hover, lightColors.secondary);
-    [catalogue, designSystem, inventory].forEach((document) => {
-      expect(document).toContain("1.000:1");
-      expect(document).toContain(`${base?.toFixed(3)}:1`);
-    });
-  });
-
-  it("passes every shipped style once the variant paints the derived fills", () => {
-    // The fix is one branch in another package: when it lands, the derived step
-    // clears the floor in all 16 styles and this suite's pages have to move.
+  it("clears the floor in every shipped style", () => {
     everyStyle.forEach(([name, theme]) => {
       (["hover", "pressed"] as const).forEach((state) => {
         expect(
@@ -305,6 +273,22 @@ describe("the secondary variant's pointer feedback", () => {
           `${name} ${state}`,
         ).toBeGreaterThanOrEqual(decorativeFloor);
       });
+    });
+  });
+
+  it("holds the four documents to the fixed paint", () => {
+    // The deviation was printed as a measured fact in all four, so the same
+    // four have to carry its closure: the history stays (a reader can check the
+    // claim) and the retracted "still swaps" sentence does not.
+    [catalogue, designSystem, inventory, readme].forEach((document) => {
+      const text = document.replace(/\s+/g, " ");
+
+      expect(text).toContain("15 of its 32 pointer placements");
+      expect(text).toContain("derives");
+      expect(text, "the retracted deviation").not.toContain("still swaps");
+      expect(text, "the retracted deviation").not.toContain(
+        "still does, so 15",
+      );
     });
   });
 });
