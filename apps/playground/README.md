@@ -3137,9 +3137,10 @@ no `;<payload>`, so the original APC grammar never saw the restore. Both
 directions were measured — reverting either fails its kitty case by name.
 
 The paint check was measured failing too: with `TERMINAL_REST_FILL` one hex
-digit off (`#D9432C`), `terminal-render` reports
-`expected at least 0.9 of the frame in #d9432b, got 0.000` and both input
-scenarios report no repaint frame, all `FAIL`, exit `1`; restored, 4/4.
+digit off (`#D9432C`), all four scenarios `FAIL` and the run exits `1` —
+`terminal-render` reports `expected at least 0.9 of the frame in #d9432b, got
+0.000`, `terminal-resize` finds no resized page, and both input scenarios report
+no repaint frame; restored, 4/4.
 
 The harness is macOS-only in this runner (`script` + `stty`): the runtime's
 terminal platform also targets Linux, and a Linux wrapper is not a claim this
