@@ -37,6 +37,7 @@ export * from "./fieldset.js";
 export * from "./fireworks.js";
 export * from "./form.js";
 export * from "./gradient.js";
+export * from "./gradient-text.js";
 export * from "./gravity-stars.js";
 export * from "./hexagon.js";
 export * from "./highlight-text.js";

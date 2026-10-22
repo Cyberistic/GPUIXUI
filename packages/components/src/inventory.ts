@@ -38,6 +38,7 @@ import { fieldsetMeta } from "./fieldset.js";
 import { fireworksMeta } from "./fireworks.js";
 import { formMeta } from "./form.js";
 import { gradientMeta } from "./gradient.js";
+import { gradientTextMeta } from "./gradient-text.js";
 import { gravityStarsMeta } from "./gravity-stars.js";
 import { hexagonMeta } from "./hexagon.js";
 import { highlightTextMeta } from "./highlight-text.js";
@@ -131,6 +132,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   fireworksMeta,
   formMeta,
   gradientMeta,
+  gradientTextMeta,
   gravityStarsMeta,
   hexagonMeta,
   highlightTextMeta,

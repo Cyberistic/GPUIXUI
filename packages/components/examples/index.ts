@@ -42,6 +42,7 @@ import { FieldExample } from "./field.example.js";
 import { FieldsetExample } from "./fieldset.example.js";
 import { FireworksExample } from "./fireworks.example.js";
 import { GradientExample } from "./gradient.example.js";
+import { GradientTextExample } from "./gradient-text.example.js";
 import { GravityStarsExample } from "./gravity-stars.example.js";
 import { HexagonExample } from "./hexagon.example.js";
 import { HighlightTextExample } from "./highlight-text.example.js";
@@ -119,6 +120,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   fieldset: FieldsetExample,
   fireworks: FireworksExample,
   gradient: GradientExample,
+  "gradient-text": GradientTextExample,
   "gravity-stars": GravityStarsExample,
   hexagon: HexagonExample,
   "highlight-text": HighlightTextExample,

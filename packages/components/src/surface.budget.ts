@@ -42,8 +42,7 @@ export const surfaceBudget = {
   // shared `internal/measure.ts` both button layers read their box from.
   // 115 → 117 for Magnetic (`magnetic.tsx` and the lean rule beside it), and
   // 117 → 119 for LiquidButton (`liquid-button.tsx` and its flood rule).
-  // 119 → 121 for AvatarGroup (`avatar-group.tsx` and its facepile rule).
-  // 121 → 123 for PinnedList (`pinned-list.tsx` and its header-position rule);
+  // 119 → 121 for AvatarGroup (`avatar-group.tsx` and its facepile rule).  // 121 → 123 for PinnedList (`pinned-list.tsx` and its header-position rule);
   // 123 → 125 for Particles (`particles.tsx` and its field rule); 125 → 128 for
   // Stars (`stars.tsx` and its twinkle rule) and the fields' shared scatter
   // arithmetic (`internal/scatter.ts`). 128 → 130 for CodeBlock
@@ -76,7 +75,8 @@ export const surfaceBudget = {
   // retarget their insets on a reorder. 157 → 160 for SlidingText
   // (`sliding-text.tsx`, the slide rule beside it, and `internal/text-swap.ts`,
   // the half RollingText now reads its state machine and timing from too).
-  modules: 159,
+  // 159 → 161 for GradientText (`gradient-text.tsx` and the ramp rule beside it).
+  modules: 161,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
