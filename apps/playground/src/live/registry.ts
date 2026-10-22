@@ -264,6 +264,12 @@ export const liveRegistry = [
       "Table: a header press sorts by the column it hit, a row press selects and focuses, arrows rove, and the header holds still under one shared scroller",
     capability: "table",
   },
+  {
+    id: "frozen-column-lifecycle",
+    title:
+      "Table: a frozen column and its grid mirror either pane's wheel in a window, the frozen column ignores a pan, and a frozen cell selects the row",
+    capability: "table",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

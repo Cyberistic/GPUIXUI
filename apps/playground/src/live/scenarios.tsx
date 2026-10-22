@@ -18,6 +18,7 @@ import {
 import { Duration, Effect, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import {
   extendTheme,
@@ -9476,6 +9477,311 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("table-sorted");
   });
 
+/** The frozen-column probe's geometry: two panes, one row height. */
+const FROZEN_ROWS = 60;
+const FROZEN_ROW_HEIGHT = 28;
+const FROZEN_WIDTH = 120;
+const FROZEN_BODY_WIDTH = 240;
+const FROZEN_VIEWPORT = 240;
+const FROZEN_CELL_WIDTH = 200;
+/** `rows × height - viewport`: the offset both panes clamp at. */
+const FROZEN_MAX = FROZEN_ROWS * FROZEN_ROW_HEIGHT - FROZEN_VIEWPORT;
+const FROZEN_ROW_INDEXES = Arr.range(0, FROZEN_ROWS - 1);
+
+/**
+ * A frozen first column beside a grid, in a window.
+ *
+ * The runtime has no `position: "sticky"`, so a frozen column is two vertical
+ * scrollers that must move as one: each `onScrollChange` mirrors its `y` into
+ * the other through `renderer.scrollTo`, guarded by a ref because a programmatic
+ * scroll reports its own change inside the call. The headless
+ * `data-grid-frozen-column` scenario measured the arithmetic; this probe asks
+ * whether the mirror holds in a window, where the wheel is hit-tested and a
+ * press selects through the painted cell.
+ */
+const FrozenColumnProbe = (): ReactNode => {
+  const theme = useTheme();
+  const windowSize = useWindowSize();
+  const renderer = useGpuix().renderer;
+  const frozen = useRef<PublicInstance | null>(null);
+  const body = useRef<PublicInstance | null>(null);
+  const syncing = useRef(false);
+  const [selected, setSelected] = useState(Option.none<number>());
+
+  const mirror =
+    (target: "frozen" | "body") =>
+    (event: EventPayload): void => {
+      const elementId = (target === "frozen" ? frozen : body).current?.id;
+      const y = event.scrollY;
+      // The programmatic scroll paints synchronously, so the target's own change
+      // arrives inside this call; the flag stops it mirroring back.
+      if (elementId == null || y == null || syncing.current) return;
+      syncing.current = true;
+      renderer?.scrollTo?.(elementId, 0, y);
+      syncing.current = false;
+    };
+
+  const rowStyle = (index: number) => ({
+    display: "flex",
+    height: FROZEN_ROW_HEIGHT,
+    alignItems: "center",
+    flexShrink: 0,
+    backgroundColor: Option.contains(selected, index)
+      ? theme.colors.accent
+      : index % 2 === 0
+        ? theme.colors.background
+        : theme.colors.card,
+    hover: { backgroundColor: theme.colors.muted },
+  });
+
+  return (
+    <div
+      testId="frozen-probe"
+      style={{
+        width: windowSize.width,
+        height: windowSize.height,
+        padding: theme.spacing.xl,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        Two scrollers, one offset: either pane's wheel moves both, and the
+        frozen column never pans.
+      </text>
+      <Readout testId="frozen-selected">
+        {Option.match(selected, {
+          onNone: () => "none",
+          onSome: (n) => `r${n}`,
+        })}
+      </Readout>
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <div
+          testId="frozen"
+          ref={frozen}
+          onScrollChange={mirror("body")}
+          style={{
+            width: FROZEN_WIDTH,
+            height: FROZEN_VIEWPORT,
+            overflowY: "scroll",
+            backgroundColor: theme.colors.muted,
+          }}
+        >
+          {FROZEN_ROW_INDEXES.map((index) => (
+            <div
+              key={index}
+              testId={`frozen-row-${index}`}
+              tabIndex={0}
+              role="row"
+              aria-selected={Option.contains(selected, index)}
+              onClick={() => setSelected(Option.some(index))}
+              style={rowStyle(index)}
+            >
+              <text style={{ color: theme.colors.foreground }}>
+                {`F${index}`}
+              </text>
+            </div>
+          ))}
+        </div>
+        <div
+          testId="frozen-body"
+          ref={body}
+          onScrollChange={mirror("frozen")}
+          style={{
+            width: FROZEN_BODY_WIDTH,
+            height: FROZEN_VIEWPORT,
+            overflowY: "scroll",
+            overflowX: "scroll",
+            backgroundColor: theme.colors.card,
+          }}
+        >
+          {FROZEN_ROW_INDEXES.map((index) => (
+            <div
+              key={index}
+              testId={`frozen-body-row-${index}`}
+              style={{ ...rowStyle(index), width: FROZEN_CELL_WIDTH * 3 }}
+            >
+              <div style={{ width: FROZEN_CELL_WIDTH, flexShrink: 0 }}>
+                <text style={{ color: theme.colors.foreground }}>
+                  {`B${index}`}
+                </text>
+              </div>
+              <div style={{ width: FROZEN_CELL_WIDTH, flexShrink: 0 }}>
+                <text style={{ color: theme.colors.mutedForeground }}>
+                  {`C${index}`}
+                </text>
+              </div>
+              <div style={{ width: FROZEN_CELL_WIDTH, flexShrink: 0 }}>
+                <text style={{ color: theme.colors.mutedForeground }}>
+                  {`D${index}`}
+                </text>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The frozen column's checks: both panes follow either wheel, the row under the
+ * reader lines up across them, the frozen column ignores a horizontal pan, and a
+ * frozen cell selects the row for the grid.
+ */
+const frozenColumnSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("frozen-selected");
+    yield* Effect.sleep(SETTLE);
+
+    const offsetOf = (testId: string) =>
+      Effect.gen(function* () {
+        return yield* ctx.expectSome(
+          `${testId} reports a scroll offset`,
+          Option.fromNullishOr(yield* ctx.host.scrollOffset(testId)),
+        );
+      });
+    const yOf = (testId: string) =>
+      Effect.map(paintedBox(ctx, testId), (bounds) => bounds.y);
+    const xOf = (testId: string) =>
+      Effect.map(paintedBox(ctx, testId), (bounds) => bounds.x);
+    const paintedRows = Effect.map(ctx.host.paintedText(), (lines) =>
+      Arr.filterMap(lines, (line) =>
+        Option.match(Str.match(/^B(\d+)$/)(line), {
+          onNone: () => Result.failVoid,
+          onSome: (match) =>
+            Option.match(Option.fromNullishOr(match[1]), {
+              onNone: () => Result.failVoid,
+              onSome: (digits) => Result.succeed(Number.parseInt(digits, 10)),
+            }),
+        }),
+      ),
+    );
+
+    // 1. Both panes start at the top, and the first row lines up across them.
+    yield* ctx.expectEqual(
+      "the frozen column starts at the top",
+      (yield* offsetOf("frozen")).y,
+      0,
+    );
+    yield* ctx.expectEqual(
+      "the grid starts at the top",
+      (yield* offsetOf("frozen-body")).y,
+      0,
+    );
+    yield* ctx.expectNear(
+      "the first row sits at the same y in both panes",
+      yield* yOf("frozen-row-0"),
+      yield* yOf("frozen-body-row-0"),
+      1,
+    );
+
+    // 2. A wheel over the grid moves both panes.
+    yield* ctx.host.wheel("frozen-body", 0, -300);
+    yield* Effect.sleep(SETTLE);
+    const bodyAfterGrid = yield* offsetOf("frozen-body");
+    yield* ctx.expectNear(
+      "the grid follows the wheel",
+      bodyAfterGrid.y,
+      -300,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the frozen column mirrors the grid in the same frame",
+      (yield* offsetOf("frozen")).y,
+      bodyAfterGrid.y,
+      1,
+    );
+
+    // 3. A wheel over the frozen column moves both back: the mirror is two-way.
+    yield* ctx.host.wheel("frozen", 0, -300);
+    yield* Effect.sleep(SETTLE);
+    const frozenAfterBoth = yield* offsetOf("frozen");
+    yield* ctx.expectNear(
+      "the frozen column's own wheel scrolls it",
+      frozenAfterBoth.y,
+      -600,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the grid mirrors the frozen column",
+      (yield* offsetOf("frozen-body")).y,
+      frozenAfterBoth.y,
+      1,
+    );
+
+    // 4. The row the reader is looking at lines up across the panes.
+    const rows = yield* paintedRows;
+    const row = yield* ctx.expectSome(
+      "a row inside the scrolled window is painted",
+      Arr.findFirst(rows, (value) => value >= 22 && value <= 25),
+    );
+    yield* ctx.expectNear(
+      `row ${row} lines up between the frozen column and the grid`,
+      yield* yOf(`frozen-row-${row}`),
+      yield* yOf(`frozen-body-row-${row}`),
+      1,
+    );
+
+    // 5. A horizontal wheel pans the grid's cells and leaves the frozen column.
+    const frozenX = yield* xOf(`frozen-row-${row}`);
+    const bodyX = yield* xOf(`frozen-body-row-${row}`);
+    yield* ctx.host.wheel("frozen-body", -200, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "a horizontal wheel pans the grid",
+      (yield* offsetOf("frozen-body")).x,
+      -200,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the grid's row moved left with the pan",
+      yield* xOf(`frozen-body-row-${row}`),
+      bodyX - 200,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the frozen column stayed where it was",
+      yield* xOf(`frozen-row-${row}`),
+      frozenX,
+      1,
+    );
+
+    // 6. A frozen cell selects the row for the whole grid.
+    yield* ctx.host.click(`frozen-row-${row}`);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press on a frozen cell selects its row",
+      yield* ctx.host.text("frozen-selected"),
+      `r${row}`,
+    );
+    yield* ctx.host.capture("frozen-column");
+
+    // 7. A huge wheel clamps both panes at the same end.
+    yield* ctx.host.wheel("frozen-body", 0, -10_000);
+    yield* Effect.sleep(SETTLE);
+    const bodyEnd = yield* offsetOf("frozen-body");
+    yield* ctx.expectNear(
+      "the grid clamps at the content's end",
+      bodyEnd.y,
+      -FROZEN_MAX,
+      2,
+    );
+    yield* ctx.expectNear(
+      "the frozen column clamps with it",
+      (yield* offsetOf("frozen")).y,
+      bodyEnd.y,
+      1,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -9668,5 +9974,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "table-lifecycle",
     view: () => <TableProbe />,
     steps: tableLifecycleSteps,
+  },
+  "frozen-column-lifecycle": {
+    id: "frozen-column-lifecycle",
+    view: () => <FrozenColumnProbe />,
+    steps: frozenColumnSteps,
   },
 };

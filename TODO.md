@@ -519,7 +519,23 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 62/62
+`[x]` `[██████████]` 63/63
+
+`[x]` Land the `frozen-column-lifecycle` live probe and measure **the table's
+      frozen column in a window** — the headless `data-grid-frozen-column`
+      scenario measured the two-scroller arithmetic against a `TestRenderer`,
+      and what a window adds is that the wheel is hit-tested and the press lands
+      on a painted cell. Two 240px panes over 60 rows of 28px: either pane's
+      wheel moves **both** offsets in the same frame (`-300`, then `-600` from
+      the frozen pane's own wheel), the row under the reader lines up across the
+      panes (`F22` at `B22`'s `y`), a sideways wheel pans the grid to `x=-200`
+      and leaves the frozen column still, a press on a frozen cell selects the
+      row for the grid, and both panes clamp at `-1440`. 32 checks, `--only
+      frozen-column-lifecycle`, green on 0.11.0. Two negative controls measured
+      (dropping either pane's mirror: `expected -300 ± 1, got 0` and
+      `expected -600 ± 1, got -300`, exit `1` each). Evidence:
+      `apps/playground/README.md` §`frozen-column-lifecycle`,
+      `.artifacts/live/frozen-column.png`
 
 `[x]` Land the `table-lifecycle` live probe and measure **the table's two
       critical interactions in a window** — MISSION's list names table
@@ -2121,6 +2137,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | The `tooltip-lifecycle` probe's **on-screen caption** contradicts its own checks: `apps/playground/src/live/scenarios.tsx` paints "a hover opens it, leaving closes it and Escape dismisses it — a keyboard focus does not", while the same probe asserts `a keyboard focus opens the tip` and passes 14/14 on 0.11.0. Four Tier 2 `COMPONENTS.md` rows teach the same retracted gap in prose (Tabs: "a window's Tab traversal focuses a trigger without delivering `onFocus`"; Lists: "a window's `Tab` traversal reports no focus event"; Toasts: "a `Tab` traversal delivers no focus event"; Preview Card: "a `Tab` traversal does not open it"), so a reader of the probe screen or the inventory is told the opposite of the measurement | apps/playground (the caption) and components (the four rows and the rationale in `src/tabs.tsx`/`src/tabs/logic.ts`) | **playground half resolved** — the caption now reads "a hover or a Tab traversal's focus opens it, and leaving or Escape closes it", matching the assertions beside it; the four `COMPONENTS.md` rows and the `tabs.tsx`/`tabs/logic.ts` rationale are still the components workstream's, and `--only tooltip-lifecycle` was re-run green after the change |
 
 | Cite `table-lifecycle` where a table's **sort and selection** are described — MISSION lists "table sort/selection" among the critical interactions to verify in the real runtime, and the capability record's §3 has no table row at all: a Tier 3 table plan read only the headless `table-select-sort` and `data-grid-fixed-header` scenarios' prose, which say nothing about whether a press is hit-tested, whether a pressed row takes the focus a following key needs, or what a clipped sortable header does. The playground's `table-lifecycle` measured all three in a window (34 checks, 0.11.0, three negative controls) | docs-site (capability record + `/docs/runtime`) and the Tier 3 table component | **open** — add a **Table sort and selection** row (`supported, with limits`: composed, not provided) carrying the measurement — a press selects the record it hit and that row holds the focus, `down` roves both focus and selection through the row's own handler, a header press sorts by the column it hit while the header stays a sibling outside the row scroller (a wheel over it scrolls nothing, and a header moved inside the scroller paints `y = -36` after the same wheel), and one horizontal scroller keeps the header cell and the row cell aligned at the same `x` after a pan — plus the measured constraint (**the protocol aims a press at the painted centre, so a sortable header whose centre is clipped by the horizontal viewport sorts nothing**; keep sortable columns inside the frame or pan them in) and the selection-is-a-record rule (it survives a sort). `/docs/runtime#measured-in-a-window` publishes the row, §5's owed-probe list names `table-lifecycle`, and `capability-doc.test.ts` gains the record-row, page-row and required-probe cases. Evidence: `apps/playground/README.md` §`table-lifecycle`, `.artifacts/live/table-sorted.png` |
+| Cite `frozen-column-lifecycle` beside `data-grid-frozen-column` in the capability record's **Frozen column** row — the row's rule (two panes mirrored through `onScrollChange` → `scrollTo`, guarded by a ref) is published from the headless scenario, and a window has now measured the consequence that matters: the mirror lands in the **same frame** as the wheel, the sideways pan is the grid's alone, and a press on a frozen cell selects the row. A table plan reading the record cannot tell the window from the renderer today | docs-site (capability record + `/docs/runtime`) | **open** — add `frozen-column-lifecycle` to the row's evidence and to §5's owed-probe list, and publish it on `/docs/runtime#measured-in-a-window`; `capability-doc.test.ts`'s required-probes case gains the id. Evidence: `apps/playground/README.md` §`frozen-column-lifecycle`, 32 checks, two negative controls |
 
 | The `/docs/themes` **Decorative surfaces** bullet still names four surface kinds — "dividers, skeleton fills, the modal veil and status edges" — while `decorativeSurfaces` measures nine kinds: it omits the scrollbar thumb, the `hover`/`active`/`selected`/`accent` state washes, the `secondary` action face, and the elevation shadow the tokens workstream just added (whose deepest level is now held to the same floor, and whose high-contrast dark tint was invisible on its black page) | docs-site | open — the readout itself needs nothing (the editor words any decorative failure generically, so a failing shadow prints `elevation: shadow on background — 1.00:1 (needs 1.05:1)`); only the bullet's enumeration is behind the contract. The tokens side prints no count for it, so the sentence can grow without a number moving |
 

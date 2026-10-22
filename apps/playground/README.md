@@ -2164,6 +2164,55 @@ fails `the header keeps its painted y` (`expected 64 ± 1, got -36`). 34 checks,
 `--only table-lifecycle`, green on 0.11.0. Capture:
 `.artifacts/live/table-sorted.png`.
 
+### `frozen-column-lifecycle` — measured on 0.11.0 here
+
+The frozen column, in a window. The runtime paints no `position: "sticky"`, so a
+frozen first column is **two vertical scrollers whose offsets are kept equal**
+by the app: each pane's `onScrollChange` mirrors its `y` into the other through
+`renderer.scrollTo`, guarded by a ref because a programmatic scroll reports its
+own change inside the call. The headless `data-grid-frozen-column` scenario
+measured the arithmetic against a `TestRenderer`; this probe asks whether the
+mirror holds in a window, where the wheel is hit-tested and a press lands on a
+painted cell rather than calling a handler.
+
+Sixty 28px rows in two 240px-tall panes — a 120px frozen column and a 240px grid
+whose rows are 600px wide — so both panes have 1 440px of vertical travel and
+the grid pans 360px sideways. Measured:
+
+| Step | Result |
+| ---- | ------ |
+| mount | both offsets `0`, `F0` and `B0` at the same `y` |
+| wheel the **grid** −300 | grid `-300`, frozen column `-300` in the same frame |
+| wheel the **frozen column** −300 | frozen `-600`, grid mirrors it to `-600` |
+| the scrolled window | rows `B22`… are painted, and `F22` sits at `B22`'s `y` |
+| wheel the grid −200 across | grid `x=-200`, its row moved −200, the frozen column unmoved |
+| press a frozen cell | `frozen-selected=r22` — the press selects the row for the grid |
+| wheel the grid −10 000 | both panes clamp at `-1440` |
+
+Two facts a frozen-column table can build on:
+
+1. **The mirror lands in the same frame as the wheel.** `scrollTo` paints
+   synchronously from inside `onScrollChange`, so both panes report one offset
+   after a single settle — the laggy alternative, mirroring on the next render,
+   would leave the frozen column one frame behind every wheel.
+2. **The horizontal pan is the grid's alone.** The frozen pane has no
+   `overflowX`, so a sideways wheel moves the cells and leaves the column still;
+   the frozen column is a vertical scroller only.
+
+Negative controls measured, both exit `1` and restored green: dropping the
+grid's mirror (`onScrollChange` on `frozen-body`) fails
+`the frozen column mirrors the grid in the same frame` (`expected -300 ± 1, got
+0`), and dropping the frozen pane's fails `the grid mirrors the frozen column`
+(`expected -600 ± 1, got -300`). 32 checks, `--only
+frozen-column-lifecycle`, green on 0.11.0. Capture:
+`.artifacts/live/frozen-column.png`.
+
+The guard that makes this work is worth naming: without the `syncing` ref, the
+target's synchronous `onScrollChange` would mirror straight back and the two
+panes would drive each other. The probe does not measure the loop (an unguarded
+version hangs, which is not a check a gate can read); the headless scenario's
+`syncGuard` note and the ref here are the same rule.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
