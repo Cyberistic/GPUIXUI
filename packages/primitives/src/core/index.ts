@@ -42,7 +42,15 @@ export {
 } from "./number.js";
 export type { NumberRange } from "./number.js";
 
-export { clampRating, decideRating, ratingTabStop } from "./rating.js";
+export {
+  clampRating,
+  decideRating,
+  pointerRating,
+  ratingTabStop,
+  starFill,
+  starState,
+} from "./rating.js";
+export type { StarBox, StarState } from "./rating.js";
 
 export {
   applyOtpInput,
@@ -141,6 +149,8 @@ export {
   progressTrackStyle,
   ratingStarColor,
   ratingStarStyle,
+  ratingPartialCellStyle,
+  ratingPartialStyle,
   PROGRESS_TONES,
   ruleStyle,
   scrollStyle,
