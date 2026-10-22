@@ -271,7 +271,7 @@ placeholder.
 | Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. |
 | Keyboard navigation | todo | ? | Real native focus handles (verified); the roving-focus model is ours. |
 | Command palette | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). |
-| Application menus | todo | ? | The macOS menu bar is a renderer API (`README.md` "The macOS menu bar"); cross-platform app menus are ours. |
+| Application menus | todo | partial (fixed menu only) | The runtime **installs a fixed macOS menu bar** at window init: the Apple menu (Services, Hide, Hide Others, Show All, Quit), a Window menu (Minimize, Zoom, Close) and **no Edit menu** — deliberately, so ⌘C/⌘V reach the window's text handling instead of being consumed by AppKit; ⌘Q/⌘H/⌥⌘H/⌘M/⌘W are bound. There is **no API to add an item**: `app_menu::init`/`default_menus` are `pub(crate)`, `WindowOptions.appName` only names the Hide/Quit items, and no napi method takes a menu (`@gpuix/native` 0.11.0 `index.d.ts`). An application menu is therefore a caller-drawn in-window menu (a `div` + dropdowns); a native menu-item callback cannot be attached, and cross-platform menus are ours. |
 | Status bars | todo | ? | `div` + `<text>`. |
 | Toolbars | todo | ? | `div` + Button groups. |
 | Breadcrumb navigation | todo | ? | Breadcrumbs + navigation. |
