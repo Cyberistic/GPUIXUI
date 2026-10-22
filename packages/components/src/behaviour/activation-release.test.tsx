@@ -179,6 +179,37 @@ describe("Space activates on the release, not the press", () => {
     menu.unmount();
   });
 
+  it("opens a menu from the trigger's Space release and lands on the first row", () => {
+    const onSelect = vi.fn();
+    const menu = renderComponent(
+      <div style={{ padding: 40 }}>
+        <DropdownMenu>
+          <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+          <DropdownMenuContent testId="menu" label="File actions">
+            <DropdownMenuItem
+              testId="rename"
+              onSelect={() => onSelect("rename")}
+            >
+              Rename
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>,
+    );
+    menu.renderer.focusElement(menu.renderer.findByTestId("trigger")?.id ?? -1);
+
+    pressSpace(menu);
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+
+    releaseSpace(menu);
+    expect(menu.renderer.findByTestId("menu")).toBeDefined();
+    // A keyboard open lands on the first enabled row, so Enter has something to
+    // run — the same edge the Enter press reaches.
+    expect(focusedTestId(menu)).toEqual(Option.some("rename"));
+
+    menu.unmount();
+  });
+
   it("chooses a calendar day on the release, not on the press", () => {
     const onValueChange = vi.fn();
     const picker = renderComponent(
