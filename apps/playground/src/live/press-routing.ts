@@ -138,7 +138,11 @@ export const PRESS_CASES: ReadonlyArray<PressCase> = Arr.map(
 /** One case by nesting; total, because the nesting is the case. */
 export const pressCase = (id: Nesting): PressCase => byNesting[id];
 
-/** The field's value, read from React because a host paints no text of its own. */
+/**
+ * The field's value, read from React rather than the element: a window's
+ * `text(testId)` reports no value for an `<input>`, so a probe that asked the
+ * element would read empty whether the key arrived or not.
+ */
 export const PRESS_DRAFT = "press-routing-draft";
 /** The readout's test id, one row under the cases. */
 export const PRESS_READOUT = "press-routing-readout";
