@@ -34,7 +34,9 @@ Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start)
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | from the density scale |
 | `square` | `boolean` | `false` | equal width and height, for an icon-only toggle |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
-| `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
+| `loading` | `boolean` | `false` | a spinner in the leading slot, announced as "Loading", activation refused; stays focusable |
+| `reducedMotion` | `boolean` | — | holds the busy spinner's lit dot (the runtime exposes no preference) |
+| `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label (replaced by the spinner while busy) |
 | `label` | `string` | none | accessible name; required when icon-only |
 | `description` | `string` | none | announced help; wins over the tooltip's `aria-description` when both are present |
 | `ref` / `aria-id` / `onLayout` | host address | none | the button element is the addressed element |
@@ -100,16 +102,23 @@ the neutral `disabled`/`disabledForeground` pair, the paint the design system
 names for a filled control anywhere off the page, instead of fading. Nothing
 names a literal.
 
+A **busy** toggle renders a `Spinner` where its leading icon would be, in the
+accent's own on-colour while pressed (a brand dot on the pressed face is 1.00:1),
+and in the neutral pair while it is both pressed and disabled. The spinner is
+`Sm` on the icon scale and takes the caller's `reducedMotion`; the toggle's
+`aria-description` becomes `"Loading"` so the state is announced, and the control
+stays focusable while refusing every press and key.
+
 `style` takes a `StateStyle<ToggleState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused, selected }` and returns one. `selected` is the
-pressed state under the contract's vocabulary. The result merges after every role
-decision, so a callback is the last word on a property the recipe also sets.
+pressed state under the contract's vocabulary, and `disabled` is the state that
+**refuses activation**: a busy toggle reports `disabled: true` too, exactly like
+a `Button`. The result merges after every role decision, so a callback is the
+last word on a property the recipe also sets.
 
 ## Limitations
 
 - No `aria-pressed` (above).
-- No `loading` state: a toggle sets a mode instantly; a toggle that waits for a
-  request should disable itself and show the result elsewhere.
 - A disabled pressed toggle paints the neutral pair rather than the accent, so
   it reads unavailable rather than dimmed-on.
 - `square` sizes the button; it does not size the icon — pass an icon whose size
@@ -118,6 +127,9 @@ decision, so a callback is the last word on a property the recipe also sets.
 ## Verification
 
 - `src/components/Toggle.test.tsx` — role and value text, no `aria-pressed`,
+  the busy spinner and its accent (pressed, unpressed and disabled pressed), the
+  announced `"Loading"` and refused activation while busy, the reduced-motion
+  forwarding,
   the pressed paint from the accent role, the derived opaque hover/press fills
   and the label floors on them, the disabled pressed neutral pair, the outline
   border, click/Enter/Space activation, held keys, disabled, the focus ring, the
@@ -126,7 +138,9 @@ decision, so a callback is the last word on a property the recipe also sets.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus run
   before the toggle's own action, once each.
 - `runtime/toggle.runtime.test.tsx` — a real click flips the announced state and
-  repaints the accent fill; Enter down and Space up each activate once; a
+  repaints the accent fill; a busy toggle refuses a click and both keys and
+  paints its dots in the accent's on-colour; Enter down and Space up each
+  activate once; a
   disabled pressed toggle paints the neutral pair with no opacity left; a
   disabled toggle leaves the tab order; the ring follows focus. Measured in a
   window on 0.11.0.

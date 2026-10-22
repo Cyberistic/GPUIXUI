@@ -28,7 +28,7 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `size` | `number` | `theme.iconSize.md` | the dot side in pixels |
-| `accent` | `primary \| destructive \| muted \| on-primary \| on-secondary \| on-destructive \| on-disabled` | `"primary"` | the role every dot paints; the `on-*` accents are the fill's on-colour |
+| `accent` | `primary \| destructive \| muted \| on-primary \| on-secondary \| on-destructive \| on-accent \| on-disabled` | `"primary"` | the role every dot paints; the `on-*` accents are the fill's on-colour |
 | `label` | `string` | `"Loading"` | accessible name announced as a status |
 | `reducedMotion` | `boolean` | `false` | holds the lit dot and schedules no interval |
 | `style` | `StyleDesc` | — | merged last |
@@ -44,7 +44,11 @@ mark contract measures on the page. A **disabled** filled button paints the
 neutral `disabled`/`disabledForeground` pair instead of its fill, so its spinner
 takes `on-disabled` — `disabledForeground` — rather than white dots on the light
 theme's neutral fill (1.0x:1). A disabled action with no fill keeps `primary`,
-because it is not painted on the pair.
+because it is not painted on the pair. `toggleSpinnerAccent(pressed, disabled)`
+applies the same rule to a `Toggle`'s two faces: a pressed toggle is the accent
+role and takes `on-accent` (`accentForeground`), a pressed-and-disabled one wears
+the neutral pair and takes `on-disabled`, and an unpressed toggle keeps the brand
+accent because it has no fill of its own.
 
 ## Keyboard
 
@@ -92,7 +96,7 @@ preference covers the action and the indicator inside it.
 
 - `src/core/loading.test.ts` — the lit index and fade across steps, the accent on
   every dot, and each `on-*` accent resolving to its fill's on-colour (including
-  `on-disabled` on the neutral pair).
+  `on-accent` on the selected surface and `on-disabled` on the neutral pair).
 - `src/components/Button.test.tsx` — a busy filled button hands the spinner
   `on-primary`/`on-secondary`/`on-destructive`, a variant with no fill keeps
   `primary`, and a disabled filled button's spinner moves to `on-disabled` while

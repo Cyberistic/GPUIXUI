@@ -165,6 +165,24 @@ export const variantSpinnerAccent = (
     : (FILLED_SPINNER_ACCENT[variant] ?? "primary");
 
 /**
+ * The spinner accent that reads on a toggle's current face.
+ *
+ * A pressed toggle paints the `accent` role, so its busy dots must take the
+ * accent's own on-colour — a brand dot on the pressed face is the same
+ * 1.00:1-class defect the filled button had. A **disabled pressed** toggle wears
+ * the neutral disabled pair instead of the accent, so its dots move to
+ * `on-disabled`; an unpressed toggle has no fill to be measured on and keeps the
+ * brand accent, faded with the rest of the control.
+ */
+export const toggleSpinnerAccent = (
+  pressed: boolean,
+  disabled = false,
+): SpinnerAccent => {
+  if (pressed) return disabled ? "on-disabled" : "on-accent";
+  return "primary";
+};
+
+/**
  * Whether a variant paints a fill behind its label.
  *
  * The runtime dims every other focusable element to 40% while one control has

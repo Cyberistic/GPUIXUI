@@ -142,6 +142,9 @@ describe("spinnerDots", () => {
     expect(colourOf("on-destructive")).toBe(
       testTheme.colors.destructiveForeground,
     );
+    // A pressed toggle's face is the accent role, so its spinner paints the
+    // accent's own on-colour rather than the brand fill behind it.
+    expect(colourOf("on-accent")).toBe(testTheme.colors.accentForeground);
     // A disabled filled action paints the neutral pair, so its spinner reads
     // on that fill rather than on the action's own.
     expect(colourOf("on-disabled")).toBe(testTheme.colors.disabledForeground);

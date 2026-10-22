@@ -26,6 +26,8 @@ import { renderToggle, type ToggleState } from "./Toggle.js";
 import type { FocusState } from "./internal.js";
 import { keyEvent } from "./testing/event.js";
 import {
+  elementChildren,
+  elementProp,
   expectSome,
   hostHandler,
   hostProp,
@@ -253,6 +255,95 @@ describe("Toggle", () => {
     expect(hostHandler(element, "onClick")).toStrictEqual(Option.none());
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("enter"));
     expect(onPressedChange).toHaveBeenCalledTimes(0);
+  });
+
+  it("shows a spinner, announces it and refuses activation while busy", () => {
+    // The bug this guards: a toolbar action awaiting a request was pressable,
+    // so a second press could start the work twice, and nothing said it was
+    // busy. `loading` blocks activation without taking the tab stop away, like
+    // a `Button`'s.
+    const onPressedChange = vi.fn();
+    const element = renderToggle(
+      { loading: true, label: "Sync", description: "Re-read the branch" },
+      testTheme,
+      state(false),
+      idle,
+      onPressedChange,
+    );
+    expect(expectSome(hostProp(element, "tabIndex"))).toBe(0);
+    expect(expectSome(hostProp(element, "aria-description"))).toBe("Loading");
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("enter"));
+    expectSome(hostHandler(element, "onKeyUp"))(keyEvent("space"));
+    expect(onPressedChange).toHaveBeenCalledTimes(0);
+    expect(
+      Option.isSome(
+        elementProp(
+          elementChildren(element)[0] ??
+            expect.fail("the busy toggle drew no spinner"),
+          "accent",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it("gives a pressed toggle's spinner the accent's on-colour", () => {
+    // A pressed toggle paints the accent role; the default brand spinner on it
+    // would be the same 1.00:1-class defect the filled button had. A disabled
+    // pressed toggle wears the neutral pair, so its dots move with it.
+    const accentOf = (pressed: boolean, disabled = false): unknown =>
+      expectSome(
+        elementProp(
+          elementChildren(
+            renderToggle(
+              { loading: true, pressed, disabled },
+              testTheme,
+              state(pressed),
+              idle,
+              vi.fn(),
+            ),
+          )[0] ?? expect.fail("the busy toggle drew no spinner"),
+          "accent",
+        ),
+      );
+    expect(accentOf(true)).toBe("on-accent");
+    expect(accentOf(false)).toBe("primary");
+    expect(accentOf(true, true)).toBe("on-disabled");
+  });
+
+  it("hands the busy spinner the caller's reduced-motion preference", () => {
+    const preference = (reducedMotion: boolean): Option.Option<unknown> =>
+      elementProp(
+        elementChildren(
+          renderToggle(
+            { loading: true, reducedMotion },
+            testTheme,
+            state(false),
+            idle,
+            vi.fn(),
+          ),
+        )[0] ?? expect.fail("the busy toggle drew no spinner"),
+        "reducedMotion",
+      );
+    expect(preference(true)).toStrictEqual(Option.some(true));
+    expect(preference(false)).toStrictEqual(Option.some(false));
+  });
+
+  it("tells a style callback that a busy toggle is disabled", () => {
+    const seen: ToggleState[] = [];
+    renderToggle(
+      {
+        loading: true,
+        style: (next) => {
+          seen.push(next);
+          return {};
+        },
+      },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(seen).toEqual([{ disabled: true, focused: false, selected: false }]);
   });
 
   it("declares the keyboard ring at rest, and never a focus-painted shadow", () => {

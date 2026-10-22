@@ -32,6 +32,7 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
 import { toggleClass } from "../recipe/index.js";
+import { toggleSpinnerAccent } from "../core/variants.js";
 import { recipeTw } from "../recipe/registry.js";
 import {
   childrenName,
@@ -47,6 +48,7 @@ import {
   type InteractionProps,
   type TooltipTriggerProps,
 } from "./internal.js";
+import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface ToggleProps
@@ -62,6 +64,17 @@ export interface ToggleProps
   /** Equal width and height, for an icon-only toggle. */
   readonly square?: boolean;
   readonly disabled?: boolean;
+  /**
+   * Busy: shows a spinner and blocks activation, but stays focusable. A busy
+   * toggle reports `disabled` to its `style` callback, because it refuses every
+   * press and key.
+   */
+  readonly loading?: boolean;
+  /**
+   * Hold the busy spinner's lit dot. The runtime exposes no reduced-motion
+   * preference, so the caller passes its own.
+   */
+  readonly reducedMotion?: boolean;
   readonly leading?: ReactNode;
   readonly trailing?: ReactNode;
   /** Accessible name. Required when the toggle has only an icon. */
@@ -94,8 +107,9 @@ export const renderToggle = (
   onPressedChange: (pressed: boolean) => void,
 ): ReactElement => {
   const { size = "md", variant = "default" } = props;
+  const busy = props.disabled === true || props.loading === true;
   const toggle = (): void => {
-    if (props.disabled === true) return;
+    if (busy) return;
     onPressedChange(!state.current);
   };
   const onKey =
@@ -120,7 +134,9 @@ export const renderToggle = (
   style = mergeStyle(
     style,
     resolveStyle(props.style, {
-      disabled: props.disabled === true,
+      // The state that refuses activation, like `Button`'s: `loading` is not a
+      // second flag a caller has to handle.
+      disabled: busy,
       focused: focus.focused,
       selected: state.current,
     }),
@@ -133,15 +149,17 @@ export const renderToggle = (
       // A tooltip arrives through the same channel as the caller's help; an
       // explicit `description` is the field-style help and wins.
       aria-description={
-        accessibleName(props.description) ??
-        accessibleName(props["aria-description"])
+        props.loading === true
+          ? "Loading"
+          : (accessibleName(props.description) ??
+            accessibleName(props["aria-description"]))
       }
       aria-id={props["aria-id"]}
       aria-valuetext={pressedValueText(state.current)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onLayout={props.onLayout}
-      onClick={composePress(props.disabled === true, props.onClick, toggle)}
+      onClick={composePress(busy, props.onClick, toggle)}
       onMouseEnter={props.onMouseEnter}
       onMouseLeave={props.onMouseLeave}
       onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKey("down"))}
@@ -150,7 +168,16 @@ export const renderToggle = (
       onBlur={composeEvent<EventPayload>(props.onBlur, focus.onBlur)}
       style={style}
     >
-      {props.leading}
+      {props.loading === true ? (
+        <Spinner
+          size={theme.iconSize.sm}
+          accent={toggleSpinnerAccent(state.current, props.disabled === true)}
+          label="Loading"
+          reducedMotion={props.reducedMotion}
+        />
+      ) : (
+        props.leading
+      )}
       {props.children}
       {props.trailing}
     </div>

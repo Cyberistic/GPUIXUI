@@ -9,6 +9,7 @@
  */
 
 import { expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
 import { Stack } from "../src/components/Stack.js";
@@ -94,6 +95,31 @@ it("refuses activation when disabled and stays out of the tab order", async () =
   runtime.click("b");
   runtime.focusNext();
   expect(runtime.focused()).toStrictEqual(Option.some("b"));
+});
+
+it("refuses activation while busy and paints a spinner a reader can see", async () => {
+  // The bug this guards: a toolbar action awaiting a request could be pressed
+  // again, starting the work twice. A busy toggle keeps its tab stop (so the
+  // reader is not dropped mid-action) and refuses both activation paths.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Toggle testId="t" label="Sync" pressed loading />
+    </Surface>,
+  );
+  expect(announced(runtime, "Sync")).toBe("pressed");
+  runtime.click("t");
+  runtime.keyDown("t", "enter");
+  runtime.keyUp("t", "space");
+  expect(announced(runtime, "Sync")).toBe("pressed");
+  // The spinner is painted where the leading icon would be, in the pressed
+  // face's own on-colour rather than the brand fill behind it.
+  const dots = Arr.filter(
+    runtime.all(),
+    (element) =>
+      element.style.backgroundColor === testTheme.colors.accentForeground,
+  );
+  expect(dots.length).toBeGreaterThan(0);
 });
 
 it("paints a disabled pressed toggle in the measured neutral pair", async () => {

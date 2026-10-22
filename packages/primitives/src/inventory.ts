@@ -369,7 +369,6 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "No aria-checked: the state is announced through aria-valuetext",
       "A visible Label paints text only; the label prop names the control",
       "The slide is 150ms; reducedMotion lands the thumb (the runtime exposes no preference)",
-      "No loading or pending state",
     ],
     source: [
       "src/components/Switch.tsx",
@@ -553,7 +552,6 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "No aria-pressed: the state is announced through aria-valuetext",
-      "No loading state",
       "Square sizes the button, not the icon",
     ],
     source: ["src/components/Toggle.tsx", "src/core/keyboard.ts"],

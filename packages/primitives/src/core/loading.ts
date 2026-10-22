@@ -101,6 +101,7 @@ export const SPINNER_ACCENTS = [
   "on-primary",
   "on-secondary",
   "on-destructive",
+  "on-accent",
   "on-disabled",
 ] as const;
 export type SpinnerAccent = (typeof SPINNER_ACCENTS)[number];
@@ -145,6 +146,7 @@ const ACCENT_COLOR: Readonly<
   "on-primary": (theme) => theme.colors.primaryForeground,
   "on-secondary": (theme) => theme.colors.secondaryForeground,
   "on-destructive": (theme) => theme.colors.destructiveForeground,
+  "on-accent": (theme) => theme.colors.accentForeground,
   "on-disabled": (theme) => theme.colors.disabledForeground,
 };
 

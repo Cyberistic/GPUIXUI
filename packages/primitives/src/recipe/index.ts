@@ -692,6 +692,7 @@ const SPINNER_ACCENT_CLASS: Readonly<Record<SpinnerAccent, string>> = {
   "on-primary": "bg-primary-foreground",
   "on-secondary": "bg-secondary-foreground",
   "on-destructive": "bg-destructive-foreground",
+  "on-accent": "bg-accent-foreground",
   "on-disabled": "bg-disabled-foreground",
 };
 
