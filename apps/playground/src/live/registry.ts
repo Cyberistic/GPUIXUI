@@ -426,6 +426,12 @@ export const liveRegistry = [
       "Content: opacity mixes a box with the page in its share's direction, zero is the page, above one is the fill, a parent fades the ink its child paints, and a faded box's shadow fades with it",
     capability: "content",
   },
+  {
+    id: "movable-tabs-lifecycle",
+    title:
+      "Workspace: a dragged tab lands in the strip the drop is over, its panel follows with the app's draft, a gap is a miss, and Cmd+Shift+Arrow steps it without wrapping",
+    capability: "workspace",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

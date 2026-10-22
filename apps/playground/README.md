@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-65 probes a real window can prove, of which fifteen mount shipped
+66 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -3673,6 +3673,54 @@ What it settles, for every faded surface in the library:
 
 The capability record's **Opacity** row now cites this probe.
 
+### `movable-tabs-lifecycle` — measured on 0.11.0 here
+
+**What a tab move costs a dock.** Tier 4's *detachable / movable tabs* row is
+`partial` because the binding opens one window per process; the half a window
+can prove is the move inside it. `workspace-tab-drag` measured the state
+arithmetic in a `TestRenderer`; this probe asks what a real pointer and a real
+key do. The fixture is two 280px strips 24px apart, each with its own selected
+panel and an editable field.
+
+| State | Measured |
+| ----- | -------- |
+| the two strips | one row (`y` equal), **24px** apart — the dock's whole gap |
+| a press on `bravo` | selects it and mounts its panel; typing `abc` reaches the draft |
+| dragging `bravo` out of the left strip and dropping at the right strip's start | left `alpha,charlie` (selecting `charlie`, the tab that took its slot); right `bravo,delta,echo` with `bravo` selected; the moved tab paints **inside** the destination group, on `delta`'s row |
+| the panel across that drop | the destination paints `bravo`'s title, the source mounts `charlie`, and the draft reads **`bravo:abc`** — it lives above the strips because the tab changed parent |
+| the focus across that drop | **`movable-tab-bravo`** — the app restores it, because the move remounted the element |
+| `Cmd+Shift+Right` on the focused tab | `delta,bravo,echo`, then the end `delta,echo,bravo`; one more step changes nothing and `Cmd+Shift+Left` returns one slot; the focus stays on the tab throughout |
+| a release **below both strips** | a miss (`misses=1`) that leaves both orders alone |
+| dragging `echo` back into the left strip's `charlie` slot | `alpha,echo,charlie` with `echo` selected, right `delta,bravo`, the draft still `bravo:abc` |
+
+31 checks, `--only movable-tabs-lifecycle`, green on 0.11.0 (~0.7 s). Fixture:
+`src/live/tabs-drag.ts` — the two groups, `groupAt`, `insertionIndex`,
+`moveTab`, `stepTab` and the readout; `tabs-drag.test.ts` (14 cases) holds the
+drop split at a tab's centre, the neighbour a removed tab leaves selected, the
+emptied strip's `None`, the clamp at both ends of a strip, and the readout.
+
+Two negative controls were measured, exit `1`, restored green: dropping the
+app's focus restore fails `the app restores focus to the tab it moved`
+(`expected "movable-tab-bravo", got "none"`), and resolving the drop slot from a
+tab's left edge instead of its centre fails the unit case
+`splits a tab at its centre` (`expected 1 to be +0`).
+
+What it settles, for a dock's tab strip:
+
+1. **A drop is resolved from painted geometry.** The group comes from the
+   painted boxes and the slot from the destination tabs' centres, so the gap
+   between strips and the space below them are misses rather than a guess at
+   the nearest target.
+2. **A move remounts the panel.** The tab changes parent, so a draft kept in the
+   panel element is lost and the runtime's focus is gone: the draft belongs
+   above the strips and the app must re-focus the tab it moved.
+3. **A keyboard step clamps.** `Cmd+Shift+Arrow` reorders inside the strip, stops
+   at both ends, keeps the focus and selects the tab it moved.
+4. **A press selects.** Pressing a tab (including the press that starts a drag)
+   selects it, so a dock needs no separate pointer-down selection path.
+
+Captures: `.artifacts/live/movable-tabs.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -3887,7 +3935,8 @@ narrower. Each deviation is deliberate and measured:
   them. The full live suite is the release gate, and this line is its result.
   Measured alone since then: `inspector-lifecycle`,
   `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`,
-  `elevation-paint` and `opacity-paint` (seven probes, each run alone).
+  `elevation-paint`, `opacity-paint` and `movable-tabs-lifecycle` (eight probes,
+  each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

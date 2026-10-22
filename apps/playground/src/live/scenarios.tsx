@@ -494,6 +494,30 @@ import {
   type DockTab,
 } from "./dock-focus.js";
 import {
+  MOVABLE_DRAFT,
+  MOVABLE_READOUT,
+  TAB_GROUP_GAP,
+  TAB_GROUP_INITIAL,
+  TAB_GROUP_IDS,
+  groupAt,
+  groupBoxId,
+  groupOf,
+  insertionIndex,
+  moveTab,
+  panelFieldId,
+  panelId,
+  panelTitle,
+  panelTitleId,
+  stepTab as stepMovableTab,
+  stripId,
+  tabId,
+  tabReadout,
+  type GroupBox,
+  type TabBox,
+  type TabGroupId,
+  type TabLayout,
+} from "./tabs-drag.js";
+import {
   TREE_ALL_DIRECTORIES,
   TREE_INDENT,
   TREE_REVEAL_INDEX,
@@ -18304,6 +18328,507 @@ const opacitySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * `movable-tabs-lifecycle` — a tab dragged between two strips, and stepped by a
+ * keyboard.
+ *
+ * Tier 4's **detachable / movable tabs** row is `partial` because the binding
+ * opens one window per process; the half a window can prove is the move inside
+ * it. `workspace-tab-drag` measured the state arithmetic in a `TestRenderer`;
+ * this probe asks what a real pointer and a real key do to it: whether the tab
+ * keeps the pointer after it leaves its own strip, whether a drop resolves from
+ * the group the pointer is actually over (not a distance heuristic), and what a
+ * move costs the panel — it changes parent, so the draft has to live above the
+ * strips and the focus has to be restored by the app.
+ */
+const MovableTabsProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const renderer = useGpuix().renderer;
+  const layoutRef = useRef<TabLayout>(TAB_GROUP_INITIAL);
+  const [layout, setLayout] = useState<TabLayout>(TAB_GROUP_INITIAL);
+  const [draft, setDraft] = useState<
+    Option.Option<{ readonly tab: string; readonly value: string }>
+  >(Option.none());
+  const [moves, setMoves] = useState(0);
+  const [misses, setMisses] = useState(0);
+  const groups = useRef<ReadonlyArray<GroupBox>>([]);
+  const tabBoxes = useRef<ReadonlyArray<TabBox>>([]);
+  const tabIds = useRef<Partial<Record<string, number>>>({});
+  const pressed = useRef<Option.Option<string>>(Option.none());
+  const trail = useRef<
+    Option.Option<{ readonly x: number; readonly y: number }>
+  >(Option.none());
+  const pendingFocus = useRef<Option.Option<string>>(Option.none());
+
+  /** A move changes the tab's parent, so its element is new: focus it here. */
+  useLayoutEffect(() => {
+    const pending = pendingFocus.current;
+    if (Option.isNone(pending)) return;
+    pendingFocus.current = Option.none();
+    const id = tabIds.current[pending.value];
+    if (id !== undefined) renderer?.focusElement?.(id);
+  });
+
+  const commit = useCallback((next: TabLayout) => {
+    layoutRef.current = next;
+    setLayout(next);
+    setMoves((count) => count + 1);
+  }, []);
+
+  /**
+   * Apply the release over the last point the pointer reported.
+   *
+   * The group comes from the painted boxes, so the gap between the strips and
+   * the space below them are misses rather than guesses; the slot comes from
+   * the tab centres inside the destination strip.
+   */
+  const drop = useCallback(() => {
+    const carried = pressed.current;
+    const at = trail.current;
+    pressed.current = Option.none();
+    trail.current = Option.none();
+    if (Option.isNone(carried) || Option.isNone(at)) return;
+    const tab = carried.value;
+    const point = at.value;
+    Option.match(groupAt(point, groups.current), {
+      onNone: () => setMisses((count) => count + 1),
+      onSome: (destination) => {
+        const boxes = Arr.filter(tabBoxes.current, (box) =>
+          Arr.contains(layoutRef.current[destination].tabs, box.tab),
+        );
+        commit(
+          moveTab(layoutRef.current, tab, {
+            group: destination,
+            index: insertionIndex(boxes, point.x),
+          }),
+        );
+        pendingFocus.current = Option.some(tab);
+      },
+    });
+  }, [commit]);
+
+  /** A pointer that never moves a tab is a press, not a move: `trail` stays empty. */
+  const press = useCallback((tab: string) => {
+    pressed.current = Option.some(tab);
+    trail.current = Option.none();
+  }, []);
+
+  const follow = useCallback((event: EventPayload) => {
+    if (Option.isNone(pressed.current)) return;
+    trail.current = Option.some({ x: event.x ?? 0, y: event.y ?? 0 });
+  }, []);
+
+  /** A press selects a tab without moving it; the panel follows the selection. */
+  const select = useCallback((tab: string) => {
+    Option.match(groupOf(layoutRef.current, tab), {
+      onNone: () => {},
+      onSome: (group) => {
+        const next = {
+          ...layoutRef.current,
+          [group]: {
+            ...layoutRef.current[group],
+            selected: Option.some(tab),
+          },
+        };
+        layoutRef.current = next;
+        setLayout(next);
+      },
+    });
+  }, []);
+
+  /** One keyboard step inside the tab's own strip; it selects the tab it moved. */
+  const step = useCallback(
+    (tab: string, delta: -1 | 1) => {
+      commit(stepMovableTab(layoutRef.current, tab, delta));
+    },
+    [commit],
+  );
+
+  const draftFor = (tab: string): string =>
+    Option.match(draft, {
+      onNone: () => "",
+      onSome: (current) => (current.tab === tab ? current.value : ""),
+    });
+
+  const strip = (group: TabGroupId): ReactNode => (
+    <div
+      testId={stripId(group)}
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        gap: theme.spacing.xs,
+        padding: theme.spacing.xs,
+        backgroundColor: theme.colors.muted,
+        borderRadius: theme.radius.sm,
+      }}
+    >
+      {Arr.map(layout[group].tabs, (tab) => (
+        <div
+          key={tab}
+          testId={tabId(tab)}
+          ref={(instance) => {
+            tabIds.current[tab] = instance?.id;
+          }}
+          tabIndex={0}
+          role="tab"
+          aria-selected={Option.exists(
+            layout[group].selected,
+            (current) => current === tab,
+          )}
+          onClick={() => select(tab)}
+          onMouseDown={() => press(tab)}
+          onMouseMove={follow}
+          onMouseUp={drop}
+          onKeyDown={(event: EventPayload) => {
+            if (
+              event.modifiers?.cmd !== true ||
+              event.modifiers?.shift !== true
+            ) {
+              return;
+            }
+            if (event.key === "right") step(tab, 1);
+            if (event.key === "left") step(tab, -1);
+          }}
+          onLayout={(payload) =>
+            Option.match(boxOf(payload), {
+              onNone: () => {},
+              onSome: (box) => {
+                tabBoxes.current = [
+                  ...Arr.filter(tabBoxes.current, (entry) => entry.tab !== tab),
+                  { tab, x: box.x, width: box.width },
+                ];
+              },
+            })
+          }
+          style={{
+            padding: theme.spacing.xs,
+            borderRadius: theme.radius.sm,
+            ...keyboardFocusRing(theme),
+            backgroundColor: Option.exists(
+              layout[group].selected,
+              (current) => current === tab,
+            )
+              ? theme.colors.card
+              : theme.colors.background,
+          }}
+        >
+          <text style={{ color: theme.colors.foreground }}>{tab}</text>
+        </div>
+      ))}
+    </div>
+  );
+
+  const panel = (group: TabGroupId): ReactNode =>
+    Option.match(layout[group].selected, {
+      onNone: () => (
+        <text
+          testId={`${panelId(group)}-empty`}
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.placeholder,
+          }}
+        >
+          empty strip
+        </text>
+      ),
+      onSome: (tab) => (
+        <div
+          testId={panelId(group)}
+          style={{
+            padding: theme.spacing.sm,
+            backgroundColor: theme.colors.card,
+            borderRadius: theme.radius.sm,
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.xs,
+          }}
+        >
+          <text
+            testId={panelTitleId(group, tab)}
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            {panelTitle(tab)}
+          </text>
+          <Input
+            testId={panelFieldId(tab)}
+            label={`${tab} draft`}
+            value={draftFor(tab)}
+            onValueChange={(value) => setDraft(Option.some({ tab, value }))}
+          />
+        </div>
+      ),
+    });
+
+  return (
+    <div
+      testId="movable-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        Drag a tab into the other strip, or Cmd+Shift+Arrow it inside its own:
+        the panel follows, the draft stays and the gap is a miss.
+      </text>
+      <Readout testId={MOVABLE_READOUT}>
+        {`${tabReadout(layout)} moves=${moves} misses=${misses}`}
+      </Readout>
+      <Readout testId={MOVABLE_DRAFT}>
+        {`draft=${Option.match(draft, {
+          onNone: () => "none",
+          onSome: (current) => `${current.tab}:${current.value}`,
+        })}`}
+      </Readout>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: TAB_GROUP_GAP,
+          alignItems: "flex-start",
+        }}
+      >
+        {Arr.map(TAB_GROUP_IDS, (group) => (
+          <div
+            key={group}
+            testId={groupBoxId(group)}
+            onLayout={(payload) =>
+              Option.match(boxOf(payload), {
+                onNone: () => {},
+                onSome: (box) => {
+                  groups.current = [
+                    ...Arr.filter(
+                      groups.current,
+                      (entry) => entry.group !== group,
+                    ),
+                    { group, ...box },
+                  ];
+                },
+              })
+            }
+            style={{
+              width: 280,
+              height: 200,
+              display: "flex",
+              flexDirection: "column",
+              gap: theme.spacing.sm,
+              borderWidth: theme.borderWidth.thin,
+              borderColor: theme.colors.border,
+              padding: theme.spacing.xs,
+            }}
+          >
+            {strip(group)}
+            {panel(group)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(MOVABLE_READOUT);
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text(MOVABLE_READOUT);
+    const draft = () => ctx.host.text(MOVABLE_DRAFT);
+    const painted = (id: string) =>
+      Effect.flatMap(ctx.host.bounds(id), (box) =>
+        ctx.expectSome(`${id} paints`, Option.fromNullishOr(box)),
+      );
+    /** Drag a tab so the pointer is released at a window point. */
+    const dragTabTo = (tab: string, x: number, y: number) =>
+      Effect.gen(function* () {
+        const from = yield* painted(tabId(tab));
+        yield* ctx.host.drag(
+          tabId(tab),
+          x - (from.x + from.width / 2),
+          y - (from.y + from.height / 2),
+        );
+        yield* Effect.sleep(SETTLE);
+      });
+
+    // 1. Two strips on one row, separated by the dock's whole gap.
+    const left = yield* painted(groupBoxId("left"));
+    const right = yield* painted(groupBoxId("right"));
+    yield* ctx.expectNear("the two strips sit on one row", right.y, left.y, 1);
+    yield* ctx.expectNear(
+      "the strips are separated by the dock's gap",
+      right.x,
+      left.x + left.width + TAB_GROUP_GAP,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the dock opens on its own layout",
+      yield* readout(),
+      `${tabReadout(TAB_GROUP_INITIAL)} moves=0 misses=0`,
+    );
+
+    // 2. A press selects a tab and mounts its panel.
+    yield* ctx.host.click(tabId("bravo"));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press selects the tab it hit",
+      yield* readout(),
+      "left=alpha,bravo,charlie selected=bravo",
+    );
+    yield* ctx.expectSome(
+      "the selected tab's panel paints",
+      Option.fromNullishOr(
+        yield* ctx.host.bounds(panelTitleId("left", "bravo")),
+      ),
+    );
+
+    // 3. The panel's draft is the app's data, not the panel element's.
+    yield* ctx.host.click(panelFieldId("bravo"));
+    yield* ctx.host.key("a");
+    yield* ctx.host.key("b");
+    yield* ctx.host.key("c");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "typing reaches the panel's draft",
+      yield* draft(),
+      "draft=bravo:abc",
+    );
+
+    // 4. Drag the tab out of its strip and drop it at the other strip's start.
+    const rightStrip = yield* painted(stripId("right"));
+    yield* dragTabTo(
+      "bravo",
+      rightStrip.x + 2,
+      rightStrip.y + rightStrip.height / 2,
+    );
+    yield* ctx.expectContains(
+      "the drop moves the tab into the destination strip at its slot",
+      yield* readout(),
+      "left=alpha,charlie selected=charlie | right=bravo,delta,echo selected=bravo",
+    );
+    const moved = yield* painted(tabId("bravo"));
+    yield* ctx.expectEqual(
+      "the moved tab paints inside the destination group",
+      moved.x >= right.x && moved.x + moved.width <= right.x + right.width,
+      true,
+    );
+    yield* ctx.expectNear(
+      "the moved tab paints on the destination strip's row",
+      moved.y,
+      (yield* painted(tabId("delta"))).y,
+      1,
+    );
+    yield* ctx.expectSome(
+      "the moved tab's panel and title paint in the destination",
+      Option.fromNullishOr(
+        yield* ctx.host.bounds(panelTitleId("right", "bravo")),
+      ),
+    );
+    yield* ctx.expectEqual(
+      "the source strip mounts the tab it selected instead",
+      Option.isNone(
+        Option.fromNullishOr(
+          yield* ctx.host.bounds(panelTitleId("left", "bravo")),
+        ),
+      ),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the draft survives the panel's remount",
+      yield* draft(),
+      "draft=bravo:abc",
+    );
+    yield* ctx.expectEqual(
+      "the app restores focus to the tab it moved",
+      yield* focusedAfterPaint(ctx),
+      tabId("bravo"),
+    );
+
+    // 5. Cmd+Shift+Right steps the focused tab inside its strip and keeps focus.
+    yield* ctx.host.focusElement(tabId("bravo"));
+    yield* ctx.host.key("cmd-shift-right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a keyboard step reorders the strip it is in",
+      yield* readout(),
+      "right=delta,bravo,echo selected=bravo",
+    );
+    yield* ctx.expectEqual(
+      "a keyboard step keeps the focus on the tab it moved",
+      yield* focusedAfterPaint(ctx),
+      tabId("bravo"),
+    );
+
+    // 6. The end of the strip is the end of the travel: no wrap, no second move.
+    yield* ctx.host.key("cmd-shift-right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "holding the step reaches the end of the strip",
+      yield* readout(),
+      "right=delta,echo,bravo selected=bravo",
+    );
+    yield* ctx.host.key("cmd-shift-right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a step past the end leaves the order alone",
+      yield* readout(),
+      "right=delta,echo,bravo selected=bravo",
+    );
+    yield* ctx.host.key("cmd-shift-left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a step back returns the tab one slot",
+      yield* readout(),
+      "right=delta,bravo,echo selected=bravo",
+    );
+
+    // 7. A release below both strips is a miss, not a drop on the nearer one.
+    const carried = yield* painted(tabId("echo"));
+    yield* ctx.host.drag(
+      tabId("echo"),
+      0,
+      left.y + left.height + 80 - (carried.y + carried.height / 2),
+    );
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a release outside both strips is a miss",
+      yield* readout(),
+      "misses=1",
+    );
+    yield* ctx.expectContains(
+      "a miss leaves both orders alone",
+      yield* readout(),
+      "left=alpha,charlie selected=charlie | right=delta,bravo,echo",
+    );
+
+    // 8. A tab moves back the other way, into the slot it was dropped on.
+    const charlie = yield* painted(tabId("charlie"));
+    yield* dragTabTo("echo", charlie.x + 2, charlie.y + charlie.height / 2);
+    yield* ctx.expectContains(
+      "a drop on the other strip's slot inserts the tab there",
+      yield* readout(),
+      "left=alpha,echo,charlie selected=echo | right=delta,bravo selected=bravo",
+    );
+    yield* ctx.expectEqual(
+      "the draft is still the moved tab's after a second move",
+      yield* draft(),
+      "draft=bravo:abc",
+    );
+    yield* ctx.host.capture("movable-tabs");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -18631,5 +19156,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "opacity-paint",
     view: () => <OpacityProbe />,
     steps: opacitySteps,
+  },
+  "movable-tabs-lifecycle": {
+    id: "movable-tabs-lifecycle",
+    view: () => <MovableTabsProbe />,
+    steps: movableTabsSteps,
   },
 };
