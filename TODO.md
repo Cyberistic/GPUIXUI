@@ -5302,6 +5302,22 @@ built-in-theme specimen, landed in `3078b3c7` and `c10e081a` with its guards
 green, and `apps/docs` was clean between that turn's commits. The overlap itself
 stays open: the supervisor still starts a fresh session per tick.
 
+**Measured again 2026-10-23 02:23–02:26, on the Avatar page.** This session
+began curating `/docs/components/avatar` (the next page on its own list) and
+wrote `avatar-preview.ts`, `avatar-demo.tsx` and `avatar.mdx`; within two
+minutes the other docs session added `avatar-preview.test.ts` and the
+`demos.tsx`/`sources.ts` registrations for the *same* page, and its test named a
+model API (`initialMembers`, `presenceCounts`, `describeRoster`, `invite`, …)
+that the writes had just replaced. This session stopped writing that unit,
+rebuilt the model to the surviving test's contract, fixed two assertions the
+test had wrong about the source (`avatarSize` sliced out of a file with four
+`xs` steps; `recipeStyle(cn(AVATAR_ROOT, className), theme)`), and left the tree
+consistent — `avatar-preview.test.ts` + `avatar-demo.test.tsx` are **25/25** —
+but **uncommitted and unclaimed**, so the other docs session can land or replace
+it. Everything this session committed (`/docs/motion`, the capability rows, the
+presence-seam truth pass, the docs palette) is untouched. The blocker stands:
+two docs sessions must not be scheduled onto `apps/docs`.
+
 `[x]` **The GPUix native runtime now loads on this machine, so the Tier 2 behaviour
 suites run here.** Resolved 2026-10-17 08:57 by plan `140` (playground workstream):
 `@gpuix/native@0.10.0` publishes no `darwin-x64` binary, so the pinned source was
