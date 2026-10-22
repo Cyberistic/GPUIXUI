@@ -408,6 +408,33 @@ describe("the motion page", () => {
     expect(pageText).toContain("a later change is ignored");
   });
 
+  it("places the first frame's repair where the hooks read the option", () => {
+    // `initial` and `target` are the caller's numbers, so either can be
+    // unreadable: `{ initial: NaN }` published `NaN` for the first frame, which
+    // the runtime draws as nothing, and the retained value had repaired it to
+    // `0` on its own — so the hook and the value disagreed. `startValue` is the
+    // one reader, and both hooks take their first frame through it.
+    expect(react).toContain(
+      "const startValue = (target: number, initial: number | undefined): number =>",
+    );
+    expect(react).toContain(
+      "if (initial !== undefined && Number.isFinite(initial)) return initial;",
+    );
+    expect(react).toContain("return Number.isFinite(target) ? target : 0;");
+    expect(react).toContain(
+      "useState(() => startValue(target, options.initial))",
+    );
+    expect(react).toContain("useState(() => startValue(0, options.initial))");
+
+    expect(pageText).toContain(
+      "An `initial` the hook cannot read is **no** initial",
+    );
+    expect(pageText).toContain("an unreadable target starts at `0`");
+    expect(pageText).toContain(
+      "the first frame is always a number the runtime paints",
+    );
+  });
+
   it("describes reduced motion as the app's policy, not a runtime capability", () => {
     // The claim is true because the record proves the typings publish no
     // preference query and the value finishes an active run on the flag. If

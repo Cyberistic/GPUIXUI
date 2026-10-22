@@ -271,7 +271,10 @@ Each hook returns `{ value, velocity, complete }` and accepts
 `{ reducedMotion, initial }`. `initial` is the value the **first** run starts
 from — the default is the target, so a hook mounted at rest paints without an
 entry run. It is read once at mount: a later change is ignored, because the
-current presentation is the truth after it. `useSpring` and `useTransition`
+current presentation is the truth after it. An `initial` the hook cannot read is
+**no** initial — the run starts at the target — and an unreadable target starts
+at `0`, so the first frame is always a number the runtime paints rather than the
+`NaN` it draws as nothing. `useSpring` and `useTransition`
 build their transition from primitive arguments, so passing a physics preset or
 a tween inline is safe; `useMotion(target, transition)` takes the transition
 itself and compares structurally, but its effect re-runs on the reference — pass
