@@ -17,6 +17,9 @@
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as R from "effect/Record";
+import * as Schema from "effect/Schema";
+import { alpha, filledHover, filledPressed } from "@gpuixui/tokens";
 import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
@@ -120,6 +123,57 @@ it("paints an outlined Button's edge in the measured boundary role", async () =>
   );
   expect(edge).toBe(testTheme.colors.borderStrong);
   expect(edge).not.toBe(testTheme.colors.border);
+});
+
+/**
+ * The fill the runtime reports for an element's `hover` or `active` bucket.
+ *
+ * The runtime's style report carries the whole style record for the bucket, so
+ * the fill is read out of it rather than assumed.
+ */
+const bucketFill = (
+  style: Record<string, unknown>,
+  bucket: "hover" | "active",
+): string =>
+  Option.getOrElse(
+    Option.flatMap(Option.fromNullishOr(style[bucket]), (value) =>
+      Option.flatMap(
+        Schema.decodeUnknownOption(
+          Schema.Record(Schema.String, Schema.Unknown),
+        )(value),
+        (record) =>
+          Option.flatMap(R.get(record, "backgroundColor"), (colour) =>
+            Schema.decodeUnknownOption(Schema.String)(colour),
+          ),
+      ),
+    ),
+    () => expect.fail(`the runtime reported no ${bucket} fill`),
+  );
+
+it("paints a filled Button's hover as the theme's opaque derived fill", async () => {
+  // The bug: the hover lifted the fill's alpha, so the surface behind the
+  // control showed through — the same action read as two colours on a card and
+  // on a dialog — and a translucent fill cannot be measured for label contrast
+  // at all. The runtime's own style report is the proof that the derived fill
+  // reaches the paint, not a class name in a string.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Button testId="b">Save</Button>
+    </Surface>,
+  );
+  const style = Option.getOrElse(
+    Option.flatMap(runtime.element("b"), (element) =>
+      Option.fromNullishOr(runtime.renderer.getElement(element.id)?.style),
+    ),
+    () => expect.fail("the runtime retained no button"),
+  );
+  expect(bucketFill(style, "hover")).toBe(filledHover(testTheme, "primary"));
+  expect(bucketFill(style, "active")).toBe(filledPressed(testTheme, "primary"));
+  // The old recipe lifted the fill's alpha; the derived fill does not.
+  expect(bucketFill(style, "hover")).not.toBe(
+    alpha(testTheme.colors.primary, 0.9),
+  );
 });
 
 it("keeps a filled Button's label while another control has keyboard focus", async () => {

@@ -185,7 +185,8 @@ the dim back with `style`, which merges last.
   on down, Space on up, a held key ignored; disabled and loading refuse both and
   a busy button still announces its role and name; a filled button's painted
   `keyboardFocusDim: false` and a ghost button's absent declaration are read off
-  the runtime's style report.
+  the runtime's style report; a filled button's **hover** is read back off that
+  report as the theme's opaque derived fill, not a lifted alpha.
 - `runtime/loading.runtime.test.tsx` — a busy primary button's spinner dots paint
   `primaryForeground` and a secondary one's paint `secondaryForeground` in a real
   window.
