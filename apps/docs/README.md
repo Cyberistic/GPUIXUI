@@ -110,6 +110,7 @@ src/lib/layout.shared.tsx           The nav chrome: brand and top-level links
 src/lib/source.ts                   The Fumadocs collection for content/docs
 src/lib/doc-snippets.test-util.ts   The shared page-snippet and symbol resolve for the page guards
 src/lib/search-index.ts             The search index's page list: curated pages shadow package pages
+src/lib/search-links.ts             The search dialog's pre-query entry points
 src/lib/package-docs.ts             The loaders for the three package collections
 src/lib/collection-routes.ts        The registry: every mounted package directory, route, section
 src/lib/page-tree.ts                Fills the package's pages into their sidebar section
