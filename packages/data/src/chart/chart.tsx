@@ -214,7 +214,10 @@ const ChartFrame = ({
    * totals (`stackedScale`). Both come from the same call, so the axis cannot
    * name a value the plot did not draw.
    */
-  readonly scaleOf?: (series: ReadonlyArray<ChartSeries>) => number;
+  readonly scaleOf?: (
+    series: ReadonlyArray<ChartSeries>,
+    categories: number,
+  ) => number;
   readonly marks: (
     box: ChartBox,
     scale: number,
@@ -222,7 +225,7 @@ const ChartFrame = ({
 }) => {
   const theme = useTheme();
   const box = boxOf(width, height);
-  const scale = scaleOf(series);
+  const scale = scaleOf(series, labels.length);
   const palette = seriesColors(theme);
   const layers = marks(box, scale);
   const slot = barSlot(labels.length, box.width).slot;

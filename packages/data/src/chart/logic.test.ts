@@ -84,6 +84,10 @@ describe("the chart scale", () => {
       stackedScale([series("a", [60, 10]), series("b", [60, 10])]),
     ).toBe(200);
     expect(stackedScale([series("a", [5, 12]), series("b", [5])])).toBe(20);
+    // A value past the last painted category draws nowhere, so it cannot raise
+    // the axis the painted bars are read against.
+    expect(stackedScale([series("a", [5, 500])], 1)).toBe(5);
+    expect(stackedScale([series("a", [5, 500])])).toBe(500);
     expect(stackedScale([series("a", [0]), series("b", [0])])).toBe(1);
     expect(stackedScale([])).toBe(1);
   });

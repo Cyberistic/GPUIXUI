@@ -71,10 +71,12 @@ store without the component:
 - `axisTicks(scale, count)` divides that scale evenly;
 - `chartScale(series)` is the scale a grouped bar or a line draws against: the
   ceiling of the widest single value;
-- `stackedScale(series)` is the scale a stack draws against: the ceiling of the
-  tallest category's **total**. A 120 stack must not print an axis of 100, so
-  the frame that paints the axis and the marks that paint the bars read this one
-  function;
+- `stackedScale(series, categories?)` is the scale a stack draws against: the
+  ceiling of the tallest painted category's **total**. A 120 stack must not print
+  an axis of 100, so the frame that paints the axis and the marks that paint the
+  bars read this one function; `categories` is the number of slots the chart
+  paints (its labels), because a value past the last label is drawn nowhere and
+  cannot raise the axis;
 - `barSlot`, `barMarks`, `groupedBarMarks`, `stackedBarMarks`, `linePath`,
   `donutSegments` and `donutMarks` return the shapes in the plot's pixel space —
   the bar, stacked and line marks take the scale the axis prints, so neither can

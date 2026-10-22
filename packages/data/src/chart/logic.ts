@@ -84,18 +84,21 @@ const categoryCount = (
 
 /**
  * The scale a **stacked** chart draws against: the rounded ceiling of the
- * tallest category's total.
+ * tallest painted category's total.
  *
  * A stack is read as one bar, so its axis is measured over the sums — a scale
  * taken from the widest single series would label a 120 total `100`, and every
- * bar in the plot would claim a value the axis does not name. The category
- * count needs no telling: a category beyond every series' length sums to zero,
- * so it cannot be the tallest one.
+ * bar in the plot would claim a value the axis does not name. `categories` is
+ * the number of slots the chart paints: a value past the last label is drawn
+ * nowhere, so it cannot raise the axis.
  */
-export const stackedScale = (series: ReadonlyArray<ChartSeries>): number =>
+export const stackedScale = (
+  series: ReadonlyArray<ChartSeries>,
+  categories?: number,
+): number =>
   niceCeiling(
     Arr.reduce(
-      Arr.makeBy(categoryCount(series), (index) =>
+      Arr.makeBy(categoryCount(series, categories), (index) =>
         Arr.reduce(
           series,
           0,

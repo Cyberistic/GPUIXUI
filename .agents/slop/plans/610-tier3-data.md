@@ -306,6 +306,14 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   Direction measured: the old sentence fails `reads an empty any group as
   nothing, because that is what it keeps` with `expected 'everything' to be
   'nothing'`. 132 unit / 68 behaviour green.
+- **A stack is scaled by the categories it paints**: `stackedScale` took its
+  count from the longest series, so a value past the last label — which draws
+  nowhere — still raised the axis and shrank every painted bar. It takes the
+  painted count now (`StackedBar` hands it `labels.length`, the same count the
+  marks use) and falls back to the longest series only when no caller names one.
+  Direction measured: ignoring the count fails `reads a stack's axis against the
+  totals, not its widest series` with `expected 500 to be 5`. 12 chart cases
+  green.
 
 ## 5. Acceptance
 
