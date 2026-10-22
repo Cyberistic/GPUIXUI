@@ -435,7 +435,7 @@ const audit = auditTheme(brandTheme);
 audit.passed; // true when nothing below reports
 audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
-audit.invalidNumbers; // [] — every size, length and shadow is layable and every control height is pressable
+audit.invalidNumbers; // [] — every size, length and shadow is layable, every leading reaches its size and every control height is pressable
 audit.contrast; // [] — every measured pair meets its floor
 audit.decorative; // [] — every divider, skeleton, veil, status edge, thumb, state wash and control face is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
@@ -464,7 +464,9 @@ Each report is also a function of its own:
   reach native as `null` and the property is dropped — the element paints as if
   the value were never set — while a negative size is accepted and paints
   nothing usable. Each failure names its group, path, value and the rule it
-  missed; a shadow offset may be negative, but a type size must be positive and
+  missed; a shadow offset may be negative, but a type size must be positive, a
+  type role's leading must reach its own size (a shorter one starts the next
+  line inside this line's glyphs) and
   a control height must reach `targetSize.minimum`, because the library builds
   the control box at that height and reserves no extra hit area.
 - `contrastFailures(theme, floors?)` lists every text-on-surface pair that

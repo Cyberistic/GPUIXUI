@@ -30,3 +30,22 @@ export const squatDensityTheme = extendTheme(lightTheme, {
 
 /** What the gate reports for it: the two heights under the floor, by size. */
 export const squatDensityAudit = auditTheme(squatDensityTheme);
+
+/**
+ * A type scale a factor moved: the sizes are the library's, the leadings were
+ * multiplied by 0.7. Every number is positive and finite, so the renderer lays
+ * the text out — each line just starts inside the glyph box of the one above it,
+ * and a paragraph becomes a smear. The gate compares the pair rather than the
+ * numbers alone.
+ */
+export const crushedTypeTheme = extendTheme(lightTheme, {
+  name: "Crushed",
+  typography: {
+    display: { lineHeight: 20 },
+    h1: { lineHeight: 16 },
+    body: { lineHeight: 10 },
+  },
+});
+
+/** What the gate reports for it: each leading that fell under its own size. */
+export const crushedTypeAudit = auditTheme(crushedTypeTheme);

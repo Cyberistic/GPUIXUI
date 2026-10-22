@@ -17,6 +17,12 @@
  * claim `docs/design-system.md` §6 makes about the shipped presets, held here
  * for a brand's density too.
  *
+ * A type role carries two numbers that only mean something together: a leading
+ * shorter than the role's own size puts the next baseline inside this line's
+ * glyph box, so ascenders and descenders collide. A type scale computed from a
+ * factor can produce one (`lineHeight: size * 0.9`) and every suite would stay
+ * green, so the pair is compared rather than the numbers alone.
+ *
  * `invalidColorRoles` covers the values the renderer cannot parse as a colour;
  * this covers the ones it cannot lay out or press.
  */
@@ -47,9 +53,21 @@ export type NumberGroup =
  * - `pressable` — a control height, which is also the box a pointer presses, so
  *   it reaches {@link targetSize.minimum}. The library builds a control at its
  *   `controlHeight` with no extra inset, so a shorter one is a target a reader
- *   cannot reliably hit.
+ *   cannot reliably hit;
+ * - `leading` — a type role's line height, which reaches the role's own font
+ *   size. Below that the next baseline sits inside this line's glyph box, so the
+ *   two lines collide. It is the one rule about two tokens, so it is applied
+ *   where the pair sits together ({@link inspectType}) rather than to one value.
  */
-export type NumberRule = "finite" | "positive" | "nonNegative" | "pressable";
+export type NumberRule =
+  | "finite"
+  | "positive"
+  | "nonNegative"
+  | "pressable"
+  | "leading";
+
+/** The rules one value can be measured against on its own. */
+type SingleRule = Exclude<NumberRule, "leading">;
 
 /** One numeric token that is not a number the renderer can lay out. */
 export interface InvalidNumber {
@@ -79,7 +97,7 @@ export type NumberSource = Pick<
 >;
 
 /** Whether `value` meets `rule`. */
-const layable = (value: number, rule: NumberRule): boolean => {
+const layable = (value: number, rule: SingleRule): boolean => {
   if (!Number.isFinite(value)) {
     return false;
   }
@@ -96,7 +114,7 @@ const inspect = (
   group: NumberGroup,
   path: string,
   value: number,
-  rule: NumberRule,
+  rule: SingleRule,
 ): readonly InvalidNumber[] =>
   layable(value, rule) ? [] : [{ group, path, value, rule }];
 
@@ -107,7 +125,7 @@ const inspect = (
 const inspectLengths = <Scale extends object>(
   group: NumberGroup,
   scale: Scale,
-  rule: NumberRule,
+  rule: SingleRule,
   prefix = "",
 ): readonly InvalidNumber[] =>
   Object.entries(scale).flatMap(([key, value]) =>
@@ -122,28 +140,41 @@ const isTextStyle = (value: unknown): value is TextStyle =>
 const isShadowList = (value: unknown): value is readonly BoxShadow[] =>
   Array.isArray(value);
 
-/** The size and leading of every text role. */
+/** The size and leading of every text role, and the leading against its size. */
 const inspectType = (
   typography: NumberSource["typography"],
 ): readonly InvalidNumber[] =>
-  Object.entries(typography).flatMap(([role, value]) =>
-    isTextStyle(value)
+  Object.entries(typography).flatMap(([role, value]) => {
+    if (!isTextStyle(value)) {
+      return [];
+    }
+    const measured = [
+      ...inspect("typography", `${role}.fontSize`, value.fontSize, "positive"),
+      ...inspect(
+        "typography",
+        `${role}.lineHeight`,
+        value.lineHeight,
+        "positive",
+      ),
+    ];
+    // Only comparable when both numbers are usable; an unusable one is already
+    // reported by the size check above, and would be reported twice here.
+    const collides =
+      value.fontSize > 0 &&
+      value.lineHeight > 0 &&
+      value.lineHeight < value.fontSize;
+    return collides
       ? [
-          ...inspect(
-            "typography",
-            `${role}.fontSize`,
-            value.fontSize,
-            "positive",
-          ),
-          ...inspect(
-            "typography",
-            `${role}.lineHeight`,
-            value.lineHeight,
-            "positive",
-          ),
+          ...measured,
+          {
+            group: "typography",
+            path: `${role}.lineHeight`,
+            value: value.lineHeight,
+            rule: "leading",
+          },
         ]
-      : [],
-  );
+      : measured;
+  });
 
 /** The four numbers a shadow carries. Offsets and spread may be negative. */
 const inspectShadow = (
@@ -170,11 +201,13 @@ const inspectShadow = (
  * cannot press.
  *
  * An empty array means every size, length and shadow a theme carries is one the
- * runtime can paint and every control height is one a reader can hit. A number
+ * runtime can paint, every control height is one a reader can hit and every type
+ * role's leading reaches its own size. A number
  * that is not finite is dropped rather than clamped, a size at or below zero
- * paints an element no one can find, and a control height under
+ * paints an element no one can find, a control height under
  * {@link targetSize.minimum} is a press target the library's own components do
- * not pad up — all three are reported by path instead of shipping as a default.
+ * not pad up, and a leading shorter than its type stacks the next line into the
+ * current one — all four are reported by path instead of shipping as a default.
  *
  * @example
  * ```ts
@@ -185,6 +218,10 @@ const inspectShadow = (
  * // [{ group: "radius", path: "md", value: NaN, rule: "nonNegative" }]
  * invalidNumbers(extendTheme(lightTheme, { density: { controlHeight: { sm: 20 } } }));
  * // [{ group: "density", path: "controlHeight.sm", value: 20, rule: "pressable" }]
+ * invalidNumbers(
+ *   extendTheme(lightTheme, { typography: { body: { lineHeight: 12 } } }),
+ * );
+ * // [{ group: "typography", path: "body.lineHeight", value: 12, rule: "leading" }]
  * ```
  */
 export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {

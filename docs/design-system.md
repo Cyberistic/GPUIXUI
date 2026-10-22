@@ -494,7 +494,9 @@ and dropped only the radius; a negative size is accepted instead and paints
 nothing usable (`fontSize: -4` laid text out at height 0). `invalidNumbers(theme)`
 names the group, path, value and rule for every numeric token that cannot be
 laid out — a shadow offset may be negative, but a control height or type size
-must be positive (§10, `docs/tokens.md` §Numbers).
+must be positive, and a type role's leading must reach its own size, because a
+shorter one starts the next line inside this line's glyph box (§10,
+`docs/tokens.md` §Numbers).
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
 reports all nine in one call — `invalidRoles`, `invalidShadows`,
@@ -562,6 +564,7 @@ design system cannot compensate for a missing role.
 | shadows are structured objects | elevation tokens are objects, not CSS strings |
 | invalid colour strings are ignored per property | a typo paints the previous/black value; `invalidColorRoles` reports it, and the shipped themes are held to the hex grammar by test |
 | a style batch is JSON, so a non-finite number is dropped | the property is never set and the element paints its default; `invalidNumbers` reports the token, its group, path, value and rule |
+| a leading shorter than its type is accepted | the renderer advances the baseline less than the glyphs are tall, so consecutive lines collide; `invalidNumbers` reports the role's `lineHeight` as `leading` |
 
 ## 11. Extension
 

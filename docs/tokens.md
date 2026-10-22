@@ -844,7 +844,8 @@ by group, path, value and the rule it missed:
 | `radius` | every step | finite, `>= 0` (`none` is 0) |
 | `borderWidth` | `thin`, `strong` | finite, `>= 0` |
 | `iconSize` | `xs`…`xl` | finite, `> 0` |
-| `typography` | every role's size and leading | finite, `> 0` |
+| `typography` | every role's size | finite, `> 0` |
+| `typography` | every role's leading | finite, `> 0`, and at least the role's size (`leading`) |
 | `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`) |
 | `density` | `rowHeight` | finite, `> 0` |
 | `density` | `controlPaddingX` per size | finite, `>= 0` |
@@ -864,18 +865,32 @@ instead of letting the audit pass. The shipped presets sit at or above it —
 `compact` `sm` is exactly `targetSize.minimum` — so no palette or metric moves
 for a theme that keeps them.
 
+Two numbers only mean something together: a type role's leading and its size. A
+leading shorter than the size puts the next baseline inside this line's glyph
+box, so ascenders and descenders collide — and a scale computed from a factor
+(`lineHeight: size * 0.7`) produces one while every number stays finite and
+positive. `invalidNumbers` compares the pair and reports the leading as
+`leading`; a leading exactly equal to the size passes, because lines that touch
+are tight rather than overlapping.
+
 ```ts
 import { extendTheme, invalidNumbers, lightTheme } from "@gpuixui/tokens";
 
 invalidNumbers(extendTheme(lightTheme, { radius: { md: Number.NaN } }));
 // [{ group: "radius", path: "md", value: NaN, rule: "nonNegative" }]
+invalidNumbers(
+  extendTheme(lightTheme, { typography: { body: { lineHeight: 10 } } }),
+);
+// [{ group: "typography", path: "body.lineHeight", value: 10, rule: "leading" }]
 ```
 
-`src/numbers.example.ts` holds two brands: one whose corner radius came from a
-scale factor nobody set, and one whose "dense" preset shaves two control heights
-under the pressable floor. `numbers.test.ts` runs both audits, proves none of the
-colour reports can see either defect, and holds all 16 shipped, platform and
-authored themes to an empty report.
+`src/numbers.example.ts` holds three brands: one whose corner radius came from a
+scale factor nobody set, one whose "dense" preset shaves two control heights
+under the pressable floor, and one whose type scale multiplied the leadings under
+the sizes. `numbers.test.ts` runs all three audits, proves none of the colour
+reports can see their defects, and holds all 16 shipped, platform and authored
+themes to an empty report — the shipped scale's tightest role is the display
+step at 28/36, well clear of the floor.
 
 ### Contrast
 

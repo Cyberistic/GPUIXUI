@@ -10,7 +10,14 @@
  * accepted and laid a text element out at height 0. A brand theme built from a
  * scale factor or a stored preference can carry either, and every suite stayed
  * green.
+ *
+ * A type role's leading is the same class one step on: a scale computed from a
+ * factor keeps every number finite and positive while the next line starts
+ * inside the previous one's glyph box. The documents name that rule, and this
+ * suite reads them (as `docs.test.ts` and `selection.test.ts` do) so the page
+ * cannot describe a report the code does not return.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   auditTheme,
@@ -26,8 +33,10 @@ import {
   targetSize,
   themes,
   type ThemeOverrides,
+  typography,
 } from "./index.js";
 import {
+  crushedTypeAudit,
   squatDensityAudit,
   unmeasuredBrandAudit,
   unmeasuredBrandTheme,
@@ -57,6 +66,110 @@ describe("every shipped theme carries numbers the renderer can lay out", () => {
 
   it("audits a real set, so a scan that stopped iterating cannot pass", () => {
     expect(shipped.length).toBeGreaterThanOrEqual(16);
+  });
+});
+
+describe("a type role's leading reaches its own size", () => {
+  it("reports a leading shorter than the type it carries", () => {
+    expect(
+      invalidNumbers(brand({ typography: { body: { lineHeight: 12 } } })),
+    ).toEqual([
+      {
+        group: "typography",
+        path: "body.lineHeight",
+        value: 12,
+        rule: "leading",
+      },
+    ]);
+  });
+
+  it("accepts a leading of exactly the size, where lines touch but do not collide", () => {
+    expect(
+      invalidNumbers(
+        brand({
+          typography: { display: { fontSize: 28, lineHeight: 28 } },
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("reports an unusable leading once, as a size rather than as a collision", () => {
+    // A zero leading is a size failure; counting it twice would name the same
+    // token for two rules and read as two defects.
+    expect(
+      invalidNumbers(brand({ typography: { h2: { lineHeight: 0 } } })),
+    ).toEqual([
+      {
+        group: "typography",
+        path: "h2.lineHeight",
+        value: 0,
+        rule: "positive",
+      },
+    ]);
+  });
+
+  it("fails the gate on a crushed scale with no colour report involved", () => {
+    // The scale a factor produces: the leading moved but the type did not.
+    const audit = auditTheme(
+      brand({
+        typography: {
+          h1: { lineHeight: 18 },
+          h2: { lineHeight: 14 },
+          body: { lineHeight: 10 },
+        },
+      }),
+    );
+
+    expect(audit.invalidNumbers.map(({ rule }) => rule)).toEqual([
+      "leading",
+      "leading",
+      "leading",
+    ]);
+    expect(audit.contrast).toEqual([]);
+    expect(audit.decorative).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("holds every shipped role above the floor", () => {
+    // The scale's own tightest role is the display step; a shipped role that
+    // dropped under 1.0 would be a defect in the tokens, not only in a brand.
+    const collapsed = Object.entries(typography).flatMap(([role, value]) =>
+      typeof value === "object" && value.lineHeight < value.fontSize
+        ? [role]
+        : [],
+    );
+
+    expect(collapsed).toEqual([]);
+  });
+});
+
+describe("the documents name the leading rule", () => {
+  const page = (path: string): string =>
+    readFileSync(new URL(path, import.meta.url), "utf8");
+
+  it("prints the rule in the catalogue, with a report the code actually returns", () => {
+    const catalogue = page("../../../docs/tokens.md");
+    const [failure] = invalidNumbers(
+      brand({ typography: { body: { lineHeight: 10 } } }),
+    );
+
+    expect(failure).toBeDefined();
+    expect(catalogue).toContain(
+      "| `typography` | every role's leading | finite, `> 0`, and at least the role's size (`leading`) |",
+    );
+    // The snippet is the real report, not an illustration of one.
+    expect(catalogue).toContain(
+      `// [{ group: "typography", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
+    );
+  });
+
+  it("states the rule and its consequence in the design system", () => {
+    const design = page("../../../docs/design-system.md");
+
+    expect(design).toContain("a type role's leading must reach its own size");
+    expect(design).toContain(
+      "`invalidNumbers` reports the role's `lineHeight` as `leading`",
+    );
   });
 });
 
@@ -321,5 +434,17 @@ describe("the audit gates on the numbers", () => {
     ]);
     expect(squatDensityAudit.contrast).toEqual([]);
     expect(squatDensityAudit.passed).toBe(false);
+  });
+
+  it("executes the documented crushed-scale example", () => {
+    expect(
+      crushedTypeAudit.invalidNumbers.map(({ path, rule }) => [path, rule]),
+    ).toEqual([
+      ["display.lineHeight", "leading"],
+      ["h1.lineHeight", "leading"],
+      ["body.lineHeight", "leading"],
+    ]);
+    expect(crushedTypeAudit.contrast).toEqual([]);
+    expect(crushedTypeAudit.passed).toBe(false);
   });
 });
