@@ -916,6 +916,33 @@ describe("the curated component pages", () => {
     expect(text).not.toContain("announced by aria-live");
   });
 
+  it("hold the alert's text action to the tint it derives against", () => {
+    // A link inside a message sits on the tone's own soft fill, where the shared
+    // page brand is measured under the text floor in 29 of the 64 tint
+    // placements; the part derives against that tint instead, keeps the 24px
+    // target and publishes `role="link"`. The page and the painter are read
+    // together, so neither can describe the other's colour.
+    const alert = pages.find((page) => page.file === "alert.mdx");
+    expect(alert, "the alert page is not in the curated set").toBeDefined();
+    if (alert === undefined) return;
+
+    const source = read(alert.source);
+    expect(source).toContain('role="link"');
+    expect(source).toContain("height: targetSize.minimum");
+    expect(source).toContain("messageLink(theme, value)");
+    expect(source).toContain("activationHandlers(");
+    expect(read("packages/components/src/internal/theme.ts")).toContain(
+      "brandTextOn(theme, softRoles[value])",
+    );
+
+    const text = body(alert).replace(/\s+/g, " ");
+    expect(text).toContain("`AlertLink`");
+    expect(text).toContain("message's own tint");
+    expect(text).toContain("29 of the 64");
+    expect(text).toContain('`role="link"`');
+    expect(text).toContain("13 native behaviour tests");
+  });
+
   it("describe the alert's tone paint and the announcement it does not claim", () => {
     // The package page the curated page displaces said the root is "a live
     // region, announced when it appears". The runtime's aria set has no live

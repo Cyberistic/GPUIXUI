@@ -46,6 +46,22 @@ Only the root is required; the parts you compose are the message. Add `AlertIcon
 and `AlertDismiss` only when the message needs them, and put an action inside
 `AlertDescription` — it is a container, not a line of text.
 
+A **text** action is `AlertLink`, composed beside the description:
+
+```tsx
+import { AlertLink } from "@gpuixui/components/alert";
+
+<Alert tone="warning">
+  <AlertContent>
+    <AlertTitle>3 tokens are missing</AlertTitle>
+    <AlertDescription>
+      The platform themes fall back to the default palette.
+    </AlertDescription>
+    <AlertLink onSelect={openTokenSettings}>Open the token settings</AlertLink>
+  </AlertContent>
+</Alert>;
+```
+
 ## Variants
 
 `tone` is the only variant. There is no `size`: an alert is a body block, so its
@@ -72,6 +88,7 @@ than the tone's colour, because body prose has to remain readable on the tint.
 | `AlertContent` | `div` | the growing column between icon and dismiss |
 | `AlertTitle` | `text`, `bodyStrong`'s weight | the tone's readable colour |
 | `AlertDescription` | `div` | `foreground`; may hold an action |
+| `AlertLink` | `div`, `role="link"` | the brand derived for the tone's own tint; an underline on the pointer |
 | `AlertDismiss` | the package's `IconButton` | a focusable dismiss control |
 
 The tone travels through React context: a part rendered outside `Alert` throws
@@ -87,6 +104,7 @@ instead of nesting it silently.
 | --- | ----- | -------- |
 | `Enter` | the dismiss control | dismisses once |
 | `Space` | the dismiss control | dismisses once |
+| `Enter` / `Space` | a link action | runs `onSelect` once, like a click |
 | — | the alert itself | not focusable and takes no keys; it is not a dialog and has no `Escape` |
 
 There is no automatic timeout and no focus move: the alert stays until the state
@@ -102,6 +120,7 @@ pointer and key handlers) and merges `style` last.
 | ---- | ---- | ---- | ------- | ----------- |
 | `Alert` | `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` | the surface, edge and readable colour every part inherits |
 | `Alert` | `children` | parts | — | the composition; a part outside the root throws |
+| `AlertLink` | `onSelect` | `() => void` | — | the text action's handler, on click, `Enter` or `Space` |
 | `AlertDismiss` | `onDismiss` | `() => void` (required) | — | runs on click, `Enter` or `Space`; there is no optional dismiss |
 | `AlertDismiss` | `label` | `string` | `"Dismiss"` | the control's accessible name |
 
@@ -113,6 +132,7 @@ pointer and key handlers) and merges `style` last.
 | title and icon | the tone's `xSoftForeground` role |
 | edge | the tone's solid role at 30% |
 | description | `foreground` |
+| link action | the brand derived for the tone's own tint (`brandTextOn`), not the page link colour |
 | dismiss glyph | `foreground`, not the tone |
 | corners | the fixed registry's 6px `md` step |
 
@@ -122,6 +142,15 @@ Changing the theme's `radius`, `density` or platform does **not** reshape the
 alert: it compiles against the default registry's fixed metrics (ADR 0006), so a
 platform switch repaints the palette and the families but keeps 12px padding and
 6px corners. Pass `className` or `style` to own the metrics.
+
+The link action is the one run that cannot use the page's link colour. The
+message is filled with the tone's soft role, and the shared brand is derived for
+page surfaces — measured, it is under the text floor on **29 of the 64** tint
+placements across the shipped styles, macOS dark's brand on `warningSoft` at
+**3.43:1**. `AlertLink` therefore derives the brand against the tint it sits on,
+keeping as much of the brand as that surface allows, and paints no wash of its
+own: the underline is the pointer cue, so the tint is the only surface the colour
+is read on.
 
 ## Accessibility and limitations
 
@@ -136,6 +165,10 @@ platform switch repaints the palette and the families but keeps 12px padding and
   title should name the state rather than repeat the body.
 - The dismiss control is this package's local `IconButton`; a caller that needs a
   different control can compose its own button instead of `AlertDismiss`.
+- `AlertLink` is a focusable `role="link"` activated by a click, `Enter` or
+  `Space`, and it reaches the same 24px target floor as the dismiss control. It
+  is a block-level row, so it starts its own line rather than sitting inline in a
+  sentence, and its underline is the pointer cue.
 - The preview above is a browser rendering of the recipe. The shipped alert is a
   GPUix host tree; the Code tab and the source accordion are the real usage.
 
@@ -161,9 +194,11 @@ one alert.
 ## Status
 
 `done` in `COMPONENTS.md` with a `yes` runtime verdict: a compound of `div`s and
-a `<text>` over a tone context, with no runtime feature to miss. 11 native
+a `<text>` over a tone context, with no runtime feature to miss. 13 native
 behaviour tests in `packages/components/src/behaviour/alert.test.tsx` hold the
 part order, each tone's surface and title colour, the description keeping the page
 foreground, the optional icon, the dismiss control's name and activation by click,
-`Enter` and `Space`, and a caller `style` winning. The role reaches the tree; the
-announcement does not, and the inventory records the same limit.
+`Enter` and `Space`, a caller `style` winning, and a link action painting the
+colour derived for the message's own tint, publishing `role="link"` and
+activating by click and `Enter`. The role reaches the tree; the announcement does
+not, and the inventory records the same limit.
