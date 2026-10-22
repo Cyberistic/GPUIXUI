@@ -103,6 +103,44 @@ describe("decodePng", () => {
     );
   });
 
+  // Every filter is hand-encoded from the spec: the decoder resolves the filter
+  // once per row (a per-byte dispatch over a capture costs seconds), so a
+  // filter wired to the wrong rule would decode a plausible but wrong frame.
+  const twoRows = (filter: number, row: ReadonlyArray<number>) =>
+    png(2, 2, 6, [
+      new Uint8Array([0, 255, 0, 0, 255, 0, 0, 255, 255]),
+      new Uint8Array([filter, ...row]),
+    ]);
+  const secondRow = new Rgba({ r: 10, g: 20, b: 30, a: 255 });
+  const secondPixel = new Rgba({ r: 40, g: 50, b: 60, a: 255 });
+
+  it("applies the Up filter against the decoded row above", () => {
+    const frame = decode(twoRows(2, [1, 255, 0, 0, 255, 255, 1, 0]));
+    expect(pixelAt(frame, 0, 1)).toEqual(
+      new Rgba({ r: 0, g: 255, b: 0, a: 255 }),
+    );
+    expect(pixelAt(frame, 1, 1)).toEqual(
+      new Rgba({ r: 255, g: 255, b: 0, a: 255 }),
+    );
+  });
+
+  it("applies the Average filter against the left and above neighbours", () => {
+    const frame = decode(twoRows(3, [139, 20, 30, 128, 35, 40, 174, 0]));
+    expect(pixelAt(frame, 0, 1)).toEqual(secondRow);
+    expect(pixelAt(frame, 1, 1)).toEqual(secondPixel);
+  });
+
+  it("applies the Paeth filter against its predicted neighbour", () => {
+    const frame = decode(twoRows(4, [11, 20, 30, 0, 40, 30, 61, 0]));
+    expect(pixelAt(frame, 0, 1)).toEqual(secondRow);
+    expect(pixelAt(frame, 1, 1)).toEqual(secondPixel);
+  });
+
+  it("refuses a filter byte the specification does not define", () => {
+    const decoded = decodePng(twoRows(5, [0, 0, 0, 0, 0, 0, 0, 0]), inflate);
+    expect(decoded).toBeInstanceOf(PngDecodeError);
+  });
+
   it("refuses a byte array that is not a PNG", () => {
     const decoded = decodePng(new Uint8Array(40), inflate);
     expect(decoded).toBeInstanceOf(PngDecodeError);

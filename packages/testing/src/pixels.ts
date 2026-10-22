@@ -122,6 +122,23 @@ const paeth = (left: number, up: number, upLeft: number): number => {
 };
 
 /**
+ * The five scanline filters, in the spec's numbering.
+ *
+ * The filter is one byte per row, so it is resolved **once per row**: a
+ * per-byte dispatch over a 1800×1040 capture costs seconds (measured: 4.2s for
+ * one frame), and a decode sits in every pixel check of the live suite.
+ */
+const filters: ReadonlyArray<
+  (value: number, left: number, up: number, upLeft: number) => number
+> = [
+  (value) => value,
+  (value, left) => value + left,
+  (value, _left, up) => value + up,
+  (value, left, up) => value + Math.floor((left + up) / 2),
+  (value, left, up, upLeft) => value + paeth(left, up, upLeft),
+];
+
+/**
  * Reverses the per-scanline filters (PNG spec §9.2).
  *
  * `prior` is the already-unfiltered previous row; filter 0 needs neither.
@@ -141,10 +158,13 @@ const unfilter = (
   let previousStart = 0;
   for (let row = 0; row < header.height; row += 1) {
     const filter = byte(inflated, row * (stride + 1));
+    const decode = filters[filter];
+    if (decode === undefined) {
+      return fail(`scanline filter ${filter} is unknown`);
+    }
     const lineStart = row * (stride + 1) + 1;
     const outStart = row * stride;
     for (let column = 0; column < stride; column += 1) {
-      const value = byte(inflated, lineStart + column);
       const left =
         column >= header.channels
           ? byte(out, outStart + column - header.channels)
@@ -154,16 +174,8 @@ const unfilter = (
         row === 0 || column < header.channels
           ? 0
           : byte(out, previousStart + column - header.channels);
-      const decoded = Match.value(filter).pipe(
-        Match.when(0, () => value),
-        Match.when(1, () => value + left),
-        Match.when(2, () => value + up),
-        Match.when(3, () => value + Math.floor((left + up) / 2)),
-        Match.when(4, () => value + paeth(left, up, upLeft)),
-        Match.orElse((): number | null => null),
-      );
-      if (decoded === null) return fail(`scanline filter ${filter} is unknown`);
-      out[outStart + column] = decoded & 0xff;
+      out[outStart + column] =
+        decode(byte(inflated, lineStart + column), left, up, upLeft) & 0xff;
     }
     previousStart = outStart;
   }

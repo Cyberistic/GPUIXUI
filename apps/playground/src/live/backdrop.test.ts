@@ -23,15 +23,13 @@ import {
   BACKDROP_FILL,
   BACKDROP_FILL_RGBA,
   backdropPoint,
-  captureScale,
   contentPoint,
   decodeWindowBackground,
-  describeColour,
-  framePoint,
   splitWindowBackground,
   surfaceAlpha,
   windowBackgrounds,
 } from "./backdrop.js";
+import { captureScale, describeColour, framePoint } from "./frame.js";
 
 const size = { width: 900, height: 520 } as const;
 

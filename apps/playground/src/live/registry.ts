@@ -121,6 +121,12 @@ export const liveRegistry = [
     capability: "modal",
   },
   {
+    id: "surface-fade",
+    title:
+      "Motion: a surface fades into its resting frame over its level, and a reduced preference removes the journey",
+    capability: "modal",
+  },
+  {
     id: "menu-lifecycle",
     title:
       "Overlay: the shipped DropdownMenu opens, moves real focus, activates and dismisses",

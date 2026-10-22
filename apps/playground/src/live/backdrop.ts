@@ -19,6 +19,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { Pixels } from "@gpuixui/testing";
+import type { Point } from "./frame.js";
 
 /** The `windowBackground` values the binding declares, in its own order. */
 export const windowBackgrounds = ["opaque", "transparent", "blurred"] as const;
@@ -60,12 +61,6 @@ export const BACKDROP_FILL_RGBA = new Pixels.Rgba({
   a: 255,
 });
 
-/** A logical point in the window. */
-export interface Point {
-  readonly x: number;
-  readonly y: number;
-}
-
 /** Where the painted box's centre sits: the surface proof. */
 export const contentPoint: Point = {
   x: BACKDROP_BOX.x + BACKDROP_BOX.width / 2,
@@ -82,37 +77,6 @@ export const backdropPoint = (size: {
   readonly width: number;
   readonly height: number;
 }): Point => ({ x: size.width - 60, y: size.height - 40 });
-
-/**
- * The capture's device scale.
- *
- * A window is captured at its display's scale factor (900x520 arrives as
- * 1800x1040), so a probe converts logical points instead of assuming a monitor.
- * A non-integral or inconsistent ratio is `None`: a capture that is not the
- * window's box cannot be sampled at a logical point.
- */
-export const captureScale = (
-  frame: { readonly width: number; readonly height: number },
-  size: { readonly width: number; readonly height: number },
-): Option.Option<number> => {
-  const horizontal = frame.width / size.width;
-  const vertical = frame.height / size.height;
-  return Number.isInteger(horizontal) &&
-    horizontal > 0 &&
-    horizontal === vertical
-    ? Option.some(horizontal)
-    : Option.none();
-};
-
-/** A logical point in the capture's pixels. */
-export const framePoint = (point: Point, scale: number): Point => ({
-  x: Math.round(point.x * scale),
-  y: Math.round(point.y * scale),
-});
-
-/** A pixel in one line, so a failed assertion prints the colour it read. */
-export const describeColour = (colour: Pixels.Rgba): string =>
-  `rgba(${colour.r}, ${colour.g}, ${colour.b}, ${colour.a})`;
 
 /**
  * The mode a probe's readout names.

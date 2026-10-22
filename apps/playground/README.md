@@ -37,8 +37,8 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-44 probes a real window can prove, of which eleven mount shipped
-`@gpuixui/components` (the dialog, the menu, the context menu, the toast system,
+45 probes a real window can prove, of which twelve mount shipped
+`@gpuixui/components` (the dialog and its fade, the menu, the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
 combobox and the modal focus rule), five mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider, Text and Tooltip), one more
@@ -1192,6 +1192,45 @@ The veil is an `anchored` element sized from the window, so the probe's root has
 to **fill** the window: mounted inside a 720px column the veil covered only that
 column, which is the documented "dim only its parent's box" behaviour rather than
 a defect.
+
+### `surface-fade` — measured on 0.11.0 here
+
+The half of the presence seam (`packages/components/src/internal/presence.tsx`)
+that no bounds check can prove: a surface **fades** into its resting frame. The
+runtime's style report sees geometry, not paint, so the probe reads the frame —
+the shipped `Dialog` opens over a page the probe fills white, and every reading
+is the pixel at one point inside the content's own left padding, where nothing
+but the surface paints.
+
+| Step | Check |
+| ---- | ----- |
+| mount | the palette resolves the surface colour, and a closed dialog paints no bounds |
+| press the trigger | the readout reaches `opens=1` before any pixel is read |
+| read at 107 ms past the press (a third of the 320 ms level) | the read landed inside the level (`107 ± 80`), and the pixel is a **mix** of the surface and the page: `rgba(163, 164, 165, 255)` on one run, `rgba(195, 196, 197, 255)` on another — the frame the fade produced, not a cut |
+| read past the level (`460 ± 140`) | the read landed after the level, and the pixel is the surface's own colour exactly: `rgba(34, 39, 48, 255)` = `#222730`, the dark palette's `popover` |
+| press the reduce control, `Escape` | the surface unpaints and the readout reads `preference=reduced` |
+| read at the same 107 ms past the second press | the pixel is **already** the surface's own colour — the journey is removed, not the resting frame |
+| read past the level again | still exactly the surface colour; `opens=2 closes=1` |
+
+24 checks. The two read windows are asserted, not assumed: the partial read's
+window ends before the level does and the settled read's starts after it, so a
+capture that is early measures the tween and one that is late measures a resting
+surface — both fail by name rather than passing quietly. The fixture's own suite
+(`src/live/fade.test.ts`, 7 cases) holds the duration to `motionLevels.slow`, the
+level to the dialog's `useSurfaceTiming("slow")`, both read windows to the level
+in both directions, and the partial-frame predicate to the page and the surface.
+
+Negative control, measured: rendering the surface under `MotionProvider
+preference="reduced"` for the first phase fails `partway through its level the
+surface is a mix of surface and page` (`expected true, got false`, exit `1`).
+Captures: `.artifacts/live/fade-{partial,settled,reduced-partial,reduced-settled}.png`.
+
+The probe also paid for a decoder fix: one 1800×1040 capture took **4.2 s** to
+decode because the PNG filter was dispatched per byte. Resolving it once per row
+(`packages/testing/src/pixels.ts`) takes the same frame in **254 ms**, and the
+five-capture probe from 24 s to 5 s. `pixels.test.ts` gained the three filters
+that had no decoded-byte case (Up, Average, Paeth) and the unknown-filter
+rejection; swapping Average and Paeth in the table fails both cases by name.
 
 ### `menu-lifecycle` — measured on 0.11.0 here
 
@@ -2623,7 +2662,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (44/44), with a written report and screenshots.
+  (45/45), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

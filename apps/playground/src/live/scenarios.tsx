@@ -15,7 +15,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Duration, Effect, Match, pipe } from "effect";
+import { Clock, Duration, Effect, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
@@ -62,6 +62,7 @@ import {
   MessageScrollerItem,
   MessageScrollerJumpToLatest,
   MessageScrollerViewport,
+  MotionProvider,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -171,13 +172,23 @@ import {
   BACKDROP_FILL,
   BACKDROP_FILL_RGBA,
   backdropPoint,
-  captureScale,
   contentPoint,
   decodeWindowBackground,
-  describeColour,
-  framePoint,
   surfaceAlpha,
 } from "./backdrop.js";
+import { captureScale, describeColour, framePoint } from "./frame.js";
+import {
+  FADE_BACKING,
+  FADE_BACKING_RGBA,
+  FADE_CAPTURE_SLACK_MS,
+  fadeRead,
+  fadeSample,
+  isFading,
+  isSurface,
+  surfaceFadeColour,
+  type FadeBox,
+  type FadeRead,
+} from "./fade.js";
 import { moveRow, rowAt, type RowHandle } from "./reorder.js";
 import { settleNumber, settleUntil } from "./settle.js";
 import {
@@ -1611,6 +1622,88 @@ const DialogProbe = (): ReactNode => {
         >
           {`opens=${opens} closes=${closes}`}
         </text>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The shipped `Dialog` over a white page: the entry fade the presence seam
+ * paints, as paint rather than bounds.
+ *
+ * A window reports no style, so a surface's opacity is only provable from the
+ * pixel it paints on the way in. The probe reads one point inside the content's
+ * own padding (where nothing but the surface is painted) partway through the
+ * entry tween and again past it, and the reduce control swaps the motion
+ * preference so the same probe measures the journey the timing removes.
+ */
+const SurfaceFadeProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [preference, setPreference] = useState<"animated" | "reduced">(
+    "animated",
+  );
+  const [opens, setOpens] = useState(0);
+  const [closes, setCloses] = useState(0);
+  return (
+    <div
+      testId="fade-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: FADE_BACKING,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          left: theme.spacing.lg,
+          top: theme.spacing.lg,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          gap: theme.spacing.sm,
+        }}
+      >
+        <Pressable
+          testId="fade-reduce"
+          onClick={() => setPreference("reduced")}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            Reduce motion
+          </text>
+        </Pressable>
+        <MotionProvider preference={preference}>
+          <Dialog
+            onOpenChange={(open) => {
+              if (open) setOpens((count) => count + 1);
+              else setCloses((count) => count + 1);
+            }}
+          >
+            <DialogTrigger testId="fade-trigger">Open dialog</DialogTrigger>
+            <DialogContent label="Fade in" testId="fade-surface">
+              <DialogHeader>
+                <DialogTitle>Fade in</DialogTitle>
+                <DialogDescription>
+                  The surface enters on its own opacity, not on a cut.
+                </DialogDescription>
+              </DialogHeader>
+              {/* Room for the surface to be read below the copy: the sampled
+                  point is in the left padding, and a taller box keeps the
+                  centre clear of the children's edges. */}
+              <div style={{ height: 180 }} />
+            </DialogContent>
+          </Dialog>
+        </MotionProvider>
+        <Readout testId="fade-readout">
+          {`opens=${opens} closes=${closes} preference=${preference}`}
+        </Readout>
       </div>
     </div>
   );
@@ -4668,6 +4761,188 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "dialog-trigger",
     );
     yield* ctx.host.capture("dialog-closed");
+  });
+
+/**
+ * Reads the fade the presence seam paints, from the pixel the entry leaves.
+ *
+ * The seam is a `motion` description, and no window exposes one, so the surface
+ * is measured where it paints: a point inside the content's own padding, over a
+ * page the probe fills white. Partway through the level the pixel is a mix of
+ * the surface and the page; past it the pixel is the surface's own colour.
+ * Swapping the preference then repeats the reading with the journey removed, so
+ * the resting frame is proved to survive the shorter timing.
+ */
+const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("fade-trigger");
+    const surface = yield* ctx.expectSome(
+      "the palette names the surface colour",
+      surfaceFadeColour(palettes.dark.colors.popover),
+    );
+    yield* ctx.expectEqual(
+      "a closed dialog paints no surface",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds("fade-surface")),
+      ),
+      true,
+    );
+
+    /** The box the surface rests in; the sample point is computed from it. */
+    const restBox = (): Effect.Effect<
+      FadeBox,
+      Smoke.SmokeAssertionError | Smoke.SmokeHostError
+    > =>
+      Effect.gen(function* () {
+        return yield* ctx.expectSome(
+          "the surface paints a box to sample",
+          Option.fromNullishOr(yield* ctx.host.bounds("fade-surface")),
+        );
+      });
+
+    /**
+     * The colour at the sample point of a capture.
+     *
+     * The device scale is read from the frame itself: a capture that is not the
+     * window's box cannot be sampled at a logical point, and saying so is better
+     * than reading a pixel from another part of the window.
+     */
+    const sampleOf = (
+      name: string,
+      box: FadeBox,
+    ): Effect.Effect<
+      Pixels.Rgba,
+      Smoke.SmokeAssertionError | Smoke.SmokeHostError
+    > =>
+      Effect.gen(function* () {
+        const frame = yield* ctx.host.pixels(name);
+        const size = yield* ctx.host.windowSize();
+        const scale = yield* ctx.expectSome(
+          "the capture is the window at a whole device scale",
+          captureScale(frame, size),
+        );
+        const point = framePoint(fadeSample(box), scale);
+        return yield* ctx.expectSome(
+          `the ${name} capture holds the sample point`,
+          Option.fromNullishOr(Pixels.pixelAt(frame, point.x, point.y)),
+        );
+      });
+
+    /** Sleeps until `read` is due past `pressedAt`, captures, and reports when. */
+    const captureAt = (
+      pressedAt: number,
+      read: FadeRead,
+      name: string,
+    ): Effect.Effect<number, Smoke.SmokeHostError> =>
+      Effect.gen(function* () {
+        const elapsed = (yield* Clock.currentTimeMillis) - pressedAt;
+        yield* elapsed < read.atMs
+          ? Effect.sleep(Duration.millis(read.atMs - elapsed))
+          : Effect.void;
+        const at = (yield* Clock.currentTimeMillis) - pressedAt;
+        yield* ctx.host.capture(name);
+        return at;
+      });
+
+    // ── Animated: the surface arrives on a painted fade ─────────────────────
+    yield* ctx.host.click("fade-trigger");
+    const opened = yield* Clock.currentTimeMillis;
+    yield* ctx.expectContains(
+      "the press opens the dialog",
+      yield* settleUntil(ctx.host.text("fade-readout"), (value) =>
+        value.includes("opens=1 closes=0"),
+      ),
+      "opens=1 closes=0",
+    );
+    const partialAt = yield* captureAt(
+      opened,
+      fadeRead("partial"),
+      "fade-partial",
+    );
+    yield* ctx.expectNear(
+      "the partial read lands inside the level",
+      partialAt,
+      fadeRead("partial").atMs,
+      FADE_CAPTURE_SLACK_MS,
+    );
+    const settledAt = yield* captureAt(
+      opened,
+      fadeRead("settled"),
+      "fade-settled",
+    );
+    yield* ctx.expectNear(
+      "the settled read lands past the level",
+      settledAt,
+      fadeRead("settled").atMs,
+      fadeRead("settled").tolerance,
+    );
+
+    const box = yield* restBox();
+    const partial = yield* sampleOf("fade-partial", box);
+    const settled = yield* sampleOf("fade-settled", box);
+    yield* ctx.expectEqual(
+      "partway through its level the surface is a mix of surface and page",
+      isFading(partial, FADE_BACKING_RGBA, surface),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "past its level the surface rests on its own colour",
+      isSurface(settled, surface),
+      true,
+    );
+
+    // ── Reduced: the journey is gone, the resting frame is not ──────────────
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "Escape unpaints the surface",
+      yield* settleGone(ctx, "fade-surface"),
+      true,
+    );
+    yield* ctx.host.click("fade-reduce");
+    yield* ctx.expectContains(
+      "the reduce control takes the preference",
+      yield* settleUntil(ctx.host.text("fade-readout"), (value) =>
+        value.includes("preference=reduced"),
+      ),
+      "preference=reduced",
+    );
+    yield* ctx.host.click("fade-trigger");
+    const reducedAt = yield* Clock.currentTimeMillis;
+    const reducedPartialAt = yield* captureAt(
+      reducedAt,
+      fadeRead("partial"),
+      "fade-reduced-partial",
+    );
+    yield* ctx.expectNear(
+      "the reduced read lands inside the level too",
+      reducedPartialAt,
+      fadeRead("partial").atMs,
+      FADE_CAPTURE_SLACK_MS,
+    );
+    yield* captureAt(reducedAt, fadeRead("settled"), "fade-reduced-settled");
+    const reducedBox = yield* restBox();
+    const reducedPartial = yield* sampleOf("fade-reduced-partial", reducedBox);
+    yield* ctx.expectEqual(
+      "a reduced surface is already at rest partway through the level",
+      isSurface(reducedPartial, surface),
+      true,
+    );
+    const reducedSettled = yield* sampleOf("fade-reduced-settled", reducedBox);
+    yield* ctx.expectEqual(
+      "a reduced surface still paints at its resting colour",
+      isSurface(reducedSettled, surface),
+      true,
+    );
+    yield* ctx.expectContains(
+      "both opens reached onOpenChange",
+      yield* ctx.host.text("fade-readout"),
+      "opens=2 closes=1",
+    );
+    yield* ctx.expectEqual(
+      "the reduced surface paints a box",
+      reducedBox.width > 0 && reducedBox.height > 0,
+      true,
+    );
   });
 
 /**
@@ -11066,6 +11341,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "dialog-lifecycle",
     view: () => <DialogProbe />,
     steps: dialogSteps,
+  },
+  "surface-fade": {
+    id: "surface-fade",
+    view: () => <SurfaceFadeProbe />,
+    steps: surfaceFadeSteps,
   },
   "menu-lifecycle": {
     id: "menu-lifecycle",
