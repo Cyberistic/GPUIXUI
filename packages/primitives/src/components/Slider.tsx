@@ -67,11 +67,14 @@ import {
 import { recipeTw } from "../recipe/registry.js";
 import {
   composeEvent,
+  mergeRefs,
   mergeStyle,
   useControlState,
   useFocus,
   valueChange,
+  type FieldHostProps,
   type FocusState,
+  type HelpProps,
   type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
@@ -79,7 +82,11 @@ import { useTheme } from "./ThemeProvider.js";
 
 /** A single value on a track. */
 export interface SliderProps
-  extends ValueChangeProps<number>, InteractionProps {
+  extends
+    ValueChangeProps<number>,
+    InteractionProps,
+    FieldHostProps,
+    HelpProps {
   /** Controlled value. Omit to let the slider hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
@@ -109,7 +116,11 @@ export interface SliderProps
 
 /** Two values on one track. */
 export interface RangeSliderProps
-  extends ValueChangeProps<readonly [number, number]>, InteractionProps {
+  extends
+    ValueChangeProps<readonly [number, number]>,
+    InteractionProps,
+    FieldHostProps,
+    HelpProps {
   readonly value?: readonly [number, number];
   readonly defaultValue?: readonly [number, number];
   readonly min?: number;
@@ -204,6 +215,8 @@ interface ThumbPart {
   readonly tabIndex: number | undefined;
   readonly ring: boolean;
   readonly ref: (instance: PublicInstance | null) => void;
+  readonly "aria-id"?: string;
+  readonly onLayout?: ((event: EventPayload) => void) | undefined;
   readonly onClick: ((event: EventPayload) => void) | undefined;
   readonly onFocus: ((event: EventPayload) => void) | undefined;
   readonly onBlur: ((event: EventPayload) => void) | undefined;
@@ -350,9 +363,11 @@ export const renderSliderThumb = (
       ref={thumb.ref}
       role="slider"
       aria-label={thumb.label}
+      aria-id={thumb["aria-id"]}
       aria-valuetext={thumb.valueText}
       tabIndex={thumb.tabIndex}
       onClick={thumb.onClick}
+      onLayout={thumb.onLayout}
       onFocus={thumb.onFocus}
       onBlur={thumb.onBlur}
       onKeyDown={thumb.onKeyDown}
@@ -403,12 +418,15 @@ export const renderSlider = (
   };
   return (
     <div
-      ref={handlers.registerTrack}
+      ref={mergeRefs(handlers.registerTrack, props.ref)}
       role="slider"
       aria-label={accessibleName(props.label)}
+      aria-description={accessibleName(props.description)}
+      aria-id={props["aria-id"]}
       aria-valuetext={sliderValueText(value, props.formatValue)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
+      onLayout={props.onLayout}
       onClick={props.disabled === true ? undefined : props.onClick}
       onMouseDown={handlers.onPointerDown}
       onMouseMove={handlers.onPointerMove}
@@ -492,14 +510,23 @@ export const renderRangeSlider = (
     name === undefined
       ? ([undefined, undefined] as const)
       : ([`${name} minimum`, `${name} maximum`] as const);
+  // The address names one element, and the group's only focusable elements are
+  // its thumbs: a form focuses the end the reader last used, or the start while
+  // neither holds focus. The group itself carries the help, because that is the
+  // node a reader hears the group's name on.
+  const addressedIndex = Option.getOrElse(focus.focusedIndex, () => 0);
   const thumbPart = (index: 0 | 1): ThumbPart => {
     const value = index === 0 ? span.start : span.end;
+    const addressed = index === addressedIndex;
+    const register = handlers.registerThumb(index);
     return {
       label: labels[index],
       valueText: sliderValueText(value, props.formatValue),
       tabIndex: props.disabled === true ? undefined : 0,
       ring: props.disabled !== true,
-      ref: handlers.registerThumb(index),
+      ref: addressed ? mergeRefs(register, props.ref) : register,
+      "aria-id": addressed ? props["aria-id"] : undefined,
+      onLayout: addressed ? props.onLayout : undefined,
       onClick: props.disabled === true ? undefined : props.onClick,
       onFocus: composeEvent<EventPayload>(props.onFocus, () =>
         focus.onFocus(index),
@@ -550,6 +577,7 @@ export const renderRangeSlider = (
       ref={handlers.registerTrack}
       role="group"
       aria-label={accessibleName(props.label)}
+      aria-description={accessibleName(props.description)}
       testId={props.testId}
       onClick={props.disabled === true ? undefined : props.onClick}
       onMouseDown={handlers.onPointerDown}

@@ -38,6 +38,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostRef,
   hostStyle,
   hostStyleRecord,
   hostStyleString,
@@ -123,6 +124,55 @@ describe("Slider", () => {
       sliderHandlers(vi.fn()),
     );
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("42%");
+  });
+
+  it("hands its element the caller's address, layout and help", () => {
+    // Bug guarded: a slider is the control a form owns, but it had no address
+    // and no announced help — a form could not focus the slider it failed on,
+    // an automation host could not name it, and a visible `Label`'s
+    // description reached nobody. The root is both the slider and its tab
+    // stop, so all four land there, and the track's own registration survives
+    // the caller's ref.
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const registerTrack = vi.fn();
+    const element = renderSlider(
+      {
+        label: "Volume",
+        description: "Controls the output level.",
+        ref,
+        "aria-id": "volume",
+        onLayout: layout,
+      },
+      testTheme,
+      valueOf(42),
+      idle,
+      { ...sliderHandlers(vi.fn()), registerTrack },
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Controls the output level.",
+    );
+    expect(expectSome(hostProp(element, "aria-id"))).toBe("volume");
+    expect(Option.getOrUndefined(hostHandler(element, "onLayout"))).toBe(
+      layout,
+    );
+    const merged = Option.getOrElse(hostRef(element), () =>
+      expect.fail("the slider carried no ref"),
+    );
+    merged(null);
+    expect(registerTrack).toHaveBeenCalledWith(null);
+    expect(ref).toHaveBeenCalledWith(null);
+  });
+
+  it("publishes nothing rather than a blank description", () => {
+    const element = renderSlider(
+      { description: "   " },
+      testTheme,
+      valueOf(42),
+      idle,
+      sliderHandlers(vi.fn()),
+    );
+    expect(hostProp(element, "aria-description")).toStrictEqual(Option.none());
   });
 
   it("moves one step with an arrow key, and clamps at the end", () => {
@@ -268,6 +318,55 @@ describe("RangeSlider", () => {
         expectSome(hostProp(thumb ?? expect.fail("no thumb"), "tabIndex")),
       ),
     ).toStrictEqual([0, 0]);
+  });
+
+  it("addresses the thumb the form focuses and announces the group's help", () => {
+    // Bug guarded: the same address/help hole one control over. The group is
+    // not focusable, so the address lands on the thumb the reader last used —
+    // the start while neither holds focus — and the help rides the group node,
+    // which is where a reader hears the group's name.
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const renderWith = (focusedIndex: Option.Option<0 | 1>) =>
+      renderRangeSlider(
+        {
+          label: "Price",
+          description: "Between one and nine hundred.",
+          ref,
+          "aria-id": "price",
+          onLayout: layout,
+        },
+        testTheme,
+        spanOf(20, 60),
+        { focusedIndex, onFocus: vi.fn(), onBlur: vi.fn() },
+        rangeHandlers(vi.fn()),
+      );
+
+    const idleRange = renderWith(Option.none());
+    expect(expectSome(hostProp(idleRange, "aria-description"))).toBe(
+      "Between one and nine hundred.",
+    );
+    const [, idleStart, , idleEnd] = partsOf(idleRange);
+    expect(
+      expectSome(hostProp(idleStart ?? expect.fail("no thumb"), "aria-id")),
+    ).toBe("price");
+    expect(
+      hostProp(idleEnd ?? expect.fail("no thumb"), "aria-id"),
+    ).toStrictEqual(Option.none());
+
+    const endFocused = renderWith(Option.some(1));
+    const [, focusedStart, , focusedEnd] = partsOf(endFocused);
+    expect(
+      hostProp(focusedStart ?? expect.fail("no thumb"), "aria-id"),
+    ).toStrictEqual(Option.none());
+    expect(
+      expectSome(hostProp(focusedEnd ?? expect.fail("no thumb"), "aria-id")),
+    ).toBe("price");
+    expect(
+      Option.getOrUndefined(
+        hostHandler(focusedEnd ?? expect.fail("no thumb"), "onLayout"),
+      ),
+    ).toBe(layout);
   });
 
   it("derives the thumb names from the group's trimmed name", () => {

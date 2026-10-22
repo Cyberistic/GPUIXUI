@@ -62,6 +62,8 @@ const theme = useTheme();
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no pointer or keys |
 | `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |
 | `label` | `string` | none | accessible name |
+| `description` | `string` | none | announced help; a blank one publishes nothing |
+| `ref` / `aria-id` / `onLayout` | host props | none | the track is the element a form focuses, an automation host names and a layout measures |
 | `formatValue` | `(value: number) => string` | `String` | the announced text |
 | `style` | `StateStyle<SliderState>` | — | resolved against the live state, merged last on the track |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
@@ -111,7 +113,8 @@ handling and `aria-valuetext` — only the paint moves into the caller's parts.
 | `Home` / `End` | `min` / `max` |
 
 Any other key is left alone, so a slider inside a form does not swallow it. The
-slider is a single tab stop, and the focus ring is painted on the thumb.
+slider is a single tab stop, and the focus ring is declared on the track — the
+element that holds focus — not on the thumb.
 
 ## Accessibility
 
@@ -122,6 +125,11 @@ slider is a single tab stop, and the focus ring is painted on the thumb.
   when the number alone is ambiguous (`"62%"`, `"$40"`).
 - A disabled slider has no tab stop, so it is skipped rather than announced as
   a control that cannot be used.
+- A `Label` beside the slider is visible text only; pass its name through
+  `label` and its help line through `description` (there is no
+  `aria-describedby`). The track is addressable — `ref` focuses it, `aria-id`
+  names it for automation and `onLayout` reports its painted box — so a form can
+  focus the slider it failed on.
 
 ## Theming
 

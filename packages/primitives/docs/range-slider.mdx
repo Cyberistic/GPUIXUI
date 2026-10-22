@@ -51,6 +51,8 @@ rather than skipping it.
 | `disabled` | `boolean` | `false` | both thumbs leave the tab order |
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |
 | `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` (trimmed; a blank label leaves both unnamed) |
+| `description` | `string` | none | announced help on the group node; a blank one publishes nothing |
+| `ref` / `aria-id` / `onLayout` | host props | none | the address lands on the thumb the form should focus — the one holding keyboard focus, or the start while neither does |
 | `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
 | `style` | `StateStyle<SliderState>` | — | resolved against the live state, merged last on the track |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
@@ -95,6 +97,11 @@ act on the end the user is holding. The focused thumb paints the ring.
   `label` after the package's name rule: trimmed, and absent when blank. A group
   with one name is never two unnamed sliders, and a blank label does not name
   the ends `" minimum"` / `" maximum"`.
+- The help line a visible `Label` paints goes through `description` and is
+  announced on the group node (there is no `aria-describedby`). The address
+  names one element because only one can hold it: the thumb a form should focus
+  — the end the reader last used, or the start while neither holds focus — so a
+  form can focus the range it failed on and an automation host can address it.
 
 ## Theming
 
