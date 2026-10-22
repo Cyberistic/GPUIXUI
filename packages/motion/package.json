@@ -17,6 +17,10 @@
     "./timing": {
       "types": "./src/timing.ts",
       "default": "./src/timing.ts"
+    },
+    "./timeline": {
+      "types": "./src/timeline.ts",
+      "default": "./src/timeline.ts"
     }
   },
   "scripts": {

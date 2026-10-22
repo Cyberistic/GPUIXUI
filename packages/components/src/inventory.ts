@@ -45,6 +45,7 @@ import { popoverMeta } from "./popover.js";
 import { previewCardMeta } from "./preview-card.js";
 import { rotatingTextMeta } from "./rotating-text.js";
 import { searchInputMeta } from "./search-input.js";
+import { splittingTextMeta } from "./splitting-text.js";
 import { stepperMeta } from "./stepper.js";
 import { tabsMeta } from "./tabs.js";
 import { tagInputMeta } from "./tag-input.js";
@@ -110,6 +111,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   previewCardMeta,
   rotatingTextMeta,
   searchInputMeta,
+  splittingTextMeta,
   stepperMeta,
   tabsMeta,
   tagInputMeta,

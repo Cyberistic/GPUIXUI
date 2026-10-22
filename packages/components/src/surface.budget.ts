@@ -30,8 +30,9 @@ export const surfaceBudget = {
   // timing rule beside it), 93 → 95 when CountingNumber did
   // (`counting-number.tsx` and its formatting rule), 95 → 96 for AutoHeight
   // (`auto-height.tsx`, plan 600's measured reveal), 96 → 98 for RotatingText
-  // (`rotating-text.tsx` and its index rule).
-  modules: 98,
+  // (`rotating-text.tsx` and its index rule), 98 → 100 for SplittingText
+  // (`splitting-text.tsx` and the split rule beside it).
+  modules: 100,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   bytes: 660 * 1024,
   /** Packages the entry's own modules import. */

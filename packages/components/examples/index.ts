@@ -51,6 +51,7 @@ import { PopoverExample } from "./popover.example.js";
 import { PreviewCardExample } from "./preview-card.example.js";
 import { RotatingTextExample } from "./rotating-text.example.js";
 import { SearchInputExample } from "./search-input.example.js";
+import { SplittingTextExample } from "./splitting-text.example.js";
 import { StepperExample } from "./stepper.example.js";
 import { TabsExample } from "./tabs.example.js";
 import { TagInputExample } from "./tag-input.example.js";
@@ -100,6 +101,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "preview-card": PreviewCardExample,
   "rotating-text": RotatingTextExample,
   "search-input": SearchInputExample,
+  "splitting-text": SplittingTextExample,
   stepper: StepperExample,
   tabs: TabsExample,
   "tag-input": TagInputExample,
