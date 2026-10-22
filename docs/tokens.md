@@ -2420,10 +2420,10 @@ const controlStyle = (
 });
 ```
 
-Both component packages decide that rule in their own seam today
-(`packages/primitives/src/core/focus.ts`, `packages/components/src/internal/theme.ts`);
-this helper is the one home the tokens package publishes for it, and their
-adoption is tracked in `TODO.md`.
+The two component packages' ring seams
+(`packages/primitives/src/core/focus.ts`, `packages/components/src/internal/theme.ts`)
+are where that rule was first written; this helper is its one home, and a seam
+that has not delegated to it yet is tracked in `TODO.md`.
 
 Both rings were measured in a real window on `@gpuix/native@0.11.0` (the
 playground's `focus-visible` live probe): Tab paints the outline and dims the
