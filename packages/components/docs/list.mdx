@@ -54,6 +54,12 @@ import {
 A disabled row is skipped by the arrow keys, by `Home`/`End` and by clicks; it can
 never be selected.
 
+A key acts on the row it came from, so a reader who reached a row with `Tab`
+moves from **that** row: a window's traversal focuses it without delivering a
+focus event, which is the same measured gap the [Tabs](/docs/components/tabs)
+page records. The rule is a pure function (`src/list/origin.ts`) with its own
+suite, `src/list/origin.test.ts`.
+
 ## Keyboard (multiple mode)
 
 Movement works exactly as in single mode. Selection differs:

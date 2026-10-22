@@ -68,6 +68,7 @@ import {
 } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { keyboardRing, useTheme } from "./internal/theme.js";
+import { keyOrigin } from "./list/origin.js";
 import { useTypeahead } from "./internal/typeahead.js";
 import { range, sameValues, selectAll, toggle } from "./list/selection.js";
 import { makeRowStore, type RowStore } from "./list/store.js";
@@ -347,9 +348,9 @@ export const List = (props: ListProps) => {
    * multiple mode selects the range from the anchor to the row it reached.
    */
   const moveBy = useCallback(
-    (delta: 1 | -1, extend: boolean) => {
+    (delta: 1 | -1, extend: boolean, from: Option.Option<string>) => {
       pipe(
-        rowAt(rows, nextEnabled(items(rows), indexOf(rows, active), delta)),
+        rowAt(rows, nextEnabled(items(rows), indexOf(rows, from), delta)),
         Option.match({
           onNone: () => undefined,
           onSome: (row) => {
@@ -369,7 +370,7 @@ export const List = (props: ListProps) => {
         }),
       );
     },
-    [active, anchor, commit, focusRow, multiple, rows],
+    [anchor, commit, focusRow, multiple, rows],
   );
 
   const jumpTo = useCallback(
@@ -468,26 +469,32 @@ export const List = (props: ListProps) => {
     ],
   );
 
-  const selectActive = useCallback(() => {
-    pipe(
-      active,
-      Option.match({
-        onNone: () => undefined,
-        onSome: (target) => select(target),
-      }),
-    );
-  }, [active, select]);
+  const selectActive = useCallback(
+    (target: Option.Option<string>) => {
+      pipe(
+        target,
+        Option.match({
+          onNone: () => undefined,
+          onSome: (value) => select(value),
+        }),
+      );
+    },
+    [select],
+  );
 
-  /** Run the active row's action; a disabled or missing row does nothing. */
-  const activateActive = useCallback(() => {
-    pipe(
-      Option.flatMap(active, enabledRow),
-      Option.match({
-        onNone: () => undefined,
-        onSome: (row) => onActivate?.(row.value),
-      }),
-    );
-  }, [active, enabledRow, onActivate]);
+  /** Run a row's action; a disabled or missing row does nothing. */
+  const activateActive = useCallback(
+    (target: Option.Option<string>) => {
+      pipe(
+        Option.flatMap(target, enabledRow),
+        Option.match({
+          onNone: () => undefined,
+          onSome: (row) => onActivate?.(row.value),
+        }),
+      );
+    },
+    [enabledRow, onActivate],
+  );
 
   /** Cmd/Ctrl+A: select every enabled row and anchor at the first of them. */
   const selectEveryRow = useCallback(() => {
@@ -512,7 +519,24 @@ export const List = (props: ListProps) => {
 
   const handleKeyDown = (event: EventPayload): void => {
     if (!selectable) return;
+    const origin = keyOrigin(
+      rows,
+      active,
+      Option.fromNullishOr(event.elementId),
+    );
     const extend = multiple && event.modifiers?.shift === true;
+
+    // Adopt a row that holds focus without having reported it, so the highlight
+    // and the tab stop follow the reader rather than the last recorded row.
+    pipe(
+      origin,
+      Option.match({
+        onNone: () => undefined,
+        onSome: (value) => {
+          if (!Option.contains(active, value)) setActive(Option.some(value));
+        },
+      }),
+    );
     pipe(
       typedChar(event),
       Option.match({
@@ -521,13 +545,13 @@ export const List = (props: ListProps) => {
         onNone: () =>
           Match.value(event).pipe(
             Match.when(isEnter, () => {
-              if (selectable) selectActive();
-              activateActive();
+              if (selectable) selectActive(origin);
+              activateActive(origin);
             }),
-            Match.when(isActivation, selectActive),
+            Match.when(isActivation, () => selectActive(origin)),
             Match.when(isSelectAll, selectEveryRow),
-            Match.when(isDown, () => moveBy(1, extend)),
-            Match.when(isUp, () => moveBy(-1, extend)),
+            Match.when(isDown, () => moveBy(1, extend, origin)),
+            Match.when(isUp, () => moveBy(-1, extend, origin)),
             Match.when(isFirst, () => jumpTo("first")),
             Match.when(isLast, () => jumpTo("last")),
             Match.orElse(() => undefined),

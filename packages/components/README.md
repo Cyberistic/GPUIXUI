@@ -60,19 +60,19 @@ them. Measured 2026-10-22 with
 
 | Surface | Modules | Source |
 | ------- | ------: | -----: |
-| the package's own graph | 85 | 548 KiB |
-| `@gpuixui/tokens` it reaches | 22 | 146 KiB |
-| `@gpuixui/tw` | 9 | 99 KiB |
+| the package's own graph | 89 | 589 KiB |
+| `@gpuixui/tokens` it reaches | 24 | 174 KiB |
+| `@gpuixui/tw` | 9 | 104 KiB |
 | `@gpuixui/keyboard` | 8 | 12 KiB |
 | `@gpuixui/icons` | 5 | 11 KiB |
-| **total** | **129** | **≈817 KiB** |
+| **total** | **135** | **≈890 KiB** |
 
 The table counts the workspace source a consumer compiles. `react`, `effect` and
 `@gpuix/react` are dependencies the app already holds, so their bytes are not in
 it; their cost is in the cold-import numbers below.
 
-The package's own modules import exactly three packages: `@gpuix/react` (64
-sites), `effect` (153) and `react` (45). Cold import through the repo's loader,
+The package's own modules import exactly three packages: `@gpuix/react` (65
+sites), `effect` (160) and `react` (47). Cold import through the repo's loader,
 three fresh processes each (`nub scripts/surface.ts --import`): the runtime
 alone 168 ms, one family through its subpath (`@gpuixui/components/badge`)
 528 ms, the barrel 876 ms. The digit belongs to a shared machine — one run
