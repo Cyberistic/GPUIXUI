@@ -20,8 +20,11 @@
  * the selected text under the body floor (`selection.ts`). Both modes carry
  * their own `secondary` — the face a tonal action rests on — because each look's
  * muted strip and window sit at their own lightness (`decorative.ts`). Luna light
- * also deepens the destructive status text to red 900, because its warm pressed
- * wash left a destructive row at 6.77:1, under the body floor.
+ * also carries its own status tints: its beige page is at the lightness a pale
+ * tint has, so the base light tint would vanish into it and a deeper one into
+ * its toolbar — the look sits its tints above its page instead. Its warm pressed
+ * wash is why the light destructive status text is red 900 in the base theme,
+ * which this look inherits.
  */
 
 import { palette, type ThemeColors } from "./color.js";
@@ -78,9 +81,6 @@ const lunaColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     successSoft: palette.green[50],
     warningSoft: palette.amber[50],
     destructiveSoft: palette.red[50],
-    // Luna's pressed wash is warm and dark, so the shared red 800 label landed
-    // at 6.77:1 on a pressed destructive row; red 900 keeps it readable there.
-    destructiveSoftForeground: "#5C1619",
     selection: "#316AC53D",
     placeholder: "#5C6470",
     disabled: "#E4E0CE",

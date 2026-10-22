@@ -752,6 +752,12 @@ Four facts about these two:
   decorative placement through `decorativeFailures`, in `retro.test.ts`; a
   high-contrast base keeps its own palette and takes only the families, radii
   and density, exactly as a platform style does.
+- **Luna light owns its soft status tints.** Its beige page (`#ECE9D8`) sits at
+  the lightness a pale status tint has — the base `infoSoft` measured 1.00:1
+  against it — and its toolbar is deeper than that, so no inherited tint can be
+  seen on both. The look carries the `50` step of each family instead, which
+  reads above its page rather than into it
+  ([Decorative surfaces](#decorative-surfaces)).
 
 ```ts
 import { extendTheme, retroTheme, themes } from "@gpuixui/tokens";
