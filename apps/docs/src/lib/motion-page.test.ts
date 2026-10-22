@@ -606,8 +606,11 @@ describe("the motion page", () => {
     ).toEqual([]);
 
     // The unit the function converts to is the runtime's: the levels are
-    // milliseconds and the returned duration is seconds.
-    expect(timing).toContain("motionLevels[level] / 1000");
+    // milliseconds and the returned duration is seconds. `levelMs` is the seam
+    // that also keeps an unreadable level from reaching the runtime as
+    // `undefined / 1000`, so the guard names it rather than the table read.
+    expect(timing).toContain("levelMs(level) / 1000");
+    expect(timing).toContain(": motionLevels.normal;");
     expect(pageText).toContain("a duration in **seconds**");
     expect(timing).toContain(
       'if (options.preference === "reduced") return { duration: 0 };',

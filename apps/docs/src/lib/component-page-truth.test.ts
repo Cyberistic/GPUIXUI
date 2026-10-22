@@ -91,6 +91,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/alert.tsx",
   },
   {
+    file: "avatar.mdx",
+    row: "Avatars",
+    suite: "packages/components/src/behaviour/avatar.test.tsx",
+    shadowed: "packages/components/docs/avatar.mdx",
+    source: "packages/components/src/avatar.tsx",
+  },
+  {
     file: "breadcrumb.mdx",
     row: "Breadcrumbs",
     suite: "packages/components/src/behaviour/breadcrumb.test.tsx",
@@ -680,8 +687,9 @@ describe("the curated component pages", () => {
     expect(source).toContain("fadeFromSide(side, 12)");
     expect(source).toContain('useSurfaceTiming("slow")');
     expect(flatSource).toContain("...presenceStyle(presence.present)");
-    expect(presenceSeam).toContain('{ pointerEvents: "auto" }');
-    expect(presenceSeam).toContain('{ pointerEvents: "none" }');
+    expect(presenceSeam).toContain(
+      'pointerEvents: present ? "auto" : "none"',
+    );
     expect(source).toContain("if (!presence.mounted) return null;");
     expect(source).toContain('label="Close drawer"');
 
@@ -783,8 +791,9 @@ describe("the curated component pages", () => {
     expect(flatSource).toContain("if (!presence.mounted) return null;");
     expect(flatSource).toContain("occlude={presence.present}");
     expect(flatSource).toContain("...presenceStyle(presence.present)");
-    expect(presenceSeam).toContain('{ pointerEvents: "auto" }');
-    expect(presenceSeam).toContain('{ pointerEvents: "none" }');
+    expect(presenceSeam).toContain(
+      'pointerEvents: present ? "auto" : "none"',
+    );
 
     // The surface itself takes focus on every open: `autoFocus` is on the
     // menu box, so the first arrow reaches the first row rather than the probe
@@ -1289,8 +1298,9 @@ describe("the curated component pages", () => {
     expect(viewportRecipe).toContain("pointer-events-none");
     expect(cardRecipe).toContain("pointer-events-auto");
     expect(viewport).toContain("presenceStyle(present)");
-    expect(presenceSeam).toContain('{ pointerEvents: "auto" }');
-    expect(presenceSeam).toContain('{ pointerEvents: "none" }');
+    expect(presenceSeam).toContain(
+      'pointerEvents: present ? "auto" : "none"',
+    );
     expect(viewport).toContain("held.current.focus > 0");
     expect(viewport).toContain(
       "Math.max(0, held.current.focus + (value ? 1 : -1))",
@@ -2375,7 +2385,7 @@ describe("the curated component pages", () => {
     expect(text).toContain("decoded");
     expect(text).toContain("reads them from the `FormApi`");
     expect(text).toContain("read when the form mounts");
-    expect(text).toContain("9 native behaviour tests");
+    expect(text).toContain("10 native behaviour tests");
     expect(text).toContain("form-root");
     // The dependency a reader installs is the core, so the table lists it.
     expect(text).toContain("| `@tanstack/form-core` |");
@@ -2866,4 +2876,5 @@ describe("the page a curated page displaces", () => {
     ).toBeGreaterThan(30);
     expect(gaps).toEqual([]);
   });
+
 });
