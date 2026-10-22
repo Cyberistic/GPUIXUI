@@ -37,8 +37,9 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-48 probes a real window can prove, of which twelve mount shipped
-`@gpuixui/components` (the dialog and its fade, the menu, the context menu, the toast system,
+49 probes a real window can prove, of which thirteen mount shipped
+`@gpuixui/components` (the dialog and its fade, the confirmation flow, the menu,
+the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
 combobox and the modal focus rule), five mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider, Text and Tooltip), one more
@@ -2722,6 +2723,43 @@ control to 32 fails `darwin: the md control takes the theme's height`
 that repainted but never reflowed would pass every colour read.
 Captures: `.artifacts/live/theme-{dark,light,high,darwin,restored}.png`.
 
+### `confirm-dialog-lifecycle` — measured on 0.11.0 here
+
+The **confirmation flow** — MISSION's "dialog open/close/confirm" — driven
+through the shipped `ConfirmDialog`. `dialog-lifecycle` measures open, focus
+entry, Escape and the dialog's own close; what it cannot is the pair of actions
+that make a confirmation safe, because `ConfirmDialog` has no trigger, reports
+`onConfirm` and leaves the close to the caller. So the probe's fixture **is the
+caller**: `confirmFlow` (`src/live/confirm.ts`) owns `open`, counts each open,
+and closes the surface when a confirm is reported — exactly the app half the
+component's docs name.
+
+| Step | Measurement |
+| ---- | ----------- |
+| open | a press on the app's own `confirm-open` action paints the surface; the focus is on **Cancel**, not on Delete; `open=true opens=1` |
+| Enter | the untouched dialog dismisses on `Enter` — `confirms=0 closes=1` — and the focus returns to `confirm-open`, so the safe path is what a reader's first key takes |
+| confirm | a press on Delete reports **once** (`confirms=1`), the surface goes because the fixture closed it, and the focus returns to the opener |
+| cancel | a press on Cancel dismisses and reports nothing (`confirms=1` still), focus back on the opener |
+| Escape | dismisses and reports nothing either (`opens=4 closes=4`), with the focus back on the opener |
+
+18 checks, `--only confirm-dialog-lifecycle`, green on 0.11.0. Fixture:
+`src/live/confirm.ts` — the opener and readout ids, the shipped controls' ids,
+the `ConfirmFlow` state and its reducer. `confirm.test.ts` (6 cases) holds the
+premise: a confirm reports once **and** closes, a cancel closes without
+reporting, a duplicated confirm is two reports (so the single-report check can
+fail), every open counts, the shipped source still carries the two locators,
+Cancel as `initialFocus` and a confirm that only reports, and the fixture's ids
+are the ones the probe addresses.
+
+Negative controls measured, exit `1` each and restored green: duplicating the
+confirm call in the fixture fails `the confirmation reports once and the caller
+records the close` (`expected "open=false opens=2 confirms=1 closes=2", got
+"open=false opens=2 confirms=2 closes=3"`), and wiring the fixture's close path
+to the confirm event — a caller that treats a dismissal as confirmation — fails
+`Enter on the untouched dialog confirms nothing` (`expected "open=false opens=1
+confirms=0 closes=1", got "…confirms=1 closes=1"`). Captures:
+`.artifacts/live/confirm-{open,cancelled,accepted,escaped}.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -2834,7 +2872,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (48/48), with a written report and screenshots.
+  (49/49), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

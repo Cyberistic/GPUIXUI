@@ -324,6 +324,12 @@ export const liveRegistry = [
       "Theme: a provider switch repaints the page and the card, and a platform look re-lays an md control out at its own density while a high-contrast palette keeps its colours",
     capability: "theme",
   },
+  {
+    id: "confirm-dialog-lifecycle",
+    title:
+      "Modal: the shipped ConfirmDialog holds Cancel's focus, reports a confirm once, cancels on Enter and Escape, and returns focus to the app's opener",
+    capability: "modal",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

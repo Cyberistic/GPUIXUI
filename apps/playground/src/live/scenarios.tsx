@@ -12,6 +12,7 @@ import {
   useCallback,
   useContext,
   useLayoutEffect,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -40,6 +41,7 @@ import {
   CommandMenuEmpty,
   CommandMenuInput,
   CommandMenuList,
+  ConfirmDialog,
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
@@ -247,6 +249,15 @@ import {
   OUTER_VIEWPORT,
 } from "./nested-scroll.js";
 import { REVIEWERS } from "./combobox.js";
+import {
+  CONFIRM_ACCEPT,
+  CONFIRM_CANCEL,
+  CONFIRM_OPENER,
+  CONFIRM_READOUT,
+  confirmFlow,
+  confirmReadout,
+  initialConfirmFlow,
+} from "./confirm.js";
 import { listAnchorOf } from "./host.js";
 import { LIST_ROWS, TYPEAHEAD_LETTER, type ListRow } from "./list.js";
 import {
@@ -1681,6 +1692,69 @@ const DialogProbe = (): ReactNode => {
         >
           {`opens=${opens} closes=${closes}`}
         </text>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The shipped `ConfirmDialog` with the probe playing the caller.
+ *
+ * The component reports a confirm and leaves the close to the app, so the
+ * fixture owns `open` through `confirmFlow`: a confirm closes, a cancel closes
+ * without reporting, and the readout carries every count the checks read.
+ */
+const ConfirmProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [flow, dispatch] = useReducer(confirmFlow, initialConfirmFlow);
+  return (
+    <div
+      testId="confirm-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 720,
+          padding: theme.spacing.xl,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped ConfirmDialog: Cancel holds the focus, a confirm reports
+          once, and the caller owns the close.
+        </text>
+        <Pressable testId={CONFIRM_OPENER} onClick={() => dispatch("open")}>
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            Delete workspace
+          </text>
+        </Pressable>
+        <ConfirmDialog
+          open={flow.open}
+          onOpenChange={(next) => dispatch(next ? "open" : "cancel")}
+          title="Delete workspace"
+          description="The workspace and its 42 files are removed permanently."
+          confirmLabel="Delete"
+          onConfirm={() => dispatch("confirm")}
+        />
+        <Readout testId={CONFIRM_READOUT}>{confirmReadout(flow)}</Readout>
       </div>
     </div>
   );
@@ -4860,6 +4934,144 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "dialog-trigger",
     );
     yield* ctx.host.capture("dialog-closed");
+  });
+
+/**
+ * Confirms and cancels the shipped `ConfirmDialog` in a window — the flow
+ * MISSION names beside the plain dialog's open/close.
+ *
+ * Three claims a `TestRenderer` suite cannot make, because they are about real
+ * input: `Cancel` holds the initial focus, so `Enter` on an untouched dialog
+ * takes the safe path instead of destroying; a confirm reports exactly once and
+ * the surface goes away because the *caller* closes it; and every close path —
+ * confirm, cancel, Escape — hands the focus back to the app's opener. The
+ * fixture is the caller (`confirmFlow`), so the counts the checks read are the
+ * app's own, not the component's state.
+ */
+const confirmSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(CONFIRM_OPENER);
+    yield* ctx.expectEqual(
+      "the flow starts closed with nothing reported",
+      yield* ctx.host.text(CONFIRM_READOUT),
+      "open=false opens=0 confirms=0 closes=0",
+    );
+    yield* ctx.expectEqual(
+      "a closed confirmation paints no action",
+      yield* settleGone(ctx, CONFIRM_ACCEPT),
+      true,
+    );
+
+    /**
+     * Focuses the app's opener and presses it. The press is what records the
+     * restore target, so the opener must hold the focus before it opens.
+     */
+    const open = Effect.gen(function* () {
+      yield* ctx.host.focusElement(CONFIRM_OPENER);
+      yield* ctx.host.click(CONFIRM_OPENER);
+      yield* settlePainted(ctx, CONFIRM_ACCEPT);
+    });
+
+    yield* open;
+    yield* ctx.expectEqual(
+      "a press opens the confirmation over the page",
+      (yield* paintedBox(ctx, CONFIRM_ACCEPT)).width > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "Cancel holds the initial focus, not the destructive action",
+      yield* focusedAfterPaint(ctx),
+      CONFIRM_CANCEL,
+    );
+    yield* ctx.expectContains(
+      "the caller records the open",
+      yield* ctx.host.text(CONFIRM_READOUT),
+      "open=true opens=1",
+    );
+    // Capture-only wait: the surface is painted but still fading in on its
+    // `slow` level, and a screenshot that shows a half-opacity dialog is poor
+    // evidence for the docs. No check reads the frame.
+    yield* Effect.sleep(Duration.millis(400));
+    yield* ctx.host.capture("confirm-open");
+
+    // The safety property: the focused control is Cancel, so Enter takes the
+    // safe path. A dialog that focused its confirm action would destroy here.
+    yield* ctx.host.key("enter");
+    yield* ctx.expectEqual(
+      "Enter on the untouched dialog dismisses it",
+      yield* settleGone(ctx, CONFIRM_ACCEPT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "Enter on the untouched dialog confirms nothing",
+      yield* ctx.host.text(CONFIRM_READOUT),
+      "open=false opens=1 confirms=0 closes=1",
+    );
+    yield* ctx.expectEqual(
+      "the cancelled dialog returns the focus to its opener",
+      yield* focusedAfterPaint(ctx),
+      CONFIRM_OPENER,
+    );
+    yield* ctx.host.capture("confirm-cancelled");
+
+    // Confirm: one report, and the surface goes because the fixture closed it.
+    yield* open;
+    yield* ctx.host.click(CONFIRM_ACCEPT);
+    yield* ctx.expectEqual(
+      "the confirm action dismisses the surface",
+      yield* settleGone(ctx, CONFIRM_ACCEPT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the confirmation reports once and the caller records the close",
+      yield* ctx.host.text(CONFIRM_READOUT),
+      "open=false opens=2 confirms=1 closes=2",
+    );
+    yield* ctx.expectEqual(
+      "the confirmed dialog returns the focus to its opener",
+      yield* focusedAfterPaint(ctx),
+      CONFIRM_OPENER,
+    );
+    yield* ctx.host.capture("confirm-accepted");
+
+    // Cancel: the destructive action must not run.
+    yield* open;
+    yield* ctx.host.click(CONFIRM_CANCEL);
+    yield* ctx.expectEqual(
+      "the cancel action dismisses the surface",
+      yield* settleGone(ctx, CONFIRM_ACCEPT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "cancelling reports no confirm",
+      yield* ctx.host.text(CONFIRM_READOUT),
+      "open=false opens=3 confirms=1 closes=3",
+    );
+    yield* ctx.expectEqual(
+      "the cancelled dialog returns the focus to its opener too",
+      yield* focusedAfterPaint(ctx),
+      CONFIRM_OPENER,
+    );
+
+    // Escape is the third close path, and it is a cancel rather than a confirm.
+    yield* open;
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "Escape dismisses the confirmation",
+      yield* settleGone(ctx, CONFIRM_ACCEPT),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "Escape reports no confirm",
+      yield* ctx.host.text(CONFIRM_READOUT),
+      "open=false opens=4 confirms=1 closes=4",
+    );
+    yield* ctx.expectEqual(
+      "Escape returns the focus to the opener as well",
+      yield* focusedAfterPaint(ctx),
+      CONFIRM_OPENER,
+    );
+    yield* ctx.host.capture("confirm-escaped");
   });
 
 /**
@@ -12901,5 +13113,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "theme-switch-lifecycle",
     view: () => <ThemeSwitchProbe />,
     steps: themeSwitchSteps,
+  },
+  "confirm-dialog-lifecycle": {
+    id: "confirm-dialog-lifecycle",
+    view: () => <ConfirmProbe />,
+    steps: confirmSteps,
   },
 };
