@@ -9,6 +9,13 @@
  * on its muted strip and Linux dark's reached 1.004:1 on its card, so both
  * styles now carry a `skeleton` of their own.
  *
+ * The floating strip was the one the skeleton contract still missed: a dialog
+ * whose body is loading paints its placeholder rows on the dialog's own
+ * `popover` fill, and the three dark platform styles carried a skeleton
+ * 1.031–1.049:1 from that fill — a loading dialog that looked empty. They carry
+ * their own placeholder fill now, and the placement is in the table so a brand
+ * cannot repeat it.
+ *
  * The state washes joined the same contract because they had the same hole and
  * a worse symptom: the base dark theme's `hover` was its `popover`, so hovering
  * a menu row repainted the surface it already sat on, and the base light
@@ -69,11 +76,12 @@ import {
   edgeLessBrand,
   flatActionBrand,
   flatShadowBrand,
+  flatSkeletonBrand,
   report,
   unavailableActionBrand,
 } from "./decorative.example.js";
 import { statusEdgeAlpha, statusTone, statusTones } from "./styles.js";
-import { platformNames } from "./platforms.js";
+import { platformNames, platformStyles } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
 import {
   darkTheme,
@@ -116,11 +124,52 @@ describe("decorative surfaces", () => {
   });
 
   it("measures a skeleton on every surface it can stand in", () => {
-    const missing = ["background", "card", "muted"].filter(
+    // A placeholder stands in for a row on a page, in a card, in a muted list
+    // and in a dialog or popover whose body has not loaded. The floating strip
+    // is the one the table missed: a loading dialog paints its skeleton rows on
+    // the dialog's own `popover` fill, so a placeholder that matches it is an
+    // empty dialog.
+    const missing = ["background", "card", "popover", "muted"].filter(
       (over) => !measured("skeleton", "skeleton", over),
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it("prints the skeleton's strips in the catalogue, from the placements themselves", () => {
+    // The page lists the strips a placeholder is measured on, so a placement the
+    // table gains cannot stay unprinted and a row cannot name a strip nobody
+    // measures.
+    const strips = decorativeSurfaces
+      .filter(({ surface }) => surface === "skeleton")
+      .map(({ over }) => `\`${over}\``)
+      .join(", ");
+
+    expect(
+      readFileSync(new URL("../../../docs/tokens.md", import.meta.url), "utf8"),
+    ).toContain(`| skeleton | \`skeleton\` | ${strips} |`);
+  });
+
+  it("reads the painters that put a placeholder on a dialog", () => {
+    // The placement exists because a dialog's body is a placeholder's real home:
+    // its content surface fills `popover` and the placeholder fills `skeleton`.
+    // A painter that stopped painting either role would leave the pair behind.
+    const primitives = readFileSync(
+      new URL("../../primitives/src/recipe/index.ts", import.meta.url),
+      "utf8",
+    );
+    const recipes = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+    const surface = (name: string): string =>
+      new RegExp(`export const ${name} =\\s*"([^"]*)"`).exec(recipes)?.[1] ??
+      "";
+
+    expect(primitives).toContain('"shrink-0 bg-skeleton"');
+    expect(surface("DIALOG_CONTENT")).toContain("bg-popover");
+    expect(surface("POPOVER_CONTENT")).toContain("bg-popover");
+    expect(surface("PREVIEW_CARD_CONTENT")).toContain("bg-popover");
   });
 
   it("measures a veil over the content surfaces a modal covers", () => {
@@ -675,6 +724,68 @@ describe("decorative surfaces", () => {
       expect(decorativeFailures(theme), theme.name).toEqual([]);
     });
   });
+
+  it("reports the platform placeholders that matched their own dialog before this step", () => {
+    // Measured on the tree before the move: macOS dark's inherited skeleton was
+    // 1.049:1 from its popover, Linux dark's 1.031:1 and Windows dark's
+    // 1.039:1 — a loading dialog in any of them was an empty surface.
+    const before = [
+      ["darwin", "#2A303B", 1.049],
+      ["linux", "#3A3A3A", 1.031],
+      ["win32", "#2A303B", 1.039],
+    ] as const;
+
+    before.forEach(([platform, skeleton, ratio]) => {
+      const stale = extendTheme(platformTheme(themes.dark, platform), {
+        colors: { skeleton },
+      });
+      const shipped = platformTheme(themes.dark, platform);
+
+      expect(
+        contrastRatio(skeleton, stale.colors.popover),
+        platform,
+      ).toBeCloseTo(ratio, 3);
+      expect(platformStyles[platform].colors.dark.skeleton, platform).not.toBe(
+        skeleton,
+      );
+      expect(
+        contrastRatio(shipped.colors.skeleton, shipped.colors.popover),
+        platform,
+      ).toBeGreaterThanOrEqual(decorativeFloor);
+      expect(decorativeFailures(shipped), platform).toEqual([]);
+    });
+  });
+
+  it("prints the tightest placeholder placement over every shipped style", () => {
+    const strips = decorativeSurfaces.filter(
+      ({ surface }) => surface === "skeleton",
+    );
+    const looks = retroNames.flatMap((look) => [
+      retroTheme(lightTheme, look),
+      retroTheme(darkTheme, look),
+    ]);
+    const tightest = [...shippedThemes, ...platformThemes, ...looks]
+      .flatMap((theme) =>
+        strips.map(({ over, role }) => ({
+          theme: theme.name,
+          over,
+          ratio: contrastRatio(theme.colors[role], theme.colors[over]),
+        })),
+      )
+      .reduce((worst, placement) =>
+        placement.ratio !== undefined &&
+        (worst.ratio === undefined || placement.ratio < worst.ratio)
+          ? placement
+          : worst,
+      );
+
+    expect(tightest.theme).toBe("Dark · Windows XP (Luna)");
+    expect(tightest.over).toBe("popover");
+    expect(tightest.ratio).toBeCloseTo(1.054, 3);
+    expect(
+      readFileSync(new URL("../../../docs/tokens.md", import.meta.url), "utf8"),
+    ).toContain("placeholder on its dialog fill at 1.054:1");
+  });
 });
 
 describe("decorativeFailures", () => {
@@ -776,6 +887,13 @@ describe("the documented example", () => {
     expect(decorativeSurfacesAreVisible(unavailableActionBrand)).toBe(false);
     expect(report(unavailableActionBrand)).toContain(
       "disabledFace: disabled on secondary is 1.00",
+    );
+  });
+
+  it("reports the brand whose loading dialog has no placeholder", () => {
+    expect(decorativeSurfacesAreVisible(flatSkeletonBrand)).toBe(false);
+    expect(report(flatSkeletonBrand)).toContain(
+      "skeleton: skeleton on popover is 1.00",
     );
   });
 });

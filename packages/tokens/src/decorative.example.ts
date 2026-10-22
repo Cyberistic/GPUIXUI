@@ -43,6 +43,15 @@ export const unavailableActionBrand = extendTheme(lightTheme, {
   colors: { disabled: lightTheme.colors.secondary },
 });
 
+/**
+ * A brand whose loading placeholder is the fill a dialog paints. The dialog's
+ * body is still loading and the skeleton rows are the only content it has, so a
+ * placeholder in the dialog's own colour is a dialog that looks empty.
+ */
+export const flatSkeletonBrand = extendTheme(lightTheme, {
+  colors: { skeleton: lightTheme.colors.popover },
+});
+
 /** A failure written the way a theme editor shows it. */
 export const report = (theme: Theme): ReadonlyArray<string> =>
   decorativeFailures(theme).map(

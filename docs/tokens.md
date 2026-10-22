@@ -633,6 +633,7 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 | `popover` | `#FFFFFF` | `#2C2C30` | `#FFFFFF` | `#383838` | `#FFFFFF` | `#2D2D2D` |
 | `input` | `#FFFFFF` | `#1F1F22` | `#FFFFFF` | `#212121` | `#FFFFFF` | `#1F1F1F` |
 | `muted` | `#E9E9EF` | `#2A2A2E` | `#ECEBE9` | `#2A2A2A` | `#EBEBEB` | `#2A2A2A` |
+| `skeleton` | `#DCDFE7` | `#303036` | base | `#3E3E3E` | base | `#323232` |
 | `secondary` | `#DEE3EA` | `#3A3A3C` | base | `#404040` | base | `#3A3A3A` |
 | `hover` | `#E2E2E8` | `#35353B` | `#E3E2DF` | `#343434` | `#E0E0E0` | `#333333` |
 | `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#D6D6D6` | `#3A3A3A` |
@@ -1682,10 +1683,10 @@ is unavailable (`disabled`), and the shadow a raised surface drops. They still
 have one job — be seen — so they get one floor of their own,
 `decorativeFloor = 1.05:1`. Below it a
 surface reads as the fill it is painted on: a card without an edge, a skeleton
-that looks like an empty row, a dialog with no layer behind it, a message with no
-surface or no boundary, a scroller whose thumb nobody can find, a menu row that
-does not answer the pointer, a button that looks like a label, a disabled
-control that looks available.
+that looks like an empty row or an empty dialog, a dialog with no layer behind
+it, a message with no surface or no boundary, a scroller whose thumb nobody can
+find, a menu row that does not answer the pointer, a button that looks like a
+label, a disabled control that looks available.
 
 `decorativeFailures(theme, floor?)` measures every placement the system paints,
 compositing a translucent role over its surface first, so the veil — translucent
@@ -1696,7 +1697,7 @@ how a status edge is measured at the alpha its component actually uses:
 | Surface | Role | Measured over |
 | ------- | ---- | ------------- |
 | divider | `border` | `background`, `card`, `popover`, `muted` |
-| skeleton | `skeleton` | `background`, `card`, `muted` |
+| skeleton | `skeleton` | `background`, `card`, `popover`, `muted` |
 | scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `input` |
 | statusTint | each tone's `xSoft` | `background`, `card`, `popover`, `muted` |
 | statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, the same four strips, and the washes `hover`, `active`, `selected`, `accent` |
@@ -1708,6 +1709,15 @@ how a status edge is measured at the alpha its component actually uses:
 The thumb is chrome: the platform paints and sizes it and the role only tints it,
 so it is not held to the 3:1 a control boundary gets. It is still held to being
 findable, which is the same reason a divider is.
+
+A **loading placeholder** is the empty-row defect one surface over. The contract
+measured it on the page, a card and a muted list, and not on the floating surface
+a dialog paints: a dialog whose body is still loading draws its skeleton rows on
+the dialog's own `popover` fill (`DIALOG_CONTENT`), so a placeholder that matches
+that fill is a dialog with nothing in it. The three dark platform styles did —
+macOS 1.049:1, Linux 1.031:1 and Windows 1.039:1 — and each now carries its own
+`skeleton`; the tightest placement is the authored Windows XP (Luna) dark look's
+placeholder on its dialog fill at 1.054:1.
 
 A **soft status surface** is the tint an alert, a toast or a soft badge sits in,
 and the tint is what tells the message apart from the strip behind it. It had
@@ -2957,7 +2967,11 @@ paints, the veil and the shadow are composited rather than skipped, a surface
 that matches its page or cannot be measured is reported, and every shipped,
 platform and authored theme clears the 1.05:1 floor. It found two platform styles whose inherited
 skeleton matched their own surfaces — macOS light on `muted` at 1.045:1, Linux
-dark on `card` at 1.004:1 — which now carry a `skeleton` of their own. The
+dark on `card` at 1.004:1 — which now carry a `skeleton` of their own; the
+floating strip the contract later gained found three more on the fill a loading
+dialog paints (`popover`) — macOS dark 1.049:1, Linux dark 1.031:1 and Windows
+dark 1.039:1 — so those carry a `skeleton` too, and the tightest of every
+placement is the authored Luna dark look's dialog at 1.054:1. The
 state-wash half found five aliases: the base dark theme's `hover` was its
 `popover` (a hovered menu row painted nothing), the base light theme's was its
 `muted` toolbar, and macOS light, Windows light and Linux dark were within one

@@ -10,14 +10,16 @@
  * the veil's job is to suppress what is behind it — so they have no floor at all
  * unless this file states one. They still have a minimum job: be seen. A divider
  * that matches the page is a card without an edge; a skeleton that matches the
- * row it stands in is an empty list that looks loaded; a veil that dims nothing
- * is a dialog with no layer behind it; a tint that matches the strip it sits in
- * is a status message with no surface; an edge that matches its tint is a
- * message with no boundary; a hover that matches the row it tints is a menu with
- * no feedback; a tonal action painted in its toolbar's own colour is a label a
- * reader cannot tell is a button; a disabled control painted in the face of the
- * one it replaced looks available; a shadow that cannot darken the page it falls
- * on leaves every raised surface flat. One floor covers all ten, 1.05:1.
+ * row it stands in is an empty list that looks loaded, and one that matches the
+ * dialog it stands in is a loading dialog with nothing in it; a veil that dims
+ * nothing is a dialog with no layer behind it; a tint that matches the strip it
+ * sits in is a status message with no surface; an edge that matches its tint is
+ * a message with no boundary; a hover that matches the row it tints is a menu
+ * with no feedback; a tonal action painted in its toolbar's own colour is a
+ * label a reader cannot tell is a button; a disabled control painted in the face
+ * of the one it replaced looks available; a shadow that cannot darken the page
+ * it falls on leaves every raised surface flat. One floor covers all ten,
+ * 1.05:1.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
@@ -179,6 +181,19 @@ const enabledFaces = [
 ] as const;
 
 /**
+ * The strips a loading placeholder stands in: a page, a card, a muted toolbar
+ * and the `popover` fill a dialog or a popover paints.
+ *
+ * The floating strip is the one the table missed, and it is where a placeholder
+ * does its real work: a dialog whose body is still loading paints skeleton rows
+ * on the dialog's own `popover` fill (`DIALOG_CONTENT`), so a placeholder that
+ * matches that fill is a dialog with nothing in it. Measured, the three dark
+ * platform styles carried a skeleton 1.03–1.05:1 from their own popover, and the
+ * base dark theme's own popover happens to sit one step from it as well.
+ */
+const skeletonStrips = ["background", "card", "popover", "muted"] as const;
+
+/**
  * The shadow a raised surface drops, on every strip it can float over.
  *
  * A level's strength lives in its own alpha byte, so the painted colour is the
@@ -200,21 +215,26 @@ const elevationStrips = ["background", "card", "popover", "muted"] as const;
  * The decorative surfaces the library paints. Each is measured where it is
  * actually used rather than against a single generic surface: a divider sits on
  * the page, inside a card, in a popover and in a muted toolbar strip; a
- * skeleton stands in for a row on a page, in a card and in a muted list; a soft
- * status surface is the tint a message sits in and its edge bounds it, on every
- * strip a message is placed on; a tonal action sits on any of the four strips,
- * because a toolbar, a card and a popover all hold buttons; a raised surface
- * floats over the same four, and its shadow is what tells it apart from them;
- * and a disabled control's face is measured against each face it can replace.
+ * skeleton stands in for a row on a page, in a card, in a dialog or popover whose
+ * content has not loaded and in a muted list; a soft status surface is the tint a
+ * message sits in and its edge bounds it, on every strip a message is placed on;
+ * a tonal action sits on any of the four strips, because a toolbar, a card and a
+ * popover all hold buttons; a raised surface floats over the same four, and its
+ * shadow is what tells it apart from them; and a disabled control's face is
+ * measured against each face it can replace.
  */
 export const decorativeSurfaces: readonly DecorativeSurface[] = [
   { surface: "divider", role: "border", over: "background" },
   { surface: "divider", role: "border", over: "card" },
   { surface: "divider", role: "border", over: "popover" },
   { surface: "divider", role: "border", over: "muted" },
-  { surface: "skeleton", role: "skeleton", over: "background" },
-  { surface: "skeleton", role: "skeleton", over: "card" },
-  { surface: "skeleton", role: "skeleton", over: "muted" },
+  ...skeletonStrips.map(
+    (over): DecorativeSurface => ({
+      surface: "skeleton",
+      role: "skeleton",
+      over,
+    }),
+  ),
   // A veil is measured over the surfaces a modal covers that carry content, not
   // over the page's void: a black page cannot be darkened by any scrim, and a
   // theme with one separates its dialog with a border instead. The strips are

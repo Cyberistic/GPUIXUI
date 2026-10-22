@@ -83,9 +83,10 @@ export interface PlatformStyle extends PlatformType {
  * `contrast.ts` by `platforms.test.ts`; `contrast` names the variant those
  * floors are, so a high-contrast base keeps its own palette. The dark sets carry
  * a lighter `placeholder` than the base theme because their field surfaces are
- * lighter than its canvas. Two styles also carry their own `skeleton`, because
- * a placeholder fill is measured against the card and the muted strip it stands
- * in (`decorative.ts`) and the inherited fill matched theirs. Each `darwin` set
+ * lighter than its canvas. Four styles also carry their own `skeleton`, because
+ * a placeholder fill is measured against the card, the muted strip and the
+ * popover fill it stands in (`decorative.ts`) and the inherited fill matched
+ * theirs. Each `darwin` set
  * and all three dark sets carry their own `secondary`, because a tonal action's
  * fill has to be visible on the strip it sits on and their surfaces are
  * lighter than the base theme's — macOS light's window sits 1.015:1 from the
@@ -135,6 +136,10 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         input: "#1F1F22",
         secondary: "#3A3A3C",
         muted: "#2A2A2E",
+        // A loading dialog paints its skeleton rows on this popover fill; the
+        // inherited base skeleton sat 1.049:1 from it, so the dialog looked
+        // empty rather than loading.
+        skeleton: "#303036",
         hover: "#35353B",
         active: "#3A3A40",
         border: "#3A3A40",
@@ -185,7 +190,9 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         input: "#212121",
         secondary: "#404040",
         muted: "#2A2A2A",
-        skeleton: "#3A3A3A",
+        // A loading dialog paints its skeleton rows on this popover fill; the
+        // previous step sat 1.031:1 from it.
+        skeleton: "#3E3E3E",
         hover: "#343434",
         active: "#3D3D3D",
         border: "#464646",
@@ -240,6 +247,9 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         input: "#1F1F1F",
         secondary: "#3A3A3A",
         muted: "#2A2A2A",
+        // A loading dialog paints its skeleton rows on this popover fill; the
+        // inherited base skeleton sat 1.039:1 from it.
+        skeleton: "#323232",
         hover: "#333333",
         active: "#3A3A3A",
         border: "#3D3D3D",

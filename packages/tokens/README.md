@@ -605,7 +605,8 @@ Each report is also a function of its own:
   misses its floor, including one it cannot measure because a value is
   translucent. The floors default to the theme's own variant.
 - `decorativeFailures(theme, floor?)` lists every subtle surface — a divider, a
-  skeleton fill, the modal veil (on the content strips a window holds behind it:
+  skeleton fill (on the page, a card, a muted list and the fill a loading dialog
+  paints), the modal veil (on the content strips a window holds behind it:
   a card, a popover, a `muted` toolbar, a `secondary` panel and a field's `input`
   fill, with the page's void exempt because nothing can darken a black page), a
   status tone's soft tint and its edge, a

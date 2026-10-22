@@ -677,7 +677,9 @@ The surfaces that carry no text are measured too, because "subtle" is not
 tint and its edge, the scrollbar thumb, the wash a row is hovered, pressed,
 selected or accented with, the resting fill of a tonal action, the face a
 disabled control wears and the shadow of a
-raised surface are held to 1.05:1 against what they are painted on. The veil is composited over its surface rather than rejected as
+raised surface are held to 1.05:1 against what they are painted on. A loading
+dialog's skeleton is measured on the dialog's own `popover` fill, not only on
+the page, a card and a muted list. The veil is composited over its surface rather than rejected as
 translucent, and it is measured on every content strip a window holds behind a
 modal — a card, a popover, a sidebar's `muted` toolbar, a segmented `secondary`
 panel and a field's `input` fill; the page's own void is exempt, because a black
@@ -699,7 +701,11 @@ one step lighter with their text at 100, and Luna carries a lighter tint of its
 own. It found two platform styles whose
 inherited skeleton matched their own surfaces — macOS light's on a muted strip
 (1.045:1) and Linux dark's on its card (1.004:1) — which now carry a `skeleton`
-of their own, and the state-wash half found five aliases: the base dark theme's
+of their own, and the floating surface a loading dialog paints is a placement
+too: macOS dark sat 1.049:1, Linux dark 1.031:1 and Windows dark 1.039:1 from
+their own `popover`, so all three carry a placeholder fill now (the tightest
+placement is the Luna dark look's dialog at 1.054:1). The state-wash half found
+five aliases: the base dark theme's
 `hover` was its `popover`, the base light theme's was its `muted` strip, and
 macOS light's, Windows light's and Linux dark's were within one step of the
 strips they tint (the Linux dark wash now sits at 1.06 on both the card and the
