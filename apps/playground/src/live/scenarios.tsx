@@ -108,6 +108,7 @@ import type {
   ImgInstance,
   NativeWindowInsets,
   PublicInstance,
+  StyleDesc,
 } from "@gpuix/react";
 import type { EventPayload } from "@gpuix/native";
 import { FloatingLayer } from "@gpuix/react/floating";
@@ -118,7 +119,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@gpuix/react/select";
-import { Pixels, type Smoke } from "@gpuixui/testing";
+import { Pixels, Smoke } from "@gpuixui/testing";
 import { nextPalette, palettes, type PaletteId } from "../palettes.js";
 import { SplitPane } from "../panels/split-pane.js";
 import { Body, Pressable, Readout, Toolbar } from "../ui.js";
@@ -186,6 +187,20 @@ import {
   surfaceAlpha,
 } from "./backdrop.js";
 import { captureScale, describeColour, framePoint } from "./frame.js";
+import {
+  OVERLAY_ENTER_COUNT,
+  OVERLAY_FRAME,
+  OVERLAY_GAP,
+  OVERLAY_MARK,
+  OVERLAY_PAGE,
+  OVERLAY_SOURCE,
+  overlayCodeStyle,
+  overlayFieldStyle,
+  overlayMetrics,
+  overlayReadout,
+  overlayRegion,
+  type OverlayInk,
+} from "./editor-overlay.js";
 import {
   FADE_BACKING,
   FADE_BACKING_RGBA,
@@ -13518,9 +13533,360 @@ const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("nested-dismissed");
   });
 
+/**
+ * The editable-code composition: one source painted twice, the left box under a
+ * transparent field and the right with no field at all.
+ *
+ * The pair is the instrument. Both boxes are the same size with the same code,
+ * the same metrics and the same fill, so a pixel-for-pixel comparison of the two
+ * regions reports exactly what the field painted: nothing while its ink is
+ * transparent, its own glyphs while the control's ink is on. Nothing else in the
+ * window is inside either region, and the readout prints counts rather than the
+ * value, so the probe's own text cannot be mistaken for the code's.
+ */
+const EditorOverlayProbe = (): ReactNode => {
+  const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const [value, setValue] = useState(OVERLAY_SOURCE);
+  const [ink, setInk] = useState<OverlayInk>("transparent");
+  // A text field's caret is drawn for an active window; automation drives a
+  // window that may never have taken the OS focus, so the probe asks for it.
+  useLayoutEffect(() => {
+    renderer?.activateWindow?.();
+  }, [renderer]);
+  const box: StyleDesc = {
+    width: OVERLAY_FRAME.width,
+    height: OVERLAY_FRAME.height,
+    position: "relative",
+    overflow: "hidden",
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.radius.md,
+  };
+  const stack = (code: string, testId: string): ReactNode => (
+    <code
+      testId={testId}
+      code={code}
+      style={{
+        ...overlayCodeStyle(theme),
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+      }}
+    />
+  );
+  return (
+    <div
+      testId="editor-overlay-probe"
+      style={{
+        width: OVERLAY_PAGE.width,
+        height: OVERLAY_PAGE.height,
+        padding: OVERLAY_GAP,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: OVERLAY_GAP,
+      }}
+    >
+      <Toolbar>
+        <Pressable testId="overlay-ink-visible" onClick={() => setInk("visible")}>
+          <text style={{ color: theme.colors.foreground }}>Show the ink</text>
+        </Pressable>
+        <Pressable
+          testId="overlay-ink-clear"
+          onClick={() => setInk("transparent")}
+        >
+          <text style={{ color: theme.colors.foreground }}>Hide it</text>
+        </Pressable>
+        <Pressable testId="overlay-neutral" onClick={() => undefined}>
+          <text style={{ color: theme.colors.foreground }}>Focus here</text>
+        </Pressable>
+      </Toolbar>
+      <div
+        style={{ display: "flex", flexDirection: "row", gap: OVERLAY_GAP }}
+      >
+        <div testId="overlay-editor" style={box}>
+          {stack(value, "overlay-code")}
+          <textarea
+            testId="overlay-input"
+            value={value}
+            onChange={(event) => setValue(event.value ?? "")}
+            style={{
+              ...overlayFieldStyle(theme, ink),
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+            }}
+          />
+        </div>
+        <div testId="overlay-reference" style={box}>
+          {stack(OVERLAY_SOURCE, "overlay-reference-code")}
+        </div>
+      </div>
+      {/* A plain, opaque field: the control that shows the caret reading is the
+          runtime's, not this composition's. */}
+      <div
+        testId="caret-box"
+        style={{ width: 200, height: 60, backgroundColor: theme.colors.card }}
+      >
+        <textarea
+          testId="caret-input"
+          value="caretfield"
+          style={{
+            width: 200,
+            height: 60,
+            padding: 8,
+            ...overlayMetrics(theme),
+            backgroundColor: theme.colors.input,
+            color: theme.colors.inputForeground,
+          }}
+        />
+      </div>
+      <Readout testId="overlay-readout">{overlayReadout(value, ink)}</Readout>
+    </div>
+  );
+};
+
+/** The logical box `testId` paints, failing by name when it paints none. */
+const paintedRegion = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+  scale: number,
+): Effect.Effect<
+  Pixels.PixelRegion,
+  Smoke.SmokeAssertionError | Smoke.SmokeHostError
+> =>
+  Effect.gen(function* () {
+    const box = yield* ctx.expectSome(
+      `the runtime paints ${testId}`,
+      Option.fromNullishOr(yield* ctx.host.bounds(testId)),
+    );
+    return overlayRegion(box, scale);
+  });
+
+/** One region of a capture, failing (rather than measuring nothing) when absent. */
+const cropped = (
+  frame: Pixels.Pixels,
+  region: Pixels.PixelRegion,
+  label: string,
+): Effect.Effect<Pixels.Pixels, Smoke.SmokeAssertionError> =>
+  Option.match(Option.fromNullishOr(Pixels.crop(frame, region)), {
+    onSome: Effect.succeed,
+    onNone: () =>
+      Effect.fail(
+        new Smoke.SmokeAssertionError({
+          label: `the ${label} box is inside the capture`,
+          expected: "a region the capture covers",
+          actual: "no overlap",
+        }),
+      ),
+  });
+
+/** The two editor boxes of one capture, and how many pixels the field added. */
+const editorPaint = (
+  ctx: Smoke.AsyncSmokeContext,
+  name: string,
+  regions: EditorRegions,
+): Effect.Effect<number, Smoke.SmokeAssertionError | Smoke.SmokeHostError> =>
+  Effect.gen(function* () {
+    const frame = yield* ctx.host.pixels(name);
+    const overlay = yield* cropped(frame, regions.overlay, "overlay");
+    const reference = yield* cropped(frame, regions.reference, "reference");
+    return yield* ctx.expectSome(
+      "the two editor boxes are the same box",
+      Option.fromNullishOr(Pixels.countDifferingPixels(overlay, reference)),
+    );
+  });
+
+/** The device-scaled regions the probe compares, read once from the first frame. */
+interface EditorRegions {
+  readonly overlay: Pixels.PixelRegion;
+  readonly reference: Pixels.PixelRegion;
+  readonly caret: Pixels.PixelRegion;
+}
+
+const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("overlay-editor");
+    yield* ctx.host.capture("editor-overlay-transparent");
+    const first = yield* ctx.host.pixels("editor-overlay-transparent");
+    const scale = yield* ctx.expectSome(
+      "the capture is the window's box at one scale",
+      captureScale(first, yield* ctx.host.windowSize()),
+    );
+    const regions: EditorRegions = {
+      overlay: yield* paintedRegion(ctx, "overlay-editor", scale),
+      reference: yield* paintedRegion(ctx, "overlay-reference", scale),
+      caret: yield* paintedRegion(ctx, "caret-box", scale),
+    };
+
+    /**
+     * Waits for the readout to name the field's ink before a capture.
+     *
+     * The ink is React state, so a screenshot taken on the click's own frame
+     * shows the previous state — the first run of this probe read the control as
+     * an unpainted field for exactly that reason.
+     */
+    const settleInk = (ink: OverlayInk) =>
+      Effect.gen(function* () {
+        const text = yield* settleUntil(
+          ctx.host.text("overlay-readout"),
+          (value) => value.includes(`ink=${ink}`),
+        );
+        yield* ctx.expectContains(
+          `the readout names the ${ink} state`,
+          text,
+          `ink=${ink}`,
+        );
+      });
+
+    // 1. At rest the field holds the same source the reference paints, and its
+    //    ink is transparent: every pixel of the comparison must be the code's.
+    yield* settleInk("transparent");
+    yield* ctx.expectEqual(
+      "a transparent field paints nothing over the code beneath it",
+      yield* editorPaint(ctx, "editor-overlay-transparent", regions),
+      0,
+    );
+    const codeInk = yield* themeColour(ctx, "foreground");
+    yield* ctx.expectEqual(
+      "the code layer is what paints through the field",
+      Pixels.countColour(
+        yield* cropped(first, regions.overlay, "overlay"),
+        codeInk,
+      ) > 0,
+      true,
+    );
+
+    // 2. The negative control: the same comparison with the field's own ink on.
+    //    A field that painted nothing at all would make check 1 pass trivially,
+    //    so this is what makes it a measurement.
+    yield* ctx.host.click("overlay-ink-visible");
+    yield* settleInk("visible");
+    yield* ctx.host.capture("editor-overlay-control");
+    yield* ctx.expectEqual(
+      "the comparison sees the field's glyphs when its ink is on",
+      (yield* editorPaint(ctx, "editor-overlay-control", regions)) > 0,
+      true,
+    );
+    yield* ctx.host.click("overlay-ink-clear");
+    yield* settleInk("transparent");
+    yield* ctx.host.capture("editor-overlay-cleared");
+    yield* ctx.expectEqual(
+      "hiding the ink again leaves the code alone",
+      yield* editorPaint(ctx, "editor-overlay-cleared", regions),
+      0,
+    );
+
+    // 3. The caret. A field with no caret is not an editor, so the claim is
+    //    measured on a plain opaque field as well as the transparent one: the
+    //    ink is on, the glyphs are therefore identical on both sides of the
+    //    focus, and five frames are sampled because a caret blinks.
+    yield* ctx.host.capture("editor-overlay-caret-before");
+    const caretInk = yield* themeColour(ctx, "inputForeground");
+    const caretBefore = yield* cropped(
+      yield* ctx.host.pixels("editor-overlay-caret-before"),
+      regions.caret,
+      "caret",
+    );
+    yield* ctx.expectEqual(
+      "the caret control paints its own text",
+      Pixels.countColour(caretBefore, caretInk) > 0,
+      true,
+    );
+    yield* ctx.host.click("caret-input");
+    yield* ctx.expectEqual(
+      "the caret control takes the focus",
+      yield* focusedAfterPaint(ctx),
+      "caret-input",
+    );
+    yield* ctx.host.key("left");
+    const caretFrames = yield* Effect.forEach(
+      Arr.range(1, 5),
+      (n) =>
+        Effect.gen(function* () {
+          yield* Effect.sleep(Duration.millis(120));
+          yield* ctx.host.capture(`editor-overlay-caret-${n}`);
+          return yield* ctx.expectSome(
+            "the caret capture is the box it names",
+            Option.fromNullishOr(
+              Pixels.countDifferingPixels(
+                caretBefore,
+                yield* cropped(
+                  yield* ctx.host.pixels(`editor-overlay-caret-${n}`),
+                  regions.caret,
+                  "caret",
+                ),
+              ),
+            ),
+          );
+        }),
+      { concurrency: 1 },
+    );
+    yield* ctx.expectEqual(
+      "a focused field paints no caret in any of five frames",
+      Arr.reduce(caretFrames, 0, (most, count) => Math.max(most, count)),
+      0,
+    );
+
+    // 4. Typing lands in the app's state; with the field's ink still transparent,
+    //    the overlay's code layer is the only thing that can repaint to the edit.
+    yield* ctx.host.focusElement("overlay-input");
+    yield* ctx.expectEqual(
+      "the focus enters the transparent field",
+      yield* focusedAfterPaint(ctx),
+      "overlay-input",
+    );
+    yield* ctx.host.key("z");
+    yield* ctx.host.key("z");
+    yield* ctx.expectEqual(
+      "typed text reaches the app through the transparent field",
+      yield* settleUntil(
+        ctx.host.text("overlay-readout"),
+        (value) =>
+          value.includes(
+            `chars=${Str.length(OVERLAY_SOURCE) + Str.length(OVERLAY_MARK)} `,
+          ),
+      ),
+      `ink=transparent chars=${
+        Str.length(OVERLAY_SOURCE) + Str.length(OVERLAY_MARK)
+      } lines=6`,
+    );
+    yield* ctx.host.click("overlay-neutral");
+    yield* settleUntil(focusedId(ctx), (id) => id === "overlay-neutral");
+    yield* ctx.host.capture("editor-overlay-edited");
+    yield* ctx.expectEqual(
+      "the code layer repaints to the edited value",
+      (yield* editorPaint(ctx, "editor-overlay-edited", regions)) > 0,
+      true,
+    );
+
+    // 5. A file longer than the frame: the offset an app would mirror into the
+    //    code view. The field is grown past its own box with real keyboard input,
+    //    then asked where its content sits.
+    yield* ctx.host.focusElement("overlay-input");
+    yield* Effect.forEach(
+      Arr.range(1, OVERLAY_ENTER_COUNT),
+      () => ctx.host.key("enter"),
+      { concurrency: 1 },
+    );
+    yield* ctx.host.capture("editor-overlay-scrolled");
+    const offset = yield* ctx.host.scrollOffset("overlay-input");
+    yield* ctx.expectEqual(
+      "the field reports no scroll offset of its own",
+      Option.match(Option.fromNullishOr(offset), {
+        onNone: () => "none",
+        onSome: (value) => `y=${value.y}`,
+      }),
+      "none",
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
-export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
-  "focus-visible": {
+export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {  "focus-visible": {
     id: "focus-visible",
     view: () => <FocusVisibleProbe />,
     steps: focusVisibleSteps,
@@ -13780,5 +14146,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "nested-overlay-lifecycle",
     view: () => <NestedOverlayProbe />,
     steps: nestedOverlaySteps,
+  },
+  "editor-overlay": {
+    id: "editor-overlay",
+    view: () => <EditorOverlayProbe />,
+    steps: editorOverlaySteps,
   },
 };

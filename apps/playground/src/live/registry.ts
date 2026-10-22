@@ -348,6 +348,12 @@ export const liveRegistry = [
       "Overlay: a dialog holding a popover holding a menu dismisses exactly one surface per Escape, outside-in, and returns focus at each layer",
     capability: "overlay",
   },
+  {
+    id: "editor-overlay",
+    title:
+      "Editor: a transparent field over a code layer lets the code paint through, keeps its caret, and reports the offset a long file needs",
+    capability: "editor",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

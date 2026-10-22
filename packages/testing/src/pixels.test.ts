@@ -10,7 +10,10 @@ import { crc32, deflateSync, inflateSync } from "node:zlib";
 import { describe, expect, it } from "@effect/vitest";
 import {
   PngDecodeError,
+  PixelRegion,
   countColour,
+  countDifferingPixels,
+  crop,
   decodePng,
   hexToRgba,
   pixelAt,
@@ -176,6 +179,82 @@ describe("countColour", () => {
     expect(countColour(frame, red)).toBe(2);
     // The second blue is translucent, so an exact-alpha match sees one.
     expect(countColour(frame, blue)).toBe(1);
+  });
+});
+
+/** Four colours, one per column: red, blue, green, white. */
+const coloursRow = new Uint8Array([
+  0, 255, 0, 0, 255, 0, 0, 255, 255, 0, 255, 0, 255, 255, 255, 255, 255,
+]);
+
+const colourFrame = () =>
+  decode(png(4, 2, 6, [coloursRow, coloursRow]));
+
+const at = (x: number, y: number, width: number, height: number) =>
+  new PixelRegion({ x, y, width, height });
+
+describe("crop", () => {
+  it("cuts the rectangle a comparison names, row for row", () => {
+    const cut = crop(colourFrame(), at(1, 0, 2, 1));
+    expect(cut?.width).toBe(2);
+    expect(cut?.height).toBe(1);
+    expect(cut === null ? null : pixelAt(cut, 0, 0)).toEqual(blue);
+    expect(cut === null ? null : pixelAt(cut, 1, 0)).toEqual(
+      new Rgba({ r: 0, g: 255, b: 0, a: 255 }),
+    );
+  });
+
+  it("clamps a region the capture's edge cuts", () => {
+    // A layout box wider than the window still leaves the paint it covers.
+    const cut = crop(colourFrame(), at(3, 1, 4, 4));
+    expect(cut?.width).toBe(1);
+    expect(cut?.height).toBe(1);
+    expect(cut === null ? null : pixelAt(cut, 0, 0)).toEqual(
+      new Rgba({ r: 255, g: 255, b: 255, a: 255 }),
+    );
+  });
+
+  it("has no frame to compare when the region is off the capture", () => {
+    expect(crop(colourFrame(), at(4, 0, 2, 2))).toBeNull();
+    expect(crop(colourFrame(), at(-2, -2, 2, 2))).toBeNull();
+  });
+});
+
+describe("countDifferingPixels", () => {
+  it("reports no change for one frame read twice", () => {
+    expect(countDifferingPixels(colourFrame(), colourFrame())).toBe(0);
+  });
+
+  it("counts a difference in one channel, alpha included", () => {
+    const faded = decode(
+      png(2, 1, 6, [new Uint8Array([0, 255, 0, 0, 255, 0, 0, 255, 254])]),
+    );
+    const opaque = decode(
+      png(2, 1, 6, [new Uint8Array([0, 255, 0, 0, 255, 0, 0, 255, 255])]),
+    );
+    // The second pixel differs only in alpha: a wash that changed opacity is paint.
+    expect(countDifferingPixels(faded, opaque)).toBe(1);
+  });
+
+  it("compares two regions of one capture through a crop", () => {
+    const frame = colourFrame();
+    const left = crop(frame, at(0, 0, 2, 1));
+    const right = crop(frame, at(2, 0, 2, 1));
+    expect(left === null || right === null ? null : countDifferingPixels(left, right))
+      .toBe(2);
+  });
+
+  it("refuses two captures of different shapes", () => {
+    const wide = decode(
+      png(2, 1, 6, [new Uint8Array([0, 255, 0, 0, 255, 0, 0, 255, 255])]),
+    );
+    const tall = decode(
+      png(1, 2, 6, [
+        new Uint8Array([0, 255, 0, 0, 255]),
+        new Uint8Array([0, 255, 0, 0, 255]),
+      ]),
+    );
+    expect(countDifferingPixels(wide, tall)).toBeNull();
   });
 });
 

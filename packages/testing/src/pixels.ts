@@ -281,3 +281,64 @@ export const countColour = (frame: Pixels, colour: Rgba): number => {
   }
   return count;
 };
+
+/** A rectangle in a capture's own pixels (device-scaled, not logical). */
+export class PixelRegion extends Schema.Class<PixelRegion>("PixelRegion")({
+  x: Schema.Int,
+  y: Schema.Int,
+  width: Schema.Int,
+  height: Schema.Int,
+}) {}
+
+/**
+ * The part of `frame` a region covers, as a frame of its own.
+ *
+ * The region is clamped to the frame, because a capture's edge can cut a box
+ * the layout reports. A region with no overlap at all is `null`: there is no
+ * paint there to compare.
+ */
+export const crop = (frame: Pixels, region: PixelRegion): Pixels | null => {
+  const left = Math.max(region.x, 0);
+  const top = Math.max(region.y, 0);
+  const right = Math.min(region.x + region.width, frame.width);
+  const bottom = Math.min(region.y + region.height, frame.height);
+  const width = right - left;
+  const height = bottom - top;
+  if (width <= 0 || height <= 0) return null;
+  const data = new Uint8Array(width * height * 4);
+  for (let row = 0; row < height; row += 1) {
+    const source = ((top + row) * frame.width + left) * 4;
+    data.set(
+      frame.data.subarray(source, source + width * 4),
+      row * width * 4,
+    );
+  }
+  return new Pixels({ width, height, data });
+};
+
+/**
+ * How many pixels differ between two captures of the same box.
+ *
+ * `null` when the frames are not the same size: two boxes of different shapes
+ * are not a measurement of "nothing changed", and reporting `0` would let a
+ * resized layer pass as an invisible one. A difference is any differing byte,
+ * alpha included — a wash that changes only opacity is paint too.
+ */
+export const countDifferingPixels = (
+  left: Pixels,
+  right: Pixels,
+): number | null => {
+  if (left.width !== right.width || left.height !== right.height) return null;
+  let count = 0;
+  for (let at = 0; at < left.data.length; at += 4) {
+    if (
+      left.data[at] !== right.data[at] ||
+      left.data[at + 1] !== right.data[at + 1] ||
+      left.data[at + 2] !== right.data[at + 2] ||
+      left.data[at + 3] !== right.data[at + 3]
+    ) {
+      count += 1;
+    }
+  }
+  return count;
+};

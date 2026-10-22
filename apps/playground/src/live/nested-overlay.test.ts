@@ -133,10 +133,9 @@ describe("the nested flow the probe records", () => {
     // fail. `paintedBox` asserts its own `expectSome` (a surface that never
     // paints fails by name), so each read is one check in the report too.
     const start = scenarios.indexOf("const nestedOverlaySteps");
-    const end = scenarios.indexOf(
-      "\n/** The bodies, one per registry id",
-      start + 1,
-    );
+    // The slice ends at the next **top-level** declaration, not at the body map:
+    // a probe added after this one must not inherit its check count.
+    const end = scenarios.indexOf("\nconst ", start + 1);
     const steps = start === -1 || end === -1 ? "" : scenarios.slice(start, end);
     const asserted =
       (steps.match(/ctx\.expect[A-Za-z]+\(/g)?.length ?? 0) +
