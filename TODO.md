@@ -712,7 +712,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 112/112
+`[x]` `[██████████]` 113/113
 
 `[x]` Hold the **headless suite's printed total** to the registry again — the
       data workstream's `6aa8cb15` added `data-table-core` to
@@ -2959,6 +2959,26 @@ a workaround for two live sessions sharing one worktree; see
       line), and `nub apps/playground/dist/smoke/run.js` is 44/44 with all
       eighteen capabilities verified on 0.11.0.
 
+`[x]` Measure the **shipped workspace tree in a window** — `TreeView`'s contract
+      is about **native focus** (one tab stop that follows the cursor, a
+      `focusElement` call after the `tabIndex` commit, a type-ahead buffer fed by
+      the focused row's keys), and the offscreen `data-tree-core` synthesises its
+      keys. The `data-tree-lifecycle` probe mounts the example and reads the
+      focused row's `testId` after every gesture: `5 rows · active=src` at open
+      with no focus, a press folding `src` to `3 rows` **and** taking the press's
+      focus, Right opening it back to `5 rows`, Right stepping into
+      `components`, Down walking to `index.ts`, Left returning to `src`, typing
+      `pa` jumping to `package.json` (focus included), Reveal row.tsx opening the
+      path to `9 rows · active=row.tsx` **while the focus stays on the reveal
+      button**, Collapse all folding to `3 rows` and Expand all painting
+      `11 rows`, both keeping the cursor's key while its row is hidden. 22
+      checks, `--only data-tree-lifecycle`, green on 0.11.0 (~0.8 s, three
+      consecutive runs). Fixture `src/live/data-tree.ts` + the 5-case test that
+      parses the example's own `file(...)` literal and derives every count from
+      it. The measured limit is the interlock row below. Evidence:
+      `apps/playground/README.md` §`data-tree-lifecycle`,
+      `.artifacts/live/data-tree-{revealed,expanded}.png`.
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 3/3
@@ -4471,6 +4491,25 @@ a workaround for two live sessions sharing one worktree; see
       switch, rating, otp-field, number-field, slider, range-slider,
       scroll-area) and `docs/README.md` §Cross-component guards.
 
+`[x]` `packages/icons`: an **icon given a measure it cannot paint vanished** —
+      `size` takes a named step *or* the raw number a caller measured (a
+      collapsed panel's width, a row's height), and `iconPixels` passed that
+      number to `style.width`/`height` unchecked, so `NaN`, `Infinity`, `0` or a
+      negative count reached the renderer, which draws a `NaN` inset as
+      **nothing** — an icon absent from a control that still painted its own box,
+      indistinguishable from a decorative `<svg>`. The rule `skeletonSize` and
+      `clampLines` already follow applies: a count that is not a finite positive
+      number reads as the default step (`md`), while a readable count — a
+      fraction included — stays the caller's number. Proof: `sizes.test.ts`'s
+      `reads a raw count it cannot paint as the default step` (four unusable
+      counts) and `runtime/icons.runtime.test.tsx`'s `paints an icon whose raw
+      size cannot be measured at the default step`, which measures the painted
+      frame (16×16 for each unusable count, 21 for a readable 21). Directions
+      measured: with the guard reverted the unit case fails
+      (`expected NaN to be 16`) and the window case paints the full window width
+      (`expected 1256 to be 16`); restored, 31 icons unit / 7 runtime green.
+      Docs: `docs/icon.mdx` §Sizes and §Verification.
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21
@@ -4908,6 +4947,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Restore the **playground's live suite build** — `apps/playground/src/live/scenarios.tsx` (uncommitted, in the working tree) imports `VIRTUAL_TABLE`, `VIRTUAL_TABLE_FILTER`, `VIRTUAL_TABLE_FILTERED_ROWS`, `VIRTUAL_TABLE_INITIAL`, `VIRTUAL_TABLE_NAME_SORT`, `VIRTUAL_TABLE_READOUT`, `VIRTUAL_TABLE_REVEAL`, `virtualTableReadout` and `virtualTableRow` from `./virtual-table.js` and never reads them, so `nub run --filter playground build` exits 2 and no headless or live run can start: the tree and expandable-rows probes were measured against a build made with `--noUnusedLocals false`. Finish or drop the in-flight virtual-table live probe | playground (the live suite's owner — the edit is uncommitted, so coordinate before touching it) | **open** |
 
 | Re-clamp a **virtual table's window when the set shrinks** — `virtual-table-lifecycle` measured on 0.11.0 that filtering 1 000 rows to 127 while the window sat near row 700 updates the readout and releases the selection, but leaves a row the app no longer holds still reporting its box (`virtual-row-row-701`), and the range reports `first=8 last=16` (the pre-filter window) until the next wheel, when it jumps to `last=127` and the paint holds `file-0601.ts` and its neighbours. `useVirtualRows` derives the window from `scrollOffset` with `calculator.at`, so the offset is not re-clamped when `count` changes, and `VirtualTableBody` keeps the indices it had. The app should clamp the offset on a count change (or the body should) and drop the children outside the new count; add a `packages/data/src/virtual/list.test.ts` case for a shrinking count, state the rule in the Tier 3 **Virtualized tables** row and `/docs/data-display`, and re-run `--only virtual-table-lifecycle` | data (the hook, the body, the inventory row and the data-display page) | **open** |
+
+| Focus the **row a reveal lands on** — `data-tree-lifecycle` measured on 0.11.0 that the tree's own reveal (`tree.reveal("row.tsx")` from a button, the shape a search hit or a "show this file" command needs) opens the path and moves the cursor to `row.tsx` while the **focus stays on the button**: the tree's focus effect runs on the cursor change, but the revealed rows are newly mounted in that same commit, so their instance refs are not registered yet and `focusElement` goes nowhere. The keyboard paths are all correct (Right/Left/Down/type-ahead each leave the focus on the cursor's row), so this is the app-driven path only. Move the focus after the revealed subtree commits (a layout effect keyed on the rows, or `focusElement` in the tree once the row's ref arrives), add a native behaviour case for it, and state the rule on the Tier 3 **Tree views** row and `/docs/data-display`; the probe then asserts the revealed row's focus instead of the button's | data (the tree, the inventory row and the data-display page) | **open** |
 
 ## Phase D — data and workspace components
 

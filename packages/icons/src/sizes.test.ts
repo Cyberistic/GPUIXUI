@@ -31,6 +31,18 @@ describe("icon sizes", () => {
     expect(iconPixels(37)).toBe(37);
   });
 
+  it("reads a raw count it cannot paint as the default step", () => {
+    // The bug this guards: `size` also takes the number a caller measured, and a
+    // count that is not a finite positive number reached `style.width`
+    // verbatim. The runtime paints a `NaN` inset as nothing, so the icon
+    // disappeared from a control that still had its box — the silent vanishing
+    // the `skeletonSize` and `clampLines` rules already refuse.
+    expect(iconPixels(Number.NaN)).toBe(ICON_SIZES.md);
+    expect(iconPixels(Number.POSITIVE_INFINITY)).toBe(ICON_SIZES.md);
+    expect(iconPixels(0)).toBe(ICON_SIZES.md);
+    expect(iconPixels(-8)).toBe(ICON_SIZES.md);
+  });
+
   it("resolves a name to its declared pixels, not to a neighbour", () => {
     expect(iconPixels("xl")).toBe(ICON_SIZES.xl);
     expect(iconPixels("xs")).toBe(ICON_SIZES.xs);

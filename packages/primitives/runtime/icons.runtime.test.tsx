@@ -63,6 +63,27 @@ it("scales an icon from the size scale", async () => {
   expect(widthAt("xl")).toBeGreaterThan(widthAt("sm"));
 });
 
+it("paints an icon whose raw size cannot be measured at the default step", async () => {
+  // The bug this guards: `size` takes the number a caller measured, so `NaN`,
+  // infinity, zero or a negative can arrive — and the runtime paints a `NaN`
+  // inset as nothing, so the icon vanished from a control that still had its
+  // box. Measured on the painted frame: every unusable count resolves to the
+  // `md` step, while a readable raw count is still the caller's number.
+  const runtime = await openWindow();
+  const widthAt = (size: number): number => {
+    mount(
+      runtime,
+      <Icon name="check" color="#123456" size={size} testId={ICON} />,
+    );
+    return boundsOfIcon(runtime).width;
+  };
+  expect(widthAt(Number.NaN)).toBe(ICON_SIZES.md);
+  expect(widthAt(Number.POSITIVE_INFINITY)).toBe(ICON_SIZES.md);
+  expect(widthAt(0)).toBe(ICON_SIZES.md);
+  expect(widthAt(-4)).toBe(ICON_SIZES.md);
+  expect(widthAt(21)).toBe(21);
+});
+
 it("takes a decorative icon out of the accessibility tree and keeps a named one", async () => {
   const runtime = await openWindow();
   mount(runtime, <Icon name="check" color="#123456" testId={ICON} />);

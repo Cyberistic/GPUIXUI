@@ -80,7 +80,9 @@ carries a colour; the tint is still `style.color`.
 | `xl` | 24 |
 
 Named sizes line an icon up with text of the same step. A raw number is for the
-rare case that no step fits.
+rare case that no step fits; a measure that cannot be painted — `NaN`, infinity,
+zero or a negative count from a collapsed panel or an empty row — reads as the
+`md` step rather than a `width` the runtime draws as nothing.
 
 ## Accessibility
 
@@ -121,14 +123,15 @@ paint values a monochrome tint can use. No individual icon carries a colour.
   of scripts, external references and embedded colours; no two names carry the
   same geometry (a copy-pasted entry ships a wrong glyph); and the markup uses
   only the six element types the runtime suite has painted.
-- `src/sizes.test.ts` — every named step resolves, and a raw number passes
-  through.
+- `src/sizes.test.ts` — every named step resolves, a readable raw number passes
+  through, and a count that cannot be painted reads as `md`.
 - `src/Icon.test.ts` — the decoration/image rule, required colour and the
   pointer-events rule.
 - `src/docs.test.ts` — the page prints the set's real size, lists every name in
   it, and cites the provenance record that carries the licence notices.
 - `packages/primitives/runtime/icons.runtime.test.tsx` — the raw `<svg source>`
-  paints at 20×20 (`lg`) and 24×24 (`xl`); a decorative icon is absent from the
+  paints at 20×20 (`lg`) and 24×24 (`xl`); an unusable raw size paints the
+  `md` 16×16 box; a decorative icon is absent from the
   accessibility tree while a labelled one is an `Image`; a red versus blue
   capture differs byte-wise, so the tint reaches the paint — for a **stroke**
   glyph (`check`) and for `star-filled`, the one icon drawn with `fill`, which
