@@ -449,7 +449,8 @@ reads on (`background`, `card`, `popover`, `muted`), the two washes a hovered an
 a pressed link tints behind itself (`hover`, `active`), and the two washes a
 **row** paints under an action in its `trailing` slot (`accent` while the pointer
 is over the row, `selected` once it is chosen) — a wash is a surface with text on
-it, so it is measured like one. The row is not decoration: the components
+it, so it is measured like one. The four status tints are deliberately outside
+it; the next section measures why. The row is not decoration: the components
 package's list row documents that slot as the place for an explicit action and
 paints both washes there, the primitives' `Text tone="primary"` paints this
 colour, and a `Box` can fill either wash behind it. Measured across the sixteen
@@ -462,6 +463,49 @@ the rule the audit's contrast report already uses: 4.5:1 for a default theme,
 7:1 for a high-contrast one. The high-contrast dark brand measures 6.94:1 as
 text, so it steps once there even though the same value would pass a default
 theme.
+
+### A brand run inside a message
+
+A message is a container: an `Alert`'s description says so in its own
+documentation, and the fill behind it is the tone's `xSoft` role. A link action
+placed there paints the tone's tint, not the page — and the tints are
+deliberately **not** in `brandTextSurfaces`, because a tint is one tone away
+from the page and a single colour measured on all of them would be dragged away
+from the brand everywhere. Measured, the shared colour is under its floor in
+**29 of the 64** tint placements across the sixteen styles (the count and every
+cell below are computed by `brand-text.test.ts`, so they move with the
+palettes):
+
+| Where the brand is written | Theme | Ratio |
+| -------------------------- | ----- | ----- |
+| `primary` on `warningSoft` | macOS dark | **2.32:1** |
+| the shared colour on `warningSoft` | macOS dark | **3.43:1** |
+| the shared colour on `infoSoft` | base light | 4.46:1 |
+| the shared colour on `warningSoft` | base dark | 3.94:1 |
+| `primary` on `infoSoft` (a high-contrast theme asks 7:1) | High contrast light | 5.81:1 |
+
+So a run that knows its surface asks for that surface. `brandTextOn(theme,
+surface)` is the same derivation held to one role: the brand where that surface
+already carries it, otherwise the smallest step toward `foreground` that does,
+and the theme's own floor:
+
+```ts
+import { brandTextOn, type Theme } from "@gpuixui/tokens";
+
+const link = {
+  color: brandTextOn(theme, "infoSoft"),
+  backgroundColor: theme.colors.infoSoft,
+};
+```
+
+`src/brand-text.example.ts`'s `messageLinkStyles` is that call site.
+`brandText(theme)` remains the answer for a run that may sit anywhere; the two
+differ wherever the tint is harder than the page.
+
+The message's **own copy** keeps the tone's readable role, not the brand:
+`statusTone(theme, tone).foreground` is measured on that tint at the body floor
+by the contrast table, so a warning's body text stays readable while its action
+link keeps as much of the brand as the tint allows.
 
 The other text a component writes in a status colour — a required marker, a
 field error, an inline warning — is not `brandText`'s job: a status tone has its

@@ -255,6 +255,12 @@ import { brandText } from "@gpuixui/tokens";
 const link = { color: brandText(theme) };
 ```
 
+A run that knows its surface asks for that surface: a link inside an `Alert`'s
+description sits on the message's `xSoft` tint, and the shared colour is under
+the floor there in 29 of the 64 tint placements (macOS dark on `warningSoft`
+measures 3.43:1), so it paints `brandTextOn(theme, "infoSoft")` — the same
+derivation held to one role.
+
 Status text — a required marker, a field error — is
 `statusTone(theme, tone).foreground`, the tone's readable role.
 

@@ -15,8 +15,12 @@
 
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { brandText, brandTextSurfaces } from "./brand-text.js";
-import { linkStyles, paleBrand } from "./brand-text.example.js";
+import { brandText, brandTextOn, brandTextSurfaces } from "./brand-text.js";
+import {
+  linkStyles,
+  messageLinkStyles,
+  paleBrand,
+} from "./brand-text.example.js";
 import { alpha } from "./color.js";
 import { contrastFloorsFor } from "./contrast.js";
 import { contrastFloors, contrastRatio } from "./contrast.js";
@@ -332,5 +336,191 @@ describe("brand text", () => {
         expect(value, `${label} channel ${at}`).toBeLessThanOrEqual(high);
       });
     });
+  });
+});
+
+describe("brand text on a message's own tint", () => {
+  /**
+   * The fills an `Alert` paints: `ALERT_TONES` maps each tone to its `xSoft`
+   * role. A message's description is a container, so an action can live there.
+   */
+  const tints = [
+    "infoSoft",
+    "successSoft",
+    "warningSoft",
+    "destructiveSoft",
+  ] as const;
+
+  /** The shared colour against each tint, over every shipped style. */
+  const placements = everyTheme.flatMap(([label, theme]) => {
+    const floor = contrastFloorsFor(theme).secondary;
+    const shared = brandText(theme);
+    return tints.map((tint) => ({
+      label,
+      theme,
+      tint,
+      shared,
+      floor,
+      ratio: contrastRatio(shared, theme.colors[tint]) ?? 0,
+    }));
+  });
+
+  it("reads the painters that put a brand run on a message", () => {
+    const recipes = source("../../tw/src/recipes.ts");
+    const alert = source("../../components/src/alert.tsx");
+    const registry = source("../../primitives/src/recipe/registry.ts");
+    // The four fills are the alert's tones, one per message family.
+    expect(recipes).toContain(
+      'info: "bg-infoSoft text-infoSoftForeground border-info/30"',
+    );
+    expect(recipes).toContain(
+      'warning: "bg-warningSoft text-warningSoftForeground border-warning/30"',
+    );
+    expect(recipes).toContain("export const ALERT_DESCRIPTION");
+    // The description is a container, and its documentation says an action may
+    // sit in it — on the tone's tint, not on the page.
+    expect(alert).toContain("It is a container, so it may hold an action");
+    // That action's `link` variant paints `text-brand`, the shared colour — so
+    // the measured colour below is the one a link in an alert actually paints.
+    expect(registry).toContain(
+      '"text-brand": (theme) => ({ color: brandText(theme) })',
+    );
+    // And the tints are outside the shared set: the derivation is for the page
+    // and the washes, so it cannot answer for a message's fill.
+    const sharedSurfaces: readonly string[] = brandTextSurfaces;
+    tints.forEach((tint) => expect(sharedSurfaces).not.toContain(tint));
+  });
+
+  it("measures the shared colour under the text floor on a message tint", () => {
+    const under = placements.filter(({ ratio, floor }) => ratio < floor);
+    // The gap is not a hypothetical brand: it is the colour the library hands
+    // every link, read on a fill the library paints behind a message.
+    expect(under.length).toBeGreaterThan(0);
+    expect(placements.length).toBe(64);
+
+    const light = placements.find(
+      ({ label, tint }) => label === "light" && tint === "infoSoft",
+    );
+    expect(light?.ratio).toBeCloseTo(4.46, 2);
+    expect(light?.ratio ?? 0).toBeLessThan(light?.floor ?? 0);
+
+    const dark = placements.find(
+      ({ label, tint }) => label === "dark" && tint === "warningSoft",
+    );
+    expect(dark?.ratio).toBeCloseTo(3.94, 2);
+
+    const darwinDark = platformTheme(themes.dark, "darwin");
+    expect(
+      contrastRatio(darwinDark.colors.primary, darwinDark.colors.warningSoft),
+    ).toBeCloseTo(2.32, 2);
+    const worst = placements.reduce((low, placement) =>
+      placement.ratio < low.ratio ? placement : low,
+    );
+    expect(`${worst.label} ${worst.tint}`).toBe("darwin dark warningSoft");
+    expect(worst.ratio).toBeCloseTo(3.43, 2);
+  });
+
+  it("derives a colour every tint can carry, in every shipped style", () => {
+    everyTheme.forEach(([label, theme]) => {
+      const floor = contrastFloorsFor(theme).secondary;
+      tints.forEach((tint) => {
+        const ratio = contrastRatio(
+          brandTextOn(theme, tint),
+          theme.colors[tint],
+        );
+        expect(ratio, `${label} on ${tint}`).toBeDefined();
+        expect(ratio ?? 0, `${label} on ${tint}`).toBeGreaterThanOrEqual(floor);
+      });
+    });
+  });
+
+  it("keeps the brand where the tint carries it, and steps where it does not", () => {
+    // The base themes show both halves: the dark brand reads on `infoSoft` and
+    // does not on `warningSoft`, and the light brand is the reverse on
+    // `successSoft` and `infoSoft`.
+    expect(brandTextOn(darkTheme, "infoSoft")).toBe(darkTheme.colors.primary);
+    expect(brandTextOn(lightTheme, "successSoft")).toBe(
+      lightTheme.colors.primary,
+    );
+    expect(brandTextOn(darkTheme, "warningSoft")).not.toBe(
+      darkTheme.colors.primary,
+    );
+    expect(brandTextOn(lightTheme, "infoSoft")).not.toBe(
+      lightTheme.colors.primary,
+    );
+    // One surface does not answer for the others: the shared colour and the
+    // tint answer differ, which is why both functions exist.
+    expect(brandTextOn(lightTheme, "infoSoft")).not.toBe(brandText(lightTheme));
+  });
+
+  it("holds a high-contrast tint to the 7:1 its variant asks for", () => {
+    const raw = contrastRatio(
+      highContrastLightTheme.colors.primary,
+      highContrastLightTheme.colors.infoSoft,
+    );
+    expect(raw).toBeCloseTo(5.81, 2);
+    expect(raw ?? 0).toBeLessThan(7);
+    const derived = brandTextOn(highContrastLightTheme, "infoSoft");
+    expect(derived).not.toBe(highContrastLightTheme.colors.primary);
+    expect(
+      contrastRatio(derived, highContrastLightTheme.colors.infoSoft) ?? 0,
+    ).toBeGreaterThanOrEqual(7);
+  });
+
+  it("returns a colour it cannot measure unchanged instead of guessing", () => {
+    const unpaintable = extendTheme(lightTheme, {
+      colors: { primary: "#NOPE" },
+    });
+    expect(brandTextOn(unpaintable, "infoSoft")).toBe("#NOPE");
+    const translucent = extendTheme(lightTheme, {
+      colors: { primary: alpha(lightTheme.colors.primary, 0.5) },
+    });
+    expect(brandTextOn(translucent, "infoSoft")).toBe(
+      alpha(lightTheme.colors.primary, 0.5),
+    );
+  });
+
+  it("runs the documented message link over the theme's tints", () => {
+    const link = messageLinkStyles(lightTheme);
+    expect(link.color).toBe(brandTextOn(lightTheme, "infoSoft"));
+    expect(link.backgroundColor).toBe(lightTheme.colors.infoSoft);
+    expect(
+      contrastRatio(link.color, link.backgroundColor) ?? 0,
+    ).toBeGreaterThanOrEqual(contrastFloors.secondary);
+  });
+
+  it("prints the tint measurements and the rule on both token pages", () => {
+    const page = source("../../../docs/tokens.md").replace(/\s+/g, " ");
+    const designSystem = source("../../../docs/design-system.md").replace(
+      /\s+/g,
+      " ",
+    );
+    const under = placements.filter(({ ratio, floor }) => ratio < floor);
+    const darwinDark = platformTheme(themes.dark, "darwin");
+    const fill = contrastRatio(
+      darwinDark.colors.primary,
+      darwinDark.colors.warningSoft,
+    );
+    const shared = contrastRatio(
+      brandText(darwinDark),
+      darwinDark.colors.warningSoft,
+    );
+    expect(page).toContain(
+      `the shared colour is under its floor in **${under.length} of the ${placements.length}** tint placements`,
+    );
+    expect(page).toContain(
+      `| \`primary\` on \`warningSoft\` | macOS dark | **${(fill ?? 0).toFixed(2)}:1** |`,
+    );
+    expect(page).toContain(
+      `| the shared colour on \`warningSoft\` | macOS dark | **${(shared ?? 0).toFixed(2)}:1** |`,
+    );
+    expect(page).toContain("brandTextOn(theme, surface)");
+    expect(page).toContain("statusTone(theme, tone).foreground");
+    // The design system teaches the same rule with the same measured count, so
+    // a page that drops it fails here rather than in a reader's composition.
+    expect(designSystem).toContain(
+      `under the floor in ${under.length} of the ${placements.length} tint placements`,
+    );
+    expect(designSystem).toContain("brandTextOn(theme, surface)");
   });
 });

@@ -88,10 +88,14 @@ which returns the brand where it already reads and otherwise steps it toward the
 theme's `foreground` until the least readable of the eight surfaces it can sit on
 (the page, card, popover, muted toolbar, the hover and press washes a link tints,
 and the `accent`/`selected` washes a row paints under an action) clears the
-floor the theme's variant asks for — 4.5:1 default, 7:1 high contrast. The same
-rule covers status text: a required marker or a field error paints
-`statusTone(theme, tone).foreground`, the tone's readable role, never the solid
-fill. See `docs/tokens.md` §Brand text.
+floor the theme's variant asks for — 4.5:1 default, 7:1 high contrast. A run
+that knows its surface asks for it: a link inside an `Alert`'s description sits
+on that message's `xSoft` tint, where the shared colour is under the floor in 29
+of the 64 tint placements (macOS dark on `warningSoft` measures 3.43:1), so it
+paints `brandTextOn(theme, surface)`. The message's own copy keeps the tone's
+readable role. The same rule covers status text: a required marker or a field
+error paints `statusTone(theme, tone).foreground`, the tone's readable role,
+never the solid fill. See `docs/tokens.md` §Brand text.
 
 ## 4. Light and dark
 

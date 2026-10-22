@@ -24,9 +24,23 @@
  * derivation already, but the Luna look's dark brand landed at **4.50:1** on the
  * row it selects — under the 4.5:1 floor — so it steps once now. The two washes
  * are in the set, so the class cannot recur in a brand.
+ *
+ * **A message's own tint is not one of those surfaces, and it cannot be.** An
+ * `Alert`'s description is a container — its documentation says so — and the
+ * fill behind it is the tone's `xSoft` role, so a link placed inside a message
+ * sits on a tint. Measured, the shared link colour is under the text floor in
+ * **29 of the 64** tint placements across the sixteen styles (the worst is macOS
+ * dark's brand on `warningSoft` at **3.43:1**; the raw fill role there is
+ * 2.32:1), and no single colour can fix that without dragging every link on the
+ * page away from the brand: a tint is one tone lighter or darker than the page it
+ * sits in. So the answer is the surface a run actually knows:
+ * {@link brandTextOn} derives the colour against one surface, and a message's
+ * action link names the tint it lives on. The message's own copy keeps the tone's
+ * readable role (`statusTone(theme, tone).foreground`), which the contrast table
+ * measures on that tint at the body floor.
  */
 
-import { blend } from "./color.js";
+import { blend, type ThemeColors } from "./color.js";
 import {
   contrastFloorsFor,
   contrastRatio,
@@ -75,6 +89,18 @@ const worstRatio = (theme: Theme, colour: string): number | undefined =>
   }, Number.POSITIVE_INFINITY);
 
 /**
+ * The brand, moved toward the theme's foreground until `legible` accepts it.
+ *
+ * The 2% grid is the derivation both readers share: a colour that already reads
+ * is returned unchanged (`step` 0), and one that never does stops at
+ * `foreground`, the most readable text role the theme has.
+ */
+const derivedBrandText = (theme: Theme, legible: (colour: string) => boolean) =>
+  Array.from({ length: TEXT_STEPS + 1 }, (_, step) =>
+    blend(theme.colors.primary, theme.colors.foreground, step / TEXT_STEPS),
+  ).find(legible) ?? blend(theme.colors.primary, theme.colors.foreground, 1);
+
+/**
  * The colour a link, a text action or any brand-coloured run paints.
  *
  * The theme's `primary` when it already clears the floor on every surface a
@@ -100,11 +126,41 @@ export function brandText(
     const ratio = worstRatio(theme, colour);
     return ratio === undefined || ratio >= floors.secondary;
   };
-  const candidates = Array.from({ length: TEXT_STEPS + 1 }, (_, step) =>
-    blend(theme.colors.primary, theme.colors.foreground, step / TEXT_STEPS),
-  );
-  return (
-    candidates.find(legible) ??
-    blend(theme.colors.primary, theme.colors.foreground, 1)
-  );
+  return derivedBrandText(theme, legible);
+}
+
+/**
+ * The colour a brand-coloured run paints on one **known** surface.
+ *
+ * {@link brandText} answers for a run that may sit anywhere, so it is held to
+ * the least readable of every surface a link can occupy. A run that knows where
+ * it sits — a link inside an `Alert`'s description, on that message's own
+ * `xSoft` tint — is held to the surface it actually paints on, so it keeps as
+ * much of the brand as that surface allows. It matters because the tints are not
+ * in {@link brandTextSurfaces}' set by design: a tint is one tone away from the
+ * page, and the shared colour is under the text floor on a third of the tint
+ * placements in the shipped styles.
+ *
+ * The floor and the derivation are the same as {@link brandText}'s: the theme's
+ * own contrast variant (4.5:1 default, 7:1 high contrast), a 2% step toward
+ * `foreground`, no step past it, and a brand or surface it cannot measure is
+ * returned unchanged rather than replaced by a guess.
+ *
+ * @example
+ * ```tsx
+ * import { brandTextOn, type Theme } from "@gpuixui/tokens";
+ *
+ * <text style={{ color: brandTextOn(theme, "infoSoft") }}>Learn more</text>
+ * ```
+ */
+export function brandTextOn(
+  theme: Theme,
+  surface: keyof ThemeColors,
+  floors: ContrastFloors = contrastFloorsFor(theme),
+): string {
+  const legible = (colour: string): boolean => {
+    const ratio = contrastRatio(colour, theme.colors[surface]);
+    return ratio === undefined || ratio >= floors.secondary;
+  };
+  return derivedBrandText(theme, legible);
 }
