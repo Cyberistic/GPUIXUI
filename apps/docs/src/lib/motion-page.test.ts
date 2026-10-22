@@ -421,8 +421,14 @@ describe("the motion page", () => {
       "if (initial !== undefined && Number.isFinite(initial)) return initial;",
     );
     expect(react).toContain("return Number.isFinite(target) ? target : 0;");
+    // Both hooks reach the repair through `startValue`. The retained hook goes
+    // through `firstValue`, which also drops an `initial` under reduced motion —
+    // the preference removes the journey, so the mount paints the resting frame.
     expect(react).toContain(
-      "useState(() => startValue(target, options.initial))",
+      "): number => startValue(target, reducedMotion ? undefined : initial);",
+    );
+    expect(react).toContain(
+      "firstValue(target, options.initial, reducedMotion)",
     );
     expect(react).toContain("useState(() => startValue(0, options.initial))");
 

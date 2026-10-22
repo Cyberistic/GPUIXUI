@@ -37,6 +37,7 @@
     "accordion",
     "collapsible",
     "tabs",
+    "stepper",
     "breadcrumb",
     "pagination"
   ]

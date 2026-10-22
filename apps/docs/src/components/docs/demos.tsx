@@ -99,6 +99,12 @@ import {
   searchWorkflowSource,
 } from "./search-input-demo";
 import {
+  StepperStates,
+  StepperWorkflow,
+  stepperStatesSource,
+  stepperWorkflowSource,
+} from "./stepper-demo";
+import {
   SwitchStates,
   SwitchWorkflow,
   switchStatesSource,
@@ -2532,6 +2538,11 @@ export const demos: Readonly<Record<string, Demo>> = {
   "collapsible-workflow": {
     render: CollapsibleWorkflow,
     source: collapsibleWorkflowSource,
+  },
+  "stepper-states": { render: StepperStates, source: stepperStatesSource },
+  "stepper-workflow": {
+    render: StepperWorkflow,
+    source: stepperWorkflowSource,
   },
   "switch-states": { render: SwitchStates, source: switchStatesSource },
   "switch-workflow": {

@@ -315,6 +315,35 @@ describe("preview style sheets", () => {
     );
   });
 
+  it("takes a stepper's marker from the density step the component reads", () => {
+    // The shipped marker is `controlHeight(theme, "md")` round, so a platform's
+    // compact or comfortable density resizes it with the controls beside it. A
+    // preview carrying a literal 28px would look right on the default theme and
+    // stop following the switch — the one thing the marker's size is for.
+    const css = read("../styles/demos.css");
+    const marker = block(css, ".gx-stepper-marker");
+
+    expect(marker).toContain("width: var(--control-height-md)");
+    expect(marker).toContain("height: var(--control-height-md)");
+    expect(marker).not.toContain("28px");
+
+    // The three derived statuses paint the fills `markerPalette` names.
+    expect(
+      block(css, '.gx-stepper-step[data-status="complete"] .gx-stepper-marker'),
+    ).toContain("background: var(--secondary)");
+    expect(
+      block(css, '.gx-stepper-step[data-status="current"] .gx-stepper-marker'),
+    ).toContain("background: var(--primary)");
+    expect(
+      block(css, '.gx-stepper-step[data-status="upcoming"] .gx-stepper-marker'),
+    ).toContain("background: var(--muted)");
+    // An upcoming step's label is the muted role; a complete or current one is
+    // body text.
+    expect(
+      block(css, '.gx-stepper-step[data-status="upcoming"] .gx-stepper-label'),
+    ).toContain("color: var(--muted-foreground)");
+  });
+
   it("reads a carousel's control fills and its track edge from the theme", () => {
     // The control is the local `Button`'s `secondary` variant: `secondary` fill,
     // `borderStrong` edge and the derived opaque pointer steps. The track's edge

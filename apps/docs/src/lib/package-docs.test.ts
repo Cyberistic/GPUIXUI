@@ -129,6 +129,7 @@ describe("the package docs collections", () => {
     "/docs/components/pagination",
     "/docs/components/popover",
     "/docs/components/search-input",
+    "/docs/components/stepper",
     "/docs/components/tag-input",
     "/docs/components/tabs",
     "/docs/components/time-picker",

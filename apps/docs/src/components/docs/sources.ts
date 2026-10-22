@@ -21,6 +21,7 @@ import pagination from "../../../../../packages/components/src/pagination.tsx?ra
 import popover from "../../../../../packages/components/src/popover.tsx?raw";
 import searchInput from "../../../../../packages/components/src/search-input.tsx?raw";
 import select from "../../../../../packages/primitives/src/components/Select.tsx?raw";
+import stepper from "../../../../../packages/components/src/stepper.tsx?raw";
 import switchSource from "../../../../../packages/primitives/src/components/Switch.tsx?raw";
 import tagInput from "../../../../../packages/components/src/tag-input.tsx?raw";
 import tabs from "../../../../../packages/components/src/tabs.tsx?raw";
@@ -59,6 +60,7 @@ export const componentSources = {
   popover,
   searchInput,
   select,
+  stepper,
   switch: switchSource,
   table,
   tabs,

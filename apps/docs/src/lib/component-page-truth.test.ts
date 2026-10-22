@@ -216,6 +216,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/primitives/src/components/Select.tsx",
   },
   {
+    file: "stepper.mdx",
+    row: "Stepper",
+    suite: "packages/components/src/behaviour/stepper.test.tsx",
+    shadowed: "packages/components/docs/stepper.mdx",
+    source: "packages/components/src/stepper.tsx",
+  },
+  {
     file: "switch.mdx",
     row: "Switches",
     suite: "packages/primitives/runtime/switch.runtime.test.tsx",
@@ -1738,6 +1745,50 @@ describe("the curated component pages", () => {
     expect(text).toContain("`filledHover`");
     expect(text).toContain("`filledPressed`");
     expect(text).toContain("`iconSize`");
+  });
+
+  it("holds the stepper's derived status and its raw value to the source", () => {
+    // A stepper page can drift in three silent ways: it can teach a `status`
+    // prop the component does not take, hide the 24px marker that scales with
+    // the platform's density, or claim the value is clamped when the component
+    // compares the raw number. Each is read from the painter rather than
+    // trusted, and the page's "no key handler" sentence is the one a reader
+    // needs before putting Next on the stepper.
+    const page = pages.find((candidate) => candidate.file === "stepper.mdx");
+    expect(page, "the stepper page is not in the curated set").toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    // One rule, one place: the raw comparison, with no clamp and no callback.
+    expect(source).toContain(
+      'step < current ? "complete" : step === current ? "current" : "upcoming"',
+    );
+    expect(source).not.toContain("Math.min");
+    expect(source).not.toContain("Math.max");
+    expect(source).toContain('role="list"');
+    expect(source).toContain('role="listitem"');
+    expect(source).toContain('aria-selected={status === "current"}');
+    // The marker is a density step, not a constant.
+    expect(source).toContain('controlHeight(theme, "md")');
+
+    // The props are the contract: no callback to move the value, and no status
+    // a caller could pass beside it.
+    const props = source.slice(
+      source.indexOf("export interface StepperProps"),
+      source.indexOf("export interface StepperStepProps"),
+    );
+    expect(props).not.toContain("onValueChange");
+    expect(props).not.toContain("readonly status");
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("The comparison is made against the **raw number**");
+    expect(text).toContain("no `aria-orientation`");
+    expect(text).toContain("`aria-selected`");
+    expect(text).toContain("installs no key handler and no tab stop");
+    expect(text).toContain('controlHeight(theme, "md")');
+    expect(text).toContain("8 native behaviour tests");
+    // The retracted shape: a status prop a caller could contradict.
+    expect(text).not.toContain("`status` prop to set");
   });
 
   it("holds the switch's slide, its band and its knob guard to the source", () => {

@@ -64,6 +64,7 @@ components/pagination.mdx   Curated: the derived window, the gap-of-one rule, th
 components/popover.mdx       Curated: anchored placement
 components/search-input.mdx  Curated: the Escape rule, the 24px clear target, the fixed metrics
 components/select.mdx        Curated: the 320px list, the row that reveals itself
+components/stepper.mdx       Curated: the derived status, the raw value, the workflow's gate
 components/switch.mdx        Curated: the left-inset slide, the 24px band, the cleared dependent
 components/table.mdx         Curated: the model, the sort and selection rules, the fixed header
 components/tag-input.mdx     Curated: the commit rules, the cap, the 24px removal target, no Backspace
@@ -136,6 +137,8 @@ src/components/docs/form-preview.ts      The form preview's messages, submit rul
 src/components/docs/form-demo.tsx        The form's two browser renderings and their source strings
 src/components/docs/search-input-preview.ts The search preview's filter, count and Escape rule
 src/components/docs/search-input-demo.tsx The search field's two browser renderings and their source strings
+src/components/docs/stepper-preview.ts    The stepper preview's derived status and the step gate
+src/components/docs/stepper-demo.tsx      The stepper's two browser renderings and their source strings
 src/components/docs/switch-preview.ts      The switch preview's dependent-setting rule and its slide duration
 src/components/docs/switch-demo.tsx        The switch's two browser renderings and their source strings
 src/components/docs/table-preview.ts      The table preview's copy of the package's sort, selection and filter rules

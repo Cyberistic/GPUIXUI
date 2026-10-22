@@ -1,0 +1,191 @@
+---
+title: Stepper
+description: A read-only indicator of progress through named steps, whose statuses are derived from one value the workflow owns.
+---
+
+`Stepper` shows where a workflow is in a sequence: a numbered marker, the step's
+name and an optional description per step. It is an **indicator, not a control**.
+
+- It holds no state and takes no callback.
+- It derives each step's status from the one `value` you pass.
+- No step is clickable. Moving between steps is the workflow's job; a stepper
+  with arbitrary jump targets needs a validation and disabled policy the API
+  cannot invent.
+
+<ComponentPreview name="stepper-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Stepper" />
+
+<ComponentSource
+  name="stepper"
+  file="packages/components/src/stepper.tsx"
+/>
+
+## Usage
+
+```tsx
+import { Stepper, StepperStep } from "@gpuixui/components";
+
+<Stepper label="Checkout" value={2}>
+  <StepperStep description="Email and password" label="Account" value={1} />
+  <StepperStep description="Card and address" label="Billing" value={2} />
+  <StepperStep label="Review" value={3} />
+</Stepper>;
+```
+
+The runnable build is `examples/stepper.example.tsx`, which the native
+playground mounts.
+
+## Statuses
+
+The status is derived from `value` — there is no `status` prop to contradict it:
+
+| A step's `value` | Status | Marker | Label |
+| ---------------- | ------ | ------ | ----- |
+| `< value` | `complete` | `secondary` fill, `secondaryForeground` number | `foreground` |
+| `= value` | `current` | `primary` fill, `primaryForeground` number | `foreground` |
+| `> value` | `upcoming` | `muted` fill, `mutedForeground` number | `mutedForeground` |
+
+`StepperStepState` is the public state object: `{ status }`. Pass a function to
+`style` to read it:
+
+```tsx
+<StepperStep
+  label="Billing"
+  style={(state) => ({ opacity: state.status === "current" ? 1 : 0.6 })}
+  value={2}
+/>
+```
+
+The comparison is made against the **raw number**, so nothing is clamped: a
+value below `1` leaves every step upcoming, and a value past the last step
+leaves every step complete.
+
+<ComponentPreview name="stepper-states" />
+
+The component cannot clamp, because it does not know how many steps a workflow
+has — a `value` past the end is the app's bug, painted honestly. Keep the value
+inside `1…steps.length` in the code that owns it.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Stepper` | the `role="list"`, the orientation and the value every step derives from |
+| `StepperStep` | one `role="listitem"`: its marker, name, description and derived status |
+
+`Stepper`'s children are `StepperStep`s and nothing else: a misplaced sibling is
+named at render (`Put StepperStep directly inside Stepper.`). The stepper owns
+no connector line and no state — a step's `value` is what ties it to the root's
+scale, and the page's [Statuses](#statuses) table is the whole rule.
+
+The workflow above is app composition: the step's check runs **before** the
+value moves, so the indicator never paints a step the reader has not answered.
+The component knows nothing about that rule.
+
+## Keyboard
+
+`Stepper` installs no key handler and no tab stop. It is a list a reader reads,
+not a control they operate; the workflow's own Next and Back controls own every
+key. A stepper that lets a reader jump between steps is a different component —
+compose [`Tabs`](/docs/components/tabs) or the list's roving tab stop, which
+carry the focus and activation the workflow would then owe.
+
+## API reference
+
+### `Stepper`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `number` | — | the current step, 1-based; steps below it are complete |
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | a row of steps, or a column for a sidebar |
+| `label` | `string` | none | the list's accessible name (`aria-label`) |
+| `children` | `ReactNode` | — | `StepperStep` parts, in order |
+| `style` | `StyleDesc` | — | merged last |
+| `className` | `string` | — | compiled through `@gpuixui/tw`, joined after the recipe |
+| `testId` | `string` | — | stable locator |
+
+### `StepperStep`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `number` | — | this step's position, 1-based, on the root's scale |
+| `label` | `string` | — | the step's name and its accessible name |
+| `description` | `string` | none | one line of support copy under the name |
+| `style` | `StateStyle<StepperStepState>` | — | resolved against the derived status, merged last |
+| `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `testId` | `string` | — | stable locator |
+
+`StepperStepState` is `{ status }`, handed to the `style` callback after the
+recipe. `className` compiles first, then the callback's `style` is merged last,
+so a callback can paint a property the recipe does not.
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| marker, complete | `secondary` fill, `secondaryForeground` number |
+| marker, current | `primary` fill, `primaryForeground` number |
+| marker, upcoming | `muted` fill, `mutedForeground` number |
+| label | `foreground`, and `mutedForeground` while upcoming |
+| description | `mutedForeground` |
+| marker side | `controlHeight.md`, round |
+| step gap | `spacing.md` |
+
+The marker is **`controlHeight(theme, "md")`** — a density step, not a constant —
+so the selected platform's compact or comfortable density resizes every marker
+with the controls beside it. The marker's number is the step's `value`, and the
+label weight and the description's type role come from the fixed recipe, so a
+platform switch repaints the colours and the marker box without reshaping the
+text. A custom theme changes the whole indicator with no code change — see
+[`docs/tokens.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md).
+
+## Accessibility and limitations
+
+- The root is a list (`role="list"`) named when `label` is given; every step is
+  a `listitem` named by its `label`. Passing `label` is what makes the list
+  announce as one, so pass it.
+- `@gpuix/native@0.11.0` has no `aria-current`, so the current step carries
+  `aria-selected` — the same substitution Pagination uses. A browser preview may
+  show `aria-current`; the native stepper does not.
+- The number marker is visual: the step's accessible name does not include it, so
+  a screen reader hears "Billing", not "2 Billing".
+- Display-only: there is no step click, disabled policy or `onValueChange`, and
+  no `aria-orientation`. The current step is the only state a reader can hear.
+- No connector line between steps: the runtime has no pseudo-elements, and the
+  contract fixes two parts.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the list, the step, the derived status and the marker palette |
+| `effect` | `Match` over the three statuses |
+| `@gpuix/react` | the host style and part types |
+| `@gpuix/react/floating` | `resolveStyle` for the state callback |
+| `@gpuixui/tw` | the recipe registry and `cn` conflict resolution |
+
+## Related
+
+- **Tabs** — switchable panels, not progress.
+- **Breadcrumb** — where you are, not how far through.
+- **Pagination** — moving through pages of one step.
+- **Progress** — one bar of completeness, with no named steps.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `partial` runtime verdict: the indicator is
+whole, but 0.11.0 has no `aria-current`, so the current step travels as
+`aria-selected`, and a step's number is not part of its name.
+
+`src/behaviour/stepper.test.tsx` runs in the real GPUix renderer — 8 native
+behaviour tests: step order with labels and descriptions, derived statuses in
+both themes, the selected current step, label colours per status, both
+orientations, list naming with the parts contract, a consumer `style` winning
+over the status rule, and the `style` callback receiving the status.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
