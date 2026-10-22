@@ -140,6 +140,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/confirm-dialog.tsx",
   },
   {
+    file: "context-menu.mdx",
+    row: "Context menus",
+    suite: "packages/components/src/behaviour/context-menu.test.tsx",
+    shadowed: "packages/components/docs/context-menu.mdx",
+    source: "packages/components/src/context-menu.tsx",
+  },
+  {
     file: "date-picker.mdx",
     row: "Date pickers",
     suite: "packages/components/src/behaviour/date-picker.test.tsx",
@@ -653,6 +660,95 @@ describe("the curated component pages", () => {
     // before its tween, neither of which the code paints.
     expect(text).not.toContain("rounded-4xl");
     expect(text).not.toContain("unmounts immediately");
+  });
+
+  it("hold the context menu's point, its restore gate and its type-ahead to the source", () => {
+    // A context menu is a position and a focus destination, and a screenshot
+    // shows neither: the pointer point is the aux click's, `Shift+F10` opens at
+    // the trigger's bottom-left, only a keyboard-opened menu returns focus, and
+    // a typed prefix searches *after* the current row with a 500 ms window.
+    // Each is read from the handler, the key module and the type-ahead module
+    // that ship them.
+    const menu = pages.find((page) => page.file === "context-menu.mdx");
+    expect(
+      menu,
+      "the context menu page is not in the curated set",
+    ).toBeDefined();
+    if (menu === undefined) return;
+
+    const source = read(menu.source);
+    const flatSource = source.replace(/\s+/g, " ");
+    const keys = read("packages/components/src/internal/key.ts").replace(
+      /\s+/g,
+      " ",
+    );
+    const typeahead = read(
+      "packages/components/src/internal/typeahead.ts",
+    ).replace(/\s+/g, " ");
+
+    // Both opening routes, each with the point it records.
+    expect(flatSource).toContain("event.isRightClick !== true");
+    expect(flatSource).toContain(
+      "openAt({ x: event.x ?? 0, y: event.y ?? 0 })",
+    );
+    expect(flatSource).toContain(
+      "openFromKeyboard({ x: bounds.x, y: bounds.y + bounds.height })",
+    );
+    expect(keys).toContain(
+      '(event.key === "f10" && event.modifiers?.shift === true)',
+    );
+    expect(keys).toContain('event.key === "contextmenu"');
+
+    // The surface is placed at the point, not anchored to a trigger.
+    expect(flatSource).toContain("position={point}");
+    expect(flatSource).toContain("deferred");
+
+    // The restore gate: a keyboard open records a target, and only the two
+    // reasons that keep the reader's place use it.
+    expect(flatSource).toContain("restoreFocus.current = true;");
+    expect(flatSource).toContain(
+      '(reason === "activate" || reason === "dismiss")',
+    );
+    expect(flatSource).toContain("restoreFocus.current = false;");
+
+    // The entrance and the exit frame: 4px from the point at the normal level,
+    // mounted without taking a press once it starts leaving.
+    expect(flatSource).toContain('fadeFromAnchor("bottom", 4)');
+    expect(flatSource).toContain('useSurfaceTiming("normal")');
+    expect(flatSource).toContain("if (!presence.mounted) return null;");
+    expect(flatSource).toContain("occlude={presence.present}");
+    expect(flatSource).toContain(
+      'pointerEvents: presence.present ? "auto" : "none"',
+    );
+
+    // The typed prefix: the shipped window and the "after the current row"
+    // rule, which is what makes a repeated letter advance.
+    expect(typeahead).toContain("Duration.millis(500)");
+    expect(typeahead).toContain("candidate.index > fromIndex");
+
+    // The surface's fixed corner, so the page can say the platform switch
+    // repaints the palette and not the 24px radius.
+    const recipes = read("packages/tw/src/recipes.ts");
+    const at = recipes.indexOf("export const MENU_CONTENT =");
+    const recipe =
+      at === -1 ? "" : recipes.slice(at).split("\n").slice(0, 2).join(" ");
+    expect(recipe).toContain("rounded-3xl");
+    expect(recipe).toContain("bg-popover");
+
+    const text = body(menu).replace(/\s+/g, " ");
+    expect(text).toContain("bottom-left");
+    expect(text).toContain("500 ms");
+    expect(text).toContain("not portalled");
+    expect(text).toContain("no `onContextMenu`");
+    expect(text).toContain("focus `none`");
+    expect(text).toContain("4px");
+    expect(text).toContain("200 ms");
+    expect(text).toContain("rounded-3xl");
+    expect(text).toContain("`partial`");
+    expect(text).toContain("24 checks");
+    // The retracted shape: a keyboard route that opens at the pointer would
+    // teach a point the keyboard never has.
+    expect(text).not.toContain("Shift+F10` opens at the pointer");
   });
 
   it("holds the pagination window, its square pages and its gap rule to the source", () => {

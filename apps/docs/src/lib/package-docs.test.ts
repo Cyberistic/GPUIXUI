@@ -111,6 +111,7 @@ describe("the package docs collections", () => {
     "/docs/components/combobox",
     "/docs/components/command-menu",
     "/docs/components/confirm-dialog",
+    "/docs/components/context-menu",
     "/docs/components/date-picker",
     "/docs/components/dialog",
     "/docs/components/drawer",

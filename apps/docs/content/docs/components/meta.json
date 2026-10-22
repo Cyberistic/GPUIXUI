@@ -27,6 +27,7 @@
     "confirm-dialog",
     "popover",
     "dropdown-menu",
+    "context-menu",
     "tooltip",
     "command-menu",
     "---Navigation---",

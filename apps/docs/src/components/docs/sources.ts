@@ -8,6 +8,7 @@ import checkbox from "../../../../../packages/primitives/src/components/Checkbox
 import commandMenu from "../../../../../packages/components/src/command-menu.tsx?raw";
 import combobox from "../../../../../packages/components/src/combobox.tsx?raw";
 import confirmDialog from "../../../../../packages/components/src/confirm-dialog.tsx?raw";
+import contextMenu from "../../../../../packages/components/src/context-menu.tsx?raw";
 import datePicker from "../../../../../packages/components/src/date-picker.tsx?raw";
 import dialog from "../../../../../packages/components/src/dialog.tsx?raw";
 import dropdownMenu from "../../../../../packages/components/src/dropdown-menu.tsx?raw";
@@ -42,6 +43,7 @@ export const componentSources = {
   commandMenu,
   combobox,
   confirmDialog,
+  contextMenu,
   datePicker,
   dialog,
   dropdownMenu,

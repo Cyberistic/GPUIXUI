@@ -33,6 +33,12 @@ import {
   comboboxMultipleSource,
 } from "./combobox-demo";
 import {
+  ContextMenuStates,
+  ContextMenuWorkflow,
+  contextMenuStatesSource,
+  contextMenuWorkflowSource,
+} from "./context-menu-demo";
+import {
   commandMatches,
   firstEnabled,
   nextEnabled,
@@ -2538,6 +2544,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   "confirm-dialog-states": {
     render: ConfirmDialogStates,
     source: confirmStatesSource,
+  },
+  "context-menu-states": {
+    render: ContextMenuStates,
+    source: contextMenuStatesSource,
+  },
+  "context-menu-workflow": {
+    render: ContextMenuWorkflow,
+    source: contextMenuWorkflowSource,
   },
   "dialog-demo": { render: DialogDemo, source: dialogSource },
   "date-picker-workflow": {

@@ -51,6 +51,7 @@ components/checkbox.mdx      Curated: the three states, the 24px target, the mix
 components/combobox.mdx      Curated: the ranked list, the disabled row, the create row
 components/command-menu.mdx  Curated: the palette's matcher, group ranking and keys
 components/confirm-dialog.mdx Curated: Cancel first, confirm never closes, the frozen busy mark
+components/context-menu.mdx  Curated: the pointer point, the restore gate, the type-ahead window
 components/date-picker.mdx   Curated: the six-row grid, inclusive bounds, the clamped key path
 components/dialog.mdx        Curated: a real confirmation workflow
 components/drawer.mdx        Curated: the edge box, the dismiss stack, the exit frame
@@ -121,6 +122,8 @@ src/components/docs/pagination-preview.ts The pagination preview's window rule, 
 src/components/docs/pagination-demo.tsx   The pagination's two browser renderings and their source strings
 src/components/docs/menu-preview.ts       The menu preview's row model and arrow arithmetic
 src/components/docs/command-preview.ts    The palette preview's matcher and group ranking
+src/components/docs/context-menu-preview.ts The context menu's points, restore gate and type-ahead
+src/components/docs/context-menu-demo.tsx The context menu's two browser renderings and their source strings
 src/components/docs/select-preview.ts     The select preview's data and arrow arithmetic
 src/components/docs/select-demo.tsx       The select's two browser renderings and their source strings
 src/components/docs/selection-preview.ts   The key edges a checkbox and a switch share

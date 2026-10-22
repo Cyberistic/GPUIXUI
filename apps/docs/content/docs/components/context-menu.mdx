@@ -1,0 +1,302 @@
+---
+title: Context menu
+description: The shared menu rows, positioned at the pointer or opened from the keyboard.
+---
+
+`ContextMenu` is the right-click counterpart of **Dropdown menu**. It uses the
+same rows, submenus, highlight rules and type-ahead; only the positioning
+differs — the surface is placed at the point the reader pressed, or under the
+trigger when a keyboard opens it, rather than anchored to a control.
+
+<ComponentPreview name="context-menu-workflow" />
+
+The list above is the app's: a row's right press opens the menu at that point,
+`Shift+F10` opens it at the row's bottom-left, and the action runs once. The
+surface only reports; it never renames a file or copies a path itself.
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="ContextMenu" />
+
+<ComponentSource name="contextMenu" file="packages/components/src/context-menu.tsx" />
+
+## Usage
+
+```tsx
+import {
+  ContextMenu,
+  ContextMenuCheckboxItem,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from "@gpuixui/components/context-menu";
+
+<ContextMenu>
+  <ContextMenuTrigger>
+    <text>release-notes.md</text>
+  </ContextMenuTrigger>
+  <ContextMenuContent label="Project actions">
+    <ContextMenuItem onSelect={open}>Open</ContextMenuItem>
+    <ContextMenuItem onSelect={rename}>Rename</ContextMenuItem>
+    <ContextMenuItem disabled>Move to trash</ContextMenuItem>
+    <ContextMenuSub>
+      <ContextMenuSubTrigger>Share</ContextMenuSubTrigger>
+      <ContextMenuSubContent label="Share">
+        <ContextMenuItem onSelect={copyLink}>Copy link</ContextMenuItem>
+        <ContextMenuItem onSelect={email}>Email</ContextMenuItem>
+      </ContextMenuSubContent>
+    </ContextMenuSub>
+    <ContextMenuSeparator />
+    <ContextMenuCheckboxItem
+      checked={showHidden}
+      onCheckedChange={setShowHidden}
+    >
+      Show hidden files
+    </ContextMenuCheckboxItem>
+  </ContextMenuContent>
+</ContextMenu>;
+```
+
+`label` names the surface for assistive technology. `ContextMenuContent` renders
+nothing while the menu is closed and for the whole exit tween after a close.
+
+## Where it opens
+
+`@gpuix/native@0.11.0` has no `onContextMenu`. A non-primary press arrives as
+`onAuxClick`, and the payload's `isRightClick` says whether it was the right
+button. The trigger records the event's `{ x, y }` — window coordinates — and
+opens there. A payload without a point falls back to the origin rather than
+refusing to open.
+
+The keyboard route has no pointer, so `Shift+F10` (or the menu key) opens at the
+trigger's **bottom-left**: `{ x: bounds.x, y: bounds.y + bounds.height }`, read
+from the trigger's measured box.
+
+| Gesture | Opens at | What happens |
+| ------- | -------- | ------------ |
+| right press on the trigger | the press point | an open surface closes and a new one opens at the new point |
+| right press outside the trigger | nothing | an open surface closes; the trigger is the only element listening, so no second menu can open |
+| `Shift+F10` / Menu key | the trigger's bottom-left | the first enabled row takes focus |
+| primary press | nothing | the trigger answers it like any other element |
+
+`ContextMenuContent` renders an `anchored` element with the point as its
+`position`. `anchored` takes **window** coordinates independent of the mount
+parent, so the point passes through unchanged; `FloatingLayer` is
+anchor-relative and cannot take a pointer point, which is why this component
+uses `anchored` directly. The surface is not portalled, and it is not clipped by
+a scroll container.
+
+## Composition
+
+| Part | Renders | Responsibility |
+| ---- | ------- | -------------- |
+| `ContextMenu` | nothing | owns `open`/`defaultOpen`/`onOpenChange`, the point and the dismiss layer |
+| `ContextMenuTrigger` | focusable box | the area whose right press or `Shift+F10` opens the menu |
+| `ContextMenuContent` | `anchored` surface | the named menu at the point, mounted while open and for its exit tween |
+| `ContextMenuItem` | row | one action; `tone="destructive"` for a removal |
+| `ContextMenuCheckboxItem` | checkable row | a toggle that keeps the menu open |
+| `ContextMenuSeparator` / `ContextMenuLabel` / `ContextMenuGroup` | structure | a hairline, a caption and a labelled group |
+| `ContextMenuSub` / `ContextMenuSubTrigger` / `ContextMenuSubContent` | second level | one submenu beside its row |
+
+The parts validate their placement: a `ContextMenuContent` outside `ContextMenu`,
+or a row outside `ContextMenuContent`, fails with a message naming the family.
+Put the trigger and the content directly inside `ContextMenu`.
+
+## Keyboard
+
+The surface takes focus when it opens, so an arrow moves **real** focus and the
+highlighted row is the focused row. A pointer-opened menu focuses the surface
+itself, which is why no row is highlighted after a right press.
+
+| Key | Contract |
+| ---- | -------- |
+| `Shift+F10` / Menu key | opens at the trigger's bottom-left and focuses the first enabled row |
+| `ArrowDown` / `ArrowUp` | next/previous enabled row, wrapping at both ends |
+| `Home` / `End` | first/last enabled row |
+| `Enter` | runs the highlighted row on the press |
+| `Space` | runs the highlighted row on the release, and the press is swallowed so the page cannot scroll |
+| `ArrowRight` on a submenu trigger | opens that level and focuses its first row |
+| `ArrowLeft` inside a submenu | closes one level and returns focus to its trigger |
+| letter / digit keys | type-ahead over enabled labels — a 500 ms window, case-insensitive, searching **after** the current row and wrapping; repeating a letter advances to the next row that starts with it |
+| `Escape` | closes the topmost layer; a keyboard-opened menu returns focus to its trigger |
+| `Tab` | closes without taking the key, so focus moves on |
+
+Only one submenu is open at a time, and an outside press closes both levels.
+`Tab` is the reader leaving, not dismissing: the menu closes and the platform's
+focus move continues.
+
+## The close
+
+<ComponentPreview name="context-menu-states" />
+
+Where focus goes is part of the contract, and it is not symmetric:
+
+| Opened by | `Escape` | running a row | `Tab` | outside press |
+| --------- | -------- | ------------- | ----- | ------------- |
+| `Shift+F10` | returns to the trigger | returns to the trigger | `none` | `none` |
+| a right press | `none` | `none` | `none` | `none` |
+
+A pointer-opened menu records no restore target, so dismissing it leaves the
+native focus `none` — measured in a window by the playground's
+`context-menu-lifecycle` probe. A consumer that opens the menu from its own
+shortcut and wants focus back should go through `Shift+F10` or a controlled
+`open` with its own restore.
+
+Dismissal is a stack, not a flag: the surface pushes itself as a dismiss layer
+and an `Escape` or outside press is offered to the **topmost** layer only, so a
+context menu opened inside a dialog closes first and one gesture cannot close
+both. An outside press is also how a right press on a sibling row is handled:
+the trigger swallows the new press and the open menu closes.
+
+### Motion
+
+The surface fades and travels **4px** down from the point at the `normal` level
+(200 ms). It stays mounted for the exit tween without taking a press: the
+anchored host stops occluding the moment the menu closes, so a press inside the
+fading box belongs to the control underneath rather than needing a second
+click. A submenu is the shared menu part, so a second level enters from its
+row's side and keeps its box for its exit the same way. `MotionProvider` supplies
+the reduced-motion preference (`docs/component-api.md` §11).
+
+## API reference
+
+### `ContextMenu`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `open` | `boolean` | uncontrolled | controlled open state |
+| `defaultOpen` | `boolean` | `false` | the initial state when uncontrolled |
+| `onOpenChange` | `(open: boolean) => void` | none | reports the next state; a controlled menu waits for the caller |
+| `children` | parts | none | `ContextMenuTrigger` and `ContextMenuContent` |
+
+### `ContextMenuTrigger`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `disabled` | `boolean` | `false` | no aux click, no `Shift+F10`, out of the tab order, dimmed |
+| `children` | nodes | none | the area the reader presses |
+| `style` | host style | none | merged last over the card-like box |
+
+The trigger composes any host handler the caller passes — an aux click, a key
+press, focus and blur — with its own, so an app can react to a right press
+without losing the open. It is a `card`-filled box with a `border` edge and
+`spacing.md` padding; pass `style` to match the row it represents.
+
+### `ContextMenuContent`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `label` | `string` | `"Context menu"` | the surface's accessible name |
+| `children` | parts | none | rows, groups, labels, separators and submenus |
+| `className` | `string` | none | compiled through `@gpuixui/tw` and joined after the recipe |
+| `style` | host style | none | merged last on the surface |
+
+`ContextMenuContent` takes the GPUix host props (`style`, `testId`, `ref`,
+`aria-*`, `onKeyDown`, `onMouseDownOutside`) and merges `style` last.
+
+### `ContextMenuItem` and `ContextMenuCheckboxItem`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `onSelect` | `() => void` | none | runs once when the row is activated |
+| `disabled` | `boolean` | `false` | skipped by arrows and type-ahead; paints the measured disabled pair |
+| `tone` | `"default" \| "destructive"` | `"default"` | a destructive row paints the status tone's readable role |
+| `leading` / `trailing` | `ReactNode` | none | slots before and after the label |
+| `textValue` | `string` | the label | the text type-ahead searches |
+| `closeOnSelect` | `boolean` | `true` | whether activation closes the menu |
+| `checked` | `boolean` | none | the checkbox row's state (required on `ContextMenuCheckboxItem`) |
+| `onCheckedChange` | `(checked: boolean) => void` | none | reported when the checkbox row toggles (required) |
+| `style` | `MenuItemState` callback | none | `{ disabled, highlighted }`, merged after the row's roles |
+
+`ContextMenuCheckboxItem` does not close the menu when it toggles, so a reader
+can switch more than one.
+
+### `ContextMenuSeparator`, `ContextMenuLabel`, `ContextMenuGroup`
+
+The structure parts take `children` and `className` and no required prop. The
+separator is a hairline, the label a muted caption, the group a labelled stack.
+
+### `ContextMenuSub`, `ContextMenuSubTrigger`, `ContextMenuSubContent`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `children` | parts | none | `ContextMenuSub` holds a trigger and its content |
+| `label` | `string` | none | the second level's accessible name |
+| `className` / `style` | host | none | merged last |
+
+`ContextMenuSubContent` takes the same placement props as the root surface. The
+sub-trigger is an ordinary row: arrows and type-ahead reach it, and a press,
+`Enter`, `Space`, `ArrowRight` or a hover opens the second level.
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| surface | `popover` fill, `popoverForeground` text, fixed 24px corner, 6px padding, a 1px `foreground` ring at 5%, the theme's `lg` elevation |
+| row | `popoverForeground` label, `hover` wash and a 2px `accent` bar under the highlight |
+| disabled row | the `disabled`/`disabledForeground` pair, held to the disabled floor, not a fade |
+| destructive row | `statusTone(theme, "destructive").foreground`, the readable role rather than the solid fill |
+| checkbox tick | `primary` as a mark, measured against the washes it sits on |
+| trigger | `card` fill, `border` edge, `radius.md`, `spacing.md` padding |
+
+The surface's corner is the recipe's fixed `rounded-3xl` rather than the theme's
+radius scale, so a platform switch repaints the palette and leaves the 24px
+corner alone. The preview draws the same fixed corner.
+
+## Accessibility and limitations
+
+- The runtime role is `menu`, with `menuitem` and `menuitemcheckbox` on rows.
+  `@gpuix/native@0.11.0` has no `onContextMenu`: a right press is the aux click,
+  which is a platform event rather than an accessibility one.
+- No `aria-haspopup` on the trigger and no `aria-activedescendant`: the keyboard
+  route is documented here rather than announced. A submenu trigger announces
+  `aria-expanded` only.
+- The surface is **not portalled**: it is an anchored layer at window
+  coordinates, so it paints correctly but is not clipped by a scroll container.
+- The menu is scoped to its trigger: a right press outside it can close the menu
+  but cannot open one. One level of submenus is tested; deeper nesting follows
+  the same rule but no suite exercises it.
+- A pointer-opened menu leaves focus `none`, so a workflow that must keep a
+  keyboard position should open through `Shift+F10` or restore focus itself.
+- The drawing on this page places the surface inside its own frame, opens the
+  second level on a press or `ArrowRight` (not hover), and removes the surface
+  at once instead of keeping it for the 200 ms exit frame.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the trigger, the anchored surface, the dismiss layer and the shared menu parts |
+| `@gpuix/react` | host props, the aux-click payload and `useGpuix` |
+| `@gpuix/react/floating` | `mergeStyles` for the trigger and surface styles |
+| `effect` | `pipe` and `Option` in the trigger's bounds lookup |
+
+## Related
+
+- **Dropdown menu** — the same rows anchored to a button, with a keyboard path.
+- **Command menu** — a searchable action list for the keyboard.
+- **Popover** — a pointer-anchored panel of content rather than actions.
+- **Drawer** and **Confirmation dialog** — modal surfaces that share the dismiss
+  stack this menu pushes itself onto.
+
+## Status
+
+**Status: `done`.** `COMPONENTS.md` records the runtime support as `partial`, and
+the missing half is the API rather than the opening path: no `onContextMenu`, no
+`aria-haspopup`, no portal, and one tested submenu level. The right press itself
+is measured in a real window.
+
+`packages/components/src/behaviour/context-menu.test.tsx` runs **18 native
+behaviour tests** in the real renderer on `@gpuix/native@0.11.0`: a primary press
+opening nothing, a right press opening a `menu` surface within 12px of the
+pointer, a selected action running once and closing, a second right press moving
+the surface, Escape closing, a disabled trigger ignoring both routes, `Shift+F10`
+opening at the trigger's bottom-left with focus in the menu, keyboard activation,
+focus returning only for a keyboard-opened menu, type-ahead, and the submenu
+rules. The playground's `context-menu-lifecycle` probe mounts the same component
+in a real window (24 checks), because a headless suite synthesises the aux click
+that opens it; its negative control is a primary press, which leaves `opens=0`.

@@ -62,6 +62,18 @@ height comes from the platform's density, the segment width and the clear
 target are the component's own constants, and the clock the preview runs is the
 component's.
 
+A **context menu** is drawn one frame removed from the native placement. The
+native surface is an `anchored` layer at **window** coordinates; the preview
+places it at the point the browser event reported **inside its own frame**, so a
+scroll of the page moves the native surface with its window and the drawing with
+its frame. Both routes are the component's: the drawing listens for the
+browser's `contextmenu` event where the native one reads `onAuxClick` +
+`isRightClick`, and `Shift+F10` opens at the trigger's bottom-left in both. Two
+smaller differences: the second level opens on a press or `ArrowRight` in the
+drawing while the native row also opens on hover, and the drawing removes the
+surface at once where the native one keeps it for its 200 ms exit frame without
+taking a press.
+
 ### Strategy 1 is real: the GPUix web build
 
 `@gpuix/native@0.11.0` ships a second target beside the `.node` binding: a
@@ -280,7 +292,7 @@ command that cannot resolve on the section a reader follows first.
 A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source.
 Curated today: Accordion, Alert, Breadcrumb, Button, Card, Carousel, Checkbox,
-Combobox, Command menu, Confirmation dialog, Date picker, Dialog, Drawer,
+Combobox, Command menu, Confirmation dialog, Context menu, Date picker, Dialog, Drawer,
 Dropdown menu, Field and inline validation, Form, List, Pagination, Popover,
 Search input, Select, Switch, Tabs, Time picker, Tooltip, Toast.
 `src/lib/component-preview.test.ts` holds the preview registry from both sides:
