@@ -1412,7 +1412,10 @@ describe("PreviewCard, ConfirmDialog and Drawer recipes", () => {
     });
   });
 
-  it("resolves the confirm-dialog busy glyph type", () => {
+  it("resolves the confirm-dialog busy type", () => {
+    // The published busy-mark type. The components' busy mark is the `loader`
+    // icon now, so no component paints this recipe — it stays covered here so
+    // the registry cannot drift while `@gpuixui/tw` owns it.
     expect(style(CONFIRM_DIALOG_BUSY)).toEqual({
       fontSize: 14,
       lineHeight: 20,

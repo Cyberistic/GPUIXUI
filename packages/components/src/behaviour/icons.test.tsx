@@ -6,6 +6,8 @@
  * than the icon scale. The components now paint `@gpuixui/icons`, so this suite
  * measures the `<svg>` where the glyph used to be, the name a labelled one
  * announces, and the source sweep that keeps a text stand-in from returning.
+ * The sweep reads a painted `…` too: the confirm dialog's busy mark was the
+ * last one, and the old pattern could not see it.
  *
  * `node:fs` is read synchronously only because the sweep is a test-time
  * repository check; nothing in the component runtime imports it.
@@ -36,6 +38,22 @@ import { SearchInput } from "../search-input.js";
 /** The painted icons in a frame. */
 const icons = (root: ReturnType<typeof renderComponent>): number =>
   root.renderer.findByType("svg").length;
+
+/**
+ * The control marks the chrome used before the icon set. None of them appears
+ * in copy, so one anywhere in a component file is a stand-in.
+ */
+const CONTROL_MARK = /[✕✓⌕▾›‹⌃⌄▸]/;
+
+/**
+ * An ellipsis standing alone as an element's content. A placeholder may end in
+ * one ("Search…"), so the ellipsis is a stand-in only where it is painted.
+ */
+const PAINTED_ELLIPSIS = />\s*…\s*</;
+
+/** Whether a component file paints a text stand-in for an icon. */
+const isStandInGlyph = (source: string): boolean =>
+  CONTROL_MARK.test(source) || PAINTED_ELLIPSIS.test(source);
 
 describe("Tier 2 icons", () => {
   it("draws the dialog's close control as an icon, not a ✕", () => {
@@ -126,9 +144,18 @@ describe("Tier 2 icons", () => {
     expect(files.length).toBeGreaterThan(30);
 
     const standIns = Arr.filter(files, (file) =>
-      /[✕✓⌕▾›‹⌃⌄▸]/.test(readFileSync(`${source}${file}`, "utf8")),
+      isStandInGlyph(readFileSync(`${source}${file}`, "utf8")),
     );
 
     expect(standIns).toEqual([]);
+  });
+
+  it("reads a painted ellipsis as a stand-in and a placeholder as copy", () => {
+    // The fixture is the guard's own premise: the sweep has to tell a painted
+    // `…` from a placeholder that ends in one.
+    expect(isStandInGlyph("<text>…</text>")).toBe(true);
+    expect(isStandInGlyph('<input placeholder="Search…" />')).toBe(false);
+    expect(isStandInGlyph("<text>Search…</text>")).toBe(false);
+    expect(isStandInGlyph("<text>✕</text>")).toBe(true);
   });
 });

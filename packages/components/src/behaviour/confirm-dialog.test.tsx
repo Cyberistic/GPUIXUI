@@ -4,14 +4,16 @@
  * The bugs these guard: focusing the destructive action instead of Cancel (so
  * Enter destroys something); a cancel that confirms; a confirm that closes the
  * dialog itself (a failed save would vanish); a loading state that still accepts
- * a click or lets Escape dismiss the dialog mid-write; and a danger tone that
- * does not paint the destructive role.
+ * a click or lets Escape dismiss the dialog mid-write; a danger tone that
+ * does not paint the destructive role; and a busy state whose mark was a text
+ * glyph — the one chrome mark in the package that was not a vector icon.
  */
 
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ConfirmDialog } from "../confirm-dialog.js";
+import { nodesWithRole } from "../internal/a11y.js";
 import { darkTheme } from "../internal/theme.js";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
@@ -83,8 +85,6 @@ describe("ConfirmDialog", () => {
     const onConfirm = vi.fn();
     const confirm = renderComponent(<Harness onConfirm={onConfirm} loading />);
 
-    expect(confirm.renderer.getAllText()).toContain("…");
-
     clickCentreOf(confirm, "confirm-accept");
     clickCentreOf(confirm, "confirm-cancel");
     confirm.renderer.simulateKeystrokes("escape");
@@ -93,6 +93,44 @@ describe("ConfirmDialog", () => {
     expect(confirm.renderer.findByTestId("confirm-accept")).toBeDefined();
 
     confirm.unmount();
+  });
+
+  it("paints the busy mark as the loader icon, not a text glyph", () => {
+    const confirm = renderComponent(<Harness onConfirm={vi.fn()} loading />);
+
+    try {
+      // The chrome marks are vector icons; a painted `…` would be the one text
+      // stand-in left in the package.
+      expect(confirm.renderer.getAllText()).not.toContain("…");
+      expect(confirm.renderer.findByTestId("confirm-busy")).toBeDefined();
+      expect(confirm.renderer.findByType("svg")).toHaveLength(1);
+
+      // The mark sits on the action's own fill, so it takes the label's role.
+      expect(confirm.renderer.findByTestId("confirm-busy")?.style.color).toBe(
+        darkTheme.colors.primaryForeground,
+      );
+
+      // And it is named, so a screen reader hears the state rather than a mark.
+      expect(
+        nodesWithRole(confirm.renderer, "image").map((node) => node.name),
+      ).toContain("In progress");
+    } finally {
+      confirm.unmount();
+    }
+  });
+
+  it("paints the busy mark in the destructive tone's own label role", () => {
+    const confirm = renderComponent(
+      <Harness onConfirm={vi.fn()} loading tone="danger" />,
+    );
+
+    try {
+      expect(confirm.renderer.findByTestId("confirm-busy")?.style.color).toBe(
+        darkTheme.colors.destructiveForeground,
+      );
+    } finally {
+      confirm.unmount();
+    }
   });
 
   it("paints the destructive roles for a danger confirmation", () => {

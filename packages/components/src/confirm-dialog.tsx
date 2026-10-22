@@ -10,13 +10,17 @@
  * - **Confirm does not close the dialog.** The caller owns the async work and
  *   closes through `open` when it succeeds, so a failed save can stay open with
  *   the error visible instead of vanishing mid-flight.
+ *
+ * While `loading`, the confirm action paints the `loader` icon beside its
+ * label: the package's chrome marks are vector icons, so a text glyph would be
+ * the one stand-in left. The icon is frozen — 0.11.0 has no transform, so
+ * nothing rotates.
  */
 
 import { Match } from "effect";
 import { useRef } from "react";
 import type { PublicInstance } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
-import { CONFIRM_DIALOG_BUSY } from "@gpuixui/tw";
+import { Icon } from "@gpuixui/icons";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +31,6 @@ import {
 } from "./dialog.js";
 import type { PartChildren } from "./internal/parts.js";
 import { Button } from "./internal/button.js";
-import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
 
 /** How much emphasis the confirm action carries. */
@@ -76,6 +79,16 @@ export const ConfirmDialog = ({
 }: ConfirmDialogProps) => {
   const theme = useTheme();
   const cancel = useRef<PublicInstance | null>(null);
+  const variant = Match.value(tone).pipe(
+    Match.when("danger", () => "danger" as const),
+    Match.orElse(() => "primary" as const),
+  );
+  // The busy mark sits on the action's own fill, so it takes the label's role
+  // rather than a colour of its own: the same pair `contrastPairs` measures.
+  const busyColor =
+    variant === "danger"
+      ? theme.colors.destructiveForeground
+      : theme.colors.primaryForeground;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} dismissible={!loading}>
@@ -101,22 +114,18 @@ export const ConfirmDialog = ({
           </Button>
           <Button
             testId="confirm-accept"
-            variant={Match.value(tone).pipe(
-              Match.when("danger", () => "danger" as const),
-              Match.orElse(() => "primary" as const),
-            )}
+            variant={variant}
             disabled={loading}
             onClick={onConfirm}
           >
             {loading ? (
-              <text
-                aria-label="In progress"
-                style={mergeStyles(recipeStyle(CONFIRM_DIALOG_BUSY, theme), {
-                  color: "inherit",
-                })}
-              >
-                …
-              </text>
+              <Icon
+                name="loader"
+                size="sm"
+                color={busyColor}
+                label="In progress"
+                testId="confirm-busy"
+              />
             ) : null}
             {confirmLabel}
           </Button>
@@ -134,7 +143,7 @@ export const confirmDialogMeta = {
   gpuixSupport: "partial",
   limitations: [
     "shares the dialog's 0.11.0 gaps: no aria-modal, no aria-labelledby",
-    "the busy indicator is a text glyph until a Spinner primitive exists",
+    "the busy mark is the loader icon and it does not spin: 0.11.0 has no transform, so a frozen spinner is the honest alternative to a text glyph",
     "confirm does not close the dialog by design: the caller owns the close after its work succeeds",
   ],
   docs: "docs/confirm-dialog.mdx",
