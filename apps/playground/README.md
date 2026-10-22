@@ -1067,6 +1067,24 @@ trigger without the `Tooltip` wrapper fails
 `a hover opens the tip with its own content` (`expected true, got false`,
 exit `1`).
 
+**The wait is a poll, not a sleep.** Every state above is read from the frame
+after the probe polls it: `settleTip(wanted)` re-reads `getPaintedText` every
+40ms until the tip's paint state matches, bounded at 50 attempts (~2s), and the
+assertion that follows names what it actually read. A fixed 240ms sleep passed
+the close path on an idle box and failed `leaving the trigger closes the tip`
+once while a production docs build shared the machine — the frame, not the
+timer, is what the probe needs. Re-reading without waiting is not a substitute:
+polling for the closed state immediately after a hover (the wrong state, so the
+poll returns at once) fails `the pointer enters the trigger`
+(`got "enters=0 leaves=0 above=true overlaps=true tip=227 anchor=252"`) and
+`a second hover reopens the tip` (`expected true, got false`), which is that
+direction measured.
+
+**The on-screen caption now says what the checks measure** — "a hover or a Tab
+traversal's focus opens it, and leaving or Escape closes it". It had kept the
+retracted "a keyboard focus does not" long after the probe measured that it
+does.
+
 **Corrected measurement — keyboard focus does open the tip.** The old section
 reported a gap: a `Tab` traversal focused the trigger while React's `onFocus`
 never ran, so the tip stayed closed. Re-measured on 2026-10-22 at HEAD, the

@@ -1556,8 +1556,16 @@ const DialogProbe = (): ReactNode => {
  */
 const TOOLTIP_CONTENT = "Rename the file";
 
-/** The runtime closes a tooltip 80ms after the pointer leaves; allow for it. */
-const TOOLTIP_CLOSE_SETTLE = Duration.millis(240);
+/**
+ * How often a paint state is re-read, and how long a probe waits for it.
+ *
+ * The runtime closes a tooltip 80ms after the pointer leaves, and the frame that
+ * carries the new state depends on the box's load: a fixed 240ms sleep failed
+ * `leaving the trigger closes the tip` once on a busy machine. The probe polls
+ * the frame instead, so a slow frame costs a poll and not a false failure.
+ */
+const TOOLTIP_POLL = Duration.millis(40);
+const TOOLTIP_ATTEMPTS = 50;
 
 /** A painted box, as the runtime's own layout report gives it. */
 interface Painted {
@@ -1673,8 +1681,8 @@ const TooltipProbe = (): ReactNode => {
             color: theme.colors.mutedForeground,
           }}
         >
-          The shipped Tooltip: a hover opens it, leaving closes it and Escape
-          dismisses it — a keyboard focus does not.
+          The shipped Tooltip: a hover or a Tab traversal's focus opens it, and
+          leaving or Escape closes it.
         </text>
         <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
           <Tooltip
@@ -4586,6 +4594,24 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       lines.join("\n").includes(TOOLTIP_CONTENT),
     );
 
+    /**
+     * Reads the frame until the tip's paint state is `wanted`, then gives up.
+     *
+     * Bounded rather than endless: an endless poll would turn a probe that never
+     * reaches the state into a hung release gate, and the assertion that follows
+     * reports the state it actually read.
+     */
+    const settleTip = (
+      wanted: boolean,
+      attempts: number = TOOLTIP_ATTEMPTS,
+    ): Effect.Effect<void, Smoke.SmokeHostError> =>
+      Effect.gen(function* () {
+        const shown = yield* painted;
+        if (shown === wanted || attempts === 0) return;
+        yield* Effect.sleep(TOOLTIP_POLL);
+        yield* settleTip(wanted, attempts - 1);
+      });
+
     yield* ctx.host.waitFor("tooltip-trigger");
     yield* ctx.expectEqual("a tooltip starts closed", yield* painted, false);
     yield* ctx.expectContains(
@@ -4599,7 +4625,7 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     // 2026-10-22; the earlier probe read the frame before it arrived), so the
     // tip opens. Escape then closes it, so the pointer path starts from closed.
     yield* ctx.host.key("tab");
-    yield* Effect.sleep(TOOLTIP_CLOSE_SETTLE);
+    yield* settleTip(true);
     yield* ctx.expectEqual(
       "Tab lands on the trigger",
       yield* focusedId(ctx),
@@ -4611,7 +4637,7 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
     yield* ctx.host.key("escape");
-    yield* Effect.sleep(TOOLTIP_CLOSE_SETTLE);
+    yield* settleTip(false);
     yield* ctx.expectEqual(
       "Escape closes the tip the keyboard opened",
       yield* painted,
@@ -4626,7 +4652,7 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     // The pointer path. The tip opens immediately (the wrapper's provider has a
     // zero delay), so the wait is for the frame, not for a timer.
     yield* ctx.host.hover("tooltip-trigger");
-    yield* Effect.sleep(TOOLTIP_CLOSE_SETTLE);
+    yield* settleTip(true);
     yield* ctx.expectContains(
       "the pointer enters the trigger",
       yield* ctx.host.text("tooltip-readout"),
@@ -4647,9 +4673,9 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("tooltip-open");
 
     // Leaving is a pointer move too: the runtime schedules the close 80ms later,
-    // so the probe waits past it rather than reading the frame it left.
+    // so the probe reads frames until the tip is gone rather than one fixed one.
     yield* ctx.host.hover("tooltip-away");
-    yield* Effect.sleep(TOOLTIP_CLOSE_SETTLE);
+    yield* settleTip(false);
     yield* ctx.expectContains(
       "the pointer leaves the trigger",
       yield* ctx.host.text("tooltip-readout"),
@@ -4665,14 +4691,14 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     // window-level dismissal, which does not need the focus inside the layer)
     // is the keyboard way out.
     yield* ctx.host.hover("tooltip-trigger");
-    yield* Effect.sleep(TOOLTIP_CLOSE_SETTLE);
+    yield* settleTip(true);
     yield* ctx.expectEqual(
       "a second hover reopens the tip",
       yield* painted,
       true,
     );
     yield* ctx.host.key("escape");
-    yield* Effect.sleep(SETTLE);
+    yield* settleTip(false);
     yield* ctx.expectEqual("Escape dismisses the tip", yield* painted, false);
     yield* ctx.expectEqual(
       "Escape leaves the focus on the trigger",
