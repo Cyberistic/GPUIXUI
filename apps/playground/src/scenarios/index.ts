@@ -45,6 +45,7 @@ import { logViewerScenario } from "./log-viewer.js";
 import { editorScenario } from "./editor.js";
 import { examplesMountScenario } from "./examples.js";
 import { searchHighlightsScenario } from "./search-highlights.js";
+import { searchVirtualDocumentScenario } from "./search-virtual-document.js";
 import { modalScenario } from "./modal.js";
 import { floatingScenario } from "./floating.js";
 import {
@@ -93,6 +94,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "tree-view": treeScenario,
   "log-viewer": logViewerScenario,
   "search-highlights": searchHighlightsScenario,
+  "search-virtual-document": searchVirtualDocumentScenario,
   "editor-surface": editorScenario,
   "examples-mount": examplesMountScenario,
 };

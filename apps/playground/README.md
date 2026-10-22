@@ -88,7 +88,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (39/39 green); -> 2 on a host with no binding
+# -> 0 here (40/40 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -638,16 +638,58 @@ measured: adding an id the registry has no entry for fails
 mounting every page from one component fails
 `no two examples paint the same screen` (`expected 39, got 1`) — exit `1` each.
 
+## Search in a virtualized document
+
+A find bar over a log, a code editor or a data grid searches a document the
+runtime never holds: a `<virtual-list>` mounts a window of its rows, so
+`getPaintedHighlights()` reports only that window's washes and `activeIndex`
+would mean "the nth match on screen". `matchIndexOffset` is the published seam —
+**a match count per row, not a row index**, because rows hold different numbers
+of matches.
+
+`search-virtual-document` searches 400 rows of 24px in a 200px viewport, each
+built with zero, one or two occurrences of `error`; the document holds 676
+matches, 540 of them above row 320. Measured on 0.11.0:
+
+| Step | Check |
+| ---- | ----- |
+| mount | the first row paints and row 399 does not, so native holds a window; an empty query washes nothing |
+| find | the app's `findRanges` count is 676 while the painted washes are only the mounted rows' matches — row 0, row 3 and row 5 wash 2, 1 and 0 — so the document's count and the paint are different numbers |
+| next | the global cursor marks exactly one wash: row 0's first match |
+| far match | `scrollToItem(320)` paints that row, its two washes and **exactly one active** — the second match, which is the one the cursor names (`active=541 row=320 local=1 offset=match:540`), on the viewport's top edge |
+| a row index as the offset | no active wash at all — `320` compared against a match numbered `541` — while the row keeps both of its washes |
+| an off-by-one offset | the **first** match of the same row is active: the match before the one named, read from `start`, so the wash is a number compared arithmetically rather than a row looked up |
+| a negative offset | every wash disappears — the runtime drops the whole spec rather than mis-numbering it |
+| replace all | total 0, no washes, the mounted row paints `fixed`, no `error` survives, and the reader's row does not move |
+| find `fixed` | total 676 again — one replacement per old occurrence across the unmounted rows too — and the row washes twice |
+
+36 checks, `--only search-virtual-document`, green on 0.11.0. The three wrong
+offsets are steps of the same run, so the pass holds the contract in both
+directions: a runtime that ignored `matchIndexOffset` fails
+`the active wash is the second match of the row`, a parser that accepted `-1`
+fails `a refused offset drops every wash`, and a replace that rewrote one
+occurrence per row fails `replace-all leaves no match in the document`.
+
+Two out-of-band controls measured, exit `1` each and restored green: dropping
+`matchIndexOffset` from the spec fails `the cursor marks exactly one match`
+(`expected 1, got 8` — the naive composition lights the cursor on every mounted
+row), and replacing one occurrence per row fails
+`replace-all leaves no match in the document`
+(`expected a string containing "total=0", got "… total=312 …"`).
+`src/scenarios/find-document.ts` holds the offset and replace arithmetic —
+`find-document.test.ts` (7 cases) holds the per-row counts, the offsets, the
+locate rule and replace-all, so a green probe cannot stand on wrong numbers.
+
 ## Evidence on this host
 
-The suite is **39/39 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **40/40 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-39/39 scenarios passed · capabilities: layout=verified text=verified
+40/40 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
-editor=verified
+editor=verified search=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -667,6 +709,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
 | data grid | a frozen first column is its own vertical scroller beside the grid, mirrored in `onScrollChange` with a re-entrancy guard: a wheel over either pane moves both, the same row shares its `y` across the panes, a horizontal wheel pans the cells but not the frozen column, and both clamp at the same `-1440` (`data-grid-frozen-column`). A header **outside** the row scroller keeps its painted y while the rows scroll (`position: "sticky"` paints nothing: a sticky sample *inside* the scroller moves by exactly the scroll amount, so the header must be a sibling); one `overflowX` scroller wrapping header and rows moves a header cell and its column's cells by the same x, keeping them aligned |
 | search highlights | a `highlight` spec paints a wash per match, and `SmokeHost.highlights()` (the renderer's `getPaintedHighlights`) reports each wash's run, `[start, end)` and boxes: three for `alpha`, two for `beta`, and none once the query is case-sensitive `ALPHA` or a whole-word `alp` — the insensitive/word-off queries mark them again. One `activeIndex` marks exactly one wash `active`. `ranges: [[0, 5)]` marks the same region `indexOf` would. A wash is a quad, so `text`/`paintedText` never report it |
+| search, virtual document | the runtime numbers only the matches it paints, so a find bar over a `<virtual-list>` carries a match count per row: `matchIndexOffset` = 540 puts row 320's second match at document index 541 and marks exactly one wash active, while the row index (320) marks none and an off-by-one prefix sum marks the match before the named one. A negative offset drops the whole spec. `findRanges` over all 400 rows is the document's count (676) and a replace-all clears it (`search-virtual-document`) |
 | editor | a `<textarea>` edits lines: Enter inserts a newline (a field with an `onSubmit` listener reports Enter **instead**, so an editor must not set one), and the arrow keys move the native caret (two lefts from the end of `cd` put the next character before its `c`). `<code code language showLineNumbers>` paints its source and every line, scrolls in a bounded viewport, and `<diff patch>` paints both sides of a changed line. **No caret or selection API exists**, so a highlighted editable surface cannot be built: the honest editor is edit in the textarea, display in `<code>` |
 | docking | nested splits compose: each level keeps its own width, so an outer drag moves the inner split's origin and leaves its width alone, and an inner drag leaves the sidebar alone. A caller-owned sidebar collapses to 0 (the nested split takes the width) and reopens at the width it had; a tab switch inside a pane repaints it without moving it. A split's `max` is the **caller's number**, not the container's width: a nested split does not re-clamp when its parent shrinks, so a dock passes its own bounds — and `dock-reflow` measured the signal: a pane's `onLayout` fires again when a sibling takes 100px, the settled payload equals the painted `bounds`, but a stale pass arrives first with the pane's current box and a pane whose box did not change is still reported to, so the handler must re-clamp from the width it is given and be idempotent |
 | drag auto-scroll | a drag at a scroller's edge does **not** move it: the offset stays `0` across eight moves. `renderer.scrollTo(id, 0, y)` from the component's `onMouseMove`, using the rail's own `getElementBounds` for the edge band, is the measured alternative (`y = -128` for 8 × 16px). `scrollTo` paints synchronously, so state after the call is not committed when the drag returns — keep the offset in a ref |

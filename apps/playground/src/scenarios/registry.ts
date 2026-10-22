@@ -36,6 +36,7 @@ export const PROBE_CAPABILITIES = [
   "log",
   "workspace",
   "editor",
+  "search",
 ] as const;
 
 /** One scenario's identity: what it is called and which capability it proves. */
@@ -239,7 +240,13 @@ export const registry = [
     id: "search-highlights",
     title:
       "Search: the runtime counts matches by query, case and whole word, and by explicit ranges",
-    capability: "table",
+    capability: "search",
+  },
+  {
+    id: "search-virtual-document",
+    title:
+      "Search: a virtualized document needs the match offset a row carries",
+    capability: "search",
   },
   {
     id: "editor-surface",
