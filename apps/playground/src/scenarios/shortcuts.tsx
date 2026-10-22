@@ -14,7 +14,7 @@ import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Readout } from "../ui.js";
-import { useWindowKey } from "../window-key.js";
+import { useWindowKey } from "../window-handlers.js";
 import type { ScenarioBody } from "../types.js";
 
 const ShortcutProbe = () => {

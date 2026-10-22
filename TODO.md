@@ -552,7 +552,24 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 77/77
+`[x]` `[██████████]` 78/78
+
+`[x]` Measure the **window's selection event** — `selection-lifecycle` proved the
+      wash and `getSelectedText()`, and neither tells the app the reader picked a
+      run; the only route is `render(<App/>, { onSelectionChange })`, which nothing
+      drove. The `window-selection-lifecycle` probe is the app: it registers through
+      the runtime's seam, records each change and paints `fires=N last=…`. Measured
+      in a window on 0.11.0: a pointer drag over the selectable line raises the
+      count and the last run equals `getSelectedText()`; `clearSelection()` raises
+      it again with **no** run (`last=none`); the same drag over the non-selectable
+      line raises nothing. 13 checks green, three consecutive runs. Negative control
+      measured: dropping `onSelectionChange` from the runner's `render` fails `a
+      pointer drag publishes a window selection change` (`expected true, got
+      false`). The seam is now shared: `src/window-handlers.tsx` carries the key and
+      selection registrations (the key half re-verified by
+      `window-shortcut-lifecycle`), `src/live/selection-event.ts` + its test own the
+      record arithmetic and the readout wording. Evidence:
+      `apps/playground/README.md` §`window-selection-lifecycle`
 
 `[x]` Map the **critical interactions MISSION names to the probes that drive
       them** — the eight representative interactions ("dialog
@@ -3043,6 +3060,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Measure a chart swatch on the **quiet strip** a plot can be drawn in — `seriesSurfaces` names the page, a card and a popover, while `Box`/`surfaceStyle` also paints a `muted` panel (a toolbar, a status bar, a quiet tile) and a sparkline or a small plot sits there. Measured on 2026-10-22 over the four shipped tables: the light amber `#B57600` lands at **2.75:1** on Luna's beige `muted` (`#E0DCCB`) — a status-bar chart in the authored look has one swatch nobody can find — and Aero light's 3.05:1 is the tightest placement that still clears the 3:1 boundary floor. The tokens half is a contract change plus a style-level scale: `seriesSurfaces` gains `muted` (4 surfaces), `PlatformStyle` gains an optional per-mode `series` that `applyStyle` passes under the same `contrast` rule as `colors`, and Luna light carries `["#5F4BDB", "#1B45AC", "#158754", "#9A6300", "#A5262B"]` (verified on all four surfaces, both distinctness floors and all three deficiencies; `#8E5B00` fails deuteranopia against the red at 0.044). The cascade: the catalogue's plot-surface list and tightest printed value (3.55 → 3.05), `docs/tokens.md` §Data series/§Authored looks, `docs/design-system.md` §3/§9, the README, the `Data series` row, and `series.test.ts`'s surface-count cases (`3`→`4`, `15`→`20`) | tokens-theme + docs-site | open — the tokens half was prototyped and measured, then reverted to keep the shared tree green: `/docs/themes` and `/docs/theming` print the surface list as literal backticked names (only the count is interpolated), and `theming-page.test.ts`'s `the theming pages' series surfaces` holds each page to the package's list, so both pages need `muted` in the same push |
 | Correct the **Card package page** the site no longer serves — `packages/components/docs/card.mdx` says the outline edge is the `border` role, `elevated` paints the `md` elevation, and colour, spacing, radius and type all come from the theme. The compiled recipe is `border border-input` (the `input` role), `shadow-sm` (`elevation.sm`: a 1px offset, a 2px blur), and `components` compiles against the default registry's fixed metrics (ADR 0006), so the theme's `radius`/`density` never reshape a card. The curated page (`/docs/components/card`) now states the measured truth and shadows the package page on the site, but the page still ships in `@gpuixui/components` for a consumer reading the package. The same page's footer recipe (`CARD_FOOTER` in `packages/tw/src/recipes.ts`) is `px-3 pt-3` with no bottom padding, so a control in it sits on the card's bottom edge; decide whether the recipe takes `pb-3` or the page documents the override (the curated page documents it today) | components (owns the package page) + tw (owns `CARD_FOOTER`) | open — rewrite the three paint claims from the recipe and settle the footer's bottom padding; `component-page-truth.test.ts` already holds the curated page to the recipe, so the package page can cite the same guard |
+
+| Publish the **window's selection event** in the capability record — the live `window-selection-lifecycle` probe measured the only route the runtime publishes (`render(<App/>, { onSelectionChange })`): a pointer drag raises the app's counter with the run `getSelectedText()` reports, `clearSelection()` raises it again with no run, and a non-selectable node raises nothing (13 checks, green three runs; negative control `expected true, got false` without the root handler). `docs/gpuix-capabilities.md`'s §3 has a **Text selection** row for the paint and the copy gesture but no row for the **event**, and `/docs/runtime`'s measured table does not list it — so a plan for a selection-aware toolbar, an inspector or a command palette reads only that `getSelectedText()` exists and cannot know the app is told when it changes. Also record the limit the payload carries: joined text only, no ranges or pane identity | docs-site (the record + `/docs/runtime`) | open — add the row (`supported, with limits`), publish it on the measured table, name `window-selection-lifecycle` in §5's owed probes, and carry the "an empty change is delivered" rule where a toolbar is designed. Evidence: `apps/playground/README.md` §`window-selection-lifecycle` |
 
 ## Phase D — data and workspace components
 

@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-50 probes a real window can prove, of which fourteen mount shipped
+51 probes a real window can prove, of which fourteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -48,7 +48,8 @@ mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
 restore, a dock's keyboard order, an anchored menu in a scrolled header, the
-window's own backdrop and the app-level key handler).
+window's own backdrop, the app-level key handler and the app-level selection
+handler).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -1908,6 +1909,36 @@ dragging in the window, and an application can read the selected run with
 clipboard write (see `clipboard-lifecycle`), so a component may offer "select
 and copy" but cannot put arbitrary text on the clipboard from a button.
 
+### `window-selection-lifecycle` — measured on 0.11.0 here
+
+`selection-lifecycle` proves the wash and the renderer's `getSelectedText()`.
+Neither tells the **app** that the reader picked something: a selection-aware
+toolbar, an inspector that follows the text, or a "quote selection" action needs
+the window-level event, and the runtime publishes exactly one route for it —
+`render(<App/>, { onSelectionChange })`. No probe measured that route, so the
+playground now *is* the app: it registers through the runtime's own seam
+(`src/window-handlers.tsx`), records every change, and paints the count and the
+last run it received.
+
+| Gesture | Measured |
+| ------- | -------- |
+| a programmatic `clearSelection()` with nothing selected | the app's counter is the baseline the other rows are read against |
+| a pointer drag over the selectable line | the counter rises and the last run the app received is the same run `getSelectedText()` reports (the drag starts mid-line, so it is the line's tail) |
+| `clearSelection()` after that drag | the counter rises again and the change carries **no** run (`last=none`), so a toolbar can hide itself |
+| the same drag over the non-selectable line | the counter does **not** move — a node that opted out publishes no change |
+
+Thirteen checks. Negative control measured: dropping `onSelectionChange` from
+the runner's `render` call fails `a pointer drag publishes a window selection
+change` (`expected true, got false`); restored, `--only
+window-selection-lifecycle` is green three runs in a row.
+
+What it means: an app can react to a selection, and the empty change is part of
+the contract rather than a silence the app has to time out. Two limits are worth
+stating: the payload carries the **joined text only** (`EventPayload.value`, and
+it is absent for the empty change), so the app cannot tell which pane the run
+came from, and there are no selection offsets — "comment on this line" is a line
+click, not a selection range.
+
 ### `select-lifecycle` — measured on 0.11.0 here
 
 The runtime's `Select` is the one overlay surface a window had never painted:
@@ -2887,7 +2918,7 @@ src/scenarios/examples.tsx  the shipped-example gallery: one page per registry i
 src/scenarios/index.ts   one implementation per registered id
 src/scenarios/registry.ts the ids, titles and capabilities + the pure integrity check
 src/scenarios/registry.test.ts the README's printed total and capability list against it
-src/window-key.tsx       the app-level window key bridge (useWindowKey)
+src/window-handlers.tsx  the app-level window key and selection seams
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
 src/live/registry.ts     live probe ids + capabilities (imports nothing native)
 src/live/scenarios.tsx   one window view + async steps per live probe
@@ -2932,8 +2963,8 @@ narrower. Each deviation is deliberate and measured:
 
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
-  backdrop and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (50/50), with a written report and screenshots.
+  backdrop, the app-level shortcut and selection probes pass in real GPUix 0.11.0 on this host
+  (51/51), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

@@ -30,6 +30,7 @@ import { Report, Runtime, Smoke } from "@gpuixui/testing";
 import { registerFonts, type FontRegistrar } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { Root } from "@gpuix/react";
+import type { EventPayload } from "@gpuix/native";
 import { createElement, Fragment } from "react";
 import { palettes } from "../palettes.js";
 import {
@@ -45,7 +46,12 @@ export { EXIT };
 import { createLiveHost } from "./host.js";
 import { liveRegistry, type LiveProbeMeta } from "./registry.js";
 import { liveProbeBodies, type LiveProbeBody } from "./scenarios.js";
-import { withWindowKeyProvider, type WindowKeyHandler } from "../window-key.js";
+import {
+  withWindowKeyProvider,
+  withWindowSelectionProvider,
+  type WindowHandler,
+  type WindowHandlerRegister,
+} from "../window-handlers.js";
 import { splitWindowBackground, type WindowBackground } from "./backdrop.js";
 import {
   defaultTitlebarChrome,
@@ -57,6 +63,12 @@ import { withWindowFacts, type WindowFacts } from "./window-facts.js";
 
 /** One live probe: its metadata, its body and the view the window mounts. */
 export type LiveProbe = LiveProbeMeta & LiveProbeBody;
+
+/** The two app-level window handlers the root owns and a probe registers for. */
+interface WindowHandlers {
+  readonly key: WindowHandlerRegister;
+  readonly selection: WindowHandlerRegister;
+}
 
 const TITLE = "GPUIXUI live smoke";
 const WINDOW = { width: 900, height: 520 } as const;
@@ -149,7 +161,7 @@ const mount =
     root: Pick<Root, "render">,
     registrar: FontRegistrar,
     selected: ReadonlyArray<LiveProbe>,
-    registerWindowKey: (handler: Option.Option<WindowKeyHandler>) => void,
+    windowHandlers: WindowHandlers,
     facts: WindowFacts,
   ): ((scenario: { readonly id: string }) => Effect.Effect<void>) =>
   (scenario) =>
@@ -178,12 +190,15 @@ const mount =
               { theme: palettes.dark },
               withWindowFacts(
                 facts,
-                withWindowKeyProvider(
-                  registerWindowKey,
-                  Option.match(view, {
-                    onNone: () => null,
-                    onSome: (render) => render(),
-                  }),
+                withWindowSelectionProvider(
+                  windowHandlers.selection,
+                  withWindowKeyProvider(
+                    windowHandlers.key,
+                    Option.match(view, {
+                      onNone: () => null,
+                      onSome: (render) => render(),
+                    }),
+                  ),
                 ),
               ),
             ),
@@ -237,26 +252,39 @@ export const program = (
     const loop = modules.gpuix.startFrameLoop(renderer, {
       onTerminated: () => {},
     });
-    // The app-level window key handler: a window delivers window keys only
-    // through `render({ onKeyDown })`, so the runner is the "app" that owns it
-    // and forwards to whatever the mounted probe registered (`useWindowKey`).
-    const windowKey: { current: Option.Option<WindowKeyHandler> } = {
+    // The app-level window handlers: a window delivers window keys and text
+    // selection only through `render({ ... })`, so the runner is the "app" that
+    // owns both and forwards to whatever the mounted probe registered
+    // (`useWindowKey`, `useWindowSelection`).
+    const windowKey: { current: Option.Option<WindowHandler> } = {
       current: Option.none(),
     };
-    const registerWindowKey = (
-      handler: Option.Option<WindowKeyHandler>,
-    ): void => {
-      windowKey.current = handler;
+    const windowSelection: { current: Option.Option<WindowHandler> } = {
+      current: Option.none(),
     };
+    const windowHandlers: WindowHandlers = {
+      key: (handler) => {
+        windowKey.current = handler;
+      },
+      selection: (handler) => {
+        windowSelection.current = handler;
+      },
+    };
+    /** Hands one window event to the probe that registered for it, if any. */
+    const forward = (
+      sink: { readonly current: Option.Option<WindowHandler> },
+      event: EventPayload,
+    ): void =>
+      Option.match(sink.current, {
+        onNone: () => {},
+        onSome: (handler) => handler(event),
+      });
     const root = yield* Effect.sync(() =>
       modules.gpuix.render(createElement(Fragment), {
         renderer,
         ...windowOptions,
-        onKeyDown: (event) =>
-          Option.match(windowKey.current, {
-            onNone: () => {},
-            onSome: (handler) => handler(event),
-          }),
+        onKeyDown: (event) => forward(windowKey, event),
+        onSelectionChange: (event) => forward(windowSelection, event),
       }),
     );
     const app = yield* Effect.tryPromise({
@@ -290,7 +318,7 @@ export const program = (
       host,
       selected,
       { host: hostLabel(facts.background, facts.chrome), startedAt },
-      mount(root, renderer, selected, registerWindowKey, facts),
+      mount(root, renderer, selected, windowHandlers, facts),
     );
 
     yield* fileSystem.writeFileString(

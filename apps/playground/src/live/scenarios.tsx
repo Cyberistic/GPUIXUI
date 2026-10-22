@@ -122,7 +122,7 @@ import { Pixels, type Smoke } from "@gpuixui/testing";
 import { nextPalette, palettes, type PaletteId } from "../palettes.js";
 import { SplitPane } from "../panels/split-pane.js";
 import { Body, Pressable, Readout, Toolbar } from "../ui.js";
-import { useWindowKey } from "../window-key.js";
+import { useWindowKey, useWindowSelection } from "../window-handlers.js";
 import { useWindowFacts } from "./window-facts.js";
 import type { LiveProbeId } from "./registry.js";
 import {
@@ -200,6 +200,16 @@ import {
   type FadeBox,
 } from "./fade.js";
 import { moveRow, rowAt, type RowHandle } from "./reorder.js";
+import {
+  firesOf,
+  initialSelectionLog,
+  recordSelection,
+  SELECTION_EVENT_CHROME,
+  SELECTION_EVENT_LINE,
+  SELECTION_EVENT_READOUT,
+  SELECTION_EVENT_TAIL,
+  selectionReadout,
+} from "./selection-event.js";
 import { settleNumber, settleUntil } from "./settle.js";
 import {
   THEME_CARD,
@@ -9446,6 +9456,140 @@ const selectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * The window's selection event, on the app that owns the root.
+ *
+ * `selection-lifecycle` proves the wash and `getSelectedText`; neither tells a
+ * toolbar that the reader picked a run. That is
+ * `render(<App/>, { onSelectionChange })` — the only route the runtime
+ * publishes for a window-level selection change — so the probe *is* the app: it
+ * records every change through the runtime's own seam, paints the count and the
+ * last run, and the checks read them back after a real drag, a clear, and a drag
+ * over a line that opted out.
+ */
+const WindowSelectionProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [log, setLog] = useState(initialSelectionLog);
+  useWindowSelection((event) =>
+    setLog((previous) => recordSelection(previous, event.value)),
+  );
+  return (
+    <PrimitiveThemeProvider theme={palettes.dark}>
+      <div
+        testId="window-selection-probe"
+        style={{
+          width: window.width,
+          height: window.height,
+          padding: theme.spacing.xl,
+          backgroundColor: theme.colors.background,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <Text
+          testId="window-selection-line"
+          selectable
+          style={{ alignSelf: "start" }}
+        >
+          {SELECTION_EVENT_LINE}
+        </Text>
+        <Text testId="window-selection-chrome" style={{ alignSelf: "start" }}>
+          {SELECTION_EVENT_CHROME}
+        </Text>
+        <text
+          testId={SELECTION_EVENT_READOUT}
+          style={{
+            ...textStyle(theme, "code"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {selectionReadout(log)}
+        </text>
+      </div>
+    </PrimitiveThemeProvider>
+  );
+};
+
+const windowSelectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    /** The count the painted readout carries, or a failed check. */
+    const fires = (caption: string, readout: string) =>
+      ctx.expectSome(caption, firesOf(readout));
+
+    yield* ctx.host.waitFor(SELECTION_EVENT_READOUT);
+    // A clear before the reader has selected anything publishes whatever the
+    // runtime thinks an empty change is; taking it as the baseline measures the
+    // gesture below rather than assuming the runtime's bookkeeping.
+    yield* ctx.host.clearSelection();
+    yield* Effect.sleep(SETTLE);
+    const baseline = yield* fires(
+      "the app reads the window's selection changes",
+      yield* ctx.host.text(SELECTION_EVENT_READOUT),
+    );
+
+    yield* ctx.host.drag("window-selection-line", 240, 0);
+    yield* Effect.sleep(SETTLE);
+    const selected = yield* ctx.expectSome(
+      "the renderer reports the run the drag selected",
+      Option.fromNullishOr(yield* ctx.host.selectedText()),
+    );
+    yield* ctx.expectContains(
+      "the drag reaches the end of the line",
+      selected,
+      SELECTION_EVENT_TAIL,
+    );
+    const afterDrag = yield* ctx.host.text(SELECTION_EVENT_READOUT);
+    yield* ctx.expectEqual(
+      "a pointer drag publishes a window selection change",
+      (yield* fires("the drag's count parses", afterDrag)) > baseline,
+      true,
+    );
+    yield* ctx.expectContains(
+      "the event carries the run the renderer reports",
+      afterDrag,
+      selected,
+    );
+
+    // Clearing is the other half of the contract: an app that only hears the
+    // first change keeps showing a toolbar for a selection that is gone.
+    const beforeClear = yield* fires(
+      "the drag's final count parses",
+      afterDrag,
+    );
+    yield* ctx.host.clearSelection();
+    yield* Effect.sleep(SETTLE);
+    const cleared = yield* ctx.host.text(SELECTION_EVENT_READOUT);
+    yield* ctx.expectEqual(
+      "clearing the selection publishes the empty change",
+      (yield* fires("the cleared count parses", cleared)) > beforeClear,
+      true,
+    );
+    yield* ctx.expectContains(
+      "the empty change carries no run",
+      cleared,
+      "last=none",
+    );
+
+    // The opt-out: a drag over chrome is not a selection change, so the app must
+    // not be told one happened.
+    const beforeChrome = yield* fires(
+      "the cleared final count parses",
+      cleared,
+    );
+    yield* ctx.host.drag("window-selection-chrome", 240, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a drag over a non-selectable line publishes nothing",
+      yield* fires(
+        "the chrome count parses",
+        yield* ctx.host.text(SELECTION_EVENT_READOUT),
+      ),
+      beforeChrome,
+    );
+  });
+
+/**
  * One focusable tree row.
  *
  * The row owns the focus and the keyboard; the disclosure marker is a pointer
@@ -13252,6 +13396,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "selection-lifecycle",
     view: () => <SelectionProbe />,
     steps: selectionSteps,
+  },
+  "window-selection-lifecycle": {
+    id: "window-selection-lifecycle",
+    view: () => <WindowSelectionProbe />,
+    steps: windowSelectionSteps,
   },
   "virtual-tree-lifecycle": {
     id: "virtual-tree-lifecycle",

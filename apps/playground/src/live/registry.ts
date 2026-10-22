@@ -229,6 +229,12 @@ export const liveRegistry = [
     capability: "text",
   },
   {
+    id: "window-selection-lifecycle",
+    title:
+      "Selection: a window reports a drag's run and the clear to the app's root handler, and a non-selectable line reports nothing",
+    capability: "text",
+  },
+  {
     id: "select-lifecycle",
     title:
       "Overlay: the runtime's Select opens its list below the trigger, selects by press and by key, skips a disabled row and dismisses on Escape or an outside press",

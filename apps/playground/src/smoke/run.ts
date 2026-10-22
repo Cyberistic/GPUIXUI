@@ -31,8 +31,8 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { EventPayload } from "@gpuix/native";
 import { createElement, type ReactNode } from "react";
 import type { PlaygroundScenario } from "../types.js";
-import { withWindowKeyProvider } from "../window-key.js";
-import type { WindowKeyHandler } from "../window-key.js";
+import { withWindowKeyProvider } from "../window-handlers.js";
+import type { WindowKeyHandler } from "../window-handlers.js";
 import { palettes } from "../palettes.js";
 import { registry, selectScenarios } from "../scenarios/registry.js";
 
