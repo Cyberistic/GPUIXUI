@@ -28,7 +28,7 @@ import { Native, Report, Runtime, Smoke } from "@gpuixui/testing";
 | `Runtime` | `detectRuntime` (never fails), `bindingHint`, `RuntimeStatus` |
 | `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union; the async twin `AsyncSmokeHost`/`AsyncSmokeScenario`/`runAsyncScenarios` for a real window |
 | `Native`  | `createTestHost` over the structural `NativeRenderer`/`NativeElement` port: the synchronous offscreen host, with the `testId` lookups, ancestor-bounds fallback, subtree text join, style decode and drag synthesis this package can test without a renderer |
-| `Pixels`  | `decodePng` (inflate injected), `pixelAt`, `countColour`, `hexToRgba`, `Pixels`, `Rgba` — paint evidence from a captured frame |
+| `Pixels`  | `decodePng` (inflate injected), `pixelAt`, `countColour`, `hexToRgba`, `crop`, `countDifferingPixels`, `PixelRegion`, `Pixels`, `Rgba` — paint evidence from a captured frame |
 | `State`   | `runCommands` — replay a component runtime's commands and query the final state |
 | `Report`  | `formatReport`, `reportJson`, `passed`, `exitCode` |
 
@@ -66,9 +66,13 @@ style, so the live half adapts to `Smoke.AsyncSmokeHost` and runs through
 `Smoke.runAsyncScenarios`: same checks, same report, same exit code. Its verbs
 return `Effect`s and every failure is a `SmokeHostError` naming the verb. Paint
 is proved from the frame: `capture(name)` writes a PNG, `pixels(name)` decodes
-it, and a probe counts exact colours with `Pixels.countColour`. The inflate
-function is injected by the runner, so this package still imports no platform
-or GPUix module.
+it, and a probe counts exact colours with `Pixels.countColour` — or asks what
+two frames of the same box changed by: `Pixels.crop` cuts a region out of a
+capture (clamped to the frame, `null` when it lies outside) and
+`Pixels.countDifferingPixels` counts the pixels that differ, `null` when the two
+frames are not the same shape. The editor-overlay probe uses the pair to prove a
+field painted nothing over the code beneath it. The inflate function is injected
+by the runner, so this package still imports no platform or GPUix module.
 
 A tween is measured on the **motion clock**, not on wall time: a paint on a
 software renderer can block longer than the tween, so "capture at 107 ms" races

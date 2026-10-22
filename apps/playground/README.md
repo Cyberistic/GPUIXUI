@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-52 probes a real window can prove, of which fifteen mount shipped
+53 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -2901,6 +2901,73 @@ one. That is a defect in `packages/components`, recorded as an interlock row in
 `TODO.md`; this probe will carry the press checks when it is fixed. Captures:
 `.artifacts/live/nested-{open,menu-dismissed,dismissed}.png`.
 
+### `editor-overlay` — measured on 0.11.0 here
+
+Plan `130`'s handoff leaves one editor question a probe owes: an **editable
+highlighted** surface has no runtime element, and the only honest composition is
+the read-only `<code>` display with a text field above it. Two things decide
+whether that composition is an editor, and neither is visible from the typings:
+
+- a field can be made **invisible** — transparent glyphs and fill — so the code
+  beneath is the only thing a reader sees, while typing still reaches the app;
+- the reader can see **where** they type, and a file longer than the frame stays
+  in step with the code view.
+
+The probe paints one source twice: the left box holds a `<code>` with a
+`<textarea>` laid over it, the right box is the same `<code>` with no field. The
+pair is the instrument — the boxes share size, fill, source, font, size, line
+height and padding, so a pixel-for-pixel comparison of the two regions reports
+exactly what the field painted. The **negative control is in the probe**: the
+same comparison with the field's ink switched to the `destructive` role, a colour
+no code layer paints, so a broken instrument cannot pass as "nothing painted".
+
+| Measurement | Result |
+| ----------- | ------ |
+| a transparent field over the code | the two regions differ by **0** pixels — the code is the only ink, and it still paints (its `foreground` glyphs are counted inside the box) |
+| the same comparison with the field's ink on | **14 028** differing pixels — the comparison reports the field's own glyphs, so the 0 above is a measurement rather than an empty frame |
+| hiding the ink again | back to 0 |
+| typing into the transparent field | `chars` and `lines` in the readout follow the keys, so the field really edits |
+| the code layer after an edit | differs from the untouched reference — the display is a live view of the same value, not a picture |
+| the caret | **no caret is painted** — with the ink on, the glyphs are identical on both sides of the focus, and five frames 120 ms apart over a focused plain field differ by 0 pixels; the control field's text does paint, so the box and the focus are real |
+| the scroll offset of a longer file | `scrollOffset` reports **no offset** for the field, so an app cannot mirror the field's scroll into the code view |
+
+**Verdict: the composition is not an editor in 0.11.0.** A reader can type into
+a code view that shows their text, but cannot see the insertion point, and a file
+longer than the frame desynchronises from the display with no API to re-align it.
+The honest pattern therefore stays the one `editor-surface` (headless) already
+records: edit in a real field, display in a `<code>` view — which is also what
+`packages/components`' editor-facing surfaces do. The two gaps to revisit are a
+caret token that paints under a transparent glyph colour and an offset a
+`<textarea>` reports.
+
+Two facts were measured the hard way and are what the fixture encodes:
+
+- the glyph ink belongs to `style.color`: a field mounted with a theme whose
+  `text` token named the control colour painted nothing while its style said
+  `transparent`, and the same field painted as soon as the style named the
+  colour — so the ink the probe toggles has one owner, and the theme was dropped
+  rather than kept as a second, contradictory one.
+- the ink is React state, so a capture taken on the click's own frame shows the
+  previous state; the probe polls the readout before every capture (the first
+  run read the control as an unpainted field for exactly that reason).
+
+29 checks, `--only editor-overlay`, green on 0.11.0 (~18 s). Two negative controls
+were measured and restored green:
+
+- painting the field's ink at mount (so the "transparent" state is not
+  transparent) fails `a transparent field paints nothing over the code beneath
+  it` with **`expected 0, got 14028`** — the same count the control reports, so
+  the instrument and the composition are not confused.
+- making the control ink transparent fails `the comparison sees the field's
+  glyphs when its ink is on` (`expected true, got false`), so the control cannot
+  pass by the field painting nothing. Fixture:
+`src/live/editor-overlay.ts` — the sources, the two inks, the shared metric, the
+readout and the region arithmetic; `editor-overlay.test.ts` (7 cases) holds the
+premises: one metric for both layers, no fill in either ink, a control ink the
+code never paints, counts rather than the value in the readout, the source
+fitting inside the frame, the page fitting the two boxes, and enough typed lines
+to outgrow the frame. Captures: `.artifacts/live/editor-overlay-*.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -2979,6 +3046,7 @@ src/live/dock-focus.ts   the dock fixture and the Tab stop rule the probe measur
 src/live/header-menu.ts  the header widths and trigger-cell arithmetic the probe asserts
 src/live/backdrop.ts     the window-backdrop modes, fixture and capture arithmetic
 src/live/window-facts.tsx the window options the runner opened, read by a probe
+src/live/editor-overlay.ts the editable-code fixture: one source under a field and beside it
 src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
@@ -3013,7 +3081,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop, the app-level shortcut and selection probes pass in real GPUix 0.11.0 on this host
-  (52/52), with a written report and screenshots.
+  (53/53), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls
