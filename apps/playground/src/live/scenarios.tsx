@@ -202,6 +202,17 @@ import {
   type OverlayInk,
 } from "./editor-overlay.js";
 import {
+  MULTI_PANE,
+  MULTI_PANE_FILES,
+  MULTI_PANE_IDS,
+  MULTI_PANE_VALUES,
+  dragWidth,
+  multiPaneReadout,
+  paneWidths,
+  type PaneOpen,
+  type PaneSide,
+} from "./multi-pane.js";
+import {
   FADE_BACKING,
   FADE_BACKING_RGBA,
   FADE_CAPTURE_ATTEMPTS,
@@ -13886,6 +13897,356 @@ const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * `multi-pane-editor` — two files in one split, and the text session between
+ * them.
+ *
+ * Tier 4's **multi-pane editing layouts** row is composition, and the
+ * composition has one interaction that nothing had measured: a window has a
+ * single platform text session, so a press must move it from one pane's field to
+ * the other without either buffer changing, and the splitter between them must
+ * resize the panes without taking the session away. The probe drives exactly
+ * that: type in one pane, press the other and type there, drag the divider (the
+ * shipped `SplitPane`, whose capture contract `split-pane-lifecycle` already
+ * measures), then close and reopen a pane. The closed pane keeps its buffer in
+ * the app, which is what makes a dock's `close` a layout change rather than data
+ * loss.
+ */
+const MultiPaneEditorProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [left, setLeft] = useState<string>(MULTI_PANE_VALUES.left);
+  const [right, setRight] = useState<string>(MULTI_PANE_VALUES.right);
+  const [open, setOpen] = useState<PaneOpen>("both");
+  const [width, setWidth] = useState<number>(MULTI_PANE.initial);
+
+  const editor = (
+    side: PaneSide,
+    value: string,
+    setValue: (next: string) => void,
+  ): ReactNode => (
+    <div
+      testId={
+        side === "left" ? MULTI_PANE_IDS.leftPane : MULTI_PANE_IDS.rightPane
+      }
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        height: "100%",
+        minHeight: 0,
+        backgroundColor: theme.colors.card,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          paddingTop: theme.spacing.xs,
+          paddingBottom: theme.spacing.xs,
+          paddingLeft: theme.spacing.sm,
+          borderBottomWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.muted,
+        }}
+      >
+        <text
+          testId={MULTI_PANE_IDS.title(side)}
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          {MULTI_PANE_FILES[side]}
+        </text>
+      </div>
+      <textarea
+        testId={MULTI_PANE_IDS.input(side)}
+        value={value}
+        onChange={(event) => setValue(event.value ?? "")}
+        style={{
+          flexGrow: 1,
+          minHeight: 0,
+          padding: theme.spacing.sm,
+          ...textStyle(theme, "code"),
+          backgroundColor: theme.colors.input,
+          color: theme.colors.inputForeground,
+        }}
+      />
+    </div>
+  );
+
+  return (
+    <div
+      testId={MULTI_PANE_IDS.probe}
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        Two files in one split: typing stays in the pane holding the session, and
+        the splitter resizes them without touching either buffer.
+      </text>
+      <Toolbar>
+        <Pressable
+          testId={MULTI_PANE_IDS.close}
+          onClick={() => setOpen("left")}
+        >
+          close right
+        </Pressable>
+        <Pressable
+          testId={MULTI_PANE_IDS.reopen}
+          onClick={() => setOpen("both")}
+        >
+          reopen right
+        </Pressable>
+      </Toolbar>
+      <div
+        testId={MULTI_PANE_IDS.row}
+        style={{ height: 300, width: "100%", display: "flex" }}
+      >
+        {open === "both" ? (
+          <SplitPane
+            id="mp"
+            size={width}
+            initial={MULTI_PANE.initial}
+            min={MULTI_PANE.min}
+            max={MULTI_PANE.max}
+            onResize={setWidth}
+            primary={editor("left", left, setLeft)}
+            secondary={editor("right", right, setRight)}
+          />
+        ) : (
+          editor("left", left, setLeft)
+        )}
+      </div>
+      <Readout testId={MULTI_PANE_IDS.readout}>
+        {multiPaneReadout(left, right, open, width)}
+      </Readout>
+    </div>
+  );
+};
+
+const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(MULTI_PANE_IDS.row);
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text(MULTI_PANE_IDS.readout);
+    const leftInput = MULTI_PANE_IDS.input("left");
+    const rightInput = MULTI_PANE_IDS.input("right");
+    const rightPanePainted = () =>
+      Effect.map(ctx.host.bounds(MULTI_PANE_IDS.rightPane), (bounds) =>
+        Option.isSome(Option.fromNullishOr(bounds)),
+      );
+
+    // 1. Both panes paint, side by side, and the divider is the whole gap.
+    yield* ctx.expectEqual(
+      "the layout opens with both buffers and the initial split",
+      yield* readout(),
+      multiPaneReadout(
+        MULTI_PANE_VALUES.left,
+        MULTI_PANE_VALUES.right,
+        "both",
+        MULTI_PANE.initial,
+      ),
+    );
+    const row = yield* paintedBox(ctx, MULTI_PANE_IDS.row);
+    const leftPane = yield* paintedBox(ctx, MULTI_PANE_IDS.leftPane);
+    const divider = yield* paintedBox(ctx, "mp-divider");
+    const rightPane = yield* paintedBox(ctx, MULTI_PANE_IDS.rightPane);
+    const start = paneWidths(row.width, MULTI_PANE.initial, "both");
+    yield* ctx.expectNear(
+      "the left pane paints the initial width",
+      leftPane.width,
+      start.left,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the splitter sits on the left pane's right edge",
+      divider.x,
+      leftPane.x + leftPane.width,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the right pane takes what the split leaves",
+      rightPane.width,
+      start.right,
+      1,
+    );
+    yield* ctx.expectNear(
+      "both panes and the divider fill the row",
+      leftPane.width + divider.width + rightPane.width,
+      row.width,
+      1,
+    );
+
+    // 2. A press enters one pane's field, and typing reaches only that buffer.
+    yield* ctx.host.click(leftInput);
+    yield* ctx.expectEqual(
+      "a press enters the left pane's field",
+      yield* focusedAfterPaint(ctx),
+      leftInput,
+    );
+    yield* ctx.host.key("a");
+    yield* Effect.sleep(SETTLE);
+    const leftTyped = `${MULTI_PANE_VALUES.left}a`;
+    yield* ctx.expectEqual(
+      "typing reaches the left pane and leaves the right buffer alone",
+      yield* readout(),
+      multiPaneReadout(
+        leftTyped,
+        MULTI_PANE_VALUES.right,
+        "both",
+        MULTI_PANE.initial,
+      ),
+    );
+
+    // 3. A press in the other pane moves the one text session.
+    yield* ctx.host.click(rightInput);
+    yield* ctx.expectEqual(
+      "a press moves the text session to the right pane",
+      yield* focusedAfterPaint(ctx),
+      rightInput,
+    );
+    yield* ctx.host.key("b");
+    yield* Effect.sleep(SETTLE);
+    const rightTyped = `${MULTI_PANE_VALUES.right}b`;
+    yield* ctx.expectEqual(
+      "typing follows the session: the right buffer changed, the left did not",
+      yield* readout(),
+      multiPaneReadout(
+        leftTyped,
+        rightTyped,
+        "both",
+        MULTI_PANE.initial,
+      ),
+    );
+
+    // 4. The splitter resizes the panes, and neither buffer nor the session moves.
+    const dragged = dragWidth(MULTI_PANE.initial, 60);
+    yield* ctx.host.drag("mp-divider", 60, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a splitter drag resizes the pane and keeps both buffers",
+      yield* readout(),
+      multiPaneReadout(leftTyped, rightTyped, "both", dragged),
+    );
+    yield* ctx.expectNear(
+      "the painted left pane follows the drag",
+      (yield* paintedBox(ctx, MULTI_PANE_IDS.leftPane)).width,
+      dragged,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the drag leaves the text session where the reader left it",
+      yield* focusedAfterPaint(ctx),
+      rightInput,
+    );
+    yield* ctx.host.key("c");
+    yield* Effect.sleep(SETTLE);
+    const rightResized = `${rightTyped}c`;
+    yield* ctx.expectEqual(
+      "typing after the drag still reaches the pane that held the session",
+      yield* readout(),
+      multiPaneReadout(leftTyped, rightResized, "both", dragged),
+    );
+
+    // 5. Both bounds clamp, and the other editor stays painted at the widest one.
+    yield* ctx.host.drag("mp-divider", 200, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a drag past the maximum stops at the pane's bound",
+      yield* readout(),
+      multiPaneReadout(
+        leftTyped,
+        rightResized,
+        "both",
+        MULTI_PANE.max,
+      ),
+    );
+    yield* ctx.expectNear(
+      "the widest pane still leaves the right editor painted",
+      (yield* paintedBox(ctx, MULTI_PANE_IDS.rightPane)).width,
+      paneWidths(row.width, MULTI_PANE.max, "both").right,
+      1,
+    );
+    yield* ctx.host.drag("mp-divider", -260, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a drag past the minimum stops at the pane's bound",
+      yield* readout(),
+      multiPaneReadout(
+        leftTyped,
+        rightResized,
+        "both",
+        MULTI_PANE.min,
+      ),
+    );
+    yield* ctx.host.capture("multi-pane-split");
+
+    // 6. Closing a pane is a layout change: its buffer stays in the app and the
+    //    survivor takes the row.
+    yield* ctx.host.click(MULTI_PANE_IDS.close);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a closed pane keeps its buffer",
+      yield* readout(),
+      multiPaneReadout(leftTyped, rightResized, "left", MULTI_PANE.min),
+    );
+    yield* ctx.expectNear(
+      "the surviving pane takes the whole row",
+      (yield* paintedBox(ctx, MULTI_PANE_IDS.leftPane)).width,
+      row.width,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the closed pane paints nothing",
+      yield* rightPanePainted(),
+      false,
+    );
+    yield* ctx.host.capture("multi-pane-closed");
+
+    // 7. Reopening restores both panes at the width they held, with both buffers.
+    yield* ctx.host.click(MULTI_PANE_IDS.reopen);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "reopening restores both panes at the split they held",
+      yield* readout(),
+      multiPaneReadout(leftTyped, rightResized, "both", MULTI_PANE.min),
+    );
+    yield* ctx.expectNear(
+      "the restored right pane paints its share of the row",
+      (yield* paintedBox(ctx, MULTI_PANE_IDS.rightPane)).width,
+      paneWidths(row.width, MULTI_PANE.min, "both").right,
+      1,
+    );
+    yield* ctx.host.click(rightInput);
+    yield* ctx.host.key("d");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the restored field takes the text session again",
+      yield* readout(),
+      multiPaneReadout(
+        leftTyped,
+        `${rightResized}d`,
+        "both",
+        MULTI_PANE.min,
+      ),
+    );
+    yield* ctx.host.capture("multi-pane-reopened");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -14153,5 +14514,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "editor-overlay",
     view: () => <EditorOverlayProbe />,
     steps: editorOverlaySteps,
+  },
+  "multi-pane-editor": {
+    id: "multi-pane-editor",
+    view: () => <MultiPaneEditorProbe />,
+    steps: multiPaneSteps,
   },
 };

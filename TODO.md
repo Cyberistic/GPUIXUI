@@ -607,7 +607,32 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 80/80
+`[x]` `[██████████]` 81/81
+
+`[x]` Measure the **multi-pane editing layout** a dock's editor area needs —
+      Tier 4's *multi-pane editing layouts* row is composition, and the one
+      interaction nothing had measured is the window's **single text session**:
+      a press has to move it between panes without either buffer changing, and
+      the splitter between them must resize without taking it away. The
+      `multi-pane-editor` live probe mounts two real `<textarea>`s in the shipped
+      `SplitPane` and drives it on 0.11.0: a press focuses the left field and one
+      key changes only the left buffer; a press on the right moves the session
+      and the next key changes only the right; a **+60** drag moves the splitter
+      to 440 with both typed buffers unchanged and the focus still in the right
+      field, and the next key still reaches it (a splitter press does not take
+      the session); further drags clamp at **460** and **220** with the other
+      editor still painted; closing the right pane leaves its buffer in the app
+      and gives the row to the left editor; reopening paints the split it held
+      and a press in the restored field takes keys again. 30 checks,
+      `--only multi-pane-editor`, green (~3 s). Two negative controls measured:
+      swapping the right pane's setter fails `typing follows the session` with
+      `expected "left=2/47 right=3/47 …", got "left=3/47 right=3/46 …"`, and
+      rendering both panes regardless of `open` fails `the surviving pane takes
+      the whole row` (`expected 876 ± 1, got 220`). Fixture:
+      `src/live/multi-pane.ts` + `multi-pane.test.ts` (7 cases, including the
+      README count). Evidence: `apps/playground/README.md`
+      §`multi-pane-editor`, `.artifacts/live/multi-pane-*.png`. Publishing the
+      row and the workspace rule is the interlock row below
 
 `[x]` Measure the **editable highlighted editor** composition — plan 130's handoff
       left "an editable highlighted surface needs an overlay aligned by measured
@@ -3219,6 +3244,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Teach `/docs/testing` the two **paint-comparison** verbs — `packages/testing` gained `Pixels.crop` and `Pixels.countDifferingPixels` (with `PixelRegion`) for the `editor-overlay` probe, which compares one box against another in the same capture and reports `null` rather than `0` when the two frames are not the same shape. The package's own README lists them; `/docs/testing` still describes `Pixels` as `decodePng`/`pixelAt`/`countColour`/`hexToRgba` only, and its prose explains counts of an exact colour rather than a comparison | docs-site (`apps/docs/content/docs/testing.mdx`) | open — add the two verbs to the `Pixels` row and one sentence to the paint section (what `crop` clamps, why a different shape is `null`), and cite `editor-overlay` as the consumer |
 
 | The **Pinned list row is outside the Tier 3 table** — `COMPONENTS.md` separates `| Pinned list | … |` from the rows above it with a blank line, so it is not a table row: the docs site's parser reads the table above it and reports `packages/components/docs/pinned-list.mdx: COMPONENTS.md has no row for this page` (`inventory-status.test.ts`, two cases), which means the page renders no status strip and the index wears no verdict for a component the inventory says is `done` / `partial`. The row is otherwise complete. | components (`COMPONENTS.md`) | **open** — delete the blank line before the row; the site needs no change |
+| Publish the **multi-pane editing** measurement — the live `multi-pane-editor` probe (30 checks, 0.11.0) measured what a dock's editor area owes: two real `<textarea>` panes in one split share **one** text session (a press moves it, typing changes only the pressed pane), a splitter drag resizes to 440 and clamps at 460/220 while the session stays in the pane the reader left, and a closed pane keeps its buffer with the survivor taking the row. Tier 4's **Multi-pane editing layouts** row is still `?` though its composition is now measured, and `/docs/workspace` has no rule for a pane that closes or for the one session a split shares | components (the Tier 4 row) + docs-site (`/docs/workspace`) | **open** — mark the row `yes (measured)` citing `multi-pane-editor` (the split, the session handoff, the bounds, and the buffer kept on close) and add the two workspace rules: a press is what moves the editing session between panes, and closing a pane is a layout change that must keep its buffer in app state. Evidence: `apps/playground/README.md` §`multi-pane-editor`, `.artifacts/live/multi-pane-*.png` |
 
 ## Phase D — data and workspace components
 

@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-53 probes a real window can prove, of which fifteen mount shipped
+54 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -2968,6 +2968,53 @@ code never paints, counts rather than the value in the readout, the source
 fitting inside the frame, the page fitting the two boxes, and enough typed lines
 to outgrow the frame. Captures: `.artifacts/live/editor-overlay-*.png`.
 
+### `multi-pane-editor` — measured on 0.11.0 here
+
+The **editing session a split shares**. Tier 4's *multi-pane editing layouts*
+row is composition over split panes and editors, and the composition has one
+interaction nothing had measured: a window has a single platform text session,
+so a press has to move it from one pane's field to the other, typing must reach
+only the pane that holds it, and the splitter between them must resize the panes
+without taking it away. Each pane is a real `<textarea>` — `editor-overlay`
+already settled that a highlighted *editable* surface is not available (no caret,
+no offset), so the honest editor is a field and a view, not an overlay — and the
+divider is the shipped `SplitPane` whose pointer-capture contract
+`split-pane-lifecycle` measures.
+
+| Step | Measurement |
+| ---- | ----------- |
+| open | both buffers paint side by side: the left pane **380**, the 6px divider on its right edge, and the right pane the rest of the row — the three add up to the row |
+| left | a press focuses `mp-input-left`; one typed key changes the left buffer and leaves the right |
+| right | a press moves the session to `mp-input-right`; the next key changes the right buffer and leaves the left |
+| resize | a **+60** drag moves the splitter to **440** and both typed buffers are unchanged |
+| session after a drag | focus is still `mp-input-right`, and the next key reaches it: a splitter press does not take the text session |
+| bounds | a further drag stops at **460** with the right editor still painted; a **−260** drag stops at **220** |
+| close | the closed pane paints nothing, the surviving editor takes the whole **row**, and both buffers are still in the app |
+| reopen | the split paints at the width it held, the right editor takes its share of the row again, and a press on it accepts a key |
+
+30 checks, `--only multi-pane-editor`, green on 0.11.0 (~3 s). Fixture:
+`src/live/multi-pane.ts` — the two files and buffers, the width/divider
+arithmetic, the drag clamp and a counts-only readout; `multi-pane.test.ts` (7
+cases) holds the split arithmetic (a closed pane's space goes to the survivor,
+the widest pane never meets the divider), both clamps, the premise that the
+readout carries counts rather than buffers, and the README check count. The
+count is 22 `ctx.expect*` call sites plus one painted-box check per `paintedBox`
+call (8), because that helper asserts the element paints.
+
+Two negative controls were measured, exit `1` each, then restored green:
+
+- swapping the right pane's setter so a key writes the left buffer fails
+  `typing follows the session: the right buffer changed, the left did not` with
+  `expected "left=2/47 right=3/47 open=both width=380", got "left=3/47
+  right=3/46 open=both width=380"` — the checks read the app's state, not the
+  frame.
+- rendering both panes regardless of `open` fails `the surviving pane takes the
+  whole row` with **`expected 876 ± 1, got 220`**, so the closed-pane checks
+  cannot pass by a pane that is still there.
+
+Captures: `.artifacts/live/{multi-pane-split,multi-pane-closed,
+multi-pane-reopened}.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -3047,6 +3094,7 @@ src/live/header-menu.ts  the header widths and trigger-cell arithmetic the probe
 src/live/backdrop.ts     the window-backdrop modes, fixture and capture arithmetic
 src/live/window-facts.tsx the window options the runner opened, read by a probe
 src/live/editor-overlay.ts the editable-code fixture: one source under a field and beside it
+src/live/multi-pane.ts  the two-pane editor fixture: buffers, split arithmetic and the drag clamp
 src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
@@ -3081,7 +3129,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop, the app-level shortcut and selection probes pass in real GPUix 0.11.0 on this host
-  (53/53), with a written report and screenshots.
+  (54/54), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

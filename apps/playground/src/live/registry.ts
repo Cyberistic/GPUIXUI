@@ -354,6 +354,12 @@ export const liveRegistry = [
       "Editor: a transparent field over a code layer lets the code paint through, keeps its caret, and reports the offset a long file needs",
     capability: "editor",
   },
+  {
+    id: "multi-pane-editor",
+    title:
+      "Editor: two panes share one text session by press, the splitter resizes them without touching either buffer, and a closed pane keeps its file",
+    capability: "editor",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
