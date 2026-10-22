@@ -3344,7 +3344,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[~]` `[█████████░]` 118/119
+`[x]` `[██████████]` 119/119
+
+`[x]` Land the **`.gx-demo` `--placeholder` default** the tokens pass moved — the
+native-text work moved the role (light `#606A79`, dark `#858E9F`), so the preview
+block's default would have painted the previous dark grey and
+`theme-css.test.ts`'s `keep the .gx-demo defaults equal to the dark theme` would
+have reported it. The style sheet's `.gx-demo` now carries `--placeholder:
+#858e9f` in the same commit as the token move (`b09d4957`), and the guard reads
+the block against `themes.dark`'s roles, so a later move fails there rather than
+in the browser. Verified: the full docs suite is green (73 files / 672 tests).
 
 `[x]` Move the **styling page past the removed `border-input` remap** — the
 primitives' registry overrode `border-input` to the `input` fill (the page's "one
@@ -3360,13 +3369,6 @@ the two roles differ, and requires the page's explanation while refusing the old
 with `type-body` named so a scan that stopped matching still fails. Directions
 measured: the old page fails `to contain '`border` role'`, and the pre-fix
 override failed with the `input` role painted; 9/9 green.
-
-`[ ]` Move the **`.gx-demo` `--placeholder` default** when the tokens workstream's
-native-text pass lands — it moves the dark `placeholder` role from `#7C8595` to
-`#858E9F` (and light from `#626C7B` to `#606A79`), so
-`theme-css.test.ts`'s `keep the .gx-demo defaults equal to the dark theme` reports
-`--placeholder` against the current style sheet. The docs default is correct on
-`master` and stale against the uncommitted tokens tree.
 
 `[x]` Record **where the overlay preview stays coarser than the shipped surface** —
 the four curated overlay pages already state the two shadows (`elevation.lg` beside
