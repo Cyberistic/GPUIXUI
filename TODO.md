@@ -547,7 +547,21 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 74/74
+`[x]` `[█████████░]` 74/75
+
+`[ ]` Live-probe the **confirmation flow** the mission's critical-interaction
+      list names ("dialog open/close/confirm") — `dialog-lifecycle` measures
+      open, focus entry, Escape and the dialog's own close, and no live probe
+      mounts the shipped `ConfirmDialog` at all, so the confirm/cancel actions
+      are proven only in a `TestRenderer`
+      (`packages/components/src/behaviour/confirm-dialog.test.tsx`). The probe
+      should open a confirmation over a page, press its confirm control (the
+      callback fires once, the surface unpaints, focus returns to the opener)
+      and then reopen and cancel (no confirm, focus back), with a negative
+      control that duplicates the confirm call. Deferred because
+      `packages/components/src/dialog.tsx` and `internal/overlay.ts` were being
+      edited in the shared checkout when this was queued; measure the pair on a
+      settled tree.
 
 `[x]` Land the `theme-switch-lifecycle` live probe and measure **a provider
       switch in a window** — the headless gallery proves the token layer through
