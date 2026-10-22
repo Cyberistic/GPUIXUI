@@ -5690,6 +5690,25 @@ numbers).
       `docs/mention-input.mdx` §Motion, the per-surface table in
       `docs/component-api.md` §11 (marked entry-only) and the Mention input
       inventory row.
+`[x]` Hold the **leaving-surface pointer contract** across the family, not one surface at
+      a time. Fixing the context menu exposed two more gaps and no guard: the
+      submenu's `anchored` host kept `occlude` for its leap (a deferred host's box
+      *is* the surface, and the occlusion is a native mouse block the child's
+      `pointerEvents` cannot undo), and nothing held a future surface to either
+      rule. `MenuSubContent` now passes `occlude={presence.present}`;
+      `src/presence-contract.test.ts` (3 cases) walks every source that composes
+      `useSurfacePresence` with a `<FloatingLayer>`/`<anchored>` host and requires
+      the presence-derived `pointerEvents` guard, plus a conditional `occlude` on
+      a **deferred** anchored host (the modal veil is exempt: its anchor is a
+      zero-size box at the window origin and its backdrop child owns the size —
+      measured, a press already passes through it). `presence.test.tsx` gains the
+      modal half: with the veil still painted after `Escape`, a press on the page
+      runs the control underneath. Directions measured: the source guard reports
+      `src/context-menu.tsx` when its guard is removed and
+      `src/menu/sub.tsx: <anchored occlude> is not conditional` when the prop is
+      bare, and the new modal case fails `expected "vi.fn()" to be called 1 time,
+      but got 0` when the backdrop's guard is dropped. Docs: `docs/component-api.md`
+      §11 §Verification names both.
 `[x]` **playground**: the four live probes the motion wiring moved now read the
       frame a user is left with, and the auto-focus case follows the modal fix.
       `popover-lifecycle` takes its gap from a settled `y` (the 200ms entry first

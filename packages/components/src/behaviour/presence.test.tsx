@@ -162,6 +162,55 @@ describe("a modal surface", () => {
     page.unmount();
   });
 
+  it("lets a press through its veil while it leaves", async () => {
+    const onBehind = vi.fn();
+    const page = renderComponent(
+      <Page>
+        <div style={{ position: "relative", width: 700, height: 400 }}>
+          <Button
+            testId="behind"
+            onClick={onBehind}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: 200,
+              height: 60,
+            }}
+          >
+            Behind
+          </Button>
+          <Dialog>
+            <DialogTrigger
+              testId="open"
+              style={{ position: "absolute", left: 300, top: 0 }}
+            >
+              Rename
+            </DialogTrigger>
+            <DialogContent label="Rename" testId="dialog" size="sm">
+              <DialogFooter>
+                <DialogClose testId="cancel">Cancel</DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </Page>,
+    );
+    clickCentreOf(page, "open");
+    await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(true));
+
+    page.renderer.simulateKeystrokes("escape");
+    await delay();
+    // The veil is still painted for the exit tween...
+    expect(painted(page.renderer, "dialog-backdrop")).toBe(true);
+    // ...but the press belongs to the page, not to the fading modal.
+    clickCentreOf(page, "behind");
+    expect(onBehind).toHaveBeenCalledTimes(1);
+
+    await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(false));
+    page.unmount();
+  });
+
   it("paints the resting frame with no travel under reduced motion", async () => {
     const page = renderComponent(
       <Page reducedMotion>

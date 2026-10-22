@@ -343,7 +343,9 @@ export const MenuSubContent = ({
         snapMargin={8}
         deferred
         priority={1}
-        occlude
+        // A leaving submenu keeps its box for the exit tween without blocking
+        // the menu underneath it.
+        occlude={presence.present}
       >
         <MenuSurface
           ref={setSurface}

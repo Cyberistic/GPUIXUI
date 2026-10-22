@@ -463,8 +463,12 @@ the movement and the mount window in the real renderer: bounds move by the
 surface's offset, the exit keeps the box painted and then removes it, the
 reduced preference paints the resting frame with no travel, the accordion grows
 from zero to its measured height, and the tab pill lands exactly on the next
-trigger's box. The live playground proves the fade itself (a window reports
-painted bounds, not painted opacity).
+trigger's box. A press through a leaving box is measured on the context menu and
+on a dismissed modal's veil. `src/presence-contract.test.ts` holds every
+floating host in the package to the two rules that make it possible — a host
+that composes the presence seam paints `pointerEvents` from it, and a deferred
+`anchored` host drops its occlusion with it. The live playground proves the fade
+itself (a window reports painted bounds, not painted opacity).
 
 ## 12. Native text hosts
 
