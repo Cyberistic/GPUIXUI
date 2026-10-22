@@ -163,6 +163,22 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   So keep the selection by **record** and clear it when the record leaves the
   set, leave the text session in the field while rows come and go, reset the
   scroller on a filter change, and walk the filtered array on arrow keys.
+- **A column menu is app state, and a window measured what hiding or moving one
+  costs** — the runtime has no table element, so the visible columns are one
+  ordered list the header and every row read; the runtime still owns the
+  geometry. `table-columns-lifecycle` opened six columns
+  (120/80/160/100/140/90 = **690px**) in a 360px scroller: hiding `status` took
+  the content to **610px**, unpainted that column's header and cells, and shifted
+  every later column by exactly its **80px** while the header and its cells kept
+  one `x`, the vertical offset stayed `-200` and the selection survived; a press
+  on row 9's `owner` cell selected `r9`, the column that had moved into the gap;
+  panning to the end reached `-250` (360 − 610); hiding `owner` while panned made
+  the renderer **clamp its own offset** to `-90` (360 − 450) and report it
+  through `onScrollChange`, so the grid calls no `scrollTo` and paints no blank
+  space past the last column; and moving `owner` after `updated` changed the
+  order and not the width, with the cells following the header. So derive every
+  width and offset from the visible list, and read `onScrollChange` as the
+  clamp's report rather than a value to set (`table-columns-lifecycle`).
 - **A selection toolbar is told, and told when it empties** — the runtime has
   one app-level selection event, `render(<App/>, { onSelectionChange })`, and a
   window measured the contract (`window-selection-lifecycle`): a pointer drag

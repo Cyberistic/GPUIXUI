@@ -314,6 +314,23 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("row index");
   });
 
+  it("teaches a column menu's consequences, and the clamp the renderer owns", () => {
+    // The page taught sort, filter and freeze and said nothing about the column
+    // list a header menu rewrites: hiding or moving a column is app state whose
+    // geometry the runtime still enforces. `table-columns-lifecycle` measured
+    // the content and per-column shifts, the press on the column that moved
+    // into the gap, and the renderer's own clamp when a hide shrinks a panned
+    // grid — so a table plan does not compute it with a stale offset.
+    expect(dataPage).toContain("table-columns-lifecycle");
+    expect(dataPage).toContain("A column menu is app state");
+    expect(dataPage).toContain("690");
+    expect(dataPage).toContain("610");
+    expect(dataPage).toContain("-90");
+    expect(dataPage).toContain("clamp");
+    expect(dataPage).toContain("onScrollChange");
+    expect(dataPage).toContain("no `scrollTo`");
+  });
+
   it("tells a selection toolbar when the reader's selection empties", () => {
     // The page taught a table how a row is selected and nothing about the
     // window-level event a selection toolbar, an inspector or a "quote the
