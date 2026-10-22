@@ -4682,8 +4682,9 @@ submitted,retry}.png`.
 
 The negative controls are the two step gates themselves: making `stepError`
 accept every name advances the wizard on the empty field, and dropping the
-port's range check advances on `70000` — the probe's first two refusals fail by
-name.
+port's range check advances on `70000` — each fails its refusal by name
+(`expected "step=1 …", got "step=2 …"` and `expected "step=2 …", got
+"step=3 …"`), exit `1`, and both were restored green.
 
 ## Terminal mode: the pty probe
 
