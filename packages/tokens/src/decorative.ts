@@ -723,9 +723,11 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   // the state a row is in. A theme whose `accent` is its `selected` leaves a
   // chosen row with no feedback at all, which is what eleven shipped styles did,
   // the four base and high-contrast palettes at **1.00:1**. The press that
-  // follows is the same defect one state over and is recorded in `TODO.md` →
-  // Interlocks with its measurement, because `active` is pinned against the
-  // selected row's own title floor in macOS dark.
+  // follows is the same defect one state over: a menu row's press replaces its
+  // own hover, and a list row's press replaces the accent it hovers with. Those
+  // two transitions are not role pairs — the palette has no room for them in six
+  // styles — so they are derived by `pointerWash` and held beside this placement
+  // by `pointerWashTransitions`.
   { surface: "stateWash", role: "accent", over: "selected" },
   // A status message's edge is a decorative boundary — its text and icon carry
   // the meaning — so it is held to the perceptibility floor, not the boundary

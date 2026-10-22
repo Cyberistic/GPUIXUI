@@ -123,6 +123,25 @@ describe("the wash a pointer state paints", () => {
     ]);
   });
 
+  it("records the derived press beside the placement", () => {
+    // The table's own comment sent a reader to `TODO.md` for the two transitions
+    // the derivation answers, so the placement read as a contract for a paint
+    // nothing made. The source and the table have to agree.
+    const source = readFileSync(
+      new URL("./decorative.ts", import.meta.url),
+      "utf8",
+    );
+
+    expect(source).toContain("derived by `pointerWash`");
+    expect(source).not.toContain("is recorded in `TODO.md`");
+    expect(
+      decorativeSurfaces.some(
+        ({ surface, role, over }) =>
+          surface === "stateWash" && role === "accent" && over === "selected",
+      ),
+    ).toBe(true);
+  });
+
   it("paints a palette that already answers the pointer as it is", () => {
     // The base light theme's own press clears the floor against the wash the row
     // wears (1.099:1), so the derivation paints the role the theme authored —
