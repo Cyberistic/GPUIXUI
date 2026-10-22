@@ -48,13 +48,16 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import {
   alpha,
+  blend,
   highContrastDarkColors,
   highContrastLightColors,
   lightColors,
   palette,
 } from "./color.js";
+import { contrastRatio } from "./contrast.js";
 import {
   decorativeFailures,
   decorativeFloor,
@@ -127,14 +130,100 @@ describe("decorative surfaces", () => {
     expect(missing).toEqual([]);
   });
 
-  it("measures every status edge on its tint and on both page surfaces", () => {
+  it("measures every status edge where the message it bounds is measured", () => {
+    // The tint's placements are the four strips a message sits on, and the edge
+    // is the boundary around that same message: a warning alert in a
+    // confirmation dialog's body sits on the dialog's `popover` fill, a soft
+    // badge in a muted sidebar on `muted`. Measuring the edge on the two page
+    // surfaces only left the two floating/quiet strips with a measured tint and
+    // an edge nothing checked.
     const missing = statusTones.flatMap((tone) =>
-      [`${tone}Soft`, "background", "card"]
+      [`${tone}Soft`, "background", "card", "popover", "muted"]
         .filter((over) => !measured("statusEdge", tone, over))
         .map((over) => `${tone}/${over}`),
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it("measures an edge on every strip its tint is measured on", () => {
+    const tintStrips = [
+      ...new Set(
+        decorativeSurfaces
+          .filter(({ surface }) => surface === "statusTint")
+          .map(({ over }) => over),
+      ),
+    ];
+    const edgeStrips = new Set(
+      decorativeSurfaces
+        .filter(({ surface }) => surface === "statusEdge")
+        .map(({ over }) => over),
+    );
+
+    expect(tintStrips.filter((over) => !edgeStrips.has(over))).toEqual([]);
+  });
+
+  it("reports a status edge painted in the strip it bounds", () => {
+    // A tone that is its own strip paints no boundary: the alert in a dialog is
+    // then a tint a reader has to guess the edges of.
+    const flatPopover = {
+      colors: { ...lightColors, warning: lightColors.popover },
+    };
+
+    expect(
+      decorativeFailures(flatPopover).find(
+        ({ surface, role, over }) =>
+          surface === "statusEdge" && role === "warning" && over === "popover",
+      ),
+    ).toMatchObject({ floor: decorativeFloor });
+  });
+
+  it("clears the floor on the floating and quiet strips, with Luna light tightest", () => {
+    // The catalogue prints the tightest placement of the two new strips, so the
+    // sentence and this computation fail in opposite directions.
+    const lookThemes = retroNames.flatMap((look) => [
+      retroTheme(themes.light, look),
+      retroTheme(themes.dark, look),
+    ]);
+    const placements = [
+      ...shippedThemes,
+      ...platformThemes,
+      ...lookThemes,
+    ].flatMap((theme) =>
+      statusTones.flatMap((tone) =>
+        (["popover", "muted"] as const).map((over) => ({
+          theme: theme.name,
+          tone,
+          over,
+          ratio: contrastRatio(
+            blend(theme.colors[over], theme.colors[tone], statusEdgeAlpha),
+            theme.colors[over],
+          ),
+        })),
+      ),
+    );
+
+    expect(
+      placements.filter(
+        ({ ratio }) => ratio === undefined || ratio < decorativeFloor,
+      ),
+    ).toEqual([]);
+
+    const tightest = placements.reduce((low, placement) =>
+      (placement.ratio ?? 0) < (low.ratio ?? 0) ? placement : low,
+    );
+    expect(tightest.theme).toBe("Light · Windows XP (Luna)");
+    expect(tightest.tone).toBe("warning");
+    expect(tightest.over).toBe("muted");
+    expect(tightest.ratio).toBeCloseTo(1.11, 2);
+    // The catalogue prints the number this suite measures, so a palette edit
+    // moves the sentence instead of leaving a stale claim.
+    expect(
+      readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(`at ${tightest.ratio?.toFixed(2)}:1`);
   });
 
   it("measures the edge the component actually paints", () => {

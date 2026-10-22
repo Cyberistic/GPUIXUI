@@ -75,7 +75,7 @@ export interface DecorativeSurface {
 
 /**
  * A status message's edge: the tone's solid role at the share `statusTone`
- * paints, on the tint it bounds or on the page the message sits on.
+ * paints, on the tint it bounds or on the strip the message sits on.
  */
 const statusEdge = (
   tone: (typeof statusTones)[number],
@@ -244,7 +244,13 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   ),
   // A status message's edge is a decorative boundary — its text and icon carry
   // the meaning — so it is held to the perceptibility floor, not the boundary
-  // floor, and measured on the tint it bounds and on both page surfaces.
+  // floor, and measured on the tint it bounds and on every strip the tint is
+  // measured on. The tint placements are the four surfaces a message sits on, so
+  // the edge has to answer on all four: a warning alert in a confirmation
+  // dialog's body sits on that dialog's `popover` fill, and a soft badge in a
+  // muted sidebar sits on `muted`. The edge was measured on the two page
+  // surfaces only, so a message on a floating surface had a measured tint and an
+  // edge nothing checked.
   ...statusTones.flatMap((tone) => [
     ...statusTintStrips.map(
       (over): DecorativeSurface => ({
@@ -254,8 +260,7 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
       }),
     ),
     statusEdge(tone, `${tone}Soft`),
-    statusEdge(tone, "background"),
-    statusEdge(tone, "card"),
+    ...statusTintStrips.map((over) => statusEdge(tone, over)),
   ]),
 ] satisfies ReadonlyArray<DecorativeSurface>;
 

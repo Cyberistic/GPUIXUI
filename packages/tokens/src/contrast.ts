@@ -370,6 +370,13 @@ export const contrastPairs: readonly ContrastPair[] = [
   // on `secondary`. The edge must stay findable there for the same reason.
   { foreground: "borderStrong", background: "muted", floor: "boundary" },
   { foreground: "borderStrong", background: "secondary", floor: "boundary" },
+  // A floating surface is a strip a control sits on too, and the ring was
+  // measured there while the edge was not: a dialog's footer holds the
+  // `secondary` cancel action (`confirm-dialog.tsx`, no `variant` so the default
+  // paints `borderStrong`) on the `popover` fill `DIALOG_CONTENT` paints, and a
+  // popover holding a form holds the same control. The two boundary roles are
+  // drawn around the same elements, so they are measured on the same strips.
+  { foreground: "borderStrong", background: "popover", floor: "boundary" },
   // A bordered control tints its own surface while it is hovered or pressed and
   // keeps its edge — the secondary action paints `borderStrong` and hands the
   // same element to the `hover` and `active` washes — so those washes are strips

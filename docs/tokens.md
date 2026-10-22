@@ -1125,7 +1125,7 @@ so a single number would be a guess — or carries no channels here at all (a
 named colour, an `hsl()`-family function). Shorthand hex is measured.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 81 pairs cover the text role
+— an empty array means the theme is readable. The 82 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1142,7 +1142,8 @@ surfaces and on the two group strips a disabled control sits in (`muted`,
 `secondary`), accent and selected, the state washes,
 the placeholder, and the essential boundaries and focus ring — the ring and the
 strong boundary on every surface a focused control can sit on, including a
-toolbar strip (`muted`), a segmented group (`secondary`), the fill the ring hugs
+toolbar strip (`muted`), a segmented group (`secondary`), a floating surface
+(`popover` — a dialog's footer or a popover's form), the fill the ring hugs
 (`input`, `selected`, `hover`, `active`, `accent`) and the `hover`/`active`
 wash a bordered control tints while it is hovered or pressed, plus the invalid
 edge below. A wash — `hover`,
@@ -1172,6 +1173,16 @@ four shipped misses — the base light theme's pressed secondary button at
 its 4.5 floor, and Linux light at 2.96:1 hovered and 2.77:1 pressed — so those
 four `borderStrong` values moved to `#727D8C`, `#788494`, `#A7A7A7` and
 `#7E7C79`, and every other pair they carry still clears its floor.
+
+A **floating** surface is the last strip that story was missing. The ring was
+already measured on `popover` — a focused control in a dialog wears it — while
+the edge around that same control was measured on every strip *but* `popover`:
+`ConfirmDialog`'s cancel action is a plain `Button`, whose default variant is
+`secondary` and therefore paints `borderStrong`, and it sits on the `popover`
+fill `DIALOG_CONTENT` paints. A popover holding a form is the same composition.
+Every shipped, high-contrast, platform and authored style clears the floor
+there, the tightest being the base dark theme at 3.95:1 — an edge drawn in a
+neutral on a neutral fill is the hardest placement the boundary has.
 
 A **field** is the fourth border case, and the one the table reaches last. A
 field can land on the page, a card, a popover or a `muted` toolbar, and in the
@@ -1479,7 +1490,7 @@ how a status edge is measured at the alpha its component actually uses:
 | skeleton | `skeleton` | `background`, `card`, `muted` |
 | scrim | `overlay` | `card`, `popover` |
 | statusTint | each tone's `xSoft` | `background`, `card`, `popover`, `muted` |
-| statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, `background`, `card` |
+| statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint and the same four strips |
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
 | stateWash | `hover`, `active`, `selected`, `accent` | `background`, `card`, `popover`, `muted` |
 | filledAction | `secondary` | `background`, `card`, `popover`, `muted` |
@@ -1502,6 +1513,15 @@ ramp moved one step deeper (the 200 step, with the 900 text) and the dark one on
 step lighter (800, with the 100 text); Luna carries a lighter tint of its own,
 because its beige page sits at the same lightness a pale tint has and a deeper
 one would vanish into its toolbar instead.
+
+The **edge around that surface** is measured where the surface is, which is the
+same four strips — a tint the reader can see and a boundary they cannot is a
+message with a soft hole around it. It was measured on the tint and the two page
+surfaces only, so a warning alert in a confirmation dialog's body (the
+`ConfirmDialog` children slot, on the dialog's `popover` fill) and a soft badge
+in a muted sidebar had a measured tint and an unmeasured edge. Every shipped,
+high-contrast, platform and authored style clears the floor on both, the
+tightest being Luna light's `warning` edge on its `muted` toolbar at 1.11:1.
 
 A **state wash** is the one entry a component paints *behind* content rather than
 around it, so it has two jobs and two contracts: the text on it keeps the floors

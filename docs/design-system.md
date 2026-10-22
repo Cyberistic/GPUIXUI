@@ -252,11 +252,13 @@ Two border roles:
 - `borderStrong` is functional — a control's boundary, and the edge a field
   owes (§8). It meets 3:1
   against every surface a control can sit on — the canvas, a card, a field, a
-  toolbar strip and a secondary fill — and on the `hover`/`active` wash a
-  bordered control tints while it is hovered or pressed, because the secondary
-  action keeps that edge while its fill moves. That last strip found four
-  shipped misses (both base themes, high-contrast dark and Linux light), so the
-  edge is perceivable in every state without relying on fill alone.
+  toolbar strip, a secondary fill and a floating surface (a dialog's footer or a
+  popover's form, where the ring was measured before the edge) — and on the
+  `hover`/`active` wash a bordered control tints while it is hovered or pressed,
+  because the secondary action keeps that edge while its fill moves. That last
+  strip found four shipped misses (both base themes, high-contrast dark and Linux
+  light), so the edge is perceivable in every state without relying on fill
+  alone.
 
 A **field is carried by its edge, not its fill.** A field sits on the page, a
 card, a popover and a `muted` toolbar, and in the light palettes the page
@@ -538,10 +540,10 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | status text on `background`/`card`/`popover` and on the `hover`/`active` wash a floating row tints (a field error, an inline warning, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own `disabled` fill, on `background`/`card`/`popover` and on a `muted` toolbar or `secondary` panel (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
-| focus ring (on background, card, popover, muted and secondary, and on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs) and `borderStrong` on those strips, on the field, and on the `hover`/`active` wash a bordered control tints | 3:1 | 4.5:1 |
+| focus ring (on background, card, popover, muted and secondary, and on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs) and `borderStrong` on those same strips (a floating surface included), on the field, and on the `hover`/`active` wash a bordered control tints | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the `hover`/`active` wash a row tints under the pointer | 3:1 | 4.5:1 |
-| soft status surface against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
+| soft status surface and its edge against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, elevation shadow (at its deepest level) | 1.05:1 | 1.05:1 |
 | a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
 | a disabled action's fill against each face an enabled control wears (`primary`, `secondary`, `destructive`, `accent`, `input`) | 1.05:1 | 1.05:1 |
@@ -585,7 +587,9 @@ raised surface are held to 1.05:1 against what they are painted on. The veil is 
 translucent, and the two places it is measured are the content surfaces a modal
 covers; a black page cannot be darkened, and a high-contrast theme separates its
 dialog with a border instead. The status edge is measured at the share
-`statusTone` paints, on the tint it bounds and on both page surfaces.
+`statusTone` paints, on the tint it bounds and on the four strips a message sits
+on — so a warning alert in a confirmation dialog's body, or a soft badge in a
+muted sidebar, has its boundary measured where its tint is.
 `decorativeFailures(theme, floor?)` runs the check, and `decorative.test.ts` holds
 every shipped and platform theme to it. The status-tint half found the surface a message sits in: the page promised this
 row, and the code measured only the edge, so a tint equal to its strip passed.

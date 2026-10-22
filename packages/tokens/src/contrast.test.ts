@@ -949,6 +949,9 @@ describe("a control boundary on the strip it sits on", () => {
       "input",
       "muted",
       "secondary",
+      // A floating surface holds controls too: a dialog's footer or a popover's
+      // form. The ring was measured there and the edge was not.
+      "popover",
       // A bordered control tints its own surface while hovered or pressed and
       // keeps its edge, so the wash is a strip the edge is painted on too.
       "hover",
@@ -1034,6 +1037,70 @@ describe("a control boundary on the strip it sits on", () => {
           foreground === "borderStrong" && background === "hover",
       ),
     ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
+  });
+
+  it("holds the control a floating surface actually paints", () => {
+    // The composition the pair exists for: `ConfirmDialog`'s cancel action is a
+    // plain `Button`, whose default variant is `secondary` — the one variant
+    // that owns a `borderStrong` edge — and it sits in the dialog's body, whose
+    // recipe paints `bg-popover`. A popover holding a form paints the same pair.
+    const button = readFileSync(
+      new URL("../../components/src/internal/button.tsx", import.meta.url),
+      "utf8",
+    );
+    const confirm = readFileSync(
+      new URL("../../components/src/confirm-dialog.tsx", import.meta.url),
+      "utf8",
+    );
+    const recipes = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+
+    expect(button).toContain('variant = "secondary"');
+    expect(button).toContain("borderColor: theme.colors.borderStrong");
+    expect(confirm).toContain('testId="confirm-cancel"');
+    expect(recipe(recipes, "DIALOG_CONTENT")).toContain("bg-popover");
+    expect(recipe(recipes, "POPOVER_CONTENT")).toContain("bg-popover");
+  });
+
+  it("clears the boundary floor on a floating surface, with dark tightest", () => {
+    const measured = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ].map((theme) => ({
+      theme: theme.name,
+      ratio: contrastRatio(theme.colors.borderStrong, theme.colors.popover),
+      floor: contrastFloorsFor(theme).boundary,
+    }));
+
+    expect(
+      measured.filter(
+        ({ ratio, floor }) => ratio === undefined || ratio < floor,
+      ),
+    ).toEqual([]);
+
+    // The dark base theme is the tightest placement, and the catalogue prints
+    // it: an edge on a popover is the hardest neutral-on-neutral pair here.
+    const tightest = measured.reduce((low, placement) =>
+      (placement.ratio ?? 0) < (low.ratio ?? 0) ? placement : low,
+    );
+    expect(tightest.theme).toBe("Dark");
+    expect(tightest.ratio).toBeCloseTo(3.95, 2);
+    // The catalogue prints the number this suite measures, so a palette edit
+    // moves the sentence instead of leaving a stale claim.
+    expect(
+      readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(`base dark theme at ${printedRatio(tightest.ratio)}`);
   });
 });
 

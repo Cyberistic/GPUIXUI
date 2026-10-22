@@ -582,10 +582,11 @@ four through the mark contract and two (`input`, `secondary`) through
 `contrastPairs`. The decorative surfaces use `decorativeFloor` (1.05:1), and
 `decorativeSurfaces` names the placements measured — dividers, skeleton fills,
 the modal veil, each status tone's soft tint on the four strips a message sits
-on and its edge (read at the share `statusEdgeAlpha` that `statusTone` paints),
-the scrollbar thumb, `hover`/`active`/`selected`/`accent` and the `secondary`
-fill on the four strips a control can sit on, and the deepest elevation level
-composited over those same four. Nothing escapes the contract either:
+on and its edge on those same four (read at the share `statusEdgeAlpha` that
+`statusTone` paints), the scrollbar thumb, `hover`/`active`/`selected`/`accent`
+and the `secondary` fill on the four strips a control can sit on, and the
+deepest elevation level composited over those same four. Nothing escapes the
+contract either:
 `coverage.test.ts` holds every role in `colorRoles` to at least one measurement,
 and names the one a dedicated contract measures instead — `selection`, by
 `selectionFailures`. See
