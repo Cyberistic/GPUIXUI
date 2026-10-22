@@ -22,6 +22,7 @@ import {
   Progress,
   ProgressIndicator,
   ProgressTrack,
+  ProgressValue,
 } from "../src/components/Progress.js";
 import { Skeleton } from "../src/components/Skeleton.js";
 import { Spinner } from "../src/components/Spinner.js";
@@ -108,6 +109,32 @@ it("announces a determinate Progress's value as a percentage", async () => {
   expect(
     Option.isSome(a11yNode(runtime.a11y(), { role: "ProgressIndicator" })),
   ).toBe(true);
+});
+
+it("says a Progress's share in the caller's words in a window", async () => {
+  // The bug guarded: `aria-valuetext` — the only channel 0.11.0 has — carried a
+  // fixed `42%`/`loading` phrase, so a localised interface could not say its own
+  // words and a download could not fold its buffered share into the sentence.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Progress
+        testId="pg"
+        value={42}
+        label="Uploading"
+        formatValue={(percent) => `${percent}% uploaded`}
+      >
+        <ProgressTrack>
+          <ProgressIndicator />
+        </ProgressTrack>
+        <ProgressValue testId="pg-value" />
+      </Progress>
+    </Surface>,
+  );
+  expect(a11yValueOf(runtime.a11y(), { label: "Uploading" })).toEqual(
+    Option.some("42% uploaded"),
+  );
+  expect(runtime.text("pg-value")).toEqual(Option.some("42% uploaded"));
 });
 
 it("fills a determinate Progress to its value", async () => {
@@ -278,6 +305,18 @@ it("moves an indeterminate Progress's segment over time", async () => {
     () => expect.fail("the Progress painted no track"),
   );
   expect(offsets.every((x) => x === undefined || x >= trackBox.x)).toBe(true);
+});
+
+it("announces an indeterminate Progress in the caller's word", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Progress testId="pg" label="Uploading" loadingText="Chargement" />
+    </Surface>,
+  );
+  expect(a11yValueOf(runtime.a11y(), { label: "Uploading" })).toEqual(
+    Option.some("Chargement"),
+  );
 });
 
 it("paints an indeterminate Progress in its own tone", async () => {

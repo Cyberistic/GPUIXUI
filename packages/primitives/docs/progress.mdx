@@ -66,7 +66,7 @@ import {
 | `ProgressTrack` | the bar's background, height, radius and overflow clip |
 | `ProgressIndicator` | the fill, and the buffer segment after it; while indeterminate it is the moving segment |
 | `ProgressLabel` | visible task name, defaulting to the root's `label` |
-| `ProgressValue` | the clamped percentage, or `loading` with no value |
+| `ProgressValue` | the clamped percentage in the caller's words, or `loading`/`loadingText` with no value |
 
 The default composition is the track and its indicator. A caller's `children`
 replace it entirely, and the parts render from the same resolved state the
@@ -81,6 +81,8 @@ root uses — there is no second paint path.
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm` |
 | `label` | `string` | none | accessible name, and `ProgressLabel`'s default text |
+| `formatValue` | `(percent: number) => string` | `` `${percent}%` `` | the announced and painted share, in the caller's words; receives the **clamped** 0–100 percentage |
+| `loadingText` | `string` | `"loading"` | what an indeterminate bar says instead of a percentage |
 | `reducedMotion` | `boolean` | `false` | holds the indeterminate segment at its resting offset and schedules no interval; no effect when `value` is set |
 | `children` | `ReactNode` | the track | the parts to draw |
 | `style` | `StyleDesc` | — | merged last, on the root frame |
@@ -106,9 +108,27 @@ Not focusable. Progress is status, not a control; there is no slider behaviour.
 
 - Role: `progressbar` (`ProgressIndicator` in AccessKit).
 - The value is announced through **`aria-valuetext`** — `"42%"` or
-  `"loading"` — because `@gpuix/native` 0.11.0 has no `aria-valuenow`. A
-  `buffer` is **not announced**: the one supported attribute carries the value,
-  so a held-ahead share is a visual cue only.
+  `"loading"` — because `@gpuix/native` 0.11.0 has no `aria-valuenow`.
+- **The words are the caller's.** `formatValue` receives the clamped percentage
+  and is used both for `aria-valuetext` and by `ProgressValue`, so a localised
+  interface, another unit, or a download that wants its buffered share in the
+  sentence is not stuck with the default phrase:
+
+  ```tsx
+  const buffer = 78;
+
+  <Progress
+    value={42}
+    buffer={buffer}
+    label="Downloading"
+    formatValue={(percent) => `${percent}% downloaded, ${buffer}% buffered`}
+  />;
+  ```
+
+  `loadingText` does the same for the indeterminate state, whose default word is
+  English.
+- The **default** announcement carries the value alone: a `buffer` is a visual
+  cue unless the caller folds it into `formatValue` as above.
 - The name comes from `label`. Without one, a progress bar is an unnamed
   progress bar; give it the task's name ("Uploading", "Saving").
 - `ProgressLabel` is visible text, not a second name: it does not replace the
@@ -139,7 +159,10 @@ no interval running; a determinate bar is unaffected because it never animated.
 
 ## Limitations
 
-- No `aria-valuenow` (above), so the buffer is not announced.
+- No `aria-valuenow` (above), so the value text is the only report; a `buffer`
+  is announced only when the caller folds it into `formatValue`.
+- The indeterminate word defaults to English (`"loading"`); pass `loadingText`
+  for another locale.
 - The indeterminate segment is a discrete step, not a smooth sweep; the runtime
   cannot interpolate position beyond the motion API this package does not import.
 - One buffer, no stacked segments. The label and value parts sit beside the
@@ -159,15 +182,19 @@ no interval running; a determinate bar is unaffected because it never animated.
   indeterminate lead, the tone
   on both the determinate and the indeterminate fill, a custom composition, the
   root frame's `style` and `className` merge (a caller's `flex-row` wins over the
-  frame's resting column), and the lead held at the resting offset under
-  `reducedMotion`.
+  frame's resting column), the lead held at the resting offset under
+  `reducedMotion`, and the words the share is said in — `formatValue` in the
+  announcement and `ProgressValue` (fed the clamped percentage), `loadingText`
+  for an indeterminate bar, and the default phrases unchanged.
 - `runtime/loading.runtime.test.tsx` — announces `"42%"`, clamps 140 to `"100%"`
   and −5 to `"0%"`, the fill tracks the value inside the track, the buffer paints
   the gap it reports (its painted box and mark role), a `muted` bar's buffer
   paints `borderStrong` while its fill paints `mutedForeground` (the collision
   the old code shipped), the indeterminate segment's **painted x** moves over
   real time in its own tone, a step counter that is not running stays still, and
-  a `reducedMotion` bar's lead width is one value across six samples.
+  a `reducedMotion` bar's lead width is one value across six samples; it also
+  reads a caller's `formatValue` back off the accessibility tree and the painted
+  `ProgressValue`, and a caller's `loadingText` off an indeterminate bar.
 - `src/recipe/geometry.test.ts` — every tone's buffer role differs from its fill's
   and both clear the mark floor on the `muted` track, in the two shipped and two
   high-contrast themes.

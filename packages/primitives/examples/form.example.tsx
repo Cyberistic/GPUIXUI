@@ -139,7 +139,12 @@ export const FormExample = (): ReactElement => {
 
         {saving ? (
           <Stack direction="column" gap="sm">
-            <Progress label="Creating project" value={62} tone="success">
+            <Progress
+              label="Creating project"
+              value={62}
+              tone="success"
+              formatValue={(percent) => `${percent}% complete`}
+            >
               <Stack direction="row" justify="between">
                 <ProgressLabel />
                 <ProgressValue />

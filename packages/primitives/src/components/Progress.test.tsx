@@ -73,6 +73,14 @@ const textOf = (element: ReactElement): string =>
     () => expect.fail("the part carried no text"),
   );
 
+/** The announced value text, decoded as the string `aria-valuetext` must be. */
+const announced = (element: ReactElement): string =>
+  expectSome(
+    Option.flatMap(hostProp(element, "aria-valuetext"), (value) =>
+      Schema.decodeUnknownOption(Schema.String)(value),
+    ),
+  );
+
 describe("Progress", () => {
   it("clamps a value past the end instead of painting outside the track", () => {
     const element = bar(Option.some(140));
@@ -89,6 +97,52 @@ describe("Progress", () => {
   it("announces an indeterminate bar as loading rather than as 0%", () => {
     const element = bar(Option.none());
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("loading");
+  });
+
+  it("says the value in the caller's words, in the announcement and the part", () => {
+    // The bug guarded: the only supported channel (`aria-valuetext`) carried a
+    // fixed `42%`/`loading` phrase, so a localised interface, a different unit,
+    // or a download that wanted its buffered share in the sentence could not
+    // say it — while its sibling `Meter` had taken a `formatValue` all along.
+    const props = {
+      value: 42,
+      label: "Uploading",
+      formatValue: (percent: number) => `${percent}% uploaded`,
+    };
+    const element = renderProgress(props, testTheme, 0);
+    expect(announced(element)).toBe("42% uploaded");
+    expect(
+      textOf(renderProgressValue({}, progressPart(props, testTheme, 0))),
+    ).toBe("42% uploaded");
+    // The default phrase is untouched, so an existing bar is unchanged.
+    expect(announced(bar(Option.some(42)))).toBe("42%");
+  });
+
+  it("hands the formatter the clamped percentage, not the raw prop", () => {
+    const said = (value: number): string =>
+      announced(
+        renderProgress(
+          { value, formatValue: (percent) => `${percent} percent` },
+          testTheme,
+          0,
+        ),
+      );
+    expect(said(250)).toBe("100 percent");
+    expect(said(-5)).toBe("0 percent");
+    expect(said(42)).toBe("42 percent");
+  });
+
+  it("names the indeterminate state in the caller's word", () => {
+    const props = { label: "Uploading", loadingText: "Chargement" };
+    const element = renderProgress(props, testTheme, 0);
+    expect(announced(element)).toBe("Chargement");
+    expect(
+      textOf(renderProgressValue({}, progressPart(props, testTheme, 0))),
+    ).toBe("Chargement");
+    // A determinate bar ignores the loading word: it has a value to say.
+    expect(
+      announced(renderProgress({ ...props, value: 42 }, testTheme, 0)),
+    ).toBe("42%");
   });
 
   it("paints the held-ahead buffer in the segment between value and buffer", () => {

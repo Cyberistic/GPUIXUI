@@ -113,11 +113,14 @@ it("creates through the form example's busy action", async () => {
   renderExample(runtime, "form");
   expect(Option.getOrUndefined(runtime.focused())).toBe("form-example-name");
   runtime.click("form-example-save");
+  // The bar says its share in the composition's own words (`formatValue`), not
+  // the default percentage: this is the only example that proves the seam end to
+  // end, and the value still describes the clamped fill.
   expect(
     Option.getOrUndefined(
       a11yValueOf(runtime.a11y(), { label: "Creating project" }),
     ),
-  ).toBe("62%");
+  ).toBe("62% complete");
 });
 
 it("counts the form example's name and refuses a name past its limit", async () => {

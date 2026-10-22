@@ -10,6 +10,11 @@
  * `ProgressIndicator` the fill, and `ProgressLabel`/`ProgressValue` the text a
  * caller may put beside it. The default composition is the track alone, so
  * `<Progress value={42} />` renders exactly the bar it always has.
+ *
+ * The share is said in the caller's words: `formatValue` receives the clamped
+ * percentage and `loadingText` names the indeterminate state, so a localised
+ * interface — or a download that wants its buffered share in the sentence — is
+ * not stuck with the fixed `"42%"`/`"loading"` phrase.
  */
 
 import {
@@ -61,6 +66,17 @@ export interface ProgressProps {
   /** Accessible name, e.g. "Uploading". */
   readonly label?: string;
   /**
+   * How the bar says its share — the `aria-valuetext` an assistive technology
+   * reads and the text `ProgressValue` paints. Called with the **clamped**
+   * 0–100 percentage, never the raw prop. Defaults to `` `${percent}%` ``.
+   */
+  readonly formatValue?: (percent: number) => string;
+  /**
+   * What an indeterminate bar says instead of a percentage. Defaults to
+   * `loading`, so a localised interface can hand over its own word.
+   */
+  readonly loadingText?: string;
+  /**
    * Hold the indeterminate segment and schedule no interval. The runtime
    * exposes no reduced-motion preference, so the caller passes its own. A
    * determinate bar never animates, so this changes nothing on it.
@@ -88,13 +104,21 @@ export interface ProgressPart {
   readonly size: ProgressSpec["size"];
   readonly step: number;
   readonly label: string | undefined;
-  /** Exposed through `aria-valuetext`; `"42%"` or `"loading"`. */
+  /** The share in the caller's words, or the default; announced and painted. */
   readonly valueText: string;
 }
 
 /** Resolve a progress's shared state once, for its root and every part. */
 export const progressPart = (
-  { value, buffer, tone = "primary", size = "md", label }: ProgressProps,
+  {
+    value,
+    buffer,
+    tone = "primary",
+    size = "md",
+    label,
+    formatValue,
+    loadingText,
+  }: ProgressProps,
   theme: PrimitiveTheme,
   step: number,
 ): ProgressPart => {
@@ -114,7 +138,12 @@ export const progressPart = (
     size,
     step,
     label,
-    valueText: determinate ? `${percent}%` : "loading",
+    // The share is said in the caller's words: a locale, a unit, or a buffer the
+    // default phrase cannot know about. The formatter sees the **clamped**
+    // percentage, so it cannot announce a number the track never paints.
+    valueText: determinate
+      ? (formatValue?.(percent) ?? `${percent}%`)
+      : (loadingText ?? "loading"),
   };
 };
 
@@ -266,7 +295,7 @@ export interface ProgressValueProps {
   readonly testId?: string;
 }
 
-/** The percentage, or `loading` when there is no known value. */
+/** The share in the caller's words, or `loading` when there is no known value. */
 export const renderProgressValue = (
   { testId }: ProgressValueProps,
   part: ProgressPart,
