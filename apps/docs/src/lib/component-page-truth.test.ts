@@ -900,6 +900,19 @@ describe("the curated component pages", () => {
     expect(button).toContain(
       'Match.when("ghost", () => theme.colors.foreground)',
     );
+
+    // A count or a bound the control cannot read is the case a page built from
+    // `Math.ceil(total / pageSize)` reaches: the reducer answers no count for a
+    // `NaN`, page 1 for an unreadable page and the default sibling for an
+    // unreadable one, so the page teaches that rather than only `<= 0`.
+    expect(logic).toContain(
+      "Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : fallback",
+    );
+    expect(logic).toContain("Number.isFinite(page) ? Math.trunc(page) : 1");
+    expect(logic).toContain("countable(rawSiblingCount, 1)");
+    expect(text).toContain("a `pageCount` it cannot read");
+    expect(text).toContain("a `page` or `siblingCount` it cannot read");
+    expect(text).toContain("no unreadable number is painted");
   });
 
   it("holds the breadcrumb's budget, its separator pairing and its current crumb to the source", () => {

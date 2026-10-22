@@ -66,6 +66,8 @@ same crop is painted at every width:
 | Input | Window |
 | ----- | ------ |
 | `pageCount <= 0` | nothing rendered |
+| a `pageCount` it cannot read (`NaN`) | nothing rendered — a count that never arrived is no count, not a trail labelled `NaN` |
+| a `page` or `siblingCount` it cannot read | page **1** and the default sibling, and no unreadable number is painted |
 | a list that fits (`siblingCount + 5` or fewer pages) | every page |
 | page 1 of 10 | `1 2 3 4 5 … 10` |
 | page 5 of 10 | `1 … 4 5 6 … 10` |
@@ -198,10 +200,12 @@ host `div`s and the local `Button`, with no runtime feature to miss beyond the
 absent `aria-current`. 10 native behaviour tests in
 `packages/components/src/behaviour/pagination.test.tsx` hold the disabled edges,
 the page (not index) reported, the current page's no-op, Previous/Next stepping,
-the ellipsis staying out of the tab order, Enter activation, `pageCount: 0`, the
-current fill in both themes, the part order and an item outside the list reading
-the root. 15 window tests in `packages/components/src/pagination/logic.test.ts`
-hold the table above, including the sweep that fails an ellipsis whose
-neighbours differ by one or less. `pagination-preview.test.ts` holds this page's
+the ellipsis staying out of the tab order, Enter activation, `pageCount: 0` and a
+`pageCount` it cannot read rendering nothing, an unreadable `page`/`siblingCount`
+painting page 1 with no `NaN`, the current fill in both themes, the part order
+and an item outside the list reading the root. 15 window tests in
+`packages/components/src/pagination/logic.test.ts` hold the table above,
+including the sweep that fails an ellipsis whose neighbours differ by one or
+less. `pagination-preview.test.ts` holds this page's
 drawing to the component's own `pageWindow` over every page, sibling count and
 edge setting.
