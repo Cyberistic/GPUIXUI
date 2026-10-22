@@ -3,11 +3,12 @@
  *
  * The component's header and `core/otp.ts` claim a pasted code arrives as one
  * multi-character `onChange` and is distributed forward from the cell that took
- * it, because the runtime publishes no paste event — and the capability record
- * says the field's paste is **unverified** in a window. This file pins the
- * fixture's arithmetic to the shipped `applyOtpInput` rule, the cell ids to the
- * field's own derivation, the marker to a shape `normalizeOtp` keeps whole, and
- * the README's check count to the assertions the probe actually runs.
+ * it, because the runtime publishes no paste event. The capability record now
+ * carries that measurement, so the README must cite the row rather than the
+ * gap it once owed. This file pins the fixture's arithmetic to the shipped
+ * `applyOtpInput` rule, the cell ids to the field's own derivation, the marker
+ * to a shape `normalizeOtp` keeps whole, the README's check count to the
+ * assertions the probe actually runs, and the prose to the record.
  *
  * `node:fs` is deliberate, as in `registry.test.ts`: this checks the
  * repository's own probe and prose, not a runtime path.
@@ -44,6 +45,14 @@ const otpPasteSteps = (() => {
   const start = scenarios.indexOf("const otpPasteSteps");
   const end = scenarios.indexOf("\nconst ", start + 1);
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
+})();
+
+/** The README section for this probe, bounded by the next probe's heading. */
+const otpPasteSection = (() => {
+  const heading = "### `otp-paste-lifecycle` — measured on 0.11.0 here";
+  const start = readme.indexOf(heading);
+  const end = readme.indexOf("\n### ", start + heading.length);
+  return start === -1 || end === -1 ? "" : readme.slice(start, end);
 })();
 
 /** A random source that always answers the same index. */
@@ -136,6 +145,19 @@ describe("the OTP paste fixture", () => {
         capability: "input",
       },
     ]);
+  });
+
+  it("reads the record it cites, not the gap it once owed", () => {
+    // The regression: after the capability record gained **Paste into a code
+    // field**, the section still said the record called the paste unverified
+    // and that it could move to measured — a reader was told the evidence did
+    // not exist. The section is prose about what the record says, so it must
+    // cite the row and not retract it. The Markdown is wrapped, so the phrase
+    // is read from one line of text rather than from the file's line breaks.
+    const prose = otpPasteSection.replace(/\s+/g, " ");
+    expect(prose).toContain("Paste into a code field");
+    expect(prose).not.toContain("unverified");
+    expect(prose).not.toContain("can move");
   });
 
   it("documents the probe and prints the check count it asserts", () => {

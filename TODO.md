@@ -692,11 +692,13 @@ a workaround for two live sessions sharing one worktree; see
       both bounds, a width outside the bounds, both ends, the caller's step) and
       the key guard's negative set; `src/live/split-pane.test.ts` (3 cases) holds
       the README's count to the assertions plus the paint reads and the source to
-      the runtime's key names. Directions measured: dropping `onKeyDown` fails
-      `an arrow key narrows the pane by one step` (`expected "split=504", got
-      "split=520"`), and making the arrows step by 0 fails the same check;
-      restored, `--only split-pane-lifecycle` 1/1 green (29 checks). The
-      components Tier 4 row now records the contract the shipped component owes.
+      the runtime's key names. Directions measured: dropping the key handler's
+      `resize` call fails `an arrow key narrows the pane by one step` (`expected
+      "split=504", got "split=520"`), and an unclamped right step fails `an arrow
+      held at the maximum clamps` (`expected "split=520", got "split=536"`) —
+      exit `1` each; restored, `--only split-pane-lifecycle` 1/1 green (29 checks,
+      5.6 s). The components Tier 4 row now records the contract the shipped
+      component owes.
 
 `[x]` Hold **`Pixels.hexToRgba` to the whole value, not its prefix** — the
       documented contract is "a hex colour, or `null` when malformed", and the

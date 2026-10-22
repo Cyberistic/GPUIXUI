@@ -7862,6 +7862,105 @@ const splitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
 
     yield* ctx.host.capture("split-resized");
+
+    // The keyboard half. A divider reachable only by pointer is not operable,
+    // and the ring is the cue that tells a keyboard reader where the keys go.
+    const ring = yield* ctx.expectSome(
+      "the theme names a ring colour",
+      Option.fromNullishOr(Pixels.hexToRgba(palettes.dark.colors.ring)),
+    );
+    yield* ctx.host.capture("split-rest");
+    yield* ctx.expectEqual(
+      "a pressed divider paints no keyboard ring",
+      yield* paintedPixels(ctx, "split-rest", ring),
+      0,
+    );
+
+    yield* ctx.host.key("tab");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Tab puts the keyboard on the divider",
+      yield* focusedAfterPaint(ctx),
+      "split-divider",
+    );
+    yield* ctx.expectEqual(
+      "reaching the divider with a key resizes nothing",
+      yield* ctx.host.text("split-readout"),
+      "split=520",
+    );
+    yield* ctx.host.capture("split-focused");
+    yield* ctx.expectEqual(
+      "the focused divider paints the keyboard ring",
+      (yield* paintedPixels(ctx, "split-focused", ring)) > 0,
+      true,
+    );
+
+    yield* ctx.host.key("left");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow key narrows the pane by one step",
+      yield* ctx.host.text("split-readout"),
+      "split=504",
+    );
+    const narrowed = yield* paintedBox(ctx, "split-pane-a");
+    yield* ctx.expectNear(
+      "the painted pane follows a key resize",
+      narrowed.width,
+      504,
+      1,
+    );
+    const narrowedDivider = yield* paintedBox(ctx, "split-divider");
+    yield* ctx.expectNear(
+      "the divider follows the key resize",
+      narrowedDivider.x,
+      narrowed.x + narrowed.width,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the divider keeps the focus after a key resize",
+      yield* focusedAfterPaint(ctx),
+      "split-divider",
+    );
+
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the opposite arrow widens it back",
+      yield* ctx.host.text("split-readout"),
+      "split=520",
+    );
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow held at the maximum clamps",
+      yield* ctx.host.text("split-readout"),
+      "split=520",
+    );
+
+    yield* ctx.host.key("home");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Home jumps to the caller's minimum",
+      yield* ctx.host.text("split-readout"),
+      "split=80",
+    );
+    const collapsed = yield* paintedBox(ctx, "split-pane-a");
+    yield* ctx.expectNear(
+      "the painted pane is the minimum Home named",
+      collapsed.width,
+      80,
+      1,
+    );
+
+    yield* ctx.host.key("end");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "End jumps to the caller's maximum",
+      yield* ctx.host.text("split-readout"),
+      "split=520",
+    );
+
+    yield* ctx.host.capture("split-keyboard");
   });
 
 /** The virtual list probe's row height and count, and its viewport. */

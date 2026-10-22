@@ -1805,7 +1805,7 @@ Evidence: `.artifacts/live/message-scroller-end.png`,
 The Tier 4 resize interaction in a real window. The split is the playground's
 `SplitPane` — the fixture the headless `panel-resize`, `docking-nested` and
 `workspace-tab-drag` scenarios drive — at 320px inside a 500px container, with
-`min=80` and `max=520`.
+`min=80`, `max=520` and a 16px keyboard step.
 
 | Step | Check |
 | ---- | ----- |
@@ -1815,17 +1815,37 @@ The Tier 4 resize interaction in a real window. The split is the playground's
 | drag `-320` | clamps at the 80px minimum |
 | drag `+600` | clamps at the caller's 520px maximum |
 | drag **pane A** itself `+40` | nothing resizes: only the divider is a handle |
+| the frame after the drags | the divider paints **no** keyboard ring: a pointer press focuses it without the `focusVisible` outline |
+| `Tab` | the divider holds the focus, the split stays at 520, and the divider paints the theme's `ring` outline — a divider a keyboard can reach is also one a keyboard can see |
+| `left` | `split=504`; the painted pane is 504px, the divider's `x` is the painted pane's right edge, and the focus stays on the divider |
+| `right`, then `right` again | 520, then 520: the arrow moves one `step` and clamps at the maximum instead of crossing it |
+| `Home` | `split=80`, the painted pane is the 80px minimum |
+| `End` | `split=520`, the caller's maximum |
 
 Every drag stays inside the window on purpose: a drag that leaves the frame
 would measure the OS's pointer delivery as well as the split.
 
-12 checks. The window found the defect this probe now guards: the press was
-React state, and a window delivers the press and all eight moves before React
-commits the press's render, so the first move read no press and the pane never
-followed. `SplitPane` holds the press in a ref now — the same finding as
-`drag-between-panes`. Negative control measured: reverting the press to state
-fails `a drag grows the pane by its travel` with the readout still `split=320`
-(exit `1`). Evidence: `.artifacts/live/split-resized.png`.
+29 checks, `--only split-pane-lifecycle`, green on 0.11.0 (5.6 s). The window
+found the defect this probe now guards: the press was React state, and a window
+delivers the press and all eight moves before React commits the press's render,
+so the first move read no press and the pane never followed. `SplitPane` holds
+the press in a ref now — the same finding as `drag-between-panes`. Negative
+control measured: reverting the press to state fails `a drag grows the pane by
+its travel` with the readout still `split=320` (exit `1`). Evidence:
+`.artifacts/live/split-resized.png`, `.artifacts/live/split-keyboard.png`.
+
+The keyboard half is the other control contract, and it is the one a library
+must not leave to the app: the divider is a **tab stop** with
+`role="separator"`, its keys are the runtime's own names (`left`, `right`,
+`home`, `end` — not the DOM's `ArrowLeft`), and it declares
+`keyboardFocusRing` at rest so the runtime paints the ring when the traversal
+arrives. It announces `aria-valuetext` (`"320 pixels"`) because 0.11.0 has no
+`aria-valuenow` and no `aria-orientation`, so the vertical/horizontal direction
+is not published. The arrows clamp through the same `nextSize` the pointer
+uses; Home/End name the caller's bounds. Negative controls measured, each exit
+`1`: dropping the key handler's `resize` call leaves `split=520` on `left`
+(`expected "split=504"`), and an unclamped right step crosses the maximum on the
+second `right` (`expected "split=520", got "split=536"`).
 
 The `moves=8` row is the pointer-capture measurement: the element that took the
 press keeps receiving moves after the pointer leaves its box, which is what a
@@ -1975,13 +1995,12 @@ drops the rest is broken on the only path most readers use. The pinned runtime
 publishes **no paste event** — `HostProps` has no `onPaste` — so
 `packages/primitives`' `OTPField` states the other half in its header: a pasted
 code arrives as one multi-character `onChange`, and `applyOtpInput` fills it
-forward from the cell that received it. The capability record still says the
-field's paste is **unverified** in a window, because `clipboard-lifecycle`
-measured a plain `<input>` and no scenario had mounted the code field. This probe
-closes that gap with the same platform keys: it copies a marker from a shipped
-`Input` (`cmd-a`, `cmd-c`), pastes it into a shipped six-cell `OTPField`
-(`cmd-v`) and reads the value the caller receives and the cells the field paints
-through the package's own `otpCells`.
+forward from the cell that received it. The capability record's **Paste into a
+code field** row carries the window measurement this probe produced; nothing here
+is a claim the record still owes. With the same platform keys the probe copies a
+marker from a shipped `Input` (`cmd-a`, `cmd-c`), pastes it into a shipped
+six-cell `OTPField` (`cmd-v`) and reads the value the caller receives and the
+cells the field paints through the package's own `otpCells`.
 
 The two markers are unique to the mount. The nine-character one is generated so
 its first character differs from the character in the third cell it will be
@@ -2010,11 +2029,10 @@ The consequence: the field's header and `core/otp.ts` describe the paste path
 correctly on this host — the runtime delivers the clipboard as one
 multi-character `onChange`, the cells fill forward from the one that took it, a
 longer paste truncates at six, and replacing a finished code does not fire
-`onComplete` twice. The capability record's `OTPField` paste line can move from
-**unverified** to measured (the docs-site half), and no application has to
-handle paste itself. The probe also surfaced a React warning in the field's
-default cell list (`Each child in a list should have a unique "key" prop`),
-recorded as an interlock for the package that owns the field.
+`onComplete` twice. The capability record carries that measured path, and no
+application has to handle paste itself. The probe also surfaced a React warning
+in the field's default cell list (`Each child in a list should have a unique
+"key" prop`), recorded as an interlock for the package that owns the field.
 
 ### `otp-keys-lifecycle` — measured on 0.11.0 here
 
