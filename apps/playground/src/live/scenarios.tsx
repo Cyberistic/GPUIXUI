@@ -523,6 +523,21 @@ import {
   TRUNCATION_PROSE,
   TRUNCATION_WIDTH,
 } from "./truncation.js";
+import {
+  BOX_PAINT_BORDER,
+  BOX_PAINT_BORDER_WIDTH,
+  BOX_PAINT_FILL,
+  BOX_PAINT_HEIGHT,
+  BOX_PAINT_IDS,
+  BOX_PAINT_STOPS,
+  BOX_PAINT_WIDTH,
+  pointAcross,
+  colourAt,
+  countPaint,
+  differs,
+  isColour,
+  type PaintPoint,
+} from "./box-paint.js";
 
 /** Long enough for one paint after an input reaches the window. */
 const SETTLE = Duration.millis(40);
@@ -17278,6 +17293,221 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * A box's own edges and fill.
+ *
+ * The library's `Box` page tells a consumer to pass a dashed border, a per-side
+ * width and a per-corner radius through `style`, and the capability record calls
+ * a two-stop gradient supported; every one of them is declared in `StyleDesc`
+ * and none had been painted in a window. A dashed edge is proved against the
+ * solid edge of the same geometry, because "fewer border pixels than a solid
+ * band" is a measurement where a dash pattern would be a guess.
+ */
+const BoxPaintProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const page = {
+    width: window.width,
+    height: window.height,
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.background,
+    display: "flex" as const,
+    flexDirection: "column" as const,
+    gap: theme.spacing.xl,
+  };
+  const row = {
+    display: "flex" as const,
+    flexDirection: "row" as const,
+    gap: theme.spacing.xl,
+  };
+  const bordered = {
+    width: BOX_PAINT_WIDTH,
+    height: BOX_PAINT_HEIGHT,
+    borderWidth: BOX_PAINT_BORDER_WIDTH,
+    borderColor: BOX_PAINT_BORDER,
+  };
+  return (
+    <div testId="boxpaint-probe" style={page}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A box&apos;s own edges and fill: a dashed border covers less of its band
+        than a solid one, a per-corner radius and a per-side width paint where
+        they are asked, and a two-stop gradient grades across the box.
+      </text>
+      <div style={row}>
+        <div
+          testId={BOX_PAINT_IDS.solid}
+          style={{ ...bordered, borderStyle: "solid" }}
+        />
+        <div
+          testId={BOX_PAINT_IDS.dashed}
+          style={{ ...bordered, borderStyle: "dashed" }}
+        />
+      </div>
+      <div style={row}>
+        <div
+          testId={BOX_PAINT_IDS.corners}
+          style={{
+            width: 80,
+            height: 80,
+            backgroundColor: BOX_PAINT_FILL,
+            borderTopLeftRadius: 24,
+          }}
+        />
+        <div
+          testId={BOX_PAINT_IDS.sides}
+          style={{
+            width: 80,
+            height: 80,
+            backgroundColor: BOX_PAINT_FILL,
+            borderTopWidth: 8,
+            borderColor: BOX_PAINT_BORDER,
+          }}
+        />
+      </div>
+      <div
+        testId={BOX_PAINT_IDS.gradient}
+        style={{
+          width: 240,
+          height: 60,
+          background: {
+            type: "linear-gradient",
+            angle: 90,
+            stops: [
+              { color: BOX_PAINT_STOPS[0], position: 0 },
+              { color: BOX_PAINT_STOPS[1], position: 1 },
+            ],
+          },
+        }}
+      />
+    </div>
+  );
+};
+
+const boxPaintSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(BOX_PAINT_IDS.solid);
+    const window = yield* ctx.host.windowSize();
+    yield* ctx.host.capture("box-paint");
+    const frame = yield* ctx.host.pixels("box-paint");
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+    const page = palettes.dark.colors.background;
+
+    const boxOf = (id: string) =>
+      Effect.gen(function* () {
+        return yield* ctx.expectSome(
+          `${id} reports its painted box`,
+          Option.fromNullishOr(yield* ctx.host.bounds(id)),
+        );
+      });
+
+    /** The colour the capture paints at a logical point. */
+    const at = (point: PaintPoint) =>
+      ctx.expectSome(
+        "the sampled point is inside the capture",
+        colourAt(frame, point, scale),
+      );
+
+    // 1. A solid edge and a dashed one of the same geometry.
+    const solid = yield* boxOf(BOX_PAINT_IDS.solid);
+    const dashed = yield* boxOf(BOX_PAINT_IDS.dashed);
+    const solidPaint = yield* ctx.expectSome(
+      "the solid box is in the capture",
+      countPaint(frame, solid, scale, BOX_PAINT_BORDER),
+    );
+    const dashedPaint = yield* ctx.expectSome(
+      "the dashed box is in the capture",
+      countPaint(frame, dashed, scale, BOX_PAINT_BORDER),
+    );
+    yield* ctx.expectEqual(
+      "a solid edge paints its border colour",
+      solidPaint > 0,
+      true,
+    );
+    yield* ctx.expectEqual("a dashed edge paints", dashedPaint > 0, true);
+    yield* ctx.expectEqual(
+      "a dashed edge covers less of its band than the solid edge of the same geometry",
+      dashedPaint * 10 < solidPaint * 9,
+      true,
+    );
+
+    // 2. One rounded corner, the other square.
+    const corners = yield* boxOf(BOX_PAINT_IDS.corners);
+    const cut = yield* at({ x: corners.x + 2, y: corners.y + 2 });
+    const square = yield* at({
+      x: corners.x + corners.width - 2,
+      y: corners.y + 2,
+    });
+    yield* ctx.expectEqual(
+      "a per-corner radius cuts its own corner to the page",
+      isColour(cut, page),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the corner no radius names keeps its fill",
+      isColour(square, BOX_PAINT_FILL),
+      true,
+    );
+
+    // 3. A per-side width paints only the side it names.
+    const sides = yield* boxOf(BOX_PAINT_IDS.sides);
+    const topEdge = yield* at({
+      x: sides.x + sides.width / 2,
+      y: sides.y + 4,
+    });
+    const underEdge = yield* at({
+      x: sides.x + sides.width / 2,
+      y: sides.y + 12,
+    });
+    const leftEdge = yield* at({
+      x: sides.x + 4,
+      y: sides.y + sides.height / 2,
+    });
+    yield* ctx.expectEqual(
+      "a named top width paints the top edge",
+      isColour(topEdge, BOX_PAINT_BORDER),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the fill starts under the top edge",
+      isColour(underEdge, BOX_PAINT_FILL),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the side with no width paints no border",
+      isColour(leftEdge, BOX_PAINT_FILL),
+      true,
+    );
+
+    // 4. A two-stop gradient grades across its box.
+    const gradient = yield* boxOf(BOX_PAINT_IDS.gradient);
+    const middle = gradient.y + gradient.height / 2;
+    const left = yield* at(pointAcross(gradient, 0.1, middle));
+    const right = yield* at(pointAcross(gradient, 0.9, middle));
+    yield* ctx.expectEqual(
+      "the gradient paints its first stop away from the page",
+      isColour(left, page),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "the two ends of the gradient are different colours",
+      differs(left, right),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the gradient paints away from the page at its far end",
+      isColour(right, page),
+      false,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -17590,5 +17820,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "text-truncation",
     view: () => <TruncationProbe />,
     steps: truncationSteps,
+  },
+  "box-paint": {
+    id: "box-paint",
+    view: () => <BoxPaintProbe />,
+    steps: boxPaintSteps,
   },
 };

@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-62 probes a real window can prove, of which fifteen mount shipped
+63 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -3503,6 +3503,47 @@ both marks are supported, `lineClamp` is not. The library's own
 `truncate({ maxLines })` spec still writes `lineClamp`, which is the interlock
 row in `TODO.md`.
 
+### `box-paint` — measured on 0.11.0 here
+
+**A box's own edges and fill.** The `Box` page tells a consumer to pass a dashed
+border, a per-side width and a per-corner radius through `style`, and the
+capability record calls a two-stop gradient supported — all of them declared in
+`StyleDesc`, none of them painted in a window. The probe mounts one box per
+property and reads the frame.
+
+| State | Measured |
+| ----- | -------- |
+| a solid 2-point border round a 160×60 box | **3 456** pixels of the border colour |
+| the same geometry with `borderStyle: "dashed"` | **2 240** pixels — **65%** of the solid edge — in **27** dashes of 8 device pixels (4 points) with a 2-point gap, so the style is a real dash and not a solid edge with softer corners |
+| `borderTopLeftRadius: 24` alone on a filled 80×80 box | the point 2 points in from the top-left is the **page** and the matching point at the top-right is the **fill** — one corner is cut, the others are not |
+| `borderTopWidth: 8` with the same fill | the top **8** points are the border colour, the fill starts directly under them, and the left edge (4 points in) is the fill: the side with no width paints no border |
+| a two-stop gradient (`#FF3B30` → `#0A84FF`, 90°) | the 10% sample is **`231,67,69`**, the 90% sample **`34,124,234`**, and neither is the page (`17,20,26`) — the fill grades across the box |
+
+16 checks, `--only box-paint`, green on 0.11.0 (~0.4 s). Fixture:
+`src/live/box-paint.ts` — the ids, the two stop colours, `colourAt`,
+`countPaint`, `differs`/`isColour` with an 8-level tolerance for an antialiased
+sample, and `pointAcross`; `box-paint.test.ts` (10 cases) holds the reader to a
+drawn frame (a 4×3 block of one colour on white), refuses an absent region and an
+unreadable colour rather than reading `0`, and holds this section's heading,
+count and the three properties the fixture asks for.
+
+What it settles:
+
+1. **A dashed border is real, and it costs a third of the edge.** A drop zone or
+   an empty state can draw one and expect 65% of the solid edge's paint; a
+   component that measured border thickness by counting pixels must not read a
+   dash as a half-width border.
+2. **Per-corner radii and per-side widths are independent.** One corner can be
+   round while the rest are square, and a top border paints without a left one,
+   so a table header rule or a tab's underline needs no full border.
+3. **A gradient is gradeable, not a flat fallback.** Two stops at 90° painted a
+   left colour and a right colour with neither stop falling back to the page, so
+   a brand surface or a chart band can use the two-stop form the record allows —
+   and only that form, since the tuple holds two stops.
+
+The capability record's **Two-stop linear gradients** and **Per-corner radii,
+per-side border widths, a two-value `borderStyle`** rows now cite this probe.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -3716,8 +3757,8 @@ narrower. Each deviation is deliberate and measured:
   paint, which records all three measured shapes and the waits that replaced
   them. The full live suite is the release gate, and this line is its result.
   Measured alone since then: `inspector-lifecycle`,
-  `otp-paste-lifecycle`, `otp-keys-lifecycle` and `text-truncation` (four
-  probes, each run alone).
+  `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation` and `box-paint`
+  (five probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

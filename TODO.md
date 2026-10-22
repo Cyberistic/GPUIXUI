@@ -673,7 +673,30 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 95/95
+`[x]` `[██████████]` 96/96
+
+`[x]` Measure **a box's own edges and fill** — the `Box` page tells a consumer to
+      pass a dashed border, a per-side width and a per-corner radius through
+      `style`, and the capability record calls a two-stop gradient supported; all
+      are declared in `StyleDesc` and none was painted in a window. The
+      `box-paint` live probe mounts one box per property and reads the frame: a
+      2-point solid border round a 160×60 box paints **3 456** border pixels and
+      the same geometry dashed paints **2 240** — **65%**, in **27** dashes of 4
+      points with a 2-point gap; `borderTopLeftRadius: 24` cuts that corner to
+      the page while the top-right keeps its fill; `borderTopWidth: 8` paints 8
+      points of top edge and no left border; and a `#FF3B30` → `#0A84FF` gradient
+      at 90° samples `231,67,69` at 10% and `34,124,234` at 90%, neither the
+      page. 16 checks, `--only box-paint`, green on 0.11.0 (~0.4 s). Fixture:
+      `src/live/box-paint.ts` + `box-paint.test.ts` (10 cases: the reader held to
+      a drawn frame, an absent region and an unreadable colour refused rather
+      than read as `0`, and the README's count and the three properties held to
+      the fixture). One negative control measured, exit `1`, restored green:
+      painting the second box solid fails `a dashed edge covers less of its band
+      than the solid edge of the same geometry`. Evidence:
+      `apps/playground/README.md` §`box-paint`,
+      `.artifacts/live/box-paint.png`; the capability record's **Two-stop linear
+      gradients** and **Per-corner radii, per-side border widths, a two-value
+      `borderStyle`** rows now cite the probe.
 
 `[x]` Measure **what a line that does not fit paints** — every table cell, tab
       label, tree row and list title keeps its run on one line, and the capability

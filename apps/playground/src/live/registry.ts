@@ -408,6 +408,12 @@ export const liveRegistry = [
       "Content: a clipped run stops at its box and slices the last glyph, an ellipsis replaces the tail, ellipsis-start keeps it, a clamp cuts a paragraph, and an unclipped box lets the run escape",
     capability: "content",
   },
+  {
+    id: "box-paint",
+    title:
+      "Content: a dashed border covers less of its band than a solid one, a per-corner radius and a per-side width paint where they are asked, and a two-stop gradient grades across its box",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
