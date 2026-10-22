@@ -50,14 +50,16 @@ mounts.
 
 | `variant` | Recipe | Paints |
 | --------- | ------ | ------ |
-| `outline` (default) | `border border-input` | a 1px edge in the **`input`** role, not the `border` role |
+| `outline` (default) | `border border-input` | a 1px edge in the **`border`** role on the `card` fill |
 | `elevated` | `shadow-sm` | `elevation.sm` — a 1px offset and a 2px blur, tinted by the `shadow` role |
 | `plain` | — | the `card` fill only, for a card inside another surface |
 
-The `outline` edge borrows the field fill role: in the base light theme `input`
-and `card` are the same white, so the card is drawn by its fill against the page
-rather than by a darker rule. A theme that wants a visible edge repaints
-`input`, not `border`.
+`border-input` is shadcn's name for its border, and `@gpuixui/tw` resolves it to
+the **`border` role** — not to `input`. In this library `input` names the field
+*fill*, and in the base light theme that fill is the same white as `card`, so a
+page that read the class name literally taught an edge the renderer never paints
+(`border` is `#E1E5EC` against the white card). A theme that wants a different
+outline repaints `border`.
 
 `elevated` is the one recipe in the library that paints its lift: it carries no
 ring, so the last shadow utility is the elevation. The overlay surfaces order
@@ -118,7 +120,7 @@ through, recorded in ADR 0006.
 | surface | the `card` fill |
 | title | `foreground`, at the fixed `base` step (16/24, weight 600) |
 | description, body rows | `mutedForeground`, at the fixed `sm` step (14/20) |
-| outline and footer edge | the `input` role |
+| outline and footer edge | the `border` role (the recipe's `border-input`, remapped by `@gpuixui/tw`) |
 | elevated lift | `elevation.sm`, tinted by the `shadow` role |
 | corners | the registry's 8px `lg` step |
 

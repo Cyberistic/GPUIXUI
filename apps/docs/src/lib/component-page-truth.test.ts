@@ -436,15 +436,42 @@ describe("the curated component pages", () => {
     expect(seam).toMatch(/\*\*default\*\* registry/);
 
     const text = body(card).replace(/\s+/g, " ");
-    expect(text).toContain("`input`");
+    expect(text).toContain("`border`");
     expect(text).toContain(`\`elevation.${level}\``);
     expect(text).toContain(`${shadow.offsetY}px offset`);
     expect(text).toContain(`${shadow.blurRadius}px blur`);
     expect(text).toContain(`${radius ?? ""}px`);
     expect(text).toContain("default registry");
 
+    // The edge's role is the compiler's, not the class name's: the recipe says
+    // `border-input` (shadcn's name for its border) and `@gpuixui/tw` resolves
+    // that to this library's `border` role, because `input` here is the field
+    // fill. A page that read the class literally taught a role the renderer
+    // never paints — `input` is the card's own white in the base light theme.
+    expect(utilities).toContain(
+      'if (name === "border-input") return { borderColor: theme.colors.border };',
+    );
+    expect(lightTheme.colors.input).not.toBe(lightTheme.colors.border);
+
+    // The Variants and Theming cells are read directly, not through the page's
+    // prose: bold markers would hide a retracted "**`input`** role" from a
+    // `not.toContain("in the `input` role")` check.
+    const outlineRow =
+      /\| `outline` \(default\) \| `border border-input` \| ([^|\n]+) \|/.exec(
+        body(card),
+      )?.[1] ?? "";
+    const themingRow =
+      /\| outline and footer edge \| ([^|\n]+) \|/.exec(body(card))?.[1] ?? "";
+    expect(outlineRow).toContain("`border`");
+    expect(outlineRow).not.toContain("`input`");
+    expect(themingRow).toContain("`border`");
+    expect(themingRow).not.toContain("`input`");
+    expect(text).toContain("`border-input`");
+    expect(text).toContain("`border` role");
+
     // The retracted claims: the package page taught a role and a lift the
     // recipe does not paint.
+    expect(text).not.toContain("in the `input` role");
     expect(text).not.toContain("elevation.md");
     expect(text).not.toContain("radius.lg");
   });
