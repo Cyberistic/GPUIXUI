@@ -2,10 +2,19 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | complete — every phase landed 2026-10-22; retained as the citation record |
 | Phase | D — after the core component tiers |
 | Feeds | the `motion` workstream and the components inventory |
 | Depends on | `@gpuixui/motion`, `@gpuixui/tw`, the runtime capability matrix |
+
+Phase 0 and every catalogue phase have landed: each row in `TODO.md` →
+*Animated primitives* and `COMPONENTS.md` → *Animated primitives* names the
+component, its proof and its limits, and the entries that need `transform` or a
+filter are declined there with measured evidence. The file is kept because
+component sources cite its §3 rule ("never animate `transform`; a scale or
+rotate degrades to fade + offset") and §2's catalogue; deleting it would turn
+those citations into dead ends. New motion work still starts from `TODO.md`, not
+from this plan.
 
 The catalogue below is a **gap list of generic animated primitives** worth
 having in a GPUix component library. Every primitive is designed from scratch

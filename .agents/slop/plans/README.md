@@ -155,7 +155,7 @@ component call sites adopt the outline in their own workstream.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [600](./600-animated-primitives.md) | Animated primitives: gap analysis and phases | D | motion, tw, runtime | planned |
+| [600](./600-animated-primitives.md) | Animated primitives: gap analysis and phases | D | motion, tw, runtime | landed — every phase is recorded in `TODO.md` → Animated primitives; the file stays as the citation record its sources point at |
 
 ### Data workstream
 
