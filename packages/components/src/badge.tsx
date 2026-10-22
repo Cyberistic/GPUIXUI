@@ -2,12 +2,15 @@
  * Badge: a short status label.
  *
  * Non-interactive by design — a badge is never a button and nothing inside one
- * is clickable. Colour comes from the theme's semantic roles, and the four
- * status variants from the soft-tone palette Alert and Toast share, so a custom
- * theme restyles every badge with no code change. The resting appearance is a
- * Tailwind recipe (`BADGE_*`), compiled against shadcn's fixed metrics; the
- * caller's `className` is joined after the recipe and its `style` is merged
- * last.
+ * is clickable, so the pill also stays out of the pointer: a badge paints a
+ * fill, and a filled child is the boundary the hit test stops counting at, so
+ * a status pill in a selectable row would swallow the row's press
+ * (`list-row-press`). Colour comes from the theme's semantic roles, and the
+ * four status variants from the soft-tone palette Alert and Toast share, so a
+ * custom theme restyles every badge with no code change. The resting
+ * appearance is a Tailwind recipe (`BADGE_*`), compiled against shadcn's fixed
+ * metrics; the caller's `className` is joined after the recipe and its `style`
+ * is merged last, so an interactive badge can opt back into the pointer.
  */
 
 import type { Props } from "@gpuix/react";
@@ -52,9 +55,19 @@ export const Badge = ({
     <div
       {...rest}
       style={mergeStyles(
-        recipeStyle(
-          cn(BADGE_BASE, BADGE_SIZES[size], BADGE_VARIANTS[variant], className),
-          theme,
+        mergeStyles(
+          recipeStyle(
+            cn(
+              BADGE_BASE,
+              BADGE_SIZES[size],
+              BADGE_VARIANTS[variant],
+              className,
+            ),
+            theme,
+          ),
+          // The pill takes no pointer input: its fill is the boundary a press
+          // stops at, and the caller's `style` below can hand it back.
+          { pointerEvents: "none" },
         ),
         style,
       )}

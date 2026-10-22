@@ -147,6 +147,43 @@ describe("Badge", () => {
     badge.unmount();
   });
 
+  it("keeps the pill out of the pointer, and lets a consumer opt back in", () => {
+    // The bug this guards: a badge paints a fill, and a filled child is the
+    // boundary the hit test stops counting at, so the example's trailing badge
+    // swallowed the press its row never heard (`list-row-press` measured
+    // `selected=none`; the same badge with `pointerEvents: "none"` selects).
+    Arr.forEach(["dark", "light"] as const, (mode) => {
+      const page = renderComponent(
+        <List testId="list" selectionMode="single">
+          <ListItem
+            testId="row"
+            value="beta"
+            trailing={<Badge testId="badge">Beta</Badge>}
+          >
+            <ListItemTitle>Beta</ListItemTitle>
+          </ListItem>
+        </List>,
+        mode,
+      );
+
+      try {
+        expect(styleOf(page).pointerEvents).toBe("none");
+      } finally {
+        page.unmount();
+      }
+    });
+
+    const interactive = renderComponent(
+      <Badge testId="badge" style={{ pointerEvents: "auto" }} />,
+    );
+
+    try {
+      expect(styleOf(interactive).pointerEvents).toBe("auto");
+    } finally {
+      interactive.unmount();
+    }
+  });
+
   it("rounds every variant into a pill", () => {
     const variants: ReadonlyArray<BadgeVariant> = [
       "neutral",

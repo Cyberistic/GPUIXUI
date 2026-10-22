@@ -5,7 +5,11 @@ description: A short status label on a pill.
 
 `Badge` labels something — a state, a count, a category. It is **not a control**:
 a badge is never clickable, never focusable and never a button. If it should do
-something when pressed, use a `Button` and give it the badge's styling.
+something when pressed, use a `Button` and give it the badge's styling. The pill
+also stays **out of the pointer** (`pointerEvents: "none"`): it paints a fill,
+and a filled child is the boundary the runtime's hit test stops counting at, so
+a status badge in a selectable row would otherwise swallow the row's press. A
+caller's `style` merges last, so an interactive badge can hand the pointer back.
 
 ## Usage
 
@@ -91,6 +95,11 @@ boundary at rest and none under the pointer. It paints `borderStrong`, which
 
 ## Limitations
 
+- Out of the pointer by design: the pill declares `pointerEvents: "none"`, so
+  the press on a status badge in a selectable row belongs to the row (the live
+  `list-row-press` probe measured `selected=none` with the shipped pill and the
+  row selecting once it opted out). A caller's `style` merges last and can turn
+  the pointer back on.
 - No dismiss, no icon slot and no count animation. A badge that needs a close
   affordance is a chip, which is not built yet.
 - The docs site cannot render this component live — it is a GPUix host tree, not
@@ -98,14 +107,15 @@ boundary at rest and none under the pointer. It paints `borderStrong`, which
 
 ## Verification
 
-`src/behaviour/badge.test.tsx` runs in the real GPUix renderer (8 tests): the
+`src/behaviour/badge.test.tsx` runs in the real GPUix renderer (9 tests): the
 label renders as text, each non-status variant paints from its own theme role,
 each status variant paints from the shared tone palette, a status fill changes
 with the theme (so it cannot be a constant), each size's measured height matches
 its type step plus padding, every variant is pill-rounded, a consumer `style`
-wins, and an outline badge's edge clears the boundary floor on the hover and
+wins, an outline badge's edge clears the boundary floor on the hover and
 selected washes of the row it sits in — with the decorative role's ~1.00:1
-measured as the premise.
+measured as the premise — and the pill declares `pointerEvents: "none"` in both
+themes while a consumer's `style` can opt back in.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
