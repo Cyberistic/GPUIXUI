@@ -1,14 +1,15 @@
 # 160 — Retire the components package's local Button stand-in
 
 **Owner:** components · **Size:** multi-phase (≈2 sessions) · **Status:**
-**blocked at Phase 2 on a primitives subpath** — R1/R2 pass, the primitives'
-`Button` now forwards the host props Phase 1 asked for, and both Phase-2 STOPs
-are closed (its `onActivate` carries the `EventPayload`; its `useTheme` reads
-`useThemePresence`, so a token-only tree renders it). The remaining gap is the
-**route**: importing `Button` from the primitives' root barrel loads every
-primitive — measured at 52 modules / 416 KiB against the `./hint` subpath's
-5 / 51 — so the plan waits on a `@gpuixui/primitives/button` subpath (row in
-`TODO.md` → Interlocks). See §Measured STOP — Phase 2, item 4.
+**blocked at Phase 2 on the disabled tab stop** — R1/R2 pass, the primitives'
+`Button` now forwards the host props Phase 1 asked for, `onActivate` carries the
+`EventPayload`, `useTheme` reads `useThemePresence`, and `@gpuixui/primitives/button`
+is a declared export (measured 159 own modules / 999 KiB for the entry, 5 modules
+/ 49 KiB for the subpath). The adapter's remaining gap is one property:
+primitives writes `tabIndex={undefined}` for a disabled action while three
+trigger suites and the Tier 2 rows read `-1`, and `ActionHostProps` omits
+`tabIndex`, so a caller cannot supply it. See §Measured STOP — Phase 2, the
+disabled tab stop.
 
 ## Why
 
@@ -175,6 +176,31 @@ Interlocks. Do not import the barrel and do not copy `renderButton`.
 Two workarounds were rejected rather than shipped: wrapping each adapter instance
 in its own `ThemeProvider`, and reaching for primitives' unexported
 `renderButton`. Both hide a seam the next consumer would hit.
+
+## Measured STOP — Phase 2, the disabled tab stop (2026-10-22)
+
+Item 4 is closed: `@gpuixui/primitives/button` is a declared export
+(`src/button.ts`, guarded by `src/button-entry.test.ts`) and this plan's adapter
+was written against it. The suites then caught one more primitive-owned delta,
+measured in this package's own renderer:
+
+| Painter | Disabled `Button` `tabIndex` |
+| ------- | ---------------------------- |
+| the stand-in (`src/internal/button.tsx`) | **`-1`** |
+| `@gpuixui/primitives`' `Button` | **`undefined`** |
+
+`renderButton` writes `tabIndex={disabled === true ? undefined : 0}` and
+`ActionHostProps` omits `tabIndex`, so a caller cannot express the stand-in's
+value. Three behaviour cases read it as `-1` — `pagination.test.tsx`'s Prev and
+Next edges, `navigation-menu.test.tsx`'s disabled trigger and
+`dropdown-menu.test.tsx`'s disabled trigger — and the Tier 2 rows call the
+trigger's stop out of the tab order by that property, so this is the plan's STOP
+condition "a call site needs a host prop primitives' `Button` cannot express".
+
+The unblocking change belongs to `@gpuixui/primitives`: let a disabled action
+paint the `-1` it always has (a one-line writer, plus its own case) or publish a
+prop that names the stop. Filed in `TODO.md` → Interlocks; Phase 2 does not start
+until it lands. Do not relax the three cases and do not wrap the action.
 
 ## Phase 0 — baseline (10 min)
 
