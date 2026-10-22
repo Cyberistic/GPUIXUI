@@ -7,7 +7,7 @@
  */
 
 import type { ThemeColors } from "./color.js";
-import { opaqueRgb } from "./hex.js";
+import { opaqueRgb } from "./measure.js";
 import type { ThemeContrast } from "./theme.js";
 
 const channel = (rgb: string, at: number): number => {
@@ -15,7 +15,7 @@ const channel = (rgb: string, at: number): number => {
   return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
 };
 
-/** WCAG 2.1 relative luminance of an opaque hex colour. */
+/** WCAG 2.1 relative luminance of an opaque colour. */
 const relativeLuminance = (color: string | undefined): number | undefined => {
   const rgb = color === undefined ? undefined : opaqueRgb(color);
   return rgb === undefined
@@ -26,17 +26,20 @@ const relativeLuminance = (color: string | undefined): number | undefined => {
 };
 
 /**
- * The WCAG 2.1 contrast ratio between two opaque hex colours: 1 for identical
+ * The WCAG 2.1 contrast ratio between two opaque colours: 1 for identical
  * colours, 21 for black on white.
  *
- * The measured dialect is hex in every length the runtime paints, with or
- * without the `#` — shorthand `#fff` is widened, because a hand-written brand
- * reaches for it, and an eight-digit value whose alpha byte is `FF` is the
- * opaque colour it is, because `alpha(color, 1)` produces that form. Returns
- * `undefined` when either value is not that dialect: a translucent colour's
+ * The measured dialect is the colour grammar the renderer paints minus the
+ * perceptual spaces: hex in every length the runtime paints, with or without the
+ * `#` — shorthand `#fff` is widened, because a hand-written brand reaches for
+ * it, and an eight-digit value whose alpha byte is `FF` is the opaque colour it
+ * is, because `alpha(color, 1)` produces that form — a CSS named colour, and an
+ * `rgb`/`hsl`/`hwb`/`hsv` function with an optional alpha channel. Returns
+ * `undefined` when either value is not one of those: a translucent colour's
  * contrast depends on the surface painted behind it, so a single ratio would be
- * a guess (composite it first if it needs measuring), and a named colour or
- * `hsl()` value paints without resolving to channels here. An absent role — a
+ * a guess (composite it first if it needs measuring), and a perceptual space
+ * (`lab`, `lch`, `oklab`, `oklch`), a relative colour or a channel expression
+ * resolves through a conversion this does not approximate. An absent role — a
  * theme restored from storage that predates it — is the same unmeasurable
  * answer rather than a crash.
  *

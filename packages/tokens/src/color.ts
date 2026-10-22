@@ -1,4 +1,4 @@
-import { measuredHex } from "./hex.js";
+import { colourFunctions, isNamedColour, measuredColour } from "./measure.js";
 
 /**
  * Raw colour ramps. Components must use {@link ThemeColors} roles instead;
@@ -455,54 +455,10 @@ const paintedHex =
   /^#?(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/;
 
 /**
- * The CSS named colours the runtime's parser knows, plus `transparent`. A theme
- * value may be a name, so the paint check has to know them: reading a name as an
- * unpaintable colour would fail a theme the renderer paints.
+ * The CSS named colours the runtime's parser knows live in `measure.ts` beside
+ * their channels, so the paint check and the measurement one cannot disagree
+ * about a name; the functional families come from the same module.
  */
-const namedColours = new Set(
-  (
-    "aliceblue antiquewhite aqua aquamarine azure beige bisque black " +
-    "blanchedalmond blue blueviolet brown burlywood cadetblue chartreuse " +
-    "chocolate coral cornflowerblue cornsilk crimson cyan darkblue " +
-    "darkcyan darkgoldenrod darkgray darkgreen darkgrey darkkhaki " +
-    "darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon " +
-    "darkseagreen darkslateblue darkslategray darkslategrey " +
-    "darkturquoise darkviolet deeppink deepskyblue dimgray dimgrey " +
-    "dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro " +
-    "ghostwhite gold goldenrod gray green greenyellow grey honeydew " +
-    "hotpink indianred indigo ivory khaki lavender lavenderblush " +
-    "lawngreen lemonchiffon lightblue lightcoral lightcyan " +
-    "lightgoldenrodyellow lightgray lightgreen lightgrey lightpink " +
-    "lightsalmon lightseagreen lightskyblue lightslategray " +
-    "lightslategrey lightsteelblue lightyellow lime limegreen linen " +
-    "magenta maroon mediumaquamarine mediumblue mediumorchid " +
-    "mediumpurple mediumseagreen mediumslateblue mediumspringgreen " +
-    "mediumturquoise mediumvioletred midnightblue mintcream mistyrose " +
-    "moccasin navajowhite navy oldlace olive olivedrab orange orangered " +
-    "orchid palegoldenrod palegreen paleturquoise palevioletred " +
-    "papayawhip peachpuff peru pink plum powderblue purple rebeccapurple " +
-    "red rosybrown royalblue saddlebrown salmon sandybrown seagreen " +
-    "seashell sienna silver skyblue slateblue slategray slategrey snow " +
-    "springgreen steelblue tan teal thistle tomato turquoise violet " +
-    "wheat white whitesmoke yellow yellowgreen transparent"
-  ).split(" "),
-);
-
-/** The functional colour families the runtime's parser reads. */
-const colourFunctions = new Set([
-  "rgb",
-  "rgba",
-  "hsl",
-  "hsla",
-  "hwb",
-  "hwba",
-  "hsv",
-  "hsva",
-  "lab",
-  "lch",
-  "oklab",
-  "oklch",
-]);
 
 /**
  * Whether a functional colour's argument list has the shape the parser reads:
@@ -614,7 +570,7 @@ export const isPaintableColor = (value: unknown): boolean => {
     return false;
   }
   const colour = value.trim();
-  if (paintedHex.test(colour) || namedColours.has(colour.toLowerCase())) {
+  if (paintedHex.test(colour) || isNamedColour(colour)) {
     return true;
   }
   const open = colour.indexOf("(");
@@ -633,26 +589,29 @@ export const isPaintableColor = (value: unknown): boolean => {
  *
  * `amount` is clamped to `0…1` and rounded to the nearest byte. A 6-digit
  * `#RRGGBB` gains an alpha byte; an 8-digit `#RRGGBBAA` has its alpha replaced,
- * and shorthand `#fff`/`#fff8` is widened first. A colour outside the measured
- * hex dialect is returned unchanged, so a value the renderer paints stays as it
- * was rather than becoming transparent — and so is a non-finite `amount`, which
- * has no alpha byte to produce and would otherwise emit a string the renderer
- * cannot parse.
+ * and shorthand `#fff`/`#fff8` is widened first. A colour the contracts measure
+ * in another form — a named colour, `rgb()`, `hsl()`, `hwb()`, `hsv()` — is
+ * resolved to its channels and returned in hex, so a brand written the way a
+ * design tool exports it still gets its derived states. A value no colour
+ * grammar reads is returned unchanged, so it stays as it was rather than
+ * becoming transparent — and so is a non-finite `amount`, which has no alpha
+ * byte to produce and would otherwise emit a string the renderer cannot parse.
  *
  * @example
  * ```ts
  * alpha("#2559D6", 0.3); // "#2559D64D"
  * alpha("#fff", 0.5); // "#FFFFFF80" — shorthand widens first
+ * alpha("rebeccapurple", 0.3); // "#6633994D"
  * ```
  */
 export function alpha(color: string, amount: number): string {
-  const measured = measuredHex(color);
-  if (measured === undefined || !Number.isFinite(amount)) {
+  const resolved = measuredColour(color);
+  if (resolved === undefined || !Number.isFinite(amount)) {
     return color;
   }
   const byte = Math.round(Math.min(Math.max(amount, 0), 1) * 255);
   const hex = byte.toString(16).padStart(2, "0");
-  return `${measured.rgb}${hex}`.toUpperCase();
+  return `${resolved.rgb}${hex}`.toUpperCase();
 }
 
 /**
@@ -660,21 +619,22 @@ export function alpha(color: string, amount: number): string {
  *
  * The inverse of {@link alpha}: it reads the byte a translucent colour carries
  * so a rule can restate that colour at the same strength in another tint. An
- * opaque colour reads as `1` in every length the renderer paints — the six- and
- * three-digit forms, and an eight-digit one whose byte is `FF` — and so does a
- * value outside the measured hex dialect: the CSS colour families carry their
- * alpha in a form this reads as opaque, which is one reason the contracts
- * measure the hex dialect.
+ * opaque colour reads as `1` in every form the contracts measure — hex in any
+ * length, a named colour, and a colour function without an alpha channel — and
+ * an explicit alpha channel reads its share, whether it is a byte, a number or a
+ * percentage. A value no colour grammar reads reads as `1`: it was never a
+ * translucent colour this could measure.
  *
  * @example
  * ```ts
  * alphaOf("#191D2514"); // 0.078
  * alphaOf("#191D25"); // 1
  * alphaOf("#fff8"); // 0.533 — shorthand's own share
+ * alphaOf("rgb(0 0 0 / 50%)"); // 0.502
  * ```
  */
 export function alphaOf(color: string): number {
-  const alphaByte = measuredHex(color)?.alpha;
+  const alphaByte = measuredColour(color)?.alpha;
   return alphaByte === undefined ? 1 : Number.parseInt(alphaByte, 16) / 255;
 }
 
@@ -684,20 +644,23 @@ export function alphaOf(color: string): number {
  * `amount` is clamped to `0…1`. The result keeps `color`'s alpha byte when it
  * carries a share below full opacity and is opaque when it does not — an `FF`
  * byte is no share — so a blend of two opaque colours is an opaque colour in the
- * measurable dialect: the point of the rule is that a fill that changes with the
- * pointer does not let the surface behind it through. Shorthand hex is widened
- * first, on either side. A colour outside the measured hex dialect — or a
- * non-finite `amount`, as in {@link alpha} — is returned unchanged.
+ * measured dialect: the point of the rule is that a fill that changes with the
+ * pointer does not let the surface behind it through. Both sides are resolved
+ * through the same seam as the contrast contracts, so shorthand hex and the
+ * measured colour functions blend as their channels. A value no colour grammar
+ * reads — or a non-finite `amount`, as in {@link alpha} — returns `color`
+ * unchanged.
  *
  * @example
  * ```ts
  * blend("#5F4BDB", "#191D25", 0.12); // "#5745C5"
  * blend("#fff", "#000", 0.5); // "#808080"
+ * blend("hsl(258 88% 58%)", "#000000", 0.5); // "#371B79"
  * ```
  */
 export function blend(color: string, toward: string, amount: number): string {
-  const base = measuredHex(color);
-  const target = measuredHex(toward);
+  const base = measuredColour(color);
+  const target = measuredColour(toward);
   if (base === undefined || target === undefined || !Number.isFinite(amount)) {
     return color;
   }

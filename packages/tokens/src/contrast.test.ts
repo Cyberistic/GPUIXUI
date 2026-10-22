@@ -92,13 +92,15 @@ describe("contrastRatio", () => {
     expect(contrastRatio("#FFFFFF", "#00000080")).toBeUndefined();
   });
 
-  it("refuses to measure a value it cannot parse", () => {
-    // A translucent value's ratio depends on the surface behind it, and a named
-    // colour or a colour function has no channels here — shorthand hex, which
-    // does resolve, is measured (`the hex dialect the contracts measure`).
+  it("refuses to measure a value the dialect does not resolve", () => {
+    // A translucent value's ratio depends on the surface behind it, and a
+    // perceptual colour space, a relative colour or a channel expression needs a
+    // conversion this does not approximate — while a name and the sRGB families
+    // are measured (`measure.test.ts`).
     expect(contrastRatio("transparent", "#FFFFFF")).toBeUndefined();
     expect(contrastRatio("#FFFFFF", "#00000080")).toBeUndefined();
-    expect(contrastRatio("rgb(0, 0, 0)", "#FFFFFF")).toBeUndefined();
+    expect(contrastRatio("oklch(0.62 0.26 29.2)", "#FFFFFF")).toBeUndefined();
+    expect(contrastRatio("rgb(from #bad455 b r g)", "#FFFFFF")).toBeUndefined();
   });
 });
 

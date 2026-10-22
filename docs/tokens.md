@@ -1116,25 +1116,39 @@ the gate reads a non-blank string, not a registered one — so a custom family
 passes, and an uninstalled face is the font limitation in §Limitations rather
 than a theme defect.
 
-**The measurement dialect is hex.** `contrastRatio`, `alphaOf`, `blend`,
-`selectionFailures` and the decorative contracts read hex in every length the
-renderer paints, with or without the `#` — shorthand `#fff`/`#fff8` widens to
-the long form, so a brand written the way a hand-written theme usually is is
-measured rather than reported unmeasurable. An alpha byte of `FF` is full
-opacity rather than a share, so `#FFFFFFff` measures exactly as `#FFFFFF` —
-which matters because `alpha(color, 1)`, this package's own helper, produces that
-form; any byte below `FF` still marks a translucent value. What they cannot read
-is a value that carries no channels here: a CSS named colour and an
-`hsl()`-family function paint and pass the paint check, and their contrast pairs
-are reported **unmeasurable** rather than guessed. That is why every shipped
-palette is written in the long hex form and the docs' examples stay in hex.
+**The measurement dialect is the colour grammar the renderer paints, minus the
+perceptual spaces.** `contrastRatio`, `alphaOf`, `blend`, `selectionFailures` and
+the decorative contracts resolve a value through one seam: hex in every length
+the renderer paints, with or without the `#`; the CSS named colours and
+`transparent`; and the functional families whose channels are sRGB arithmetic —
+`rgb`/`rgba`, `hsl`/`hsla`, `hwb`/`hwba`, `hsv`/`hsva` — with an optional alpha
+channel, a percentage channel, a comma or space separator and a hue in `deg`,
+`grad`, `rad` or `turn`. Shorthand `#fff`/`#fff8` widens to the long form, so a
+brand written the way a hand-written theme usually is is measured rather than
+reported unmeasurable. An alpha byte of `FF` is full opacity rather than a
+share, so `#FFFFFFff` measures exactly as `#FFFFFF` — which matters because
+`alpha(color, 1)`, this package's own helper, produces that form; any byte below
+`FF` still marks a translucent value. `alpha` and `blend` write their result in
+the long hex form, so a derived state is measurable by every contract after it.
+
+What they **cannot** resolve is a value whose channels need a colour-space
+conversion or a runtime expression: the perceptual spaces `lab`, `lch`, `oklab`
+and `oklch`, a relative colour (`rgb(from …)`) and a channel expression
+(`calc(…)`, `none`). Those paint and pass the paint check, and their pairs are
+reported **unmeasurable** rather than guessed — a ratio computed from an
+approximation is worse than the absence the gate names. The same is true of a
+translucent value, whose contrast depends on the surface behind it: composite it
+first. Every shipped palette is written in the long hex form the docs' tables
+print, so the catalogue's own rows are exact.
 
 ```ts
 import { alpha, contrastRatio } from "@gpuixui/tokens";
 
 contrastRatio("#fff", "#000"); // 21 — shorthand is measured
 contrastRatio(alpha("#FFFFFF", 1), "#000000"); // 21 — an opaque byte is no share
-contrastRatio("hsl(0 0% 100%)", "#000"); // undefined — no channels here
+contrastRatio("hsl(0 0% 100%)", "#000"); // 21
+contrastRatio("rebeccapurple", "#FFFFFF"); // 8.41
+contrastRatio("oklch(0.62 0.26 29.2)", "#FFFFFF"); // undefined — a perceptual space
 ```
 
 ### Numbers
@@ -1410,10 +1424,13 @@ three steps are out of order.
 ### Contrast
 
 `contrastRatio(foreground, background)` is the WCAG 2.1 ratio between two opaque
-hex colours, and it returns `undefined` rather than a number when either value
-is translucent — a translucent colour's ratio depends on the surface behind it,
-so a single number would be a guess — or carries no channels here at all (a
-named colour, an `hsl()`-family function). Shorthand hex is measured.
+colours, and it returns `undefined` rather than a number when either value is
+translucent — a translucent colour's ratio depends on the surface behind it, so a
+single number would be a guess — or is one of the forms the measurement dialect
+cannot resolve: a perceptual space (`lab`, `lch`, `oklab`, `oklch`), a relative
+colour or a channel expression. Hex in every painted length, the CSS named
+colours and the `rgb`/`hsl`/`hwb`/`hsv` families are measured (§Paint-ready
+values).
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
 — an empty array means the theme is readable. The floors are the theme's own
@@ -1646,10 +1663,11 @@ export const shipsCleanly = (theme: Theme): boolean => auditTheme(theme).passed;
 // { foreground: "mutedForeground", background: "muted", ratio: 1, floor: 4.5 }
 ```
 
-A pair whose value is translucent, or a named colour or colour function that
-carries no channels here, is reported with `ratio: undefined` rather than
-skipped, because an unverifiable pair is not a pass. To measure one by hand,
-composite it first and use `contrastRatio`.
+A pair whose value is translucent, or one the measurement dialect cannot resolve
+— a perceptual space, a relative colour, a channel expression — is reported with
+`ratio: undefined` rather than skipped, because an unverifiable pair is not a
+pass. To measure a translucent value by hand, composite it first and use
+`contrastRatio`.
 
 `src/theme-audit.example.ts` runs `auditTheme` over a theme with one misspelt
 fill, and `theme.test.ts` asserts the reported role, so the failure this page
@@ -3469,15 +3487,19 @@ or dropped is named rather than passing silently.
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.
 - The paint grammar is CSS Color 4 (the runtime's `csscolorparser`) while this
-  package's measurements resolve hex: a brand in `hsl()`, a colour name or a
-  colour function paints and passes the paint check, but its contrast, selection
-  and decorative pairs are reported unmeasurable rather than guessed. Hex is
+  package's measurements resolve the part of it whose channels are sRGB
+  arithmetic: hex in every painted length, the CSS named colours, and
+  `rgb`/`hsl`/`hwb`/`hsv` with an optional alpha channel. A brand written that
+  way is measured rather than reported unmeasurable. A **perceptual** space
+  (`lab`, `lch`, `oklab`, `oklch`), a relative colour (`rgb(from …)`) and a
+  channel expression (`calc`, `none`) paint and pass the paint check, but their
+  contrast, selection and decorative pairs are reported unmeasurable rather than
+  guessed — the conversion a ratio would need is not approximated here. Hex is
   measured in every length the renderer paints — shorthand `#fff` widens, with or
-  without the `#`, and an `FF` alpha byte is the opaque colour it is rather than
-  a share — and the shipped palettes are written in the long form the catalogue
+  without the `#`, and an `FF` alpha byte is the opaque colour it is rather than a
+  share — and the shipped palettes are written in the long form the catalogue
   prints. `alphaOf` / `blend` derive from the same dialect, so a shadow colour
-  written as a name or function is treated as opaque when an elevation level is
-  retinted.
+  written as a name or a measured function is retinted at its own share.
 - No `zIndex` in the published API, so there is no numeric stacking token: paint
   order is tree order and the mounting rules are §Layering. The repo's
   source-built binding carries a local `zIndex` patch for a probe; library code

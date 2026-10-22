@@ -234,9 +234,13 @@ describe("alpha", () => {
     expect(alpha("#2559D6", -1)).toBe("#2559D600");
   });
 
-  it("returns a colour it cannot parse unchanged", () => {
-    expect(alpha("transparent", 0.5)).toBe("transparent");
-    expect(alpha("rgb(1, 2, 3)", 0.5)).toBe("rgb(1, 2, 3)");
+  it("resolves the measured grammar and returns the rest unchanged", () => {
+    // A name and a colour function paint, and the contracts resolve them, so a
+    // derived state is written in the long hex form every later contract reads.
+    expect(alpha("transparent", 0.5)).toBe("#00000080");
+    expect(alpha("rgb(1, 2, 3)", 0.5)).toBe("#01020380");
+    expect(alpha("rebeccapurple", 0.5)).toBe("#66339980");
+    expect(alpha("oklch(0.62 0.26 29.2)", 0.5)).toBe("oklch(0.62 0.26 29.2)");
   });
 
   it("normalises the result to upper case", () => {
@@ -286,9 +290,14 @@ describe("blend", () => {
     expect(blend("#000000", "#FFFFFF", 0.1)).toMatch(/^#[0-9A-F]{6}$/);
   });
 
-  it("returns a colour it cannot parse unchanged", () => {
-    expect(blend("transparent", "#FFFFFF", 0.5)).toBe("transparent");
+  it("resolves the measured grammar and returns the rest unchanged", () => {
+    // `transparent` is black at zero alpha, so its channels blend and its share
+    // stays zero; a painted function blends as its channels.
+    expect(blend("transparent", "#FFFFFF", 0.5)).toBe("#80808000");
     expect(blend("#000000", "rgb(0, 0, 0)", 0.5)).toBe("#000000");
+    expect(blend("oklch(0.62 0.26 29.2)", "#FFFFFF", 0.5)).toBe(
+      "oklch(0.62 0.26 29.2)",
+    );
   });
 
   it("normalises the result to upper case", () => {
@@ -359,12 +368,17 @@ describe("the hex dialect the contracts measure", () => {
     expect(blend("#5F4BDBFF", "#FFFFFF", 0.5)).toBe("#AFA5ED");
   });
 
-  it("still refuses a value that carries no channels here", () => {
-    // A named colour and a colour function paint; resolving them is the
-    // renderer's parser, not this package's.
-    expect(contrastRatio("rebeccapurple", "#FFFFFF")).toBeUndefined();
-    expect(contrastRatio("hsl(0 100% 50%)", "#FFFFFF")).toBeUndefined();
+  it("still refuses a value the contracts cannot resolve", () => {
+    // A translucent value's contrast depends on the surface behind it, and a
+    // perceptual colour space or a relative colour resolves through a
+    // conversion this package does not guess at: both are reported rather than
+    // approximated.
     expect(contrastRatio("#00000080", "#FFFFFF")).toBeUndefined();
+    expect(contrastRatio("transparent", "#FFFFFF")).toBeUndefined();
+    expect(contrastRatio("oklch(0.62 0.26 29.2)", "#FFFFFF")).toBeUndefined();
+    expect(contrastRatio("lab(54.29% 80.82 69.9)", "#FFFFFF")).toBeUndefined();
+    expect(contrastRatio("rgb(from #bad455 b r g)", "#FFFFFF")).toBeUndefined();
+    expect(contrastRatio("rgb(calc(255) 0 0)", "#FFFFFF")).toBeUndefined();
   });
 });
 

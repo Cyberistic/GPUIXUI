@@ -241,10 +241,11 @@ describe("the syntax palette", () => {
   });
 
   it("reports a token it cannot measure rather than counting it as a pass", () => {
-    // `hsl()` paints — the runtime's parser accepts it — but the measured dialect
-    // is hex, so the contrast of this token is unknown rather than fine.
+    // `oklch()` paints — the runtime's parser accepts it — but the measurement
+    // dialect does not resolve a perceptual colour space, so the contrast of
+    // this token is unknown rather than fine.
     const named = extendTheme(lightTheme, {
-      syntax: { ...syntaxColors(lightTheme), keyword: "hsl(280 60% 40%)" },
+      syntax: { ...syntaxColors(lightTheme), keyword: "oklch(0.4 0.16 280)" },
     });
     const reported = syntaxFailures(named).filter(
       ({ role }) => role === "keyword",

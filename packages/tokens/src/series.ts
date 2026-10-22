@@ -23,7 +23,7 @@
 
 import type { ThemeColors } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
-import { opaqueRgb } from "./hex.js";
+import { opaqueRgb } from "./measure.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 /**

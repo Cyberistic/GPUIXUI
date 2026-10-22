@@ -456,7 +456,9 @@ describe("simulateColorVision", () => {
 
   it("returns undefined for a value it cannot read", () => {
     expect(simulateColorVision("#C02B4580", "protanopia")).toBeUndefined();
-    expect(simulateColorVision("red", "protanopia")).toBeUndefined();
+    expect(
+      simulateColorVision("oklch(0.62 0.26 29.2)", "protanopia"),
+    ).toBeUndefined();
   });
 });
 

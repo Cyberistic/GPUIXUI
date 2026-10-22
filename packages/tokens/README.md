@@ -599,11 +599,14 @@ Each report is also a function of its own:
   reported with `value: undefined`, which is the shape a theme restored from
   storage has when it predates a role the library added: the source is
   `Partial<ThemeColors>` and `isPaintableColor` takes `unknown`, so absence is a
-  line in the report rather than a `TypeError`. The measurement dialect is hex:
-  the contrast and decorative contracts read every length the renderer paints —
+  line in the report rather than a `TypeError`. The measurement dialect is the
+  grammar the renderer paints minus the perceptual spaces: every hex length —
   shorthand `#fff` widens, with or without the `#`, and a fully opaque `FF` alpha
-  byte is the opaque colour it is rather than a share — so a hand-written brand is
-  measured, and a brand in a named colour or a colour function has its pairs
+  byte is the opaque colour it is rather than a share — the CSS named colours,
+  and `rgb`/`hsl`/`hwb`/`hsv` with an optional alpha channel, so a brand written
+  the way a design tool exports it is measured exactly as its hex twin. A
+  perceptual space (`lab`, `lch`, `oklab`, `oklch`), a relative colour
+  (`rgb(from …)`) and a channel expression (`calc`, `none`) paint and are
   reported unmeasurable rather than guessed.
 - `invalidShadowColors(theme)` applies the same grammar to every shadow in the
   elevation scale, which the role report cannot see: a level a brand supplies

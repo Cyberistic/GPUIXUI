@@ -843,12 +843,15 @@ pinned release): hex in any of its four lengths, a CSS named colour or a colour
 function. It is what found the documented brand example pairing a saturated
 violet with the dark theme's near-black on-colour — 4.24:1, below the floor. The
 example now ships a white label with its violet, and the audit runs over it in
-`theme.test.ts`. The measurement dialect is hex: the contracts read every length
-the renderer paints — shorthand `#fff` widens, with or without the `#`, and a
-fully opaque `FF` alpha byte is the colour it is rather than a share, which is
-the form `alpha(color, 1)` produces — so a brand written the way a hand-written
-theme usually is, is measured; a brand in `hsl()` or a colour name paints and its
-pairs are reported unmeasurable (`docs/tokens.md` §Paint-ready values). An
+`theme.test.ts`. The measurement dialect is the grammar the renderer paints minus
+the perceptual spaces: every hex length — shorthand `#fff` widens, with or
+without the `#`, and a fully opaque `FF` alpha byte is the colour it is rather
+than a share, which is the form `alpha(color, 1)` produces — the CSS named
+colours, and `rgb`/`hsl`/`hwb`/`hsv` with an optional alpha channel, so a brand
+written the way a design tool exports it is measured exactly as its hex twin. A
+perceptual space (`lab`, `lch`, `oklab`, `oklch`), a relative colour or a
+channel expression paints and has its pairs reported unmeasurable rather than
+guessed (`docs/tokens.md` §Paint-ready values). An
 elevation level a brand supplies is outside that report — it reads `colors` —
 and an unpaintable shadow colour paints no shadow, so
 `invalidShadowColors(theme)` names the level and position (§7).
