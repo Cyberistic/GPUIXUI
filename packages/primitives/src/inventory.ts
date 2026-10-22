@@ -409,7 +409,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "The trigger must be a focusable element: a host, or a control that forwards TooltipTriggerProps",
       "No arrow, no aria-describedby and no wrapping content",
       "A role is required to be in the accessibility tree, and only a TestRenderer exposes it",
-      "Open and close timing are the runtime's",
+      "Open and close timing are the runtime's; a caller can take the open state through open/onOpenChange",
       "The runtime reports focus, not how the trigger got it",
     ],
     source: ["src/components/Tooltip.tsx"],

@@ -735,6 +735,53 @@ it("keeps the Tooltip's content inside the frame it is anchored to", async () =>
   expect(tip.x + tip.width).toBeLessThanOrEqual(frame.x + frame.width);
 });
 
+it("paints a controlled Tooltip only while its owner says open", async () => {
+  // The gap guarded: the wrapper forwarded only the delay, so the runtime's
+  // `open`/`onOpenChange` never arrived and a tip could not be held open from
+  // code. Controlled, the trigger's requests are observations: a press asks to
+  // close and the tip stays painted until the owner agrees.
+  const runtime = await openWindow();
+  const requests: boolean[] = [];
+  const tree = (open: boolean) => (
+    <Surface>
+      <Tooltip
+        content="A hint"
+        testId="tip"
+        open={open}
+        onOpenChange={(next) => requests.push(next)}
+      >
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Trigger</Text>
+        </div>
+      </Tooltip>
+    </Surface>
+  );
+  runtime.render(tree(true));
+  expect(runtime.allText()).toContain("A hint");
+  runtime.click("target");
+  // A press is a mouse-down and a click, and the runtime asks to close on both;
+  // what matters is that the request reached the owner and the tip obeyed it.
+  expect(requests.length).toBeGreaterThan(0);
+  expect(requests.every((next) => next === false)).toBe(true);
+  expect(runtime.allText()).toContain("A hint");
+  runtime.render(tree(false));
+  expect(runtime.allText()).not.toContain("A hint");
+});
+
+it("opens a Tooltip that mounts default-open, with no interaction", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" testId="tip" defaultOpen>
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Trigger</Text>
+        </div>
+      </Tooltip>
+    </Surface>,
+  );
+  expect(runtime.allText()).toContain("A hint");
+});
+
 it("paints the theme's hint for an empty field and replaces it with the value", async () => {
   // The claim this measures: the native field's hint is the theme's
   // `placeholder` role, not the runtime's default, and it is a hint — the

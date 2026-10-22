@@ -47,6 +47,23 @@ and `Toggle` forward the whole `TooltipTriggerProps` pair (`onMouseEnter`,
 neither — this package's `Box`, for instance — paints the trigger but does not
 open the tip or announce the description.
 
+### Controlled
+
+The runtime owns the open state unless the caller takes it. `open` makes the tip
+paint only while it is `true`, and `onOpenChange` reports every request the
+trigger makes — hover, focus, Escape or a press — so a caller can hold a tip
+open for a first-run hint while the trigger's own dismissal still asks:
+
+```tsx
+<Tooltip content="Booked revenue, net of refunds." open={showing} onOpenChange={setShowing}>
+  <IconButton label="Revenue definition" icon={<Icon name="info" color={theme.colors.mutedForeground} />} />
+</Tooltip>;
+```
+
+`defaultOpen` starts a tip open when no one controls it — the local-first version
+of the same hint. `disableHoverableContent` closes as soon as the pointer leaves
+the trigger instead of letting it cross the gap onto the tip.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -57,6 +74,10 @@ open the tip or announce the description.
 | `side` | `FloatingSide` | `"top"` | preferred placement |
 | `align` | `FloatingAlign` | GPUix's default | alignment against the trigger |
 | `delay` | `number` | provider default | hover delay in milliseconds |
+| `open` | `boolean` | the runtime's state | takes the open state; the tip paints only while it is `true` |
+| `defaultOpen` | `boolean` | `false` | starts open before any interaction; ignored while `open` is set |
+| `onOpenChange` | `(open: boolean) => void` | — | the state the runtime asked for, controlled or not |
+| `disableHoverableContent` | `boolean` | `false` | close when the pointer leaves the trigger, instead of letting it cross onto the tip |
 | `style` | `StyleDesc` | — | extra style on the tip's surface, merged last |
 | `className` | `string` | — | a Tailwind string joined after the recipe, so it wins conflicts |
 | `testId` | `string` | — | locator on the **tip** |
@@ -65,6 +86,11 @@ open the tip or announce the description.
 
 Owned by GPUix: the tip opens when its trigger receives a focus event, and
 Escape dismisses it. A click dismisses it.
+
+A **controlled** tip is the caller's: Escape and a press still ask to close
+(`onOpenChange(false)`), but the tip stays painted until `open` changes. Nothing
+about the keyboard path changes with `open` — the trigger is still the focus
+target.
 
 **A `Tab` traversal opens the tip** — measured in a real window: the traversal
 focuses the trigger and React's `onFocus` runs, so the keyboard path works. The
@@ -138,7 +164,9 @@ cannot see and no contrast pair measures.
   so its description is never announced.
 - No wrapping or rich content: a paragraph is a popover, not a tooltip.
 - No arrow/caret and no touch-long-press behaviour.
-- Open/close timing is GPUix's; this wrapper only sets the delay.
+- Open/close **timing** is GPUix's (the delay, the near-instant re-open after a
+  close); the wrapper sets the delay and can take the open state, not rewrite the
+  timing.
 
 ## Verification
 
@@ -147,11 +175,13 @@ cannot see and no contrast pair measures.
 - `src/components/Tooltip.test.tsx` — a string tip and an explicit `description`
   reach the host trigger and a control trigger that forwards them, a non-text
   tip without one invents nothing, and a component that forwards nothing is not
-  pretended to carry the description; the tip paints `popoverForeground` on its
-  own `popover` fill and that pair clears the body floor in both shipped
-  palettes; a caller's `className` beats the recipe and their `style` beats
-  both. `src/components/Button.test.tsx` / `IconButton.test.tsx` hold the
-  forwarded pair.
+  pretended to carry the description; the controlled open state
+  (`open`/`defaultOpen`/`onOpenChange`/`disableHoverableContent`) reaches the
+  runtime and an uncontrolled tip leaves the runtime's own state alone; the tip
+  paints `popoverForeground` on its own `popover` fill and that pair clears the
+  body floor in both shipped palettes; a caller's `className` beats the recipe
+  and their `style` beats both. `src/components/Button.test.tsx` /
+  `IconButton.test.tsx` hold the forwarded pair.
 - `src/docs.test.ts` — every snippet's `@gpuixui/primitives` import resolves to a
   real export of the package, which is how this page's `Icon` (an
   `@gpuixui/icons` glyph) stopped being taught as a primitive.
@@ -159,7 +189,9 @@ cannot see and no contrast pair measures.
   the `TestRenderer` from a host trigger **and from the `IconButton` it wraps**,
   dismisses on click, keeps its content inside the anchoring frame, paints the
   popover role, and the a11y tree reports the tip as the trigger's
-  `description`.
+  `description`. A controlled tip paints while its owner says `open`, reports a
+  press's close request to `onOpenChange` and stays painted until `open` flips;
+  a `defaultOpen` tip paints at mount with no interaction.
 - The `tooltip-lifecycle` live probe (`apps/playground/README.md`) — the same
   wrapper in a **real window** (14 checks on 0.11.0): a `Tab` traversal opens the
   tip and Escape closes it with the focus on the trigger; hover opens it above

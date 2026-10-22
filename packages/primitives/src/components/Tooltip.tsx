@@ -19,6 +19,11 @@
  * open the tip. The runtime reports focus without saying how it arrived, so a
  * tooltip opened by a mouse press looks the same as one opened by Tab.
  *
+ * The open state is the runtime's unless the caller takes it: `open` makes the
+ * tip paint only while it is `true`, and `onOpenChange` reports every request
+ * the trigger makes in both modes, so a guided hint can be held open or opened
+ * from code.
+ *
  * The resting appearance is a Tailwind recipe (`recipe/tooltipClass`), compiled
  * through `@gpuixui/tw`.
  */
@@ -63,6 +68,22 @@ export interface TooltipProps {
   readonly align?: FloatingAlign;
   /** Milliseconds before the tip opens on hover. Defaults to the provider's. */
   readonly delay?: number;
+  /**
+   * Take the open state. With it the tip paints only while this is `true`; the
+   * trigger still asks to open and close (hover, focus, Escape, a press) and
+   * every request reaches `onOpenChange`, but the caller decides.
+   */
+  readonly open?: boolean;
+  /** Open on mount, before any interaction. Ignored while `open` is set. */
+  readonly defaultOpen?: boolean;
+  /** Called with the state the runtime asked for, controlled or not. */
+  readonly onOpenChange?: (open: boolean) => void;
+  /**
+   * Close as soon as the pointer leaves the trigger, so the tip itself cannot
+   * be hovered. Defaults to the runtime's `false`, where the tip stays open
+   * while the pointer crosses the gap onto it.
+   */
+  readonly disableHoverableContent?: boolean;
   /**
    * Extra style on the tip's surface, merged after the recipe and after
    * `className`, so a caller's value is the last word.
@@ -116,13 +137,23 @@ export const renderTooltip = (
     side,
     align,
     delay,
+    open,
+    defaultOpen,
+    onOpenChange,
+    disableHoverableContent,
     style,
     className,
     testId,
   }: TooltipProps,
   theme: PrimitiveTheme,
 ): ReactElement => (
-  <GpuixTooltip delayDuration={delay}>
+  <GpuixTooltip
+    delayDuration={delay}
+    open={open}
+    defaultOpen={defaultOpen}
+    onOpenChange={onOpenChange}
+    disableHoverableContent={disableHoverableContent}
+  >
     <TooltipTrigger asChild>
       {describedTrigger(
         children,

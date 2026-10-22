@@ -204,3 +204,45 @@ describe("Tooltip theming", () => {
     expect(overridden["backgroundColor"]).toBe(testTheme.colors.muted);
   });
 });
+
+describe("Tooltip open state", () => {
+  it("hands the runtime the open state its caller owns", () => {
+    // The gap guarded: the wrapper forwarded only the delay, so the runtime's
+    // own `open`/`defaultOpen`/`onOpenChange` never reached it and a tip could
+    // not be held open from code. All four props are forwarded verbatim.
+    const onOpenChange = (): void => {};
+    const controlled = render({
+      content: "Revenue definition",
+      open: true,
+      defaultOpen: false,
+      onOpenChange,
+      disableHoverableContent: true,
+      children: <div tabIndex={0} />,
+    });
+    expect(expectSome(elementProp(controlled, "open"))).toBe(true);
+    expect(expectSome(elementProp(controlled, "defaultOpen"))).toBe(false);
+    expect(expectSome(elementProp(controlled, "onOpenChange"))).toBe(
+      onOpenChange,
+    );
+    expect(expectSome(elementProp(controlled, "disableHoverableContent"))).toBe(
+      true,
+    );
+  });
+
+  it("leaves the runtime's own state when the caller passes none", () => {
+    const uncontrolled = render({
+      content: "Revenue definition",
+      children: <div tabIndex={0} />,
+    });
+    expect(elementProp(uncontrolled, "open")).toStrictEqual(Option.none());
+    expect(elementProp(uncontrolled, "defaultOpen")).toStrictEqual(
+      Option.none(),
+    );
+    expect(elementProp(uncontrolled, "onOpenChange")).toStrictEqual(
+      Option.none(),
+    );
+    expect(elementProp(uncontrolled, "disableHoverableContent")).toStrictEqual(
+      Option.none(),
+    );
+  });
+});
