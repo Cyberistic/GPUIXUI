@@ -16,6 +16,7 @@ import {
   contrastFailures,
   contrastFloors,
   contrastFloorsFor,
+  createTheme,
   decorativeFailures,
   extendTheme,
   highContrastFloors,
@@ -340,5 +341,37 @@ describe("every report is part of the gate", () => {
     );
 
     expect(disagreeing).toEqual([]);
+  });
+});
+
+/**
+ * The bug this holds: a brand may write the shorthand the runtime paints —
+ * `#fff` for a page, `#000` for text — and the gate reported every pair those
+ * roles touched **unmeasurable**, because the measurement dialect was six- and
+ * eight-digit hex while the paint check already accepted the short form. The
+ * renderer paints it, `invalidColorRoles` passes it, and the audit failed it, so
+ * the same theme painted and was called unshippable. Shorthand resolves exactly,
+ * so it is measured like the long form.
+ */
+describe("a brand written in the shorthand the renderer paints", () => {
+  const shorthand = createTheme({
+    mode: "light",
+    contrast: "high",
+    colors: { background: "#fff", foreground: "#000" },
+  });
+
+  it("measures every pair the shorthand roles carry", () => {
+    expect(shorthand.colors.background).toBe("#fff");
+    expect(auditTheme(shorthand).contrast).toEqual([]);
+  });
+
+  it("passes the gate the shipped theme with the same palette passes", () => {
+    // `#fff` and `#000` are the shipped high-contrast light values written
+    // short, so the two themes carry one palette — a gate that cannot measure
+    // one cannot measure the other.
+    expect(highContrastLightTheme.colors.background).toBe("#FFFFFF");
+    expect(highContrastLightTheme.colors.foreground).toBe("#000000");
+    expect(auditTheme(highContrastLightTheme).passed).toBe(true);
+    expect(auditTheme(shorthand).passed).toBe(true);
   });
 });

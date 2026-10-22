@@ -863,13 +863,22 @@ resolving the arithmetic inside a channel is the runtime's.
 `invalidShadowColors(theme)` applies the same check to an elevation level a brand
 supplies, which the role report cannot see (§Elevation).
 
-**The paint grammar is wider than the measurement one.** `contrastRatio`,
-`alphaOf`, `blend`, `selectionFailures` and the decorative contracts read the
-six- and eight-digit hex form only, which is why every shipped palette is written
-in it. A brand written in `hsl()`, a colour name or shorthand hex paints, and its
-role values pass this check, but its contrast pairs are reported **unmeasurable**
-rather than guessed — the honest outcome, and the reason the docs' examples stay
-in hex.
+**The measurement dialect is hex.** `contrastRatio`, `alphaOf`, `blend`,
+`selectionFailures` and the decorative contracts read hex in every length the
+renderer paints, with or without the `#` — shorthand `#fff`/`#fff8` widens to
+the long form, so a brand written the way a hand-written theme usually is is
+measured rather than reported unmeasurable. What they cannot read is a value
+that carries no channels here: a CSS named colour and an `hsl()`-family function
+paint and pass the paint check, and their contrast pairs are reported
+**unmeasurable** rather than guessed. That is why every shipped palette is
+written in the long hex form and the docs' examples stay in hex.
+
+```ts
+import { contrastRatio } from "@gpuixui/tokens";
+
+contrastRatio("#fff", "#000"); // 21 — shorthand is measured
+contrastRatio("hsl(0 0% 100%)", "#000"); // undefined — no channels here
+```
 
 ### Numbers
 
@@ -1001,9 +1010,10 @@ three steps are out of order.
 ### Contrast
 
 `contrastRatio(foreground, background)` is the WCAG 2.1 ratio between two opaque
-`#RRGGBB` colours, and it returns `undefined` rather than a number when either
-value is translucent or not hex — a translucent colour's ratio depends on the
-surface behind it, so a single number would be a guess.
+hex colours, and it returns `undefined` rather than a number when either value
+is translucent — a translucent colour's ratio depends on the surface behind it,
+so a single number would be a guess — or carries no channels here at all (a
+named colour, an `hsl()`-family function). Shorthand hex is measured.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
 — an empty array means the theme is readable. The 65 pairs cover the text role
@@ -1070,9 +1080,10 @@ export const shipsCleanly = (theme: Theme): boolean => auditTheme(theme).passed;
 // { foreground: "mutedForeground", background: "muted", ratio: 1, floor: 4.5 }
 ```
 
-A pair whose values are translucent or not hex is reported with `ratio:
-undefined` rather than skipped, because an unverifiable pair is not a pass. To
-measure one by hand, composite it first and use `contrastRatio`.
+A pair whose value is translucent, or a named colour or colour function that
+carries no channels here, is reported with `ratio: undefined` rather than
+skipped, because an unverifiable pair is not a pass. To measure one by hand,
+composite it first and use `contrastRatio`.
 
 `src/theme-audit.example.ts` runs `auditTheme` over a theme with one misspelt
 fill, and `theme.test.ts` asserts the reported role, so the failure this page
@@ -2238,13 +2249,15 @@ or dropped is named rather than passing silently.
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.
-- The paint grammar is CSS Color 4 (the runtime's `csscolorparser`), while this
-  package's measurements read six- and eight-digit hex: a brand in `hsl()`, a
-  named colour or shorthand hex paints and passes the paint check, but its
-  contrast, selection and decorative pairs are reported unmeasurable rather than
-  guessed. The shipped palettes are hex for that reason, and `alphaOf` /
-  `blend` derive from hex only — a shadow colour written another way is treated
-  as opaque when an elevation level is retinted.
+- The paint grammar is CSS Color 4 (the runtime's `csscolorparser`) while this
+  package's measurements resolve hex: a brand in `hsl()`, a colour name or a
+  colour function paints and passes the paint check, but its contrast, selection
+  and decorative pairs are reported unmeasurable rather than guessed. Hex is
+  measured in every length the renderer paints — shorthand `#fff` widens, with or
+  without the `#` — and the shipped palettes are written in the long form the
+  catalogue prints. `alphaOf` / `blend` derive from the same dialect, so a shadow
+  colour written as a name or function is treated as opaque when an elevation
+  level is retinted.
 - No `zIndex` in the published API, so there is no numeric stacking token: paint
   order is tree order and the mounting rules are §Layering. The repo's
   source-built binding carries a local `zIndex` patch for a probe; library code

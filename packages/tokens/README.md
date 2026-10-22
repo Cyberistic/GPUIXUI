@@ -475,10 +475,11 @@ Each report is also a function of its own:
   `csscolorparser` 0.8.3: hex in any of its four lengths, a named colour, or an
   `rgb`/`hsl`/`hwb`/`hsv`/`lab`/`lch`/`oklab`/`oklch` function. The runtime
   **ignores** a value it cannot parse, so a typo paints black instead of failing —
-  this is the warning that makes it visible. The paint grammar is wider than the
-  measurement one: the contrast and decorative contracts read six- and eight-digit
-  hex, so the shipped palettes are written in it and a brand in another family has
-  its pairs reported unmeasurable rather than guessed.
+  this is the warning that makes it visible. The measurement dialect is hex: the
+  contrast and decorative contracts read every length the renderer paints —
+  shorthand `#fff` widens, with or without the `#` — so a hand-written brand is
+  measured, and a brand in a named colour or a colour function has its pairs
+  reported unmeasurable rather than guessed.
 - `invalidShadowColors(theme)` applies the same grammar to every shadow in the
   elevation scale, which the role report cannot see: a level a brand supplies
   replaces the array whole, and a colour the runtime ignores paints no shadow at

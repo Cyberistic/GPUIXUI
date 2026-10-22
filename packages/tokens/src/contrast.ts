@@ -7,29 +7,33 @@
  */
 
 import type { ThemeColors } from "./color.js";
+import { opaqueRgb } from "./hex.js";
 
-const opaqueHex = /^#[0-9A-Fa-f]{6}$/;
-
-const channel = (color: string, at: number): number => {
-  const srgb = Number.parseInt(color.slice(at, at + 2), 16) / 255;
+const channel = (rgb: string, at: number): number => {
+  const srgb = Number.parseInt(rgb.slice(at, at + 2), 16) / 255;
   return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
 };
 
-/** WCAG 2.1 relative luminance of an opaque `#RRGGBB` colour. */
-const relativeLuminance = (color: string): number | undefined =>
-  opaqueHex.test(color)
-    ? 0.2126 * channel(color, 1) +
-      0.7152 * channel(color, 3) +
-      0.0722 * channel(color, 5)
-    : undefined;
+/** WCAG 2.1 relative luminance of an opaque hex colour. */
+const relativeLuminance = (color: string): number | undefined => {
+  const rgb = opaqueRgb(color);
+  return rgb === undefined
+    ? undefined
+    : 0.2126 * channel(rgb, 1) +
+        0.7152 * channel(rgb, 3) +
+        0.0722 * channel(rgb, 5);
+};
 
 /**
- * The WCAG 2.1 contrast ratio between two opaque `#RRGGBB` colours: 1 for
- * identical colours, 21 for black on white.
+ * The WCAG 2.1 contrast ratio between two opaque hex colours: 1 for identical
+ * colours, 21 for black on white.
  *
- * Returns `undefined` when either value is not an opaque hex colour. A
+ * The measured dialect is hex in every length the runtime paints, with or
+ * without the `#` — shorthand `#fff` is widened, because a hand-written brand
+ * reaches for it. Returns `undefined` when either value is not that dialect: a
  * translucent colour's contrast depends on the surface painted behind it, so a
- * single ratio would be a guess; composite it first if it needs measuring.
+ * single ratio would be a guess (composite it first if it needs measuring), and
+ * a named colour or `hsl()` value paints without resolving to channels here.
  *
  * @example
  * ```ts

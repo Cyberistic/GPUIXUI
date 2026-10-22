@@ -25,6 +25,7 @@ import {
   contrastRatio,
   highContrastFloors,
 } from "./contrast.js";
+import { opaqueRgb } from "./hex.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 /**
@@ -230,8 +231,6 @@ export interface SeriesFloors {
   readonly deficiency?: number;
 }
 
-const opaqueHex = /^#[0-9A-Fa-f]{6}$/;
-
 const linear = (channel: number): number =>
   channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
 
@@ -240,17 +239,19 @@ const encode = (channel: number): number =>
 
 const clamp = (channel: number): number => Math.min(1, Math.max(0, channel));
 
-/** Linear-light sRGB channels of an opaque `#RRGGBB` colour. */
+/** Linear-light sRGB channels of an opaque hex colour, in any painted length. */
 const linearRgb = (
   color: string,
-): readonly [number, number, number] | undefined =>
-  opaqueHex.test(color)
-    ? [
-        linear(Number.parseInt(color.slice(1, 3), 16) / 255),
-        linear(Number.parseInt(color.slice(3, 5), 16) / 255),
-        linear(Number.parseInt(color.slice(5, 7), 16) / 255),
-      ]
-    : undefined;
+): readonly [number, number, number] | undefined => {
+  const rgb = opaqueRgb(color);
+  return rgb === undefined
+    ? undefined
+    : [
+        linear(Number.parseInt(rgb.slice(1, 3), 16) / 255),
+        linear(Number.parseInt(rgb.slice(3, 5), 16) / 255),
+        linear(Number.parseInt(rgb.slice(5, 7), 16) / 255),
+      ];
+};
 
 /** An `#RRGGBB` colour from linear-light sRGB channels, clamped to the gamut. */
 const hexFromLinear = (channels: readonly [number, number, number]): string =>

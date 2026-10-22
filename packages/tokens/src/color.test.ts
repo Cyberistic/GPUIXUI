@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 import {
   alpha,
+  alphaOf,
   blend,
   colorRoles,
   darkColors,
@@ -236,7 +237,6 @@ describe("alpha", () => {
   it("returns a colour it cannot parse unchanged", () => {
     expect(alpha("transparent", 0.5)).toBe("transparent");
     expect(alpha("rgb(1, 2, 3)", 0.5)).toBe("rgb(1, 2, 3)");
-    expect(alpha("#FFF", 0.5)).toBe("#FFF");
   });
 
   it("normalises the result to upper case", () => {
@@ -289,7 +289,6 @@ describe("blend", () => {
   it("returns a colour it cannot parse unchanged", () => {
     expect(blend("transparent", "#FFFFFF", 0.5)).toBe("transparent");
     expect(blend("#000000", "rgb(0, 0, 0)", 0.5)).toBe("#000000");
-    expect(blend("#000000", "#FFF", 0.5)).toBe("#000000");
   });
 
   it("normalises the result to upper case", () => {
@@ -301,6 +300,55 @@ describe("blend", () => {
     expect(blend("#5F4BDB", "#FFFFFF", Number.POSITIVE_INFINITY)).toBe(
       "#5F4BDB",
     );
+  });
+});
+
+/**
+ * The bug this holds: the measurement contracts read six- and eight-digit hex
+ * only while the runtime paints hex in any of its four lengths, so a brand that
+ * wrote the common shorthand — `#fff` for a page, `#000` for text — painted and
+ * passed `invalidColorRoles`, then had **every** pair it touched reported
+ * unmeasurable and failed the audit it is told to run. Shorthand is exactly
+ * resolvable, so it is measured rather than guessed; a named colour or a colour
+ * function still has no channels here and stays unmeasurable.
+ */
+describe("the hex dialect the contracts measure", () => {
+  it("widens shorthand before deriving a share or a blend", () => {
+    expect(alpha("#fff", 0.5)).toBe("#FFFFFF80");
+    expect(alpha("#fff8", 0)).toBe("#FFFFFF00");
+    expect(alpha("fff", 0.3)).toBe("#FFFFFF4D");
+    expect(blend("#fff", "#000", 0.5)).toBe("#808080");
+    expect(blend("ff0000", "00ff00", 0.5)).toBe("#808000");
+    expect(blend("#fff8", "#000", 1)).toBe("#00000088");
+  });
+
+  it("reads a shorthand colour's own share", () => {
+    expect(alphaOf("#fff")).toBe(1);
+    expect(alphaOf("#fff8")).toBeCloseTo(0x88 / 255, 10);
+    expect(alphaOf("fff8")).toBeCloseTo(0x88 / 255, 10);
+    expect(alphaOf("#ffffff80")).toBeCloseTo(0x80 / 255, 10);
+  });
+
+  it("measures every hex length the renderer paints", () => {
+    // `isPaintableColor` is the renderer's grammar; each hex form it accepts
+    // must be a value the contrast contract can read, or the paint check and
+    // the gate disagree about the same theme.
+    ["#fff", "#fff8", "#ffffff", "#ffffff80", "fff", "ffffff80"].forEach(
+      (value) => {
+        expect(isPaintableColor(value), value).toBe(true);
+      },
+    );
+    expect(contrastRatio("#fff", "#000")).toBeCloseTo(21, 10);
+    expect(contrastRatio("#000", "#FFF")).toBeCloseTo(21, 10);
+    expect(contrastRatio("ffffff", "000000")).toBeCloseTo(21, 10);
+  });
+
+  it("still refuses a value that carries no channels here", () => {
+    // A named colour and a colour function paint; resolving them is the
+    // renderer's parser, not this package's.
+    expect(contrastRatio("rebeccapurple", "#FFFFFF")).toBeUndefined();
+    expect(contrastRatio("hsl(0 100% 50%)", "#FFFFFF")).toBeUndefined();
+    expect(contrastRatio("#00000080", "#FFFFFF")).toBeUndefined();
   });
 });
 
@@ -436,10 +484,9 @@ describe("the colour grammar GPUix paints", () => {
     ).toEqual([{ role: "primary", value: "#7C5CF" }]);
   });
 
-  it("writes the shipped palettes in the measurable hex dialect", () => {
-    // The paint grammar is wider than the measurement one: `contrastRatio`,
-    // `alphaOf` and `blend` read 6- and 8-digit hex only, so the shipped
-    // palettes stay in that form even though the renderer paints more.
+  it("writes the shipped palettes in the long hex dialect", () => {
+    // The contracts measure every hex length, but the catalogue prints the long
+    // form, so the shipped palettes are written the way the docs show them.
     colourSets.forEach(({ label, colors }) => {
       Object.entries(colors).forEach(([role, value]) => {
         expect(value, `${label}.${role}`).toMatch(

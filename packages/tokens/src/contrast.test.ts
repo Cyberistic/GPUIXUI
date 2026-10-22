@@ -67,8 +67,11 @@ describe("contrastRatio", () => {
   });
 
   it("refuses to measure a value it cannot parse", () => {
+    // A translucent value's ratio depends on the surface behind it, and a named
+    // colour or a colour function has no channels here — shorthand hex, which
+    // does resolve, is measured (`the hex dialect the contracts measure`).
     expect(contrastRatio("transparent", "#FFFFFF")).toBeUndefined();
-    expect(contrastRatio("#FFF", "#FFFFFF")).toBeUndefined();
+    expect(contrastRatio("#FFFFFF", "#00000080")).toBeUndefined();
     expect(contrastRatio("rgb(0, 0, 0)", "#FFFFFF")).toBeUndefined();
   });
 });

@@ -1,3 +1,5 @@
+import { measuredHex } from "./hex.js";
+
 /**
  * Raw colour ramps. Components must use {@link ThemeColors} roles instead;
  * ramps exist for documentation and for the rare case that needs a shade
@@ -415,14 +417,6 @@ export const highContrastDarkColors = {
 } satisfies ThemeColors;
 
 /**
- * The hex form this package's measurements understand: `#RRGGBB`, with an
- * optional `AA` byte carrying a translucent role's share. The shipped palettes
- * are written in this form, because a contrast pair, `alphaOf` and `blend` all
- * read it.
- */
-const measuredHex = /^#([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/;
-
-/**
  * Every hex form the runtime's parser reads: 3, 4, 6 or 8 digits, with or
  * without the `#`. A bare form is legal to that parser — it reads `ff0` as a
  * colour — so the paint check accepts it rather than reporting a value the
@@ -600,25 +594,27 @@ export const isPaintableColor = (value: string): boolean => {
  * Return `color` with an alpha channel, as an 8-digit hex colour.
  *
  * `amount` is clamped to `0…1` and rounded to the nearest byte. A 6-digit
- * `#RRGGBB` gains an alpha byte; an 8-digit `#RRGGBBAA` has its alpha replaced.
- * A colour outside the measured hex dialect is returned unchanged, so a value
- * the renderer paints stays as it was rather than becoming transparent — and so
- * is a non-finite `amount`, which has no alpha byte to produce and would
- * otherwise emit a string the renderer cannot parse.
+ * `#RRGGBB` gains an alpha byte; an 8-digit `#RRGGBBAA` has its alpha replaced,
+ * and shorthand `#fff`/`#fff8` is widened first. A colour outside the measured
+ * hex dialect is returned unchanged, so a value the renderer paints stays as it
+ * was rather than becoming transparent — and so is a non-finite `amount`, which
+ * has no alpha byte to produce and would otherwise emit a string the renderer
+ * cannot parse.
  *
  * @example
  * ```ts
  * alpha("#2559D6", 0.3); // "#2559D64D"
+ * alpha("#fff", 0.5); // "#FFFFFF80" — shorthand widens first
  * ```
  */
 export function alpha(color: string, amount: number): string {
-  const match = measuredHex.exec(color);
-  if (match === null || !Number.isFinite(amount)) {
+  const measured = measuredHex(color);
+  if (measured === undefined || !Number.isFinite(amount)) {
     return color;
   }
   const byte = Math.round(Math.min(Math.max(amount, 0), 1) * 255);
   const hex = byte.toString(16).padStart(2, "0");
-  return `#${match[1]}${hex}`.toUpperCase();
+  return `${measured.rgb}${hex}`.toUpperCase();
 }
 
 /**
@@ -626,20 +622,21 @@ export function alpha(color: string, amount: number): string {
  *
  * The inverse of {@link alpha}: it reads the byte a translucent colour carries
  * so a rule can restate that colour at the same strength in another tint. An
- * opaque six-digit colour reads as `1`, and so does a value outside the measured
- * hex dialect — the CSS colour families carry their alpha in a form this reads
- * as opaque, which is one reason the contracts measure the hex dialect.
+ * opaque six- or three-digit colour reads as `1`, and so does a value outside
+ * the measured hex dialect — the CSS colour families carry their alpha in a
+ * form this reads as opaque, which is one reason the contracts measure the hex
+ * dialect.
  *
  * @example
  * ```ts
  * alphaOf("#191D2514"); // 0.078
  * alphaOf("#191D25"); // 1
+ * alphaOf("#fff8"); // 0.533 — shorthand's own share
  * ```
  */
 export function alphaOf(color: string): number {
-  const match = measuredHex.exec(color);
-  const byte = match?.[2];
-  return byte === undefined ? 1 : Number.parseInt(byte, 16) / 255;
+  const alphaByte = measuredHex(color)?.alpha;
+  return alphaByte === undefined ? 1 : Number.parseInt(alphaByte, 16) / 255;
 }
 
 /**
@@ -648,26 +645,24 @@ export function alphaOf(color: string): number {
  * `amount` is clamped to `0…1`. The result keeps `color`'s alpha byte when it
  * has one and is opaque when it does not, so a blend of two opaque colours is
  * an opaque colour — the point of the rule: a fill that changes with the
- * pointer does not let the surface behind it through. A colour outside the
- * measured hex dialect — or a non-finite `amount`, as in {@link alpha} — is
- * returned unchanged.
+ * pointer does not let the surface behind it through. Shorthand hex is widened
+ * first, on either side. A colour outside the measured hex dialect — or a
+ * non-finite `amount`, as in {@link alpha} — is returned unchanged.
  *
  * @example
  * ```ts
  * blend("#5F4BDB", "#191D25", 0.12); // "#5745C5"
+ * blend("#fff", "#000", 0.5); // "#808080"
  * ```
  */
 export function blend(color: string, toward: string, amount: number): string {
-  const base = measuredHex.exec(color);
-  const target = measuredHex.exec(toward);
-  if (base === null || target === null || !Number.isFinite(amount)) {
+  const base = measuredHex(color);
+  const target = measuredHex(toward);
+  if (base === undefined || target === undefined || !Number.isFinite(amount)) {
     return color;
   }
-  const from = base[1];
-  const to = target[1];
-  if (from === undefined || to === undefined) {
-    return color;
-  }
+  const from = base.rgb.slice(1);
+  const to = target.rgb.slice(1);
   const ratio = Math.min(Math.max(amount, 0), 1);
   const channel = (at: number): string => {
     const start = Number.parseInt(from.slice(at, at + 2), 16);
@@ -677,7 +672,7 @@ export function blend(color: string, toward: string, amount: number): string {
       .padStart(2, "0");
   };
   const rgb = [0, 2, 4].map(channel).join("");
-  return `#${rgb}${base[2] ?? ""}`.toUpperCase();
+  return `#${rgb}${base.alpha ?? ""}`.toUpperCase();
 }
 
 /**
@@ -761,10 +756,11 @@ export interface InvalidColorRole {
  * previous value or paints black, so a typo in a brand theme fails silently.
  * This is the check that makes it visible, over the grammar the runtime's own
  * parser reads ({@link isPaintableColor}) — any hex length, a CSS named colour
- * or a colour function. The shipped palettes stay in the six- and eight-digit
- * hex form because that is the one every contrast and decorative contract can
- * measure, and a role missing from a hand-built theme literal is reported too,
- * because the runtime cannot paint what is not there.
+ * or a colour function. The shipped palettes are written in the long hex form
+ * the docs' tables print, and the contracts measure every hex length; a named
+ * colour or a colour function paints but is reported unmeasurable by them. A
+ * role missing from a hand-built theme literal is reported too, because the
+ * runtime cannot paint what is not there.
  *
  * @example
  * ```ts

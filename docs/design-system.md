@@ -526,9 +526,11 @@ pinned release): hex in any of its four lengths, a CSS named colour or a colour
 function. It is what found the documented brand example pairing a saturated
 violet with the dark theme's near-black on-colour — 4.24:1, below the floor. The
 example now ships a white label with its violet, and the audit runs over it in
-`theme.test.ts`. The paint grammar is wider than the measurement one — the
-contracts read six- and eight-digit hex, so a brand in `hsl()` paints and its
-pairs are reported unmeasurable (`docs/tokens.md` §Paint-ready values). An
+`theme.test.ts`. The measurement dialect is hex: the contracts read every length
+the renderer paints — shorthand `#fff` widens, with or without the `#` — so a
+brand written the way a hand-written theme usually is, is measured; a brand in
+`hsl()` or a colour name paints and its pairs are reported unmeasurable
+(`docs/tokens.md` §Paint-ready values). An
 elevation level a brand supplies is outside that report — it reads `colors` —
 and an unpaintable shadow colour paints no shadow, so
 `invalidShadowColors(theme)` names the level and position (§7).
