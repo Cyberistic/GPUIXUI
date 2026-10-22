@@ -71,6 +71,22 @@ describe("IconButton", () => {
     expect(props["aria-description"]).toBe("Deletes the selected layer");
   });
 
+  it("carries a trigger's host props onto its button", () => {
+    // The bug guarded: an icon action is the usual menu or popover trigger, so
+    // a `ref` and `aria-expanded` have to reach the element here too — the
+    // props were narrowed away when only the tooltip pair was forwarded.
+    const ref = vi.fn();
+    const element = resting({
+      label: "Open filters",
+      icon: glyph,
+      ref,
+      "aria-expanded": true,
+    });
+    expect(Option.getOrUndefined(hostProp(element, "ref"))).toBe(ref);
+    expect(expectSome(hostProp(element, "aria-expanded"))).toBe(true);
+    expect(expectSome(hostProp(element, "role"))).toBe("button");
+  });
+
   it("is square at the density's control height", () => {
     const style = expectSome(
       hostStyleRecord(resting({ label: "Delete layer", icon: glyph })),

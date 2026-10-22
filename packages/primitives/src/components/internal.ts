@@ -9,7 +9,7 @@
 
 import { Children, useEffect, useState, type ReactNode } from "react";
 import * as Option from "effect/Option";
-import type { EventPayload, KeyEvent, StyleDesc } from "@gpuix/react";
+import type { EventPayload, KeyEvent, Props, StyleDesc } from "@gpuix/react";
 import {
   initValueState,
   setValue,
@@ -65,6 +65,41 @@ export interface InteractionProps {
   readonly onFocus?: (event: EventPayload) => void;
   readonly onBlur?: (event: EventPayload) => void;
 }
+
+/**
+ * The host props an action hands to its element unchanged.
+ *
+ * A control that opens something has to be addressable itself: a popover's
+ * trigger takes a `ref` so the surface can be anchored to it, a menu trigger
+ * writes `aria-expanded`/`aria-selected` so its state is announced, and a
+ * hover-opened surface needs the pointer pair. Those are the runtime's own host
+ * props, so this type forwards them rather than inventing a second vocabulary.
+ *
+ * Everything the control **owns** is removed here instead of from the element:
+ * the role, the tab stop, the accessible name, the style, the test id and every
+ * handler the activation contract composes. A caller therefore cannot replace
+ * the behaviour by passing a host prop of the same name — the component writes
+ * its own copy after the spread.
+ */
+export type ActionHostProps = Omit<
+  Props,
+  | "key"
+  | "children"
+  | "style"
+  | "role"
+  | "tabIndex"
+  | "aria-label"
+  | "aria-description"
+  | "motion"
+  | "testId"
+  | "onClick"
+  | "onKeyDown"
+  | "onKeyUp"
+  | "onFocus"
+  | "onBlur"
+  | "onMouseEnter"
+  | "onMouseLeave"
+>;
 
 /**
  * The host props an `asChild` tooltip trigger forwards.

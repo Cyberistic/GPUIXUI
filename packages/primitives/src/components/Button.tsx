@@ -23,6 +23,13 @@
  * Host handlers arrive through `InteractionProps` and are composed with the
  * button's own, never handed the element: `onClick` observes a press the button
  * accepts, and a busy or disabled button takes no press at all.
+ *
+ * The rest of the runtime's host props (`ActionHostProps`) pass straight
+ * through, because a trigger has to be addressable: a `ref` anchors the surface
+ * it opens, `aria-expanded`/`aria-selected` announce it, and the pointer pair
+ * opens a hover surface. The props this component owns are written **after**
+ * the spread, so no host prop can replace its role, tab stop, name or
+ * activation.
  */
 
 import { useState, type ReactElement, type ReactNode } from "react";
@@ -45,6 +52,7 @@ import {
   composePress,
   mergeStyle,
   suppressFeedback,
+  type ActionHostProps,
   type InteractionProps,
   type TooltipTriggerProps,
 } from "./internal.js";
@@ -52,7 +60,8 @@ import { controlRing, keepContent } from "../core/focus.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface ButtonProps extends InteractionProps, TooltipTriggerProps {
+export interface ButtonProps
+  extends InteractionProps, TooltipTriggerProps, ActionHostProps {
   /** Defaults to `primary`. */
   readonly variant?: ButtonVariant;
   /** Defaults to `md`. */
@@ -104,8 +113,10 @@ export interface ButtonState {
   readonly focused: boolean;
 }
 
-const isBusy = (props: ButtonProps): boolean =>
-  props.disabled === true || props.loading === true;
+const isBusy = (props: {
+  readonly disabled?: boolean;
+  readonly loading?: boolean;
+}): boolean => props.disabled === true || props.loading === true;
 
 /** The element `Button` renders. Pure in its arguments. */
 export const renderButton = (
@@ -113,11 +124,38 @@ export const renderButton = (
   theme: PrimitiveTheme,
   focus: ButtonFocus,
 ): ReactElement => {
-  const { variant = "primary", size = "md" } = props;
-  const busy = isBusy(props);
+  const {
+    variant = "primary",
+    size = "md",
+    square,
+    fullWidth,
+    disabled,
+    loading,
+    reducedMotion,
+    leading,
+    trailing,
+    label,
+    onActivate,
+    style: callerStyle,
+    className,
+    children,
+    testId,
+    onClick,
+    onKeyDown,
+    onKeyUp,
+    onFocus,
+    onBlur,
+    onMouseEnter,
+    onMouseLeave,
+    "aria-description": description,
+    // The runtime's own host props, forwarded untouched: a trigger's `ref`,
+    // `aria-expanded`/`aria-selected`, pointer handlers and layout observers.
+    ...host
+  } = props;
+  const busy = isBusy({ disabled, loading });
   const activate = (): void => {
     if (busy) return;
-    props.onActivate?.();
+    onActivate?.();
   };
   const onKey =
     (phase: "down" | "up") =>
@@ -130,39 +168,38 @@ export const renderButton = (
   const resolved = recipeTw.classesToStyle(
     cn(
       buttonClass(variant, size, {
-        square: props.square,
-        fullWidth: props.fullWidth,
+        square,
+        fullWidth,
       }),
-      props.className,
+      className,
     ),
     theme,
   );
   const base =
-    props.disabled === true
+    disabled === true
       ? suppressFeedback(mergeStyle(resolved.style, resolved.disabled))
       : resolved.style;
   const own = mergeStyle(
     // A filled action's label is the control, so it keeps full opacity while
     // another control has the keyboard focus (`paintsFilledSurface`).
     paintsFilledSurface(variant) ? mergeStyle(base, keepContent) : base,
-    controlRing(theme, { disabled: props.disabled }),
+    controlRing(theme, { disabled }),
   );
   const style = mergeStyle(
     own,
-    resolveStyle(props.style, {
-      disabled: props.disabled === true,
+    resolveStyle(callerStyle, {
+      disabled: disabled === true,
       focused: focus.focused,
     }),
   );
 
   return (
     <div
+      {...host}
       role="button"
-      aria-label={accessibleName(props.label) ?? childrenName(props.children)}
+      aria-label={accessibleName(label) ?? childrenName(children)}
       aria-description={
-        props.loading === true
-          ? "Loading"
-          : accessibleName(props["aria-description"])
+        loading === true ? "Loading" : accessibleName(description)
       }
       tabIndex={
         // A busy button stays focusable so a keyboard reader is not dropped
@@ -170,30 +207,30 @@ export const renderButton = (
         // also busy, because it declares no ring and refuses every key — a stop
         // with no cue. The two props together are the common
         // `disabled={pending} loading={pending}` pair.
-        props.disabled === true ? undefined : 0
+        disabled === true ? undefined : 0
       }
-      testId={props.testId}
-      onClick={composePress(busy, props.onClick, activate)}
-      onMouseEnter={props.onMouseEnter}
-      onMouseLeave={props.onMouseLeave}
-      onFocus={composeEvent<EventPayload>(props.onFocus, focus.onFocus)}
-      onBlur={composeEvent<EventPayload>(props.onBlur, focus.onBlur)}
-      onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKey("down"))}
-      onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKey("up"))}
+      testId={testId}
+      onClick={composePress(busy, onClick, activate)}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onFocus={composeEvent<EventPayload>(onFocus, focus.onFocus)}
+      onBlur={composeEvent<EventPayload>(onBlur, focus.onBlur)}
+      onKeyDown={composeEvent<KeyEvent>(onKeyDown, onKey("down"))}
+      onKeyUp={composeEvent<KeyEvent>(onKeyUp, onKey("up"))}
       style={style}
     >
-      {props.loading === true ? (
+      {loading === true ? (
         <Spinner
           size={theme.iconSize.sm}
-          accent={variantSpinnerAccent(variant, props.disabled)}
+          accent={variantSpinnerAccent(variant, disabled)}
           label="Loading"
-          reducedMotion={props.reducedMotion}
+          reducedMotion={reducedMotion}
         />
       ) : (
-        props.leading
+        leading
       )}
-      {props.children}
-      {props.trailing}
+      {children}
+      {trailing}
     </div>
   );
 };

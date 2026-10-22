@@ -218,6 +218,32 @@ describe("Button", () => {
     );
   });
 
+  it("hands a trigger's own element the host props it opens with", () => {
+    // Bug guarded (plan 160's measured Phase 1 STOP): six triggers pass a `ref`
+    // so the surface they open can be anchored, five pass `aria-expanded`,
+    // pagination passes `aria-selected` and the hover-opened surfaces pass the
+    // pointer pair — and none of them reached the element while `Button`
+    // accepted only its own fields, so the components package had to keep a
+    // second button implementation. The runtime's own host props now pass
+    // through, and the props the control owns are written after the spread.
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const element = resting({
+      ref,
+      "aria-expanded": true,
+      "aria-selected": false,
+      onLayout: layout,
+    });
+    expect(Option.getOrUndefined(hostProp(element, "ref"))).toBe(ref);
+    expect(expectSome(hostProp(element, "aria-expanded"))).toBe(true);
+    expect(expectSome(hostProp(element, "aria-selected"))).toBe(false);
+    expect(Option.getOrUndefined(hostHandler(element, "onLayout"))).toBe(
+      layout,
+    );
+    expect(expectSome(hostProp(element, "role"))).toBe("button");
+    expect(expectSome(hostProp(element, "tabIndex"))).toBe(0);
+  });
+
   it("announces the busy state over a trigger's description", () => {
     const busy = resting({
       loading: true,

@@ -16,7 +16,9 @@
  *
  * Ghost is the default variant: a toolbar of icon actions reads as chrome, not
  * as a row of filled buttons. Pass `variant` when one action should carry more
- * weight.
+ * weight. `ActionHostProps` also reaches the element through
+ * `iconButtonProps`, so an icon-only trigger carries its own `ref` and
+ * `aria-expanded` exactly like `Button`.
  */
 
 import type { ReactElement, ReactNode } from "react";
@@ -31,12 +33,14 @@ import {
 } from "./Button.js";
 import {
   useFocus,
+  type ActionHostProps,
   type InteractionProps,
   type TooltipTriggerProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface IconButtonProps extends InteractionProps, TooltipTriggerProps {
+export interface IconButtonProps
+  extends InteractionProps, TooltipTriggerProps, ActionHostProps {
   /** The accessible name. An icon-only control has no text to read. */
   readonly label: string;
   /** The glyph. It paints inside the button and never becomes its name. */
@@ -65,28 +69,54 @@ export interface IconButtonProps extends InteractionProps, TooltipTriggerProps {
  * Exposed so a test can read the decision without a renderer, and so a caller
  * composing several of these can share one props object.
  */
-export const iconButtonProps = (props: IconButtonProps): ButtonProps => ({
-  variant: props.variant ?? "ghost",
-  size: props.size,
-  square: true,
-  disabled: props.disabled,
-  loading: props.loading,
-  reducedMotion: props.reducedMotion,
-  label: props.label,
-  leading: props.icon,
-  onActivate: props.onActivate,
-  onClick: props.onClick,
-  onMouseEnter: props.onMouseEnter,
-  onMouseLeave: props.onMouseLeave,
-  "aria-description": props["aria-description"],
-  onKeyDown: props.onKeyDown,
-  onKeyUp: props.onKeyUp,
-  onFocus: props.onFocus,
-  onBlur: props.onBlur,
-  style: props.style,
-  className: props.className,
-  testId: props.testId,
-});
+export const iconButtonProps = (props: IconButtonProps): ButtonProps => {
+  const {
+    variant,
+    size,
+    disabled,
+    loading,
+    reducedMotion,
+    label,
+    icon,
+    onActivate,
+    onClick,
+    onMouseEnter,
+    onMouseLeave,
+    "aria-description": description,
+    onKeyDown,
+    onKeyUp,
+    onFocus,
+    onBlur,
+    style,
+    className,
+    testId,
+    // The trigger props, forwarded as they arrive (`ActionHostProps`).
+    ...host
+  } = props;
+  return {
+    ...host,
+    variant: variant ?? "ghost",
+    size,
+    square: true,
+    disabled,
+    loading,
+    reducedMotion,
+    label,
+    leading: icon,
+    onActivate,
+    onClick,
+    onMouseEnter,
+    onMouseLeave,
+    "aria-description": description,
+    onKeyDown,
+    onKeyUp,
+    onFocus,
+    onBlur,
+    style,
+    className,
+    testId,
+  };
+};
 
 /** The element an icon button renders. Pure in its arguments. */
 export const renderIconButton = (

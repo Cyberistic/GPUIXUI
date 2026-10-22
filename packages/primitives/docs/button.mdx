@@ -89,6 +89,9 @@ keeps the text floor on both fills.
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; yours runs first |
 | `onMouseEnter` / `onMouseLeave` | host handlers | none | forwarded to the host; the pair a `Tooltip` trigger needs |
 | `aria-description` | `string` | none | supplementary description; `Tooltip` passes the tip here, and a busy button announces `Loading` instead |
+| `ref` | `Ref<PublicInstance>` | — | the element itself: a trigger anchors the surface it opens to it |
+| `aria-expanded` / `aria-selected` | `boolean` | — | announced state — an open menu or popover, and the current page |
+| other host props | `ActionHostProps` | — | forwarded unchanged (`onMouseDown`/`onMouseMove`/`onMouseUp`, `onLayout`, `autoFocus`, …) |
 | `style` | `StateStyle<ButtonState>` | — | resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the visible label |
@@ -103,6 +106,23 @@ The pointer pair and `aria-description` are `TooltipTriggerProps`: GPUix's
 runtime delivers a hover only to the element that registered the listener, so
 the button forwards them to its own host. That is what makes `<Tooltip><Button
 … /></Tooltip>` open on hover and announce the tip.
+
+The rest of the runtime's host props are `ActionHostProps`, forwarded unchanged
+because a button is also the trigger a surface opens from: the `ref` is the
+element the popover or menu anchors to, `aria-expanded`/`aria-selected` are the
+state assistive technology reads off that same element, and the pointer moves
+are what a hover-opened surface listens to.
+
+```tsx
+<Button ref={setTrigger} aria-expanded={open} variant="ghost">
+  Filters
+</Button>;
+```
+
+`setTrigger` is the surface's own anchor and `open` its state. The props this
+component **owns** — role, tab stop, accessible name, `style`, `testId` and
+every handler the activation contract composes — are written after the spread,
+so no host prop can replace the behaviour.
 
 ## Keyboard
 
@@ -223,7 +243,9 @@ the dim back with `style`, which merges last.
   action's hover and press painting the theme's **opaque** derived fills with
   the label still clearing the text floor on both, and the disabled paint: the
   neutral pair on every filled variant with the fade's under-floor card as the
-  premise, while an unfilled action keeps the fade.
+  premise, while an unfilled action keeps the fade; a trigger's host props
+  (`ref`, `aria-expanded`/`aria-selected`, `onLayout`) reaching the element while
+  the component still writes its own role and tab stop.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus run
   before the button's own action, and a busy button installs no press handler.
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter
@@ -233,7 +255,9 @@ the dim back with `style`, which merges last.
   the runtime's style report; a filled button's **hover** is read back off that
   report as the theme's opaque derived fill, not a lifted alpha, and a disabled
   filled button's fill and label are read back off it as the neutral pair on a
-  card while a disabled ghost button keeps its fade.
+  card while a disabled ghost button keeps its fade; and a trigger's `ref`
+  receives the runtime's own instance, `aria-expanded`/`aria-selected` land in
+  the accessibility tree and GPUI's pointer dispatch calls the hover pair.
 - `runtime/loading.runtime.test.tsx` — a busy primary button's spinner dots paint
   `primaryForeground` and a secondary one's paint `secondaryForeground` in a real
   window.

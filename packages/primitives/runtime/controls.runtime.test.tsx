@@ -466,6 +466,65 @@ it("names a Button by its text child", async () => {
   ).toBe(true);
 });
 
+it("hands a trigger's ref, state and pointer pair to the element", async () => {
+  // The bug guarded (plan 160's measured Phase 1 STOP): the components
+  // package's six triggers pass a `ref` so the surface they open is anchored to
+  // the action, five pass `aria-expanded`, pagination passes `aria-selected`
+  // and the hover-opened surfaces pass the pointer pair — and none of them
+  // could reach the element while `Button` accepted only its own fields, so a
+  // second button implementation had to exist. This is the half a unit test
+  // cannot reach: the ref receives the runtime's own instance, the state lands
+  // in the accessibility tree, and GPUI's own pointer dispatch calls the pair.
+  const runtime = await openWindow();
+  // A ref callback is a nullish boundary, so each call is lifted once here.
+  const refs: Array<Option.Option<number>> = [];
+  const hovers: string[] = [];
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button
+          testId="b"
+          label="Filters"
+          ref={(instance) => {
+            refs.push(
+              Option.map(Option.fromNullishOr(instance), (held) => held.id),
+            );
+          }}
+          aria-expanded
+          aria-selected
+          onMouseEnter={() => hovers.push("enter")}
+          onMouseLeave={() => hovers.push("leave")}
+        >
+          Filters
+        </Button>
+        <Button testId="after">After</Button>
+      </Stack>
+    </Surface>,
+  );
+
+  const id = Option.getOrElse(
+    Option.flatMap(Arr.last(refs), (held) => held),
+    () => expect.fail("the button's ref never ran"),
+  );
+  expect(
+    Option.map(runtime.element("b"), (element) => element.id),
+  ).toStrictEqual(Option.some(id));
+
+  const node = Option.getOrElse(
+    a11yNode(runtime.a11y(), { role: "Button", label: "Filters" }),
+    () => expect.fail("no accessibility node named Filters"),
+  );
+  expect({
+    expanded: node.aria?.expanded,
+    selected: node.aria?.selected,
+  }).toStrictEqual({ expanded: true, selected: true });
+
+  runtime.hover("b");
+  expect(hovers).toStrictEqual(["enter"]);
+  runtime.hover("after");
+  expect(hovers).toStrictEqual(["enter", "leave"]);
+});
+
 it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", async () => {
   const gapOf = async (mode: "attached" | "separated"): Promise<number> => {
     const runtime = await openWindow();
