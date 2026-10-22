@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-86 probes a real window can prove, of which eighteen mount shipped
+87 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -4781,6 +4781,60 @@ port's range check advances on `70000` — each fails its refusal by name
 (`expected "step=1 …", got "step=2 …"` and `expected "step=2 …", got
 "step=3 …"`), exit `1`, and both were restored green.
 
+### `image-fit` — measured on 0.11.0 here
+
+`image-box` measured the **box** an `<img>` paints; this measures the paint
+inside it. `objectFit` is not a style — it is a host prop, so a window's style
+report cannot see it, and the only evidence is the frame. The fixture sets a
+40×20 bitmap through the ref (`setImagePixels`, in a layout effect) carrying
+three unequal bands — 14 red, 12 green, 14 blue — and mounts it in a 160×160
+box, so every mode answers with a placement the fixture predicted and the
+probe reads each band's start, the page at each edge the bitmap misses, and the
+corner a `borderRadius` cuts.
+
+| `objectFit` | Placement in the 160×160 box | Bands the frame reads |
+| ----------- | ---------------------------- | --------------------- |
+| `fill` | `0,0 160×160` | red `0–56`, green `56–104`, blue `104–160` — both axes stretched |
+| `contain` | `0,40 160×80` | the same run; the page above `y=40` and below `y=120` |
+| `cover` | `-80,0 320×160` | red `0–32`, green `32–128`, blue `128–160` — the 8× scale crops source `x=10–30` |
+| absent | `0,40 160×80` | what `contain` paints: the runtime's own default |
+| `scaleDown` | `60,70 40×20` | red `60–74`, green `74–86`, blue `86–100` — its own size, centred |
+| `none` | `0,0 40×20` | red `0–14`, green `14–26`, blue `26–40` — the box's **origin**, not centred |
+| `scaleDown`, 20×20 box | `0,5 20×10` | a bitmap larger than its box needs `contain`'s scale; the page above and below |
+| `none`, 20×20 box | `0,0 40×20` | red `0–14`, green `14–20` — the box crops the right half, blue is gone |
+| `cover`, radius 80 | as `cover` | the `4,4` corner is the page; the top middle and the centre still paint |
+
+What it settles for a component:
+
+1. **`cover` crops**, it does not squash: an avatar or an image preview that
+   fills its frame loses the outer part of the source — `Avatar` and
+   `ImageZoom` both declare `cover`, so their circle and zoom frame are a real
+   crop rather than a stretch.
+2. **`contain` letterboxes** and keeps the whole picture, which is the honest
+   fit for a preview that must show everything.
+3. **`none` anchors at the box's top-left corner**, not at its centre as a
+   browser's default does — a component that wants a centred natural-size image
+   offsets it itself, and a `none` image in a padded frame sits in the corner.
+4. **An absent prop is `contain`**, the runtime's own default; a wrapper must
+   not assume `fill`.
+5. **`borderRadius` clips the bitmap**, so a rounded avatar is one clipped
+   `<img>` rather than a mask element over it.
+6. The two definite dimensions keep their box after the bitmap loads — the
+   aspect-ratio compensation `image-box` measured holds for a buffer pushed
+   through the ref too.
+
+161 checks, `--only image-fit`, green on 0.11.0 here (740ms). Fixture:
+`src/live/image-fit.ts` (the bands and buffer, the five placements, the band and
+edge sample arithmetic, the rounded corner) + `image-fit.test.ts` (the band
+buffer, every placement, the five modes apart, the two documented equivalences,
+the sample points, the registry entry, this section and the printed count). The
+view and steps live in `src/live/scenarios.tsx`. Evidence:
+`.artifacts/live/image-fit.png`.
+
+Negative control, measured: declaring `fill` on the `contain` sample fails
+`imagefit-contain leaves the page at its top edge` (`expected true, got false`,
+exit `1`); restored, green.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5002,8 +5056,8 @@ narrower. Each deviation is deliberate and measured:
   `date-picker-lifecycle`, `data-table-lifecycle`, `virtual-table-lifecycle` and
   `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`,
   `action-ring`, `surface-origin`, `hover-routing-lifecycle`,
-  `multi-step-form-lifecycle`, `aspect-ratio-paint` and `image-box`
-  (twenty-eight probes, each run alone).
+  `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box` and
+  `image-fit` (twenty-nine probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

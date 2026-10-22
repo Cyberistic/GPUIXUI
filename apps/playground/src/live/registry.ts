@@ -552,6 +552,12 @@ export const liveRegistry = [
       "Input: a multi-step form gates each step, keeps its draft across Back, and submits only the record its schema decodes",
     capability: "input",
   },
+  {
+    id: "image-fit",
+    title:
+      "Content: fill stretches a bitmap, contain letterboxes it, cover crops it, scaleDown centres its own size, none anchors it top-left, and an absent prop paints contain",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

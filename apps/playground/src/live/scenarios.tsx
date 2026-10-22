@@ -796,6 +796,7 @@ import {
   countPaint,
   differs,
   isColour,
+  type PaintBox,
   type PaintPoint,
 } from "./box-paint.js";
 import {
@@ -819,6 +820,18 @@ import {
   IMAGE_WIDTH,
   type ImageBoxExpectation,
 } from "./image-box.js";
+import {
+  bandHex,
+  bandSamples,
+  edgeSamples,
+  FIT_CASES,
+  FIT_SOURCE_HEIGHT,
+  FIT_SOURCE_WIDTH,
+  fitPixels,
+  roundCase,
+  roundSamples,
+  type FitCase,
+} from "./image-fit.js";
 import { bandPoint, leftOf, RING_OFFSET } from "./ring-offset.js";
 import {
   decodeReadout,
@@ -20258,6 +20271,196 @@ const imageBoxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * Where a bitmap's pixels land in a box of a different ratio.
+ *
+ * `image-box` measured the box an `<img>` paints; this measures the paint
+ * **inside** it. The fixture's bitmap is 40×20 with three unequal bands, so
+ * every mode answers with a different placement: `fill` stretches the bands
+ * across the box, `contain` letterboxes the same run, `cover` crops the outer
+ * bands, and `scaleDown`/`none` keep the bitmap's own size — one centred, the
+ * other anchored at the box's origin. The page is read at each edge the bitmap
+ * does not reach, and the last sample clips a `borderRadius` circle so the
+ * corner it removes is a measurement rather than a claim.
+ */
+const ImageFitProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const page = {
+    width: window.width,
+    height: window.height,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
+    display: "flex" as const,
+    flexDirection: "column" as const,
+    gap: theme.spacing.lg,
+  };
+  const row = {
+    display: "flex" as const,
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: theme.spacing.lg,
+  };
+  const pixels = fitPixels();
+  const FitImage = ({ image }: { readonly image: FitCase }): ReactNode => {
+    const ref = useRef<ImgInstance>(null);
+    useLayoutEffect(() => {
+      ref.current?.setImagePixels(
+        FIT_SOURCE_WIDTH,
+        FIT_SOURCE_HEIGHT,
+        Buffer.from(pixels),
+      );
+    }, []);
+    return (
+      <img
+        testId={image.id}
+        ref={ref}
+        alt={`Bitmap painted with objectFit ${Option.getOrElse(image.fit, () => "absent")}`}
+        objectFit={Option.getOrUndefined(image.fit)}
+        style={{
+          width: image.box.width,
+          height: image.box.height,
+          borderRadius: Option.getOrElse(image.radius, () => 0),
+        }}
+      />
+    );
+  };
+  return (
+    <div testId="image-fit-probe" style={page}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A bitmap in a box of another ratio: fill stretches it, contain
+        letterboxes it, cover crops it, scaleDown keeps its size centred, none
+        keeps it at the box&apos;s origin, and an absent prop paints what
+        contain paints.
+      </text>
+      <div style={row}>
+        {Arr.map(Arr.take(FIT_CASES, 4), (image) => (
+          <FitImage key={image.id} image={image} />
+        ))}
+      </div>
+      <div style={row}>
+        {Arr.map(Arr.drop(FIT_CASES, 4), (image) => (
+          <FitImage key={image.id} image={image} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const imageFitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* Effect.forEach(FIT_CASES, (image) => ctx.host.waitFor(image.id), {
+      concurrency: 1,
+      discard: true,
+    });
+    yield* ctx.host.capture("image-fit");
+    const frame = yield* ctx.host.pixels("image-fit");
+    const window = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+    const pageHex = palettes.dark.colors.background;
+    const page = yield* ctx.expectSome(
+      "the page's role is a colour a sample can be compared with",
+      Option.fromNullishOr(Pixels.hexToRgba(pageHex)),
+    );
+
+    const boxOf = (id: string) =>
+      Effect.gen(function* () {
+        return yield* ctx.expectSome(
+          `${id} reports its painted box`,
+          Option.fromNullishOr(yield* ctx.host.bounds(id)),
+        );
+      });
+    const at = (box: PaintBox, point: { x: number; y: number }) =>
+      ctx.expectSome(
+        "the sampled point is inside the capture",
+        colourAt(frame, { x: box.x + point.x, y: box.y + point.y }, scale),
+      );
+
+    yield* Effect.forEach(
+      FIT_CASES,
+      (image) =>
+        Effect.gen(function* () {
+          const box = yield* boxOf(image.id);
+          yield* ctx.expectNear(
+            `${image.id} paints the width its box asks for`,
+            box.width,
+            image.box.width,
+            1,
+          );
+          yield* ctx.expectNear(
+            `${image.id} paints the height its box asks for`,
+            box.height,
+            image.box.height,
+            1,
+          );
+          yield* Effect.forEach(
+            bandSamples(image),
+            (sample) =>
+              Effect.gen(function* () {
+                const colour = yield* at(box, sample);
+                yield* ctx.expectEqual(
+                  `${image.id} paints its ${sample.band.name} band where the fit places it`,
+                  isColour(colour, bandHex(sample.band)),
+                  true,
+                );
+              }),
+            { concurrency: 1, discard: true },
+          );
+          yield* Effect.forEach(
+            edgeSamples(image),
+            (sample) =>
+              Effect.gen(function* () {
+                const colour = yield* at(box, sample);
+                yield* ctx.expectEqual(
+                  sample.expected === "page"
+                    ? `${image.id} leaves the page at its ${sample.edge} edge`
+                    : `${image.id} paints the bitmap at its ${sample.edge} edge`,
+                  sample.expected === "page"
+                    ? isColour(colour, pageHex)
+                    : differs(colour, page),
+                  true,
+                );
+              }),
+            { concurrency: 1, discard: true },
+          );
+        }),
+      { concurrency: 1, discard: true },
+    );
+
+    // The rounded case: the clip removes the corner, leaves the top middle and
+    // the centre, and the box it clips is the same square.
+    const rounded = yield* ctx.expectSome(
+      "the fixture declares a rounded case",
+      roundCase,
+    );
+    const roundBox = yield* boxOf(rounded.id);
+    yield* Effect.forEach(
+      roundSamples(rounded),
+      (sample) =>
+        Effect.gen(function* () {
+          const colour = yield* at(roundBox, sample);
+          yield* ctx.expectEqual(
+            sample.expected === "page"
+              ? "a rounded image paints the page in the corner its radius cuts"
+              : `a rounded image keeps painting its bitmap at its ${sample.what}`,
+            sample.expected === "page"
+              ? isColour(colour, pageHex)
+              : differs(colour, page),
+            true,
+          );
+        }),
+      { concurrency: 1, discard: true },
+    );
+  });
+
+/**
  * What a `boxShadow` paints, one property per box.
  *
  * The library's whole elevation contract is this one `StyleDesc` field: a card,
@@ -24967,5 +25170,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "multi-step-form-lifecycle",
     view: () => <MultiStepProbe />,
     steps: multiStepSteps,
+  },
+  "image-fit": {
+    id: "image-fit",
+    view: () => <ImageFitProbe />,
+    steps: imageFitSteps,
   },
 };
