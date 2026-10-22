@@ -26,6 +26,7 @@ import {
   keyboardFocusRing,
   textStyle,
   type FontSource,
+  type PlatformName,
   type Theme,
 } from "@gpuixui/tokens";
 import {
@@ -86,7 +87,10 @@ import {
   ThemeProvider as PrimitiveThemeProvider,
   Tooltip,
 } from "@gpuixui/primitives";
-import { useTheme } from "@gpuixui/tokens/react";
+import {
+  ThemeProvider as TokensThemeProvider,
+  useTheme,
+} from "@gpuixui/tokens/react";
 import {
   createPortal,
   flushSync,
@@ -110,9 +114,9 @@ import {
   SelectValue,
 } from "@gpuix/react/select";
 import { Pixels, type Smoke } from "@gpuixui/testing";
-import { palettes } from "../palettes.js";
+import { nextPalette, palettes, type PaletteId } from "../palettes.js";
 import { SplitPane } from "../panels/split-pane.js";
-import { Pressable, Readout, Toolbar } from "../ui.js";
+import { Body, Pressable, Readout, Toolbar } from "../ui.js";
 import { useWindowKey } from "../window-key.js";
 import { useWindowFacts } from "./window-facts.js";
 import type { LiveProbeId } from "./registry.js";
@@ -192,6 +196,21 @@ import {
 } from "./fade.js";
 import { moveRow, rowAt, type RowHandle } from "./reorder.js";
 import { settleNumber, settleUntil } from "./settle.js";
+import {
+  THEME_CARD,
+  THEME_CARD_PADDING,
+  THEME_CONTROL_WIDTH,
+  THEME_PAGE,
+  THEME_PAGE_PADDING,
+  controlHeight,
+  nextPlatformInCycle,
+  roleColour,
+  sameColour,
+  themeCardPoint,
+  themeFor,
+  themePagePoint,
+  themeSwitchReadout,
+} from "./theme-switch.js";
 import {
   EDGE_HEIGHT,
   MESSAGE_ROWS,
@@ -12297,6 +12316,349 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("workspace-clamped");
   });
 
+/**
+ * The window's theme switch: the provider's value changes and the frame follows.
+ *
+ * A window's renderer reports no style, so the theme gallery's style-report
+ * proof cannot run here. What a window adds is the paint and the layout: the
+ * page and card are sampled out of the captured frame, and the `md` control's
+ * height is read from `bounds`, which is where a density change has to show. The
+ * palette cycle is the shell's own; the platform cycle covers every look the
+ * tokens table ships.
+ *
+ * The high-contrast palette is the measured rule: `applyStyle` reserves its
+ * colours while still applying a look's density, so switching the platform with
+ * that palette selected must move the control and leave the page's fill alone.
+ */
+const ThemeSwitchProbe = (): ReactNode => {
+  const [palette, setPalette] = useState<PaletteId>("dark");
+  const [platform, setPlatform] = useState<PlatformName>("default");
+  const theme = themeFor(palette, platform);
+
+  return (
+    <TokensThemeProvider theme={theme}>
+      <div
+        testId="theme-page"
+        style={{
+          width: THEME_PAGE.width,
+          height: THEME_PAGE.height,
+          padding: THEME_PAGE_PADDING,
+          backgroundColor: theme.colors.background,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.md,
+        }}
+      >
+        <div
+          testId="theme-card"
+          style={{
+            width: THEME_CARD.width,
+            height: THEME_CARD.height,
+            padding: THEME_CARD_PADDING,
+            backgroundColor: theme.colors.card,
+            borderRadius: theme.radius.md,
+          }}
+        >
+          <text
+            testId="theme-card-label"
+            style={{
+              ...textStyle(theme, "bodyStrong"),
+              color: theme.colors.foreground,
+            }}
+          >
+            {`${palette} · ${platform}`}
+          </text>
+          <div
+            testId="theme-control"
+            style={{
+              width: THEME_CONTROL_WIDTH,
+              height: theme.density.controlHeight.md,
+              marginTop: theme.spacing.md,
+              borderRadius: theme.radius.md,
+              backgroundColor: theme.colors.primary,
+            }}
+          />
+        </div>
+        <Toolbar>
+          <Pressable
+            testId="theme-palette-next"
+            onClick={() => setPalette((current) => nextPalette[current])}
+          >
+            <Body>switch palette</Body>
+          </Pressable>
+          <Pressable
+            testId="theme-platform-next"
+            onClick={() =>
+              setPlatform((current) => nextPlatformInCycle[current])
+            }
+          >
+            <Body>switch platform</Body>
+          </Pressable>
+          <Readout testId="theme-switch-readout">
+            {themeSwitchReadout(palette, platform, theme)}
+          </Readout>
+        </Toolbar>
+      </div>
+    </TokensThemeProvider>
+  );
+};
+
+const themeSwitchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("theme-page");
+    yield* Effect.sleep(SETTLE);
+
+    const readoutIs = (palette: PaletteId, platform: PlatformName) =>
+      Effect.gen(function* () {
+        const theme = themeFor(palette, platform);
+        const wanted = themeSwitchReadout(palette, platform, theme);
+        const settled = yield* settleUntil(
+          ctx.host.text("theme-switch-readout"),
+          (value) => value === wanted,
+        );
+        yield* ctx.expectEqual(
+          `the readout names ${palette} on ${platform}`,
+          settled,
+          wanted,
+        );
+      });
+
+    const boxOf = (testId: string) =>
+      Effect.gen(function* () {
+        return yield* ctx.expectSome(
+          `the ${testId} paints a box`,
+          Option.fromNullishOr(yield* ctx.host.bounds(testId)),
+        );
+      });
+
+    const colourOf = (role: "background" | "card", theme: Theme) =>
+      ctx.expectSome(
+        `the ${role} role is a colour a frame can hold`,
+        roleColour(theme, role),
+      );
+
+    const size = yield* ctx.host.windowSize();
+    const page = yield* boxOf("theme-page");
+    const card = yield* boxOf("theme-card");
+
+    /**
+     * Captures `name`, samples `pointOf` its box and settles on `expected`.
+     *
+     * Each attempt writes the same capture, so a software paint that lands a
+     * frame late costs a retry instead of a false failure; the assertion then
+     * prints both colours.
+     */
+    const sample = (
+      label: string,
+      name: string,
+      surface: Smoke.Bounds,
+      pointOf: (box: Smoke.Bounds) => {
+        readonly x: number;
+        readonly y: number;
+      },
+      expected: Pixels.Rgba,
+    ) =>
+      Effect.gen(function* () {
+        const read = Effect.gen(function* () {
+          yield* ctx.host.capture(name);
+          const frame = yield* ctx.host.pixels(name);
+          const scale = yield* ctx.expectSome(
+            "the capture is the window at a whole device scale",
+            captureScale(frame, size),
+          );
+          const at = framePoint(pointOf(surface), scale);
+          return yield* ctx.expectSome(
+            `the ${name} capture holds the sample point`,
+            Option.fromNullishOr(Pixels.pixelAt(frame, at.x, at.y)),
+          );
+        });
+        const settled = yield* settleUntil(
+          read,
+          (colour) => sameColour(colour, expected),
+          4,
+        );
+        yield* ctx.expectEqual(
+          label,
+          describeColour(settled),
+          describeColour(expected),
+        );
+        return settled;
+      });
+
+    const heightOf = (label: string, theme: Theme) =>
+      Effect.gen(function* () {
+        const control = yield* boxOf("theme-control");
+        yield* ctx.expectNear(
+          `${label}: the md control takes the theme's height`,
+          control.height,
+          controlHeight(theme),
+          1,
+        );
+        return control.height;
+      });
+
+    // ── The shell's opening frame ───────────────────────────────────────────
+    const dark = themeFor("dark", "default");
+    yield* readoutIs("dark", "default");
+    const darkPage = yield* sample(
+      "the window paints the dark page",
+      "theme-dark",
+      page,
+      themePagePoint,
+      yield* colourOf("background", dark),
+    );
+    const darkCard = yield* sample(
+      "the window paints the dark card",
+      "theme-dark",
+      card,
+      themeCardPoint,
+      yield* colourOf("card", dark),
+    );
+    const darkHeight = yield* heightOf("dark", dark);
+
+    // ── A palette press repaints, and leaves density alone ──────────────────
+    yield* ctx.host.click("theme-palette-next");
+    const light = themeFor("light", "default");
+    yield* readoutIs("light", "default");
+    const lightPage = yield* sample(
+      "a palette press repaints the page",
+      "theme-light",
+      page,
+      themePagePoint,
+      yield* colourOf("background", light),
+    );
+    yield* ctx.expectEqual(
+      "the light page is a different fill from the dark one",
+      sameColour(lightPage, darkPage),
+      false,
+    );
+    yield* sample(
+      "a palette press repaints the card",
+      "theme-light",
+      card,
+      themeCardPoint,
+      yield* colourOf("card", light),
+    );
+    const lightHeight = yield* heightOf("light", light);
+    yield* ctx.expectEqual(
+      "a palette press leaves the control's height alone",
+      lightHeight,
+      darkHeight,
+    );
+
+    // ── The high-contrast palette is a third page ───────────────────────────
+    yield* ctx.host.click("theme-palette-next");
+    const high = themeFor("high", "default");
+    yield* readoutIs("high", "default");
+    const highPage = yield* sample(
+      "the high-contrast palette repaints the page again",
+      "theme-high",
+      page,
+      themePagePoint,
+      yield* colourOf("background", high),
+    );
+    yield* ctx.expectEqual(
+      "the high-contrast page is a different fill from the light one",
+      sameColour(highPage, lightPage),
+      false,
+    );
+    yield* sample(
+      "the high-contrast palette repaints the card",
+      "theme-high",
+      card,
+      themeCardPoint,
+      yield* colourOf("card", high),
+    );
+    const highHeight = yield* heightOf("high", high);
+
+    // ── A platform press re-lays the control out ────────────────────────────
+    yield* ctx.host.click("theme-platform-next");
+    const darwin = themeFor("high", "darwin");
+    yield* readoutIs("high", "darwin");
+    const darwinPage = yield* sample(
+      "a platform look keeps a high-contrast palette's page",
+      "theme-darwin",
+      page,
+      themePagePoint,
+      yield* colourOf("background", darwin),
+    );
+    yield* ctx.expectEqual(
+      "the reserved high-contrast fill is the one the last frame painted",
+      sameColour(darwinPage, highPage),
+      true,
+    );
+    const darwinHeight = yield* heightOf("darwin", darwin);
+    yield* ctx.expectEqual(
+      "a platform look re-lays the control out",
+      darwinHeight === highHeight,
+      false,
+    );
+
+    // ── Every look in the cycle moves the density to its own preset ─────────
+    yield* ctx.host.click("theme-platform-next");
+    const linux = themeFor("high", "linux");
+    yield* readoutIs("high", "linux");
+    const linuxHeight = yield* heightOf("linux", linux);
+    yield* ctx.expectEqual(
+      "the next look moves the density again",
+      linuxHeight === darwinHeight,
+      false,
+    );
+
+    yield* ctx.host.click("theme-platform-next");
+    yield* readoutIs("high", "win32");
+    const win32Height = yield* heightOf("win32", themeFor("high", "win32"));
+    yield* ctx.expectEqual(
+      "the third look has its own height",
+      win32Height === linuxHeight,
+      false,
+    );
+
+    yield* ctx.host.click("theme-platform-next");
+    yield* readoutIs("high", "default");
+    const defaultHeight = yield* heightOf("default", high);
+    yield* ctx.expectEqual(
+      "the platform cycle returns to the base density",
+      defaultHeight,
+      highHeight,
+    );
+
+    // ── The palette cycle closes on the frame it opened on ──────────────────
+    yield* ctx.host.click("theme-palette-next");
+    const darkAgain = themeFor("dark", "default");
+    yield* readoutIs("dark", "default");
+    const restoredPage = yield* sample(
+      "the palette cycle closes on the page it opened on",
+      "theme-restored",
+      page,
+      themePagePoint,
+      yield* colourOf("background", darkAgain),
+    );
+    yield* ctx.expectEqual(
+      "the restored page is the opening frame's fill",
+      sameColour(restoredPage, darkPage),
+      true,
+    );
+    const restoredCard = yield* sample(
+      "the restored page is the opening frame's card",
+      "theme-restored",
+      card,
+      themeCardPoint,
+      yield* colourOf("card", darkAgain),
+    );
+    yield* ctx.expectEqual(
+      "the restored card is the opening frame's fill",
+      sameColour(restoredCard, darkCard),
+      true,
+    );
+    const restoredHeight = yield* heightOf("restored", darkAgain);
+    yield* ctx.expectEqual(
+      "the restored control is the opening height",
+      restoredHeight,
+      darkHeight,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -12534,5 +12896,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "workspace-restore",
     view: () => <WorkspaceRestoreProbe />,
     steps: workspaceRestoreSteps,
+  },
+  "theme-switch-lifecycle": {
+    id: "theme-switch-lifecycle",
+    view: () => <ThemeSwitchProbe />,
+    steps: themeSwitchSteps,
   },
 };

@@ -547,7 +547,39 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 73/73
+`[x]` `[██████████]` 74/74
+
+`[x]` Land the `theme-switch-lifecycle` live probe and measure **a provider
+      switch in a window** — the headless gallery proves the token layer through
+      the runtime's style report, and a window's renderer reports no style, so
+      "theme switching" (a critical interaction the mission names) had never
+      been read off a frame. The probe paints a fixed page, a card and an `md`
+      control inside a provider and switches the shell's own palette cycle and
+      every platform look: the page and card are sampled **inside their own
+      padding** from the capture, and the control's height is read from `bounds`,
+      which is where a density change has to show. Measured on 0.11.0, 73 checks,
+      `--only theme-switch-lifecycle`: dark/default paints `#11141A`/`#191D25`
+      at 32; light repaints `#F6F8FA`/`#FFFFFF` and keeps 32 (a palette press
+      does not reflow); high contrast repaints `#000000`/`#0D0D0D`; switching to
+      macOS keeps the high-contrast page (the look **reserves** the palette) and
+      re-lays the control to **28**, Linux **36**, Windows **32**, default again
+      32; switching the palette back to dark paints the opening frame and
+      height. `src/live/theme-switch.ts` holds both cycles, `themeFor` (the
+      `applyStyle` rule the probe relies on), the sample points and the readout;
+      `theme-switch.test.ts` (7 cases) holds the premise — both cycles reach
+      every id and return, a new platform in `platformNames` fails until the
+      probe visits it, at least three distinct control heights exist, every
+      platform's palette differs from the base, the high-contrast base keeps its
+      fill while it takes a look's density, both sample points sit in the
+      padding they claim, and every visited state's roles are paint-ready.
+      Two negative controls measured (pinning the page to the dark fill:
+      `expected "rgba(246, 248, 250, 255)", got "rgba(17, 20, 26, 255)"`;
+      pinning the control to 32: `expected 28 ± 1, got 32`; exit `1` each and
+      restored green). Fixture directions measured: dropping `win32` from the
+      cycle fails the platform case, and collapsing `themeFor` onto its base
+      fails the density, palette and high-contrast cases by name. Evidence:
+      `apps/playground/README.md` §`theme-switch-lifecycle`,
+      `.artifacts/live/theme-{dark,light,high,darwin,restored}.png`
 
 `[x]` Prove the **surface fade** the presence seam paints and record the frames
       — the `surface-fade` live probe opens the shipped `Dialog` over a white

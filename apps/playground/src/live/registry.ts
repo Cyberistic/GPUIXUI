@@ -318,6 +318,12 @@ export const liveRegistry = [
       "Workspace: a saved arrangement paints again after a re-mount — the panes, the chosen document and the inspector's scroll — while a corrupt string opens the default and an out-of-bounds width is clamped",
     capability: "workspace",
   },
+  {
+    id: "theme-switch-lifecycle",
+    title:
+      "Theme: a provider switch repaints the page and the card, and a platform look re-lays an md control out at its own density while a high-contrast palette keeps its colours",
+    capability: "theme",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

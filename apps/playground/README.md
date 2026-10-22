@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-47 probes a real window can prove, of which twelve mount shipped
+48 probes a real window can prove, of which twelve mount shipped
 `@gpuixui/components` (the dialog and its fade, the menu, the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
 combobox and the modal focus rule), five mount
@@ -2683,6 +2683,45 @@ fails `the saved scroll paints where it was saved` (`expected -120 ± 1, got 0`)
 Captures: `.artifacts/live/{workspace-changed,workspace-restored,
 workspace-default,workspace-clamped}.png`.
 
+### `theme-switch-lifecycle` — measured on 0.11.0 here
+
+The **provider switch in a window**. The headless theme gallery proves the token
+layer through the runtime's style report; a window's renderer reports no style,
+so this probe reads the frame and the layout instead: the page and card fills at
+points inside their own padding, and the height of an `md` control, which the
+theme's density owns. The palette cycle is the shell's own switch, and the
+platform cycle covers every look in `platformStyles` (a new platform fails
+`src/live/theme-switch.test.ts` until the probe visits it).
+
+| Step | Measurement |
+| ---- | ----------- |
+| open | `palette=dark platform=default h=32`; page `rgba(17, 20, 26, 255)` (`#11141A`), card `#191D25`, the `md` control **32** |
+| palette → light | page `#F6F8FA`, card `#FFFFFF` — a **different** fill from the dark frame — and the control stays **32**, so a palette press repaints without reflowing |
+| palette → high contrast | page `#000000`, card `#0D0D0D`, a third different fill, height still **32** |
+| platform → macOS | the page stays `#000000` — `applyStyle` **reserves** a high-contrast palette — while the control re-lays out to **28** (compact) |
+| platform → Linux | the control takes **36** (spacious) |
+| platform → Windows | **32** (comfortable) |
+| platform → Default | the base density again, **32** |
+| palette → dark | the page, the card and the height are the opening frame's, so both cycles close |
+
+73 checks, `--only theme-switch-lifecycle`, green on 0.11.0. Fixture:
+`src/live/theme-switch.ts` — the palette and platform cycles, `themeFor`, the
+two sample points, the role-to-frame colour conversion and the readout.
+`theme-switch.test.ts` (7 cases) holds the premise: both cycles reach every id
+and return, each platform's density is a preset the control height can show (at
+least three distinct heights), every platform's palette differs from the base at
+the sampled point, a high-contrast base keeps its fill while it takes a look's
+density, both sample points sit inside the padding they claim, and every visited
+state's roles are paint-ready colours.
+
+Negative controls measured, exit `1` each and restored green: pinning the page
+to the dark fill fails `a palette press repaints the page` (`expected
+"rgba(246, 248, 250, 255)", got "rgba(17, 20, 26, 255)"`), and pinning the
+control to 32 fails `darwin: the md control takes the theme's height`
+(`expected 28 ± 1, got 32`). The second is why the height is a check: a look
+that repainted but never reflowed would pass every colour read.
+Captures: `.artifacts/live/theme-{dark,light,high,darwin,restored}.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -2795,7 +2834,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (47/47), with a written report and screenshots.
+  (48/48), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls
