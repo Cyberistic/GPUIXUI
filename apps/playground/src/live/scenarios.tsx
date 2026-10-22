@@ -18,6 +18,7 @@ import {
 } from "react";
 import { Duration, Effect, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
+import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
@@ -212,6 +213,16 @@ import {
   type PaneOpen,
   type PaneSide,
 } from "./multi-pane.js";
+import {
+  FILTER_IDS,
+  FILTER_ROW_HEIGHT,
+  FILTER_VIEWPORT,
+  filterReadout,
+  filterRows,
+  keepSelection,
+  rowLabel,
+  stepRow,
+} from "./table-filter.js";
 import {
   FADE_BACKING,
   FADE_BACKING_RGBA,
@@ -14247,6 +14258,337 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("multi-pane-reopened");
   });
 
+/**
+ * `table-filter-lifecycle` — the rules around a grid's filter control.
+ *
+ * Tier 3's **filtering controls** row is `div` + `<input>`, so the runtime cannot
+ * refuse the control; what a data grid has to get right is what happens to the
+ * rows, the selection and the focus while the set changes under them. The probe
+ * types a literal query into a field above 120 rows, watches the painted set
+ * narrow, and measures the three decisions a grid owns: a selection survives only
+ * while its record does, the field keeps the text session while rows come and
+ * go, and a new set opens at the top. Arrow steps then walk the filtered order
+ * (`Item 1` → `Item 10`), not the numeric index, and a clear keeps a selection
+ * the full set still holds.
+ */
+const TableFilterProbe = (): ReactNode => {
+  const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const list = useRef<PublicInstance | null>(null);
+  const field = useRef<PublicInstance | null>(null);
+  const rowIds = useRef(HashMap.empty<number, number>());
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<Option.Option<number>>(Option.none());
+  const [offset, setOffset] = useState(0);
+  const rows = filterRows(query);
+
+  /** Applies a query: the selection follows the set, and the new set opens at the top. */
+  const apply = (next: string) => {
+    setQuery(next);
+    setSelected((current) => keepSelection(current, filterRows(next)));
+    const elementId = list.current?.id;
+    if (elementId != null) renderer?.scrollTo?.(elementId, 0, 0);
+    setOffset(0);
+  };
+
+  const clear = () => {
+    apply("");
+    const elementId = field.current?.id;
+    if (elementId != null) renderer?.focusElement?.(elementId);
+  };
+
+  const onRowKey = (event: EventPayload) => {
+    const delta = event.key === "down" ? 1 : event.key === "up" ? -1 : 0;
+    if (delta === 0) return;
+    const next = stepRow(rows, selected, delta);
+    setSelected(next);
+    Option.match(next, {
+      onNone: () => {},
+      onSome: (index) =>
+        Option.match(HashMap.get(rowIds.current, index), {
+          onNone: () => {},
+          onSome: (elementId) => renderer?.focusElement?.(elementId),
+        }),
+    });
+  };
+
+  /** Registers a row's native id, so a step can move the real focus to it. */
+  const registerRow = (index: number) => (instance: PublicInstance | null) => {
+    rowIds.current =
+      instance === null
+        ? HashMap.remove(rowIds.current, index)
+        : HashMap.set(rowIds.current, index, instance.id);
+  };
+
+  return (
+    <div
+      testId={FILTER_IDS.probe}
+      style={{
+        width: 560,
+        height: 460,
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A literal filter over 120 rows: the selection follows the set, and the
+        filtered order is the arrow order.
+      </text>
+      <Toolbar>
+        <input
+          testId={FILTER_IDS.field}
+          ref={field}
+          value={query}
+          onChange={(event) => apply(event.value ?? "")}
+          style={{
+            width: 200,
+            padding: theme.spacing.sm,
+            ...textStyle(theme, "body"),
+            backgroundColor: theme.colors.input,
+            color: theme.colors.inputForeground,
+            borderWidth: theme.borderWidth.thin,
+            borderColor: theme.colors.border,
+            borderRadius: theme.radius.sm,
+          }}
+        />
+        <Pressable testId={FILTER_IDS.clear} onClick={clear}>
+          clear
+        </Pressable>
+      </Toolbar>
+      <div
+        testId={FILTER_IDS.list}
+        ref={list}
+        onScrollChange={(event) => setOffset(event.scrollY ?? 0)}
+        style={{
+          height: FILTER_VIEWPORT,
+          overflowY: "scroll",
+          backgroundColor: theme.colors.card,
+          borderWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+        }}
+      >
+        {Arr.map(rows, (index) => (
+          <div
+            key={index}
+            testId={FILTER_IDS.row(index)}
+            ref={registerRow(index)}
+            tabIndex={0}
+            role="option"
+            aria-selected={Option.contains(selected, index)}
+            onClick={() => setSelected(Option.some(index))}
+            onKeyDown={onRowKey}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              height: FILTER_ROW_HEIGHT,
+              paddingLeft: theme.spacing.sm,
+              flexShrink: 0,
+              backgroundColor: Option.contains(selected, index)
+                ? theme.colors.selected
+                : theme.colors.card,
+              borderBottomWidth: theme.borderWidth.thin,
+              borderColor: theme.colors.border,
+              ...keyboardFocusRing(theme),
+            }}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "body"),
+                color: Option.contains(selected, index)
+                  ? theme.colors.selectedForeground
+                  : theme.colors.foreground,
+              }}
+            >
+              {rowLabel(index)}
+            </text>
+          </div>
+        ))}
+        {Arr.match(rows, {
+          onEmpty: () => (
+            <div
+              testId={FILTER_IDS.empty}
+              style={{
+                padding: theme.spacing.lg,
+                backgroundColor: theme.colors.muted,
+              }}
+            >
+              <text
+                style={{
+                  ...textStyle(theme, "body"),
+                  color: theme.colors.mutedForeground,
+                }}
+              >
+                No rows match
+              </text>
+            </div>
+          ),
+          onNonEmpty: () => null,
+        })}
+      </div>
+      <Readout testId={FILTER_IDS.readout}>
+        {filterReadout(query, rows, selected, offset)}
+      </Readout>
+    </div>
+  );
+};
+
+const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(FILTER_IDS.list);
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text(FILTER_IDS.readout);
+    const everyRow = filterRows("");
+
+    // 1. The table opens unfiltered, at its own row height.
+    yield* ctx.expectEqual(
+      "the grid opens with every row and no filter",
+      yield* readout(),
+      filterReadout("", everyRow, Option.none(), 0),
+    );
+    yield* paintedBox(ctx, FILTER_IDS.list);
+    yield* ctx.expectNear(
+      "a row paints at the height the grid declares",
+      (yield* paintedBox(ctx, FILTER_IDS.row(0))).height,
+      FILTER_ROW_HEIGHT,
+      1,
+    );
+
+    // 2. A press selects the record and focuses the row it hit.
+    yield* ctx.host.click(FILTER_IDS.row(1));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press selects the record it hit",
+      yield* readout(),
+      filterReadout("", everyRow, Option.some(1), 0),
+    );
+    yield* ctx.expectEqual(
+      "the pressed row holds the focus, so the next key reaches it",
+      yield* focusedAfterPaint(ctx),
+      FILTER_IDS.row(1),
+    );
+
+    // 3. Typing filters; the field keeps the session and a visible selection stays.
+    yield* ctx.host.click(FILTER_IDS.field);
+    yield* ctx.host.key("1");
+    yield* Effect.sleep(SETTLE);
+    const ones = filterRows("1");
+    yield* ctx.expectEqual(
+      "typing narrows the painted rows and keeps a selection the set still holds",
+      yield* readout(),
+      filterReadout("1", ones, Option.some(1), 0),
+    );
+    yield* ctx.expectEqual(
+      "the field keeps the text session while the rows change under it",
+      yield* focusedAfterPaint(ctx),
+      FILTER_IDS.field,
+    );
+
+    // 4. A selection the narrower set hides is cleared, not kept invisible.
+    yield* ctx.host.key("2");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a selection the narrower set hides is cleared",
+      yield* readout(),
+      filterReadout("12", filterRows("12"), Option.none(), 0),
+    );
+
+    // 5. No match is an empty state, and the filtered-out row paints nothing.
+    yield* ctx.host.key("z");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a query with no match paints no rows",
+      yield* readout(),
+      filterReadout("12z", [], Option.none(), 0),
+    );
+    yield* ctx.expectEqual(
+      "no match paints the empty state",
+      Option.isSome(
+        Option.fromNullishOr(yield* ctx.host.bounds(FILTER_IDS.empty)),
+      ),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a filtered-out record's row paints nothing",
+      Option.isNone(
+        Option.fromNullishOr(yield* ctx.host.bounds(FILTER_IDS.row(1))),
+      ),
+      true,
+    );
+
+    // 6. Clearing restores the set and parks the session in the field.
+    yield* ctx.host.click(FILTER_IDS.clear);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "clearing restores every row",
+      yield* readout(),
+      filterReadout("", everyRow, Option.none(), 0),
+    );
+    yield* ctx.expectEqual(
+      "clearing parks the text session back in the filter field",
+      yield* focusedAfterPaint(ctx),
+      FILTER_IDS.field,
+    );
+
+    // 7. A new set opens at the top, even when the reader was scrolled away.
+    yield* ctx.host.wheel(FILTER_IDS.list, 0, -200);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the wheel scrolls the list",
+      yield* readout(),
+      "offset=-200",
+    );
+    yield* ctx.host.key("1");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a filter change opens the new set at the top",
+      yield* readout(),
+      filterReadout("1", ones, Option.none(), 0),
+    );
+    yield* ctx.expectEqual(
+      "the list itself paints at the top, not only the readout",
+      Option.match(
+        Option.fromNullishOr(yield* ctx.host.scrollOffset(FILTER_IDS.list)),
+        { onNone: () => Number.NaN, onSome: (value) => value.y },
+      ),
+      0,
+    );
+
+    // 8. Arrows walk the filtered order, with the focus and the selection together.
+    yield* ctx.host.click(FILTER_IDS.row(1));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("down");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "Down steps to the next record in the filtered order, not the numeric one",
+      yield* readout(),
+      filterReadout("1", ones, Option.some(10), 0),
+    );
+    yield* ctx.expectEqual(
+      "the arrow step moves the focus with the selection",
+      yield* focusedAfterPaint(ctx),
+      FILTER_IDS.row(10),
+    );
+
+    // 9. Clearing keeps a selection the full set still holds.
+    yield* ctx.host.click(FILTER_IDS.clear);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "clearing keeps a selection the full set still holds",
+      yield* readout(),
+      filterReadout("", everyRow, Option.some(10), 0),
+    );
+    yield* ctx.host.capture("table-filtered");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -14519,5 +14861,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "multi-pane-editor",
     view: () => <MultiPaneEditorProbe />,
     steps: multiPaneSteps,
+  },
+  "table-filter-lifecycle": {
+    id: "table-filter-lifecycle",
+    view: () => <TableFilterProbe />,
+    steps: tableFilterSteps,
   },
 };

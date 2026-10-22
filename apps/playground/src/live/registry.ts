@@ -360,6 +360,12 @@ export const liveRegistry = [
       "Editor: two panes share one text session by press, the splitter resizes them without touching either buffer, and a closed pane keeps its file",
     capability: "editor",
   },
+  {
+    id: "table-filter-lifecycle",
+    title:
+      "Table: a typed filter narrows the painted rows, keeps the field's session, clears a hidden selection, and steps in the filtered order",
+    capability: "table",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

@@ -35,8 +35,7 @@ const scenarios = readFileSync(
 );
 
 /**
- * The `multiPaneSteps` effect, bounded by the live-probe body table that follows
- * it.
+ * The `multiPaneSteps` effect, bounded by the probe that follows it.
  *
  * It has no loop that adds a check, so its `ctx.expect*` call sites plus one per
  * `paintedBox` call are the checks the window runs — which is what the README
@@ -44,7 +43,7 @@ const scenarios = readFileSync(
  */
 const multiPaneSteps = (() => {
   const start = scenarios.indexOf("const multiPaneSteps");
-  const end = scenarios.indexOf("/** The bodies", start + 1);
+  const end = scenarios.indexOf("const TableFilterProbe", start + 1);
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
 })();
 

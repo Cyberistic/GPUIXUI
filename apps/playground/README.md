@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-54 probes a real window can prove, of which fifteen mount shipped
+55 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -3015,6 +3015,45 @@ Two negative controls were measured, exit `1` each, then restored green:
 Captures: `.artifacts/live/{multi-pane-split,multi-pane-closed,
 multi-pane-reopened}.png`.
 
+### `table-filter-lifecycle` — measured on 0.11.0 here
+
+The **rules around a grid's filter**. Tier 3's *filtering controls* row is `div` +
+`<input>`, so the runtime cannot refuse the control; what a data grid owns is
+what happens to the rows, the selection and the focus while the set changes under
+them. The probe puts a literal, case-insensitive query field above 120 rows in a
+240px scroller and drives the decisions a grid has to make.
+
+| Step | Measurement |
+| ---- | ----------- |
+| open | `rows=120 query=none selected=none offset=0`, and a row paints at its declared **28px** |
+| press | the pressed record is selected and its row holds the focus, so the next key reaches it |
+| type `1` | `rows=39` (`Item 1`, 10–19, the eight odd tens and 100–119), the visible selection is kept, and the field keeps the text session |
+| type `2` | `rows=2` (`Item 12`, `Item 112`) and the hidden selection is **cleared**, not kept invisibly |
+| type `z` | `rows=0`: the empty state paints and the filtered-out row paints nothing |
+| clear | every row returns and the session is parked back in the filter field |
+| scroll, then filter | a −200 wheel scrolls the list; the next key opens the new set at **0** — read from `scrollOffset` and not only the readout |
+| Down | from `Item 1` the step lands on `Item 10`, the next **filtered** row rather than the numeric one, and the focus moves with it |
+| clear | the full set returns and keeps `item-10`, which it still holds |
+
+20 checks, `--only table-filter-lifecycle`, green on 0.11.0 (~1 s). Fixture:
+`src/live/table-filter.ts` — the literal filter, the selection rule
+(`keepSelection`), the filtered-order step (`stepRow`) and the counts-only
+readout; `table-filter.test.ts` (7 cases) holds the label match (39 rows for
+`1`, `[12, 112]` for `12`, case-insensitive), both ends of the step, the cleared
+selection, the no-filter/empty distinction and the README check count.
+
+Two negative controls were measured, exit `1` each, then restored green:
+
+- keeping the selection across a filter that hides it fails `a selection the
+  narrower set hides is cleared` with `selected=item-1` where `selected=none` was
+  expected — the grid would act on a record the reader cannot see.
+- dropping the scroll reset (leaving the app's readout at `0`) fails `the list
+  itself paints at the top, not only the readout` with **`expected 0, got
+  -200`** — the readout alone would have passed, so the probe reads the
+  renderer's own offset beside it.
+
+Capture: `.artifacts/live/table-filtered.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -3095,6 +3134,7 @@ src/live/backdrop.ts     the window-backdrop modes, fixture and capture arithmet
 src/live/window-facts.tsx the window options the runner opened, read by a probe
 src/live/editor-overlay.ts the editable-code fixture: one source under a field and beside it
 src/live/multi-pane.ts  the two-pane editor fixture: buffers, split arithmetic and the drag clamp
+src/live/table-filter.ts the filtered-grid fixture: the label match, the selection rule and the filtered-order step
 src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
@@ -3129,7 +3169,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop, the app-level shortcut and selection probes pass in real GPUix 0.11.0 on this host
-  (54/54), with a written report and screenshots.
+  (55/55), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls
