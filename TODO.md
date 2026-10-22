@@ -2983,7 +2983,7 @@ column fails 6, and `nub run --filter @gpuixui/docs test` is green (39 files /
 
 `[x]` The theming pages print the **series surface contract** from the package — `/docs/themes`' Data series bullet said "the five categorical colours … the three surfaces a plot is drawn on (`background`, `card`, `popover`) at the boundary floor" while `/docs/theming` derived only the scale length, so a surface or a scale length the package changed would leave one page teaching a contract the library no longer runs. Both pages now interpolate `{seriesColors(themes.dark).length}` and `{seriesSurfaces.length}`, print the `seriesSurfaces` list, and derive the `{contrastFloors.boundary}:1` floor. `theming-page.test.ts` gains `the theming pages' series surfaces`: each page must import `seriesSurfaces`, print the count, print the package's own backticked list (whitespace-flattened, because prose wraps) and keep no stale "three surfaces"; `/docs/themes` must also derive the scale length rather than print "five categorical colours". Directions measured: restoring "the five categorical colours" fails the scale case; restoring "the three surfaces" fails `prints a literal surface count` + `keeps a stale surface count`; dropping `popover` from the list fails `does not print (...)`. The bridge sentence also stopped printing a terminal index — it said `--series-1` to `--series-5` while the length beside it was derived — and now names `--series-1`, `--series-2`, … so the guard reads the printed variables and fails on any index above the second (measured: restoring `--series-5` fails `names the bridge's variables without printing a terminal index`). `nub run --filter @gpuixui/docs test` green (69 files / 600 tests), `check-types` and `build` green.
 
-`[x]` The **Typography** page's description counts the scale it shows — its search snippet said "The ten type roles, the two families" while `<TypeScale />` derives its rows from `themes.dark.typography`, so a role added to the package would leave the sentence (and the search result) counting the previous scale. `type-scale.test.tsx` gains `counts the roles and families its description advertises`: it reads `themeRoles` and the family fields from the theme and requires the description's word for each, so the count cannot be printed. Direction measured: `The nine type roles` fails `expected … to contain 'The ten type roles'`; `nub run --filter @gpuixui/docs test` green (69 files / 601 tests), `check-types` and `build` green.
+`[x]` The **Typography** page's description counts the scale it shows — its search snippet said "The ten type roles, the two families" while `<TypeScale />` derives its rows from `themes.dark.typography`, so a role added to the package would leave the sentence (and the search result) counting the previous scale. `type-scale.test.tsx` gains `counts the roles and families its description advertises`: it reads `themeRoles` and the family fields from the theme and requires the description's word for each, so the count cannot be printed. Direction measured: `The nine type roles` fails `expected … to contain 'The ten type roles'`; `nub run --filter @gpuixui/docs test` green (69 files / 601 tests), `check-types`, `build`, `lint` and `check:tests` green.
 
 ## Phase G — release readiness
 
@@ -3341,8 +3341,11 @@ numbers).
       read `expected 6 ± 1, got 0.5`); `context-menu-lifecycle` settles **both**
       axes of the keyboard-placed surface (`204 ± 1` at rest, `201` mid-entry);
       `header-menu-lifecycle` replaced its one-shot `gone` with the bounded
-      `settleGone` (`Escape unpaints the menu` saw the 200ms exit still painted);
-      `modal-focus-restore` now expects `restore-auto-trigger`, because the
+      `settleGone` (`Escape unpaints the menu` saw the 200ms exit still painted)
+      and reads a panel that has just been opened with `settledBox` (a press
+      after the header shrank read `expected a value, got none` on the frame
+      before the entry); `modal-focus-restore` now expects
+      `restore-auto-trigger`, because the
       modal records its opener in the render that opens it, before a child's
       `autoFocus` runs. The check that expects the popover to **survive** a
       press inside it polls for the painted state (`settlePainted`) instead of
