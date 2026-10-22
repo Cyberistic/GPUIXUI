@@ -323,4 +323,21 @@ describe("the workspace page's pointer and terminal claims", () => {
     expect(workspace).toContain("createPortal");
     expect(workspace).not.toContain("the runtime has neither");
   });
+
+  it("keeps the workspace out of the wheel's path, as the window measured it", () => {
+    // A dock's pane list sits inside the workspace's own scroll root, and the
+    // page described the dock's focus order and panes while saying nothing about
+    // what a wheel does across the two. `nested-scroll-lifecycle` measured one
+    // wheel moving **every** scrollable ancestor by the same delta, each
+    // clamping against its own content, and the page's `onScroll` hearing a wheel
+    // aimed inside the list — so the outer layout is a rule, not a detail.
+    const nested = rowFor(record, "Nested scrollers");
+
+    expect(nested).toContain("supported, with limits");
+    expect(nested).toContain("nested-scroll-lifecycle");
+    expect(nested).toContain("preventDefault");
+    expect(workspace).toContain("nested-scroll-lifecycle");
+    expect(workspace).toContain("The workspace does not scroll");
+    expect(workspace).toContain("onScrollChange");
+  });
 });

@@ -1365,6 +1365,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("tooltip-lifecycle");
     expect(runtimePage).toContain("tabs-lifecycle");
     expect(runtimePage).toContain("scroll-lifecycle");
+    expect(runtimePage).toContain("nested-scroll-lifecycle");
     expect(runtimePage).toContain("pointer-capture");
     expect(runtimePage).toContain("content-surfaces");
     expect(runtimePage).toContain("selection-lifecycle");
@@ -1409,6 +1410,42 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(scroll?.[1]).toContain("getScrollOffset");
     expect(scroll?.[1]).toContain("clamped");
     expect(scroll?.[2]).toContain("onScrollChange");
+  });
+
+  it("records the wheel every scrollable ancestor takes", () => {
+    // A dock pane's list sits inside the workspace's scroll root, and the
+    // routing question — does the inner scroller keep the wheel, does the outer
+    // one wait for its end — was answered nowhere, so a dock had no rule for the
+    // outer layout. `nested-scroll-lifecycle` measured that one wheel moves
+    // **every** scrollable ancestor by the same delta, that each clamps against
+    // its own content, and that the page's `onScroll` hears a wheel aimed inside
+    // the list. The host props publish no wheel handler, so no pane can guard.
+    const nested = rowFor("Nested scrollers");
+    expect(nested?.verdict).toBe("supported, with limits");
+    expect(nested?.evidence).toContain("nested-scroll-lifecycle");
+    expect(nested?.evidence).toContain("-100");
+    expect(nested?.evidence).toContain("-340");
+    expect(nested?.evidence).toContain("-360");
+    expect(nested?.evidence).toContain("events=3");
+    expect(nested?.evidence).toContain("preventDefault");
+    expect(nested?.workaround).toContain("non-scrolling");
+    expect(nested?.workaround).toContain("onScrollChange");
+  });
+
+  it("publishes the nested scroller rule on /docs/runtime", () => {
+    // The page is read before a dock is designed, so it has to carry both the
+    // measurement and the two rules a reader acts on: keep the workspace out of
+    // the wheel's path, and read each scroller's own offset because an
+    // ancestor's `onScroll` cannot tell which one moved.
+    const nested = measuredRow("Nested scrollers");
+    expect(
+      nested,
+      "the page's measured table has no nested-scroller row",
+    ).toBeDefined();
+    expect(nested?.[1]).toContain("nested-scroll-lifecycle");
+    expect(nested?.[1]).toContain("every scrollable ancestor");
+    expect(nested?.[2]).toContain("onScrollChange");
+    expect(nested?.[2]).toContain("non-scrolling");
   });
 
   it("publishes the same matrix the code narrows on", () => {

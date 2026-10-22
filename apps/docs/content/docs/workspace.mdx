@@ -61,6 +61,31 @@ state, because a workspace that cannot persist it is not a workspace. Choosing
 otherwise (animated panels, a transform-based slide) would be a browser promise
 this runtime cannot keep.
 
+## A dock's panes own their scrollers
+
+A wheel does not stop at the pane under the pointer. A window measured
+`nested-scroll-lifecycle`: with a 320×140 list inside a 420×260 page, a `-100`
+wheel over the list moved the list to `-100` **and the page to `-100`**, though
+the list still had 240px of travel left. One wheel moves every scrollable
+ancestor on the hit path; a `-100000` wheel clamped the list at `-340` and the
+page at `-360`, each against its own content. The host props publish no wheel
+handler and no `preventDefault`, so a pane cannot take a wheel from its page.
+
+Two rules follow for a dock:
+
+- **The workspace does not scroll.** Size it to the window and give each pane
+  the `overflow`. A scroll root wrapped around pane scrollers moves the whole
+  layout whenever a reader wheels a list, and a fixed sidebar or status bar
+  cannot hold its place inside it.
+- **Read the scroller's own offset.** An ancestor's `onScroll` hears a wheel
+  aimed inside its descendant (the page counted all three wheels, two of them
+  over the list), so a page listener cannot tell which scroller moved. Each
+  pane reads `onScrollChange`.
+
+A page that genuinely scrolls — a settings form, a dialog body — moves together
+with a list inside it; that is a layout decision, not something a pane can
+guard against. See [Runtime](/docs/runtime) for the measurement.
+
 ## State and persistence
 
 There is no renderer storage, so a layout is the app's data. Model it once and
