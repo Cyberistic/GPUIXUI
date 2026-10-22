@@ -125,3 +125,6 @@ not fake `transform` with a decorative placeholder.
   (Apache-2.0) — see `LICENSES/open-gpui.md`.
 - Easing variants and the `Inertia`/`MotionValue` API borrowed from
   `gpui-ce-motion` (MIT OR Apache-2.0) — see `LICENSES/gpui-motion.md`.
+
+`NOTICE` beside this README carries the copyright lines and MIT text those two
+records oblige the port to redistribute.

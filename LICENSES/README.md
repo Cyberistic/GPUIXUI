@@ -10,7 +10,7 @@ verified, its provenance recorded, and its notices preserved.
 | -------- | --------------------- |
 | What licence does each reference actually ship? | `inventory.md` |
 | Which implementations are *inspiration* and which are *copied or adapted*? | `provenance.md` |
-| Which notices must be redistributed with our package? | `NOTICE` |
+| Which notices must be redistributed with our package? | `packages/motion/NOTICE` |
 | Which assets (icons, images) are we shipping, and under what terms? | `inventory.md` |
 | Are any logos or trademarks being reused? | **must be "no"** — the identity is original |
 
@@ -20,7 +20,7 @@ verified, its provenance recorded, and its notices preserved.
 | ---- | ------- |
 | `inventory.md` | one row per dependency and reference: name, version/commit, licence, use, obligations |
 | `provenance.md` | one row per adapted implementation: source, commit, what changed, licence |
-| `NOTICE` | the notices our package must redistribute |
+| `packages/motion/NOTICE` | the notices the motion port must redistribute: both open-gpui NOTICE copyright lines (Apache-2.0 §4(d)) and the gpui-ce-motion MIT text |
 
 ## Non-negotiables
 

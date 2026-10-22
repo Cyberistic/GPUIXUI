@@ -1,0 +1,48 @@
+@gpuixui/motion
+===============
+
+This package is a TypeScript port. No Rust source is vendored and no crate is
+imported as a dependency; the maths and API shapes below travel under the
+notices their upstream projects require.
+
+open-gpui — crates/motion
+-------------------------
+
+https://github.com/Latias94/open-gpui
+
+Licensed under the Apache License, Version 2.0. The closed-form spring, timeline,
+sequence and reduced-motion policy maths are translated to TypeScript; the
+caller owns the clock and `Duration` becomes a number in milliseconds.
+
+The NOTICE this package must redistribute under section 4(d) of the Apache
+License 2.0:
+
+    Copyright 2022 - 2025 Zed Industries, Inc.
+    Copyright 2026 Mingzhen Zhuang and Open GPUI contributors
+
+gpui-motion (gpui-ce-motion) — the motion API surface
+-----------------------------------------------------
+
+https://github.com/1bye/gpui-motion
+
+Copyright (c) 2026 1keep contributors
+
+Licensed under MIT OR Apache-2.0; this package relies on the MIT grant for the
+easing variants and the `Inertia`/`MotionValue` API shapes it borrows as a spec.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
