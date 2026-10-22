@@ -19,6 +19,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import { inventory, type ComponentMeta } from "./inventory.js";
 
@@ -91,6 +92,10 @@ const tier2Rows = (): ReadonlyArray<Row> =>
 /** The animated primitives plan 600 lands, held to the same contract. */
 const animatedRows = (): ReadonlyArray<Row> =>
   rowsBetween("## Animated primitives (plan 600)", "");
+
+/** The Tier 3–5 target rows, which no component here implements yet. */
+const targetRows = (): ReadonlyArray<Row> =>
+  rowsBetween("## Tier 3", "## Animated primitives (plan 600)");
 
 /** Every `COMPONENTS.md` row that belongs to this package's inventory. */
 const packageRows = (): ReadonlyArray<Row> => [
@@ -282,5 +287,85 @@ describe("component API contract", () => {
     expect(Arr.some(limitations, (text) => text.includes("jumps"))).toBe(false);
     expect(intro).toContain("slides");
     expect(intro).not.toContain("jumps between");
+  });
+});
+
+/**
+ * The Tier 3–5 rows the playground's probes measured must name the probe.
+ *
+ * Those tiers are targets this package has not built, so the row is a future
+ * plan's only pointer from a capability to the frame that measured it. A row
+ * that claims "measured" without the probe cannot be checked, and an invented
+ * probe id reads exactly like a measured one — the docs lane pages render these
+ * rows, so a reader has nowhere else to go.
+ */
+const CITATIONS: ReadonlyArray<readonly [string, string]> = [
+  ["Charts", "chart-raster"],
+  ["Resizable split panes", "nested-scroll-lifecycle"],
+  ["Docking layouts", "nested-scroll-lifecycle"],
+  ["Workspace layouts", "workspace-restore"],
+  ["Persistent panel state", "workspace-restore"],
+  ["Toolbars", "window-chrome"],
+  ["Status bars", "window-chrome"],
+];
+
+/** The live probe ids the playground registers, read from its own registry. */
+const probeIds = (): ReadonlyArray<string> => {
+  const source = readFileSync(
+    fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
+    "utf8",
+  );
+  return Arr.flatMap(
+    Arr.fromIterable(Str.matchAll(/id: "([a-z0-9-]+)"/g)(source)),
+    (match) => (match[1] === undefined ? [] : [match[1]]),
+  );
+};
+
+describe("the measured target rows", () => {
+  it("cites a probe the playground registers", () => {
+    const ids = probeIds();
+    const problems = Arr.flatMap(CITATIONS, ([row, probe]) =>
+      Arr.some(ids, (id) => id === probe)
+        ? []
+        : [`${row}: cites ${probe}, which no live probe registers`],
+    );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("names the probe in the row it measured", () => {
+    const rows = targetRows();
+    const problems = Arr.flatMap(CITATIONS, ([name, probe]) =>
+      Option.match(
+        Arr.findFirst(rows, (row) => row.name === name),
+        {
+          onNone: () => [`${name}: no row in the target tiers`],
+          onSome: (row) =>
+            row.notes.includes(probe)
+              ? []
+              : [`${name}: the row does not cite ${probe}`],
+        },
+      ),
+    );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("states a measured verdict instead of a question mark", () => {
+    const rows = targetRows();
+    const problems = Arr.flatMap(CITATIONS, ([name]) =>
+      Option.match(
+        Arr.findFirst(rows, (row) => row.name === name),
+        {
+          onNone: () => [],
+          onSome: (row) =>
+            row.support.includes("measured")
+              ? []
+              : [`${name}: support reads "${row.support}"`],
+        },
+      ),
+    );
+
+    expect(problems).toEqual([]);
   });
 });

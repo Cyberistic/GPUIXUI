@@ -1,10 +1,10 @@
 # 160 — Retire the components package's local Button stand-in
 
 **Owner:** components · **Size:** multi-phase (≈2 sessions) · **Status:**
-**blocked at Phase 1** — R1/R2 pass, but the trigger call sites need host props
-primitives' `Button` cannot express (`ref`, `aria-expanded`, `aria-selected`,
-pointer handlers, a `Props` spread). See §Measured STOP; the unblocking change is
-a `@gpuixui/primitives` task recorded in `TODO.md` → Interlocks.
+**blocked at Phase 2** — R1/R2 pass and the primitives' `Button` now forwards the
+host props Phase 1 asked for, but two measured gaps remain: it throws
+`MissingThemeProviderError` under the token provider this package publishes, and
+its `onActivate` carries no event. See §Measured STOP — Phase 2.
 
 ## Why
 
@@ -108,6 +108,58 @@ deletes). The unblocking change belongs to `@gpuixui/primitives`: `Button` must
 forward `ref`, its `aria-*` set and the pointer handlers, i.e. accept the host
 props a trigger needs. That request is recorded in `TODO.md` → Interlocks; this
 plan stays active and Phase 2 does not start until primitives ships it.
+
+## Measured STOP — Phase 2 (2026-10-22)
+
+Phase 1's blocker is closed: `ActionHostProps` now carries `ref`,
+`aria-expanded`/`aria-selected`, the pointer pair and `onLayout`, and the
+primitives hand them to the element (`Button.test.tsx`, `IconButton.test.tsx`,
+`runtime/controls.runtime.test.tsx`). The dependency was added
+(`"@gpuixui/primitives": "workspace:*"`) and Phase 0 stayed green — unit **546**,
+behaviour **669**. Two API gaps then stopped the adapter, both measured, both in
+primitives.
+
+**1. The provider.** `primitives/src/components/ThemeProvider.tsx`'s `useTheme`
+throws when its own presence marker is absent, and this package publishes the
+token package's provider (`internal/theme.ts`; `theme-provider.test.ts` holds
+`components.ThemeProvider === tokensReact.ThemeProvider`). Rendering primitives'
+`Button` inside `renderComponent` — this package's own test root, which mounts
+the token provider — failed:
+
+```text
+MissingThemeProviderError: useTheme() found no <ThemeProvider>. GPUIxUI
+primitives never fall back to a default palette; wrap the tree in
+<ThemeProvider theme={theme}>.
+```
+
+Measured with a throwaway probe that rendered a primitives `Button` under
+`renderComponent` and found no `probe` node. The consequence is not local:
+`apps/playground` mounts `ThemeProvider` from `@gpuixui/tokens/react`
+(`src/app.tsx`, `src/smoke/run.ts`), so requiring the primitives' marker would
+break the playground's headless example gallery too. The unblocking change is
+primitives': its own module header already promises that "a tree that mixes the
+two packages wraps once", so `useTheme` should read the shared token context, or
+the package should publish a render seam that takes a theme instead of demanding
+the marker.
+
+**2. The event.** `ButtonProps.onActivate?: () => void` carries no payload, while
+eight call sites read one: `popover.tsx`, `preview-card.tsx`,
+`navigation-menu.tsx`, `dialog.tsx`, `drawer.tsx`, `dropdown-menu.tsx` and
+`message-scroller.tsx` forward it to the caller's own `onClick`, and
+`ripple-button.tsx` measures the press point from it (`ripplePoint(event, …)`).
+Mapping the stand-in's `onClick` to `onActivate` — Phase 2's instruction — drops
+the event, and passing both runs the action twice. `onActivate` needs the
+`EventPayload`, or the activation decision must be exported so an adapter can
+keep a single event-carrying contract.
+
+**3. Sequencing.** `src/ripple-button.tsx` (plan 600, the motion workstream)
+imports `Button`, `actionOnColor` and `ButtonProps` from `internal/button.tsx`.
+Phase 4 deletes that file, so the deletion follows the ripple component's
+migration; it is another workstream's file and this one does not edit it.
+
+Two workarounds were rejected rather than shipped: wrapping each adapter instance
+in its own `ThemeProvider`, and reaching for primitives' unexported
+`renderButton`. Both hide a seam the next consumer would hit.
 
 ## Phase 0 — baseline (10 min)
 

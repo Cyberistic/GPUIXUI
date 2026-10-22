@@ -42,7 +42,7 @@ workstream declares in its own section below.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| `160` | Retire the components package's local `Button` stand-in | C | primitives' opaque filled hover/press and `borderStrong` outline edge (**both landed**), plus a `Button` that forwards `ref`, its `aria-*` set and pointer handlers | **blocked at Phase 1** — measured 2026-10-22: `InteractionProps` is handlers only, so six triggers' `ref` and their `aria-expanded`/`aria-selected`/hover handlers have no primitive to land on; recorded in `TODO.md` → Interlocks |
+| `160` | Retire the components package's local `Button` stand-in | C | primitives' opaque filled hover/press and `borderStrong` outline edge (**both landed**), a `Button` that forwards `ref`, its `aria-*` set and pointer handlers (**landed**), a provider the components package can render under, and an activating callback that carries the event | **blocked at Phase 2** — measured 2026-10-22: `@gpuixui/primitives`' `Button` throws `MissingThemeProviderError` under the token provider this package publishes, and its `onActivate` carries no event, so the eight call sites that read one (`popover`, `preview-card`, `navigation-menu`, `dialog`, `drawer`, `dropdown-menu`, `message-scroller`, `ripple-button`) cannot migrate; recorded in `TODO.md` → Interlocks |
 
 Interlocks this workstream depends on and does not own:
 
