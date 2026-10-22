@@ -1179,6 +1179,78 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("cites the window that measured a button's activation", () => {
+    // Bug guarded: the Button page's Keyboard section and its inventory row
+    // taught the Enter/Space rule from `core/keyboard.test.ts` and the
+    // offscreen `runtime/controls.runtime.test.tsx` alone, while the shipped
+    // control had been driven in a real window. A reader could not tell the
+    // decision from the delivery, and two facts only the window shows — the
+    // automation's key down with no release, and a key reaching `onActivate`
+    // without the caller's host `onClick` — were missing from the contract.
+    // The citation must resolve: the id is read from the playground's live
+    // registry and the fixture that supplies its route table, so a renamed or
+    // deleted probe fails here instead of reading as evidence.
+    const page = read("button.mdx");
+    const keyboard = Option.getOrElse(bodyOf(page, "Keyboard"), () => "");
+    const verification = Option.getOrElse(
+      bodyOf(page, "Verification"),
+      () => "",
+    );
+    const registry = readFileSync(
+      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
+      "utf8",
+    );
+    const fixture = readFileSync(
+      fileURLToPath(new URL("apps/playground/src/live/button.ts", repoRoot)),
+      "utf8",
+    );
+    const readme = readFileSync(
+      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
+      "utf8",
+    );
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      "utf8",
+    );
+    const row = Option.getOrElse(
+      Arr.findFirst(catalogue.split("\n"), Str.startsWith("| Buttons |")),
+      () => "",
+    );
+
+    expect({
+      lane: keyboard.includes("`button-activation-lifecycle`"),
+      renderer: keyboard.includes("`TestRenderer`"),
+      noRelease: keyboard.includes("down with no release"),
+      keyAlone: keyboard.includes("`onActivate` alone"),
+      pointerHost: keyboard.includes("`onClick` as well"),
+      verified: verification.includes("`button-activation-lifecycle`"),
+      printed: verification.includes("18 checks on 0.11.0"),
+      evidence: verification.includes("§`button-activation-lifecycle`"),
+      registered: registry.includes('id: "button-activation-lifecycle"'),
+      routes:
+        fixture.includes('"space-release"') &&
+        fixture.includes('"keyUp:space"') &&
+        fixture.includes("activationKind"),
+      readme: readme.includes(
+        "18 checks, `--only button-activation-lifecycle`",
+      ),
+      row: row.includes("`button-activation-lifecycle`"),
+    }).toEqual({
+      lane: true,
+      renderer: true,
+      noRelease: true,
+      keyAlone: true,
+      pointerHost: true,
+      verified: true,
+      printed: true,
+      evidence: true,
+      registered: true,
+      routes: true,
+      readme: true,
+      row: true,
+    });
+  });
+
   it("cites only plans that exist", () => {
     // The bug guarded: completed plans are deleted (`.agents/slop/plans/README.md`),
     // but this workstream still sent readers to four completed plans for the

@@ -178,6 +178,17 @@ focus handle for it (`tab_stop(false)`) and a caller can focus it from code. A
 Space **press** calls `preventDefault()`, so the platform default (scrolling a
 container) does not run while activation waits for the release.
 
+The rule has two lanes. `core/keyboard.test.ts` holds the decision and
+`runtime/controls.runtime.test.tsx` the offscreen events;
+`button-activation-lifecycle` paints the shipped control in a real window (18
+checks on 0.11.0) and measures the two facts a `TestRenderer` cannot. The
+automation sends a key **down with no release**, so Space only activates when
+the probe releases it — a suite that sends a press alone would read the rule as
+broken. And a key reaches `onActivate` alone, while a pointer press runs the
+caller's host `onClick` as well; the pointer payload carries the press point (the
+centre of the painted box, `x=47 y=50` at the probe's first stop), and a key
+payload carries none.
+
 ## Accessibility
 
 - Role: `button`; the name comes from `label`, or from a plain text child when
@@ -327,6 +338,15 @@ the dim back with `style`, which merges last.
   window.
 - `runtime/examples.runtime.test.tsx` — the form example's busy action creates a
   progress state.
+- `apps/playground`'s `button-activation-lifecycle` — the same contract in a real
+  window (18 checks on 0.11.0): a pointer press activates once and carries the
+  press point, Enter's press activates and its release adds nothing, a Space
+  press adds nothing and its release is the activation, and a disabled or busy
+  button refuses every route while only the disabled one leaves the Tab order.
+  It also measures what the offscreen suite cannot: the automation sends a key
+  down with no release, and a key reaches `onActivate` alone while a pointer
+  press runs the caller's host `onClick` too. Evidence:
+  `apps/playground/README.md` §`button-activation-lifecycle`.
 
 ```sh
 nub run --filter @gpuixui/primitives test
