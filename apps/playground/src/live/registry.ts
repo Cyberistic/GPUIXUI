@@ -312,6 +312,12 @@ export const liveRegistry = [
       "Window: the app's layout starts at the window's top edge, the reported insets carry no titlebar band in either titlebar mode, and an app insets its own chrome",
     capability: "workspace",
   },
+  {
+    id: "workspace-restore",
+    title:
+      "Workspace: a saved arrangement paints again after a re-mount — the panes, the chosen document and the inspector's scroll — while a corrupt string opens the default and an out-of-bounds width is clamped",
+    capability: "workspace",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-46 probes a real window can prove, of which twelve mount shipped
+47 probes a real window can prove, of which twelve mount shipped
 `@gpuixui/components` (the dialog and its fade, the menu, the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
 combobox and the modal focus rule), five mount
@@ -2642,6 +2642,47 @@ of 28 fails the two-channel check
 `the app channel reports the renderer's safe area: expected "28,0,0,0", got
 "0,0,0,0"`. Capture: `.artifacts/live/chrome.png`.
 
+### `workspace-restore` — measured on 0.11.0 here
+
+The **arrangement a dock gets back**. Tier 4's *persistent panel state* is
+app-owned — the runtime publishes no storage — so the half a window can prove is
+the restore: a sidebar width, a caller-owned document width, a chosen document
+and an inspector's scroll are written as a string, decoded at the app's boundary
+and handed back to a **re-mounted** workspace. Nothing had measured that the
+second mount paints them: a pane given a restored width, a document that mounts
+from a restored value, and a programmatic scroll applied on the first layout.
+
+The probe changes the arrangement with controls rather than a drag — panel drags
+are `split-pane-lifecycle` and `dock-focus-lifecycle` — so the restore is the
+only variable. It then saves, re-mounts from the saved string, and re-mounts two
+more times from a corrupt string and from one outside the pane's bounds.
+
+| Step | Measurement |
+| ---- | ----------- |
+| open | `sidebar=160 document=240 tab=explorer scroll=0 mount=1`; the sidebar, the document pane and the inspector divide the row exactly (the inspector takes what the fixed panes and the 6px divider leave) |
+| change | a press collapses the sidebar to **0**, four widening presses stop at the pane's **360** bound, the document switches to `output`, and a −120 wheel leaves `scroll=120` |
+| save | the saved string decodes back to `[0, 360, "output", 120]` — the arrangement the window is showing |
+| restore | `mount=2 source=stored`: the sidebar paints **0**, the document pane **360**, the inspector the rest of the row, `document=output`, the pane's layout pass reports **360**, and the saved scroll paints at **−120** |
+| corrupt | `not a workspace` restores `mount=3 source=default` at 160 / 240 / explorer / scroll 0, so a bad string opens the default rather than a partial layout |
+| clamp | a stored `sidebar:-5 document:9999 scroll:-30` restores `mount=4 source=stored` at **0 / 360 / 0**, so a stale width cannot leave the inspector off the frame |
+
+30 checks, `--only workspace-restore`, green on 0.11.0. Fixture:
+`src/live/workspace-restore.ts` — the `WorkspaceLayout` schema (sidebar,
+document, tab, scroll), `encodeWorkspace`/`decodeWorkspace`, `restoreWorkspace`
+(default on a decode failure), the clamp to the pane's bounds, and the
+`SplitPane`'s caller-owned width. `workspace-restore.test.ts` (7 cases) holds the
+string round-trip for every document, the default on both a corrupt and a
+partial string, the clamp of width/sidebar/scroll, the one-step control at both
+bounds, and that a patch leaves the other fields alone.
+
+Negative controls measured, exit `1` each and restored green: restoring the
+default instead of the saved layout fails `a restore re-mounts the workspace
+from its saved string` (`got "sidebar=160 document=240 tab=explorer scroll=0
+mount=2 saved=yes source=stored"`), and skipping the saved-scroll application
+fails `the saved scroll paints where it was saved` (`expected -120 ± 1, got 0`).
+Captures: `.artifacts/live/{workspace-changed,workspace-restored,
+workspace-default,workspace-clamped}.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -2754,7 +2795,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (46/46), with a written report and screenshots.
+  (47/47), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

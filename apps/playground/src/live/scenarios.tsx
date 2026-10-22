@@ -6,7 +6,7 @@
  * focus and captures paint states as screenshots. The checks are still the
  * shared `Smoke` ones, so both suites emit one report shape.
  */
-import type { ReactNode } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 import {
   createContext,
   useCallback,
@@ -295,6 +295,27 @@ import {
   visibleRows,
   type TreeNode,
 } from "./virtual-tree.js";
+import {
+  CORRUPT_WORKSPACE,
+  WORKSPACE_DIVIDER,
+  WORKSPACE_DOCUMENT,
+  WORKSPACE_IDS,
+  WORKSPACE_PANE,
+  WORKSPACE_ROWS,
+  WORKSPACE_ROW_HEIGHT,
+  WORKSPACE_SIDEBAR,
+  WORKSPACE_TABS,
+  WorkspaceLayout,
+  clampedSample,
+  decodeWorkspace,
+  defaultWorkspace,
+  encodeWorkspace,
+  restoreWorkspace,
+  stepDocument,
+  toggleSidebar,
+  updateWorkspace,
+  type WorkspaceTab,
+} from "./workspace-restore.js";
 
 /** Long enough for one paint after an input reaches the window. */
 const SETTLE = Duration.millis(40);
@@ -11699,6 +11720,583 @@ const windowChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * A workspace arrangement after a restore: the fixed panes, the document rail
+ * and the inspector, built from the layout the app hands back.
+ *
+ * The split is the shipped `SplitPane` in its caller-owned mode, because a
+ * restored arrangement cannot reach a component's internal width — the app
+ * passes the width and takes every drag through `onResize`. The inspector
+ * applies the saved scroll once, on its first layout, since a programmatic
+ * scroll before the content is measured would clamp to zero.
+ */
+const WorkspaceView = ({
+  layout,
+  onChange,
+}: {
+  readonly layout: WorkspaceLayout;
+  readonly onChange: Dispatch<SetStateAction<WorkspaceLayout>>;
+}): ReactNode => {
+  const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const inspector = useRef<PublicInstance | null>(null);
+  const applied = useRef(false);
+  const savedScroll = useRef(layout.scroll);
+  const [documentLayout, setDocumentLayout] = useState({
+    width: 0,
+    reports: 0,
+  });
+
+  const applySavedScroll = () => {
+    if (applied.current) return;
+    applied.current = true;
+    const elementId = inspector.current?.id;
+    if (elementId == null || savedScroll.current <= 0) return;
+    renderer?.scrollTo?.(elementId, 0, -savedScroll.current);
+  };
+
+  const row = (index: number): ReactNode => (
+    <div
+      key={index}
+      testId={`ws-inspector-row-${index}`}
+      style={{
+        height: WORKSPACE_ROW_HEIGHT,
+        backgroundColor:
+          index % 2 === 0 ? theme.colors.background : theme.colors.card,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {`inspector ${index}`}
+      </text>
+    </div>
+  );
+
+  return (
+    <div
+      testId={WORKSPACE_IDS.row}
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        flexGrow: 1,
+        minHeight: 0,
+      }}
+    >
+      <div
+        testId={WORKSPACE_IDS.sidebar}
+        style={{
+          width: layout.sidebar,
+          flexShrink: 0,
+          overflow: "hidden",
+          backgroundColor: theme.colors.muted,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          sidebar
+        </text>
+      </div>
+      <div style={{ flexGrow: 1, minWidth: 0 }}>
+        <SplitPane
+          id="ws"
+          size={layout.document}
+          initial={layout.document}
+          min={WORKSPACE_DOCUMENT.min}
+          max={WORKSPACE_DOCUMENT.max}
+          onResize={(size) =>
+            onChange((current) => updateWorkspace(current, { document: size }))
+          }
+          primary={
+            <div
+              testId={WORKSPACE_IDS.centre}
+              onLayout={(payload) =>
+                setDocumentLayout((current) => ({
+                  width: Math.round(payload.width ?? current.width),
+                  reports: current.reports + 1,
+                }))
+              }
+              style={{
+                width: "100%",
+                height: "100%",
+                padding: theme.spacing.lg,
+                backgroundColor: theme.colors.card,
+              }}
+            >
+              <Readout testId={WORKSPACE_IDS.document}>
+                {`document=${layout.tab}`}
+              </Readout>
+              <Readout testId={WORKSPACE_IDS.layout}>
+                {`w=${documentLayout.width} reports=${documentLayout.reports}`}
+              </Readout>
+            </div>
+          }
+          secondary={
+            <div
+              testId={WORKSPACE_IDS.inspector}
+              ref={inspector}
+              onLayout={applySavedScroll}
+              onScrollChange={(event) =>
+                onChange((current) =>
+                  updateWorkspace(current, {
+                    scroll: Math.max(0, Math.round(-(event.scrollY ?? 0))),
+                  }),
+                )
+              }
+              style={{
+                width: "100%",
+                height: "100%",
+                overflow: "scroll",
+                backgroundColor: theme.colors.background,
+              }}
+            >
+              {Arr.map(Arr.range(0, WORKSPACE_ROWS - 1), row)}
+            </div>
+          }
+        />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * `workspace-restore` — a dock's arrangement survives a re-mount.
+ *
+ * Tier 4's **persistent panel state** is app-owned: the runtime publishes no
+ * storage, so the app writes a layout as a string, decodes it at the boundary
+ * and hands it back. Nothing had measured that the second half paints: whether
+ * a pane given a restored width paints that box (and the layout pass reports
+ * it), whether the chosen document mounts, and whether a saved scroll offset
+ * lands where it was. The probe changes the arrangement with controls rather
+ * than a drag — the drags are measured by `split-pane-lifecycle` and
+ * `dock-focus-lifecycle` — so the restore is the only variable. A corrupt
+ * string and one outside the pane's bounds are steps of the same run: the first
+ * falls back to the default, the second is clamped, so the boundary is measured
+ * in both directions.
+ */
+const WorkspaceRestoreProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [layout, setLayout] = useState<WorkspaceLayout>(() =>
+    defaultWorkspace(),
+  );
+  const [mount, setMount] = useState(1);
+  const [saved, setSaved] = useState("none");
+  const [source, setSource] = useState<"none" | "stored" | "default">("none");
+
+  const save = () => setSaved(encodeWorkspace(layout));
+  const restoreFrom = (stored: string) => {
+    const restored = restoreWorkspace(stored);
+    setLayout(restored.layout);
+    setSource(restored.source);
+    setMount((current) => current + 1);
+  };
+  const tab = (value: WorkspaceTab) =>
+    setLayout((current) => updateWorkspace(current, { tab: value }));
+
+  return (
+    <div
+      testId={WORKSPACE_IDS.probe}
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A workspace saved as a string and re-mounted from it: the panes, the
+        document and the inspector's scroll come back.
+      </text>
+      <Toolbar>
+        <Pressable
+          testId={WORKSPACE_IDS.toggle}
+          onClick={() =>
+            setLayout((current) =>
+              updateWorkspace(current, {
+                sidebar: toggleSidebar(current.sidebar),
+              }),
+            )
+          }
+        >
+          sidebar
+        </Pressable>
+        <Pressable
+          testId={WORKSPACE_IDS.wider}
+          onClick={() =>
+            setLayout((current) =>
+              updateWorkspace(current, {
+                document: stepDocument(
+                  current.document,
+                  WORKSPACE_DOCUMENT.step,
+                ),
+              }),
+            )
+          }
+        >
+          wider
+        </Pressable>
+        <Pressable
+          testId={WORKSPACE_IDS.narrower}
+          onClick={() =>
+            setLayout((current) =>
+              updateWorkspace(current, {
+                document: stepDocument(
+                  current.document,
+                  -WORKSPACE_DOCUMENT.step,
+                ),
+              }),
+            )
+          }
+        >
+          narrower
+        </Pressable>
+        {Arr.map(WORKSPACE_TABS, (value) => (
+          <Pressable
+            key={value}
+            testId={WORKSPACE_IDS.tab(value)}
+            onClick={() => tab(value)}
+          >
+            {value}
+          </Pressable>
+        ))}
+      </Toolbar>
+      <Toolbar>
+        <Pressable testId={WORKSPACE_IDS.save} onClick={save}>
+          save
+        </Pressable>
+        <Pressable
+          testId={WORKSPACE_IDS.restore}
+          onClick={() => restoreFrom(saved)}
+        >
+          restore
+        </Pressable>
+        <Pressable
+          testId={WORKSPACE_IDS.corrupt}
+          onClick={() => {
+            setSaved(CORRUPT_WORKSPACE);
+            restoreFrom(CORRUPT_WORKSPACE);
+          }}
+        >
+          corrupt
+        </Pressable>
+        <Pressable
+          testId={WORKSPACE_IDS.clamp}
+          onClick={() => {
+            const stored = encodeWorkspace(clampedSample());
+            setSaved(stored);
+            restoreFrom(stored);
+          }}
+        >
+          clamp
+        </Pressable>
+      </Toolbar>
+      <Readout testId={WORKSPACE_IDS.readout}>
+        {`sidebar=${layout.sidebar} document=${layout.document} tab=${layout.tab} scroll=${layout.scroll} mount=${mount} saved=${saved === "none" ? "no" : "yes"} source=${source}`}
+      </Readout>
+      <Readout testId={WORKSPACE_IDS.saved}>{saved}</Readout>
+      <WorkspaceView key={mount} layout={layout} onChange={setLayout} />
+    </div>
+  );
+};
+
+const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(WORKSPACE_IDS.probe);
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text(WORKSPACE_IDS.readout);
+    /** An element's painted width; an unpainted one is `-1`. */
+    const widthOf = (testId: string) =>
+      Effect.map(ctx.host.bounds(testId), (bounds) =>
+        Option.match(Option.fromNullishOr(bounds), {
+          onNone: () => -1,
+          onSome: (value) => value.width,
+        }),
+      );
+    const boxOf = (testId: string) =>
+      Effect.flatMap(
+        Effect.map(ctx.host.bounds(testId), Option.fromNullishOr),
+        (bounds) => ctx.expectSome(`${testId} painted`, bounds),
+      );
+    /** The inspector's painted scroll offset; `NaN` when it reports none. */
+    const scrollY = () =>
+      Effect.map(ctx.host.scrollOffset(WORKSPACE_IDS.inspector), (offset) =>
+        Option.match(Option.fromNullishOr(offset), {
+          onNone: () => Number.NaN,
+          onSome: (value) => value.y,
+        }),
+      );
+    /** The readout once it names `expected`, or whatever it last read. */
+    const settledReadout = (expected: string) => {
+      const poll = (
+        tries: number,
+      ): Effect.Effect<string, Smoke.SmokeHostError> =>
+        Effect.gen(function* () {
+          const text = yield* readout();
+          if (Str.includes(expected)(text) || tries <= 0) return text;
+          yield* Effect.sleep(Duration.millis(40));
+          return yield* poll(tries - 1);
+        });
+      return poll(50);
+    };
+    /** The inspector offset once it reaches `expected`, or its last value. */
+    const settledScroll = (
+      expected: number,
+    ): Effect.Effect<number, Smoke.SmokeHostError> => {
+      const poll = (
+        tries: number,
+      ): Effect.Effect<number, Smoke.SmokeHostError> =>
+        Effect.gen(function* () {
+          const y = yield* scrollY();
+          if (Math.abs(y - expected) <= 1 || tries <= 0) return y;
+          yield* Effect.sleep(Duration.millis(40));
+          return yield* poll(tries - 1);
+        });
+      return poll(50);
+    };
+    /** The document pane's layout report once it reaches `expected`, or its last value. */
+    const settledLayoutWidth = (
+      expected: number,
+    ): Effect.Effect<number, Smoke.SmokeHostError> => {
+      const poll = (
+        tries: number,
+      ): Effect.Effect<number, Smoke.SmokeHostError> =>
+        Effect.gen(function* () {
+          const width = readoutNumber(
+            yield* ctx.host.text(WORKSPACE_IDS.layout),
+            "w",
+          );
+          if (Math.abs(width - expected) <= 1 || tries <= 0) return width;
+          yield* Effect.sleep(Duration.millis(40));
+          return yield* poll(tries - 1);
+        });
+      return poll(50);
+    };
+
+    // 1. The default arrangement, and the row it is laid out in.
+    const row = yield* boxOf(WORKSPACE_IDS.row);
+    yield* ctx.expectContains(
+      "the workspace opens at the default arrangement",
+      yield* readout(),
+      "sidebar=160 document=240 tab=explorer scroll=0 mount=1 saved=no source=none",
+    );
+    yield* ctx.expectNear(
+      "the sidebar paints its width",
+      yield* widthOf(WORKSPACE_IDS.sidebar),
+      WORKSPACE_SIDEBAR,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the document pane paints its width",
+      yield* widthOf(WORKSPACE_PANE.a),
+      WORKSPACE_DOCUMENT.initial,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the inspector takes what the fixed panes leave",
+      yield* widthOf(WORKSPACE_PANE.b),
+      row.width -
+        WORKSPACE_SIDEBAR -
+        WORKSPACE_DOCUMENT.initial -
+        WORKSPACE_DIVIDER,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the workspace opens on the document it names",
+      yield* ctx.host.text(WORKSPACE_IDS.document),
+      "document=explorer",
+    );
+    yield* ctx.expectEqual(
+      "the inspector starts at the top",
+      yield* scrollY(),
+      0,
+    );
+
+    // 2. Change every persisted field.
+    yield* ctx.host.click(WORKSPACE_IDS.toggle);
+    yield* Effect.forEach(
+      Arr.range(1, 4),
+      () => ctx.host.click(WORKSPACE_IDS.wider),
+      { concurrency: 1 },
+    );
+    yield* ctx.host.click(WORKSPACE_IDS.tab("output"));
+    yield* ctx.host.wheel(WORKSPACE_IDS.inspector, 0, -120);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the controls leave a collapsed sidebar, the widest document, the chosen tab and a scroll",
+      yield* readout(),
+      "sidebar=0 document=360 tab=output scroll=120",
+    );
+    yield* ctx.expectNear(
+      "the fourth widening press stops at the pane's bound",
+      yield* widthOf(WORKSPACE_PANE.a),
+      WORKSPACE_DOCUMENT.max,
+      1,
+    );
+    yield* ctx.expectNear(
+      "a collapsed sidebar paints no width",
+      yield* widthOf(WORKSPACE_IDS.sidebar),
+      0,
+      0.5,
+    );
+    yield* ctx.expectNear(
+      "the inspector takes the enlarged row",
+      yield* widthOf(WORKSPACE_PANE.b),
+      row.width - WORKSPACE_DOCUMENT.max - WORKSPACE_DIVIDER,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the chosen document is the one painted",
+      yield* ctx.host.text(WORKSPACE_IDS.document),
+      "document=output",
+    );
+    yield* ctx.expectNear(
+      "the wheel moved the inspector by its delta",
+      yield* scrollY(),
+      -120,
+      1,
+    );
+    yield* ctx.host.capture("workspace-changed");
+
+    // 3. Save: the string is the arrangement the window is showing.
+    yield* ctx.host.click(WORKSPACE_IDS.save);
+    yield* Effect.sleep(SETTLE);
+    const stored = yield* ctx.expectSome(
+      "the app saved a layout the schema decodes",
+      decodeWorkspace(yield* ctx.host.text(WORKSPACE_IDS.saved)),
+    );
+    yield* ctx.expectEqual(
+      "the saved string is the arrangement the window shows",
+      Arr.join(
+        Arr.map(
+          [stored.sidebar, stored.document, stored.tab, stored.scroll],
+          String,
+        ),
+        ",",
+      ),
+      [0, WORKSPACE_DOCUMENT.max, "output", 120].join(","),
+    );
+
+    // 4. Restore re-mounts the workspace from that string.
+    yield* ctx.host.click(WORKSPACE_IDS.restore);
+    const restored = yield* settledReadout("mount=2");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a restore re-mounts the workspace from its saved string",
+      restored,
+      `sidebar=0 document=${WORKSPACE_DOCUMENT.max} tab=output scroll=120 mount=2 saved=yes source=stored`,
+    );
+    yield* ctx.expectNear(
+      "the restored sidebar paints the saved width",
+      yield* widthOf(WORKSPACE_IDS.sidebar),
+      0,
+      0.5,
+    );
+    yield* ctx.expectNear(
+      "the restored document pane paints the saved width",
+      yield* widthOf(WORKSPACE_PANE.a),
+      WORKSPACE_DOCUMENT.max,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the restored inspector takes the row the saved layout leaves",
+      yield* widthOf(WORKSPACE_PANE.b),
+      row.width - WORKSPACE_DOCUMENT.max - WORKSPACE_DIVIDER,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the restored document is the one painted",
+      yield* ctx.host.text(WORKSPACE_IDS.document),
+      "document=output",
+    );
+    yield* ctx.expectNear(
+      "the pane's layout pass reports the restored width",
+      yield* settledLayoutWidth(WORKSPACE_DOCUMENT.max),
+      WORKSPACE_DOCUMENT.max,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the saved scroll paints where it was saved",
+      yield* settledScroll(-120),
+      -120,
+      1,
+    );
+    yield* ctx.host.capture("workspace-restored");
+
+    // 5. A string that is not a layout opens the default arrangement.
+    yield* ctx.host.click(WORKSPACE_IDS.corrupt);
+    const fallback = yield* settledReadout("mount=3");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a string that is not a layout restores the default arrangement",
+      fallback,
+      `sidebar=${WORKSPACE_SIDEBAR} document=${WORKSPACE_DOCUMENT.initial} tab=explorer scroll=0 mount=3 saved=yes source=default`,
+    );
+    yield* ctx.expectNear(
+      "the default sidebar paints again",
+      yield* widthOf(WORKSPACE_IDS.sidebar),
+      WORKSPACE_SIDEBAR,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the default document paints again",
+      yield* widthOf(WORKSPACE_PANE.a),
+      WORKSPACE_DOCUMENT.initial,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the default document is painted",
+      yield* ctx.host.text(WORKSPACE_IDS.document),
+      "document=explorer",
+    );
+    yield* ctx.expectNear(
+      "the default layout starts at the top",
+      yield* settledScroll(0),
+      0,
+      1,
+    );
+    yield* ctx.host.capture("workspace-default");
+
+    // 6. A stored width outside the bounds is clamped to the window's own.
+    yield* ctx.host.click(WORKSPACE_IDS.clamp);
+    const clamped = yield* settledReadout("mount=4");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a stored width outside the pane's bounds restores clamped",
+      clamped,
+      `sidebar=0 document=${WORKSPACE_DOCUMENT.max} tab=explorer scroll=0 mount=4 saved=yes source=stored`,
+    );
+    yield* ctx.expectNear(
+      "the clamped document cannot leave the inspector off the frame",
+      yield* widthOf(WORKSPACE_PANE.a),
+      WORKSPACE_DOCUMENT.max,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the clamped inspector still fills the rest of the row",
+      yield* widthOf(WORKSPACE_PANE.b),
+      row.width - WORKSPACE_DOCUMENT.max - WORKSPACE_DIVIDER,
+      1,
+    );
+    yield* ctx.host.capture("workspace-clamped");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -11931,5 +12529,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "window-chrome",
     view: () => <WindowChromeProbe />,
     steps: windowChromeSteps,
+  },
+  "workspace-restore": {
+    id: "workspace-restore",
+    view: () => <WorkspaceRestoreProbe />,
+    steps: workspaceRestoreSteps,
   },
 };
