@@ -129,9 +129,7 @@ describe("NumberField", () => {
   it("commits before it reports Enter, and installs no listener while disabled", () => {
     const onCommit = vi.fn();
     const onSubmit = vi.fn();
-    const { input } = partsOf(
-      render({ onSubmit }, 5, "5", idle, { onCommit }),
-    );
+    const { input } = partsOf(render({ onSubmit }, 5, "5", idle, { onCommit }));
     expectSome(hostHandler(input, "onSubmit"))(changeEvent(""));
     expect(onCommit).toHaveBeenCalledTimes(1);
     expect(onSubmit).toHaveBeenCalledTimes(1);
