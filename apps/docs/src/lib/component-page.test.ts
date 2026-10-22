@@ -86,6 +86,52 @@ const policySections = (): ReadonlyArray<string> => {
     .filter((label) => label !== "" && label !== "Section");
 };
 
+/** The source trees a curated page's API table can resolve a name against. */
+const documentedPackages = [
+  new URL("packages/primitives/src/", repo),
+  new URL("packages/components/src/", repo),
+];
+
+/**
+ * The three forms a documented name can take in the packages' source.
+ *
+ * `readonly` is the prop convention, the two-space form covers the shared
+ * `Props` object types, and an exported declaration is what a part row
+ * (`CommandMenuInput`) names.
+ */
+const declarationForms = [
+  /^\s*readonly ([A-Za-z_][A-Za-z0-9_]*)\??:/gm,
+  /^  ([A-Za-z_][A-Za-z0-9_]*)\??:/gm,
+  /^export (?:interface|type|const|function|class) ([A-Za-z_][A-Za-z0-9_]*)/gm,
+];
+
+/** Every name a prop interface or an exported part declares. */
+const propDeclarations = (): ReadonlySet<string> =>
+  new Set(
+    documentedPackages.flatMap((dir) =>
+      readdirSync(dir, { recursive: true, encoding: "utf8" })
+        .filter((name) => /\.tsx?$/.test(name))
+        .flatMap((name) => {
+          const text = readFileSync(new URL(name, dir), "utf8");
+          return declarationForms.flatMap((form) =>
+            [...text.matchAll(form)].flatMap((match) => match[1] ?? []),
+          );
+        }),
+    ),
+  );
+
+/** The backticked names in the first column of a page's `## API reference`. */
+const apiNames = (body: string): ReadonlyArray<string> => {
+  const start = body.indexOf("## API reference");
+  if (start === -1) return [];
+  const rest = body.slice(start);
+  const section = rest.slice(0, rest.indexOf("\n## ", 1));
+
+  return [...section.matchAll(/^\| ([^|]*)\|/gm)].flatMap((row) =>
+    [...(row[1] ?? "").matchAll(/`([^`]+)`/g)].map((inner) => inner[1] ?? ""),
+  );
+};
+
 describe("the curated component pages", () => {
   it("exist, so the folder cannot empty out unnoticed", () => {
     expect(pages.length).toBeGreaterThanOrEqual(4);
@@ -149,6 +195,30 @@ describe("the curated component pages", () => {
     );
 
     expect(withoutInstall).toEqual([]);
+  });
+
+  it("name only props and parts the packages declare", () => {
+    // The API table is the page's most copyable claim, and nothing resolved it:
+    // `page-snippets.test.ts` checks the imports in a fence, not the prop names
+    // in a row, so renaming `onActivate` in the component left the page teaching
+    // a prop that no longer exists — the same "copyable code must resolve" rule
+    // the snippet walk exists for. This reads the two packages a curated page
+    // can document (primitives, and the components built on it) and holds every
+    // backticked name in the table's first column to a declaration there.
+    //
+    // It is a resolution check, not a completeness one: a prop a page omits is
+    // a documentation gap, not a wrong name, and inherited `Omit`/`Props` types
+    // make "every prop" a compiler question rather than a regex one.
+    const declared = propDeclarations();
+    const unresolved = pages.flatMap((name) =>
+      apiNames(source(name))
+        .filter((prop) => !declared.has(prop))
+        .map((prop) => `${name}: ${prop}`),
+    );
+
+    // Floors, so a scan that stopped matching cannot pass.
+    expect(declared.size).toBeGreaterThanOrEqual(400);
+    expect(unresolved).toEqual([]);
   });
 });
 

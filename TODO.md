@@ -1932,7 +1932,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 74/75
+`[ ]` `[█████████░]` 75/76
+
+`[x]` The curated **API tables resolve** — a page's prop rows are the most copyable claim it makes, and nothing checked them: `page-snippets.test.ts` resolves the imports inside a fence, not the backticked names in a table, so renaming `onActivate` in `Button.tsx` or a part in `command-menu.tsx` would leave the page teaching a symbol no longer declared while the suite stayed green. `component-page.test.ts` now scans `packages/primitives/src` and `packages/components/src` for the three forms a name can take (a `readonly` interface prop, a two-space `Props` object key, an exported part) and holds every backticked name in the first column of every curated `## API reference` table to that set, with floors on both the declaration count and the page list. It claims resolution, not completeness: an omitted prop is a documentation gap, and `Omit`/`Props` inheritance makes "every prop" a compiler question. Directions measured: `onActivate` → `onActivatee` in `button.mdx` fails with `[ 'button.mdx: onActivatee' ]`, and `CommandMenuInput` → `CommandMenuInputt` in the part table fails with `[ 'command-menu.mdx: CommandMenuInputt' ]`; restored, 10/10 green and `docs/preview-strategy.md` §The component page template states what the guard does and does not prove
 
 `[ ]` Mount the **live GPUix surface** (plan `440-live-gpuix-web-surface`) — the browser build exists and makes strategy 1 possible, but no route imports it yet: the spike needs a browser with WebGPU or WebGL2 to prove a paint, cross-origin isolation headers on `/live`, and the single-mount rule. Until it lands, every preview is the labelled reproduction and `preview-strategy.md` says so
 

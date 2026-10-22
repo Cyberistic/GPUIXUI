@@ -244,7 +244,14 @@ no keyboard path, it says so rather than leaving the reader to guess.
 The template is a contract, not a suggestion: a page missing a section is a page
 that hides a decision from the reader, so `src/lib/component-page.test.ts`
 checks every curated page for the required sections and their order, a preview,
-and the package it installs from.
+and the package it installs from. It also **resolves the API table**: every
+backticked name in the table's first column must be a prop an interface declares
+or a part an exported component declares, in `packages/primitives` or
+`packages/components`. The snippet walk checks the imports in a fence, not the
+prop names in a row, so a renamed prop would otherwise leave the page teaching a
+name that no longer exists. It is a resolution check rather than a completeness
+one — a prop the page omits is a documentation gap, and inherited `Omit`/`Props`
+types make "every prop" a compiler question rather than a regex one.
 
 The package's own pages are the component's doc file and use strategy 4 from the
 top of this file: no browser preview, and a section that does not apply (no
