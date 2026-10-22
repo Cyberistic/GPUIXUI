@@ -1491,6 +1491,20 @@ a workaround for two live sessions sharing one worktree; see
       suite samples the skeleton, spinner and bar six times in a window and reads
       one frame. Docs on the five pages, the five `COMPONENTS.md` rows and the
       four inventory records. 686 unit / 195 runtime
+`[x]` `packages/primitives`: an **arrow no longer clears a rating** — ArrowLeft (or
+      Down) at one star reported `0`, so a reader nudging the end of a rated
+      group lost the value with one keystroke while the page says clearing is
+      explicit (`Delete`/`Backspace`) and the module header says zero is the
+      clear key's job. `decideRating` now clamps a rated value's lower end at one
+      star, and an unrated group still stays at `0` (arrow keys are not a way to
+      "unclear" a decision the reader never made). `rating.test.ts` holds both
+      ends, `Rating.test.tsx` reads the group's key handler, and the native
+      `rating.runtime.test.tsx` presses Left on a one-star rating and reads the
+      unchanged star back off the window. Docs in `docs/rating.mdx` (the keyboard
+      table and the explicit-clearing bullet), `COMPONENTS.md` and the record.
+      Both directions measured: restoring the old clamp fails three unit cases by
+      name plus the native case (`expected 'unchecked' to be 'checked'`). 688 unit
+      / 196 runtime
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness

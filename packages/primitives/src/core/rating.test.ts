@@ -2,8 +2,9 @@
  * The rating contract.
  *
  * The guarded defects: an arrow wrapping from five stars to one (a rating is not
- * a radio group), a rating that cannot be cleared at all, and a `max` that is
- * zero or fractional turning the tab stop into a star that does not exist.
+ * a radio group), an arrow clearing a rated value (zero is the clear key's job),
+ * a rating that cannot be cleared at all, and a `max` that is zero or fractional
+ * turning the tab stop into a star that does not exist.
  */
 
 import { describe, expect, it } from "vitest";
@@ -38,7 +39,17 @@ describe("decideRating", () => {
     // The bug guarded: a radio-group move wraps 5 → 1, which for a rating reads
     // as "you just lost your five stars".
     expect(decideRating(5, 5, "right")).toStrictEqual(Option.some(5));
-    expect(decideRating(1, 5, "left")).toStrictEqual(Option.some(0));
+    expect(decideRating(1, 5, "left")).toStrictEqual(Option.some(1));
+  });
+
+  it("never clears a rated value with an arrow — zero is explicit", () => {
+    // The bug guarded: ArrowLeft at one star went to 0, so a reader nudging the
+    // arrow lost the rating the page says only Delete clears.
+    expect(decideRating(1, 5, "left")).toStrictEqual(Option.some(1));
+    expect(decideRating(1, 5, "down")).toStrictEqual(Option.some(1));
+    // ...while an unrated rating is still reached only from zero's own end.
+    expect(decideRating(0, 5, "left")).toStrictEqual(Option.some(0));
+    expect(decideRating(0, 5, "right")).toStrictEqual(Option.some(1));
   });
 
   it("jumps to the ends with Home and End", () => {

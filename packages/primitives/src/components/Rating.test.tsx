@@ -155,6 +155,23 @@ describe("Rating", () => {
     expect(onMove).toHaveBeenCalledTimes(3);
   });
 
+  it("keeps one star when an arrow is nudged at the rated end", () => {
+    // The bug guarded: ArrowLeft at one star reported 0, so the group cleared a
+    // rating the docs say only Delete clears — one keystroke of data loss while
+    // the reader was trying to stay put.
+    const onMove = vi.fn();
+    const rated = render({}, 1, undefined, { onMove });
+    expectSome(hostHandler(rated, "onKeyDown"))(keyEvent("left"));
+    expect(onMove).toHaveBeenLastCalledWith(1);
+    // An unrated group stays unrated on the same key, and zero is still the
+    // clear key's report.
+    const unrated = render({}, 0, undefined, { onMove });
+    expectSome(hostHandler(unrated, "onKeyDown"))(keyEvent("left"));
+    expect(onMove).toHaveBeenLastCalledWith(0);
+    expectSome(hostHandler(rated, "onKeyDown"))(keyEvent("backspace"));
+    expect(onMove).toHaveBeenLastCalledWith(0);
+  });
+
   it("selects a star when it is clicked", () => {
     const onSelect = vi.fn();
     const stars = starsOf(render({}, 0, undefined, { onSelect }));

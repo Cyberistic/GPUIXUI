@@ -135,6 +135,23 @@ it("activates the focused star with Space on the release", async () => {
   expect(seen).toStrictEqual([1]);
 });
 
+it("keeps a one-star rating when the left arrow is nudged", async () => {
+  // The bug: ArrowLeft at one star reported 0, so a reader trying to stay put
+  // cleared a rating the page says only Delete clears.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" defaultValue={1} />
+    </Surface>,
+  );
+  runtime.keyDown("ra", "left");
+  expect(checkedStars(runtime)[0]).toBe("checked");
+  expect(checkedStars(runtime)[1]).toBe("unchecked");
+  // Delete is still the clear path.
+  runtime.keyDown("ra", "delete");
+  expect(checkedStars(runtime)[0]).toBe("unchecked");
+});
+
 it("clears the rating with Delete", async () => {
   const runtime = await openWindow();
   runtime.render(

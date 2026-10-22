@@ -31,7 +31,10 @@ const ARROW_STEPS: Readonly<Record<string, number>> = {
  *
  * `None` means the key is not one of ours. Delete and Backspace clear the
  * rating (the only way to return to zero), Home and End jump to the ends, and
- * the arrows step and clamp rather than wrapping.
+ * the arrows step and clamp rather than wrapping. **A rated value's lower end is
+ * one star**, so an arrow never clears a rating the reader only nudged: zero is
+ * explicit (a clear key, or the app calling `onValueChange(0)`), because losing
+ * a rating to a stray ArrowLeft is data loss, not a step.
  */
 export const decideRating = (
   value: number,
@@ -44,9 +47,9 @@ export const decideRating = (
   if (key === "delete" || key === "backspace") return Option.some(0);
   const step = ARROW_STEPS[key];
   if (step === undefined) return Option.none();
-  return Option.some(
-    Math.min(limit, Math.max(0, clampRating(value, limit) + step)),
-  );
+  const current = clampRating(value, limit);
+  const lower = current === 0 ? 0 : 1;
+  return Option.some(Math.min(limit, Math.max(lower, current + step)));
 };
 
 /** The star that holds the group's single tab stop. */

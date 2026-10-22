@@ -585,7 +585,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "Whole stars only: no half stars without clipping or a transform",
       "No hover preview: it needs per-star hover state",
-      "Clearing is explicit (Delete/Backspace) rather than clicking the value",
+      "Clearing is explicit (Delete/Backspace); an arrow clamps at one star once rated",
     ],
     source: ["src/components/Rating.tsx", "src/core/rating.ts"],
     docs: "docs/rating.mdx",
