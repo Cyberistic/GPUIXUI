@@ -31,10 +31,30 @@ import { inventory, type ComponentMeta } from "./inventory.js";
 
 const packageRoot = fileURLToPath(new URL("../", import.meta.url));
 
-const readText = (relative: string): Option.Option<string> =>
-  existsSync(join(packageRoot, relative))
+/**
+ * The package's text, read once.
+ *
+ * The tree is static for a run and every record names its own module, so an
+ * uncached walk re-read the graph per record and per page: this file measured
+ * **17 980** reads in one case, which outran the suite's 5 s default timeout
+ * under a loaded run. `texts` is that walk's one pass, and `reads` lets a case
+ * hold it there.
+ */
+const texts = new Map<string, Option.Option<string>>();
+
+/** Files read this run, so a case can prove the walk is one pass. */
+let reads = 0;
+
+const readText = (relative: string): Option.Option<string> => {
+  const cached = texts.get(relative);
+  if (cached !== undefined) return cached;
+  reads += 1;
+  const text = existsSync(join(packageRoot, relative))
     ? Option.some(readFileSync(join(packageRoot, relative), "utf8"))
     : Option.none();
+  texts.set(relative, text);
+  return text;
+};
 
 /** Every relative specifier a module imports, as written. */
 const LOCAL_IMPORT = /from "(\.{1,2}\/[^"]+)\.js"/g;
@@ -52,8 +72,12 @@ const resolveImport = (
 };
 
 /** The local modules a source file imports, resolved to real paths. */
-const importsOf = (file: string): ReadonlyArray<string> =>
-  Option.match(readText(file), {
+const importsByFile = new Map<string, ReadonlyArray<string>>();
+
+const importsOf = (file: string): ReadonlyArray<string> => {
+  const cached = importsByFile.get(file);
+  if (cached !== undefined) return cached;
+  const imports = Option.match(readText(file), {
     onNone: () => [],
     onSome: (text) =>
       Arr.getSomes(
@@ -64,23 +88,33 @@ const importsOf = (file: string): ReadonlyArray<string> =>
         ),
       ),
   });
+  importsByFile.set(file, imports);
+  return imports;
+};
 
 /** The seam a component composes to enter and leave. */
 const MOTION_TARGET =
   /presenceMotion\(|useSurfaceTiming\(|useSurfacePresence\(|<AutoHeight|motion=\{/;
 
-/** Whether `file`, or a part it imports, composes the motion seam. */
-const reachesMotion = (
-  file: string,
-  seen: ReadonlyArray<string> = [],
-): boolean =>
-  Arr.contains(seen, file) ||
-  Option.match(readText(file), {
-    onNone: () => false,
-    onSome: (text) =>
-      MOTION_TARGET.test(text) ||
-      Arr.some(importsOf(file), (next) => reachesMotion(next, [...seen, file])),
-  });
+/**
+ * Whether `file`, or a part it imports, composes the motion seam.
+ *
+ * `visited` is the search's own set, not a path: reachability is monotone, so a
+ * module already walked in this search cannot add a route the first walk missed.
+ */
+const reachesMotion = (file: string): boolean => {
+  let visited: ReadonlyArray<string> = [];
+  const walk = (current: string): boolean => {
+    if (Arr.contains(visited, current)) return false;
+    visited = Arr.append(visited, current);
+    return Option.match(readText(current), {
+      onNone: () => false,
+      onSome: (text) =>
+        MOTION_TARGET.test(text) || Arr.some(importsOf(current), walk),
+    });
+  };
+  return walk(file);
+};
 
 /** One record's declaration, resolved from the collector's own imports. */
 interface RecordFile {
@@ -101,7 +135,7 @@ const COLLECTOR_IMPORT = /import \{ (\w+Meta) \} from "(\.{1,2}\/[^"]+)\.js";/g;
  * in `toast/viewport.tsx`), so one import step is followed to the declaration,
  * and the record's own `name` says which file it is.
  */
-const recordFiles = (): ReadonlyArray<RecordFile> => {
+const collectRecordFiles = (): ReadonlyArray<RecordFile> => {
   const collector = Option.getOrElse(readText("src/inventory.ts"), () => "");
   return Arr.flatMap(
     Arr.fromIterable(Str.matchAll(COLLECTOR_IMPORT)(collector)),
@@ -130,6 +164,19 @@ const recordFiles = (): ReadonlyArray<RecordFile> => {
     },
   );
 };
+
+/** The records' files, resolved once: `fileFor` asks for them per record. */
+let recordFilesOnce: Option.Option<ReadonlyArray<RecordFile>> = Option.none();
+
+const recordFiles = (): ReadonlyArray<RecordFile> =>
+  Option.match(recordFilesOnce, {
+    onNone: () => {
+      const records = collectRecordFiles();
+      recordFilesOnce = Option.some(records);
+      return records;
+    },
+    onSome: (records) => records,
+  });
 
 /** The module that declares the record named `name`. */
 const fileFor = (name: string): Option.Option<string> =>
@@ -187,13 +234,30 @@ describe("the motion the records deny", () => {
         ),
     );
     expect(unresolved).toEqual([]);
-    const reaching = Arr.filter(inventory, (meta) =>
-      Option.match(fileFor(meta.name), {
-        onNone: () => false,
-        onSome: (file) => reachesMotion(file),
-      }),
-    );
-    expect(reaching.length).toBeGreaterThan(30);
+    const reaching = () =>
+      Arr.filter(inventory, (meta) =>
+        Option.match(fileFor(meta.name), {
+          onNone: () => false,
+          onSome: reachesMotion,
+        }),
+      );
+    expect(reaching().length).toBeGreaterThan(30);
+
+    // The tree is static for a run, so a second walk re-reads nothing. Uncached,
+    // this case read 17 980 files — 39 records times the graph plus one graph
+    // walk per page — and outran the suite's 5 s default timeout.
+    const walk = () => {
+      reaching();
+      Arr.forEach(docPages(), (page) =>
+        reachesMotion(`src/${Str.replace(/\.mdx$/, ".tsx")(page)}`),
+      );
+    };
+    walk();
+    const walked = reads;
+    walk();
+    expect(reads).toBe(walked);
+    expect(walked).toBeLessThan(400);
+    expect(walked).toBeGreaterThan(100);
   });
 
   it("denies no reveal the record's own source composes", () => {
