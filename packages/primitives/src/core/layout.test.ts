@@ -71,6 +71,26 @@ describe("gridStyle", () => {
     expect(gridStyle({ columns: 0 }, testTheme).gridTemplateColumns).toBe(1);
     expect(gridStyle({ columns: 2.9 }, testTheme).gridTemplateColumns).toBe(2);
   });
+
+  it("reads a count it cannot draw as one track", () => {
+    // The bug guarded: `Math.max(1, Math.floor(NaN))` is `NaN`, so a count from
+    // a measurement that never arrived reached the runtime as no template at all
+    // and the element painted as a block — not a grid, and nothing said so.
+    expect(
+      gridStyle({ columns: Number.NaN }, testTheme).gridTemplateColumns,
+    ).toBe(1);
+    expect(
+      gridStyle({ columns: Number.POSITIVE_INFINITY }, testTheme)
+        .gridTemplateColumns,
+    ).toBe(1);
+    expect(
+      gridStyle({ columns: 2, rows: Number.NaN }, testTheme).gridTemplateRows,
+    ).toBe(1);
+    expect(
+      gridStyle({ columns: 2, rows: Number.NEGATIVE_INFINITY }, testTheme)
+        .gridTemplateRows,
+    ).toBe(1);
+  });
 });
 
 describe("boxStyle", () => {

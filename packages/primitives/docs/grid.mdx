@@ -25,8 +25,8 @@ import { Grid, Text } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `columns` | `number` | — (required) | equal column tracks; floored, minimum 1 |
-| `rows` | `number` | auto | equal fixed rows; floored, minimum 1 |
+| `columns` | `number` | — (required) | equal column tracks; floored, minimum 1; a count that is not a finite number reads as 1 |
+| `rows` | `number` | auto | equal fixed rows; floored, minimum 1; the same rule for a non-finite count |
 | `gap` | spacing step | none | both axes, from `spacing` |
 | `grow` | `boolean` | `false` | takes leftover space on the parent's axis |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
@@ -60,7 +60,9 @@ width is ever a pixel value at the call site.
 
 ## Verification
 
-- `src/core/layout.test.ts` — column/row clamping and gap resolution.
+- `src/core/layout.test.ts` — column/row clamping (a fractional, zero, negative,
+  infinite or `NaN` count all resolve to a drawable track count) and gap
+  resolution.
 - `runtime/layout.runtime.test.tsx` — a two-column grid paints two cells on one
   row with the theme's gap.
 

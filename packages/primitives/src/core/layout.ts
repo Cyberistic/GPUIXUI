@@ -92,6 +92,18 @@ export interface GridSpec {
 }
 
 /**
+ * A track count the runtime can draw.
+ *
+ * The runtime's grid takes a whole number of equal tracks, so a fractional count
+ * floors and a count below one is one. A count that is not a number at all —
+ * `NaN` from a measurement that never arrived, or an infinity from a bad
+ * division — is one track rather than a number the runtime silently drops: the
+ * element would otherwise paint as a block, not a grid, with nothing to say so.
+ */
+const trackCount = (count: number): number =>
+  Number.isFinite(count) ? Math.max(1, Math.floor(count)) : 1;
+
+/**
  * A fixed-size grid.
  *
  * GPUix exposes `gridTemplateColumns`/`gridTemplateRows` as **numbers** and has
@@ -101,10 +113,10 @@ export interface GridSpec {
 export const gridStyle = (spec: GridSpec, theme: PrimitiveTheme): StyleDesc => {
   const style: StyleDesc = {
     display: "grid",
-    gridTemplateColumns: Math.max(1, Math.floor(spec.columns)),
+    gridTemplateColumns: trackCount(spec.columns),
   };
   if (spec.rows !== undefined) {
-    style.gridTemplateRows = Math.max(1, Math.floor(spec.rows));
+    style.gridTemplateRows = trackCount(spec.rows);
   }
   if (spec.gap !== undefined) style.gap = theme.spacing[spec.gap];
   if (spec.grow === true) style.flexGrow = 1;
