@@ -188,18 +188,25 @@ export const useTransition = (
 };
 
 /**
- * Coasts with an initial velocity under inertial decay. `value` accumulates
- * from zero across releases; when `velocity` becomes `0` the value holds.
- * `inertia` must be a stable reference.
+ * Coasts with an initial velocity under inertial decay. The value accumulates
+ * from the start of the run across releases; when `velocity` becomes `0` the
+ * value holds. `inertia` must be a stable reference.
+ *
+ * `options.initial` is the value the first run accumulates from — the offset a
+ * gesture released at — and it obeys the family's rule: one it cannot read is no
+ * initial, so the run starts at `0`. Until this hook read it, the option was
+ * accepted and silently dropped, so a caller that handed a drag's offset got a
+ * value starting at zero.
  */
 export const useInertia = (
   velocity: number,
   inertia: Inertia,
   options: MotionOptions = {},
 ): MotionState => {
-  const [motion] = useState(() => new MotionValue(0));
+  const [from] = useState(() => startValue(0, options.initial));
+  const [motion] = useState(() => new MotionValue(from));
   const [start] = useState(() => performance.now());
-  const [frame, setFrame] = useState<MotionFrame>(() => initialFrame(0));
+  const [frame, setFrame] = useState<MotionFrame>(() => initialFrame(from));
 
   useEffect(() => {
     publish(setFrame, settleBefore(motion, start, reduced(options)));

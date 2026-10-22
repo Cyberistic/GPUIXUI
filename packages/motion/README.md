@@ -81,17 +81,19 @@ function Grow({ open }: { open: boolean }) {
 Each hook returns `{ value, velocity, complete }`. Map `value` onto a GPUix
 `MotionStyle` numeric field — `width`, `height`, `top`, `right`, `bottom`,
 `left`, `opacity` (0–1), `borderRadius`. `useTransition(target, { durationMs,
-easing })` tweens; `useInertia(velocity, inertia)` coasts with momentum.
+easing })` tweens; `useInertia(velocity, inertia)` coasts with momentum from
+`options.initial` (zero by default).
 `useMotion(target, transition, options)` is the general hook behind them; pass
 it a stable `transition` (`instant`, `tween`, or `springTransition`).
 
 Pass `options.reducedMotion` from your platform's reduced-motion preference; it
 completes immediately at the target. `options.initial` gives the first run a
 start value — `useTransition(1284, { durationMs: 320 }, { initial: 0 })` counts
-up on mount — and is read once, because the presentation on screen is the truth
-after it. A start or a target it cannot read is no value: the start is the
-target, so the first published frame is a number the runtime can paint rather
-than the `NaN` it draws as nothing.
+up on mount, and `useInertia(400, inertia(), { initial: dragOffset })` coasts
+from the offset a gesture released at — and is read once, because the
+presentation on screen is the truth after it. A start or a target it cannot read
+is no value: the start is the target, so the first published frame is a number
+the runtime can paint rather than the `NaN` it draws as nothing.
 
 The hooks own one clock, so they **sample once before retargeting**: a run that
 has come to rest is not advanced while nothing moves, and handing the retained
@@ -157,7 +159,8 @@ cannot be read is replaced before the frame is published — an unreadable
 `initial` is no initial (the start is the target) and an unreadable target is no
 target (the start is `0`). The retained `MotionValue` repaired the same value on
 its own, so the hook and the value it drives could disagree about the frame the
-caller sees first.
+caller sees first. `useInertia` reads the same option as the offset the coast
+accumulates from; an unreadable one is no offset, so the coast starts at `0`.
 
 ## The runtime's declarative timing
 
