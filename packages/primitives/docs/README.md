@@ -7,10 +7,10 @@ and the examples registry is what `apps/playground` mounts natively.
 
 Each page follows the same contract: what it is, usage, variants/sizes/states,
 API, keyboard, accessibility, theming, limitations, verification, related. Every
-claim is traceable to the source, `COMPONENTS.md`'s `Runtime (041)` notes or
-`.agents/slop/plans/041-tier1-runtime-verification.md` §9. A capability the
-pinned runtime does not have is written as a limitation with the alternative in
-use — never as a promise.
+claim is traceable to the source and to the suite each Tier 1 record in
+`src/inventory.ts` names; `COMPONENTS.md` carries the same verdicts. A capability
+the pinned runtime does not have is written as a limitation with the alternative
+in use — never as a promise.
 
 ## Pages
 

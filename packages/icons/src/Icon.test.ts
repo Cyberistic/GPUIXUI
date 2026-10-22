@@ -15,9 +15,10 @@ import { ICON_SIZES } from "./sizes.js";
  * screen reader user; an icon that does not disable pointer events eats the
  * click meant for the button around it.
  *
- * There is no GPUix renderer available in this environment (see
- * `.agents/slop/plans/020-gpuix-runtime-capability.md` §3), so nothing here
- * claims a painted result. That is `packages/testing`'s job.
+ * There is no renderer in this package's own suite: `Icon` is a pure function,
+ * so these cases assert on the element it returns and claim no painted result.
+ * Painted behaviour is `packages/testing`'s job, run by the playground suite on
+ * this host.
  */
 
 const render = (props: Parameters<typeof Icon>[0]): ReactElement<SvgProps> =>

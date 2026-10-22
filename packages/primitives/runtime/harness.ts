@@ -60,8 +60,8 @@ export class MissingNativeBindingError extends Schema.TaggedError<MissingNativeB
     return (
       "the runtime suites need a GPUix native binding, and importing " +
       "@gpuix/react/testing failed. On darwin-x64 no binding is published; " +
-      "build one from source with gpui_macos/runtime_shaders " +
-      "(.agents/slop/plans/140-gpuix-native-darwin-x64-build.md §5). " +
+      "build one from source with the recipe in " +
+      "`apps/playground/README.md` §The binding on this host. " +
       `Cause: ${String(this.cause)}`
     );
   }

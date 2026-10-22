@@ -8,7 +8,7 @@
  *
  * It is a small state machine rather than a React hook on purpose: the decision
  * is what needs to be provable, and a pure reducer needs no rendering runtime
- * to test (see `.agents/slop/plans/020-gpuix-runtime-capability.md` §3).
+ * to test.
  */
 
 import * as Option from "effect/Option";

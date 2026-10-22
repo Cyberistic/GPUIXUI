@@ -8,8 +8,7 @@
  * that looks, once, from the theme.
  *
  * Everything here is pure, which is also what makes the visual layer provable
- * without a rendering runtime (see
- * `.agents/slop/plans/020-gpuix-runtime-capability.md` §3).
+ * without a rendering runtime.
  */
 
 import type { GpuixTheme, StyleDesc } from "@gpuix/react";

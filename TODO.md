@@ -1354,6 +1354,20 @@ a workaround for two live sessions sharing one worktree; see
       every record's limitations and fails when a denied capitalised name is
       exported. Both directions measured: restoring the old string fails with
       `Radio groups: says there is no RadioGroupItem, and the package exports it`
+`[x]` `packages/primitives`: the workstream's own documents sent readers to **deleted
+      plans** — `README.md` and `docs/README.md` cited plans 041 and 055 for the
+      Tier 1 runtime evidence, four source comments cited plan 020, and the
+      runtime harness's install error cited plan 140, all deleted when their work
+      landed. The citations now name what survives (`COMPONENTS.md`, the runtime
+      suite each `src/inventory.ts` record names, `docs/gpuix-capabilities.md`,
+      `apps/playground/README.md` §The binding on this host), and the README's
+      printed "16 files, 167 tests" count is gone (the runner prints it). The
+      icons package no longer claims a renderer is unavailable on this host.
+      `docs.test.ts`'s `cites only plans that exist` case scans every
+      `.ts`/`.tsx`/`.md`/`.mdx` file in both owned packages and fails on a
+      citation that resolves nowhere. Both directions measured: a planted
+      `.agents/slop/plans/099-deleted-plan.md` citation fails naming the file, and
+      the tree passes as it is
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness
@@ -1520,6 +1534,25 @@ a workaround for two live sessions sharing one worktree; see
       fails the persistence case). Unit 433/46, behaviour 559/53, `check-types`
       green. The focus-hold *mechanism* is unchanged: a press still pauses the
       clock, and only the claim and the escape hatch moved
+    - [x] Make a list's keys act on the row that sent them — the same window gap
+      `Tabs` had: a `Tab` traversal focuses a row without running its focus
+      handler (`tabs-lifecycle`), so with no recorded row the first `ArrowDown`
+      re-anchored on the first enabled row (from a row further down, that row
+      itself) and `Enter` ran **nothing**, because `activateActive` read the
+      unset recorded row. The origin is now a pure rule, `src/list/origin.ts`
+      (`keyOrigin`): the event's own element when it is a row, else the recorded
+      row, else nothing; the handler also adopts that row as `active`, so the
+      highlight and the tab stop follow the reader. `src/list/origin.test.ts`
+      (4: the sending row wins over a different recorded row, the list root and
+      an absent element fall back, and neither is `None`); the direction is
+      measured by reversing the precedence (`expected Some "c"` fails). The
+      behaviour suite cannot produce "focused with no focus event" — its key
+      send focuses the target, which is why two tests written that way passed
+      without the fix and were deleted rather than kept — so the rule is proven
+      as a pure function and the component only supplies the event id. Docs:
+      `docs/list.mdx` keyboard section states the rule, `COMPONENTS.md`'s row
+      names it. Unit 433/46 + 4, behaviour 559/53 + 38 list cases, `check-types`
+      green
     - [x] Inventory test counts and the drifted rows — plan 139
     - [x] Tabs vertical orientation verified: axis keys, layout and manual activation — plan 321
     - [x] Toast actions: one labelled action with a provider-owned handler — plan 322
@@ -1868,7 +1901,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 73/73
+`[ ]` `[█████████░]` 74/75
+
+`[ ]` Mount the **live GPUix surface** (plan `440-live-gpuix-web-surface`) — the browser build exists and makes strategy 1 possible, but no route imports it yet: the spike needs a browser with WebGPU or WebGL2 to prove a paint, cross-origin isolation headers on `/live`, and the single-mount rule. Until it lands, every preview is the labelled reproduction and `preview-strategy.md` says so
+
+`[x]` The preview policy records the **GPUix web build** — `@gpuix/native@0.11.0` ships a `browser` entry over a 19.2 MiB wasm renderer that is GPUI's browser platform (its own `<canvas>` appended to `<body>`, WebGPU with a WebGL2 fallback), so the mission's strategy 1 became available without anyone noticing. Three measured constraints decide the design: one document-owned canvas and one top-level window per page load (`GPUIX web is already running` on a second mount), shared memory so the document must be cross-origin isolated (`COOP`/`COEP`), and a text fallback where neither backend exists. `docs/preview-strategy.md` gains §Strategy 1 is real; `apps/docs/src/lib/gpuix-web.test.ts` (6 cases) reads the installed package for the browser entry, the shared-memory requirement and the size, and holds the policy's "not mounted" status to the tree **in both directions**. Directions measured: flipping the status sentence fails the agreement case (`saysUnmounted: false` against `true`), a planted `@gpuix/native` import fails the same case with the module named, and printing 19.3 MiB for the 19.2 MiB build fails the size case. The plan is indexed; the mount itself stays unbuilt because no browser-automation tool on this host can prove a paint
 
 `[x]` The capability record publishes the **loading-row restore** a paginated list owes — a paginated history paints a void row at the edge a page arrives from, and `<virtual-list>` anchors on the row at the viewport top, so the void is the anchor and a splice replaces the screen the reader was reading. The record's Virtualized list row covered modes, heights and reveals and said nothing about it, so a table, log or message-scroller plan would have rebuilt the wrong thing. `docs/gpuix-capabilities.md` §3 gains **Loading-row restore** (`supported, with limits`, composed rather than provided) with `loading-row-correction`'s measurements — the naive prepend painting the page where the reader's message was (`y=80`) against the corrected one that holds it, the at-end sentinel's `y=0` against the pinned `y=80` with the row above at `y=40`, the `guarded=1` second page that must not correct, `corrected=2` after wheeling back, and the reads that lag the request because `getListScrollTop` names the row at the viewport top after layout — and the workaround (read before the commit, re-anchor after; `flushSync` the splice before the scroll; correct only while the void is the anchor). `/docs/runtime#measured-in-a-window` publishes it, §5 owes the probe, and `/docs/data-display` carries the rule where a paginated table is designed. Guards: `capability-doc.test.ts` gained the record-and-page case and the published-gaps line, `lane-page.test.ts` holds the lane bullet to the record's row. Directions measured: the row's verdict changed to `supported` fails both name cases, and dropping the page row fails the case and the published-gaps assertion. Suite 60 files / 495 tests, `check-types` and `build` green; `/docs/runtime` and `/docs/data-display` render it in the dev server
 

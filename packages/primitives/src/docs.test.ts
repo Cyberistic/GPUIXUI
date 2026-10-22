@@ -14,7 +14,7 @@
  * package's runtime code stays on Effect's platform services.
  */
 
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -24,6 +24,8 @@ import { describe, expect, it } from "vitest";
 import * as primitives from "./index.js";
 
 const docsDir = new URL("../docs/", import.meta.url);
+const repoRoot = new URL("../../../", import.meta.url);
+const packageRoot = new URL("../", import.meta.url);
 
 const read = (name: string): string =>
   readFileSync(fileURLToPath(new URL(name, docsDir)), "utf8");
@@ -94,6 +96,45 @@ const deniedProps = (source: string): ReadonlyArray<string> =>
   Arr.filterMap(
     [...source.matchAll(/[Tt]here is no `([^`]+)` prop/g)],
     (match) => Result.succeed(match[1] ?? ""),
+  );
+
+/** The plan paths a document cites, e.g. the plan file a comment names with `§9`. */
+const citedPlans = (source: string): ReadonlyArray<string> =>
+  Arr.map(
+    [...source.matchAll(/\.agents\/slop\/plans\/[A-Za-z0-9._-]+/g)],
+    (match) => match[0],
+  );
+
+const TEXT_EXTENSIONS = [".ts", ".tsx", ".md", ".mdx"] as const;
+
+/** Every text file this workstream owns, so a citation cannot go stale in a comment. */
+const workstreamFiles = (): ReadonlyArray<{
+  readonly name: string;
+  readonly source: string;
+}> =>
+  Arr.flatMap(
+    [
+      { prefix: "packages/primitives/", root: packageRoot },
+      {
+        prefix: "packages/icons/",
+        root: new URL("../../icons/", import.meta.url),
+      },
+    ],
+    ({ prefix, root }) => {
+      const base = fileURLToPath(root);
+      return Arr.filterMap(
+        readdirSync(base, { recursive: true, encoding: "utf8" }),
+        (entry) => {
+          if (/(^|\/)(node_modules|dist)\//.test(entry)) return Result.failVoid;
+          if (!Arr.some(TEXT_EXTENSIONS, (ext) => Str.endsWith(ext)(entry)))
+            return Result.failVoid;
+          return Result.succeed({
+            name: `${prefix}${entry}`,
+            source: readFileSync(`${base}${entry}`, "utf8"),
+          });
+        },
+      );
+    },
   );
 
 /** The names a page's snippets import from this package, aliases resolved. */
@@ -286,5 +327,25 @@ describe("the primitives docs page contract", () => {
         (target) => `${target}: linked but missing`,
       ),
     ]).toEqual([]);
+  });
+
+  it("cites only plans that exist", () => {
+    // The bug guarded: completed plans are deleted (`.agents/slop/plans/README.md`),
+    // but this workstream still sent readers to plans 020, 041, 055 and 140 for
+    // the Tier 1 runtime evidence and the binding recipe. A citation to a deleted
+    // plan is a dead end; the evidence lives in `COMPONENTS.md`, the suite each
+    // `src/inventory.ts` record names, `docs/gpuix-capabilities.md` and
+    // `apps/playground/README.md`.
+    const missing = Arr.flatMap(workstreamFiles(), (file) =>
+      Arr.map(
+        Arr.filter(
+          citedPlans(file.source),
+          (path) => !existsSync(fileURLToPath(new URL(path, repoRoot))),
+        ),
+        (path) => `${file.name}: cites ${path}, which does not exist`,
+      ),
+    );
+
+    expect(missing).toEqual([]);
   });
 });

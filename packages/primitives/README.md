@@ -131,25 +131,25 @@ the suites in `runtime/` mount the components in the GPUix 0.11.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-22: **16 files, 167 tests, all passing** —
-including a theme switch on a mounted tree, using the shipped `lightTheme` /
-`darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
-the active palette, the high-contrast palettes in both modes, a density override
-measured against the preset's metrics, and a platform theme's mono family
-reaching the paint (plan 055).
+runtime-proven too. The suite runs in full — including a theme switch on a
+mounted tree, using the shipped `lightTheme` / `darkTheme` from
+`@gpuixui/tokens`, a check that no painted colour is outside the active palette,
+the high-contrast palettes in both modes, a density override measured against the
+preset's metrics, and a platform theme's mono family reaching the paint. Its
+runner prints the file and test counts; no count is copied here to drift.
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.
 
-What it observed, per component, is in `COMPONENTS.md`; the measured details and
-the two-direction proof are in
-`.agents/slop/plans/041-tier1-runtime-verification.md` §9 and
-`.agents/slop/plans/055-tier1-theme-axes.md` §7.
+What it observed, per component, is in `COMPONENTS.md`, and each Tier 1 record
+in `src/inventory.ts` names the runtime suite that measured it. Capability
+verdicts and their probes are in `docs/gpuix-capabilities.md` and
+`apps/playground/README.md`.
 
 **Still unproven, on purpose:**
 
-- the binding is the **locally-built** `darwin-x64` artifact (plan 140), not a
-  published binary — no `darwin-x64` release exists;
+- the binding is the **locally-built** `darwin-x64` artifact, not a published
+  binary — no `darwin-x64` release exists;
 - the ring's **paint** is the playground's `focus-visible` probe (plan 053): the
   test renderer reports the declared `focusVisible` style, not pixels;
 - rotation and colour interpolation are absent from 0.11.0, so
