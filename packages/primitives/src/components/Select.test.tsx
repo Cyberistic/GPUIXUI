@@ -158,6 +158,34 @@ describe("Select groups", () => {
 });
 
 describe("Select", () => {
+  it("announces the trigger as the named control", () => {
+    // The bug guarded: the accessible name was put on `GpuixSelect`'s wrapper,
+    // which is a plain `div` with no role, while GPUix's trigger is a `div` with
+    // a tab stop and no role either. A node needs a role to reach the
+    // accessibility tree, so in a window the whole control was absent (the tree
+    // held only the Window). The name now sits on the trigger, which declares
+    // the combobox role; the wrapper carries none.
+    const select = renderSelect(
+      {
+        options: [{ value: "apple", label: "Apple" }],
+        label: "Fruit",
+      },
+      testTheme,
+    );
+    const trigger = Arr.head(elementChildren(select));
+    expect(
+      Option.map(trigger, (element) =>
+        expectSome(elementProp(element, "role")),
+      ),
+    ).toStrictEqual(Option.some("combobox"));
+    expect(
+      Option.map(trigger, (element) =>
+        expectSome(elementProp(element, "aria-label")),
+      ),
+    ).toStrictEqual(Option.some("Fruit"));
+    expect(elementProp(select, "aria-label")).toStrictEqual(Option.none());
+  });
+
   it("paints a selected item differently from a hovered or resting one", () => {
     const paint = selectItemStyle(testTheme);
     const selected = paint({ ...rest, selected: true });

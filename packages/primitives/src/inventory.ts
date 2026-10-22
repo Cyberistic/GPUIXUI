@@ -344,8 +344,9 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
   {
     name: "Selects",
     status: "done",
-    gpuixSupport: "yes",
+    gpuixSupport: "partial",
     limitations: [
+      "The trigger is a named combobox; 0.11.0's option rows are plain divs, so the open list is not announced",
       "Options are data: grouped, but no rich options or compound escape hatch",
       "Group captions are painted, not announced (SelectGroup has no role)",
       "No search or type-ahead and no multi-select",

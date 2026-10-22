@@ -458,6 +458,44 @@ it("paints an unchosen Select's hint in the placeholder role", async () => {
   );
 });
 
+it("announces a Select's trigger as its named control", async () => {
+  // The bug guarded: the accessible name landed on `GpuixSelect`'s wrapper — a
+  // plain `div` with no role — and GPUix's trigger is a `div` with a tab stop
+  // and no role either, so a window's accessibility tree held no node for the
+  // control at all (measured: only the Window node and one tab stop). The
+  // trigger now carries `role="combobox"` and the name.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        label="Fruit"
+        placeholder="Pick one"
+        triggerTestId="fruit-trigger"
+        options={[{ value: "apple", label: "Apple" }]}
+      />
+    </Surface>,
+  );
+  const control = a11yNode(runtime.a11y(), {
+    role: "ComboBox",
+    label: "Fruit",
+  });
+  expect(Option.isSome(control)).toBe(true);
+  // The actions say the node is the control a reader can press and focus.
+  const actions = Option.getOrElse(
+    Option.map(control, (node) => node.aria?.on_action ?? []),
+    () => expect.fail("the Select trigger painted no accessibility node"),
+  );
+  expect(Arr.contains(actions, "Click")).toBe(true);
+  expect(Arr.contains(actions, "Focus")).toBe(true);
+  // The rows stay out of the tree: 0.11.0's item parts are plain `div`s, so
+  // this pins the recorded limitation and will fail when that changes.
+  runtime.click("fruit-trigger");
+  runtime.flush();
+  expect(
+    Option.isSome(a11yNode(runtime.a11y(), { role: "ListBoxOption" })),
+  ).toBe(false);
+});
+
 it("lifts a Select's list like every other floating surface", async () => {
   // The bug guarded: the list floats over page content and was the one floating
   // surface with no lift at all. `selectContentStyle` bounds it (the only

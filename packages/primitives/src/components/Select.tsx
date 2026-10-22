@@ -227,8 +227,10 @@ export const renderSelectRow = (
     {option.label}
     {/*
       The selected mark comes from the state GPUix reports for this row, so an
-      uncontrolled Select needs no mirror of its value. It is decorative: the
-      row is already `aria-selected`.
+      uncontrolled Select needs no mirror of its value. It is decorative — the
+      row's own selection is painted, and the runtime announces a Select's
+      trigger rather than its rows (0.11.0's `SelectItem` is a plain `div`) — so
+      the mark carries no second name.
     */}
     {selected ? (
       <Icon name="check" size="sm" color={theme.colors.popoverForeground} />
@@ -373,7 +375,6 @@ export const renderSelect = (
       defaultValue={defaultValue}
       onValueChange={valueChange({ onValueChange, onChange })}
       disabled={disabled}
-      aria-label={accessibleName(label)}
       testId={testId}
       style={mergeStyle(
         { width: fullWidth === true ? "100%" : undefined },
@@ -383,6 +384,14 @@ export const renderSelect = (
       <SelectTrigger
         disabled={disabled}
         testId={triggerTestId}
+        // The trigger is the control, so it is what assistive technology must
+        // see: a named `combobox`. GPUix renders it as a `div` with a tab stop
+        // and no role, and a role-less node is absent from the accessibility
+        // tree — measured on 0.11.0, a Select with a `label` produced no node
+        // at all (the wrapper's `aria-label` landed on a plain `div`). The
+        // option rows stay unannounced (their parts are plain `div`s too).
+        role="combobox"
+        aria-label={accessibleName(label)}
         style={selectTriggerStyle(spec, theme, triggerStyle)}
       >
         <SelectValue placeholder={placeholder} />
