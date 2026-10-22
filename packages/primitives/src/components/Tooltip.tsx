@@ -10,8 +10,8 @@
  *
  * The trigger also carries the tip as its `aria-description` (GPUix 0.11.0 has
  * no `aria-describedby`), cloned onto the element the caller supplies. A host
- * element publishes it directly; this package's `Button`/`IconButton` forward
- * it from their own `TooltipTriggerProps`, so an icon action is a trigger.
+ * element publishes it directly; this package's `Button`/`IconButton`/`Toggle` forward
+ * it from their own `TooltipTriggerProps`, so an action or a mode is a trigger.
  *
  * **Limitation:** the runtime dispatches a hover to the element carrying the
  * listener, so the trigger's host element must be the focusable one — a
@@ -53,7 +53,7 @@ export interface TooltipProps {
   readonly description?: string;
   /**
    * A focusable host element, or a control that forwards
-   * `TooltipTriggerProps` (`Button`, `IconButton`).
+   * `TooltipTriggerProps` (`Button`, `IconButton`, `Toggle`).
    */
   readonly children: ReactNode;
   /** Defaults to `top`, the runtime's own default. */

@@ -74,7 +74,8 @@ export interface InteractionProps {
  * an ancestor never hears a child's hover — so a control has to carry this pair
  * itself to open a tip on hover. `aria-description` is the description channel
  * 0.11.0 publishes (`aria-describedby` does not exist): the tip arrives there
- * and a control hands it to its host like any other attribute.
+ * and a control hands it to its host like any other attribute. The button-shaped
+ * controls (`Button`, `IconButton`, `Toggle`) are the ones that declare it.
  */
 export interface TooltipTriggerProps {
   readonly onMouseEnter?: (event: EventPayload) => void;

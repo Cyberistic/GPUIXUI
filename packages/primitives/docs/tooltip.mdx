@@ -41,8 +41,8 @@ tree (a `div` carrying only a description is not a node a screen reader visits):
 ```
 
 The child must be a single **focusable element**. `Tooltip`'s trigger clones it
-with the hover and focus handlers, so a control has to forward them. `Button` and
-`IconButton` forward the whole `TooltipTriggerProps` pair (`onMouseEnter`,
+with the hover and focus handlers, so a control has to forward them. `Button`, `IconButton`
+and `Toggle` forward the whole `TooltipTriggerProps` pair (`onMouseEnter`,
 `onMouseLeave`) and the tip's `aria-description`; a component that forwards
 neither — this package's `Box`, for instance — paints the trigger but does not
 open the tip or announce the description.
@@ -76,8 +76,8 @@ Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
 - The tip is the trigger's **`aria-description`** when `content` is a string (or
   `description` is set): GPUix 0.11.0 has `aria-description` but no
   `aria-describedby`, so the wrapper passes it to the trigger.
-  `Button`/`IconButton` hand it to their host; a component that does not forward
-  it cannot carry it. The text is trimmed and a blank one is not published — an
+  `Button`/`IconButton`/`Toggle` hand it to their host; a component that does not
+  forward it cannot carry it. The text is trimmed and a blank one is not published — an
   empty description is still an attribute a reader dismisses.
 - **Measured in the accessibility tree**: the `description` field is one of the
   four attribute fields `getA11yTree()` reports, so the tip reaches a screen
@@ -110,7 +110,7 @@ Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
 
 - The trigger must be a focusable element: a host with no `tabIndex` never
   receives the focus that opens the tip, and a component only works if it
-  forwards `TooltipTriggerProps` (`Button` and `IconButton` do).
+  forwards `TooltipTriggerProps` (`Button`, `IconButton` and `Toggle` do).
 - No `aria-describedby`: a non-string tip has no description unless `description`
   is passed, and an element with no `role` is absent from the accessibility tree,
   so its description is never announced.
@@ -149,7 +149,7 @@ nub run --filter @gpuixui/primitives test:runtime
 
 ## Related
 
-- **Button** / **IconButton** — the usual triggers; both forward the trigger
-  pair, and the control still needs its own `label`.
+- **Button** / **IconButton** / **Toggle** — the usual triggers; each forwards
+  the pair, and the control still needs its own `label`.
 - **Select** — the other headless GPUix wrapper this package themes.
 - **Text** — use visible help text when the information is essential.
