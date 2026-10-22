@@ -112,7 +112,8 @@ export const SplittingText = ({
             alignItems: "baseline",
             // A word gap is the column gap; a character split carries its own
             // spaces, so the letters stay joined.
-            columnGap: split === "words" ? Math.round(metrics.fontSize * 0.3) : 0,
+            columnGap:
+              split === "words" ? Math.round(metrics.fontSize * 0.3) : 0,
           }}
         >
           {line.units.map((unit) => (

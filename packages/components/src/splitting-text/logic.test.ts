@@ -19,7 +19,10 @@ import {
 const texts = (source: string, mode: "words" | "characters" = "words") =>
   splitUnits(source, { mode }).map((line) => line.units.map((u) => u.text));
 
-const delays = (source: string, options: Parameters<typeof splitUnits>[1] = {}) =>
+const delays = (
+  source: string,
+  options: Parameters<typeof splitUnits>[1] = {},
+) =>
   splitUnits(source, options).flatMap((line) =>
     line.units.map((unit) => unit.delayMs),
   );

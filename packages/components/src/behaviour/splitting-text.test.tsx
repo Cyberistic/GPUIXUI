@@ -37,10 +37,7 @@ const painted = (renderer: TestRoot["renderer"], glue = ""): string =>
   renderer.getAllText().join(glue);
 
 /** One unit, failing on a missing index rather than casting it away. */
-const unitAt = (
-  renderer: TestRoot["renderer"],
-  index: number,
-): TestElement => {
+const unitAt = (renderer: TestRoot["renderer"], index: number): TestElement => {
   const unit = units(renderer)[index];
   if (unit === undefined) {
     throw new Error(`behaviour: no unit at ${index}`);
