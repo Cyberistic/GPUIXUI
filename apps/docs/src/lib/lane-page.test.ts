@@ -202,6 +202,21 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("same frame");
   });
 
+  it("keeps a table's scroller out of its page's wheel path", () => {
+    // The page taught a table its header, its frozen column and its
+    // virtualization, and never said where the scroll of the table itself ends
+    // and the page's begins. `nested-scroll-lifecycle` measured that a wheel
+    // moves every scrollable ancestor by the same delta and that no pane can
+    // guard, so a table inside a scrolling page moves with it.
+    const nested = rowFor(record, "Nested scrollers");
+
+    expect(nested).toContain("nested-scroll-lifecycle");
+    expect(nested).toContain("preventDefault");
+    expect(dataPage).toContain("nested-scroll-lifecycle");
+    expect(dataPage).toContain("A table's pane owns the wheel, not the page");
+    expect(dataPage).toContain("onScrollChange");
+  });
+
   it("teaches the sort and selection a window measured, and the press its centre decides", () => {
     // MISSION names table sort/selection among the critical interactions, and
     // the page described them as an intention ("a set of row ids") with no

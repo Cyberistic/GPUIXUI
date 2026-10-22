@@ -114,6 +114,16 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   wheel pans the data pane alone — a frozen column does not pan. In a window the
   mirror lands in the **same frame** as the wheel, for that synchronous reason
   (`frozen-column-lifecycle`).
+- **A table's pane owns the wheel, not the page** — a wheel moves **every**
+  scrollable ancestor on its hit path by the same delta, measured by
+  `nested-scroll-lifecycle`: a `-100` wheel over an inner list moved the list to
+  `-100` **and the page to `-100`** while the list still had 240px of travel,
+  and each scroller clamps against its own content (`-340` inside, `-360`
+  outside). The host props publish no wheel handler and no `preventDefault`, so
+  a pane cannot keep a wheel from its page. Size the table's container to the
+  height it has and give **it** the overflow, keep the page around it out of the
+  scroll path, and read the table's own `onScrollChange` — an ancestor's
+  `onScroll` fires for a wheel aimed inside the table.
 - **Sort and selection are keyed by record, and a window measured both** — a
   press selects the record it hit **and that row holds the focus**, so the next
   key reaches that row's own handler with no synthetic focus; `down` roves focus
