@@ -10,6 +10,7 @@
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { icons } from "@gpuixui/icons";
 import { targetSize } from "@gpuixui/tokens";
 import { Button } from "../src/components/Button.js";
 import { Rating } from "../src/components/Rating.js";
@@ -63,6 +64,71 @@ it("is a named group of stars that reports the rating", async () => {
     "unchecked",
     "unchecked",
   ]);
+});
+
+it("previews the star under the pointer, then restores the rating", async () => {
+  // The bug this guards: a rating gave no hint which score a press would
+  // choose. The preview is paint-only, so the value the group announces must
+  // not move while the pointer does.
+  const filled = icons["star-filled"];
+  const outline = icons.star;
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button testId="away" label="Away" />
+        <Rating label="Quality" defaultValue={2} />
+      </Stack>
+    </Surface>,
+  );
+
+  /** The markup the star's own icon is painting. */
+  const glyph = (label: string): string => {
+    const star = byLabel(runtime, label);
+    const icon = Option.flatMap(Option.fromNullishOr(star.children[0]), (id) =>
+      Option.fromNullishOr(runtime.renderer.getElement(id)),
+    );
+    return String(
+      Option.getOrElse(
+        Option.map(icon, (element) => element.customProps?.source),
+        () => "none",
+      ),
+    );
+  };
+  const painted = (): ReadonlyArray<string> =>
+    Arr.map(Arr.range(1, 5), (index) => glyph(`${index} of 5`));
+
+  expect(painted()).toStrictEqual([filled, filled, outline, outline, outline]);
+  expect(checkedStars(runtime)).toStrictEqual([
+    "checked",
+    "checked",
+    "unchecked",
+    "unchecked",
+    "unchecked",
+  ]);
+
+  const four = byLabel(runtime, "4 of 5");
+  const bounds = Option.getOrElse(runtime.boundsOfId(four.id), () =>
+    expect.fail("the fourth star painted no bounds"),
+  );
+  runtime.mouseMoveAt(
+    bounds.x + bounds.width / 2,
+    bounds.y + bounds.height / 2,
+  );
+  runtime.flush();
+  expect(painted()).toStrictEqual([filled, filled, filled, filled, outline]);
+  // The preview is not the answer: the value still announces two stars.
+  expect(checkedStars(runtime)).toStrictEqual([
+    "checked",
+    "checked",
+    "unchecked",
+    "unchecked",
+    "unchecked",
+  ]);
+
+  runtime.hover("away");
+  runtime.flush();
+  expect(painted()).toStrictEqual([filled, filled, outline, outline, outline]);
 });
 
 it("selects the star that a real click lands on", async () => {

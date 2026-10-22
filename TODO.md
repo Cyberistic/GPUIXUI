@@ -549,7 +549,7 @@ a workaround for two live sessions sharing one worktree; see
       opaque window — so a translucent window's content must be opaque and the
       *unpainted* area carries the translucency. `src/live/backdrop.ts` holds the
       mode table, the fixture and the capture arithmetic with
-      `backdrop.test.ts` (8 cases: the mode table, the fill's hex against its
+      `backdrop.test.ts` (10 cases: the mode table, the fill's hex against its
       rgba, the readout decode, the scale rule's four refusals, the point
       conversion, both sample points inside every window the runner can open,
       and the flag split's default/take/reject directions), and
@@ -1756,6 +1756,22 @@ a workaround for two live sessions sharing one worktree; see
       measured, the window reporting `[ '   ', '  Yankee  ' ]` where
       `[ undefined, 'Yankee' ]` is required. Docs: the three pages' Accessibility
       sections and the `label` API rows. 704 unit / 201 runtime
+`[x]` `packages/primitives`: `Rating` has the **hover preview** the page and its
+      record said it could not have — a pointer gave no hint which score a press
+      would choose, and the limitation blamed a re-render per pointer move
+      although the runtime delivers `onMouseEnter`/`onMouseLeave`. `RatingHover`
+      carries the star under the pointer; the paint fills up to it and the group
+      clears it on leave, while the **value, `aria-valuetext` and tab stop keep
+      reading the rating** — a preview is a hint, not an answer. A
+      `disabled`/`readOnly` rating installs no pointer handler. Proof:
+      `Rating.test.tsx` (`previews the star under the pointer in the paint
+      only`, `ignores the pointer while disabled or read-only`, both measured
+      failing on a `lit = value` paint) and a native window case in
+      `rating.runtime.test.tsx` (a real hover paints the fourth star and
+      `hover("away")` restores it; the glyphs are read as `star-filled`/`star`
+      source). Docs: `docs/rating.mdx` §Pointer, the page's Limitations and
+      Verification lists, the record and the `COMPONENTS.md` row. 707 unit /
+      202 runtime
 `[x]` `packages/primitives`: a **range slider's thumb names carried the group
       label raw** — both ends interpolated `label` before the package's name
       rule, so `label="  Price  "` named them `"  Price   minimum"` /

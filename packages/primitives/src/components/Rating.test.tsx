@@ -15,6 +15,7 @@ import { targetSize } from "@gpuixui/tokens";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
+  noPreview,
   renderRating,
   type RatingHandlers,
   type RatingProps,
@@ -54,7 +55,14 @@ const render = (
   focused?: number,
   over: Partial<RatingHandlers> = {},
 ): ReactElement =>
-  renderRating(props, testTheme, state(value), focus(focused), handlers(over));
+  renderRating(
+    props,
+    testTheme,
+    state(value),
+    focus(focused),
+    noPreview,
+    handlers(over),
+  );
 
 const starsOf = (element: ReactElement): ReadonlyArray<ReactElement> =>
   elementChildren(element);
@@ -140,6 +148,88 @@ describe("Rating", () => {
     expect(iconName(stars[0] ?? expect.fail("no star"))).toBe("star-filled");
     expect(iconName(stars[1] ?? expect.fail("no star"))).toBe("star-filled");
     expect(iconName(stars[2] ?? expect.fail("no star"))).toBe("star");
+  });
+
+  it("previews the star under the pointer in the paint only", () => {
+    // The bug guarded: a rating had no hover preview, so a pointer gave no hint
+    // which score a press would choose. The preview must not become the answer:
+    // the announced state and the tab stop keep reading the value.
+    const onHover = vi.fn();
+    const onHoverEnd = vi.fn();
+    const element = renderRating(
+      {},
+      testTheme,
+      state(2),
+      focus(),
+      { hoveredIndex: Option.some(4), onHover, onHoverEnd },
+      handlers(),
+    );
+    const stars = starsOf(element);
+    const iconName = (star: ReactElement): unknown =>
+      Option.getOrUndefined(
+        elementProp(elementChildren(star)[0] ?? expect.fail("no icon"), "name"),
+      );
+
+    expect(stars.map(iconName)).toStrictEqual([
+      "star-filled",
+      "star-filled",
+      "star-filled",
+      "star-filled",
+      "star",
+    ]);
+    expect(
+      stars.map((star) => expectSome(hostProp(star, "aria-valuetext"))),
+    ).toStrictEqual([
+      "checked",
+      "checked",
+      "unchecked",
+      "unchecked",
+      "unchecked",
+    ]);
+    expect(
+      stars.map((star) => Option.getOrUndefined(hostProp(star, "tabIndex"))),
+    ).toStrictEqual([-1, 0, -1, -1, -1]);
+
+    // The star under the pointer reports it; leaving the group clears it.
+    expectSome(hostHandler(stars[3] ?? expect.fail("no star"), "onMouseEnter"))(
+      keyEvent("click"),
+    );
+    expect(onHover).toHaveBeenCalledWith(4);
+    expectSome(hostHandler(element, "onMouseLeave"))(keyEvent("click"));
+    expect(onHoverEnd).toHaveBeenCalledOnce();
+  });
+
+  it("ignores the pointer while disabled or read-only", () => {
+    Arr.forEach([{ disabled: true }, { readOnly: true }] as const, (props) => {
+      const element = renderRating(
+        props,
+        testTheme,
+        state(2),
+        focus(),
+        { hoveredIndex: Option.some(5), onHover: vi.fn(), onHoverEnd: vi.fn() },
+        handlers(),
+      );
+      const stars = starsOf(element);
+      const iconName = (star: ReactElement): unknown =>
+        Option.getOrUndefined(
+          elementProp(
+            elementChildren(star)[0] ?? expect.fail("no icon"),
+            "name",
+          ),
+        );
+
+      expect(stars.map(iconName)).toStrictEqual([
+        "star-filled",
+        "star-filled",
+        "star",
+        "star",
+        "star",
+      ]);
+      expect(
+        hostProp(stars[0] ?? expect.fail("no star"), "onMouseEnter"),
+      ).toStrictEqual(Option.none());
+      expect(hostProp(element, "onMouseLeave")).toStrictEqual(Option.none());
+    });
   });
 
   it("moves with the arrows, clamps at the ends and clears with Delete", () => {

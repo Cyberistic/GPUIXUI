@@ -31,7 +31,7 @@ import { renderSwitch } from "./Switch.js";
 import { renderTextArea } from "./TextArea.js";
 import { renderToggle } from "./Toggle.js";
 import { renderRadioGroup, type RadioGroupFocus } from "./RadioGroup.js";
-import { renderRating } from "./Rating.js";
+import { noPreview, renderRating } from "./Rating.js";
 import {
   renderRangeSlider,
   renderSlider,
@@ -451,6 +451,7 @@ describe("a caller's handlers on a group with rows", () => {
       testTheme,
       initValueState(Option.some(0), 0),
       { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+      noPreview,
       { onSelect, onMove, registerItem: () => () => {} },
     );
     expectSome(hostHandler(starOf(element, 2), "onClick"))(clickEvent);
@@ -469,6 +470,7 @@ describe("a caller's handlers on a group with rows", () => {
       testTheme,
       initValueState(Option.some(2), 0),
       { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+      noPreview,
       { onSelect: nothing(), onMove: nothing(), registerItem: () => () => {} },
     );
     expect(hostHandler(starOf(element, 1), "onClick")).toStrictEqual(

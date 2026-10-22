@@ -83,6 +83,28 @@ export interface RatingFocus {
   readonly onBlur: (index: number) => void;
 }
 
+/**
+ * Where the pointer is, so a rating can preview the star it would choose.
+ *
+ * A hovered star fills the stars up to it **in the paint only**: the value, the
+ * announced state and the tab stop keep reading the rating, because a preview
+ * is a hint about the next press, not a change of the answer.
+ */
+export interface RatingHover {
+  /** The star under the pointer, or `None` while the pointer is elsewhere. */
+  readonly hoveredIndex: Option.Option<number>;
+  readonly onHover: (index: number) => void;
+  /** The pointer left the group: the paint returns to the value. */
+  readonly onHoverEnd: () => void;
+}
+
+/** A pointer that is nowhere: a rating with no star previewed. */
+export const noPreview: RatingHover = {
+  hoveredIndex: Option.none(),
+  onHover: () => {},
+  onHoverEnd: () => {},
+};
+
 export interface RatingHandlers {
   readonly onSelect: (value: number) => void;
   /** Select, then move native focus to the star the change landed on. */
@@ -101,12 +123,20 @@ export const renderRating = (
   theme: PrimitiveTheme,
   state: ValueState<number>,
   focus: RatingFocus,
+  hover: RatingHover,
   handlers: RatingHandlers,
 ): ReactElement => {
   const max = ratingMax(props.max);
   const value = clampRating(state.current, max);
   const tabStop = ratingTabStop(value, max);
   const interactive = props.disabled !== true && props.readOnly !== true;
+  /** The star the paint reaches: the pointer's while it is inside, else the value. */
+  const lit = interactive
+    ? clampRating(
+        Option.getOrElse(hover.hoveredIndex, () => value),
+        max,
+      )
+    : value;
   /** The star an activating key chooses: the one holding focus, else the tab stop. */
   const focusedStar = clampRating(
     Option.getOrElse(focus.focusedIndex, () => tabStop),
@@ -134,11 +164,13 @@ export const renderRating = (
       ref={handlers.registerItem(index)}
       role="radio"
       aria-label={`${index} of ${max}`}
+      // The state stays the rating's: a previewed star is filled, not chosen.
       aria-valuetext={index <= value ? "checked" : "unchecked"}
       tabIndex={interactive ? (index === tabStop ? 0 : -1) : undefined}
       onClick={composePress(!interactive, props.onClick, () => {
         handlers.onSelect(index);
       })}
+      onMouseEnter={interactive ? () => hover.onHover(index) : undefined}
       onFocus={composeEvent<EventPayload>(props.onFocus, () =>
         focus.onFocus(index),
       )}
@@ -148,9 +180,9 @@ export const renderRating = (
       style={starStyle}
     >
       <Icon
-        name={index <= value ? "star-filled" : "star"}
+        name={index <= lit ? "star-filled" : "star"}
         size={props.size ?? "md"}
-        color={ratingStarColor(index <= value, theme, props.invalid)}
+        color={ratingStarColor(index <= lit, theme, props.invalid)}
       />
     </div>
   );
@@ -174,6 +206,7 @@ export const renderRating = (
         if (!interactive) return;
         if (decideActivation(event.key ?? "", "up", false)) selectFocused();
       })}
+      onMouseLeave={interactive ? hover.onHoverEnd : undefined}
       style={mergeStyle(
         recipeTw.classesToStyle(cn(ratingGroupClass, props.className), theme)
           .style,
@@ -198,6 +231,11 @@ export const Rating = (props: RatingProps): ReactElement => {
   const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
     Option.none(),
   );
+  // Paint-only: the preview is discarded when the pointer leaves, so it never
+  // reaches the value, the name or the tab stop.
+  const [hoveredIndex, setHoveredIndex] = useState<Option.Option<number>>(
+    Option.none(),
+  );
   const state = useControlState(
     props.value,
     clampRating(props.defaultValue ?? 0, ratingMax(props.max)),
@@ -214,6 +252,11 @@ export const Rating = (props: RatingProps): ReactElement => {
         setFocusedIndex((current) =>
           Option.filter(current, (focused) => focused !== index),
         ),
+    },
+    {
+      hoveredIndex,
+      onHover: (index) => setHoveredIndex(Option.some(index)),
+      onHoverEnd: () => setHoveredIndex(Option.none()),
     },
     {
       onSelect: state.set,

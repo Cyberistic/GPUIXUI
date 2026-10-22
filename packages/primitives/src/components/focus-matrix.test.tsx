@@ -31,7 +31,7 @@ import { renderInput } from "./Input.js";
 import { renderNumberField } from "./NumberField.js";
 import { renderOtpField } from "./OTPField.js";
 import { renderRadioGroup } from "./RadioGroup.js";
-import { renderRating } from "./Rating.js";
+import { noPreview, renderRating } from "./Rating.js";
 import { renderRangeSlider, renderSlider } from "./Slider.js";
 import { renderSwitch } from "./Switch.js";
 import { renderTextArea } from "./TextArea.js";
@@ -191,6 +191,7 @@ const ROWS: ReadonlyArray<Row> = [
         testTheme,
         rating(),
         { focusedIndex: Option.none(), onFocus: noop, onBlur: noop },
+        noPreview,
         { onSelect: noop, onMove: noop, registerItem: () => () => {} },
       ),
   },

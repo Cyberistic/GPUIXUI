@@ -584,7 +584,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "Whole stars only: no half stars without clipping or a transform",
-      "No hover preview: it needs per-star hover state",
+      "The pointer preview is paint-only: a screen reader hears the value, not the previewed star",
       "Clearing is explicit (Delete/Backspace); an arrow clamps at one star once rated",
     ],
     source: ["src/components/Rating.tsx", "src/core/rating.ts"],

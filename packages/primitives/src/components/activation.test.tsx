@@ -23,7 +23,7 @@ import { renderButton } from "./Button.js";
 import { renderCheckbox } from "./Checkbox.js";
 import { renderIconButton } from "./IconButton.js";
 import { renderRadioGroup, type RadioGroupHandlers } from "./RadioGroup.js";
-import { renderRating, type RatingHandlers } from "./Rating.js";
+import { noPreview, renderRating, type RatingHandlers } from "./Rating.js";
 import { renderSwitch } from "./Switch.js";
 import { renderToggle } from "./Toggle.js";
 import { keyEvent } from "./testing/event.js";
@@ -144,6 +144,7 @@ const rating = (): Part => {
         testTheme,
         initValueState(Option.some(0), 0),
         { focusedIndex: Option.some(4), onFocus: vi.fn(), onBlur: vi.fn() },
+        noPreview,
         handlers,
       ),
     activations: () => onSelect.mock.calls.length,
@@ -204,6 +205,7 @@ describe("a rating's activating key", () => {
       testTheme,
       initValueState(Option.some(2), 0),
       { focusedIndex: focused, onFocus: vi.fn(), onBlur: vi.fn() },
+      noPreview,
       { onSelect, onMove: vi.fn(), registerItem: () => () => {} },
     );
     expectSome(hostHandler(element, "onKeyUp"))(keyEvent("space"));
