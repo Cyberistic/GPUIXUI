@@ -627,7 +627,8 @@ Each report is also a function of its own:
   skeleton fill (on the page, a card, a muted list and the fill a loading dialog
   paints), the modal veil (on the content strips a window holds behind it:
   a card, a popover, a `muted` toolbar, a `secondary` panel, a field's `input`
-  fill and a chosen row's `selected` wash, with the page's void exempt because
+  fill, and the washes a row can be wearing when a surface opens over it —
+  `selected`, `accent` and `active` — with the page's void exempt because
   nothing can darken a black page), a
   status tone's soft tint and its edge, a
   scrollbar thumb, the wash a hovered or selected row is tinted with, the fill a
@@ -686,8 +687,9 @@ on and its edge on those same four and on the four washes a row tints under a
 badge (read at the share `statusEdgeAlpha` that `statusTone` paints), the
 scrollbar thumb, `hover`/`active`/`selected`/`accent`
 and the `secondary` fill on the four strips a control can sit on, and the
-deepest elevation level composited over those four plus the chosen row a context
-menu opens over. Nothing escapes the
+deepest elevation level composited over those four plus the washes a row can be
+wearing when a context menu opens over it (`selected`, `hover`, `accent`,
+`active`). Nothing escapes the
 contract either:
 `coverage.test.ts` holds every role in `colorRoles` to at least one measurement,
 and names the one a dedicated contract measures instead — `selection`, by

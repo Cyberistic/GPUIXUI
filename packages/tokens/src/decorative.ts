@@ -300,9 +300,13 @@ const skeletonStrips = ["background", "card", "popover", "muted"] as const;
  * high-contrast dark theme's black tint on its pure-black page measured 1.00:1
  * at every level, so no raised surface in that variant had a shadow.
  *
- * The strips are the four a raised surface floats over plus the `selected` wash
- * a row wears behind it: a context menu opens over the row the reader
- * right-clicked, so the shadow falls on that row's own fill.
+ * The strips are the four a raised surface floats over plus the washes a row
+ * wears behind it: a context menu opens over the row the reader right-clicked,
+ * so the shadow falls on that row's own fill — the `selected` a chosen row
+ * holds, the `accent` a list row tints under the pointer, and the `active` a
+ * row keeps while the press that opened the surface is down. A menu row's
+ * `hover` is deliberately not one of them: no surface opens over a menu row,
+ * and the row a menu is opened *from* is a list row, which tints `accent`.
  */
 const elevationRole = "shadow" as const;
 const elevationLevel = "lg" as const;
@@ -312,6 +316,8 @@ const elevationStrips = [
   "popover",
   "muted",
   "selected",
+  "active",
+  "accent",
 ] as const;
 
 /**
@@ -355,6 +361,14 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   // the row the reader just selected is the library's own pattern, so the veil
   // has to recede the selection as well as the content around it.
   { surface: "scrim", role: "overlay", over: "selected" },
+  // And the row under the pointer is the one a menu or dialog is opened *from*:
+  // a context menu, a confirmation dialog or a command palette opened on a list
+  // row covers the wash that row is wearing — `accent` under the pointer and
+  // `active` while the press that opened the surface is down. A veil painted in
+  // that wash leaves the thing the surface is about at full brightness, which is
+  // the same defect the chosen row closed one state over.
+  { surface: "scrim", role: "overlay", over: "active" },
+  { surface: "scrim", role: "overlay", over: "accent" },
   // A scrollbar thumb is chrome: the platform paints and sizes it, and the role
   // only tints it. A thumb that matches the strip it moves along is a scroller a
   // reader cannot find, so it is measured wherever a scroller can sit.

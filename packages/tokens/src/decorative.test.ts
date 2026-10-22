@@ -615,20 +615,79 @@ describe("decorative surfaces", () => {
     ).toMatchObject({ ratio: 1, floor: decorativeFloor });
   });
 
+  /** Whether a row wash has a painter that tints it. */
+  const surfaceOrigin = (wash: "active" | "accent"): boolean => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8");
+    const list = read("../../components/src/list.tsx");
+    return wash === "accent"
+      ? list.includes("hover: { backgroundColor: theme.colors.accent }")
+      : list.includes("active: { backgroundColor: theme.colors.active }");
+  };
+
   it("measures the deepest elevation level on every strip a raised surface floats over", () => {
     // A dialog lands on the page, a popover on a card or the page, a menu in a
     // toolbar and a context menu over the row it was opened from; the shadow is
     // the only thing separating a raised surface from the strip in a dark theme,
-    // so all five are measured.
-    const missing = [
-      "background",
-      "card",
-      "popover",
-      "muted",
-      "selected",
-    ].filter((over) => !measured("elevation", "shadow", over));
+    // so the four content strips and every wash a row can wear are measured.
+    const strips = [
+      ...new Set(
+        decorativeSurfaces
+          .filter(({ surface }) => surface === "elevation")
+          .map(({ over }) => over),
+      ),
+    ];
+
+    expect(strips.length).toBeGreaterThanOrEqual(7);
+    expect(
+      strips.filter((over) => !measured("elevation", "shadow", over)),
+    ).toEqual([]);
+  });
+
+  it("measures a surface opened from the row the pointer is on", () => {
+    // A context menu, a confirmation dialog or a command palette is opened from
+    // a list row, and that row is wearing a wash at the moment the surface
+    // paints: `accent` under the pointer and `active` while the press that
+    // opened it is down (`list.tsx`). The veil has to recede those washes and
+    // the shadow has to fall on them, which is the same claim the chosen row
+    // states one state on. A menu row's `hover` is not one of them — no surface
+    // opens over a menu row.
+    const washes = ["active", "accent"] as const;
+    const missing = washes.flatMap((over) => [
+      ...["scrim", "elevation"].flatMap((surface) =>
+        measured(
+          surface as "scrim" | "elevation",
+          surface === "scrim" ? "overlay" : "shadow",
+          over,
+        )
+          ? []
+          : [`${surface}/${over}`],
+      ),
+      ...(surfaceOrigin(over) ? [] : [`${over} has no painter`]),
+    ]);
 
     expect(missing).toEqual([]);
+  });
+
+  it("reports a shadow painted in the wash the row is wearing", () => {
+    // The wash is a fill like any other, so a tint that carries it darkens
+    // nothing there: a brand whose `shadow` is its `accent` paints a context
+    // menu with no shadow over the list row that opened it, while the page
+    // placements still pass. The placement is what sees it.
+    const broken = extendTheme(lightTheme, {
+      colors: { shadow: lightTheme.colors.accent },
+    });
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, over }) => surface === "elevation" && over === "accent",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+    expect(
+      decorativeFailures(lightTheme).some(
+        ({ surface }) => surface === "elevation",
+      ),
+    ).toBe(false);
   });
 
   it("reads the level's painted colour, not the role it is tinted from", () => {
@@ -649,17 +708,15 @@ describe("decorative surfaces", () => {
       },
     });
 
+    const strips = decorativeSurfaces
+      .filter(({ surface }) => surface === "elevation")
+      .map(({ over }) => over);
+
     expect(
       decorativeFailures(flat)
         .filter(({ surface }) => surface === "elevation")
         .map(({ over, ratio }) => [over, ratio]),
-    ).toEqual([
-      ["background", 1],
-      ["card", 1],
-      ["popover", 1],
-      ["muted", 1],
-      ["selected", 1],
-    ]);
+    ).toEqual(strips.map((over) => [over, 1]));
     expect(decorativeFailures(lightTheme)).toEqual([]);
   });
 
@@ -745,17 +802,20 @@ describe("decorative surfaces", () => {
       colors: { shadow: lightTheme.colors.background },
     });
 
+    const strips = decorativeSurfaces
+      .filter(({ surface }) => surface === "elevation")
+      .map(({ over }) => over);
+
     expect(
       decorativeFailures(broken)
         .filter(({ surface }) => surface === "elevation")
         .map(({ over, ratio }) => [over, ratio]),
-    ).toMatchObject([
-      ["background", 1],
-      ["card", expect.any(Number)],
-      ["popover", expect.any(Number)],
-      ["muted", expect.any(Number)],
-      ["selected", expect.any(Number)],
-    ]);
+    ).toMatchObject(
+      strips.map((over) => [
+        over,
+        over === "background" ? 1 : expect.any(Number),
+      ]),
+    );
     expect(
       decorativeFailures(broken)
         .filter(({ surface }) => surface === "elevation")

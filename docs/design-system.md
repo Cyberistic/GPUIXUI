@@ -339,17 +339,18 @@ Overlay layering is paint order, not a shadow or a weight: the runtime has no
 dismissal stack, and why `elevation.overlay` stays a reserved, empty level. Dark
 shadows are stronger because contrast between surfaces is lower — but stronger is
 not the same as visible. The deepest level is held to the perceptibility floor
-against the five strips a raised surface falls on — the page, card, popover and
-toolbar, plus the `selected` wash a row wears when a context menu opens over it —
-the same `decorativeFailures`
+against the strips a raised surface falls on — the page, card, popover and
+toolbar, plus every wash a row can be wearing when the surface opens: the
+`selected` a chosen row holds, the `accent` a list row tints under the pointer and
+the `active` a row keeps while the press is down — the same `decorativeFailures`
 call a divider and a wash answer to (§9). A shadow is a blurred geometry, so the
 composite is a ceiling rather than what the eye receives: a shadow that passes may
 still read faint at its edge, and the contract reports only one that cannot be
 seen at all. It found exactly that — the high-contrast dark theme tinted its
 shadows with black on a pure-black page, so every level was 1.00:1 there and a
 dialog or a full-width card had no shadow; that theme's tint is now the grey its
-raised controls use, and the deepest level reads 1.09–1.37:1 across the page,
-card, popover, toolbar and chosen row.
+raised controls use, and the deepest level reads 1.09–1.37:1 across all seven
+strips.
 
 A level is a rung on the same kind of ladder as a radius: the surface a reader
 raises must cast a shadow that reaches further below its box than the level
@@ -748,12 +749,12 @@ Linux light were under the floor there — the four values moved stronger, and t
 message-tint pairs moved the neutral edge again.
 
 The elevation tint is measured on the same floor, as a **ceiling**: the deepest
-level is composited over the five strips a raised surface can fall on — the
-page, card, popover and toolbar, and the chosen row a context menu opens over —
-so a shadow that passes may still read faint at its blurred edge and one a reader
-cannot see is reported. That is how the high-contrast dark page's black-on-black
-scale was found; the one-shadow rule and the role-owned tint stay
-`elevation.test.ts`'s.
+level is composited over the strips a raised surface can fall on — the page,
+card, popover and toolbar, and every wash a row can be wearing when a context
+menu or a dialog opens over it (`selected`, `accent`, `active`) — so a shadow
+that passes may still read faint at its blurred edge and one a reader cannot see
+is reported. That is how the high-contrast dark page's black-on-black scale was
+found; the one-shadow rule and the role-owned tint stay `elevation.test.ts`'s.
 
 One pair class is measured by a helper rather than by the table, because it is
 **derived** rather than stored: a link's colour. `primary` is a fill, so

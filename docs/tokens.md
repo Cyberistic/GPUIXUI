@@ -1785,7 +1785,7 @@ how a status edge is measured at the alpha its component actually uses:
 | ------- | ---- | ------------- |
 | divider | `border` | `background`, `card`, `popover`, `muted` |
 | skeleton | `skeleton` | `background`, `card`, `popover`, `muted` |
-| scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `input`, `selected` |
+| scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `input`, `selected`, `active`, `accent` |
 | statusTint | each tone's `xSoft` | `background`, `card`, `popover`, `muted` |
 | statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint, the same four strips, and the washes `hover`, `active`, `selected`, `accent` |
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
@@ -1903,8 +1903,12 @@ behind a modal had a measured card and an undimmed toolbar, and a brand's dark
 `muted` surface could ship a veil that receded nothing. The chosen row is the
 same gap one surface on: a confirmation dialog opens over the row it is about, so
 a veil painted in that row's fill leaves the thing the dialog is asking about at
-full brightness. A surface that cannot be measured at all — a translucent page —
-is reported with `ratio: undefined`, exactly as a text pair is.
+full brightness. The row **under the pointer** is the third state: a context
+menu, a confirmation dialog or a command palette is opened from a row, and that
+row is wearing a wash at that moment — `accent` on a list row, `active` while the
+press is down — so those two washes are measured alongside the chosen one. A surface that cannot be measured at all — a
+translucent page — is reported with `ratio: undefined`, exactly as a text pair
+is.
 
 The **elevation tint** is in the table too, and it is the surface this page used
 to say was deliberately outside it. A shadow is a blurred geometry, so a flat
@@ -1915,14 +1919,19 @@ faint at its blurred edge and only a shadow a reader cannot see at all is
 reported. The measured colour is the level's own, because a level carries its
 share in its alpha byte and a brand can supply a level whole; the strips are the
 four a raised surface floats over (`background`, `card`, `popover`, `muted`) plus
-the `selected` wash a row wears — a context menu opens over the row the reader
-right-clicked, so its shadow lands on that row's own fill.
+every wash a row can be wearing when the surface opens — the `selected` a chosen
+row holds, the `accent` a list row tints under the pointer, and the `active` a row
+keeps while the press that opened the surface is down. A context menu opens over
+the row the reader right-clicked, so its shadow lands on that row's own fill. A
+menu row's `hover` is not one of them: no surface opens over a menu row, and the
+row a surface is opened from is a list row, which tints `accent`.
 
 That gap was real. The high-contrast dark theme tinted its shadows with black on
 a **pure-black** page, so every level measured 1.00:1 there and a dialog or a
 full-width card had no shadow at all. Its tint is the grey its raised controls
-use (`#2E2E2EB3` now), and the deepest level clears the floor on all five strips
-at 1.09–1.37:1. The one-shadow-per-level rule and the role-owned tint remain
+use (`#2E2E2EB3` now), and the deepest level clears the floor on all seven strips
+at 1.09–1.37:1, the tightest being the chosen and the pointer's `accent` wash at
+1.09:1. The one-shadow-per-level rule and the role-owned tint remain
 `elevation.test.ts`'s.
 
 ```ts
@@ -2487,9 +2496,10 @@ Two differently named tokens are easy to mix up here:
 
 - `overlay` is the **modal scrim colour** (`#00000073` light, `#000000A6` dark),
   painted behind a modal's content and measured as a decorative surface over
-  `card`, `popover`, `muted`, `secondary`, `input` and `selected`
-  (`decorative.ts`) — the strips a window actually holds behind a modal,
-  including the row the reader has chosen, not the page's void. It is what
+  `card`, `popover`, `muted`, `secondary`, `input`, `selected`, `active` and
+  `accent` (`decorative.ts`) — the strips a window actually holds behind a modal,
+  including the row the reader has chosen and the row the pointer or a press has
+  tinted when the surface opens over it, not the page's void. It is what
   makes a modal recede.
 - `elevation.overlay` is a **reserved, empty elevation level**. It lifts nothing:
   `elevationShadow(theme, "overlay")` returns `undefined`, and a surface that
