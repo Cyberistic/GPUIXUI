@@ -113,6 +113,36 @@ The typed prefix lives for 500ms. The window is a lazy comparison against
 Effect's monotonic clock, not a timer: nothing runs while the list is idle, and a
 prefix that matches nothing is cleared so the next letter starts a fresh search.
 
+### The rule is published
+
+A list's type-ahead is not private to `List`. `@gpuixui/components/typeahead`
+exports the seam a surface with its own rows composes:
+
+- `typeaheadPress(buffer, char, nowMs)` — the buffer's window and repeat rule.
+- `typeaheadMatchIndex(items, from, prefix)` / `typeaheadMatch` — the first
+  enabled row at or after `from` whose label starts with the prefix, wrapping.
+- `typedChar(event)` — the character a keystroke types, or `None` for a named
+  key, Space or a chord.
+- `useTypeahead(items, from, onMatch)` — the hook `List` and the menus use.
+- `idleTypeahead`, `typeaheadWindow`, `typeaheadWindowMs`, and the
+  `TypeaheadBuffer` / `TypeaheadItem` types.
+
+```tsx
+import * as Option from "effect/Option";
+import {
+  idleTypeahead,
+  typeaheadMatchIndex,
+  typeaheadPress,
+} from "@gpuixui/components/typeahead";
+
+// `elapsedMs` is the caller's clock read, so the rule stays pure.
+const prefix = typeaheadPress(idleTypeahead, "r", elapsedMs);
+const at = typeaheadMatchIndex(rows, Option.none(), prefix.text);
+```
+
+A surface keeps its own row type: map each row to `{ label, disabled }`, ask for
+a position, and read the row at that position.
+
 ## Activation
 
 Selection is state; activation is an action. Pass `onActivate` when a row must

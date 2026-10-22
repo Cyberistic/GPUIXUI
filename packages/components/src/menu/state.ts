@@ -18,7 +18,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useTypeahead } from "../internal/typeahead.js";
+import { useTypeahead } from "../typeahead.js";
 import {
   initial,
   move as moveActive,

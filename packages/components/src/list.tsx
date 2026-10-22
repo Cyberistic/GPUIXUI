@@ -80,12 +80,11 @@ import {
   isSelectAll,
   isUp,
   swallowsDefault,
-  typedChar,
 } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { controlRing, pressWash, useTheme } from "./internal/theme.js";
 import { keyOrigin } from "./list/origin.js";
-import { useTypeahead } from "./internal/typeahead.js";
+import { typedChar, useTypeahead } from "./typeahead.js";
 import { range, sameValues, selectAll, toggle } from "./list/selection.js";
 import { makeRowStore, type RowStore } from "./list/store.js";
 

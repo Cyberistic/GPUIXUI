@@ -16,7 +16,7 @@ import {
   nextEnabled,
   type CollectionItem,
 } from "../internal/collection.js";
-import type { TypeaheadItem } from "../internal/typeahead.js";
+import type { TypeaheadItem } from "../typeahead.js";
 
 /**
  * A menu row: the id of its host element, whether it accepts selection, and the

@@ -8,7 +8,6 @@
  */
 
 import type { EventPayload, KeyEvent, Props } from "@gpuix/react";
-import { pipe } from "effect";
 import * as Option from "effect/Option";
 
 /** The half of a key event a decision is made for. */
@@ -115,33 +114,6 @@ export const isSelectAll = (event: EventPayload): boolean =>
 export const isMenuKey = (event: EventPayload): boolean =>
   (event.key === "f10" && event.modifiers?.shift === true) ||
   event.key === "contextmenu";
-
-/**
- * The character a keystroke types, or `None` for a shortcut, a named key or Space.
- *
- * `key` decides whether this is text: one character for letters, digits and
- * punctuation, a word (`"enter"`, `"space"`, `"down"`) otherwise. `keyChar`
- * supplies the shifted form. Measured in the real renderer: `Enter` carries
- * `keyChar: "\n"`, so testing `keyChar` alone would type a newline instead of
- * activating the row.
- */
-export const typedChar = (event: EventPayload): Option.Option<string> =>
-  pipe(
-    Option.fromNullishOr(event.keyChar),
-    Option.filter(
-      (char) =>
-        char.length === 1 &&
-        char !== " " &&
-        Option.exists(
-          Option.fromNullishOr(event.key),
-          (key) =>
-            key.length === 1 &&
-            event.modifiers?.cmd !== true &&
-            event.modifiers?.ctrl !== true &&
-            event.modifiers?.alt !== true,
-        ),
-    ),
-  );
 
 /**
  * The direction an arrow key means for a list on that axis: `1` forward, `-1`

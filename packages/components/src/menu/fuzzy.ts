@@ -6,7 +6,7 @@
  * starts beat runs inside a word, and a longer consecutive run beats a shorter
  * one. Ties break by declaration index, so equal labels never swap places.
  *
- * The type-ahead matcher in `internal/typeahead.ts` is a different tool: it
+ * The type-ahead matcher in `typeahead.ts` is a different tool: it
  * cycles rows by prefix as the user types. This one filters and ranks a list
  * once per query.
  */

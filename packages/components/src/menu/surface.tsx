@@ -27,10 +27,10 @@ import {
   isTab,
   isUp,
   swallowsDefault,
-  typedChar,
 } from "../internal/key.js";
 import { overlaySurfaceStyle } from "../internal/overlay.js";
 import { useTheme, type Theme } from "../internal/theme.js";
+import { typedChar } from "../typeahead.js";
 import { useMenuContext, type MenuContextValue } from "./state.js";
 
 /** The floating surface every menu paints: the shared `MENU_CONTENT` recipe
