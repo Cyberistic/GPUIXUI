@@ -22,6 +22,7 @@
  * the gap rather than hiding it: the audit passes a brand whose scales lie.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   auditTheme,
@@ -372,5 +373,50 @@ describe("the shipped example", () => {
       },
     ]);
     expect(auditTheme(unevenElevationBrand).passed).toBe(true);
+  });
+});
+
+describe("a type role the theme does not carry", () => {
+  // The bug this guards: the type ladder read `typography[role].fontSize`
+  // directly, so a theme restored from storage that predates a role the library
+  // added — the one way a complete theme becomes incomplete — threw
+  // `TypeError: Cannot read properties of undefined (reading 'fontSize')` at
+  // every rung but the two mono roles. A step the theme does not carry is not a
+  // rung, the same rule the elevation ladder already follows.
+  const withoutRole = (role: "h3") => {
+    const { [role]: _gone, ...typography } = lightTheme.typography;
+    return { ...lightTheme, typography };
+  };
+
+  it("skips the absent rung, instead of throwing", () => {
+    expect(invalidScales(withoutRole("h3"))).toEqual([]);
+  });
+
+  it("keeps the ladder compared across the gap", () => {
+    // Body raised above `h2` is still reported: the steps either side of the
+    // missing name are adjacent once it is gone, and the report names the
+    // preceding step it is actually compared with.
+    const raised = brand({ typography: { body: { fontSize: 22 } } });
+    const { h3: _gone, ...typography } = raised.typography;
+
+    expect(invalidScales({ ...raised, typography })).toEqual([
+      {
+        group: "typography",
+        path: "h2.fontSize",
+        value: 20,
+        previous: { path: "body.fontSize", value: 22 },
+      },
+    ]);
+  });
+
+  it("is what the catalogue promises the report does", () => {
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(page).toContain(
+      "A type role a restored theme does not carry is skipped",
+    );
   });
 });

@@ -164,9 +164,14 @@ interface TextStyleNumbers {
  * names it needs, and each role's numbers are opened to `number` rather than
  * `TextStyle`'s own shape: the report is the gate for a weight or a size a
  * theme computed rather than chose, and it reads the value the batch sees.
+ *
+ * A role is optional because a stored theme can predate it. The report walks the
+ * steps a theme carries, so it says nothing about one that is not there — the
+ * gate refuses that absence by name (`requireSteps`), because a role is what a
+ * component reads by name and cannot be painted around.
  */
 type TypographyNumbers = Omit<Typography, TextRole> & {
-  readonly [role in TextRole]: TextStyleNumbers;
+  readonly [role in TextRole]?: TextStyleNumbers;
 };
 
 /** The fields the number audit reads: every group of a theme except its colours. */
@@ -296,6 +301,11 @@ const inspectEmphasis = (
   typography: NumberSource["typography"],
 ): readonly InvalidNumber[] => {
   const { body, bodyStrong } = typography;
+  // A stored theme that predates either role is the gate's refusal to name; there
+  // is no pair to compare, and reading through an absent one would throw.
+  if (!isTextStyle(body) || !isTextStyle(bodyStrong)) {
+    return [];
+  }
   // An unusable number is already the single-value report's: comparing it would
   // report one broken value twice, under a rule that says nothing about it. A
   // leading inside its own glyph box is the same — the `leading` rule owns that
@@ -358,11 +368,13 @@ const controlContent = (
   typography: NumberSource["typography"],
   iconSize: NumberSource["iconSize"],
 ): number | undefined => {
-  const parts = [
-    typography.label.lineHeight,
-    typography.body.lineHeight,
-    iconSize.md,
-  ];
+  const { label, body } = typography;
+  // Both carriers are steps of the scale, so a theme that lost one is the gate's
+  // refusal rather than this report's; the ceiling is unknown, not smaller.
+  if (!isTextStyle(label) || !isTextStyle(body)) {
+    return undefined;
+  }
+  const parts = [label.lineHeight, body.lineHeight, iconSize.md];
   return parts.every(Number.isFinite) ? Math.max(...parts) : undefined;
 };
 

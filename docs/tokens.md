@@ -1091,7 +1091,10 @@ from a shipped one with `extendTheme`.
 lost one cannot be painted with the numbers an audit would have passed:
 `textStyle(theme, "codeBlock")` reads `typography.codeBlock.fontSize`, so an
 absent role throws at the first paint that asks for it, while `invalidNumbers`
-walks the steps a theme carries and says nothing about one that is not there. A
+walks the steps a theme carries and says nothing about one that is not there —
+including the two pairs it compares, the emphasis (`bodyStrong` against `body`)
+and a control's fit (the `label` and `body` leadings): a missing member is no
+pair to compare, so neither reader throws. A
 missing `density.controlHeight.sm` and a single absent `typography.body.lineHeight`
 are refused the same way, by path. The required list is derived from the scales
 this package ships, so a role or a metric added to one is required on the next
@@ -1370,7 +1373,12 @@ are a separate family rather than rungs of the size ladder, so neither is
 compared here. The emphasis pair is not left unmeasured for it: `bodyStrong`
 must share `body`'s size and leading and weigh more, and `invalidNumbers`
 reports the strong role's number as `emphasis` (§Numbers). A value that is not
-finite is skipped here and reported once by `invalidNumbers`, which owns it.
+finite is skipped here and reported once by `invalidNumbers`, which owns it. A
+type role a restored theme does not carry is skipped for the same reason a
+missing elevation level is: the step is not a rung, so the roles either side of
+it are compared with each other and the report names the step it is actually
+measured against. The absence itself is the gate's refusal, not this report's
+(§Paint-ready values).
 
 Elevation is the one ladder whose rung is not a single token. A level is a
 geometry plus a share of the `shadow` role, so its depth is the distance the

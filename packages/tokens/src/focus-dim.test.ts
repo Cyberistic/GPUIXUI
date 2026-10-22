@@ -233,7 +233,10 @@ describe("keyboardDimPairs", () => {
     });
 
     // The painters: a ghost action or a menu row tints `hover`, and the list row
-    // tints `accent` under the pointer and `active` while it is pressed.
+    // tints `accent` under the pointer and `active` while it is pressed. The
+    // press may be painted as the role or through the derived wash that keeps
+    // the step visible (`pressWash`), which names the wash it replaces; the
+    // contract is the role the row's press plays.
     const list = readFileSync(
       new URL("../../components/src/list.tsx", import.meta.url),
       "utf8",
@@ -243,7 +246,13 @@ describe("keyboardDimPairs", () => {
       "utf8",
     );
     expect(list).toContain("backgroundColor: theme.colors.accent");
-    expect(list).toContain("backgroundColor: theme.colors.active");
+    expect(
+      [
+        "{ backgroundColor: theme.colors.active }",
+        'backgroundColor: pressWash(theme, "accent")',
+      ].some((form) => list.includes(form)),
+      "the list row paints no press",
+    ).toBe(true);
     expect(list).toContain("color: theme.colors.selectedForeground");
     expect(recipe).toContain("hover:bg-hover active:bg-active");
   });

@@ -609,8 +609,10 @@ audit.keyboardDim; // [] — every label the runtime's keyboard dim fades is sti
 A theme restored from storage can be **incomplete**. A missing colour role or
 elevation level is a line in the report, but a missing **numeric step** is not
 something the reports can describe: `invalidNumbers` walks the steps a theme
-carries, so it says nothing about one that is not there, while
-`textStyle(theme, "codeBlock")` reads `typography.codeBlock.fontSize` and throws
+carries, so it says nothing about one that is not there — the pairs it compares
+(the emphasis, a control's fit) skip a member that is absent rather than reading
+through it — while `textStyle(theme, "codeBlock")` reads
+`typography.codeBlock.fontSize` and throws
 at the first paint that asks for the role. So `auditTheme` refuses a theme missing
 a step — or a whole numeric group — and names the path (`typography.codeBlock`,
 `density.controlHeight.sm`); such a theme is rebuilt from a shipped one with
@@ -688,10 +690,12 @@ Each report is also a function of its own:
   control heights and paddings, and the elevation levels by the distance each
   level's shadow reaches below its box. Every value can be layable while the name
   still lies: a `sm` control taller than its `lg`, a dialog as square as a card,
-  or a dialog casting a tighter shadow than a menu. It is not one of the audit's
-  eleven reports yet (the docs readout words each report it prints), so run it
-  beside `auditTheme`; it found the Windows style's `xl` radius equal to its
-  `lg`.
+  or a dialog casting a tighter shadow than a menu. A type role or elevation
+  level the theme does not carry is not a rung, so the steps either side of it
+  are compared with each other rather than read through it. It is not one of the
+  audit's eleven reports yet (the docs readout words each report it prints), so
+  run it beside `auditTheme`; it found the Windows style's `xl` radius equal to
+  its `lg`.
 - `contrastFailures(theme, floors?)` lists every text-on-surface pair that
   misses its floor, including one it cannot measure because a value is
   translucent. The floors default to the theme's own variant.

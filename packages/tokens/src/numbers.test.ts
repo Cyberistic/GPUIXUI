@@ -41,6 +41,7 @@ import {
   retroTheme,
   targetSize,
   themes,
+  type TextRole,
   type ThemeOverrides,
   typography,
 } from "./index.js";
@@ -1100,6 +1101,58 @@ describe("the focus ring's width paints", () => {
     ]);
     expect(invisibleRingAudit.contrast).toEqual([]);
     expect(invisibleRingAudit.passed).toBe(false);
+  });
+});
+
+describe("a theme that lost a type role", () => {
+  // The bug this guards: `invalidNumbers` is documented as walking the steps a
+  // theme carries — "says nothing about one that is not there" — and two pair
+  // readers instead read the role directly. A stored theme that predates a role
+  // (the one way a complete theme becomes incomplete) threw
+  // `TypeError: Cannot read properties of undefined (reading 'fontWeight')` from
+  // the emphasis pair, and `(reading 'lineHeight')` from the control fit.
+  const withoutTypeRole = (role: TextRole) => {
+    const { [role]: _gone, ...typography } = lightTheme.typography;
+    return { ...lightTheme, typography };
+  };
+
+  it("skips a role the theme does not carry, instead of throwing", () => {
+    (["body", "bodyStrong", "label", "h1"] as const).forEach((role) => {
+      expect(invalidNumbers(withoutTypeRole(role)), role).toEqual([]);
+    });
+  });
+
+  it("still reports the numbers the theme does carry", () => {
+    // The absent role suppresses only its own pair; a shortened control is a
+    // report of its own and stays one.
+    const shortened = brand({ density: { controlHeight: { sm: 20 } } });
+    const { label: _gone, ...typography } = shortened.typography;
+
+    expect(invalidNumbers({ ...shortened, typography })).toEqual([
+      {
+        group: "density",
+        path: "controlHeight.sm",
+        value: 20,
+        rule: "pressable",
+      },
+    ]);
+  });
+
+  it("names the absent role as the gate's refusal", () => {
+    // The reports cannot describe an absence, so the gate refuses it up front —
+    // the report's silence is only correct beside that refusal.
+    expect(() => auditTheme(withoutTypeRole("bodyStrong"))).toThrow(
+      "`typography.bodyStrong` is missing",
+    );
+  });
+
+  it("is what the catalogue promises the report does", () => {
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(page).toContain("including the two pairs it compares");
   });
 });
 

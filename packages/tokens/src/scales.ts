@@ -84,8 +84,17 @@ export interface InvalidScale {
 /** The fields the scale audit reads: every ordered group of a theme. */
 export type ScaleSource = Pick<
   Theme,
-  "spacing" | "radius" | "borderWidth" | "iconSize" | "typography" | "density"
+  "spacing" | "radius" | "borderWidth" | "iconSize" | "density"
 > & {
+  /**
+   * The type roles the theme carries, keyed by name. A role it omits is skipped
+   * rather than reported — a theme restored from storage can predate a role the
+   * library added, and the gate refuses that absence by name (`requireSteps`),
+   * because a component selects a role by name and cannot paint around one.
+   */
+  readonly typography: Partial<
+    Record<TextRole, { readonly fontSize: number }>
+  >;
   /**
    * Every elevation level the theme carries. A level it omits is skipped rather
    * than reported: a theme restored from storage can predate a level the
@@ -258,10 +267,14 @@ export function invalidScales(theme: ScaleSource): readonly InvalidScale[] {
     ),
     ...ordered(
       "typography",
-      typeKeys.map(
-        (role) =>
-          [`${role}.fontSize`, theme.typography[role].fontSize] as const,
-      ),
+      // A role the theme does not carry is not a rung: comparing across the gap
+      // would report the steps either side of a name nothing can select.
+      typeKeys.flatMap((role) => {
+        const style = theme.typography[role];
+        return style === undefined
+          ? []
+          : [[`${role}.fontSize`, style.fontSize] as const];
+      }),
     ),
     ...ordered(
       "density",
