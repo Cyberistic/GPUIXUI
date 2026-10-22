@@ -51,9 +51,12 @@ import {
 import {
   composeEvent,
   composePress,
+  mergeRefs,
   mergeStyle,
   suppressFeedback,
   useControlState,
+  type FieldHostProps,
+  type HelpProps,
   type InteractionProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -112,7 +115,7 @@ export function toggleGroupValue(
 }
 
 /** The props both modes share. */
-interface ToggleGroupBase extends InteractionProps {
+interface ToggleGroupBase extends InteractionProps, FieldHostProps, HelpProps {
   /** The choices as data. Omit when the options are item children. */
   readonly options?: ReadonlyArray<ToggleGroupOption>;
   /** The choices as items, when they carry rich content. */
@@ -263,6 +266,7 @@ export const renderToggleGroup = (
     <div
       role="group"
       aria-label={accessibleName(props.label)}
+      aria-description={accessibleName(props.description)}
       testId={props.testId}
       onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKeyDown)}
       onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKeyUp)}
@@ -288,12 +292,17 @@ export const renderToggleGroup = (
             pressed,
           }),
         );
+        // The address lands on the option that holds the tab stop, so a form can
+        // focus the group's reachable mode rather than an unfocusable wrapper.
+        const addressed = Option.contains(activeIndex, index);
+        const register = handlers.registerItem(index);
         return (
           <div
             key={option.value}
-            ref={handlers.registerItem(index)}
+            ref={addressed ? mergeRefs(register, props.ref) : register}
             role="button"
             aria-label={optionName(option)}
+            aria-id={addressed ? props["aria-id"] : undefined}
             aria-valuetext={pressedValueText(pressed)}
             tabIndex={
               disabled
@@ -302,6 +311,7 @@ export const renderToggleGroup = (
                   ? 0
                   : -1
             }
+            onLayout={addressed ? props.onLayout : undefined}
             onClick={composePress(disabled, props.onClick, () => {
               toggle(index);
             })}

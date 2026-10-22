@@ -78,6 +78,8 @@ deepest element, so content that accepts the press takes it from the row.
 | `disabled` | `boolean` | `false` | disables every option and removes the group's stop |
 | `invalid` | `boolean` | `false` | the empty box's border and every row's focus ring take the destructive role; a checked box keeps its accent fill |
 | `label` | `string` | none | the group's accessible name |
+| `description` | `string` | none | announced help on the group node; a blank one publishes nothing |
+| `ref` / `aria-id` / `onLayout` | host props | none | the address lands on the row that holds the tab stop, so a form can focus the group it failed on |
 | `style` | `StateStyle<CheckboxGroupState>` | — | resolved against the group's live state and merged last |
 | `itemStyle` | `StateStyle<CheckboxItemState>` | — | resolved per option row and merged last |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the group's own on every row; yours runs first |
@@ -127,6 +129,10 @@ value: unlike a radio group, a checkbox group has no "selection follows focus".
   `aria-disabled`.
 - An option's `description` is painted, not associated: there is no
   `aria-describedby`.
+- The group's own help line goes through `description` and is announced on the
+  group node. The address names one element, so `ref`/`aria-id`/`onLayout` land
+  on the row that holds the tab stop — the element a form focuses — rather than
+  the unfocusable wrapper.
 
 ## Theming
 
@@ -166,7 +172,8 @@ decision, so a callback is the last word on a property the recipe also sets.
 - `src/components/CheckboxGroup.test.tsx` — value text and no `aria-checked`;
   the stop skips a disabled option; an arrow moves focus without toggling;
   Space-up and Enter-down; Home/End skip disabled options; a disabled row
-  installs no press; both style callbacks; item children read into one list.
+  installs no press; both style callbacks; item children read into one list;
+  the group's help and the row the address lands on.
 - `runtime/controls.runtime.test.tsx` — a real hit-tested click turns one option
   on without clearing another, and a key delivered to the focused row moves focus
   through GPUI's own dispatcher without changing any value.

@@ -33,6 +33,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostRef,
   hostStyle,
   hostStyleString,
   hostTag,
@@ -107,6 +108,58 @@ describe("CheckboxGroup", () => {
       Option.none(),
       Option.none(),
     ]);
+  });
+
+  it("announces the group's help and addresses the row that holds the stop", () => {
+    // Bug guarded: a checkbox group is a control a form owns, but it had no
+    // address and no announced help — a form could not focus the group it
+    // failed on, an automation host could not name it, and a visible `Label`'s
+    // description reached nobody. The wrapper is not focusable, so the address
+    // lands on the row that holds the tab stop; the help rides the group node.
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const register = vi.fn();
+    const element = render(
+      {
+        options,
+        label: "Channels",
+        description: "Pick at least one.",
+        ref,
+        "aria-id": "channels",
+        onLayout: layout,
+      },
+      [],
+      Option.some(1),
+      {
+        ...handlers(vi.fn()),
+        registerItem: (index) => (instance) => register(index, instance),
+      },
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Pick at least one.",
+    );
+    const [email, push, sms] = rows(element);
+    expect(hostProp(email ?? expect.fail("no row"), "aria-id")).toStrictEqual(
+      Option.none(),
+    );
+    expect(expectSome(hostProp(push ?? expect.fail("no row"), "aria-id"))).toBe(
+      "channels",
+    );
+    expect(
+      Option.getOrUndefined(
+        hostHandler(push ?? expect.fail("no row"), "onLayout"),
+      ),
+    ).toBe(layout);
+    expect(hostProp(sms ?? expect.fail("no row"), "aria-id")).toStrictEqual(
+      Option.none(),
+    );
+    const merged = Option.getOrElse(
+      hostRef(push ?? expect.fail("no row")),
+      () => expect.fail("the addressed row carried no ref"),
+    );
+    merged(null);
+    expect(register).toHaveBeenCalledWith(1, null);
+    expect(ref).toHaveBeenCalledWith(null);
   });
 
   it("publishes a trimmed row name, and no name at all for a blank label", () => {

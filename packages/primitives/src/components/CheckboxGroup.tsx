@@ -55,10 +55,13 @@ import {
   composeEvent,
   composePress,
   decorative,
+  mergeRefs,
   mergeStyle,
   suppressSelectionFeedback,
   useControlState,
   valueChange,
+  type FieldHostProps,
+  type HelpProps,
   type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
@@ -86,7 +89,11 @@ export const checkboxGroupItems = (props: {
   props.options ?? optionItems(props.children, CheckboxGroupItem);
 
 export interface CheckboxGroupProps
-  extends ValueChangeProps<ReadonlyArray<string>>, InteractionProps {
+  extends
+    ValueChangeProps<ReadonlyArray<string>>,
+    InteractionProps,
+    FieldHostProps,
+    HelpProps {
   /** The choices as data. Omit when the options are item children. */
   readonly options?: ReadonlyArray<CheckboxGroupOption>;
   /** The choices as items, when they carry rich content. */
@@ -208,6 +215,7 @@ export const renderCheckboxGroup = (
     <div
       role="group"
       aria-label={accessibleName(props.label)}
+      aria-description={accessibleName(props.description)}
       testId={props.testId}
       onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKeyDown)}
       onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKeyUp)}
@@ -245,12 +253,17 @@ export const renderCheckboxGroup = (
             checked: current === "checked",
           }),
         );
+        // The address lands on the row that holds the tab stop, so a form can
+        // focus the group's reachable option rather than an unfocusable wrapper.
+        const addressed = Option.contains(activeIndex, index);
+        const register = handlers.registerItem(index);
         return (
           <div
             key={option.value}
-            ref={handlers.registerItem(index)}
+            ref={addressed ? mergeRefs(register, props.ref) : register}
             role="checkbox"
             aria-label={optionName(option)}
+            aria-id={addressed ? props["aria-id"] : undefined}
             aria-valuetext={selectionValueText(current)}
             tabIndex={
               disabled
@@ -259,6 +272,7 @@ export const renderCheckboxGroup = (
                   ? 0
                   : -1
             }
+            onLayout={addressed ? props.onLayout : undefined}
             onClick={composePress(disabled, props.onClick, () => {
               toggle(index);
             })}

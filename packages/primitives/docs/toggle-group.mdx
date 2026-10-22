@@ -68,6 +68,8 @@ switching `type` does not force a rewrite of the value it is given.
 | `square` | `boolean` | `false` | equal width and height per option, for icon-only groups |
 | `disabled` | `boolean` | `false` | disables every option and removes the group's stop |
 | `label` | `string` | none | the group's accessible name |
+| `description` | `string` | none | announced help on the group node; a blank one publishes nothing |
+| `ref` / `aria-id` / `onLayout` | host props | none | the address lands on the option that holds the tab stop, so a form can focus the group it failed on |
 | `style` | `StateStyle<ToggleGroupState>` | — | resolved against the group's live state and merged last |
 | `itemStyle` | `StateStyle<ToggleItemState>` | — | resolved per option button and merged last |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the group's own on every option; yours runs first |
@@ -115,6 +117,10 @@ does, so walking the toolbar must not change it. A Space **press** calls
 - `disabled` removes an option's tab stop and the group's; there is no
   `aria-disabled`.
 - No `aria-describedby`, so an option's `description` is painted text only.
+- The group's own help line goes through `description` and is announced on the
+  group node. The address names one element, so `ref`/`aria-id`/`onLayout` land
+  on the option that holds the tab stop — the element a form focuses — rather
+  than the unfocusable wrapper.
 
 ## Theming
 
@@ -143,7 +149,8 @@ decision, so a callback is the last word.
   on re-press, `multiple` adds and removes; value text and no `aria-pressed`;
   the stop skips a disabled option; an arrow moves focus without pressing;
   Space-up and Enter-down; a disabled option installs no press; both style
-  callbacks; item children read into one list.
+  callbacks; item children read into one list; the group's help and the option
+  the address lands on.
 - `src/core/roving.test.ts` — the tab-stop decision a group shares with
   `CheckboxGroup` and `RadioGroup`.
 - `runtime/controls.runtime.test.tsx` — a real click presses an option and a

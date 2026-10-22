@@ -6,10 +6,10 @@
  * `aria-id`, and a `Label`'s description reaches assistive technology through
  * `aria-description` because 0.11.0 has no `aria-describedby`. The same three
  * jobs apply to every other control a form owns — a checkbox, a switch, a
- * toggle, a radio group, a rating, a number field, a code field and the two
- * sliders — and the guarantee this suite holds is that the words reach the
- * runtime's accessibility tree and the ref receives the runtime's own element,
- * not a wrapper id.
+ * toggle, the radio, checkbox and toggle groups, a rating, a number field, a
+ * code field and the two sliders — and the guarantee this suite holds is that
+ * the words reach the runtime's accessibility tree and the ref receives the
+ * runtime's own element, not a wrapper id.
  *
  * A composite names the element the address lands on, because only one element
  * can hold it: a number field's inner `<input>`, a code field's first cell, the
@@ -22,6 +22,7 @@ import * as Option from "effect/Option";
 import { createRef } from "react";
 import type { PublicInstance } from "@gpuix/react";
 import { Checkbox } from "../src/components/Checkbox.js";
+import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { NumberField } from "../src/components/NumberField.js";
 import { OTPField } from "../src/components/OTPField.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
@@ -30,6 +31,7 @@ import { RangeSlider, Slider } from "../src/components/Slider.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
 import { Toggle } from "../src/components/Toggle.js";
+import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import { a11yNode, type Runtime } from "./harness.js";
 import { Surface, openWindow } from "./fixture.js";
 
@@ -95,6 +97,28 @@ const mount = async (): Promise<Runtime> => {
           defaultValue={3}
           ref={ratingRef}
         />
+        <CheckboxGroup
+          testId="channels"
+          label="Channels"
+          description="Pick at least one."
+          aria-id="channels-row"
+          options={[
+            { value: "email", label: "Email" },
+            { value: "push", label: "Push" },
+          ]}
+          ref={channelGroupRef}
+        />
+        <ToggleGroup
+          testId="alignment"
+          label="Alignment"
+          description="Applies to the selected text."
+          aria-id="alignment-row"
+          options={[
+            { value: "left", label: "Left" },
+            { value: "center", label: "Center" },
+          ]}
+          ref={alignGroupRef}
+        />
         <NumberField
           testId="copies"
           label="Copies"
@@ -137,6 +161,8 @@ const checkboxRef = createRef<PublicInstance>();
 const switchRef = createRef<PublicInstance>();
 const radioRef = createRef<PublicInstance>();
 const ratingRef = createRef<PublicInstance>();
+const channelGroupRef = createRef<PublicInstance>();
+const alignGroupRef = createRef<PublicInstance>();
 const numberRef = createRef<PublicInstance>();
 const otpRef = createRef<PublicInstance>();
 const sliderRef = createRef<PublicInstance>();
@@ -178,6 +204,12 @@ it("announces the help every control carries", async () => {
   expect(node(runtime, "Group", "Price").aria?.description).toBe(
     "Between one and nine hundred.",
   );
+  expect(node(runtime, "Group", "Channels").aria?.description).toBe(
+    "Pick at least one.",
+  );
+  expect(node(runtime, "Group", "Alignment").aria?.description).toBe(
+    "Applies to the selected text.",
+  );
 });
 
 it("publishes the id an automation host addresses, on the element named", async () => {
@@ -217,6 +249,12 @@ it("publishes the id an automation host addresses, on the element named", async 
   expect(
     node(runtime, "Slider", "Price maximum").aria?.author_id,
   ).toBeUndefined();
+  expect(node(runtime, "CheckBox", "Email").aria?.author_id).toBe(
+    "channels-row",
+  );
+  expect(node(runtime, "CheckBox", "Push").aria?.author_id).toBeUndefined();
+  expect(node(runtime, "Button", "Left").aria?.author_id).toBe("alignment-row");
+  expect(node(runtime, "Button", "Center").aria?.author_id).toBeUndefined();
 });
 
 it("hands the caller's ref the element the form has to focus", async () => {
@@ -258,4 +296,6 @@ it("hands the caller's ref the element the form has to focus", async () => {
   );
   expect(sliderRef.current?.id).toBe(slider.id);
   expect(rangeRef.current?.id).toBe(addressed(runtime, "Price minimum").id);
+  expect(channelGroupRef.current?.id).toBe(addressed(runtime, "Email").id);
+  expect(alignGroupRef.current?.id).toBe(addressed(runtime, "Left").id);
 });

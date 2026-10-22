@@ -21,6 +21,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostRef,
   hostStyleString,
 } from "./testing/element.js";
 import {
@@ -115,6 +116,57 @@ describe("toggleSelection", () => {
 });
 
 describe("ToggleGroup", () => {
+  it("announces the group's help and addresses the row that holds the stop", () => {
+    // Bug guarded: a toggle group is a control a form owns, but it had no
+    // address and no announced help — the same hole one group over. The
+    // wrapper is not focusable, so the address lands on the row holding the tab
+    // stop; the help rides the group node.
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const register = vi.fn();
+    const element = render(
+      {
+        options,
+        label: "Formatting",
+        description: "Applies to the next word.",
+        ref,
+        "aria-id": "formatting",
+        onLayout: layout,
+      },
+      [],
+      Option.some(1),
+      {
+        ...handlers(vi.fn()),
+        registerItem: (index) => (instance) => register(index, instance),
+      },
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Applies to the next word.",
+    );
+    const [bold, italic, underline] = rows(element);
+    expect(hostProp(bold ?? expect.fail("no row"), "aria-id")).toStrictEqual(
+      Option.none(),
+    );
+    expect(
+      expectSome(hostProp(italic ?? expect.fail("no row"), "aria-id")),
+    ).toBe("formatting");
+    expect(
+      Option.getOrUndefined(
+        hostHandler(italic ?? expect.fail("no row"), "onLayout"),
+      ),
+    ).toBe(layout);
+    expect(
+      hostProp(underline ?? expect.fail("no row"), "aria-id"),
+    ).toStrictEqual(Option.none());
+    const merged = Option.getOrElse(
+      hostRef(italic ?? expect.fail("no row")),
+      () => expect.fail("the addressed row carried no ref"),
+    );
+    merged(null);
+    expect(register).toHaveBeenCalledWith(1, null);
+    expect(ref).toHaveBeenCalledWith(null);
+  });
+
   it("announces each option's pressed state as value text, and never invents aria-pressed", () => {
     const element = render(
       { options, label: "Formatting" },
