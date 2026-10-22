@@ -418,6 +418,25 @@ describe("Grid recipe", () => {
     ).toBe(99);
   });
 
+  it("reads a count the runtime cannot draw as one track", () => {
+    // The page promises a non-finite count reads as one track, and `gridStyle`
+    // keeps that promise. The painter must too: `grid-cols-NaN` is not a
+    // utility the compiler resolves, so the recipe silently painted no track
+    // count at all while the resolver said one.
+    const cases: ReadonlyArray<GridSpec> = [
+      { columns: Number.NaN },
+      { columns: Number.POSITIVE_INFINITY },
+      { columns: Number.NEGATIVE_INFINITY },
+      { columns: 2, rows: Number.NaN },
+      { columns: 2, rows: Number.POSITIVE_INFINITY },
+    ];
+    Arr.forEach(cases, (spec) => {
+      const compiled = recipeTw.classesToStyle(gridClass(spec), testTheme);
+      expect(compiled.style).toEqual(gridStyle(spec, testTheme));
+      expect(compiled.unsupported).toEqual([]);
+    });
+  });
+
   it("rejects an arbitrary template instead of resolving it", () => {
     const result = recipeTw.classesToStyle(
       "grid-cols-[repeat(3,minmax(0,1fr))]",

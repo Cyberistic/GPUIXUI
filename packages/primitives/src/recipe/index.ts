@@ -11,6 +11,7 @@
 import type { ControlSize, TextRole } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import type { SpinnerAccent } from "../core/loading.js";
+import { trackCount } from "../core/layout.js";
 import type {
   BoxSpec,
   GridSpec,
@@ -242,15 +243,12 @@ export const stackClass = (spec: StackSpec): string =>
 
 // ── Grid ─────────────────────────────────────────────────────────────
 
-/** A spec track count clamped to the numeric grid's minimum. */
-const track = (count: number): number => Math.max(1, Math.floor(count));
-
 /** The class string a `Grid` resolves from its fixed track spec. */
 export const gridClass = (spec: GridSpec): string =>
   cn(
     "grid",
-    `grid-cols-${track(spec.columns)}`,
-    spec.rows === undefined ? undefined : `grid-rows-${track(spec.rows)}`,
+    `grid-cols-${trackCount(spec.columns)}`,
+    spec.rows === undefined ? undefined : `grid-rows-${trackCount(spec.rows)}`,
     spec.gap === undefined ? undefined : `gap-${spec.gap}`,
     spec.grow === true && "flex-grow",
   );

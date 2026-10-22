@@ -127,6 +127,39 @@ describe("layout containers", () => {
     expect(stringIn(element, "gridAutoFlow")).toStrictEqual(Option.none());
   });
 
+  it("draws one track for a count the runtime cannot measure", () => {
+    // `docs/grid.mdx` promises a non-finite count reads as one track. The core
+    // resolver always did; the recipe did not, and an unresolved
+    // `grid-cols-NaN` left the shipped grid with no template at all.
+    Arr.forEach(
+      [
+        { spec: { columns: Number.NaN }, columns: 1, rows: Option.none() },
+        {
+          spec: { columns: Number.POSITIVE_INFINITY },
+          columns: 1,
+          rows: Option.none(),
+        },
+        {
+          spec: { columns: Number.NEGATIVE_INFINITY },
+          columns: 1,
+          rows: Option.none(),
+        },
+        {
+          spec: { columns: 2, rows: Number.NaN },
+          columns: 2,
+          rows: Option.some(1),
+        },
+      ],
+      ({ spec, columns, rows }) => {
+        const element = renderGrid(spec, testTheme);
+        expect(numberIn(element, "gridTemplateColumns")).toStrictEqual(
+          Option.some(columns),
+        );
+        expect(numberIn(element, "gridTemplateRows")).toStrictEqual(rows);
+      },
+    );
+  });
+
   it("let the caller's className override the grid recipe", () => {
     const element = renderGrid(
       { columns: 1, className: "grid-cols-3 gap-md" },

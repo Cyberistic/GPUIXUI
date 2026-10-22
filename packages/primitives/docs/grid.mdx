@@ -47,8 +47,10 @@ not a positional relationship.
 
 ## Theming
 
-`gridStyle` reads `theme.spacing[gap]` and clamps the track counts. No column
-width is ever a pixel value at the call site.
+`gridStyle` reads `theme.spacing[gap]` and clamps the track counts. The recipe
+(`gridClass`) reads the same `trackCount`, so the painted classes and the
+resolver cannot disagree about a count the runtime cannot draw. No column width
+is ever a pixel value at the call site.
 
 ## Limitations
 
@@ -63,6 +65,11 @@ width is ever a pixel value at the call site.
 - `src/core/layout.test.ts` — column/row clamping (a fractional, zero, negative,
   infinite or `NaN` count all resolve to a drawable track count) and gap
   resolution.
+- `src/recipe/recipe.test.ts` — the compiled recipe equals the resolver for the
+  same counts, **including** a `NaN` and an infinite one: an unresolved
+  `grid-cols-NaN` used to leave the shipped grid with no template at all.
+- `src/components/presentational.test.tsx` — `renderGrid` paints one track for a
+  count it cannot measure.
 - `runtime/layout.runtime.test.tsx` — a two-column grid paints two cells on one
   row with the theme's gap.
 

@@ -100,7 +100,7 @@ export interface GridSpec {
  * division — is one track rather than a number the runtime silently drops: the
  * element would otherwise paint as a block, not a grid, with nothing to say so.
  */
-const trackCount = (count: number): number =>
+export const trackCount = (count: number): number =>
   Number.isFinite(count) ? Math.max(1, Math.floor(count)) : 1;
 
 /**
