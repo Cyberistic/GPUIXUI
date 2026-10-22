@@ -14,15 +14,16 @@
  * settled, painting `NaN` into every frame.
  */
 
+import {
+  DEFAULT_TAU_MS,
+  boundsOf,
+  tauOf,
+  type Bounds,
+} from "./inertia-read.js";
+
 /** Time constant (seconds) plus optional hard bounds. */
 export interface Inertia {
   readonly tau: number;
-  readonly min: number | null;
-  readonly max: number | null;
-}
-
-/** The bounds a sample clamps to. */
-interface Bounds {
   readonly min: number | null;
   readonly max: number | null;
 }
@@ -34,21 +35,7 @@ export interface InertiaSample {
   readonly settled: boolean;
 }
 
-const DEFAULT_TAU_MS = 350;
 const REST_SPEED = 0.001;
-
-/** The time constant a sample can run with: the house one for a value it cannot. */
-const tauOf = (tau: number): number =>
-  Number.isFinite(tau) && tau > 0 ? tau : DEFAULT_TAU_MS / 1000;
-
-/** Bounds a sample can clamp to: unreadable ones dropped, an inverted pair swapped. */
-const boundsOf = (min: number | null, max: number | null): Bounds => {
-  const low = min !== null && Number.isFinite(min) ? min : null;
-  const high = max !== null && Number.isFinite(max) ? max : null;
-  return low !== null && high !== null && low > high
-    ? { min: high, max: low }
-    : { min: low, max: high };
-};
 
 const clampTo = (value: number, { min, max }: Bounds): number => {
   if (min !== null && value < min) return min;

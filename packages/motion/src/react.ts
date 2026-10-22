@@ -245,7 +245,8 @@ export const useTransition = (
 /**
  * Coasts with an initial velocity under inertial decay. The value accumulates
  * from the start of the run across releases; when `velocity` becomes `0` the
- * value holds. `inertia` must be a stable reference.
+ * value holds. The declaration is compared structurally, so an `inertia()`
+ * built inline on every render does not restart the coast already in flight.
  *
  * `options.initial` is the value the first run accumulates from — the offset a
  * gesture released at — and it obeys the family's rule: one it cannot read is no

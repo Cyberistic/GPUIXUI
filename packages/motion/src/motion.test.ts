@@ -133,6 +133,71 @@ describe("MotionValue", () => {
     expect(value.sample(150).value).toBeCloseTo(0.75, 5);
   });
 
+  it("does not restart a coast for a re-declared inertia", () => {
+    // `useInertia(velocity, inertia())` builds its inertia inline, so every
+    // render re-declares the same coast. Without the guard the run restarted
+    // from the sample on screen with the full release velocity, so a surface
+    // that re-rendered while coasting travelled past its projected rest and
+    // never settled — the inertiatic twin of the re-declared tween rule.
+    const value = new MotionValue(0);
+    value.coast(inertia(350), 400);
+    const quarter = value.sample(100);
+    expect(quarter.value).toBeCloseTo(140 * (1 - Math.E ** -0.285714), 3);
+
+    value.coast(inertia(350), 400);
+    // The trajectory at 200 ms, not a fresh one launched from the 100 ms sample.
+    expect(value.sample(200).value).toBeCloseTo(
+      140 * (1 - Math.E ** -0.571428),
+      3,
+    );
+
+    const done = value.sample(5_000);
+    expect(done.value).toBeCloseTo(140, 3);
+    expect(done.active).toBe(false);
+    expect(done.complete).toBe(true);
+  });
+
+  it("stays at rest when the same release is re-declared after it settled", () => {
+    // A parent that re-renders after the coast has come to rest must not fling
+    // the value again: the projected rest is the presentation the reader sees.
+    const value = new MotionValue(0);
+    value.coast(inertia(350), 400);
+    expect(value.sample(5_000).value).toBeCloseTo(140, 3);
+
+    value.coast(inertia(350), 400);
+    const after = value.sample(5_100);
+    expect(after.value).toBeCloseTo(140, 3);
+    expect(after.active).toBe(false);
+  });
+
+  it("starts a new coast when the release velocity changes", () => {
+    // The no-op is for the *same* declaration. A faster release is a new
+    // gesture, so it starts from the presentation on screen.
+    const value = new MotionValue(0);
+    value.coast(inertia(350), 400);
+    const quarter = value.sample(100);
+
+    value.coast(inertia(350), 700);
+    expect(value.sample(200).value).toBeCloseTo(
+      quarter.value + 245 * (1 - Math.E ** -0.285714),
+      3,
+    );
+  });
+
+  it("starts a new coast when the inertia it reads changes", () => {
+    // Two declarations the sampler reads differently are different runs: a
+    // changed time constant is not the coast already in flight.
+    const value = new MotionValue(0);
+    value.coast(inertia(350), 400);
+    const quarter = value.sample(100);
+
+    value.coast(inertia(700), 400);
+    expect(value.sample(200).value).toBeCloseTo(
+      quarter.value + 280 * (1 - Math.E ** -0.142857),
+      3,
+    );
+  });
+
   it("completes a spring whose physics cannot be read", () => {
     // `SpringPhysics` is structural, so a caller can hand the transition a
     // physics the sampler cannot read. The retained value used to take the

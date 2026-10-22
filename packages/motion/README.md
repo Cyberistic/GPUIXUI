@@ -64,7 +64,12 @@ frame.complete; // true
 `sample(elapsedMs, reducedMotion?)`. `transition` is `instant`, `tween`, or
 `spring` (built with `instant`, `tween(durationMs, easing)`,
 `springTransition(physics)`); `transitionEquals` compares them structurally so a
-re-declared transition does not restart a run.
+re-declared transition does not restart a run. A coast is compared the same way:
+re-declaring the inertia already in flight with the same release velocity is a
+no-op, so a render that builds `inertia()` again does not relaunch the run from
+the sample on screen with the speed it has since lost. A new gesture (another
+release velocity, a changed time constant or bound) starts where the surface is,
+and so does a coast after `set`/`animate`.
 
 ## React hooks
 
@@ -82,9 +87,11 @@ Each hook returns `{ value, velocity, complete }`. Map `value` onto a GPUix
 `MotionStyle` numeric field — `width`, `height`, `top`, `right`, `bottom`,
 `left`, `opacity` (0–1), `borderRadius`. `useTransition(target, { durationMs,
 easing })` tweens; `useInertia(velocity, inertia)` coasts with momentum from
-`options.initial` (zero by default).
-`useMotion(target, transition, options)` is the general hook behind them; pass
-it a stable `transition` (`instant`, `tween`, or `springTransition`).
+`options.initial` (zero by default) and may be given its inertia inline — the
+declaration is compared by the physics it reads, so `inertia()` rebuilt on a
+render does not restart the coast.
+`useMotion(target, transition, options)` is the general hook behind them; a
+re-declared transition is compared the same way.
 
 Pass `options.reducedMotion` from your platform's reduced-motion preference; it
 completes at the target, and the **first render** already paints that frame.

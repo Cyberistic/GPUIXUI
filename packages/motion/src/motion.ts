@@ -9,6 +9,7 @@
  */
 
 import { easeOut, type Easing } from "./easing.js";
+import { sameInertia } from "./inertia-read.js";
 import { sampleInertia, type Inertia, project } from "./inertia.js";
 import { eased } from "./progress.js";
 import { sampleSpring, springPhysics, type SpringPhysics } from "./spring.js";
@@ -188,10 +189,26 @@ export class MotionValue {
   /**
    * Starts exponential inertia from the last presentation. `velocity` overrides
    * the retained velocity, so a gesture can release with an explicit speed.
+   *
+   * The coast already in flight is that declaration: re-declaring the same
+   * inertia with the same release velocity is a no-op, so a render that builds
+   * `inertia()` again does not relaunch the run from the sample on screen with
+   * the full speed it has since lost (which would overshoot its rest and never
+   * settle). A new gesture — another release velocity, a changed time constant
+   * or bound — starts from the presentation, and so does a `coast` after `set`
+   * or `animate`.
    */
   coast(inertia: Inertia, velocity?: number): void {
+    const release = finite(velocity ?? this.velocity, 0);
+    if (
+      this.mode.kind === "inertia" &&
+      this.initialVelocity === release &&
+      sameInertia(this.mode.inertia, inertia)
+    ) {
+      return;
+    }
     this.from = this.value;
-    this.initialVelocity = finite(velocity ?? this.velocity, 0);
+    this.initialVelocity = release;
     this.target = project(inertia, this.value, this.initialVelocity);
     this.mode = { kind: "inertia", inertia };
     this.startedMs = this.lastMs;
