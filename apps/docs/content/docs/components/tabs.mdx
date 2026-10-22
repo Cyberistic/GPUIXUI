@@ -133,14 +133,28 @@ Only the selected trigger is in the tab order; every other trigger is `-1`.
 | Part | Reads |
 | ---- | ----- |
 | rail | `background` with a `border` edge |
-| trigger, selected | `foreground`, at the density height |
+| trigger, selected | `foreground`, on the `selected` wash |
 | trigger, rest | `mutedForeground`, `hover` on hover |
+| indicator | `selected`, painted behind the selected trigger |
 | panel | the body text role |
-| focus | `focusRing(theme)` |
+| focus | `keyboardRing(theme)` — the `focusVisible` outline, so a press paints none |
 
-Selection is painted per trigger rather than by a shared sliding indicator: the
-native side has no measured overlay, and the browser demo's sliding bar is a
-preview-only affordance. `COMPONENTS.md` records the native gap.
+Selection is **one measured surface**, not a fill per trigger: the rail renders a
+`tabs-indicator` element and every trigger reports its painted box through
+`onLayout`, while a 1×1 `tabs-origin` swatch reports where the rail's absolutely
+positioned children start (the rail's border and padding move that origin, so the
+component cannot assume it). The pill is the selected trigger's box
+re-expressed against that origin, which means a longer label or another font
+carries the pill with it.
+
+The pill **slides** between triggers: its `left`/`top`/`width`/`height` are a
+motion target (`normal`, 200 ms) retargeted from the box on screen, so a move
+across three tabs sweeps once rather than jumping. Not a transform — the runtime
+animates the box's own inset and size, and the motion package completes the move
+immediately for a caller that passes its `reducedMotion` preference. The pill
+paints `selected` rather than `card`, because `card` equals the rail's
+`background` in the high-contrast light theme (1.00:1) and the selected tab would
+paint no surface at all.
 
 ## Accessibility and limitations
 
@@ -172,9 +186,10 @@ preview-only affordance. `COMPONENTS.md` records the native gap.
 
 ## Status
 
-`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 20 native
+`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 21 native
 behaviour tests, both themes and both axes. `@gpuix/native@0.11.0` has no
 `aria-orientation` and no `aria-controls`, so a panel is named by its value; the
-selected surface is one measured indicator on the native component rather than a
-fill per trigger, so it jumps on a selection change (the runtime has no
-`transform`).
+selected surface is one measured `tabs-indicator` rather than a fill per trigger,
+and it slides through the motion seam (the runtime interpolates the box's inset
+and size, not a `transform`). There is no `zIndex` in the published API, so the
+pill stays behind the triggers by being their earlier sibling.

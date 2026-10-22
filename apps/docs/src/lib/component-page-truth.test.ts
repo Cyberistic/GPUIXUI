@@ -180,6 +180,24 @@ describe("the curated component pages", () => {
     expect(wrong).toEqual([]);
   });
 
+  it("describe the selected surface the source paints", () => {
+    // The Tabs page said selection was "painted per trigger" and that the native
+    // side had "no measured overlay" long after `tabs-indicator` shipped as one
+    // measured, sliding surface — a claim the count and status checks cannot see.
+    // The page's description is derived from the source rather than trusted.
+    const tabs = pages.find((page) => page.file === "tabs.mdx");
+    expect(tabs, "the tabs page is not in the curated set").toBeDefined();
+    if (tabs === undefined) return;
+
+    expect(read(tabs.source)).toContain('testId="tabs-indicator"');
+
+    const text = body(tabs);
+    expect(text).not.toContain("painted per trigger");
+    expect(text).not.toContain("no measured overlay");
+    expect(text).toContain("`tabs-indicator`");
+    expect(text).toContain("slides");
+  });
+
   it("agree with the inventory row for the component", () => {
     const disagreeing = pages.flatMap((page) => {
       const row = inventory.rows.find(
