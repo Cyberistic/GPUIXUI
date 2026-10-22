@@ -433,7 +433,28 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(chrome, "the page's measured table has no window-chrome row").toBeDefined();
     expect(chrome?.[1]).toContain("window-chrome");
     expect(chrome?.[1]).toContain("first row");
+    expect(chrome?.[1]).toContain("100ms");
     expect(chrome?.[2]).toContain("trafficLightX");
+  });
+
+  it("records that a process gets one window, and where a detached surface goes", () => {
+    // The Tier 4 detachable-tabs and multi-pane rows are designed against the
+    // window the app is given, and the only statement of the limit was buried in
+    // the Portals and backdrop rows: a second `init` throws, so a "detach" is a
+    // move inside the one window. A plan reading §3 for detachable tabs had no
+    // row to cite and could have assumed a second OS window.
+    const single = rowFor("Second OS window");
+    expect(single?.verdict).toBe("not supported");
+    expect(single?.evidence).toContain("window-backdrop");
+    expect(single?.evidence).toContain(
+      "A GPUI application already exists on this thread",
+    );
+    expect(single?.workaround).toContain("createPortal");
+
+    const page = measuredRow("Second window");
+    expect(page, "the page's measured table has no second-window row").toBeDefined();
+    expect(page?.[1]).toContain("window-backdrop");
+    expect(page?.[2]).toContain("createPortal");
   });
 
   it("records the portal a window measured, with its two limits", () => {
