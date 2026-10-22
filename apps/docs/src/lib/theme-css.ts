@@ -30,11 +30,11 @@ const toKebab = (name: string): string =>
  * `--<kebab role>`, `--radius` from `radius.md`, the two families, the control
  * metrics and row height of the theme's density so a platform's controls and
  * rows change size in a browser preview the way they do in the runtime, the
- * default spacing step a list row adds to its height, the icon steps a drawn
- * control takes its side from, the pressable-target floor a control reserves
- * around that drawing, and the five categorical series colours as `--series-1`
- * through `--series-5` so a chart or a legend paints the theme's scale instead
- * of a palette of its own.
+ * spacing steps a list row and a timeline's event add between their parts, the
+ * icon steps a drawn control takes its side from, the pressable-target floor a
+ * control reserves around that drawing, and the five categorical series colours
+ * as `--series-1` through `--series-5` so a chart or a legend paints the
+ * theme's scale instead of a palette of its own.
  *
  * @example
  * ```tsx
