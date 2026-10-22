@@ -14,6 +14,7 @@ import {
   type SmokeHost,
   type SmokeReport,
   type SmokeScenario,
+  coverageOf,
   runScenarios,
 } from "./smoke.js";
 
@@ -54,6 +55,22 @@ export const run = (
   scenarios: ReadonlyArray<SmokeScenario>,
 ): Effect.Effect<SmokeReport> =>
   runScenarios(nullHost, scenarios, { host: "fixture host", startedAt: 0 });
+
+/**
+ * Runs `scenarios` as a selection out of `registry`.
+ *
+ * The `--only` shape: the registry is what the run *could* have covered, and a
+ * capability is only verified when the selection covers all of it.
+ */
+export const runScoped = (
+  scenarios: ReadonlyArray<SmokeScenario>,
+  registry: ReadonlyArray<SmokeScenario>,
+): Effect.Effect<SmokeReport> =>
+  runScenarios(nullHost, scenarios, {
+    host: "fixture host",
+    startedAt: 0,
+    coverage: coverageOf(registry),
+  });
 
 /** The aggregated verdict for `capability`, when the report has one. */
 export const statusOf = (

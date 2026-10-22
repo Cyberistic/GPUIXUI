@@ -12,9 +12,12 @@ the native half (`apps/playground`) supplies the real renderer.
 - Not a test framework. It is the scenario/check/report model; run it under
   `@effect/vitest` or a CLI.
 - Not evidence. `runScenarios` only reports what it was actually run against.
-  A capability is `verified` only when every scenario covering it passed on a
-  host that ran it; a host that could not load a binding exits `2` (unverified)
-  rather than reporting success.
+  A capability is `verified` only when every scenario covering it **ran** and
+  passed, `failed` when one did not, and `unverified` when the run only sampled
+  it — which is why a runner passes `coverage` (the registry it selected out of)
+  and a `--only` run prints the capability it touched as `unverified` rather
+  than claiming a total it never measured. A host that could not load a binding
+  exits `2` (unverified) rather than reporting success.
 - Not native. It has no GPUix dependency and cannot mount a renderer.
 
 ## Surface
@@ -26,7 +29,7 @@ import { Native, Report, Runtime, Smoke } from "@gpuixui/testing";
 | Namespace | Responsibility |
 | --------- | -------------- |
 | `Runtime` | `detectRuntime` (never fails), `bindingHint`, `RuntimeStatus` |
-| `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union; the async twin `AsyncSmokeHost`/`AsyncSmokeScenario`/`runAsyncScenarios` for a real window |
+| `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union; the async twin `AsyncSmokeHost`/`AsyncSmokeScenario`/`runAsyncScenarios` for a real window; and the verdict seam — `Coverage`, `coverageOf(registry)` (the scope a selection filtered against, counted per capability) and `capabilityStatuses(results, coverage)` (the pure rule, for a runner that builds its own report) |
 | `Native`  | `createTestHost` over the structural `NativeRenderer`/`NativeElement` port: the synchronous offscreen host, with the `testId` lookups, ancestor-bounds fallback, subtree text join, style decode and drag synthesis this package can test without a renderer |
 | `Pixels`  | `decodePng` (inflate injected), `encodePng` (deflate injected), `pixelAt`, `countColour`, `boundsOfColour`, `hexToRgba`, `crop`, `countDifferingPixels`, `PixelRegion`, `Pixels`, `Rgba` — paint evidence from a captured frame |
 | `State`   | `runCommands` — replay a component runtime's commands and query the final state |

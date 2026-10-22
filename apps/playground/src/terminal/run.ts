@@ -718,24 +718,9 @@ const reportOf = (
     startedAt,
     durationMs: now - startedAt,
     scenarios,
-    capabilities: Arr.map(
-      Arr.dedupe(Arr.map(scenarios, (scenario) => scenario.capability)),
-      (capability) => ({
-        capability,
-        status: Arr.every(
-          Arr.filter(
-            scenarios,
-            (scenario) => scenario.capability === capability,
-          ),
-          (scenario) =>
-            Arr.every(
-              scenario.checks,
-              (result) => result.outcome instanceof Smoke.Passed,
-            ),
-        )
-          ? ("verified" as const)
-          : ("failed" as const),
-      }),
+    capabilities: Smoke.capabilityStatuses(
+      scenarios,
+      Option.some(Smoke.coverageOf(terminalRegistry)),
     ),
   });
 };

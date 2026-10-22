@@ -769,29 +769,93 @@ const scenarioPassed = (result: ScenarioResult): boolean =>
       Arr.every(checks, (check) => isPassed(check.outcome)),
   });
 
-const capabilityResults = (
-  results: ReadonlyArray<ScenarioResult>,
-): ReadonlyArray<CapabilityResult> =>
-  Arr.map(
-    Arr.filter(CAPABILITIES, (capability) =>
-      Arr.some(results, (result) => result.capability === capability),
-    ),
-    (capability) =>
-      new CapabilityResult({
-        capability,
-        status: Arr.every(
-          Arr.filter(results, (result) => result.capability === capability),
-          scenarioPassed,
-        )
-          ? "verified"
-          : "failed",
-      }),
+/**
+ * How many scenarios a registry declares for a capability — the scope a run
+ * selected out of.
+ *
+ * A `--only` run is evidence for the probes it ran and nothing else, so the
+ * verdict needs the registry's own count: without it, one passing probe reports
+ * its whole capability `verified`.
+ */
+export interface Coverage {
+  readonly capability: Capability;
+  readonly declared: number;
+}
+
+/** The scope `registry` declares, one entry per capability it covers. */
+export const coverageOf = (
+  registry: ReadonlyArray<{ readonly capability: Capability }>,
+): ReadonlyArray<Coverage> =>
+  Arr.getSomes(
+    Arr.map(CAPABILITIES, (capability) => {
+      const declared = Arr.length(
+        Arr.filter(registry, (entry) => entry.capability === capability),
+      );
+      return declared === 0
+        ? Option.none<Coverage>()
+        : Option.some<Coverage>({ capability, declared });
+    }),
   );
+
+/**
+ * The verdict per capability: `verified` only when every scenario the registry
+ * declares for it ran and passed.
+ *
+ * Only capabilities the run touched get a line — the report speaks about the
+ * run, never about the registry — but the declaration is what lets a **scoped**
+ * run withhold `verified`: a `--only` run that sampled one probe reports
+ * `unverified`, because the other probes covering it did not run. Without a
+ * declaration the verdict can only be drawn from the scenarios handed over,
+ * which is the documented fallback for a caller that owns its whole list.
+ */
+export const capabilityStatuses = (
+  results: ReadonlyArray<ScenarioResult>,
+  coverage: Option.Option<ReadonlyArray<Coverage>> = Option.none(),
+): ReadonlyArray<CapabilityResult> =>
+  Arr.getSomes(
+    Arr.map(CAPABILITIES, (capability) => {
+      const ran = Arr.filter(
+        results,
+        (result) => result.capability === capability,
+      );
+      if (Arr.length(ran) === 0) return Option.none<CapabilityResult>();
+      const declared = Option.flatMap(coverage, (entries) =>
+        Option.map(
+          Arr.findFirst(entries, (entry) => entry.capability === capability),
+          (entry) => entry.declared,
+        ),
+      );
+      return Option.some(
+        new CapabilityResult({
+          capability,
+          status: Arr.some(ran, (result) => !scenarioPassed(result))
+            ? "failed"
+            : Option.match(declared, {
+                onNone: () => "verified",
+                onSome: (count) =>
+                  Arr.length(ran) === count ? "verified" : "unverified",
+              }),
+        }),
+      );
+    }),
+  );
+
+/** The metadata every run records. */
+export interface RunMeta {
+  readonly host: string;
+  readonly startedAt: number;
+  /**
+   * The registry the caller selected out of, so a scoped run cannot report a
+   * capability it never covered as `verified`. Omit it only when the scenario
+   * list *is* the caller's whole registry.
+   */
+  readonly coverage?: ReadonlyArray<Coverage>;
+}
 
 /** Aggregates scenario results into the report both runners emit. */
 const reportOf = (
   results: ReadonlyArray<ScenarioResult>,
-  meta: { readonly host: string; readonly startedAt: number },
+  meta: RunMeta,
 ): Effect.Effect<SmokeReport> =>
   Effect.gen(function* () {
     const endedAt = yield* Clock.currentTimeMillis;
@@ -800,7 +864,10 @@ const reportOf = (
       startedAt: meta.startedAt,
       durationMs: endedAt - meta.startedAt,
       scenarios: results,
-      capabilities: capabilityResults(results),
+      capabilities: capabilityStatuses(
+        results,
+        Option.fromNullishOr(meta.coverage),
+      ),
     });
   });
 
@@ -817,7 +884,7 @@ const reportOf = (
 export const runScenarios = (
   host: SmokeHost,
   scenarios: ReadonlyArray<SmokeScenario>,
-  meta: { readonly host: string; readonly startedAt: number },
+  meta: RunMeta,
   beforeEach?: (scenario: SmokeScenario) => Effect.Effect<void>,
 ): Effect.Effect<SmokeReport> =>
   Effect.gen(function* () {
@@ -840,7 +907,7 @@ export const runScenarios = (
 export const runAsyncScenarios = (
   host: AsyncSmokeHost,
   scenarios: ReadonlyArray<AsyncSmokeScenario>,
-  meta: { readonly host: string; readonly startedAt: number },
+  meta: RunMeta,
   beforeEach?: (scenario: AsyncSmokeScenario) => Effect.Effect<void>,
 ): Effect.Effect<SmokeReport> =>
   Effect.gen(function* () {

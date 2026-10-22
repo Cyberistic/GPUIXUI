@@ -11,10 +11,18 @@ import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { CheckOutcome, StyleSnapshot } from "./smoke.js";
+import { CheckOutcome, StyleSnapshot, coverageOf } from "./smoke.js";
+import type { SmokeScenario } from "./smoke.js";
 import { nullHost } from "./test-support.js";
 import { runScenarios } from "./smoke.js";
-import { checkOf, labelsOf, run, scenario, statusOf } from "./test-support.js";
+import {
+  checkOf,
+  labelsOf,
+  run,
+  runScoped,
+  scenario,
+  statusOf,
+} from "./test-support.js";
 
 const holds = (
   check: Option.Option<{ readonly outcome: CheckOutcome }>,
@@ -202,4 +210,86 @@ describe("runScenarios mount seam", () => {
       );
     }),
   );
+});
+
+describe("a scoped run's capability verdict", () => {
+  const first = scenario("first", "input", (ctx) => ctx.expectEqual("a", 1, 1));
+  const second = scenario("second", "input", (ctx) =>
+    ctx.expectEqual("b", 2, 2),
+  );
+  const registry: ReadonlyArray<SmokeScenario> = [first, second];
+
+  it.effect("withholds verified from a capability it only sampled", () =>
+    // The bug: `--only first` printed `input=verified` while `second` — the
+    // other probe covering input — never ran, so a scoped run was citable as a
+    // capability total it had not measured.
+    Effect.gen(function* () {
+      const report = yield* runScoped([first], registry);
+      expect(Option.getOrUndefined(statusOf(report, "input"))).toBe(
+        "unverified",
+      );
+    }),
+  );
+
+  it.effect("verifies a capability the selection covers whole", () =>
+    Effect.gen(function* () {
+      const report = yield* runScoped(registry, registry);
+      expect(Option.getOrUndefined(statusOf(report, "input"))).toBe("verified");
+    }),
+  );
+
+  it.effect("still fails a capability when its sampled probe failed", () =>
+    // `unverified` must not swallow a real failure: a scoped run that saw a
+    // failure has evidence, and it says so.
+    Effect.gen(function* () {
+      const failing = scenario("second", "input", (ctx) =>
+        ctx.expectEqual("b", 1, 2),
+      );
+      const report = yield* runScoped([failing], registry);
+      expect(Option.getOrUndefined(statusOf(report, "input"))).toBe("failed");
+    }),
+  );
+
+  it.effect(
+    "keeps the run's own list as the fallback when no scope is given",
+    () =>
+      // A caller that owns the whole list has nothing to declare against; the
+      // existing contract (every given scenario passed) stands, so no consumer
+      // that passes a registry-free list changes its verdict.
+      Effect.gen(function* () {
+        const report = yield* run([first]);
+        expect(Option.getOrUndefined(statusOf(report, "input"))).toBe(
+          "verified",
+        );
+      }),
+  );
+
+  it.effect("omits a capability the run did not touch", () =>
+    Effect.gen(function* () {
+      const layoutA = scenario("layout-a", "layout", (ctx) =>
+        ctx.expectEqual("x", 1, 1),
+      );
+      const layoutB = scenario("layout-b", "layout", (ctx) =>
+        ctx.expectEqual("y", 2, 2),
+      );
+      const report = yield* runScoped(
+        [layoutA],
+        [...registry, layoutA, layoutB],
+      );
+      expect(statusOf(report, "input")).toEqual(Option.none());
+      expect(Option.getOrUndefined(statusOf(report, "layout"))).toBe(
+        "unverified",
+      );
+    }),
+  );
+
+  it("counts the registry per capability, in the suite's order", () => {
+    expect(coverageOf(registry)).toEqual([
+      { capability: "input", declared: 2 },
+    ]);
+    expect(coverageOf([...registry, ...registry])).toEqual([
+      { capability: "input", declared: 4 },
+    ]);
+    expect(coverageOf([])).toEqual([]);
+  });
 });

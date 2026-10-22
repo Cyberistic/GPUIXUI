@@ -331,7 +331,7 @@ export const program = (
     const report = yield* Smoke.runScenarios(
       host,
       selected,
-      { host: hostLabel(), startedAt },
+      { host: hostLabel(), startedAt, coverage: Smoke.coverageOf(scenarios) },
       mount(flags, scenarios, root, path, registerWindowKey),
     );
 

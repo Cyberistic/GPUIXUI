@@ -317,7 +317,11 @@ export const program = (
     const report = yield* Smoke.runAsyncScenarios(
       host,
       selected,
-      { host: hostLabel(facts.background, facts.chrome), startedAt },
+      {
+        host: hostLabel(facts.background, facts.chrome),
+        startedAt,
+        coverage: Smoke.coverageOf(liveProbes()),
+      },
       mount(root, renderer, selected, windowHandlers, facts),
     );
 
