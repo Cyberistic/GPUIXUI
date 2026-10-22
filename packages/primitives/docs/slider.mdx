@@ -220,6 +220,16 @@ ends, until it is released. Measured in a real window (`pointer-capture`,
   The capture cases are the headless half of the playground's `pointer-capture`
   probe (negative control measured: removing the track's `onMouseMove`, so the
   capture is never armed, leaves the value at 30 — `expected 30 to be 100`).
+- `apps/playground`'s `slider-vertical-lifecycle` — the vertical axis painted in
+  a real window on 0.11.0: the track paints **32 × 200** with a **4 × 184** rail,
+  the thumb's ink is centred at **240 / 148 / 194 / 56** for 0 / 50 / 25 / 100, a
+  drag that leaves the box follows to 100 and stops on release, and a vertical
+  range moves only its nearer end. The two lanes prove different things: the
+  `TestRenderer` above holds the arithmetic (fractions, the bottom-up pointer
+  mapping, the key contract), while the window holds the paint and the runtime's
+  pointer path. Its negative control measured the gap between them — a
+  ceiling-first mapping fails `a thumb at zero is centred on the rail's floor`
+  with `expected 56 ± 1, got 240`.
 
 ```sh
 nub run --filter @gpuixui/primitives test

@@ -153,6 +153,12 @@ ceiling, say — and the order of the pair is still `[start, end]`, not
   reads its ends from the floor (0.05 moves the start, 0.9 the end) on a track
   whose width is the control's height. Measured 2026-10-17 (plan 053 §11); the
   vertical case was added 2026-10-22.
+- `apps/playground`'s `slider-vertical-lifecycle` (0.11.0) — the vertical range
+  painted in a real window: a press at the centre of a `10-90` pair moves the
+  nearer end to `50-90`, a drag to the quarter mark moves that end to `25-90`
+  while the other end stays, and the two thumbs' ink is centred at **194** and
+  **74.5**, their values' marks. The `TestRenderer` cases above are the
+  arithmetic; this is the paint and the runtime's pointer path.
 
 ```sh
 nub run --filter @gpuixui/primitives test

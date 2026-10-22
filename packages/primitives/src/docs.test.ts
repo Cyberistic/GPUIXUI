@@ -936,6 +936,66 @@ describe("the primitives docs page contract", () => {
     expect(painter).toContain("Arr.reverse(flattenParts(children))");
   });
 
+  it("cites the window that painted the vertical slider", () => {
+    // Bug guarded: both pages presented the vertical axis as the TestRenderer's
+    // reading (`runtime/value.runtime.test.tsx`) even after
+    // `slider-vertical-lifecycle` had painted it in a real window, so a reader
+    // could not tell the arithmetic from the paint and a plan could reimplement
+    // work the window already measures. The citation has to name the probe, say
+    // what each lane proves, and resolve: the id is read out of the playground's
+    // own live registry and the fixture that supplies its arithmetic, so a
+    // renamed or deleted probe fails here rather than reading as evidence.
+    const registry = readFileSync(
+      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
+      "utf8",
+    );
+    const fixture = readFileSync(
+      fileURLToPath(
+        new URL("apps/playground/src/live/vertical-slider.ts", repoRoot),
+      ),
+      "utf8",
+    );
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      "utf8",
+    );
+    const row = (label: string): string =>
+      Option.getOrElse(
+        Arr.findFirst(catalogue.split("\n"), (line) =>
+          Str.startsWith(`| ${label} |`)(line),
+        ),
+        () => "",
+      );
+    const lane = (page: string) => {
+      const verification = Option.getOrElse(
+        bodyOf(read(page), "Verification"),
+        () => "",
+      );
+      return {
+        probe: verification.includes("`slider-vertical-lifecycle`"),
+        renderer: verification.includes("`TestRenderer`"),
+        window: verification.includes("the paint and the runtime's"),
+      };
+    };
+
+    expect({
+      slider: lane("slider.mdx"),
+      range: lane("range-slider.mdx"),
+      registered: registry.includes('id: "slider-vertical-lifecycle"'),
+      fixture:
+        fixture.includes("thumbCentreAt") && fixture.includes("inkBounds"),
+      sliderRow: row("Slider").includes("`slider-vertical-lifecycle`"),
+      rangeRow: row("Range slider").includes("`slider-vertical-lifecycle`"),
+    }).toEqual({
+      slider: { probe: true, renderer: true, window: true },
+      range: { probe: true, renderer: true, window: true },
+      registered: true,
+      fixture: true,
+      sliderRow: true,
+      rangeRow: true,
+    });
+  });
+
   it("cites only plans that exist", () => {
     // The bug guarded: completed plans are deleted (`.agents/slop/plans/README.md`),
     // but this workstream still sent readers to four completed plans for the
