@@ -3315,7 +3315,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | The **Pinned list row is outside the Tier 3 table** — `COMPONENTS.md` separates `| Pinned list | … |` from the rows above it with a blank line, so it is not a table row: the docs site's parser reads the table above it and reports `packages/components/docs/pinned-list.mdx: COMPONENTS.md has no row for this page` (`inventory-status.test.ts`, two cases), which means the page renders no status strip and the index wears no verdict for a component the inventory says is `done` / `partial`. The row is otherwise complete. | components (`COMPONENTS.md`) | **open** — delete the blank line before the row; the site needs no change |
 | Publish the **multi-pane editing** measurement — the live `multi-pane-editor` probe (30 checks, 0.11.0) measured what a dock's editor area owes: two real `<textarea>` panes in one split share **one** text session (a press moves it, typing changes only the pressed pane), a splitter drag resizes to 440 and clamps at 460/220 while the session stays in the pane the reader left, and a closed pane keeps its buffer with the survivor taking the row. Tier 4's **Multi-pane editing layouts** row is still `?` though its composition is now measured, and `/docs/workspace` has no rule for a pane that closes or for the one session a split shares | components (the Tier 4 row) + docs-site (`/docs/workspace`) | **docs half landed** — `/docs/workspace` gains **One text session, one buffer per pane** with the three rules the probe measured (a press moves the session and each pane's buffer stays in app state; a +60 splitter drag reaches 440 and does **not** take the session, with the pane's own clamps at 460/220; closing a pane is a layout change that keeps its buffer, and reopening repaints the width it held) and points at `editor-overlay` for why a pane is a field and a view rather than an overlay. `lane-page.test.ts` gained `shares one editing session between a split's panes`: it reads `MULTI_PANE`'s `initial`/`min`/`max` and the two probe check sentences, then holds the page to the derived 440/460/220 and to each rule. Directions measured: deleting the section fails `to contain 'multi-pane-editor'`, and a stale clamp fails `to contain 'stopped at 460'`; 27/27 green. **components half is open** (the Tier 4 row still reads `?`). Evidence: `apps/playground/README.md` §`multi-pane-editor`, `.artifacts/live/multi-pane-*.png` |
-| Publish the **grid filter** rules — the live `table-filter-lifecycle` probe (20 checks, 0.11.0) measured what a data grid owns around its filter: a literal case-insensitive query narrows the painted rows while the field keeps the text session, a selection the set hides is cleared (and one it still holds survives, including a clear), no match paints the empty state, a new set opens at the top even when the reader was scrolled away, and an arrow step walks the filtered order. Tier 3's **Filtering controls** row is still `?` though it is composition, and `/docs/data-display` has no filter rules | components (the Tier 3 row) + docs-site (`/docs/data-display`) | **open** — mark the row `yes (measured)` citing `table-filter-lifecycle`, and add the four rules where a table is designed: keep the selection by record and clear it when the record leaves the set, park the text session in the filter field, open a new set at the top, and walk the filtered array on arrow keys. Evidence: `apps/playground/README.md` §`table-filter-lifecycle`, `.artifacts/live/table-filtered.png` |
+| Publish the **grid filter** rules — the live `table-filter-lifecycle` probe (20 checks, 0.11.0) measured what a data grid owns around its filter: a literal case-insensitive query narrows the painted rows while the field keeps the text session, a selection the set hides is cleared (and one it still holds survives, including a clear), no match paints the empty state, a new set opens at the top even when the reader was scrolled away, and an arrow step walks the filtered order. Tier 3's **Filtering controls** row is still `?` though it is composition, and `/docs/data-display` has no filter rules | components (the Tier 3 row) + docs-site (`/docs/data-display`) | **docs half landed 2026-10-22** — `/docs/data-display` teaches the four rules (selection by **record**, cleared when it leaves the set; the field's text session; a new set at the top, read from `scrollOffset`; an arrow step through the filtered array), and the durable record gained a **Filtering controls** row (`supported`, *composed, not provided*) with the probe's readouts, published in `/docs/runtime`'s measured table and owed by §5. `lane-page.test.ts` and `capability-doc.test.ts` hold the page and the record from both sides (measured: deleting the page's "filtered array" rule fails `expected … to contain 'filtered array'`, and dropping either the record row or the page row fails the capability case). **open for components** — the Tier 3 row still reads `?`; mark it `yes (measured)` citing `table-filter-lifecycle`. Evidence: `apps/playground/README.md` §`table-filter-lifecycle`, `.artifacts/live/table-filtered.png` |
 
 ## Phase D — data and workspace components
 
@@ -3371,7 +3371,54 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 119/119
+`[x]` `[██████████]` 122/122
+
+`[x]` Read the **dialog recipe without a quoted regex** so `check:tests` can see
+the preview-truth case — `component-preview.test.ts`'s `says the overlay preview
+draws a corner the native surface does not` read `DIALOG_CONTENT` with
+`/export const DIALOG_CONTENT =\s*\n?\s*"([^"]+)"/`, and `scripts/check-tests.ts`'s
+comment stripper takes the `"` inside that regex for an opening string (the
+known bug tracked under Harness, line 26, owner: repo tooling), so every later
+`//` comment in the file was kept as code and the case was reported
+`no-assertionless-test` on a test that asserts five things. The read is now a
+slice of the declaration's own two lines — no regex, no quote — so the guard
+still holds `rounded-4xl` to the dialog recipe and `nub run check:tests` reports
+`every test asserts something, and nothing asserts itself` again.
+
+`[x]` Name the **three paint readers** `@gpuixui/testing` grew — `app.ts`
+reached the terminal renderer (raw RGBA over the kitty graphics protocol), so
+`Pixels` gained `encodePng` (with the platform's deflate injected, the write side
+of `decodePng`), `PngEncodeError` and `boundsOfColour` (the rectangle a colour
+covers, `null` when it paints nothing), while `/docs/testing`'s `Pixels` row
+still listed the previous nine exports — the existing `documents every export the
+Pixels namespace projects` guard failed on all three. The row now names every
+export the namespace projects, and §Reading a frame explains both verbs: the
+bounds are what a probe asserts when it claims *where* a run was laid out
+instead of guessing a coordinate, and `encodePng` is how a terminal capture
+becomes the PNG evidence a window capture leaves. Measured: the page as found
+failed `expected [ 'PngEncodeError', 'encodePng', …(1) ] to deeply equal []`;
+the full suite is green (73 files / 674 tests).
+
+`[x]` Publish the **grid filter rules** a window measured — Tier 3's *filtering
+controls* row is a field above the rows, so what a data grid owes is the
+machinery around it, and `/docs/data-display` stopped at sort and selection.
+`table-filter-lifecycle` measured all four decisions, so the page now teaches
+them: a selection keyed by **record** and cleared when that record leaves the
+set (an invisible selection would act on a row nobody can see), the text session
+left in the filter field while rows come and go, a new set reopened at the top
+(read from `scrollOffset`, because the readout alone passed while the list
+stayed at −200), and an arrow step through the filtered array rather than the
+numeric neighbour (`Item 1` → `Item 10`, with the real focus). The record's §3
+gained a **Filtering controls** row (`supported`, *composed, not provided*) with
+the probe's own readouts — 39 rows for `1`, 2 and a cleared selection for `12`,
+the empty state for `12z`, `item-10` kept by a clear — `/docs/runtime`'s
+*Measured in a window* table publishes it, and §5's owed-probe list names it.
+`lane-page.test.ts` holds the page to the rule (deleting "filtered array" fails
+`expected … to contain 'filtered array'`), and `capability-doc.test.ts` gained
+the row-and-page case: dropping the record row fails `expected undefined to be
+'supported'` and dropping the page row fails `the page's measured table has no
+filtering-controls row`. The `COMPONENTS.md` Tier 3 row is the components half,
+recorded open in the interlock table.
 
 `[x]` Land the **`.gx-demo` `--placeholder` default** the tokens pass moved — the
 native-text work moved the role (light `#606A79`, dark `#858E9F`), so the preview
