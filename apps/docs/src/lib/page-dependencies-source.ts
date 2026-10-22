@@ -45,19 +45,48 @@ const componentModules = (
     });
   })(join(root, packageDir, "src"));
 
+/**
+ * The subject a page names in its opening line.
+ *
+ * A page whose file name matches neither a published symbol nor a module stem
+ * still opens by naming the part it documents — `` `TableExpandableRow` is a
+ * row … `` — and that name resolves through the same symbol index. Read from
+ * the first paragraph so a usage snippet further down cannot answer for the
+ * page's subject.
+ */
+const subjectOf = (markdown: string): string | undefined => {
+  const prose = markdown.replace(/^---\n[\s\S]*?\n---\n/, "");
+  const opening = prose.split("\n\n")[0] ?? "";
+  return /`([A-Za-z_][A-Za-z0-9_]*)`/.exec(opening)?.[1];
+};
+
 /** The module a page documents, from the published symbol or its file name. */
 const moduleFor = (
   root: string,
   collection: (typeof packageCollections)[number],
   page: string,
   symbols: ReturnType<typeof buildWorkspaceSymbolIndex>,
+  markdown: string,
 ): string | undefined => {
+  const published = symbols.packages.find(
+    (entry) => entry.name === collection.packageName,
+  )?.symbols;
+
   const wanted = normalisedName(page);
-  const published = symbols.packages
-    .find((entry) => entry.name === collection.packageName)
-    ?.symbols.find((symbol) => normalisedName(symbol.name) === wanted);
-  if (published !== undefined && existsSync(join(root, published.module))) {
-    return published.module;
+  const byStem = published?.find(
+    (symbol) => normalisedName(symbol.name) === wanted,
+  );
+  if (byStem !== undefined && existsSync(join(root, byStem.module))) {
+    return byStem.module;
+  }
+
+  const subject = subjectOf(markdown);
+  const bySubject =
+    subject === undefined
+      ? undefined
+      : published?.find((symbol) => symbol.name === subject);
+  if (bySubject !== undefined && existsSync(join(root, bySubject.module))) {
+    return bySubject.module;
   }
 
   const named = componentModules(root, collection.dir.replace(/\/docs$/, ""))
@@ -118,7 +147,7 @@ export const readPackagePages = (
         const markdown = readFileSync(join(root, collection.dir, file), "utf8");
         return {
           url: `${collection.route}/${page}`,
-          module: moduleFor(root, collection, page, symbols),
+          module: moduleFor(root, collection, page, symbols, markdown),
           writesDependencies: /^## Dependencies\s*$/m.test(markdown),
         };
       }),

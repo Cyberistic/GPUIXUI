@@ -18,9 +18,11 @@ import { readPageDependencies } from "./page-dependencies-source";
  * every workspace import the module makes is listed, and nothing else is.
  *
  * The page stem names the component (`otp-field` → `OTPField`); the public
- * symbol index resolves it, and a family that publishes no symbol under its own
- * name falls back to the file of the same name. A page that resolves to no
- * source is reported here rather than rendering no strip in silence.
+ * symbol index resolves it, a page whose stem matches nothing resolves through
+ * the part it names in its opening line, and a family that publishes no symbol
+ * under its own name falls back to the file of the same name. A page that
+ * resolves to no source is reported here rather than rendering no strip in
+ * silence.
  */
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url)).replace(
@@ -72,6 +74,11 @@ describe("the dependency index", () => {
     // alone is not enough — the published symbol names the module.
     expect(index.pages["/docs/primitives/grid"]?.module).toBe(
       "packages/primitives/src/components/Stack.tsx",
+    );
+    // A page whose file name matches neither a published symbol nor a module
+    // stem resolves through the part it names in its opening line.
+    expect(index.pages["/docs/data-display/expandable-rows"]?.module).toBe(
+      "packages/data/src/table/expandable.tsx",
     );
   });
 

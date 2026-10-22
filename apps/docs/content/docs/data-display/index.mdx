@@ -6,10 +6,10 @@ description: The data-presentation lane — the table core that ships, what the 
 A data surface is rows, columns, a header that sorts them and a selection that
 survives a scroll. GPUix 0.11.0 has **no table host element**, so this lane is a
 composition of layout primitives, a pure row model and — since `@gpuixui/data`
-landed — a reusable table core. Most of the Tier 3 rows now ship from that
-package; three remain `todo` (tree views, expandable rows and charts), and this
-page records what exists, what a missing row will be built from, and the
-evidence for each gap, so the next one does not start by re-discovering them.
+landed — a reusable table core. Every Tier 3 row now ships from that package
+except charts, and this page records what exists, what the missing row will be
+built from, and the evidence for the gap, so the next one does not start by
+re-discovering it.
 
 ## The lane
 
@@ -36,6 +36,8 @@ The package documents its own surfaces on this site:
 | Query builder | [Advanced filtering](/docs/data-display/advanced-filter) | a typed predicate tree a saved query and a table's filter share |
 | Toolbar | [Data toolbar](/docs/data-display/data-toolbar) | a row of controls above the set, with a debounced search field |
 | Resizable columns | [Table](/docs/components/table) | `TableColumnDivider`, the 6px strip whose drag `column-resize-lifecycle` measured |
+| Tree view | [Tree views](/docs/data-display/tree-view) | one tab stop, arrow keys, type-ahead and a hierarchy the reader opens |
+| Expandable rows | [Expandable rows](/docs/data-display/expandable-rows) | a detail panel under the row it describes, without a row span |
 | Key-value | [Key-value](/docs/data-display/key-value) | one object as label/value rows, with no copy of it |
 | Property panel | [Property panel](/docs/data-display/property-panel) | editable and read-only rows over the same object |
 | Metric | [Stat card](/docs/data-display/stat-card) | a derived reading, its unit and its trend |
@@ -79,8 +81,8 @@ model, the sort and the selection, and you draw the header yourself. A header
 that sorts, a selection that survives sorting and a filter field are what
 `@gpuixui/data` adds — see below; a themed key/value list and metric card are
 its [Key-value](/docs/data-display/key-value) and
-[Stat card](/docs/data-display/stat-card) pages. What stays missing is a tree
-view, expandable rows and charts.
+[Stat card](/docs/data-display/stat-card) pages. What stays missing is a chart
+component.
 
 ## A property panel is one object, read four ways
 
@@ -289,13 +291,14 @@ re-deriving them.
 
 ## Gaps, with the evidence
 
+One Tier 3 row is still `todo` in `COMPONENTS.md` — charts. The rest of this
+section records the runtime's own limits, which no component can close.
+
 | Gap | Evidence |
 | --- | -------- |
 | No table element | GPUix 0.11.0's element set has `div`, `text`, `img`, `svg`, `canvas`, `input`, `textarea`, `anchored`, `code`, `diff`, `markdown`, `virtual-list` — no table |
 | No cell-level accessibility | `role`, `aria-label`, `aria-selected` and `aria-level` exist; `aria-colindex`, `aria-rowindex` and `aria-describedby` do not |
 | Charts | No chart component; every drawing route is measured. `<svg source>` paints its markup as **one tint**, so a multi-series chart is one stacked `<svg>` per colour, and `<text>` inside the markup paints; a `setImagePixels` buffer keeps each pixel's own colour — three series inside one element — and its transparent margin composites onto the card behind it, uploaded from a layout effect; `setImage` decoding SVG **bytes** keeps every `fill`, which `<svg source>` cannot; `<canvas>` is measured **blank**, so the fill behind it shows through. Two limits: a translucent bar over another bar is unmeasured, and a buffer scales to its element's box, so a chart is drawn at its layout size |
-| Tree views | `todo` in `COMPONENTS.md`: a tree needs a `<virtual-list>` plus our own flattening; hierarchical virtualization is ours. `virtual-tree-lifecycle` measured the shape: one `<virtual-list>` child per visible node, 4 000 rows from 40 open directories, arrows moving native focus through `renderer.focusElement`, and a reveal by index |
-| Expandable rows | `todo` in `COMPONENTS.md`: a row height is a `motion` tween, measured by `motion-geometry`, and a painted row that grows re-measures on the next frame (`virtual-list-expand`); the rows below shift by the growth and the grown height joins `scrollToItem`'s estimate |
 
 The full runtime table is on [Runtime](/docs/runtime).
 
