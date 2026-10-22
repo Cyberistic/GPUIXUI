@@ -2,7 +2,7 @@
  * The package-surface budget.
  *
  * `@gpuixui/components` is consumed from source, so the entry's import graph is
- * what every consumer pays for: 39 families re-exported from one barrel. The
+ * what every consumer pays for: every family re-exported from one barrel. The
  * cost was unmeasured — no number backed "this package is heavy to load" — and
  * a family that reached a new package would have added load time to every
  * consumer with nothing to notice it.

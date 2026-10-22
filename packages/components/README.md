@@ -54,7 +54,7 @@ cost, which is why `List` subscribes each row to its own slice
 ### What the entry costs to load
 
 `@gpuixui/components` resolves to `src/index.ts`, and that barrel re-exports all
-39 families, so importing any one component from the package root reads all of
+every family, so importing any one component from the package root reads all of
 them. Measured 2026-10-22 with
 `nub run --filter @gpuixui/components measure:surface`:
 
@@ -238,7 +238,7 @@ duration: `docs/component-api.md` §11.
 | `src/context-menu.tsx` | ContextMenu: the same rows, type-ahead and submenus at the pointer (`onAuxClick` + `isRightClick`) or at the trigger from `Shift+F10` |
 | `src/command-menu.tsx` | CommandMenu: a dialog-hosted palette over `menu/logic.ts`, with ranked subsequence matching inside each declared group |
 | `src/tabs.tsx` | Tabs: roving tab stop, automatic/manual activation, arrow wrap |
-| `src/collapsible.tsx` | Collapsible: a trigger with `aria-expanded`, a body that unmounts |
+| `src/collapsible.tsx` | Collapsible: a trigger with `aria-expanded`, a measured-height body that unmounts after its collapse |
 | `src/accordion.tsx` | Accordion: single (collapsible) and multiple modes over a tagged union, with arrow/Home/End header movement |
 | `src/breadcrumb.tsx` | Breadcrumb: a declarative trail with `maxItems` collapsing |
 | `src/pagination.tsx` | Pagination: a stable-width page window with disabled edges |
@@ -263,7 +263,11 @@ duration: `docs/component-api.md` §11.
 | `src/date-picker.tsx`, `src/date-picker/calendar.ts` | DatePicker: a pure `DateTime` month grid in a Popover, with bounded selection and a clear action (the day half) |
 | `src/time-picker.tsx`, `src/time-picker/time.ts` | TimePicker: a 24-hour `HH:mm` field in two labelled segments, with clamped typing, arrow carry/wrap, `minuteStep` and an optional clear |
 | `src/toast.tsx`, `src/toast/*` | the toast provider, viewport and Effect store, with pointer/focus pause/resume |
-| `src/inventory.ts` | the Tier 2 inventory records, checked against `COMPONENTS.md` |
+| `src/inventory.ts` | the component inventory records, checked against `COMPONENTS.md` |
+| `src/auto-height.tsx` | AutoHeight: a reveal that tweens to its content's measured height (plan 600) |
+| `src/typing-text.tsx`, `src/typing-text/logic.ts` | TypingText: a code-point reveal on a real-time timer |
+| `src/counting-number.tsx`, `src/counting-number/logic.ts` | CountingNumber: a number interpolated by `@gpuixui/motion` and painted each frame |
+| `src/rotating-text.tsx`, `src/rotating-text/logic.ts` | RotatingText: a phrase rotation on an interval, one fade per step |
 | `src/internal/dismiss-layer.ts`, `src/internal/dismiss-scope.tsx` | the overlay stack: the deepest open surface wins, one event closes one overlay; the scope gives each surface its containment depth |
 | `src/internal/controllable.ts` | `useControllableState` — `value`/`defaultValue`/`onValueChange` in one hook |
 | `src/core/runtime.ts` | the shared state model: `createRuntime({ initial, reduce, query })` with a pure command fold (`run`); no React, no GPUix (plan 201) |

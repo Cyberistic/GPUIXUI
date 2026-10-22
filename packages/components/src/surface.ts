@@ -3,8 +3,8 @@
  *
  * `@gpuixui/components` is consumed from source — its `exports` map points at
  * `./src/index.ts` — so a consumer's toolchain reads every module the barrel
- * reaches, not just the component it imports. The barrel re-exports 39 families,
- * so that graph, not one file, is the package's import cost: a component that
+ * reaches, not just the component it imports. The barrel re-exports every
+ * family, so that graph, not one file, is the package's import cost: a component that
  * reaches a new package is paid for by every consumer of the entry.
  *
  * The measurement is a static walk, not a build. It scans each module's
