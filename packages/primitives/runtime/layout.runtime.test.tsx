@@ -13,12 +13,14 @@
 
 import { expect, it } from "vitest";
 import * as Option from "effect/Option";
+import type { PublicInstance } from "@gpuix/react";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import {
   ScrollArea,
+  ScrollAreaViewport,
   DEFAULT_SCROLL_NAME,
 } from "../src/components/ScrollArea.js";
 import { Separator, Spacer } from "../src/components/Separator.js";
@@ -306,6 +308,93 @@ it("reports a ScrollArea's absolute offset, whatever moved it", async () => {
   runtime.renderer.dispatchNativeEvents();
   runtime.flush();
   expect(offsets).toContain(-60);
+});
+
+it("hands a caller the scroller it can restore", async () => {
+  // The bug guarded: `onScrollChange` reports where a scroller is, and the page
+  // told a caller to keep it "for a restored offset" — while the area handed
+  // out no way to set one. Only the renderer moves a scroller, by element id,
+  // and the element was private. `viewportRef` is that handle, and a
+  // Back-to-top action proves it is the scroller rather than the frame.
+  const runtime = await openWindow();
+  const offsets: number[] = [];
+  // A seat the ref writes into: a closure assignment does not narrow a local,
+  // so the element is read from a property instead.
+  const held: { current: PublicInstance | null } = { current: null };
+  const backToTop = (): void => {
+    const scroller = held.current;
+    if (scroller !== null) runtime.renderer.scrollTo(scroller.id, 0, 0);
+  };
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        viewportTestId="s"
+        viewportRef={(instance) => {
+          held.current = instance;
+        }}
+        onScrollChange={(event) => offsets.push(event.scrollY ?? 0)}
+      >
+        {card("tall", 200, 400)}
+      </ScrollArea>
+      <Button label="Back to top" testId="top" onActivate={backToTop} />
+    </Surface>,
+  );
+  const instance = Option.getOrElse(Option.fromNullishOr(held.current), () =>
+    expect.fail("the area handed no viewport to its viewportRef"),
+  );
+  // The id the caller holds is the scrollable element: the runtime reports an
+  // offset for it, which the frame around it does not have.
+  runtime.renderer.scrollTo(instance.id, 0, -120);
+  runtime.renderer.flush();
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  expect(runtime.renderer.getScrollOffset(instance.id)).toStrictEqual([
+    0, -120,
+  ]);
+  expect(offsets).toContain(-120);
+  runtime.click("top");
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  expect(runtime.scrollOffset("s")).toStrictEqual(Option.some({ x: 0, y: 0 }));
+  expect(offsets).toContain(0);
+});
+
+it("composes a caller's ref with the viewport's own keyboard handle", async () => {
+  // The merge must not trade one for the other: a composed viewport that hands
+  // its element to the caller still consumes the scroll keys.
+  const runtime = await openWindow();
+  const held: { current: PublicInstance | null } = { current: null };
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        label="Rows"
+      >
+        <ScrollAreaViewport
+          testId="s"
+          ref={(instance) => {
+            held.current = instance;
+          }}
+        >
+          {card("tall", 200, 400)}
+        </ScrollAreaViewport>
+      </ScrollArea>
+    </Surface>,
+  );
+  const instance = Option.getOrElse(Option.fromNullishOr(held.current), () =>
+    expect.fail("the composed viewport handed no element"),
+  );
+  const painted = Option.getOrElse(runtime.element("s"), () =>
+    expect.fail("the composed viewport painted no element"),
+  );
+  expect(instance.id).toBe(painted.id);
+  runtime.keyDown("s", "down");
+  expect(runtime.scrollOffset("s")).toStrictEqual(
+    Option.some({ x: 0, y: -testTheme.density.rowHeight }),
+  );
 });
 
 it("tints and sizes the platform's scrollbar", async () => {

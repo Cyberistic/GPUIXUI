@@ -21,6 +21,12 @@
  * scroller. `ScrollAreaViewport` carries the overflow axes, `onScroll` (wheel
  * deltas) and `onScrollChange` (the absolute offset, whatever moved it).
  *
+ * The scroller is also the caller's element: `viewportRef` on the area (or
+ * `ref` on a composed viewport) hands over the instance the renderer scrolls,
+ * because only the renderer can move it. A restored offset, a Back-to-top
+ * action and a revealed row each need that instance; `onScrollChange` alone
+ * reads a position it can never put back.
+ *
  * The resting appearance is a Tailwind recipe (`recipe/scrollClass` and
  * `recipe/scrollFrameClass`), compiled through `@gpuixui/tw`; the caller's
  * `className` is joined last so it wins conflicts exactly as `cn` resolves them.
@@ -35,6 +41,7 @@ import {
   useRef,
   type ReactElement,
   type ReactNode,
+  type Ref,
 } from "react";
 import { useGpuix } from "@gpuix/react";
 import type {
@@ -53,7 +60,7 @@ import type { ScrollSpec } from "../core/style.js";
 import type { PrimitiveTheme, RadiusStep, SpaceStep } from "../core/theme.js";
 import { scrollClass, scrollFrameClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
-import { mergeStyle } from "./internal.js";
+import { mergeRefs, mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** The scroll behaviour every viewport shares. */
@@ -166,6 +173,15 @@ export interface ScrollAreaProps extends ScrollSpec {
   readonly testId?: string;
   /** The implicit viewport's locator, for scroll automation. */
   readonly viewportTestId?: string;
+  /**
+   * The implicit viewport's element — the one element that can move.
+   *
+   * The renderer scrolls by element id (`scrollTo`/`scrollIntoView`), so this
+   * handle is how a caller restores a saved offset or sends a reader back to
+   * the top. A caller who composes a `ScrollAreaViewport` gives that viewport
+   * its own `ref` instead; this one names the scroller the area creates.
+   */
+  readonly viewportRef?: Ref<PublicInstance>;
 }
 
 /** {@link ScrollAreaViewport} props. */
@@ -189,6 +205,15 @@ export interface ScrollAreaViewportProps {
   readonly className?: string;
   readonly children?: ReactNode;
   readonly testId?: string;
+  /**
+   * The scroller itself.
+   *
+   * Composed with the keyboard contract's own handle rather than replacing it,
+   * so a caller can hold the element without losing the arrow keys. The
+   * renderer moves it by id: `scrollTo`, `scrollToItem` and `scrollIntoView`
+   * are what a restored offset, a Back-to-top action or a revealed row use.
+   */
+  readonly ref?: Ref<PublicInstance>;
 }
 
 /** The element a scroll area's content scrolls in. Pure in its arguments. */
@@ -205,6 +230,7 @@ export const renderScrollAreaViewport = (
     className,
     children,
     testId,
+    ref,
   }: ScrollAreaViewportProps,
   part: ScrollPart,
   instance?: (element: PublicInstance | null) => void,
@@ -227,9 +253,15 @@ export const renderScrollAreaViewport = (
   const name =
     accessibleName(label ?? part.label) ??
     (focusablePort ? DEFAULT_SCROLL_NAME : undefined);
+  // The keyboard contract needs the id and the caller needs the element, so
+  // both are written instead of one replacing the other.
+  const attach =
+    instance === undefined && ref === undefined
+      ? undefined
+      : mergeRefs(instance, ref);
   return (
     <div
-      ref={instance}
+      ref={attach}
       role={name === undefined ? undefined : "group"}
       aria-label={name}
       tabIndex={focusablePort ? 0 : undefined}
@@ -344,6 +376,7 @@ export const renderScrollArea = (
     children,
     testId,
     viewportTestId,
+    viewportRef,
     padding,
     radius,
     border,
@@ -367,7 +400,7 @@ export const renderScrollArea = (
         {composesItsOwnViewport(children) ? (
           children
         ) : (
-          <ScrollAreaViewport testId={viewportTestId}>
+          <ScrollAreaViewport ref={viewportRef} testId={viewportTestId}>
             {children}
           </ScrollAreaViewport>
         )}

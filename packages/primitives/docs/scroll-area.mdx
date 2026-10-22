@@ -71,7 +71,7 @@ and a scroller should not change which element scrolls.
 | Part | Responsibility |
 | ---- | -------------- |
 | `ScrollArea` | the frame: padding, radius, border, bounded size, scroll context |
-| `ScrollAreaViewport` | the overflow axes, `onScroll`/`onScrollChange`, keyboard scrolling, and the native thumb's colour and width |
+| `ScrollAreaViewport` | the overflow axes, `onScroll`/`onScrollChange`, keyboard scrolling, the native thumb's colour and width, and the scroller's own element (`ref`) |
 
 ## API
 
@@ -92,14 +92,61 @@ and a scroller should not change which element scrolls.
 | `children` | `ReactNode` | — | viewport content, or a composed `ScrollAreaViewport` |
 | `testId` | `string` | — | the frame's locator |
 | `viewportTestId` | `string` | — | the implicit viewport's locator, for scroll automation |
+| `viewportRef` | `Ref<PublicInstance>` | — | the implicit viewport's element, the handle the renderer scrolls (see [Scroll position](#scroll-position)) |
 
 `ScrollAreaViewport` accepts `axis`, `onScroll`, `onScrollChange`,
 `scrollbarColor`, `scrollbarWidth`, `focusable`, `label`, `style`, `className`,
-`children` and `testId`; each prop defaults to the area's value.
+`children`, `testId` and `ref` (the scroller's own element); each prop defaults
+to the area's value.
 
 `onScroll` reports wheel input; `onScrollChange` reports where the content ended
 up, whatever moved it. Use the second for a position (a pinned header, a
 restored offset) and the first for a gesture.
+
+## Scroll position
+
+A scroll container has one part that moves — the viewport — and only the
+renderer can move it, by element id. So the viewport hands its element out:
+`viewportRef` names the scroller a `ScrollArea` creates for plain children, and a
+composed `ScrollAreaViewport` takes the same handle as `ref`. That is what turns
+`onScrollChange` into a position you can put back, and what a Back-to-top action
+or a "reveal the new row" control needs.
+
+```tsx
+import { useRef } from "react";
+import { useGpuix, type PublicInstance } from "@gpuix/react";
+import { Button, ScrollArea, Stack, Text } from "@gpuixui/primitives";
+
+const items = ["Name", "Size", "Owner", "Modified"];
+const scrollerRef = useRef<PublicInstance | null>(null);
+const { renderer } = useGpuix();
+
+const backToTop = () => {
+  const scroller = scrollerRef.current;
+  if (scroller !== null) renderer?.scrollTo?.(scroller.id, 0, 0);
+};
+
+<ScrollArea viewportRef={scrollerRef} style={{ height: 240 }} label="Rows">
+  <Stack direction="column" gap="sm">
+    {items.map((item) => (
+      <Text role="body" key={item}>{item}</Text>
+    ))}
+  </Stack>
+</ScrollArea>;
+<Button variant="secondary" onActivate={backToTop}>
+  Back to top
+</Button>;
+```
+
+The handle is composed with the viewport's own keyboard handle, never instead of
+it, so a caller who holds the element keeps the arrow keys. Reaching the
+renderer from application code is the documented boundary: a component returns
+an element, and moving a scroller is a runtime call (`scrollTo`, `scrollToItem`,
+`scrollIntoView`).
+
+A caller who composes a `ScrollAreaViewport` gives **that** viewport the `ref`;
+the area's `viewportRef` names only the one it creates, exactly as
+`viewportTestId` does.
 
 ## Keyboard
 
@@ -170,17 +217,22 @@ scrollbar's paint is otherwise the platform's. The keyboard step is the theme's
   region does not own.
 - `src/components/presentational.test.tsx` — a caller's viewport among the
   children is kept as the scroller, including one grouped inside a fragment, so
-  the area never wraps that composition in a second implicit one; the viewport
-  is a tab stop with the area's absolute-offset callback; an unnamed one is the
-  named `group` `"Scroll region"`; a named one keeps its group without a stop;
-  `focusable={false}` with no label drops the stop, the role and the name; the
-  viewport declares the keyboard ring and a non-focusable one declares none; the
-  frame's padding/radius stay off the viewport.
+  the area never wraps that composition in a second implicit one; the implicit
+  viewport carries the area's `viewportRef`; the viewport is a tab stop with the
+  area's absolute-offset callback; an unnamed one is the named `group` `"Scroll
+  region"`; a named one keeps its group without a stop; `focusable={false}` with
+  no label drops the stop, the role and the name; the viewport declares the
+  keyboard ring and a non-focusable one declares none; the frame's
+  padding/radius stay off the viewport.
 - `runtime/layout.runtime.test.tsx` — a wheel with `deltaY -100` leaves the
   viewport's offset at `y -100` and the caller's `onScroll` receives `-100`;
   keyboard Down/PageDown/Home/End move the painted offset; `onScrollChange`
   reports it; a focused field inside keeps its Down key (the scroller stays at
-  `0`); the renderer retains `scrollbarColor` (`colors.scrollbar`) and
+  `0`); the held viewport (`viewportRef`) is the scrollable element itself, so a
+  Back-to-top action on that instance returns the offset to `0` and
+  `onScrollChange` reports both moves; a composed viewport's `ref` is composed
+  with the keyboard handle, so the same element both answers the caller and
+  moves on Down; the renderer retains `scrollbarColor` (`colors.scrollbar`) and
   `scrollbarWidth`; an unnamed viewport reaches the accessibility tree as a
   focusable group; the focusable viewport declares `focusVisible` and `Tab`
   lands on it, while a non-focusable one declares none.

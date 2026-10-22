@@ -307,6 +307,26 @@ describe("layout containers", () => {
     expect(expectSome(elementProp(viewport, "children"))).toBe(content);
   });
 
+  it("hands the implicit viewport to the caller's ref", () => {
+    // The bug guarded: the page told a caller to keep `onScrollChange` "for a
+    // restored offset", while the area handed out no way to set one — the
+    // scroller is the element the renderer moves, so it has to be reachable.
+    // `viewportTestId` addresses it in automation; `viewportRef` holds it in
+    // application code.
+    const viewportRef = () => {};
+    const root = renderScrollArea(
+      { axis: "vertical", viewportRef, children: <div /> },
+      testTheme,
+    );
+    const provider =
+      elementChildren(root)[0] ?? expect.fail("the area drew nothing");
+    const viewport =
+      elementChildren(provider)[0] ??
+      expect.fail("the area carried no viewport");
+    expect(viewport.type).toBe(ScrollAreaViewport);
+    expect(expectSome(elementProp(viewport, "ref"))).toBe(viewportRef);
+  });
+
   it("keeps the caller's composition while providing the scroll context", () => {
     const root = renderScrollArea(
       {
