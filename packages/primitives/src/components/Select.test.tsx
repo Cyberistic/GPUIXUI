@@ -220,6 +220,16 @@ describe("Select", () => {
     );
   });
 
+  it("bounds the list and scrolls it, because the runtime sets no bound", () => {
+    // The runtime's own content has no `maxHeight`/`overflow` and its edge-scroll
+    // parts are empty in 0.11.0, so without this a 40-option list painted its
+    // tail outside the window with nothing able to reach it.
+    const style = selectContentStyle(testTheme);
+    expect(style.maxHeight).toBe(320);
+    expect(style.overflowY).toBe("scroll");
+    expect(selectContentStyle(testTheme).padding).toBe(testTheme.spacing.xs);
+  });
+
   it("maps the options to the labels the trigger shows", () => {
     const element = renderSelect(
       { options: [{ value: "alpha", label: "Alpha" }], disabled: true },

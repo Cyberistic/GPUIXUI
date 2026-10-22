@@ -145,9 +145,21 @@ export const selectTriggerStyle = (
   };
 };
 
-/** The list: the popover surface, one step of padding, full trigger width. */
+/**
+ * The list: the popover surface, one step of padding, full trigger width.
+ *
+ * A long list must be reachable, and the runtime's content sets no bound of its
+ * own (its edge-scroll parts are empty in 0.11.0), so the surface caps at the
+ * menus' 320px and scrolls. The wheel moves it; an arrow does not reveal its own
+ * row — the runtime never scrolls the highlight into view — so a keyboard user
+ * with more options than fit still cannot reach the tail (`select.mdx` records
+ * it as the remaining gap).
+ */
 export const selectContentStyle = (theme: PrimitiveTheme): StyleDesc =>
-  recipeTw.classesToStyle(selectContentClass, theme).style;
+  mergeStyle(recipeTw.classesToStyle(selectContentClass, theme).style, {
+    maxHeight: 320,
+    overflowY: "scroll",
+  });
 
 /** A group caption: the caption role, muted, above its rows. */
 export const selectLabelStyle = (theme: PrimitiveTheme): StyleDesc =>

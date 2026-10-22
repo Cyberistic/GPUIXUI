@@ -364,11 +364,13 @@ it("keeps an open list inside the window when its trigger sits at the bottom", a
   expect(apple.y).toBeLessThan(pear.y);
 });
 
-it("does not scroll a list taller than the window", async () => {
-  // Measured, not assumed: `SelectScrollUpButton`/`SelectScrollDownButton` are
-  // empty divs in 0.11.0 and the content sets no maxHeight/overflow, so a long
-  // list is snapped but its tail still sits outside the window. The page
-  // records this as a limitation instead of promising a scroll.
+it("bounds a long list and scrolls it on the wheel", async () => {
+  // Measured: the runtime's own content sets no `maxHeight`/`overflow`, and
+  // `SelectScrollUpButton`/`SelectScrollDownButton` are empty divs in 0.11.0, so
+  // a 40-option list used to paint its tail outside the window with nothing able
+  // to reach it. The wrapper caps the surface at the menus' 320px and turns it
+  // into a scroller; the wheel moves it, the keyboard highlight still does not
+  // reveal its own row (the limitation the page records).
   const runtime = await openWindow();
   const options = Arr.map(Arr.range(1, 40), (index) => ({
     value: `option-${index}`,
@@ -386,20 +388,43 @@ it("does not scroll a list taller than the window", async () => {
     </Surface>,
   );
   runtime.clickElement(triggerOf(runtime, "sel"));
-  const last = optionRow(runtime, "Option 40");
-  const first = optionRow(runtime, "Option 1");
-
-  expect(first.y).toBeGreaterThanOrEqual(0);
-  expect(last.y + last.height).toBeGreaterThan(WINDOW.height);
-  // And there is no scroller to reach it with: no ancestor of the tail reports
-  // a scroll offset, so arrowing to the last row cannot reveal it either.
-  expect(
-    Arr.getSomes(
-      Arr.map(ancestorsOf(runtime, optionRowId(runtime, "Option 40")), (id) =>
-        Option.fromNullishOr(runtime.renderer.getScrollOffset(id)),
+  const contentId = (): number =>
+    Option.getOrElse(
+      Arr.findFirst(
+        ancestorsOf(runtime, optionRowId(runtime, "Option 1")),
+        (id) =>
+          Option.match(
+            Option.fromNullishOr(runtime.renderer.getElementBounds(id)),
+            { onNone: () => false, onSome: (bounds) => bounds.height === 320 },
+          ),
       ),
-    ),
-  ).toEqual([]);
+      () => expect.fail("the list painted no bounded scroller"),
+    );
+  const content = (): Bounds =>
+    Option.getOrElse(
+      Option.fromNullishOr(runtime.renderer.getElementBounds(contentId())),
+      () => expect.fail("the scroller lost its box"),
+    );
+  const offset = (): unknown => runtime.renderer.getScrollOffset(contentId());
+
+  expect(content().height).toBe(320);
+  expect(offset()).toEqual([0, 0]);
+  const box = content();
+  runtime.renderer.nativeSimulateScrollWheel(
+    box.x + box.width / 2,
+    box.y + box.height / 2,
+    0,
+    -200,
+  );
+  runtime.flush();
+  expect(offset()).toEqual([0, -200]);
+  // The keyboard gap: an arrow never calls `scrollIntoView`, so the highlight
+  // can sit on a row the scroller has not revealed.
+  runtime.type(
+    "down down down down down down down down down down down down down down down down down down down down",
+  );
+  runtime.flush();
+  expect(offset()).toEqual([0, -200]);
 });
 
 it("selects a Select option by clicking it", async () => {

@@ -346,7 +346,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "Options are data: grouped, but no rich options or compound escape hatch",
       "Group captions are painted, not announced (SelectGroup has no role)",
       "No search or type-ahead and no multi-select",
-      "A list taller than the window does not scroll (measured)",
+      "A long list is capped at 320px and scrolls on the wheel; an arrow does not reveal its row (runtime gap)",
       "Open animation, positioning and dismissal are the runtime's",
     ],
     source: ["src/components/Select.tsx"],
