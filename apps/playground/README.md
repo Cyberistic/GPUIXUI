@@ -700,6 +700,30 @@ import, so `--list` costs no binding), `scenarios.tsx` owns the view and steps,
 `host.ts` adapts the window to `Smoke.AsyncSmokeHost`, and `run.ts` is the CLI.
 Artifacts: `.artifacts/live-report.json` and `.artifacts/live/<state>.png`.
 
+### A probe waits for a settled paint
+
+A window paints a sequence of frames, so a check that reads one frame after a key
+measures the journey instead of the state a user is left with: a dismissed surface
+stays mounted for its exit tween (`@gpuixui/motion`'s `slow` level is 320ms, five
+times the runner's frame settle) and a panel that enters travels a few pixels
+before it rests. Three measured shapes of that, all fixed by polling:
+
+- a dialog or menu read right after `Escape` was still painted
+  (`Escape unpaints the dialog surface: expected true, got false`);
+- the tabs pill was caught mid-slide (`the pill follows the selected trigger:
+  expected 110 ± 2, got 49.5`);
+- a context menu read on its entry offset (`the surface starts at the press
+  point's y: expected 124 ± 1, got 121.5`).
+
+`src/live/settle.ts` holds the one poll — `settleUntil(read, holds)` re-reads
+until the state arrives, `settleNumber(read)` waits for a box to stop moving —
+and `settleGone`/`boxAxis` in `scenarios.tsx` are its host-shaped wrappers. The
+poll is **bounded** (40ms × 50, ~2s): an overlay that never dismisses still fails,
+and the assertion after it names the value it settled on, so a steady-state defect
+cannot hide behind a wait. `settle.test.ts` (6 cases) holds the semantics —
+including that `settleNumber` returns the resting value rather than the mid-tween
+one it was waiting to leave.
+
 ### `focus-visible` — measured on 0.11.0 here
 
 The probe paints the ring as a `focusVisible` outline
@@ -2455,6 +2479,7 @@ src/live/dock-focus.ts   the dock fixture and the Tab stop rule the probe measur
 src/live/header-menu.ts  the header widths and trigger-cell arithmetic the probe asserts
 src/live/backdrop.ts     the window-backdrop modes, fixture and capture arithmetic
 src/live/window-facts.tsx the window options the runner opened, read by a probe
+src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
 ```

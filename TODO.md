@@ -530,7 +530,37 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 66/66
+`[x]` `[██████████]` 67/67
+
+`[x]` Make every live probe wait for a **settled paint** instead of one frame —
+      the components workstream's presence work (an exit tween keeps a dismissed
+      surface mounted for `@gpuixui/motion`'s `slow` level, 320ms, and an entered
+      panel travels a few pixels before it rests) turned **five of six overlay
+      probes red** against the same tree in one window: `Escape unpaints the
+      dialog surface: expected true, got false`, `Escape unpaints the menu
+      surface` and `Escape dismisses the panel` the same way, `running an action
+      dismisses the palette: expected true, got false`, the tabs pill caught
+      mid-slide (`expected 110 ± 2, got 49.5`) and the context menu read on its
+      entry offset (`expected 124 ± 1, got 121.5`). The runner's 60ms frame
+      settle is shorter than any exit tween, so a check read a journey rather
+      than the state a user is left with. `src/live/settle.ts` is now the one
+      poll: `settleUntil(read, holds)` re-reads until the state arrives,
+      `settleNumber(read)` waits for a box to stop moving, both **bounded**
+      (40ms × 50, ~2s) so an overlay that never settles still fails on the value
+      it settled on; `settleGone`/`boxAxis` in `scenarios.tsx` are the host-shaped
+      wrappers, the dialog's three inline reads, the menu/popover/command-palette
+      `unpainted` helpers, the tabs pill's two reads and the context menu's
+      placement all use them, and the tooltip's local `settleTip` poll now calls
+      the shared helper. `settle.test.ts` (6 cases) holds the semantics — the
+      value whose state holds, the give-up value and read count, one read when
+      the state already holds, a moving number's resting value rather than the
+      mid-tween one, a number that never rests, and `NaN` for a box that paints
+      nothing — proven with a counted fake read. Ten probes re-measured green in
+      one window against that in-flight tree (`tooltip-lifecycle`,
+      `dialog-lifecycle`, `tabs-lifecycle`, `menu-lifecycle`,
+      `context-menu-lifecycle`, `popover-lifecycle`, `command-palette`,
+      `toast-lifecycle`, `combobox-lifecycle`, `window-backdrop`, 10/10).
+      Evidence: `apps/playground/README.md` §A probe waits for a settled paint
 
 `[x]` Land the `window-backdrop` live probe and measure **what a window's own
       backdrop paints** — the capability record had carried
@@ -2372,6 +2402,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Record the **reduced-motion** answer — the capability record's §3 lists `Reduced-motion detection` as `unverified` ("no documented media query or runtime flag"). `@gpuix/native` 0.11.0's `index.d.ts` publishes no preference query (no `appearance`, `prefers*` or `reduce*` export, and `WindowOptions` carries none), and `@gpuixui/motion` already takes reduced motion as a caller-supplied boolean on `MotionValue.sample`, so the honest verdict is a measured absence rather than a gap to probe: the app owns the policy | docs-site (`docs/gpuix-capabilities.md` §3 + `/docs/runtime`) | **resolved** — the row reads `not supported` and proves it from the installed typings (no `appearance`, `prefers*` or `reduce*` export; `WindowOptions` carries no option), with `MotionValue.sample(elapsedMs, reducedMotion)` and the hooks' `options.reducedMotion` named as the workaround; §4's motion paragraph now says the runtime has no preference query and the app owns the policy. `/docs/runtime` gains a *Reduced-motion preference* row in *Not in the typings* (the section now says seven) and §5 records that this absence is proved from the typings and the package source rather than a probe that could never run. `capability-doc.test.ts` gained `records reduced motion as a policy the app supplies`: the row, the installed `index.d.ts` grep (a preference query appearing fails with a re-measure message), `motion.ts`'s `sample(elapsedMs, reducedMotion = false)` and `react.ts`'s `reducedMotion?: boolean`, and the page row. `motion-page.test.ts`'s reduced-motion case moves from `unverified` to `not supported` and still holds the flag's behaviour. Directions measured: restoring `unverified` fails the new case, the no-unverified case and the motion-page case by name |
 
 | **A second session writes `packages/components` alongside this workstream** — measured 2026-10-22 during a components turn: another session (the motion/presence work) added `src/internal/presence.tsx`, `src/behaviour/presence.test.tsx`, `@gpuixui/motion` in `package.json`, and presence motion props across `dialog`, `drawer`, `popover`, `dropdown-menu`, `context-menu`, `preview-card`, `toast/viewport`, `accordion` and `internal/modal` — all uncommitted. Its in-flight state makes `test:behaviour` red (a closed `AccordionContent` stays mounted for its exit tween, a dismissed menu is still findable, `renderComponent` then throws on a leaked root for every later case) and `src/surface.test.ts` red (90 modules / 623,991 bytes against the recorded 89 / 614,400), so this turn verified its two cases with `-t` and left every one of those files untouched | the motion/presence writer (owner of that branch) | **open** — one writer per tree: whoever holds `packages/components` must not overlap the other. This turn's commit was verified against the committed tree in a clean `git archive HEAD` copy (workspace `node_modules` symlinked, so the real native binding is used): unit 449/449, behaviour 571/571 (54 files), including the three new cases; `check-types` in the shared tree still names only the presence test's two errors and a tokens file, not this turn's files |
+
+| Prove the **surface fade** the presence seam paints, once the components workstream's motion work lands — `internal/presence.tsx` states that "the fade itself is a paint value the native tree does not expose, and the live probes are what prove it", so the seam's own claim rests on a probe that does not exist yet. My six overlay probes now wait for the **settled** state (measured, 10/10 green in one window), which is the opposite half: nothing captures a mid-tween frame and shows that a dialog's surface is partly transparent on its way in or out. A probe can: capture during the entry tween and after it, and compare the same pixel over the app's own background (an `opacity` below 1 blends toward it), then assert the two frames differ and the settled one matches the surface's own colour. Blocked until the presence props are committed, because the frame timings are still moving (the drawer also briefly broke the shared `playground` build with an unused `fadeFrom` import while this was measured) | playground (this workstream) | **open** — after the motion work lands: add the mid-tween capture to `dialog-lifecycle` (or a `surface-fade` probe), hold the fade to the motion level's duration, and record the measured frames in `apps/playground/README.md` |
 
 ## Phase D — data and workspace components
 

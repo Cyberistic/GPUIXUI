@@ -147,6 +147,7 @@ import {
   surfaceAlpha,
 } from "./backdrop.js";
 import { moveRow, rowAt, type RowHandle } from "./reorder.js";
+import { settleNumber, settleUntil } from "./settle.js";
 import {
   EDGE_HEIGHT,
   MESSAGE_ROWS,
@@ -1598,17 +1599,6 @@ const DialogProbe = (): ReactNode => {
  */
 const TOOLTIP_CONTENT = "Rename the file";
 
-/**
- * How often a paint state is re-read, and how long a probe waits for it.
- *
- * The runtime closes a tooltip 80ms after the pointer leaves, and the frame that
- * carries the new state depends on the box's load: a fixed 240ms sleep failed
- * `leaving the trigger closes the tip` once on a busy machine. The probe polls
- * the frame instead, so a slow frame costs a poll and not a false failure.
- */
-const TOOLTIP_POLL = Duration.millis(40);
-const TOOLTIP_ATTEMPTS = 50;
-
 /** A painted box, as the runtime's own layout report gives it. */
 interface Painted {
   readonly y: number;
@@ -2272,13 +2262,10 @@ const PopoverProbe = (): ReactNode => {
  */
 const popoverSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** Whether `testId` is absent from the window's tree. */
+    /** Whether `testId` is absent from the window's tree, once it settles. */
     const unpainted = (
       testId: string,
-    ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
-      Effect.map(ctx.host.bounds(testId), (bounds) =>
-        Option.isNone(Option.fromNullishOr(bounds)),
-      );
+    ): Effect.Effect<boolean, Smoke.SmokeHostError> => settleGone(ctx, testId);
 
     yield* ctx.host.waitFor("popover-trigger");
 
@@ -2779,6 +2766,39 @@ const paintedWidth = (
 /** The placement gap every layer in `floating-sides` uses. */
 const GAP = 6;
 
+/**
+ * Waits until `testId` stops painting, and reports whether it did.
+ *
+ * A dismissal is a transition, not an instant: the shipped surfaces stay mounted
+ * for their exit tween, so `bounds` still answers for a few hundred milliseconds
+ * after Escape. Polling the settled state keeps the check about the dismissal
+ * rather than about the tween's duration.
+ */
+const settleGone = (
+  ctx: Smoke.AsyncSmokeContext,
+  testId: string,
+): Effect.Effect<boolean, Smoke.SmokeHostError> =>
+  settleUntil(
+    Effect.map(ctx.host.bounds(testId), (bounds) =>
+      Option.isNone(Option.fromNullishOr(bounds)),
+    ),
+    (gone) => gone,
+  );
+
+/** The painted `x` or `y` of `testId`; `NaN` while it paints nothing. */
+const boxAxis =
+  (field: "x" | "y") =>
+  (
+    ctx: Smoke.AsyncSmokeContext,
+    testId: string,
+  ): Effect.Effect<number, Smoke.SmokeHostError> =>
+    Effect.map(ctx.host.bounds(testId), (bounds) =>
+      Option.match(Option.fromNullishOr(bounds), {
+        onNone: () => Number.NaN,
+        onSome: (box) => box[field],
+      }),
+    );
+
 /** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
@@ -3097,16 +3117,17 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
     const reports = yield* paintedBox(ctx, "tabs-reports");
-    const second = yield* paintedBox(ctx, "tabs-indicator");
+    // The pill slides to the selected trigger's start edge; read it at rest.
+    const secondX = yield* settleNumber(boxAxis("x")(ctx, "tabs-indicator"));
     yield* ctx.expectNear(
       "the pill follows the selected trigger",
-      second.x,
+      secondX,
       reports.x,
       2,
     );
     yield* ctx.expectEqual(
       "the pill moved with the selection",
-      second.x === first.x,
+      secondX === first.x,
       false,
     );
     yield* ctx.host.capture("tabs-reports");
@@ -3158,10 +3179,10 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text("tabs-readout"),
       "value=reports changes=5",
     );
-    const pressed = yield* paintedBox(ctx, "tabs-indicator");
+    const pressedX = yield* settleNumber(boxAxis("x")(ctx, "tabs-indicator"));
     yield* ctx.expectNear(
       "the pill follows a pressed trigger",
-      pressed.x,
+      pressedX,
       reports.x,
       2,
     );
@@ -4579,12 +4600,9 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
 
     yield* ctx.host.key("escape");
-    yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
       "Escape unpaints the dialog surface",
-      Option.isNone(
-        Option.fromNullishOr(yield* ctx.host.bounds("dialog-content")),
-      ),
+      yield* settleGone(ctx, "dialog-content"),
       true,
     );
     yield* ctx.expectEqual(
@@ -4637,22 +4655,15 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
 
     /**
-     * Reads the frame until the tip's paint state is `wanted`, then gives up.
+     * Waits until the tip's paint state is `wanted`, then gives up.
      *
-     * Bounded rather than endless: an endless poll would turn a probe that never
-     * reaches the state into a hung release gate, and the assertion that follows
-     * reports the state it actually read.
+     * The shared bounded poll: the assertion that follows reports the state it
+     * actually read.
      */
     const settleTip = (
       wanted: boolean,
-      attempts: number = TOOLTIP_ATTEMPTS,
     ): Effect.Effect<void, Smoke.SmokeHostError> =>
-      Effect.gen(function* () {
-        const shown = yield* painted;
-        if (shown === wanted || attempts === 0) return;
-        yield* Effect.sleep(TOOLTIP_POLL);
-        yield* settleTip(wanted, attempts - 1);
-      });
+      Effect.asVoid(settleUntil(painted, (shown) => shown === wanted));
 
     yield* ctx.host.waitFor("tooltip-trigger");
     yield* ctx.expectEqual("a tooltip starts closed", yield* painted, false);
@@ -4757,9 +4768,8 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
  */
 const menuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    const unpainted = Effect.map(ctx.host.bounds("menu-content"), (bounds) =>
-      Option.isNone(Option.fromNullishOr(bounds)),
-    );
+    /** The menu surface is gone once its exit tween has finished. */
+    const unpainted = settleGone(ctx, "menu-content");
 
     yield* ctx.host.waitFor("menu-trigger");
     yield* ctx.expectContains(
@@ -4861,9 +4871,8 @@ const menuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
  */
 const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    const unpainted = Effect.map(ctx.host.bounds("context-menu"), (bounds) =>
-      Option.isNone(Option.fromNullishOr(bounds)),
-    );
+    /** The surface is gone once its exit tween has finished. */
+    const unpainted = settleGone(ctx, "context-menu");
 
     yield* ctx.host.waitFor("context-trigger");
     yield* Effect.sleep(SETTLE);
@@ -4895,16 +4904,19 @@ const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text("context-readout"),
       "opens=1",
     );
-    const atPointer = yield* paintedBox(ctx, "context-menu");
+    // The panel enters with a few pixels of travel on its entry axis, so both
+    // axes are read at rest: a mid-tween read reported `y=121.5` for `124`.
+    const pointerX = yield* settleNumber(boxAxis("x")(ctx, "context-menu"));
+    const pointerY = yield* settleNumber(boxAxis("y")(ctx, "context-menu"));
     yield* ctx.expectNear(
       "the surface starts at the press point's x",
-      atPointer.x,
+      pointerX,
       trigger.x + trigger.width / 2,
       1,
     );
     yield* ctx.expectNear(
       "the surface starts at the press point's y",
-      atPointer.y,
+      pointerY,
       trigger.y + trigger.height / 2,
       1,
     );
@@ -5237,13 +5249,10 @@ const toastSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
  */
 const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** Whether `testId` is absent from the window's tree. */
+    /** Whether `testId` is absent from the window's tree, once it settles. */
     const unpainted = (
       testId: string,
-    ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
-      Effect.map(ctx.host.bounds(testId), (bounds) =>
-        Option.isNone(Option.fromNullishOr(bounds)),
-      );
+    ): Effect.Effect<boolean, Smoke.SmokeHostError> => settleGone(ctx, testId);
 
     /** Types a key sequence in order; one keystroke at a time. */
     const type = (
