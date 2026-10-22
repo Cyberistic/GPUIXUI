@@ -463,6 +463,8 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "No aria-valuenow/min/max: the value is announced as aria-valuetext",
+      "No aria-orientation: a vertical track is announced without its axis",
+      "A vertical track needs a caller-supplied height",
       "A composed part cannot answer a press",
       "The thumb cannot rotate or scale: the runtime has no transform",
     ],
@@ -481,6 +483,8 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "No aria-valuenow/min/max: each thumb announces its value as aria-valuetext",
+      "No aria-orientation: a vertical range is announced without its axis",
+      "A vertical track needs a caller-supplied height",
       "A composed part cannot answer a press",
       "The thumb cannot rotate or scale: the runtime has no transform",
     ],

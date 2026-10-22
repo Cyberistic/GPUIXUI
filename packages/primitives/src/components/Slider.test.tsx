@@ -497,10 +497,12 @@ describe("the slider parts", () => {
   const paint = (
     fractions: ReadonlyArray<number>,
     thumbs: ReadonlyArray<null> = [null],
+    orientation: "horizontal" | "vertical" = "horizontal",
   ) => ({
     theme: testTheme,
     size: "md" as const,
     invalid: false,
+    orientation,
     fractions,
     thumbs,
     press: undefined,
@@ -558,6 +560,48 @@ describe("the slider parts", () => {
     const fill = renderSliderIndicator({ index: 1 }, paint([0.2, 0.6]));
 
     expect(expectSome(hostStyleString(fill, "width"))).toBe("40%");
+  });
+
+  it("turns the default composition and every part onto a vertical track", () => {
+    // The bug guarded: `orientation` reached the root but not the parts, so a
+    // vertical slider still laid a horizontal rail, grew its fill sideways and
+    // pulled the thumb on the wrong axis.
+    const element = renderSlider(
+      { value: 40, orientation: "vertical" },
+      testTheme,
+      valueOf(40),
+      idle,
+      sliderHandlers(vi.fn()),
+    );
+    const inset = Math.round(testTheme.iconSize.md / 2);
+    expect(expectSome(hostStyle(element, "flexDirection"))).toBe("column");
+    expect(expectSome(hostStyle(element, "width"))).toBe(
+      testTheme.density.controlHeight.md,
+    );
+    expect(expectSome(hostStyle(element, "height"))).toBe("100%");
+    expect(expectSome(hostStyle(element, "paddingTop"))).toBe(inset);
+
+    const rail = railOf(element);
+    expect(expectSome(hostStyle(rail, "flexDirection"))).toBe("column");
+    expect(expectSome(hostStyle(rail, "justifyContent"))).toBe("flex-end");
+    const parts = partsOf(element);
+    // A vertical rail paints its parts from the floor up, so the thumb comes
+    // first in the tree and the fill after it.
+    const thumb = parts[0] ?? expect.fail("no thumb");
+    const fill = parts[1] ?? expect.fail("no fill");
+    expect(expectSome(hostStyleString(fill, "height"))).toBe("40%");
+    expect(hostStyleString(fill, "width")).toStrictEqual(Option.some("100%"));
+    expect(expectSome(hostStyle(thumb, "marginTop"))).toBe(-inset);
+    expect(hostStyle(thumb, "marginLeft")).toStrictEqual(Option.none());
+  });
+
+  it("paints a vertical range's second segment along the axis", () => {
+    const fill = renderSliderIndicator(
+      { index: 1 },
+      paint([0.2, 0.6], [null, null], "vertical"),
+    );
+    expect(expectSome(hostStyleString(fill, "height"))).toBe("40%");
+    expect(hostStyleString(fill, "width")).toStrictEqual(Option.some("100%"));
   });
 
   it("draws a caller's glyph inside a thumb", () => {

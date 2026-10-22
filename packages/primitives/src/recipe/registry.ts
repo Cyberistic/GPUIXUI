@@ -372,11 +372,38 @@ export const recipeTw = createTw({
         borderWidth: theme.borderWidth.strong,
       };
     },
+    // The same thumb on a track that runs up: the half-side pull is vertical.
+    "slider-thumb-v": (theme, value) => {
+      const side = iconSide(theme, value);
+      if (side === undefined) return undefined;
+      const half = Math.round(side / 2);
+      return {
+        width: side,
+        height: side,
+        marginTop: -half,
+        marginBottom: -half,
+        borderWidth: theme.borderWidth.strong,
+      };
+    },
     "px-inset": (theme, value) => {
       const half = halfIconSide(theme, value);
       return half === undefined
         ? undefined
         : { paddingLeft: half, paddingRight: half };
+    },
+    "py-inset": (theme, value) => {
+      const half = halfIconSide(theme, value);
+      return half === undefined
+        ? undefined
+        : { paddingTop: half, paddingBottom: half };
+    },
+    // A control's height becomes the width of a vertical track, so the same
+    // density step shapes the axis it is turned onto.
+    "w-control": (theme, value) => {
+      const size = controlSize(value);
+      return size === undefined
+        ? undefined
+        : { width: theme.density.controlHeight[size] };
     },
     "w-stepper-column": (theme) => ({
       width: theme.iconSize.md + theme.spacing.sm,
@@ -390,6 +417,10 @@ export const recipeTw = createTw({
     "h-space": (theme, value) => {
       const step = spacingStep(value);
       return step === undefined ? undefined : { height: theme.spacing[step] };
+    },
+    "w-space": (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined ? undefined : { width: theme.spacing[step] };
     },
   },
 });

@@ -868,6 +868,30 @@ describe("the primitives docs page contract", () => {
     expect(api).toContain("focus ring");
   });
 
+  it("gives both value controls their second axis", () => {
+    // The bug guarded: `orientation` reached the root but not the parts, so a
+    // vertical slider laid a horizontal rail, grew its fill sideways and pulled
+    // the thumb on the wrong axis — while the page documented the prop and the
+    // window reported the value moving correctly. The pages name the axis and
+    // its two measured limits; the painter keeps feeding it to all four parts.
+    Arr.forEach(["slider.mdx", "range-slider.mdx"], (page) => {
+      const source = read(page);
+      expect(source, page).toContain("| `orientation` |");
+      expect(source, page).toContain('"horizontal" \\| "vertical"');
+      expect(source, page).toContain("needs a definite height");
+      expect(source, page).toContain("`aria-orientation`");
+    });
+    const painter = readFileSync(
+      fileURLToPath(new URL("../src/components/Slider.tsx", import.meta.url)),
+      "utf8",
+    );
+    expect(painter).toContain("sliderTrackClass(size, orientation)");
+    expect(painter).toContain("sliderRailClass(part.orientation)");
+    expect(painter).toContain("sliderThumbClass(size, invalid, orientation)");
+    expect(painter).toContain("verticalPointerValue");
+    expect(painter).toContain("Arr.reverse(flattenParts(children))");
+  });
+
   it("cites only plans that exist", () => {
     // The bug guarded: completed plans are deleted (`.agents/slop/plans/README.md`),
     // but this workstream still sent readers to four completed plans for the

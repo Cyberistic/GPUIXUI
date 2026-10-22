@@ -24,6 +24,7 @@ import { clampLines } from "../core/style.js";
 import type {
   ProgressTone,
   ScrollSpec,
+  SliderOrientation,
   SurfaceTone,
   TextTone,
 } from "../core/style.js";
@@ -624,30 +625,60 @@ export const switchThumbClass = ({
 
 // ── Slider / RangeSlider ─────────────────────────────────────────────
 
-/** The class string a slider's hit area resolves from. */
-export const sliderTrackClass = (size: ControlSize): string =>
-  cn(
-    "flex flex-row items-center w-full cursor-pointer",
-    `h-${size}`,
-    `px-inset-${size}`,
-    "disabled:opacity-50 disabled:cursor-not-allowed",
-  );
+/**
+ * The class string a slider's hit area resolves from.
+ *
+ * The vertical axis is the same box turned on its side: the control's height
+ * becomes the hit area's width, the caller supplies the length, and the insets
+ * move to the vertical edges so the thumb is centred at both ends.
+ */
+export const sliderTrackClass = (
+  size: ControlSize,
+  orientation: SliderOrientation = "horizontal",
+): string =>
+  orientation === "vertical"
+    ? cn(
+        "flex flex-col items-center h-full cursor-pointer",
+        `w-control-${size}`,
+        `py-inset-${size}`,
+        "disabled:opacity-50 disabled:cursor-not-allowed",
+      )
+    : cn(
+        "flex flex-row items-center w-full cursor-pointer",
+        `h-${size}`,
+        `px-inset-${size}`,
+        "disabled:opacity-50 disabled:cursor-not-allowed",
+      );
 
 /** The class string a slider's rail resolves to. */
-export const sliderRailClass =
-  "w-full h-space-xs rounded-full bg-muted flex flex-row items-center pointer-events-none";
+export const sliderRailClass = (
+  orientation: SliderOrientation = "horizontal",
+): string =>
+  orientation === "vertical"
+    ? "h-full w-space-xs rounded-full bg-muted flex flex-col justify-end items-center pointer-events-none"
+    : "w-full h-space-xs rounded-full bg-muted flex flex-row items-center pointer-events-none";
 
 /** The class string a slider's filled span resolves from. */
-export const sliderFillClass = (invalid: boolean): string =>
+export const sliderFillClass = (
+  invalid: boolean,
+  orientation: SliderOrientation = "horizontal",
+): string =>
   cn(
-    "h-full shrink-0 rounded-full pointer-events-none",
+    "shrink-0 rounded-full pointer-events-none",
+    orientation === "vertical" ? "w-full" : "h-full",
     invalid ? "bg-destructive" : "bg-primary",
   );
 
 /** The class string a slider's thumb resolves from. */
-export const sliderThumbClass = (size: ControlSize, invalid: boolean): string =>
+export const sliderThumbClass = (
+  size: ControlSize,
+  invalid: boolean,
+  orientation: SliderOrientation = "horizontal",
+): string =>
   cn(
-    `slider-thumb-${size}`,
+    orientation === "vertical"
+      ? `slider-thumb-v-${size}`
+      : `slider-thumb-${size}`,
     "shrink-0 rounded-full bg-input pointer-events-none",
     invalid ? "border-destructive" : "border-primary",
   );

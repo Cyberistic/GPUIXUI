@@ -1,11 +1,11 @@
 /**
  * Value controls example: a render-settings panel.
  *
- * The three components in the roles they actually differ in — a continuous
- * quality slider with a formatted value, a price range with two ends, and a
- * meter reporting a measurement. The sliders are controlled, so the example
- * shows the API a settings screen uses: the panel's own state is the source of
- * truth and the readout is derived from it.
+ * The components in the roles they actually differ in — a continuous quality
+ * slider with a formatted value, a vertical master level, a price range with two
+ * ends, and a meter reporting a measurement. The sliders are controlled, so the
+ * example shows the API a settings screen uses: the panel's own state is the
+ * source of truth and the readout is derived from it.
  */
 
 import { useState, type ReactElement } from "react";
@@ -53,6 +53,7 @@ const Row = ({
 export const ValueExample = (): ReactElement => {
   const theme = useTheme();
   const [quality, setQuality] = useState(62);
+  const [level, setLevel] = useState(40);
   const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
   const diskUsed = 68;
 
@@ -87,6 +88,20 @@ export const ValueExample = (): ReactElement => {
               </SliderThumb>
             </SliderTrack>
           </Slider>
+        </Row>
+
+        <Separator orientation="horizontal" />
+
+        <Row title="Master level" value={`${level}%`}>
+          <Slider
+            testId="value-example-level"
+            label="Master level"
+            orientation="vertical"
+            value={level}
+            onValueChange={setLevel}
+            formatValue={(value) => `${value}%`}
+            style={{ height: 120 }}
+          />
         </Row>
 
         <Separator orientation="horizontal" />

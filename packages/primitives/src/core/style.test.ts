@@ -503,7 +503,7 @@ describe("value controls", () => {
   it("keeps the rail, the fill and the thumb out of the hit test", () => {
     // The deepest hit target wins in GPUix and events do not bubble, so a
     // painted child would swallow the press that maps to a value.
-    const rail = sliderRailStyle(testTheme);
+    const rail = sliderRailStyle(spec, testTheme);
     const fill = sliderFillStyle(0.5, spec, testTheme);
     const thumb = sliderThumbStyle(spec, testTheme);
     expect(rail.pointerEvents).toBe("none");
@@ -518,6 +518,38 @@ describe("value controls", () => {
     expect(sliderFillStyle(0.25, spec, testTheme).backgroundColor).toBe(
       testTheme.colors.primary,
     );
+  });
+
+  it("turns the track, rail, fill and thumb onto the vertical axis", () => {
+    // The bug guarded: a value on a vertical track was still painted by the
+    // horizontal recipe, so the fill grew sideways out of a bar one spacing
+    // step wide and the thumb's half-side pull moved it off its own centre.
+    const vertical = { size: "md", orientation: "vertical" } as const;
+    const inset = sliderInset(vertical.size, testTheme);
+    const track = sliderTrackStyle(vertical, testTheme);
+    const rail = sliderRailStyle(vertical, testTheme);
+    const fill = sliderFillStyle(0.25, vertical, testTheme);
+    const thumb = sliderThumbStyle(vertical, testTheme);
+
+    expect(track.flexDirection).toBe("column");
+    expect(track.width).toBe(testTheme.density.controlHeight[vertical.size]);
+    expect(track.height).toBe("100%");
+    expect(track.paddingTop).toBe(inset);
+    expect(track.paddingBottom).toBe(inset);
+    expect(track.paddingLeft).toBeUndefined();
+
+    expect(rail.flexDirection).toBe("column");
+    expect(rail.justifyContent).toBe("flex-end");
+    expect(rail.width).toBe(testTheme.spacing.xs);
+    expect(rail.height).toBe("100%");
+
+    expect(fill.height).toBe("25%");
+    expect(fill.width).toBe("100%");
+
+    expect(thumb.marginTop).toBe(-inset);
+    expect(thumb.marginBottom).toBe(-inset);
+    expect(thumb.marginLeft).toBeUndefined();
+    expect(thumb.marginRight).toBeUndefined();
   });
 
   it("leaves the ring to the track, which is the slider's focus target", () => {

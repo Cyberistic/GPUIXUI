@@ -23,7 +23,10 @@
  */
 
 import {
+  Children,
+  Fragment,
   createContext,
+  isValidElement,
   useContext,
   useRef,
   useState,
@@ -39,6 +42,7 @@ import type {
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
+import * as Arr from "effect/Array";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
 import * as Option from "effect/Option";
@@ -52,10 +56,11 @@ import {
   normalizeSpan,
   pointerValue,
   valueFraction,
+  verticalPointerValue,
   type ValueRange,
   type ValueSpan,
 } from "../core/value.js";
-import { sliderInset } from "../core/style.js";
+import { sliderInset, type SliderOrientation } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
@@ -105,6 +110,13 @@ export interface SliderProps
   readonly label?: string;
   /** How the value is announced. Defaults to `String(value)`. */
   readonly formatValue?: (value: number) => string;
+  /**
+   * The axis the value runs along. Defaults to `horizontal`.
+   *
+   * A vertical track has no natural length: give it a definite height (its
+   * width is the control's own height).
+   */
+  readonly orientation?: SliderOrientation;
   /** Extra style, resolved against the slider's live state and merged last. */
   readonly style?: StateStyle<SliderState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
@@ -132,6 +144,8 @@ export interface RangeSliderProps
   /** The group's name; each thumb becomes "<label> minimum"/"<label> maximum". */
   readonly label?: string;
   readonly formatValue?: (value: number) => string;
+  /** The axis the value runs along. Defaults to `horizontal`. */
+  readonly orientation?: SliderOrientation;
   /** Extra style, resolved against the range's live state and merged last. */
   readonly style?: StateStyle<SliderState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
@@ -190,23 +204,29 @@ export interface SliderHandlers {
   readonly onPointerUp: () => void;
 }
 
-/** The resolved fill for a fraction: the recipe plus its data-driven width. */
+/** The resolved fill for a fraction: the recipe plus its data-driven share. */
 const fillStyle = (
   fraction: number,
   invalid: boolean,
   theme: PrimitiveTheme,
-): StyleDesc =>
-  mergeStyle(recipeTw.classesToStyle(sliderFillClass(invalid), theme).style, {
-    width: `${fraction * 100}%`,
-  });
+  orientation: SliderOrientation,
+): StyleDesc => {
+  const share = `${fraction * 100}%`;
+  return mergeStyle(
+    recipeTw.classesToStyle(sliderFillClass(invalid, orientation), theme).style,
+    orientation === "vertical" ? { height: share } : { width: share },
+  );
+};
 
 /** The resolved thumb. The track is the focus target, so it declares the ring. */
 const thumbStyle = (
   size: ControlSize,
   invalid: boolean,
   theme: PrimitiveTheme,
+  orientation: SliderOrientation,
 ): StyleDesc =>
-  recipeTw.classesToStyle(sliderThumbClass(size, invalid), theme).style;
+  recipeTw.classesToStyle(sliderThumbClass(size, invalid, orientation), theme)
+    .style;
 
 /** The interaction a thumb owns when it is its own tab stop (the range case). */
 interface ThumbPart {
@@ -229,6 +249,8 @@ interface SliderPart {
   readonly theme: PrimitiveTheme;
   readonly size: ControlSize;
   readonly invalid: boolean;
+  /** The axis the value runs along, which every part paints on. */
+  readonly orientation: SliderOrientation;
   /** The fraction each thumb sits at — one entry for a slider, two for a range. */
   readonly fractions: ReadonlyArray<number>;
   /** Per-thumb interaction; `null` where the root owns it (a single slider). */
@@ -258,6 +280,15 @@ export interface SliderTrackProps {
   readonly testId?: string;
 }
 
+/** The rendered children, with fragments flattened so a part is one entry. */
+const flattenParts = (children: ReactNode): ReadonlyArray<ReactNode> =>
+  Arr.flatMap(Children.toArray(children), (child) =>
+    isValidElement<{ readonly children?: ReactNode }>(child) &&
+    child.type === Fragment
+      ? flattenParts(child.props.children)
+      : [child],
+  );
+
 /** The rail a slider's parts sit in. The slider paints nothing else. */
 export const renderSliderTrack = (
   { children, className, style, testId }: SliderTrackProps,
@@ -266,11 +297,21 @@ export const renderSliderTrack = (
   <div
     testId={testId}
     style={mergeStyle(
-      recipeTw.classesToStyle(cn(sliderRailClass, className), part.theme).style,
+      recipeTw.classesToStyle(
+        cn(sliderRailClass(part.orientation), className),
+        part.theme,
+      ).style,
       style,
     )}
   >
-    {children}
+    {
+      // A vertical value runs up and the runtime has no `column-reverse`, so
+      // the start's parts paint at the floor: the composition order stays
+      // start-to-end for the caller, and the track mirrors it here.
+      part.orientation === "vertical"
+        ? Arr.reverse(flattenParts(children))
+        : children
+    }
   </div>
 );
 
@@ -303,7 +344,7 @@ export const renderSliderIndicator = (
     <div
       style={mergeStyle(
         mergeStyle(
-          fillStyle(to - from, part.invalid, part.theme),
+          fillStyle(to - from, part.invalid, part.theme, part.orientation),
           recipeTw.classesToStyle(className, part.theme).style,
         ),
         style,
@@ -339,7 +380,12 @@ export const renderSliderThumb = (
   part: SliderPart,
 ): ReactElement => {
   const thumb = part.thumbs[index] ?? null;
-  let resolved = thumbStyle(part.size, part.invalid, part.theme);
+  let resolved = thumbStyle(
+    part.size,
+    part.invalid,
+    part.theme,
+    part.orientation,
+  );
   if (thumb?.ring === true) {
     resolved = mergeStyle(
       resolved,
@@ -394,8 +440,9 @@ export const renderSlider = (
   const value = clampValue(state.current, range);
   const size = props.size ?? "md";
   const invalid = props.invalid === true;
+  const orientation = props.orientation ?? "horizontal";
   const resolved = recipeTw.classesToStyle(
-    cn(sliderTrackClass(size), props.className),
+    cn(sliderTrackClass(size, orientation), props.className),
     theme,
   );
   let track = resolved.style;
@@ -412,6 +459,7 @@ export const renderSlider = (
     theme,
     size,
     invalid,
+    orientation,
     fractions: [valueFraction(value, range)],
     thumbs: [null],
     press: props.disabled === true ? undefined : props.onClick,
@@ -501,6 +549,7 @@ export const renderRangeSlider = (
   const span = spanOf(state.current, range);
   const size = props.size ?? "md";
   const invalid = props.invalid === true;
+  const orientation = props.orientation ?? "horizontal";
   // The group's name is the subject the two ends are derived from, so it takes
   // the package's name rule first: a padded label would otherwise announce its
   // padding in both thumb names, and a blank one would name the ends " minimum"
@@ -549,7 +598,7 @@ export const renderRangeSlider = (
     };
   };
   const resolved = recipeTw.classesToStyle(
-    cn(sliderTrackClass(size), props.className),
+    cn(sliderTrackClass(size, orientation), props.className),
     theme,
   );
   let track = resolved.style;
@@ -565,6 +614,7 @@ export const renderRangeSlider = (
     theme,
     size,
     invalid,
+    orientation,
     fractions: [
       valueFraction(span.start, range),
       valueFraction(span.end, range),
@@ -612,12 +662,18 @@ const pointerOf = (
   trackId: number | null,
   range: ValueRange,
   inset: number,
+  orientation: SliderOrientation,
 ): Option.Option<number> => {
   if (trackId === null) return Option.none();
   const box = renderer?.getElementBounds?.(trackId);
   if (box === null || box === undefined) return Option.none();
   return Option.some(
-    clampValue(pointerValue(event.x ?? 0, box, range, inset), range),
+    clampValue(
+      orientation === "vertical"
+        ? verticalPointerValue(event.y ?? 0, box, range, inset)
+        : pointerValue(event.x ?? 0, box, range, inset),
+      range,
+    ),
   );
 };
 
@@ -635,11 +691,15 @@ export const Slider = (props: SliderProps): ReactElement => {
     valueChange(props),
   );
   const inset = sliderInset(props.size ?? "md", theme);
+  const orientation = props.orientation ?? "horizontal";
   const apply = (event: EventPayload): void =>
-    Option.match(pointerOf(event, renderer, trackId.current, range, inset), {
-      onNone: () => {},
-      onSome: state.set,
-    });
+    Option.match(
+      pointerOf(event, renderer, trackId.current, range, inset, orientation),
+      {
+        onNone: () => {},
+        onSome: state.set,
+      },
+    );
   return renderSlider(props, theme, state.value, focus, {
     onValueChange: state.set,
     registerTrack: (instance) => {
@@ -689,6 +749,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     valueChange(props),
   );
   const inset = sliderInset(props.size ?? "md", theme);
+  const orientation = props.orientation ?? "horizontal";
   const focusThumb = (index: 0 | 1): void => {
     Option.match(Option.fromNullishOr(thumbIds.current.get(index)), {
       onNone: () => {},
@@ -723,7 +784,14 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
         if (props.disabled === true) return;
         const span = spanOf(state.value.current, range);
         Option.match(
-          pointerOf(event, renderer, trackId.current, range, inset),
+          pointerOf(
+            event,
+            renderer,
+            trackId.current,
+            range,
+            inset,
+            orientation,
+          ),
           {
             onNone: () => {},
             onSome: (value) => {
@@ -743,7 +811,14 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
           return;
         }
         Option.match(
-          pointerOf(event, renderer, trackId.current, range, inset),
+          pointerOf(
+            event,
+            renderer,
+            trackId.current,
+            range,
+            inset,
+            orientation,
+          ),
           {
             onNone: () => {},
             onSome: (value) =>

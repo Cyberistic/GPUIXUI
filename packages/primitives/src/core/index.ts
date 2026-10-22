@@ -73,8 +73,14 @@ export {
   stepValue,
   valueFraction,
   valueStep,
+  verticalPointerValue,
 } from "./value.js";
-export type { TrackBox, ValueRange, ValueSpan } from "./value.js";
+export type {
+  TrackBox,
+  ValueRange,
+  ValueSpan,
+  VerticalTrackBox,
+} from "./value.js";
 
 export {
   boxStyle,
@@ -157,6 +163,7 @@ export {
   sliderFillStyle,
   sliderInset,
   sliderRailStyle,
+  SLIDER_ORIENTATIONS,
   sliderThumbStyle,
   sliderTrackStyle,
   surfaceStyle,
@@ -176,6 +183,7 @@ export type {
   RatingStarSpec,
   RuleSpec,
   ScrollSpec,
+  SliderOrientation,
   SliderSpec,
   SurfaceSpec,
   SurfaceTone,

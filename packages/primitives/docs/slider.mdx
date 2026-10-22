@@ -65,6 +65,7 @@ const theme = useTheme();
 | `description` | `string` | none | announced help; a blank one publishes nothing |
 | `ref` / `aria-id` / `onLayout` | host props | none | the track is the element a form focuses, an automation host names and a layout measures |
 | `formatValue` | `(value: number) => string` | `String` | the announced text |
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | the axis the value runs along; a vertical track needs a definite height |
 | `style` | `StateStyle<SliderState>` | — | resolved against the live state, merged last on the track |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `children` | `ReactNode` | — | the parts to draw; omit for `SliderTrack` with an indicator and a thumb |
@@ -125,6 +126,10 @@ element that holds focus — not on the thumb.
   when the number alone is ambiguous (`"62%"`, `"$40"`).
 - A disabled slider has no tab stop, so it is skipped rather than announced as
   a control that cannot be used.
+- The axis is **not announced**: `@gpuix/native` 0.11.0 publishes no
+  `aria-orientation`, so a vertical slider is heard as a slider whose value runs
+  in the usual direction. Say the axis in the label (`"Level, inches"`) when it
+  matters.
 - A `Label` beside the slider is visible text only; pass its name through
   `label` and its help line through `description` (there is no
   `aria-describedby`). The track is addressable — `ref` focuses it, `aria-id`
@@ -140,10 +145,30 @@ border `borderWidth.strong`, and focus is the keyboard-only outline
 (`keyboardRing` → the runtime's `focusVisible`), declared on the track because
 the track is the tab stop. Nothing in the component names a literal.
 
+`orientation="vertical"` turns the same four parts onto the other axis: the
+control's height becomes the track's width, the caller's `style` supplies the
+length, the rail is one spacing step wide, and the thumb's half-side pull is
+vertical. The runtime has no `column-reverse`, so the track paints its parts
+from the floor up — a caller composing parts keeps writing them start-to-end and
+`SliderTrack` mirrors the order. The pointer and the arrow keys follow the same
+rule: up increases, and a vertical value runs from the bottom.
+
 `style` takes a `StateStyle<SliderState>` — a `StyleDesc`, or a callback that
 receives `{ disabled, focused, invalid }` and returns one. It merges after every
 role decision, so a callback is the last word on a property the recipe also
 sets.
+
+A vertical slider has no natural length, so give the track a definite height:
+
+```tsx
+<Slider
+  label="Level"
+  orientation="vertical"
+  value={level}
+  onValueChange={setLevel}
+  style={{ height: 160 }}
+/>
+```
 
 ## Pointer behaviour
 
@@ -158,7 +183,11 @@ ends, until it is released. Measured in a real window (`pointer-capture`,
 
 ## Limitations
 
-- **No `aria-valuenow`/`min`/`max`** (above).
+- **No `aria-valuenow`/`min`/`max`** (above), and **no `aria-orientation`**: a
+  vertical track is announced without its axis.
+- **A vertical track needs a definite height.** Its width is the control's own
+  height, but a value that runs up has no natural length; without a caller
+  `style` the track lays out at its content height.
 - The thumb cannot rotate or transform; GPUix has no `transform`, and the
   position is a flex layout, not a `translate`. A custom glyph sits upright
   inside the thumb.
@@ -168,22 +197,26 @@ ends, until it is released. Measured in a real window (`pointer-capture`,
 ## Verification
 
 - `src/core/value.test.ts` — clamping, snapping (no binary-float tails),
-  fractions, the key contract, the pointer mapping, the crossing rule, the
-  maximum staying reachable when the step does not divide the span, and a move
-  off that maximum landing on the stop beside it.
+  fractions, the key contract, the pointer mapping on both axes (a vertical
+  track is read from its bottom, so the top is the maximum), the crossing rule,
+  the maximum staying reachable when the step does not divide the span, and a
+  move off that maximum landing on the stop beside it.
 - `src/core/style.test.ts` — the inset/negative-margin geometry, the hit-test
-  children, the fill fraction, the ring.
+  children, the fill fraction, the ring, and the four parts turned onto the
+  vertical axis.
 - `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint;
   the thumb's centre at 0/50/100 % (fill width, thumb size and its half-thumb
   offset, track inset); a custom composition replacing the default; a glyph
   inside a thumb; the second range segment's width; a caller's rail `className`,
   `style` and `testId`; a `style` callback receiving the live state and winning.
 - `runtime/value.runtime.test.tsx` — a real click at 25% reports 25, the thumb is
-  centred within 1 px at 0/50/100, the ring follows focus, disabled is skipped
+  centred within 1 px at 0/50/100, a vertical click at 25% measured from the
+  bottom reports 25 with the thumb centred on it, a vertical drag that leaves
+  the track still follows the pointer (to 100) and stops on the release, the
+  arrow keys move a vertical value, the ring follows focus, disabled is skipped
   by Tab, a `max: 10` / `step: 3` slider still reaches 10 by key and by press
-  and steps down from it onto 9, and a drag that leaves the track keeps
-  following the pointer (to 100) and
-  stops on the release. Measured 2026-10-17; plan 053 §11 records the probes.
+  and steps down from it onto 9. Measured 2026-10-17; plan 053 §11 records the
+  probes. The vertical cases were added 2026-10-22.
   The capture cases are the headless half of the playground's `pointer-capture`
   probe (negative control measured: removing the track's `onMouseMove`, so the
   capture is never armed, leaves the value at 30 — `expected 30 to be 100`).

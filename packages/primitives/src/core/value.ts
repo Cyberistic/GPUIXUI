@@ -24,6 +24,12 @@ export interface TrackBox {
   readonly width: number;
 }
 
+/** The same box on the other axis, for a vertical track. */
+export interface VerticalTrackBox {
+  readonly y: number;
+  readonly height: number;
+}
+
 /** The two ends of a range slider. */
 export interface ValueSpan {
   readonly start: number;
@@ -193,6 +199,25 @@ export const pointerValue = (
   const span = box.width - 2 * inset;
   if (!Number.isFinite(x) || span <= 0) return normalizeRange(range).min;
   return fractionValue((x - box.x - inset) / span, range);
+};
+
+/**
+ * The value a pointer at window y aims at on a vertical track.
+ *
+ * A vertical value runs **up**: the maximum is at the top of the usable span,
+ * so the fraction is measured from the bottom. `inset` is half a thumb, exactly
+ * as on the horizontal axis, so a thumb at either end is centred on the end
+ * rather than hanging off it.
+ */
+export const verticalPointerValue = (
+  y: number,
+  box: VerticalTrackBox,
+  range: ValueRange,
+  inset = 0,
+): number => {
+  const span = box.height - 2 * inset;
+  if (!Number.isFinite(y) || span <= 0) return normalizeRange(range).min;
+  return fractionValue(1 - (y - box.y - inset) / span, range);
 };
 
 /** Order and clamp a range slider's two ends. */

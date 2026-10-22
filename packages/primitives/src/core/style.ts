@@ -473,11 +473,20 @@ export const progressFillStyle = (
 
 // ── Value controls: Slider, RangeSlider ──────────────────────────────
 
+/** The axis a value control runs along. */
+export const SLIDER_ORIENTATIONS = ["horizontal", "vertical"] as const;
+export type SliderOrientation = (typeof SLIDER_ORIENTATIONS)[number];
+
 export interface SliderSpec {
   readonly size: ControlSize;
   readonly invalid?: boolean;
   readonly disabled?: boolean;
+  /** Defaults to `horizontal`. A vertical track needs a definite height. */
+  readonly orientation?: SliderOrientation;
 }
+
+const isVertical = (spec: Pick<SliderSpec, "orientation">): boolean =>
+  spec.orientation === "vertical";
 
 /**
  * Half a thumb — the track's inset, and the same number `pointerValue` takes.
@@ -496,60 +505,104 @@ export const sliderInset = (size: ControlSize, theme: PrimitiveTheme): number =>
  * become a bar as tall as the control — and it still takes presses: GPUI makes a
  * hitbox for an element with mouse handlers (measured in plan 053 §11; an
  * unpositioned, unfilled box with handlers receives the press).
+ *
+ * The vertical axis is the same box turned on its side: the control's height
+ * becomes its width and the track takes the caller's height, because a value
+ * that runs up has no natural length.
  */
 export const sliderTrackStyle = (
   spec: SliderSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
   const inset = sliderInset(spec.size, theme);
-  const style: StyleDesc = {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    height: theme.density.controlHeight[spec.size],
-    paddingLeft: inset,
-    paddingRight: inset,
-    cursor: spec.disabled === true ? "not-allowed" : "pointer",
-  };
+  const control = theme.density.controlHeight[spec.size];
+  const style: StyleDesc = isVertical(spec)
+    ? {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        width: control,
+        height: "100%",
+        paddingTop: inset,
+        paddingBottom: inset,
+      }
+    : {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        width: "100%",
+        height: control,
+        paddingLeft: inset,
+        paddingRight: inset,
+      };
+  style.cursor = spec.disabled === true ? "not-allowed" : "pointer";
   if (spec.disabled === true) style.opacity = 0.5;
   return style;
 };
 
-/** The rail: the whole width, one spacing step tall, and never a hit target. */
-export const sliderRailStyle = (theme: PrimitiveTheme): StyleDesc => ({
-  width: "100%",
-  height: theme.spacing.xs,
-  borderRadius: theme.radius.full,
-  backgroundColor: theme.colors.muted,
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "center",
-  pointerEvents: "none",
-});
+/**
+ * The rail: the whole length, one spacing step thick, and never a hit target.
+ *
+ * The length follows the axis, so a vertical rail is as tall as the rotated
+ * track and one spacing step wide.
+ */
+export const sliderRailStyle = (
+  spec: SliderSpec,
+  theme: PrimitiveTheme,
+): StyleDesc =>
+  isVertical(spec)
+    ? {
+        width: theme.spacing.xs,
+        height: "100%",
+        borderRadius: theme.radius.full,
+        backgroundColor: theme.colors.muted,
+        display: "flex",
+        // The runtime has no `column-reverse`, so the track reverses its parts
+        // and packs them to the floor: the start's fill is the bottom one and
+        // the axis reads from the value's floor to its ceiling.
+        flexDirection: "column",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        pointerEvents: "none",
+      }
+    : {
+        width: "100%",
+        height: theme.spacing.xs,
+        borderRadius: theme.radius.full,
+        backgroundColor: theme.colors.muted,
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        pointerEvents: "none",
+      };
 
 /** The filled part of the rail, up to the value. */
 export const sliderFillStyle = (
   fraction: number,
   spec: SliderSpec,
   theme: PrimitiveTheme,
-): StyleDesc => ({
-  width: `${(Number.isFinite(fraction) ? Math.min(1, Math.max(0, fraction)) : 0) * 100}%`,
-  height: "100%",
-  flexShrink: 0,
-  borderRadius: theme.radius.full,
-  backgroundColor:
-    spec.invalid === true ? theme.colors.destructive : theme.colors.primary,
-  pointerEvents: "none",
-});
+): StyleDesc => {
+  const share = `${(Number.isFinite(fraction) ? Math.min(1, Math.max(0, fraction)) : 0) * 100}%`;
+  const style: StyleDesc = isVertical(spec)
+    ? { width: "100%", height: share }
+    : { width: share, height: "100%" };
+  style.flexShrink = 0;
+  style.borderRadius = theme.radius.full;
+  style.backgroundColor =
+    spec.invalid === true ? theme.colors.destructive : theme.colors.primary;
+  style.pointerEvents = "none";
+  return style;
+};
 
 /**
  * The thumb.
  *
  * The negative margins are load-bearing: they pull half a thumb out of the
  * layout on each side, so the thumb's **centre** lands on the fraction the fill
- * ends at. Without them the thumb would sit half a thumb to the right of the
- * value it represents. Measured in plan 053 §11.
+ * ends at. Without them the thumb would sit half a thumb past the value it
+ * represents. Measured in plan 053 §11.
+ *
+ * A vertical track pulls on the vertical axis for the same reason.
  */
 export const sliderThumbStyle = (
   spec: SliderSpec,
@@ -566,8 +619,9 @@ export const sliderThumbStyle = (
     borderWidth: theme.borderWidth.strong,
     borderColor:
       spec.invalid === true ? theme.colors.destructive : theme.colors.primary,
-    marginLeft: -half,
-    marginRight: -half,
+    ...(isVertical(spec)
+      ? { marginTop: -half, marginBottom: -half }
+      : { marginLeft: -half, marginRight: -half }),
     pointerEvents: "none",
   };
   return style;

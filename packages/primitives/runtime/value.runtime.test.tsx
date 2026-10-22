@@ -56,9 +56,9 @@ const partsOf = (runtime: Runtime, testId: string) => {
   return rail.children.map((id) => elementById(runtime, id));
 };
 
-const thumbOf = (runtime: Runtime, testId: string) => {
+const thumbOf = (runtime: Runtime, testId: string, vertical = false) => {
   const parts = partsOf(runtime, testId);
-  const index = parts.length === 2 ? 1 : 3;
+  const index = parts.length === 2 ? (vertical ? 0 : 1) : vertical ? 0 : 3;
   return parts[index] ?? expect.fail(`${testId} paints no thumb`);
 };
 
@@ -76,6 +76,15 @@ const thumbCentre = (runtime: Runtime, testId: string): number => {
   return bounds.x + bounds.width / 2;
 };
 
+/** The vertical centre of a thumb. */
+const thumbCentreY = (runtime: Runtime, testId: string): number => {
+  const thumb = thumbOf(runtime, testId, true);
+  const bounds = Option.getOrElse(runtime.boundsOfId(thumb.id), () =>
+    expect.fail(`the thumb of ${testId} painted no box`),
+  );
+  return bounds.y + bounds.height / 2;
+};
+
 /** A point at `fraction` of the track's usable span. */
 const pointAt = (
   runtime: Runtime,
@@ -86,6 +95,22 @@ const pointAt = (
   return {
     x: box.x + INSET + fraction * (box.width - 2 * INSET),
     y: box.y + box.height / 2,
+  };
+};
+
+/**
+ * A point at `fraction` of a vertical track, measured from its **bottom** —
+ * a vertical value runs up, so 0 is the bottom edge and 1 the top.
+ */
+const verticalPointAt = (
+  runtime: Runtime,
+  testId: string,
+  fraction: number,
+): { readonly x: number; readonly y: number } => {
+  const box = boundsOf(runtime, testId);
+  return {
+    x: box.x + box.width / 2,
+    y: box.y + INSET + (1 - fraction) * (box.height - 2 * INSET),
   };
 };
 
@@ -112,6 +137,112 @@ it("maps a real click to the value under the pointer", async () => {
   runtime.clickAt(point.x, point.y);
   expect(seen.at(-1)).toBe(25);
   expect(announced(runtime, "Volume")).toBe("25");
+});
+
+it("maps a vertical track from its bottom edge", async () => {
+  // The bug guarded: the vertical axis reuses the horizontal arithmetic, so the
+  // bar fills from the ceiling and a reader who drags up gets a *lower* value.
+  const { seen, onChange } = values();
+  const runtime = await mount(
+    <Slider
+      testId="v"
+      label="Level"
+      orientation="vertical"
+      style={{ height: 200 }}
+      onValueChange={onChange}
+    />,
+  );
+  const box = boundsOf(runtime, "v");
+  expect(box.height).toBe(200);
+  expect(box.width).toBe(testTheme.density.controlHeight.md);
+  const quarter = verticalPointAt(runtime, "v", 0.25);
+  runtime.clickAt(quarter.x, quarter.y);
+  expect(seen.at(-1)).toBe(25);
+  expect(announced(runtime, "Level")).toBe("25");
+  // The thumb's centre sits on the point the pointer named, measured up from
+  // the bottom: the same half-thumb inset the horizontal axis proves.
+  expect(Math.abs(thumbCentreY(runtime, "v") - quarter.y)).toBeLessThanOrEqual(
+    1,
+  );
+  const top = verticalPointAt(runtime, "v", 1);
+  runtime.clickAt(top.x, top.y);
+  expect(seen.at(-1)).toBe(100);
+  expect(
+    Math.abs(thumbCentreY(runtime, "v") - (box.y + INSET)),
+  ).toBeLessThanOrEqual(1);
+});
+
+it("keeps a vertical drag that leaves the track, and stops it on release", async () => {
+  const { seen, onChange } = values();
+  const runtime = await mount(
+    <Slider
+      testId="v"
+      label="Level"
+      orientation="vertical"
+      style={{ height: 200 }}
+      onValueChange={onChange}
+    />,
+  );
+  const box = boundsOf(runtime, "v");
+  const start = verticalPointAt(runtime, "v", 0.5);
+  runtime.mouseDownAt(start.x, start.y);
+  expect(seen.at(-1)).toBe(50);
+  runtime.mouseMoveAt(start.x, box.y - 120, 0);
+  runtime.flush();
+  expect(seen.at(-1)).toBe(100);
+  const duringDrag = seen.length;
+  runtime.mouseUpAt(start.x, box.y - 120);
+  runtime.flush();
+  runtime.mouseMoveAt(start.x, verticalPointAt(runtime, "v", 0.1).y, 0);
+  runtime.flush();
+  expect(seen.length).toBe(duringDrag);
+});
+
+it("moves a vertical slider with the arrow keys and announces the step", async () => {
+  const { seen, onChange } = values();
+  const runtime = await mount(
+    <Slider
+      testId="v"
+      label="Level"
+      orientation="vertical"
+      defaultValue={50}
+      onValueChange={onChange}
+    />,
+  );
+  runtime.keyDown("v", "up");
+  expect(seen.at(-1)).toBe(51);
+  runtime.keyDown("v", "down");
+  runtime.keyDown("v", "down");
+  expect(seen.at(-1)).toBe(49);
+  expect(announced(runtime, "Level")).toBe("49");
+});
+
+it("moves the end a click grabbed on a vertical range", async () => {
+  const runtime = await mount(
+    <RangeSlider
+      testId="r"
+      label="Price"
+      orientation="vertical"
+      style={{ height: 200 }}
+      defaultValue={[20, 60] as const}
+    />,
+  );
+  const box = boundsOf(runtime, "r");
+  expect(box.width).toBe(testTheme.density.controlHeight.md);
+  runtime.clickAt(
+    verticalPointAt(runtime, "r", 0.9).x,
+    verticalPointAt(runtime, "r", 0.9).y,
+  );
+  runtime.flush();
+  expect(announced(runtime, "Price maximum")).toBe("90");
+  expect(announced(runtime, "Price minimum")).toBe("20");
+  runtime.clickAt(
+    verticalPointAt(runtime, "r", 0.05).x,
+    verticalPointAt(runtime, "r", 0.05).y,
+  );
+  runtime.flush();
+  expect(announced(runtime, "Price minimum")).toBe("5");
+  expect(announced(runtime, "Price maximum")).toBe("90");
 });
 
 it("delivers a caller's press and keys through the track", async () => {

@@ -266,7 +266,12 @@ describe("selection recipes", () => {
 });
 
 describe("slider recipes", () => {
-  const spec = (over: { readonly invalid?: boolean } = {}): SliderSpec => ({
+  const spec = (
+    over: {
+      readonly invalid?: boolean;
+      readonly orientation?: SliderSpec["orientation"];
+    } = {},
+  ): SliderSpec => ({
     size: "md",
     invalid: false,
     disabled: false,
@@ -277,7 +282,9 @@ describe("slider recipes", () => {
     expect(compiled(sliderTrackClass("md"))).toEqual(
       sliderTrackStyle(spec(), testTheme),
     );
-    expect(compiled(sliderRailClass)).toEqual(sliderRailStyle(testTheme));
+    expect(compiled(sliderRailClass())).toEqual(
+      sliderRailStyle(spec(), testTheme),
+    );
 
     const fraction = 0.5;
     expect(
@@ -288,6 +295,28 @@ describe("slider recipes", () => {
 
     expect(compiled(sliderThumbClass("md", false))).toEqual(
       sliderThumbStyle(spec(), testTheme),
+    );
+  });
+
+  it("turns the same four parts onto the vertical axis", () => {
+    // The bug guarded: a vertical slider is the horizontal one rotated, so a
+    // recipe and an oracle that disagree paint the fill along the wrong axis —
+    // a bar that never moves while its value does.
+    const vertical = spec({ orientation: "vertical" });
+    expect(compiled(sliderTrackClass("md", "vertical"))).toEqual(
+      sliderTrackStyle(vertical, testTheme),
+    );
+    expect(compiled(sliderRailClass("vertical"))).toEqual(
+      sliderRailStyle(vertical, testTheme),
+    );
+    const fraction = 0.25;
+    expect(
+      mergeStyle(compiled(sliderFillClass(false, "vertical")), {
+        height: `${fraction * 100}%`,
+      }),
+    ).toEqual(sliderFillStyle(fraction, vertical, testTheme));
+    expect(compiled(sliderThumbClass("md", false, "vertical"))).toEqual(
+      sliderThumbStyle(vertical, testTheme),
     );
   });
 
@@ -460,9 +489,13 @@ describe("the geometry recipes register no unsupported classes", () => {
       switchTrackClass({ size: "md", accent: "primary", state: "checked" }),
       switchThumbClass({ size: "md", accent: "primary", state: "checked" }),
       sliderTrackClass("md"),
-      sliderRailClass,
+      sliderTrackClass("md", "vertical"),
+      sliderRailClass(),
+      sliderRailClass("vertical"),
       sliderFillClass(false),
+      sliderFillClass(false, "vertical"),
       sliderThumbClass("md", false),
+      sliderThumbClass("md", false, "vertical"),
       progressTrackClass("md"),
       progressFillClass("primary"),
       progressBufferClass("primary"),

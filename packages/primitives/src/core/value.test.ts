@@ -22,6 +22,7 @@ import {
   stepValue,
   valueFraction,
   valueStep,
+  verticalPointerValue,
 } from "./value.js";
 
 const RANGE = { min: 0, max: 100, step: 1 } as const;
@@ -188,6 +189,32 @@ describe("pointerValue", () => {
 
   it("reads a track no wider than its inset as the minimum", () => {
     expect(pointerValue(100, { x: 100, width: 8 }, RANGE, 8)).toBe(0);
+  });
+});
+
+describe("verticalPointerValue", () => {
+  // A vertical value runs **up**: the top of the track is the maximum. A
+  // mapping that reused the horizontal arithmetic would turn the bar upside
+  // down while every thumb position still looked plausible at the ends.
+  const BOX = { y: 100, height: 200 } as const;
+
+  it("maps the inset span from the bottom, so the top is the maximum", () => {
+    expect(verticalPointerValue(292, BOX, RANGE, 8)).toBe(0);
+    expect(verticalPointerValue(200, BOX, RANGE, 8)).toBe(50);
+    expect(verticalPointerValue(108, BOX, RANGE, 8)).toBe(100);
+  });
+
+  it("clamps a pointer above or below the track", () => {
+    expect(verticalPointerValue(0, BOX, RANGE, 8)).toBe(100);
+    expect(verticalPointerValue(500, BOX, RANGE, 8)).toBe(0);
+  });
+
+  it("reads a track no taller than its inset as the minimum", () => {
+    expect(verticalPointerValue(100, { y: 100, height: 8 }, RANGE, 8)).toBe(0);
+  });
+
+  it("reads a position that is not a number as the minimum", () => {
+    expect(verticalPointerValue(Number.NaN, BOX, RANGE, 8)).toBe(0);
   });
 });
 
