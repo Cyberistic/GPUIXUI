@@ -24,15 +24,14 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, actionOnColor, type ButtonProps } from "./internal/button.js";
+import { measuredBox, type MeasuredBox } from "./internal/measure.js";
 import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
 import { alpha, useTheme } from "./internal/theme.js";
 import {
-  measuredRippleBox,
   rippleFrames,
   rippleOpacity,
   ripplePoint,
   rippleReach,
-  type RippleBox,
   type RipplePoint,
 } from "./ripple-button/logic.js";
 
@@ -107,7 +106,7 @@ export const RippleButton = ({
 }: RippleButtonProps) => {
   const theme = useTheme();
   const preference = useMotionPreference();
-  const box = useRef<Option.Option<RippleBox>>(Option.none());
+  const box = useRef<Option.Option<MeasuredBox>>(Option.none());
   const nextId = useRef(0);
   const [ripples, setRipples] = useState<ReadonlyArray<Ripple>>([]);
   const wash =
@@ -118,7 +117,7 @@ export const RippleButton = ({
   }, []);
 
   const measure = (event: EventPayload) => {
-    box.current = measuredRippleBox(event);
+    box.current = measuredBox(event);
     onLayout?.(event);
   };
 

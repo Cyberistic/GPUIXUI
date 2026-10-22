@@ -272,6 +272,7 @@ duration: `docs/component-api.md` §11.
 | `src/rolling-text.tsx`, `src/rolling-text/logic.ts` | RollingText: a value that rolls vertically inside one clipped line, two halves and a swap (plan 600) |
 | `src/reveal.tsx`, `src/reveal/frames.ts` | Reveal: the house fade-and-offset entrance on mount or on an `open` change (plan 600) |
 | `src/ripple-button.tsx`, `src/ripple-button/logic.ts` | RippleButton: a press spreads a disc from the pointer by growing its box, never a transform (plan 600) |
+| `src/shine-button.tsx`, `src/shine-button/logic.ts` | ShineButton: a sheen of two two-stop halves crossing the action on hover (plan 600) |
 | `src/splitting-text.tsx`, `src/splitting-text/logic.ts` | SplittingText: a phrase revealed unit by unit, each unit fading and rising (plan 600) |
 | `src/highlight-text.tsx`, `src/highlight-text/logic.ts` | HighlightText: a marker wash swept across a query's matches by the runtime's `highlight` layer (plan 600) |
 | `src/internal/dismiss-layer.ts`, `src/internal/dismiss-scope.tsx` | the overlay stack: the deepest open surface wins, one event closes one overlay; the scope gives each surface its containment depth |
@@ -279,6 +280,7 @@ duration: `docs/component-api.md` §11.
 | `src/core/runtime.ts` | the shared state model: `createRuntime({ initial, reduce, query })` with a pure command fold (`run`); no React, no GPUix (plan 201) |
 | `src/internal/placement.ts`, `src/internal/use-placement.ts` | the measured anchored-placement rule: true `center` and a one-shot flip off the trigger when GPUix's snap would cover it (plan 323) |
 | `src/internal/theme.ts` | the one seam over `@gpuixui/tokens`: re-exports `alpha`, `focusRing`, `elevationShadow` and `statusTone`, and maps the component tone `danger` to the token role `destructive` (plan 157) |
+| `src/internal/measure.ts` | the one reader of an `onLayout` box (four sides, or nothing) for the components that measure themselves |
 | `src/internal/recipe.ts` | the one seam over `@gpuixui/tw`: compiles a class-string recipe to the resting `StyleDesc` (ADR 0006) |
 | `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |

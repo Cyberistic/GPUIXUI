@@ -51,6 +51,7 @@ export * from "./rotating-text.js";
 export * from "./scroll-fade.js";
 export * from "./scroll-progress.js";
 export * from "./search-input.js";
+export * from "./shine-button.js";
 export * from "./splitting-text.js";
 export * from "./stepper.js";
 export * from "./tabs.js";

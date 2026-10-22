@@ -10,14 +10,7 @@
 
 import type { EventPayload, MotionStyle } from "@gpuix/react";
 import * as Option from "effect/Option";
-
-/** A control's box in window coordinates, as `onLayout` reports it. */
-export interface RippleBox {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
+import type { MeasuredBox } from "../internal/measure.js";
 
 /** A press point in the control's own coordinates. */
 export interface RipplePoint {
@@ -35,27 +28,16 @@ export interface RippleFrames {
 export const rippleOpacity = 0.28;
 
 /**
- * The box an `onLayout` event carries, `None` for any other event or one
- * missing a side.
- */
-export const measuredRippleBox = (
-  event: EventPayload,
-): Option.Option<RippleBox> =>
-  Option.all({
-    x: Option.fromNullishOr(event.x),
-    y: Option.fromNullishOr(event.y),
-    width: Option.fromNullishOr(event.width),
-    height: Option.fromNullishOr(event.height),
-  });
-
-/**
  * Where a press starts the ripple.
  *
  * A pointer press reports its window position, re-expressed inside the control.
  * A keyboard activation reports none, so it ripples from the centre — the only
  * point that belongs to no pointer.
  */
-export const ripplePoint = (event: EventPayload, box: RippleBox): RipplePoint =>
+export const ripplePoint = (
+  event: EventPayload,
+  box: MeasuredBox,
+): RipplePoint =>
   Option.all({
     x: Option.fromNullishOr(event.x),
     y: Option.fromNullishOr(event.y),
@@ -68,7 +50,7 @@ export const ripplePoint = (event: EventPayload, box: RippleBox): RipplePoint =>
  * The radius that reaches the farthest corner: a circle born at the press point
  * covers the whole control, so even a press in one corner fills it.
  */
-export const rippleReach = (point: RipplePoint, box: RippleBox): number =>
+export const rippleReach = (point: RipplePoint, box: MeasuredBox): number =>
   Math.ceil(
     Math.max(
       Math.hypot(point.x, point.y),

@@ -9,10 +9,8 @@
  */
 
 import type { EventPayload } from "@gpuix/react";
-import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
-  measuredRippleBox,
   rippleFrames,
   rippleOpacity,
   ripplePoint,
@@ -26,22 +24,6 @@ const event = (fields: Partial<EventPayload>): EventPayload => ({
   elementId: 1,
   eventType: "click",
   ...fields,
-});
-
-describe("measuredRippleBox", () => {
-  it("reads the four sides of a layout event", () => {
-    expect(
-      Option.getOrUndefined(
-        measuredRippleBox(event({ x: 100, y: 40, width: 80, height: 32 })),
-      ),
-    ).toEqual(box);
-  });
-
-  it("refuses a box missing a side", () => {
-    expect(
-      Option.isNone(measuredRippleBox(event({ x: 100, y: 40, width: 80 }))),
-    ).toBe(true);
-  });
 });
 
 describe("ripplePoint", () => {

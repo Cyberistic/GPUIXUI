@@ -1,0 +1,119 @@
+---
+title: Shine button
+description: An action that a soft sheen crosses while the pointer is over it.
+---
+
+`ShineButton` is the local action with a light that travels across it on hover. It
+is the same control as `Button` — the same variants, sizes, disabled state and
+host props — so adopting it changes the hover feedback and nothing else.
+
+## Usage
+
+```tsx
+import { ShineButton } from "@gpuixui/components/shine-button";
+
+<ShineButton variant="primary" onClick={deploy}>
+  Deploy
+</ShineButton>;
+```
+
+The component reads the pointer itself (`onMouseEnter`), so the caller does not
+wire a hover state; a sweep starts on each entry and finishes even if the pointer
+leaves before it is done.
+
+## How the sheen is painted
+
+The runtime has **no `transform`** (upstream issue `#102`), and `0.11.0`'s
+`LinearGradientBackground` takes exactly **two** stops, so the sheen is neither a
+scaled highlight nor one soft gradient. It is two halves inside the control's
+clipped box:
+
+1. the **lead** half starts entirely left of the control, clear at its left edge
+   and lit at its right, so it brightens into view as it arrives;
+2. the **trail** half follows immediately, lit at its left edge and clear at its
+   right, so it dims back out;
+3. both halves tween their `left` by the same distance, from outside the left edge
+   to outside the right edge, and the seam between them is the brightest line of
+   the sheen.
+
+Each half is a quarter of the control wide, never thinner than 16px. The lit
+colour is the action's **own label ink** at 20% — `actionOnColor` — rather than a
+colour chosen beside it, so the sheen stays visible on a filled action where the
+fill is the surface it crosses.
+
+## Timing and reduced motion
+
+The sweep uses one house level: `notice` (500 ms) by default, the same budget the
+ripple uses to cross a control. `level` selects any other level from
+`@gpuixui/motion`.
+
+A sheen marks a pointer, so it is feedback rather than content: under
+`MotionProvider preference="reduced"` **none is painted**. The control's own hover
+fill remains, which the local `Button` already paints. The preference is the
+application's to supply — the runtime exposes no reduced-motion query.
+
+```tsx
+import { MotionProvider } from "@gpuixui/components";
+import { ShineButton } from "@gpuixui/components/shine-button";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <ShineButton onClick={deploy}>Deploy</ShineButton>
+</MotionProvider>;
+```
+
+## Keyboard and disabled
+
+A keyboard reader never hovers, so no sheen is painted; the `keyboardFocusRing`
+is the feedback that path already has. A disabled action paints no sheen either,
+even though the pointer can still rest on it — the sheen never promises a press
+the action will not take.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` | The action's look, from the local `Button`. |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | The density-defined control height. |
+| `disabled` | `boolean` | `false` | Leaves the tab order and paints no sheen. |
+| `level` | `MotionLevel` | `"notice"` | How long the sheen takes to cross the control. |
+| `sheenColor` | `string` | the label colour | The sheen's ink; the clear end is the same colour at zero alpha. |
+| `onMouseEnter` | `(event) => void` | — | Composed: the sweep starts, then the caller's handler runs. |
+| `onLayout` | `(event) => void` | — | Composed: the measured width is kept, then the caller's handler runs. |
+| `style` | `StyleDesc` | — | Merged last on the control; the sheen assumes the control stays a containing block. |
+
+`ShineButton` takes the whole GPUix host-prop surface (`testId`, `role`, `aria-*`,
+the pointer handlers) because it is the local action with two layers added. Each
+half carries an internal `testId="shine"`, no role and no text, so the sheen adds
+no accessibility node.
+
+## Limitations
+
+- **Inset travel, not a scaled layer.** The band moves its `left` inside the
+  control; nothing is transformed, so a very wide action paints a proportionally
+  wider band.
+- **Two stops, two halves.** The runtime's gradient accepts exactly two stops, so
+  a single three-stop band is not available; the seam between the halves is where
+  the brightest line sits.
+- **One sweep per entry.** The sweep does not repeat on its own. A looping sheen
+  needs the caller's timer (remount the button, or toggle a key) — this component
+  deliberately owns no interval.
+- **The sheen crosses the label.** The halves paint above the content at 20% ink;
+  the text is tinted while the band passes.
+- **Reduced motion and keyboard readers get none.** There is no static sheen; the
+  hover fill and the focus ring are the remaining feedback.
+
+## Verification
+
+Six native behaviour cases in `src/behaviour/shine-button.test.tsx` measure the
+travel on the renderer's motion clock (born outside the left edge, centred at the
+half-way point, past the right edge), the removal timer, the re-entry restart, the
+reduced preference, the disabled action and the ink role; the arithmetic is
+`src/shine-button/logic.test.ts` (8 tests).
+
+## Related
+
+- [Ripple button](/docs/components/ripple-button) — the press-time sibling: a
+  disc that grows by inset geometry.
+- [Reveal](/docs/components/reveal) — the house fade-and-offset entrance.
+- [Button](/docs/primitives/button) — the primitive action this package's local
+  stand-in will be replaced by.
