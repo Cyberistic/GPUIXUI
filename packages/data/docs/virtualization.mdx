@@ -1,0 +1,223 @@
+---
+title: Virtualization
+description: A long list and a long table that mount one window of rows, over the runtime's own virtual-list, with the window arithmetic from @tanstack/virtual-core.
+---
+
+Long data does not need a long tree. GPUix publishes `<virtual-list>` as a host
+element, and `@gpuixui/data` composes it twice: `VirtualList` is the typed seam
+over the host (both of its modes), and `VirtualTable`/`VirtualTableBody` put the
+windowed body under the table's measured fixed header. The window arithmetic is
+**`@tanstack/virtual-core`'s**, driven without a DOM — this package hands it the
+scroll offset and the viewport and reads the range back.
+
+Neither part paints a second row abstraction: a row is the caller's `div` with a
+measured height or a `TableRow`, so a virtualized table is the same table with
+fewer mounted rows.
+
+## Usage
+
+Children mode is the default: every row is retained, and the runtime skips the
+build, layout and paint of the rows away from the viewport.
+
+```tsx
+import { VirtualList } from "@gpuixui/data";
+
+<VirtualList height={320} aria-label="Files">
+  {rows.map((row) => (
+    <div key={row.id} style={{ height: 32 }}>
+      <text>{row.label}</text>
+    </div>
+  ))}
+</VirtualList>;
+```
+
+The `itemCount` form retains only the slice the app renders. The app owns
+`windowStart`, because the runtime cannot infer a window it was not given:
+
+```tsx
+<VirtualList
+  ref={attach}
+  height={320}
+  itemCount={rows.length}
+  estimatedItemHeight={32}
+  windowStart={windowStart}
+  onVisibleRange={(range) => setWindowStart(Math.max(0, range.first - 4))}
+>
+  {slice.map((row) => (
+    <div key={row.id} style={{ height: 32 }}>{row.label}</div>
+  ))}
+</VirtualList>
+```
+
+A **table** over a long set composes that list with the fixed header. A row must
+paint exactly `rowHeight`: the window's positions come from the estimate, so a
+taller row would push the rows below it without moving the window.
+
+```tsx
+import { TableCell, TableHeaderCell, TableRow, VirtualTable } from "@gpuixui/data";
+
+<VirtualTable
+  height={360}
+  count={rows.length}
+  rowHeight={36}
+  aria-label="Files"
+  header={<TableRow><TableHeaderCell width={260}>Name</TableHeaderCell></TableRow>}
+  row={(index) => (
+    <TableRow key={rows[index].id} selected={table.isSelected(rows[index].id)}>
+      <TableCell width={260}>{rows[index].name}</TableCell>
+    </TableRow>
+  )}
+  caption={`${rows.length} rows`}
+/>;
+```
+
+A reveal is a request the table performs in order: the window moves to the row
+in the same render, and the body scrolls to it in the layout effect after that
+commit.
+
+```tsx
+<VirtualTable … reveal={{ index: 900 }} />
+```
+
+The full screens are `packages/data/examples/virtual-list.example.tsx`
+(2 000 rows) and `packages/data/examples/virtual-table.example.tsx` (1 000
+rows), which the native playground mounts as the `virtual-list` and
+`virtual-table` examples.
+
+## Measured rules
+
+These are the rules two window probes measured on `@gpuix/native@0.11.0`, and
+they are the reason this component is more than a wrapper:
+
+- **The window follows the scroll anchor, not the reported range.**
+  `onVisibleRange` lags the paint by one gesture (it read `20..27` while the
+  paint had reached `40..46`, `virtual-list-windowed`). A window built from the
+  reported range paints blank rows: the window stayed at rows 0–17 while the
+  paint was at 16–24 and nothing painted. `VirtualTableBody` therefore reads the
+  runtime's `getListScrollTop` — the row at the viewport's top edge — and hands
+  that offset to the calculator.
+- **The window is wider than the viewport plus overdraw.** The report's lag is
+  one gesture wide, so `overdraw` (default `4`) mounts rows beyond each edge.
+- **A reveal moves the window before the scroll.** The runtime cannot build a
+  row outside the window it was given, so `useVirtualRows` moves the window to
+  the row's own position and the body calls `scrollToItem` after that commit.
+- **A shrinking set re-clamps the window in the same commit.** A scroll offset
+  belongs to the set it was measured against. The core alone clamps the stale
+  offset to the new content's end and mounts five rows in a nine-row viewport;
+  `useVirtualRows` clamps to `count × rowHeight − viewport` first, so a filter
+  that narrows 1 000 rows to 127 while the reader sits at row 900 lands on the
+  narrowed set's end with the viewport full (`virtual-table-lifecycle`).
+- **The body's height is measured, not flexed.** 0.11.0 sizes an
+  `overflow-y: scroll` box from a definite height; a `flex-1` body grew to its
+  content (8 880px for a 320px table). `VirtualTableBody` takes the measured
+  difference between the viewport and the header (`table-lifecycle`).
+- **A list sizes itself from a definite height.** With no `height` the caller's
+  layout owns the bound; a list with no bound paints no rows.
+- **`scrollToItem` reveals a row that was never mounted**, and a programmatic
+  reveal fires no `onVisibleRange` — read the painted rows, not the event
+  (`virtual-tree-lifecycle`).
+
+## API
+
+`VirtualList`:
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `height` | `number` | caller's layout | a definite viewport height; the rows scroll inside it |
+| `children` | `ReactNode` | — | the rows; each must paint its measured height |
+| `itemCount` | `number` | children mode | switches to the windowed mode; retains only the rendered slice |
+| `estimatedItemHeight` | `number` | — | required with `itemCount`; positions the rows by index |
+| `windowStart` | `number` | `0` | the first rendered slice's absolute index |
+| `onVisibleRange` | `(range: VisibleRange) => void` | — | the built window, absolute; it lags the paint by one gesture |
+| `overdraw` | `number` | — | rows built beyond the viewport, when the runtime can use them |
+| `followTail` | `boolean` | — | keep the list at its trailing edge as rows arrive |
+| `alignment` | `"top" \| "bottom"` | — | where the content sits when it does not fill the viewport |
+| `ref` | `Ref<PublicInstance>` | — | the list's instance, for `scrollToItem` |
+
+`VirtualTable` and `VirtualTableBody`:
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `count` | `number` | — | the logical row count — the whole set, not the slice |
+| `rowHeight` | `number` | — | every row must paint exactly this height |
+| `row` / `renderRow` | `(index: number) => ReactNode` | — | paints one absolute row index |
+| `height` | `number` | measured body | a definite table (or body) height |
+| `header` | `ReactNode` | — | the header row's cells, outside the vertical scroller |
+| `empty` | `ReactNode` | — | painted in place of the rows when `count` is `0` |
+| `caption` | `ReactNode` | — | the line below the frame |
+| `overdraw` | `number` | `4` | rows mounted beyond the viewport on each side |
+| `reveal` | `VirtualReveal` | — | `{ index }`; the window moves, then the body scrolls |
+| `onVisibleRange` | `(range: VisibleRange) => void` | — | the runtime's lagging report, for a readout |
+| `instanceRef` | `Ref<PublicInstance>` | — | the list's instance, for a consumer's own scroll |
+
+`useVirtualRows({ count, rowHeight, viewportHeight, overdraw, initialOffset, reveal })`
+returns `window`, `windowStart`, `mounted`, `scrollOffset`, `setScrollOffset`,
+`reveal`, `scrollTarget` and `consumeScrollTarget` — the state a consumer needs
+to render the window itself. `createWindowCalculator` is the same arithmetic
+without React, for a grid driven from Effect or a store.
+
+## Accessibility
+
+- The list is a host element, not a semantic list: set `aria-label` on it to
+  name the scroller, and give the rows the roles of what they are. A table's
+  rows carry `role="row"` and its cells `role="cell"` (both reach the
+  accessibility tree); a plain `div` row reaches it only through its text.
+- Only the mounted window is in the tree. A row that is scrolled out does not
+  exist for a reader either, which is why a reveal moves the window rather than
+  mounting the whole set.
+- A virtualized table keeps the table's fixed-header composition, so the
+  columns' header cells are always present even while the rows move.
+
+## Limitations
+
+- **One row height.** The windowed mode positions rows from
+  `estimatedItemHeight`; rows of different heights use `VirtualList` in children
+  mode, where the runtime measures each row (`virtual-list-rows`).
+- **`onVisibleRange` is not a window source.** It lags the paint by one gesture
+  and reports nothing for a programmatic reveal; drive the window from
+  `getListScrollTop` (as `VirtualTableBody` does) or from your own state.
+- **`itemCount` mode has no row span.** An expandable row that grows belongs in
+  the plain table or the list's children mode (`virtual-list-expand`).
+- **The window is app state.** There is no built-in search, sticky header or
+  paging beyond what the table parts and `DataToolbar` compose.
+- The docs site cannot render this component live — it is a GPUix host tree, not
+  DOM. The code above is the real source.
+
+## Verification
+
+`src/virtual/list.test.ts` (4 tests) holds the range mapping — an absent pair is
+`None`, never `0..0` — and the discriminated union's two modes.
+`src/virtual/window.test.ts` (14 tests) holds the arithmetic `@tanstack/virtual-core`
+answers: the mounted range at an offset, the overdraw on each side, the clamp at
+the content's end, the reveal's position, and the shrink that re-clamps before
+the calculator sees the offset.
+
+`src/behaviour/virtual-list.test.tsx` (4 tests) mounts the shipped 2 000-row
+example in the real renderer: only a window paints (`Row 1999` is retained and
+never painted), a wheel moves the window, the range arrives, and
+`scrollToItem` reveals row 1 200.
+
+`src/behaviour/virtual-table.test.tsx` (7 tests) mounts the shipped 1 000-row
+table: only a window paints (`file-1000.ts` is retained and never painted), the
+header keeps its painted `y` through a wheel, a far row reveals, a chosen record
+survives the window leaving and returning, a filter narrows to the empty state,
+a filter applied under the window lands on the narrowed set's end with the
+viewport still full, and a sort reorders the whole set rather than the mounted
+window.
+
+```sh
+nub run --filter @gpuixui/data test
+nub run --filter @gpuixui/data test:behaviour
+```
+
+The window rules themselves were measured by the playground's
+`virtual-list-lifecycle`, `virtual-list-windowed`, `virtual-list-rows`,
+`virtual-list-window`, `virtualized-table` and `virtual-table-lifecycle`
+scenarios on `@gpuix/native@0.11.0`.
+
+## Related
+
+- **Table** — the fixed-header composition the virtualized body sits under.
+- **Tree views** — a flattened hierarchy that composes `VirtualList` in children
+  mode.
+- **Expandable rows** — why a row that grows leaves the fixed-estimate window.
