@@ -79,6 +79,18 @@ export const POINTER_AT = {
   y: (TERMINAL_GRID.rows * TERMINAL_CELL.height) / 2,
 } as const;
 
+/** The grid the resize message asks for. */
+export const RESIZED_GRID = { columns: 50, rows: 20 } as const;
+
+/**
+ * The terminal's in-band resize, as kitty terminals send it.
+ *
+ * `CSI 48 ; rows ; cols ; height ; width t` — the protocol the platform
+ * negotiates with `?2048h`. A pty `stty` alone does not repaint: measured, the
+ * app kept its 800×640 frame until this sequence arrived.
+ */
+export const RESIZE_SEQUENCE = `\x1b[48;${RESIZED_GRID.rows};${RESIZED_GRID.columns};0;0t`;
+
 /** The press and release a click is, as the terminal reports one. */
 export const POINTER_CLICK = `\x1b[<0;${POINTER_AT.x};${POINTER_AT.y}M\x1b[<0;${POINTER_AT.x};${POINTER_AT.y}m`;
 
@@ -116,6 +128,12 @@ export const terminalRegistry: ReadonlyArray<TerminalScenarioMeta> = [
     title:
       "Terminal: the runtime paints an app into a pty through the kitty graphics protocol",
     capability: "content",
+  },
+  {
+    id: "terminal-resize",
+    title:
+      "Terminal: the terminal's in-band resize repaints the app at the new grid",
+    capability: "layout",
   },
   {
     id: "terminal-pointer",
@@ -189,6 +207,7 @@ export const firstPainted = (
 export interface Painted {
   readonly rest: KittyFrame;
   readonly clicked: Option.Option<KittyFrame>;
+  readonly resized: Option.Option<KittyFrame>;
   readonly pressed: Option.Option<KittyFrame>;
 }
 
@@ -209,6 +228,13 @@ export const paintedOf = (
         clicked: Arr.findFirst(
           Arr.drop(frames, index + 1),
           (frame) => inkPixelsOf(frame, TERMINAL_CLICK_INK) > 100,
+        ),
+        resized: Arr.findFirst(
+          Arr.drop(frames, index + 1),
+          (frame) =>
+            frame.pixels.width === RESIZED_GRID.columns * TERMINAL_CELL.width &&
+            frame.pixels.height === RESIZED_GRID.rows * TERMINAL_CELL.height &&
+            shareOf(frame, TERMINAL_REST) >= PAGE_SHARE,
         ),
         pressed: firstPainted(
           Arr.drop(frames, index + 1),
@@ -233,6 +259,7 @@ export const evidenceOf = (
     Option.getOrElse(paintedOf(frames), () => ({
       rest: first,
       clicked: Option.none(),
+      resized: Option.none(),
       pressed: Option.none(),
     })),
   );
@@ -410,6 +437,7 @@ const spawnTerminal = (
 /** The assertions a capture supports, split by the scenario that owns each. */
 interface Checks {
   readonly render: ReadonlyArray<Verdict>;
+  readonly resize: ReadonlyArray<Verdict>;
   readonly pointer: ReadonlyArray<Verdict>;
   readonly input: ReadonlyArray<Verdict>;
 }
@@ -445,6 +473,14 @@ const checksOf = (
     onNone: () => ({ present: false, rest: -1 }),
     onSome: (frame) => ({
       present: true,
+      rest: shareOf(frame, TERMINAL_REST),
+    }),
+  });
+  const resize = Option.match(painted.resized, {
+    onNone: () => ({ present: false, size: "none", rest: -1 }),
+    onSome: (frame) => ({
+      present: true,
+      size: `${frame.pixels.width}x${frame.pixels.height}`,
       rest: shareOf(frame, TERMINAL_REST),
     }),
   });
@@ -552,6 +588,22 @@ const checksOf = (
         }),
       },
     ],
+    resize: [
+      {
+        label: "the terminal's in-band resize repaints at the new grid",
+        holds: resize.present,
+        expected: `${RESIZED_GRID.columns * TERMINAL_CELL.width}x${RESIZED_GRID.rows * TERMINAL_CELL.height}`,
+        actual: resize.size,
+      },
+      {
+        label: "the app fills the resized frame",
+        holds: resize.present && resize.rest >= PAGE_SHARE,
+        expected: `at least ${PAGE_SHARE} of the resized frame in ${rgbaText(TERMINAL_REST)}`,
+        actual: resize.present
+          ? `${resize.rest.toFixed(3)} in ${rgbaText(TERMINAL_REST)}`
+          : "no resized frame",
+      },
+    ],
     pointer: [
       {
         label: "a pointer press reaches the app",
@@ -630,9 +682,11 @@ const reportOf = (
         checks: Arr.map(
           meta.id === "terminal-render"
             ? checks.render
-            : meta.id === "terminal-pointer"
-              ? checks.pointer
-              : checks.input,
+            : meta.id === "terminal-resize"
+              ? checks.resize
+              : meta.id === "terminal-pointer"
+                ? checks.pointer
+                : checks.input,
           check,
         ),
         durationMs: now - startedAt,
@@ -754,6 +808,15 @@ const capture = (
             ),
           KEY_FRAME_ATTEMPTS,
         );
+        yield* child.write(new TextEncoder().encode(RESIZE_SEQUENCE));
+        yield* settle(
+          child.output,
+          (stream) =>
+            Option.exists(paintedOf(stream.frames), (painted) =>
+              Option.isSome(painted.resized),
+            ),
+          KEY_FRAME_ATTEMPTS,
+        );
         yield* child.write(new TextEncoder().encode(KEY_T));
         yield* settle(
           child.output,
@@ -823,6 +886,10 @@ const capture = (
       yield* Option.match(painted.value.clicked, {
         onNone: () => Effect.void,
         onSome: (frame) => write("clicked.png", frame),
+      });
+      yield* Option.match(painted.value.resized, {
+        onNone: () => Effect.void,
+        onSome: (frame) => write("resized.png", frame),
       });
       yield* Option.match(painted.value.pressed, {
         onNone: () => Effect.void,

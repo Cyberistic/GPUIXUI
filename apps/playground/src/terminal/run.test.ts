@@ -30,6 +30,8 @@ import {
 } from "./logic.js";
 import {
   POINTER_CLICK,
+  RESIZE_SEQUENCE,
+  RESIZED_GRID,
   TERMINAL_GRID,
   evidenceOf,
   firstPainted,
@@ -124,6 +126,18 @@ describe("reading a run's frames", () => {
     expect(Option.isNone(paintedOf([frame(TERMINAL_PRESSED)]))).toBe(true);
   });
 
+  it("finds the frame the terminal's resize painted", () => {
+    const resized = solidFrame(
+      TERMINAL_REST,
+      RESIZED_GRID.columns * 8,
+      RESIZED_GRID.rows * 16,
+    );
+    const painted = paintedOf([frame(TERMINAL_REST), resized]);
+    expect(Option.isSome(painted) && Option.isSome(painted.value.resized)).toBe(
+      true,
+    );
+  });
+
   it("reads a press as a repaint of the ink, not the page", () => {
     expect(terminalInk(false)).toBe(TERMINAL_INK_FILL);
     expect(terminalInk(true)).toBe(TERMINAL_CLICK_INK_FILL);
@@ -177,6 +191,10 @@ describe("the command this runner spawns", () => {
     expect(terminalCommand("/tmp/it's here/main.js")).toBe(
       `stty rows ${TERMINAL_GRID.rows} cols ${TERMINAL_GRID.columns}; exec nub '/tmp/it'\\''s here/main.js'`,
     );
+  });
+
+  it("sends the resize a kitty terminal sends", () => {
+    expect(RESIZE_SEQUENCE).toBe("\x1b[48;20;50;0;0t");
   });
 
   it("aims a left press at the frame's centre", () => {
