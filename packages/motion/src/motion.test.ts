@@ -184,7 +184,7 @@ describe("MotionValue", () => {
     value.coast(inertia(350), 400);
     const after = value.sample(5_100);
     expect(after.active).toBe(true);
-    // The 80 ms presentation plus the same 140 ms projection, a tenth of the way.
+    // The set value plus the same 140-unit projection, a quarter of the way in.
     expect(after.value).toBeCloseTo(80 + 140 * (1 - Math.E ** -0.285714), 3);
   });
 
