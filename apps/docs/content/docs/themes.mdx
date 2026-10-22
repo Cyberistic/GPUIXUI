@@ -51,7 +51,9 @@ call reports ten independent failures:
 
 - **Roles** the renderer cannot paint. GPUix ignores a colour string it cannot
   parse and keeps the previous value or paints black, so the editor names the role
-  and the value instead of failing in silence.
+  and the value instead of failing in silence, and calls an absent role
+  **"missing from this theme"** — a theme restored from storage can predate a role
+  the library added, which is not a typo in a value.
 - **Elevation shadows** the renderer cannot paint. A level is normally a geometry
   plus a share of the `shadow` role, which the role check covers — but an
   `elevation` override replaces a level whole, colours and all.
@@ -100,7 +102,10 @@ call reports ten independent failures:
   secondary line). `contrastRatio` refuses a translucent colour, so the wash and
   the text in it were measured nowhere before this report; the editor does not
   edit `selection`, but a change to a surface under it can still bury a selected
-  run — including the caption or second line beneath a heading.
+  run — including the caption or second line beneath a heading. A theme carrying
+  no `selection` role (or no surface to blend it over) has no wash to measure, so
+  the line says it **could not be composited** and the role check names what is
+  missing.
 - **Indicator marks**: `indicatorFailures` holds the roles a component paints
   when it *shows* rather than says something — a progress fill, a spinner's lit
   dot, a slider's filled span, a switch's on-state, a presence dot — to the 3:1

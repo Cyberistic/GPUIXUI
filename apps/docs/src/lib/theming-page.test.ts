@@ -189,6 +189,19 @@ describe("the theme page", () => {
     ).toEqual([]);
   });
 
+  it("says what the readout prints for a role or a wash that is not there", () => {
+    // A theme restored from storage can predate a role the library added, so a
+    // report carries `value: undefined`; and a theme with no `selection` role has
+    // no wash to blend. The readout once printed `undefined is not a colour`,
+    // and called an unbuildable wash "unmeasurable" — the sentence for a value
+    // whose contrast depends on what is behind it, not for a value that is
+    // missing. `theme-editor-logic.test.ts` holds both lines.
+    const audit = section(page("themes.mdx"), "The theme audit");
+
+    expect(audit).toContain("missing from this theme");
+    expect(audit).toContain("could not be composited");
+  });
+
   it("describes the whole audit the readout runs, not only its contrast half", () => {
     // The editor printed `contrastFailures` alone while `auditTheme` reported
     // three failures, so a reader whose divider vanished or whose role painted

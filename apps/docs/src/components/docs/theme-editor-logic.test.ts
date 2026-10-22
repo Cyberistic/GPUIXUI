@@ -2,6 +2,8 @@ import {
   auditTheme,
   createTheme,
   extendTheme,
+  invalidColorRoles,
+  selectionFailures,
   targetSize,
   themes,
 } from "@gpuixui/tokens";
@@ -13,6 +15,8 @@ import {
   decodeState,
   defaultState,
   editableRoles,
+  formatInvalidRole,
+  formatSelectionFailure,
   noPins,
   paintsEveryRole,
   parseState,
@@ -471,5 +475,33 @@ describe("theme-editor audit readout", () => {
     expect(findings.map((finding) => finding.text)).toContain(
       "selection wash over background — 1.00:1 (needs 1.05:1)",
     );
+  });
+
+  it("calls an absent role missing instead of quoting an undefined value", () => {
+    // A theme restored from storage can predate a role the library added. The
+    // report carries `value: undefined`, and the readout printed
+    // `primary — undefined is not a colour GPUix can paint` — which reads as a
+    // typo in a value rather than a theme that needs the newer package.
+    const lines = invalidColorRoles({ colors: {} }).map(formatInvalidRole);
+
+    expect(lines).toContain("primary — missing from this theme");
+    expect(lines.every((line) => !line.includes("undefined"))).toBe(true);
+  });
+
+  it("says a selection wash could not be composited, rather than unmeasurable", () => {
+    // `selectionFailures` blends the wash over each surface before measuring it,
+    // so a theme without the role has no ratio to report at all. "Unmeasurable"
+    // is the sentence for a value whose contrast depends on what is behind it;
+    // this is a value that is not there.
+    const { selection: _drop, ...colors } = themes.dark.colors;
+    const lines = selectionFailures({ colors }).map(formatSelectionFailure);
+
+    expect(lines).toContain(
+      "selection wash over input — could not be composited (needs 1.05:1)",
+    );
+    expect(lines).toContain(
+      "foreground on the selection wash over background — could not be composited (needs 7:1)",
+    );
+    expect(lines.every((line) => !line.includes("unmeasurable"))).toBe(true);
   });
 });

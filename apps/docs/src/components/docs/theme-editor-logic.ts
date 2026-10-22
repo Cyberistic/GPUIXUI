@@ -167,6 +167,22 @@ export interface AuditFinding {
 const measured = (ratio: number | undefined, floor: number): string =>
   `${ratio === undefined ? "unmeasurable" : `${ratio.toFixed(2)}:1`} (needs ${floor}:1)`;
 
+/**
+ * The same sentence for a selection wash, which has one failure a ratio cannot
+ * express: a theme restored from storage can predate the `selection` role (or
+ * the surface under it), so there is no wash to composite and no ratio to
+ * print. `invalidColorRoles` names the missing role; the line says the wash
+ * could not be built rather than calling a missing value "unmeasurable".
+ */
+const composited = (
+  wash: string | undefined,
+  ratio: number | undefined,
+  floor: number,
+): string =>
+  wash === undefined
+    ? `could not be composited (needs ${floor}:1)`
+    : measured(ratio, floor);
+
 /** One failure as an editable line, e.g. `mutedForeground on muted — 3.9:1 (needs 4.5:1)`. */
 export const formatContrastFailure = ({
   foreground,
@@ -186,9 +202,16 @@ export const formatDecorativeFailure = ({
 }: DecorativeFailure): string =>
   `${surface}: ${role} on ${over} — ${measured(ratio, floor)}`;
 
-/** A role the renderer would ignore, with the value it was given. */
+/**
+ * A role the renderer would ignore. A value it cannot parse is quoted; an
+ * absent value — a stored theme older than a role the library added — is called
+ * missing, because `JSON.stringify(undefined)` has no string to quote and
+ * `undefined is not a colour` reads as a typo rather than an upgrade.
+ */
 export const formatInvalidRole = ({ role, value }: InvalidColorRole): string =>
-  `${role} — ${JSON.stringify(value)} is not a colour GPUix can paint`;
+  value === undefined
+    ? `${role} — missing from this theme`
+    : `${role} — ${JSON.stringify(value)} is not a colour GPUix can paint`;
 
 /**
  * An elevation shadow the renderer would ignore, e.g. `elevation md (shadow 1) —
@@ -267,18 +290,20 @@ export const formatSeriesVisionFailure = ({
 /**
  * A selection wash as a line. It has two jobs and one line per missed job: the
  * wash must be visible where the reader selected, and the text inside it must
- * keep the body floor.
+ * keep the body floor. Both lines carry the wash's fate, so a theme that cannot
+ * composite one says so instead of printing an unmeasurable ratio.
  */
 export const formatSelectionFailure = ({
   kind,
   foreground,
   background,
+  wash,
   ratio,
   floor,
 }: SelectionFailure): string =>
   kind === "visibility"
-    ? `selection wash over ${background} — ${measured(ratio, floor)}`
-    : `${foreground} on the selection wash over ${background} — ${measured(ratio, floor)}`;
+    ? `selection wash over ${background} — ${composited(wash, ratio, floor)}`
+    : `${foreground} on the selection wash over ${background} — ${composited(wash, ratio, floor)}`;
 
 /**
  * An indicator mark as a line, e.g. `mark primary on muted — 1.20:1 (needs
