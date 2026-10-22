@@ -20,9 +20,15 @@ export interface NamedImport {
   readonly names: ReadonlyArray<string>;
 }
 
-/** The page's fenced TypeScript snippets, in reading order. */
+/**
+ * The page's fenced TypeScript snippets, in reading order.
+ *
+ * A `ts` fence is as copyable as a `tsx` one: `/docs/runtime` prints
+ * `import { capabilities } from "@gpuixui/runtime"` in a plain TypeScript block,
+ * and a guard that read only `tsx` never saw it.
+ */
 export const typescriptSnippets = (page: string): ReadonlyArray<string> =>
-  [...page.matchAll(/```tsx\n([\s\S]*?)```/g)].map((match) => match[1] ?? "");
+  [...page.matchAll(/```tsx?\n([\s\S]*?)```/g)].map((match) => match[1] ?? "");
 
 /** Every named import the snippets write, in page order. */
 export const namedImports = (

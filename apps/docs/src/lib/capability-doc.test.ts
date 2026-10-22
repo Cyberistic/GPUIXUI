@@ -350,10 +350,7 @@ describe("docs/gpuix-capabilities.md", () => {
 
   it("publishes the portal measurement on /docs/runtime", () => {
     const portal = measuredRow("Portals");
-    expect(
-      portal,
-      "the page's measured table has no portal row",
-    ).toBeDefined();
+    expect(portal, "the page's measured table has no portal row").toBeDefined();
     expect(portal?.[1]).toContain("portal-layer");
     expect(portal?.[1]).toContain("getPaintedText");
     expect(portal?.[2]).toContain("capture");
@@ -479,8 +476,8 @@ describe("docs/gpuix-capabilities.md", () => {
     const floating = rowFor("Floating layer placement");
     expect(floating?.verdict).toBe("supported, with limits");
     expect(floating?.evidence).toContain("floating-sides");
-    expect(floating?.evidence).toContain("align=\"center\"");
-    expect(floating?.workaround).toContain("align=\"start\"");
+    expect(floating?.evidence).toContain('align="center"');
+    expect(floating?.workaround).toContain('align="start"');
 
     const page = measuredRow("Floating layer");
     expect(
@@ -489,7 +486,7 @@ describe("docs/gpuix-capabilities.md", () => {
     ).toBeDefined();
     expect(page?.[1]).toContain("floating-sides");
     expect(page?.[1]).toContain("centre line");
-    expect(page?.[2]).toContain("align=\"start\"");
+    expect(page?.[2]).toContain('align="start"');
   });
 
   it("records the Select reveal gap a window and a runtime suite measured", () => {

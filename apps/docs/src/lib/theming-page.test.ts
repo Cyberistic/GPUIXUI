@@ -6,6 +6,7 @@ import {
   contrastFloors,
   contrastRatio,
   createTheme,
+  extendTheme,
   indicatorFailures,
   isThemeMode,
   retroStyles,
@@ -121,6 +122,20 @@ describe("the theme page", () => {
     expect(page("themes.mdx")).toContain("{targetSize.minimum}");
   });
 
+  it("names the leading rule the number report can return", () => {
+    // The number report grew a fifth rule when a type role's leading had to
+    // reach its own font size, and the bullet described only the single-value
+    // rules. It is the one rule about two tokens, so the page says so.
+    const audit = section(page("themes.mdx"), "The theme audit");
+    const short = auditTheme(
+      extendTheme(themes.light, { typography: { body: { lineHeight: 12 } } }),
+    );
+
+    expect(short.invalidNumbers.map(({ rule }) => rule)).toEqual(["leading"]);
+    expect(audit).toContain("leading");
+    expect(audit).toContain("own font size");
+  });
+
   it("measures both the body text and the secondary line a reader can select", () => {
     // The bullet described "the four content surfaces body text can be selected
     // from" at 7:1. `selectionPairs` grew to seven when a `mutedForeground` line
@@ -150,9 +165,10 @@ describe("the theme page", () => {
     const unnamed = [
       ...new Set(selectionPairs.map((pair) => pair.background)),
     ].filter((surface) => !audit.includes(`\`${surface}\``));
-    expect(unnamed, "the selection bullet does not name these surfaces").toEqual(
-      [],
-    );
+    expect(
+      unnamed,
+      "the selection bullet does not name these surfaces",
+    ).toEqual([]);
   });
 
   it("describes the whole audit the readout runs, not only its contrast half", () => {

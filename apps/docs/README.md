@@ -277,6 +277,14 @@ adds the API tables, limitations and the example to run. `src/lib/component-page
 runtime version the workspace pins, the inventory row and the test count their
 suite actually runs.
 
+The copies are checked on every page the site mounts, not only the curated ones:
+`src/lib/page-snippets.test.ts` resolves each `@gpuixui/*` import in every `ts`
+and `tsx` fence — 98 pages, the site's own plus the 71 the packages ship —
+against the package source, so a renamed export fails the docs suite instead of
+reaching a reader as working code. One defect on a page this app does not own is
+recorded with its owner in that guard, and the entry fails once the page is
+fixed.
+
 ## Metadata and discovery
 
 Every docs page publishes its own document metadata: the frontmatter `title`

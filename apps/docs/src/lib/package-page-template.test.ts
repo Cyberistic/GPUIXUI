@@ -112,9 +112,7 @@ describe("the package page template", () => {
   });
 
   it("gives every page its API, its accessibility budget, its evidence and its siblings", () => {
-    const unrecorded = missing.filter(
-      (gap) => !isKnown(gap.page, gap.section),
-    );
+    const unrecorded = missing.filter((gap) => !isKnown(gap.page, gap.section));
 
     expect(
       unrecorded.map((gap) => `${gap.page}: no ${gap.section} section`),

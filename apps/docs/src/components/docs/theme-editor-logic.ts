@@ -206,6 +206,7 @@ const numberRequirement: Record<NumberRule, string> = {
   nonNegative: "a length of zero or more",
   positive: "a size greater than zero",
   pressable: `a pressable height of ${targetSize.minimum} or more`,
+  leading: "a line height at least its own font size",
 };
 
 /**

@@ -197,7 +197,9 @@ describe("the data-display page's drawing claims", () => {
     // The two rows that denied the children form are the same retracted claim as
     // the record's "takes an item count": `<virtual-list>` has both modes.
     expect(dataPage).not.toContain("a list is not virtualized");
-    expect(dataPage).not.toContain("takes an item count, not compound children");
+    expect(dataPage).not.toContain(
+      "takes an item count, not compound children",
+    );
   });
 });
 

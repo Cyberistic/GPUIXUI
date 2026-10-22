@@ -376,8 +376,8 @@ describe("theme-editor audit readout", () => {
 
   it("words a control height that misses the press floor", () => {
     // A control height is also the box a pointer presses, so it is held to the
-    // target floor — the token package's fourth number rule. The editor's
-    // readout has to say that in the reader's terms, not print the rule's name.
+    // target floor. The editor's readout has to say that in the reader's terms,
+    // not print the rule's name.
     const density = themes.dark.density;
     const audit = auditTheme(
       extendTheme(themes.dark, {
@@ -392,6 +392,23 @@ describe("theme-editor audit readout", () => {
       `density controlHeight.md — 20 cannot be laid out (needs a pressable height of ${targetSize.minimum} or more)`,
     ]);
     expect(audit.contrast).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("words a leading that sits inside its own type", () => {
+    // The one number rule about two tokens: a line height shorter than its font
+    // size stacks the next baseline inside this line's glyphs. The reader is told
+    // what the pair has to be, not the rule's name.
+    const audit = auditTheme(
+      extendTheme(themes.light, { typography: { body: { lineHeight: 12 } } }),
+    );
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "number",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual([
+      "typography body.lineHeight — 12 cannot be laid out (needs a line height at least its own font size)",
+    ]);
     expect(audit.passed).toBe(false);
   });
 

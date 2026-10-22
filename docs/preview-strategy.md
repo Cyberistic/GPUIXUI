@@ -59,6 +59,17 @@ for a package boundary. `src/lib/collection-routes.ts` is the single registry;
 `src/lib/package-docs.test.ts` holds it to every `packages/*/docs` directory and
 checks that the primitives index links every page in the section.
 
+**A snippet is code, not prose.** Every `ts` and `tsx` fence on every mounted
+page — the site's own and each package's — has its `@gpuixui/*` imports resolved
+against the package source by `src/lib/page-snippets.test.ts`, because the build
+renders a snippet with the wrong export name exactly like a right one. A plain
+`ts` fence counts: `/docs/runtime` prints its capability calls in one, and a walk
+that read only `tsx` fences never saw it. The walk found one page that names a
+symbol its package does not publish — `primitives/docs/tooltip.mdx` imports
+`Icon` from `@gpuixui/primitives`, while `Icon` lives in `@gpuixui/icons` — and
+that page belongs to `primitives`, so the guard records the defect with its owner
+and fails once the page is fixed.
+
 A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source. Curated today: Button, Dialog,
 Dropdown menu, Popover, Tabs. `src/lib/component-preview.test.ts` holds the
