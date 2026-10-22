@@ -141,6 +141,7 @@ describe("matching an example to its page", () => {
         props: [],
         types: [],
         limitations: "",
+        preview: false,
       },
       {
         title: "B",
@@ -151,6 +152,7 @@ describe("matching an example to its page", () => {
         props: [],
         types: [],
         limitations: "",
+        preview: false,
       },
     ];
     expect(pageFor("a", "/docs/primitives", pages)).toBeUndefined();

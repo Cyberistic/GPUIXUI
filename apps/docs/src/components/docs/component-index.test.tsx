@@ -14,6 +14,14 @@ import { ComponentIndex } from "./component-index";
 
 const markup = renderToStaticMarkup(<ComponentIndex />);
 
+/** One rendered row: from its link to the list item's close. */
+const row = (url: string): string => {
+  const start = markup.indexOf(`href="${url}"`);
+  if (start === -1) return "";
+  const end = markup.indexOf("</li>", start);
+  return markup.slice(start, end === -1 ? undefined : end);
+};
+
 describe("the component index", () => {
   it("renders every page in the index", () => {
     expect(componentIndex.length).toBeGreaterThan(60);
@@ -22,6 +30,23 @@ describe("the component index", () => {
     ).toEqual([]);
     expect(
       componentIndex.filter((entry) => !markup.includes(entry.title)),
+    ).toEqual([]);
+  });
+
+  it("marks the rows that open with a browser preview, and no others", () => {
+    // The index says only the curated pages preview the component, so a reader
+    // scanning the rows can see which one to open first — and a package page,
+    // which has no preview, must not wear the badge.
+    const marked = componentIndex.filter((entry) => entry.preview);
+
+    expect(marked.length).toBeGreaterThanOrEqual(4);
+    expect(
+      marked.filter((entry) => !row(entry.url).includes("Browser preview")),
+    ).toEqual([]);
+    expect(
+      componentIndex
+        .filter((entry) => !entry.preview)
+        .filter((entry) => row(entry.url).includes("Browser preview")),
     ).toEqual([]);
   });
 

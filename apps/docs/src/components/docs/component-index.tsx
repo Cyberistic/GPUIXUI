@@ -55,6 +55,11 @@ export function ComponentIndex() {
                 <span className="flex items-baseline justify-between gap-2">
                   <span className="font-medium text-foreground">
                     {entry.title}
+                    {entry.preview ? (
+                      <span className="ml-2 rounded border border-border px-1.5 py-0.5 align-middle font-mono text-[0.65rem] font-normal text-muted-foreground">
+                        Browser preview
+                      </span>
+                    ) : null}
                   </span>
                   <span className="font-mono text-[0.7rem] text-muted-foreground">
                     {entry.section}

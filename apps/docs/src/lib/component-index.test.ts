@@ -48,6 +48,7 @@ const entry = (
   limitations = "",
   props: ReadonlyArray<string> = [],
   types: ReadonlyArray<string> = [],
+  preview = false,
 ): ComponentEntry => ({
   title,
   description,
@@ -56,6 +57,7 @@ const entry = (
   props,
   types,
   limitations,
+  preview,
   url: `/docs/${section.toLowerCase()}/${title.toLowerCase()}`,
 });
 
@@ -130,6 +132,25 @@ describe("the index built from pages", () => {
 
     expect(entries.map((row) => row.title)).toEqual(["Badge"]);
   });
+
+  it("marks a page that mounts a browser preview, and only that page", () => {
+    // The badge is a claim about the page, so it is read from the page: the
+    // curated pages open with `<ComponentPreview`, and a package page opens
+    // with the native-run note instead (`docs/preview-strategy.md`).
+    const entries = buildIndex([
+      {
+        file: "content/docs/components/dialog.mdx",
+        source:
+          '---\ntitle: Dialog\n---\n\n<ComponentPreview name="dialog-demo" />',
+      },
+      page("packages/components/docs/card.mdx", "Card"),
+    ]);
+
+    expect(entries.map((row) => [row.title, row.preview])).toEqual([
+      ["Card", false],
+      ["Dialog", true],
+    ]);
+  });
 });
 
 describe("the filter", () => {
@@ -191,6 +212,21 @@ describe("the filter", () => {
       switchRow,
     ]);
     expect(filterEntries([switchRow], "oncheckedchange dialog")).toEqual([]);
+  });
+
+  it("finds the pages that open with a browser preview", () => {
+    // The index says only the curated pages preview the component; a reader who
+    // wants to see one had no query for it, because none of those rows carries
+    // the word "preview" in its title, description or API table.
+    const withPreview = [
+      entry("Button", "Components", "An action.", [], "", [], [], true),
+      entry("Card", "Components", "A surface."),
+    ];
+
+    expect(filterEntries(withPreview, "preview")).toEqual([withPreview[0]]);
+    expect(filterEntries(withPreview, "browser preview")).toEqual([
+      withPreview[0],
+    ]);
   });
 });
 
@@ -395,6 +431,30 @@ describe("the real index", () => {
     expect(componentIndex.length).toBeGreaterThan(0);
     expect(componentIndex[0]?.section).toBe("Primitives");
     expect(componentIndex.at(-1)?.section).toBe("Components");
+  });
+
+  it("marks exactly the pages the site curates with a preview", () => {
+    // The badge, and the "preview" query, are only honest if the count is the
+    // folder's: every curated page opens with `<ComponentPreview`, and no
+    // package page does. Comparing the two sets keeps a badge off a page that
+    // has no preview and on one that gained it.
+    const curated = readdirSync(
+      new URL("apps/docs/content/docs/components/", root),
+    )
+      .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
+      .map((name) => ({
+        url: `/docs/components/${name.replace(/\.mdx$/, "")}`,
+        preview: readFileSync(
+          new URL(`apps/docs/content/docs/components/${name}`, root),
+          "utf8",
+        ).includes("<ComponentPreview"),
+      }));
+
+    expect(curated.length).toBeGreaterThanOrEqual(4);
+    expect(curated.filter((page) => !page.preview)).toEqual([]);
+    expect(componentIndex.filter((row) => row.preview).map((row) => row.url)).toEqual(
+      curated.map((page) => page.url).toSorted(),
+    );
   });
 
   it("finds a component by a part name, which the sidebar cannot show", () => {

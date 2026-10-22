@@ -33,6 +33,15 @@ export interface ComponentEntry {
   readonly types: ReadonlyArray<string>;
   /** What the page says the component cannot do. */
   readonly limitations: string;
+  /**
+   * True when the page opens with a browser preview (`<ComponentPreview`).
+   *
+   * Only a curated page mounts one; a package page is strategy 4 in
+   * `docs/preview-strategy.md` and opens with the native-run note instead. The
+   * index marks the rows so a reader can see which pages show the shape of the
+   * component before reading its API.
+   */
+  readonly preview: boolean;
 }
 
 /** The section the site's own component pages belong to. */
@@ -347,6 +356,7 @@ const entryOf = (page: ComponentPage): ComponentEntry | undefined => {
     parts: partsOf(page.source),
     ...propsOf(page.source),
     limitations: limitationsOf(page.source),
+    preview: page.source.includes("<ComponentPreview"),
   };
 };
 
@@ -381,7 +391,8 @@ export const buildIndex = (
  * finds the search field and not every input, and a term matches the section so
  * "primitives" narrows to that lane. A part name finds the page that
  * documents it, a prop or its type finds the page whose API table declares it,
- * and a limitation finds the pages that carry it.
+ * a limitation finds the pages that carry it, and "preview" finds the pages
+ * that open with a browser rendering.
  */
 export const filterEntries = (
   entries: ReadonlyArray<ComponentEntry>,
@@ -395,7 +406,7 @@ export const filterEntries = (
 
   return entries.filter((entry) => {
     const haystack =
-      `${entry.title} ${entry.description} ${entry.section} ${entry.parts.join(" ")} ${entry.props.join(" ")} ${entry.types.join(" ")} ${entry.limitations}`.toLowerCase();
+      `${entry.title} ${entry.description} ${entry.section} ${entry.parts.join(" ")} ${entry.props.join(" ")} ${entry.types.join(" ")} ${entry.limitations} ${entry.preview ? "browser preview" : ""}`.toLowerCase();
     return terms.every((term) => haystack.includes(term));
   });
 };

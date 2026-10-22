@@ -166,6 +166,21 @@ describe("the component section index", () => {
     ).toEqual([]);
   });
 
+  it("teaches the badge its rows wear, so the mark is not unexplained", () => {
+    // The index marks the curated rows and offers `preview` as a query; a
+    // reader needs the page to say what the mark means, and the mark's wording
+    // lives in the component that renders it.
+    const index = source("index.mdx");
+    const badge = readFileSync(
+      new URL("../components/docs/component-index.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(badge).toContain("Browser preview");
+    expect(index).toContain("**Browser preview**");
+    expect(index).toContain("`preview` finds");
+  });
+
   it("says how to run the native component, in the note's own words", () => {
     // The index claimed every package page named the example file; the note
     // names the playground command and the Markdown path, so the sentence was
