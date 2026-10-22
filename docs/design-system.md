@@ -65,15 +65,17 @@ A chart breaks that rule on purpose: a series colour means "a different
 category", not "this is a warning", so data marks are the one place a component
 does not name a semantic role. They read the categorical scale instead —
 `seriesColors(theme)` returns five colours for the theme's mode and contrast
-variant, every one perceivable on the three plot surfaces (`seriesSurfaces`),
+variant, every one perceivable on the four plot surfaces (`seriesSurfaces`: the
+page, a card, a popover and the `muted` strip a toolbar or status bar paints),
 every pair separated by an OKLab distance (`seriesDistinctnessFloor`), and every
 pair still separated once protanopia, deuteranopia and tritanopia are simulated
 (`seriesDeficiencyFloor`). A chart never hard-codes a hex; a brand that wants its
-own categories carries `series`, a plot drawn on another strip names it
-(`seriesFailures(theme, { surfaces: ["muted"] })`), and a look that repaints the
-surfaces a plot is drawn on declares a scale for them (`PlatformStyle.series` —
-Luna's beige toolbar swallows the shared light amber at 2.75:1, so a house copy
-of that look adds a table). See
+own categories carries `series`, a plot drawn on another role names it
+(`seriesFailures(theme, { surfaces: ["secondary"] })`), and a look that repaints
+the surfaces a plot is drawn on declares a scale for them (`PlatformStyle.series`
+— Luna's beige toolbar swallows the shared light amber at 2.75:1, so the look
+ships `lunaSeries`; a house that wants other hues copies the style and replaces
+the five positions). See
 `docs/tokens.md` §Data series and §Authored looks.
 
 This keeps a brand theme small: overriding `primary` changes every primary
@@ -655,7 +657,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | text inside the selection wash (input, page, card, popover, a message bubble's muted fill) | 7:1 | 7:1 |
 | secondary text inside the selection wash (page, card, popover) | 4.5:1 | 7:1 |
 | the selection wash against the surface it covers | 1.05:1 | 1.05:1 |
-| data series on `background`, `card` and `popover` (a look's chart on its own quiet strip is measured by the same report with `surfaces` named) | 3:1 | 4.5:1 |
+| data series on `background`, `card`, `popover` and `muted` (a look's chart on its own quiet strip is measured by the same report with `surfaces` named) | 3:1 | 4.5:1 |
 | any two data series apart from each other (OKLab distance) | 0.06 | 0.06 |
 | any two data series apart after protanopia, deuteranopia and tritanopia (OKLab distance) | 0.05 | 0.05 |
 

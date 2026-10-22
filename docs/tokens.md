@@ -547,16 +547,19 @@ The four tables are `lightSeries`, `darkSeries`, `highContrastLightSeries` and
 
 - **On the plot.** Every swatch is held to the theme's own boundary floor
   against every surface a plot is drawn on — `seriesSurfaces` is `background`,
-  `card` and `popover` — so 3:1 by default and 4.5:1 for a high-contrast theme.
-  The tightest shipped value is light series 4 at 3.55:1. Those three are the
-  **default**; a chart painted on another strip names it, because a surface
-  nobody measures is a swatch nobody has checked:
+  `card`, `popover` and the `muted` strip a toolbar or status bar paints — so
+  3:1 by default and 4.5:1 for a high-contrast theme. The tightest of the four
+  shipped tables is light series 4 at 3.34:1 on its muted strip; across every
+  platform and authored style it is Aero's light amber on its muted strip at
+  3.05:1. A chart painted on another role names it, because a surface nobody
+  measures is a swatch nobody has checked:
 
   ```ts
   import { seriesFailures, themes } from "@gpuixui/tokens";
 
-  // A sparkline in a status bar: the `muted` strip it is drawn on, not the page.
-  seriesFailures(themes.dark, { surfaces: ["muted"] }).surfaces; // []
+  // A sparkline in a segmented panel: the `secondary` strip it is drawn on,
+  // not the page.
+  seriesFailures(themes.dark, { surfaces: ["secondary"] }).surfaces; // []
   ```
 - **Apart from each other.** Contrast cannot answer "are these two colours
   different" — a blue and a violet of one lightness measure near 1:1 yet read
@@ -604,10 +607,14 @@ not a merge. A **look** owns one the same way, in the `PlatformStyle` shape: a
 style may declare `series` per mode, `applyStyle` hands it to the base theme
 under the rule its palette follows (a high-contrast base keeps its own scale),
 and a mode a look does not name — and every style that declares none —
-resolves the base theme's table. It is the field a house version of a look sets
-when the look repaints the strips a plot is drawn on, which is the measured case
-in [Authored looks](#authored-looks). A runnable example builds a legend, an
-audit and the look that owns the table; see
+resolves the base theme's table. Windows XP's Luna is the measured case: its
+beige toolbar swallows the shared light amber at 2.75:1, so `retroStyles.luna`
+declares `lunaSeries` for the light edition — the amber one step deeper,
+`#9A6300` — and leaves its dark edition on the shared dark table, which separates
+on that navy page already. A house that wants other hues copies the style and
+replaces the five positions; `series.example.ts`'s `houseLook` is that copy. See
+[Authored looks](#authored-looks). A runnable example builds a legend, an
+audit and a look that owns its table; see
 [`src/series.example.ts`](../packages/tokens/src/series.example.ts).
 
 ## High contrast
@@ -916,19 +923,18 @@ Four facts about these two:
   decorative placement through `decorativeFailures`, in `retro.test.ts`; a
   high-contrast base keeps its own palette and takes only the families, radii
   and density, exactly as a platform style does.
-- **Its beige toolbar needs a chart scale of its own.** The shared light table is
-  designed against a near-white page; on Luna's toolbar (`#E0DCCB`) its amber
-  measures **2.75:1**, so a chart in a Luna status bar loses a category while
-  every other series contract passes. A house version of the look therefore sets
-  `PlatformStyle.series` — `beigeLook` in
+- **Its beige toolbar owns a chart scale.** The shared light table is designed
+  against a near-white page; on Luna's toolbar (`#E0DCCB`) its amber measures
+  **2.75:1**, so a chart in a Luna status bar loses a category while every other
+  series contract passes. The look therefore declares `lunaSeries` for its light
+  edition — the amber `#9A6300`, because the ramp's own `#8E5B00` is 0.044 from
+  the red under deuteranopia — which clears the look's page, card, popover and
+  toolbar (tightest **3.30:1**, the green on the toolbar) and keeps every pair
+  apart for a dichromat. Its dark edition needs no table: its navy page
+  separates the shared dark scale already. A house that wants other hues copies
+  the style and replaces the five positions — `houseLook` in
   [`src/series.example.ts`](../packages/tokens/src/series.example.ts) is that
-  copy, with the amber `#9A6300` (the ramp's own `#8E5B00` is 0.044 from the red
-  under deuteranopia) — which clears the look's page, card, popover and toolbar
-  (tightest 3.67:1, that amber on the toolbar) and keeps every pair apart for a
-  dichromat. The dark edition needs no table: its navy page separates the shared
-  dark scale already. The shipped edition follows its base theme's scale until a
-  page that teaches the contract prints the fourth plot strip
-  (`TODO.md` → Interlocks). See [Data series](#data-series).
+  copy. See [Data series](#data-series).
 - **Luna light owns its soft status tints.** Its beige page (`#ECE9D8`) sits at
   the lightness a pale status tint has — the base `infoSoft` measured 1.00:1
   against it — and its toolbar is deeper than that, so no inherited tint can be
@@ -3220,11 +3226,13 @@ all 16 shipped, platform and authored themes clear every contract.
 
 `packages/tokens/src/series.test.ts` covers the categorical scale: every
 shipped, platform and authored theme holds every swatch to its variant's
-boundary floor on the three plot surfaces, every pair to 0.06 in OKLab, and
+boundary floor on the four plot surfaces, every pair to 0.06 in OKLab, and
 every pair to 0.05 again after protanopia, deuteranopia and tritanopia are
 simulated. It reports the red/green pair a deuteranope sees 0.024 apart, a
 swatch that is the card it is drawn on, a repeated pair and a translucent
-swatch, and it executes the example's legend and reported lines.
+swatch, names the tightest placement over every shipped style (Aero light's
+series 4 at 3.05:1 on its muted strip), and it executes the example's legend and
+reported lines.
 
 `packages/tokens/src/indicator.test.ts` covers the marks a component paints: the
 eight roles on the four strips are held to the theme's non-text floor in all 16

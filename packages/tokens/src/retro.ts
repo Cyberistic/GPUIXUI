@@ -25,14 +25,15 @@
  * its toolbar — the look sits its tints above its page instead. Its warm pressed
  * wash is why the light destructive status text is red 900 in the base theme,
  * which this look inherits. Its beige page and toolbar also swallow the shared
- * light **chart** amber (2.75:1 on `#E0DCCB`), so a house version of the look
- * adds its own `PlatformStyle.series` — the table `series.example.ts` measures —
- * while the shipped edition follows its base theme's scale.
+ * light **chart** amber (2.75:1 on `#E0DCCB`), so the look declares its own
+ * light `series` — the amber one step deeper, `#9A6300` — while the dark edition
+ * keeps the shared dark table, which separates on its navy page already.
  */
 
 import { palette, type ThemeColors } from "./color.js";
 import type { PlatformStyle } from "./platforms.js";
 import { systemUiFont } from "./platforms.js";
+import type { SeriesColors } from "./series.js";
 import type { Theme } from "./theme.js";
 import { applyStyle } from "./theme.js";
 
@@ -199,6 +200,26 @@ const aeroColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
 };
 
 /**
+ * The categorical scale Luna's light edition needs, in legend order.
+ *
+ * The shared light table is designed against a near-white page; on Luna's
+ * `#E0DCCB` toolbar its amber measures **2.75:1**, so a chart in that status bar
+ * has one series nobody can find. These are the same hues with the amber one
+ * step deeper — the ramp's own `700`, `#8E5B00`, is 0.044 from the red under
+ * deuteranopia, under the 0.05 floor — and the table clears the look's page,
+ * card, popover and toolbar (tightest 3.30:1, the green on the toolbar).
+ * The dark edition needs no table: its navy page separates the shared dark
+ * scale already.
+ */
+export const lunaSeries: SeriesColors = [
+  "#5F4BDB",
+  "#1B45AC",
+  "#158754",
+  "#9A6300",
+  "#A5262B",
+];
+
+/**
  * The authored looks. Each is the same `PlatformStyle` shape the platform table
  * uses, so one merge rule serves both: families, radii and density always
  * apply, and a palette applies only to a base of the `contrast` variant it was
@@ -218,6 +239,7 @@ export const retroStyles: Readonly<Record<RetroName, PlatformStyle>> = {
     density: "compact",
     contrast: "default",
     colors: lunaColors,
+    series: { light: lunaSeries },
   },
   aero: {
     label: "Windows 7 (Aero)",

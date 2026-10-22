@@ -65,40 +65,38 @@ export const brandChartTheme: Theme = extendTheme(lightTheme, {
 });
 
 /**
- * The scale a look needs when it repaints the strips a plot is drawn on, and the
- * look that carries it.
+ * The scale a house look carries, and the look that carries it.
  *
- * Windows XP's Luna light edition is the measured case: its `#ECE9D8` page and
- * `#E0DCCB` toolbar swallow the shared light amber (`#B57600`), which reads
- * **2.75:1** there — a chart in that status bar would have one series nobody can
- * find. The same five hues with the amber one step deeper clear the look's page,
- * card, popover and toolbar (tightest 3.67:1, that amber on the toolbar) and keep
- * every pair apart for a dichromat: the ramp's own `700` step, `#8E5B00`, is
- * 0.044 from the red under deuteranopia, under the 0.05 floor.
+ * Luna's light edition is the measured case for the mechanism: its `#E0DCCB`
+ * toolbar swallows the shared light amber (`#B57600`) at **2.75:1**, so the look
+ * ships a table of its own (`retroStyles.luna.series`, `retro.ts`). A house that
+ * wants different hues copies the style — this is that copy — and replaces the
+ * five positions; the house table keeps the look's page, card, popover and
+ * toolbar readable and every pair apart for a dichromat.
  *
  * A look owns the scale in the `PlatformStyle` shape, per mode, and `applyStyle`
  * hands it to the base theme under the same `contrast` rule as the look's
- * palette. A consumer copies the style they ship — this is the copy of Luna with
- * one more field — rather than naming a new platform.
+ * palette. A consumer copies the style they ship rather than naming a new
+ * platform.
  */
-export const beigeSeries: SeriesColors = [
-  "#5F4BDB",
-  "#1B45AC",
-  "#158754",
+export const houseSeries: SeriesColors = [
+  "#6A45F0",
+  "#0E7490",
+  "#116A43",
   "#9A6300",
   "#A5262B",
 ];
 
-/** The Luna look, with the light-edition scale its own strips need. */
-export const beigeLook: PlatformStyle = {
+/** Luna's chrome with a house chart scale, the way a consumer authors one. */
+export const houseLook: PlatformStyle = {
   ...retroStyles.luna,
   label: "Windows XP (Luna) · house",
-  series: { light: beigeSeries },
+  series: { light: houseSeries },
 };
 
 /** The look applied to a base theme, which is what a chart is painted on. */
-export const beigeTheme = (mode: ThemeMode): Theme =>
-  applyStyle(themes[mode], beigeLook);
+export const houseTheme = (mode: ThemeMode): Theme =>
+  applyStyle(themes[mode], houseLook);
 
 /** A failure written the way a theme editor shows it. */
 export function seriesReport(theme: Theme): ReadonlyArray<string> {

@@ -278,8 +278,9 @@ Charts and legends read a categorical scale, not a semantic role — a series
 colour means "a different category", so painting it `warning` would say the
 wrong thing. `seriesColors(theme)` returns five colours for the theme's mode and
 contrast variant; every one is perceivable on the plot surfaces (`background`,
-`card`, `popover`), every pair is separated by an OKLab distance, and every pair
-stays separated after protanopia, deuteranopia and tritanopia are simulated.
+`card`, `popover` and the `muted` strip a toolbar or status bar paints), every
+pair is separated by an OKLab distance, and every pair stays separated after
+protanopia, deuteranopia and tritanopia are simulated.
 
 ```ts
 import { seriesColors, simulateColorVision } from "@gpuixui/tokens";
@@ -291,10 +292,11 @@ simulateColorVision(colors[0], "deuteranopia"); // the same swatch to a deuteran
 A brand that wants its own categories carries `series` in `extendTheme`; the
 array replaces the shipped scale whole. A style carries one in the
 `PlatformStyle` shape (`PlatformStyle.series`, per mode), which `applyStyle`
-hands to the base theme under the same rule as the look's palette — a house copy
-of Luna, whose beige toolbar swallows the shared light amber at 2.75:1, carries
-the scale its own plot strips need (`beigeLook` in `series.example.ts`). A plot drawn on a strip that is not one of the three
-defaults names it: `seriesFailures(theme, { surfaces: ["muted"] })`.
+hands to the base theme under the same rule as the look's palette — Luna's beige
+toolbar swallowed the shared light amber at 2.75:1, so the look ships
+`lunaSeries` for its light edition, and a house that wants other hues copies the
+style and replaces the five positions (`houseLook` in `series.example.ts`). A plot drawn on another role
+names it: `seriesFailures(theme, { surfaces: ["secondary"] })`.
 `seriesFailures(theme)` reports all three contracts and is part of `auditTheme`.
 
 ## Focus

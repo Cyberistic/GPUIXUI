@@ -23,15 +23,19 @@
 
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
-import { contrastFloors, highContrastFloors } from "./contrast.js";
-import { platformNames } from "./platforms.js";
-import { retroNames, retroTheme } from "./retro.js";
 import {
-  beigeLook,
-  beigeSeries,
-  beigeTheme,
+  contrastFloors,
+  contrastRatio,
+  highContrastFloors,
+} from "./contrast.js";
+import { platformNames } from "./platforms.js";
+import { lunaSeries, retroNames, retroStyles, retroTheme } from "./retro.js";
+import {
   brandChartTheme,
   brandSeries,
+  houseLook,
+  houseSeries,
+  houseTheme,
   legend,
   seriesReport,
 } from "./series.example.js";
@@ -121,25 +125,28 @@ describe("the shipped scale", () => {
 
   it("keeps the scale on a platform or authored look's base theme", () => {
     expect(seriesColors(platformTheme(lightTheme, "linux"))).toBe(lightSeries);
+    // The one look that repaints the strips a plot is drawn on owns its table.
+    expect(seriesColors(retroTheme(lightTheme, "luna"))).toBe(lunaSeries);
   });
 
   it("follows the scale a look declares for its own plot surfaces", () => {
-    const themed = beigeTheme("light");
+    const themed = houseTheme("light");
 
-    expect(themed.series).toBe(beigeSeries);
-    expect(seriesColors(themed)).toBe(beigeSeries);
+    expect(themed.series).toBe(houseSeries);
+    expect(seriesColors(themed)).toBe(houseSeries);
     expect(seriesColors(lightTheme)).toBe(lightSeries);
     // A mode the look does not name keeps the base's table, and a style that
     // declares none is the platform case above.
-    expect(beigeTheme("dark").series).toBeUndefined();
-    expect(seriesColors(beigeTheme("dark"))).toBe(darkSeries);
-    expect(retroTheme(lightTheme, "luna").series).toBeUndefined();
+    expect(houseTheme("dark").series).toBeUndefined();
+    expect(seriesColors(houseTheme("dark"))).toBe(darkSeries);
+    expect(retroStyles.luna.series?.light).toBe(lunaSeries);
+    expect(retroTheme(lightTheme, "luna").series).toBe(lunaSeries);
   });
 
   it("keeps a high-contrast base's own scale", () => {
     // Same rule as the palette: a scale designed for a look's strips is not an
     // AAA one, so accessibility outranks the look.
-    const accessible = applyStyle(highContrastLightTheme, beigeLook);
+    const accessible = applyStyle(highContrastLightTheme, houseLook);
 
     expect(accessible.series).toBeUndefined();
     expect(seriesColors(accessible)).toBe(highContrastLightSeries);
@@ -184,7 +191,31 @@ describe("every shipped scale passes its contract", () => {
 
   it("audits a real set, so a scan that stopped iterating cannot pass", () => {
     expect(passing.length).toBeGreaterThanOrEqual(16);
-    expect(seriesSurfaces).toEqual(["background", "card", "popover"]);
+    // The quiet strip is a default because the library's own plots land there.
+    expect(seriesSurfaces).toEqual(["background", "card", "popover", "muted"]);
+  });
+
+  it("names the tightest plot placement over every shipped style", () => {
+    const measured = passing.flatMap((theme) =>
+      seriesColors(theme).flatMap((color, index) =>
+        seriesSurfaces.flatMap((surface) => {
+          const ratio = contrastRatio(color, theme.colors[surface]);
+          return ratio === undefined
+            ? []
+            : [{ label: theme.name, index, surface, ratio }];
+        }),
+      ),
+    );
+    const tightest = measured.reduce((lowest, placement) =>
+      placement.ratio < lowest.ratio ? placement : lowest,
+    );
+
+    expect(tightest).toEqual({
+      label: "Light · Windows 7 (Aero)",
+      index: 3,
+      surface: "muted",
+      ratio: expect.closeTo(3.047, 2),
+    });
   });
 });
 
@@ -203,11 +234,9 @@ describe("the surface floor follows the theme's variant", () => {
     expect(highContrastFloors.boundary).toBe(4.5);
     const failing = seriesFailures(accessible).surfaces;
     expect([...new Set(failing.map(({ surface }) => surface))]).toEqual([
-      "background",
-      "card",
-      "popover",
+      ...seriesSurfaces,
     ]);
-    expect(failing).toHaveLength(15);
+    expect(failing).toHaveLength(seriesSurfaces.length * 5);
     expect(failing[0]?.floor).toBe(4.5);
   });
 
@@ -259,7 +288,7 @@ describe("the failures name the decision", () => {
     });
     const { surfaces, distinctness } = seriesFailures(translucent);
 
-    expect(surfaces).toHaveLength(3);
+    expect(surfaces).toHaveLength(seriesSurfaces.length);
     expect(surfaces.every(({ ratio }) => ratio === undefined)).toBe(true);
     expect(distinctness.some(({ distance }) => distance === undefined)).toBe(
       true,
@@ -268,17 +297,21 @@ describe("the failures name the decision", () => {
 });
 
 describe("the strips a plot is drawn on", () => {
-  it("measures the surface a caller names instead of the default three", () => {
+  it("measures the quiet strip by default and names any other", () => {
     // A dark window whose sidebar is white: the shared dark scale is clean on
     // the page, the card and the popover, and four of its five swatches are
-    // gone on the strip the chart in that sidebar is actually drawn on.
+    // gone on the toolbar the chart in that sidebar is actually drawn on.
     const whiteSidebar = extendTheme(darkTheme, {
       colors: { muted: "#FFFFFF" },
     });
 
-    expect(seriesFailures(whiteSidebar).surfaces).toEqual([]);
+    expect(
+      seriesFailures(whiteSidebar, {
+        surfaces: ["background", "card", "popover"],
+      }).surfaces,
+    ).toEqual([]);
 
-    const measured = seriesFailures(whiteSidebar, { surfaces: ["muted"] });
+    const measured = seriesFailures(whiteSidebar);
     expect(
       measured.surfaces.map(
         ({ index, surface, ratio }) =>
@@ -291,17 +324,12 @@ describe("the strips a plot is drawn on", () => {
       "5 on muted is 1.97",
     ]);
     expect(measured.surfaces.every(({ floor }) => floor === 3)).toBe(true);
-    expect(seriesSurfaces).toEqual(["background", "card", "popover"]);
+    expect(seriesSurfaces).toEqual(["background", "card", "popover", "muted"]);
   });
 });
 
 describe("a look owns the scale its own strips need", () => {
-  /**
-   * The four strips a chart is drawn on in a look: its page, a card, a popover
-   * and the quiet toolbar (or status bar) a plot also lands on.
-   */
-  const plotStrips = [...seriesSurfaces, "muted"] as const;
-  const luna = retroTheme(lightTheme, "luna");
+  const luna = retroTheme(themes.light, "luna");
 
   it("measures the shared light table on Luna's toolbar", () => {
     // The measured case for the mechanism: a look that only repainted its page
@@ -309,7 +337,7 @@ describe("a look owns the scale its own strips need", () => {
     // toolbar the shared amber is 2.75:1 — one series nobody can find.
     const inherited = seriesFailures(
       { ...luna, series: lightSeries },
-      { surfaces: plotStrips },
+      { surfaces: ["muted"] },
     );
 
     expect(
@@ -320,10 +348,25 @@ describe("a look owns the scale its own strips need", () => {
     ).toEqual(["series 4 on muted is 2.75"]);
   });
 
-  it("is clean on every strip with the scale the look carries", () => {
-    expect(
-      seriesFailures(beigeTheme("light"), { surfaces: plotStrips }),
-    ).toEqual({ surfaces: [], distinctness: [], deficiencies: [] });
+  it("ships the table its own toolbar needs", () => {
+    expect(retroStyles.luna.series?.light).toBe(lunaSeries);
+    expect(seriesColors(luna)).toBe(lunaSeries);
+    expect(seriesFailures(luna)).toEqual({
+      surfaces: [],
+      distinctness: [],
+      deficiencies: [],
+    });
+    // The dark edition keeps the shared dark table: its navy page separates it.
+    expect(retroStyles.luna.series?.dark).toBeUndefined();
+    expect(seriesColors(retroTheme(themes.dark, "luna"))).toBe(darkSeries);
+  });
+
+  it("is clean on every strip with a house table a consumer declares", () => {
+    expect(seriesFailures(houseTheme("light"))).toEqual({
+      surfaces: [],
+      distinctness: [],
+      deficiencies: [],
+    });
   });
 });
 

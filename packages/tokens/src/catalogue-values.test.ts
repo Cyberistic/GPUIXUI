@@ -29,6 +29,7 @@ import {
   palette,
   type ThemeColors,
 } from "./color.js";
+import { contrastRatio } from "./contrast.js";
 import {
   darkElevation,
   highContrastDarkElevation,
@@ -43,7 +44,7 @@ import {
   platformStyles,
   type PlatformStyle,
 } from "./platforms.js";
-import { isRetroName, retroNames, retroStyles } from "./retro.js";
+import { isRetroName, retroNames, retroStyles, retroTheme } from "./retro.js";
 import {
   avatarSize,
   borderWidth,
@@ -59,10 +60,13 @@ import {
   highContrastDarkSeries,
   highContrastLightSeries,
   lightSeries,
+  seriesColors,
   seriesDeficiencyFloor,
   seriesDistinctnessFloor,
+  seriesSurfaces,
 } from "./series.js";
 import { statusTones } from "./styles.js";
+import { highContrastThemes, platformTheme, themes } from "./theme.js";
 import { typography, type TextStyle } from "./typography.js";
 
 const read = (path: string): string =>
@@ -71,6 +75,9 @@ const read = (path: string): string =>
 /** The two documents a consumer reads: the token catalogue and the README. */
 const catalogue = read("../../../docs/tokens.md");
 const readme = read("../README.md");
+
+/** Prose wraps, so a sentence is compared against the page read flat. */
+const flatCatalogue = catalogue.replace(/\s+/g, " ");
 
 /** A Markdown table: its header cells and its body rows, each cell trimmed. */
 interface DocTable {
@@ -271,6 +278,66 @@ describe("the catalogue's colour roles", () => {
     expect(catalogue).toContain(`\`${seriesDeficiencyFloor}\``);
     expect(catalogue).toContain("`colorVisionDeficiencies`");
     expect(catalogue).toContain("`simulateColorVision`");
+  });
+
+  it("prints the tightest plot placement it measures", () => {
+    const shipped = [
+      ["light", themes.light, lightSeries],
+      ["dark", themes.dark, darkSeries],
+      [
+        "high contrast light",
+        highContrastThemes.light,
+        highContrastLightSeries,
+      ],
+      ["high contrast dark", highContrastThemes.dark, highContrastDarkSeries],
+    ] as const;
+    const shippedPlacements = shipped.flatMap(([, theme, table]) =>
+      table.flatMap((color, index) =>
+        seriesSurfaces.map((surface) => ({
+          table,
+          index,
+          surface,
+          ratio: contrastRatio(color, theme.colors[surface]) ?? 0,
+        })),
+      ),
+    );
+    const shippedTightest = shippedPlacements.reduce((lowest, placement) =>
+      placement.ratio < lowest.ratio ? placement : lowest,
+    );
+    const styled = [
+      ...platformNames.flatMap((name) =>
+        Object.values(themes).map((theme) => platformTheme(theme, name)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const styledPlacements = styled.flatMap((theme) =>
+      seriesColors(theme).flatMap((color, index) =>
+        seriesSurfaces.map((surface) => ({
+          theme,
+          index,
+          surface,
+          ratio: contrastRatio(color, theme.colors[surface]) ?? 0,
+        })),
+      ),
+    );
+    const styledTightest = styledPlacements.reduce((lowest, placement) =>
+      placement.ratio < lowest.ratio ? placement : lowest,
+    );
+
+    expect(seriesSurfaces).toContain("muted");
+    expect(shippedTightest.index).toBe(3);
+    expect(shippedTightest.surface).toBe("muted");
+    expect(shippedTightest.ratio).toBeCloseTo(3.336, 3);
+    expect(flatCatalogue).toContain(
+      `light series 4 at ${shippedTightest.ratio.toFixed(2)}:1`,
+    );
+    expect(styledTightest.theme.name).toBe("Light · Windows 7 (Aero)");
+    expect(styledTightest.surface).toBe("muted");
+    expect(flatCatalogue).toContain(
+      `Aero's light amber on its muted strip at ${styledTightest.ratio.toFixed(2)}:1`,
+    );
   });
 
   it("prints each palette ramp's steps", () => {

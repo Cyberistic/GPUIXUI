@@ -72,23 +72,31 @@ export const highContrastDarkSeries: SeriesColors = [
 /**
  * One surface a plot is drawn on: any role a chart mark can be painted behind.
  *
- * {@link seriesSurfaces} names the three the contract measures unless a caller
- * says otherwise, and a plot that sits on another strip — a `muted` toolbar, a
- * `secondary` panel — names it, because a surface nobody measures is a swatch
- * nobody has checked.
+ * {@link seriesSurfaces} names the four the contract measures unless a caller
+ * says otherwise, and a plot that sits on another strip — a `secondary` panel,
+ * a status bar of its own role — names it, because a surface nobody measures is
+ * a swatch nobody has checked.
  */
 export type SeriesSurface = keyof ThemeColors;
 
 /**
  * The surfaces a plot is drawn on by default, so every series colour is measured
- * where a chart actually paints it: the page, a card and a popover.
+ * where a chart actually paints it: the page, a card, a popover and the `muted`
+ * strip a toolbar or status bar paints.
  *
- * The library's own plots sit on one of those three. A consumer's chart on a
- * quieter strip — a status bar, a toolbar, a sidebar — names it through
- * {@link SeriesContract.surfaces}, which is also how an authored look whose
- * toolbar swallows a swatch is held to the scale it designs for that toolbar.
+ * The quiet strip is a default rather than a caller's choice because the
+ * library's own plots land there: a sparkline in a toolbar, a status bar's
+ * activity chart, a quiet tile. Measured, that placement is the one a palette
+ * can lose — Luna's beige toolbar swallowed the shared light amber at 2.75:1 —
+ * so an authored look declares the scale its own strips need. Any other role a
+ * chart is drawn on is named through {@link SeriesContract.surfaces}.
  */
-export const seriesSurfaces = ["background", "card", "popover"] as const;
+export const seriesSurfaces = [
+  "background",
+  "card",
+  "popover",
+  "muted",
+] as const;
 
 /**
  * The OKLab distance two series colours must reach to read as two categories.
@@ -240,9 +248,9 @@ export interface SeriesContract {
   readonly surface?: number;
   /**
    * The surfaces a plot is drawn on. Defaults to {@link seriesSurfaces}, the
-   * three content surfaces the library paints a chart on; a caller whose plot
-   * sits on another role — the `muted` strip a status bar paints, a `secondary`
-   * panel — names it here, so its own surface is measured rather than assumed.
+   * four content surfaces the library paints a chart on; a caller whose plot
+   * sits on another role — a `secondary` panel — names it here, so its own
+   * surface is measured rather than assumed.
    */
   readonly surfaces?: readonly SeriesSurface[];
   /** OKLab distance between two series. Defaults to {@link seriesDistinctnessFloor}. */
@@ -375,8 +383,8 @@ type SeriesAuditSource = SeriesSource & {
  * reader who cannot tell its two hues apart. Every option is a floor, so a
  * caller can hold an authored scale to a stricter contract than the variant
  * asks for; the variant still decides the surface default. The surfaces are the
- * three the library paints a plot on unless the caller names its own, so a
- * chart drawn on a quiet strip is measured on the strip it is drawn on.
+ * four the library paints a plot on unless the caller names its own, so a chart
+ * drawn on a quiet strip is measured on the strip it is drawn on.
  *
  * @example
  * ```ts
@@ -385,7 +393,7 @@ type SeriesAuditSource = SeriesSource & {
  * const report = seriesFailures(themes.light);
  * report.surfaces.length === 0; // every swatch is perceivable on a plot
  * report.deficiencies.length === 0; // and no two collapse for a colour-blind reader
- * // A chart on a quiet strip names the surface it paints:
+ * // A chart on another role names the surface it paints:
  * seriesFailures(themes.light, { surfaces: ["muted"] }).surfaces;
  * ```
  */
