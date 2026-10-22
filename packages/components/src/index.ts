@@ -34,6 +34,7 @@ export * from "./dropdown-menu.js";
 export * from "./empty-state.js";
 export * from "./field.js";
 export * from "./fieldset.js";
+export * from "./fireworks.js";
 export * from "./form.js";
 export * from "./highlight-text.js";
 export * from "./hotkey-recorder.js";

@@ -35,6 +35,7 @@ import { dropdownMenuMeta } from "./dropdown-menu.js";
 import { emptyStateMeta } from "./empty-state.js";
 import { fieldMeta } from "./field.js";
 import { fieldsetMeta } from "./fieldset.js";
+import { fireworksMeta } from "./fireworks.js";
 import { formMeta } from "./form.js";
 import { highlightTextMeta } from "./highlight-text.js";
 import { hotkeyRecorderMeta } from "./hotkey-recorder.js";
@@ -119,6 +120,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   emptyStateMeta,
   fieldMeta,
   fieldsetMeta,
+  fireworksMeta,
   formMeta,
   highlightTextMeta,
   hotkeyRecorderMeta,

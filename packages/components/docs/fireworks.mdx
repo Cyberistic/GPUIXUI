@@ -1,0 +1,157 @@
+---
+title: Fireworks
+description: A decorative field of bursting sparks for a launch screen, a success state or a celebration moment.
+---
+
+`Fireworks` paints a bounded box of small explosions: seeded centres whose sparks
+fly out to a ring in every direction, brighten, and fade. It is decoration: it
+publishes no accessibility node, takes no pointer input, and names nothing. The
+content in front of it owns the words and the presses.
+
+## Usage
+
+```tsx
+import { Fireworks } from "@gpuixui/components/fireworks";
+
+<div style={{ position: "relative", height: 260, overflow: "hidden" }}>
+  <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}>
+    <Fireworks bursts={3} sparks={20} seed={5} />
+  </div>
+  <EmptyState title="Release published" />
+</div>;
+```
+
+The field **measures itself**, so the box has to be bounded — a height, or an
+absolute inset like the one above. Before the first layout it paints nothing,
+because there is no box to place a burst in yet.
+
+## How a burst works
+
+The runtime has no `transform` (upstream issue #102), no canvas and no blur, so a
+spark cannot stretch into a streak or trail behind itself. What it can do is
+travel and fade: a spark is an absolutely positioned dot whose `left`/`top` the
+runtime tweens, lit by `opacity`, the one paint value it animates natively.
+
+The layout is a pure function of the measured box and one seed
+(`fireworks/logic.ts`):
+
+- **one centre per burst** — seeded in the middle half of the box, so a ring has
+  room on every side;
+- **radial** — the sparks divide the circle evenly and add a little jitter, so a
+  burst reads as an explosion rather than a jet;
+- **inside the box** — the ring stops short of the nearest wall, so a burst
+  seeded near an edge shrinks instead of clipping;
+- **staggered** — each later burst waits `0.4` of `burstMs` for its turn, so the
+  field is a sequence of explosions rather than one ring of light.
+
+## The two phases
+
+One tween cannot brighten and dim, so a spark lives twice:
+
+1. **fly** — the first `0.7` of its time, out to `0.7` of its ring while fading
+   in to its own peak;
+2. **fade** — the rest, out to the last pixel while fading to nothing.
+
+The fade **retargets** from the point the fly left the spark (`initial: false`),
+so it does not replay the entry. When the fade completes, the element is re-keyed
+into a fresh spark at the centre — another burst, with the same delay. The field
+keeps bursting for as long as it is mounted, and the restart is invisible because
+a spark is at zero opacity before its fly and after its fade.
+
+```tsx
+import { Fireworks } from "@gpuixui/components/fireworks";
+import { useTheme } from "@gpuixui/components";
+
+const theme = useTheme();
+
+<Fireworks
+  bursts={2}
+  sparks={14}
+  // The three decisions the field leaves to its caller.
+  color={theme.colors.accent}
+  minSize={2}
+  maxSize={3}
+  burstMs={1_000}
+/>;
+```
+
+## Reduced motion
+
+`MotionProvider preference="reduced"` paints every spark held at its ring
+position rather than deleting the field — the celebration stays, the flight
+goes. No spark then has a motion target at all, so no burst restarts. The
+entrance fade is zeroed the same way the overlays are.
+
+```tsx
+import { Fireworks, MotionProvider } from "@gpuixui/components";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <Fireworks bursts={3} />
+</MotionProvider>;
+```
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `bursts` | `number` | `3` | `0` paints none; the cap is `6`. |
+| `sparks` | `number` | `18` | The sparks in one burst. `0` paints none; the cap is `40`, because each spark is its own native tween. |
+| `seed` | `number` | `1` | The layout seed. The same seed paints the same sequence; a non-finite value is the house seed. |
+| `minSize` | `number` | `2` | The smallest spark, in pixels. A value below 1 falls back. |
+| `maxSize` | `number` | `4` | The largest spark. An inverted pair is read low-to-high. |
+| `color` | `string` | theme `primary` | The spark colour; each spark paints it at its own peak opacity. |
+| `burstMs` | `number` | `1_400` | The base time for one burst. Below 400 ms the flash reads as noise and falls back; 12 s is the cap. |
+| `level` | `MotionLevel` | `"slow"` | The entrance fade. `MotionProvider` zeroes it under the reduced preference. |
+| `className` | `string` | — | A Tailwind class string, merged last. |
+| `style` | `StyleDesc` | — | The box's style, or a function of `{ count, reducedMotion, width, height }`. Give it a height. |
+
+Every spark carries an internal id (`spark-0-0`, `spark-0-1`, …) and a `testId`
+on the field lands on the clipped box.
+
+## Limitations
+
+- **A dot, not a streak.** No `transform` and no blur, so a spark travels without
+  stretching, trailing or arcing; it cannot fall under gravity.
+- **Straight lines only.** The fly and fade phases are two straight segments per
+  spark, not a curve.
+- **Bursts restart, they do not refill.** A completed fade re-keys the element
+  into a fresh spark at the centre; both ends sit at zero opacity, so the restart
+  has no frame a reader can see.
+- **The box must be bounded by the caller.** The field measures itself; a box
+  with no height paints no sparks.
+- **A hidden field keeps animating.** The runtime exposes no visibility query, so
+  unmount the field (or pass `bursts={0}`) when it is off screen.
+- **A resize re-draws the sequence.** The layout follows the new box from the
+  same seed, and every burst restarts — a tween cannot be resumed at an arbitrary
+  progress.
+- **No accessibility node.** The field adds no role and no name; give the content
+  in front of it its own.
+- **One tween per spark.** `bursts × sparks` is capped at 240 so a field cannot
+  turn into a thousand native animations.
+
+## Verification
+
+Eight native behaviour cases in `src/behaviour/fireworks.test.tsx` (8 tests)
+measure the real renderer: the sparks laid out at the centres the box allows, the
+fly target brightening toward its ring, the fade retargeting from the ring
+(`initial: false`) and a fresh spark starting the next burst, the same seed
+painting the same sequence, the reduced preference painting the ring with no
+motion target, `bursts={0}` painting none, no accessibility node and no pointer
+input, and the entrance at the house `slow` level. The arithmetic is
+`src/fireworks/logic.test.ts` (9 tests): determinism, the burst and spark caps,
+one shared centre per burst with every quadrant reached, every spark ending
+inside the box, a corner burst shrinking instead of clipping, the brightness
+range, the burst stagger and spark jitter, the phase split and its rest point,
+and an unmeasured box painting nothing. The clamps it shares with the other
+fields are `src/internal/scatter.test.ts`.
+
+## Related
+
+- [Bubbles](/docs/components/bubbles) — the same off-stage lap, rising instead of
+  bursting.
+- [Stars](/docs/components/stars) — the same field arithmetic, twinkling in place.
+- [Particles](/docs/components/particles) — the same field arithmetic, drifting
+  instead of exploding.
+- [Reveal](/docs/components/reveal) — the entrance a field's content can join.
+- [Empty state](/docs/components/empty-state) — the content a celebration sits
+  behind.
