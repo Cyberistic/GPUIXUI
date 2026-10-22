@@ -104,6 +104,42 @@ describe("the pattern data", () => {
     expect(missing.map((pattern) => pattern.example)).toEqual([]);
   });
 
+  it("describes the state the form-core adoption actually hands over", () => {
+    // The settings-form pattern told a reader there was "no field registration"
+    // and to read `form.errors`, which was true of the hand-rolled form and
+    // false the moment `Form` moved its state to `@tanstack/form-core`: the
+    // render prop hands over a `FormApi`, and a registered field reads its own
+    // message from it. The pattern is prose, so it is held to the source the
+    // same way a curated page is.
+    const form = readFileSync(
+      new URL("../../../../packages/components/src/form.tsx", import.meta.url),
+      "utf8",
+    );
+    const validator = readFileSync(
+      new URL(
+        "../../../../packages/components/src/form/validator.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    expect(form).toContain("SchemaFormApi");
+    expect(form).toContain("children({ errors, pending, submit, form })");
+    expect(validator).toContain("fields: grouped.fields");
+
+    const pattern = patterns.find(
+      (candidate) => candidate.id === "settings-form",
+    );
+    expect(pattern, "the settings-form pattern is gone").toBeDefined();
+    if (pattern === undefined) return;
+
+    const prose = [pattern.state, ...pattern.steps].join(" ");
+    expect(prose).toContain("`@tanstack/form-core`");
+    expect(prose).toContain("form.getFieldMeta(name)");
+    expect(prose).toContain("not a second copy of the value");
+    expect(prose).not.toContain("no field registration");
+    expect(prose).not.toContain("`form.errors`");
+  });
+
   it("gives every pattern a workflow, not just a list of parts", () => {
     const thin = patterns.filter(
       (pattern) =>

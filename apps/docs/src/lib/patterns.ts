@@ -99,7 +99,7 @@ export const patterns: ReadonlyArray<Pattern> = [
       {
         name: "Form",
         url: "/docs/components/form",
-        job: "the schema run, the single alert summary and the decoded `onSubmit`",
+        job: "the schema run over a `@tanstack/form-core` state, the single alert summary and the decoded `onSubmit`",
       },
       {
         name: "Field",
@@ -118,12 +118,12 @@ export const patterns: ReadonlyArray<Pattern> = [
       },
     ],
     state:
-      "The screen owns the value and passes it down; `Form` owns the error list and the pending guard. There is no field registration and no second copy of the value.",
+      "The screen owns the value and passes it down; `Form` drives a `@tanstack/form-core` `FormApi` for the summary and the pending guard. The core can carry field meta and register a field's validators, but it is not a second copy of the value: `Form` pushes the screen's value into it at submit and never reads one back.",
     steps: [
       "Keep the value in one place — a schema-decoded value in the screen's state — and pass it to `Form`.",
       'Decode on submit; every message appears in one `role="alert"` summary in schema order, so a failed save is announced once.',
       "Pass `pending` to `Form` and disable the submit control with the same flag; the component refuses a submit while it is set.",
-      "Read `form.errors` from the render prop when a field also needs its own message; `Field` carries the description to the control.",
+      "Read `errors` from the render prop for the summary; a field that needs its own message, validator or touched state registers with the same render prop's `form` and reads `form.getFieldMeta(name)`.",
     ],
     prevents:
       "A form with two sources of truth, a submit that runs twice, and an error list that is only painted.",
