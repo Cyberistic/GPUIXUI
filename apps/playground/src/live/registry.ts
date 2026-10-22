@@ -456,6 +456,12 @@ export const liveRegistry = [
       "Text: a code host paints the keyword its syntax palette names, and one handed no palette paints the runtime's own",
     capability: "text",
   },
+  {
+    id: "press-routing-lifecycle",
+    title:
+      "Input: a press or key on a composite row's inner element names every handler it runs, in the order it runs",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

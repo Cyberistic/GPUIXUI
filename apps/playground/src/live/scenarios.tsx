@@ -604,6 +604,19 @@ import {
   type RowSelection,
 } from "./modifier-select.js";
 import {
+  PRESS_CAPTION,
+  PRESS_CLEAR,
+  PRESS_CASES,
+  PRESS_DRAFT,
+  PRESS_READOUT,
+  formatHits,
+  pressCase,
+  pressCellId,
+  pressRowId,
+  type Nesting,
+  type PressCase,
+} from "./press-routing.js";
+import {
   BOX_PAINT_BORDER,
   BOX_PAINT_BORDER_WIDTH,
   BOX_PAINT_FILL,
@@ -19886,6 +19899,392 @@ const syntaxPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/** How many cases the left column holds; the rest go right so the frame fits a window. */
+const PRESS_LEFT_COUNT = Math.ceil(PRESS_CASES.length / 2);
+
+/** The width of a composite row, and its height, so a press misses the cell when aimed at the row. */
+const PRESS_ROW_WIDTH = 320;
+const PRESS_ROW_HEIGHT = 34;
+/** The width of the cell pinned to a row's trailing edge. */
+const PRESS_CELL_WIDTH = 80;
+
+/** The style a row paints: a card face with a hairline under it. */
+const pressRowStyle = (theme: Theme): StyleDesc => ({
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  width: PRESS_ROW_WIDTH,
+  height: PRESS_ROW_HEIGHT,
+  paddingLeft: theme.spacing.sm,
+  paddingRight: theme.spacing.xs,
+  backgroundColor: theme.colors.card,
+  borderBottomWidth: theme.borderWidth.thin,
+  borderColor: theme.colors.border,
+  ...keyboardFocusRing(theme),
+});
+
+/**
+ * The style a case's inner element paints.
+ *
+ * `filled` is the case's variable: the runtime inserts a mouse hitbox for an
+ * element that paints a background, and that hitbox is the boundary a press
+ * stops at, so the same child with and without a fill measures two routes.
+ */
+const pressCellStyle = (theme: Theme, filled: boolean): StyleDesc => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: PRESS_CELL_WIDTH,
+  height: PRESS_ROW_HEIGHT - theme.spacing.sm,
+  borderRadius: theme.radius.sm,
+  borderWidth: theme.borderWidth.thin,
+  borderColor: theme.colors.border,
+  ...textStyle(theme, "caption"),
+  color: theme.colors.mutedForeground,
+  ...(filled ? { backgroundColor: theme.colors.muted } : {}),
+});
+
+/** The row-level handlers a case owns, so a spread stays typed. */
+interface PressRowHandlers {
+  readonly onClick?: () => void;
+  readonly onMouseDown?: () => void;
+  readonly onMouseMove?: () => void;
+  readonly onAuxClick?: () => void;
+  readonly onKeyDown?: () => void;
+}
+
+/**
+ * One nesting: what the row holds at the point the probe presses.
+ *
+ * The cases are the shapes a Tier 3 row composes — a label, an inert box, a
+ * trailing control, a control that steps aside, a drag row, a context-menu row
+ * and an editable cell — so the measured route is the one a table or a tree
+ * inherits rather than a synthetic pair.
+ */
+const PressRoutingProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [hits, setHits] = useState<ReadonlyArray<string>>([]);
+  const [draft, setDraft] = useState("");
+
+  const hit = (name: string) => () =>
+    setHits((previous) => Arr.append(previous, name));
+
+  /** The inner element a case is measured through. */
+  const cellOf = (entry: PressCase): ReactNode => {
+    const id = pressCellId(entry.id);
+    const filled = pressCellStyle(theme, true);
+    const unfilled = pressCellStyle(theme, false);
+    return Match.value(entry.id).pipe(
+      Match.when("text-unfilled", () => (
+        <text testId={id} style={unfilled}>
+          {entry.id}
+        </text>
+      )),
+      Match.when("text-filled", () => (
+        <text testId={id} style={filled}>
+          {entry.id}
+        </text>
+      )),
+      Match.when("div-filled", () => <div testId={id} style={filled} />),
+      Match.when("control-filled", () => (
+        <div
+          testId={id}
+          role="button"
+          tabIndex={0}
+          onClick={hit("cell-click")}
+          style={filled}
+        >
+          Act
+        </div>
+      )),
+      Match.when("control-unfilled", () => (
+        <div
+          testId={id}
+          role="button"
+          tabIndex={0}
+          onClick={hit("cell-click")}
+          style={unfilled}
+        >
+          Act
+        </div>
+      )),
+      Match.when("inert-control", () => (
+        <div
+          testId={id}
+          role="button"
+          tabIndex={0}
+          onClick={hit("cell-click")}
+          style={{ ...filled, pointerEvents: "none" }}
+        />
+      )),
+      Match.when("drag-row", () => (
+        <div testId={id} onClick={hit("cell-click")} style={filled} />
+      )),
+      Match.when("aux-row", () => <div testId={id} style={filled} />),
+      Match.when("field-cell", () => (
+        <input
+          testId={id}
+          value={draft}
+          onChange={(event) => setDraft(event.value ?? "")}
+          theme={nativeTextTheme(theme)}
+          style={{
+            width: PRESS_CELL_WIDTH,
+            height: PRESS_ROW_HEIGHT - theme.spacing.sm,
+            color: theme.colors.inputForeground,
+            backgroundColor: theme.colors.input,
+          }}
+        />
+      )),
+      Match.when("field-in-row", () => (
+        <input
+          testId={id}
+          value={draft}
+          onChange={(event) => setDraft(event.value ?? "")}
+          theme={nativeTextTheme(theme)}
+          style={{
+            width: PRESS_CELL_WIDTH,
+            height: PRESS_ROW_HEIGHT - theme.spacing.sm,
+            color: theme.colors.inputForeground,
+            backgroundColor: theme.colors.input,
+          }}
+        />
+      )),
+      Match.exhaustive,
+    );
+  };
+
+  /** The handlers a case's row itself owns. */
+  const rowHandlers = (id: Nesting): PressRowHandlers =>
+    Match.value(id).pipe(
+      Match.when("drag-row", () => ({
+        onMouseDown: hit("row-down"),
+        onMouseMove: () => undefined,
+      })),
+      Match.when("aux-row", () => ({ onAuxClick: hit("row-aux") })),
+      Match.when("field-cell", () => ({ onKeyDown: hit("row-key") })),
+      Match.when("field-in-row", () => ({ onClick: hit("row-click") })),
+      Match.orElse((): PressRowHandlers => ({ onClick: hit("row-click") })),
+    );
+
+  return (
+    <div
+      style={{
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        testId={PRESS_CAPTION}
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A composite row: which handler a press on the inner element runs, in the
+        order it runs.
+      </text>
+      <div
+        testId={PRESS_CLEAR}
+        role="button"
+        tabIndex={0}
+        onClick={() => setHits([])}
+        style={{
+          ...pressCellStyle(theme, true),
+          width: 72,
+          backgroundColor: theme.colors.secondary,
+          color: theme.colors.secondaryForeground,
+        }}
+      >
+        Clear
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "flex-start",
+          gap: theme.spacing.md,
+        }}
+      >
+        {Arr.map(
+          [
+            Arr.take(PRESS_CASES, PRESS_LEFT_COUNT),
+            Arr.drop(PRESS_CASES, PRESS_LEFT_COUNT),
+          ],
+          (column) => (
+            <div
+              key={Arr.join(
+                Arr.map(column, (entry) => entry.id),
+                "-",
+              )}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: theme.spacing.xs,
+              }}
+            >
+              {Arr.map(column, (entry) => (
+                <div
+                  key={entry.id}
+                  testId={pressRowId(entry.id)}
+                  tabIndex={0}
+                  {...rowHandlers(entry.id)}
+                  style={pressRowStyle(theme)}
+                >
+                  {entry.id === "text-unfilled" ||
+                  entry.id === "text-filled" ? null : (
+                    <text
+                      style={{
+                        ...textStyle(theme, "body"),
+                        color: theme.colors.foreground,
+                      }}
+                    >
+                      {entry.id}
+                    </text>
+                  )}
+                  {cellOf(entry)}
+                </div>
+              ))}
+            </div>
+          ),
+        )}
+      </div>
+      <text
+        testId={PRESS_DRAFT}
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {`field=${draft}`}
+      </text>
+      <text
+        testId={PRESS_READOUT}
+        style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}
+      >
+        {formatHits(hits)}
+      </text>
+    </div>
+  );
+};
+
+const pressRoutingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(pressRowId("text-unfilled"));
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text(PRESS_READOUT);
+    const draft = () => ctx.host.text(PRESS_DRAFT);
+    const clear = () =>
+      Effect.flatMap(ctx.host.click(PRESS_CLEAR), () => Effect.sleep(SETTLE));
+    const press = (id: string) =>
+      Effect.flatMap(ctx.host.click(id), () => Effect.sleep(SETTLE));
+    const assertRoute = (id: Nesting) =>
+      Effect.gen(function* () {
+        const entry = pressCase(id);
+        yield* ctx.expectEqual(
+          `${entry.caption} runs ${formatHits(entry.hits)}`,
+          yield* readout(),
+          formatHits(entry.hits),
+        );
+      });
+
+    // 1. The frame opens with an empty log, so every route below is the press's.
+    yield* ctx.expectEqual(
+      "the frame opens with an empty log",
+      yield* readout(),
+      formatHits([]),
+    );
+
+    // 2. A label that paints no fill is transparent to the press; the same label
+    // with a fill is the boundary the press stops at.
+    yield* clear();
+    yield* press(pressCellId("text-unfilled"));
+    yield* assertRoute("text-unfilled");
+
+    yield* clear();
+    yield* press(pressCellId("text-filled"));
+    yield* assertRoute("text-filled");
+
+    // 3. A filled child with no handlers.
+    yield* clear();
+    yield* press(pressCellId("div-filled"));
+    yield* assertRoute("div-filled");
+
+    // 4. A control child: filled, it is the only handler; unfilled, the row's
+    // painted surface is still inside the hover walk, so both run.
+    yield* clear();
+    yield* press(pressCellId("control-filled"));
+    yield* assertRoute("control-filled");
+
+    yield* clear();
+    yield* press(pressCellId("control-unfilled"));
+    yield* assertRoute("control-unfilled");
+
+    // The row stays pressable where the control is not: its own painted surface
+    // runs its handler and nothing else.
+    yield* clear();
+    yield* press(pressRowId("control-filled"));
+    yield* ctx.expectEqual(
+      "a press on the row's own surface runs only the row",
+      yield* readout(),
+      formatHits(["row-click"]),
+    );
+
+    // 5. The workaround: a *drawing* told to ignore the pointer lets the row
+    // take the press, but a control that keeps a focus hitbox is still reached.
+    yield* clear();
+    yield* press(pressCellId("inert-control"));
+    yield* assertRoute("inert-control");
+
+    // 6. A row that owns a drag does not hear a press on a filled control in it,
+    // so the row's capture is not armed by a press the cell takes.
+    yield* clear();
+    yield* press(pressCellId("drag-row"));
+    yield* assertRoute("drag-row");
+
+    // 7. A row's context menu does not hear a right press on a filled child.
+    yield* clear();
+    yield* Effect.flatMap(ctx.host.rightClick(pressCellId("aux-row")), () =>
+      Effect.sleep(SETTLE),
+    );
+    yield* assertRoute("aux-row");
+
+    // 8. A field inside the row: the field takes the focus and keeps what is
+    // typed, while the row's key handler still hears the key.
+    yield* clear();
+    yield* press(pressCellId("field-cell"));
+    yield* ctx.expectEqual(
+      "a press on the field focuses it",
+      yield* focusedId(ctx),
+      pressCellId("field-cell"),
+    );
+    yield* ctx.host.key("a");
+    yield* Effect.sleep(SETTLE);
+    yield* assertRoute("field-cell");
+    yield* ctx.expectEqual(
+      "the field keeps the key the row also heard",
+      yield* draft(),
+      "field=a",
+    );
+
+    // 9. A press on a field also runs the row it sits in, so an editable cell is
+    // selected by the press that starts the edit.
+    yield* clear();
+    yield* press(pressCellId("field-in-row"));
+    yield* assertRoute("field-in-row");
+    yield* ctx.expectEqual(
+      "the pressed field holds the focus",
+      yield* focusedId(ctx),
+      pressCellId("field-in-row"),
+    );
+
+    yield* ctx.host.capture("press-routing");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -20238,5 +20637,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "syntax-palette",
     view: () => <SyntaxPaletteProbe />,
     steps: syntaxPaletteSteps,
+  },
+  "press-routing-lifecycle": {
+    id: "press-routing-lifecycle",
+    view: () => <PressRoutingProbe />,
+    steps: pressRoutingSteps,
   },
 };

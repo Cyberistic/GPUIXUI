@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-70 probes a real window can prove, of which fifteen mount shipped
+71 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -3975,6 +3975,82 @@ Two negative controls measured, exit `1` each, then restored green:
   palette's keyword` with **`expected true, got false`** — the positive count is
   what proves a palette reached the glyphs rather than a default matching it.
 
+### `press-routing-lifecycle` — measured on 0.11.0 here
+
+**Which handler does a press on a row's inner element run?** A Tier 3 table puts
+a control inside a row it also selects — a checkbox cell, a sort arrow, an
+expander, a trailing menu — and a Tier 4 tree row carries a trailing action. Until
+this probe, the only answer in the repo was a comment in `carousel.tsx` claiming
+the runtime runs the innermost handler alone, which is not the rule and would
+have led a table plan to the wrong shape twice over.
+
+The rule is about **painted surfaces**, not depth. GPUI collects the hitboxes
+under the pointer from the topmost down, and `hit_test` stops counting an
+element as hovered at the first hitbox that blocks the mouse
+(`BlockMouseExceptScroll`); an element's listener only runs when its own hitbox
+is inside that boundary. `packages/native` inserts such a hitbox for a style
+with a **painted background** (or `position: absolute`/`fixed`, or
+`pointerEvents: "auto"`), so a filled child is the edge a press stops at, while
+an unfilled one lets the press through to the element that paints under it.
+
+The cases are one window's worth of that rule, each the shape a composite row
+actually composes:
+
+| Case | What the press lands on | Route |
+| ---- | ----------------------- | ----- |
+| `text-unfilled` | a press on an unfilled `<text>` label | `row-click` |
+| `text-filled` | a press on a `<text>` label that paints a fill | `none` |
+| `div-filled` | a press on a `<div>` child that paints a fill | `none` |
+| `control-filled` | a press on a control child that paints a fill | `cell-click` |
+| `control-unfilled` | a press on a control child that paints no fill | `cell-click,row-click` |
+| `inert-control` | a press on a filled control that declares pointerEvents none | `cell-click,row-click` |
+| `drag-row` | a press on a filled control inside a row that owns mouseDown | `cell-click` |
+| `aux-row` | a right press on a filled child of a row with onAuxClick | `none` |
+| `field-cell` | a key typed in a field inside a row with onKeyDown | `row-key` |
+| `field-in-row` | a press on a field inside a row that also selects | `row-click` |
+
+The routes are the readout, in the order the handlers ran. What a component
+does with them:
+
+1. **A pressed cell is a boundary.** A row whose cell paints a fill does not
+   receive a press aimed at that cell at all — so a row's own `onClick` must not
+   be the only selection path, and a cell that is meant to be inert must say
+   `pointerEvents: "none"` (the probe's `div-filled` shows the defect, and
+   `inert-control` shows the limit of the fix: a control that keeps a focus
+   hitbox is still reached, so the *drawing* is what opts out, not a control).
+2. **An unfilled child runs both.** A cell that draws nothing but carries a
+   control has no blocking hitbox of its own, so the press runs its handler
+   **and** the row's — a table that puts a pressable chip in a selectable row
+   gets two actions from one press unless it fills the cell or stops the second.
+3. **A drag row is not armed by a press its cell takes.** A row that captures
+   the pointer through `onMouseDown` never sees the press, so a reorder handle
+   must be the element the press lands on.
+4. **A context menu belongs to the surface pressed.** A row's `onAuxClick`
+   does not hear a right press on a filled child, so a grid whose cells paint
+   must put the menu on the cell (or leave the cell unfilled).
+5. **Keys travel the focus path, not the paint.** A row's `onKeyDown` hears a
+   key typed in a field inside it while the field keeps the key and the focus —
+   so an editable cell's row must read the event's own `elementId` before acting
+   on an arrow. A press on that field also runs the row's click, so starting to
+   edit a cell selects its row.
+
+15 checks, `--only press-routing-lifecycle`, green on 0.11.0 (~1.2 s). Fixture:
+`src/live/press-routing.ts` holds the table (`PRESS_CASES`), the one route
+spelling (`formatHits`) and the ids; `press-routing.test.ts` (5 cases) holds the
+cases to the nestings, the handlers to the ones the fixture can log, and this
+section's table to the routes the probe asserts — so a case can be neither added
+without a route nor documented with a stale one. Evidence:
+`.artifacts/live/press-routing.png`.
+
+Two negative controls measured, exit `1` each, then restored green:
+
+- expecting a filled label to reach its row fails `a press on a \`<text>\` label
+  that paints a fill runs hits=none` with **`expected "hits=row-click", got
+  "hits=none"`** — the boundary is what the case exists to measure.
+- expecting the field case to run nothing fails `a key typed in a field inside a
+  row with onKeyDown runs hits=row-key` with `expected "hits=none", got
+  "hits=row-key"` — the key path is the second half of the rule.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -4190,8 +4266,9 @@ narrower. Each deviation is deliberate and measured:
   Measured alone since then: `inspector-lifecycle`,
   `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`,
   `elevation-paint`, `opacity-paint`, `movable-tabs-lifecycle`,
-  `slider-vertical-lifecycle`, `modifier-select-lifecycle`, `rtl-text` and
-  `syntax-palette` (twelve probes, each run alone).
+  `slider-vertical-lifecycle`, `modifier-select-lifecycle`, `rtl-text`,
+  `syntax-palette` and `press-routing-lifecycle` (thirteen probes, each run
+  alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
