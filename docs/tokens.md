@@ -3381,17 +3381,16 @@ export const messagePaint = (theme: Theme, tone: StatusTone) => {
 `userSelect: "text"` — and `packages/components` exports
 `selectionWash(theme)` from its theme seam, which every selectable host spreads:
 `FieldInput`, `SearchInput`, both `TimePickerSegment`s, `TagInputField`,
-`MentionInput`, `ColorPicker`'s hex field, `CommandMenuInput`, `ChatComposer`
-and the input `InlineEdit` swaps in, read back off the renderer by
+`MentionInput`, `ColorPicker`'s hex field, `CommandMenuInput`, `ChatComposer`,
+`ComboboxInput` and the input `InlineEdit` swaps in, read back off the renderer by
 `src/behaviour/selection.test.tsx`. The property inherits down a subtree, so a
 container that paints a status tint does not use the page role: `Alert`'s root
 declares `messageSelection(theme, tone)`, which is `selectionOn` against the
 tone's own soft role. The runtime's own default is the theme accent at 35%,
-which is not this role.
-
-**Still open:** `ComboboxInput` renders GPUix's own input and spreads no
-`selectionWash`, so its selected run keeps that accent default; recorded in
-`TODO.md` → Interlocks.
+which is not this role. `ComboboxInput` is GPUix's own search field rather than
+one this package paints, so its wash is declared in the field style it hands the
+host — the last selectable host to carry the role, and the one a source scan
+cannot mistake for a field the package draws.
 
 **Not measured, deliberately:** a field's `placeholder`. It is painted only
 while the field is empty, so there is no run for a reader to select.

@@ -766,6 +766,11 @@ describe("the floors a selection report uses", () => {
  * the sentence cannot outlive either state: a page that calls the work owed
  * fails while the hosts paint it, and a host that drops the wash fails while the
  * page says it paints it.
+ *
+ * The combobox's search field was the last host handing the runtime's own
+ * accent default — it renders GPUix's `ComboboxInput` and passed only the recipe
+ * and the ring — so its spread, the renderer case that opens the popup, and the
+ * page's adopter list move together.
  */
 describe("the adoption both packages paint", () => {
   const catalogue = read("../../../docs/tokens.md");
@@ -812,16 +817,20 @@ describe("the adoption both packages paint", () => {
     expect(alert).toContain("messageSelection(theme, value)");
   });
 
-  it("names the host that still keeps the runtime's default", () => {
-    // `ComboboxInput` renders GPUix's own input and never spreads the wash, so
-    // the page's deviation is a measured one rather than a stale sentence: the
-    // day the host adopts the role, this case fails until the page moves.
+  it("holds the last selectable host to the role the others paint", () => {
+    // `ComboboxInput` renders GPUix's own input, so the wash has to be declared
+    // in its field style rather than inherited from a field the package paints.
     const combobox = read("../../components/src/combobox.tsx");
+    const rendered = read("../../components/src/behaviour/selection.test.tsx");
     const text = section("## Text selection");
 
     expect(combobox).toContain("ComboboxInput as HeadlessInput");
-    expect(combobox).not.toContain("selectionWash");
+    expect(combobox).toContain("...selectionWash(theme)");
+    // The renderer case is what proves the spread reaches the painted host; a
+    // source spread with no case is the state this page used to describe.
+    expect(rendered).toContain("declares it on the combobox search field");
+    // The page holds it with the other adopters and claims no gap.
     expect(text).toContain("`ComboboxInput`");
-    expect(text).toContain("Still open:");
+    expect(text).not.toContain("Still open:");
   });
 });
