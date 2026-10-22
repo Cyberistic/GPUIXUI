@@ -712,7 +712,7 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 111/111
+`[x]` `[██████████]` 112/112
 
 `[x]` Hold the **headless suite's printed total** to the registry again — the
       data workstream's `6aa8cb15` added `data-table-core` to
@@ -2949,6 +2949,16 @@ a workaround for two live sessions sharing one worktree; see
       box. Evidence: `apps/playground/README.md` §`virtual-table-lifecycle`,
       `.artifacts/live/virtual-table-revealed.png`.
 
+`[x]` Hold the **headless suite's printed total** to the registry — the data
+      workstream's `8c792168` (trees and expandable rows) and the two scenarios
+      before it added entries to `src/scenarios/registry.ts` without moving the
+      totals the README prints, so `src/scenarios/registry.test.ts` failed
+      `prints the scenario total the registry actually runs` with `43/43` and
+      then `44/44` against the printed `41/41`. The README now prints **44/44**
+      in all three places (`--help`, §Evidence on this host, and the sample run
+      line), and `nub apps/playground/dist/smoke/run.js` is 44/44 with all
+      eighteen capabilities verified on 0.11.0.
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 3/3
@@ -4424,6 +4434,42 @@ a workaround for two live sessions sharing one worktree; see
       `bg-active` fails the window case by name. 910 unit / 269 runtime green.
       Docs: `docs/button.mdx` §Variants/§Theming and `docs/checkbox.mdx`
       §Theming.
+
+`[x]` `packages/primitives`: **a shortcut chord was a control's key** — every
+      control read `KeyEvent.key` and ignored `KeyEvent.modifiers`, so a chord
+      meant for the platform or the application acted as a plain press:
+      `Cmd+A` chose a radio group's option whose label starts with "a" (and
+      typed one into every `OTPField` cell), `Cmd+Enter`/`Ctrl+Space` (the macOS
+      input source) activated a focused `Button`/`Toggle`/`Checkbox`/`Switch`/
+      `Rating`, and a chorded arrow moved a `Slider`, `RangeSlider`,
+      `NumberField` or `ScrollArea`. The pinned runtime already skips a command
+      modifier for its own default actions (`hasCommandModifier` in
+      `@gpuix/native`'s `renderer-state`: Escape, Tab traversal, a dialog's
+      dismissal), so a control was the one place the rule did not hold.
+      `core/keyboard.ts`'s `isPlainKey(chord)` owns the rule now (Ctrl/Alt/Cmd
+      are chords, Shift is not), exported from `core/`, and every key entry
+      point guards with it **before** `swallowKeyDefault` — twelve components
+      plus the scroll viewport — so a chord's default action keeps running.
+      Proof: `src/components/keyboard-chords.test.tsx` (6 cases, every reader:
+      group arrows/type-ahead/toggle, OTP typing, slider/range/number-field
+      steps) measures both halves in every case — the chord does nothing **and**
+      the plain key still acts; `activation.test.tsx` gains the matching
+      `a chord belongs to the platform` suite over its seven activation parts
+      (three chords each, no `preventDefault`, plus a `Shift` press that still
+      activates); `core/keyboard.test.ts` holds the rule. Window proof:
+      `runtime/controls.runtime.test.tsx`'s `leaves a shortcut chord's key to
+      the platform` (`cmd-enter` activates nothing, `cmd-a` leaves the radio
+      value, both plain keys then act) and `runtime/layout.runtime.test.tsx`'s
+      `leaves a chorded scroll key to the platform` (`cmd-end`/`alt-down` leave
+      the offset at 0). Directions measured: with the twelve guards reverted,
+      **13** unit cases fail by name (`Cmd+A` selects "spacious", the OTP cell
+      reports `a`, the slider moves to 43) and both window cases fail
+      (`expected 1 to be +0` for the activation, the moved offset for the
+      scroller); restored, 935 unit / 273 runtime green. Docs: the chord
+      paragraph in the §Keyboard of the fourteen interactive pages (button,
+      icon-button, toggle, toggle-group, checkbox, checkbox-group, radio-group,
+      switch, rating, otp-field, number-field, slider, range-slider,
+      scroll-area) and `docs/README.md` §Cross-component guards.
 
 ## Blockers (project-level, with evidence)
 
@@ -7069,6 +7115,7 @@ numbers).
 | `COMPONENTS.md`'s **Property panels** row carries a literal `\|` inside `kind: "readonly" \| "editable"`, which splits the row into five cells — the site's inventory parser reports `line 259: expected 4 cells under a tier, found 5` and `inventory.test.ts` stays red | data (owns the Tier 3 row) | open — escape the pipe as `\\\|` or word the union without it |
 | Publish the **property inspector** measurement — the live `inspector-lifecycle` probe (48 checks, 0.11.0) measured what Tier 3's *property panels*, *key-value displays*, *data toolbars* and *statistic cards*, and Tier 4's *inspector panels* and *property editors* rows claim: one object read by a preview, 30 key-value rows and a metric card; an `Input` edit reaching all of them while it keeps the platform text session; a toolbar row sizing all three views (120 → 240, 9600 → 19200); and a **−200** wheel scrolling only the inspector while its pane and the preview caption hold their `y`, with the **6 px** divider as a panel group's whole gap. `COMPONENTS.md`'s six rows now carry `yes (measured)`, and the stale Command palette row cites `command-palette` + `window-shortcut-lifecycle`. The capability record and `/docs/data-display`/`/docs/workspace` still describe these rows as composition with no window behind them | playground (the probe, landed) + docs-site (the record and both lane pages) | **playground half landed** 2026-10-22 — `apps/playground/README.md` §`inspector-lifecycle` records the measurement and three negative controls (a fixed preview width, `overflowY: hidden`, a wider label column), and `.artifacts/live/inspector.png` is the frame. **docs-site half landed 2026-10-22** — the record gains **Property inspector** (`supported, with limits`, composed rather than provided) with the probe's own readouts (one row and a **6px** divider as the whole gap, the preview at 120×80 and the metric at 9600, `ab` reaching the readout/preview/`tag` row in one frame while the field keeps the platform text session, **Wide** at 240/19200/240×80, **Reset size** returning the width and keeping the tag, the **−200** wheel scrolling only the 30 rows, and the toolbar as a row rather than a host) and the workaround (a pane that owns its `overflow`, every view painted from the one object, one value column derived from the label column). `/docs/runtime#measured-in-a-window` publishes it, §5 owes `inspector-lifecycle`, `/docs/data-display` gains **A property panel is one object, read four ways** and `/docs/workspace` gains **The inspector is a pane, not a page** (including the two saves a dock owns). Guards: `capability-doc.test.ts`'s new case derives the printed sizes and totals from `apps/playground/src/live/inspector.ts` (`width`/`height`/`WIDE_WIDTH`) so a fixture edit cannot leave the record on the previous object, and `lane-page.test.ts` gained one case per lane page. Directions measured: renaming the record row fails `expected undefined to be 'supported, with limits'`, and retitling either page's section fails its lane case by name; restored, the two files are green |
 | Correct **`/docs/testing`'s capability rule** — the page says "A capability is `verified` only when every scenario covering it passed, `failed` when one did not, and `unverified` when none ran", and `@gpuixui/testing` now emits `unverified` for the case the page does not name: a **scoped** run (`--only`) that sampled a capability but did not cover it. The report no longer grades from the scenarios it was handed — the runners pass `coverageOf(registry)`, so `--only examples-mount` prints `layout=unverified` and the page's rule otherwise reads as "a pass means verified", which is exactly the citation the fix removes. The rule is: verified when every declared scenario of the capability **ran** and passed, failed when one did not, `unverified` when the run only sampled it, and no row at all for a capability the run never touched. The page's export table should also carry the seam: `coverageOf` and `capabilityStatuses` (and `Coverage`), which the package README lists and a runner outside this repo would need to build its own report, and the summary's `(unverified: the run did not cover every probe of that capability)` note. Owner: docs-site (`apps/docs/content/docs/testing.mdx` §The report) | docs-site | **resolved** — `/docs/testing` §The report now states the rule the runner applies: `verified` only when every scenario the registry declares for the capability **ran** and passed, `failed` when one of them did not, `unverified` when the run only **sampled** it (`--only` is the normal case), and **no line at all** for a capability the run never touched; the old "`unverified` when none ran" sentence is gone. The export table carries the seam a runner outside this repo needs — `Coverage`, `coverageOf`, `capabilityStatuses` and `RunMeta.coverage` (the `Smoke` namespace row names them too) — and the page quotes `formatReport`'s scoped-run note verbatim. `testing-page.test.ts` gained three cases: the rule held to `capabilityStatuses`'s own branches and the untouched-capability omission (the stale sentence fails it by name), the three seam names held to both the page's export table and the package README while the source still exports them, and the summary note **derived** from `report.ts`'s literal rather than retyped, with `formatReport`'s `summary` as its home. Directions measured: at HEAD the three cases failed (`every scenario the registry declares…`, `[ 'Coverage', 'coverageOf', 'capabilityStatuses' ]`, the missing note), and re-planting the old sentence fails `states the capability rule…` with `not to contain` while the corrected page is 14/14 green. Scoped run: `nub run --filter @gpuixui/docs test src/lib/testing-page.test.ts` |
+| Give the new **Charts** package page its `## API` section — `packages/data/docs/charts.mdx` landed on 2026-10-22 with The shapes, Sizing, The numbers, Theming, Accessibility, Limitations and Verification, and the site's template guard requires an `## API reference` table before Theming, so `package-page-template.test.ts` reports `packages/data/docs/charts.mdx: no API section` and the docs suite stays red on a page the site now mounts | data (owns `packages/data/docs`) | **open** — add the props table for `BarChart`, `StackedBar`, `LineChart`, `DonutChart`, `Sparkline` and `ChartLegend`, the way the package's other pages do; the lane page already links `/docs/data-display/charts` |
 
 ## TanStack cores
 

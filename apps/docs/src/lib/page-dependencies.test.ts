@@ -19,8 +19,9 @@ import { readPageDependencies } from "./page-dependencies-source";
  *
  * The page stem names the component (`otp-field` → `OTPField`); the public
  * symbol index resolves it, a page whose stem matches nothing resolves through
- * the part it names in its opening line, and a family that publishes no symbol
- * under its own name falls back to the file of the same name. A page that
+ * the part it names in its opening line, a family that publishes no symbol
+ * under its own name falls back to the file of the same name, and a family
+ * page with neither resolves through the first part its example imports. A page that
  * resolves to no source is reported here rather than rendering no strip in
  * silence.
  */
@@ -79,6 +80,11 @@ describe("the dependency index", () => {
     // stem resolves through the part it names in its opening line.
     expect(index.pages["/docs/data-display/expandable-rows"]?.module).toBe(
       "packages/data/src/table/expandable.tsx",
+    );
+    // A family page names no one subject and matches no stem; the first part
+    // its own example imports answers, so the source block shows real code.
+    expect(index.pages["/docs/data-display/charts"]?.module).toBe(
+      "packages/data/src/chart/chart.tsx",
     );
   });
 

@@ -60,6 +60,37 @@ const subjectOf = (markdown: string): string | undefined => {
   return /`([A-Za-z_][A-Za-z0-9_]*)`/.exec(opening)?.[1];
 };
 
+/**
+ * The names a page's first example imports from its own package, in order.
+ *
+ * A page that documents a family rather than one part (`charts`) names no
+ * single subject in its opening and matches no file stem; the example it
+ * teaches is the next honest answer, and it is the page's own code.
+ */
+const importedNames = (
+  markdown: string,
+  specifier: string,
+): ReadonlyArray<string> => {
+  const fence = /```tsx\n([\s\S]*?)```/.exec(markdown)?.[1] ?? "";
+  const escaped = specifier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return [
+    ...fence.matchAll(
+      new RegExp(`import\\s*\\{([^}]+)\\}\\s*from\\s*"${escaped}"`, "g"),
+    ),
+  ].flatMap((match) =>
+    (match[1] ?? "")
+      .split(",")
+      .map(
+        (name) =>
+          name
+            .trim()
+            .split(/\s+as\s+/)[0]
+            ?.trim() ?? "",
+      )
+      .filter((name) => name !== ""),
+  );
+};
+
 /** The module a page documents, from the published symbol or its file name. */
 const moduleFor = (
   root: string,
@@ -97,7 +128,13 @@ const moduleFor = (
         left.localeCompare(right),
     );
   const found = named[0];
-  return found === undefined ? undefined : relative(root, found);
+  if (found !== undefined) return relative(root, found);
+
+  const imported = importedNames(markdown, collection.packageName).find(
+    (name) => published?.some((symbol) => symbol.name === name),
+  );
+  const byImport = published?.find((symbol) => symbol.name === imported);
+  return byImport === undefined ? undefined : byImport.module;
 };
 
 /** The specifiers a module imports, in the order the file declares them. */

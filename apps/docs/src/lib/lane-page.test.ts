@@ -122,7 +122,7 @@ const rowFor = (table: string, name: string): string => {
 
 describe("the data-display page's drawing claims", () => {
   const dataPage = read(dataDisplayPage);
-  const charts = rowFor(dataPage, "Charts");
+  const charts = rowFor(dataPage, "Chart surfaces");
 
   it("states the measured surface, not a plan", () => {
     expect(rowFor(record, "Inline SVG painting")).toContain(
@@ -732,8 +732,14 @@ describe("the data-display page's shipped rows", () => {
     expect(parts.filter((part) => !dataPage.includes(part))).toEqual([]);
   });
 
-  it("still says what is pending, so the lane is not called whole", () => {
-    expect(lane.pending).toBeGreaterThan(0);
+  it("calls the lane whole only when the inventory does", () => {
+    // The lane's premise is read from the inventory: while a row is pending the
+    // page has to say so, and once none is it must not keep a stale `todo` — a
+    // page that calls a shipped lane unfinished hides the work that landed.
+    if (lane.pending === 0) {
+      expect(dataPage).not.toContain("`todo`");
+      return;
+    }
     expect(dataPage).toContain("`todo`");
   });
 
