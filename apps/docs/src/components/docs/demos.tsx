@@ -9,6 +9,12 @@ import {
   type ReactNode,
 } from "react";
 import {
+  CheckboxStates,
+  CheckboxWorkflow,
+  checkboxStatesSource,
+  checkboxWorkflowSource,
+} from "./checkbox-demo";
+import {
   ComboboxDemo,
   ComboboxMultiple,
   comboboxDemoSource,
@@ -2428,6 +2434,11 @@ export const demos: Readonly<Record<string, Demo>> = {
   "button-sizes": { render: ButtonSizes, source: sizeSource },
   "button-states": { render: ButtonStates, source: stateSource },
   "card-variants": { render: CardVariants, source: cardVariantsSource },
+  "checkbox-states": { render: CheckboxStates, source: checkboxStatesSource },
+  "checkbox-workflow": {
+    render: CheckboxWorkflow,
+    source: checkboxWorkflowSource,
+  },
   "card-composition": {
     render: CardComposition,
     source: cardCompositionSource,

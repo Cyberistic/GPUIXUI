@@ -99,6 +99,11 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/card.tsx",
   },
   {
+    file: "checkbox.mdx",
+    row: "Checkboxes",
+    source: "packages/primitives/src/components/Checkbox.tsx",
+  },
+  {
     file: "combobox.mdx",
     row: "Comboboxes",
     suite: "packages/components/src/behaviour/combobox.test.tsx",
@@ -663,7 +668,12 @@ describe("the curated component pages", () => {
     expect(text).toContain("No `aria-multiselectable`");
     expect(text).toContain("without running its `onFocus`");
     expect(text).toContain("never fades by opacity");
-    expect(text).toContain("40 native behaviour tests");
+    // Derived, so a case added to the suite fails the generic count check above
+    // rather than leaving this line asserting a stale number.
+    expect(list.suite, "the list page names no behaviour suite").toBeDefined();
+    expect(text).toContain(
+      `${nativeCases(list.suite ?? "")} native behaviour tests`,
+    );
     // The retracted shapes: a stop per row, or a faded disabled row.
     expect(text).not.toContain("one tab stop per row");
     expect(text).not.toContain("disabled rows are dimmed");
@@ -1144,6 +1154,65 @@ describe("the curated component pages", () => {
     // Floors: every curated page is read, and each verdict is a real word.
     expect(pages.length).toBeGreaterThanOrEqual(4);
     expect(missing).toEqual([]);
+  });
+
+  it("holds the checkbox's three states and its target to the source", () => {
+    // A checkbox page can drift in three silent ways: it can promise an
+    // `aria-checked` the runtime does not have, hide the 24px target that makes
+    // the small drawing pressable, or teach the wrong activation edge (Space on
+    // key down double-toggles). Each is read from the painter and the shared
+    // decisions rather than trusted.
+    const page = pages.find((candidate) => candidate.file === "checkbox.mdx");
+    expect(page, "the checkbox page is not in the curated set").toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    const selection = read("packages/primitives/src/core/selection.ts");
+    const keyboard = read("packages/primitives/src/core/keyboard.ts");
+    const recipe = read("packages/primitives/src/recipe/index.ts");
+
+    expect(source).toContain('role="checkbox"');
+    expect(source).toContain("aria-valuetext={selectionValueText(current)}");
+    // No `aria-checked` attribute (the module's comment names the absence).
+    expect(source).not.toContain("aria-checked=");
+    expect(source).toContain("aria-description=");
+    expect(source).toContain("selectionTargetStyle(spec, theme)");
+    expect(source).toContain("controlRing(theme,");
+    expect(source).toContain('pointerEvents: "none"');
+    expect(source).toContain(
+      "tabIndex={props.disabled === true ? undefined : 0}",
+    );
+    expect(source).toContain("composePress(props.disabled === true");
+
+    // The target is the token helper's arithmetic, not a hardcoded 24px.
+    expect(selection).toContain("targetInset(side)");
+    expect(keyboard).toContain(
+      'if (key === ENTER_KEY) return phase === "down"',
+    );
+    expect(keyboard).toContain('if (key === SPACE_KEY) return phase === "up"');
+    expect(keyboard).toContain("if (held) return false");
+
+    // The empty edge, its state wash and the filled box's derived fills.
+    expect(recipe).toContain(
+      'invalid === true ? "border-destructive" : "border-strong"',
+    );
+    expect(recipe).toContain("hover:bg-hover active:bg-active");
+    expect(recipe).toContain("hover:fill-");
+    expect(recipe).toContain("active:fill-");
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("@gpuix/native@0.11.0");
+    expect(text).toContain("`aria-valuetext`");
+    expect(text).toContain("no `aria-checked`");
+    expect(text).toContain("24px");
+    expect(text).toContain("key **up**");
+    expect(text).toContain("key **down**");
+    expect(text).toContain("held key");
+    expect(text).toContain("paint override");
+    expect(text).toContain("`borderStrong`");
+    expect(text).toContain("`filledHover`");
+    expect(text).toContain("`filledPressed`");
+    expect(text).toContain("`iconSize`");
   });
 
   it("hold the tip's clock and its trigger rule to the runtime", () => {

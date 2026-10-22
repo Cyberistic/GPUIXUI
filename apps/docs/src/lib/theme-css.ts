@@ -1,4 +1,10 @@
-import { seriesColors, type Theme } from "@gpuixui/tokens";
+import {
+  filledHover,
+  filledPressed,
+  seriesColors,
+  targetSize,
+  type Theme,
+} from "@gpuixui/tokens";
 import type { CSSProperties } from "react";
 import { cssFontStack } from "./fonts";
 
@@ -24,9 +30,11 @@ const toKebab = (name: string): string =>
  * `--<kebab role>`, `--radius` from `radius.md`, the two families, the control
  * metrics and row height of the theme's density so a platform's controls and
  * rows change size in a browser preview the way they do in the runtime, the
- * default spacing step a list row adds to its height, and the five categorical
- * series colours as `--series-1` through `--series-5` so a chart or a legend
- * paints the theme's scale instead of a palette of its own.
+ * default spacing step a list row adds to its height, the icon steps a drawn
+ * control takes its side from, the pressable-target floor a control reserves
+ * around that drawing, and the five categorical series colours as `--series-1`
+ * through `--series-5` so a chart or a legend paints the theme's scale instead
+ * of a palette of its own.
  *
  * @example
  * ```tsx
@@ -46,6 +54,16 @@ export const toCssVars = (theme: Theme): CssVars => ({
   "--control-padding-x-lg": `${theme.density.controlPaddingX.lg}px`,
   "--row-height": `${theme.density.rowHeight}px`,
   "--spacing-md": `${theme.spacing.md}px`,
+  "--icon-size-sm": `${theme.iconSize.sm}px`,
+  "--icon-size-md": `${theme.iconSize.md}px`,
+  "--icon-size-lg": `${theme.iconSize.lg}px`,
+  "--target-size": `${targetSize.minimum}px`,
+  // A filled box's hover and press are the theme's derived opaque fills, not an
+  // alpha lift, so a preview shadowing a checked control must take them here.
+  "--primary-hover": filledHover(theme, "primary"),
+  "--primary-pressed": filledPressed(theme, "primary"),
+  "--destructive-hover": filledHover(theme, "destructive"),
+  "--destructive-pressed": filledPressed(theme, "destructive"),
   ...Object.fromEntries(
     seriesColors(theme).map((value, index) => [`--series-${index + 1}`, value]),
   ),

@@ -2,6 +2,7 @@ import accordion from "../../../../../packages/components/src/accordion.tsx?raw"
 import alert from "../../../../../packages/components/src/alert.tsx?raw";
 import button from "../../../../../packages/primitives/src/components/Button.tsx?raw";
 import card from "../../../../../packages/components/src/card.tsx?raw";
+import checkbox from "../../../../../packages/primitives/src/components/Checkbox.tsx?raw";
 import commandMenu from "../../../../../packages/components/src/command-menu.tsx?raw";
 import combobox from "../../../../../packages/components/src/combobox.tsx?raw";
 import confirmDialog from "../../../../../packages/components/src/confirm-dialog.tsx?raw";
@@ -26,6 +27,7 @@ export const componentSources = {
   alert,
   button,
   card,
+  checkbox,
   commandMenu,
   combobox,
   confirmDialog,

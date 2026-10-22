@@ -1,8 +1,11 @@
 import {
   darkSeries,
+  filledHover,
+  filledPressed,
   lightSeries,
   platformTheme,
   retroStyles,
+  targetSize,
   themes,
   type Theme,
 } from "@gpuixui/tokens";
@@ -83,6 +86,18 @@ const darkDensity: Readonly<Record<string, number>> = {
   "control-padding-x-lg": themes.dark.density.controlPaddingX.lg,
   "row-height": themes.dark.density.rowHeight,
   "spacing-md": themes.dark.spacing.md,
+  "icon-size-sm": themes.dark.iconSize.sm,
+  "icon-size-md": themes.dark.iconSize.md,
+  "icon-size-lg": themes.dark.iconSize.lg,
+  "target-size": targetSize.minimum,
+};
+
+/** The derived fills a filled control previews, keyed by their CSS variable. */
+const darkFills: Readonly<Record<string, string>> = {
+  "primary-hover": filledHover(themes.dark, "primary"),
+  "primary-pressed": filledPressed(themes.dark, "primary"),
+  "destructive-hover": filledHover(themes.dark, "destructive"),
+  "destructive-pressed": filledPressed(themes.dark, "destructive"),
 };
 
 describe("theme bridge", () => {
@@ -106,6 +121,16 @@ describe("theme bridge", () => {
     );
     expect(vars["--row-height"]).toBe(`${themes.dark.density.rowHeight}px`);
     expect(vars["--spacing-md"]).toBe(`${themes.dark.spacing.md}px`);
+    // A drawn control's side is an icon step and its press target is the
+    // shared floor around it, so a checkbox preview cannot carry its own 16px.
+    expect(vars["--icon-size-md"]).toBe(`${themes.dark.iconSize.md}px`);
+    expect(vars["--target-size"]).toBe(`${targetSize.minimum}px`);
+    // A checked box's hover and press are the derived opaque fills, not an
+    // alpha lift, so the bridge cannot leave a preview to guess one.
+    expect(vars["--primary-hover"]).toBe(filledHover(themes.dark, "primary"));
+    expect(vars["--primary-pressed"]).toBe(
+      filledPressed(themes.dark, "primary"),
+    );
   });
 
   it("carries the platform density, so a preview's controls change size", () => {
@@ -177,6 +202,8 @@ describe("preview style sheets", () => {
       const role = toCamel(name.slice(2));
       const metric = darkDensity[name];
       if (metric !== undefined) return value !== `${metric}px`;
+      const fill = darkFills[name];
+      if (fill !== undefined) return value !== fill.toLowerCase();
       if (role === "radius") return value !== `${themes.dark.radius.md}px`;
       const expected = darkColours[role];
       // Not every declared name is a colour role; only roles are held here.

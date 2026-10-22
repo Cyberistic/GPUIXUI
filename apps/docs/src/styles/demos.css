@@ -48,6 +48,14 @@
   --control-padding-x-lg: 12px;
   --row-height: 32px;
   --spacing-md: 8px;
+  --icon-size-sm: 14px;
+  --icon-size-md: 16px;
+  --icon-size-lg: 20px;
+  --target-size: 24px;
+  --primary-hover: #b0b2fe;
+  --primary-pressed: #b4b6fd;
+  --destructive-hover: #fd7b7c;
+  --destructive-pressed: #fc8384;
 
   display: flex;
   flex-wrap: wrap;
@@ -2102,6 +2110,211 @@
 
 .gx-list-multiple {
   max-width: 480px;
+}
+
+/* ---- checkbox: mirrors primitives/src/components/Checkbox.tsx -----------
+   The box draws at `iconSize[size]` and sits inside a `targetSize.minimum`
+   (24px) press target that owns the role, the tab stop and the ring; the
+   drawing takes no pointer input. The empty box is carried by `borderStrong`
+   (never the field fill), an invalid one by `destructive`, and a filled one by
+   its accent's derived `filledHover`/`filledPressed` fills — no alpha lift. */
+.gx-check-scene {
+  align-items: stretch;
+  gap: 10px;
+  min-height: 240px;
+  padding: 24px;
+}
+
+.gx-check-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 360px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-check-parent,
+.gx-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.gx-check-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: calc(var(--target-size) + var(--spacing-md));
+}
+
+.gx-check-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-check-title {
+  color: var(--foreground);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.gx-check-hint {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-check-target {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-size);
+  height: var(--target-size);
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+}
+
+.gx-check-target:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-check-target[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gx-check-target[data-managed] {
+  cursor: default;
+}
+
+.gx-check-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  border: 1px solid var(--border-strong);
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: var(--icon-size-md);
+}
+
+.gx-check-target[data-size="sm"] .gx-check-box {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  font-size: var(--icon-size-sm);
+}
+
+.gx-check-target[data-size="lg"] .gx-check-box {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+  font-size: var(--icon-size-lg);
+}
+
+.gx-check-target[data-invalid] .gx-check-box {
+  border-color: var(--destructive);
+  color: var(--destructive);
+}
+
+.gx-check-target[data-state="checked"] .gx-check-box,
+.gx-check-target[data-state="indeterminate"] .gx-check-box {
+  border-color: transparent;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-check-target[data-accent="destructive"][data-state="checked"] .gx-check-box,
+.gx-check-target[data-accent="destructive"][data-state="indeterminate"]
+  .gx-check-box {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.gx-check-target[data-state="checked"]:not([data-disabled]):not(
+    [data-managed]
+  ):hover
+  .gx-check-box,
+.gx-check-target[data-state="indeterminate"]:not([data-disabled]):not(
+    [data-managed]
+  ):hover
+  .gx-check-box {
+  background: var(--primary-hover);
+}
+
+.gx-check-target[data-state="checked"]:not([data-disabled]):not(
+    [data-managed]
+  ):active
+  .gx-check-box,
+.gx-check-target[data-state="indeterminate"]:not([data-disabled]):not(
+    [data-managed]
+  ):active
+  .gx-check-box {
+  background: var(--primary-pressed);
+}
+
+.gx-check-target[data-accent="destructive"][data-state="checked"]:not(
+    [data-disabled]
+  ):not([data-managed]):hover
+  .gx-check-box,
+.gx-check-target[data-accent="destructive"][data-state="indeterminate"]:not(
+    [data-disabled]
+  ):not([data-managed]):hover
+  .gx-check-box {
+  background: var(--destructive-hover);
+}
+
+.gx-check-target[data-accent="destructive"][data-state="checked"]:not(
+    [data-disabled]
+  ):not([data-managed]):active
+  .gx-check-box,
+.gx-check-target[data-accent="destructive"][data-state="indeterminate"]:not(
+    [data-disabled]
+  ):not([data-managed]):active
+  .gx-check-box {
+  background: var(--destructive-pressed);
+}
+
+.gx-check-target[data-state="unchecked"]:not([data-disabled]):hover
+  .gx-check-box {
+  background: var(--hover);
+}
+
+.gx-check-target[data-state="unchecked"]:not([data-disabled]):active
+  .gx-check-box {
+  background: var(--active);
+}
+
+.gx-check-mark {
+  font-size: 0.7em;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.gx-check-states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.gx-check-state {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.gx-check-readout {
+  margin: 0;
+  color: var(--placeholder);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
 }
 
 /* ---- tooltip: mirrors primitives/src/components/Tooltip.tsx's recipe ----

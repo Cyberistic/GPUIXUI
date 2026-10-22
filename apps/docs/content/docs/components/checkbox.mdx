@@ -1,0 +1,208 @@
+---
+title: Checkbox
+description: An independent yes/no with an optional mixed state — a 24px press target around an icon-sized box, on the runtime's key events.
+---
+
+`Checkbox` is a square control for an independent choice. It has three paint
+states — unchecked, checked and **indeterminate** — over one selection model
+shared with Switch and Radio group, and it is a primitive: the box and its mark
+are two parts, so a custom glyph replaces the drawing without rebuilding the
+control. What it is **not** is a toggle for a mode (that is Switch) or one
+choice from a set (Radio group).
+
+<ComponentPreview name="checkbox-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/primitives" importName="Checkbox" />
+
+<ComponentSource
+  name="checkbox"
+  file="packages/primitives/src/components/Checkbox.tsx"
+/>
+
+## Usage
+
+```tsx
+import { Checkbox } from "@gpuixui/primitives";
+import { useState } from "react";
+
+export const Digest = () => {
+  const [email, setEmail] = useState(true);
+
+  return (
+    <Checkbox
+      checked={email}
+      label="Email notifications"
+      onCheckedChange={setEmail}
+    />
+  );
+};
+```
+
+A visible `Label` beside the box is **text only**: 0.11.0 has no
+`aria-labelledby`, so the box is named by its own `label` prop. Pass the same
+string, or spread `labelledBy(name)`, and the reader hears one name rather than
+a label that points at nothing.
+
+## Variants
+
+The **accent** decides the fill and the mark. Both are measured roles, so a
+theme change repaints the box rather than needing a variant change.
+
+| Accent | Fill and mark |
+| ------ | ------------- |
+| `primary` (default) | `primary` fill with `primaryForeground` on it |
+| `destructive` | `destructive` fill with `destructiveForeground` on it |
+
+## Sizes and states
+
+<ComponentPreview name="checkbox-states" />
+
+| Size | Drawing | Press target |
+| ---- | ------- | ------------ |
+| `sm` | `iconSize.sm` (14px) | 24px |
+| `md` (default) | `iconSize.md` (16px) | 24px |
+| `lg` | `iconSize.lg` (20px) | 24px |
+
+The target is the box's **role**, tab stop and ring; the drawing inside takes no
+pointer input, so a press on the box and a press on its padding each toggle
+exactly once. An empty box is carried by its edge (`borderStrong`, or
+`destructive` while invalid) rather than a field fill; hover and press paint the
+`hover`/`active` wash without changing that edge. A filled box's hover and press
+are the theme's derived **opaque** fills, not an alpha lift, because the mark is
+painted on that fill.
+
+`indeterminate` is a **paint override**: the box draws a dash and announces
+`mixed`, while activation still toggles the underlying boolean. Pressing an
+indeterminate box therefore reports `true` — a "select all" parent becomes
+checked, not cleared.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Checkbox` | the target, the state, the name, the description and the keyboard edges |
+| `CheckboxIndicator` | the mark region; `children` replace the default check/dash |
+| `CheckboxGroup` | a set of boxes with one tab stop and arrow movement |
+
+`Checkbox`'s children are the indicator's content and are drawn inside the
+mark's `pointerEvents: "none"` guard, so a custom glyph cannot swallow the press.
+The box forwards the `TooltipTriggerProps` pair onto its target, which makes a
+box in a toolbar a tip's trigger; its own `description` wins the shared
+`aria-description` channel.
+
+The preview's parent is app composition, not a component: its rule counts only
+the channels a reader can change, so a managed row never leaves the parent
+permanently mixed. Use `CheckboxGroup` when the boxes are a set rather than a
+handful of independent choices.
+
+## Keyboard
+
+| Key | Contract |
+| ---- | -------- |
+| `Space` | toggles on key **up**; the press calls `preventDefault()` so a scroller does not move while the box waits for the release |
+| `Enter` | toggles on key **down** |
+| held key | repeat events do nothing |
+| `Tab` | reaches the target unless the box is disabled |
+
+A disabled box removes the tab stop and installs no press handler; its keys and
+focus stay observable to the caller. There is no `aria-disabled`.
+
+## API reference
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `checked` | `boolean` | — | controlled state; omit to let the box keep its own |
+| `defaultChecked` | `boolean` | `false` | initial state when uncontrolled |
+| `onCheckedChange` | `(next: boolean) => void` | none | the next boolean, only when it changed |
+| `onChange` | `(next: boolean) => void` | none | deprecated alias for `onCheckedChange`; the new name wins when both are passed |
+| `children` | `ReactNode` | the default glyph | the mark's content |
+| `indeterminate` | `boolean` | `false` | paints a dash and announces `mixed`; overrides `checked` |
+| `disabled` | `boolean` | `false` | refuses pointer and keys and leaves the tab order |
+| `invalid` | `boolean` | `false` | the empty box takes the destructive edge |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | the drawing's side from `iconSize`; the target stays 24px |
+| `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark roles |
+| `label` | `string` | none | the accessible name; a visible `Label` does not supply it |
+| `description` | `string` | none | announced help (`aria-description`); wins over a tooltip's text |
+| `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `style` | `StateStyle<CheckboxState>` | — | resolved against the live state and merged last |
+| `testId` | `string` | — | stable locator |
+| `ref` / `onLayout` | host address | none | the box is the addressed element: focus it, measure it, and name it for automation with `aria-id` |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the box's own; yours runs first |
+
+`CheckboxState` carries `{ disabled, focused, checked, indeterminate, invalid }`
+to the `style` callback, so a callback can paint a property the recipe does not.
+
+### `CheckboxIndicator`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactNode` | the default check/dash | the glyph |
+| `className` | `string` | — | compiled through the recipe registry after the part's rules |
+| `style` | `StyleDesc` | — | merged last |
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| empty box edge | `borderStrong` (`destructive` while invalid) |
+| empty box wash | `hover` while hovered, `active` while pressed |
+| filled box | `primary`/`destructive`, with the derived `filledHover` and `filledPressed` for feedback |
+| mark | `primaryForeground` / `destructiveForeground` |
+| target ring | `ring` at `borderWidth.strong`, painted after Tab and never after a mouse press |
+| disabled box | the target fades to `disabledOpacity` and paints no feedback |
+
+The edge is never the `input` role: that is a **field fill** here, and it is the
+card's own white in the light theme, so an empty box carried by it disappears.
+The box's side comes from `iconSize` and the target from `targetSize.minimum`,
+so density and platform changes do not shrink a press target below 24px.
+
+## Accessibility and limitations
+
+- The runtime's role is **`CheckBox`**. State is announced through
+  **`aria-valuetext`** — `checked`, `unchecked` or `mixed` — because
+  `@gpuix/native@0.11.0` has no `aria-checked`; a browser preview may show
+  `aria-checked`, the native box does not.
+- No label-inside-the-control composition and no `aria-labelledby`: the box's
+  own `label` is its name, and its `description` is its help (`aria-description`;
+  there is no `aria-describedby`).
+- The target is 24px around a 14–20px drawing, the press-target floor WCAG 2.2
+  sets for a small control, and the drawing takes no pointer input, so a press
+  toggles once wherever it lands.
+- No `aria-disabled`, no partial-state animation, and no third value: `mixed` is
+  a paint state over a boolean.
+- A held key never repeats the activation, and a `Tab` traversal runs the
+  focus handler (measured by the tooltip's window probe), so a focus-driven hint
+  opens on the box.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the box, the target, the state machine and the mark |
+| `@gpuix/react` | the host event and style types |
+| `@gpuix/react/floating` | `resolveStyle` for the state callback |
+| `@gpuixui/tw` | `cn` conflict resolution |
+| `@gpuixui/icons` | the default check/dash glyph |
+
+## Related
+
+- **Switch** — an immediate on/off for a mode, not a list of choices.
+- **Radio group** — one choice from a set; arrows change the value.
+- **Checkbox group** — several boxes with one tab stop and arrow movement.
+- **Tooltip** — a short label for a box in a toolbar.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `partial` runtime verdict: the control is whole,
+but 0.11.0 has no `aria-checked`, so the state travels as `aria-valuetext`, and
+a visible `Label` cannot name the box. The unit and window evidence is
+`packages/primitives/src/components/Checkbox.test.tsx`,
+`runtime/controls.runtime.test.tsx` (click and Space-up toggle, `mixed` reads
+back off the accessibility tree, a custom mark still toggles on a real hit test)
+and `runtime/selection-targets.runtime.test.tsx` (the 24px target around the
+14–20px drawing, both press paths, and the edge read back in the boundary role).
+The strongest alternative for a name is `labelledBy(name)`, which puts the same
+string on the box; the strongest alternative for the mixed state is
+`aria-valuetext`, which the accessibility tree publishes.
