@@ -3,18 +3,8 @@ title: RadioGroup
 description: One choice from a small set, with a roving tab stop and arrow navigation.
 ---
 
-`RadioGroup` is a radio group whose options can arrive two ways: as data
-(`options: RadioOption[]`) or as `<RadioGroupItem>` children. Both are read into
-one option list, so the roving index and the arrow contract have a single path;
-the data prop is sugar for an option that carries only text. It follows the
-platform contract: the arrows **select and move focus together**, and the option
-row that holds keyboard focus paints the ring. A disabled option — the whole
-group or one choice — declares no ring and leaves the tab order.
-
-The **row** is the control, at least 24px tall even when its one line of text is
-shorter: it is what a pointer presses and what the runtime gives focus to. The
-circle is decoration with `pointerEvents: "none"`, so a filled circle cannot
-swallow the press that belongs to the row.
+`RadioGroup` is a radio group whose options arrive as data or as
+`<RadioGroupItem>` children; the arrows select and move focus together.
 
 ## Usage
 
@@ -33,29 +23,12 @@ import { RadioGroup } from "@gpuixui/primitives";
 />;
 ```
 
-An option that needs more than a name and a caption is an item:
+## Composition
 
-```tsx
-import { Icon } from "@gpuixui/icons";
-import { RadioGroup, RadioGroupItem, Text, useTheme } from "@gpuixui/primitives";
-
-const theme = useTheme();
-
-<RadioGroup label="Shipping" value={shipping} onValueChange={setShipping}>
-  <RadioGroupItem value="standard" label="Standard">
-    <Text role="label">Standard</Text>
-    <Text role="caption" tone="muted">4–6 days</Text>
-  </RadioGroupItem>
-  <RadioGroupItem value="express" label="Express">
-    <Icon name="clock" size={theme.iconSize.sm} color={theme.colors.primary} />
-    <Text role="label">Express</Text>
-    <Text role="caption" tone="muted">Tomorrow · $12</Text>
-  </RadioGroupItem>
-</RadioGroup>;
-```
-
-An item's `label` is the accessible name; its children are what the row draws.
-Fragments and arrays are transparent, so items can be grouped freely.
+| Part | Responsibility |
+| ---- | -------------- |
+| `RadioGroup` | the named group, the roving tab stop and the value |
+| `RadioGroupItem` | an option row; the data prop's element form |
 
 ## API
 
@@ -72,156 +45,19 @@ Fragments and arrays are transparent, so items can be grouped freely.
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the dot's fill |
 | `disabled` | `boolean` | `false` | disables every option |
 | `label` | `string` | none | accessible name for the group |
-| `description` | `string` | none | announced help for the group (`aria-description`); a blank one publishes nothing |
-| `ref` / `aria-id` / `onLayout` | host address | none | land on the row that holds the tab stop, so a form can focus the current choice |
+| `description` | `string` | none | announced help for the group (`aria-description`) |
+| `ref` / `aria-id` / `onLayout` | host address | none | land on the row that holds the tab stop |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
-| `style` | `StateStyle<RadioGroupState>` | — | resolved against the live state, merged last on the group |
-| `itemStyle` | `StateStyle<RadioItemState>` | — | resolved per option row against that row's state, merged last |
-| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the group's own, on the element that owns each: keys on the root, the press and focus on the option row |
+| `style` | `StateStyle<RadioGroupState>` | — | resolved against the live state, merged last |
+| `itemStyle` | `StateStyle<RadioItemState>` | — | resolved per option row, merged last |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the group's own; yours runs first |
 | `testId` | `string` | — | stable locator |
-
-`RadioOption` is `{ value, label, description?, disabled?, content? }`.
-`description` is a caption beside the name, not an accessible description;
-`content` replaces both with rich content.
-
-`RadioGroupItem` takes `value`, `label`, `description?`, `disabled?` and
-`children` (the rich content). It draws nothing itself: the group reads its props
-and renders the row, which is why the two paths cannot diverge.
-
-Your host handlers (`InteractionProps`) are composed with the group's, never
-substituted: yours runs first and the row still selects. A disabled option
-installs no `onClick` at all, so neither handler runs.
-
-## Keyboard
-
-| Key | Contract |
-| --- | -------- |
-| ↑ / ↓ (vertical) | move the selection and native focus, **wrapping**, skipping disabled options |
-| ← / → (horizontal) | the same on the horizontal axis |
-| Home / End | jump to the first / last **enabled** option and select it |
-| Enter / Space | select the focused option |
-| a letter | selects the next option whose label starts with it, wrapping and skipping disabled options |
-| Tab | moves to the group as **one** stop; the selected option holds it |
-
-Arrows and Home/End **select as they move** and take focus with them, matching
-the platform radio contract. The tab stop is the selection: a controlled
-`value` change from the parent moves the tab stop with it. Space selects on the
-**release** (the press is swallowed, so a scroll container does not also scroll);
-Enter selects on the press.
-
-A typed prefix lands where an arrow would — the selection follows it — and the
-search runs forward from the current option, so tapping the same letter again
-walks the options that share it. The prefix accumulates for half a second
-(`TYPE_AHEAD_RESET_MS`), which is what lets `al` tell two options apart instead
-of replacing the match, and a prefix that matches nothing retries its last
-character so a fast `qx` still means `x`.
-
-Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
-Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
-moving by word — belongs to the platform or the application and is left alone,
-default action included; Shift is not a chord, so `Shift+Space` is still a press.
-
-## Accessibility
-
-- Roles: `RadioGroup` and `RadioButton` in AccessKit.
-- The group's name comes from `label`.
-- Each option announces its selected state through **`aria-valuetext`**
-  (`checked` / `unchecked`); there is no `aria-checked`. The words are the
-  provider's `messages.selection` table.
-- An option's own `label` is its accessible name — trimmed, and absent when
-  blank, so an icon-only row falls back to the content it paints instead of
-  publishing an empty name; the visible text beside the circle is a separate
-  `Text` (or a `RadioGroupItem`'s children).
-- Disabled options are skipped by the arrows and are not tab stops.
-- The group's help is announced on the `RadioGroup` node through
-  **`aria-description`** (0.11.0 has no `aria-describedby`), so a `Label
-  description` reaches assistive technology when it is passed as `description`
-  or through `labelledBy(name, help)`.
-- The group wrapper is not focusable, so the **address** lands on the row that
-  holds the tab stop: `ref` receives that row, `aria-id` is its automation id, and
-  `onLayout` reports its box. The address follows the selection as the tab stop
-  moves (`runtime/address.runtime.test.tsx`).
-- Every option declares the keyboard outline on its **row** (the `ring` role, at
-  `borderWidth.strong`), because the runtime applies a `focusVisible` refinement
-  only to an element it tracks focus for — a ring declared on the circle, which
-  never holds focus, was a declaration nothing painted. The same measured rule
-  keeps the circle out of the press: a painted element owns a mouse-blocking
-  hitbox, so the circle declares `pointerEvents: "none"` and the row hears every
-  press.
-
-## Theming
-
-The circle is `selectionBoxStyle` with `shape: "circle"` and the dot is
-`radioDotStyle`, both from `core/selection.ts`, so a radio and a checkbox of the
-same size are the same square/circle family. An empty circle is carried by its
-edge — the measured boundary role (`borderStrong`, 3:1 on every strip a control
-sits on), never the `input` fill — and pointer feedback is a state wash under
-the dot, so the edge survives hover and press, including a destructive one. A
-chosen circle's hover and press paint the theme's **opaque** derived fill
-(`filledHover`/`filledPressed`) with the edge transparent, like the checkbox's,
-because the pip is painted on that fill. The row's style — the pressable
-floor, the ring, the cursor — comes from `group.tsx`'s `optionRowStyle`, and the
-circle's from the shared `decorative` guard, so the group controls — and the
-standalone selection controls — cannot disagree about
-which element is the control. Gaps use `spacing.sm`.
-
-`style` takes a `StateStyle<RadioGroupState>` — a `StyleDesc`, or a callback that
-receives `{ disabled, focused }` for the group. `itemStyle` takes a
-`StateStyle<RadioItemState>` and runs **once per option row** with
-`{ disabled, focused, checked }`, whether the options came from `options` or from
-`RadioGroupItem` children — the data path cannot paint a selected row without it.
-Both merge after every role decision, so a callback is the last word.
 
 ## Limitations
 
-- A `description` is not associated with the option for assistive technology.
-- **`""` is a value like any other.** An option whose `value` is the empty
-  string paints checked when the group's value is `""`, and because that is
-  `defaultValue`'s default an uncontrolled group carrying such an option starts
-  on it. A "no choice" state is therefore explicit: omit the empty-valued option,
-  or set the value to a real one and offer a clear action.
-- An item's `label` must be passed even when the children already show the same
-  text: the runtime has no `aria-labelledby`, so the two cannot be tied together
-  automatically.
-- **Item content must stay presentational.** A painted element owns a
-  mouse-blocking hitbox in this runtime, so a `Box` (or anything with its own
-  background) inside a `RadioGroupItem` takes the press that would select the
-  row; text and icons do not. Measured on 0.11.0. The circle a row draws is
-  guarded for you (`decorative`, from `components/internal.ts`).
-
-## Verification
-
-- `src/core/keyboard.test.ts` — arrow movement, wrapping, skipping, Home/End
-  landing on the nearest enabled end, and the type-ahead matcher (forward search
-  with wrap, case folding, a narrowing buffer, the last-character retry, and a
-  disabled match never being a landing spot).
-- `src/core/selection.test.ts` — circle and dot paint; the ring is not part of
-  the resting paint, so the recipe oracle stays comparable.
-- `src/recipe/geometry.test.ts` — the compiled circle equals the resolver and an
-  empty circle's edge clears the boundary floor on every measured strip.
-- `src/components/RadioGroup.test.tsx` — roving index and data options; a typed
-  prefix selects the option it names; an arrow
-  asks the group to move focus to the option it landed on; item children produce
-  the same option list as `options`, the arrow path skips a disabled item, an
-  option whose value is the empty string paints checked, and an
-  item's rich content reaches its row; the group's `style` callback sees the live
-  state, and `itemStyle` paints each row from its own.
-- `runtime/controls.runtime.test.tsx` — arrows move, wrap and skip disabled
-  options; Home/End jump to the enabled ends; arrows move native focus with the
-  selection and a controlled value moves the tab stop; a click on the circle
-  selects; two typed keys narrow onto the second "Al..." option and a pause past
-  the buffer's half second starts the next key over, measured in a window.
-- `runtime/groups.runtime.test.tsx` — the ring is declared on the row that holds
-  focus (and not on the circle), every option row reaches the 24px pressable
-  floor, and the box a row draws is kept out of the press.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Checkbox** — independent choices.
-- **Select** — the same choice in a popover, for longer lists.
-- **ButtonGroup** — actions, not a selection.
+- No `aria-checked`: a row's state is announced through `aria-valuetext`.
+- An option's `description` is a caption beside the name, not an accessible
+  description.
+- `""` is a value like any other: an option whose `value` is the empty string
+  paints checked when the group's value is `""`.
+- Item content must stay presentational; rich content uses `RadioGroupItem`.

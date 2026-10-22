@@ -3,11 +3,8 @@ title: OTPField
 description: A one-time code in length cells, held as one contiguous string.
 ---
 
-`OTPField` is a one-time-code entry control: `length` single-character
-`<input>` cells over one value. GPUix's `<input>` holds text natively, so the
-cells keep the caret and the selection; what is ours is the distribution of the
-code over them (`core/otp.ts`) and the movement of native focus between cells.
-It is **not** six independent fields: a caller passes and receives one string.
+`OTPField` is a one-time-code entry: `length` single-character cells over one
+string.
 
 ## Usage
 
@@ -30,52 +27,12 @@ const [code, setCode] = useState("");
 </Stack>;
 ```
 
-`length` defaults to six. The value is **contiguous from the first cell**, so
-typing into a cell beyond the current code appends at the end rather than
-leaving a hole.
-
-Enter is the caller's key, not the field's: pass `onSubmit` and the runtime
-reports it as a submit with the code untouched, so a verification form can send
-it. Without the prop Enter does nothing — the runtime only turns the key into a
-submit when a listener exists (the same contract as `Input`, and the reason
-`TextArea` omits it). A disabled field installs no listener at all.
-
-## Parts
+## Composition
 
 | Part | Responsibility |
 | ---- | -------------- |
 | `OTPField` | the named group, the code, focus and the per-cell context |
-| `OTPFieldInput` | one cell: its value, name, edit/key/focus handlers and ring |
-
-The default composition is `length` cells painted by the same function the part
-calls. A caller who supplies `children` places their own `OTPFieldInput`s — for
-example, to group a six-digit code as three and three:
-
-```tsx
-import { OTPField, OTPFieldInput, Separator, Stack } from "@gpuixui/primitives";
-
-<OTPField
-  label="Verification code"
-  length={6}
-  value={code}
-  onValueChange={setCode}
->
-  <Stack direction="row" gap="sm">
-    <OTPFieldInput index={0} />
-    <OTPFieldInput index={1} />
-    <OTPFieldInput index={2} />
-  </Stack>
-  <Separator orientation="vertical" style={{ height: 24 }} />
-  <Stack direction="row" gap="sm">
-    <OTPFieldInput index={3} />
-    <OTPFieldInput index={4} />
-    <OTPFieldInput index={5} />
-  </Stack>
-</OTPField>;
-```
-
-`OTPFieldInput` takes `index`, `style`, `className` and `testId`; it has no
-`value` or `onValueChange` of its own, because every cell reads the field's one code.
+| `OTPFieldInput` | one cell: its value, name, handlers and ring |
 
 ## API
 
@@ -84,158 +41,26 @@ import { OTPField, OTPFieldInput, Separator, Stack } from "@gpuixui/primitives";
 | `length` | `number` | `6` | number of cells; a nonsense value resolves to at least one |
 | `value` | `string` | — | controlled code, normalised to letters/digits |
 | `defaultValue` | `string` | — | initial code when uncontrolled |
-| `onChange` | `(value: string) => void` | — | deprecated alias for `onValueChange`; the new name runs when both are passed |
 | `onValueChange` | `(value: string) => void` | — | the code after every edit that changed it |
+| `onChange` | `(value: string) => void` | — | deprecated alias for `onValueChange` |
 | `onComplete` | `(value: string) => void` | — | fires when an edit makes the code full |
-| `onSubmit` | `(event: EventPayload) => void` | — | Enter in any cell, with the code unchanged; no listener is installed while `disabled` |
+| `onSubmit` | `(event: EventPayload) => void` | — | Enter in any cell, with the code unchanged |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | cell height and width, from the density scale |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border on every cell |
-| `label` | `string` | none | group name; each cell is named `<label> digit N` (the sentence is the provider's `messages.codeDigit`) |
-| `description` | `string` | none | announced help, carried by **every** cell (`aria-description`); a blank one publishes nothing |
-| `ref` / `aria-id` / `onLayout` | host address | none | land on the **first cell**, the element a form focuses |
+| `label` | `string` | none | group name; each cell is named `<label> digit N` |
+| `description` | `string` | none | announced help, carried by every cell (`aria-description`) |
 | `autoFocus` | `boolean` | `false` | focuses the first cell on mount |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
-| `style` | `StateStyle<FieldState>` | — | `StyleDesc` or `(state: { disabled, focused, invalid }) => StyleDesc` on the group; resolved against the live state and merged last |
+| `style` | `StateStyle<FieldState>` | — | on the group; resolved against the live state, merged last |
 | `children` | `ReactNode` | `length` cells | the cell parts to draw |
-| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with each cell's own, on every cell; a disabled field keeps them observable |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with each cell's own, on every cell |
 | `testId` | `string` | — | the group's locator; cells are `<testId>-cell-N` |
-
-`OTPFieldInput` accepts `index` (zero-based, required), `style`, `className` and
-`testId`; its `testId` defaults to `<group testId>-cell-<index + 1>`.
-
-Your host handlers are composed with each cell's, never substituted, and are
-installed on every cell — so a press, a key or a focus reports the cell it
-landed on. A disabled field keeps them observable and only refuses the action.
-
-Only letters and digits are kept. A pasted `123-456` becomes `123456`, and a
-code longer than `length` is truncated rather than partially applied.
-
-## Keyboard
-
-| Key | Effect |
-| --- | ------ |
-| any character | replaces the cell, then focus advances |
-| `ArrowLeft` / `ArrowRight` | previous / next cell |
-| `Home` / `End` | first / last cell |
-| `Backspace` | deletes the current character; in an empty cell, clears the one before and moves there |
-| `Delete` | deletes the current character (native) |
-| `Enter` | reports `onSubmit`; the code is unchanged (nothing happens without the prop) |
-
-The group is **one tab stop**. The tabbable cell is the one the code has
-reached — the first empty cell, or the last cell when the code is full — and it
-moves with focus while the reader is inside the group. Tab therefore enters the
-field once and leaves it; it does not walk all `length` cells. **A focus index
-that outlives its cell is no focus at all**: `length` is a prop, so a field that
-shrinks under a focused cell (six cells to four) drops the stale index and puts
-the stop back on the cell the code has reached, rather than painting
-`tabIndex={-1}` on every cell and leaving the group unreachable by Tab
-(`OTPField.test.tsx` and `runtime/otp.runtime.test.tsx`).
-
-The key contract runs on **key up**. GPUix's text editor consumes
-Left/Right/Home/End/Backspace/Delete on key down, so those keys never reach the
-element's key-down handler (measured 2026-10-17 in a window). A held arrow
-therefore moves one cell rather than repeating. Backspace on a filled cell is
-the native edit and arrives through `onValueChange`; the key-up handler knows this
-and does not delete a second character.
-
-Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
-Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
-moving by word — belongs to the platform or the application and is left alone,
-default action included; Shift is not a chord, so `Shift+Space` is still a press.
-
-## Accessibility
-
-- The field is a named `Group` and each cell is a named `TextInput`
-  ("Verification code digit 1" …). A screen reader can read every cell and the
-  group's name. The cell sentence is the provider's `messages.codeDigit`, so a
-  localised interface names its own cells.
-- There is no `aria-labelledby` in `@gpuix/native` 0.11.0, so each cell carries its own
-  `aria-label` written from the group's `label`; a `Label` beside the field is
-  the visible name.
-- The group is one tab stop, on the cell the code has reached (or the cell that
-  holds focus); the other cells are `tabIndex={-1}`. A focused index the field no
-  longer draws — the field shrank — does not count as focus, so the stop falls
-  back to the code's cell instead of vanishing with it.
-- A disabled field is `readOnly` and every cell is out of the tab order.
-- The code itself is the native input text; there is no `aria-valuetext` on a
-  cell, so the value is not announced twice.
-- The help a visible `Label description` paints is announced on **every cell**
-  through `aria-description` (no `aria-describedby` exists), because any cell can
-  hold focus. A blank description publishes nothing.
-- The **address lands on the first cell** — the element a form focuses to start
-  typing the code: `ref` receives it, `aria-id` is its automation id, and
-  `onLayout` reports its box. The later cells keep their internal refs, and the
-  group wrapper is not focusable (`runtime/address.runtime.test.tsx`).
-
-## Theming
-
-Cells use the shared field chrome (`colors.input`, `colors.border`,
-`colors.inputForeground`) via `otpCellStyle`, the destructive role when
-`invalid`, and `controlFocusStyle`'s ring on the focused cell only. Cell size
-comes from `density.controlHeight[size]`; the row gap is the `sm` spacing step.
-No literal colour, size or radius is named.
-
-Each cell's character is content, not chrome, so every cell declares
-`keyboardFocusDim: false`: the runtime dims every other focusable element to 40%
-while one has keyboard focus, which would composite the character into its own
-cell fill. The ring still marks where the focus is.
 
 ## Limitations
 
-- **There is no `onPaste`.** `@gpuix/native` 0.11.0 exposes no paste event, so a
-  pasted code arrives as one multi-character `onValueChange` and the field fills
-  it forward from the cell that received it. Measured in a window
-  (`otp-paste-lifecycle`): a six-character copy from a shipped `Input` fills all
-  six cells, reports one edit and one completion and leaves focus in the last
-  cell; a nine-character paste truncates at six and does not complete twice; a
-  paste over the third cell keeps the first two. The `TestRenderer` drives no
-  clipboard, so the native suite measures the distribution rule only.
-- **Arrows do not repeat.** They are handled on key up, because the editor
-  consumes their key down.
-- **The code is contiguous.** Clearing a middle character shifts the following
-  characters left; there is no sparse representation, which is why the public
-  value is a single string.
-- **`autoFocus` paints no ring on mount.** The runtime focuses the cell without
-  dispatching a focus event (the same limitation as `Input`); the ring appears
-  at the next focus change.
-- **No letter casing rule.** Letters are kept as typed; a caller that needs
-  uppercase normalises in `onValueChange`.
-
-## Verification
-
-- `src/core/otp.test.ts` — normalisation and truncation, cell padding, one-char
-  replacement and advance, accumulated-text stripping, multi-character fill,
-  range clamping, Backspace and navigation rules.
-- `src/components/OTPField.test.tsx` — `length` named inputs, one React key per
-  default cell, per-cell handlers,
-  click-to-pick, autoFocus on the first cell, one ring, destructive borders,
-  square geometry, disabled guards, one roving tab stop (partial, full and
-  focused), a stale focus index no longer drawn, a composed cell carrying its
-  index's value, name and handlers, a caller composing the cells, the caller's
-  `onSubmit` on every cell, and no submit installed while disabled.
-- `runtime/otp.runtime.test.tsx` — six digits **typed one at a time** fill six
-  cells and complete once; Enter reaches `onSubmit` with the code unchanged; focus
-  advances and moves back with the arrow keys; Backspace clears backwards on an
-  empty cell and only one character on a filled one; the a11y tree has a `Group`
-  and six `TextInput`s; invalid paints every cell; one ring; disabled refuses
-  input, submit and the tab order; Tab enters once at the cell the code reached
-  and leaves the group; a field that shrinks under a focused cell keeps a
-  reachable stop; a caller's cell composition still types, distributes and
-  reports the code. Measured in a window 2026-10-17; Enter on 2026-10-22; the
-  shrunken field on 2026-10-23.
-- `apps/playground`'s `otp-paste-lifecycle` — the clipboard half in a real window:
-  a copy from a shipped `Input` pasted with `cmd-v` fills the shipped field
-  forward, a longer paste truncates, a paste over the third cell keeps the first
-  two, and each path reports the completions and edits above.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Input** — free text, one field.
-- **NumberField** — a numeric text field with steps and bounds.
-- **Label** — the visible name; each cell carries its own `aria-label`.
+- There is no `onPaste`: a pasted code arrives as one multi-character edit and
+  fills it forward; a longer code truncates at six.
+- Arrows do not repeat: they are handled on key up.
+- The code is contiguous: clearing a middle character shifts the rest left.
+- No letter casing rule; normalise in `onValueChange`.

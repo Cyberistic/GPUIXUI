@@ -1,25 +1,16 @@
 ---
 title: Advanced filtering / query builders
-description: A builder over a typed predicate tree, with the tree as data a caller can store, save and read.
+description: A builder over a typed predicate tree.
 ---
 
-`AdvancedFilter` is a **query builder**: the reader composes clauses — a
-field, a comparison and a value — and the clauses combine with `all`, `any`
-and `not`.
-
-A query builder is a **tree of predicates**, not a string. Modelling it as
-data means a builder, a saved query and a table's own filter all read the same
-shape, and the evaluation stays a pure function a test can hold. The
-comparisons are literal — a value is never a pattern — and a field's value is
-read through the caller's `valueOf`, so the tree never learns what a row is.
-
-The tree is the **caller's**: the builder paints it and reports every edit.
-Nothing is stored inside the component.
+`AdvancedFilter` is a **query builder**: the reader composes clauses, combined
+with `all`, `any` and `not`.
 
 ## Usage
 
 ```tsx
 import { AdvancedFilter, emptyTree } from "@gpuixui/data";
+import { useState } from "react";
 
 const [tree, setTree] = useState<FilterTree>(emptyTree);
 
@@ -33,41 +24,15 @@ const [tree, setTree] = useState<FilterTree>(emptyTree);
 />;
 ```
 
-The rows the tree keeps are the caller's to compute:
-
-```ts
-const kept = filterByTree(rows, tree, (row, field) => row[field]);
-```
-
-The full build is the `surfaces` example in
-`packages/data/examples/surfaces.example.tsx`, which the native playground
-mounts.
-
-## The tree
-
-| Shape | Meaning |
-| ----- | ------- |
-| `{ kind: "predicate", field, comparison, value }` | one comparison over one field |
-| `{ kind: "all", children }` | every child must match |
-| `{ kind: "any", children }` | at least one child must match |
-| `{ kind: "not", child }` | the child must not match |
-
-A comparison is `equals`, `notEquals`, `contains`, `greaterThan` or
-`lessThan`. An order reads both sides as **numbers**, so a field the caller
-stores as a number and a clause the reader types as text still compare; a text
-that is not a number never satisfies an order.
-
-An empty `all` matches **everything** — which is what an empty builder means.
-
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name, in the order the picker lists them |
+| `fields` | `AdvancedFilterField[]` | — | the fields a clause may name |
 | `tree` | `FilterTree` | — | the tree the builder paints |
 | `onChange` | `(next: FilterTree) => void` | — | receives every edited tree |
 | `title` | `string` | `Filters` | the title above the builder |
-| `testId` | `string` | — | every row derives from it: `${testId}-${at}-field`, `-comparison`, `-value`, `-remove` |
+| `testId` | `string` | — | every row derives from it |
 
 The tree's own API, exported beside the builder:
 
@@ -76,65 +41,10 @@ The tree's own API, exported beside the builder:
 | `emptyTree` | the empty `all` group, which matches everything |
 | `filterByTree(rows, tree, valueOf)` | the rows a tree keeps |
 | `matchesTree(tree, row, valueOf)` | whether one row matches |
-| `matchesComparison(comparison, left, right)` | one comparison |
 | `describeTree(tree)` | the sentence a tree reads as |
-| `clauseCount(tree)` | how many comparisons a tree holds |
-| `clauseAt(tree, path)` | the predicate a path names |
-| `updateAt(tree, path, next)` | replace the node at a path |
-| `updatePredicate(tree, change)` | change a predicate's field, comparison or value |
-| `removeAt(tree, path)` | remove the node at a path |
-| `appendClause(tree, clause)` | add a clause to the group that holds them |
-
-## Theming
-
-| Part | Reads |
-| ---- | ----- |
-| the builder's surface | the `card` fill, with the `border` edge |
-| the title and the group labels | `mutedForeground`, at the registry's `xs` step |
-| the sentence | `foreground`, at the registry's `xs` step |
-| a group's clauses | indented under its combinator, with the `border` edge as the rule |
-| the field and comparison pickers | the components package's `DropdownMenu` |
-
-The pickers are the **component package's measured `DropdownMenu`** — the same
-surface the column configuration uses, not a second menu implementation. The
-runtime paints no menu of its own.
-
-## Accessibility
-
-- The sentence is painted as text, so a reader can see what the tree means
-  without reading every clause.
-- Each clause's field and comparison picker is a menu button with its own
-  accessible name.
-- The value is a field named after the field it filters.
-- A group is labelled by its combinator ("all of", "any of", "not") and its
-  clauses are indented under it.
 
 ## Limitations
 
-- The builder **edits** a tree; it does not run one. Narrowing a table is the
-  caller's `filterByTree`.
-- The builder creates `all` groups and predicates. A `not` in a saved query is
-  painted and editable, but the builder never writes one: a negated clause is
-  removed with its group.
-- There is no pattern comparison: a value is compared literally, and
-  `contains` is a substring test rather than a glob.
-
-## Verification
-
-`src/surfaces/logic.test.ts` (22 tests) holds the tree: every comparison, the
-three combinators, an empty tree matching everything, an edit that keeps the
-clauses the reader did not touch, a removal that removes the right sibling, and
-a `not` that cannot be left empty.
-
-`src/behaviour/surfaces.test.tsx` runs in the real GPUix renderer: adding a
-clause and typing a value narrows the painted rows to the ones the tree
-matches. Run it with:
-
-```sh
-nub run --filter @gpuixui/data test:behaviour
-```
-
-## Related
-
-- **Filtering controls** — the single field above a table's rows.
-- **Data toolbars** — the row that holds a filter's actions.
+- The builder edits a tree; it does not run one — use `filterByTree`.
+- The builder never writes a `not`; a negated clause is removed with its group.
+- No pattern comparison: a value is compared literally.

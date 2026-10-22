@@ -3,10 +3,8 @@ title: NumberField
 description: A number in a text field, with steps and optional bounds.
 ---
 
-`NumberField` is a numeric text field. GPUix's `<input>` has **no numeric
-mode** — no `type`, no `min`, no spinner — so parsing, clamping, stepping and
-the draft text are this package's (`core/number.ts`). It is not a slider: the
-user types an exact number, and the arrows are a convenience.
+`NumberField` is a numeric text field: parsing, clamping and stepping are this
+package's.
 
 ## Usage
 
@@ -22,45 +20,13 @@ const [copies, setCopies] = useState(1);
 </Stack>;
 ```
 
-An untouched field with neither `value` nor `defaultValue` renders empty, the
-way a native number field does — it does not start with a zero to delete.
-
-## Parts
+## Composition
 
 | Part | Responsibility |
 | ---- | -------------- |
 | `NumberField` | the chrome, state and the accessible name |
-| `NumberFieldInput` | the native `<input>`: draft text, keys, focus, the focus ring and blur |
-| `NumberFieldIncrement` | the step-up hit target (pointer only, never a tab stop) |
-| `NumberFieldDecrement` | the step-down hit target |
-
-The default composition is the input and a column of both steppers, painted by
-the same functions the parts call. A caller who supplies `children` composes
-the field themselves; each stepper accepts a custom glyph as its children, and
-every part accepts `style`, `className` and `testId`, merged last.
-
-```tsx
-import { Icon } from "@gpuixui/icons";
-import {
-  NumberField,
-  NumberFieldDecrement,
-  NumberFieldIncrement,
-  NumberFieldInput,
-  Stack,
-} from "@gpuixui/primitives";
-
-<NumberField label="Copies" value={copies} onValueChange={setCopies} min={1} max={99}>
-  <NumberFieldInput />
-  <Stack direction="column" justify="between" style={{ height: "100%" }}>
-    <NumberFieldIncrement>
-      <Icon name="plus" size="xs" />
-    </NumberFieldIncrement>
-    <NumberFieldDecrement>
-      <Icon name="minus" size="xs" />
-    </NumberFieldDecrement>
-  </Stack>
-</NumberField>;
-```
+| `NumberFieldInput` | the native `<input>`: draft text, keys, focus, ring |
+| `NumberFieldIncrement` / `NumberFieldDecrement` | the step hit targets (pointer only) |
 
 ## API
 
@@ -68,262 +34,36 @@ import {
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | — | controlled value |
 | `defaultValue` | `number` | none | start value; the field shows empty without one |
-| `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange`; the new name runs when both are passed |
 | `onValueChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
-| `min` / `max` | `number` | none | bound the value; absent means unbounded, and an inverted pair is the range it means (swapped, as a slider does) |
+| `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange` |
+| `min` / `max` | `number` | none | bound the value; absent means unbounded, and an inverted pair is the range it means |
 | `step` | `number` | `1` | arrow step |
 | `precision` | `number` | `0` | decimals shown on commit |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | field height and padding |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border |
 | `label` | `string` | none | accessible name |
-| `onSubmit` | `(event: EventPayload) => void` | — | Enter in the input: the draft commits first, then this reports; no listener is installed while `disabled` |
-| `description` | `string` | none | announced help on the input (`aria-description`); a blank one publishes nothing |
-| `ref` / `aria-id` / `onLayout` | host address | none | land on the inner `<input>`, the element a form focuses — not the chrome |
+| `onSubmit` | `(event: EventPayload) => void` | — | Enter: the draft commits first, then this reports |
+| `description` | `string` | none | announced help on the input (`aria-description`) |
 | `placeholder` | `string` | none | empty-field hint |
 | `autoFocus` | `boolean` | `false` | focus on mount |
-| `formatValue` | `(value: number) => string` | fixed decimals | the display text, display-only; pair it with `parseValue` when the format is not decimal |
-| `parseValue` | `(text: string) => Option<number>` | none | reads the text `formatValue` painted; tried first, then decimal; an empty field is never a value |
+| `formatValue` | `(value: number) => string` | fixed decimals | the display text, display-only; pair it with `parseValue` |
+| `parseValue` | `(text: string) => Option<number>` | none | reads the text `formatValue` painted; tried first, then decimal |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
-| `style` | `StateStyle<FieldState>` | — | `StyleDesc` or `(state: { disabled, focused, invalid }) => StyleDesc`; resolved against the live state and merged last |
+| `style` | `StateStyle<FieldState>` | — | resolved against the live state, merged last |
 | `children` | `ReactNode` | input + steppers | the parts to draw |
-| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the field's own on the input and both steppers; a disabled field keeps them observable |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the field's own; a disabled field keeps them observable |
 | `testId` | `string` | — | stable locator on the field's chrome |
 
-`NumberFieldInput` and both steppers accept `style`, `className` and `testId`;
-the steppers also take `children` as a custom glyph. `NumberFieldInput` has no
-`value`/`onValueChange` of its own: the parts read the field's state, so there is one
-source of truth.
-
-Your host handlers are composed with the field's, never substituted. A press
-arrives from the input or the stepper it hit, and the keys and focus from the
-input. A disabled field is still an observation surface — it keeps every handler
-and only refuses the action.
-
-While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
-the caret never jumps. Every edit that parses reports the clamped number
-through `onValueChange`; on blur or `Enter` the draft is reformatted to `precision`.
-A value that rounds to zero keeps no sign (`-0.004` at two decimals shows
-`0.00`, not `-0.00`), and a magnitude past `1e21` keeps its fixed decimals
-rather than the platform's exponential `1e+21`. Enter is the runtime's own
-**Submit** action on a single-line `<input>` — it never arrives as a keydown —
-so the field commits from that action and reports the same event through
-`onSubmit`, which is how a form sends from the field.
-
-A step is exact at decimal precision: stepping `0.2` by `0.1` reports `0.3`, not
-the binary `0.30000000000000004`, because the move is rounded to the finer of
-the value's and the step's decimal places. An integer step is untouched.
-
-### A display format is also a reading
-
-`formatValue` paints; it does not teach the field to read. A grouped `1,234` or a
-comma decimal `1,5` is not decimal notation, so a field showing one used to drop
-every keystroke typed into it (measured: no change reported at all). `parseValue`
-is the counterpart — it reads the text the caller's own format painted, and it is
-consulted before the decimal grammar, so text it declines still reads as decimal
-and a grouped field stays editable by hand. Both the edit path and the commit
-path use it, so `Enter` reformats through `formatValue` exactly as the value
-arrived.
-
-```tsx
-import * as Option from "effect/Option";
-
-const grouped = (value: number): string => value.toLocaleString("en-US");
-const readGrouped = (text: string): Option.Option<number> => {
-  const digits = text.replaceAll(",", "");
-  return /^-?\d+(?:\.\d+)?$/.test(digits)
-    ? Option.some(Number(digits))
-    : Option.none();
-};
-
-<NumberField
-  label="Budget"
-  defaultValue={1234}
-  formatValue={grouped}
-  parseValue={readGrouped}
-/>;
-```
-
-A blank field has no value whatever a parser answers, and a parser that answers
-`NaN` or `Infinity` is not a reading: only finite numbers reach the value
-channel, and the decimal grammar still gets its turn.
-
-A **controlled** field keeps the draft too: the owner's echo is compared with the
-text through the same reading the field edits with, so an owner that answers the
-value the reader just typed does not reformat the grouped text under the caret.
-That is the `1.` rule applied to a display format — measured in a window, since
-the decimal grammar would otherwise judge `1,2345` meaningless and replace it
-with `12,345` on the first keystroke.
-
-## Keyboard
-
-| Key | Effect |
-| --- | ------ |
-| `ArrowUp` | + one step |
-| `ArrowDown` | − one step |
-| `PageUp` / `PageDown` | ± ten steps |
-| `Home` / `End` | `min` / `max` — only when the field has that bound |
-| `Enter` | commit and reformat; reports `onSubmit` (the runtime's Submit action, not a keydown) |
-
-`ArrowLeft` and `ArrowRight` are the host text editor's: they move the caret
-inside the draft, because a numeric field that stepped its value when the caret
-crossed a digit could not be edited.
-
-The spin buttons are pointer affordances, **not tab stops**: the field is one
-tab stop and the arrows are the keyboard path, as in a native spinner. A click
-on a stepper — or a scrub that moved the value — returns focus to the input so
-the next arrow works.
-
-Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
-Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
-moving by word — belongs to the platform or the application and is left alone,
-default action included; Shift is not a chord, so `Shift+Space` is still a press.
-
-## Pointer
-
-A press on a stepper that **travels** scrubs the value instead of clicking:
-dragging up raises it and dragging down lowers it, one `step` per four logical
-pixels of travel from the value the press started on. The direction is the
-gesture, not the chevron — dragging up raises the value whichever stepper the
-press landed on — and the drag keeps reporting after it leaves the small column,
-because the runtime captures the pointer for an element that listens to both
-`mouseDown` and `mouseMove` (measured by the `pointer-capture` probe). The travel
-rounds to the nearest four pixels, so a one-pixel wobble is still a click; a
-gesture that did move the value consumes the click the platform delivers at its
-end, so one gesture is one step. A disabled field takes no gesture at all, and a
-scrub stops at `min`/`max` like every other step.
-
-## Accessibility
-
-- The input is a `TextInput` with the name from `label`; the steppers are
-  `presentation`, so a screen reader sees one named number field rather than
-  three controls.
-- The value is the native input's text, which the runtime exposes to AccessKit.
-  There is no `aria-valuenow`/`min`/`max` in `@gpuix/native` 0.11.0.
-- A disabled field is `readOnly`, out of the tab order and paints the disabled
-  chrome; assistive technology hears read-only, which is the honest state (the
-  host has no `disabled` prop).
-- The help a visible `Label description` paints is announced on the input through
-  **`aria-description`** (no `aria-describedby`); a blank one publishes nothing.
-- The **address belongs to the input**, not the chrome the steppers sit in: a
-  form focuses the field it failed on through `ref`, an automation host addresses
-  it by `aria-id`, and `onLayout` reports the input's box. The field's own ref
-  (which points native focus at the input after a step) is composed with the
-  caller's, so neither replaces the other (`runtime/address.runtime.test.tsx`).
-
-## Theming
-
-The field uses the shared field chrome (`colors.input`, `colors.border`,
-`colors.inputForeground`) and `colors.mutedForeground` icons in the spin column.
-Height and padding come from `density`; nothing names a literal.
-
-The `keyboardRing` outline is declared on the **input**, the element the runtime
-tracks focus for and paints `focusVisible` on; a ring declared on the wrapper
-painted nothing (the rule measured by `runtime/groups.runtime.test.tsx`). The
-input also declares `keyboardFocusDim: false`, so its value stays readable while
-another control holds the keyboard focus — the runtime otherwise dims every other
-focusable element to 40% and composites the value into the field's own fill
-(`keyboardDimFailures`). `NumberFieldInput`'s `style` merges last, so a caller
-can put the cue back.
-
-A `placeholder` is painted by the field, not the host: the runtime shapes an
-empty input's hint in a fixed `#8F8F8F` no token reaches (see `Input` §Theming),
-so `NumberFieldInput` renders no `placeholder` prop and paints the words in the
-`placeholder` role inside the input's own box — left of the steppers, where the
-value will be typed. `NumberFieldInput` is a positioning frame around the host,
-so a caller that composes its own parts still gets the hint.
+`formatValue` paints; it does not teach the field to read. `parseValue` is the
+counterpart and is consulted before the decimal grammar, so a grouped field stays
+editable, and a controlled owner's echo is read through the same path rather than
+reformatting under the caret.
 
 ## Limitations
 
-- **A value the field cannot lay out reads as a bound.** `NaN` and `±Infinity`
-  have no position to paint, so the field shows the nearest bound (`min`, else
-  `max`, else `0`) and steps from it rather than painting `NaN` or refusing every
-  arrow. `core/value.ts` states the same rule for a slider. A bound that is
-  itself non-finite is not a bound, so one bad `max` cannot take the value with
-  it.
-- **An inverted pair is the range it means.** A `min` above its `max` is swapped
-  (`min: 100, max: 0` reads as `0…100`), the same rule `core/value.ts` applies to
-  a slider. Without it every value clamped to the lower number and both steppers
-  read as inert — a field that could not be edited at all
-  (`normalizeNumberRange`, `core/number.test.ts` and `NumberField.test.tsx`).
-- **Decimal text only, unless the caller reads its own format.** `1,5`, `0x10`
-  and `Infinity` are rejected rather than guessed at; a grouped or locale display
-  reaches the field through the `formatValue`/`parseValue` pair, because the
-  grammar cannot know that `1,234` and `1,5` are different formats.
-- **No `type="number"`, `inputMode` or `maxLength`.** The host input takes
-  `value`, `readOnly`, `theme` and its events — nothing else, and a cap cannot be
-  laid on top: the runtime applies a field's `value` only when it changes, so a
-  refused character stays in the box (`Input` §Theming measures both directions
-  with `runtime/fields.runtime.test.tsx`). The hint is the field's own painted
-  `<text>` (one line, clipped at the field's edge).
-- **No drag-to-scrub from the input.** A scrub is a pointer gesture on a
-  stepper; dragging across the text field is the host editor's selection, so the
-  value cannot be scrubbed from the box itself.
-- **`autoFocus` paints no ring on mount.** A focus that arrives without keyboard
-  input (mount, programmatic) does not paint `focusVisible`, so the input's ring
-  appears at the first Tab. The same is true of `Input`.
-- **Enter is not a keydown.** The host binds it to Submit before a key handler
-  sees it, so `onKeyDown` cannot observe Enter; `onSubmit` is the channel.
-
-## Verification
-
-- `src/core/number.test.ts` — decimal-only parsing, clamping, precision,
-  noisy-free decimal steps (ten 0.1 steps reach 1 exactly), a large integer step
-  that rounding must not erase, Home/End only with a bound, a value that is not a
-  number read as a bound, an inverted pair read as the range it means, the
-  `formatValue`/`parseValue` reading (a grouped and a
-  comma-decimal parser, the decimal fallback, a blank field, an unpaintable
-  answer, and the grouped draft a controlled owner echoes), and fixed-decimal
-  text that keeps no negative zero and expands past the platform's `1e21`
-  exponential bound. `scrubNumber` holds the drag arithmetic: one step per four
-  pixels, a sign-symmetric half step (a +6px and a −6px travel are both two
-  steps), a click that stays a click, both bounds, a decimal step free of binary
-  noise, and an unreadable travel or scale.
-- `src/components/NumberField.test.tsx` — the draft value, the key contract, the
-  raw edit report, the submit channel (commit first, no listener while
-  disabled), steppers as presentation, an inverted pair whose steppers still
-  move, one tab stop, disabled/invalid,
-  the four part names in a caller's composition, the input part carrying the
-  draft, name and keys, the ring on the input rather than the wrapper, the
-  value opted out of the keyboard dim (a caller's `style` puts it back), and the
-  scrub wiring — both steppers carry the gesture, a scrubbing click is refused,
-  and a disabled field installs none.
-- `src/components/keyboard-dim.test.tsx` — every field node keeps its content
-  lit, and a `Toggle`/`Slider` keep the cue.
-- `src/components/field-hint.test.tsx` and `runtime/field-hint.runtime.test.tsx`
-  — the input part paints the hint in the `placeholder` role inside its own box
-  and hands the host no placeholder, measured both in the element tree and in a
-  window.
-- `runtime/number-field.runtime.test.tsx` — real typing through the native input
-  reports `12`; `1.5` with `precision={2}`; `999` against `max=100` reports
-  `100`; arrow/PageDown step; a hit-tested stepper press steps and refocuses;
-  **a vertical drag on the spin column scrubs the value** — 40px up is ten
-  steps and the platform's click at the end of that gesture does not step again,
-  while a fresh press that does not travel is exactly one step (measured in a
-  window on 0.11.0, with the pointer captured past the column's edge);
-  the chrome declares the keyboard ring and a press paints none; a disabled
-  field refuses text, keys and clicks; a caller's composition of the input and
-  both steppers reads the field's live value (a real press on each steps it);
-  **a non-finite value mounts instead of throwing** — the field paints its
-  bound and an arrow reports one step from it (measured 2026-10-22; the old
-  comparison folded the draft on every render and React threw "Too many
-  re-renders"); **Enter arrives as the runtime's Submit action** — the draft
-  reformats to `precision` and `onSubmit` reports once (measured 2026-10-22;
-  without the field's listener the text stayed `1.5` and the report never came);
-  **a grouped display is read back** — a field showing `1,234` reports `12345`
-  after typing `5` and commits as `12,345` through the `parseValue` pair
-  (measured 2026-10-22; without `parseValue` the field reported no change at all),
-  and a **controlled** owner's echo keeps the grouped draft (`1,2345`) instead of
-  reformatting it under the caret.
-  Measured in a window 2026-10-17.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Input** — free text.
-- **Slider** — a value chosen by gesture rather than typed.
-- **Label** — the visible name; the control carries its own `aria-label`.
+- Decimal text by default: a grouped or locale display is read through the
+  `formatValue`/`parseValue` pair, never guessed.
+- An inverted pair is the range it means: `min` above `max` is swapped.
+- No `type="number"`, `inputMode` or `maxLength`: the runtime applies a value only when it changes, so a refused character stays in the box.
+- `autoFocus` paints no ring; Enter is the runtime's Submit action, not a keydown.

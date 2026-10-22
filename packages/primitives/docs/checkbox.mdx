@@ -3,12 +3,9 @@ title: Checkbox
 description: An independent yes/no, optionally indeterminate.
 ---
 
-`Checkbox` is a square selection control for an independent choice. It shares one
-three-state paint (`unchecked`, `checked`, `indeterminate`) with `Switch` and
-`RadioGroup` through `core/selection.ts`, so they cannot drift apart.
+`Checkbox` is a square selection control for an independent choice.
 
-Two parts: the box, and `CheckboxIndicator` — the mark. `Checkbox`'s children
-are the indicator's content, so a custom glyph needs no rebuild of the control.
+<ComponentPreview name="checkbox-states" />
 
 ## Usage
 
@@ -22,44 +19,12 @@ import { Checkbox } from "@gpuixui/primitives";
 />;
 ```
 
-An indeterminate parent:
+## Composition
 
-```tsx
-<Checkbox
-  checked={email && push}
-  indeterminate={!email !== !push}
-  onCheckedChange={(next) => {
-    setEmail(next);
-    setPush(next);
-  }}
-  label="All channels"
-/>;
-```
-
-A custom mark:
-
-```tsx
-import { Icon } from "@gpuixui/icons";
-import { useTheme } from "@gpuixui/primitives";
-
-const theme = useTheme();
-
-<Checkbox
-  checked={favourite}
-  onCheckedChange={setFavourite}
-  label="Favourite"
->
-  <Icon
-    name="star-filled"
-    size={theme.iconSize.sm}
-    color={theme.colors.primaryForeground}
-  />
-</Checkbox>;
-```
-
-Passing children replaces the default check/dash glyph. They are drawn inside
-the mark's `pointerEvents: "none"` region, so a custom mark cannot swallow the
-press that toggles the box.
+| Part | Responsibility |
+| ---- | -------------- |
+| `Checkbox` | the box, its state and the press target |
+| `CheckboxIndicator` | the mark; `Checkbox`'s children are its content |
 
 ## API
 
@@ -69,8 +34,8 @@ press that toggles the box.
 | ---- | ---- | ------- | ----------- |
 | `checked` | `boolean` | — | controlled state; omit to let the box keep its own |
 | `defaultChecked` | `boolean` | `false` | initial state when uncontrolled |
-| `onCheckedChange` | `(next: boolean) => void` | none | the next boolean, only when it changed |
-| `onChange` | `(next: boolean) => void` | none | deprecated alias for `onCheckedChange`, removed next release; the new name wins when both are passed |
+| `onCheckedChange` | `(next: boolean) => void` | none | the next boolean |
+| `onChange` | `(next: boolean) => void` | none | deprecated alias for `onCheckedChange` |
 | `children` | `ReactNode` | the default glyph | the mark's content |
 | `indeterminate` | `boolean` | `false` | paints a dash and announces `mixed`; overrides `checked` |
 | `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
@@ -78,155 +43,25 @@ press that toggles the box.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name |
-| `description` | `string` | none | announced help (`aria-description`) for a format hint or an error message; a blank one publishes nothing, and it wins over a tooltip's |
-| `onMouseEnter` / `onMouseLeave` / `aria-description` | `TooltipTriggerProps` | none | forwarded to the press target, so the box can be a `Tooltip` trigger; the tip opens on hover (and on the focus event a `TestRenderer` delivers — a window's `Tab` traversal runs no `onFocus`) |
-| `ref` / `aria-id` / `onLayout` | host address | none | the box is the addressed element: focus it, name it for an automation host, measure it |
+| `description` | `string` | none | announced help (`aria-description`) |
+| `onMouseEnter` / `onMouseLeave` / `aria-description` | `TooltipTriggerProps` | none | forwarded to the press target, so the box can be a `Tooltip` trigger |
+| `ref` / `aria-id` / `onLayout` | host address | none | the box is the addressed element |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the box's own; yours runs first |
-| `style` | `StateStyle<CheckboxState>` | — | resolved against the live state and merged last |
+| `style` | `StateStyle<CheckboxState>` | — | resolved against the live state, merged last |
+| `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `testId` | `string` | — | stable locator |
 
 ### `CheckboxIndicator`
 
-The mark region. `Checkbox` renders it; compose it directly only when you need
-its props (a `style`, a `className`) in addition to `Checkbox`'s children.
-
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `children` | `ReactNode` | the default check/dash | the glyph |
-| `className` | `string` | — | compiled through the recipe registry, after the part's rules |
+| `className` | `string` | — | compiled through the recipe, after the part's rules |
 | `style` | `StyleDesc` | — | merged last |
-
-`indeterminate` is a **paint override**: activation still toggles the underlying
-boolean, so an indeterminate parent becomes checked on the next click rather than
-clearing.
-
-The five host handlers are `InteractionProps`: your handler runs first with the
-runtime's own event and the box still toggles. A disabled box installs no
-`onClick` at all; its keys and focus stay observable.
-
-## Keyboard
-
-| Key | Contract |
-| --- | -------- |
-| Space | toggles on key **up** |
-| Enter | toggles on key **down** |
-| held key | repeat events do nothing |
-| Tab | reaches the box when it is not disabled |
-
-A Space **press** calls `preventDefault()`, so a scroll container does not
-also scroll while the control waits for the release.
-
-Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
-Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
-moving by word — belongs to the platform or the application and is left alone,
-default action included; Shift is not a chord, so `Shift+Space` is still a press.
-
-## Accessibility
-
-- Role: `CheckBox` in the runtime's accessibility tree, on a **24px press
-  target** — the box it draws stays icon-sized (16px at `md`, so it lines up
-  with a label's icon), and the target around it meets WCAG 2.2 SC 2.5.8. The
-  drawing is decoration with `pointerEvents: "none"`, so a press on the box and a
-  press on its padding each toggle exactly once.
-- State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
-  `mixed`), because `@gpuix/native` 0.11.0 has no `aria-checked` (see
-  `docs/gpuix-capabilities.md`). The words are the provider's
-  `messages.selection` table, so a localised interface announces its own.
-- `disabled` removes the tab stop; there is no `aria-disabled`.
-- The visible name is a separate `Label`, but it does not name the box: there is
-  no `aria-labelledby`, so the box's own `label` prop is its accessible name —
-  pass the same string, or spread `labelledBy(name)`.
-- The help a visible `Label description` paints is announced through
-  **`aria-description`**, because 0.11.0 has no `aria-describedby` to connect the
-  two nodes: pass the same string as `description`, or
-  `labelledBy(name, help)`. A blank description publishes nothing. A `Tooltip`
-  arrives on the same channel: its text becomes the description when the box has
-  no `description` of its own, and the forwarded hover pair means the tip opens
-  on the pointer (a window's `Tab` traversal runs no `onFocus`, so hover is its
-  only open path).
-- The box is the **address** a form focuses: `ref` receives the runtime's own
-  instance, `aria-id` is its automation id, and `onLayout` reports its box.
-  `runtime/address.runtime.test.tsx` reads all three back off a window.
-
-## Theming
-
-`selectionBoxClass` compiles the box through the recipe registry: side from
-`iconSize`, radius from `radius.sm`, the empty box's edge from the measured
-boundary role (`borderStrong`, or `destructive` while invalid), fill from
-the accent role, and the mark colour from `selectionMarkColor`. An empty box is
-carried by its edge alone, so the edge is never the `input` role — that is a
-field *fill* here, and it is the card's own white in the light theme. Pointer
-feedback is a state wash (`hover`/`active`) under the mark rather than a change
-of edge, so a destructive edge stays destructive while hovered. The press is
-`pressWash` (`core/pointer.ts`) — derived against the hover it replaces, because
-the raw `active` role sat under the perceptibility floor in Light · macOS. Hover
-and press
-are declared in `style.hover`/`style.active`, not scripted — and they still paint
-on a drawing that takes no press: `pointerEvents: "none"` removes the blocking,
-not the element's hitbox. A filled box's feedback is another **opaque** fill —
-the theme's `filledHover`/`filledPressed` for its accent, with the edge going
-transparent — because the mark is painted on that fill: a half-alpha lift let
-the surface behind the box through, so the same checked box read as two colours
-on a card and on a dialog, and the mark could not be measured against it.
-Disabled adds half opacity and removes pointer
-feedback. The target is `selectionTargetStyle` (`targetInset`, the shared floor
-arithmetic) and carries the focus: the keyboard outline is declared at rest
-(`controlRing`, `colors.ring` at `borderWidth.strong`), painted by the runtime
-after Tab and never after a mouse press; a disabled box declares none, since
-disabling the focused box does not take the runtime's focus away.
-
-`style` takes a `StateStyle<CheckboxState>` — a `StyleDesc`, or a callback that
-receives `{ disabled, focused, checked, indeterminate, invalid }` and returns
-one. The result merges after every role decision, so a callback is the last word
-on a property the recipe also sets.
 
 ## Limitations
 
-- No `aria-checked` (above).
+- No `aria-checked`: the state is announced through `aria-valuetext`.
 - No label-inside-the-control composition: a `Label` beside the box is visible
-  text only — it does not name the control. The box is named by its own `label`
-  prop, which `labelledBy(name)` builds from the same string.
+  text only — it does not name the control. Pass `label` or `labelledBy(name)`.
 - No partial-state animation.
-
-## Verification
-
-- `src/core/selection.test.ts` — the three-state paint and mark colour; the
-  measured boundary edge on an empty box (and the state wash that replaces the
-  old edge change).
-- `src/recipe/geometry.test.ts` — the compiled recipe equals the resolver for
-  every state and shape, and an empty box's edge clears the boundary floor on
-  every strip `contrastPairs` measures a `borderStrong` boundary on.
-- `src/components/Checkbox.test.tsx` — toggle, indeterminate and disabled
-  wiring; the mark's state flows into its colour; a custom glyph replaces the
-  default; the mark keeps the pointer guard; the callback name and its alias;
-  a `style` callback receives the live state and wins; the tooltip trigger pair
-  reaches the press target and the box's own help wins over a tip's description.
-- `src/components/handlers.test.tsx` — a caller's click, keys and focus are
-  composed with the box's own, and a disabled box installs no press handler.
-- `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced
-  value flips `unchecked → checked`; a custom mark still toggles on a real hit
-  test; indeterminate reads `mixed`; the AccessKit role is `CheckBox`; focus
-  declares the keyboard ring and moves native focus with the selection; a
-  caller's `onFocus`/`onClick`/`onKeyUp`/`onBlur` are delivered by GPUI's own
-  dispatch alongside the toggle, and a disabled box delivers no press.
-- `runtime/selection-targets.runtime.test.tsx` — the 24px target around the
-  16px drawing, a press on the padding and a press on the drawing each reporting
-  exactly one change, and an empty box's edge read back off the window in the
-  measured boundary role.
-- `runtime/labelling.runtime.test.tsx` — a `Label` beside the box paints its
-  text but does not name the box; the same string through `labelledBy` does.
-- `runtime/fields.runtime.test.tsx` — a `Tooltip` wrapping the box opens on
-  hover, publishes its text as the box's description in the accessibility tree
-  and closes on a press.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Switch** — an immediate on/off with a different intent.
-- **RadioGroup** — one choice from a set.
-- **Tooltip** — a short description for a box in a toolbar.
-- **Label** — the visible name.

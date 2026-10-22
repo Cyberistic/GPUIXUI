@@ -4,9 +4,8 @@ description: A control's visible name, with a required marker and a description.
 ---
 
 `Label` renders the **visible** name of a field. It is not associated with the
-control by reference — `@gpuix/native` 0.11.0 has no `aria-labelledby` — so the control
-carries its own `aria-label` through its `label` prop. `labelledBy(name)` builds
-that prop from the same string.
+control by reference, so the control carries its own `aria-label` through its
+`label` prop; `labelledBy(name)` builds that prop.
 
 ## Usage
 
@@ -20,15 +19,11 @@ const help = "Shown on invitations and in the app switcher.";
 <Input {...labelledBy(name)} description={help} fullWidth />;
 ```
 
-`Label`'s `description` is the **visible** help line. The field's own
-`description` is what assistive technology hears, because neither
-`aria-labelledby` nor `aria-describedby` exists to connect the two nodes.
-
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `required` | `boolean` | `false` | appends a destructive `*`; **visual only** |
+| `required` | `boolean` | `false` | appends a destructive `*`; visual only |
 | `invalid` | `boolean` | `false` | paints the name in the destructive role |
 | `description` | `string` | none | a caption line under the name |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
@@ -36,62 +31,12 @@ const help = "Shown on invitations and in the app switcher.";
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the name |
 
-`labelledBy(name, help?)` returns `{ label }` — or `{ label, description }` when
-help is given — so a caller spreads it into an `Input`, `TextArea`, `Select`,
-`Checkbox`, `Switch`, `RadioGroup`, `Rating`, `NumberField`, `OTPField` or
-`Toggle` instead of spelling the name twice. The optional `description` is the
-same string the `Label` paints, handed to the control as `aria-description`.
-
-## Keyboard
-
-Not focusable. A label that responds to a click is a button.
-
-## Accessibility
-
-- The visible name is an accessibility `Label` node.
-- The control's own `label` prop is its accessible name; there is **no
-  `aria-labelledby`**, so the two are separate nodes. A test asserts both exist
-  (`fields.runtime.test.tsx`).
-- The help line is visible-only. A field announces the words handed to its own
-  `description` prop (`aria-description`), so a caller who wants help heard
-  passes it to the control as well as painting it here.
-- `required` is a mark, not `aria-required`; validation must also be expressed in
-  words and in the control's `invalid` state.
-- `invalid` is colour plus the field's border; it is not announced by itself.
-
-## Theming
-
-The name uses the `label` role and the `foreground` (or the status text role,
-`destructiveSoftForeground`, when invalid) role; the description uses `caption` +
-`mutedForeground`. The required star is the same status text role. No literal
-size or colour.
-
 ## Limitations
 
-- No click-to-focus: the runtime has no `for`/`htmlFor`, and the label cannot
-  move focus to another element.
-- No association by reference (above) — the name is written in two places when
-  both the visible label and the control's name are needed. `labelledBy(name,
-  help)` writes both control-side props from one call, but the `Label` still
-  paints its own copy.
-- The visible description is a second copy: the control announces only the
-  `description` handed to it. A form that paints help on the `Label` and stops
-  there is a field whose help cannot be heard.
-- `required` does not validate anything. Validate with `Schema` at the boundary.
-
-## Verification
-
-- `src/components/fields.test.tsx` — name, description, required and invalid
-  resolve as specified.
-- `runtime/fields.runtime.test.tsx` — the visible `Label` and the control's
-  `TextInput` name are both present in the accessibility dump.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Input**, **TextArea**, **Select** — the controls that take `label`.
-- **Text** — the typographic primitive underneath.
+- No click-to-focus: the runtime has no `for`/`htmlFor`.
+- No association by reference — the name is written in two places when both the
+  visible label and the control's name are needed; `labelledBy(name)` writes the
+  control's copy.
+- The visible description is a second copy: the control announces only its own
+  `description`.
+- `required` does not validate; validate with `Schema` at the boundary.

@@ -3,17 +3,8 @@ title: ThemeProvider
 description: Supplies the theme every primitive draws with — and refuses to invent one.
 ---
 
-`ThemeProvider` puts a `PrimitiveTheme` in React context. Every primitive reads it
-through `useTheme()`. It is **not** a theme builder and it ships **no default
-palette**: without a provider above it, a primitive throws
-`MissingThemeProviderError` at the moment it renders.
-
-The context is `@gpuixui/tokens/react`'s — the same one `@gpuixui/components`
-reads — so a tree that mixes the two packages wraps **once** and both paint the
-same theme. Either provider satisfies the rule: a tree already wrapped in
-`@gpuixui/tokens/react`'s `ThemeProvider` needs no second wrapper, because both
-write one context and presence is read from it. The density override reaches
-that context too.
+`ThemeProvider` puts a `PrimitiveTheme` in context; every primitive reads it
+through `useTheme()`, and a missing provider throws.
 
 ## Usage
 
@@ -28,180 +19,25 @@ import { darkTheme } from "@gpuixui/tokens";
 </ThemeProvider>;
 ```
 
-The theme is `Theme` from **`@gpuixui/tokens`**, re-exported here as
-`PrimitiveTheme` (`src/core/theme.ts`). The tokens package owns every value and
-the runtime-shaped helpers (`focusRing`, `elevationShadow`); this package resolves
-a semantic spec into a GPUix `StyleDesc` from that theme. There is one theme
-declaration in the library (`@gpuixui/tokens`), so a token change reaches every component
-without an adapter.
-
-## Density
-
-```tsx
-<ThemeProvider theme={theme} density={compactDensity}>
-  …
-</ThemeProvider>
-```
-
-Density replaces the theme's **numeric** metrics only (`controlHeight`,
-`controlPaddingX`, `rowHeight`). It cannot change colour, so a density switch can
-never produce a second palette. Build presets with tokens' `extendTheme`; this
-package owns no copy of them. Selection boxes stay icon-sized by design, so
-density never stretches a checkbox or a switch.
-
 ## Words
 
-A control's state is announced in words (`aria-valuetext`), because this runtime
-has no `aria-checked`, `aria-pressed` or `aria-busy`. Those words are interface
-copy, not values, so the provider carries them:
-
-```tsx
-import { ThemeProvider, Toggle } from "@gpuixui/primitives";
-
-<ThemeProvider
-  theme={theme}
-  messages={{
-    selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" },
-    press: { pressed: "enfoncé", notPressed: "relâché" },
-    star: { checked: "plein", half: "demi", unchecked: "vide" },
-    starName: (index, max) => `étoile ${index} sur ${max}`,
-    scrollRegion: "Zone de défilement",
-    codeDigit: (index, label) => `${label ?? "Code"} chiffre ${index + 1}`,
-  }}
->
-  <Toggle label="Gras" />
-</ThemeProvider>;
-```
-
-A table is a **complete group per state set**: naming `selection` means owning
-all three words, because a half-translated set reads as a bug. A group left out
-keeps the shipped English, so naming `press` alone changes nothing else. The
-table carries six entries — `selection` and `press` (the state sets), `star` and
-`starName` (a rating's fill words and its star sentence), `scrollRegion` (a
-focusable scroller's name) and `codeDigit` (a code cell's sentence).
-`MessagesProvider` is the same seam without a theme — a sub-tree that speaks
-another language wraps in it, and a nested provider **extends** the table above
-it rather than resetting it. `useMessages()` returns the resolved table for a
-component of your own that announces a state, and `selectionValueText`,
-`pressedValueText`, `starWord` and `otpCellLabel` are the word functions, taking
-a table when you compute a word yourself. `starName` is a template rather than a
-word because a star's name is a whole sentence over its position and the star
-count, so a caller owns its wording and its grammar.
-
-## Contrast and platform
-
-Contrast is another theme, not a component prop:
-
-```tsx
-import { getTheme } from "@gpuixui/tokens";
-
-<ThemeProvider theme={getTheme("dark", "high")}>…</ThemeProvider>;
-```
-
-`getTheme(mode, contrast)` returns the shipped high-contrast palette. Every
-Tier 1 component paints from that palette and nothing else; the runtime suite
-below keeps that invariant in both modes.
-
-The platform styles are themes too. `platformTheme` re-types the base theme
-without touching its colours or metrics, which is exactly what the docs site's
-platform toggle feeds the provider:
-
-```tsx
-import { platformTheme, lightTheme } from "@gpuixui/tokens";
-
-<ThemeProvider theme={platformTheme(lightTheme, "win32")}>…</ThemeProvider>;
-```
+A control's state is announced in words, because this runtime has no
+`aria-checked`, `aria-pressed` or `aria-busy`. The provider carries them as
+`messages`, one complete group per state set: `selection` and `press`, `star` and
+`starName`, `scrollRegion` and `codeDigit`.
 
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `theme` | `PrimitiveTheme` | — (required) | every colour, size, radius and font a primitive paints |
+| `theme` | `PrimitiveTheme` | required | every colour, size, radius and font a primitive paints |
 | `density` | `Density` | `theme.density` | swaps the numeric metrics group; colours stay |
-| `messages` | `Partial<PrimitiveMessages>` | the shipped English | the words a control announces, grouped per state set |
+| `messages` | `Partial<PrimitiveMessages>` | the shipped English | the words a control announces |
 | `children` | `ReactNode` | — | the tree that may render primitives |
-
-`useTheme(): PrimitiveTheme` returns the active theme from the shared context and
-throws `MissingThemeProviderError` when no provider is above it.
-`useMessages(): PrimitiveMessages` returns the words table — the shipped English
-when no provider names any, so a control never falls back word by word.
-
-## Keyboard
-
-Not interactive. It renders no element of its own.
-
-## Accessibility
-
-No role, no announcement. It only supplies values; the accessibility tree is
-whatever the components below it produce. Because there is no silent default, a
-missing provider is a **visible crash in development**, not a wrong palette
-shipped to a user. The words an interface announces are the one exception with a
-default: a missing provider still speaks the shipped English rather than
-announcing nothing.
-
-## Theming
-
-This is the seam: light and dark are two `Theme` values from `@gpuixui/tokens`. Switching is a
-re-render with a different `theme` prop — verified natively by
-`runtime/theme.runtime.test.tsx`, which mounts the shipped `lightTheme` and
-`darkTheme` and checks that every painted colour comes from the active one.
 
 ## Limitations
 
-- The density override is a whole group, not a partial patch; a partial override
-  would make "compact" mean something different at each call site.
-- There is no built-in light/dark toggle and no persistence: theme choice is
-  application state, owned by the app.
+- The density override is a whole group, not a partial patch.
+- No built-in light/dark toggle and no persistence.
 - Providers do not merge: the nearest `ThemeProvider` supplies the whole theme.
-  The words are the exception and merge per group, because a nested dialog that
-  names its own two words must not silence the page around it.
-- Every control whose state is spoken takes its words from this seam, not from a
-  per-control prop: one vocabulary for the tree, and no way for a checkbox deep
-  in a form to be forgotten. A control that needs a *name* still takes `label`.
-
-## Verification
-
-- `src/components/ThemeProvider.test.tsx` — the missing-provider error and the
-  density swap are proven on the render boundary; the provider is the token
-  package's own, a scan holds a second **theme** context out of the package
-  (the part contexts are not theme contexts), and the seam asks
-  `useThemePresence()` rather than keeping a marker of its own.
-- `src/components/messages.test.tsx` — the words table: the shipped defaults, a
-  named group replacing its default whole, a group left out keeping the default,
-  a nested provider extending the table above it, and **every** render path
-  (checkbox, checkbox group, radio group, switch, toggle, toggle group, rating,
-  scroll region, code cell) announcing the table it is handed — plus the
-  compatibility direction, that a tree naming no words announces exactly the
-  shipped ones.
-- `runtime/messages.runtime.test.tsx` — the same seam in a real window: a
-  provider's French table reaches nine controls' accessibility nodes (a rating's
-  star names and fill words among them), a nested `MessagesProvider` extends the
-  outer table instead of resetting it, and an unnamed tree still announces the
-  English words.
-- `src/core/theme.test.ts` — the colour-literal scan and density metrics.
-- `src/docs.test.ts` — `teaches every group of the words table`: a group added to
-  `PrimitiveMessages` without a line under §Words fails by name, so the seam a
-  caller reads about is the whole table.
-- `runtime/theme.runtime.test.tsx` — a primitive paints the dark background
-  under `@gpuixui/tokens/react`'s provider **alone** (the mixed-tree case that
-  used to throw); both palettes paint only their own colours; a live theme
-  switch repaints every asserted role; a caller's element that reads the token
-  context directly paints this provider's theme and density, not the token
-  package's light fallback.
-- `runtime/theme-axes.runtime.test.tsx` — the high-contrast palettes paint only
-  their own colours in both modes, on a scene that mounts **every Tier 1
-  component** at rest (a link or a mark's derived `brandText` is the one
-  documented exception); a density override moves control heights to the preset
-  and leaves colour alone; `platformTheme`'s mono family reaches the paint and a
-  platform switch repaints the same tree (the playground's theme gallery).
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Box** — the surface most primitives sit on.
-- **Text** — the typography roles the theme resolves.
-- `@gpuixui/tokens` — the package that builds real light and dark themes.
+- One vocabulary for the tree; a control that needs a name still takes `label`.

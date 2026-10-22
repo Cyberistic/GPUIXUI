@@ -1,17 +1,10 @@
 ---
 title: Table selection
-description: A checkbox column for a data table — one box per row and a tri-state select-all in the header.
+description: A checkbox column for a data table.
 ---
 
-`TableSelectionHeader` and `TableSelectionCell` are the checkbox column of a
-data table. They are **cells**, not a column model: the table's columns stay the
-caller's list, and the selection track is the same fixed width in the header and
-every row.
-
-The state is `useTable`'s. `allSelected` and `someSelected` read the **visible**
-order — the filtered and sorted rows — so the header cannot claim a record the
-filter hides. `toggleSelection` flips one record without disturbing the rest,
-and `setAllSelected` chooses every visible record or clears the set.
+`TableSelectionHeader` and `TableSelectionCell` are the checkbox column of a data
+table.
 
 ## Usage
 
@@ -58,23 +51,6 @@ const table = useTable({ rows: files, keyOf: (row) => row.id, columns });
 </Table>;
 ```
 
-The full screen is `packages/data/examples/table.example.tsx`, mounted by the
-native playground as the `table` example.
-
-## Behaviour
-
-- A row box toggles **one** record and leaves the rest of the set alone.
-- The header box is unchecked, mixed or checked. Pressing it when it is not
-  fully checked chooses every **painted** row; pressing it when it is checked
-  clears the set.
-- A filter that hides a chosen record releases it from the painted selection the
-  same way the row press does: `allSelected` and `someSelected` only ever read
-  the visible order. The release is render-time retention, not a write — a query
-  that widens back to the record paints it chosen again, and `clear()` is the
-  permanent clear.
-- Sorting does not change which records are chosen: the boxes are keyed by
-  record, not by row index.
-
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -83,59 +59,12 @@ native playground as the `table` example.
 | `indeterminate` | `boolean` | `false` | header only: paints a dash for a partial set |
 | `onCheckedChange` | `(selected: boolean) => void` | — | the box's next state |
 | `label` | `string` | header: `Select every row`; row: required | the box's accessible name |
-| `width` | `number` | `40` | the track width; the header and every row must agree |
+| `width` | `number` | `40` | the track width |
 | `disabled` | `boolean` | `false` | refuses the press |
-| `testId` | `string` | — | the box's id; the cell is `${testId}-cell` |
+| `testId` | `string` | — | the box's id |
 
-`SELECTION_COLUMN_WIDTH` exports the default track so a caller can size another
-cell to match it.
+## Limitations
 
-## Measured rules
-
-A checkbox **paints a fill**, and GPUI's hit test stops at the first painted
-child (`press-routing-lifecycle`): a press on a row box toggles its record and
-does not also run the row's press. A table whose row press replaces the set
-would otherwise lose the reader's selection on every box press. The package's
-behaviour suite measures the consequence — a row press and then a box press
-paint `2 selected`, with the first record still chosen.
-
-0.11.0 has no `aria-checked`, so the box announces its state through
-`aria-valuetext` as `checked`, `unchecked` or `mixed`. That is the supported
-route, and the suite reads the same field off the painted element.
-
-## Theming
-
-The box is the primitives' `Checkbox` at `size="sm"`, so it takes the theme's
-accent, focus ring and disabled fade. The cell paints no fill of its own, like
-every `TableCell`; the box is the only painted child, which is what makes the
-press land on it rather than on the row.
-
-## Accessibility
-
-- Every box carries a `label`; a row box with no name is anonymous in the
-  accessibility tree, and the runtime has no `aria-labelledby` to borrow the
-  row's text.
-- The header box states the whole visible set through its three words, so a
-  reader hears a partial set as `mixed` rather than as an unchecked box.
-- The header box is `disabled` when no row is painted; there is nothing to
-  choose.
-
-## Verification
-
-- `packages/data/src/selection/logic.test.ts` holds the three states, the
-  visible-order rule and the empty table (an empty set is neither all nor
-  some).
-- `packages/data/src/behaviour/table.test.tsx` mounts the shipped example in
-  the real GPUix renderer: a box press after a row press leaves both records
-  chosen, the header box chooses all 60 rows and clears them on the next press,
-  and a partial set reads `mixed`.
-- `press-routing-lifecycle` measured the painted-child press rule the behaviour
-  case relies on.
-
-## Related
-
-- [Tables](/docs/components/table) — the grid, its fixed header and its cells.
-- [Expandable rows](/docs/data-display/expandable-rows) — the other cell that
-  takes its own press.
-- [Virtualized tables](/docs/data-display/virtualization) — a selection by
-  record survives the window leaving and returning.
+- A row box toggles one record; the header box toggles the whole visible set.
+- No `aria-checked`: state is announced through `aria-valuetext`.
+- A filter that hides a chosen record releases it from the painted selection.

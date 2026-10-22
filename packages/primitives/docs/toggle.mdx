@@ -3,10 +3,7 @@ title: Toggle
 description: A button whose action has a persistent on/off state.
 ---
 
-`Toggle` is a button that stays on: bold, grid view, snap-to-grid, mute. It is
-**not** a `Switch` — a switch changes a setting immediately ("dark mode"), while a
-toggle sets a mode for what happens next and usually sits in a toolbar beside
-other actions.
+`Toggle` is a button that stays on: bold, grid view, mute. It is not a `Switch`.
 
 ## Usage
 
@@ -21,8 +18,6 @@ const [grid, setGrid] = useState(true);
 </Toggle>;
 ```
 
-Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start).
-
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -34,137 +29,23 @@ Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start)
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | from the density scale |
 | `square` | `boolean` | `false` | equal width and height, for an icon-only toggle |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
-| `loading` | `boolean` | `false` | a spinner in the leading slot, the busy word announced, activation refused; stays focusable |
-| `loadingLabel` | `string` | `"Loading"` | the busy word, announced as the description and the spinner's name; a blank one announces nothing |
-| `reducedMotion` | `boolean` | — | holds the busy spinner's lit dot (the runtime exposes no preference) |
-| `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label (replaced by the spinner while busy) |
+| `loading` | `boolean` | `false` | a spinner, the busy word announced, activation refused |
+| `loadingLabel` | `string` | `"Loading"` | the busy word, announced as the description and the spinner's name |
+| `reducedMotion` | `boolean` | — | holds the busy spinner's lit dot |
+| `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
 | `label` | `string` | none | accessible name; required when icon-only |
-| `description` | `string` | none | announced help; wins over the tooltip's `aria-description` when both are present |
+| `description` | `string` | none | announced help |
 | `ref` / `aria-id` / `onLayout` | host address | none | the button element is the addressed element |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the toggle's own; yours runs first |
 | `onMouseEnter` / `onMouseLeave` | host handlers | none | forwarded to the host; the pair a `Tooltip` trigger needs |
 | `aria-description` | `string` | none | supplementary description; `Tooltip` passes the tip here |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
-| `style` | `StateStyle<ToggleState>` | — | resolved against the live state and merged last |
+| `style` | `StateStyle<ToggleState>` | — | resolved against the live state, merged last |
 | `children` | `ReactNode` | — | the visible label |
 | `testId` | `string` | — | stable locator |
 
-The five host handlers are `InteractionProps`: your handler runs first with the
-runtime's own event and the toggle still changes. A disabled toggle installs no
-`onClick` at all; its keys and focus stay observable. The pointer pair and
-`aria-description` are `TooltipTriggerProps`, so `<Tooltip><Toggle … /></Tooltip>`
-opens the tip on hover and focus and announces it as the mode's description.
-
-Pressing paints `colors.accent` with `colors.accentForeground` — the role the
-theme reserves for a selected surface — so pressed, hover and focus are three
-different states.
-
-## Keyboard
-
-| Key | Effect |
-| --- | ------ |
-| `Enter` | activates on key **down** |
-| `Space` | activates on key **up** |
-| a held key | ignored, so it does not repeat |
-
-A click activates as well. The toggle is one tab stop and declares the keyboard
-outline while it can act; a disabled toggle declares none. A Space **press**
-calls `preventDefault()`, so a scroll container does not also scroll while the
-toggle waits for the release.
-
-Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
-Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
-moving by word — belongs to the platform or the application and is left alone,
-default action included; Shift is not a chord, so `Shift+Space` is still a press.
-
-## Accessibility
-
-- Role: `button` (AccessKit `Button`).
-- **`@gpuix/native` 0.11.0 has no `aria-pressed`**, so the state is announced through
-  `aria-valuetext` — `"pressed"` or `"not pressed"` — exactly like `Checkbox`
-  uses that channel for its state. A screen reader therefore hears a button with
-  a value, not a pressed button. That is the limitation of the runtime, and the
-  component does not pretend otherwise. The words are the provider's
-  `messages.press` table.
-- The name comes from `label` or a plain text child; a blank label is omitted.
-  Give an icon-only toggle a `label` — the icon is decorative.
-- A tooltip's tip and a caller's help share the `aria-description` channel:
-  `description` is the field-style help and wins when both are given, and a blank
-  either drops nothing rather than announcing an empty string.
-- The button element is the **address** — `ref`, `aria-id` and `onLayout` land on
-  it, so a toolbar can focus the mode it just changed and a layout can measure it
-  (`runtime/address.runtime.test.tsx`).
-
-## Theming
-
-Rest and pressed are two rows of `core/variants.ts`' `toggleVariants`, so the
-docs and the component read one table. Rest paints no fill (or a `borderStrong`
-edge for `outline`, the role the design system holds to the 3:1 control-boundary
-floor — not the decorative `border` a divider uses); pressed paints
-`colors.accent`/`colors.accentForeground`. A pressed toggle is a **filled face**,
-so its hover and press are the theme's derived opaque fills —
-`filledHover(theme, "accent")` / `filledPressed(theme, "accent")` — not an alpha
-lift of the accent: the surface behind the mode must not show through, and the
-label keeps its contrast floor on both fills. A **disabled pressed** toggle wears
-the neutral `disabled`/`disabledForeground` pair, the paint the design system
-names for a filled control anywhere off the page, instead of fading. Nothing
-names a literal.
-
-A **busy** toggle renders a `Spinner` where its leading icon would be, in the
-accent's own on-colour while pressed (a brand dot on the pressed face is 1.00:1),
-and in the neutral pair while it is both pressed and disabled. The spinner is
-`Sm` on the icon scale and takes the caller's `reducedMotion`; the toggle's
-`aria-description` becomes `loadingLabel` (`"Loading"` unless the caller names
-it) so the state is announced, and the control stays focusable while refusing
-every press and key.
-
-`style` takes a `StateStyle<ToggleState>` — a `StyleDesc`, or a callback that
-receives `{ disabled, focused, selected }` and returns one. `selected` is the
-pressed state under the contract's vocabulary, and `disabled` is the state that
-**refuses activation**: a busy toggle reports `disabled: true` too, exactly like
-a `Button`. The result merges after every role decision, so a callback is the
-last word on a property the recipe also sets.
-
 ## Limitations
 
-- No `aria-pressed` (above).
-- A disabled pressed toggle paints the neutral pair rather than the accent, so
-  it reads unavailable rather than dimmed-on.
-- `square` sizes the button; it does not size the icon — pass an icon whose size
-  matches the control (`theme.iconSize`).
-
-## Verification
-
-- `src/components/Toggle.test.tsx` — role and value text, no `aria-pressed`,
-  the busy spinner and its accent (pressed, unpressed and disabled pressed), the
-  announced busy word and refused activation while busy, a caller's word
-  replacing the default, the reduced-motion
-  forwarding,
-  the pressed paint from the accent role, the derived opaque hover/press fills
-  and the label floors on them, the disabled pressed neutral pair, the outline
-  border, click/Enter/Space activation, held keys, disabled, the focus ring, the
-  forwarded tooltip trigger pair, and a `style` callback that receives the live
-  state and wins over the recipe.
-- `src/components/handlers.test.tsx` — a caller's click, keys and focus run
-  before the toggle's own action, once each.
-- `runtime/toggle.runtime.test.tsx` — a real click flips the announced state and
-  repaints the accent fill; a busy toggle refuses a click and both keys and
-  paints its dots in the accent's on-colour; Enter down and Space up each
-  activate once; a
-  disabled pressed toggle paints the neutral pair with no opacity left; a
-  disabled toggle leaves the tab order; the ring follows focus. Measured in a
-  window on 0.11.0.
-- The disabled **handler** guard is proven at the element-tree level: a
-  tabIndex-less toggle cannot be focused natively, so the runtime test can only
-  prove the tab order.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Button** — an action with no state.
-- **Switch** — an immediate setting.
-- **Checkbox** — an independent choice in a form.
+- No `aria-pressed`: the state is announced through `aria-valuetext`.
+- `square` sizes the button, not the icon.
+- A disabled pressed toggle paints the neutral pair rather than the accent.

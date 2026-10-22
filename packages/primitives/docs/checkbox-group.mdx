@@ -3,21 +3,7 @@ title: Checkbox group
 description: Several independent choices sharing one tab stop.
 ---
 
-`CheckboxGroup` is a set of checkboxes that belong together — notification
-channels, report columns, permissions — and answer one question with many
-possible answers. It is **not** a `RadioGroup`: picking one option does not clear
-the others, so the arrow keys only move focus and `Space`/`Enter` is what changes
-the value.
-
-The group holds **one** tab stop. Tab reaches the group, the arrow keys walk its
-options, and Tab leaves — instead of a form with eight checkboxes taking eight
-Tab presses to pass.
-
-The **row** is the control, at least 24px tall even when its one line of text is
-shorter: it is what a pointer presses and what the runtime gives focus to. The box
-is decoration with `pointerEvents: "none"`, so a checked box's fill cannot swallow
-the press that belongs to the row — measured: without it, a checked option could
-be unchecked by clicking beside its box but not on it.
+`CheckboxGroup` is a set of checkboxes that answer one question with many answers.
 
 ## Usage
 
@@ -36,30 +22,12 @@ import { CheckboxGroup } from "@gpuixui/primitives";
 />;
 ```
 
-Omit `value` to let the group keep its own state (`defaultValue` sets the start).
-An option can carry rich content instead of its name pair:
+## Composition
 
-```tsx
-import { CheckboxGroup, CheckboxGroupItem, useTheme } from "@gpuixui/primitives";
-import { Icon } from "@gpuixui/icons";
-
-const theme = useTheme();
-
-<CheckboxGroup label="Flags" defaultValue={["pinned"]}>
-  <CheckboxGroupItem value="pinned" label="Pinned">
-    <Icon
-      name="star-filled"
-      size={theme.iconSize.sm}
-      color={theme.colors.foreground}
-    />
-  </CheckboxGroupItem>
-  <CheckboxGroupItem value="archived" label="Archived" />
-</CheckboxGroup>;
-```
-
-The label stays the accessible name, so the visible content and the announced
-name cannot diverge. Keep rich content non-interactive: GPUix hit-tests the
-deepest element, so content that accepts the press takes it from the row.
+| Part | Responsibility |
+| ---- | -------------- |
+| `CheckboxGroup` | the named group, the roving tab stop and the value |
+| `CheckboxGroupItem` | an option row; the data prop's element form |
 
 ## API
 
@@ -69,136 +37,36 @@ deepest element, so content that accepts the press takes it from the row.
 | ---- | ---- | ------- | ----------- |
 | `options` | `ReadonlyArray<GroupOption>` | — | the choices as data; omit with item children |
 | `children` | `ReactNode` | — | `CheckboxGroupItem` elements, for rich content |
-| `value` | `ReadonlyArray<string>` | — | controlled values; omit to let the group keep its own |
+| `value` | `ReadonlyArray<string>` | — | controlled values |
 | `defaultValue` | `ReadonlyArray<string>` | `[]` | the initial values when uncontrolled |
-| `onValueChange` | `(next: ReadonlyArray<string>) => void` | none | the on values, only when they changed |
+| `onValueChange` | `(next: ReadonlyArray<string>) => void` | none | the on values |
 | `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | which arrow pair moves focus |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
-| `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour of every box |
-| `disabled` | `boolean` | `false` | disables every option and removes the group's stop |
-| `invalid` | `boolean` | `false` | the empty box's border and every row's focus ring take the destructive role; a checked box keeps its accent fill |
+| `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
+| `disabled` | `boolean` | `false` | disables every option |
+| `invalid` | `boolean` | `false` | the empty box's border and every row's focus ring take the destructive role |
 | `label` | `string` | none | the group's accessible name |
-| `description` | `string` | none | announced help on the group node; a blank one publishes nothing |
-| `ref` / `aria-id` / `onLayout` | host props | none | the address lands on the row that holds the tab stop, so a form can focus the group it failed on |
-| `style` | `StateStyle<CheckboxGroupState>` | — | resolved against the group's live state and merged last |
-| `itemStyle` | `StateStyle<CheckboxItemState>` | — | resolved per option row and merged last |
-| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the group's own on every row; yours runs first |
-| `className` | `string` | — | compiled after the group's recipe, so it wins conflicts |
+| `description` | `string` | none | announced help on the group node |
+| `ref` / `aria-id` / `onLayout` | host props | none | land on the row that holds the tab stop |
+| `style` | `StateStyle<CheckboxGroupState>` | — | resolved against the live state, merged last |
+| `itemStyle` | `StateStyle<CheckboxItemState>` | — | resolved per option row, merged last |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the group's own; yours runs first |
+| `className` | `string` | — | compiled after the recipe, so it wins conflicts |
 | `testId` | `string` | — | stable locator for the group |
 
 ### `CheckboxGroupItem`
 
-The data prop's element form. The group reads its props and renders the row, so
-the roving index and the key contract stay one code path; the part draws nothing
-on its own.
-
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `value` | `string` | — | the value this option adds to the selection |
-| `label` | `string` | — | accessible name (trimmed; blank publishes none), and the visible text unless `children` replaces it |
+| `value` | `string` | — | the value this option adds |
+| `label` | `string` | — | accessible name, and the visible text unless `children` replaces it |
 | `description` | `string` | none | a caption beside the name |
 | `disabled` | `boolean` | `false` | the option cannot be chosen and takes no focus |
 | `children` | `ReactNode` | — | rich content drawn instead of the name pair |
 
-## Keyboard
-
-| Key | Contract |
-| --- | -------- |
-| Arrow keys | moves focus along `orientation`; wraps at the ends and skips disabled options |
-| `Home` / `End` | moves focus to the first / last enabled option |
-| `Space` | toggles the focused option on key **up** |
-| `Enter` | toggles the focused option on key **down** |
-| a held key | repeat events do nothing |
-| a letter | moves focus to the next option whose label starts with it (never toggles it) |
-| `Tab` | reaches the group once, then leaves it |
-
-A Space **press** calls `preventDefault()`, so a scroll container does not also
-scroll while the control waits for the release. Moving focus never changes the
-value: unlike a radio group, a checkbox group has no "selection follows focus".
-Type-ahead follows the same rule — it moves focus to the matching option and
-leaves the value alone, because a typed key must never be a hidden press.
-
-Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
-Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
-moving by word — belongs to the platform or the application and is left alone,
-default action included; Shift is not a chord, so `Shift+Space` is still a press.
-
-## Accessibility
-
-- The container is a named `group`; each option is a named checkbox. The row's
-  name is the option's `label`, trimmed, and a blank label publishes **no name**
-  rather than an empty one — an icon-only row then falls back to the content it
-  paints instead of announcing nothing.
-- State is announced through **`aria-valuetext`** (`checked` / `unchecked`),
-  because `@gpuix/native` 0.11.0 has no `aria-checked`. The words are the
-  provider's `messages.selection` table, so a localised interface announces its
-  own.
-- There is no `aria-multiselectable` in 0.11.0, so nothing claims the group is
-  multi-select — the checkbox roles carry that meaning.
-- `disabled` removes an option's tab stop and the group's; there is no
-  `aria-disabled`.
-- An option's `description` is painted, not associated: there is no
-  `aria-describedby`.
-- The group's own help line goes through `description` and is announced on the
-  group node. The address names one element, so `ref`/`aria-id`/`onLayout` land
-  on the row that holds the tab stop — the element a form focuses — rather than
-  the unfocusable wrapper.
-
-## Theming
-
-Each box compiles `selectionBoxClass` — side from `iconSize`, radius from
-`radius.sm`, border from `input`/`destructive`, fill from the accent role, and a
-checked box's hover/press from the theme's opaque `filledHover`/`filledPressed`
-— and
-is kept out of the press by the shared `decorative` guard. The **row** is the control: it
-takes the shared keyboard ring from `controlRing` and reserves the 24px
-pressable floor, both from `group.tsx`'s `optionRowStyle`, so radio and checkbox
-rows cannot disagree. The row body uses the label and caption type roles, muted
-while the row is disabled. Disabled rows add half opacity and drop pointer
-feedback.
-
-A `focusVisible` declaration only paints on the element the runtime tracks focus
-for, which is the row — a ring declared on the box was a declaration nothing
-painted.
-
-`style` receives `{ disabled, focused }` for the group; `itemStyle` receives
-`{ disabled, focused, checked }` for one row. Both merge after every role
-decision, so a callback is the last word on a property the recipe also sets.
-
 ## Limitations
 
-- No `aria-checked` and no `aria-multiselectable` (above).
-- A group is one tab stop, so an option cannot be reached directly by Tab. That
-  is a deliberate composite-widget trade — use separate `Checkbox` controls when
-  every row should be its own stop.
-- No select-all, indeterminate parent or virtualisation; compose a
-  `Checkbox` parent beside the group and derive its state from the values.
+- No `aria-checked` and no `aria-multiselectable`: state is `aria-valuetext`.
+- One tab stop; an option is not reachable by Tab.
+- No select-all, indeterminate parent or virtualisation.
 - No drag selection.
-
-## Verification
-
-- `src/core/roving.test.ts` — the tab-stop decision: a disabled preferred index
-  falls back to the first reachable option, an all-disabled group has none.
-- `src/components/CheckboxGroup.test.tsx` — a typed prefix moves focus to the
-  option it names without toggling it, plus value text and no `aria-checked`;
-  the stop skips a disabled option; an arrow moves focus without toggling;
-  Space-up and Enter-down; Home/End skip disabled options; a disabled row
-  installs no press; both style callbacks; item children read into one list;
-  the group's help and the row the address lands on.
-- `runtime/controls.runtime.test.tsx` — a real hit-tested click turns one option
-  on without clearing another, and a key delivered to the focused row moves focus
-  through GPUI's own dispatcher without changing any value.
-- `runtime/groups.runtime.test.tsx` — pressing the box a checked option draws
-  unchecks it (the fill used to swallow the press), the ring is declared on the
-  row that holds focus, and every option row is at least 24px tall.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Checkbox** — one independent choice, with an indeterminate state.
-- **RadioGroup** — exactly one choice, where selection follows focus.
-- **ToggleGroup** — related modes, pressed and unpressed.

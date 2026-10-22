@@ -3,9 +3,7 @@ title: Skeleton
 description: A pulsing placeholder for content that has not arrived.
 ---
 
-`Skeleton` paints a block in the skeleton role and pulses its opacity between two
-states. It is not a spinner and not a progress bar: it stands in for the shape of
-content while that content loads.
+`Skeleton` paints a block in the skeleton role and pulses its opacity.
 
 ## Usage
 
@@ -19,90 +17,21 @@ import { Skeleton, Stack } from "@gpuixui/primitives";
 </Stack>;
 ```
 
-An avatar placeholder:
-
-```tsx
-<Skeleton width={32} circle />
-```
-
-`circle` mirrors whichever side is explicit, so `width={32} circle` paints a
-32×32 circle rather than a 32-wide ellipse. With neither side it is one line
-tall and square; with both sides explicit the caller's two numbers stand (they
-may be an ellipse on purpose).
-
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `width` | `number \| string` | `"100%"` (circle: one line) | the block's width; a numeric side that is not finite or is zero or below reads as the default, because a box the runtime cannot draw paints nothing |
-| `height` | `number \| string` | body line height | the block's height; the same rule for an unmeasurable number |
+| `width` | `number \| string` | `"100%"` | the block's width |
+| `height` | `number \| string` | body line height | the block's height |
 | `radius` | `sm \| md \| lg \| xl \| none` | `"sm"` | corner radius |
-| `circle` | `boolean` | `false` | full radius; the missing side mirrors the other, so one explicit size stays a circle |
+| `circle` | `boolean` | `false` | full radius; the missing side mirrors the other |
 | `reducedMotion` | `boolean` | `false` | paints the full-opacity frame and schedules no pulse |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
-## Keyboard
-
-Not focusable. A skeleton is decoration; loading state must be announced by
-something else.
-
-## Accessibility
-
-The block has **no role** and no text, which is the honest arrangement — a
-placeholder must not be read out as content. Announce the wait with a `Spinner`
-label ("Loading projects") or a `Progress` label, or with visible text beside the
-skeleton.
-
-## Theming
-
-`skeletonStyle` paints `colors.skeleton`; height defaults to
-`typography.body.lineHeight`, and a circle's size comes from the same
-`skeletonSize` rule the component uses. A side the runtime cannot paint — `NaN`
-from a measurement that never arrived, an infinity, zero or a negative number —
-takes that side's default instead of reaching `width`/`height` verbatim, where
-the runtime would paint no box at all; a length string such as `"45%"` is the
-caller's expression and stays. The pulse alternates opacity `1` / `0.6` every
-700 ms.
-
-`reducedMotion` is the caller's, not the runtime's: GPUix 0.11.0 exposes no
-reduced-motion preference, so a host application reads the platform setting it
-already knows and passes it down. With it set, the block keeps the skeleton
-role but paints one frame and schedules no interval.
-
-```tsx
-<Skeleton height={14} width="70%" reducedMotion={prefersReducedMotion} />
-```
-
 ## Limitations
 
-- **No shimmer sweep**: the runtime's `motion` animates opacity, width, height,
-  insets and radius — not a moving gradient — so a shimmer would be a fake.
+- No shimmer sweep: motion animates opacity and size only.
 - No automatic count or list-shape generation; compose the blocks you need.
-- The reduced-motion preference is the caller's to supply (above).
-
-## Verification
-
-- `src/core/loading.test.ts` — the two pulse states, the block geometry, the
-  circle's mirrored side (one explicit side, neither, and both), and a side it
-  cannot paint (`NaN`, an infinity, zero, a negative number) falling back to the
-  side's default while a length string stays.
-- `src/components/presentational.test.tsx` — the component paints a width-only
-  circle at equal width and height, a block whose measured side is `NaN` still
-  paints its box, and `reducedMotion` holds the full-opacity frame no matter
-  which step arrives.
-- `runtime/loading.runtime.test.tsx` — opacity samples take both `1` and `0.6`
-  in the real renderer; a `reducedMotion` block's opacity is one value across
-  six samples.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Spinner** — activity without a shape.
-- **Progress** — a known proportion.
-- **Box** — the surface the real content will occupy.
+- The reduced-motion preference is the caller's to supply.

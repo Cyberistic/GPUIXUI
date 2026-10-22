@@ -1,15 +1,12 @@
 ---
 title: Select
-description: One choice from a list, in a popover — a themed wrapper over GPUix's own Select.
+description: One choice from a list, in a popover.
 ---
 
-`Select` reuses `@gpuix/react/select` for the interaction — opening, dismissal and
-arrow navigation — and themes it to match the field chrome. It is **not** a
-reimplementation: what this package owns is the trigger's paint, the list surface
-and the item states. The one state it holds itself is the open state, because a
-`combobox` has to publish it and the runtime publishes none: the wrapper mirrors
-what GPUix reports (so `aria-expanded` is always truthful) and a caller may take
-it over with `open`/`onOpenChange`.
+`Select` reuses `@gpuix/react/select` for the interaction and themes it to match
+the field chrome.
+
+<ComponentPreview name="select-states" />
 
 ## Usage
 
@@ -30,46 +27,18 @@ import { Label, Select } from "@gpuixui/primitives";
 />;
 ```
 
-Options can be grouped under a caption. `SelectGroup`/`SelectLabel` are plain
-elements in 0.11.0 with no role, so the caption is announced by the `Group` the
-rows sit in — the wrapper names that group with the caption — while each row
-keeps its own accessible name. The runtime still receives one flat list in render
-order, so keyboard navigation crosses a group boundary exactly as it crosses any
-other row.
-
-```tsx
-import { Select } from "@gpuixui/primitives";
-
-<Select
-  label="Density"
-  options={[
-    {
-      label: "Comfortable",
-      options: [
-        { value: "compact", label: "Compact" },
-        { value: "cozy", label: "Cosy" },
-      ],
-    },
-    {
-      label: "Spacious",
-      options: [{ value: "roomy", label: "Roomy" }],
-    },
-  ]}
-/>;
-```
-
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | — (required) | `{ value, label, disabled? }` items, or `{ label, options }` groups painted under a caption and a rule |
+| `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | required | `{ value, label, disabled? }` items, or `{ label, options }` groups |
 | `value` | `string` | — | controlled selection |
 | `defaultValue` | `string` | — | initial selection when uncontrolled |
-| `open` | `boolean` | — | controlled open state of the list; omit to let the Select hold its own |
-| `defaultOpen` | `boolean` | `false` | the list's initial state while `open` is omitted |
-| `onOpenChange` | `(open: boolean) => void` | none | the open state GPUix reported, mirrored for `aria-expanded` |
-| `onChange` | `(value: string) => void` | none | deprecated alias for `onValueChange`; the new name runs when both are passed |
+| `open` | `boolean` | — | controlled open state |
+| `defaultOpen` | `boolean` | `false` | the list's initial state |
+| `onOpenChange` | `(open: boolean) => void` | none | the open state GPUix reported |
 | `onValueChange` | `(value: string) => void` | none | the committed value |
+| `onChange` | `(value: string) => void` | none | deprecated alias for `onValueChange` |
 | `placeholder` | `string` | none | shown before a choice |
 | `disabled` | `boolean` | `false` | refuses opening |
 | `invalid` | `boolean` | `false` | destructive border on the trigger |
@@ -77,179 +46,16 @@ import { Select } from "@gpuixui/primitives";
 | `fullWidth` | `boolean` | `false` | trigger and list fill the parent |
 | `side` | `FloatingSide` | GPUix's choice | which side the list opens on |
 | `label` | `string` | none | accessible name for the select |
-| `style` | `StyleDesc` | — | merged last on the select root, which only carries its width |
+| `style` | `StyleDesc` | — | merged last on the select root |
 | `triggerStyle` | `StateStyle<SelectTriggerState>` | — | resolved against the trigger's live state, merged last |
-| `itemStyle` | `StateStyle<SelectItemState>` | — | resolved per option against that option's state, merged last |
-| `testId` | `string` | — | stable locator for the root, which paints only the wrapper's width |
-| `triggerTestId` | `string` | — | stable locator for the trigger, the element that opens the list |
-| `itemTestId` | `(value: string) => string` | — | stable locator for each option row, derived from its value |
-
-The root `testId` is not the control: it sits on a positioning wrapper that
-paints nothing but its width. An automation host presses `triggerTestId` and
-clicks `itemTestId(value)`, rather than walking the root's children and reading
-painted label text.
-
-`Select` takes no `className`: its root paints only that width, so a class
-there would reach nothing. The styling seams are `triggerStyle`, `itemStyle` and
-the trigger's own recipe — the same roles the page names under Theming. Every
-other primitive takes a `className` joined after its recipe.
-
-## Keyboard
-
-Owned by GPUix's Select: the trigger opens with Enter/Space, the arrows move the
-highlight, Enter commits, Escape dismisses. This wrapper does not intercept any
-key, and it adds one behaviour the runtime omits: **the highlighted row is kept
-inside the list**. GPUix never moves the list for its own highlight, so a row the
-arrows reached past the 320px cap used to stay off screen. The row itself reveals
-its own highlight (`core/scroll.ts`'s `revealScroll` reads the row's and the
-list's painted boxes), which also works for a row nested in a group.
-
-## Accessibility
-
-- **The trigger is the announced control.** It carries `role="combobox"` and the
-  `label` prop as its accessible name, so the runtime publishes a `ComboBox`
-  node with the Click and Focus actions — measured in a window
-  (`runtime/fields.runtime.test.tsx`). The role is load-bearing: a node reaches
-  the accessibility tree only with a role, and GPUix renders the trigger as a
-  `div` with a tab stop and no role. Before the fix the name sat on the
-  wrapper (a role-less `div`) and a window's tree held **no node for the
-  control at all** — only the Window and the tab stop.
-- **Pass `label`.** The trigger is a combobox either way, so a Select without
-  one publishes an unnamed control rather than no node. Pass `label`: without it
-  the node exists and has no name.
-- **The option rows are announced.** 0.11.0's `SelectItem`, `SelectGroup` and
-  `SelectLabel` are plain `div`s with no role, so the wrapper announces the list
-  from inside them: the list is a `ListBox`, every row is an `option` with the
-  option's label as its name and `aria-selected` carrying the state GPUix
-  reports for it, and a named group is a `Group` named by its caption. Measured
-  in a window (`runtime/fields.runtime.test.tsx`): opening a list with a chosen
-  option publishes its rows, the chosen one reads `selected` and the others do
-  not, and the group's caption names the run it heads. The rows take pointer and
-  keyboard input as before — the announcement is a role and a name, not a second
-  control.
-- **The expanded state is published.** The trigger's `aria-expanded` follows the
-  open state the wrapper holds, so the combobox says whether its popup is open —
-  measured in a window (`runtime/fields.runtime.test.tsx`): `false` at rest,
-  `true` once the list opens, and `false` again when an option commits. GPUix
-  reports the changes but publishes no state to read, so the wrapper mirrors them
-  and a caller may take the state over with `open`/`onOpenChange`. A controlled
-  select is really controlled: a host that holds `open` true and refuses the
-  change keeps its list open when an option commits (the same window case),
-  rather than the wrapper's mirror winning.
-- Disabled items are painted from the `disabled` state GPUix reports and cannot
-  be committed.
-
-## Theming
-
-`selectTriggerStyle`, `selectContentStyle` and `selectItemStyle` resolve the
-trigger (the field chrome), the list (`popover` fill, `radius.md`, a `border`
-rule and **`elevation.lg`** — the lift every floating surface in this library
-takes, read through `elevationShadow` rather than a literal shadow) and the item
-states (`selected`, `hover`, `disabledForeground`). A selected row also paints a **check mark** in the
-`popoverForeground` role at its end: the row's children are a function of the
-state GPUix reports, so an uncontrolled select needs no mirror of its value and
-the mark cannot disagree with the selection. It is decorative — the mark is
-`role="presentation"` and the row's `aria-selected` is the state (see
-[Accessibility](#accessibility)). The trigger
-declares the shared keyboard outline at rest (`keyboardRing`, destructive while
-`invalid`), so the runtime paints it after Tab and not after a mouse press; a
-disabled trigger declares none. The trigger shows the chosen value, so it also
-declares `keyboardFocusDim: false` and keeps that value readable while another
-control holds the keyboard focus. **An unchosen trigger's hint is painted in the
-`placeholder` role**, the hint role the contrast table measures on a field's own
-fill, and a chosen value keeps `inputForeground`: GPUix's `SelectValue` paints its
-fallback *inside* the trigger, so the trigger's own colour is what the hint
-inherits, and leaving it at the value role made an empty select read as a chosen
-one. The list is one spacing step inset, full trigger width.
-
-`triggerStyle` and `itemStyle` are the state-aware hooks. The trigger callback
-receives GPUix's own `{ open, disabled, placeholder }`, so a caller can paint the
-open state; the item callback receives `{ selected, highlighted, disabled }` and
-runs once per option, so a data-driven list can style its rows. Both merge after
-the recipe and its role decisions, so a callback is the last word. The root
-`style` stays a plain `StyleDesc`: the root is a positioning wrapper with no live
-state of its own.
+| `itemStyle` | `StateStyle<SelectItemState>` | — | resolved per option, merged last |
+| `testId` | `string` | — | the root's locator |
+| `triggerTestId` | `string` | — | the trigger's locator |
+| `itemTestId` | `(value: string) => string` | — | per-option locator, derived from its value |
 
 ## Limitations
 
-- **Options are data.** No rich option content and no compound escape hatch in
-  the public API; use `RadioGroup` for rich options.
-- A group's name has no semantic effect on the keyboard; the arrows walk the
-  flat list in render order.
-- The list's dismissal and positioning are GPUix's; this package cannot change
-  the open animation or the outside-click rules. **Measured on 0.11.0:** the
-  layer snaps into the window (`fit: "snap"` with an 8px margin), so a trigger at
-  the bottom edge opens a list that sits inside it instead of painting off it.
-- **A long list scrolls on the wheel, and the keyboard reveals its row.** GPUix's
-  content sets no maximum height and no overflow, and its
-  `SelectScrollUpButton`/`SelectScrollDownButton` are empty elements in 0.11.0,
-  so the wrapper caps the surface at the menus' 320px and makes it a scroller:
-  measured, a 40-option list paints a 320px box, the wheel moves it to `-200`,
-  and a keyboard move to a row past the fold scrolls the list until that row is
-  inside it. The reveal is this package's arithmetic over two painted boxes
-  (`revealScroll`), not the runtime's `scrollIntoView`, which scrolls a scroller
-  to the index of its **direct child** and so could only reveal a whole group.
-  Keep a keyboard-critical list short anyway; there is no type-ahead to jump.
-- No search or type-ahead. A long list wants a combobox, which is Tier 2.
-- No multi-select.
-
-## Verification
-
-- `src/components/Select.test.tsx` — the trigger as the announced control
-  (`role="combobox"` and the `label` as its name, with the wrapper carrying
-  neither), trigger chrome, the keyboard ring (ring
-  role, destructive while invalid, absent while disabled), the hint's
-  `placeholder` role and a chosen value's value role, the list's `lg` lift (held
-  to `elevationShadow(theme, "lg")`, not a literal shadow), list surface and item
-  states, both state-aware callbacks receiving their live state and winning, the
-  selected row's mark coming from the state the runtime reports, a row's
-  announcement (`role="option"`, its label as the name, `aria-selected` from the
-  state), and the trigger's `aria-expanded` following the open state it was
-  rendered with (absent when a pure render has none). Group cases:
-  the flat list in render order, the caption's muted role and one-pixel rule, the
-  group/rule/group tree, and a grouped row being a row of its own.
-- `src/core/scroll.test.ts` — the reveal arithmetic: a row below the fold moves
-  the list by exactly its overshoot, a row above moves it back by the gap, a row
-  already inside (or ending on the fold) is `None`, a row taller than the list
-  aligns its top, and the horizontal offset is kept.
-- `runtime/fields.runtime.test.tsx` — the trigger reaches the accessibility tree
-  as a named `ComboBox` with the Click and Focus actions; the open list is a
-  `ListBox` holding an `option` per row, the chosen row reads `selected` and the
-  others do not, and a group's caption names a `Group` (negative controls
-  measured: without the row's `role` the tree holds no `ListBoxOption`, and
-  without the group's it holds no `Group`); the trigger's `expanded` is `false`
-  at rest, `true` with the list open and `false` again once an option commits
-  (negative control measured: without the attribute the node publishes no
-  `expanded`), and a controlled select's `open` is the state it renders — a host
-  that refuses a close keeps the list open (negative control measured: ignoring
-  the prop closes it); it opens, paints its options and
-  commits a clicked option in the real renderer; the trigger and an option row are
-  addressed by `triggerTestId`/`itemTestId` rather than by walking children and
-  searching the painted text (negative control measured: without the forwarding,
-  `runtime.element("fruit-trigger")` is `none`); the trigger's own applied colour
-  is the `placeholder` role while unchosen and the value role once an option is
-  committed (negative control measured: without the paint the window reports
-  `expected '#000016' to be '#000017'`); the list carries a shadow in the
-  renderer once it is open (negative control measured: without the recipe's
-  lift, `expected false to be true`); exactly one row paints the mark,
-  and the
-  mark moves to the row that becomes selected (negative control measured:
-  rendering the label alone fails `expected [] to have a length of 1`). Open
-  state and dismissal are GPUix's. Three placement cases measure the behaviour
-  above: a bottom-edge trigger's list is painted inside the window in order, a
-  40-option list is a 320px scroller whose wheel offset moves, and twenty
-  ArrowDowns keep the highlighted row inside that scroller (both directions, and
-  the negative control measured: without the reveal the offset stays at `0`); a
-  grouped list's highlighted row is revealed by the same arithmetic. A grouped
-  list paints both captions and commits a row clicked inside a group.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **RadioGroup** — a small set with no popover.
-- **Label** — the visible name.
-- **Tooltip** — the other headless GPUix wrapper this package themes.
+- Options are data: no rich options or compound escape hatch.
+- No search, type-ahead or multi-select.
+- A long list caps at 320px and scrolls; the highlighted row reveals itself.
+- Open animation, positioning and dismissal are the runtime's.

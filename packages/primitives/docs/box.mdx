@@ -1,13 +1,10 @@
 ---
 title: Box
-description: The one container — a GPUix box with a semantic surface and flex facts.
+description: A surface with tone, padding, radius, border and flex facts.
 ---
 
 `Box` is a `<div>` with a resolved surface: tone, padding, radius, border,
-elevation and the two flex facts a layout needs. It is the **only** primitive
-that merges a caller's `style` over a resolved one and the escape hatch for
-anything the named props do not cover. It is not a card, a panel or a dialog;
-those are compositions.
+elevation and two flex facts.
 
 ## Usage
 
@@ -19,110 +16,41 @@ import { Box, Text } from "@gpuixui/primitives";
 </Box>;
 ```
 
-Padding can differ per axis, a border can be dashed, and a ratio fills the side
-that has no definite size:
-
-```tsx
-<Box tone="none" paddingX="md" paddingY="sm" border borderStyle="dashed">
-  <Text role="caption" tone="muted">Drop a layer here</Text>
-</Box>;
-
-<Box tone="muted" radius="md" aspectRatio={1} style={{ width: 48 }} />;
-```
-
 ## Tones
 
-| `tone` | Background role | Use for |
-| ------ | --------------- | ------- |
-| `none` | none | a layout wrapper that must not paint |
-| `background` | `background` | the application frame |
-| `card` | `card` | a raised content surface |
-| `popover` | `popover` | menus, overlays, tooltips |
-| `muted` | `muted` | a quiet inset region |
-| `accent` | `accent` | a highlighted region |
-| `selected` | `selected` | a selected row or tile |
-| `skeleton` | `skeleton` | a placeholder block |
+| `tone` | Background role |
+| ------ | --------------- |
+| `none` | none |
+| `background` | `background` |
+| `card` | `card` |
+| `popover` | `popover` |
+| `muted` | `muted` |
+| `accent` | `accent` |
+| `selected` | `selected` |
+| `skeleton` | `skeleton` |
 
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `tone` | `SurfaceTone` | — (required) | which semantic background is painted |
-| `padding` | spacing step | none | padding on all four sides, from the theme scale |
-| `paddingX` | spacing step | none | padding on the left and right, overriding `padding` there |
-| `paddingY` | spacing step | none | padding on the top and bottom, overriding `padding` there |
+| `tone` | `SurfaceTone` | required | the semantic background |
+| `padding` | spacing step | none | padding on all four sides |
+| `paddingX` / `paddingY` | spacing step | none | per-axis padding, overriding `padding` there |
 | `radius` | `none \| sm \| md \| lg \| xl \| full` | none | corner radius |
 | `border` | `boolean` | `false` | one thin border on the `border` role |
 | `borderStyle` | `"solid" \| "dashed"` | `"solid"` | the edge style; no effect without `border` |
-| `aspectRatio` | `number` | none | width ÷ height; fills whichever axis has no definite size. A non-finite, zero or negative ratio is dropped |
+| `aspectRatio` | `number` | none | width ÷ height; a non-finite, zero or negative ratio is dropped |
 | `elevation` | `sm \| md \| lg \| overlay` | none | the theme's first shadow at that level |
-| `grow` | `boolean` | `false` | takes leftover space on the parent's main axis |
-| `shrink` | `boolean` | `false` | may shrink below its content |
+| `grow` / `shrink` | `boolean` | `false` | flex growth, or allow shrinking below content |
 | `fullWidth` / `fullHeight` | `boolean` | `false` | `100%` on that axis |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
-| `style` | `StyleDesc` | — | merged **last**, so it wins property by property |
+| `style` | `StyleDesc` | — | merged last, so it wins property by property |
 | `children` | `ReactNode` | — | content |
-| `testId` | `string` | — | stable locator for automation |
-
-`shrink` is deliberately `false` by default: chrome must not squash, which is the
-opposite of the browser's flex default and the right one for application layout.
-
-`paddingX`/`paddingY` compose with `padding`: the whole-side step stays on the
-other axis, and the axis prop wins on its own. `aspectRatio` needs one definite
-side — give it `fullWidth` or a `style` width, and the runtime computes the
-height (or the reverse).
-
-## Keyboard
-
-Not focusable and not interactive. A clickable surface is a `Button` or an
-application-level host element with its own contract.
-
-## Accessibility
-
-`Box` contributes **no role** and no `aria-*`. A decorative container must stay
-out of the accessibility tree; semantic regions belong to the content or to a
-composed component such as `ButtonGroup`.
-
-## Theming
-
-Surface tones resolve through `surfaceStyle` in `src/core/style.ts`. Padding,
-radius and border width come from `spacing`, `radius` and `borderWidth`;
-elevation from the theme's shadow list, of which GPUix paints the first entry.
-The dashed edge is the runtime's `borderStyle`, not a second border width.
+| `testId` | `string` | — | stable locator |
 
 ## Limitations
 
-- No `role`, `tabIndex` or event props: the public API is a container, not a
-  host-element re-export. Compose a host element when you need semantics.
-- **No gradient prop.** GPUix 0.11.0 accepts a linear-gradient `background`, but
-  a gradient has two ends and this system has one colour role per surface; a
-  `Box` gradient would need a semantic gradient token group before a call site
-  could name its colours instead of passing two literals. Pass one through
-  `style` until such a group exists.
-- **One border style for every side.** The runtime's `borderStyle` applies to
-  all four sides; per-side styles and dotted edges are not paint values it
-  exposes. `dashed` is the one alternate it paints.
-- One shadow per element — the runtime paints a single `boxShadow`.
-
-## Verification
-
-- `src/core/style.test.ts` — tone resolution, padding and its axis overrides,
-  the dashed edge only on an explicit border, a ratio the renderer can divide
-  by, and "the caller's style wins".
-- `src/components/presentational.test.tsx` — tone resolution, padding, radius,
-  border, the axis padding and dashed edge on the element tree.
-- `runtime/layout.runtime.test.tsx` — padding and tone survive layout in real
-  GPUix, per-axis padding paints at the measured offsets, a ratio fills the
-  missing side, and `borderStyle` reaches the painted element; density moves
-  height and leaves colour alone.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Stack** — one axis over the same box.
-- **Grid** — equal tracks.
-- **ScrollArea** — a bounded box that scrolls.
+- No `role`, `tabIndex` or event props; compose a host element for semantics.
+- No gradient prop; pass one through `style`.
+- One border style for every side; `dashed` is the only alternate.
+- One shadow per element.

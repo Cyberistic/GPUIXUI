@@ -3,9 +3,8 @@ title: Separator
 description: One theme-coloured rule between regions, with an optional caption.
 ---
 
-`Separator` paints a single border step: horizontal or vertical, optionally
-inset, optionally carrying a centred caption. It is a visual divider, not a
-sectioning element and not a resizable splitter.
+`Separator` paints a single border step: horizontal or vertical, optionally inset
+or carrying a centred caption.
 
 ## Usage
 
@@ -19,81 +18,20 @@ import { Separator, Stack, Text } from "@gpuixui/primitives";
 </Stack>;
 ```
 
-A labelled rule is still one call:
-
-```tsx
-<Separator orientation="horizontal" label="Advanced" />
-```
-
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `orientation` | `"horizontal" \| "vertical"` | — (required) | which way the rule runs |
+| `orientation` | `"horizontal" \| "vertical"` | required | which way the rule runs |
 | `inset` | spacing step | none | margin at both ends, from `spacing` |
 | `label` | `string` | none | a centred caption; ignored for vertical rules |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
-The rule's thickness is `theme.borderWidth.thin` and its colour is
-`theme.colors.border`. A labelled separator is composed from two rules and a
-`caption`-role text, not a new visual primitive.
-
-## Keyboard
-
-Not focusable. A focusable divider is a resize handle, which is a docking
-component, not this one.
-
-## Accessibility
-
-No role. The rule is decorative: it conveys grouping visually, so a region whose
-only structure is a rule must still be understandable from headings and order.
-The optional label is painted as text and is therefore readable, but it is not
-associated with a region. **The reason is measured**, not a preference: `0.11.0`
-maps the one ARIA token a rule could carry, `separator`, to the platform's
-**`Splitter`** role — the role of a *draggable* divider — so a static rule
-announced that way would invite an interaction it does not have. A focusable
-divider that really resizes is a split pane's element, and that is where the role
-belongs (`runtime/layout.runtime.test.tsx` probes the mapping and holds this rule
-to no node of its own).
-
-## Theming
-
-`ruleStyle` reads `spacing[inset]`, `borderWidth.thin` and `colors.border`. No
-literal colour or thickness appears in the component.
-
 ## Limitations
 
-- **No dashed or dotted rule.** The runtime does accept `borderStyle: "dashed"`,
-  but this separator paints a **filled** 1px box on the border role rather than
-  drawing a border, so the property has nothing to style. Compose a `Box` with
-  `borderTopWidth`/`borderStyle: "dashed"`/`borderColor` when a dashed divider is
-  what a design needs; dotted is not in the runtime's grammar at all.
+- No dashed or dotted rule: it paints a **filled** 1px box, not a border.
+- `borderStyle: "dashed"` styles nothing; Compose a `Box` for a dashed divider.
 - No draggable splitter and no resize event.
-- A vertical separator does not stretch to its parent automatically; give it a
-  bounded parent or a `fullHeight` box around it.
-
-## Verification
-
-- `src/components/presentational.test.tsx` — horizontal/vertical thickness,
-  inset and the labelled composition.
-- `src/docs.test.ts` — this page's line-style limitation names the real cause
-  (a filled rule, not a runtime that only paints solid borders), the runtime's
-  `dashed` grammar and the `Box` alternative, and refuses the old sentence.
-- `runtime/layout.runtime.test.tsx` — one border step across the surface, and the
-  rule's silence: the runtime maps `role="separator"` to `Splitter`, while the
-  shipped rule adds no node of its own (negative control measured: giving the
-  rule that role makes the tree hold a second splitter).
-- `runtime/theme.runtime.test.tsx` — the rule repaints with the active palette.
-
-```sh
-nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime
-```
-
-## Related
-
-- **Spacer** — empty space rather than a rule.
-- **Stack** — the regions a separator divides.
-- **Box** — a bordered surface.
+- A vertical rule needs a bounded parent to stretch.
