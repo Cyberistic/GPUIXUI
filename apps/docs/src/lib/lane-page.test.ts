@@ -163,6 +163,27 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("virtual-tree-lifecycle");
     expect(dataPage).toContain("painted rows");
   });
+
+  it("teaches the windowed mode a large table needs, and its two rules", () => {
+    // The page said a virtualized table is "a different composition" and left
+    // it there, so a table of 100 000 rows had nothing telling it which mode to
+    // use or what that mode costs. `virtual-list-windowed` measured the
+    // `itemCount` mode and the two rules: the range event is one gesture behind
+    // the paint, and a reveal has to move the app's window before it scrolls.
+    const virtual = rowFor(record, "Virtualized list");
+
+    expect(virtual).toContain("itemCount");
+    expect(virtual).toContain("virtual-list-windowed");
+    expect(dataPage).toContain("itemCount");
+    expect(dataPage).toContain("windowStart");
+    expect(dataPage).toContain("virtual-list-windowed");
+    expect(dataPage).toContain("overdraw");
+    expect(dataPage).toContain("one gesture behind");
+    // The two rows that denied the children form are the same retracted claim as
+    // the record's "takes an item count": `<virtual-list>` has both modes.
+    expect(dataPage).not.toContain("a list is not virtualized");
+    expect(dataPage).not.toContain("takes an item count, not compound children");
+  });
 });
 
 /**

@@ -399,6 +399,54 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(virtual?.[2]).toContain("scrollToItem");
   });
 
+  it("records the itemCount window mode and the two rules a table reads", () => {
+    // The row described the children form only — every row retained, off-screen
+    // build skipped — which is not how a 100 000-row table is built. The
+    // `itemCount` + `windowStart` mode mounts a slice the app renders, and
+    // `virtual-list-windowed` measured what a table has to get right: the range
+    // event is absolute but one gesture behind the paint, and a reveal has to
+    // move the app's window before it scrolls.
+    const virtual = rowFor("Virtualized list");
+    expect(virtual?.verdict).toBe("supported, with limits");
+    expect(virtual?.evidence).toContain("itemCount");
+    expect(virtual?.evidence).toContain("windowStart");
+    expect(virtual?.evidence).toContain("virtual-list-windowed");
+    expect(virtual?.evidence).toContain("20..27");
+    expect(virtual?.evidence).toContain("40..46");
+    expect(virtual?.workaround).toContain("windowStart");
+    expect(virtual?.workaround).toContain("overdraw");
+  });
+
+  it("publishes the windowed virtual-list rules on /docs/runtime", () => {
+    const virtual = measuredRow("Virtualized list");
+    expect(
+      virtual,
+      "the page's measured table has no virtual-list row",
+    ).toBeDefined();
+    expect(virtual?.[1]).toContain("itemCount");
+    expect(virtual?.[1]).toContain("virtual-list-windowed");
+    expect(virtual?.[2]).toContain("windowStart");
+    expect(virtual?.[2]).toContain("overdraw");
+  });
+
+  it("records the variable row heights a wrapped table needs", () => {
+    // Every virtual-list probe declared fixed heights, so "rows do not need
+    // equal heights" was a claim. `virtual-list-rows` measured 400 rows cycling
+    // 24 / 48 / 72px — including the one fact an expandable row depends on: a
+    // row that grows while it is outside the window is not remeasured until it
+    // paints again.
+    const virtual = rowFor("Virtualized list");
+    expect(virtual?.evidence).toContain("virtual-list-rows");
+    expect(virtual?.evidence).toContain("24 / 48 / 72");
+    expect(virtual?.evidence).toContain("remeasured");
+    expect(virtual?.workaround).toContain("on screen");
+
+    const page = measuredRow("Virtualized list");
+    expect(page?.[1]).toContain("virtual-list-rows");
+    expect(page?.[1]).toContain("24 / 48 / 72");
+    expect(page?.[2]).toContain("on screen");
+  });
+
   it("records the clipboard gap and the one place the platform still provides it", () => {
     // The binding publishes no clipboard API, so a component cannot offer
     // "copy" — but a window measured that the platform's own keys still run
@@ -561,6 +609,8 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("selection-lifecycle");
     expect(runtimePage).toContain("clipboard-lifecycle");
     expect(runtimePage).toContain("virtual-tree-lifecycle");
+    expect(runtimePage).toContain("virtual-list-windowed");
+    expect(runtimePage).toContain("virtual-list-rows");
     expect(runtimePage).toContain("portal-layer");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");

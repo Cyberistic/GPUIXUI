@@ -23,11 +23,11 @@ first table will compose:
 
 | Piece | Page | What it gives the lane | Its limit |
 | ----- | ---- | ---------------------- | --------- |
-| List / ListItem | [List](/docs/components/list) | A roving tab stop, single and multiple selection, Shift ranges, `Cmd`/`Ctrl`+A, type-ahead, activation | Rows are compound children, so a list is not virtualized |
+| List / ListItem | [List](/docs/components/list) | A roving tab stop, single and multiple selection, Shift ranges, `Cmd`/`Ctrl`+A, type-ahead, activation | Rows are compound children, so a list mounts all of them; a windowed list is `<virtual-list>`'s `itemCount` mode |
 | Pagination | [Pagination](/docs/components/pagination) | A derived page window with stable width | No page-size control |
 | Empty state | [Empty state](/docs/components/empty-state) | The no-rows state a table shows | No illustration slot |
 | Cards, badges, progress | [Components](/docs/components) | Statistic cards and metric rows today | No chart component |
-| Message scroller | [Message scroller](/docs/components/message-scroller) | Append-follow, unread count, jump-to-latest | Every row renders: `<virtual-list>` takes an item count, not compound children |
+| Message scroller | [Message scroller](/docs/components/message-scroller) | Append-follow, unread count, jump-to-latest | Every row renders: a compound-children list, where the windowed `itemCount` mode renders rows from data instead |
 | Command menu | [Command menu](/docs/components/command-menu) | Ranked filtering over a list | Per-group ranking, no column model |
 
 A composed example is the [Dashboard](/docs/blocks/dashboard) block: statistic
@@ -74,11 +74,18 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
 - **Keyboard** — a roving tab stop over rows and a header that is reachable, or
   a grid composite; the runtime has real focus but no `aria-colindex`, so a
   screen reader gets the row name and its selected state, not a cell address.
-- **Virtualization** — `<virtual-list>` exists, but it takes an item count and
-  renders a row itself, so a virtualized table is a different composition from a
-  compound-children table. That is why "Virtualized tables" is its own row.
-  A reveal is **index-addressed**: `renderer.scrollToItem` moves the window to a
-  row that was never mounted, and a programmatic reveal fires no
+- **Virtualization** — `<virtual-list>` has two modes, and a table needs the
+  second. The **children** form retains every row and skips only the off-screen
+  build and paint; the **`itemCount`** form (`itemCount` +
+  `estimatedItemHeight` + `windowStart`) mounts the slice the app renders, so a
+  table of 100 000 rows keeps a 60-row window (`virtual-list-windowed`). Two
+  rules make that mode work: size the window wider than the viewport plus
+  **overdraw**, because `onVisibleRange` reports **absolute** indices
+  one gesture behind the paint (`20..27` while the paint reached `40..46`); and
+  on a reveal move the app's `windowStart` first and call
+  `renderer.scrollToItem` after that commit, since the window is app state
+  native cannot infer. A reveal is **index-addressed**: `scrollToItem` moves to
+  a row that was never mounted and a programmatic reveal fires no
   `onVisibleRange` — read the painted rows or the list's anchor, and never
   paginate from that event across a row-count change
   (`virtual-tree-lifecycle`).
