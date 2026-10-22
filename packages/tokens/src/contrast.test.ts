@@ -2024,19 +2024,22 @@ describe("a control's edge on a message's own tint", () => {
 /**
  * Guards the ring's **own** surface. The table measured the ring on the strips a
  * control rests on — the page, a card, a popover, a toolbar and a segmented
- * panel — and on nothing the same element paints behind itself: `list.tsx`
- * fills `selected`, tints `accent` while hovered and `active` while pressed, and
- * declares the keyboard ring on that row; a ghost or outline action tints the
- * same two washes under its ring; and a field's ring borders the field's own
- * fill (`input`), which is not the page it sits on. `outlineOffset: 0` draws the
- * line on the border box, so its inner side touches the fill and its outer side
- * the strip behind it — a ring that matches the row it surrounds is the boundary
- * of nothing, and no pair measured any of those five.
+ * panel — and on nothing a control can sit *inside*: `list.tsx` fills `selected`,
+ * tints `accent` while hovered and `active` while pressed; a ghost or outline
+ * action tints the same two washes under its ring; an action in a row's trailing
+ * slot is drawn on the wash the row wears; and a focusable clear action inside a
+ * field sits on the field's own `input` fill.
+ *
+ * The line is **separated** from the control's own fill by one `borderWidth`
+ * (`keyboardFocusRing`), so the strip behind the control shows through the gap
+ * and the ring is read against that strip. Those strips are what this suite
+ * holds: a ring that matches the surface it is drawn on is the boundary of
+ * nothing, and no pair measured any of the five before.
  */
-describe("the ring on the fill it hugs", () => {
+describe("the ring on the strip behind the control", () => {
   const fills = ["input", "selected", "hover", "active", "accent"] as const;
 
-  it("measures the ring on every fill a focused control paints", () => {
+  it("measures the ring on every strip a control sits in", () => {
     const missing = fills
       .filter(
         (background) =>
@@ -2077,9 +2080,9 @@ describe("the ring on the fill it hugs", () => {
     expect(declaresKeyboardRing(row), "list.tsx").toBe(true);
     expect(row).toContain("backgroundColor: theme.colors.selected");
     expect(row).toContain("hover: { backgroundColor: theme.colors.accent }");
-    // The press is the derived wash over the row's hover — the ring hugs the
-    // paint, so the derived press is the fill it is measured on
-    // (`pointerWashFailures` holds the step that produces it).
+    // The press is the derived wash over the row's hover — the ring is drawn on
+    // the strip the row is wearing, so the derived press is the surface it is
+    // measured on (`pointerWashFailures` holds the step that produces it).
     expect(row).toContain(
       'active: { backgroundColor: pressWash(theme, "accent") }',
     );
@@ -2124,7 +2127,7 @@ describe("the ring on the fill it hugs", () => {
     ).toMatchObject({ ratio: 1, floor: contrastFloors.boundary });
   });
 
-  it("keeps the ring findable on every fill in every shipped, platform and authored style", () => {
+  it("keeps the ring findable on every strip in every shipped, platform and authored style", () => {
     const shipped = [
       ...Object.values(themes),
       ...Object.values(highContrastThemes),
@@ -2151,10 +2154,11 @@ describe("the ring on the fill it hugs", () => {
 
 /**
  * Guards the ring on a **message's own tint**. The table measured the ring on
- * every strip a control rests on and on the fill it hugs, and on none of the
- * four soft status tints a message paints — while an `Alert`'s documented action
- * is the default `Button`, which declares the keyboard ring at rest, so a focus
- * cue inside the one component built to be noticed was measured by nothing.
+ * every strip a control rests on and on the strips a control can sit inside, and
+ * on none of the four soft status tints a message paints — while an `Alert`'s
+ * documented action is the default `Button`, which declares the keyboard ring at
+ * rest, so a focus cue inside the one component built to be noticed was measured
+ * by nothing.
  *
  * Measured, the light ring on iris 500 read **2.94:1** on `infoSoft` and
  * **2.84:1** on `destructiveSoft`, and the high-contrast ring **4.41:1** and

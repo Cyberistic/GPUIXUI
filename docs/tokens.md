@@ -852,8 +852,8 @@ const house = extendTheme(platformTheme(themes.dark, "win32"), {
   colors: {
     primary: "#B49CFF",
     primaryForeground: "#1C1547",
-    // A ring is read against the fill it hugs, so this violet stays light
-    // enough to be found on the theme's own `selected` wash.
+    // A ring is drawn on the strip behind the control, so this violet stays
+    // light enough to be found on the theme's own `selected` wash.
     ring: "#9B8CFF",
     // The accent family too: `accent`, `selected` and `selection` are surfaces
     // derived from the accent, so leaving them on the platform's blue paints a
@@ -1587,42 +1587,43 @@ empty. `contrast.test.ts`'s `the text a selected row keeps` suite reads both
 painters, reports a title held at 5:1 that the old floor passed, and holds all 16
 styles to the body floor.
 
-A **focused row** is the fifth case, and the ring's own surface is the one the
-table skipped. `outlineOffset: 0` draws the `focusVisible` line on the border
-box, so it is read against both neighbours: the fill the control paints behind
-itself and the strip beyond it. `list.tsx` fills `selected`, tints `accent` on
-hover and `active` on press, and declares the keyboard ring on that same row;
-the ghost and outline actions tint the same two washes under their ring; and a
-field's ring borders the field's own `input` fill, which is not the page it sits
-in. The five fills (`input`, `selected`, `hover`, `active`, `accent`) joined the
-ring's pairs at the boundary floor, so a brand whose ring is the colour of the
-row it surrounds is reported at 1.00:1 instead of shipping a focused row with no
-visible focus. Every shipped, high-contrast, platform and authored theme clears
-its variant's floor. `contrast.test.ts`'s `the ring
-on the fill it hugs` suite reads both painters and reports the two erased rings,
-so the pairs cannot outlive the paint.
+A **focused control's ring** is drawn **one line's width outside the border
+box**, so the strip behind the control shows through the gap and the ring is
+read against that strip rather than the fill the control paints. The five
+surfaces a control can sit *inside* are still ring surfaces — a field's own
+`input` fill holds a focusable clear action, a list row fills `selected`, tints
+`accent` under the pointer and keeps `active` while pressed, and an action in a
+row's `trailing` slot is drawn on the wash the row is wearing. The five fills
+(`input`, `selected`, `hover`, `active`, `accent`) are measured at the boundary
+floor, so a brand whose ring is the colour of the row it surrounds is reported
+at 1.00:1 instead of shipping a focused control with no visible focus. Every
+shipped, high-contrast, platform and authored theme clears its variant's floor.
+`contrast.test.ts`'s `the ring on the strip behind the control` suite reads both
+painters and reports the two erased rings, so the pairs cannot outlive the paint
+or the geometry.
 
-A **filled action** is the one face the ring cannot be required on, and the
-reason is arithmetic rather than taste. `ring` *is* the brand — `ring` and
-`primary` are the same ramp step in twelve of the sixteen styles — so a focused
-primary action draws its focus line in its own fill: measured, the ring reads
-**1.00–1.38:1** on `primary` and **1.00–1.54:1** on `destructive` in every
-style. The pair a filled face would need is not one the palettes fail to meet; it
-is unsatisfiable. The outline sits at `outlineOffset: 0`, flush against both the
-fill and the strip behind it, so a ring colour would have to clear the boundary
-floor against both — and no luminance does in **8 of the sixteen** styles for
-`primary` and **9 of the sixteen** for `destructive`, while where a colour does
-exist its nearest point is still **0.11** of relative luminance away from the
-brand, so it is never the brand the ring is. Two of the four faces are paired and
-hold (`ring` on `secondary`, `ring` on `accent`), because a neutral face is close
-enough to the page for one colour to serve both; their derived
-`filledHover`/`filledPressed` fills are not, and the press drops below the floor
-in **8 of the sixteen** styles for `secondary` and **6** for `accent`. So the
-ring stays measured against the strips a filled action is drawn on,
-`ring-fill.test.ts` holds the four faces and the arithmetic, and the fix is a
-ring **separated** from the fill: an outline offset needs a window probe before
-the geometry can change, a two-tone ring is the other route, and both are the
-interlock in `TODO.md` → Interlocks.
+A **filled action** is the case that decides the geometry. `ring` *is* the brand
+— `ring` and `primary` are the same ramp step in twelve of the sixteen styles —
+so a line flush with the fill is drawn in the action's own colour: measured, it
+reads **1.00–1.38:1** on `primary` and **1.00–1.54:1** on `destructive` in
+every style, at rest and under the pointer. A flush ring is not a palette the
+styles fail to meet; it is unsatisfiable. One colour would have to clear the
+boundary floor against both the page and the fill, and no luminance does in **8
+of the sixteen** styles for `primary` and **9 of the sixteen** for `destructive`,
+while where a colour does exist its nearest point is still **0.11** of relative
+luminance away from the brand — so it is never the brand the ring is. Two of the
+four faces were paired and held at rest (`ring` on `secondary`, `ring` on
+`accent`), because a neutral face is close enough to the page for one colour to
+serve both; their derived `filledHover`/`filledPressed` fills were not, and the
+press dropped below the floor in **8 of the sixteen** styles for `secondary` and
+**6** for `accent`. So the line is **separated from the fill**: the outline sits
+one `borderWidth.strong` outside the control, the strip shows through the gap,
+and every filled action is measured on the surface it is drawn on like any other
+control. The playground's `focus-ring-offset` probe measured the geometry in a
+window on `0.11.0` (28 checks): a two-point offset paints the ring three points
+out with the strip showing through the gap, the control and its sibling keep
+their boxes, and a flush ring stays on the border box. `ring-fill.test.ts` holds
+the offset, the arithmetic that forced it, the strips, the probe and both pages.
 
 A **message's own tint** is the ring's last strip, and the same one the edge
 reaches. An `Alert` fills its tone's soft role and its documented action is a
@@ -3024,6 +3025,13 @@ is a line outside the border box, so it takes no layout space, and a mouse press
 never shows it. Apply it **at rest** — the runtime decides when to paint it, so a
 control never tracks focus to draw a ring.
 
+The line is **separated from the control's own fill** by one
+`borderWidth.strong` (2 points in the shipped themes), so the strip behind the
+control shows through the gap and the ring is read against that strip. A flush
+line on a filled action is drawn in the action's own colour — `ring` is the brand
+— which is the case §Contrast measures; the playground's `focus-ring-offset`
+probe measured the separated geometry in a window on `0.11.0`.
+
 ```tsx
 import { keyboardFocusRing, type Theme } from "@gpuixui/tokens";
 
@@ -3035,7 +3043,7 @@ const fieldStyle = (theme: Theme) => ({
 // fieldStyle(theme)
 // {
 //   focusVisible: { outlineWidth: 2, outlineColor: theme.colors.ring,
-//                   outlineOffset: 0 }
+//                   outlineOffset: 2 }
 // }
 ```
 
@@ -3717,6 +3725,12 @@ or dropped is named rather than passing silently.
   `packages/primitives/src/core/focus.ts` and
   `packages/components/src/internal/theme.ts`, and the playground's theme
   gallery paints `focusRing` only to measure the shadow.
+- The keyboard line's **gap needs a couple of points of clearance**: it is drawn
+  one `borderWidth.strong` outside the control, so a control flush against a
+  clipping ancestor — a scroll viewport with no padding — could lose the outer
+  part of its ring. The playground measured the geometry outside a scroller, not
+  inside one, so a clipped ring is unmeasured rather than claimed; the library's
+  scrollers inset their content.
 - Motion — durations, easings, springs, inertia — lives in `@gpuixui/motion`,
   not here: a second copy would duplicate the package that owns reduced-motion
   policy. The components package composes it through `internal/presence.tsx`,

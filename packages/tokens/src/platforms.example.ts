@@ -49,10 +49,11 @@ export const resolveHouseTheme = (mode: ThemeMode): Theme =>
       // no longer carry white text, so the dark label is the near-black iris.
       primary: mode === "dark" ? "#B49CFF" : "#6A45F0",
       primaryForeground: mode === "dark" ? "#1C1547" : "#FFFFFF",
-      // A ring is read against the fill it hugs as well as the strip behind it,
-      // and the dark violet sat at 2.96:1 on this theme's own `selected` wash —
-      // a focused row whose focus line was the colour of the row. The lighter
-      // violet clears the boundary floor on all five fills.
+      // A ring is drawn on the strip behind the control as well as the surface a
+      // control can sit inside, and the dark violet sat at 2.96:1 on this
+      // theme's own `selected` wash — a focused row whose focus line was the
+      // colour of the row. The lighter violet clears the boundary floor on all
+      // five surfaces a control can sit inside.
       ring: mode === "dark" ? "#9B8CFF" : "#6A45F0",
       ...(mode === "dark"
         ? {

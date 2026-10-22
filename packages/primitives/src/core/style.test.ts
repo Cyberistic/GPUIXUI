@@ -199,7 +199,7 @@ describe("controlStyle", () => {
     expect(ring.focusVisible).toEqual({
       outlineWidth: testTheme.borderWidth.strong,
       outlineColor: testTheme.colors.ring,
-      outlineOffset: 0,
+      outlineOffset: testTheme.borderWidth.strong,
     });
     // An outline takes no layout space; a shadow ring would have had to be
     // merged on focus, which is what this removes.

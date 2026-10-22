@@ -62,7 +62,9 @@ describe("keyboardRing", () => {
       ...keyboardFocusRing(testTheme).focusVisible,
       outlineColor: testTheme.colors.destructive,
     });
-    expect(invalid.focusVisible?.outlineOffset).toBe(0);
+    expect(invalid.focusVisible?.outlineOffset).toBe(
+      testTheme.borderWidth.strong,
+    );
   });
 });
 

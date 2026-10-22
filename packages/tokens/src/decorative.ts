@@ -323,7 +323,8 @@ export const pointerWashTransitions: readonly PointerWashTransition[] = [
  * derived wash **plays** rather than by the wash it replaces. The derived wash is
  * a `hover` wash or a press wash, so it is held to the labels the table measures
  * on that role — the row's own text, the secondary line beside it, a checked
- * row's tick and the ring and edge that hug the fill (`outlineOffset: 0`). The
+ * row's tick and the ring and edge drawn over the fill (the ring sits one border
+ * width outside the control, on the strip the control's gap exposes). The
  * labels of the wash it *replaces* are the labels of a different state: a menu
  * row's `popoverForeground` and a navigation link's `accentForeground` belong to
  * the wash the row is leaving, and holding the derived wash to them would pin a

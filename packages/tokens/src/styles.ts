@@ -173,7 +173,12 @@ export interface FocusVisibleOutline {
   readonly outlineWidth: number;
   /** Outline colour, the theme's `ring` role. */
   readonly outlineColor: string;
-  /** Distance outside the border box; zero keeps the line on the control's edge. */
+  /**
+   * Distance outside the border box, one line's width. A separated line is read
+   * against the strip behind the control rather than the fill it paints, which
+   * is the only geometry a filled action can be found in: `ring` is the brand,
+   * so a line flush with a brand face is drawn in its own colour.
+   */
   readonly outlineOffset: number;
 }
 
@@ -197,6 +202,14 @@ export interface KeyboardFocusRing {
  * A programmatic focus before any keyboard input does not paint it, so a
  * mouse-opened overlay keeps {@link focusRing} for that path.
  *
+ * The line is **separated from the control's own fill** by one strong-border
+ * width, so the strip behind the control shows through the gap and the ring is
+ * read against that strip. A flush line would be drawn in a filled action's own
+ * colour (measured at 1.00–1.38:1 on `primary`), because `ring` is the brand.
+ * The playground's `focus-ring-offset` probe measured the geometry in a window:
+ * a two-point offset paints the ring three points out with the strip showing
+ * through the gap, and the control and its sibling keep their boxes.
+ *
  * @example
  * ```tsx
  * <div style={{ ...keyboardFocusRing(theme), backgroundColor: theme.colors.input }} />
@@ -207,7 +220,7 @@ export function keyboardFocusRing(theme: Theme): KeyboardFocusRing {
     focusVisible: {
       outlineWidth: theme.borderWidth.strong,
       outlineColor: theme.colors.ring,
-      outlineOffset: 0,
+      outlineOffset: theme.borderWidth.strong,
     },
   };
 }

@@ -53,7 +53,12 @@ describe("keyboardFocusRing", () => {
     ]);
     expect(focusVisible.outlineWidth).toBe(lightTheme.borderWidth.strong);
     expect(focusVisible.outlineWidth).toBeGreaterThan(0);
-    expect(focusVisible.outlineOffset).toBe(0);
+    // The line is separated from the control's own fill by one line's width, so
+    // the strip behind the control shows through the gap and the ring is read
+    // against that strip. A flush line on a filled action is drawn in the
+    // action's own colour (`ring` is the brand).
+    expect(focusVisible.outlineOffset).toBe(lightTheme.borderWidth.strong);
+    expect(focusVisible.outlineOffset).toBeGreaterThan(0);
   });
 
   it("takes the outline width from the theme, not a literal", () => {
@@ -62,6 +67,8 @@ describe("keyboardFocusRing", () => {
     expect(keyboardFocusRing(wide).focusVisible.outlineWidth).not.toBe(
       keyboardFocusRing(lightTheme).focusVisible.outlineWidth,
     );
+    // The gap is the line's own width, so it widens with it.
+    expect(keyboardFocusRing(wide).focusVisible.outlineOffset).toBe(3);
   });
 
   it("paints the ring role of every shipped theme", () => {

@@ -57,7 +57,7 @@ import { TimePicker, TimePickerSegment } from "../time-picker.js";
 const outline = {
   outlineWidth: darkTheme.borderWidth.strong,
   outlineColor: darkTheme.colors.ring,
-  outlineOffset: 0,
+  outlineOffset: darkTheme.borderWidth.strong,
 };
 
 describe("focus ring", () => {

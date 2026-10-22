@@ -346,7 +346,10 @@ Two rings, one per focus path.
 
 `keyboardFocusRing(theme)` is an outline in the runtime's `focusVisible` state:
 painted after keyboard input (Tab), never after a mouse press, and it takes no
-layout space. Apply it **at rest** — no control tracks focus to draw it.
+layout space. Apply it **at rest** — no control tracks focus to draw it. The
+line is **separated from the control's own fill** by one `borderWidth.strong`
+(2 points in the shipped themes), so the strip behind the control shows through
+the gap and the ring is read against that strip.
 
 ```tsx
 import { keyboardFocusRing } from "@gpuixui/tokens";
@@ -367,18 +370,23 @@ import { focusRing } from "@gpuixui/tokens";
 
 Both were measured in a real window on 0.11.0 (`focus-visible` live probe): Tab
 paints the outline and dims the other focusables, a mouse press paints neither,
-and a programmatic focus after a Tab paints it. A runnable example lives in
+and a programmatic focus after a Tab paints it. `focus-ring-offset` then measured
+the separated geometry (28 checks): a two-point offset paints the ring three
+points out with the strip showing through the gap, and the control and its
+sibling keep their boxes. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
-A **filled action's** own face is the one the ring cannot be measured on. `ring`
-*is* the brand, so the line merges with `primary`/`destructive` (**1.00–1.38:1**
-and **1.00–1.54:1** in all sixteen styles), and at `outlineOffset: 0` one colour
+A **filled action's** own face is why the ring is separated. `ring` *is* the
+brand, so a flush line merges with `primary`/`destructive` (**1.00–1.38:1** and
+**1.00–1.54:1** in all sixteen styles), and at `outlineOffset: 0` one colour
 would have to clear the boundary floor against both the face and the page — the
 feasible luminance set is empty in **8 of the sixteen** styles for `primary` and
-9 for `destructive`, and where one exists it is ≥0.11 from the brand. The ring
-stays measured on the strips a filled action sits on; `ring-fill.test.ts` holds
-the arithmetic and `docs/tokens.md` §Contrast the reasoning, and separating the
-ring from the fill is the interlock in `TODO.md`.
+9 for `destructive`, and where one exists it is ≥0.11 from the brand. With the
+line one line's width outside the control, every filled action is measured on
+the surface it sits on like any other control, and the tightest ring placement
+over the sixteen styles is the Aero look's red message tint at 3.09:1.
+`ring-fill.test.ts` holds the offset, the arithmetic that forced it, the strips
+and the probe; `docs/tokens.md` §Contrast carries the reasoning.
 
 A **control** declares its ring through `controlFocusRing(theme, { disabled, invalid })`,
 because its own state changes what it may paint: the same outline while it can

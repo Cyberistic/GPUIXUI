@@ -419,13 +419,13 @@ export const contrastPairs: readonly ContrastPair[] = [
   // page beneath it.
   { foreground: "ring", background: "muted", floor: "boundary" },
   { foreground: "ring", background: "secondary", floor: "boundary" },
-  // A ring at `outlineOffset: 0` is a line on the border box: its inner side
-  // hugs the fill the control paints and its outer side the strip behind it, so
-  // that fill is a surface the ring has to be found on too. A focused row is
-  // often also selected or pointer-tinted — `list.tsx` fills `selected`, tints
-  // `accent` while hovered and `active` while pressed, and declares the
-  // keyboard ring on the same element — and a field's own fill is what its ring
-  // borders, which is not the page it sits on.
+  // A focused control is drawn with its line **separated** from its own fill by
+  // one border width (`keyboardFocusRing`), so the ring lies on the strip behind
+  // the control rather than on the fill it paints. A control inside a filled
+  // surface sits on that surface — a field's clear action inside `input`, a row
+  // inside `selected`, a trailing action in the `accent` a row tints under the
+  // pointer, the `active` wash a row keeps while pressed — and the gap shows
+  // exactly that strip.
   { foreground: "ring", background: "input", floor: "boundary" },
   { foreground: "ring", background: "selected", floor: "boundary" },
   { foreground: "ring", background: "hover", floor: "boundary" },
@@ -478,14 +478,15 @@ export const contrastPairs: readonly ContrastPair[] = [
     floor: "boundary",
   },
   // A focused control draws its **ring** on the same strip its edge is measured
-  // on — `outlineOffset: 0` puts the line on the border box, so its outer side
-  // is the tint — and the ring is measured on every strip a control sits on
-  // except these four. An `Alert`'s documented action is the default `Button`,
-  // which declares the keyboard ring at rest, so a focus cue inside the one
-  // component built to be noticed was measured by nothing: on iris 500 the light
-  // ring read 2.94:1 on `infoSoft` and 2.84:1 on `destructiveSoft`, and the
-  // high-contrast ring 4.41:1 and 4.16:1 against its 4.5:1 floor. Both palettes
-  // move one ramp step deeper rather than the pairs being dropped.
+  // on — the line is separated from the control's own fill, so the tint behind
+  // it is the surface it is read on — and the ring is measured on every strip a
+  // control sits on except these four. An `Alert`'s documented action is the
+  // default `Button`, which declares the keyboard ring at rest, so a focus cue
+  // inside the one component built to be noticed was measured by nothing: on
+  // iris 500 the light ring read 2.94:1 on `infoSoft` and 2.84:1 on
+  // `destructiveSoft`, and the high-contrast ring 4.41:1 and 4.16:1 against its
+  // 4.5:1 floor. Both palettes move one ramp step deeper rather than the pairs
+  // being dropped.
   { foreground: "ring", background: "infoSoft", floor: "boundary" },
   { foreground: "ring", background: "successSoft", floor: "boundary" },
   { foreground: "ring", background: "warningSoft", floor: "boundary" },
