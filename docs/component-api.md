@@ -82,16 +82,15 @@ a public state object instead:
   State names come from `base-gpui`'s per-part structs — `active`, `checked`,
   `closed`, `disabled`, `focused`, `highlighted`, `invalid`, `open`,
   `orientation`, `selected` — and are the only vocabulary allowed.
-- **`focused` arrives on every path, and is still not the cue.** A `Tab`
-  traversal focuses the element and delivers its focus handler — re-measured on
-  0.11.0 by the playground's `tabs-lifecycle` (`focuses=1`) and
-  `tooltip-lifecycle` (the tip opens on the traversal). The earlier reading of
-  `focuses=0` took the frame before the event landed, so a `style` callback
-  keyed on `focused` sees a press, a click, a traversal or a programmatic
-  `focusElement`. It stays presentational: the focus **cue** is the ring every
-  part declares at rest (`keyboardRing`), so the runtime paints the
-  `focusVisible` outline even when a caller's callback repaints the part. Six
-  parts carry the
+- **`focused` is not the cue, and a traversal does not deliver it.** A `Tab`
+  traversal focuses the element **without running its `onFocus`** on 0.11.0 —
+  re-measured 2026-10-22 by the playground's `tabs-lifecycle` (`focuses=0`) and
+  `tooltip-lifecycle` (the tip does not open on the traversal). An earlier run
+  recorded the counter at one, so the event is not a channel a component may
+  depend on. A `style` callback keyed on `focused` therefore sees a press, a
+  click or a programmatic `focusElement`, not a traversal. The focus **cue** is
+  the ring every part declares at rest (`keyboardRing`), which the runtime paints
+  on the element it focused whether or not a handler ran. Six parts carry the
   flag — `AccordionTrigger`, `CollapsibleTrigger`, `TabsTrigger`, `SearchInput`,
   `FieldInput`, `TimePickerSegment` — and `api.test.ts` holds each one to the
   ring, so a part cannot ship the flag as its only focus feedback.

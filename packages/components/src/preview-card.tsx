@@ -7,10 +7,11 @@
  * The card is **hoverable**: it may contain a link or a small action, which is
  * what separates it from a tooltip. The pointer may travel from the trigger into
  * the content; leaving both schedules the close. A press opens it at once and a
- * second press closes it. Focus does not open it: a traversal does deliver
- * `onFocus` (re-measured by `tabs-lifecycle`), so this is a policy choice — a
- * preview under every traversal is intrusive — and the trigger's `Enter`/`Space`
- * is the keyboard path. The delays are props so tests need no 300 ms sleep.
+ * second press closes it. Focus does not open it: on 0.11.0 a `Tab` traversal
+ * focuses the trigger without running its `onFocus` (`tabs-lifecycle` reads
+ * `focuses=0`), and a preview under every traversal would be intrusive anyway;
+ * the trigger's `Enter`/`Space` is the keyboard path. The delays are props so
+ * tests need no 300 ms sleep.
  */
 
 import type { KeyEvent, PublicInstance } from "@gpuix/react";

@@ -177,16 +177,17 @@ describe("component API contract", () => {
     expect(problems).toEqual([]);
   });
 
-  it("states the focus a traversal delivers, and keeps the cue on the ring", () => {
-    // A `Tab` traversal focuses an element and delivers its focus handler
-    // (re-measured by `tabs-lifecycle`; the earlier `focuses=0` read the frame
-    // before the event landed), so a `focused` StateStyle flag does arrive for a
-    // keyboard user. It is still not the cue: the ring, declared at rest, is.
-    // This holds the spec's sentence and every part that carries the flag to
-    // that rule, so a new part cannot ship `focused` as its only feedback.
+  it("states the focus a traversal does not deliver, and keeps the cue on the ring", () => {
+    // A `Tab` traversal focuses an element **without running its `onFocus`** on
+    // 0.11.0 at HEAD: `tabs-lifecycle` reads `focuses=0` while `focusedId` names
+    // the trigger, and `tooltip-lifecycle`'s tip does not open. An earlier run
+    // read one, so the handler is not a channel to depend on. The ring, declared
+    // at rest, is the cue. This holds the spec's sentence and every part that
+    // carries the `focused` flag to that rule, so a new part cannot ship
+    // `focused` as its only feedback.
     const vocabulary = section("## 3. State-aware styling");
 
-    expect(vocabulary).toContain("delivers its focus handler");
+    expect(vocabulary).toContain("without running its `onFocus`");
     expect(vocabulary).toContain("keyboardRing");
 
     const flagged = Arr.filter(partFiles, (file) =>
@@ -209,12 +210,13 @@ describe("component API contract", () => {
 
     expect(missingRing).toEqual([]);
 
-    // The pages a reader reads must state the measured rule: the event arrives
-    // on a traversal, and the flag is still not the cue.
+    // The pages a reader reads must state the measured rule: the traversal
+    // focuses the element without running its handler, and the flag is not the
+    // cue.
     const silentPage = Arr.filter(
       flagged,
       (file) =>
-        !Str.includes("the traversal delivers the event")(
+        !Str.includes("without running its `onFocus`")(
           sourceOf(`../docs/${Str.replace(/\.tsx$/, ".mdx")(file)}`),
         ),
     );

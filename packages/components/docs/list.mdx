@@ -55,9 +55,9 @@ A disabled row is skipped by the arrow keys, by `Home`/`End` and by clicks; it c
 never be selected.
 
 A key acts on the row it came from, so a reader who reached a row with `Tab`
-moves from **that** row. A traversal does deliver its focus event (re-measured on
-0.11.0 by the playground's `tabs-lifecycle`, `focuses=1`), but the key's own
-element is the precise origin: the recorded row can be stale, and a key that
+moves from **that** row. The traversal focuses the row without running its
+`onFocus` on 0.11.0 (`tabs-lifecycle` reads `focuses=0`), so the key's own element
+is the precise origin: the recorded row can be stale or absent, and a key that
 arrives at the list root has no row of its own. The rule is a pure function
 (`src/list/origin.ts`) with its own suite, `src/list/origin.test.ts`.
 

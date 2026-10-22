@@ -40,10 +40,11 @@ they only move focus, and Enter/Space selects. Disabled triggers are skipped by
 every key and cannot be clicked.
 
 An arrow move starts from the trigger that sent the key, then the row `onFocus`
-recorded, then the **selected** tab. A traversal does deliver `onFocus`
-(re-measured on 0.11.0 by the playground's `tabs-lifecycle`, `focuses=1`), but the
-key's own element is the precise origin: it is right even for a key that reaches
-the rail, and the first arrow never depends on a focus event having arrived.
+recorded, then the **selected** tab. A `Tab` traversal focuses the trigger
+without running its `onFocus` on 0.11.0 (`tabs-lifecycle` reads `focuses=0`), but
+the key's own element is the precise origin: it is right even for a key that
+reaches the rail, and the first arrow never depends on a focus event having
+arrived.
 
 ## Orientation
 
@@ -142,10 +143,11 @@ behind the triggers by being their earlier sibling.
 (`{ active, disabled, focused, highlighted, orientation }`); the result merges
 after the trigger's own rules.
 
-`focused` arrives on every focus path — a press, a click, a `Tab` traversal or a
-programmatic focus; the traversal delivers the event (re-measured on 0.11.0 by
-the playground's `tabs-lifecycle`, `focuses=1`). The ring declared at rest is
-still the keyboard cue: the flag is presentational, not the cue
+`focused` reaches a press, a click and a programmatic focus — but not a `Tab`
+traversal: the runtime focuses the element without running its `onFocus` on
+0.11.0 (`tabs-lifecycle` reads `focuses=0`; `tooltip-lifecycle` does not open its
+tip, re-measured 2026-10-22). The ring declared at rest is still the keyboard
+cue: the flag is presentational, and nothing here depends on the event
 (`docs/component-api.md` §3).
 
 ```tsx

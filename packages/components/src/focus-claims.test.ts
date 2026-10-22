@@ -1,16 +1,18 @@
 /**
  * The focus-event claim the library's keyboard rules rest on.
  *
- * The bug this guards: four Tier 2 inventory rows, six component pages and the
- * shared API spec taught that a window's `Tab` traversal focuses an element
- * **without delivering its focus handler**, and Preview Card explained its
- * open-on-press policy with the same claim. The playground's probe had read the
- * frame before the event landed; re-measured on 0.11.0, `tabs-lifecycle` reads
- * `focuses=1` and `tooltip-lifecycle` opens its tip on the traversal, so the
- * event arrives. The retracted absolute is now a false statement in a library
- * whose keyboard advice a consumer follows, so this suite fails on any owned
- * page, source comment or inventory row that repeats it, and holds the spec and
- * the six `focused` pages to the measured rule.
+ * The bug this guards: the package taught that a window's `Tab` traversal
+ * focuses an element **and runs its focus handler** — the API spec, six pages
+ * that document a `focused` state, four inventory rows and the toast's clock
+ * advice all rested on it, and this suite asserted the probe's `focuses=1`.
+ * Re-measured on a clean build at HEAD, both live probes read the opposite:
+ * `tabs-lifecycle` reports `focuses=0` while `focusedId` still names the
+ * trigger, and `tooltip-lifecycle`'s tip does not open on the traversal. An
+ * earlier run had read one, so the handler is not a channel a component may
+ * depend on: the ring declared at rest is the cue, and every key path anchors on
+ * the key's own element. This suite fails on any owned page, source comment or
+ * inventory row that promises the handler, and holds the spec and the pages that
+ * document `focused` to the measured rule.
  */
 
 import { readFileSync, readdirSync } from "node:fs";
@@ -47,17 +49,20 @@ const files: ReadonlyArray<string> = [
   "../../docs/component-api.md",
 ];
 
-/** The sentences that claim the runtime does not deliver a focus event. */
+/** The sentences that promise a traversal runs the element's focus handler. */
 const retracted = [
-  "without delivering",
-  "delivers no focus",
-  "delivers no such event",
-  "does not deliver that event",
-  "does not deliver the event",
-  "without running its focus handler",
-  "without running its handler",
-  "reports no focus event",
+  "delivers its focus handler",
+  "does deliver `onFocus`",
+  "traversal delivers the event",
+  "traversal delivers that event",
+  "focuses=1",
+  "opens on the traversal",
+  "open-on-focus would work",
+  "holds the clock too",
 ];
+
+/** The measured rule every surface that documents `focused` must carry. */
+const measured = "without running its `onFocus`";
 
 /** `file:line — phrase`, so a failure names what to fix. */
 const offenders = Arr.flatMap(files, (file) =>
@@ -84,34 +89,37 @@ const focusedPages = [
 ] as const;
 
 describe("the focus a traversal delivers", () => {
-  it("is not denied by an owned page, comment or inventory row", () => {
+  it("is not promised by an owned page, comment or inventory row", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("is stated once in the API spec, with the probe it was measured by", () => {
+  it("is stated in the API spec with the probes that measured it", () => {
     const section = read("../../docs/component-api.md");
 
-    expect(section).toContain("delivers its focus handler");
+    expect(section).toContain(measured);
     expect(section).toContain("tabs-lifecycle");
-    expect(section).toContain("focuses=1");
+    expect(section).toContain("tooltip-lifecycle");
+    expect(section).toContain("focuses=0");
+    expect(section).toContain("keyboardRing");
   });
 
   it("is repeated on every page that documents a focused state", () => {
     const silent = Arr.filter(
       focusedPages,
-      (page) =>
-        !Str.includes("traversal delivers")(read(`docs/${page}.mdx`)) &&
-        !Str.includes("delivers the event")(read(`docs/${page}.mdx`)),
+      (page) => !Str.includes(measured)(read(`docs/${page}.mdx`)),
     );
 
     expect(silent).toEqual([]);
   });
 
-  it("names the hold a traversal gives a toast, and the press a card needs", () => {
-    expect(read("docs/toast.mdx")).toContain(
-      "A `Tab` traversal delivers that event",
+  it("keeps a toast's clock off the traversal, and a card's open off it", () => {
+    const toast = read("docs/toast.mdx");
+
+    expect(toast).toContain("A traversal does not hold the clock");
+    expect(toast).toContain("duration: 0");
+    expect(read("docs/preview-card.mdx")).toContain(
+      "A `Tab` traversal opens nothing",
     );
-    expect(read("docs/preview-card.mdx")).toContain("it is a policy choice");
   });
 
   it("reads the files it is meant to check", () => {

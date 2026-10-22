@@ -3,11 +3,12 @@
  *
  * The list owns the keys — a key event fired on a focused trigger bubbles to the
  * list, the same measured behaviour that lets `List` own its rows — and the
- * trigger owns its own focus. A `Tab` traversal does deliver `onFocus`
- * (re-measured on 0.11.0 by the playground's `tabs-lifecycle`, `focuses=1`), but
- * an arrow move anchors on the trigger that sent the key, then the selection:
- * the key's own element is the precise origin, and a key that names no row still
- * moves from the selection rather than re-anchoring at the first enabled tab.
+ * trigger owns its own focus. A `Tab` traversal focuses a trigger **without
+ * running its `onFocus`** on 0.11.0 (`tabs-lifecycle` reads `focuses=0`), so an
+ * arrow move anchors on the trigger that sent the key, then the recorded row,
+ * then the selection: the key's own element is the precise origin, and a key
+ * that names no row still moves from the selection rather than re-anchoring at
+ * the first enabled tab.
  * Index arithmetic is
  * `internal/collection.ts`, so disabled tabs are skipped and wrap-around agrees
  * with every other collection in the package.
