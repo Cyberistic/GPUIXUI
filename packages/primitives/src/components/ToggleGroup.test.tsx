@@ -352,6 +352,35 @@ describe("ToggleGroup", () => {
     );
   });
 
+  it("reports no focus for an option the group no longer draws", () => {
+    // The bug guarded: focus is tracked by index, so a group whose options shrank
+    // kept telling its `style` callback `focused: true` while the row that held
+    // native focus was gone.
+    const groupSeen: ToggleGroupState[] = [];
+    const rowSeen: ToggleItemState[] = [];
+    const element = render(
+      {
+        options: Arr.take(options, 2),
+        style: (live) => {
+          groupSeen.push(live);
+          return {};
+        },
+        itemStyle: (live) => {
+          rowSeen.push(live);
+          return {};
+        },
+      },
+      [],
+      Option.some(0),
+      handlers(vi.fn()),
+      { focusedIndex: Option.some(2), onFocus: vi.fn(), onBlur: vi.fn() },
+    );
+
+    expect(groupSeen).toEqual([{ disabled: false, focused: false }]);
+    expect(Arr.every(rowSeen, (row) => !row.focused)).toBe(true);
+    expect(stopOf(rows(element)[0] ?? expect.fail("no row"))).toBe(0);
+  });
+
   it("styles each option button from its own pressed state", () => {
     const seen: ToggleItemState[] = [];
     const element = render(

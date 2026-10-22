@@ -199,6 +199,20 @@ export const optionDisabled =
     groupDisabled === true || options[index]?.disabled === true;
 
 /**
+ * The option that holds focus, if the group still draws it.
+ *
+ * Focus is tracked by index, so a group whose options shrank would otherwise
+ * report a focused option it no longer renders: its `style` callback is told the
+ * group holds focus while nothing inside it can take any. An index outside the
+ * rows a group draws is not a row, so there is no focus to report.
+ */
+export const focusedOption = (
+  count: number,
+  focused: Option.Option<number>,
+): Option.Option<number> =>
+  Option.filter(focused, (index) => index >= 0 && index < count);
+
+/**
  * Collect character keys into a type-ahead buffer and resolve them to an option.
  *
  * A group of options owes a reader who knows what they are looking for a way to

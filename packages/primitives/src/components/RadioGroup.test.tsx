@@ -235,6 +235,36 @@ describe("RadioGroup", () => {
     );
   });
 
+  it("reports no focus for an option the group no longer draws", () => {
+    // The bug guarded: focus is tracked by index, so a group whose options shrank
+    // kept telling its `style` callback `focused: true` while the row that held
+    // native focus was gone.
+    const groupSeen: RadioGroupState[] = [];
+    const rowSeen: RadioItemState[] = [];
+    const element = renderRadioGroup(
+      {
+        options: Arr.take(options, 2),
+        style: (live) => {
+          groupSeen.push(live);
+          return {};
+        },
+        itemStyle: (live) => {
+          rowSeen.push(live);
+          return {};
+        },
+      },
+      testTheme,
+      text("alpha"),
+      0,
+      { focusedIndex: Option.some(2), onFocus: vi.fn(), onBlur: vi.fn() },
+      radioHandlers(vi.fn()),
+    );
+
+    expect(groupSeen).toEqual([{ disabled: false, focused: false }]);
+    expect(Arr.every(rowSeen, (row) => !row.focused)).toBe(true);
+    expect(stopOf(rows(element)[0] ?? expect.fail("no row"))).toBe(0);
+  });
+
   it("styles each option row from its own state", () => {
     const seen: RadioItemState[] = [];
     const element = renderRadioGroup(

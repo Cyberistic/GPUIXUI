@@ -44,6 +44,7 @@ import { selectionBoxClass, stackClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { renderCheckboxIndicator, selectionValueText } from "./Checkbox.js";
 import {
+  focusedOption,
   optionBody,
   optionDisabled,
   optionItems,
@@ -162,6 +163,9 @@ export const renderCheckboxGroup = (
   const options = checkboxGroupItems(props);
   const count = Arr.length(options);
   const isDisabled = optionDisabled(options, props.disabled);
+  // A focus the group no longer draws is not focus: the option holding it was
+  // filtered out or the list shrank, so no row can carry the ring or the state.
+  const focused = focusedOption(count, focus.focusedIndex);
   // The preferred stop may be a disabled row, which takes no focus; the first
   // option a user can reach is what keeps the group in the tab order.
   const activeIndex = rovingIndex(count, preferredIndex, isDisabled);
@@ -224,7 +228,7 @@ export const renderCheckboxGroup = (
     ).style,
     resolveStyle(props.style, {
       disabled: props.disabled === true,
-      focused: Option.isSome(focus.focusedIndex),
+      focused: Option.isSome(focused),
     }),
   );
   return (
@@ -265,7 +269,7 @@ export const renderCheckboxGroup = (
           optionRowStyle({ disabled, invalid: spec.invalid }, theme),
           resolveStyle(props.itemStyle, {
             disabled,
-            focused: Option.contains(focus.focusedIndex, index),
+            focused: Option.contains(focused, index),
             checked: current === "checked",
           }),
         );
