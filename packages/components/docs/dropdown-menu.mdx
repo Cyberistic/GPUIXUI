@@ -227,8 +227,8 @@ The surface compiles shadcn's fixed metrics: `colors.popover` /
 `colors.popoverForeground`, a 24px radius, 6px padding, a 192px minimum width, a
 1px `foreground` ring at 5% and the theme's `lg` elevation beside it — the ring
 and the lift are two declarations the runtime paints as one shadow list.
-Rows are `controlHeight(theme, "sm")` tall, use the
-`label` type role, and highlight with `colors.hover` plus a 2px left bar in
+Rows are `controlHeight(theme, "sm")` tall, paint the fixed 14/20 `text-sm` step
+at weight 500, and highlight with `colors.hover` plus a 2px left bar in
 `colors.accent`. A disabled row paints `colors.disabledForeground` — the role
 `contrastPairs` measures on the popover — and drops its hover and press fills.
 It is **not** faded: a 50% fade composites the label into the row's own fill,

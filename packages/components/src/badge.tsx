@@ -39,7 +39,7 @@ export interface BadgeProps extends Props {
   readonly className?: string;
 }
 
-/** A status label: one line of text on a pill, sized by its type role. */
+/** A status label: one line of text on a pill, sized by the recipe's type step. */
 export const Badge = ({
   variant = "neutral",
   size = "md",

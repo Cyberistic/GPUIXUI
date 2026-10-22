@@ -119,7 +119,7 @@ describe("Badge", () => {
     light.unmount();
   });
 
-  it("sizes the pill by its type role", () => {
+  it("sizes the pill by the step its recipe compiles", () => {
     const sm = renderComponent(
       <Badge testId="badge" size="sm">
         Active

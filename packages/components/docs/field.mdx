@@ -88,9 +88,10 @@ override any rule; `FieldInput` and `FieldLabel` forward the input's own props.
 
 ## Theming
 
-Labels use the `label` type role in `colors.foreground`; descriptions the
-`caption` role in `colors.mutedForeground`; errors the `caption` role in
-`colors.destructiveSoftForeground` — the status tone's page-text role, measured
+Labels paint the fixed 14/20 `text-sm` step at weight 500 in
+`colors.foreground`; descriptions and errors the fixed 12/16 `text-xs` step —
+the description in `colors.mutedForeground`, the error in
+`colors.destructiveSoftForeground`, the status tone's page-text role, measured
 at the body floor on `background` and `card`, rather than the solid
 `destructive` fill, which no contrast pair measures as text. The input paints
 `colors.input` / `colors.inputForeground`,

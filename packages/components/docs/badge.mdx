@@ -42,14 +42,16 @@ tint.
 
 ## Sizes
 
-| `size` | Type role | Height | Padding |
+| `size` | Type step | Height | Padding |
 | ------ | --------- | ------ | ------- |
-| `sm` | `caption` (12/16) | 20px | 8px × 2px |
-| `md` (default) | `label` (13/18) | 22px | 8px × 2px |
+| `sm` | `text-xs` (12/16) | 20px | 8px × 2px |
+| `md` (default) | `text-sm` (14/20, weight 500) | 24px | 8px × 2px |
 
-There is no height literal: the pill's height is the type role's line height plus
-its vertical padding, so a theme that changes type or spacing moves the badge with
-it.
+There is no height literal: the pill's height is the step's line height plus its
+2px top and bottom padding. Both the type step and the padding are the registry's
+**fixed** metrics (ADR 0006), so a theme that restyles its type scale or its
+spacing leaves the pill where it is; only the colour roles it paints follow the
+theme.
 
 ## API
 
@@ -100,7 +102,7 @@ boundary at rest and none under the pointer. It paints `borderStrong`, which
 label renders as text, each non-status variant paints from its own theme role,
 each status variant paints from the shared tone palette, a status fill changes
 with the theme (so it cannot be a constant), each size's measured height matches
-its type role plus padding, every variant is pill-rounded, a consumer `style`
+its type step plus padding, every variant is pill-rounded, a consumer `style`
 wins, and an outline badge's edge clears the boundary floor on the hover and
 selected washes of the row it sits in — with the decorative role's ~1.00:1
 measured as the premise.
