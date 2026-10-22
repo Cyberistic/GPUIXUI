@@ -85,3 +85,19 @@ export const invisibleRingTheme = extendTheme(lightTheme, {
 
 /** What the gate reports for it: the strong border, by name, as a size. */
 export const invisibleRingAudit = auditTheme(invisibleRingTheme);
+
+/**
+ * A brand whose weight scale came from a design-tool export: the strong body
+ * role was handed the regular weight. Both type sizes and both leadings are the
+ * library's, the size scale is in order, and `bodyStrong` still owns its own
+ * role — it just weighs what `body` weighs, so a card title, a lead-in and a line
+ * a reader was meant to notice all read as plain body text. Nothing else can see
+ * it: both weights are numbers the renderer lays out.
+ */
+export const flatEmphasisTheme = extendTheme(lightTheme, {
+  name: "Flat emphasis",
+  typography: { bodyStrong: { fontWeight: 400 } },
+});
+
+/** What the gate reports for it: the strong role's weight, by name. */
+export const flatEmphasisAudit = auditTheme(flatEmphasisTheme);

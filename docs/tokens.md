@@ -936,6 +936,7 @@ by group, path, value and the rule it missed:
 | `iconSize` | `xs`…`xl` | finite, `> 0` |
 | `typography` | every role's size | finite, `> 0` |
 | `typography` | every role's leading | finite, `> 0`, and at least the role's size (`leading`) |
+| `typography` | `bodyStrong`'s weight | finite, and heavier than `body`'s (`emphasis`) |
 | `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`), and at least the tallest control leading (`fits`) |
 | `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`) |
 | `density` | `controlPaddingX` per size | finite, `>= 0` |
@@ -992,6 +993,20 @@ positive. `invalidNumbers` compares the pair and reports the leading as
 `leading`; a leading exactly equal to the size passes, because lines that touch
 are tight rather than overlapping.
 
+Two **roles** only mean something together for the same reason. `bodyStrong`
+shares `body`'s size and leading by design, so its weight is the whole
+difference between reading and emphasis — a card title, a lead-in, a line a
+reader is meant to notice (`Text role="bodyStrong"`, `textStyle(theme,
+"bodyStrong")`). A brand that forwards one stored weight to every role — a
+design-tool export, a settings file, a `bodyStrong` override that copied the body
+token — keeps both sizes, both leadings and both weights layable while the
+emphasis paints exactly like the text it was meant to lift, and `invalidScales`
+cannot see it either: `bodyStrong` is not a rung of the size ladder. So the two
+weights are compared, and `invalidNumbers` reports the **strong** role's weight
+as `emphasis` — the number that has to change, whichever of the pair moved. One
+step of weight is enough (the shipped pair is `body` 400 against `bodyStrong`
+600); equal weights are a flattened emphasis, not a subpixel rounding.
+
 ```ts
 import { extendTheme, invalidNumbers, lightTheme } from "@gpuixui/tokens";
 
@@ -1010,16 +1025,21 @@ invalidNumbers(
   }),
 );
 // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
+invalidNumbers(
+  extendTheme(lightTheme, { typography: { bodyStrong: { fontWeight: 400 } } }),
+);
+// [{ group: "typography", path: "bodyStrong.fontWeight", value: 400, rule: "emphasis" }]
 invalidNumbers(extendTheme(lightTheme, { borderWidth: { strong: 0 } }));
 // [{ group: "borderWidth", path: "strong", value: 0, rule: "positive" }]
 ```
 
-`src/numbers.example.ts` holds five brands: one whose corner radius came from a
+`src/numbers.example.ts` holds six brands: one whose corner radius came from a
 scale factor nobody set, one whose "dense" preset shaves two control heights and
 a row under the pressable floor, one whose type scale multiplied the leadings
 under the sizes, one that grew its body leading past the smallest control it
-still ships, and one that zeroed the strong border and so left the focus ring
-nothing to paint. `numbers.test.ts` runs all five audits, proves none of the
+still ships, one whose weight scale flattened `bodyStrong` into `body`, and one
+that zeroed the strong border and so left the focus ring nothing to paint.
+`numbers.test.ts` runs all six audits, proves none of the
 colour reports can see their defects, and holds all 16 shipped, platform and
 authored themes to an empty report — the shipped scale's tightest role is the
 display step at 28/36, well clear of the floor.
@@ -1047,7 +1067,9 @@ it, naming both steps:
 
 `bodyStrong` shares `body`'s size and differs by weight, and the two mono roles
 are a separate family rather than rungs of the size ladder, so neither is
-compared. A value that is not finite is skipped here and reported once by
+compared here. The emphasis pair is not left unmeasured for it: `bodyStrong`
+must weigh more than `body`, and `invalidNumbers` reports it as `emphasis`
+(§Numbers). A value that is not finite is skipped here and reported once by
 `invalidNumbers`, which owns it.
 
 ```ts

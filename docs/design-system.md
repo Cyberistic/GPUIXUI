@@ -124,6 +124,13 @@ Ten roles, one job each:
 - `caption` — metadata and helper text at 12/16.
 - `code` / `codeBlock` — mono at 13/20 and 12/18.
 
+`bodyStrong` is the one pair that shares a size and a leading, so its weight is
+the whole difference between reading and emphasis. That difference is a contract,
+not a convention: the strong role must weigh more than the body it emphasises,
+and `invalidNumbers` reports a theme that flattens the pair as `emphasis` — a
+weight scale forwarded from a design-tool export can hand `bodyStrong` the body's
+weight while every number stays layable (§9, `docs/tokens.md` §Numbers).
+
 Why 14px body: it is the smallest size that stays comfortable in long desktop
 sessions while leaving more room for data density than a 16px web default.
 Labels are one step smaller because controls are scanned, not read.
@@ -599,8 +606,10 @@ nothing usable (`fontSize: -4` laid text out at height 0). `invalidNumbers(theme
 names the group, path, value and rule for every numeric token that cannot be
 laid out — a shadow offset may be negative, a type size must be positive, a
 control height and a row height must reach the pressable-target floor,
-and a type role's leading must reach its own size, because a shorter one starts
-the next line inside this line's glyph box (§10, `docs/tokens.md` §Numbers).
+a type role's leading must reach its own size, because a shorter one starts
+the next line inside this line's glyph box (§10, `docs/tokens.md` §Numbers),
+and the strong body role must weigh more than the body it emphasises, because the
+two share a size (§5).
 A zero `borderWidth.strong` is the same silent class, not a flat design choice:
 that width is the width of both focus rings, so the outline is zero pixels wide
 and the fallback shadow has no spread — the only keyboard focus cue the library
@@ -683,6 +692,7 @@ design system cannot compensate for a missing role.
 | invalid colour strings are ignored per property | a typo paints the previous/black value; `invalidColorRoles` reports it, and the shipped themes are held to the hex grammar by test |
 | a style batch is JSON, so a non-finite number is dropped | the property is never set and the element paints its default; `invalidNumbers` reports the token, its group, path, value and rule |
 | a leading shorter than its type is accepted | the renderer advances the baseline less than the glyphs are tall, so consecutive lines collide; `invalidNumbers` reports the role's `lineHeight` as `leading` |
+| a strong role at the body's weight is accepted | the two roles share a size and a leading, so the emphasis paints as plain text; `invalidNumbers` reports `bodyStrong.fontWeight` as `emphasis` |
 
 ## 11. Extension
 

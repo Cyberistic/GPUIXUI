@@ -456,7 +456,7 @@ const audit = auditTheme(brandTheme);
 audit.passed; // true when nothing below reports
 audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
-audit.invalidNumbers; // [] — every size, length and shadow is layable, every leading reaches its size, and every control height and row height is pressable
+audit.invalidNumbers; // [] — every size, length and shadow is layable, every leading reaches its size, every control height and row height is pressable, and the strong body role outweighs the body it emphasises
 audit.contrast; // [] — every measured pair meets its floor
 audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face and shadow is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
@@ -510,7 +510,12 @@ Each report is also a function of its own:
   row height, reserving no extra hit area on either, and a control height must
   contain the leading of the `label` or `body` text a control paints — the box is
   exactly that height, so a brand that grows its type past it is reported as
-  `fits` while every number is still layable. The strong border must paint: it
+  `fits` while every number is still layable. The strong body role must weigh
+  more than the body it emphasises: the two share a size and a leading, so the
+  weight is the whole difference, and a brand that forwards one stored weight to
+  every role paints a card title as plain text — reported as `emphasis` on
+  `bodyStrong.fontWeight`, the number that has to change. The strong border must
+  paint: it
   is the width of both focus rings, so a zero there leaves the outline and the
   fallback shadow invisible while every colour report stays clean.
 - `invalidScales(theme)` lists every named step that does not exceed the one

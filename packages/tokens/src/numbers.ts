@@ -29,6 +29,14 @@
  * factor can produce one (`lineHeight: size * 0.9`) and every suite would stay
  * green, so the pair is compared rather than the numbers alone.
  *
+ * The type scale also carries a pair that differs only by weight: `bodyStrong`
+ * is `body`'s emphasis, painted where a line has to stand out at the same size
+ * (`Text role="bodyStrong"`, a card's title). A brand that forwards one stored
+ * weight to every role keeps both sizes, both leadings and both weights usable
+ * while the emphasis paints exactly like the text it was meant to lift, so the
+ * two weights are compared: the strong role must weigh more than the body it
+ * emphasises.
+ *
  * A control height is the other pair across groups: the box is exactly
  * `density.controlHeight[size]` and the text inside it is laid at
  * `typography.label`'s or `typography.body`'s leading, so a brand that grows its
@@ -76,7 +84,7 @@ export type NumberGroup =
  *   hit;
  * - `leading` — a type role's line height, which reaches the role's own font
  *   size. Below that the next baseline sits inside this line's glyph box, so the
- *   two lines collide. It is the one rule about two tokens, so it is applied
+ *   two lines collide. It is a rule about two tokens, so it is applied
  *   where the pair sits together ({@link inspectType}) rather than to one value;
  * - `fits` — a control height, which contains the leading of the tallest type
  *   role a control paints (`label` or `body`). The box is exactly
@@ -85,6 +93,12 @@ export type NumberGroup =
  *   finite, positive and pressable. Reported on the height, the number that has
  *   to grow, and only once: a height that already misses the pressable floor is
  *   reported as `pressable`.
+ * - `emphasis` — `bodyStrong`'s weight, which exceeds `body`'s. The two roles
+ *   share a size and a leading by design, so the weight is the whole difference
+ *   between reading and emphasis; a brand that forwards one weight to every role
+ *   paints them identically. Reported on the strong role's weight, the number
+ *   that has to grow, and applied where the pair sits together
+ *   ({@link inspectEmphasis}) because it is about two roles.
  */
 export type NumberRule =
   | "finite"
@@ -92,10 +106,11 @@ export type NumberRule =
   | "nonNegative"
   | "pressable"
   | "leading"
-  | "fits";
+  | "fits"
+  | "emphasis";
 
 /** The rules one value can be measured against on its own. */
-type SingleRule = Exclude<NumberRule, "leading" | "fits">;
+type SingleRule = Exclude<NumberRule, "leading" | "fits" | "emphasis">;
 
 /** One numeric token that is not a number the renderer can lay out. */
 export interface InvalidNumber {
@@ -219,6 +234,30 @@ const inspectType = (
   });
 
 /**
+ * The one pair of type roles that differ only by weight. `bodyStrong` is
+ * `body` at the same size and leading, so the weight is the whole difference
+ * between reading and emphasis — a card title, a lead-in, a line a reader is
+ * meant to notice. A brand that forwards one weight to every role draws both
+ * roles identically and nothing else sees it: every size, leading and weight is
+ * a value the renderer lays out.
+ */
+const inspectEmphasis = (
+  typography: NumberSource["typography"],
+): readonly InvalidNumber[] => {
+  const { body, bodyStrong } = typography;
+  return bodyStrong.fontWeight > body.fontWeight
+    ? []
+    : [
+        {
+          group: "typography",
+          path: "bodyStrong.fontWeight",
+          value: bodyStrong.fontWeight,
+          rule: "emphasis",
+        },
+      ];
+};
+
+/**
  * The leading a control's box has to contain: the taller of the two roles a
  * control paints. A button, a toggle and a select trigger lay their text at
  * `typography.label`'s leading; a field lays its value at `typography.body`'s
@@ -292,15 +331,17 @@ const inspectShadow = (
  *
  * An empty array means every size, length and shadow a theme carries is one the
  * runtime can paint, every control height and row height is one a reader can hit,
- * every control height contains the text it carries, and every type role's
- * leading reaches its own size. A number
+ * every control height contains the text it carries, every type role's leading
+ * reaches its own size, and the strong body role outweighs the body it
+ * emphasises. A number
  * that is not finite is dropped rather than clamped, a size at or below zero
  * paints an element no one can find, a control height under
  * {@link targetSize.minimum} is a press target the library's own components do
  * not pad up, the same floor holds a dense list row to `rowHeight`, a leading
  * shorter than its type stacks the next line into the current one, a control
- * height below the leading of the label or value it paints clips the text, and a
- * zero `borderWidth.strong` leaves the focus ring nothing to paint — all
+ * height below the leading of the label or value it paints clips the text, a
+ * zero `borderWidth.strong` leaves the focus ring nothing to paint, and a
+ * `bodyStrong` no heavier than `body` paints an emphasis as plain reading — all
  * reported by path instead of shipping as a default.
  *
  * @example
@@ -325,6 +366,10 @@ const inspectShadow = (
  *   }),
  * );
  * // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
+ * invalidNumbers(
+ *   extendTheme(lightTheme, { typography: { bodyStrong: { fontWeight: 400 } } }),
+ * );
+ * // [{ group: "typography", path: "bodyStrong.fontWeight", value: 400, rule: "emphasis" }]
  * invalidNumbers(extendTheme(lightTheme, { borderWidth: { strong: 0 } }));
  * // [{ group: "borderWidth", path: "strong", value: 0, rule: "positive" }]
  * ```
@@ -336,6 +381,7 @@ export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
     ...inspectBorderWidths(theme.borderWidth),
     ...inspectLengths("iconSize", theme.iconSize, "positive"),
     ...inspectType(theme.typography),
+    ...inspectEmphasis(theme.typography),
     ...inspectControlHeights(theme.density, theme.typography),
     ...inspectLengths(
       "density",

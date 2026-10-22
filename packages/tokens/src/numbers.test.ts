@@ -45,6 +45,8 @@ import {
 } from "./index.js";
 import {
   crushedTypeAudit,
+  flatEmphasisAudit,
+  flatEmphasisTheme,
   invisibleRingAudit,
   squatDensityAudit,
   tallTypeAudit,
@@ -154,6 +156,106 @@ describe("a type role's leading reaches its own size", () => {
   });
 });
 
+describe("the strong role outweighs the body it emphasises", () => {
+  // `bodyStrong` shares `body`'s size and leading, so its weight is the whole
+  // difference between reading and emphasis (`Text role="bodyStrong"`, a card
+  // title). `invalidScales` skips the pair — it is not a rung of the size ladder
+  // — so nothing compared the two weights: a brand that forwards one weight from
+  // a design-tool export paints the emphasis identically to the text it lifts,
+  // and every size, leading and weight it carries is still layable.
+
+  it("reports a strong role painted at the weight of the body it lifts", () => {
+    expect(
+      invalidNumbers(
+        brand({ typography: { bodyStrong: { fontWeight: 400 } } }),
+      ),
+    ).toEqual([
+      {
+        group: "typography",
+        path: "bodyStrong.fontWeight",
+        value: 400,
+        rule: "emphasis",
+      },
+    ]);
+  });
+
+  it("compares the pair, so a heavier body also flattens the emphasis", () => {
+    // The report names the role that has to change, which is the strong one,
+    // even when the body is what moved.
+    expect(
+      invalidNumbers(brand({ typography: { body: { fontWeight: 700 } } })),
+    ).toEqual([
+      {
+        group: "typography",
+        path: "bodyStrong.fontWeight",
+        value: 600,
+        rule: "emphasis",
+      },
+    ]);
+  });
+
+  it("accepts one step of weight as the whole difference", () => {
+    expect(
+      invalidNumbers(
+        brand({ typography: { bodyStrong: { fontWeight: 500 } } }),
+      ),
+    ).toEqual([]);
+    expect(typography.bodyStrong.fontWeight).toBeGreaterThan(
+      typography.body.fontWeight,
+    );
+  });
+
+  it("holds every shipped, platform and authored style to it", () => {
+    // The tokens' own emphasis role is the one every consumer paints; a palette
+    // or platform edit that flattened it would ship a title nobody sees.
+    const flattened = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ]
+      .filter(
+        (theme) =>
+          theme.typography.bodyStrong.fontWeight <=
+          theme.typography.body.fontWeight,
+      )
+      .map((theme) => theme.name);
+
+    expect(flattened).toEqual([]);
+  });
+
+  it("fails the gate on a flattened emphasis, with no colour report involved", () => {
+    const audit = auditTheme(flatEmphasisTheme);
+
+    expect(audit.invalidNumbers).toEqual([
+      {
+        group: "typography",
+        path: "bodyStrong.fontWeight",
+        value: 400,
+        rule: "emphasis",
+      },
+    ]);
+    expect(audit.invalidRoles).toEqual([]);
+    expect(audit.invalidShadows).toEqual([]);
+    expect(audit.contrast).toEqual([]);
+    expect(audit.decorative).toEqual([]);
+    expect(audit.indicators).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("executes the documented example", () => {
+    expect(
+      flatEmphasisAudit.invalidNumbers.map(({ path, rule }) => [path, rule]),
+    ).toEqual([["bodyStrong.fontWeight", "emphasis"]]);
+    expect(flatEmphasisAudit.contrast).toEqual([]);
+    expect(flatEmphasisAudit.passed).toBe(false);
+  });
+});
+
 describe("the documents name the number rules", () => {
   const page = (path: string): string =>
     readFileSync(new URL(path, import.meta.url), "utf8");
@@ -213,6 +315,29 @@ describe("the documents name the number rules", () => {
     // The snippet is the real report, not an illustration of one.
     expect(catalogue).toContain(
       `// [{ group: "borderWidth", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
+    );
+  });
+
+  it("prints the emphasis rule in the catalogue, with a report the code actually returns", () => {
+    const catalogue = page("../../../docs/tokens.md");
+    const [failure] = invalidNumbers(flatEmphasisTheme);
+
+    expect(failure).toBeDefined();
+    expect(catalogue).toContain(
+      "| `typography` | `bodyStrong`'s weight | finite, and heavier than `body`'s (`emphasis`) |",
+    );
+    // The snippet is the real report, not an illustration of one.
+    expect(catalogue).toContain(
+      `// [{ group: "typography", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
+    );
+    // Both places the design system states it: the type section and the
+    // contract list, so one surface cannot drift from the other.
+    const design = page("../../../docs/design-system.md");
+    expect(design).toContain(
+      "the strong role must weigh more than the body it emphasises",
+    );
+    expect(design).toContain(
+      "the strong body role must weigh more than the body it emphasises",
     );
   });
 
