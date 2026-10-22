@@ -332,7 +332,10 @@ labels and legend are text beside the plot:
 
 `chart/logic.ts` holds the scale, the marks and the markup so a chart can be
 drawn from Effect or a store; `seriesColors(theme)` supplies the categorical
-palette every chart paints from.
+palette every chart paints from. A **stacked** bar is one bar of its categories'
+totals, so its axis reads `stackedScale` — the ceiling of the tallest total, the
+same number the marks divide by (`chartScale`, the widest single value, is the
+grouped bar's and the line's).
 
 The full screens — the files table with filter, sort headers, column menu and
 keyboard walk, the 2 000-row list, the 1 000-row virtualized table, the

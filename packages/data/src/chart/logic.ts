@@ -74,6 +74,39 @@ export const niceCeiling = (raw: number): number => {
 export const chartScale = (series: ReadonlyArray<ChartSeries>): number =>
   niceCeiling(chartMaxOf(series));
 
+/** How many category slots a series list spans, when the caller names none. */
+const categoryCount = (
+  series: ReadonlyArray<ChartSeries>,
+  categories?: number,
+): number =>
+  categories ??
+  Arr.reduce(series, 0, (most, one) => Math.max(most, one.values.length));
+
+/**
+ * The scale a **stacked** chart draws against: the rounded ceiling of the
+ * tallest category's total.
+ *
+ * A stack is read as one bar, so its axis is measured over the sums — a scale
+ * taken from the widest single series would label a 120 total `100`, and every
+ * bar in the plot would claim a value the axis does not name. The category
+ * count needs no telling: a category beyond every series' length sums to zero,
+ * so it cannot be the tallest one.
+ */
+export const stackedScale = (series: ReadonlyArray<ChartSeries>): number =>
+  niceCeiling(
+    Arr.reduce(
+      Arr.makeBy(categoryCount(series), (index) =>
+        Arr.reduce(
+          series,
+          0,
+          (sum, one) => sum + drawableValue(one.values[index] ?? 0),
+        ),
+      ),
+      0,
+      Math.max,
+    ),
+  );
+
 /** Evenly spaced axis values from `0` to `scale`, inclusive. */
 export const axisTicks = (scale: number, count = 4): ReadonlyArray<number> => {
   const steps = Math.max(1, Math.floor(count));
@@ -143,9 +176,7 @@ export const groupedBarMarks = (
   scale: number,
   categories?: number,
 ): ReadonlyArray<ReadonlyArray<ChartMark>> => {
-  const count =
-    categories ??
-    Arr.reduce(series, 0, (most, one) => Math.max(most, one.values.length));
+  const count = categoryCount(series, categories);
   const { slot } = barSlot(count, box.width);
   const width = series.length === 0 ? 0 : (slot * 0.8) / series.length;
   return Arr.map(series, (one, seriesIndex) =>
@@ -172,17 +203,18 @@ export const groupedBarMarks = (
  * Stacked bars: the first series stands on the floor and each later one stands
  * on the series before it.
  *
- * The stack's height is the sum, and the scale is measured over the **sums**,
- * so a stack is read as one bar rather than three overlapping ones.
+ * The stack's height is the sum, so the scale it draws against is
+ * {@link stackedScale} — the one measure its axis prints. Passing the widest
+ * single series' scale instead draws every stack against an axis that does not
+ * name it.
  */
 export const stackedBarMarks = (
   series: ReadonlyArray<ChartSeries>,
   box: ChartBox,
+  scale: number,
   categories?: number,
 ): ReadonlyArray<ReadonlyArray<ChartMark>> => {
-  const count =
-    categories ??
-    Arr.reduce(series, 0, (most, one) => Math.max(most, one.values.length));
+  const count = categoryCount(series, categories);
   const totals = Arr.makeBy(count, (index) =>
     Arr.reduce(
       series,
@@ -190,7 +222,6 @@ export const stackedBarMarks = (
       (sum, one) => sum + drawableValue(one.values[index] ?? 0),
     ),
   );
-  const scale = niceCeiling(Arr.reduce(totals, 0, Math.max));
   const { slot, barWidth } = barSlot(count, box.width, 0.7);
   return Arr.map(series, (_, seriesIndex) =>
     Arr.map(

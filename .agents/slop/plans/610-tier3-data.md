@@ -279,6 +279,17 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   column's width, reporting the search at once, and swapping the sides of a
   `contains` each fail their case. The suite is 85 unit / 29 behaviour green.
   Frozen columns are the open TODO row.
+- **A stacked bar's axis reads the stack**: `StackedBar` drew its bars against
+  the ceiling of the tallest total and printed its axis from the ceiling of the
+  widest single **value** — two series of `60` filled a `200` scale while the
+  axis stopped at `100`. `stackedScale(series)` is now the one measure, the
+  exported `stackedBarMarks` takes the scale rather than computing its own, and
+  `ChartFrame`'s new `scaleOf` hands the axis and the marks one number. The
+  example's data agreed by coincidence (widest value 60 → 100, tallest total
+  84 → 100), which is why neither suite saw it. Two unit cases and one window
+  case hold it; directions measured: the per-series measure fails the three
+  cases by name (`expected 100 to be 200`), and dropping `scaleOf` fails the
+  window case on the missing `tick-200`. 128 unit / 68 behaviour green.
 
 ## 5. Acceptance
 

@@ -40,6 +40,7 @@ import {
   linePath,
   seriesColour,
   stackedBarMarks,
+  stackedScale,
   type ChartBox,
   type ChartMark,
   type ChartSeries,
@@ -202,9 +203,18 @@ const ChartFrame = ({
   className,
   testId,
   marks,
+  scaleOf = chartScale,
   style,
   ...rest
 }: ChartProps & {
+  /**
+   * The scale the axis prints and the marks draw against.
+   *
+   * A grouped bar or a line reads the widest single value; a stack reads its
+   * totals (`stackedScale`). Both come from the same call, so the axis cannot
+   * name a value the plot did not draw.
+   */
+  readonly scaleOf?: (series: ReadonlyArray<ChartSeries>) => number;
   readonly marks: (
     box: ChartBox,
     scale: number,
@@ -212,7 +222,7 @@ const ChartFrame = ({
 }) => {
   const theme = useTheme();
   const box = boxOf(width, height);
-  const scale = chartScale(series);
+  const scale = scaleOf(series);
   const palette = seriesColors(theme);
   const layers = marks(box, scale);
   const slot = barSlot(labels.length, box.width).slot;
@@ -331,11 +341,20 @@ export const BarChart = (props: BarChartProps) => (
 /** {@link StackedBar} props. */
 export type StackedBarProps = ChartProps;
 
-/** Stacked bars: the first series on the floor, each later one above it. */
+/**
+ * Stacked bars: the first series on the floor, each later one above it.
+ *
+ * The axis and the bars both read {@link stackedScale}: a stack is one bar of
+ * its totals, so a scale measured over the widest single series would label a
+ * `120` stack `100`.
+ */
 export const StackedBar = (props: StackedBarProps) => (
   <ChartFrame
     {...props}
-    marks={(box) => stackedBarMarks(props.series, box, props.labels.length)}
+    scaleOf={stackedScale}
+    marks={(box, scale) =>
+      stackedBarMarks(props.series, box, scale, props.labels.length)
+    }
   />
 );
 

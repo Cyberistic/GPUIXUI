@@ -45,7 +45,7 @@ native playground as the `chart` example.
 | Chart | What it paints |
 | ----- | -------------- |
 | `BarChart` | one bar per category, every series standing side by side in the slot |
-| `StackedBar` | the first series on the floor and each later one on the series before it; the scale is measured over the totals, so a stack reads as one bar |
+| `StackedBar` | the first series on the floor and each later one on the series before it; **the axis and the bars both read the totals** (`stackedScale`), so a stack reads as one bar and the axis names the bar it drew |
 | `LineChart` | one path per series through its points, left to right |
 | `DonutChart` | one ring segment per datum, from twelve o'clock; a single datum filling the ring is drawn as two halves |
 | `Sparkline` | one line, no axis, no labels, no legend — the shape a stat card's trend takes |
@@ -69,8 +69,16 @@ store without the component:
 - `niceCeiling` rounds a maximum to 1, 2 or 5 times a power of ten, so the axis
   reads `0, 25, 50, 75, 100` rather than raw values;
 - `axisTicks(scale, count)` divides that scale evenly;
+- `chartScale(series)` is the scale a grouped bar or a line draws against: the
+  ceiling of the widest single value;
+- `stackedScale(series)` is the scale a stack draws against: the ceiling of the
+  tallest category's **total**. A 120 stack must not print an axis of 100, so
+  the frame that paints the axis and the marks that paint the bars read this one
+  function;
 - `barSlot`, `barMarks`, `groupedBarMarks`, `stackedBarMarks`, `linePath`,
-  `donutSegments` and `donutMarks` return the shapes in the plot's pixel space;
+  `donutSegments` and `donutMarks` return the shapes in the plot's pixel space —
+  the bar, stacked and line marks take the scale the axis prints, so neither can
+  disagree with the other;
 - `chartMarkup(marks, box)` writes the one-tint SVG document a layer paints;
 - `seriesColour(palette, index)` cycles the theme's categorical scale.
 

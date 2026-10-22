@@ -10,12 +10,18 @@
  * - a zero value painting a slice (a layer that claims a value the data does
  *   not have);
  * - an axis that prints raw maxima instead of its ticks;
+ * - a stacked bar's axis measured over the widest series rather than the
+ *   totals, so every stack claims a value the axis does not name;
  * - a sparkline drawn from a different colour than the chart's first series.
  */
 
 import { afterEach, describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import * as Order from "effect/Order";
 import { darkTheme, seriesColors } from "@gpuixui/tokens";
 import { ChartExample } from "../../examples/chart.example.js";
+import { StackedBar } from "../chart/chart.js";
 import {
   paintedText,
   requireBounds,
@@ -45,6 +51,32 @@ const colourAt = (index: number): string => {
     throw new Error(`the theme has no series colour ${index}`);
   }
   return colour;
+};
+
+/**
+ * The top edge of a layer's marks, in plot pixels.
+ *
+ * A chart's geometry lives in the `<svg source>` document the layer paints, so
+ * a claim about where a mark lands has to be read from the markup it paints
+ * rather than from the layer's own box (which covers the whole plot).
+ */
+const topOfLayer = (root: DataTestRoot, testId: string): number => {
+  const source = root.renderer.findByTestId(testId)?.customProps?.source;
+  if (typeof source !== "string") {
+    throw new Error(`behaviour: no SVG source on "${testId}"`);
+  }
+  const tops = Arr.filter(
+    Arr.map(
+      [...source.matchAll(/<rect\b[^>]*\by="(-?[\d.]+)"/g)],
+      (match) => Number(match[1]),
+    ),
+    Number.isFinite,
+  );
+  const top = Option.getOrUndefined(Arr.head(Arr.sort(tops, Order.Number)));
+  if (top === undefined) {
+    throw new Error(`behaviour: "${testId}" paints no rect`);
+  }
+  return top;
 };
 
 afterEach(() => {
@@ -135,5 +167,35 @@ describe("the charts", () => {
     expect(requireStyle(root, "chart-line-layer-churn").color).toBe(
       colourAt(0),
     );
+  });
+
+  it("labels a stack's axis with the totals its bars are drawn against", () => {
+    // The example's two series happen to share a ceiling (60 -> 100 for the
+    // widest value, 84 -> 100 for the totals), so a mount of it cannot see the
+    // bug this guards. Two series that each fill the plot do.
+    root = renderData(
+      <StackedBar
+        aria-label="Two halves of one total"
+        labels={["Q1"]}
+        series={[
+          { key: "a", label: "A", values: [60] },
+          { key: "b", label: "B", values: [60] },
+        ]}
+        width={200}
+        height={100}
+        testId="chart-totals"
+      />,
+    );
+    settle(root);
+
+    // The stack is 120 tall, so the axis must reach 200 rather than the 100 the
+    // widest single series would round to — its ticks are 0, 50, 100, 150, 200,
+    // not the 0, 25, 50, 75, 100 the per-series ceiling would print.
+    expect(root.renderer.findByTestId("chart-totals-tick-200")).toBeDefined();
+    expect(root.renderer.findByTestId("chart-totals-tick-150")).toBeDefined();
+    expect(root.renderer.findByTestId("chart-totals-tick-25")).toBeUndefined();
+    // …and the top of the stack lands where that axis says it does: 120 of 200
+    // leaves the stack 40px down from the plot's ceiling.
+    expect(topOfLayer(root, "chart-totals-layer-b")).toBe(40);
   });
 });

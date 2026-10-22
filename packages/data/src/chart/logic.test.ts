@@ -29,6 +29,7 @@ import {
   niceCeiling,
   seriesColour,
   stackedBarMarks,
+  stackedScale,
   type ChartBox,
   type ChartMark,
   type ChartSeries,
@@ -70,6 +71,21 @@ describe("the chart scale", () => {
     expect(chartScale([series("a", [10, 50]), series("b", [93])])).toBe(100);
     expect(axisTicks(100, 4)).toEqual([0, 25, 50, 75, 100]);
     expect(axisTicks(100, 0)).toEqual([0, 100]);
+  });
+
+  it("reads a stack's axis against the totals, not its widest series", () => {
+    const two = [series("a", [60]), series("b", [60])];
+    // The widest single value is 60; the bar a reader sees is the 120 total.
+    expect(chartScale(two)).toBe(100);
+    expect(stackedScale(two)).toBe(200);
+    // The tallest category is what the axis is rounded from, wherever it sits,
+    // and a ragged series is measured over the categories it does not span.
+    expect(
+      stackedScale([series("a", [60, 10]), series("b", [60, 10])]),
+    ).toBe(200);
+    expect(stackedScale([series("a", [5, 12]), series("b", [5])])).toBe(20);
+    expect(stackedScale([series("a", [0]), series("b", [0])])).toBe(1);
+    expect(stackedScale([])).toBe(1);
   });
 
   it("gives a value no bar when it is zero, negative or not a number", () => {
@@ -118,10 +134,8 @@ describe("the bar marks", () => {
   });
 
   it("stacks each series on the one before it", () => {
-    const stacked = stackedBarMarks(
-      [series("a", [50]), series("b", [50])],
-      box,
-    );
+    const two = [series("a", [50]), series("b", [50])];
+    const stacked = stackedBarMarks(two, box, stackedScale(two));
     const lower = rectOf(stacked[0]?.[0]);
     const upper = rectOf(stacked[1]?.[0]);
     // The stack's scale is its total (100), so each half is half the height and
@@ -131,8 +145,27 @@ describe("the bar marks", () => {
     expect(upper.y + upper.height).toBe(lower.y);
     // A series with nothing in a slot paints no segment there.
     expect(
-      stackedBarMarks([series("a", [50]), series("b", [0])], box)[1],
+      stackedBarMarks([series("a", [50]), series("b", [0])], box, 100)[1],
     ).toEqual([]);
+  });
+
+  it("draws a stack the axis it publishes actually reads", () => {
+    const two = [series("a", [60]), series("b", [60])];
+    const scale = stackedScale(two);
+    const stacked = stackedBarMarks(two, box, scale);
+    const lower = rectOf(stacked[0]?.[0]);
+    const upper = rectOf(stacked[1]?.[0]);
+    const total = 120;
+    // Every layer draws against the scale the axis prints, so the top of the
+    // stack lands where the topmost datum says it does.
+    expect(axisTicks(scale, 4)).toEqual([0, 50, 100, 150, 200]);
+    expect(Math.min(lower.y, upper.y)).toBe(box.height * (1 - total / scale));
+    // Drawn against the widest single value instead, the stack reports a full
+    // plot for a total the axis does not name: the top of the stack reaches y=0
+    // while the axis stops at 100.
+    const widest = stackedBarMarks(two, box, chartScale(two));
+    expect(rectOf(widest[1]?.[0]).y).toBe(0);
+    expect(Math.min(lower.y, upper.y)).toBe(40);
   });
 });
 

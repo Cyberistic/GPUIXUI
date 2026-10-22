@@ -98,6 +98,7 @@ export {
   seriesColour,
   seriesMax,
   stackedBarMarks,
+  stackedScale,
 } from "./chart/logic.js";
 export type {
   BarSlot,
