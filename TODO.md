@@ -240,7 +240,7 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 98/98
+`[x]` `[██████████]` 99/99
 
 `[x]` Measure a **control's edge and a message's boundary on a floating surface** — a dialog's footer holds the `secondary` cancel action (`ConfirmDialog`'s `Button` takes the default variant, which paints `borderStrong`) on the `popover` fill `DIALOG_CONTENT` paints, and a popover holding a form holds the same control; `contrastPairs` measured `borderStrong` on `background`, `card`, `input`, `muted`, `secondary`, `hover` and `active` and on `popover` only for the **ring**, so the edge drawn around the same focused control was the one boundary strip nothing checked. The status edge had the mirror gap: each tone's `xSoft` tint is measured on the four strips a message sits on (page, card, popover, muted toolbar) while its edge was measured on the tint and the two page surfaces, so a warning alert in a confirmation dialog's body and a soft badge in a muted sidebar had a measured tint and an unmeasured boundary. One pair joined `contrastPairs` (81 → 82, boundary floor) and eight placements joined `decorativeSurfaces` (`statusEdge` on `popover` and `muted`, four tones each). No palette moved: every shipped, high-contrast, platform and authored style already cleared both, the tightest being the base dark theme's edge on its popover at 3.95:1 and Luna light's `warning` edge on its muted toolbar at 1.11:1. `contrast.test.ts`'s boundary suite holds the coverage, reads the composition the pair exists for (the default-variant `Button`, `borderStrong`, `DIALOG_CONTENT`/`POPOVER_CONTENT`'s `bg-popover`), sweeps all 16 styles and reads the catalogue's printed 3.95; `decorative.test.ts` holds the coverage, derives the edge strips from the tint's own placements so a message's boundary is measured wherever its surface is, reports a tone painted in the strip it bounds, and sweeps the new strips to the printed 1.11. Directions measured: removing the pair fails the coverage case and the docs count; reverting the edge placements fails three decorative cases by name; a stale printed `3.96` and `1.12` each fail their sweep. Docs in `docs/tokens.md` §Contrast/§Decorative surfaces, `docs/design-system.md` §7/§9, the package README, the `Contrast contract`/`Status tones` inventory rows.
 
@@ -544,6 +544,7 @@ a workaround for two live sessions sharing one worktree; see
 `[x]` Fit a control's box to the **icon it draws**, not only to the text — `fits` compared a control height with the `label` and `body` leadings a control paints and nothing else, while the same box is the glyph a control carries: `Icon` defaults to `md` (`packages/icons/src/icon.tsx`), a selection box and a spinner's dot take that step (`packages/primitives/src/core/selection.ts`, `…/Spinner.tsx`), and an `IconButton` is a square at its control height. A brand from a 24px icon grid — `extendTheme(lightTheme, { density: "compact", iconSize: { md: 26, lg: 28, xl: 30 } })` — keeps every value finite, positive, ordered and pressable, and centres a 26px glyph in `compact`'s 24px `sm` box, where it clips or overflows the action; the gate passed while every control painted a glyph taller than itself. The `fits` ceiling is now `max(label.lineHeight, body.lineHeight, iconSize.md)` for every control size, with `iconSize.lg`/`xl` deliberately excluded (they are the toolbar, navigation and empty-state steps, not the glyph inside an action), an icon exactly the box height accepted, an unlayable icon left to the `iconSize` report rather than a second `fits` line, and a box already under the pressable floor still reported once. No API, gate shape or count changed — the rule and the report are the same, and `packages/tokens` still ships zero runtime dependencies. No shipped, high-contrast, platform or authored style moved: the shipped ceiling is 20px (`body`'s leading) against a 24px smallest box. `numbers.test.ts` gains `a control's box fits the icon it draws` (6 cases: the glyph report by path, the `md`-not-`xl` read, the equal-height pass, the unlayable icon, the gate failing with every colour report empty, and the preset sweep against `iconSize.md`); `numbers.example.ts` gains `grownIconTheme`/`grownIconAudit` as the seventh brand, `docs/tokens.md` §Numbers gains the paragraph and a snippet whose report the code returns, and `docs/design-system.md` §6/§9, the package README and the `Token numbers` row move with it. Directions measured: removing the icon half fails four cases by name (the example, the `md`-not-`xl` case, the gate case and the catalogue case), and the docs sentences fail in the opposite direction until the pages move.
 
 `[x]` Correct the **design-system page that still called the components `Button` a whole-control fade** — `docs/design-system.md` §8 kept the Button in "the deviation that remains" with `opacity: 0.5` after the painter split: `packages/components/src/internal/button.tsx`'s `disabledStyle` returns `disabledAction(theme)` for a variant that `paintsSurface`, and only a ghost keeps `disabledOpacity`, so the page sent a reader to fade a filled action the token pages already describe as the measured pair. The paragraph now names the unfilled variants as the Button's fade, keeps the file and the constant, and keeps the primitives' own `opacity = 0.5` parts and `@gpuixui/tw`'s `disabled:opacity-50` on the remaining list. `disabled.test.ts` gains `names the components Button's two disabled paths, not a whole-control fade`, which reads the Button's branch (`paintsSurface(variant) ? disabledAction(theme)` beside `opacity: disabledOpacity`) and requires both pages to carry the split and the `disabledOpacity` constant, and the retracted list gains the old sentence. Directions measured: restoring the stale §8 sentence fails the retraction case and the split case; the corrected page is 17/17.
+`[x]` Give a **`<code>` host the type scale** — a GPUix `<code>` host lays its block out from the **runtime theme's** `metrics` rather than from a `StyleDesc`, and `nativeTextTheme` filled the palette only, so a code block painted at the runtime's own `codeTextSize`/`codeLineHeight` (12.5/18, `packages/native/src/theme.rs`'s `Metrics` at the pinned `@gpuix/native@0.11.0`) whatever the theme said: the library's `codeBlock` role (12/18) and every brand override stopped at the one host that draws code, while its colours came from the theme. `NativeTextTheme` gains `metrics` (`NativeTextMetrics`: `codeTextSize`/`codeLineHeight`) filled from `typography.codeBlock`, so a `<code>` host follows the scale; the gutter widths and the syntax palette stay the runtime's, recorded in §Limitations because the package ships no tokens for them. `native-text.test.ts` gains `gives a code host the scale's own block type` (the base pair read from the role rather than retyped, a brand's 14/22 override flowing through, and all 16 shipped, high-contrast, platform and authored styles in both fills) and `teaches the code host's type, not only its palette` (the catalogue's row, the runtime's 12.5/18 and the syntax limitation); the key-set and mapping cases moved with the object. Directions measured: without the `metrics` field the code-host case fails (`expected undefined`) and the mapping case fails; restored, 1918 tokens tests are green with `check-types` clean. Docs in `docs/tokens.md` §Native text hosts and §Limitations, the package README and the `Native text hosts` inventory row.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
@@ -1868,6 +1869,21 @@ a workaround for two live sessions sharing one worktree; see
       paints nothing. Docs in `docs/tooltip.mdx` §Controlled/§API/§Keyboard/§Limitations/
       §Verification (the "wrapper only sets the delay" limitation is retracted),
       the `inventory.ts` record and the `COMPONENTS.md` Tooltips row
+`[x]` `packages/primitives`: the `Separator`'s line-style limit named the **wrong
+      cause** — `docs/separator.mdx`, the inventory record and the
+      `COMPONENTS.md` row all said a dashed rule was missing because "the runtime
+      paints solid borders", while the pinned `StyleDesc` accepts
+      `borderStyle: "solid" | "dashed"` (and `docs/gpuix-capabilities.md` records
+      it). What is actually true is that the rule is a **filled** 1px box on the
+      border role rather than a border, so `borderStyle` has nothing to style.
+      All three documents now say that, keep the honest alternative (compose a
+      `Box` with a dashed border), and name the missing dotted grammar. The
+      drift is guarded by `docs.test.ts`'s
+      `gives the separator's line-style limit its real cause`, which reads the
+      page and fails on the retracted sentence, a missing cause, a missing
+      alternative or a promise of a dotted rule. Direction measured: restoring
+      the old sentence fails the case by name, 1 failed / 757 passed; restored,
+      758/758.
 `[x]` `packages/primitives`: `ScrollArea`'s viewport was **the one focusable
       primitive with no focus cue** — it is a tab stop with a keyboard contract
       (arrows, PageUp/PageDown, Home/End) and declared no `focusVisible`, so a
@@ -2953,7 +2969,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 100/100
+`[x]` `[██████████]` 101/101
+
+`[x]` Say **which palette a preview paints** — the site has a light/dark
+switch of its own (Fumadocs' theme provider) and the component previews do not
+follow it: `PlatformProvider` resolved `resolvePlatformTheme(platform, "dark",
+look)`, so a reader who chose the light site still saw dark shapes on every
+curated page, and nothing on `/docs/theming` said why or where the other palette
+is printed. The mode is now `previewMode` in `src/lib/platform.ts`, the provider
+resolves that constant instead of a literal, and `/docs/theming` §The switch on
+this site interpolates it, says the site's mode is a reading preference the
+preview's subject (the platform style) does not follow, and points at
+[Built-in themes](#built-in-themes) and `/docs/themes` for both palettes. A new
+`theming-page.test.ts` describe holds the two together: the page must print
+`{previewMode}` from the module that decides it, and the provider's
+`resolvePlatformTheme` call must take the constant rather than its own literal.
+Directions measured: deleting the paragraph fails `states the mode the previews
+resolve…`, and putting `"dark"` back in the provider fails `resolves that mode in
+the provider, not a literal of its own`. Docs in `docs/preview-strategy.md`
+§Theming and the app README ledger. Suite 72 files / 639 tests, `check-types` and
+`build` green.
 
 `[x]` The **curated page that displaces a package page** documented less than the
 page it hid — the site serves one page per URL, so `/docs/components/dropdown-menu`
