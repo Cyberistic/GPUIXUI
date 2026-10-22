@@ -108,13 +108,40 @@ export const valueStep = (range: ValueRange): number => {
   return span > 0 ? span / 100 : 1;
 };
 
-/** `value` moved by `steps` steps (negative to decrease), clamped. */
+/**
+ * `value` moved by `steps` steps (negative to decrease), clamped.
+ *
+ * Stops are counted, not added: the maximum is a stop even when it is not on a
+ * step grid (`min: 0, max: 10, step: 3`), so adding `-step` to it would pass
+ * over the neighbouring stop — 10 → 7 snaps to 6, and 9 could be reached with
+ * an up move and never with a down one. Counting indices off the grid point at
+ * or below the value makes the ladder 0, 3, 6, 9, 10 in both directions.
+ */
 export const stepValue = (
   value: number,
   range: ValueRange,
   steps: number,
-): number =>
-  clampValue(clampValue(value, range) + steps * valueStep(range), range);
+): number => {
+  const normalized = normalizeRange(range);
+  const base = clampValue(value, normalized);
+  if (steps === 0) return base;
+  if (normalized.step === 0)
+    return clampValue(base + steps * valueStep(normalized), normalized);
+  const offset = (base - normalized.min) / normalized.step;
+  const nearest = Math.round(offset);
+  // `base` is on the grid unless it sits on an off-grid maximum, and a float
+  // step leaves its offset a hair off the integer it means.
+  const index =
+    Math.abs(offset - nearest) < 1e-9
+      ? nearest
+      : steps > 0
+        ? Math.floor(offset)
+        : Math.ceil(offset);
+  return clampValue(
+    normalized.min + (index + steps) * normalized.step,
+    normalized,
+  );
+};
 
 const ARROW_STEPS: Readonly<Record<string, number>> = {
   left: -1,

@@ -261,6 +261,27 @@ it("reaches its maximum when the step does not divide the span", async () => {
   expect(announced(runtime, "Volume")).toBe("10");
 });
 
+it("steps down from an off-grid maximum onto the stop below it", async () => {
+  // The bug guarded: the maximum is a stop even when the step does not divide
+  // the span, but a move down measured the step from the off-grid value, so End
+  // then ArrowDown landed on 6 and the stop at 9 could be reached with an up
+  // move and never with a down one.
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      min={0}
+      max={10}
+      step={3}
+      defaultValue={9}
+    />,
+  );
+  runtime.keyDown("s", "end");
+  expect(announced(runtime, "Volume")).toBe("10");
+  runtime.keyDown("s", "left");
+  expect(announced(runtime, "Volume")).toBe("9");
+});
+
 it("refuses a press and a key while disabled, and stays out of the tab order", async () => {
   const { seen, onChange } = values();
   const runtime = await mount(

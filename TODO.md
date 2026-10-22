@@ -1327,6 +1327,22 @@ a workaround for two live sessions sharing one worktree; see
       '#5745C5' }`. The native `runtime/controls.runtime.test.tsx` reads the same
       fill back off the runtime's own style report (`expected '#000007E6' to be
       '#000006'` without the change). Docs in `docs/button.mdx` and `MIGRATION.md`
+`[x]` `packages/primitives`: a move down from a slider's **off-grid maximum** skipped
+      the stop beside it — with `min: 0` / `max: 10` / `step: 3` the maximum is a
+      stop but not a step grid point, and `stepValue` measured the step from the
+      off-grid value (10 − 3 = 7 snapped back to 6), so 9 could be reached with
+      ArrowUp and never with ArrowDown. Stops are now counted off the grid point
+      at or below the value in the direction of travel (`core/value.ts`), so End
+      then ArrowDown lands on 9, an up move from 9 still reaches 10, and a
+      fractional grid moves exactly one step without float drift. Proof:
+      `src/core/value.test.ts` (`steps off an off-grid maximum onto the stop below
+      it`, the `decideValueKey` case, a 0.1-grid case) and
+      `runtime/value.runtime.test.tsx` (End then ArrowDown announces `"9"`).
+      Both directions measured: restoring the old arithmetic reports `expected 6
+      to be 9`, and the window case reads `"6"`. Live probe re-run:
+      `--only slider-lifecycle` green. Docs in `docs/slider.mdx`,
+      `docs/range-slider.mdx` (the stops paragraph and §Verification) and the two
+      `COMPONENTS.md` rows. 679 unit / 194 runtime
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness

@@ -34,7 +34,8 @@ cross.
 
 The ends of the **range** are stops as well: a step that does not divide the
 span (`min: 0`, `max: 10`, `step: 3`) leaves 10 reachable, so the last band
-cannot be selected away.
+cannot be selected away. The stops are counted, so a move off 10 lands on 9
+rather than skipping it.
 
 ## API
 
@@ -118,8 +119,9 @@ track both components share, not an individual thumb.
 ## Verification
 
 - `src/core/value.test.ts` — span ordering, the crossing guard, the nearest-end
-  rule (including both thumbs at one value), and the maximum staying reachable
-  when the step does not divide the span.
+  rule (including both thumbs at one value), the maximum staying reachable
+  when the step does not divide the span, and a move off that maximum landing on
+  the stop beside it.
 - `src/components/Slider.test.tsx` — two named sliders, per-thumb keys, the
   crossing result, per-thumb rings, disabled tab stops; the second segment's
   width from the parts; a `style` callback reporting focus anywhere in the group

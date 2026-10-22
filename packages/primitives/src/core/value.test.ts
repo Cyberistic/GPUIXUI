@@ -119,6 +119,25 @@ describe("stepping", () => {
     expect(stepValue(0, RANGE, -1)).toBe(0);
     expect(stepValue(100, RANGE, 1)).toBe(100);
   });
+
+  it("steps off an off-grid maximum onto the stop below it", () => {
+    // The bug guarded: with min 0, max 10 and step 3 the maximum is a stop but
+    // not a grid point. A move *down* from it measured the step from the
+    // off-grid value — 10 - 3 = 7 snapped back to 6 — so the stop at 9 could be
+    // reached with ArrowUp and never with ArrowDown. One step off a stop is the
+    // neighbouring stop, not two.
+    const range = { min: 0, max: 10, step: 3 };
+    expect(stepValue(10, range, -1)).toBe(9);
+    expect(stepValue(9, range, -1)).toBe(6);
+    expect(stepValue(10, range, 1)).toBe(10);
+    expect(stepValue(0, range, 1)).toBe(3);
+  });
+
+  it("keeps a fractional grid free of float drift when a move lands on it", () => {
+    const range = { min: 0, max: 1, step: 0.1 };
+    expect(stepValue(0.3, range, 1)).toBe(0.4);
+    expect(stepValue(0.3, range, -1)).toBe(0.2);
+  });
 });
 
 describe("decideValueKey", () => {
@@ -132,6 +151,14 @@ describe("decideValueKey", () => {
   it("jumps to the ends with Home and End", () => {
     expect(decideValueKey(50, RANGE, "home")).toStrictEqual(Option.some(0));
     expect(decideValueKey(50, RANGE, "end")).toStrictEqual(Option.some(100));
+  });
+
+  it("steps off an off-grid maximum in both directions", () => {
+    // Same defect as `stepValue`'s case, through the key contract: End then
+    // ArrowDown must land on the neighbouring stop, not skip it.
+    const range = { min: 0, max: 10, step: 3 };
+    expect(decideValueKey(10, range, "down")).toStrictEqual(Option.some(9));
+    expect(decideValueKey(9, range, "up")).toStrictEqual(Option.some(10));
   });
 
   it("moves a page at a time", () => {

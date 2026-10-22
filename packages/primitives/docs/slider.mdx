@@ -79,9 +79,12 @@ delivered as the runtime's `click` — the pointer drag itself is `onMouseDown`,
 which is not part of `InteractionProps`.
 
 **The ends are stops.** A step that does not divide the span must not make the
-maximum unreachable: with `min: 0`, `max: 10` and `step: 3` the steps are 0, 3,
-6, 9 — and 10 is still a place the thumb can go, by key or by press. A range
-whose maximum cannot be selected is a range with a lie in it.
+maximum unreachable: with `min: 0`, `max: 10` and `step: 3` the stops are 0, 3,
+6, 9 — and 10 is still a place the thumb can go, by key or by press. The stops
+are **counted**, so one move off the maximum lands on the stop beside it (10 →
+9), not two stops away. A range whose maximum cannot be selected, or whose
+neighbour can only be reached by moving away from the end, is a range with a
+lie in it.
 
 ### Parts
 
@@ -153,8 +156,9 @@ ends, until it is released. Measured in a real window (`pointer-capture`,
 ## Verification
 
 - `src/core/value.test.ts` — clamping, snapping (no binary-float tails),
-  fractions, the key contract, the pointer mapping, the crossing rule, and the
-  maximum staying reachable when the step does not divide the span.
+  fractions, the key contract, the pointer mapping, the crossing rule, the
+  maximum staying reachable when the step does not divide the span, and a move
+  off that maximum landing on the stop beside it.
 - `src/core/style.test.ts` — the inset/negative-margin geometry, the hit-test
   children, the fill fraction, the ring.
 - `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint;
@@ -164,8 +168,9 @@ ends, until it is released. Measured in a real window (`pointer-capture`,
   receiving the live state and winning.
 - `runtime/value.runtime.test.tsx` — a real click at 25% reports 25, the thumb is
   centred within 1 px at 0/50/100, the ring follows focus, disabled is skipped
-  by Tab, a `max: 10` / `step: 3` slider still reaches 10 by key and by press,
-  and a drag that leaves the track keeps following the pointer (to 100) and
+  by Tab, a `max: 10` / `step: 3` slider still reaches 10 by key and by press
+  and steps down from it onto 9, and a drag that leaves the track keeps
+  following the pointer (to 100) and
   stops on the release. Measured 2026-10-17; plan 053 §11 records the probes.
   The capture cases are the headless half of the playground's `pointer-capture`
   probe (negative control measured: removing the track's `onMouseMove`, so the
