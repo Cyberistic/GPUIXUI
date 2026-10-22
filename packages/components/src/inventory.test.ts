@@ -409,6 +409,32 @@ describe("the measured target rows", () => {
     expect(notes).toContain("onMouseDown");
   });
 
+  it("states the paint inside an image's box", () => {
+    const readme = readFileSync(
+      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
+      "utf8",
+    );
+    expect(readme).toContain("### `image-fit` — measured on 0.11.0 here");
+    expect(readme).toContain("161 checks, `--only image-fit`");
+
+    const rows = targetRows();
+    Arr.forEach(["Image preview", "Crop area"], (name) => {
+      const notes = Option.getOrElse(
+        Option.map(
+          Arr.findFirst(rows, (row) => row.name === name),
+          (row) => row.notes,
+        ),
+        () => "",
+      );
+      expect(notes, name).toContain("`image-fit`");
+      expect(notes, name).toContain("161 checks");
+      // The placements a crop or a preview has to plan around.
+      expect(notes, name).toContain("`cover`");
+      expect(notes, name).toContain("`none`");
+      expect(notes, name).toContain("`contain`");
+    });
+  });
+
   it("states a verdict instead of a question mark", () => {
     const rows = targetRows();
     const problems = Arr.flatMap(CITATIONS, ([name]) =>
