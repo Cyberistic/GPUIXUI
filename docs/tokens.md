@@ -2474,20 +2474,20 @@ measured:
 `syntaxFailures(theme, floors?)` reports every token that misses its floor,
 naming the token, the fill and the measured ratio, and reporting a colour it
 cannot measure rather than skipping it. `auditTheme` includes that report, so a
-brand is held to it. A theme owns a palette by carrying `syntax`, which merges
-**key by key** over the table its base resolves — unlike `series`, where the
-five positions are an order a chart and its legend share, a token type stands on
-its own, so recolouring one keyword is a one-key edit:
+brand is held to it. A theme owns a palette by carrying `syntax`, which
+**replaces the table whole** — the host reads all twenty-four keys, so a partial
+palette would leave the rest on the runtime's own colours. Recolor one token by
+spreading the table the theme resolves:
 
 ```ts
 import { auditTheme, extendTheme, syntaxColors } from "@gpuixui/tokens";
 
 const brand = extendTheme(theme, {
-  syntax: { keyword: "#7A1F5C", string: "#0B5E4A" },
+  syntax: { ...syntaxColors(theme), keyword: "#7A1F5C", string: "#0B5E4A" },
 });
 
 syntaxColors(brand).keyword; // the brand's own
-syntaxColors(brand).number; // the shipped table's value
+syntaxColors(brand).number; // the value it spread
 auditTheme(brand).syntax; // [] — every token still clears its floor
 ```
 

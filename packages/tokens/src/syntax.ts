@@ -200,8 +200,8 @@ export interface SyntaxSource {
 /**
  * The syntax palette a theme's code blocks paint in.
  *
- * A theme that carries `syntax` owns it — every role is its own, merged key by
- * key by `extendTheme` — and every other theme resolves the table for its mode
+ * A theme that carries `syntax` owns it — every role is its own, replacing the
+ * shipped table whole — and every other theme resolves the table for its mode
  * and contrast variant.
  *
  * @example

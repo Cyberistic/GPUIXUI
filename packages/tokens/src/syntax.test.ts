@@ -254,6 +254,16 @@ describe("the syntax palette", () => {
     expect(reported.every(({ ratio }) => ratio === undefined)).toBe(true);
   });
 
+  it("reports an absent fill rather than crashing on a stored theme", () => {
+    // A theme restored from storage can predate a surface role. Every placement
+    // is then unmeasurable rather than skipped — a token nobody can verify is
+    // not a pass — and the report still names every one of them.
+    const reported = syntaxFailures({ mode: "light", colors: {} });
+
+    expect(reported).toHaveLength(syntaxRoles.length * syntaxSurfaces.length);
+    expect(reported.every(({ ratio }) => ratio === undefined)).toBe(true);
+  });
+
   it("follows a look's own palette under the palette rule", () => {
     const light = houseSyntaxLookTheme("light");
     const dark = houseSyntaxLookTheme("dark");

@@ -834,14 +834,17 @@ high-contrast tables hold their comment at AAA too.
 import { extendTheme, syntaxColors } from "@gpuixui/tokens";
 
 syntaxColors(theme).keyword; // the mode's keyword colour
-const brand = extendTheme(theme, { syntax: { keyword: "#7A1F5C" } });
-syntaxColors(brand).number; // still the shipped number colour
+const brand = extendTheme(theme, {
+  syntax: { ...syntaxColors(theme), keyword: "#7A1F5C" },
+});
+syntaxColors(brand).number; // the value it spread
 ```
 
-A brand's palette merges **key by key** over the table its base resolves (unlike
-`series`, whose five positions are one order), and a `PlatformStyle` may carry
-one per mode for its own page. `syntaxFailures(theme)` reports every token that
-misses its floor and is part of `auditTheme` (`audit.syntax`).
+A brand's palette **replaces the table whole** — the host reads all twenty-four
+keys, so a partial palette would leave the rest on the runtime's colours — and
+a `PlatformStyle` may carry one per mode for its own page. `syntaxFailures(theme)`
+reports every token that misses its floor and is part of `auditTheme`
+(`audit.syntax`).
 
 ## For documentation sites
 
