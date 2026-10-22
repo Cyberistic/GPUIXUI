@@ -633,6 +633,27 @@ import {
   type TrailingShape,
 } from "./list-row.js";
 import {
+  BUTTON_ACTIVATION_PROBE,
+  BUTTON_AFTER,
+  BUTTON_BUSY,
+  BUTTON_CAPTION,
+  BUTTON_DISABLED,
+  BUTTON_ENABLED,
+  BUTTON_READOUT,
+  BUTTON_REFUSAL_READOUT,
+  BUTTON_ROUTES,
+  BUTTON_TAB_ORDER,
+  activationKind,
+  buttonRoute,
+  fieldOf,
+  formatActivation,
+  formatCounts,
+  formatRefusals,
+  type ActivationKind,
+  type ButtonGesture,
+  type Point,
+} from "./button.js";
+import {
   PRESS_CAPTION,
   PRESS_CLEAR,
   PRESS_CASES,
@@ -20474,6 +20495,271 @@ const listRowPressSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * The shipped `Button`'s **activation contract**, driven through every input a
+ * reader has: a pointer press, Enter's press and release, Space's press and
+ * release.
+ *
+ * The rule is the platform's — Enter on the press, Space on the release, never
+ * twice — and until this probe it rested on a pure decision function plus a
+ * `TestRenderer`. A window is a different delivery path: the automation sends a
+ * key **down** with no release (`AsyncSmokeHost.keyUp` exists because of that),
+ * so a control that waited for a release without the release ever arriving would
+ * be dead in a real window and green in every headless suite.
+ *
+ * Two consumer-facing facts fall out of the same readout:
+ *
+ * - a pointer press runs the caller's host `onClick` **and** `onActivate`, while
+ *   a key reaches `onActivate` alone — the mapping plan `160` owes when the
+ *   components' stand-in hands its `onClick` over;
+ * - the activation carries the press point, because the payload is the runtime's
+ *   own click and a ripple is born where the pointer was.
+ *
+ * The disabled and busy buttons count activations nobody may receive, and the
+ * traversal proves the half each keeps: a disabled button leaves the tab order
+ * and stays addressable from code, a busy one keeps its stop.
+ */
+const ButtonActivationProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [host, setHost] = useState(0);
+  const [activates, setActivates] = useState(0);
+  const [last, setLast] = useState<ActivationKind>("none");
+  const [point, setPoint] = useState<Option.Option<Point>>(Option.none());
+  const [disabledRefusals, setDisabledRefusals] = useState(0);
+  const [busyRefusals, setBusyRefusals] = useState(0);
+
+  const record = (event: EventPayload): void => {
+    setActivates((count) => count + 1);
+    setLast(activationKind(event));
+    Option.match(
+      Option.all([
+        Option.fromNullishOr(event.x),
+        Option.fromNullishOr(event.y),
+      ]),
+      {
+        onNone: () => {},
+        onSome: ([x, y]) => setPoint(Option.some({ x, y })),
+      },
+    );
+  };
+
+  return (
+    <div
+      testId={BUTTON_ACTIVATION_PROBE}
+      style={{
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        testId={BUTTON_CAPTION}
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        The shipped Button: Enter activates on its press, Space on its release,
+        and a refused press reaches neither prop.
+      </text>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: theme.spacing.sm,
+        }}
+      >
+        <Button
+          testId={BUTTON_ENABLED}
+          variant="primary"
+          onActivate={record}
+          onClick={() => setHost((count) => count + 1)}
+        >
+          Activate
+        </Button>
+        <Button
+          testId={BUTTON_DISABLED}
+          variant="secondary"
+          disabled
+          onActivate={() => setDisabledRefusals((count) => count + 1)}
+        >
+          Disabled
+        </Button>
+        <Button
+          testId={BUTTON_BUSY}
+          variant="secondary"
+          loading
+          onActivate={() => setBusyRefusals((count) => count + 1)}
+        >
+          Busy
+        </Button>
+        <Button testId={BUTTON_AFTER} variant="secondary">
+          After
+        </Button>
+      </div>
+      <text
+        testId={BUTTON_READOUT}
+        style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}
+      >
+        {formatActivation({ host, activates, last }, point)}
+      </text>
+      <text
+        testId={BUTTON_REFUSAL_READOUT}
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {formatRefusals({ disabled: disabledRefusals, busy: busyRefusals })}
+      </text>
+    </div>
+  );
+};
+
+/** The gesture a route names, sent as the window's own input. */
+const sendGesture = (
+  ctx: Smoke.AsyncSmokeContext,
+  gesture: ButtonGesture,
+): Effect.Effect<void, Smoke.SmokeHostError> =>
+  Match.value(gesture).pipe(
+    Match.when("click", () => ctx.host.click(BUTTON_ENABLED)),
+    Match.when("enter-press", () => ctx.host.key("enter")),
+    Match.when("enter-release", () => ctx.host.keyUp("enter")),
+    Match.when("space-press", () => ctx.host.key("space")),
+    Match.when("space-release", () => ctx.host.keyUp("space")),
+    Match.exhaustive,
+  );
+
+const buttonActivationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(BUTTON_ACTIVATION_PROBE);
+
+    const activation = () => ctx.host.text(BUTTON_READOUT);
+    const refusals = () => ctx.host.text(BUTTON_REFUSAL_READOUT);
+    /** The number the readout prints for `field`, as a settled value. */
+    const numberIn = (field: string) =>
+      settleNumber(
+        Effect.flatMap(activation(), (text) =>
+          Effect.succeed(
+            Option.getOrElse(fieldOf(text, field), () => Number.NaN),
+          ),
+        ),
+      );
+
+    yield* ctx.expectEqual(
+      "the button starts un-activated",
+      yield* activation(),
+      formatActivation({ host: 0, activates: 0, last: "none" }),
+    );
+
+    // 1. Every gesture, in the order the fixture's table names them. Each row
+    // asserts the counters *and* the kind, so a press that activates a row early
+    // or a release that activates twice names its gesture.
+    const box = yield* paintedBox(ctx, BUTTON_ENABLED);
+    yield* Effect.forEach(
+      BUTTON_ROUTES,
+      (route) =>
+        Effect.gen(function* () {
+          yield* sendGesture(ctx, route.gesture);
+          yield* Effect.sleep(SETTLE);
+          yield* ctx.expectContains(
+            `${route.caption} leaves ${formatCounts(route)}`,
+            yield* activation(),
+            formatCounts(route),
+          );
+        }),
+      { concurrency: 1 },
+    );
+
+    // 2. The pointer activation carries the press point: the payload is the
+    // runtime's click, so the point is the centre of the painted box.
+    yield* ctx.expectNear(
+      "the pointer activation carries the press point's x",
+      yield* numberIn("x"),
+      box.x + box.width / 2,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the pointer activation carries the press point's y",
+      yield* numberIn("y"),
+      box.y + box.height / 2,
+      1,
+    );
+
+    // 3. A disabled button refuses the pointer and both keys, and the native
+    // focus still lands on it, because code may focus a control it disabled.
+    yield* ctx.host.click(BUTTON_DISABLED);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.focusElement(BUTTON_DISABLED);
+    yield* ctx.expectEqual(
+      "a press focuses the disabled button from code",
+      yield* focusedAfterPaint(ctx),
+      BUTTON_DISABLED,
+    );
+    yield* ctx.host.key("enter");
+    yield* ctx.host.keyUp("enter");
+    yield* ctx.host.key("space");
+    yield* ctx.host.keyUp("space");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a disabled button refuses the pointer, Enter and Space",
+      yield* refusals(),
+      formatRefusals({ disabled: 0, busy: 0 }),
+    );
+
+    // 4. A busy button refuses the same four inputs and stays focusable.
+    yield* ctx.host.click(BUTTON_BUSY);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.focusElement(BUTTON_BUSY);
+    yield* ctx.expectEqual(
+      "a busy button keeps a focus it can be given",
+      yield* focusedAfterPaint(ctx),
+      BUTTON_BUSY,
+    );
+    yield* ctx.host.key("enter");
+    yield* ctx.host.keyUp("enter");
+    yield* ctx.host.key("space");
+    yield* ctx.host.keyUp("space");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a busy button refuses Enter and Space",
+      yield* refusals(),
+      formatRefusals({ disabled: 0, busy: 0 }),
+    );
+    yield* ctx.expectContains(
+      "no refused gesture reached the enabled button either",
+      yield* activation(),
+      formatCounts(buttonRoute("space-release")),
+    );
+
+    // 5. The tab order: a traversal skips the disabled stop and reaches the
+    // busy one, so `tabIndex: -1` and `0` are the difference a reader feels.
+    yield* ctx.host.focusElement(
+      yield* ctx.expectSome(
+        "the tab order names its first stop",
+        Arr.head(BUTTON_TAB_ORDER),
+      ),
+    );
+    yield* Effect.forEach(
+      BUTTON_TAB_ORDER,
+      (id) =>
+        Effect.gen(function* () {
+          yield* ctx.expectEqual(
+            `the traversal reaches ${id}`,
+            yield* focusedAfterPaint(ctx),
+            id,
+          );
+          yield* ctx.host.focusNext();
+          yield* Effect.sleep(SETTLE);
+        }),
+      { concurrency: 1 },
+    );
+
+    yield* ctx.host.capture("button-activation");
+  });
+
+/**
  * A grid whose first column is drag-resized in a real window.
  *
  * Tier 3's **Resizable columns** row cites only the headless
@@ -21297,5 +21583,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "column-resize-lifecycle",
     view: () => <ColumnResizeProbe />,
     steps: columnResizeSteps,
+  },
+  "button-activation-lifecycle": {
+    id: "button-activation-lifecycle",
+    view: () => <ButtonActivationProbe />,
+    steps: buttonActivationSteps,
   },
 };

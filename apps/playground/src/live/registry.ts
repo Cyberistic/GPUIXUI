@@ -474,6 +474,12 @@ export const liveRegistry = [
       "Table: a column's divider keeps a drag past its own box, header and cells share the width it clamps to, and a move-only divider keeps none of it",
     capability: "table",
   },
+  {
+    id: "button-activation-lifecycle",
+    title:
+      "Input: the shipped Button activates on Enter's press and Space's release, carries the press point, and a disabled or busy button refuses every route",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

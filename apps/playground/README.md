@@ -42,13 +42,14 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-73 probes a real window can prove, of which fifteen mount shipped
+74 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
-combobox, the nested overlay stack and the modal focus rule), six mount
-`@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text and Tooltip), one more
+combobox, the nested overlay stack and the modal focus rule), seven mount
+`@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip and
+the Button), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
@@ -778,6 +779,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 
 | Critical interaction | Probes | What a window measures |
 | -------------------- | ------ | ---------------------- |
+| button activation | `button-activation-lifecycle` | a pointer press activates once and carries the press point; Enter activates on its press and Space on its release; a disabled or busy button refuses every route, and only the disabled one leaves the tab order |
 | dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape and per outside press, outside-in |
 | menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
 | input update/validation | `text-input`, `validation-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both |
@@ -4147,6 +4149,67 @@ ctrl=90 moves=8 outside=8 ctrlMoves=0", got "w=160 ctrl=90 moves=0 outside=0
 ctrlMoves=0"`** — the drag is only a resize because the press arms the capture,
 and a divider with one listener hears none of it.
 
+### `button-activation-lifecycle` — measured on 0.11.0 here
+
+**Which half of a key activates the one control everything else is built on?**
+`Button` carries the platform's rule — Enter activates on the press, Space on the
+release, and a release never activates twice — and until this probe the rule was
+proved only by a pure decision function and a `TestRenderer`. A window delivers
+its own events, and `AsyncSmokeHost.key` records the half a headless suite hides:
+the automation's `keystrokes` sends the key **down** with no release, so a
+control that waits for the release is only provable by releasing it. Every
+trigger, toolbar item, dialog opener and pagination arrow in the library
+composes this control, which is why MISSION's list puts button activation first.
+
+The probe mounts the shipped `Button` four times — enabled, `disabled`, `loading`
+and a second enabled one — plus a readout of both counters, the kind of the last
+activation and the point a pointer activation carried. The gestures run in the
+fixture's order:
+
+| Gesture | Readout | What it proves |
+| ------- | ------- | -------------- |
+| open | `host=0 activates=0 last=none` | nothing has activated yet |
+| a pointer press on the enabled button | `host=1 activates=1 last=click` | one activation, and it runs the caller's host `onClick` *and* `onActivate` |
+| Enter's press | `host=1 activates=2 last=keyDown:enter` | Enter activates on the **press**, and a key reaches `onActivate` alone |
+| Enter's release | `host=1 activates=2 last=keyDown:enter` | the release adds nothing |
+| Space's press | `host=1 activates=2 last=keyDown:enter` | Space waits for the release |
+| Space's release | `host=1 activates=3 last=keyUp:space` | the release is the activation |
+
+The pointer payload is the runtime's own click, so it carries the press point: the
+readout's `x`/`y` are the centre of the button's painted box to within a point
+(`x=47 y=50` for the first stop in this window), which is what a ripple needs to
+be born where the reader pressed. A **key** activation carries no point, so the
+readout keeps the last pointer point rather than inventing one.
+
+The refusals are counted apart, because their contract is the opposite one: a
+press, Enter's pair and Space's pair on the `disabled` button and on the `loading`
+one leave `disabled=0 busy=0`, and neither reaches the enabled button's counters.
+The traversal is the other half each keeps. A `disabled` button paints
+`tabIndex: -1`, so `focusNext` skips it and reaches `button-loading` and
+`button-after`, while `focusElement` still lands on it — out of the Tab order, not
+out of the element. A `loading` button keeps `0`, so a reader is not dropped
+mid-action while it refuses the activation.
+
+18 checks, `--only button-activation-lifecycle`, green on 0.11.0 (~1 s). Fixture:
+`src/live/button.ts` (the cumulative route table, `activationKind`, the readout
+and `fieldOf`) + `button.test.ts` (7 cases: one route per gesture, the activation
+credited to the gesture that carries it, the kind's spelling, the readout with an
+absent point as a word, the field reader refusing `none`, the probe held to the
+table, and this section). Evidence: `.artifacts/live/button-activation.png`.
+
+Negative control measured, exit `1`, restored green: crediting Space's **press**
+with an activation (`activates=3 last=keyUp:space` on that row) fails
+`Space's press leaves host=1 activates=3 last=keyUp:space` with **`expected a
+string containing "host=1 activates=3 last=keyUp:space", got "host=1 activates=2
+last=keyDown:enter x=47 y=50"`** — the press and the release are different
+gestures, and only the release activates.
+
+The measured gap this leaves for plan `160`: a pointer press runs the caller's
+host `onClick` **and** `onActivate`, while a key reaches `onActivate` alone. The
+components package's stand-in routes both to `onClick`, so the migration that
+hands its eight `onClick` call sites to the primitives' `Button` must map them to
+`onActivate` or keyboard activation silently stops arriving.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -4363,8 +4426,9 @@ narrower. Each deviation is deliberate and measured:
   `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`,
   `elevation-paint`, `opacity-paint`, `movable-tabs-lifecycle`,
   `slider-vertical-lifecycle`, `modifier-select-lifecycle`, `rtl-text`,
-  `syntax-palette`, `press-routing-lifecycle`, `list-row-press` and
-  `column-resize-lifecycle` (fifteen probes, each run alone).
+  `syntax-palette`, `press-routing-lifecycle`, `list-row-press`,
+  `column-resize-lifecycle` and `button-activation-lifecycle` (sixteen probes,
+  each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

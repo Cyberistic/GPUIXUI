@@ -86,6 +86,7 @@ describe("live probe documentation", () => {
     // the claim unreadable rather than red.
     const rows = interactionRows();
     expect(rows.map((row) => row.interaction)).toEqual([
+      "button activation",
       "dialog open/close/confirm",
       "menu selection/dismissal",
       "input update/validation",
