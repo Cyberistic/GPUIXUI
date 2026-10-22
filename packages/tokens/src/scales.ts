@@ -92,9 +92,7 @@ export type ScaleSource = Pick<
    * library added, and the gate refuses that absence by name (`requireSteps`),
    * because a component selects a role by name and cannot paint around one.
    */
-  readonly typography: Partial<
-    Record<TextRole, { readonly fontSize: number }>
-  >;
+  readonly typography: Partial<Record<TextRole, { readonly fontSize: number }>>;
   /**
    * Every elevation level the theme carries. A level it omits is skipped rather
    * than reported: a theme restored from storage can predate a level the
