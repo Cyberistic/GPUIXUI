@@ -227,8 +227,9 @@ describe("the theme page", () => {
     // Every surface the report composites over is named in the selection bullet
     // itself, so a pair added to the contract cannot leave the bullet describing
     // an older table.
-    const unnamed = [...new Set(selectionPairs.map((pair) => pair.background))]
-      .filter((surface) => !selection.includes(backticked(surface)));
+    const unnamed = [
+      ...new Set(selectionPairs.map((pair) => pair.background)),
+    ].filter((surface) => !selection.includes(backticked(surface)));
     expect(
       unnamed,
       "the selection bullet does not name these surfaces",
