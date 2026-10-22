@@ -88,7 +88,7 @@ it (`docs/gpuix-capabilities.md`).
 | `from` | `RevealFrom` | `"below"` | The edge the content comes from, or `"none"` for a fade. |
 | `distance` | `number` | `8` | Pixels travelled; an unusable value falls back to the default. |
 | `level` | `MotionLevel` | `"normal"` | The house duration the entry and exit use. |
-| `delayMs` | `number` | `0` | Milliseconds before the entry starts; dropped under reduced motion. |
+| `delayMs` | `number` | `0` | Milliseconds before the entry starts; dropped under reduced motion, and a value that cannot be scheduled adds nothing. |
 | `className` | `string` | — | Joined after the resting style, so it wins conflicts. |
 | `style` | `StateStyle<RevealState>` | — | `RevealState` is `{ open, from, reducedMotion }`. |
 

@@ -86,13 +86,7 @@ export const Reveal = ({
   const theme = useTheme();
   const preference = useMotionPreference();
   const timing = useSurfaceTiming(level);
-  const delay = Option.getOrElse(
-    Option.filter(
-      Option.fromNullishOr(delayMs),
-      (ms) => Number.isFinite(ms) && ms > 0,
-    ),
-    () => 0,
-  );
+  const delay = Option.getOrElse(Option.fromNullishOr(delayMs), () => 0);
   const travel = Option.getOrElse(Option.fromNullishOr(distance), () => 8);
   const presence = useSurfacePresence(open ?? true, {
     enter: delayedTiming(timing.enter, delay),
