@@ -16,14 +16,23 @@
  * `@gpuixui/tw`.
  */
 
-import { Fragment, type ReactElement } from "react";
-import type { StyleDesc } from "@gpuix/react";
+import {
+  Fragment,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  type ReactElement,
+  type ReactNode,
+} from "react";
+import { useGpuix } from "@gpuix/react";
+import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import {
   resolveStyle,
   type FloatingSide,
   type StateStyle,
 } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import {
   Select as GpuixSelect,
   SelectContent,
@@ -38,6 +47,7 @@ import {
 } from "@gpuix/react/select";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing, keepContent } from "../core/focus.js";
+import { revealScroll } from "../core/scroll.js";
 import type { ControlSpec } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
@@ -61,6 +71,16 @@ import { useTheme } from "./ThemeProvider.js";
 
 /** The trigger and item states GPUix reports; the style callbacks receive them. */
 export type { SelectItemState, SelectTriggerState };
+
+/**
+ * A mutable seat for a native element, the shape React's own refs use.
+ *
+ * `renderSelect` is pure in its arguments, so it cannot create a ref; the
+ * component creates one and the list and its rows share it.
+ */
+export interface PublicInstanceHolder {
+  readonly current: PublicInstance | null;
+}
 
 export interface SelectOption {
   readonly value: string;
@@ -192,6 +212,113 @@ export const selectItemStyle =
       resolveStyle(caller, state),
     );
 
+/** One row's content: the label and the selected mark, pure in its arguments. */
+export const renderSelectRow = (
+  option: SelectOption,
+  theme: PrimitiveTheme,
+  selected: boolean,
+): ReactElement => (
+  <div style={recipeTw.classesToStyle(selectItemRowClass, theme).style}>
+    {option.label}
+    {/*
+      The selected mark comes from the state GPUix reports for this row, so an
+      uncontrolled Select needs no mirror of its value. It is decorative: the
+      row is already `aria-selected`.
+    */}
+    {selected ? (
+      <Icon name="check" size="sm" color={theme.colors.popoverForeground} />
+    ) : null}
+  </div>
+);
+
+/**
+ * Bring the row the keyboard moved onto into view.
+ *
+ * GPUix scrolls a list on the wheel but never moves it for its own highlight, so
+ * a list taller than its 320px cap kept an unreachable tail: twenty ArrowDowns
+ * left the offset where the wheel put it. The row is the only part that is told
+ * `highlighted`, so it is the part that has to reveal itself — after commit,
+ * because the runtime needs both elements' ids.
+ *
+ * The move is arithmetic over the two painted boxes (`core/scroll.ts`'s
+ * `revealScroll`), not the renderer's `scrollIntoView`: that one scrolls a
+ * scroller to the index of its **direct child**, so a row inside a `SelectGroup`
+ * could only reveal its group.
+ *
+ * It renders its children unchanged: a fragment is transparent to the runtime's
+ * part walk, exactly like the `ScrollArea` viewport's group.
+ */
+const RevealOnHighlight = ({
+  highlighted,
+  instance,
+  scroller,
+  children,
+}: {
+  readonly highlighted: boolean;
+  readonly instance: PublicInstanceHolder;
+  readonly scroller: PublicInstanceHolder;
+  readonly children: ReactNode;
+}): ReactElement => {
+  const { renderer } = useGpuix();
+  useLayoutEffect(() => {
+    if (!highlighted || renderer === null) return;
+    const row = instance.current;
+    const viewport = scroller.current;
+    if (row === null || viewport === null) return;
+    const rowBox = renderer.getElementBounds?.(row.id);
+    const viewportBox = renderer.getElementBounds?.(viewport.id);
+    const current = renderer.getScrollOffset?.(viewport.id);
+    if (!rowBox || !viewportBox || !current) return;
+    const [x, y] = current;
+    Option.match(revealScroll(rowBox, viewportBox, { x: x ?? 0, y: y ?? 0 }), {
+      onNone: () => {},
+      onSome: (next) => renderer.scrollTo?.(viewport.id, next.x, next.y),
+    });
+  }, [highlighted, instance, scroller, renderer]);
+  return <>{children}</>;
+};
+
+/** One data-driven row: a themed `SelectItem` that reveals its own highlight. */
+const SelectRow = ({
+  option,
+  theme,
+  itemStyle,
+  testId,
+  scroller,
+}: {
+  readonly option: SelectOption;
+  readonly theme: PrimitiveTheme;
+  readonly itemStyle: StateStyle<SelectItemState> | undefined;
+  readonly testId: string | undefined;
+  readonly scroller: PublicInstanceHolder;
+}): ReactElement => {
+  const instance = useRef<PublicInstance | null>(null);
+  // A stable callback: a fresh one detaches and re-attaches the item's ref on
+  // every paint, which the accordion's rows already pay for.
+  const attach = useCallback((next: PublicInstance | null) => {
+    instance.current = next;
+  }, []);
+  return (
+    <SelectItem
+      ref={attach}
+      value={option.value}
+      disabled={option.disabled}
+      testId={testId}
+      style={selectItemStyle(theme, itemStyle)}
+    >
+      {(state) => (
+        <RevealOnHighlight
+          highlighted={state.highlighted}
+          instance={instance}
+          scroller={scroller}
+        >
+          {renderSelectRow(option, theme, state.selected)}
+        </RevealOnHighlight>
+      )}
+    </SelectItem>
+  );
+};
+
 /** The element tree `Select` renders. Pure in its arguments. */
 export const renderSelect = (
   {
@@ -215,6 +342,7 @@ export const renderSelect = (
     itemTestId,
   }: SelectProps,
   theme: PrimitiveTheme,
+  scroller: PublicInstanceHolder = { current: null },
 ): ReactElement => {
   const spec: ControlSpec = { variant: fieldVariant, size, invalid, fullWidth };
   const items = Arr.map(selectOptions(options), (option) => ({
@@ -224,31 +352,14 @@ export const renderSelect = (
     disabled: option.disabled === true,
   }));
   const renderItem = (option: SelectOption): ReactElement => (
-    <SelectItem
+    <SelectRow
       key={option.value}
-      value={option.value}
-      disabled={option.disabled}
+      option={option}
+      theme={theme}
+      itemStyle={itemStyle}
       testId={itemTestId?.(option.value)}
-      style={selectItemStyle(theme, itemStyle)}
-    >
-      {(state) => (
-        <div style={recipeTw.classesToStyle(selectItemRowClass, theme).style}>
-          {option.label}
-          {/*
-            The selected mark comes from the state GPUix reports for this row,
-            so an uncontrolled Select needs no mirror of its value. It is
-            decorative: the row is already `aria-selected`.
-          */}
-          {state.selected ? (
-            <Icon
-              name="check"
-              size="sm"
-              color={theme.colors.popoverForeground}
-            />
-          ) : null}
-        </div>
-      )}
-    </SelectItem>
+      scroller={scroller}
+    />
   );
   return (
     <GpuixSelect
@@ -271,7 +382,11 @@ export const renderSelect = (
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent side={side} style={selectContentStyle(theme)}>
+      <SelectContent
+        ref={scroller}
+        side={side}
+        style={selectContentStyle(theme)}
+      >
         {Arr.map(options, (entry, index) =>
           isSelectGroup(entry) ? (
             <Fragment key={`group-${index}`}>
@@ -302,4 +417,4 @@ export const renderSelect = (
 
 /** A list of options in a popover. */
 export const Select = (props: SelectProps): ReactElement =>
-  renderSelect(props, useTheme());
+  renderSelect(props, useTheme(), useRef<PublicInstance | null>(null));

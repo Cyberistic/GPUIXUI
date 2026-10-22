@@ -30,6 +30,14 @@ export interface ScrollMetrics {
   readonly page: number;
 }
 
+/** A painted box, in window pixels. */
+export interface ScrollRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 /**
  * A far overshoot past any content, which the runtime clamps to the real end.
  *
@@ -103,3 +111,37 @@ export const scrollTarget = (
         })
       : Option.none();
   });
+
+/** How far a box falls outside the viewport that holds it, in each direction. */
+const outside = (
+  row: ScrollRect,
+  viewport: ScrollRect,
+): { readonly above: number; readonly below: number } => ({
+  above: row.y - viewport.y,
+  below: row.y + row.height - (viewport.y + viewport.height),
+});
+
+/**
+ * The offset that brings a row inside its viewport, or `None` when it is there.
+ *
+ * A scroll offset grows more negative as the content moves up, so revealing a
+ * row below the fold subtracts the overshoot and one above the fold adds the
+ * gap back. A row taller than the viewport aligns its top, because a reader needs
+ * the start of the row rather than its last line.
+ *
+ * The row is placed by its painted box, not by its index: `scrollIntoView`
+ * scrolls a scroller to the index of its **direct child**, so a row nested in a
+ * group could only reveal its group (measured by the playground's `tab-overflow`
+ * probe). Arithmetic over the two boxes works at any depth.
+ */
+export const revealScroll = (
+  row: ScrollRect,
+  viewport: ScrollRect,
+  current: ScrollOffset,
+): Option.Option<ScrollOffset> => {
+  const { above, below } = outside(row, viewport);
+  const shift = above < 0 ? above : below > 0 ? below : 0;
+  return shift === 0
+    ? Option.none()
+    : Option.some({ x: current.x, y: current.y - shift });
+};

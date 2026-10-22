@@ -381,6 +381,24 @@ const ancestorsOf = (
   });
 };
 
+/**
+ * The 320px scroller a long list becomes, found through one of its rows.
+ *
+ * A `Select`'s content is GPUix's own element, so the convention the other
+ * cases use — a `testId` on the wrapper — cannot name it; the box the wrapper
+ * caps is the bound.
+ */
+const longScroller = (runtime: Runtime, label = "Option 1"): number =>
+  Option.getOrElse(
+    Arr.findFirst(ancestorsOf(runtime, optionRowId(runtime, label)), (id) =>
+      Option.match(
+        Option.fromNullishOr(runtime.renderer.getElementBounds(id)),
+        { onNone: () => false, onSome: (bounds) => bounds.height === 320 },
+      ),
+    ),
+    () => expect.fail("the list painted no bounded scroller"),
+  );
+
 it("paints a grouped list's captions and selects a row inside a group", async () => {
   const runtime = await openWindow();
   const field = recorder();
@@ -459,8 +477,8 @@ it("bounds a long list and scrolls it on the wheel", async () => {
   // `SelectScrollUpButton`/`SelectScrollDownButton` are empty divs in 0.11.0, so
   // a 40-option list used to paint its tail outside the window with nothing able
   // to reach it. The wrapper caps the surface at the menus' 320px and turns it
-  // into a scroller; the wheel moves it, the keyboard highlight still does not
-  // reveal its own row (the limitation the page records).
+  // into a scroller; the wheel moves it. The keyboard reveal is its own case
+  // below.
   const runtime = await openWindow();
   const options = Arr.map(Arr.range(1, 40), (index) => ({
     value: `option-${index}`,
@@ -478,24 +496,15 @@ it("bounds a long list and scrolls it on the wheel", async () => {
     </Surface>,
   );
   runtime.clickElement(triggerOf(runtime, "sel"));
-  const contentId = (): number =>
-    Option.getOrElse(
-      Arr.findFirst(
-        ancestorsOf(runtime, optionRowId(runtime, "Option 1")),
-        (id) =>
-          Option.match(
-            Option.fromNullishOr(runtime.renderer.getElementBounds(id)),
-            { onNone: () => false, onSome: (bounds) => bounds.height === 320 },
-          ),
-      ),
-      () => expect.fail("the list painted no bounded scroller"),
-    );
   const content = (): Bounds =>
     Option.getOrElse(
-      Option.fromNullishOr(runtime.renderer.getElementBounds(contentId())),
+      Option.fromNullishOr(
+        runtime.renderer.getElementBounds(longScroller(runtime)),
+      ),
       () => expect.fail("the scroller lost its box"),
     );
-  const offset = (): unknown => runtime.renderer.getScrollOffset(contentId());
+  const offset = (): unknown =>
+    runtime.renderer.getScrollOffset(longScroller(runtime));
 
   expect(content().height).toBe(320);
   expect(offset()).toEqual([0, 0]);
@@ -508,13 +517,134 @@ it("bounds a long list and scrolls it on the wheel", async () => {
   );
   runtime.flush();
   expect(offset()).toEqual([0, -200]);
-  // The keyboard gap: an arrow never calls `scrollIntoView`, so the highlight
-  // can sit on a row the scroller has not revealed.
-  runtime.type(
-    "down down down down down down down down down down down down down down down down down down down down",
+});
+
+/**
+ * The row the runtime currently highlights, found by the wash it paints.
+ *
+ * A `Select` row's highlight is a style value, not an attribute, so the painted
+ * `hover` role is the only readout — and the assertion that matters is whether
+ * that row is inside the scroller.
+ */
+const highlightedRow = (runtime: Runtime): Bounds =>
+  Option.getOrElse(
+    Option.flatMap(
+      Arr.findFirst(
+        runtime.all(),
+        (element) => element.style.backgroundColor === testTheme.colors.hover,
+      ),
+      (element) => runtime.boundsOfId(element.id),
+    ),
+    () => expect.fail("the list painted no highlighted row"),
   );
+
+/** Whether a row is inside the box that holds it. */
+const inside = (row: Bounds, box: Bounds): boolean =>
+  row.y >= box.y - 1 && row.y + row.height <= box.y + box.height + 1;
+
+it("reveals the row a keyboard move highlights", async () => {
+  // The bug guarded: the runtime scrolls its list on the wheel but never for its
+  // own highlight, so twenty ArrowDowns moved the highlight over rows the 320px
+  // scroller had not revealed and left the offset where it was — a keyboard
+  // reader could not reach a row past the fold. The row is the only part told
+  // `highlighted`, so the wrapper makes the highlighted row reveal itself.
+  const runtime = await openWindow();
+  const options = Arr.map(Arr.range(1, 40), (index) => ({
+    value: `option-${index}`,
+    label: `Option ${index}`,
+  }));
+  runtime.render(
+    <Surface>
+      <Box tone="background" style={{ height: 700 }} />
+      <Select
+        testId="sel"
+        label="Long"
+        placeholder="Pick one"
+        options={options}
+      />
+    </Surface>,
+  );
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  const offset = (): ReadonlyArray<number> =>
+    Option.getOrElse(
+      Option.fromNullishOr(
+        runtime.renderer.getScrollOffset(longScroller(runtime)),
+      ),
+      () => expect.fail("the list painted no scroll offset"),
+    );
+
+  expect(offset()[1]).toBe(0);
+  runtime.type("down down down down down down down down down down");
+  runtime.type("down down down down down down down down down down");
   runtime.flush();
-  expect(offset()).toEqual([0, -200]);
+  // Ten rows overflow the cap on their own; the highlight has to have moved the
+  // list by the time it reaches the twentieth.
+  const afterDowns = offset()[1] ?? 0;
+  expect(afterDowns).toBeLessThan(-200);
+  const scroller = (): Bounds =>
+    Option.getOrElse(
+      Option.fromNullishOr(
+        runtime.renderer.getElementBounds(longScroller(runtime)),
+      ),
+      () => expect.fail("the scroller lost its box"),
+    );
+  const box = scroller();
+  expect(inside(highlightedRow(runtime), box)).toBe(true);
+
+  runtime.type("up up up up up up up up up up");
+  runtime.type("up up up up up up up up up up");
+  runtime.flush();
+  // Upwards as well: the offset moves up with the highlight, and the highlighted
+  // row is inside the scroller rather than left above the fold.
+  expect(offset()[1] ?? 0).toBeGreaterThan(afterDowns);
+  expect(inside(highlightedRow(runtime), scroller())).toBe(true);
+});
+
+it("reveals a grouped row as far as the runtime can", async () => {
+  // Measurement, not a promise: `scrollIntoView` scrolls the nearest scroller to
+  // the index of its **direct child**, so a row nested in a `SelectGroup` can
+  // only reveal its group. Pinned so the docs can say which case is limited and
+  // a runtime upgrade shows up here.
+  const runtime = await openWindow();
+  const group = (prefix: string, from: number) => ({
+    label: prefix,
+    options: Arr.map(Arr.range(from, from + 19), (index) => ({
+      value: `${prefix}-${index}`,
+      label: `${prefix} ${index}`,
+    })),
+  });
+  runtime.render(
+    <Surface>
+      <Box tone="background" style={{ height: 700 }} />
+      <Select
+        testId="sel"
+        label="Grouped"
+        placeholder="Pick one"
+        options={[group("Fruit", 1), group("Veg", 21)]}
+      />
+    </Surface>,
+  );
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  const box = (): Bounds =>
+    Option.getOrElse(
+      Option.fromNullishOr(
+        runtime.renderer.getElementBounds(longScroller(runtime, "Fruit 1")),
+      ),
+      () => expect.fail("the grouped list painted no bounded scroller"),
+    );
+  const offset = (): ReadonlyArray<number> =>
+    Option.getOrElse(
+      Option.fromNullishOr(
+        runtime.renderer.getScrollOffset(longScroller(runtime, "Fruit 1")),
+      ),
+      () => expect.fail("the grouped list painted no scroll offset"),
+    );
+  runtime.type("down down down down down down down down down down");
+  runtime.flush();
+  // The offset moves, so the reveal runs; whether the *row* is inside is the
+  // part this case records.
+  expect(offset()[1] ?? 0).toBeLessThan(0);
+  expect(inside(highlightedRow(runtime), box())).toBe(true);
 });
 
 it("selects a Select option by clicking it", async () => {

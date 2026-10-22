@@ -86,6 +86,7 @@ none paints a literal and none scripts hover or press
 | `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once |
 | scrollbar tint | present | `ScrollArea` tints the platform thumb through `scrollbarColor`/`scrollbarWidth` (measured in `runtime/layout.runtime.test.tsx`) and sets the overflow axes |
 | absolute scroll offset | present (`onScrollChange`, `scrollTo`) | `ScrollArea` forwards `onScrollChange` and is a keyboard scroll region (arrows, PageUp/PageDown, Home/End) through the renderer, measured in a window |
+| a list revealing its own highlight | absent (`scrollIntoView` scrolls to a scroller's **direct child**, and `Select` never scrolls for its highlight) | a `Select` row brings itself into view after commit from the row's and the list's painted boxes (`core/scroll.ts`'s `revealScroll`), so a row past the 320px cap and a row inside a group are both revealed |
 | fade mask | absent | no edge fade: the scroller paints a hard edge |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
 | `./button` | published (headless) | `Button` keeps this package's contract — the recipe, `loading`, `StateStyle<ButtonState>` — and does not wrap the headless one yet (tracked in `TODO.md`) |

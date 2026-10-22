@@ -86,7 +86,11 @@ painted label text.
 
 Owned by GPUix's Select: the trigger opens with Enter/Space, the arrows move the
 highlight, Enter commits, Escape dismisses. This wrapper does not intercept any
-key.
+key, and it adds one behaviour the runtime omits: **the highlighted row is kept
+inside the list**. GPUix never moves the list for its own highlight, so a row the
+arrows reached past the 320px cap used to stay off screen. The row itself reveals
+its own highlight (`core/scroll.ts`'s `revealScroll` reads the row's and the
+list's painted boxes), which also works for a row nested in a group.
 
 ## Accessibility
 
@@ -134,16 +138,16 @@ state of its own.
   the open animation or the outside-click rules. **Measured on 0.11.0:** the
   layer snaps into the window (`fit: "snap"` with an 8px margin), so a trigger at
   the bottom edge opens a list that sits inside it instead of painting off it.
-- **A long list scrolls on the wheel, but an arrow does not reveal its row.**
-  GPUix's content sets no maximum height and no overflow, and its
+- **A long list scrolls on the wheel, and the keyboard reveals its row.** GPUix's
+  content sets no maximum height and no overflow, and its
   `SelectScrollUpButton`/`SelectScrollDownButton` are empty elements in 0.11.0,
   so the wrapper caps the surface at the menus' 320px and makes it a scroller:
-  measured, a 40-option list paints a 320px box, the wheel moves it to `-200`
-  and the runtime paints its scrollbar. What stays missing is the reveal — the
-  runtime never scrolls the highlighted row into view, so twenty ArrowDowns
-  leave the offset at `0` and a keyboard user cannot reach a row past the
-  edge. Keep a keyboard-critical list short, or use a `Combobox`/`SearchInput`
-  composition for a long one.
+  measured, a 40-option list paints a 320px box, the wheel moves it to `-200`,
+  and a keyboard move to a row past the fold scrolls the list until that row is
+  inside it. The reveal is this package's arithmetic over two painted boxes
+  (`revealScroll`), not the runtime's `scrollIntoView`, which scrolls a scroller
+  to the index of its **direct child** and so could only reveal a whole group.
+  Keep a keyboard-critical list short anyway; there is no type-ahead to jump.
 - No search or type-ahead. A long list wants a combobox, which is Tier 2.
 - No multi-select.
 
@@ -152,10 +156,13 @@ state of its own.
 - `src/components/Select.test.tsx` — trigger chrome, the keyboard ring (ring
   role, destructive while invalid, absent while disabled), list surface and item
   states, both state-aware callbacks receiving their live state and winning, and
-  the selected row's mark coming from the state the runtime reports. Four group
-  cases: the flat list in render order, the caption's muted role and one-pixel
-  rule, the group/rule/group tree, and a grouped row still being a real item with
-  its own state function.
+  the selected row's mark coming from the state the runtime reports. Group cases:
+  the flat list in render order, the caption's muted role and one-pixel rule, the
+  group/rule/group tree, and a grouped row being a row of its own.
+- `src/core/scroll.test.ts` — the reveal arithmetic: a row below the fold moves
+  the list by exactly its overshoot, a row above moves it back by the gap, a row
+  already inside (or ending on the fold) is `None`, a row taller than the list
+  aligns its top, and the horizontal offset is kept.
 - `runtime/fields.runtime.test.tsx` — opens, paints its options and commits a
   clicked option in the real renderer; the trigger and an option row are
   addressed by `triggerTestId`/`itemTestId` rather than by walking children and
@@ -164,11 +171,13 @@ state of its own.
   and the
   mark moves to the row that becomes selected (negative control measured:
   rendering the label alone fails `expected [] to have a length of 1`). Open
-  state and dismissal are GPUix's. Two placement cases measure the limits above:
-  a bottom-edge trigger's list is painted inside the window in order, and a
-  40-option list is a 320px scroller whose wheel offset moves while its keyboard
-  highlight does not reveal itself. A grouped list paints both captions and commits a row clicked
-  inside a group.
+  state and dismissal are GPUix's. Three placement cases measure the behaviour
+  above: a bottom-edge trigger's list is painted inside the window in order, a
+  40-option list is a 320px scroller whose wheel offset moves, and twenty
+  ArrowDowns keep the highlighted row inside that scroller (both directions, and
+  the negative control measured: without the reveal the offset stays at `0`); a
+  grouped list's highlighted row is revealed by the same arithmetic. A grouped
+  list paints both captions and commits a row clicked inside a group.
 
 ```sh
 nub run --filter @gpuixui/primitives test

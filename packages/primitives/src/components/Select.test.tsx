@@ -10,7 +10,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { isValidElement, type ReactElement } from "react";
+import { type ReactElement } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -26,6 +26,7 @@ import * as primitives from "../index.js";
 import {
   isSelectGroup,
   renderSelect,
+  renderSelectRow,
   selectContentStyle,
   selectItemStyle,
   selectLabelStyle,
@@ -34,6 +35,7 @@ import {
   selectTriggerStyle,
   type SelectEntry,
   type SelectItemState,
+  type SelectOption,
   type SelectTriggerState,
 } from "./Select.js";
 import { tooltipStyle } from "./Tooltip.js";
@@ -56,30 +58,20 @@ const itemParts = (element: ReactElement): ReadonlyArray<ReactElement> => {
   return elementChildren(content);
 };
 
-/** A React element, decoded at the boundary instead of asserted. */
-const ElementNode = Schema.declare(
-  (input: unknown): input is ReactElement =>
-    typeof input === "object" && input !== null && isValidElement(input),
-  { description: "A React element, before the runtime sees it." },
-);
-
-/** A row's children function, which the runtime calls with the row's state. */
-const rowChildren = (
-  item: ReactElement,
-): ((state: SelectItemState) => unknown) =>
+/** The option a row component carries, decoded at the boundary. */
+const optionOf = (row: ReactElement): SelectOption =>
   expectSome(
     Schema.decodeUnknownOption(
       Schema.declare(
-        (input: unknown): input is (state: SelectItemState) => unknown =>
-          typeof input === "function",
-        { description: "A SelectItem's function children." },
+        (input: unknown): input is SelectOption =>
+          typeof input === "object" &&
+          input !== null &&
+          "value" in input &&
+          "label" in input,
+        { description: "A Select row's option." },
       ),
-    )(expectSome(elementProp(item, "children"))),
+    )(expectSome(elementProp(row, "option"))),
   );
-
-/** The row a selected or resting item paints. */
-const rowOf = (item: ReactElement, state: SelectItemState): ReactElement =>
-  expectSome(Schema.decodeUnknownOption(ElementNode)(rowChildren(item)(state)));
 
 /** Two named groups, the second with a disabled row. */
 const grouped: ReadonlyArray<SelectEntry> = [
@@ -148,7 +140,7 @@ describe("Select groups", () => {
     ).toHaveLength(3);
   });
 
-  it("keeps every grouped row a real item with its own state function", () => {
+  it("keeps every grouped row a row of its own", () => {
     const element = renderSelect({ options: grouped }, testTheme);
     const content =
       elementChildren(element)[1] ??
@@ -159,12 +151,7 @@ describe("Select groups", () => {
     expect(
       expectSome(elementProp(label ?? expect.fail("no label"), "children")),
     ).toBe("Fruit");
-    expect(
-      expectSome(elementProp(apple ?? expect.fail("no item"), "value")),
-    ).toBe("apple");
-    expect(
-      rowOf(apple ?? expect.fail("no item"), { ...rest, selected: true }),
-    ).toBeDefined();
+    expect(optionOf(apple ?? expect.fail("no item")).value).toBe("apple");
   });
 });
 
@@ -272,40 +259,22 @@ describe("Select", () => {
 
   it("marks the selected row from the state the runtime reports", () => {
     // The bug guarded: a selected row was only a tint, so a reader who cannot
-    // rely on colour had no mark. The children are a function of the row's own
-    // reported state, so an uncontrolled Select needs no mirror of its value.
-    const element = renderSelect(
-      {
-        options: [
-          { value: "alpha", label: "Alpha" },
-          { value: "beta", label: "Beta" },
-        ],
-        value: "beta",
-      },
-      testTheme,
-    );
-    const [first, second] = itemParts(element);
-    expect(
-      elementChildren(
-        rowOf(first ?? element, {
-          selected: false,
-          highlighted: false,
-          disabled: false,
-        }),
-      ),
-    ).toStrictEqual([]);
+    // rely on colour had no mark. The mark is read off the row the state
+    // produces, so an uncontrolled Select needs no mirror of its value.
     const marks = elementChildren(
-      rowOf(second ?? element, {
-        selected: true,
-        highlighted: false,
-        disabled: false,
-      }),
+      renderSelectRow({ value: "beta", label: "Beta" }, testTheme, true),
     );
     expect(marks).toHaveLength(1);
-    expect(expectSome(elementProp(marks[0] ?? element, "name"))).toBe("check");
-    expect(expectSome(elementProp(marks[0] ?? element, "color"))).toBe(
+    const mark = marks[0] ?? expect.fail("the selected row painted no mark");
+    expect(expectSome(elementProp(mark, "name"))).toBe("check");
+    expect(expectSome(elementProp(mark, "color"))).toBe(
       testTheme.colors.popoverForeground,
     );
+    expect(
+      elementChildren(
+        renderSelectRow({ value: "alpha", label: "Alpha" }, testTheme, false),
+      ),
+    ).toStrictEqual([]);
   });
 
   it("hands the trigger style callback its live state and lets its result win", () => {

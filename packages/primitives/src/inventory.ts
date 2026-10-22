@@ -350,7 +350,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "Options are data: grouped, but no rich options or compound escape hatch",
       "Group captions are painted, not announced (SelectGroup has no role)",
       "No search or type-ahead and no multi-select",
-      "A long list is capped at 320px and scrolls on the wheel; an arrow does not reveal its row (runtime gap)",
+      "A long list is capped at 320px and scrolls on the wheel; the highlighted row reveals itself by painted-box arithmetic (the runtime never does)",
       "Open animation, positioning and dismissal are the runtime's",
     ],
     source: ["src/components/Select.tsx"],
@@ -358,6 +358,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     example: formExample,
     tests: [
       "src/components/Select.test.tsx",
+      "src/core/scroll.test.ts",
       "runtime/fields.runtime.test.tsx",
     ],
   },
