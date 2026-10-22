@@ -534,7 +534,7 @@ getTheme("light"); // the default light theme, unchanged
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
 | `selected` | `#E0E3FF` | `#231B59` | selected row or item |
 | `selectedForeground` | `#2E2370` | `#E0E3FF` | text on `selected` |
-| `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface |
+| `disabled` | `#F2F2F2` | `#1A1A1A` | disabled surface |
 | `disabledForeground` | `#5A5A5A` | `#8A8A8A` | disabled text |
 | `skeleton` | `#D6D6D6` | `#3D3D3D` | loading placeholder |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb |
@@ -1287,7 +1287,10 @@ sits on — `background`, `card` and `popover` — and over the two group strips
 disabled control sits inside: a `muted` toolbar and a segmented `secondary`
 panel. The base light theme's `disabled` fill *is* its `muted` value, so a
 disabled field in a toolbar has no fill of its own and the strip around it is the
-only background its label has. Every shipped, high-contrast, platform and
+only background its label has; both high-contrast variants take the same quiet
+step, and the *face* it must not equal is the enabled control's — a separate
+placement in [Decorative surfaces](#decorative-surfaces). Every shipped,
+high-contrast, platform and
 authored theme clears the floor; of the page placements the tightest is Linux
 dark's unavailable label on a popover at 1.76:1, and the two group strips add the
 tightest pair in the set — Linux dark's label on its `secondary` panel at 1.56:1,
@@ -1360,11 +1363,16 @@ disabledAction(theme);
 
 That is the pair `contrastPairs` already measures — the label on its own fill, on
 the three page surfaces and on the two group strips — so the replacement is a
-measured state rather than a second composite nothing checks. A **field** keeps
-fading on `background`, `card` and `popover`: its fill is `input`, and the faded
-label clears the floor on all three. A filled action and the menu row already
-paint the pair; the two recipe sets and the components' `Button` are the
-interlock left in `TODO.md`.
+measured state rather than a second composite nothing checks. The **fill** has a
+second job the pair does not cover: it replaces the face of an enabled control,
+so it must not wear one of those faces (`decorative.ts` §Decorative surfaces).
+Measured, both high-contrast themes shipped `disabled` equal to `secondary`, so
+an unavailable action and an enabled tonal action painted the same box in the
+variant a reader selects for clarity; `disabled` is the quiet step now. A
+**field** keeps fading on `background`, `card` and `popover`: its fill is
+`input`, and the faded label clears the floor on all three. A filled action and
+the menu row already paint the pair; the two recipe sets and the components'
+`Button` are the interlock left in `TODO.md`.
 
 #### The dim a control paints while Tab is elsewhere
 
@@ -1425,17 +1433,19 @@ keyboardDimFailures(lightTheme); // [] — every dimmed label stays visible
 
 ### Decorative surfaces
 
-Nine surfaces carry no text and are not an essential boundary, so WCAG's floors
+Ten surfaces carry no text and are not an essential boundary, so WCAG's floors
 do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
 (`overlay`), a status message's soft tint and its edge, a scrollbar thumb, the
 wash a row is tinted with while it is hovered, pressed, selected or accented, the
-resting fill of a tonal action (`secondary`), and the shadow a raised surface
-drops. They still have one job — be seen — so they get one floor of their own,
+resting fill of a tonal action (`secondary`), the face a control wears while it
+is unavailable (`disabled`), and the shadow a raised surface drops. They still
+have one job — be seen — so they get one floor of their own,
 `decorativeFloor = 1.05:1`. Below it a
 surface reads as the fill it is painted on: a card without an edge, a skeleton
 that looks like an empty row, a dialog with no layer behind it, a message with no
 surface or no boundary, a scroller whose thumb nobody can find, a menu row that
-does not answer the pointer, a button that looks like a label.
+does not answer the pointer, a button that looks like a label, a disabled
+control that looks available.
 
 `decorativeFailures(theme, floor?)` measures every placement the system paints,
 compositing a translucent role over its surface first, so the veil — translucent
@@ -1453,6 +1463,7 @@ how a status edge is measured at the alpha its component actually uses:
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
 | stateWash | `hover`, `active`, `selected`, `accent` | `background`, `card`, `popover`, `muted` |
 | filledAction | `secondary` | `background`, `card`, `popover`, `muted` |
+| disabledFace | `disabled` | `primary`, `secondary`, `destructive`, `accent`, `input` |
 
 The thumb is chrome: the platform paints and sizes it and the role only tints it,
 so it is not held to the 3:1 a control boundary gets. It is still held to being
@@ -1497,6 +1508,27 @@ popovers. The base light `secondary` is now `#E1E5EC` (one neutral step above
 same value as a pressed ghost, `borderStrong` darkened to `#727D8C` to keep its
 3:1 on the new fill, and each affected platform style and authored look carries
 its own control face.
+
+A **disabled face** is the same defect in the other direction. A disabled control
+does not sit on a strip; it replaces the control, so the comparison is face
+against face: an unavailable action that wears the fill of the enabled one beside
+it tells the reader it can be pressed. `disabledAction(theme)` (see
+[The disabled floor](#the-disabled-floor)) paints the neutral `disabled` role,
+and both high-contrast themes shipped it equal to `secondary` — the enabled tonal
+action's own fill — so in the variant a reader selects *for* clarity the two
+painted the same box and only the lighter label said which was which;
+high-contrast light's disabled face was also 1.03:1 from the `accent` a checked
+toggle wears. It is now the quiet step (`#F2F2F2` / `#1A1A1A`), which clears the
+tonal action, the accent on-state, a field's fill, and both saturated actions in
+both variants. The five faces are `primary`, `secondary`, `destructive`,
+`accent` and `input`: an unavailable field must not look like an available one
+either. The **strip** behind the control is deliberately not measured — the
+neutral fill is a quiet surface by design, and in four shipped styles it carries
+a quiet strip's own value (the base light theme's `disabled` *is* its `muted`,
+the base dark theme's is its `popover` and toolbar, and both high-contrast
+variants' was their `secondary`); a fill that matches a toolbar is a quiet
+control on a quiet strip, while a fill that matches an enabled face is the state
+defect.
 
 This is the **perceptibility** claim, not the 3:1 control-boundary claim: a
 component that needs a hard edge paints `borderStrong` on the strips

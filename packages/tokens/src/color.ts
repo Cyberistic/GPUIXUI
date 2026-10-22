@@ -355,7 +355,12 @@ export const highContrastLightColors = {
   active: "#D6D6D6",
   selected: "#E0E3FF",
   selectedForeground: "#2E2370",
-  disabled: "#E8E8E8",
+  // Not `secondary`'s own value: the two shipped as `#E8E8E8`, so a disabled
+  // action wore the fill of the enabled tonal action beside it and only its
+  // lighter label said which was which (`decorative.ts` §disabledFace). The
+  // quiet step also clears a card and a field, so an unavailable field is not
+  // an available one.
+  disabled: "#F2F2F2",
   disabledForeground: "#5A5A5A",
   skeleton: "#D6D6D6",
   scrollbar: "#9A9A9A",
@@ -409,7 +414,11 @@ export const highContrastDarkColors = {
   active: "#3D3D3D",
   selected: "#231B59",
   selectedForeground: "#E0E3FF",
-  disabled: "#2E2E2E",
+  // Not `secondary`'s value: both shipped as `#2E2E2E`, so an unavailable
+  // action and the enabled tonal action beside it painted the same box in the
+  // variant a reader picks *for* clarity (`decorative.ts` §disabledFace). The
+  // quiet step also clears the field and the accent on-state.
+  disabled: "#1A1A1A",
   disabledForeground: "#8A8A8A",
   skeleton: "#3D3D3D",
   scrollbar: "#8A8A8A",

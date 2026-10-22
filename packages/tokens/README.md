@@ -455,7 +455,12 @@ control, and a faded `primary` label lands at 1.47:1–1.49:1 on a card in four 
 the light styles (Linux, macOS, Windows XP Luna, Windows 7 Aero). So a filled
 action is measured on the page only, and `disabledAction(theme)` is the paint a
 disabled action wears anywhere else — `disabled` behind `disabledForeground`, the
-pair the table already measures.
+pair the table already measures. Its **fill** also replaces the face of the
+control it makes unavailable, so `decorativeFailures` holds it apart from
+`primary`, `secondary`, `destructive`, `accent` and `input`: both high-contrast
+themes shipped `disabled` equal to `secondary`, so an unavailable action and an
+enabled tonal action painted the same box in the variant a reader selects for
+clarity.
 
 ```ts
 import { auditTheme } from "@gpuixui/tokens";
@@ -466,7 +471,7 @@ audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
 audit.invalidNumbers; // [] — every size, length and shadow is layable, every leading reaches its size, every control height and row height is pressable, and the strong body role outweighs the body it emphasises
 audit.contrast; // [] — every measured pair meets its floor
-audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face and shadow is visible
+audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face, disabled face and shadow is visible
 audit.series; // [] — every chart swatch is perceivable and distinct
 audit.selection; // [] — every selection wash is visible and keeps its text readable
 audit.indicators; // [] — every progress fill, spinner dot and presence mark is visible

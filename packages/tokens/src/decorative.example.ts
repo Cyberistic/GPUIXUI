@@ -34,6 +34,15 @@ export const flatShadowBrand = extendTheme(lightTheme, {
   colors: { shadow: lightTheme.colors.background },
 });
 
+/**
+ * A brand whose unavailable action wears the enabled tonal action's fill. The
+ * two controls sit side by side in a toolbar and paint the same box; only the
+ * lighter label says which one a reader can press.
+ */
+export const unavailableActionBrand = extendTheme(lightTheme, {
+  colors: { disabled: lightTheme.colors.secondary },
+});
+
 /** A failure written the way a theme editor shows it. */
 export const report = (theme: Theme): ReadonlyArray<string> =>
   decorativeFailures(theme).map(

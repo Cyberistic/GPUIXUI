@@ -2,8 +2,9 @@
  * The perceptibility contract for the surfaces that carry no text: dividers,
  * skeleton fills, the modal veil, a status message's soft surface and its edge,
  * the scrollbar thumb, the wash a control tints its surface with while it is
- * hovered, pressed, selected or accented, the fill a tonal action rests on, and
- * the shadow a raised surface drops.
+ * hovered, pressed, selected or accented, the fill a tonal action rests on, the
+ * face a control wears while it is unavailable, and the shadow a raised surface
+ * drops.
  *
  * WCAG's text and non-text floors do not cover them — they are decorative, and
  * the veil's job is to suppress what is behind it — so they have no floor at all
@@ -14,8 +15,9 @@
  * is a status message with no surface; an edge that matches its tint is a
  * message with no boundary; a hover that matches the row it tints is a menu with
  * no feedback; a tonal action painted in its toolbar's own colour is a label a
- * reader cannot tell is a button; a shadow that cannot darken the page it falls
- * on leaves every raised surface flat. One floor covers all nine, 1.05:1.
+ * reader cannot tell is a button; a disabled control painted in the face of the
+ * one it replaced looks available; a shadow that cannot darken the page it falls
+ * on leaves every raised surface flat. One floor covers all ten, 1.05:1.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
@@ -39,7 +41,8 @@ export interface DecorativeSurface {
    * fill behind a status message, `statusEdge` bounds it, `scrollbar` is the
    * thumb a scroller paints, `stateWash` is the tint behind a hovered, pressed,
    * selected or accented row, `filledAction` is the resting fill of a tonal
-   * action, `elevation` is the shadow a raised surface drops.
+   * action, `disabledFace` is the fill a control wears while it is unavailable,
+   * `elevation` is the shadow a raised surface drops.
    */
   readonly surface:
     | "divider"
@@ -50,6 +53,7 @@ export interface DecorativeSurface {
     | "scrollbar"
     | "stateWash"
     | "filledAction"
+    | "disabledFace"
     | "elevation";
   /** The role painted. Its alpha, if it has one, is part of the measurement. */
   readonly role: keyof ThemeColors;
@@ -131,6 +135,34 @@ const filledActionRole = "secondary" as const;
 const filledActionStrips = ["background", "card", "popover", "muted"] as const;
 
 /**
+ * The faces a control can wear while it is available.
+ *
+ * A disabled control replaces one of these rather than sitting on a strip, so
+ * the comparison is face against face: an unavailable action that wears the same
+ * fill as an enabled one tells the reader it is available. `secondary` is the
+ * action it collides with most easily — both are neutral — `accent` is the
+ * toggle's on-state and `input` is the fill of an available field, while
+ * `primary` and `destructive` are the saturated faces a quiet neutral can never
+ * reach in a palette that keeps them readable.
+ *
+ * The strip behind the control is deliberately **not** measured: the neutral
+ * `disabled` fill is a quiet surface by design, and in four shipped styles it
+ * carries a quiet strip's own value (the base light theme's `disabled` *is* its
+ * `muted`, the base dark theme's is its `popover` and toolbar, both
+ * high-contrast variants' is their `secondary`). A fill that matched an enabled
+ * face is the state defect; a fill that matches a toolbar is a quiet control on
+ * a quiet strip.
+ */
+const disabledFaceRole = "disabled" as const;
+const enabledFaces = [
+  "primary",
+  "secondary",
+  "destructive",
+  "accent",
+  "input",
+] as const;
+
+/**
  * The shadow a raised surface drops, on every strip it can float over.
  *
  * A level's strength lives in its own alpha byte, so the painted colour is the
@@ -156,7 +188,8 @@ const elevationStrips = ["background", "card", "popover", "muted"] as const;
  * status surface is the tint a message sits in and its edge bounds it, on every
  * strip a message is placed on; a tonal action sits on any of the four strips,
  * because a toolbar, a card and a popover all hold buttons; a raised surface
- * floats over the same four, and its shadow is what tells it apart from them.
+ * floats over the same four, and its shadow is what tells it apart from them;
+ * and a disabled control's face is measured against each face it can replace.
  */
 export const decorativeSurfaces: readonly DecorativeSurface[] = [
   { surface: "divider", role: "border", over: "background" },
@@ -191,6 +224,13 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
       role: elevationRole,
       over,
       level: elevationLevel,
+    }),
+  ),
+  ...enabledFaces.map(
+    (over): DecorativeSurface => ({
+      surface: "disabledFace",
+      role: disabledFaceRole,
+      over,
     }),
   ),
   ...stateWashRoles.flatMap((role) =>

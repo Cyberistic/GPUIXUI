@@ -91,7 +91,10 @@ export function disabledFadeFailures(
 
 /** The paint a disabled action wears off the page. */
 export interface DisabledActionStyle {
-  /** The fill: the theme's neutral `disabled` role, not the action's own. */
+  /**
+   * The fill: the theme's neutral `disabled` role, not the action's own — and
+   * not the face of an enabled control, which the decorative contract measures.
+   */
   readonly backgroundColor: string;
   /** The label: `disabledForeground`, measured against that fill. */
   readonly color: string;
@@ -106,6 +109,11 @@ export interface DisabledActionStyle {
  * neutral pair `contrastPairs` already measures on every surface a control sits
  * on. A control that can appear on a card or a popover paints this and removes
  * its fade; one that only ever sits on the page may keep fading.
+ *
+ * The fill replaces the control's own face rather than sitting on a strip, so it
+ * must also stay distinguishable from every face an enabled control wears
+ * (`decorative.ts` §disabledFace). Both high-contrast themes shipped it equal to
+ * `secondary`; it is the quiet step now.
  *
  * @example
  * ```tsx

@@ -48,7 +48,13 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { alpha, lightColors, palette } from "./color.js";
+import {
+  alpha,
+  highContrastDarkColors,
+  highContrastLightColors,
+  lightColors,
+  palette,
+} from "./color.js";
 import {
   decorativeFailures,
   decorativeFloor,
@@ -60,6 +66,7 @@ import {
   flatActionBrand,
   flatShadowBrand,
   report,
+  unavailableActionBrand,
 } from "./decorative.example.js";
 import { statusEdgeAlpha, statusTone, statusTones } from "./styles.js";
 import { platformNames } from "./platforms.js";
@@ -260,6 +267,71 @@ describe("decorative surfaces", () => {
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it("measures a disabled face against every available face it replaces", () => {
+    // A disabled control does not sit on a strip, it replaces the control: the
+    // comparison is face against face. An unavailable action that wears the same
+    // fill as the enabled one beside it tells the reader it can be pressed.
+    const missing: ReadonlyArray<string> = [
+      "primary",
+      "secondary",
+      "destructive",
+      "accent",
+      "input",
+    ].filter((over) => !measured("disabledFace", "disabled", over));
+
+    expect(missing).toEqual([]);
+  });
+
+  it("reports a disabled action painted in the enabled action's face", () => {
+    // The shipped defect: both high-contrast themes carried `disabled` equal to
+    // `secondary`, so the one variant a reader selects for clarity painted an
+    // unavailable action and an available tonal action as the same box.
+    const broken = {
+      colors: {
+        ...highContrastLightColors,
+        disabled: highContrastLightColors.secondary,
+      },
+    };
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, role, over }) =>
+          surface === "disabledFace" &&
+          role === "disabled" &&
+          over === "secondary",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+  });
+
+  it("reports the high-contrast faces that collided before the split", () => {
+    // Measured on the shipped values: both variants painted `disabled` and
+    // `secondary` in the same colour, and high-contrast light's disabled face
+    // was also 1.03:1 from the accent a checked toggle wears.
+    const beforeLight = {
+      colors: { ...highContrastLightColors, disabled: "#E8E8E8" },
+    };
+    const beforeDark = {
+      colors: { ...highContrastDarkColors, disabled: "#2E2E2E" },
+    };
+
+    expect(
+      decorativeFailures(beforeLight)
+        .filter(({ surface }) => surface === "disabledFace")
+        .map(({ over, ratio }) => [over, ratio]),
+    ).toMatchObject([
+      ["secondary", 1],
+      ["accent", 1.0324046406832623],
+    ]);
+    expect(
+      decorativeFailures(beforeDark).find(
+        ({ surface, over }) =>
+          surface === "disabledFace" && over === "secondary",
+      )?.ratio,
+    ).toBe(1);
+    expect(decorativeFailures(highContrastLightTheme)).toEqual([]);
+    expect(decorativeFailures(highContrastDarkTheme)).toEqual([]);
   });
 
   it("reports a filled action that matches the strip it sits on", () => {
@@ -505,6 +577,13 @@ describe("the documented example", () => {
     expect(decorativeSurfacesAreVisible(flatShadowBrand)).toBe(false);
     expect(report(flatShadowBrand)).toContain(
       "elevation: shadow on background is 1.00",
+    );
+  });
+
+  it("reports the brand whose unavailable action wears the enabled one's face", () => {
+    expect(decorativeSurfacesAreVisible(unavailableActionBrand)).toBe(false);
+    expect(report(unavailableActionBrand)).toContain(
+      "disabledFace: disabled on secondary is 1.00",
     );
   });
 });

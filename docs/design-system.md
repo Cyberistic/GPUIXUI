@@ -317,7 +317,7 @@ card, popover and toolbar.
 | hover | `hover` wash on ghost and subtle surfaces; a filled role — an action, or a toggle's `accent` on-state — moves to `filledHover(theme, role)` |
 | pressed | `active` wash; a filled role moves to `filledPressed(theme, role)`, a step further than its hover unless the label's floor stops it |
 | selected | `selected` + `selectedForeground` |
-| disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible; held to `contrastFloors.disabled` so the state stays visible rather than to a readability floor |
+| disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible; held to `contrastFloors.disabled` so the state stays visible rather than to a readability floor, and its fill is held apart from every enabled control face (§8/§9) |
 | invalid | the `destructive` role as the field's edge and as its `focusVisible` line; the fill and text roles do not change, so the value and placeholder stay readable |
 | link | `brandText(theme)` — the brand derived into a text colour that reads on all six surfaces it can sit on, with `hover` / `active` washes behind it; never the raw `primary` fill role |
 | loading | a mark — `primary`, or a status tone's readable role — never the disabled fade: a busy control keeps its label, its tab stop and its announcement |
@@ -433,6 +433,19 @@ surface a control sits on. A filled action and the menu row already paint the
 pair; the two recipe sets and the components' own `Button` remain the interlock
 in `TODO.md` → Interlocks.
 
+**The disabled fill must not wear an enabled control's face.** A disabled
+control does not sit on a strip, it replaces the control, so the neutral fill is
+measured against `primary`, `secondary`, `destructive`, `accent` and `input` at
+the same 1.05:1 perceptibility floor (§9). It caught both high-contrast themes:
+`disabled` was `secondary`'s own value, so an unavailable action and an enabled
+tonal action painted the same box in the variant a reader selects *for* clarity,
+and high-contrast light's disabled face was also 1.03:1 from the `accent` a
+checked toggle wears. The quiet step (`#F2F2F2` / `#1A1A1A`) clears all five.
+The strip behind the control is deliberately not measured: the base light
+theme's `disabled` *is* its `muted`, the base dark theme's is its `popover` and
+toolbar, and both high-contrast variants' is now their `muted` — a quiet fill on
+a quiet strip is the design, a quiet fill on an enabled face is the defect.
+
 **Keyboard focus dims every other control, and that is a paint too.** While one
 element has keyboard focus, `@gpuix/native` multiplies every other focusable
 element's opacity by `keyboardFocusDimOpacity` (`0.4`, on by default and per
@@ -516,6 +529,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | soft status surface against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, elevation shadow (at its deepest level) | 1.05:1 | 1.05:1 |
 | a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
+| a disabled action's fill against each face an enabled control wears (`primary`, `secondary`, `destructive`, `accent`, `input`) | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
 | text inside the selection wash (input, page, card, popover) | 7:1 | 7:1 |
 | secondary text inside the selection wash (page, card, popover) | 4.5:1 | 7:1 |
@@ -531,7 +545,8 @@ can fail: a palette edit that reduces contrast fails the gate.
 The surfaces that carry no text are measured too, because "subtle" is not
 "invisible": a divider, a skeleton fill, the modal veil, a status message's soft
 tint and its edge, the scrollbar thumb, the wash a row is hovered, pressed,
-selected or accented with, the resting fill of a tonal action and the shadow of a
+selected or accented with, the resting fill of a tonal action, the face a
+disabled control wears and the shadow of a
 raised surface are held to 1.05:1 against what they are painted on. The veil is composited over its surface rather than rejected as
 translucent, and the two places it is measured are the content surfaces a modal
 covers; a black page cannot be darkened, and a high-contrast theme separates its
