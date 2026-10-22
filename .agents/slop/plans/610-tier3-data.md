@@ -128,6 +128,28 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   `packages/data/docs/frozen-columns.mdx`, and the Tier 3 Tables and
   Column-configuration rows state the composition. Evidence:
   `data-grid-frozen-column`, `frozen-column-lifecycle`.
+- **The README ships what it claims**: §Usage's pinned-column paragraph names
+  `FrozenTable` (the two-pane mirror, the data-pane-only pan, the whole-grid
+  press) instead of calling pinned columns unshipped, and the status table's
+  row reads *shipped, window-verified*. `src/readme.test.ts` derives the claim
+  from the tree rather than repeating it — the status row, the root export, the
+  example registration, the docs page, every probe id in the playground's two
+  registries, every component named in a table row against the root exports,
+  and every prop the README's own `<FrozenTable>` snippet passes against
+  `FrozenTableProps`. Directions measured: restoring the retracted row fails
+  two cases, and the citation case failed until the paragraph named the page.
+- **Virtualization has a page**: `packages/data/docs/virtualization.mdx`
+  documents both `<virtual-list>` modes and the windowed table — the anchor
+  rule, the overdraw, the reveal order, the shrink re-clamp, the measured body
+  height — with the API tables, the accessibility budget, the limitations and
+  the eight suites that hold them. It is mounted by the `data` collection; the
+  `/docs/data-display` link is recorded as a docs-site interlock row.
+- **The empty state sits inside the grid**: `TableEmpty` wrote no role, so the
+  accessibility tree described the body's `rowgroup` with the message's text
+  directly under it and no row or cell at all (measured: four nodes). It is a
+  `role="row"` holding one `role="cell"` box with the recipe's centred column;
+  `src/behaviour/table-empty-a11y.test.tsx` (2 cases) decodes the rendered tree
+  and fails with `the tree has no Cell node` when the role-less box returns.
 - **Phase 3 (columns and resizing) landed**: `columns/logic` (visibility,
   visible-order moves, per-column resize bounds, keyboard steps), `useColumns`,
   `ColumnMenu` (the component package's measured DropdownMenu) and
