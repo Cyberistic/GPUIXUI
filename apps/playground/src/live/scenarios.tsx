@@ -13084,6 +13084,7 @@ const ChartProbe = (): ReactNode => {
   const alphaBase = useRef<ImgInstance>(null);
   const alphaOver = useRef<ImgInstance>(null);
   const [frame, setFrame] = useState(1);
+  const [plotWidth, setPlotWidth] = useState<number>(PLOT_SIZE.width);
   const [svgStatus, setSvgStatus] = useState("pending");
 
   // The translucent plot is a second layer over the first: one buffer for the
@@ -13130,10 +13131,14 @@ const ChartProbe = (): ReactNode => {
     );
   }, []);
 
-  const plot = (testId: string, ref: typeof bufferImage) => (
+  const plot = (
+    testId: string,
+    ref: typeof bufferImage,
+    width: number = PLOT_SIZE.width,
+  ) => (
     <div
       style={{
-        width: PLOT_SIZE.width,
+        width,
         height: PLOT_SIZE.height,
         backgroundColor: hexOf(PLOT_BACKING),
       }}
@@ -13143,7 +13148,7 @@ const ChartProbe = (): ReactNode => {
         ref={ref}
         alt="A three-series bar plot"
         objectFit="fill"
-        style={{ width: PLOT_SIZE.width, height: PLOT_SIZE.height }}
+        style={{ width, height: PLOT_SIZE.height }}
       />
     </div>
   );
@@ -13162,7 +13167,7 @@ const ChartProbe = (): ReactNode => {
       }}
     >
       <div style={{ display: "flex", gap: theme.spacing.xl }}>
-        {plot("chart-buffer", bufferImage)}
+        {plot("chart-buffer", bufferImage, plotWidth)}
         {plot("chart-svg", svgImage)}
         <div
           testId="chart-alpha"
@@ -13212,8 +13217,19 @@ const ChartProbe = (): ReactNode => {
             New data
           </text>
         </Pressable>
+        <Pressable testId="chart-resize" onClick={() => setPlotWidth(180)}>
+          <text
+            style={{
+              ...textStyle(theme, "label"),
+              color: theme.colors.foreground,
+            }}
+          >
+            Wider
+          </text>
+        </Pressable>
       </Toolbar>
       <Readout testId="chart-frame">{`frame=${frame}`}</Readout>
+      <Readout testId="chart-width">{`width=${plotWidth}`}</Readout>
       <Readout testId="chart-svg-status">{`svg=${svgStatus}`}</Readout>
     </div>
   );
@@ -13241,13 +13257,19 @@ const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         (bounds) =>
           ctx.expectSome(`the ${testId} plot occupies its box`, bounds),
       );
-    const sample = (bounds: Box, pixel: { x: number; y: number }): string => {
+    const sampleIn = (
+      captured: Pixels.Pixels,
+      bounds: Box,
+      pixel: { x: number; y: number },
+    ): string => {
       const point = framePoint(pointIn(bounds, pixel), scale);
       return Option.match(
-        Option.fromNullishOr(Pixels.pixelAt(frame, point.x, point.y)),
+        Option.fromNullishOr(Pixels.pixelAt(captured, point.x, point.y)),
         { onNone: () => "outside the capture", onSome: describeColour },
       );
     };
+    const sample = (bounds: Box, pixel: { x: number; y: number }): string =>
+      sampleIn(frame, bounds, pixel);
     const paints = (captured: Pixels.Pixels, colour: Rgb, label: string) =>
       ctx.expectEqual(label, chartCount(captured, colour) > 0, true);
     const absent = (captured: Pixels.Pixels, colour: Rgb, label: string) =>
@@ -13359,6 +13381,56 @@ const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
           `the first buffer's series ${index + 1} is gone`,
         ),
       { concurrency: 1 },
+    );
+
+    // 5. A resize scales the buffer with its box: a chart in a split pane is
+    //    laid out again without the app re-drawing its pixels.
+    const barOf = (captured: Pixels.Pixels, colour: Rgb) =>
+      ctx.expectSome(
+        `the ${hexOf(colour)} bar has a painted bound`,
+        Option.fromNullishOr(
+          Pixels.boundsOfColour(
+            captured,
+            new Pixels.Rgba({ ...colour, a: 0xff }),
+          ),
+        ),
+      );
+    const before = yield* barOf(updated, REPLACEMENT[0]);
+    yield* ctx.host.click("chart-resize");
+    yield* ctx.expectEqual(
+      "the plot reports the width the press gave it",
+      yield* settleUntil(
+        ctx.host.text("chart-width"),
+        (value) => value === "width=180",
+      ),
+      "width=180",
+    );
+    yield* ctx.host.capture("chart-resized");
+    const resized = yield* ctx.host.pixels("chart-resized");
+    const grown = yield* box("chart-buffer");
+    yield* ctx.expectNear(
+      "the plot's box follows its width",
+      grown.width,
+      180,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the resized buffer still paints its series",
+      sampleIn(resized, grown, BAR_PIXEL),
+      describeColour(new Pixels.Rgba({ ...REPLACEMENT[0], a: 0xff })),
+    );
+    const after = yield* barOf(resized, REPLACEMENT[0]);
+    yield* ctx.expectNear(
+      "the buffer scales with the box, so the bar grows by the same share",
+      after.width / before.width,
+      1.5,
+      0.05,
+    );
+    yield* ctx.expectNear(
+      "the bar keeps its height through the resize",
+      after.height,
+      before.height,
+      2,
     );
   });
 

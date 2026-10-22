@@ -2806,7 +2806,7 @@ nub run --filter playground build
 nub apps/playground/dist/live/run.js --only chart-raster
 ```
 
-25 checks, green on 0.11.0. The fixture is `src/live/chart.ts` (three 14×30
+33 checks, green on 0.11.0. The fixture is `src/live/chart.ts` (three 14×30
 bars, one band of columns per series, plus the two-layer alpha plot) and its
 arithmetic — the bands do not overlap, the margin has no colour in it, a buffer
 pixel converts to a fraction of the painted box, the alpha bands and the
@@ -2819,18 +2819,20 @@ straight-alpha prediction — is held by `chart.test.ts` (9 cases).
 | Does a half-alpha mark composite over another mark? | Yes, and the buffer is **straight alpha**: `#0A84FF` at `0x80` over the opaque `#FF3B30` mark reads `rgba(132, 96, 152, 255)`, over the `#14223A` card `rgba(15, 83, 157, 255)` — both the sRGB mixture of the operands — while the same colour at `0xff` beside them stays `rgba(10, 132, 255, 255)` |
 | Does new data repaint? | A press pushes a second buffer: the frame carries `#9B59B6`, `#F1C40F` and `#16A085` and **none** of the first palette, with no re-mount and no re-layout call |
 | Do SVG bytes carry their own fills? | `setImage(Buffer.from(markup))` decodes and paints `#B14AFF`, `#00A893` and `#FF8A00` — the vector route, unlike `<svg source>`, which paints every shape in the one tint its `style.color` names |
+| Does a resize re-scale the buffer? | Yes, with no second `setImagePixels`: a press takes the plot's box from 120 to 180 points and the first bar's painted bound from its 120-box width to **1.5×** it, keeping its height and its own series colour — so a chart drawn at its layout size follows a splitter, it does not need re-rastering |
 
-Three negative controls measured, exit `1` each and restored green: pushing the
+Four negative controls measured, exit `1` each and restored green: pushing the
 first buffer on the "New data" press fails
 `the updated series 1 paints from the second buffer: expected true, got false`,
 painting the plot's backing in the theme's card colour fails
 `the plot's transparent margin shows the surface behind it: expected
 "rgba(20, 34, 58, 255)", got "rgba(25, 29, 37, 255)"` (the sample is a real
-frame read, not a constant), and pre-multiplying the translucent band's bytes
+frame read, not a constant), pre-multiplying the translucent band's bytes
 fails `a half-alpha mark over another mark composites onto it: expected
 "rgba(132, 96, 152, 255)", got "rgba(130, 63, 88, 255)"` — the frame reads a
 straight-alpha mixture, so a chart hands the element its own colour at its own
-alpha rather than a pre-multiplied one.
+alpha rather than a pre-multiplied one — and pinning the image to its first
+width while its box grows fails `the plot's box follows its width`.
 
 What a chart component should do with this:
 
@@ -2847,10 +2849,10 @@ What a chart component should do with this:
 5. **Labels are not part of the raster.** A chart composes `<text>` beside the
    image for axes and legends, and the raster carries the marks.
 
-Not measured here: resize — the element scales its buffer to its box, so a
-chart drawn at its layout size is the safe shape. A translucent mark is safe on
-either layer: the buffer's alpha is straight and composites over the layer
-below, so a stacked series is its own colour at its own share.
+A chart drawn at its layout size is the safe shape on both counts: a resize
+re-scales the buffer with the box, and a translucent mark composites over the
+layer below because the buffer's alpha is straight. Nothing about a raster plot
+is left unmeasured by this probe.
 
 ### `window-chrome` — measured on 0.11.0 here
 
