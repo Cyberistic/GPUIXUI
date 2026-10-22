@@ -1602,6 +1602,28 @@ its variant's floor. `contrast.test.ts`'s `the ring
 on the fill it hugs` suite reads both painters and reports the two erased rings,
 so the pairs cannot outlive the paint.
 
+A **filled action** is the one face the ring cannot be required on, and the
+reason is arithmetic rather than taste. `ring` *is* the brand — `ring` and
+`primary` are the same ramp step in twelve of the sixteen styles — so a focused
+primary action draws its focus line in its own fill: measured, the ring reads
+**1.00–1.38:1** on `primary` and **1.00–1.54:1** on `destructive` in every
+style. The pair a filled face would need is not one the palettes fail to meet; it
+is unsatisfiable. The outline sits at `outlineOffset: 0`, flush against both the
+fill and the strip behind it, so a ring colour would have to clear the boundary
+floor against both — and no luminance does in **8 of the sixteen** styles for
+`primary` and **9 of the sixteen** for `destructive`, while where a colour does
+exist its nearest point is still **0.11** of relative luminance away from the
+brand, so it is never the brand the ring is. Two of the four faces are paired and
+hold (`ring` on `secondary`, `ring` on `accent`), because a neutral face is close
+enough to the page for one colour to serve both; their derived
+`filledHover`/`filledPressed` fills are not, and the press drops below the floor
+in **8 of the sixteen** styles for `secondary` and **6** for `accent`. So the
+ring stays measured against the strips a filled action is drawn on,
+`ring-fill.test.ts` holds the four faces and the arithmetic, and the fix is a
+ring **separated** from the fill: an outline offset needs a window probe before
+the geometry can change, a two-tone ring is the other route, and both are the
+interlock in `TODO.md` → Interlocks.
+
 A **message's own tint** is the ring's last strip, and the same one the edge
 reaches. An `Alert` fills its tone's soft role and its documented action is a
 plain `Button`, which declares the keyboard ring at rest — so the focus cue is

@@ -676,6 +676,20 @@ disabled, so a declaration made anyway would stay painted on a control that
 refuses every key. The helper is the tokens package's statement of the rule both
 component packages already apply in their own seam.
 
+A **filled action** is the one face the ring cannot be required on. `ring` is the
+brand and `primary` is the brand, so the line is drawn in the fill it touches —
+**1.00–1.38:1** on `primary` and **1.00–1.54:1** on `destructive` in every
+shipped style — and the pair is unsatisfiable rather than unmet: at
+`outlineOffset: 0` one colour would have to clear the boundary floor against both
+the page and the fill, and no luminance does in 8 of the sixteen styles for
+`primary` (9 for `destructive`), while where one exists it is at least 0.11 of
+relative luminance from the brand. The neutral faces are paired and hold at rest,
+but their derived pointer fills are not — the press falls under the floor in
+**8 of the sixteen** styles for `secondary` and six for `accent`. So the ring
+stays measured on the strips a filled action sits on, and a ring **separated**
+from the fill (an outline offset, once a window probe has measured the geometry,
+or a two-tone ring) is the interlock in `TODO.md` → Interlocks.
+
 Selection never relies on colour alone for meaning: selected rows also carry
 `aria-selected` where the runtime exposes it.
 
@@ -703,7 +717,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | disabled text on its own `disabled` fill, on `background`/`card`/`popover` and on a `muted` toolbar or `secondary` panel (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
 | a filled role's derived pointer step (`filledHover` / `filledPressed` through `actionFeedbackPlacements`) against the fill it replaces | 1.05:1 | 1.05:1 |
-| focus ring on background, card, popover, muted and secondary, on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs, and on the four soft status tints an action inside a message draws it on; and `borderStrong` on those same strips (a floating surface included), on the field, on a soft status tint, on the `hover`/`active` wash a bordered control tints, and on the `accent`/`selected` wash a row paints under the same action | 3:1 | 4.5:1 |
+| focus ring on background, card, popover, muted and secondary, on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs, and on the four soft status tints an action inside a message draws it on — never on a filled action's own brand face, which no colour can satisfy (§8); and `borderStrong` on those same strips (a floating surface included), on the field, on a soft status tint, on the `hover`/`active` wash a bordered control tints, and on the `accent`/`selected` wash a row paints under the same action | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the four washes a row wears (`hover`/`active` on a menu or combobox row; `accent`/`selected` on a list row) | 3:1 | 4.5:1 |
 | soft status surface and its edge against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
