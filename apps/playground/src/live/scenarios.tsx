@@ -571,6 +571,17 @@ import {
   VERTICAL_SLIDER_IDS,
 } from "./vertical-slider.js";
 import {
+  emptySelection,
+  MODIFIER_ROWS,
+  MODIFIER_ROW_HEIGHT,
+  MODIFIER_SELECT_IDS,
+  pressedModifiers,
+  selectRow,
+  selectionState,
+  type LastPress,
+  type RowSelection,
+} from "./modifier-select.js";
+import {
   BOX_PAINT_BORDER,
   BOX_PAINT_BORDER_WIDTH,
   BOX_PAINT_FILL,
@@ -19167,6 +19178,301 @@ const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("movable-tabs");
   });
 
+/**
+ * The chord a desktop list selects with: `shift` extends from the row the
+ * reader last chose, `cmd` toggles one record, `cmd-shift` adds the range, and
+ * a plain press replaces the set.
+ *
+ * The runtime reports the held modifiers on the click event and the automation
+ * protocol takes them, but `AsyncSmokeHost` had no verb that holds one, so no
+ * probe had ever measured a modifier press. The readout prints the four flags
+ * the payload carried, so the probe reads the event rather than assuming the
+ * chord arrived, and the selection's paint is counted from the frame because a
+ * window reports no style.
+ */
+const ModifierSelectProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [selection, setSelection] = useState<RowSelection>(emptySelection);
+  const [last, setLast] = useState<Option.Option<LastPress>>(Option.none());
+  const [presses, setPresses] = useState(0);
+
+  const press = (index: number, event: EventPayload) => {
+    const modifiers = pressedModifiers(event.modifiers);
+    setSelection((current) => selectRow(current, index, modifiers));
+    setLast(
+      Option.some({
+        modifiers,
+        clickCount: Option.getOrElse(
+          Option.fromNullishOr(event.clickCount),
+          () => 0,
+        ),
+      }),
+    );
+    setPresses((count) => count + 1);
+  };
+
+  return (
+    <div
+      style={{
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        testId={MODIFIER_SELECT_IDS.caption}
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A list selected by chord: shift extends from the anchor, cmd toggles one
+        record, cmd-shift adds the range.
+      </text>
+      <div
+        testId={MODIFIER_SELECT_IDS.list}
+        style={{
+          width: 320,
+          backgroundColor: theme.colors.card,
+          borderWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+        }}
+      >
+        {Arr.map(Arr.range(0, MODIFIER_ROWS - 1), (index) => {
+          const chosen = Arr.contains(selection.chosen, index);
+          return (
+            <div
+              key={index}
+              testId={MODIFIER_SELECT_IDS.row(index)}
+              tabIndex={0}
+              role="option"
+              aria-selected={chosen}
+              onClick={(event: EventPayload) => press(index, event)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                height: MODIFIER_ROW_HEIGHT,
+                paddingLeft: theme.spacing.sm,
+                backgroundColor: chosen
+                  ? theme.colors.selected
+                  : theme.colors.card,
+                borderBottomWidth: theme.borderWidth.thin,
+                borderColor: theme.colors.border,
+                ...keyboardFocusRing(theme),
+              }}
+            >
+              <text
+                style={{
+                  ...textStyle(theme, "body"),
+                  color: chosen
+                    ? theme.colors.selectedForeground
+                    : theme.colors.foreground,
+                }}
+              >
+                {`File ${index}`}
+              </text>
+            </div>
+          );
+        })}
+      </div>
+      <text
+        testId={MODIFIER_SELECT_IDS.readout}
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {selectionState(selection, last, presses)}
+      </text>
+    </div>
+  );
+};
+
+const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(MODIFIER_SELECT_IDS.list);
+    yield* Effect.sleep(SETTLE);
+
+    const theme = palettes.dark;
+    const readout = () => ctx.host.text(MODIFIER_SELECT_IDS.readout);
+    const none = "cmd:false,ctrl:false,alt:false,shift:false";
+    const shift = "cmd:false,ctrl:false,alt:false,shift:true";
+    const cmd = "cmd:true,ctrl:false,alt:false,shift:false";
+    const both = "cmd:true,ctrl:false,alt:false,shift:true";
+
+    /** The readout after a press: the state the chord leaves and the payload it sent. */
+    const expected = (
+      chosen: string,
+      anchor: string,
+      chord: string,
+      flags: string,
+      presses: number,
+    ): string =>
+      `selected=${chosen} anchor=${anchor} mods=${chord} flags=${flags} click=1 presses=${presses}`;
+
+    // 1. A list opens with nothing chosen and no press delivered.
+    yield* ctx.expectEqual(
+      "the list opens with nothing chosen and no press delivered",
+      yield* readout(),
+      "selected=none anchor=none mods=none flags=none click=none presses=0",
+    );
+
+    // 2. A plain press is a set of one, and it anchors the next range.
+    yield* ctx.host.click(MODIFIER_SELECT_IDS.row(3));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a plain press selects the record it hit",
+      yield* readout(),
+      expected("3", "3", "none", none, 1),
+    );
+    yield* ctx.expectEqual(
+      "the pressed row holds the focus",
+      yield* focusedAfterPaint(ctx),
+      MODIFIER_SELECT_IDS.row(3),
+    );
+
+    // 3. Shift extends the range from the anchor, not from the pressed row.
+    yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(6), ["shift"]);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "shift extends the selection from the anchor",
+      yield* readout(),
+      expected("3,4,5,6", "3", "shift", shift, 2),
+    );
+
+    // 4. The same chord re-ranges backwards; the anchor does not move.
+    yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(1), ["shift"]);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a backwards range replaces the last one",
+      yield* readout(),
+      expected("1,2,3", "3", "shift", shift, 3),
+    );
+
+    // 5. Cmd adds one record and becomes the new anchor.
+    yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(5), ["cmd"]);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "cmd adds the record it hit and moves the anchor to it",
+      yield* readout(),
+      expected("1,2,3,5", "5", "cmd", cmd, 4),
+    );
+    yield* ctx.expectEqual(
+      "a chord press holds the focus the plain press does",
+      yield* focusedAfterPaint(ctx),
+      MODIFIER_SELECT_IDS.row(5),
+    );
+
+    // 6. The same chord again removes it, because a toggle is a toggle.
+    yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(5), ["cmd"]);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "cmd removes a record it already chose",
+      yield* readout(),
+      expected("1,2,3", "5", "cmd", cmd, 5),
+    );
+
+    // 7. A toggle inside the set removes and re-adds one record.
+    yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(3), ["cmd"]);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a toggle removes the record it hit from the middle of the set",
+      yield* readout(),
+      expected("1,2", "3", "cmd", cmd, 6),
+    );
+    yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(3), ["cmd"]);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a second toggle restores it in ascending order",
+      yield* readout(),
+      expected("1,2,3", "3", "cmd", cmd, 7),
+    );
+
+    // 8. A plain press replaces the whole set, so the next range starts there.
+    yield* ctx.host.click(MODIFIER_SELECT_IDS.row(4));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a plain press replaces the set a chord built",
+      yield* readout(),
+      expected("4", "4", "none", none, 8),
+    );
+    yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(7), ["shift"]);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a range after a plain press starts at that press, not at the last toggle",
+      yield* readout(),
+      expected("4,5,6,7", "4", "shift", shift, 9),
+    );
+
+    // 9. Cmd-shift adds the range to the set instead of replacing it.
+    yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(2), ["cmd", "shift"]);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "cmd-shift adds the range and keeps the existing set",
+      yield* readout(),
+      expected("2,3,4,5,6,7", "4", "cmd-shift", both, 10),
+    );
+
+    // 10. The paint follows the set: the chosen rows wear the selected fill and
+    //     the rows outside it do not.
+    yield* ctx.host.hover(MODIFIER_SELECT_IDS.caption);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("modifier-select");
+    const frame = yield* ctx.host.pixels("modifier-select");
+    const window = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+    const fill = yield* ctx.expectSome(
+      "the theme names the selected fill",
+      Option.fromNullishOr(Pixels.hexToRgba(theme.colors.selected)),
+    );
+    /** The capture pixels a logical box covers. */
+    const regionOf = (box: Smoke.Bounds): Pixels.PixelRegion =>
+      new Pixels.PixelRegion({
+        x: Math.round(box.x * scale),
+        y: Math.round(box.y * scale),
+        width: Math.round(box.width * scale),
+        height: Math.round(box.height * scale),
+      });
+    const inside = yield* paintedBox(ctx, MODIFIER_SELECT_IDS.row(2));
+    const insideCrop = yield* ctx.expectSome(
+      "a chosen row's box is inside the capture",
+      Option.fromNullishOr(Pixels.crop(frame, regionOf(inside))),
+    );
+    yield* ctx.expectEqual(
+      "a row inside the set paints the selected fill",
+      Pixels.countColour(insideCrop, fill) > 0,
+      true,
+    );
+    const outside = yield* paintedBox(ctx, MODIFIER_SELECT_IDS.row(0));
+    const outsideCrop = yield* ctx.expectSome(
+      "a row outside the set is inside the capture too",
+      Option.fromNullishOr(Pixels.crop(frame, regionOf(outside))),
+    );
+    yield* ctx.expectEqual(
+      "a row outside the set paints none of it",
+      Pixels.countColour(outsideCrop, fill),
+      0,
+    );
+
+    // 11. The harness cannot synthesize a double press: the second press on the
+    //     same row still reports one click, so a caller who needs a double
+    //     press drives it with a key instead.
+    yield* ctx.host.click(MODIFIER_SELECT_IDS.row(6));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.click(MODIFIER_SELECT_IDS.row(6));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a second press on the same row still reports one click",
+      yield* readout(),
+      expected("6", "6", "none", none, 12),
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -19504,5 +19810,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "slider-vertical-lifecycle",
     view: () => <VerticalSliderProbe />,
     steps: verticalSliderSteps,
+  },
+  "modifier-select-lifecycle": {
+    id: "modifier-select-lifecycle",
+    view: () => <ModifierSelectProbe />,
+    steps: modifierSelectSteps,
   },
 };

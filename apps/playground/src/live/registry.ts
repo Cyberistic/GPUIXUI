@@ -438,6 +438,12 @@ export const liveRegistry = [
       "Input: a vertical slider takes the caller's height, runs from the floor, positions by press and drag on the other axis, and its range moves only the nearer end",
     capability: "input",
   },
+  {
+    id: "modifier-select-lifecycle",
+    title:
+      "Table: a modified press carries the chord, shift ranges from the anchor, cmd toggles one record, cmd-shift adds the range, and a second press still reports one click",
+    capability: "table",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

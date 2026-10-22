@@ -18,6 +18,7 @@ import { Smoke } from "@gpuixui/testing";
 import {
   fontInstaller,
   listAnchorOf,
+  modifiedPress,
   rightPress,
   windowSizeOf,
   type LiveFontRegistrar,
@@ -41,10 +42,13 @@ const recorder = (): {
 
 describe("rightPress", () => {
   it.effect("presses the right button, which is the aux-click path", () => {
-    const buttons: Array<number> = [];
+    const sent: Array<{
+      readonly button?: number;
+      readonly modifiers?: string;
+    }> = [];
     const locator: PressableLocator = {
       click: (options) => {
-        buttons.push(options.button);
+        sent.push(options);
         return Promise.resolve();
       },
     };
@@ -54,7 +58,36 @@ describe("rightPress", () => {
         catch: (cause) =>
           new Smoke.SmokeHostError({ verb: "rightPress", cause }),
       });
-      expect(buttons).toEqual([2]);
+      // The button is the whole press: no modifier rides along that could turn
+      // the aux click into a chorded one.
+      expect(sent).toEqual([{ button: 2 }]);
+    });
+  });
+});
+
+describe("modifiedPress", () => {
+  it.effect("sends the chord in the protocol's spelling", () => {
+    const sent: Array<string | undefined> = [];
+    const locator: PressableLocator = {
+      click: (options) => {
+        sent.push(options.modifiers);
+        return Promise.resolve();
+      },
+    };
+    return Effect.gen(function* () {
+      yield* Effect.tryPromise({
+        try: () => modifiedPress(locator, ["shift", "cmd"]),
+        catch: (cause) =>
+          new Smoke.SmokeHostError({ verb: "modifiedPress", cause }),
+      });
+      yield* Effect.tryPromise({
+        try: () => modifiedPress(locator, []),
+        catch: (cause) =>
+          new Smoke.SmokeHostError({ verb: "modifiedPress", cause }),
+      });
+      // One order, no modifiers when none are held: a probe's expectation
+      // cannot depend on how it spelled the chord.
+      expect(sent).toEqual(["cmd-shift", ""]);
     });
   });
 });

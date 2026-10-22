@@ -681,7 +681,32 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 101/101
+`[x]` `[██████████]` 102/102
+
+`[x]` Measure a **modified press** on a list — Tier 3's *row selection* names a
+      selected record, and a file list or grid adds the three chorded presses a
+      desktop reader expects (`shift` ranges from the anchor, `cmd` toggles one
+      record, `cmd-shift` adds the range), while no probe could hold a modifier:
+      `@gpuix/native` reports the held set on the click event and its protocol
+      dispatches it, but `AsyncSmokeHost` had no verb for it. `clickWith` is that
+      verb (`Smoke.formatModifiers` canonicalises the chord, so `["shift","cmd"]`
+      is `cmd-shift`), and `modifier-select-lifecycle` measures the whole rule on
+      0.11.0: a plain press replaces the set and anchors it, `shift` extends
+      backwards and forwards from that anchor without moving it, `cmd`
+      adds/removes a record and moves the anchor, `cmd-shift` joins the range to
+      the set, the pressed row — chorded or not — holds the focus, the chosen rows
+      paint the `selected` fill while row 0 paints none of it, and a second press
+      still reports `click=1`. 22 checks, `--only modifier-select-lifecycle`,
+      green (~1.8 s); 18 fixture cases hold `selectRow`/`selectionState` and the
+      payload boundary, 4 hold `formatModifiers` and 1 holds `modifiedPress`. Two
+      negative controls measured, exit `1` each, restored green: reading no
+      modifiers off the click fails `shift extends the selection from the anchor`
+      with `expected "selected=3,4,5,6 anchor=3 …", got "selected=6 anchor=6
+      mods=none …"`, and moving the anchor on a `shift` press fails it with
+      `… anchor=6`. Evidence: `apps/playground/README.md`
+      §`modifier-select-lifecycle`, `.artifacts/live/modifier-select.png`.
+      Publishing the chord and the double-press limit in the capability record
+      is the interlock row below (docs-site owns those files).
 
 `[x]` Measure **a tab moved between strips** — Tier 4's *detachable / movable
       tabs* row was `partial` for the one limit no probe can lift (one window per
@@ -4265,6 +4290,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Prove `Glyph`'s example in the playground's `examples-mount` — the example is registered (`packages/components/examples/index.ts`) and mounts in the test renderer, but the scenario could not run on 2026-10-22 because `apps/playground/src/live/scenarios.tsx` was mid-edit by the playground workstream (`TS2300: Duplicate identifier 'selectionReadout'`, `TS2554` on a `select`), so `nub run --filter playground build` exits 2 | playground | **resolved 2026-10-22** — the playground builds again (`nub run --filter playground build`, exit 0) and `nub apps/playground/dist/smoke/run.js --only examples-mount` mounts the registry's every id in the real host: **1/1 scenario, 18.1 s, `ok layout examples-mount — Every shipped example mounts, lays out and paints its own content`**. `glyph` is in the registry (`examples/index.ts`, held to the directory by `src/examples.test.ts`), so the wall is one of the mounted screens |
 | Add a **`./button` subpath to `@gpuixui/primitives`** so plan 160's Phase 2 can retire `packages/components/src/internal/button.tsx` — plan 160's two STOPs are closed (`onActivate` now carries the `EventPayload` and the primitives' `useTheme` reads `useThemePresence`, so a token-only tree renders a primitives `Button`), but the last measured gap is the route's cost: importing `Button` from the primitives' **root** barrel loads every primitive, and `nub scripts/surface.ts` measured that route in the hint row as **52 modules / 416 KiB** against the `./hint` subpath's 5 / 51 — a 30% entry cost for one control, which this repo already declined once. The seam is the one `docs/component-api.md` §7 and `TODO.md`'s hint row established: a declared subpath (`"./button": "./src/components/Button.tsx"`, plus `IconButton` and the two prop types) that loads `Button`, `renderButton`, `core/variants`, the recipe and `Spinner` only. With it, Phase 2's adapter is a mechanical import swap and `surface.ts` should move by one module plus that subpath's group | primitives (its export surface) | open — owner: `primitives`; the components plan (`160-retire-components-button-stand-in.md`) stays at Phase 1 until the subpath exists |
+| Record the **modifier press** a list selects with — `docs/gpuix-capabilities.md` §3 and `/docs/runtime` describe the pointer as a plain press plus wheel, drag and hover, and no row says the runtime delivers the held set on a click; the playground's `modifier-select-lifecycle` (22 checks, 0.11.0) measured a `shift` range, a `cmd` toggle and a `cmd-shift` union arriving through `clickWith`, the four flags as the payload reports them, and that the chosen rows paint the `selected` fill. Two rules a component plan needs: the anchor is the row a **plain** press left (a range press keeps it, a toggle moves it), and a **double press cannot be synthesized** (`simulateClick`/the locator hard-code `click_count: 1`), so a file tree that opens on a double press needs a keyboard path. `/docs/testing`'s pointer-verb list is also owed `clickWith` | docs-site (the capability record, `/docs/runtime`, `/docs/testing`) | open — publish the row (`supported, with limits`), the probe id and the wording in both sections; the host and probe are landed (`packages/testing/README.md` §Adapting a window documents the verb) |
+| Cite the **`modifier-select-lifecycle` selection contract** where tables describe selection — `COMPONENTS.md`'s *Row selection* row and the Tier 5 *File / folder selection* row name single-record selection only, and `packages/components/docs/*.mdx` for a list or tree has no sentence about a chord; a component plan reading them would reimplement the anchor rule or assume a double-press callback. The measured contract is the playground's `modifier-select-lifecycle` (`apps/playground/README.md` §`modifier-select-lifecycle`) | components (`COMPONENTS.md` rows and the list/tree pages) | open — the playground's probe and host verb are landed; this row is the prose half |
 
 ## Phase D — data and workspace components
 

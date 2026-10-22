@@ -6,7 +6,7 @@
  * `SmokeHost`. This module never imports `@gpuix/*`, so its own tests run on any
  * host — including one where the binding does not exist.
  */
-import { Effect, Match } from "effect";
+import { Effect, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
@@ -381,6 +381,39 @@ export interface SmokeContext extends Assertions {
   readonly host: SmokeHost;
 }
 
+/** A modifier a pointer press can hold, as the automation protocol spells it. */
+export type PointerModifier = "cmd" | "ctrl" | "alt" | "shift";
+
+/**
+ * The order a chord is written in, so one press has one spelling.
+ *
+ * `cmd-shift` is how the repository writes a chord and how the protocol's
+ * `press()` syntax reads it; in argument order, `["shift", "cmd"]` would be a
+ * second name for the same press and a probe's expectation would depend on it.
+ */
+const POINTER_MODIFIER_ORDER: ReadonlyArray<PointerModifier> = [
+  "cmd",
+  "ctrl",
+  "alt",
+  "shift",
+];
+
+/**
+ * The protocol's spelling of a held set of modifiers.
+ *
+ * `[]` is the empty string, which parses as no modifiers — the press a plain
+ * `click` sends. Repeats collapse and an unknown argument order is normalised,
+ * so two spellings of one chord cannot reach the window.
+ */
+export const formatModifiers = (
+  modifiers: ReadonlyArray<PointerModifier>,
+): string =>
+  pipe(
+    POINTER_MODIFIER_ORDER,
+    Arr.filter((modifier) => Arr.contains(modifiers, modifier)),
+    Arr.join("-"),
+  );
+
 /**
  * The window twin of `SmokeHost`: the same verbs, but effectful.
  *
@@ -426,6 +459,20 @@ export interface AsyncSmokeHost {
    * the button, so this is the same hit-tested path a pointer takes.
    */
   readonly rightClick: (testId: string) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * Presses `testId` while holding `modifiers`.
+   *
+   * A desktop list selects by chord — `shift` extends from the anchor, `cmd`
+   * toggles one record, `cmd-shift` adds the range — and the runtime reports
+   * the held set on the click event, so a probe that only presses plainly can
+   * measure none of it. The protocol's locator takes the modifier string, so
+   * this is the same hit-tested press a chord makes; `formatModifiers` is the
+   * one spelling of it.
+   */
+  readonly clickWith: (
+    testId: string,
+    modifiers: ReadonlyArray<PointerModifier>,
+  ) => Effect.Effect<void, SmokeHostError>;
   /**
    * Moves the pointer onto `testId` and leaves it there, pressing nothing.
    *

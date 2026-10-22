@@ -97,10 +97,16 @@ control that activates on release — Space on a button, checkbox or switch,
 which is the platform's own rule — is therefore driven with `keyUp(keystroke)`,
 which releases through the renderer's `simulateKeyUp`.
 
-Pointer input is three verbs. `click` presses and releases, `drag` presses and
+Pointer input is four verbs. `click` presses and releases, `drag` presses and
 travels, and `hover` moves the pointer onto the element's centre **without
 pressing** — the only way to drive the enter/leave pair a tooltip or a
 hover style listens for, since any press also fires the press handlers.
+`clickWith` holds `cmd`/`ctrl`/`alt`/`shift` for the press, because a desktop
+list selects by chord: the runtime reports the held set on the click event, and
+`Smoke.formatModifiers` is the one spelling of it (`["shift", "cmd"]` is
+`cmd-shift`, whatever the argument order). The automation protocol always
+dispatches `click_count: 1`, so a double press cannot be synthesized; a probe
+that needs one drives it with a key instead.
 
 `a11yTree()` is the offscreen renderer's accessibility dump, decoded into
 `Smoke.A11yTree`: the platform's `role`, `label`, `description`, `value`,

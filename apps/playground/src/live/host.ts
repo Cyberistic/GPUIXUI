@@ -102,11 +102,14 @@ export const fontInstaller =
     );
 
 /**
- * The locator surface a right press needs, named so a fake can stand in for the
- * automation protocol in a unit test.
+ * The locator surface a cursor press needs, named so a fake can stand in for
+ * the automation protocol in a unit test.
  */
 export interface PressableLocator {
-  readonly click: (options: { readonly button: number }) => Promise<void>;
+  readonly click: (options: {
+    readonly button?: number;
+    readonly modifiers?: string;
+  }) => Promise<void>;
 }
 
 /**
@@ -118,6 +121,19 @@ export interface PressableLocator {
  */
 export const rightPress = (locator: PressableLocator): Promise<void> =>
   locator.click({ button: 2 });
+
+/**
+ * Presses a locator's element while holding `modifiers`.
+ *
+ * The chord is the whole contract: a press that drops `shift` still selects a
+ * row, so a probe comparing only the selection would read a range it never
+ * asked for. `formatModifiers` is the protocol's one spelling.
+ */
+export const modifiedPress = (
+  locator: PressableLocator,
+  modifiers: ReadonlyArray<Smoke.PointerModifier>,
+): Promise<void> =>
+  locator.click({ modifiers: Smoke.formatModifiers(modifiers) });
 
 /**
  * Reads the renderer's `[itemIndex, offsetInItem, viewportHeight]` anchor.
@@ -239,6 +255,8 @@ export const createLiveHost = ({
     click: (testId) => call(`click ${testId}`, () => at(testId).click()),
     rightClick: (testId) =>
       call(`rightClick ${testId}`, () => rightPress(at(testId))),
+    clickWith: (testId, modifiers) =>
+      call(`clickWith ${testId}`, () => modifiedPress(at(testId), modifiers)),
     hover: (testId) => call(`hover ${testId}`, () => at(testId).hover()),
     drag: (testId, deltaX, deltaY) =>
       call(`drag ${testId}`, () => at(testId).dragBy(deltaX, deltaY)),

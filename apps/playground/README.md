@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-67 probes a real window can prove, of which fifteen mount shipped
+68 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -55,7 +55,8 @@ own wheel and size, a split pane, a virtual list, a paginated list's loading-row
 restore, a dock's keyboard order, an anchored menu in a scrolled header, the
 window's own backdrop, the app-level key handler, the app-level selection
 handler, a field's hint and value ink, a configurable data grid, a generated
-SVG pattern and a property inspector beside its preview).
+SVG pattern, a property inspector beside its preview and a table's chorded
+selection).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -781,7 +782,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 | input update/validation | `text-input`, `validation-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
 | theme switching | `theme-switch-lifecycle` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density |
-| table sort/selection | `table-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort |
+| table sort/selection | `table-lifecycle`, `modifier-select-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort; a modified press carries its chord, so shift ranges from the anchor, cmd toggles one record and cmd-shift adds the range |
 | panel resizing | `split-pane-lifecycle` | a divider drag resizes the pane and clamps at the caller's bounds |
 | workspace restore | `workspace-restore` | a saved arrangement paints again after a re-mount, a corrupt string opens the default, and an out-of-bounds width is clamped |
 
@@ -3780,6 +3781,68 @@ What it settles, for a dock or a mixer that wants a fader:
    `indicator(0)`, `thumb(0)`, `indicator(1)`, `thumb(1)`; grouping the two
    indicators first paints the thumbs in the wrong order.
 
+### `modifier-select-lifecycle` — measured on 0.11.0 here
+
+The **chord a desktop list selects with**. Tier 3's *row selection* row names a
+selected record, and a file list or data grid adds the three presses a desktop
+reader expects: `shift` extends from the row last chosen, `cmd` toggles one
+record and `cmd-shift` adds the range. The runtime reports the held modifiers on
+a click and its automation protocol takes them, but the smoke host had no verb
+that holds one, so no probe had ever sent a modified press — a row handler could
+ignore the chord and every selection check would still pass.
+
+`AsyncSmokeHost.clickWith` is that verb. It spells the chord through
+`Smoke.formatModifiers` (`["shift", "cmd"]` is `cmd-shift`, whatever the
+argument order) and the protocol locates the row's centre, so the press is the
+same hit-tested one a reader makes. The readout prints both the chord and the
+four flags the runtime sent, so the probe reads the payload rather than assuming
+the chord arrived.
+
+| Press | Measurement |
+| ----- | ----------- |
+| open | `selected=none anchor=none mods=none flags=none click=none presses=0` |
+| row 3 | `selected=3 anchor=3 mods=none flags=cmd:false,ctrl:false,alt:false,shift:false click=1`; the pressed row holds the focus |
+| `shift` row 6 | `selected=3,4,5,6 anchor=3 mods=shift` — the span, not `{3,6}` |
+| `shift` row 1 | `selected=1,2,3 anchor=3` — backwards from the same anchor |
+| `cmd` row 5 | `selected=1,2,3,5 anchor=5 mods=cmd flags=cmd:true,ctrl:false,alt:false,shift:false`; a chord press focuses its row too |
+| `cmd` row 5 again | `selected=1,2,3 anchor=5` — a toggle removes what it added |
+| `cmd` row 3, twice | `selected=1,2` then `selected=1,2,3` — a middle toggle, re-inserted in order |
+| plain row 4 | `selected=4 anchor=4 mods=none` — a plain press replaces the set |
+| `shift` row 7 | `selected=4,5,6,7 anchor=4` — the range starts at the plain press, not the last toggle |
+| `cmd-shift` row 2 | `selected=2,3,4,5,6,7 anchor=4 mods=cmd-shift` — the span joins the set |
+| the frame, pointer parked off the rows | the chosen row paints the theme's `selected` fill; row 0 paints none of it |
+| row 6 pressed twice | `mods=none … click=1 presses=12` — the second press still reports one click |
+
+22 checks, `--only modifier-select-lifecycle`, green on 0.11.0 (~1.1 s).
+Fixture: `src/live/modifier-select.ts` — `selectRow` (the whole rule) and
+`selectionState` (the readout), with `pressedModifiers` converting the payload's
+optional field at the boundary.
+
+**The anchor is the rule.** A `shift` press keeps the anchor and a `cmd` toggle
+moves it, so a second `shift` press after a `cmd` press ranges from the row the
+reader toggled. A component that moves the anchor on a range press passes one
+range and fails the next: the "range after a plain press starts at that press,
+not at the last toggle" check is that case.
+
+**A double press is not synthesizable.** The automation protocol dispatches one
+click with `click_count: 1` — `simulateClick` and the locator both hard-code it —
+so two presses on the same row measure as two singles even in a row that listens
+for a double click. A file tree that opens on a double press must give the
+opener a keyboard path (or a control) until the protocol grows a count; the probe
+pins the limit with `click=1` after the second press instead of letting a
+component assume a count the harness can never send.
+
+Two negative controls measured, exit `1` each, then restored green:
+
+- reading no modifiers off the row's click (every press plain) fails `shift
+  extends the selection from the anchor` with **`expected "selected=3,4,5,6
+  anchor=3 mods=shift …", got "selected=6 anchor=6 mods=none …"`** — the chord is
+  the whole feature, and a "selection changed" check alone would have passed.
+- moving the anchor on a `shift` press fails the same check with **`expected
+  "selected=3,4,5,6 anchor=3 …", got "selected=3,4,5,6 anchor=6 …"`** — the set
+  is right and the anchor is wrong, which is exactly the defect a screenshot
+  cannot see.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -3994,8 +4057,9 @@ narrower. Each deviation is deliberate and measured:
   them. The full live suite is the release gate, and this line is its result.
   Measured alone since then: `inspector-lifecycle`,
   `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`,
-  `elevation-paint`, `opacity-paint`, `movable-tabs-lifecycle` and
-  `slider-vertical-lifecycle` (nine probes, each run alone).
+  `elevation-paint`, `opacity-paint`, `movable-tabs-lifecycle`,
+  `slider-vertical-lifecycle` and `modifier-select-lifecycle` (ten probes, each
+  run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

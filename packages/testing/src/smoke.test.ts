@@ -11,7 +11,12 @@ import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { CheckOutcome, StyleSnapshot, coverageOf } from "./smoke.js";
+import {
+  CheckOutcome,
+  StyleSnapshot,
+  coverageOf,
+  formatModifiers,
+} from "./smoke.js";
 import type { SmokeScenario } from "./smoke.js";
 import { nullHost } from "./test-support.js";
 import { runScenarios } from "./smoke.js";
@@ -149,6 +154,30 @@ describe("runScenarios", () => {
       expect(labelsOf(report, 0)).toEqual(["a", "b"]);
     }),
   );
+});
+
+describe("formatModifiers", () => {
+  // The protocol reads a chord as one string, so the spelling is part of the
+  // measurement: two argument orders must not name two presses.
+  it("spells a chord in one order whatever the caller's order", () => {
+    expect(formatModifiers(["shift", "cmd"])).toBe("cmd-shift");
+    expect(formatModifiers(["cmd", "shift"])).toBe("cmd-shift");
+  });
+
+  it("collapses a repeat and keeps one modifier alone", () => {
+    expect(formatModifiers(["shift", "shift"])).toBe("shift");
+    expect(formatModifiers(["alt"])).toBe("alt");
+  });
+
+  it("writes the empty set as the empty string, which is no modifier", () => {
+    expect(formatModifiers([])).toBe("");
+  });
+
+  it("writes every modifier in the protocol's order", () => {
+    expect(formatModifiers(["shift", "alt", "ctrl", "cmd"])).toBe(
+      "cmd-ctrl-alt-shift",
+    );
+  });
 });
 
 describe("expectNear", () => {
