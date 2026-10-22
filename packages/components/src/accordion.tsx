@@ -67,7 +67,12 @@ import {
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import { controlHeight, controlRing, useTheme } from "./internal/theme.js";
+import {
+  controlHeight,
+  controlRing,
+  disabledFade,
+  useTheme,
+} from "./internal/theme.js";
 
 /** What an accordion part can rely on, regardless of mode. */
 interface AccordionContextValue {
@@ -489,7 +494,7 @@ export const AccordionTrigger = ({
         mergeStyles(recipeStyle(cn(ACCORDION_TRIGGER, className), theme), {
           height: controlHeight(theme, "lg"),
           cursor: disabled ? "not-allowed" : "pointer",
-          opacity: disabled ? 0.5 : 1,
+          ...disabledFade(disabled),
           hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
           ...controlRing(theme, { disabled }),
         }),

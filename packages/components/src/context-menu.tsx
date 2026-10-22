@@ -47,7 +47,7 @@ import {
   useSurfaceTiming,
 } from "./internal/presence.js";
 import { useMergedRef } from "./internal/ref.js";
-import { keyboardRing, useTheme } from "./internal/theme.js";
+import { keyboardRing, disabledFade, useTheme } from "./internal/theme.js";
 import {
   MenuCheckboxItem,
   MenuGroup,
@@ -268,7 +268,7 @@ export const ContextMenuTrigger = ({
           backgroundColor: theme.colors.card,
           color: theme.colors.cardForeground,
           cursor: disabled ? "not-allowed" : "default",
-          opacity: disabled ? 0.5 : 1,
+          ...disabledFade(disabled),
           ...(disabled ? {} : keyboardRing(theme)),
         },
         style,

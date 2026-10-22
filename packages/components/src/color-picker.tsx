@@ -33,6 +33,7 @@ import {
   controlHeight,
   keepContent,
   controlRing,
+  disabledFade,
   nativeTextTheme,
   selectionWash,
   useTheme,
@@ -163,7 +164,7 @@ export const ColorPicker = ({
       testId={testId}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(COLOR_PICKER_ROOT, className), theme), {
-          opacity: disabled ? 0.5 : 1,
+          ...disabledFade(disabled),
         }),
         resolveStyle(style, { disabled, valid }),
       )}

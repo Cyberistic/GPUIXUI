@@ -33,6 +33,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
+  disabledFade,
   keepContent,
   keyboardRing,
   nativeTextTheme,
@@ -129,7 +130,7 @@ export const SearchInput = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(SEARCH_INPUT, className), theme), {
           height: controlHeight(theme, "md"),
-          opacity: disabled ? 0.5 : 1,
+          ...disabledFade(disabled),
         }),
         resolveStyle(style, state),
       )}

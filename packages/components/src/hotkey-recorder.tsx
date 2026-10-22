@@ -44,6 +44,7 @@ import {
   controlHeight,
   currentPlatform,
   controlRing,
+  disabledFade,
   targetSize,
   useTheme,
 } from "./internal/theme.js";
@@ -162,7 +163,7 @@ export const HotkeyRecorder = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(HOTKEY_RECORDER, className), theme), {
           minHeight: controlHeight(theme, "md"),
-          opacity: disabled ? 0.5 : 1,
+          ...disabledFade(disabled),
           ...controlRing(theme, { disabled }),
         }),
         resolveStyle(style, { recording, disabled }),

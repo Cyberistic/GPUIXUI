@@ -88,6 +88,7 @@ import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
   controlRing,
+  disabledFade,
   keepContent,
   nativeTextTheme,
   useTheme,
@@ -401,7 +402,7 @@ export const ComboboxTrigger = ({
           ? theme.colors.mutedForeground
           : theme.colors.foreground,
         cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
+        ...disabledFade(disabled),
         hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
         ...controlRing(theme, { disabled }),
       })}

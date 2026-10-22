@@ -31,7 +31,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { controlRing, useTheme } from "./internal/theme.js";
+import { controlRing, disabledFade, useTheme } from "./internal/theme.js";
 
 /** The rules a collapsible part follows; throws outside a root. */
 interface CollapsibleContextValue {
@@ -150,7 +150,7 @@ export const CollapsibleTrigger = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(COLLAPSIBLE_TRIGGER, className), theme), {
           cursor: disabled ? "not-allowed" : "pointer",
-          opacity: disabled ? 0.5 : 1,
+          ...disabledFade(disabled),
           hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
           active: disabled
             ? undefined

@@ -89,7 +89,12 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { controlHeight, controlRing, useTheme } from "./internal/theme.js";
+import {
+  controlHeight,
+  controlRing,
+  disabledFade,
+  useTheme,
+} from "./internal/theme.js";
 import { indicatorBox, measuredBox, type TabBox } from "./tabs/indicator.js";
 import {
   moveOrigin,
@@ -681,7 +686,7 @@ export const TabsTrigger = ({
             ? theme.colors.foreground
             : theme.colors.mutedForeground,
           cursor: disabled ? "not-allowed" : "pointer",
-          opacity: disabled ? 0.5 : 1,
+          ...disabledFade(disabled),
           hover: disabled
             ? undefined
             : {

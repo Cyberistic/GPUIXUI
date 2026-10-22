@@ -137,6 +137,18 @@ a public state object instead:
   owns both paths, `button.test.tsx` holds the pair, the ghost's fade and the
   still pointer, and every component that disables an action (an edge control, a
   busy dialog) inherits the rule.
+- **A part with no fill of its own fades at one share.** Every non-action part
+  that cannot act — a disclosure trigger, a tab, a menu trigger, a field, a
+  picker, a chip — spreads `disabledFade(disabled)` from the seam, which is the
+  token package's `disabledOpacity` — the share `disabledFadeFailures`
+  composites — or nothing while the part can act. A button-shaped trigger paints
+  through `internal/button.tsx`'s own two mechanisms above. One fade per control:
+  a tag chip inside a disabled group declares none, because the group already
+  fades it and a second share composites the chip's own ink twice (the chip
+  painted a 0.6 no contract named). `src/disabled-fade.test.ts` refuses a numeric
+  fade in any source and holds the 12 parts to the seam, and
+  `src/behaviour/disabled-fade.test.tsx` reads the share back off a disclosure
+  trigger, a tag group and a picker in both themes.
 
 Which parts have a state, and which do not, is a measured line:
 

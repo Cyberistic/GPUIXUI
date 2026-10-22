@@ -140,6 +140,27 @@ export const selectionWash = (theme: Theme): StyleDesc => ({
  */
 export const keepContent: StyleDesc = { keyboardFocusDim: false };
 
+/**
+ * The fade a control with no fill of its own wears while it is disabled.
+ *
+ * `@gpuixui/tokens`' `disabledOpacity` is a design constant rather than a theme
+ * group, because every shipped recipe paints this one share and a brand that
+ * lowered it would make the library's own disabled state disappear. It is the
+ * share `disabledFadeFailures` composites, so a part that copies `0.5` here
+ * drifts from the measurement the moment the token moves — and one part fades by
+ * a share no contract ever named (`TagInputChip` painted 0.6 inside a root that
+ * already faded). Every disabled part states its fade through this helper, and
+ * `src/disabled-fade.test.ts` holds the sources to it.
+ *
+ * A control that owns a fill paints the measured `disabled`/`disabledForeground`
+ * pair instead ({@link disabledAction}); a fade is the mechanism for a control
+ * with no fill to collapse into.
+ */
+export const disabledFade = (
+  disabled: boolean,
+): { readonly opacity: number } | undefined =>
+  disabled ? { opacity: disabledOpacity } : undefined;
+
 /** The four status tones Alert, Badge and Toast expose. */
 export type Tone = "info" | "success" | "warning" | "danger";
 

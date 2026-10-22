@@ -43,6 +43,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
   controlRing,
+  disabledFade,
   keepContent,
   nativeTextTheme,
   selectionWash,
@@ -155,7 +156,7 @@ export const TagInput = ({
         style={mergeStyles(
           mergeStyles(recipeStyle(cn(TAG_INPUT_ROOT, className), theme), {
             minHeight: controlHeight(theme, "md"),
-            opacity: disabled ? 0.5 : 1,
+            ...disabledFade(disabled),
           }),
           style,
         )}
@@ -269,9 +270,10 @@ export const TagInputChip = ({
       {...rest}
       testId={testId}
       style={mergeStyles(
-        mergeStyles(recipeStyle(cn(TAG_INPUT_CHIP, className), theme), {
-          opacity: disabled ? 0.6 : 1,
-        }),
+        recipeStyle(cn(TAG_INPUT_CHIP, className), theme),
+        // The group owns the field's disabled face: a second fade here would
+        // composite the chip's own ink twice, so a disabled chip inherits the
+        // root's fade and only loses its removal target.
         resolveStyle(style, { disabled }),
       )}
     >

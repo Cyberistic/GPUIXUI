@@ -68,6 +68,7 @@ import {
 } from "./time-picker/time.js";
 import {
   controlHeight,
+  disabledFade,
   keepContent,
   keyboardRing,
   nativeTextTheme,
@@ -279,7 +280,7 @@ export const TimePicker = ({
           recipeStyle(cn(TIME_PICKER_ROOT, className), theme),
           {
             height: controlHeight(theme, "md"),
-            opacity: disabled ? 0.5 : 1,
+            ...disabledFade(disabled),
           },
         )}
       >

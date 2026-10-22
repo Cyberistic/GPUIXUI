@@ -32,6 +32,7 @@ import {
   controlHeight,
   keepContent,
   controlRing,
+  disabledFade,
   nativeTextTheme,
   selectionWash,
   useTheme,
@@ -165,7 +166,7 @@ export const InlineEdit = ({
         style={mergeStyles(
           mergeStyles(recipeStyle(cn(INLINE_EDIT_DISPLAY, className), theme), {
             minHeight: controlHeight(theme, "sm"),
-            opacity: disabled ? 0.5 : 1,
+            ...disabledFade(disabled),
             ...controlRing(theme, { disabled }),
             hover: { backgroundColor: theme.colors.accent },
           }),

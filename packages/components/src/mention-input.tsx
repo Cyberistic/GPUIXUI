@@ -54,6 +54,7 @@ import {
 import { recipeStyle } from "./internal/recipe.js";
 import {
   controlHeight,
+  disabledFade,
   keepContent,
   keyboardRing,
   nativeTextTheme,
@@ -208,7 +209,7 @@ export const MentionInput = ({
             recipeStyle(cn(MENTION_INPUT_FIELD, className), theme),
             {
               height: controlHeight(theme, "md"),
-              opacity: disabled ? 0.5 : 1,
+              ...disabledFade(disabled),
             },
           )}
         >
