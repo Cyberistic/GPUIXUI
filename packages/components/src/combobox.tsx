@@ -600,11 +600,14 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
           onSome: (candidate) =>
             candidate.description === undefined ? null : (
               <text
-                style={mergeStyles(recipeStyle(COMBOBOX_ITEM_DESCRIPTION, theme), {
-                  color: disabled
-                    ? theme.colors.disabledForeground
-                    : theme.colors.mutedForeground,
-                })}
+                style={mergeStyles(
+                  recipeStyle(COMBOBOX_ITEM_DESCRIPTION, theme),
+                  {
+                    color: disabled
+                      ? theme.colors.disabledForeground
+                      : theme.colors.mutedForeground,
+                  },
+                )}
               >
                 {candidate.description}
               </text>

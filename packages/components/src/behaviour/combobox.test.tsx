@@ -382,14 +382,14 @@ describe("Combobox", () => {
     // `disabledForeground` pair, which `contrastPairs` measures on the popover;
     // a row-level opacity composites the label into the fill instead.
     const painted = (root: ComponentTestRoot, value: string) =>
-      root.renderer.getElement(
-        root.renderer.findByText(value)?.parentId ?? -1,
-      )?.style.color;
+      root.renderer.getElement(root.renderer.findByText(value)?.parentId ?? -1)
+        ?.style.color;
 
     const dark = renderComponent(<Picker disabledCamera />);
     await open(dark);
-    expect(dark.renderer.findByTestId("combobox-option-camera")?.style.opacity)
-      .toBeUndefined();
+    expect(
+      dark.renderer.findByTestId("combobox-option-camera")?.style.opacity,
+    ).toBeUndefined();
     expect(painted(dark, "Camera")).toBe(darkTheme.colors.disabledForeground);
     expect(painted(dark, "Hardware")).toBe(darkTheme.colors.disabledForeground);
     dark.unmount();
@@ -406,10 +406,8 @@ describe("Combobox", () => {
     // surface the row floats on; the painted pair is what the contract holds.
     Arr.forEach([lightTheme, darkTheme], (theme) => {
       expect(
-        contrastRatio(
-          theme.colors.disabledForeground,
-          theme.colors.popover,
-        ) ?? 0,
+        contrastRatio(theme.colors.disabledForeground, theme.colors.popover) ??
+          0,
       ).toBeGreaterThanOrEqual(contrastFloors.disabled);
     });
   });
