@@ -161,7 +161,7 @@ tool never has to copy the palette out of this page.
 | `borderStrong` | `#727D8C` | `#788494` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
-| `placeholder` | `#66707F` | `#7C8595` | placeholder text |
+| `placeholder` | `#626C7B` | `#7C8595` | placeholder text |
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF3D` | text selection wash (24% alpha) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
@@ -1125,11 +1125,14 @@ so a single number would be a guess — or carries no channels here at all (a
 named colour, an `hsl()`-family function). Shorthand hex is measured.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 78 pairs cover the text role
+— an empty array means the theme is readable. The 80 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
-`input`, secondary text on `background`, `card`, `muted`, `popover` and a
-selected row, the selected row's title on that selection and the
+`input` — and into a **composite field**, which paints the page role as its own
+fill (a search, tag or mention field, the chat composer, the inline edit, the
+colour picker's hex field), so the value and its placeholder are measured on
+`background` as well — secondary text on `background`, `card`, `muted`, `popover`
+and a selected row, the selected row's title on that selection and the
 `selectedForeground` it hands its children on the `hover`/`active`/`accent` wash
 it tints, every status and soft-status pair, each status tone's readable text
 as **page** text on `background`, `card` and `popover` (a field error, an inline
@@ -1248,8 +1251,9 @@ Validation failure is a boundary, not a fill. An invalid field's border — and
 the `focusVisible` line it paints while focused — take the `destructive` role,
 the one colour a reader reads as "this needs attention", and the field keeps its
 own fill, so the value it holds and its placeholder stay the roles the table
-measures (`inputForeground` on `input` at the body floor, `placeholder` on
-`input` at the secondary floor).
+measures (`inputForeground` on the fill at the body floor, `placeholder` on it at
+the secondary floor) — `input` for a plain field, the page role for a composite
+one, which paints that as its own fill (§Native text hosts).
 
 That edge is a boundary, so `destructive` is held to `contrastFloors.boundary`
 on every strip a control sits on. Four of them — the page, a card, a popover and
@@ -1579,9 +1583,11 @@ A mark still has one job: a reader has to find it from across a panel. So it is
 held to the theme's non-text floor — `contrastFloors.boundary`, 3:1 (4.5:1 in a
 high-contrast theme) — on every strip a bar or dot is drawn on.
 
-The 8 mark roles, on the 6 strips, are `indicatorRoles` and `indicatorSurfaces`
-— `background`, `card`, `popover` and a `muted` toolbar strip at rest, plus the
-`hover` and `active` wash a row tints under itself while the pointer is on it:
+The 8 mark roles, on the 7 strips, are `indicatorRoles` and `indicatorSurfaces`
+— `background`, `card`, `popover` and a `muted` toolbar strip at rest, the
+`hover` and `active` wash a row tints under itself while the pointer is on it,
+and a field's own `input` fill, where the native text host paints its caret
+(`nativeTextTheme` hands the runtime `primary` as the caret):
 
 | Mark | Role |
 | ---- | ---- |
@@ -1699,6 +1705,67 @@ while an unknown family paints the fallback's, so the paint is the file.
 word that painted 44px with no face declared paints 81px on the next layout
 after the file is installed mid-session, while a family nothing installs stays
 at 44px ([`apps/playground/README.md`](../apps/playground/README.md)).
+
+## Native text hosts
+
+`<input>`, `<textarea>` and `<code>` are drawn by the runtime's text engine, not
+by `StyleDesc` properties, so their palette arrives through the host's `theme`
+prop. A host given **no** theme layers its own defaults on GPUix's built-in dark
+theme — the pinned `@gpuix/native@0.11.0` typings say so — which means a field in
+a light theme would paint a placeholder and a caret chosen for a dark surface
+while its fill, value colour and selection wash came from this package.
+`nativeTextTheme` is that seam: one call turns a `Theme` into the object the host
+takes.
+
+```ts
+import { nativeTextTheme } from "@gpuixui/tokens";
+
+const host = nativeTextTheme(theme);
+host.appearance; // theme.mode — the field's own defaults follow it
+host.bg; // theme.colors.input
+host.text; // inputForeground
+host.textFaint; // placeholder
+host.caret; // primary
+host.fontSans; // typography.sans
+```
+
+| Host field | Role |
+| ---------- | ---- |
+| `appearance` | the theme's `mode` |
+| `bg` | the fill the field paints — `input`, or the page role (see below) |
+| `text` / `textMuted` | `inputForeground` / `mutedForeground` |
+| `textFaint` | `placeholder` |
+| `accent` / `caret` | `primary` |
+| `fontSans` / `fontMono` | `typography.sans` / `typography.mono` |
+
+A field paints one of **two** fills, and the host has to be told which, because
+the roles above are measured against it. A plain field paints `input`; a
+composite field — a search, tag or mention field, the chat composer, the inline
+edit, the colour picker's hex field — paints the page role as its own fill, so
+its value and placeholder sit on `background`:
+
+```ts
+nativeTextTheme(theme); // a plain field: the value sits on `input`
+nativeTextTheme(theme, "background"); // a composite field: on the page role
+```
+
+`nativeTextFills` is that two-value list. The contrast table measures both: the
+value at the body floor, the placeholder at the secondary floor, on `input` and
+on `background`; the caret is the `primary` mark on the same fill, held to the
+non-text floor. The page-fill pair found two shipped misses: Aero light's
+placeholder measured **4.35:1** on its own window and macOS light's inherited
+value **4.49:1** on its, both under the 4.5:1 floor — Aero's is `#5B6C7B` and
+the light base value is `#626C7B` now. The tightest placement over both fills is
+the base dark theme's placeholder on its own field fill at 4.54:1 — 0.04 of
+headroom, recorded rather than widened, because every dark palette's placeholder
+is a step deliberately fainter than its secondary text. No other value moved.
+
+**Adoption.** `packages/primitives` keeps a private copy of this mapping
+(`src/core/style.ts`) and the components package's fields pass no host theme at
+all, so their placeholder and caret are the runtime's defaults today; passing
+this seam on every field host is recorded in `TODO.md` → Interlocks. The mapping
+is held by [`src/native-text.test.ts`](../packages/tokens/src/native-text.test.ts),
+which runs every shipped theme and both fills through the same floors.
 
 ## Spacing
 

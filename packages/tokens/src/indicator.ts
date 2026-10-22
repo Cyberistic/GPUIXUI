@@ -63,6 +63,10 @@ export const indicatorSurfaces = [
   "muted",
   "hover",
   "active",
+  // A field's own fill carries its caret, and a field is a surface a mark is
+  // drawn on: `nativeTextTheme` hands the runtime `primary` as the caret on the
+  // fill the field paints. It was the one mark surface no placement named.
+  "input",
 ] as const;
 
 /** One indicator mark that cannot be found on the strip it is drawn on. */

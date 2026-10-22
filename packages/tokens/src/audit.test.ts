@@ -81,14 +81,16 @@ describe("the floors follow the theme's contrast variant", () => {
   it("reports a pair the default floors would have passed", () => {
     // The retracted gate in one line: no failures at the default floors...
     expect(contrastFailures(faintPlaceholder)).toEqual([]);
-    // ...and a real one once the theme's own variant decides.
+    // ...and a real one once the theme's own variant decides. The placeholder
+    // sits on both field fills — a plain field's `input` and the page role a
+    // composite field paints — so the one role is reported on each.
     const { contrast, passed } = auditTheme(faintPlaceholder);
     expect(passed).toBe(false);
     expect(
       contrast.map(
         ({ foreground, background }) => `${foreground}/${background}`,
       ),
-    ).toEqual(["placeholder/input"]);
+    ).toEqual(["placeholder/background", "placeholder/input"]);
     expect(contrast[0]?.floor).toBe(highContrastFloors.secondary);
   });
 

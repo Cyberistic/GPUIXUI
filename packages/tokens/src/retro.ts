@@ -141,7 +141,10 @@ const aeroColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     selected: "#C2E0F8",
     selectedForeground: "#08344F",
     selection: "#3399FF3D",
-    placeholder: "#5F7181",
+    // Aero's window is darker than the base page, so the shared placeholder sat
+    // at 4.35:1 on it, under the 4.5:1 secondary floor. This is the step that
+    // clears it while staying visibly fainter than `mutedForeground`.
+    placeholder: "#5B6C7B",
     disabled: "#E3EAF1",
     disabledForeground: "#8A99A6",
     skeleton: "#CFDCE8",

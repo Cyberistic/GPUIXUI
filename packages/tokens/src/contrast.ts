@@ -148,6 +148,15 @@ export const contrastPairs: readonly ContrastPair[] = [
   { foreground: "cardForeground", background: "card", floor: "body" },
   { foreground: "popoverForeground", background: "popover", floor: "body" },
   { foreground: "inputForeground", background: "input", floor: "body" },
+  // A composite field — a search, tag or mention field, the chat composer, the
+  // inline edit, the colour picker's hex field — paints the **page** role as
+  // its own fill (`bg-background` in `@gpuixui/tw`'s recipes) and keeps
+  // `text-input-foreground` inside it, so the page is a field surface too. The
+  // placeholder sits on the same fill: a plain field's is measured on `input`,
+  // and the composite field's is the second fill a host can be handed through
+  // `nativeTextTheme(theme, "background")`.
+  { foreground: "inputForeground", background: "background", floor: "body" },
+  { foreground: "placeholder", background: "background", floor: "secondary" },
   {
     foreground: "mutedForeground",
     background: "background",

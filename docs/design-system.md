@@ -273,6 +273,20 @@ page) and reach `borderStrong` only on hover — so a resting field inside a car
 is a fill that matches the card and an edge a reader has to look for. The tokens
 ship and measure the boundary; the adoption is `TODO.md` → Interlocks.
 
+A field paints one of **two fills**, and the text inside it is measured against
+the fill it chose. A plain field paints `input`. A composite field — a search,
+tag or mention field, the chat composer, the inline edit, the colour picker's hex
+field — paints the page role as its own fill and keeps `inputForeground` as its
+value, so both roles and the placeholder are measured on `background` as well as
+on `input`; that pair found two shipped misses, Aero light's placeholder at
+4.35:1 on its own window and macOS light's inherited value at 4.49:1 on its,
+both under the 4.5:1 floor (Aero's is `#5B6C7B` and the light base is `#626C7B`
+now). The native text engine draws those fields, and a host given no theme falls
+back to the runtime's **built-in dark** palette, so its placeholder and caret
+would be chosen for a dark surface in a light theme:
+`nativeTextTheme(theme, fill)` hands the host the theme for the fill the field
+paints (`docs/tokens.md` §Native text hosts).
+
 A control with **no** border — the `secondary` variant paints `border-0` — is
 carried by its fill instead, so that fill is measured: `secondary` is held to the
 perceptibility floor (1.05:1) on the page, a card, a popover and a muted toolbar,
@@ -382,7 +396,8 @@ fill and each affected style's own control face moved with that contract.
 **An invalid control changes its edge, not its fill.** Validation failure paints
 the field's border and its focus line in the `destructive` role, and leaves the
 field's fill alone — so the value and the placeholder keep the roles the contrast
-table measures for them (`inputForeground` and `placeholder` on `input`). The
+table measures for them (`inputForeground` and `placeholder` on the fill the
+field paints: `input`, or the page role a composite field uses). The
 edge is a boundary: `destructive` is held to `contrastFloors.boundary` on the page,
 a card, a popover, a `muted` toolbar, a field's own fill and a segmented
 `secondary` panel, the last two through `contrastPairs` (§9). A destructive
@@ -513,10 +528,10 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |
 | body text on background/card/popover/muted and on the accent and selected washes | 7:1 | 7:1 |
-| text typed into an input, on `input` | 7:1 | 7:1 |
+| text typed into an input, on `input` and on the page role a composite field paints its fill with | 7:1 | 7:1 |
 | secondary text on background/card/muted/popover and on a selected row | 4.5:1 | 7:1 |
 | a selected row's title on its own selection, and the `selectedForeground` it hands its children on the `hover`/`active`/`accent` wash it tints | 7:1 / 4.5:1 | 7:1 / 7:1 |
-| on-colour text, placeholder | 4.5:1 | 7:1 |
+| on-colour text, placeholder (on `input` and on the page fill) | 4.5:1 | 7:1 |
 | a secondary action's label (`secondaryForeground`) on the `hover`/`active` wash it tints | 4.5:1 | 7:1 |
 | brand text — a link or text action — on background, card, popover, muted and the hover/active washes it tints (`brandText`) | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
@@ -525,7 +540,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
 | focus ring (on background, card, popover, muted and secondary, and on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs) and `borderStrong` on those strips, on the field, and on the `hover`/`active` wash a bordered control tints | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
-| an indicator mark — a progress fill, spinner dot, slider fill, presence dot or a checked row's tick — on background, card, popover and a muted strip, and on the `hover`/`active` wash a row tints under the pointer | 3:1 | 4.5:1 |
+| an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the `hover`/`active` wash a row tints under the pointer | 3:1 | 4.5:1 |
 | soft status surface against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, elevation shadow (at its deepest level) | 1.05:1 | 1.05:1 |
 | a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
@@ -541,6 +556,15 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 The test runs for every shipped colour set — light, dark, both high-contrast
 variants and all six platform themes — and is part of the normal test suite. It
 can fail: a palette edit that reduces contrast fails the gate.
+
+The **second field fill** was the last surface a field's text had no pair on:
+a composite field paints the page role, so its value and placeholder sit on
+`background` while the table measured only `input`. Measuring it found Aero
+light's placeholder at 4.35:1 on its own window and macOS light's inherited value
+at 4.49:1 on its, both under the 4.5:1 floor, so those values moved (§7). The
+caret joined the mark contract on the same fill: `indicatorSurfaces` names
+`input` as its seventh strip, because the native text host paints the caret
+there.
 
 The surfaces that carry no text are measured too, because "subtle" is not
 "invisible": a divider, a skeleton fill, the modal veil, a status message's soft

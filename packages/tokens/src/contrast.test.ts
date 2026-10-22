@@ -245,11 +245,18 @@ describe("the secondary action's label on the wash it tints", () => {
       "utf8",
     );
     const secondary = button.slice(
-      button.indexOf('Match.when("secondary"'),
-      button.indexOf('Match.when("ghost"'),
+      button.indexOf('Match.when("secondary", () => ({'),
+      button.indexOf('Match.when("ghost", () => ({'),
     );
 
-    expect(secondary).toContain("color: theme.colors.secondaryForeground");
+    // The label is the variant's own on-colour: the action colour resolver the
+    // four variants share names it, and the control style applies that resolver
+    // (so a glyph can inherit the label instead of naming a colour from another
+    // fill).
+    expect(button).toContain(
+      'Match.when("secondary", () => theme.colors.secondaryForeground)',
+    );
+    expect(button).toContain("color: actionOnColor(theme, value)");
     expect(secondary).toContain(
       "hover: { backgroundColor: theme.colors.hover }",
     );
@@ -1281,5 +1288,147 @@ describe("contrastFailures", () => {
     // The default floors pass this theme; the AAA floors do not, because its
     // secondary text was designed for the default theme's 4.5:1.
     expect(contrastFailures(lightTheme, highContrastFloors)).not.toEqual([]);
+  });
+});
+
+/**
+ * Guards the second fill a field paints.
+ *
+ * `contrastPairs` measured a field's value and placeholder on `input`, and a
+ * **composite** field does not paint that role: a search, tag or mention field,
+ * the chat composer, the inline edit and the colour picker's hex field paint
+ * `bg-background` in `@gpuixui/tw`'s recipes and keep `text-input-foreground`
+ * inside it, so the page is a field surface too. Nothing measured the roles on
+ * it, and measuring found two shipped misses: Aero light's placeholder at
+ * 4.35:1 on its own window and macOS light's inherited value at 4.49:1 on its,
+ * both under the 4.5:1 floor. Aero's is `#5B6C7B` and the light base `#626C7B`
+ * now. The pairs are also the contract for `nativeTextTheme(theme, "background")`
+ * — the fill argument a native text host is handed — so a brand is measured on
+ * the same surface its placeholder is painted on.
+ */
+describe("the text a composite field keeps on its own fill", () => {
+  const recipe = (source: string, name: string): string => {
+    const match = new RegExp(`export const ${name} =\\s*"([^"]*)"`).exec(
+      source,
+    );
+    if (match?.[1] === undefined) {
+      throw new Error(`recipe ${name} not found`);
+    }
+    return match[1];
+  };
+
+  const measured = (foreground: string, background: string): boolean =>
+    contrastPairs.some(
+      (pair) => pair.foreground === foreground && pair.background === background,
+    );
+
+  it("measures the value and the placeholder on the page role", () => {
+    expect(measured("inputForeground", "background")).toBe(true);
+    expect(measured("placeholder", "background")).toBe(true);
+    // The other field fill keeps its pair: both are painted by the library.
+    expect(measured("inputForeground", "input")).toBe(true);
+    expect(measured("placeholder", "input")).toBe(true);
+  });
+
+  it("holds the painters that make the page a field fill", () => {
+    const tw = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+    const composites = [
+      ["SEARCH_INPUT", "SEARCH_INPUT_CONTROL"],
+      ["TAG_INPUT_ROOT", "TAG_INPUT_FIELD"],
+      ["MENTION_INPUT_FIELD", "MENTION_INPUT_CONTROL"],
+      ["INLINE_EDIT_INPUT", "INLINE_EDIT_INPUT"],
+      ["COLOR_PICKER_INPUT", "COLOR_PICKER_INPUT"],
+      ["CHAT_COMPOSER", "CHAT_COMPOSER_FIELD"],
+    ] as const;
+
+    composites.forEach(([field, control]) => {
+      expect(recipe(tw, field), field).toContain("bg-background");
+      expect(recipe(tw, control), control).toContain(
+        "text-input-foreground",
+      );
+    });
+
+    // The plain field paints the other fill, through its own style rather than
+    // a recipe class.
+    const field = readFileSync(
+      new URL("../../components/src/field.tsx", import.meta.url),
+      "utf8",
+    );
+    expect(field).toContain("backgroundColor: isDisabled");
+    expect(field).toContain("theme.colors.input");
+  });
+
+  it("reports the placeholder a page-coloured field could not carry", () => {
+    // The two values the contract found, and the current one that clears it.
+    const aero = retroTheme(themes.light, "aero");
+    const darwin = platformTheme(themes.light, "darwin");
+
+    expect(contrastRatio("#5F7181", aero.colors.background)).toBeCloseTo(
+      4.35,
+      2,
+    );
+    expect(contrastRatio("#66707F", darwin.colors.background)).toBeCloseTo(
+      4.49,
+      2,
+    );
+    expect(
+      contrastRatio(aero.colors.placeholder, aero.colors.background),
+    ).toBeGreaterThanOrEqual(contrastFloors.secondary);
+    expect(
+      contrastRatio(darwin.colors.placeholder, darwin.colors.background),
+    ).toBeGreaterThanOrEqual(contrastFloors.secondary);
+  });
+
+  it("reports a placeholder painted in its own page", () => {
+    const failures = contrastFailures({
+      colors: { ...lightColors, placeholder: lightColors.background },
+    });
+
+    expect(
+      failures.filter(
+        ({ foreground, background }) =>
+          foreground === "placeholder" && background === "background",
+      ),
+    ).toEqual([
+      {
+        foreground: "placeholder",
+        background: "background",
+        ratio: 1,
+        floor: contrastFloors.secondary,
+      },
+    ]);
+  });
+
+  it("passes every shipped theme on both field fills", () => {
+    const styles = [
+      lightTheme,
+      darkTheme,
+      highContrastLightTheme,
+      highContrastDarkTheme,
+      ...platformNames.flatMap((platform) =>
+        [themes.light, themes.dark].map((theme) =>
+          platformTheme(theme, platform),
+        ),
+      ),
+      ...retroNames.flatMap((look) =>
+        [themes.light, themes.dark].map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+
+    styles.forEach((theme) => {
+      const failures = contrastFailures(
+        theme,
+        contrastFloorsFor(theme),
+      ).filter(({ foreground, background }) =>
+        foreground === "placeholder"
+          ? background === "background" || background === "input"
+          : foreground === "inputForeground" &&
+            (background === "background" || background === "input"),
+      );
+      expect(failures, theme.name).toEqual([]);
+    });
   });
 });

@@ -640,6 +640,29 @@ The library ships **no font family of its own** yet: a bundled face needs a
 licence review that permits redistribution, and that decision is recorded in
 `TODO.md`. A consumer registers their own typeface, which is the same route.
 
+## Native text hosts
+
+`<input>`, `<textarea>` and `<code>` are drawn by the runtime's text engine, so
+their palette arrives through the host's `theme` prop rather than through style
+properties. A host given no theme falls back to the runtime's **built-in dark**
+palette — the pinned typings say so — so a field in a light theme would paint a
+placeholder and a caret chosen for a dark surface. `nativeTextTheme(theme, fill)`
+is that boundary:
+
+```tsx
+import { nativeTextTheme } from "@gpuixui/tokens";
+
+<input theme={nativeTextTheme(theme)} />; // a plain field: fill `input`
+<input theme={nativeTextTheme(theme, "background")} />; // a composite field
+```
+
+The optional second argument names the fill the field paints — `input` for a
+plain field, the page role for a composite one (search, tag and mention fields,
+the chat composer, the inline edit) — because the value, the placeholder and the
+caret are measured against it (`nativeTextFills` is the two-value list). A host
+is handed the theme's mode, families, `inputForeground`/`mutedForeground`, the
+`placeholder` role and `primary` as its caret and accent.
+
 ## For documentation sites
 
 `colorRoles` lists every semantic role in documentation order, typed as

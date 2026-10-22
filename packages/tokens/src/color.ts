@@ -234,7 +234,7 @@ export const lightColors = {
   borderStrong: "#727D8C",
   input: palette.neutral[0],
   inputForeground: palette.neutral[900],
-  placeholder: "#66707F",
+  placeholder: "#626C7B",
   ring: palette.iris[500],
   selection: "#7567F23D",
   overlay: "#00000073",

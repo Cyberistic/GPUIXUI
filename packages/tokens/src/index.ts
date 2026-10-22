@@ -8,6 +8,7 @@ export * from "./elevation.js";
 export * from "./focus-dim.js";
 export * from "./fonts.js";
 export * from "./indicator.js";
+export * from "./native-text.js";
 export * from "./numbers.js";
 export * from "./platforms.js";
 export * from "./retro.js";
