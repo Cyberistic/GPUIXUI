@@ -218,6 +218,15 @@ Intel Mac, where plan 140's locally built `darwin-x64` binding is installed.
 file *fails to load* instead of skipping; that is why the default `test` run does
 not collect it (plan 117 §5a–§5c).
 
+The critical Tier 2 interactions are also measured in a real window by the
+playground's live probes, which mount the shipped components — not a copy:
+`dialog-lifecycle`, `menu-lifecycle`, `context-menu-lifecycle`,
+`popover-lifecycle`, `toast-lifecycle`, `tabs-lifecycle`, `command-palette`,
+`modal-focus-restore` and `keyboard-focus-dim`. All nine were green on
+`@gpuix/native` 0.11.0 on 2026-10-22
+(`nub apps/playground/dist/live/run.js --only <id>`); each probe records its own
+negative control in `apps/playground/README.md`.
+
 ## Adding a component
 
 1. Read the matching plan in `.agents/slop/plans/`.
