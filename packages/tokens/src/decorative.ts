@@ -530,8 +530,8 @@ const skeletonStrips = ["background", "card", "popover", "muted"] as const;
  * window fills the veil already names — a segmented `secondary` panel (a filled
  * panel as well as a tonal action's face) and a field's own `input` fill, which
  * a picker's panel overlaps — every wash a row can be wearing when the surface
- * opens, and the four soft tints a message is painted on, because an alert's
- * documented action can open a menu over its own tint. The veil and the shadow
+ * opens, and the four soft tints a message is painted on, because an action
+ * inside an alert can open a menu over its own tint. The veil and the shadow
  * cover the same window, so a strip the veil names and the shadow does not was
  * the hole: the high-contrast dark `secondary` **is** the shadow's tint, so a
  * dialog opened over a segmented panel there cast no shadow at all (1.00:1).
@@ -563,9 +563,10 @@ const raisedLevels = [
 
 /**
  * The soft status tints a message's own action opens a surface over. An
- * `Alert`'s description is a container and its documented action is a plain
- * `Button`, so a menu opened from one casts its shadow over the tint the message
- * is painted on, and a confirmation dialog opened from it veils the message that
+ * `Alert`'s description is a container, and the action a consumer places in it
+ * — the package's documented text `AlertLink` or a filled `Button` — can open a
+ * menu, so a menu opened from one casts its shadow over the tint the message is
+ * painted on, and a confirmation dialog opened from it veils the message that
  * asked for the confirmation — the same composition the row washes are measured
  * for, one surface over.
  */

@@ -460,9 +460,10 @@ export const contrastPairs: readonly ContrastPair[] = [
   { foreground: "borderStrong", background: "selected", floor: "boundary" },
   // A control also sits on a **message's own tint**, the one strip this table
   // missed. An `Alert` paints its tone's `xSoft` fill (`ALERT_TONES`) and its
-  // description is a container, so the documented action —
-  // `<Button onClick={retry}>Try again</Button>`, the default variant, which
-  // paints `borderStrong` — draws its edge on the tint. The edge is what
+  // description is a container, so an action a consumer places there — the
+  // package's own documented action is the text `AlertLink`, which paints no
+  // boundary, but a filled action is the default `Button`, which paints
+  // `borderStrong` — draws its edge on the tint. The edge is what
   // identifies a control there, as it does on a field: the neutral fill band is
   // one lightness and the pale tints share it (a `secondary` action reads
   // 1.01–1.04:1 on the green and amber tints of the light styles), so only the
@@ -480,9 +481,10 @@ export const contrastPairs: readonly ContrastPair[] = [
   // A focused control draws its **ring** on the same strip its edge is measured
   // on — the line is separated from the control's own fill, so the tint behind
   // it is the surface it is read on — and the ring is measured on every strip a
-  // control sits on except these four. An `Alert`'s documented action is the
-  // default `Button`, which declares the keyboard ring at rest, so a focus cue
-  // inside the one component built to be noticed was measured by nothing: on
+  // control sits on except these four. A filled action placed in an alert's
+  // description — the default `Button` — declares the keyboard ring at rest, so
+  // a focus cue inside the one component built to be noticed was measured by
+  // nothing: on
   // iris 500 the light ring read 2.94:1 on `infoSoft` and 2.84:1 on
   // `destructiveSoft`, and the high-contrast ring 4.41:1 and 4.16:1 against its
   // 4.5:1 floor. Both palettes move one ramp step deeper rather than the pairs

@@ -1886,8 +1886,9 @@ describe("a control boundary on the strip it sits on", () => {
  * floating surface, the washes a bordered control tints and the washes a row
  * paints under it — and on none of the four soft status tints a message is
  * painted on. An `Alert` fills its tone's `xSoft` role and its description is a
- * container, so the documented action (`<Button onClick={retry}>Try again</Button>`,
- * the default variant) draws the strong edge on that tint. Measured, thirteen of
+ * container, so a filled action a consumer places there (the default `Button`,
+ * which paints the strong edge) draws it on that tint. The package's own
+ * documented action is the text `AlertLink`, which paints no boundary. Measured, thirteen of
  * the sixteen styles missed the 3:1 floor there — the worst being the base dark
  * theme's edge on `warningSoft` at 2.23:1 — so a palette could ship a button
  * with no outline inside the one component built to be noticed, while every
@@ -1921,10 +1922,14 @@ describe("a control's edge on a message's own tint", () => {
     expect(missing).toEqual([]);
   });
 
-  it("holds the painters that put a default action inside an alert", () => {
+  it("holds the painters that put a filled action inside an alert", () => {
     // The pairs only mean something while the composition still exists: the
     // alert fills its tone's soft role, its description is a container, and the
-    // documented action is the default variant — the one that owns the edge.
+    // action a consumer places in it can be the default variant — the one that
+    // owns the edge. The package's own documented action is the text
+    // `AlertLink`, which paints no boundary, so the page only has to keep
+    // documenting an action; the container rule is the source contract these
+    // pairs rest on.
     const recipes = readFileSync(
       new URL("../../tw/src/recipes.ts", import.meta.url),
       "utf8",
@@ -1948,7 +1953,9 @@ describe("a control's edge on a message's own tint", () => {
     );
     tints.forEach((tint) => expect(tones).toContain(`bg-${tint}`));
     expect(alert).toContain("ALERT_TONES[value]");
-    expect(alert).toContain("AlertDescription");
+    // The description is the container a filled action can go in, and the
+    // sentence beside it is what these four pairs are justified by.
+    expect(alert).toContain("It is a container, so it may hold an action");
     expect(button).toContain('variant = "secondary"');
     expect(
       ["borderColor: theme.colors.borderStrong", "border border-strong"].some(
@@ -1956,8 +1963,38 @@ describe("a control's edge on a message's own tint", () => {
       ),
       "the components' action paints no borderStrong edge",
     ).toBe(true);
-    expect(page).toContain('<Alert tone="danger">');
-    expect(page).toContain("<Button onClick={retry}>Try again</Button>");
+    expect(page).toContain("AlertLink");
+    expect(page).toContain("onSelect");
+  });
+
+  it("names the action the alert documents beside the filled one it measures", () => {
+    // The pages said the alert's **documented** action was a plain `Button` long
+    // after the package page moved to the text `AlertLink`, so the catalogue
+    // described a composition no reader was shown. The filled action is still
+    // what the boundary pairs measure — a consumer may place one in the
+    // description — but the page has to name the action the package documents
+    // as well, and neither page may call it the documented one again.
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const designSystem = readFileSync(
+      new URL("../../../docs/design-system.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const packagePage = readFileSync(
+      new URL("../../components/docs/alert.mdx", import.meta.url),
+      "utf8",
+    );
+
+    expect(page).toContain("AlertLink");
+    expect(packagePage).toContain("AlertLink");
+    expect([page, designSystem].join(" ")).not.toContain(
+      "documented action is a plain",
+    );
+    expect([page, designSystem].join(" ")).not.toContain(
+      "documented action is the default",
+    );
   });
 
   it("reports an edge that disappears into the tint it sits on", () => {
@@ -2153,10 +2190,10 @@ describe("the ring on the strip behind the control", () => {
 /**
  * Guards the ring on a **message's own tint**. The table measured the ring on
  * every strip a control rests on and on the strips a control can sit inside, and
- * on none of the four soft status tints a message paints — while an `Alert`'s
- * documented action is the default `Button`, which declares the keyboard ring at
- * rest, so a focus cue inside the one component built to be noticed was measured
- * by nothing.
+ * on none of the four soft status tints a message paints — while a filled action
+ * placed in an `Alert`'s description is the default `Button`, which declares the
+ * keyboard ring at rest, so a focus cue inside the one component built to be
+ * noticed was measured by nothing.
  *
  * Measured, the light ring on iris 500 read **2.94:1** on `infoSoft` and
  * **2.84:1** on `destructiveSoft`, and the high-contrast ring **4.41:1** and

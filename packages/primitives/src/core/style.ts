@@ -15,6 +15,7 @@ import type { StyleDesc } from "@gpuix/react";
 import {
   brandText,
   disabledAction,
+  disabledOpacity,
   elevationShadow,
   targetSize,
   type FilledAction,
@@ -147,7 +148,7 @@ export const controlStyle = (
     const pair =
       variant.filledAction === undefined ? undefined : disabledAction(theme);
     if (pair === undefined) {
-      style.opacity = 0.5;
+      style.opacity = disabledOpacity;
     } else {
       style.backgroundColor = pair.backgroundColor;
       style.color = pair.color;
@@ -608,7 +609,7 @@ export const sliderTrackStyle = (
         paddingRight: inset,
       };
   style.cursor = spec.disabled === true ? "not-allowed" : "pointer";
-  if (spec.disabled === true) style.opacity = 0.5;
+  if (spec.disabled === true) style.opacity = disabledOpacity;
   return style;
 };
 
@@ -782,7 +783,7 @@ export const ratingStarStyle = (
     borderRadius: theme.radius.full,
     cursor: interactive ? "pointer" : "not-allowed",
   };
-  if (spec.disabled === true) style.opacity = 0.5;
+  if (spec.disabled === true) style.opacity = disabledOpacity;
   return style;
 };
 

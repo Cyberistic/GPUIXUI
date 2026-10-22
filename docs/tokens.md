@@ -1752,9 +1752,12 @@ their boxes, and a flush ring stays on the border box. `ring-fill.test.ts` holds
 the offset, the arithmetic that forced it, the strips, the probe and both pages.
 
 A **message's own tint** is the ring's last strip, and the same one the edge
-reaches. An `Alert` fills its tone's soft role and its documented action is a
-plain `Button`, which declares the keyboard ring at rest — so the focus cue is
-drawn on a tint, exactly as the edge is. Nothing measured it: the light ring
+reaches. An `Alert` fills its tone's soft role, and a filled action a consumer
+places in its description — the default `Button` — declares the keyboard ring at
+rest, so the focus cue is drawn on a tint, exactly as the edge is. (The
+package's own documented action is the text `AlertLink`, which paints the brand
+and no boundary; the four ring pairs are the contract for a filled action a
+consumer composes there.) Nothing measured the filled case: the light ring
 read **2.94:1** on `infoSoft` and **2.84:1** on `destructiveSoft`, the
 high-contrast ring **4.41:1** and **4.16:1** against its 4.5:1 floor, and the
 authored Aero light look's own blue the same 2.84. Both base rings move one ramp
@@ -2342,9 +2345,9 @@ reader right-clicked, so its shadow lands on that row's own fill; a submenu open
 from the menu row whose submenu was chosen, so the shadow lands on that row's
 `hover` wash (`menu/item.tsx`), and a dialog or popover opened by a click falls
 on the ghost trigger the pointer still rests on (`internal/button.tsx`); an
-`Alert`'s description is a container whose documented action is a plain
-`Button`, so a menu opened from one casts its shadow over the tint the message
-sits in.
+`Alert`'s description is a container, and the action a consumer places in it —
+the package's documented text `AlertLink` or a filled `Button` — can open a menu,
+so a surface opened from one casts its shadow over the tint the message sits in.
 
 The veil and the shadow cover the same window, so a strip the veil names and the
 shadow does not is a hole — and the high-contrast dark theme had one. The black
@@ -3382,11 +3385,11 @@ export const messagePaint = (theme: Theme, tone: StatusTone) => {
 `selectionWash(theme)` from its theme seam, which every selectable host spreads:
 `FieldInput`, `SearchInput`, both `TimePickerSegment`s, `TagInputField`,
 `MentionInput`, `ColorPicker`'s hex field, `CommandMenuInput`, `ChatComposer`,
-`ComboboxInput` and the input `InlineEdit` swaps in. The nine input hosts and the
-combobox's own search field are read back off the renderer by
-`src/behaviour/selection.test.tsx`; the chat composer's `<textarea>` declares the
-role but no case reads it back yet, which `TODO.md` → Interlocks records. The
-property inherits down a subtree, so a
+`ComboboxInput` and the input `InlineEdit` swaps in. Every selectable host above
+is read back off the renderer by `src/behaviour/selection.test.tsx` — the input
+hosts, the combobox's own search field, and the chat composer's `<textarea>`,
+which the suite reads with `findByType("textarea")` because the runtime paints
+the property on both element types. The property inherits down a subtree, so a
 container that paints a status tint does not use the page role: `Alert`'s root
 declares `messageSelection(theme, tone)`, which is `selectionOn` against the
 tone's own soft role. The runtime's own default is the theme accent at 35%,

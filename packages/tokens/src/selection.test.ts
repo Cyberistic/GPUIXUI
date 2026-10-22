@@ -834,19 +834,23 @@ describe("the adoption both packages paint", () => {
     expect(text).not.toContain("Still open:");
   });
 
-  it("tells a host the renderer reads from one only the source declares", () => {
-    // The chat composer's host is a `<textarea>`, while the renderer helper
-    // reads `<input>` elements only — so the page must not hand it to the suite
-    // that walks the inputs. The day the suite gains the case, this fails until
-    // the page says the renderer reads it too.
+  it("reads the chat composer's textarea back in the renderer", () => {
+    // The chat composer's host is a `<textarea>` while the other hosts' are
+    // `<input>` elements, so the suite walked the inputs and the composer was
+    // declared in the source but never read back. The components suite gained
+    // the textarea case (`findByType("textarea")`), so the page says it is read
+    // rather than recording a gap; a suite that drops the case, or a page that
+    // calls it unread again, fails here.
     const rendered = read("../../components/src/behaviour/selection.test.tsx");
     const chat = read("../../components/src/chat.tsx");
     const text = section("## Text selection");
 
     expect(chat).toContain("...selectionWash(theme)");
     expect(rendered).toContain('findByType("input")');
-    expect(rendered).not.toContain("ChatComposer");
+    expect(rendered).toContain("ChatComposer");
+    expect(rendered).toContain('findByType("textarea")');
     expect(text).toContain("`ChatComposer`");
     expect(text).toContain("`<textarea>`");
+    expect(text).not.toContain("no case reads it back yet");
   });
 });
