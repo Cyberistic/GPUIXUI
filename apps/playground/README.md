@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-58 probes a real window can prove, of which fifteen mount shipped
+59 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -54,8 +54,8 @@ mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
 restore, a dock's keyboard order, an anchored menu in a scrolled header, the
 window's own backdrop, the app-level key handler, the app-level selection
-handler, a field's hint and value ink, a configurable data grid and a generated
-SVG pattern).
+handler, a field's hint and value ink, a configurable data grid, a generated
+SVG pattern and a property inspector beside its preview).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -3253,6 +3253,71 @@ Four negative controls were measured, exit `1` each, then restored green:
 Captures: `.artifacts/live/svg-pattern.png` (the five shapes) and
 `.artifacts/live/svg-pattern-resized.png` (the 300×100 square).
 
+### `inspector-lifecycle` — measured on 0.11.0 here
+
+**A property inspector beside the thing it edits.** Tier 3's *property
+panels*, *key-value displays*, *data toolbars* and *statistic cards*, and Tier
+4's *inspector panels* and *property editors*, are composition over controls
+the runtime already provides — the runtime cannot refuse a key-value row any
+more than it can refuse a toolbar. What no probe had measured is the
+composition: whether one object can be read by a preview, a key-value table, a
+metric card and an editing field at once, and whether an inspector pane behaves
+like a pane rather than a form floating over the page.
+
+The probe mounts the shipped `SplitPane`, the primitives' `Input` and 30
+key-value rows beside a preview on 0.11.0, and measured:
+
+| Step | Measurement |
+| ---- | ----------- |
+| open | the preview (520 px) and the inspector share one row: the **6 px** divider is their whole gap, both panes start at one `y`, and the group's right edge is the inspector pane's own |
+| one object, four views | the preview box paints **120×80**, the readout, the `size` row and the metric all read that object, and the metric card totals **9600** |
+| the table reads down | every label cell holds one `x`, every value cell holds one `x`, and a value starts at its label's right edge |
+| the toolbar | both actions paint on one row **above** the first property row |
+| type `ab` | the field keeps the text session, and the readout, the preview caption and the `tag` key-value row all read `ab` — one edit, one object |
+| press **Wide** | the width becomes **240**, the area **19200**, the preview box paints **240** wide and still **80** tall, and the `size` row and metric follow in the same frame |
+| press **Reset size** | the width returns to **120**; the typed tag stays, because reset is a size action, not a new object |
+| wheel **−200** in the inspector | the inspector reports **−200** and scrolls its 30 rows, while its own pane and the preview caption keep their exact `y`, and the preview reports no scroll offset at all (it is not a scroller) |
+
+48 checks, `--only inspector-lifecycle`, green on 0.11.0 (~0.8 s). Fixture:
+`src/live/inspector.ts` — the object, its four readings, the area and size
+arithmetic, the row set and the scroll premise; `inspector.test.ts` (9 cases)
+holds the area against a sum, the tag's absence against an empty string, the
+reset against a lost edit, the row count against the viewport it must overflow,
+and the README's count against the steps' assertion sites.
+
+What it settles, for the workspace components:
+
+1. **A property panel is a pane, not a page.** The inspector scrolls its own
+   rows inside the split while the preview holds still, so an inspector can own
+   `overflow` and a layout does not need to keep the whole dock in view.
+2. **One object, every view.** The key-value table, the metric card, the
+   preview and the field all repaint from the same state in the frame the edit
+   lands, with no reconciliation step.
+3. **An editing field inside a scrolled pane keeps the platform text session**
+   while the pane's rows are taller than its viewport — the property-editor
+   half of the inspector.
+4. **A toolbar is a row in the pane.** Its actions sit above the rows and are
+   hit-tested like any control; the runtime provides no toolbar host, and needs
+   none.
+
+Three negative controls were measured, exit `1` each, then restored green:
+
+- painting the preview at the **initial** width instead of the object's fails
+  `the preview paints the width the action set` with
+  **`expected 240 ± 1, got 120`** — the preview is a second reader of the same
+  state, not a snapshot.
+- turning the inspector's `overflowY` to `hidden` fails `the wheel scrolls the
+  inspector` with **`expected -200 ± 2, got NaN`** — a pane that fits its rows
+  reports no scroll handle at all, so the wheel check cannot pass on a box that
+  merely clips.
+- widening one property row's label column fails `one value column holds its x
+  down the rows` with **`expected 641 ± 1, got 649`** — the value column is
+  derived from the label width, so a per-row width breaks the table the reader
+  scans down.
+
+Captures: `.artifacts/live/inspector.png` (the workspace after the type, the
+resize, the reset and the scroll).
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -3461,6 +3526,7 @@ narrower. Each deviation is deliberate and measured:
   were one-shot frame reads in the probes — see §A probe waits for a settled
   paint, which records all three measured shapes and the waits that replaced
   them. The full live suite is the release gate, and this line is its result.
+  Measured alone since then: `inspector-lifecycle` (one probe, run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

@@ -384,6 +384,12 @@ export const liveRegistry = [
       "Content: a generated svg path is scaled from its view box by the element's width, clipped at the view box's edge, and paints above and below a box it does not fit",
     capability: "content",
   },
+  {
+    id: "inspector-lifecycle",
+    title:
+      "Workspace: an inspector beside its preview reads one object four ways, a field edits it without losing the session, a toolbar action sizes all three views, and its own wheel scrolls only the inspector",
+    capability: "workspace",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

@@ -637,7 +637,39 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 87/87
+`[x]` `[██████████]` 88/88
+
+`[x]` Measure the **property inspector a workspace pane holds** — Tier 3's
+      *property panels*, *key-value displays*, *data toolbars* and *statistic
+      cards*, and Tier 4's *inspector panels* and *property editors*, are
+      composition over controls the runtime already provides, and none had a
+      window behind it. The `inspector-lifecycle` live probe mounts the shipped
+      `SplitPane`, the primitives' `Input` and 30 key-value rows beside a
+      preview on 0.11.0: the preview (520) and inspector share one row with the
+      **6 px** divider as their whole gap, both panes start at one `y`, and the
+      group's right edge is the inspector's own; the preview box paints
+      **120×80**, and the readout, the `size` row and the metric card
+      (**9600**) all read that one object; every label cell holds one `x` and
+      every value cell one `x`, with values at their labels' right edges; two
+      toolbar actions paint on one row above the first property row; typing
+      `ab` keeps the text session in the field while the preview, the `tag` row
+      and the readout all follow; **Wide** makes the width **240** and the area
+      **19200** in the preview, the size row and the metric; **Reset size**
+      restores **120** and keeps the typed tag; and a **−200** wheel scrolls
+      the inspector while its own pane and the preview caption keep their exact
+      `y` (the preview reports no scroll handle at all). 48 checks,
+      `--only inspector-lifecycle`, green (~0.8 s). Three negative controls
+      measured, exit `1`, restored green: a fixed preview width fails `expected
+      240 ± 1, got 120`; `overflowY: hidden` fails `expected -200 ± 2, got
+      NaN`; one row's wider label fails `expected 641 ± 1, got 649`. Fixture:
+      `src/live/inspector.ts` + `inspector.test.ts` (9 cases, including the
+      README count and the scroll premise); `pattern.test.ts`'s steps slice now
+      bounds at the next declaration rather than the body table, so a probe
+      appended after it cannot inflate its count. Evidence:
+      `apps/playground/README.md` §`inspector-lifecycle`,
+      `.artifacts/live/inspector.png`. The six Tier 3/4 inventory rows now carry
+      the measured verdicts, and the stale Command palette row cites the two
+      probes that closed it.
 
 `[x]` Measure the **generated `<svg>` a pattern field needs** — plan 600's
       `hexagon` and `topography` rows wait on a runtime question: does a sized

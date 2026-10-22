@@ -64,12 +64,16 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The probe's steps, from their declaration to the body table that ends it. */
+/** The probe's steps, bounded by the declaration that follows them. */
 const steps = (() => {
   const start = scenarios.indexOf("const svgPatternSteps");
   if (start === -1) return "";
-  const end = scenarios.indexOf("\n/** The bodies", start);
-  return scenarios.slice(start, end === -1 ? scenarios.length : end);
+  const end = Math.min(
+    ...["\nconst ", "\nexport const ", "\n/**"]
+      .map((marker) => scenarios.indexOf(marker, start + 1))
+      .filter((at) => at !== -1),
+  );
+  return scenarios.slice(start, Number.isFinite(end) ? end : scenarios.length);
 })();
 
 /** The count the README prints for this probe, if any. */

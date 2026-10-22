@@ -123,7 +123,7 @@ import {
 } from "@gpuix/react/select";
 import { Pixels, Smoke } from "@gpuixui/testing";
 import { nextPalette, palettes, type PaletteId } from "../palettes.js";
-import { SplitPane } from "../panels/split-pane.js";
+import { SplitPane, SPLIT_DIVIDER_WIDTH } from "../panels/split-pane.js";
 import { Body, Pressable, Readout, Toolbar } from "../ui.js";
 import { useWindowKey, useWindowSelection } from "../window-handlers.js";
 import { useWindowFacts } from "./window-facts.js";
@@ -381,6 +381,27 @@ import {
   nestedReadout,
   type NestedSurface,
 } from "./nested-overlay.js";
+import {
+  INITIAL_OBJECT,
+  INSPECTOR_LABEL_WIDTH,
+  INSPECTOR_IDS,
+  INSPECTOR_PANE_HEIGHT,
+  INSPECTOR_ROW_HEIGHT,
+  INSPECTOR_SCROLL_HEIGHT,
+  INSPECTOR_TOOLBAR_HEIGHT,
+  INSPECTOR_VALUE_WIDTH,
+  WIDE_WIDTH,
+  inspectorReadout,
+  metricReadout,
+  previewCaption,
+  propertyRows,
+  renameTag,
+  resetSize,
+  sizeValue,
+  tagValue,
+  widen,
+  type InspectedObject,
+} from "./inspector.js";
 import { listAnchorOf } from "./host.js";
 import { LIST_ROWS, TYPEAHEAD_LETTER, type ListRow } from "./list.js";
 import {
@@ -15798,6 +15819,489 @@ const svgPatternSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/** The preview half of the inspector workspace: the object at its own size. */
+const InspectorPreview = ({
+  object,
+}: {
+  readonly object: InspectedObject;
+}): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      testId={INSPECTOR_IDS.preview}
+      style={{
+        height: "100%",
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.card,
+        borderWidth: theme.borderWidth.thin,
+        borderColor: theme.colors.border,
+      }}
+    >
+      <text
+        testId={INSPECTOR_IDS.previewCaption}
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {previewCaption(object)}
+      </text>
+      <div
+        style={{
+          flexGrow: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: theme.colors.background,
+        }}
+      >
+        <div
+          testId={INSPECTOR_IDS.previewBox}
+          style={{
+            width: object.width,
+            height: object.height,
+            borderRadius: theme.radius.sm,
+            backgroundColor: theme.colors.primary,
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+/** The inspector half: a toolbar, a metric, one editor and the property rows. */
+const InspectorPanel = ({
+  object,
+  onChange,
+}: {
+  readonly object: InspectedObject;
+  readonly onChange: (next: InspectedObject) => void;
+}): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      style={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: theme.colors.card,
+        borderWidth: theme.borderWidth.thin,
+        borderColor: theme.colors.border,
+      }}
+    >
+      <div
+        testId={INSPECTOR_IDS.toolbar}
+        style={{
+          height: INSPECTOR_TOOLBAR_HEIGHT,
+          paddingLeft: theme.spacing.sm,
+          paddingRight: theme.spacing.sm,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing.sm,
+          borderBottomWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+        }}
+      >
+        <Pressable
+          testId={INSPECTOR_IDS.wide}
+          onClick={() => onChange(widen(object))}
+          style={{ padding: theme.spacing.xs }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.foreground,
+            }}
+          >
+            Wide
+          </text>
+        </Pressable>
+        <Pressable
+          testId={INSPECTOR_IDS.reset}
+          onClick={() => onChange(resetSize(object))}
+          style={{ padding: theme.spacing.xs }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.foreground,
+            }}
+          >
+            Reset size
+          </text>
+        </Pressable>
+      </div>
+      <div
+        testId={INSPECTOR_IDS.scroll}
+        style={{
+          height: INSPECTOR_SCROLL_HEIGHT,
+          overflowY: "scroll",
+          padding: theme.spacing.sm,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.sm,
+        }}
+      >
+        <div
+          testId={INSPECTOR_IDS.metric}
+          style={{
+            height: 36,
+            paddingLeft: theme.spacing.sm,
+            paddingRight: theme.spacing.sm,
+            display: "flex",
+            alignItems: "center",
+            borderRadius: theme.radius.sm,
+            backgroundColor: theme.colors.muted,
+          }}
+        >
+          <text
+            testId={INSPECTOR_IDS.metricValue}
+            style={{
+              ...textStyle(theme, "bodyStrong"),
+              color: theme.colors.foreground,
+            }}
+          >
+            {metricReadout(object)}
+          </text>
+        </div>
+        <Input
+          testId={INSPECTOR_IDS.tagField}
+          label="Tag"
+          value={object.tag}
+          onValueChange={(tag) => onChange(renameTag(object, tag))}
+          style={{ width: INSPECTOR_LABEL_WIDTH + INSPECTOR_VALUE_WIDTH }}
+        />
+        {Arr.map(propertyRows(object), (row) => (
+          <div
+            key={row.key}
+            role="row"
+            style={{
+              height: INSPECTOR_ROW_HEIGHT,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <div
+              testId={INSPECTOR_IDS.labelCell(row.key)}
+              style={{ width: INSPECTOR_LABEL_WIDTH, flexShrink: 0 }}
+            >
+              <text
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: theme.colors.mutedForeground,
+                }}
+              >
+                {row.label}
+              </text>
+            </div>
+            <div
+              testId={INSPECTOR_IDS.valueCell(row.key)}
+              style={{ width: INSPECTOR_VALUE_WIDTH, flexShrink: 0 }}
+            >
+              <text
+                testId={INSPECTOR_IDS.value(row.key)}
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: theme.colors.foreground,
+                }}
+              >
+                {row.value}
+              </text>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const InspectorProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [object, setObject] = useState<InspectedObject>(INITIAL_OBJECT);
+  return (
+    <div
+      testId={INSPECTOR_IDS.probe}
+      style={{
+        width: 900,
+        height: 520,
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A property inspector beside its preview: the object is read by the
+        preview, the key-value rows and the metric card, an edit reaches all of
+        them, and the inspector scrolls in its own pane.
+      </text>
+      <div
+        testId={INSPECTOR_IDS.split}
+        style={{ height: INSPECTOR_PANE_HEIGHT, display: "flex" }}
+      >
+        <SplitPane
+          id="inspector-split"
+          initial={520}
+          min={380}
+          max={640}
+          primary={<InspectorPreview object={object} />}
+          secondary={<InspectorPanel object={object} onChange={setObject} />}
+        />
+      </div>
+      <Readout testId={INSPECTOR_IDS.readout}>
+        {inspectorReadout(object)}
+      </Readout>
+    </div>
+  );
+};
+
+const inspectorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(INSPECTOR_IDS.previewBox);
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text(INSPECTOR_IDS.readout);
+    const readY = (testId: string) =>
+      Effect.map(ctx.host.scrollOffset(testId), (offset) =>
+        Option.match(Option.fromNullishOr(offset), {
+          onNone: () => Number.NaN,
+          onSome: (value) => value.y,
+        }),
+      );
+
+    // 1. The object is read by its preview, its key-value table and its metric.
+    yield* ctx.expectEqual(
+      "the inspector opens on the object it holds",
+      yield* readout(),
+      inspectorReadout(INITIAL_OBJECT),
+    );
+    yield* ctx.expectEqual(
+      "the preview names the object and its size",
+      yield* ctx.host.text(INSPECTOR_IDS.previewCaption),
+      previewCaption(INITIAL_OBJECT),
+    );
+    yield* ctx.expectEqual(
+      "the key-value table reads the same size",
+      yield* ctx.host.text(INSPECTOR_IDS.value("size")),
+      sizeValue(INITIAL_OBJECT),
+    );
+    yield* ctx.expectEqual(
+      "the metric card totals the same object",
+      yield* ctx.host.text(INSPECTOR_IDS.metricValue),
+      metricReadout(INITIAL_OBJECT),
+    );
+    const previewBox = yield* paintedBox(ctx, INSPECTOR_IDS.previewBox);
+    yield* ctx.expectNear(
+      "the preview paints the object's width",
+      previewBox.width,
+      INITIAL_OBJECT.width,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the preview paints the object's height",
+      previewBox.height,
+      INITIAL_OBJECT.height,
+      1,
+    );
+
+    // 2. The two panes are one group: the divider is the gap, and neither pane
+    //    leaves the group its split gives them.
+    const left = yield* paintedBox(ctx, "inspector-split-pane-a");
+    const right = yield* paintedBox(ctx, "inspector-split-pane-b");
+    const divider = yield* paintedBox(ctx, "inspector-split-divider");
+    const group = yield* paintedBox(ctx, INSPECTOR_IDS.split);
+    yield* ctx.expectNear(
+      "the divider sits at the left pane's edge",
+      divider.x,
+      left.x + left.width,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the inspector pane starts after the divider",
+      right.x,
+      divider.x + SPLIT_DIVIDER_WIDTH,
+      1,
+    );
+    yield* ctx.expectNear(
+      "both panes share the group's top edge",
+      right.y,
+      left.y,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the panes fill the group they share",
+      right.x + right.width,
+      group.x + group.width,
+      1,
+    );
+
+    // 3. A data toolbar is one row, above the properties it acts on.
+    const wide = yield* paintedBox(ctx, INSPECTOR_IDS.wide);
+    const reset = yield* paintedBox(ctx, INSPECTOR_IDS.reset);
+    const firstRow = yield* paintedBox(ctx, INSPECTOR_IDS.labelCell("name"));
+    yield* ctx.expectNear(
+      "the toolbar's actions sit on one row",
+      wide.y,
+      reset.y,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the toolbar sits above the property rows",
+      wide.y + wide.height <= firstRow.y,
+      true,
+    );
+
+    // 4. Every key-value row keeps its two columns, so the table reads down.
+    const labelName = yield* paintedBox(ctx, INSPECTOR_IDS.labelCell("name"));
+    const labelSize = yield* paintedBox(ctx, INSPECTOR_IDS.labelCell("size"));
+    const valueName = yield* paintedBox(ctx, INSPECTOR_IDS.valueCell("name"));
+    const valueSize = yield* paintedBox(ctx, INSPECTOR_IDS.valueCell("size"));
+    yield* ctx.expectNear(
+      "one label column holds its x down the rows",
+      labelSize.x,
+      labelName.x,
+      1,
+    );
+    yield* ctx.expectNear(
+      "one value column holds its x down the rows",
+      valueSize.x,
+      valueName.x,
+      1,
+    );
+    yield* ctx.expectNear(
+      "a value begins after its own label",
+      valueName.x,
+      labelName.x + labelName.width,
+      1,
+    );
+
+    // 5. The property editor edits the object every other view reads, and the
+    //    key it types stays in its own field.
+    yield* ctx.host.click(INSPECTOR_IDS.tagField);
+    yield* ctx.host.key("a");
+    yield* ctx.host.key("b");
+    yield* Effect.sleep(SETTLE);
+    const tagged = renameTag(INITIAL_OBJECT, "ab");
+    yield* ctx.expectEqual(
+      "typing reaches the inspector's field",
+      yield* readout(),
+      inspectorReadout(tagged),
+    );
+    yield* ctx.expectContains(
+      "the preview follows the edit",
+      yield* ctx.host.text(INSPECTOR_IDS.previewCaption),
+      "#ab",
+    );
+    yield* ctx.expectEqual(
+      "the key-value row follows the edit",
+      yield* ctx.host.text(INSPECTOR_IDS.value("tag")),
+      tagValue(tagged.tag),
+    );
+    yield* ctx.expectEqual(
+      "the field keeps the session it was typed into",
+      yield* focusedAfterPaint(ctx),
+      INSPECTOR_IDS.tagField,
+    );
+
+    // 6. A toolbar action moves the size in all three views at once.
+    yield* ctx.host.click(INSPECTOR_IDS.wide);
+    yield* Effect.sleep(SETTLE);
+    const widened = widen(tagged);
+    yield* ctx.expectEqual(
+      "the toolbar action widens the object",
+      yield* readout(),
+      inspectorReadout(widened),
+    );
+    const widenedBox = yield* paintedBox(ctx, INSPECTOR_IDS.previewBox);
+    yield* ctx.expectNear(
+      "the preview paints the width the action set",
+      widenedBox.width,
+      WIDE_WIDTH,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the action moves the width only",
+      widenedBox.height,
+      INITIAL_OBJECT.height,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the size row follows the action",
+      yield* ctx.host.text(INSPECTOR_IDS.value("size")),
+      sizeValue(widened),
+    );
+    yield* ctx.expectEqual(
+      "the metric card follows the action",
+      yield* ctx.host.text(INSPECTOR_IDS.metricValue),
+      metricReadout(widened),
+    );
+
+    // 7. Reset restores the size and keeps the edit the reader made.
+    yield* ctx.host.click(INSPECTOR_IDS.reset);
+    yield* Effect.sleep(SETTLE);
+    const restored = resetSize(widened);
+    yield* ctx.expectEqual(
+      "reset restores the size",
+      yield* readout(),
+      inspectorReadout(restored),
+    );
+    const restoredBox = yield* paintedBox(ctx, INSPECTOR_IDS.previewBox);
+    yield* ctx.expectNear(
+      "the preview paints the restored width",
+      restoredBox.width,
+      INITIAL_OBJECT.width,
+      1,
+    );
+
+    // 8. The inspector owns its scroller: its wheel moves the properties and
+    //    leaves the pane beside it where it was.
+    const inspectorBefore = yield* paintedBox(ctx, "inspector-split-pane-b");
+    const captionBefore = yield* paintedBox(ctx, INSPECTOR_IDS.previewCaption);
+    yield* ctx.host.wheel(INSPECTOR_IDS.scroll, 0, -200);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "the wheel scrolls the inspector",
+      yield* readY(INSPECTOR_IDS.scroll),
+      -200,
+      2,
+    );
+    const inspectorAfter = yield* paintedBox(ctx, "inspector-split-pane-b");
+    const captionAfter = yield* paintedBox(ctx, INSPECTOR_IDS.previewCaption);
+    yield* ctx.expectNear(
+      "scrolling the inspector leaves its own pane in place",
+      inspectorAfter.y,
+      inspectorBefore.y,
+      1,
+    );
+    yield* ctx.expectNear(
+      "scrolling the inspector leaves the preview in place",
+      captionAfter.y,
+      captionBefore.y,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the preview pane is not a scroller",
+      Option.isNone(
+        Option.fromNullishOr(
+          yield* ctx.host.scrollOffset(INSPECTOR_IDS.preview),
+        ),
+      ),
+      true,
+    );
+    yield* ctx.host.capture("inspector");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -16090,5 +16594,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "svg-pattern",
     view: () => <SvgPatternProbe />,
     steps: svgPatternSteps,
+  },
+  "inspector-lifecycle": {
+    id: "inspector-lifecycle",
+    view: () => <InspectorProbe />,
+    steps: inspectorSteps,
   },
 };

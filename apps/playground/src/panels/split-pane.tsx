@@ -24,6 +24,9 @@ import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
 import { nextSize } from "./resize.js";
 
+/** The divider's width, so a probe that measures the gap reads the same number. */
+export const SPLIT_DIVIDER_WIDTH = 6;
+
 /** A drag in progress: the pointer x and pane width when the button went down. */
 interface Press {
   readonly x: number;
@@ -79,7 +82,7 @@ export const SplitPane = ({
       <div
         testId={`${id}-divider`}
         style={{
-          width: 6,
+          width: SPLIT_DIVIDER_WIDTH,
           flexShrink: 0,
           cursor: "col-resize",
           backgroundColor: theme.colors.border,
