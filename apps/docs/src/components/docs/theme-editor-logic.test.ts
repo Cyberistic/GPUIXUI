@@ -9,6 +9,7 @@ import {
   targetSize,
   themes,
 } from "@gpuixui/tokens";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { platformThemes } from "../../lib/platform";
 import {
@@ -662,5 +663,43 @@ describe("theme-editor audit readout", () => {
       "foreground on the selection wash over background — could not be composited (needs 7:1)",
     );
     expect(lines.every((line) => !line.includes("unmeasurable"))).toBe(true);
+  });
+
+  it("describes the number of reports the gate actually returns", () => {
+    // The fold said `auditTheme` "reads all nine in one call" after `syntax`
+    // and `keyboardDim` had joined the gate, so the editor's own summary told a
+    // maintainer that two reports were shown somewhere else. The count is read
+    // from the gate, not printed, and every report it returns is flattened by
+    // the readout.
+    const words = [
+      "zero",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine",
+      "ten",
+      "eleven",
+      "twelve",
+    ];
+    const source = readFileSync(
+      new URL("./theme-editor-logic.ts", import.meta.url),
+      "utf8",
+    );
+    const reports = Object.keys(auditTheme(themes.light)).filter(
+      (key) => key !== "passed",
+    );
+
+    expect(source).toContain(`reads all ${words[reports.length]} in one`);
+    expect(source).toContain(
+      `Which of the audit's ${words[reports.length]} reports`,
+    );
+    expect(reports.filter((key) => !source.includes(`report.${key}`))).toEqual(
+      [],
+    );
   });
 });

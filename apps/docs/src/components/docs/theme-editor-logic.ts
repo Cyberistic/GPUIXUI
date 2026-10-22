@@ -132,12 +132,13 @@ export const themeConfig = (
  * cannot lay out, a text pair below its floor, a decorative surface too close to
  * what it sits on, a data-series colour too close to its plot or to its
  * neighbour (or two that collapse once a colour-vision deficiency is simulated),
- * a selection wash that hides itself or the text it covers, an indicator mark a
- * reader cannot find on the strip it is drawn on, and a disabled control whose
- * faded label vanishes into its faded fill. `auditTheme` reads all nine in one
- * call, so the editor cannot show some reports and leave the others silent. The
- * base is the platform style the preview is painted over, so the audit measures
- * what the reader sees.
+ * a syntax token that matches the fill a code block paints, a selection wash
+ * that hides itself or the text it covers, an indicator mark a reader cannot
+ * find on the strip it is drawn on, a disabled control whose faded label
+ * vanishes into its faded fill, and a control the runtime's keyboard dim erases.
+ * `auditTheme` reads all eleven in one call, so the editor cannot show some
+ * reports and leave the others silent. The base is the platform style the
+ * preview is painted over, so the audit measures what the reader sees.
  */
 export const auditReport = (
   mode: ThemeMode,

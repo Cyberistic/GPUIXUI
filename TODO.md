@@ -5455,7 +5455,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 177/177
+`[x]` `[██████████]` 179/179
 
 `[x]` Stop the **preview policy** claiming a frame directory the repository
 ignores — both probe paragraphs in `docs/preview-strategy.md` said the frames
@@ -6983,6 +6983,22 @@ sentence. Directions measured: deleting the Data row fails the table case
 the source case by name, and restoring the ledger sentence fails the template
 case; restored, `nub run --filter @gpuixui/docs test` is green (97 files / 967
 tests). No native scenario applies (a policy is prose).
+
+`[x]` Word the **theme editor's own summary** with the report count the gate
+returns — `auditReport`'s JSDoc said `auditTheme` "reads all nine in one call"
+while the gate returns eleven (the fold's own `AuditKind` comment already said
+eleven), so a maintainer reading the editor's summary believed `syntax` and
+`keyboardDim` were read somewhere else, and the list omitted both concepts. The
+sentence now names all eleven — including a syntax token that matches the fill a
+code block paints and a control the runtime's keyboard dim erases — and
+`theme-editor-logic.test.ts`'s `describes the number of reports the gate actually
+returns` derives the count word from `Object.keys(auditTheme(themes.light))`,
+holds both JSDoc sentences to it, and requires every report key to appear as
+`report.<key>` in `auditFindings`, so a report the gate gains fails the summary
+and a report the readout stops flattening fails too. Direction measured:
+restoring "reads all nine in one" (and the `nine` in the `AuditKind` comment)
+fails the case by name; restored, the file is 44/44 and
+`nub run --filter @gpuixui/docs check-types` is clean.
 
 `[x]` Drive a curated preview's **press path in a real browser session** — the site's headless Chrome *does* hydrate, just later than the capture waited: a cold dev server compiles the whole route tree (every MDX module) before the client entry commits, so a page read at ~1 s has `0` nodes carrying a React fiber and a press moves nothing, while the same page at ~10.5 s has 1 366 nodes with a fiber and the carousel's readout moves `Slide 1 of 4` → `Slide 2 of 4` → `Slide 1 of 4`. The earlier reading was a timing artefact, not a missing client entry (the entry, `hydrateStart` and `react-dom/client` all load with no failed requests). `apps/docs/scripts/preview-press-probe.ts` is the probe: it opens the Carousel page, waits for the workflow demo's **next control to carry `__reactProps.onClick`** (a fiber alone is not enough — the tree attaches node by node, and a press before the handler does nothing), presses Next and Previous through the DOM's own click path, and reads the slide out of `Slide N of 4`, so the assertion is the demo's state rather than a pixel. Measured 2026-10-22 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80: hydrated after 10.7 s, both moves green, exit `0`; the negative control is the hydration budget — `--timeout 500` prints `FAIL the demo never hydrated within 500 ms` and exits `1`. `docs/preview-strategy.md` gains §The press path is measured with the trap, the commands and the measured run; `src/lib/preview-press.test.ts` reads the policy and the probe (the ready-check before the press, both directions, the derived readout assertions) and unit-tests the readout parser against the kicker (`1 / 4` must not be read as the slide). Directions measured: removing the §heading fails the policy case by name, dropping `typeof props.onClick` fails the probe case, and the parser case reads `Slide 3 of 4` out of a string that also says `1 / 4`. The full docs suite is red only on the tokens workstream's uncommitted `track` contract (`passes the one gate the package runs on its own themes`, 1 of 36 in that file); this workstream's files and probe are green.
 
