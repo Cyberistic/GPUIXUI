@@ -237,12 +237,12 @@ import {
   DATE_PICKER_CHOSEN_LABEL,
   DATE_PICKER_CLEAR,
   DATE_PICKER_CONTENT,
-  DATE_PICKER_EMPTY_ANCHOR,
   DATE_PICKER_EMPTY_TRIGGER,
   DATE_PICKER_MAX,
   DATE_PICKER_MIN,
   DATE_PICKER_MONTH,
   DATE_PICKER_MONTH_LABEL,
+  DATE_PICKER_NAV_ARROW,
   DATE_PICKER_NEXT,
   DATE_PICKER_PLACEHOLDER,
   DATE_PICKER_PROBE,
@@ -21848,13 +21848,13 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("date-picker-cleared");
 
-    // A picker with no day anchors on the month's first day, not on the day it
-    // calls today (the measured limit the fixture names).
+    // A cleared picker anchors on the day it calls today, the anchor it
+    // documents: the open effect hands the focus effect the anchor it just set.
     yield* open();
     yield* ctx.expectEqual(
-      "an empty picker anchors on the month's first day, not on today (measured limit)",
+      "a cleared picker reopens on the day it calls today",
       yield* focusedAfterPaint(ctx),
-      datePickerCell(DATE_PICKER_EMPTY_ANCHOR),
+      datePickerCell(DATE_PICKER_TODAY),
     );
 
     // A day past the last bound is painted and refuses the press: the surface
@@ -21880,9 +21880,9 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor(DATE_PICKER_MONTH);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
-      "an empty picker's first open focuses the month's first day (measured limit: the anchor it documents is today)",
+      "an empty picker's first open focuses the day it calls today",
       yield* focusedAfterPaint(ctx),
-      datePickerCell(DATE_PICKER_EMPTY_ANCHOR),
+      datePickerCell(DATE_PICKER_TODAY),
     );
     yield* ctx.host.key("escape");
     yield* ctx.expectEqual(
@@ -21914,9 +21914,9 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     // The press itself: a disabled control leaves the Tab order but the runtime
     // still focuses the element a pointer pressed, so the reader's place is the
     // control they just refused (`button-activation-lifecycle` measured the same
-    // focus rule on a disabled `Button`). The nav sits beside the grid rather
-    // than inside it, so every later key has nowhere to go until the surface is
-    // reopened — the measured limit the interlock row in `TODO.md` carries.
+    // focus rule on a disabled `Button`). The nav row answers the movement keys
+    // the grid does, so the arrow takes the calendar on and pulls the focus back
+    // to the day it lands on.
     yield* ctx.expectEqual(
       "a refused month control leaves the surface open",
       yield* settlePainted(ctx, DATE_PICKER_CONTENT),
@@ -21929,9 +21929,9 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.key("right");
     yield* ctx.expectEqual(
-      "the grid no longer takes an arrow while the nav holds the focus (measured limit)",
+      "the nav row's arrow moves the calendar and takes the focus back to a day",
       yield* focusedAfterPaint(ctx),
-      DATE_PICKER_NEXT,
+      datePickerCell(DATE_PICKER_NAV_ARROW),
     );
     yield* ctx.expectEqual(
       "a refused month control chooses nothing",
@@ -21953,9 +21953,9 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* open();
     yield* ctx.expectEqual(
-      "reopening a cleared picker restores the focus to a day, at the empty anchor",
+      "reopening a cleared picker restores the focus to a day, at the anchor it documents",
       yield* focusedAfterPaint(ctx),
-      datePickerCell(DATE_PICKER_EMPTY_ANCHOR),
+      datePickerCell(DATE_PICKER_TODAY),
     );
     yield* ctx.host.key("escape");
     yield* settleGone(ctx, DATE_PICKER_CONTENT);

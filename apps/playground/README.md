@@ -4311,7 +4311,8 @@ was handed.
 | `pagedown` | `date-day-2026-03-27` | and back to the latest |
 | `escape` | `date-picker-trigger` | the surface closes without choosing and the focus comes back |
 | Clear | `date-picker-trigger` | the value is `null`, the trigger is the `Pick a date` placeholder, and the focus comes back |
-| press the disabled next-month control | `date-next` | a refused control still takes the pointer's focus — the measured limit below |
+| press the disabled next-month control | `date-next` | a refused control still takes the pointer's focus — the press-focus rule below |
+| ArrowRight after that press | `date-day-2026-03-12` | the nav row answers the movement keys and takes the focus back to a day |
 
 Navigation never moves the value: the readout stays `value=2026-03-11 changes=0`
 through all nine keys, `Enter` makes it `value=2026-03-27 changes=1`, Escape
@@ -4319,24 +4320,27 @@ leaves it there, and Clear is the second and last change. A day past `max`
 (`2026-03-30`) is painted and refuses the press: the surface stays and the value
 does not move.
 
-Two measured limits, both from an empty picker. Its first open focuses the
-month's **first day**, not the day the picker calls today — the open effect sets
-the anchor and the same commit's focus effect reads the state before it, so the
-grid falls back to `startOfMonth`. And a press on a **disabled** month control
-parks the focus on that control: the button leaves the Tab order, but the runtime
-still focuses the element a pointer pressed, and the nav row is a sibling of the
-grid rather than a child, so every later arrow has nowhere to go until the
-surface is reopened (Escape still closes it — the dismiss stack is not the grid's
-— and the next open restores a day cell). The interlock rows in `TODO.md` carry
-both halves.
+Two rows record what a **refused** month control does. Its press parks the focus
+on the control — the button leaves the Tab order, but the runtime still focuses
+the element a pointer pressed, the same press-focus rule `button-activation-lifecycle`
+measured on a disabled `Button`. The nav row answers the same movement keys as the
+grid, so the next `ArrowRight` takes the calendar from 11 to 12 March and pulls
+real focus back to that day, instead of leaving a keyboard reader with nothing
+until the surface is reopened. An empty picker's first open lands on the day it
+calls today, the anchor the component documents. Both are stated as the contract
+because both were **defects this probe measured first** — `date-day-2026-03-01`
+against the anchor's `-11`, and an arrow that stayed on `date-next` — which the
+component repaired in `6b75d6e2`; the probe and this section now assert the
+repaired behaviour.
 
 45 checks, `--only date-picker-lifecycle`, green on 0.11.0 (~24 s). Fixture:
-`src/live/date-picker.ts` (the cumulative route, the pinned days, the cell ids and
-the readout) + `date-picker.test.ts` (8 cases: every route re-derived from
-`effect/DateTime` and clamped to the bounds, the month's neighbours holding no
-selectable day, both labels re-derived from `Intl` in UTC, the readout, the probe
-held to the table, and this section). Evidence:
-`.artifacts/live/date-picker-{open,chosen,cleared}.png`.
+`src/live/date-picker.ts` (the cumulative route, the pinned days, the nav arrow's
+day, the cell ids and the readout) + `date-picker.test.ts` (9 cases: every route
+re-derived from `effect/DateTime` and clamped to the bounds, the month's
+neighbours holding no selectable day, the nav arrow derived from the anchor and
+the bounds, both labels re-derived from `Intl` in UTC, the readout, the probe held
+to the table, the repaired anchor and keyboard refused as regressions, and this
+section). Evidence: `.artifacts/live/date-picker-{open,chosen,cleared}.png`.
 
 Two negative controls measured, exit `1` each, restored green. Crediting the
 first `right` with the wrong day (`2026-03-13`) fails
@@ -4347,7 +4351,7 @@ window's focused cell rather than restating the table; `date-picker.test.ts`'s
 is opened (**`expected "ArrowRight moves one day forward: 2026-03-13", got
 "…: 2026-03-12"`**). And asserting that the refused control leaves the focus on a
 day fails with **`expected "date-day-2026-03-11", got "date-next"`** — the
-measured limit is reported, not assumed away.
+press-focus rule is reported, not assumed away.
 
 ### `data-tree-lifecycle` — measured on 0.11.0 here
 

@@ -11,6 +11,12 @@
  * both neighbouring months contain no selectable day, which is the premise the
  * "the month control refuses" check rests on.
  *
+ * The bug the section case guards: the probe kept asserting the pre-fix
+ * `DatePicker` — an empty picker anchoring on the month's first day and an arrow
+ * delivered to a refused month control moving nothing — after the component
+ * repaired both (`6b75d6e2`), so the window's evidence contradicted the shipped
+ * behaviour and the section still published the defect as a measured limit.
+ *
  * `node:fs` is deliberate, as in `registry.test.ts` and `button.test.ts`: this is
  * a check over the repository's own Markdown, not a runtime path.
  */
@@ -21,11 +27,11 @@ import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import {
   DATE_PICKER_CHOSEN_LABEL,
-  DATE_PICKER_EMPTY_ANCHOR,
   DATE_PICKER_KEYS,
   DATE_PICKER_MAX,
   DATE_PICKER_MIN,
   DATE_PICKER_MONTH_LABEL,
+  DATE_PICKER_NAV_ARROW,
   DATE_PICKER_PLACEHOLDER,
   DATE_PICKER_ROUTES,
   DATE_PICKER_TODAY,
@@ -147,11 +153,13 @@ describe("the date-picker fixture", () => {
     // the 30th) and after the last bound.
     expect(iso(day(DATE_PICKER_UNAVAILABLE)) > DATE_PICKER_MAX).toBe(true);
     expect(DATE_PICKER_UNAVAILABLE.startsWith("2026-03-")).toBe(true);
-    // The empty picker's measured anchor is the month's first day, and it is
-    // before `min` — which is why the check that pins it says the first Enter a
-    // keyboard reader presses on a fresh calendar is refused.
-    expect(DATE_PICKER_EMPTY_ANCHOR).toBe(iso(month));
-    expect(DateTime.isLessThan(day(DATE_PICKER_EMPTY_ANCHOR), min)).toBe(true);
+    // The move the refused next-month control's arrow must land on: one day on
+    // from the anchor, inside the bounds, so it is a selectable day.
+    expect(DATE_PICKER_NAV_ARROW).toBe(
+      iso(DateTime.add({ days: 1 })(day(DATE_PICKER_TODAY))),
+    );
+    expect(DateTime.isGreaterThan(day(DATE_PICKER_NAV_ARROW), min)).toBe(true);
+    expect(DateTime.isLessThan(day(DATE_PICKER_NAV_ARROW), max)).toBe(true);
   });
 
   it("holds the labels it prints to the calendar's English format", () => {
@@ -189,7 +197,23 @@ describe("the date-picker fixture", () => {
     // The empty instance is a second mount, so its first-open anchor is
     // measured rather than inherited from the driven picker.
     expect(probe).toContain("DATE_PICKER_EMPTY_TRIGGER");
-    expect(probe).toContain("datePickerCell(DATE_PICKER_EMPTY_ANCHOR)");
+    expect(probe).toContain("datePickerCell(DATE_PICKER_TODAY)");
+    expect(probe).toContain("datePickerCell(DATE_PICKER_NAV_ARROW)");
+  });
+
+  it("refuses the anchor and the dead keyboard the component repaired", () => {
+    // The regression: both rows were true of the shipped picker before
+    // `6b75d6e2` and are false after it, so an assertion that puts either back
+    // reads as evidence for a defect the window no longer paints.
+    expect(probe).not.toContain("month's first day");
+    expect(probe).not.toContain("nowhere to go");
+    expect(probe).not.toContain("DATE_PICKER_EMPTY_ANCHOR");
+    const text = section().replace(/\s+/g, " ");
+    expect(text).not.toContain("month's first day");
+    expect(text).not.toContain("nowhere to go");
+    // The repaired contract is what the section teaches instead.
+    expect(text).toContain("day it calls today");
+    expect(text).toContain("nav row");
   });
 
   it("prints every measured row in its section", () => {

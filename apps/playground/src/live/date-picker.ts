@@ -51,14 +51,17 @@ export const DATE_PICKER_MAX = "2026-03-27";
 export const DATE_PICKER_UNAVAILABLE = "2026-03-30";
 
 /**
- * The cell an empty picker's first open focuses — the month's first day.
+ * The day `Right` moves to after a press parks the focus on the refused
+ * next-month control.
  *
- * The component documents the anchor as the chosen day, or the day it calls
- * today when nothing is chosen; a window measures the first of the month instead
- * (`date-picker.test.ts` derives it, and the interlock row in `TODO.md` carries
- * the fix). The fixture names it so the gap is a check rather than a caption.
+ * The runtime focuses the element a pointer pressed even when it is `disabled`
+ * (`button-activation-lifecycle` measured the same rule), so the press leaves
+ * `date-next` holding the focus. Both the nav row and the grid answer the
+ * movement keys now, so the arrow moves the calendar and pulls real focus back to
+ * a day instead of leaving the reader without a keyboard until a reopen.
+ * `date-picker.test.ts` derives it from the anchor and the bounds.
  */
-export const DATE_PICKER_EMPTY_ANCHOR = "2026-03-01";
+export const DATE_PICKER_NAV_ARROW = "2026-03-12";
 
 /** The header a March grid paints, and the trigger's text while nothing is chosen. */
 export const DATE_PICKER_MONTH_LABEL = "March 2026";
