@@ -4,10 +4,12 @@ description: Schema validation and a submit lifecycle around a group of fields �
 ---
 
 `Form` is the boundary around a group of fields: it runs the caller's schema,
-turns the messages on, and hands `onSubmit` a **decoded** value. It reads no
-values from the runtime, because the runtime has no form element and no DOM to
-read — the caller owns the draft. Gaps below were measured on
-`@gpuix/native@0.11.0`.
+turns the messages on, and hands `onSubmit` a **decoded** value. The state is
+`@tanstack/form-core` — one `FormApi` owns the values, the field meta
+(`isTouched`/`isDirty`/errors) and the submit lifecycle — while validation stays
+Effect/Schema. It reads no values from the runtime, because the runtime has no
+form element and no DOM to read: the caller owns the draft. Gaps below were
+measured on `@gpuix/native@0.11.0`.
 
 <ComponentPreview name="form-workflow" />
 
@@ -41,7 +43,7 @@ export const CreateAccount = () => {
       value={draft}
       onSubmit={(account) => save(account.email, account.name)}
     >
-      {(form) => (
+      {(state) => (
         <>
           <Field label="Email">
             <FieldInput
@@ -59,7 +61,13 @@ export const CreateAccount = () => {
               }
             />
           </Field>
-          <Button onClick={form.submit}>Create account</Button>
+          <Button
+            onClick={state.submit}
+            disabled={state.pending}
+            loading={state.pending}
+          >
+            Create account
+          </Button>
         </>
       )}
     </Form>
@@ -77,14 +85,27 @@ submit shows.
 | Moment | What happens |
 | ------ | ------------ |
 | first render | nothing is validated and nothing is reported — a form that has never been submitted never nags, however the draft changes |
-| `submit` on an invalid draft | the schema's messages appear in one `role="alert"` block, in schema order, and `onSubmit` is **not** called |
-| an edit after a failed submit | the messages are **derived from the live draft**, so fixing a field clears its message without a second submit, and a still-bad field keeps its own |
-| `submit` on a valid draft | `onSubmit` receives the **decoded** value, never the raw one; the messages clear |
+| `submit` on an invalid draft | the current draft is pushed into the core, the schema's messages appear in one `role="alert"` block, in schema order, and `onSubmit` is **not** called |
+| an edit after a failed submit | the summary is **derived from the live draft**, so fixing a field clears its message without a second submit, and a still-bad field keeps its own |
+| `submit` on a valid draft | `onSubmit` receives the **decoded** value, never the raw one; the summary clears |
 | `pending` | a pending form ignores `submit`, so one press is one save |
 
-The one piece of state is the flag "a submit has failed". The messages are not
-state: they are recomputed from the caller's current value on every render,
+`@tanstack/form-core` owns the state: values, field meta and the submit
+lifecycle, including the `submissionAttempts` counter that decides whether a
+summary is shown at all. The summary itself is not state — it is recomputed from
+the caller's current value on every render whenever a submit has been attempted,
 which is why an edit cannot leave a stale list on screen.
+
+The core is created once, when the form mounts, so the `schema` and `onSubmit`
+are read when the form mounts. A consumer that swaps its schema later keeps the
+first one (the same lifetime the core's `defaultValues` have); remount the form —
+a `key` is enough — to change the contract it validates against.
+
+The render prop also carries the `FormApi`, so a field can opt into the core
+without leaving the component: `form.getFieldValue(name)` reads a value,
+`form.getFieldMeta(name)` reads that field's message, `form.reset()` restores the
+defaults, and `form.Field` registers a `FieldApi` for per-field validators and
+touched/dirty tracking.
 
 ## Composition
 
@@ -92,7 +113,7 @@ which is why an edit cannot leave a stale list on screen.
 | ---- | -------------- |
 | root | the `form-root` column and, only with a `label`, `role="form"` with `aria-label` |
 | message block | one `role="alert"` above the children, in the destructive tone's page role |
-| children | the caller's fields, through the render prop's `{ errors, pending, submit }` |
+| children | the caller's fields, through the render prop's `{ errors, pending, submit, form }` |
 
 `Form` is deliberately not a field: it owns no input, no label and no message
 slot, so a form of one control is usually a `Field` with a `Button` rather than a
@@ -126,12 +147,14 @@ holds no key of its own. Those belong to the surface it is mounted in.
 | `pending` | `boolean` | `false` | refuses `submit` while true, so one press is one save |
 | `label` | `string` | none | makes the root `role="form"` with `aria-label`; without it the root is a plain container |
 | `className` | `string` | none | joined after the recipe, so it wins conflicts |
-| `children` | `(state: FormState) => ReactNode` | none | the render prop: `errors`, `pending`, `submit` |
+| `children` | `(state: FormState) => ReactNode` | none | the render prop: `errors`, `pending`, `submit`, `form` |
 | `style` | `StateStyle` | none | merged last on the root |
 
-`FormState` carries `{ errors, pending, submit }`: `errors` is every message from
-the last failed submit, in schema order, and `pending` mirrors the prop. The
-remaining GPUix host props are forwarded to the root `div`.
+`FormState` carries `{ errors, pending, submit, form }`: `errors` is every
+message from the last failed submit, in schema order, `pending` mirrors the prop,
+`submit` pushes the live value into the core and validates it, and `form` is the
+`@tanstack/form-core` `FormApi` the component drives. The remaining GPUix host
+props are forwarded to the root `div`.
 
 ## Blocking a second submit
 
@@ -194,19 +217,27 @@ a second button.
   no `aria-describedby` or `aria-errormessage` (`@gpuix/native@0.11.0`), so a
   message cannot point at the field it belongs to; a `Field` around one control
   is still the way to put a message under it.
-- **No field-to-message mapping.** `validateAll` returns messages, not paths, so
-  the caller cannot ask which field failed. Two fields that fail the same check
-  read as one sentence, because `validateAll` dedupes.
+- **The summary has no field paths.** `validateAll` returns the schema's
+  messages, not their paths, so the `role="alert"` block is one flat, deduped
+  list: two fields that fail the same check read as one sentence. The **core**
+  does keep the paths — `schemaValidator` returns `{ form, fields }`, so a field
+  registered with the `FormApi` reads its own message from
+  `form.getFieldMeta(name)`. The package's `Field` part does not register itself,
+  so that wiring is the caller's.
 - **No focus move, no scroll, no error count.** A summary that focuses or
   scrolls is app code.
 - **No values read from the runtime.** The draft is the caller's; an edit that
   the schema rejects is still in the draft until the caller changes it.
+- **The schema and submit handler are read at mount.** The core is created once,
+  so swapping either later keeps the first one; remount with a new `key` to
+  change the contract.
 
 ## Dependencies
 
 | Package | Why |
 | ------- | --- |
 | `this package` | the schema walk, the message block and the submit lifecycle |
+| `@tanstack/form-core` | the `FormApi` that owns values, field meta and submit attempts |
 | `effect` | `Schema` decoding, `Effect` for the message walk, `Result` and `Array` |
 | `@gpuix/react` | the host `Props` type the root forwards |
 | `@gpuix/react/floating` | `mergeStyles` for the root's style |
@@ -226,12 +257,16 @@ a second button.
 
 `done` in `COMPONENTS.md` with a `partial` runtime verdict: the runtime
 publishes no form element and no value reader, so the form is the callers' bytes
-plus a schema rather than a rewrite of a host. The behaviour is held by 9 native behaviour tests in `packages/components/src/behaviour/form.test.tsx` —
-the failed submit, the derived messages, the edit that clears one, the decoded
-value, `pending` refusing a second submit and the named root. The chrome is held
-by `packages/components/src/recipe/recipe.test.ts` (the compiled `FORM_*`
-values in this page's Theming table).
+plus a schema rather than a rewrite of a host. The behaviour is held by 9 native behaviour tests in
+`packages/components/src/behaviour/form.test.tsx` — the failed submit, the
+derived messages, the edit that clears one, the decoded value, `pending`
+refusing a second submit and the named root — and the core adoption by
+`packages/components/src/form/validator.test.ts`, which runs the validator where
+`window` and `document` are undefined. The chrome is held by
+`packages/components/src/recipe/recipe.test.ts` (the compiled `FORM_*` values in
+this page's Theming table).
 
-One limit is recorded above rather than hidden: there is no field-to-message
-mapping, because the schema walk returns messages rather than paths. The package
-page this page displaces is the same file the component ships with.
+The limit worth naming is the shape of the summary: it is one flat, deduped list
+because `validateAll` returns messages rather than paths. A caller that needs
+per-field messages reads them from the `FormApi` it was handed. The package page
+this page displaces is the same file the component ships with.

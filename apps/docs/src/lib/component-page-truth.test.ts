@@ -2002,29 +2002,42 @@ describe("the curated component pages", () => {
     // page's most load-bearing claims are the four a screenshot cannot show: the
     // messages appear only after a failed submit, they are derived from the live
     // draft (an edit clears one), a pending form refuses a second submit, and
-    // `onSubmit` receives the decoded value. The package page listed none of the
-    // four, and it printed fifteen native cases for a suite that runs ten.
+    // `onSubmit` receives the decoded value. The state moved to
+    // `@tanstack/form-core`, so the page also owns the two consequences a reader
+    // cannot see from the props: the core owns the submit attempts, and the
+    // schema and handler are read once when the form mounts.
     const form = pages.find((candidate) => candidate.file === "form.mdx");
     expect(form, "the form page is not in the curated set").toBeDefined();
     if (form === undefined) return;
 
     const source = read(form.source);
+    // The core owns values, meta and submit attempts; the schema is its
+    // validator, not a boolean flag the page used to describe.
+    expect(source).toContain("new FormApi({");
     expect(source).toContain(
-      "const [showErrors, setShowErrors] = useState(false);",
+      "validators: { onSubmit: schemaValidator(schema) }",
     );
-    expect(source).toContain(
-      "const errors = showErrors ? Effect.runSync(validateAll(schema)(value)) : [];",
-    );
+    expect(source).toContain("Option.match(decode(schema)(rawValue)");
+    expect(source).toContain("state.submissionAttempts > 0");
+    expect(source).toContain("Effect.runSync(validateAll(schema)(value))");
     expect(source).toContain("if (pending) return;");
-    expect(source).toContain(
-      "const decoded = Schema.decodeUnknownResult(schema)(value);",
-    );
-    expect(source).toContain("if (Result.isFailure(decoded)) {");
-    expect(source).toContain("setShowErrors(true);");
-    expect(source).toContain("onSubmit(decoded.success);");
+    expect(source).toContain("syncValues(form, value);");
+    expect(source).toContain("void form.handleSubmit();");
+    expect(source).toContain("children({ errors, pending, submit, form })");
     expect(source).toContain('role="alert"');
     expect(source).toContain('statusTone(theme, "destructive").foreground');
     expect(source).toContain('role: "form", "aria-label": label');
+    // The validator is the half that maps a path to a field name, which is why
+    // the page may promise per-field messages from the `FormApi` and still call
+    // the painted summary flat.
+    const validator = read("packages/components/src/form/validator.ts");
+    expect(validator).toContain(
+      'Schema.decodeUnknownEffect(schema, { errors: "all" })',
+    );
+    expect(validator).toContain("const fieldName =");
+    expect(validator).toContain(
+      "return { form: Option.getOrUndefined(grouped.form), fields: grouped.fields };",
+    );
     // The walk is the other half of "every bad field": the default decoder
     // stops at the first failure, and `validateAll` asks for all of them.
     const logic = read("packages/components/src/validation/logic.ts");
@@ -2040,18 +2053,26 @@ describe("the curated component pages", () => {
     );
 
     const text = body(form).replace(/\s+/g, " ");
+    expect(text).toContain("`@tanstack/form-core` owns the state");
+    expect(text).toContain("submissionAttempts");
     expect(text).toContain("nothing is validated and nothing is reported");
     expect(text).toContain("derived from the live draft");
     expect(text).toContain("**every** bad field");
     expect(text).toContain("ignores `submit`");
     expect(text).toContain("decoded");
-    expect(text).toContain("No field-to-message mapping");
+    expect(text).toContain("reads them from the `FormApi`");
+    expect(text).toContain("read when the form mounts");
     expect(text).toContain("9 native behaviour tests");
     expect(text).toContain("form-root");
-    // The retracted claims: a form that reads the runtime's value, and a message
-    // the component wrote rather than the schema.
+    // The dependency a reader installs is the core, so the table lists it.
+    expect(text).toContain("| `@tanstack/form-core` |");
+    // The retracted claims: a form that reads the runtime's value, a message the
+    // component wrote rather than the schema, a single boolean and a summary
+    // that cannot name a field at all.
     expect(text).not.toContain("reads the runtime's value");
     expect(text).not.toContain("15 native behaviour tests");
+    expect(text).not.toContain("The one piece of state is the flag");
+    expect(text).not.toContain("No field-to-message mapping");
   });
 
   it("hold the search field's clear rule and its fixed metrics to the source", () => {

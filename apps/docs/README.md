@@ -30,7 +30,7 @@ accessibility.mdx            What a screen reader hears, which states have no at
 motion.mdx                   Springs, keyframes, inertia, the React hooks and the reduced-motion policy
 layouts.mdx                  The layout lane: primitives, the window frame, runtime facts
 workspace.mdx                The desktop-shell lane: composing parts, the docking gate
-data-display.mdx             The data lane: what ships, the table gate, runtime gaps
+data-display/index.mdx      The data lane: what ships, the table gate, runtime gaps
 patterns.mdx                 The workflows that cross components, and who owns the state
 keyboard.mdx                 The chord grammar, keymaps, sequences and command registry
 examples.mdx                 The example registry, generated from every package's examples
@@ -58,13 +58,14 @@ components/dialog.mdx        Curated: a real confirmation workflow
 components/drawer.mdx        Curated: the edge box, the dismiss stack, the exit frame
 components/dropdown-menu.mdx Curated: highlighted row is the focused row
 components/field.mdx        Curated: one message slot, submit-time validation, no fade
-components/form.mdx         Curated: the submit lifecycle, derived messages, no field-to-message map
+components/form.mdx         Curated: the submit lifecycle, the core's field meta, the flat summary
 components/list.mdx         Curated: one roving tab stop, type-ahead, the range that skips a row
 components/pagination.mdx   Curated: the derived window, the gap-of-one rule, the clamped page
 components/popover.mdx       Curated: anchored placement
 components/search-input.mdx  Curated: the Escape rule, the 24px clear target, the fixed metrics
 components/select.mdx        Curated: the 320px list, the row that reveals itself
 components/switch.mdx        Curated: the left-inset slide, the 24px band, the cleared dependent
+components/table.mdx         Curated: the model, the sort and selection rules, the fixed header
 components/tag-input.mdx     Curated: the commit rules, the cap, the 24px removal target, no Backspace
 components/tabs.mdx          Curated: the measured indicator
 components/time-picker.mdx   Curated: one clock behind typing, arrows and midnight
@@ -137,6 +138,8 @@ src/components/docs/search-input-preview.ts The search preview's filter, count a
 src/components/docs/search-input-demo.tsx The search field's two browser renderings and their source strings
 src/components/docs/switch-preview.ts      The switch preview's dependent-setting rule and its slide duration
 src/components/docs/switch-demo.tsx        The switch's two browser renderings and their source strings
+src/components/docs/table-preview.ts      The table preview's copy of the package's sort, selection and filter rules
+src/components/docs/table-demo.tsx        The table's browser renderings and their source strings
 src/components/docs/tag-input-preview.ts   The tag preview's commit rules, budget and publish gate
 src/components/docs/tag-input-demo.tsx     The tag field's two browser renderings and their source strings
 src/components/docs/tooltip-preview.ts    The tip's clock: delay, close grace, reopen window, traversal
@@ -186,6 +189,7 @@ src/lib/search-index.ts             The search index's page list: curated pages 
 src/lib/search-links.ts             The search dialog's pre-query entry points
 src/lib/package-docs.ts             The loaders for the three package collections
 src/lib/collection-routes.ts        The registry: every mounted package directory, route, section
+src/lib/collection-pages.ts         The pages a mounted collection serves, including one that ships none yet
 src/lib/page-tree.ts                Fills the package's pages into their sidebar section
 src/lib/page-meta.ts                Title, description, canonical and social metadata
 src/lib/page-markdown.ts            Server function behind "Copy page"
