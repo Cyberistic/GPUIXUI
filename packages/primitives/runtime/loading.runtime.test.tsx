@@ -396,6 +396,25 @@ it("pulses a Skeleton's opacity between both of its states", async () => {
   ).toBe(true);
 });
 
+it("paints a Skeleton box when a measured side cannot be laid out", async () => {
+  // The bug guarded: a side that is often a measurement (`NaN` before the
+  // layout arrives) reached `width` verbatim, which the runtime paints as no
+  // box — a placeholder indistinguishable from content that finished loading.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Skeleton testId="sk" width={Number.NaN} height={20} reducedMotion />
+      </Stack>
+    </Surface>,
+  );
+  const drawn = Option.getOrElse(runtime.bounds("sk"), () =>
+    expect.fail("the runtime painted no skeleton"),
+  );
+  expect(drawn.width).toBeGreaterThan(0);
+  expect(drawn.height).toBe(20);
+});
+
 it("moves a Spinner's lit dot instead of rotating it", async () => {
   const runtime = await openWindow();
   runtime.render(

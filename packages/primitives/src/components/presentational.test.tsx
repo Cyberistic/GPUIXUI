@@ -635,6 +635,28 @@ describe("loading", () => {
     expect(expectSome(numberIn(tall, "height"))).toBe(24);
   });
 
+  it("paints a skeleton box when a side it was given cannot be measured", () => {
+    // The bug guarded: a placeholder's side is often a measurement, and `NaN`
+    // reached `width`/`height` verbatim — a box the runtime paints as nothing,
+    // which reads exactly like content that finished loading.
+    const block = renderSkeleton({ width: Number.NaN }, testTheme, 0);
+    expect(expectSome(stringIn(block, "width"))).toBe("100%");
+    expect(expectSome(numberIn(block, "height"))).toBe(
+      testTheme.typography.body.lineHeight,
+    );
+    const circle = renderSkeleton(
+      { circle: true, width: Number.POSITIVE_INFINITY },
+      testTheme,
+      0,
+    );
+    expect(expectSome(numberIn(circle, "width"))).toBe(
+      testTheme.typography.body.lineHeight,
+    );
+    expect(expectSome(numberIn(circle, "height"))).toBe(
+      testTheme.typography.body.lineHeight,
+    );
+  });
+
   it("announces a spinner by role and name", () => {
     const element = renderSpinner({ label: "Saving" }, testTheme, 0);
     expect(expectSome(hostProp(element, "role"))).toBe("status");

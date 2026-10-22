@@ -82,6 +82,31 @@ describe("skeletonStyle", () => {
       skeletonSize({ circle: true, width: 40, height: 24 }, testTheme),
     ).toStrictEqual({ width: 40, height: 24 });
   });
+
+  it("takes a side it cannot paint from the default, not from the box", () => {
+    // The bug guarded: a placeholder's side is often a measurement, and a
+    // measurement that never arrived reached `width` as `NaN`, which paints no
+    // box at all — a skeleton that looks like content that finished loading.
+    const line = testTheme.typography.body.lineHeight;
+    Arr.forEach([Number.NaN, Number.POSITIVE_INFINITY, 0, -4], (side) => {
+      expect(skeletonSize({ width: side }, testTheme)).toStrictEqual({
+        width: "100%",
+        height: line,
+      });
+      expect(skeletonSize({ height: side }, testTheme)).toStrictEqual({
+        width: "100%",
+        height: line,
+      });
+      expect(
+        skeletonSize({ circle: true, width: side }, testTheme),
+      ).toStrictEqual({ width: line, height: line });
+    });
+    // A length string is an expression, not a measurement, and stays.
+    expect(skeletonSize({ width: "45%", height: "2% " }, testTheme)).toEqual({
+      width: "45%",
+      height: "2% ",
+    });
+  });
 });
 
 describe("spinnerDots", () => {

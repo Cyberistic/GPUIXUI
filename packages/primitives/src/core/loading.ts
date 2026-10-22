@@ -30,6 +30,22 @@ export interface SkeletonSpec {
 }
 
 /**
+ * A side the runtime can paint: any length string, or a positive finite number.
+ *
+ * A placeholder's side is often a measurement — a collapsed panel's width, a
+ * row's height — and a measurement that never arrived is `NaN`, which the
+ * runtime paints as no box at all. A skeleton that paints nothing reads as
+ * content that finished loading, so an unusable count takes the side's default.
+ * A length string is the caller's own expression ("45%") and is left alone.
+ */
+const paintableSide = (
+  side: number | string | undefined,
+): number | string | undefined =>
+  typeof side === "number" && !(Number.isFinite(side) && side > 0)
+    ? undefined
+    : side;
+
+/**
  * A skeleton's box.
  *
  * A block defaults to full width and one line of body text. A circle mirrors
@@ -41,16 +57,18 @@ export const skeletonSize = (
   spec: SkeletonSpec,
   theme: PrimitiveTheme,
 ): { readonly width: number | string; readonly height: number | string } => {
+  const width = paintableSide(spec.width);
+  const height = paintableSide(spec.height);
   if (spec.circle !== true) {
     return {
-      width: spec.width ?? "100%",
-      height: spec.height ?? theme.typography.body.lineHeight,
+      width: width ?? "100%",
+      height: height ?? theme.typography.body.lineHeight,
     };
   }
-  if (spec.width !== undefined && spec.height !== undefined) {
-    return { width: spec.width, height: spec.height };
+  if (width !== undefined && height !== undefined) {
+    return { width, height };
   }
-  const side = spec.width ?? spec.height ?? theme.typography.body.lineHeight;
+  const side = width ?? height ?? theme.typography.body.lineHeight;
   return { width: side, height: side };
 };
 
