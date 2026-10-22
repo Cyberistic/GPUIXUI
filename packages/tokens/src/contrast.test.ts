@@ -612,6 +612,104 @@ describe("the resting role of a floating row on the wash it tints", () => {
 });
 
 /**
+ * Guards the selected row a floating list paints in its own text role. The
+ * floating-row suite above measured `popoverForeground` on the two washes a row
+ * tints while the pointer moves; the row that is **chosen** fills `selected`
+ * instead, and the primitives' `Select` keeps `text-popover-foreground` over
+ * `bg-selected` — so a selection that drifted toward the popover's text role
+ * erased the row it had just selected while every hover case stayed green.
+ */
+describe("the selected row's own role on the selection wash", () => {
+  const pair = contrastPairs.find(
+    ({ foreground, background, floor }) =>
+      foreground === "popoverForeground" &&
+      background === "selected" &&
+      floor === "body",
+  );
+
+  it("measures the popover role on the selection wash", () => {
+    expect(pair).toBeDefined();
+  });
+
+  it("holds the painter the pair exists for", () => {
+    // The pair only means something while the row still rests in that role: the
+    // primitives' select row is `text-popover-foreground` over `bg-selected`.
+    const source = readFileSync(
+      new URL("../../primitives/src/recipe/index.ts", import.meta.url),
+      "utf8",
+    );
+    const row = source.slice(
+      source.indexOf("export const selectItemClass"),
+      source.indexOf("// ── NumberField"),
+    );
+
+    expect(row).toContain("text-popover-foreground");
+    expect(row).toContain('"bg-selected"');
+  });
+
+  it("reports a popover role painted into its own selection", () => {
+    const broken = {
+      colors: { ...lightColors, popoverForeground: lightColors.selected },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "popoverForeground" && background === "selected",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
+  });
+
+  it("clears the body floor in every shipped theme, with the dark looks tightest", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const measured = shipped.map((theme) => ({
+      name: theme.name,
+      floor: contrastFloorsFor(theme).body,
+      ratio: contrastRatio(
+        theme.colors.popoverForeground,
+        theme.colors.selected,
+      ),
+    }));
+    const hidden = measured.filter(
+      ({ ratio, floor }) => ratio === undefined || ratio < floor,
+    );
+    const tightest = measured.reduce((low, next) =>
+      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+    );
+
+    expect(hidden).toEqual([]);
+    // A dark selection is a deep tint under light text, so the warmest look is
+    // the tightest rather than either base theme.
+    expect(tightest.name).toBe("Dark · Windows XP (Luna)");
+    expect(printedRatio(tightest.ratio)).toBe("9.25:1");
+  });
+
+  it("is the placement both pages teach", () => {
+    const page = (path: string): string =>
+      readFileSync(
+        new URL(`../../../${path}`, import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " ");
+
+    expect(page("docs/tokens.md")).toContain(
+      "the popover's text role on the `selected` wash",
+    );
+    expect(page("docs/design-system.md")).toContain(
+      "the popover's text role on the `selected` wash",
+    );
+  });
+});
+
+/**
  * Guards the one state the contract used to skip entirely. `disabled` and
  * `disabledForeground` are painted as a pair by a disabled field, a select's
  * value and a fieldset legend, and **no** pair measured them — so a palette edit

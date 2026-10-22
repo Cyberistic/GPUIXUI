@@ -331,6 +331,11 @@ export const contrastPairs: readonly ContrastPair[] = [
   // `active` while it is pressed.
   { foreground: "popoverForeground", background: "hover", floor: "body" },
   { foreground: "popoverForeground", background: "active", floor: "body" },
+  // A selected row inside a floating list is the third wash that role sits on:
+  // the primitives' `Select` paints `selectItemClass` as `text-popover-foreground`
+  // over `bg-selected`, so a selection that drifted toward the popover's own
+  // text role would erase the row it just chose while its hover state passed.
+  { foreground: "popoverForeground", background: "selected", floor: "body" },
   {
     foreground: "destructiveSoftForeground",
     background: "hover",

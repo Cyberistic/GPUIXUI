@@ -362,8 +362,10 @@ secondary action is the one filled control whose label is neither the page's
 on both washes, tightest on Windows XP (Luna) dark's pressed wash at 7.88:1. A
 row floating on a popover keeps the *surface's* role instead — a menu row rests
 in `popoverForeground`, a destructive row in the tone's readable role — so both
-are measured on the same washes; that check found the two light looks' pressed
-washes at 6.93:1 and 6.77:1, so every light theme carries red 900 as
+are measured on the same washes, and the popover's text role on the `selected`
+wash a chosen row fills (`selectItemClass` is `text-popover-foreground` over
+`bg-selected`); that check found the two light looks' pressed washes at 6.93:1
+and 6.77:1, so every light theme carries red 900 as
 `destructiveSoftForeground` — the same value the deeper soft surface needs for
 its label, rather than flattening press into hover.
 
@@ -541,7 +543,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | body text on background/card/popover/muted and on the accent and selected washes | 7:1 | 7:1 |
 | text typed into an input, on `input` and on the page role a composite field paints its fill with | 7:1 | 7:1 |
 | secondary text on background/card/muted/popover, on a selected row, and inside a field's own fill (`input`) | 4.5:1 | 7:1 |
-| a selected row's title on its own selection, and the `selectedForeground` it hands its children on the `hover`/`active`/`accent` wash it tints | 7:1 / 4.5:1 | 7:1 / 7:1 |
+| a selected row's title on its own selection, the `selectedForeground` it hands its children on the `hover`/`active`/`accent` wash it tints, and a chosen row inside a popover resting in its surface's role (`popoverForeground` on `selected`) | 7:1 / 4.5:1 | 7:1 / 7:1 |
 | on-colour text, placeholder (on `input` and on the page fill) | 4.5:1 | 7:1 |
 | a secondary action's label (`secondaryForeground`) on the `hover`/`active` wash it tints | 4.5:1 | 7:1 |
 | brand text — a link or text action — on background, card, popover, muted and the hover/active washes it tints (`brandText`) | 4.5:1 | 7:1 |

@@ -1155,7 +1155,7 @@ so a single number would be a guess — or carries no channels here at all (a
 named colour, an `hsl()`-family function). Shorthand hex is measured.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 82 pairs cover the text role
+— an empty array means the theme is readable. The 83 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1190,7 +1190,10 @@ tightest being Windows XP (Luna) dark's pressed wash at 7.88:1. A row
 surface's role rather than the page's — a menu or combobox row is
 `popoverForeground` — and a destructive row paints the tone's readable role, so
 the table measures both on the `hover` and `active` wash `menuRowStyle` paints
-under them. That pair found two shipped misses: Windows light's pressed wash
+under them, and the popover's text role on the `selected` wash a chosen row
+fills (`selectItemClass` paints `text-popover-foreground` over `bg-selected`,
+so a selection that drifted toward its own text would erase the row it just
+chose). That pair found two shipped misses: Windows light's pressed wash
 left the destructive row at 6.93:1 and Luna light's at 6.77:1, under the body
 floor. Every light theme now carries red 900 (`#5C1619`) as
 `destructiveSoftForeground`: it is both the label the deeper soft surface needs
