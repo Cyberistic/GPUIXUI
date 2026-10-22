@@ -21,12 +21,11 @@ elapsed time you pass in, so a movement is a value in a test rather than a wait.
 | value | `MotionValue` and its transitions: `instant`, `tween`, `springTransition`, `transitionEquals` |
 | React | `useSpring`, `useTransition`, `useInertia` and `useMotion` from `@gpuixui/motion/react` |
 
-The library's components paint their transitions with the **runtime's**
-declarative `motion.div`, not with this package: a dialog fading in needs a
-duration and an easing, which the runtime already executes. This package is for
-physics the runtime does not compute — a spring that can be retargeted mid-flight,
-a stagger, a momentum coast — and its adoption by the animated surfaces is
-tracked as plan `600` Phase 0.
+The primitives paint their one moving piece — a switch's thumb, a busy
+spinner — with the **runtime's** declarative `motion.div` and a plain duration,
+and the overlay components do not animate yet. This package is for physics the
+runtime does not compute: a spring retargeted mid-flight, a stagger, a momentum
+coast. Its adoption by the animated surfaces is tracked as plan `600` Phase 0.
 
 ## The clock is yours
 
@@ -192,7 +191,7 @@ keeps detection `unverified` and says not to claim a mode — so the app supplie
 one. Every hook takes `reducedMotion`, and `MotionValue.sample(elapsed, true)`
 finishes an active run immediately at its target with zero velocity, including
 an inertial coast. The library never guesses the preference; the same split
-appears in the components, where `Button` and `IconButton` take a
+appears in the primitives, where `Button` and `IconButton` take a
 `reducedMotion` prop for the busy spinner and `Switch` paints its two states
 without the slide.
 
