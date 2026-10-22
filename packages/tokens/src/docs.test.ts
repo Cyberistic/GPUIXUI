@@ -304,6 +304,16 @@ describe("the ring seams delegate", () => {
 
     expect(own).toEqual([]);
   });
+
+  it("says the same thing in the helper's own JSDoc", () => {
+    // The published API doc is the other place a consumer reads the rule, and it
+    // said the two packages "decide the same rule in their own ring seam today"
+    // with the adoption "tracked in TODO.md" long after both delegated.
+    const source = read("../src/styles.ts");
+
+    expect(source).toContain("both **delegate**");
+    expect(source).not.toContain("tracked in `TODO.md`");
+  });
 });
 
 describe("filled action adoption claim", () => {

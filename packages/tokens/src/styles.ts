@@ -240,9 +240,9 @@ export interface ControlFocusState {
  *
  * The rule is the theme's, not a component's: the colours are the `ring` and
  * `destructive` roles, and the width is `borderWidth.strong`.
- * `@gpuixui/primitives` and `@gpuixui/components` decide the same rule in their
- * own ring seam today; this helper is the one home the tokens package publishes
- * for it, and their adoption is tracked in `TODO.md`.
+ * `@gpuixui/primitives` and `@gpuixui/components` both **delegate** to this
+ * helper from their ring seams (`core/focus.ts`, `internal/theme.ts`) and turn
+ * the absent ring into an empty style, so the rule has one home.
  *
  * @example
  * ```tsx
