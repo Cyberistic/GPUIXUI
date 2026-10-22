@@ -305,8 +305,11 @@ ghost) and `borderStrong` `#727D8C` (so the boundary keeps its 3:1 on the new
 fill and on the pressed wash); each affected platform style and look owns its control face. §9 lists the
 placement, `docs/tokens.md` §Decorative surfaces the measurements.
 
-Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
-`md` for menus and popovers, `lg` for dialogs and the command palette. A level is
+Elevation is a semantic level, not a literal shadow: `sm` for a card raised with
+`variant="elevated"`, `md` for the surfaces whose recipe names `shadow-md` and
+takes no level of its own (the toast card, the preview card, the navigation-menu
+panel), and `lg` for dialogs (and the command palette, which is one), popovers,
+menus and the drawer. A level is
 designed as **one** shadow, read with `elevationShadow(theme, level)`; the
 runtime also accepts a shadow list, but the scale does not use one, so a level
 cannot render half of itself. Each level paints the `shadow` role at its designed

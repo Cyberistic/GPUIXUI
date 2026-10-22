@@ -2104,11 +2104,17 @@ Two differently named tokens are easy to mix up here:
 
 - `overlay` is the **modal scrim colour** (`#00000073` light, `#000000A6` dark),
   painted behind a modal's content and measured as a decorative surface over
-  `card` and `popover` (`decorative.ts`). It is what makes a modal recede.
+  `card`, `popover`, `muted`, `secondary` and `input` (`decorative.ts`) — the
+  strips a window actually holds behind a modal, not the page's void. It is what
+  makes a modal recede.
 - `elevation.overlay` is a **reserved, empty elevation level**. It lifts nothing:
   `elevationShadow(theme, "overlay")` returns `undefined`, and a surface that
-  names it paints flat. Floating surfaces take `elevation.md` (menus and
-  popovers) or `elevation.lg` (dialogs and command palettes) — see §Elevation.
+  names it paints flat. Floating surfaces take `elevation.lg` — the dialog (and
+  the command palette inside it), the popover and the menu pass the level to
+  `overlaySurfaceStyle`, and the drawer's own `shadow-lg` resolves to it.
+  `elevation.md` is the lift a surface keeps from its own recipe: the toast
+  card, the preview card and the navigation-menu panel name `shadow-md` and pass
+  no level, so their lift is `md` — see §Elevation.
   The slot is kept rather than filled or removed, because the shape is the
   contract: a `Theme` is plain data a brand may write from scratch, so dropping
   the key would be a breaking type change for every hand-built theme literal and
