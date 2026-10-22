@@ -82,6 +82,30 @@ const section = (heading: string): string => {
 /** The runtime exports of the package, excluding nothing: every one is public. */
 const exportedValues = Object.keys(Tokens);
 
+/**
+ * Every source file of a package, tests excluded. Two page claims read the
+ * component packages' own trees — which focus ring a seam paints, and whether
+ * anything consumes the motion package — so the walk lives here once.
+ */
+const packageSources = (directory: string): ReadonlyArray<string> =>
+  readdirSync(new URL(directory, import.meta.url), {
+    withFileTypes: true,
+  }).flatMap((entry) => {
+    const path = `${directory}${entry.name}`;
+    if (entry.isDirectory()) {
+      return packageSources(`${path}/`);
+    }
+    const isSource =
+      (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx")) &&
+      !entry.name.includes(".test.");
+    return isSource ? [read(path)] : [];
+  });
+
+const componentSources: ReadonlyArray<string> = [
+  "../../../packages/primitives/src/",
+  "../../../packages/components/src/",
+].flatMap(packageSources);
+
 describe("token catalogue", () => {
   it("documents every public export", () => {
     const missing = exportedValues.filter((name) => !catalogue.includes(name));
@@ -204,25 +228,6 @@ describe("the audit's report list", () => {
  * asks for the page to move with it.
  */
 describe("focus adoption claim", () => {
-  const packageSources = (directory: string): ReadonlyArray<string> =>
-    readdirSync(new URL(directory, import.meta.url), {
-      withFileTypes: true,
-    }).flatMap((entry) => {
-      const path = `${directory}${entry.name}`;
-      if (entry.isDirectory()) {
-        return packageSources(`${path}/`);
-      }
-      const isSource =
-        (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx")) &&
-        !entry.name.includes(".test.");
-      return isSource ? [read(path)] : [];
-    });
-
-  const componentSources: ReadonlyArray<string> = [
-    "../../../packages/primitives/src/",
-    "../../../packages/components/src/",
-  ].flatMap(packageSources);
-
   it("no longer says the packages paint the shadow ring on every focus path", () => {
     expect(catalogue).not.toContain(
       "still paint that shadow on every focus path",
@@ -240,6 +245,47 @@ describe("focus adoption claim", () => {
     );
 
     expect(callers).toEqual([]);
+  });
+});
+
+/**
+ * Guards the catalogue's **motion** note. This package deliberately ships no
+ * motion tokens — `@gpuixui/motion` owns the timing and the reduced-motion
+ * policy — and the note explained the split by saying no component consumed the
+ * package. That stopped being true when `internal/presence.tsx` became the seam
+ * every entering and leaving surface composes, so a page still saying it sends a
+ * reader to duplicate timing that is already wired through 41 component files.
+ * The note is held to the tree: the seam composes the package's timing, the
+ * components import the seam, and the animated ones read a level directly.
+ */
+describe("the motion claim", () => {
+  it("no longer says nothing consumes the motion package", () => {
+    expect(catalogue).not.toContain("No component consumes it yet");
+  });
+
+  it("names the seam, the hook and the package that owns the timing", () => {
+    expect(catalogue).toContain("`@gpuixui/motion`");
+    expect(catalogue).toContain("`internal/presence.tsx`");
+    expect(catalogue).toContain("`useSurfaceTiming`");
+    expect(catalogue).toContain("`@gpuixui/motion/timing`");
+  });
+
+  it("matches the sources: the seam composes the timing and components use it", () => {
+    const seam = read("../../../packages/components/src/internal/presence.tsx");
+
+    expect(seam).toContain("from \"@gpuixui/motion/timing\"");
+    expect(seam).toContain("motionTiming");
+
+    // The retracted claim was "none"; a floor is enough to keep the page honest
+    // without pinning a count that a new component would move.
+    const consumers = componentSources.filter((source) =>
+      source.includes("internal/presence"),
+    );
+    expect(consumers.length).toBeGreaterThan(10);
+    expect(
+      componentSources.filter((source) => source.includes("@gpuixui/motion"))
+        .length,
+    ).toBeGreaterThan(1);
   });
 });
 

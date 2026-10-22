@@ -3250,7 +3250,13 @@ or dropped is named rather than passing silently.
   gallery paints `focusRing` only to measure the shadow.
 - Motion — durations, easings, springs, inertia — lives in `@gpuixui/motion`,
   not here: a second copy would duplicate the package that owns reduced-motion
-  policy. No component consumes it yet.
+  policy. The components package composes it through `internal/presence.tsx`,
+  the one seam that resolves a level and the reduced preference for a surface's
+  entry and exit (`useSurfaceTiming`), and the animated components — splitting
+  text, image zoom, rolling text — read the same levels for their own tweens
+  (`@gpuixui/motion/timing`). The timing is measured in
+  `packages/motion/src/timing.test.ts` and
+  `packages/components/src/behaviour/presence.test.tsx`.
 - The derived fills are adopted by both packages' buttons.
   `packages/primitives`' recipes ask their own registry for
   `hover:fill-<action>` and `active:fill-<action>-pressed`
