@@ -1,13 +1,12 @@
 /**
  * What a code block decides before the renderer runs.
  *
- * The block paints the runtime's own `<code>` host, which highlights, numbers
- * and scrolls the source itself. Three decisions are left to this package: is
- * there anything to paint (an empty block shows a placeholder instead of a bare
- * surface), what the header says (a file path is the title when the caller names
- * no title, and the path's extension names the language when no language is
- * given), and what an assistive reader hears (a block name, and how many lines of
- * what).
+ * The block paints its own text runs, tokenized by `@tanstack/highlight`. Three
+ * decisions are left to this package: is there anything to paint (an empty block
+ * shows a placeholder instead of a bare surface), what the header says (a file
+ * path is the title when the caller names no title, and the path's extension
+ * names the language when no language is given), and what an assistive reader
+ * hears (a block name, and how many lines of what).
  *
  * The rows are counted here rather than in the renderer because a source ending
  * with a newline has no final row: `"a\n"` is one line, not two, and the count is
@@ -23,18 +22,23 @@ import * as Str from "effect/String";
 export interface CodeBlockHeader {
   /** The file name or heading the header shows, `None` when the block has none. */
   readonly title: Option.Option<string>;
-  /** The language label and the host's detection hint, `None` when unknown. */
+  /** The language label and the tokenizer's language id, `None` when unknown. */
   readonly language: Option.Option<string>;
 }
 
-/** The extensions that name a language the runtime's code host highlights. */
+/**
+ * The extensions that name a language `@tanstack/highlight` ships. `c` maps to
+ * the `cpp` grammar — the tokenizer has no C grammar of its own — and `bash` is
+ * the `shell` grammar's alias; both resolve through the tokenizer's own alias
+ * table.
+ */
 const LANGUAGE_BY_EXTENSION: Readonly<Record<string, string>> = {
   bash: "bash",
-  c: "c",
+  c: "cpp",
   cpp: "cpp",
   css: "css",
   go: "go",
-  h: "c",
+  h: "cpp",
   hpp: "cpp",
   html: "html",
   java: "java",
@@ -70,9 +74,9 @@ const named = (value: string | undefined): Option.Option<string> =>
 /**
  * The language a file path's extension names.
  *
- * Only the extensions the code host is known to highlight are mapped: a path is
- * a hint, not a promise, and an unknown extension returns `None` so the header
- * stays quiet rather than printing a label no highlighter understands.
+ * Only the extensions the tokenizer is known to ship are mapped: a path is a
+ * hint, not a promise, and an unknown extension returns `None` so the header
+ * stays quiet rather than printing a label no grammar understands.
  */
 export const languageOfPath = (path: string): Option.Option<string> =>
   Option.flatMap(Option.fromNullishOr(path.split(".").at(-1)), (extension) =>
@@ -133,8 +137,8 @@ export const codeBlockName = (header: CodeBlockHeader): string =>
 /**
  * What a reader hears after the name: how much code, and of what language.
  *
- * The code host paints its own text and publishes no accessible node, so the
- * count and the language are the only description of the source a reader gets.
+ * The runs are presentational and publish no accessible node, so the count and
+ * the language are the only description of the source a reader gets.
  */
 export const codeBlockDescription = (
   rows: number,

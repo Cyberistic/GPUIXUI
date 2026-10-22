@@ -1,13 +1,13 @@
 /**
  * CodeBlock in the real GPUix renderer.
  *
- * The bugs these guard: a block that paints the source itself instead of handing
- * it to the runtime's `<code>` host (no highlighting, no gutter, no horizontal
- * scroll); a header that loses the path's title or its language; a block that
- * publishes no accessible name, or none of the line count a reader cannot see;
- * an empty source that paints a bare surface instead of its placeholder; a copy
- * action that never acknowledges the press, or acknowledges it forever; and a
- * height cap that is ignored.
+ * The bugs these guard: a block that paints the source itself without
+ * tokenizing it into runs (no highlighting, no gutter, no horizontal scroll); a
+ * header that loses the path's title or its language; a block that publishes no
+ * accessible name, or none of the line count a reader cannot see; an empty
+ * source that paints a bare surface instead of its placeholder; a copy action
+ * that never acknowledges the press, or acknowledges it forever; and a height
+ * cap that is ignored.
  *
  * The motion half is measured on the runtime's clock: the entrance travels 4 px
  * and settles, `level="none"` and the reduced preference paint at rest on the
@@ -51,13 +51,11 @@ const nodeWith = (
   nodesWithRole(page.renderer, role)[0];
 
 describe("CodeBlock", () => {
-  it("paints the source through the native code host", () => {
+  it("paints the source as one text run per token, losing no character", () => {
     const page = renderComponent(<CodeBlock code={SOURCE} />);
     try {
-      expect(page.renderer.findByTestId("code-block-source")?.type).toBe(
-        "code",
-      );
-      expect(page.renderer.getPaintedText().join("\n")).toContain(SOURCE);
+      expect(page.renderer.findByTestId("code-block-source")).toBeDefined();
+      expect(page.renderer.getPaintedText().join("")).toBe(SOURCE);
     } finally {
       page.unmount();
     }
@@ -68,7 +66,25 @@ describe("CodeBlock", () => {
       <CodeBlock code={SOURCE} path="src/app.tsx" testId="code-block" />,
     );
     try {
-      expect(page.renderer.getAllText()).toEqual(["src/app.tsx", "tsx"]);
+      const text = page.renderer.getAllText();
+      expect(text).toContain("src/app.tsx");
+      expect(text).toContain("tsx");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("numbers the rows in its own gutter", () => {
+    const page = renderComponent(<CodeBlock code={"a\nb\nc"} lineNumbers />);
+    try {
+      expect(page.renderer.getAllText()).toEqual([
+        "1",
+        "a",
+        "2",
+        "b",
+        "3",
+        "c",
+      ]);
     } finally {
       page.unmount();
     }
@@ -93,7 +109,7 @@ describe("CodeBlock", () => {
     }
   });
 
-  it("paints its placeholder instead of the host for an empty source", () => {
+  it("paints its placeholder instead of the runs for an empty source", () => {
     const page = renderComponent(<CodeBlock code={"  \n"} />);
     try {
       expect(page.renderer.findByTestId("code-block-source")).toBeUndefined();

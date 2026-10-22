@@ -25,6 +25,7 @@
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "@gpuixui/tw": "workspace:*",
+    "@tanstack/highlight": "catalog:",
     "effect": "catalog:"
   },
   "peerDependencies": {

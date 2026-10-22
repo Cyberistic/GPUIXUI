@@ -2553,9 +2553,9 @@ brand and audits it; see
 [`src/syntax.example.ts`](../packages/tokens/src/syntax.example.ts).
 
 **Adoption.** `nativeTextTheme` hands `syntaxColors(theme)` to the host as
-`syntax`, and the components package's `CodeBlock` already passes that object
-(`theme={nativeTextTheme(theme, "background")}`), so a code block highlights in
-the theme's palette with no component change. The ink itself is painted by the
+`syntax`, and the components package's `CodeBlock` reads the same table through
+`syntaxColors(theme)` and maps `@tanstack/highlight`'s token classes to it, so a
+code block highlights in the theme's palette. The ink itself is painted by the
 runtime's text engine, so the palette reaching it is measured on painted pixels,
 not only on the host object: the playground's `syntax-palette` probe paints one
 four-line TypeScript source three times in a window on `0.11.0` (**29** checks)
@@ -3539,8 +3539,9 @@ or dropped is named rather than passing silently.
   padding, a diff's paddings and accent bar, and a document's table column minima
   have no token, so tuning them is still a runtime change. A `<markdown>` host's
   inline code is prose in a chip rather than a second palette (`codeText` on
-  `codeWash`), and the highlighting itself is the runtime's tokenizer: this
-  package chooses the colours, not which run is a keyword.
+  `codeWash`), and the tokenization is the consumer's — `@tanstack/highlight` in
+  the components' code block — while this package chooses the colours, not which
+  run is a keyword.
 - `@gpuix/native@0.11.0`'s `focusVisible` outline is measured for Tab input and
   for a programmatic focus **after** a Tab, but not for a programmatic focus
   before any key. A mouse-opened dialog or menu therefore keeps `focusRing`'s

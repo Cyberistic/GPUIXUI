@@ -278,19 +278,21 @@ describe("the syntax palette", () => {
     expect(syntaxColors(high).comment).toBe(highContrastLightSyntax.comment);
   });
 
-  it("hands the palette to the native code host the component already passes", () => {
+  it("hands the palette to the painter the code block now resolves", () => {
     expect(nativeTextTheme(lightTheme).syntax).toBe(lightSyntax);
     expect(nativeTextTheme(darkTheme, "background").syntax).toBe(darkSyntax);
 
     // The painter, read from source: the seam fills `syntax`, and a code block
-    // paints the page role and hands the host the same object — so shipping the
-    // palette adopts it with no component change. A seam that stopped filling it
-    // would put the runtime's own dark palette back, silently.
+    // resolves the same table directly and maps each token class to a role, so
+    // shipping the palette reaches the block with no component-side table. A seam
+    // that stopped filling it would put the runtime's own dark palette back.
     const seam = read("./native-text.ts");
     expect(seam).toContain("syntax: syntaxColors(theme)");
     const codeBlock = read("../../components/src/code-block.tsx");
-    expect(codeBlock).toContain('nativeTextTheme(theme, "background")');
+    expect(codeBlock).toContain("syntaxColors(theme)");
     expect(codeBlock).toContain("bg-background");
+    const tokenize = read("../../components/src/code-block/tokenize.ts");
+    expect(tokenize).toContain("tokenRole");
     // And the fill the block paints is the one the contract measures.
     expect(syntaxSurfaces).toContain("background");
   });
