@@ -391,10 +391,21 @@ describe("the workspace page's pointer and terminal claims", () => {
   });
 
   it("separates rendering into a terminal from hosting one", () => {
-    expect(rowFor(record, "Terminal rendering")).toContain("supported");
+    // The row called a PTY inside a window "unverified" while the typings have
+    // no terminal host element at all, and it had no measurement of the frame a
+    // terminal does receive. Both halves now come from the record: the row the
+    // pty probes measured, and the absence an embedded terminal rests on.
+    const terminal = rowFor(record, "Terminal rendering");
+    expect(terminal).toContain("supported");
+    expect(terminal).toContain("terminal-render");
+    expect(terminal).toContain("host element");
+
     expect(workspace).toContain("terminal: true");
     expect(workspace).toContain("hosts a PTY");
     expect(workspace).not.toContain("No terminal host element");
+    expect(workspace).toContain("measured-in-a-window");
+    expect(workspace).toContain("no PTY host element");
+    expect(workspace).not.toContain("has no host element and is unverified");
   });
 
   it("moves a tab through the portal a window measured, instead of denying one", () => {

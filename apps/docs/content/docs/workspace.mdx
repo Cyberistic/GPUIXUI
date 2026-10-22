@@ -206,7 +206,7 @@ and the traversal across them is the app's, measured in a window by
 | Docking layouts | Composition over split panes, which do not exist yet | A fixed, hand-built layout |
 | Persistent panel state | No renderer storage | `Schema`-encoded app state, decoded at the entrypoint |
 | Application menus | The macOS menu bar is a renderer API; cross-platform menus are ours | `DropdownMenu` in the window |
-| Terminal surfaces | Rendering the app **into** a terminal is supported (`render(<App />, { terminal: true })` with `isTerminal()`); a pane that hosts a PTY **inside** a window has no host element and is unverified | Ship the app as a terminal UI, or put a log viewer in the window: `ScrollArea` + `Text` |
+| Terminal surfaces | Rendering the app **into** a terminal is supported and measured: `render(<App />, { terminal: true })` with `isTerminal()`, a 100×40 pty receiving an 800×640 frame, a key repainting it and ctrl-c restoring the terminal ([Runtime capabilities](/docs/runtime#measured-in-a-window)). A pane that hosts a PTY **inside** a window has no PTY host element, so it is not supported | Ship the app as a terminal UI, or put a log viewer in the window: `ScrollArea` + `Text` |
 
 The capability matrix and its evidence are on [Runtime](/docs/runtime).
 
