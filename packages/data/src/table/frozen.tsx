@@ -228,24 +228,24 @@ export const FrozenTable = <Row,>({
               minHeight: 0,
             }}
           >
-          <TableHeader
-            style={{ minHeight: headerHeight }}
-            onLayout={(event) => setDataHeaderHeight(event.height ?? 0)}
-          >
-            {header}
-          </TableHeader>
-          <TableBody
-            height={bodyHeight}
-            testId={bodyTestId}
-            ref={body}
-            onScrollChange={mirror("body")}
-          >
-            {rows.length === 0
-              ? empty
-              : rows.map((record) => (
-                  <Fragment key={rowKey(record)}>{row(record)}</Fragment>
-                ))}
-          </TableBody>
+            <TableHeader
+              style={{ minHeight: headerHeight }}
+              onLayout={(event) => setDataHeaderHeight(event.height ?? 0)}
+            >
+              {header}
+            </TableHeader>
+            <TableBody
+              height={bodyHeight}
+              testId={bodyTestId}
+              ref={body}
+              onScrollChange={mirror("body")}
+            >
+              {rows.length === 0
+                ? empty
+                : rows.map((record) => (
+                    <Fragment key={rowKey(record)}>{row(record)}</Fragment>
+                  ))}
+            </TableBody>
           </div>
         </TableViewport>
       </div>
