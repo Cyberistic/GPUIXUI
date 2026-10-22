@@ -50,6 +50,7 @@ describe("easing", () => {
       backIn,
       backOut,
       backInOut,
+      anticipate,
     ];
     closed.forEach((easing) => {
       expect(easing(0)).toBeCloseTo(0, 5);

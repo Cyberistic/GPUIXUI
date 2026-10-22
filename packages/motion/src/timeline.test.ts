@@ -9,7 +9,7 @@
  * `NaN` there painted nothing and left a driver sampling forever.
  */
 import { describe, expect, it } from "vitest";
-import { easeOut, type Easing } from "./easing.js";
+import { anticipate, easeOut, type Easing } from "./easing.js";
 import { Sequence, keyframe, sampleKeyframes, stagger } from "./timeline.js";
 
 /** The steps a stagger cannot wait for: each is "no wait". */
@@ -35,6 +35,18 @@ describe("sampleKeyframes", () => {
     ];
     // Segment [0, 0.5] with local progress 0.5 → easeOut(0.5) = 0.875.
     expect(sampleKeyframes(frames, 0.25)).toBeCloseTo(50 * 0.875, 5);
+  });
+
+  it("lands on the value a segment ends at, whatever curve it names", () => {
+    // The bug this guards: `anticipate` converged on 1 without reaching it
+    // (0.99951), so a frame that ended a segment landed a hundredth of a percent
+    // short of the value it names. A curve shapes the journey, never the stop.
+    const frames = [
+      keyframe(0, 0),
+      keyframe(0.5, 50, anticipate),
+      keyframe(1, 100),
+    ];
+    expect(sampleKeyframes(frames, 0.5)).toBe(50);
   });
 
   it("reads a NaN progress as the first frame, an infinity as the last", () => {

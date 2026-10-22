@@ -68,10 +68,17 @@ export const backInOut: Easing = (t) =>
     ? backIn(clamp01(t) * 2) / 2
     : 0.5 + backOut(clamp01(t) * 2 - 1) / 2;
 
-/** Anticipation followed by exponential deceleration. */
+/**
+ * Anticipation followed by exponential deceleration.
+ *
+ * The deceleration converges on 1 without reaching it (`0.99951` at the end), so
+ * the end is written explicitly: a curve shapes the journey, and a frame that
+ * ends a segment lands on the value it names.
+ */
 export const anticipate: Easing = (t) => {
   const u = clamp01(t);
   if (u < 0.5) return backIn(u * 2) / 2;
+  if (u === 1) return 1;
   return 1 - 0.5 * 2 ** (-20 * (u - 0.5));
 };
 
