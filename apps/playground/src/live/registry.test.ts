@@ -111,18 +111,38 @@ describe("live probe documentation", () => {
     ).toEqual([]);
   });
 
-  it("prints the live probe total it actually runs", () => {
+  it("prints the probes it ran and the ones a partial pass left red", () => {
     // The intro said "thirty-seven" while 39 probes were registered: a count a
     // reader uses to tell a partial pass from a complete one, written by hand.
+    // The suite line is the other half: a full pass prints the registry's size
+    // twice, and a partial one names exactly the probes that did not pass, so a
+    // red probe cannot be left out of the sentence that reports it.
     const intro = /the\s+(\d+) probes a real window can prove/.exec(readme);
-    const suite =
-      /pass in real GPUix 0\.11\.0 on this host\n\s+\((\d+)\/(\d+)\)/.exec(
-        readme,
-      );
     expect(intro?.[1]).toBe(`${liveRegistry.length}`);
-    expect(suite?.slice(1)).toEqual([
-      `${liveRegistry.length}`,
-      `${liveRegistry.length}`,
-    ]);
+
+    const start = readme.indexOf("The last full pass was");
+    const bullet =
+      start === -1 ? "" : readme.slice(start, readme.indexOf("\n\n", start));
+    const suite = /\*\*(\d+)\/(\d+)\*\*/.exec(bullet);
+    const passed = Number(suite?.[1] ?? Number.NaN);
+    const total = Number(suite?.[2] ?? Number.NaN);
+    expect(total).toBe(liveRegistry.length);
+    expect(passed).toBeLessThanOrEqual(total);
+
+    const redsAt = bullet.indexOf("the reds were:");
+    const redList = redsAt === -1 ? "" : bullet.slice(redsAt);
+    const upToParenthesis = redList.slice(0, redList.indexOf("("));
+    const named = Arr.filter(
+      Arr.map(
+        [...upToParenthesis.matchAll(/`([^`]+)`/g)],
+        (match) => match[1] ?? "",
+      ),
+      (id) => id.length > 0,
+    );
+    expect(named).toHaveLength(total - passed);
+    const registered = new Set<string>(
+      Arr.map(liveRegistry, (probe) => probe.id),
+    );
+    expect(Arr.filter(named, (id) => !registered.has(id))).toEqual([]);
   });
 });

@@ -372,6 +372,12 @@ export const liveRegistry = [
       "Table: a typed filter narrows the painted rows, keeps the field's session, clears a hidden selection, and steps in the filtered order",
     capability: "table",
   },
+  {
+    id: "table-columns-lifecycle",
+    title:
+      "Table: hiding a column shifts later columns, a restore re-grows the content, the offset clamps to the new end, and a move re-orders header and cells together",
+    capability: "table",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

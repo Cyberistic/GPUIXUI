@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-56 probes a real window can prove, of which fifteen mount shipped
+57 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -54,7 +54,7 @@ mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
 restore, a dock's keyboard order, an anchored menu in a scrolled header, the
 window's own backdrop, the app-level key handler, the app-level selection
-handler and a field's hint and value ink).
+handler, a field's hint and value ink and a configurable data grid).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -3114,6 +3114,47 @@ Two negative controls were measured, exit `1` each, then restored green:
 
 Capture: `.artifacts/live/table-filtered.png`.
 
+### `table-columns-lifecycle` — measured on 0.11.0 here
+
+The **rules around a grid's column menu**. Tier 3's *column configuration* row is
+`grid tracks + a menu`, so the runtime cannot refuse the control; what the grid
+owns is the consequence: the content width follows the visible set, every later
+column shifts by the hidden one's width, a press lands on the column that moved
+into the gap, and the header and its cells read one column list. Six columns
+(120/80/160/100/140/90 = 690px) sit in a 360px scroller over 40 rows at 28px.
+
+| Step | Measurement |
+| ---- | ----------- |
+| open | `cols=name,status,owner,updated,size,kind width=690 offset=0,0 selected=none`; `status` paints 80px and the content is wider than the viewport |
+| press a name cell | the record is selected (`r3`) and the pressed cell holds the focus |
+| wheel −200 | the rows scroll under the header to `-200` |
+| hide `status` | width **610**, the order loses the column, its header and cells paint nothing, and every later column shifts **−80**; the header and its cells still share one `x`; the vertical offset stays `−200` and the selection survives |
+| press row 9's `owner` cell | the column that moved into the gap is the one the press hits (`selected=r9`) |
+| pan to the end | **−250** (360 − 610), with the last column's edge at the viewport's edge |
+| hide `owner` while panned | the renderer **clamps its own offset** to **−90** (360 − 450) and reports it through `onScrollChange` — no `scrollTo` from the app, no blank space past the last column — and the vertical offset stays `−200` |
+| restore both | the 690px order returns, the offset stays `−90`, and `owner` paints at 120 + 80 = 200 − 90 from the viewport's left edge |
+| move `owner` after `updated` | `cols=name,status,updated,owner,size,kind` at the same 690px; the header paints at 300 and its cells follow it |
+
+34 checks, `--only table-columns-lifecycle`, green on 0.11.0 (~1.4 s). Fixture:
+`src/live/table-columns.ts` — the widths and order, `visibleColumns`,
+`contentWidth`, `columnOffset`, `maxOffsetX`, `moveColumn` and the
+counts-only readout; `table-columns.test.ts` (8 cases) holds the width sum, the
+local shift a hide makes, the end each width has, the move's order and clamps,
+the readout wording and the README check count.
+
+Two negative controls were measured, exit `1` each, then restored green:
+
+- expecting the **pre-hide** end after the second hide fails `the offset clamps
+  to the content's new end` with **`expected -250 ± 2, got -90`** — the clamp is
+  the renderer's, so the probe does not call `scrollTo` and a grid that trusts
+  the old pair would paint blank space even though the offset it reads moved.
+- laying the rows out from the **unfiltered** order while the header reads the
+  visible one fails `a hidden column paints no cell` (`expected true, got
+  false`) — the two lists drift apart at the first hide, which is the failure a
+  single shared list prevents.
+
+Capture: `.artifacts/live/table-columns.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -3274,6 +3315,7 @@ src/live/window-facts.tsx the window options the runner opened, read by a probe
 src/live/editor-overlay.ts the editable-code fixture: one source under a field and beside it
 src/live/multi-pane.ts  the two-pane editor fixture: buffers, split arithmetic and the drag clamp
 src/live/table-filter.ts the filtered-grid fixture: the label match, the selection rule and the filtered-order step
+src/live/table-columns.ts the configurable-grid fixture: widths, column offsets, the pan end and the column move
 src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
@@ -3312,8 +3354,12 @@ narrower. Each deviation is deliberate and measured:
 
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
-  backdrop, the app-level shortcut and selection probes pass in real GPUix 0.11.0 on this host
-  (56/56), with a written report and screenshots.
+  backdrop, the app-level shortcut and selection probes run in real GPUix 0.11.0
+  on this host. The last full pass was **55/57** on 2026-10-22 — every probe ran,
+  and the reds were: `list-lifecycle`, `command-palette` (both in the components
+  workstream's in-flight work, recorded in `TODO.md`; the new columns probe and
+  every other probe were green). The full live suite is the release gate that
+  turns this line green.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

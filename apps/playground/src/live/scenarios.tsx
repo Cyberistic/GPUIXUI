@@ -225,6 +225,22 @@ import {
   stepRow,
 } from "./table-filter.js";
 import {
+  COLUMN_IDS,
+  COLUMN_ORDER,
+  COLUMN_ROW_HEIGHT,
+  COLUMN_ROW_INDEXES,
+  COLUMN_VIEWPORT_WIDTH,
+  cellLabel,
+  columnOffset,
+  columnWidth,
+  columnsReadout,
+  contentWidth,
+  maxOffsetX,
+  moveColumn,
+  visibleColumns,
+  type ColumnId,
+} from "./table-columns.js";
+import {
   FADE_BACKING,
   FADE_BACKING_RGBA,
   FADE_CAPTURE_ATTEMPTS,
@@ -14976,6 +14992,404 @@ const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("table-filtered");
   });
 
+/**
+ * A grid whose columns can be hidden, restored and moved, in a window.
+ *
+ * Tier 3's **column configuration** row is `grid tracks + a menu`, and what a
+ * menu owes its grid is the consequence: the content width follows the visible
+ * set, every later column shifts by the hidden one's width, a horizontal offset
+ * left past the new end is clamped after the new layout, and the header and its
+ * cells read one column list. The rows live in one scroller with the header, so
+ * the horizontal pan and the vertical scroll are the runtime's own; the clamp is
+ * the app's, because a shrinking scroller keeps the offset it had.
+ */
+const TableColumnsProbe = (): ReactNode => {
+  const theme = useTheme();
+  const grid = useRef<PublicInstance | null>(null);
+  const [order, setOrder] = useState<ReadonlyArray<ColumnId>>(COLUMN_ORDER);
+  const [hidden, setHidden] = useState<ReadonlyArray<ColumnId>>([]);
+  const [view, setView] = useState({ x: 0, y: 0 });
+  const [selected, setSelected] = useState(Option.none<number>());
+  const visible = visibleColumns(order, hidden);
+  const width = contentWidth(visible);
+
+  const toggle = (id: ColumnId): void => {
+    setHidden((current) =>
+      Arr.contains(current, id)
+        ? Arr.filter(current, (column) => column !== id)
+        : Arr.append(current, id),
+    );
+  };
+
+  const headerStyle = (id: ColumnId): StyleDesc => ({
+    display: "flex",
+    alignItems: "center",
+    flexShrink: 0,
+    width: columnWidth(id),
+    height: COLUMN_ROW_HEIGHT,
+    paddingLeft: theme.spacing.sm,
+    backgroundColor: theme.colors.muted,
+    borderRightWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+  });
+
+  const cellStyle = (row: number, id: ColumnId): StyleDesc => ({
+    display: "flex",
+    alignItems: "center",
+    flexShrink: 0,
+    width: columnWidth(id),
+    height: COLUMN_ROW_HEIGHT,
+    paddingLeft: theme.spacing.sm,
+    cursor: "pointer",
+    backgroundColor: Option.contains(selected, row)
+      ? theme.colors.selected
+      : theme.colors.card,
+    borderRightWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+    ...keyboardFocusRing(theme),
+  });
+
+  return (
+    <div
+      testId={COLUMN_IDS.probe}
+      style={{
+        width: 560,
+        height: 460,
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A configurable grid: hiding a column shrinks the content and shifts
+        every later column; the grid clamps an offset left past the new end.
+      </text>
+      <Toolbar>
+        {Arr.map(COLUMN_ORDER, (id) => (
+          <Pressable
+            key={id}
+            testId={COLUMN_IDS.hide(id)}
+            onClick={() => toggle(id)}
+            style={{ padding: theme.spacing.sm }}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "caption"),
+                color: theme.colors.foreground,
+              }}
+            >
+              {Arr.contains(hidden, id) ? `show ${id}` : `hide ${id}`}
+            </text>
+          </Pressable>
+        ))}
+        <Pressable
+          testId={COLUMN_IDS.move("owner")}
+          onClick={() => setOrder((current) => moveColumn(current, "owner", 1))}
+          style={{ padding: theme.spacing.sm }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.foreground,
+            }}
+          >
+            move owner
+          </text>
+        </Pressable>
+      </Toolbar>
+      <div
+        testId={COLUMN_IDS.grid}
+        ref={grid}
+        onScrollChange={(event) =>
+          setView({ x: event.scrollX ?? 0, y: event.scrollY ?? 0 })
+        }
+        style={{
+          width: COLUMN_VIEWPORT_WIDTH,
+          height: 240,
+          overflowX: "scroll",
+          overflowY: "scroll",
+          backgroundColor: theme.colors.card,
+          borderWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+        }}
+      >
+        <div style={{ width, display: "flex", flexDirection: "column" }}>
+          <div
+            role="row"
+            style={{ display: "flex", flexDirection: "row", width }}
+          >
+            {Arr.map(visible, (id) => (
+              <div
+                key={id}
+                testId={COLUMN_IDS.header(id)}
+                role="columnheader"
+                style={headerStyle(id)}
+              >
+                <text
+                  style={{
+                    ...textStyle(theme, "caption"),
+                    color: theme.colors.mutedForeground,
+                  }}
+                >
+                  {id}
+                </text>
+              </div>
+            ))}
+          </div>
+          {Arr.map(COLUMN_ROW_INDEXES, (row) => (
+            <div
+              key={row}
+              role="row"
+              aria-selected={Option.contains(selected, row)}
+              style={{ display: "flex", flexDirection: "row", width }}
+            >
+              {Arr.map(visible, (id) => (
+                <div
+                  key={id}
+                  testId={COLUMN_IDS.cell(row, id)}
+                  tabIndex={0}
+                  role="gridcell"
+                  onClick={() => setSelected(Option.some(row))}
+                  style={cellStyle(row, id)}
+                >
+                  <text
+                    style={{
+                      ...textStyle(theme, "caption"),
+                      color: Option.contains(selected, row)
+                        ? theme.colors.selectedForeground
+                        : theme.colors.foreground,
+                    }}
+                  >
+                    {cellLabel(row, id)}
+                  </text>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      <Readout testId={COLUMN_IDS.readout}>
+        {columnsReadout(visible, view, selected)}
+      </Readout>
+    </div>
+  );
+};
+
+const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(COLUMN_IDS.grid);
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text(COLUMN_IDS.readout);
+    const offsetOf = () => ctx.host.scrollOffset(COLUMN_IDS.grid);
+    const offsetX = () =>
+      Effect.map(offsetOf(), (found) =>
+        Option.match(Option.fromNullishOr(found), {
+          onNone: () => Number.NaN,
+          onSome: (value) => value.x,
+        }),
+      );
+    const offsetY = () =>
+      Effect.map(offsetOf(), (found) =>
+        Option.match(Option.fromNullishOr(found), {
+          onNone: () => Number.NaN,
+          onSome: (value) => value.y,
+        }),
+      );
+    const unpainted = (testId: string) =>
+      Effect.map(ctx.host.bounds(testId), (found) =>
+        Option.isNone(Option.fromNullishOr(found)),
+      );
+
+    // 1. Every column opens in its configured order, at the width it defines.
+    yield* ctx.expectEqual(
+      "the grid opens with every column in its configured order",
+      yield* readout(),
+      columnsReadout(COLUMN_ORDER, { x: 0, y: 0 }, Option.none()),
+    );
+    yield* ctx.expectNear(
+      "a column paints at the width its definition gives it",
+      (yield* paintedBox(ctx, COLUMN_IDS.header("status"))).width,
+      columnWidth("status"),
+      1,
+    );
+    const viewport = yield* paintedBox(ctx, COLUMN_IDS.grid);
+    const lastColumn = yield* paintedBox(ctx, COLUMN_IDS.header("kind"));
+    yield* ctx.expectEqual(
+      "the content is wider than the viewport it scrolls in",
+      lastColumn.x + lastColumn.width > viewport.x + COLUMN_VIEWPORT_WIDTH,
+      true,
+    );
+
+    // 2. A press selects a record, and the cell that took it holds the focus.
+    yield* ctx.host.click(COLUMN_IDS.cell(3, "name"));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a press selects the record whose cell it hit",
+      yield* readout(),
+      columnsReadout(COLUMN_ORDER, { x: 0, y: 0 }, Option.some(3)),
+    );
+    yield* ctx.expectEqual(
+      "the pressed cell holds the focus, so the next key reaches the row",
+      yield* focusedAfterPaint(ctx),
+      COLUMN_IDS.cell(3, "name"),
+    );
+
+    // 3. The rows scroll under the header; the offset is the runtime's own.
+    yield* ctx.host.wheel(COLUMN_IDS.grid, 0, -200);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "the wheel scrolls the rows",
+      yield* offsetY(),
+      -200,
+      2,
+    );
+
+    // 4. Hiding a column takes its width out and shifts every later column.
+    const ownerBefore = yield* paintedBox(ctx, COLUMN_IDS.header("owner"));
+    yield* ctx.host.click(COLUMN_IDS.hide("status"));
+    yield* Effect.sleep(SETTLE);
+    const hidden = visibleColumns(COLUMN_ORDER, ["status"]);
+    yield* ctx.expectEqual(
+      "hiding a column removes it from the painted order",
+      yield* readout(),
+      columnsReadout(hidden, { x: 0, y: -200 }, Option.some(3)),
+    );
+    yield* ctx.expectEqual(
+      "a hidden column paints no header",
+      yield* unpainted(COLUMN_IDS.header("status")),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a hidden column paints no cell",
+      yield* unpainted(COLUMN_IDS.cell(3, "status")),
+      true,
+    );
+    const ownerAfter = yield* paintedBox(ctx, COLUMN_IDS.header("owner"));
+    yield* ctx.expectNear(
+      "every later column shifts left by the hidden one's width",
+      ownerAfter.x - ownerBefore.x,
+      -columnWidth("status"),
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the header and its cells still read one column list",
+      ownerAfter.x,
+      (yield* paintedBox(ctx, COLUMN_IDS.cell(3, "owner"))).x,
+    );
+    yield* ctx.expectNear(
+      "a column change leaves the vertical offset where the reader left it",
+      yield* offsetY(),
+      -200,
+      2,
+    );
+    // Row 9 is inside the viewport at this offset: a press resolves at the
+    // element's painted centre, and a row scrolled out of the window would land
+    // on whatever paints there instead.
+    yield* ctx.host.click(COLUMN_IDS.cell(9, "owner"));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the column that moved into the hidden one's place takes its press",
+      yield* readout(),
+      "selected=r9",
+    );
+
+    // 5. The grid pans to the end of the content it has now.
+    yield* ctx.host.wheel(COLUMN_IDS.grid, -10_000, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "the horizontal wheel pans to the content's end",
+      yield* offsetX(),
+      maxOffsetX(contentWidth(hidden)),
+      2,
+    );
+    const panned = yield* paintedBox(ctx, COLUMN_IDS.header("kind"));
+    yield* ctx.expectNear(
+      "the last column's edge paints at the viewport's edge",
+      panned.x + panned.width,
+      viewport.x + COLUMN_VIEWPORT_WIDTH,
+      2,
+    );
+
+    // 6. A second hide shrinks the content under an offset left past its end.
+    yield* ctx.host.click(COLUMN_IDS.hide("owner"));
+    yield* Effect.sleep(SETTLE);
+    const narrower = visibleColumns(hidden, ["owner"]);
+    yield* ctx.expectNear(
+      "the offset clamps to the content's new end",
+      yield* offsetX(),
+      maxOffsetX(contentWidth(narrower)),
+      2,
+    );
+    const clamped = yield* paintedBox(ctx, COLUMN_IDS.header("kind"));
+    yield* ctx.expectNear(
+      "the grid paints no blank space past its last column",
+      clamped.x + clamped.width,
+      viewport.x + COLUMN_VIEWPORT_WIDTH,
+      2,
+    );
+    yield* ctx.expectNear(
+      "clamping the pan keeps the vertical offset",
+      yield* offsetY(),
+      -200,
+      2,
+    );
+
+    // 7. Restoring a column re-grows the content and paints it where its widths
+    //    put it, with the offset the reader left.
+    yield* ctx.host.click(COLUMN_IDS.hide("status"));
+    yield* ctx.host.click(COLUMN_IDS.hide("owner"));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "restoring the hidden columns returns the full order",
+      yield* readout(),
+      "cols=name,status,owner,updated,size,kind width=690",
+    );
+    const restored = yield* paintedBox(ctx, COLUMN_IDS.header("owner"));
+    const ownerAt = Option.getOrElse(
+      columnOffset(COLUMN_ORDER, "owner"),
+      () => Number.NaN,
+    );
+    yield* ctx.expectNear(
+      "a restored column paints where its widths put it",
+      restored.x,
+      viewport.x + ownerAt + (yield* offsetX()),
+      2,
+    );
+
+    // 8. A column move changes the order, not the width.
+    yield* ctx.host.click(COLUMN_IDS.move("owner"));
+    yield* Effect.sleep(SETTLE);
+    const moved = moveColumn(COLUMN_ORDER, "owner", 1);
+    yield* ctx.expectEqual(
+      "a column move changes the order it is read in",
+      yield* readout(),
+      columnsReadout(moved, { x: -90, y: -200 }, Option.some(9)),
+    );
+    const movedHeader = yield* paintedBox(ctx, COLUMN_IDS.header("owner"));
+    yield* ctx.expectNear(
+      "the moved header paints at its new offset",
+      movedHeader.x,
+      viewport.x +
+        Option.getOrElse(columnOffset(moved, "owner"), () => Number.NaN) +
+        (yield* offsetX()),
+      2,
+    );
+    yield* ctx.expectEqual(
+      "the moved column's cells follow its header",
+      (yield* paintedBox(ctx, COLUMN_IDS.cell(9, "owner"))).x,
+      movedHeader.x,
+    );
+    yield* ctx.host.capture("table-columns");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -15258,5 +15672,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "table-filter-lifecycle",
     view: () => <TableFilterProbe />,
     steps: tableFilterSteps,
+  },
+  "table-columns-lifecycle": {
+    id: "table-columns-lifecycle",
+    view: () => <TableColumnsProbe />,
+    steps: tableColumnsSteps,
   },
 };

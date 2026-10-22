@@ -35,8 +35,22 @@ const scenarios = readFileSync(
 );
 
 /**
- * The `tableFilterSteps` effect, bounded by the live-probe body table that
- * follows it.
+ * Where the top-level declaration after `start` begins, which bounds a probe's
+ * steps.
+ *
+ * A probe's steps are followed by the next probe's doc comment, its `const`, or
+ * the live-probe body table — so the slice takes the first of those rather than
+ * a fixed marker, which another probe appended beside it would move.
+ */
+const endOfDeclaration = (start: number): number =>
+  Math.min(
+    ...["\nconst ", "\nexport const ", "\n/**"]
+      .map((marker) => scenarios.indexOf(marker, start + 1))
+      .filter((at) => at !== -1),
+  );
+
+/**
+ * The `tableFilterSteps` effect, bounded by the declaration that follows it.
  *
  * It has no loop that adds a check, so its `ctx.expect*` call sites plus one per
  * `paintedBox` call are the checks the window runs — which is what the README
@@ -44,8 +58,7 @@ const scenarios = readFileSync(
  */
 const tableFilterSteps = (() => {
   const start = scenarios.indexOf("const tableFilterSteps");
-  const end = scenarios.indexOf("/** The bodies", start + 1);
-  return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
+  return start === -1 ? "" : scenarios.slice(start, endOfDeclaration(start));
 })();
 
 /** The count the README prints for this probe, if any. */
