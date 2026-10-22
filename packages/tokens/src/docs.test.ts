@@ -15,6 +15,12 @@
  * ring the component packages paint, and it kept stating the old answer after
  * both adopted the new one. The page is held to the sources that decide it.
  *
+ * The fourth is the gate's own report list in the inventory: `auditTheme` grew
+ * `syntax` as its eleventh report and the `Contrast contract` row still printed
+ * ten, leaving out the check a code block is held to, and it still taught a
+ * `secondaryForeground` wash pair the table had retired. The row is read against
+ * the gate and the pair table, so a report or a pair cannot outlive the row.
+ *
  * `node:fs` is deliberate, as in `exports.test.ts`: this is a check over the
  * repository's own Markdown, and the package keeps zero runtime dependencies by
  * design.
@@ -31,6 +37,16 @@ const read = (path: string): string =>
 const catalogue = read("../../../docs/tokens.md");
 const readme = read("../README.md");
 const designSystem = read("../../../docs/design-system.md");
+const inventory = read("../../../COMPONENTS.md");
+
+/** One `COMPONENTS.md` row, by its first cell. */
+const inventoryRow = (name: string): string => {
+  const start = inventory.indexOf(`| ${name} |`);
+  const end = inventory.indexOf("\n", start);
+  return start === -1
+    ? ""
+    : inventory.slice(start, end === -1 ? undefined : end);
+};
 
 /** The package's source files a document may import from — no tests, no examples. */
 const sourceFiles: ReadonlyArray<string> = readdirSync(
@@ -168,17 +184,26 @@ describe("the audit's report list", () => {
     "twelve",
   ] as const;
   const count = words[reports.length] ?? `${reports.length}`;
+  /**
+   * Every sentence that states how many checks the gate runs. A page that
+   * prints a count is telling the reader what `passed` covers, so each phrase
+   * carries the gate's own word rather than one page's copy of it.
+   */
   const surfaces = [
     {
       name: "docs/tokens.md",
       text: catalogue,
-      phrase: `all ${count} reports`,
+      phrases: [`all ${count} reports`, `\`auditTheme\`'s ${count} reports`],
     },
-    { name: "README.md", text: readme, phrase: `all ${count} reports` },
+    {
+      name: "README.md",
+      text: readme,
+      phrases: [`all ${count} reports`, `the audit's ${count} reports`],
+    },
     {
       name: "docs/design-system.md",
       text: designSystem,
-      phrase: `reports all ${count} in one call`,
+      phrases: [`reports all ${count} in one call`, `runs all ${count} checks`],
     },
   ];
   const named = (text: string): ReadonlySet<string> =>
@@ -213,11 +238,44 @@ describe("the audit's report list", () => {
   });
 
   it("prints the report count the gate has", () => {
-    const silent = surfaces
-      .filter(({ text, phrase }) => !text.includes(phrase))
-      .map(({ name }) => name);
+    const silent = surfaces.flatMap(({ name, text, phrases }) => {
+      // A page wraps its prose, so a phrase is read across a line break.
+      const flat = text.replace(/\s+/g, " ");
+      return phrases
+        .filter((phrase) => !flat.includes(phrase))
+        .map((phrase) => `${name}: ${phrase}`);
+    });
 
     expect(silent).toEqual([]);
+  });
+
+  it("lists the reports the gate returns, in its order, in the inventory", () => {
+    const row = inventoryRow("Contrast contract");
+    const open = row.indexOf("returns all ");
+    const start = row.indexOf("(", open);
+    const end = row.indexOf(")", start);
+    const listed = row.slice(start + 1, end).split(", ");
+
+    expect(listed).toEqual(reports.map((report) => `\`${report}\``));
+  });
+
+  it("prints the pair count the contrast table holds", () => {
+    const row = inventoryRow("Contrast contract");
+    const printed = /the (\d+) role pairs/.exec(row)?.[1];
+
+    expect(Number(printed)).toBe(Tokens.contrastPairs.length);
+  });
+
+  it("does not teach the secondary action's retired wash pair", () => {
+    const row = inventoryRow("Contrast contract");
+
+    // The fill the pointer sees is derived, not a `hover`/`active` role, so the
+    // wash pair was retired from `contrastPairs` when the variant adopted
+    // `filledHover`/`filledPressed` — a row that still prints it sends a reader
+    // to a contract nothing measures.
+    expect(row).not.toContain("keeps on the `hover`/`active` wash");
+    expect(row).toContain("`filledHover`/`filledPressed`");
+    expect(row).toContain("actionFeedbackFailures");
   });
 });
 

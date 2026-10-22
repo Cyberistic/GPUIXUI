@@ -1381,7 +1381,7 @@ The rule found one shipped style: the Windows platform carried `lg: 8` and
 larger step named nothing. It is `xl: 10` now, and the platform scale is
 `2/4/8/10` (§Platform styles).
 
-`invalidScales` is not one of `auditTheme`'s ten reports yet. The docs site's
+`invalidScales` is not one of `auditTheme`'s eleven reports yet. The docs site's
 theme readout words each report it prints, so folding this in is one coordinated
 change with that page — recorded in `TODO.md` → Interlocks. Run it beside
 `auditTheme` until then: `src/scales.example.ts` is a brand whose `sm` control is

@@ -637,7 +637,7 @@ Each report is also a function of its own:
   level's shadow reaches below its box. Every value can be layable while the name
   still lies: a `sm` control taller than its `lg`, a dialog as square as a card,
   or a dialog casting a tighter shadow than a menu. It is not one of the audit's
-  ten reports yet (the docs readout words each report it prints), so run it
+  eleven reports yet (the docs readout words each report it prints), so run it
   beside `auditTheme`; it found the Windows style's `xl` radius equal to its
   `lg`.
 - `contrastFailures(theme, floors?)` lists every text-on-surface pair that
