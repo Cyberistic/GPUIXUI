@@ -308,10 +308,35 @@ const CITATIONS: ReadonlyArray<readonly [string, string]> = [
   ["Toolbars", "window-chrome"],
   ["Status bars", "window-chrome"],
   ["Column configuration", "table-columns-lifecycle"],
+  ["Resizable columns", "column-resize-lifecycle"],
   ["Filtering controls", "table-filter-lifecycle"],
   ["Multi-pane editing layouts", "multi-pane-editor"],
   ["Code editor integration", "editor-overlay"],
 ];
+
+/** The `column-resize` fixture's direct numbers, read as source. */
+const columnDrag = (): Readonly<Record<string, number>> => {
+  const source = readFileSync(
+    fileURLToPath(
+      new URL("apps/playground/src/live/column-resize.ts", repoRoot),
+    ),
+    "utf8",
+  );
+  const number = (key: string): number =>
+    Number(
+      new RegExp(`\\b${key}: (\\d+),`).exec(source)?.[1] ??
+        new RegExp(`\\b${key} = (\\d+);`).exec(source)?.[1] ??
+        Number.NaN,
+    );
+  return {
+    opened: number("name"),
+    min: number("min"),
+    divider: number("divider"),
+    control: number("control"),
+    dragSteps: number("DRAG_STEPS"),
+    controlMoves: number("CONTROL_MOVES"),
+  };
+};
 
 /** The live probe ids the playground registers, read from its own registry. */
 const probeIds = (): ReadonlyArray<string> => {
@@ -353,6 +378,35 @@ describe("the measured target rows", () => {
     );
 
     expect(problems).toEqual([]);
+  });
+
+  it("states the numbers the column-drag fixture holds", () => {
+    const drag = columnDrag();
+    expect(
+      [
+        drag.opened,
+        drag.min,
+        drag.divider,
+        drag.control,
+        drag.dragSteps,
+        drag.controlMoves,
+      ].every(Number.isFinite),
+    ).toBe(true);
+
+    const notes = Option.getOrElse(
+      Option.map(
+        Arr.findFirst(targetRows(), (row) => row.name === "Resizable columns"),
+        (row) => row.notes,
+      ),
+      () => "",
+    );
+    expect(notes).toContain(`${drag.opened} → `);
+    expect(notes).toContain(`${drag.divider}px divider`);
+    expect(notes).toContain(`${drag.dragSteps} of ${drag.dragSteps}`);
+    expect(notes).toContain(`clamps at **${drag.min}**`);
+    expect(notes).toContain(`${drag.controlMoves} of ${drag.dragSteps}`);
+    expect(notes).toContain(`stays **${drag.control}**`);
+    expect(notes).toContain("onMouseDown");
   });
 
   it("states a verdict instead of a question mark", () => {
