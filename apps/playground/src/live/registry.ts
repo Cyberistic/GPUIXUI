@@ -528,6 +528,12 @@ export const liveRegistry = [
       "Layout: a surface moved by a layout above delivers no layout report, and a nudged one-pixel probe reports the origin it has now",
     capability: "layout",
   },
+  {
+    id: "hover-routing-lifecycle",
+    title:
+      "Input: a filled child is the boundary a row's native hover stops at, while its unfilled and pointer-inert children leave the row's fill and its enter event intact",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

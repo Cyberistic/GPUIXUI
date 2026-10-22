@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-82 probes a real window can prove, of which eighteen mount shipped
+83 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -4585,6 +4585,55 @@ call — the repair itself — fails `the nudged probe reports the origin the
 surface has now` with **`expected true, got false`**, because the stale report
 stays at `88` while the surface paints at `208`.
 
+### `hover-routing-lifecycle` — measured on 0.11.0 here
+
+**Does a filled child take its row's hover away?** A Tier 3 table puts a status
+badge, a metric or a control inside a row it also tints under the pointer, and a
+Tier 4 tree row nests the same shapes. `press-routing-lifecycle` measured that a
+painted child is the boundary a **press** stops at; a row's pointer feedback,
+though, is the runtime's native `style.hover` refinement (no React state, no
+re-render per pointer move), whose hovered set comes from the same hit test —
+so the fill between the pointer and the row can take the feedback away without
+taking the press.
+
+The probe mounts one 460×56 row per child shape. Every row rests on the `card`
+role, declares `hover: { backgroundColor: accent }`, and carries one child at
+its centre plus a readout of its own enter/leave counts. The pointer is moved to
+a label outside every row first, then onto the child, then away, so each case is
+read as a delta.
+
+| Child at the pointer | Row `onMouseEnter` | Child `onMouseEnter` | Row paints `hover` |
+| -------------------- | ------------------ | -------------------- | ------------------ |
+| an unfilled `<text>` label | **1** | 1 | **yes** |
+| a `<text>` label that paints a fill | **0** | 1 | **no** |
+| a `<div>` that paints a fill | **0** | 1 | **no** |
+| a filled `<div>` with `pointerEvents: "none"` | **1** | 1 | **yes** |
+
+The measured rule: **a fill is the boundary a hover stops at, exactly as it is
+for a press.** An unfilled label leaves the row both its enter event and its
+hover fill; a filled one takes both. `pointerEvents: "none"` puts the row back
+in the pointer's path — and the child still hears its own registered listener
+(measured: enter `1`), because opting out removes the fill's hitbox, not the
+handler. A row that wants feedback while the pointer is over a badge, a status
+marker or a control therefore gives that child `pointerEvents: "none"` when it
+is decorative, or declares its own `hover` paint when it is not.
+
+56 checks, `--only hover-routing-lifecycle`, green on 0.11.0 (~15 s, eight
+captures). Fixture: `src/live/hover-routing.ts` (the ids, the case table, the
+readout codec and the crop arithmetic) + `hover-routing.test.ts` (9 cases: the
+round-trip, a non-number and a lost field refused, one case per nesting, the
+measured rule, the ids apart, the device-scale crop, and the view/prose/registry
+held to the table). The view and steps live in
+`src/live/hover-probe.tsx`. Evidence:
+`.artifacts/live/hover-{text-unfilled,text-filled,div-filled,inert-div}.png`.
+
+Negative control measured, exit `1`, restored green: expecting the filled
+`<text>` case to paint fails `text-filled: the row paints its hover fill` with
+**`expected true, got false`** — the row stays on `card` while the pointer is on
+the fill. Dropping `pointerEvents: "none"` from the inert child fails
+`inert-div: the row hears the hover` with **`expected 1, got 0`**, so the case
+is causal rather than a coincidence of geometry.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -4805,8 +4854,8 @@ narrower. Each deviation is deliberate and measured:
   `column-resize-lifecycle`, `button-activation-lifecycle` and
   `date-picker-lifecycle`, `data-table-lifecycle`, `virtual-table-lifecycle` and
   `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`,
-  `action-ring`, `surface-origin`
-  (twenty-four probes, each run alone).
+  `action-ring`, `surface-origin`, `hover-routing-lifecycle`
+  (twenty-five probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

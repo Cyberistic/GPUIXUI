@@ -791,6 +791,7 @@ import {
   SURFACE_ORIGIN_TARGET,
   type SurfaceReadout,
 } from "./surface-origin.js";
+import { HoverRoutingProbe, hoverRoutingSteps } from "./hover-probe.js";
 import {
   ACTION_RING_DANGER,
   ACTION_RING_NEIGHBOUR,
@@ -24280,5 +24281,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "surface-origin",
     view: () => <SurfaceOriginProbeView />,
     steps: surfaceOriginSteps,
+  },
+  "hover-routing-lifecycle": {
+    id: "hover-routing-lifecycle",
+    view: () => <HoverRoutingProbe />,
+    steps: hoverRoutingSteps,
   },
 };
