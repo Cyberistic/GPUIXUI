@@ -858,6 +858,29 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("record");
   });
 
+  it("records the rules around a grid's filter, and the four decisions a grid owns", () => {
+    // Tier 3's Filtering controls row is composition, and a plan reading only
+    // the table sort/selection rule would leave a filtered-out selection live.
+    // `table-filter-lifecycle` measured the four decisions: the selection
+    // follows its record, the field keeps the text session, a new set opens at
+    // the top, and an arrow step walks the filtered order.
+    const filter = rowFor("Filtering controls");
+    expect(filter?.verdict).toBe("supported");
+    expect(filter?.evidence).toContain("table-filter-lifecycle");
+    expect(filter?.evidence).toContain("39");
+    expect(filter?.evidence).toContain("scrollOffset");
+    expect(filter?.workaround).toContain("record");
+
+    const page = measuredRow("Filtering controls");
+    expect(
+      page,
+      "the page's measured table has no filtering-controls row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("table-filter-lifecycle");
+    expect(page?.[1]).toContain("scrollOffset");
+    expect(page?.[2]).toContain("record");
+  });
+
   it("records the dock's keyboard order, and the pane a closed sidebar keeps in it", () => {
     // Tier 4's Keyboard navigation row calls the keyboard order "ours", and
     // `dock-focus-lifecycle` measured it: one stop per rail, a closed sidebar

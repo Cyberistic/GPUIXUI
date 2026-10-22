@@ -181,6 +181,26 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("painted rows");
   });
 
+  it("teaches the filter rules a window measured", () => {
+    // Tier 3's filtering control is a field above the rows, so what a grid owes
+    // is the machinery around it — and `table-filter-lifecycle` measured all
+    // four decisions: a selection that follows its record and is cleared when
+    // it leaves the set, the field's text session, a new set at the top, and an
+    // arrow step through the filtered order. A planner reading only the sort
+    // and selection rules would leave a hidden selection live.
+    const filter = rowFor(record, "Filtering controls");
+
+    expect(filter).toContain("table-filter-lifecycle");
+    expect(filter).toContain("scrollOffset");
+    expect(filter).toContain("record");
+    expect(dataPage).toContain("table-filter-lifecycle");
+    expect(dataPage).toContain("scrollOffset");
+    // The two rules the page must not soften: the selection is keyed by record,
+    // and the step walks the filtered array rather than the numeric neighbour.
+    expect(dataPage).toContain("by **record**");
+    expect(dataPage).toContain("filtered array");
+  });
+
   it("teaches a frozen column as two mirrored scrollers", () => {
     // The page told a table that a fixed header is a sibling, and stopped. A
     // frozen column is the same rule on the other axis, and

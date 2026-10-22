@@ -118,8 +118,8 @@ describe("the component previews", () => {
     // reader switching platforms believes the native corner moved with the
     // preview.
     const recipes = read("packages/tw/src/recipes.ts");
-    const dialog =
-      /export const DIALOG_CONTENT =\s*\n?\s*"([^"]+)"/.exec(recipes)?.[1] ?? "";
+    const at = recipes.indexOf("export const DIALOG_CONTENT =");
+    const dialog = at === -1 ? "" : recipes.slice(at).split("\n").slice(0, 2).join("\n");
     expect(dialog, "the dialog recipe lost its fixed radius").toContain(
       "rounded-4xl",
     );

@@ -28,7 +28,7 @@ including one with no binding — while `apps/playground` supplies the renderer.
 | `Runtime` | `detectRuntime` (never fails), `bindingHint` and the `RuntimeStatus` union |
 | `Smoke` | the scenario, check and report model: `SmokeScenario`, `SmokeHost`, `runScenarios`, `SmokeReport`, `CAPABILITIES`, the assertion types, and their async twins for a window |
 | `Native` | `createTestHost` over the structural `NativeRenderer`/`NativeElement` port — the synchronous offscreen host |
-| `Pixels` | `decodePng` (with an injected inflate), `pixelAt`, `countColour`, `hexToRgba`, `crop`, `countDifferingPixels`, `PixelRegion`, `PngDecodeError`, `Pixels`, `Rgba` — paint evidence from a captured frame |
+| `Pixels` | `decodePng` (with an injected inflate), `encodePng` (with an injected deflate), `pixelAt`, `countColour`, `boundsOfColour`, `hexToRgba`, `crop`, `countDifferingPixels`, `PixelRegion`, `PngDecodeError`, `PngEncodeError`, `Pixels`, `Rgba` — paint evidence from a captured frame |
 | `State` | `runCommands` — fold a component runtime's commands and query the final state |
 | `Report` | `formatReport`, `reportJson`, `passed` and `exitCode` |
 
@@ -280,6 +280,15 @@ overlap is `null`, since there is no paint there to compare.
 `0` would let a resized layer pass as an invisible one. A difference is any
 differing byte, alpha included, so a wash that changes only opacity is paint
 too.
+
+`boundsOfColour` returns the rectangle a colour covers — and `null` when it
+paints nothing — so a probe asserting *where* a run was laid out reads the ink's
+box instead of guessing a coordinate. `encodePng` is the write side of the same
+reader: it writes a frame back as an 8-bit RGBA PNG with the platform's deflate
+injected, which is how a terminal capture (raw RGBA over the kitty graphics
+protocol) becomes the PNG evidence a window capture already leaves, and it
+returns a `PngEncodeError` for a frame whose byte count does not match its box
+rather than writing a corrupt file.
 
 ## Replaying a runtime
 

@@ -147,6 +147,22 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   sortable header whose centre is clipped by the horizontal viewport sorts
   nothing — keep sortable columns inside the frame, or pan the header before
   expecting a press to land (`table-lifecycle`).
+- **A filter's rules are the app's, and a window measured them** — a filter is
+  an `<input>` above the rows, so nothing in the runtime can make the four
+  decisions a grid owns. `table-filter-lifecycle` typed a literal,
+  case-insensitive query over 120 rows: `1` narrowed the painted set to **39**
+  while the field kept the text session and the visible selection `item-1`
+  survived; `12` narrowed to two and **cleared** the selection it hid, because an
+  invisible selection would act on a record the reader cannot see; `12z` painted
+  the empty state with no rows at all; clearing restored every row and parked the
+  session back in the filter field; a −200 wheel and then a filter reopened the
+  set at offset **0** — read from `scrollOffset`, since the readout alone would
+  have passed while the list stayed put; `Down` from `Item 1` landed on
+  `Item 10`, the next **filtered** row rather than the numeric one, with the real
+  focus; and clearing the filter kept `item-10`, which the full set still holds.
+  So keep the selection by **record** and clear it when the record leaves the
+  set, leave the text session in the field while rows come and go, reset the
+  scroller on a filter change, and walk the filtered array on arrow keys.
 - **A selection toolbar is told, and told when it empties** — the runtime has
   one app-level selection event, `render(<App/>, { onSelectionChange })`, and a
   window measured the contract (`window-selection-lifecycle`): a pointer drag
