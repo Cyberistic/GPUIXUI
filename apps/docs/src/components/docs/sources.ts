@@ -5,6 +5,7 @@ import button from "../../../../../packages/primitives/src/components/Button.tsx
 import card from "../../../../../packages/components/src/card.tsx?raw";
 import carousel from "../../../../../packages/components/src/carousel.tsx?raw";
 import checkbox from "../../../../../packages/primitives/src/components/Checkbox.tsx?raw";
+import collapsible from "../../../../../packages/components/src/collapsible.tsx?raw";
 import commandMenu from "../../../../../packages/components/src/command-menu.tsx?raw";
 import combobox from "../../../../../packages/components/src/combobox.tsx?raw";
 import confirmDialog from "../../../../../packages/components/src/confirm-dialog.tsx?raw";
@@ -40,6 +41,7 @@ export const componentSources = {
   card,
   carousel,
   checkbox,
+  collapsible,
   commandMenu,
   combobox,
   confirmDialog,

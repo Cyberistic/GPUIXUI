@@ -1,0 +1,200 @@
+---
+title: Collapsible
+description: One section that reveals its body on demand, with a measured reveal and a body that unmounts after it closes.
+---
+
+`Collapsible` is the smallest disclosure: one trigger with `aria-expanded` and
+one body that appears on demand. It is **not** an
+[accordion](/docs/components/accordion), which coordinates several sections and
+owns their open order, and not a [switch](/docs/components/switch): it reveals
+more of the same surface instead of changing a mode.
+
+What it absorbs is the runtime's missing `auto` height. The body reports its own
+painted height through `onLayout`, and the clipping box tweens to that number, so
+the section grows instead of appearing. The claims below were measured on
+`@gpuix/native@0.11.0`.
+
+<ComponentPreview name="collapsible-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Collapsible" />
+
+<ComponentSource name="collapsible" file="packages/components/src/collapsible.tsx" />
+
+## Usage
+
+```tsx
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@gpuixui/components/collapsible";
+
+<Collapsible defaultOpen={false}>
+  <CollapsibleTrigger>Advanced options</CollapsibleTrigger>
+  <CollapsibleContent>
+    Retry budget: 3 attempts
+  </CollapsibleContent>
+</Collapsible>;
+```
+
+The root owns the open state. `defaultOpen` remembers it internally; `open` plus
+`onOpenChange` hands it to the page, and the trigger then reports without moving
+the body. The trigger is a `div role="button"`, so a press and `Enter`/`Space`
+all run the same toggle. The body is mounted only while the section is open —
+and during its exit, where it stays painted for 200 ms and takes no presses,
+then unmounts.
+
+The full build is the `collapsible` example in
+`packages/components/examples/collapsible.example.tsx`, which the native
+playground mounts.
+
+## States
+
+<ComponentPreview name="collapsible-states" />
+
+| State | What it paints |
+| ----- | -------------- |
+| closed (the default) | the trigger only; the body is not mounted |
+| `defaultOpen` | open on the first frame, before any interaction |
+| `open` + `onOpenChange` | controlled: the trigger reports, the consumer decides |
+| `disabled` | the trigger dims, leaves the tab order and refuses every route |
+
+There are no variants and no sizes: the trigger is one row and the body one
+column. A second shape is a consumer's composition, which is why the preview's
+workflow puts a caller-owned retry policy inside the disclosure and a chevron in
+the trigger — **the trigger ships no indicator of its own**, and its children are
+the whole row.
+
+The first open paints the body at zero for one frame while its measurement
+arrives. That is the measured reveal, not a missing frame: the runtime can tween
+a number but not `auto`, so the body's own `onLayout` report is the only target
+it can be given.
+
+## Composition
+
+| Part | Renders | Responsibility |
+| ---- | ------- | -------------- |
+| `Collapsible` | a column | the open state and a direct home for the two parts |
+| `CollapsibleTrigger` | a `div` with `role="button"` | the row, `aria-expanded` and the activation paths |
+| `CollapsibleContent` | the measured clipping box | the body; mounted only while open, and during the exit |
+
+Every part must sit directly inside the root: a misplaced part of the same
+family throws rather than painting a second, stateless disclosure. A
+`Collapsible` that is not given a body is a header that opens onto nothing.
+
+Use [Accordion](/docs/components/accordion) when several sections share one
+open rule, and a [Dialog](/docs/components/dialog) when the revealed content
+deserves the whole window. The surface a section sits in is the caller's
+([Card](/docs/components/card) or a panel); the component paints none of its own.
+
+## Keyboard
+
+| Key | Contract |
+| ---- | -------- |
+| `Enter` | toggles on key **down** |
+| `Space` | toggles on key **up**; the press calls `preventDefault()` so a scroller does not move while the trigger waits for the release |
+| held key | repeat events do nothing |
+| `Tab` | reaches an enabled trigger; a disabled one leaves the tab order |
+| arrows / `Home` / `End` | nothing — moving between several sections is the accordion's rule |
+
+The trigger is the only tab stop. Once the body is open, its own controls join
+the tab order in document order; a closed body contributes none, because it is
+not mounted.
+
+## API reference
+
+`Collapsible` takes the GPUix host props; every part merges `style` last.
+
+| Part | Prop | Type | Default | Consequence |
+| ---- | ---- | ---- | ------- | ----------- |
+| `Collapsible` | `open` | `boolean` | — | controlled state; omit it to let the root keep its own |
+| `Collapsible` | `defaultOpen` | `boolean` | `false` | the uncontrolled starting state, open on the first frame |
+| `Collapsible` | `onOpenChange` | `(open: boolean) => void` | none | the next state the trigger reports |
+| `Collapsible` | `children` | `CollapsibleTrigger` and `CollapsibleContent` | — | the direct parts; a misplaced family part throws |
+| `CollapsibleTrigger` | `disabled` | `boolean` | `false` | leaves the tab order, dims, and refuses click, `Enter` and `Space` |
+| `CollapsibleTrigger` | `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `CollapsibleTrigger` | `style` | `StateStyle<CollapsibleTriggerState>` | the recipe | resolved against the live state and merged last |
+| `CollapsibleContent` | `className` | `string` | — | joined after the recipe on the measured box |
+| `CollapsibleContent` | `children` | `ReactNode` | — | the body; mounted only while open, and during the exit |
+
+`CollapsibleTriggerState` is `{ open, closed, focused, disabled }`, so a style
+callback can paint a property the recipe does not.
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| trigger label | `foreground` |
+| trigger hover | the `hover` wash behind the label |
+| trigger press | the `active` wash behind the label |
+| keyboard ring | `ring` at `borderWidth.strong` (2px), painted only after keyboard focus |
+| body copy | `mutedForeground` by default; caller text may name its own role |
+| disabled trigger | the `disabledOpacity` fade with no hover, press or ring |
+
+The trigger's metrics are the default registry's **fixed** steps — 8px inline,
+6px block, a 4px corner and the 14/20 step at weight 500 — and the body keeps an
+8px gap with 8/6/8 padding. A platform switch therefore repaints the section and
+re-picks its sans family; it does not re-height the row the way it re-heights a
+field. The body has no surface of its own, so it inherits the card or panel
+around it.
+
+A style callback sees `focused` on a press, a click and a programmatic focus, but
+not on a `Tab` traversal: 0.11.0 focuses the element without running its
+`onFocus` (`tabs-lifecycle` reads `focuses=0`; `tooltip-lifecycle` does not open
+its tip, re-measured 2026-10-22). The ring declared at rest is still the keyboard
+cue, so nothing depends on that flag.
+
+## Accessibility and limitations
+
+- The trigger is a **`div role="button"`**: the runtime focuses it, `Tab`
+  reaches it and `Enter`/`Space` activate it, but it is not an HTML `<button>`.
+- `aria-expanded` is the state channel. **No `aria-controls`** is published in
+  0.11.0 (`HostProps`), so the trigger → body relationship is positional rather
+  than referenced.
+- There is no `aria-disabled`: a disabled trigger removes its tab stop, installs
+  no press or key path, paints at half opacity and declares no ring. A consumer
+  that needs the state announced must say it in the row's own content.
+- The trigger ships no indicator, no icon and no `aria-haspopup`; the row is the
+  caller's content. A chevron is a caller part, as the workflow's Code tab shows.
+- The body is not a region: it has no `role`, no `aria-labelledby` and no
+  landmark. Its controls are reached through the tab order once it is mounted.
+- The first open paints at zero for one frame while the content reports its
+  height; the collapse stays painted for 200 ms and then unmounts the body.
+  `MotionProvider preference="reduced"` paints the measured frame at once, with
+  no journey.
+- State inside the body does **not** survive a close. Keep a value above the
+  disclosure when it must, as the workflow's retry policy does.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the disclosure state, the parts contract and the trigger's paint |
+| `@gpuix/react` | the host event, prop and style types |
+| `@gpuix/react/floating` | `resolveStyle` for the state callback and `mergeStyles` |
+| `@gpuixui/tw` | the `COLLAPSIBLE_*` recipes and `cn` conflict resolution |
+
+The body's measurement and tween come from the package's own `AutoHeight`
+primitive, not from a separate runtime dependency.
+
+## Related
+
+- **Auto height** — the measured reveal behind the body.
+- **Accordion** — several collapsible sections with an open rule.
+- **Card** — the surface a disclosure usually sits inside.
+- **Dialog** — when the revealed content deserves the whole window.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `yes` runtime verdict: the disclosure uses the
+runtime's published role-button and `aria-expanded` channel, and its reveal is
+the house `AutoHeight` primitive. `src/behaviour/collapsible.test.tsx` runs
+5 native behaviour tests in the real renderer — a click opens and a second click
+leaves the body painted for its collapse before it unmounts, `aria-expanded`
+follows the body, `Enter` and `Space` activate the focused trigger, a disabled
+trigger stays out of the tab order and closed on every route, and a controlled
+section never opens itself. `src/behaviour/auto-height.test.tsx` covers the
+measurement, the retarget and the reduced-motion frame the body shares with the
+accordion.

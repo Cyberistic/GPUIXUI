@@ -114,6 +114,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/carousel.tsx",
   },
   {
+    file: "collapsible.mdx",
+    row: "Collapsible sections",
+    suite: "packages/components/src/behaviour/collapsible.test.tsx",
+    shadowed: "packages/components/docs/collapsible.mdx",
+    source: "packages/components/src/collapsible.tsx",
+  },
+  {
     file: "checkbox.mdx",
     row: "Checkboxes",
     source: "packages/primitives/src/components/Checkbox.tsx",
@@ -1880,6 +1887,105 @@ describe("the curated component pages", () => {
     expect(carouselCss).toContain("width: var(--control-height-md)");
     expect(carouselCss).not.toContain("width: 6px");
     expect(carouselCss).not.toContain("width: 18px");
+  });
+
+  it("holds the collapsible's key edges and its unmount window to the source", () => {
+    // A disclosure page can drift in three silent ways: it can promise a body
+    // that stays mounted, an indicator the component ships, or a keyboard edge
+    // the shared key module does not implement. The trigger's role and its
+    // single state channel are read from the source, the reveal and its unmount
+    // window from `AutoHeight`, and the preview's fixed metrics from the recipe
+    // so a platform switch cannot be described as re-shaping the row.
+    const page = pages.find(
+      (candidate) => candidate.file === "collapsible.mdx",
+    );
+    expect(
+      page,
+      "the collapsible page is not in the curated set",
+    ).toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    const key = read("packages/components/src/internal/key.ts");
+    const reveal = read("packages/components/src/auto-height.tsx");
+    const recipes = read("packages/tw/src/recipes.ts");
+
+    // The trigger: a role button, one state channel, and a gated press path.
+    expect(source).toContain('role="button"');
+    expect(source).toContain("aria-expanded={open}");
+    expect(source).toContain("tabIndex={disabled ? -1 : 0}");
+    expect(source).toContain("opacity: disabled ? 0.5 : 1");
+    expect(source).toContain('cursor: disabled ? "not-allowed" : "pointer"');
+    expect(source).toContain("hover: disabled ? undefined");
+    expect(source).toContain("active: disabled");
+    expect(source).toContain("controlRing(theme, { disabled })");
+    expect(source).toContain("activationHandlers(toggle");
+    // The runtime publishes no `aria-controls`, and the trigger ships no icon.
+    expect(source).not.toContain("aria-controls");
+    expect(source).not.toContain("chevron");
+
+    // The two keyboard edges and the repeat guard are the shared key module's.
+    expect(key).toContain(
+      'if (event.key === "enter") return phase === "down";',
+    );
+    expect(key).toContain('return event.key === "space" && phase === "up";');
+    expect(key).toContain("if (event.isHeld === true) return false;");
+
+    // The body is the house reveal: mounted while open, unmounted after the
+    // exit, with the measured frame painted at once under the reduced rule.
+    expect(source).toContain("<AutoHeight");
+    expect(source).toContain("open={open}");
+    expect(source).toContain("contentClassName={cn(COLLAPSIBLE_CONTENT");
+    expect(reveal).toContain("if (!presence.mounted) return null;");
+    expect(reveal).toContain("initial: { height: 0, opacity: 0 }");
+    expect(reveal).toContain('reducedMotion: preference === "reduced"');
+
+    // The recipe fixes the metrics the page prints.
+    const triggerRecipe = recipes.slice(
+      recipes.indexOf("export const COLLAPSIBLE_TRIGGER"),
+    );
+    expect(triggerRecipe).toContain("px-2 py-1.5");
+    expect(triggerRecipe).toContain("rounded-sm");
+    expect(triggerRecipe).toContain("text-sm font-medium");
+    expect(triggerRecipe).toContain("text-foreground");
+    const contentRecipe = recipes.slice(
+      recipes.indexOf("export const COLLAPSIBLE_CONTENT"),
+    );
+    expect(contentRecipe).toContain("gap-2 px-2 pt-1.5 pb-2");
+    expect(contentRecipe).toContain("text-muted-foreground");
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("No `aria-controls`");
+    expect(text).toContain("ships no indicator");
+    expect(text).toContain("5 native behaviour tests");
+    expect(text).toContain("unmounts");
+    expect(text).toContain("8px inline");
+    expect(text).toContain("first open paints the body at zero");
+    // The retracted shapes: an indicator and a body that stays painted.
+    expect(text).not.toContain("rotates");
+    expect(text).not.toContain("stays mounted while closed");
+
+    // The preview paints the recipe's fixed metrics and the platform's roles,
+    // and it fades a body it actually removes.
+    const css = read("apps/docs/src/styles/demos.css");
+    const start = css.indexOf("/* ---- collapsible:");
+    const end = css.indexOf("/* ----", start + 1);
+    const collapseCss = css.slice(start, end === -1 ? undefined : end);
+    const triggerRule =
+      /\.gx-collapse-trigger \{([\s\S]*?)\n\}/.exec(collapseCss)?.[1] ?? "";
+    expect(triggerRule).toContain("padding: 6px 8px");
+    expect(triggerRule).toContain("border-radius: 4px");
+    expect(triggerRule).toContain("font-size: 14px");
+    expect(triggerRule).toContain("line-height: 20px");
+    expect(triggerRule).not.toContain("var(--radius)");
+    expect(collapseCss).toContain("background: var(--hover)");
+    expect(collapseCss).toContain("background: var(--active)");
+    expect(collapseCss).toContain("outline: 2px solid var(--ring)");
+    expect(collapseCss).toContain("animation: gx-collapse-in 160ms ease-out");
+
+    const demo = read("apps/docs/src/components/docs/collapsible-demo.tsx");
+    expect(demo).toContain('const [note, setNote] = useState("");');
+    expect(demo).toContain("{state.open ? (");
   });
 
   it("holds the form's submit lifecycle and its message block to the source", () => {

@@ -51,6 +51,16 @@ agree in the default style and differ where a platform's `radius.md` is 8. The
 carousel page prints the fixed metric, and its preview is a rendering like every
 other.
 
+A **collapsible's body** is drawn with the browser's own mount, not the native
+measured reveal. The native body reports its painted height and tweens the
+clipping box to that number, stays painted for its 200 ms collapse and then
+unmounts; the preview removes the body the moment it closes, so the two agree
+about the state contract (the body's own values go with it, the caller's
+survive) and differ about the journey: the preview fades the mounted body in and
+never animates a height. Its trigger is a real `<button>` where the native one is
+a `div role="button"`, because the browser button carries the same tab stop and
+Enter/Space activation; the page reads the native role from the source.
+
 A **time picker's focus** is drawn one level up from the native ring. The
 component declares the runtime's `focusVisible` outline on each segment and on
 the clear control, so the ring hugs the 26px input that took the focus; the
@@ -292,9 +302,10 @@ command that cannot resolve on the section a reader follows first.
 A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source.
 Curated today: Accordion, Alert, Breadcrumb, Button, Card, Carousel, Checkbox,
-Combobox, Command menu, Confirmation dialog, Context menu, Date picker, Dialog, Drawer,
-Dropdown menu, Field and inline validation, Form, List, Pagination, Popover,
-Search input, Select, Switch, Tabs, Time picker, Tooltip, Toast.
+Collapsible, Combobox, Command menu, Confirmation dialog, Context menu,
+Date picker, Dialog, Drawer, Dropdown menu, Field and inline validation, Form,
+List, Pagination, Popover, Search input, Select, Switch, Tabs, Time picker,
+Tooltip, Toast.
 `src/lib/component-preview.test.ts` holds the preview registry from both sides:
 every `<ComponentPreview name>` on a page names a registered demo, and every demo
 is mounted by a page (a key nobody renders is dead code, and a typo throws in the

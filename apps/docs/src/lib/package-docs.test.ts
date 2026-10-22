@@ -108,6 +108,7 @@ describe("the package docs collections", () => {
     "/docs/components/breadcrumb",
     "/docs/components/card",
     "/docs/components/carousel",
+    "/docs/components/collapsible",
     "/docs/components/combobox",
     "/docs/components/command-menu",
     "/docs/components/confirm-dialog",

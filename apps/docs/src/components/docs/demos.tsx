@@ -27,6 +27,12 @@ import {
   checkboxWorkflowSource,
 } from "./checkbox-demo";
 import {
+  CollapsibleStates,
+  CollapsibleWorkflow,
+  collapsibleStatesSource,
+  collapsibleWorkflowSource,
+} from "./collapsible-demo";
+import {
   ComboboxDemo,
   ComboboxMultiple,
   comboboxDemoSource,
@@ -2506,6 +2512,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   "checkbox-workflow": {
     render: CheckboxWorkflow,
     source: checkboxWorkflowSource,
+  },
+  "collapsible-states": {
+    render: CollapsibleStates,
+    source: collapsibleStatesSource,
+  },
+  "collapsible-workflow": {
+    render: CollapsibleWorkflow,
+    source: collapsibleWorkflowSource,
   },
   "switch-states": { render: SwitchStates, source: switchStatesSource },
   "switch-workflow": {

@@ -4293,3 +4293,331 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---- collapsible: mirrors components/src/collapsible.tsx ----------------
+   The trigger is one row: `px-2 py-1.5` (8/6), the default registry's fixed
+   `rounded-sm` (4px), `text-sm` at weight 500, and the `hover`/`active` washes
+   behind its own `foreground`. The body is `px-2 pt-1.5 pb-2` (8/6/8) with
+   `gap-2` (8px) and `text-muted-foreground`; the type inherits the surface, so
+   the preview carries no second size. The native body grows to its measured
+   height and stays painted for its 200 ms collapse; the preview removes it at
+   once, which is the state contract this page teaches. */
+.gx-collapse-scene {
+  align-items: flex-start;
+  gap: 14px;
+  min-height: 260px;
+  padding: 24px;
+}
+
+.gx-collapse-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 420px;
+  max-width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-collapse-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 8px 8px;
+}
+
+.gx-collapse-title {
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.gx-collapse-chip {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.gx-collapse-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-collapse-trigger {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-collapse-trigger:hover:not([data-disabled]) {
+  background: var(--hover);
+}
+
+.gx-collapse-trigger:active:not([data-disabled]) {
+  background: var(--active);
+}
+
+.gx-collapse-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 0;
+}
+
+.gx-collapse-trigger[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gx-collapse-trigger-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.gx-collapse-trigger-hint {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 15px;
+}
+
+.gx-collapse-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  color: var(--muted-foreground);
+}
+
+.gx-collapse-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 8px 8px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 20px;
+  animation: gx-collapse-in 160ms ease-out;
+}
+
+@keyframes gx-collapse-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.gx-collapse-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gx-collapse-row-label {
+  color: var(--muted-foreground);
+}
+
+.gx-collapse-value {
+  min-width: 18px;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.gx-collapse-stepper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.gx-collapse-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-size);
+  height: var(--target-size);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gx-collapse-step:hover {
+  background: var(--hover);
+}
+
+.gx-collapse-step:active {
+  background: var(--active);
+}
+
+.gx-collapse-step:focus-visible {
+  outline: 2px solid var(--ring);
+}
+
+.gx-collapse-segment {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+}
+
+.gx-collapse-segment-item {
+  padding: 2px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.gx-collapse-segment-item[data-selected] {
+  background: var(--secondary);
+  color: var(--foreground);
+}
+
+.gx-collapse-segment-item:hover:not([data-selected]) {
+  background: var(--hover);
+}
+
+.gx-collapse-segment-item:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-collapse-toggle,
+.gx-collapse-consumer {
+  padding: 2px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.gx-collapse-toggle[data-selected] {
+  border-color: transparent;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-collapse-toggle:hover:not([data-selected]),
+.gx-collapse-consumer:hover {
+  background: var(--hover);
+}
+
+.gx-collapse-toggle:focus-visible,
+.gx-collapse-consumer:focus-visible {
+  outline: 2px solid var(--ring);
+}
+
+.gx-collapse-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gx-collapse-input {
+  height: var(--control-height-sm);
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--input);
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.gx-collapse-input::placeholder {
+  color: var(--placeholder);
+}
+
+.gx-collapse-input:focus-visible {
+  outline: 2px solid var(--ring);
+}
+
+.gx-collapse-hint,
+.gx-collapse-readout {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.gx-collapse-states {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 720px;
+}
+
+.gx-collapse-state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-collapse-state-label {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gx-collapse-consumer {
+  align-self: flex-start;
+}
+
+@media (max-width: 720px) {
+  .gx-collapse-states {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
