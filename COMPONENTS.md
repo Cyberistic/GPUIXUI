@@ -235,7 +235,7 @@ placeholder.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Tables | todo | ? | No `<table>` element; grid + `div` rows. |
+| Tables | todo | yes (measured) | No `<table>` element; grid + `div` rows. A **frozen first column** is composed, not provided: its own vertical scroller beside the grid's, mirrored both ways in `onScrollChange` → `renderer.scrollTo` with a re-entrancy guard (the call paints synchronously). `data-grid-frozen-column` measured it on 0.11.0 — a wheel over either pane keeps both aligned, the same row shares its `y` across the panes, a horizontal wheel pans the cells but not the frozen column, and both clamp at the same offset. |
 | Sortable tables | todo | ? | Grid + keyboard headers. |
 | Row selection | todo | ? | `aria-selected` is supported (verified). |
 | Column configuration | todo | ? | Grid tracks + a menu. |

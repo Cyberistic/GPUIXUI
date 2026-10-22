@@ -29,6 +29,7 @@ import { virtualListWindowedScenario } from "./virtual-list-windowed.js";
 import { virtualListRowsScenario } from "./virtual-list-rows.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { dataGridScenario } from "./data-grid.js";
+import { dataGridFrozenColumnScenario } from "./data-grid-frozen-column.js";
 import { workspaceScenario } from "./workspace.js";
 import { dragAutoscrollScenario } from "./drag-autoscroll.js";
 import { dockingScenario } from "./docking.js";
@@ -69,6 +70,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "virtual-list-rows": virtualListRowsScenario,
   "table-select-sort": tableSelectSortScenario,
   "table-column-resize": tableColumnResizeScenario,
+  "data-grid-frozen-column": dataGridFrozenColumnScenario,
   "data-grid-fixed-header": dataGridScenario,
   "workspace-tab-drag": workspaceScenario,
   "drag-autoscroll": dragAutoscrollScenario,

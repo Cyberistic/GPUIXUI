@@ -484,7 +484,25 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 49/49
+`[x]` `[██████████]` 50/50
+
+`[x]` Land the `data-grid-frozen-column` headless scenario — the runtime has no
+      sticky, and a frozen first column is the header rule on the other axis: its
+      own vertical scroller beside the grid's, kept in step by the app. A 120px
+      label pane and a 240px grid over 60 × 28px rows: both panes start at `0`
+      with row 0 at the same `y`; a wheel over the grid moves both to `-300` and
+      a wheel over the frozen column moves both to `-600` (a two-way
+      `onScrollChange` → `scrollTo` mirror, guarded by a ref because `scrollTo`
+      paints synchronously); the row under the reader shares its `y` across the
+      panes; a `deltaX` wheel moves the grid's row 200px left and leaves the
+      frozen column where it is; a press on a frozen cell selects the row for the
+      whole grid; and a `-10000` wheel clamps both at `-1440`. 25 checks,
+      `--only data-grid-frozen-column`, green on 0.11.0; full headless suite
+      re-run 35/35. Two negative controls measured (dropping the grid → frozen
+      mirror: `the frozen column follows the grid — expected -300 ± 1, got 0`;
+      dropping the grid's `overflowX`: `a horizontal wheel pans the grid —
+      expected -200 ± 2, got 0`, exit `1` each). Evidence:
+      `apps/playground/README.md` §A frozen data-grid column
 
 `[x]` Land the `virtual-list-rows` headless scenario and measure **variable row
       heights** — every virtual-list probe declared fixed rows, so "rows do not

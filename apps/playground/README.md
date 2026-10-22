@@ -23,9 +23,10 @@ compile error. Each scenario is one capability, one view, one `steps` effect: th
 core capabilities (including the three theme-gallery scenarios, the modal
 contract, floating placement and text selection), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `data-grid-fixed-header`,
-`virtualized-table`, `virtual-list-windowed`, `virtual-list-rows`, `tree-view`,
-`log-viewer`, `workspace-tab-drag`, `docking-nested`, `drag-autoscroll`,
-`search-highlights`, `tab-overflow`, `editor-surface`), the app-level
+`data-grid-frozen-column`, `virtualized-table`, `virtual-list-windowed`,
+`virtual-list-rows`, `tree-view`, `log-viewer`, `workspace-tab-drag`,
+`docking-nested`, `drag-autoscroll`, `search-highlights`, `tab-overflow`,
+`editor-surface`), the app-level
 shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
@@ -82,7 +83,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (34/34 green); -> 2 on a host with no binding
+# -> 0 here (35/35 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -399,6 +400,35 @@ grow fails `the grown first row paints its new height` (`expected 64, got 24`);
 dropping the reveal's `scrollToItem` fails `the revealed row is painted` — exit
 `1` each; restored, green.
 
+## A frozen data-grid column
+
+The runtime has no sticky, so a frozen first column is the header rule on the
+other axis: its own vertical scroller beside the grid's, kept in step by the app.
+`data-grid-frozen-column` mounts a 120px label pane and a 240px grid over 60 rows
+of 28px and measures the composition:
+
+| Step | Check |
+| ---- | ----- |
+| mount | both panes report offset `0` and row 0 sits at the same `y` in both |
+| wheel `deltaY = -300` over the grid | the grid moves to `-300` and **the frozen column follows** — one `onScrollChange` → `scrollTo` mirror |
+| wheel `deltaY = -300` over the frozen column | it moves to `-600` and the grid follows it back — the mirror is two-way |
+| the row under the reader | its `y` matches in both panes, so labels cannot drift from cells |
+| wheel `deltaX = -200` over the grid | the grid's row moves 200px left and the frozen column does not move — a frozen column does not pan |
+| press a frozen cell | the row is selected for the whole grid, not just the label pane |
+| wheel `deltaY = -10000` over the grid | both panes clamp at the same `-(60 × 28 − 240) = -1440` |
+
+25 checks, `--only data-grid-frozen-column`, green on 0.11.0. The mirror runs in
+`onScrollChange` because that event carries the clamped absolute pair, and it is
+guarded by a ref: `scrollTo` paints synchronously, so the target's own change
+arrives inside the call and would otherwise mirror back. `getScrollOffset`
+reports both axes, which is what makes the horizontal half assertable — the same
+`scrollTo` call sets `x` and `y` independently.
+
+Negative controls, measured: dropping the grid → frozen mirror fails
+`the frozen column follows the grid` (`expected -300 ± 1, got 0`); dropping the
+grid's `overflowX` fails `a horizontal wheel pans the grid`
+(`expected -200 ± 2, got 0`) — exit `1` each; restored, green.
+
 ## The example gallery
 
 `packages/components/examples/index.ts` is the registry of the 39 screens the
@@ -429,10 +459,10 @@ mounting every page from one component fails
 
 ## Evidence on this host
 
-The suite is **34/34 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **35/35 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-34/34 scenarios passed · capabilities: layout=verified text=verified
+35/35 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -453,7 +483,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window. `itemCount` mode mounts only the 60-row window the app renders (`virtual-list-windowed`), and `onVisibleRange` reports absolute indices but lags the paint by one gesture in both modes. Rows may differ in height: each is measured and stacked (`virtual-list-rows`), and a row that grows while outside the window is not remeasured until it paints |
 | table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
-| data grid | a header **outside** the row scroller keeps its painted y while the rows scroll (`position: "sticky"` paints nothing: a sticky sample *inside* the scroller moves by exactly the scroll amount, so the header must be a sibling); one `overflowX` scroller wrapping header and rows moves a header cell and its column's cells by the same x, keeping them aligned |
+| data grid | a frozen first column is its own vertical scroller beside the grid, mirrored in `onScrollChange` with a re-entrancy guard: a wheel over either pane moves both, the same row shares its `y` across the panes, a horizontal wheel pans the cells but not the frozen column, and both clamp at the same `-1440` (`data-grid-frozen-column`). A header **outside** the row scroller keeps its painted y while the rows scroll (`position: "sticky"` paints nothing: a sticky sample *inside* the scroller moves by exactly the scroll amount, so the header must be a sibling); one `overflowX` scroller wrapping header and rows moves a header cell and its column's cells by the same x, keeping them aligned |
 | search highlights | a `highlight` spec paints a wash per match, and `SmokeHost.highlights()` (the renderer's `getPaintedHighlights`) reports each wash's run, `[start, end)` and boxes: three for `alpha`, two for `beta`, and none once the query is case-sensitive `ALPHA` or a whole-word `alp` — the insensitive/word-off queries mark them again. One `activeIndex` marks exactly one wash `active`. `ranges: [[0, 5)]` marks the same region `indexOf` would. A wash is a quad, so `text`/`paintedText` never report it |
 | editor | a `<textarea>` edits lines: Enter inserts a newline (a field with an `onSubmit` listener reports Enter **instead**, so an editor must not set one), and the arrow keys move the native caret (two lefts from the end of `cd` put the next character before its `c`). `<code code language showLineNumbers>` paints its source and every line, scrolls in a bounded viewport, and `<diff patch>` paints both sides of a changed line. **No caret or selection API exists**, so a highlighted editable surface cannot be built: the honest editor is edit in the textarea, display in `<code>` |
 | docking | nested splits compose: each level keeps its own width, so an outer drag moves the inner split's origin and leaves its width alone, and an inner drag leaves the sidebar alone. A caller-owned sidebar collapses to 0 (the nested split takes the width) and reopens at the width it had; a tab switch inside a pane repaints it without moving it. A split's `max` is the **caller's number**, not the container's width: a nested split does not re-clamp when its parent shrinks, so a dock passes its own bounds (0.11.0's `onLayout` is the way to measure them) |
@@ -1624,7 +1654,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (34/34), with a written report and screenshots.
+  (35/35), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

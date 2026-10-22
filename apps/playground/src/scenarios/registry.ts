@@ -135,6 +135,11 @@ export const registry = [
     capability: "table",
   },
   {
+    id: "data-grid-frozen-column",
+    title: "Data grid: a frozen column stays aligned with the scrolling rows",
+    capability: "table",
+  },
+  {
     id: "data-grid-fixed-header",
     title:
       "Table: a fixed header with one shared horizontal scroll (no sticky in the runtime)",
