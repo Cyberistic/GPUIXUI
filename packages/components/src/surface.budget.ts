@@ -55,19 +55,21 @@ export const surfaceBudget = {
   // machine beside it), the region that swaps two views with the house exit and
   // entrance. 136 → 138 for Bubbles (`bubbles.tsx` and its rise rule); 138 → 140
   // for Fireworks (`fireworks.tsx` and its burst rule); 140 → 142 for Gradient
-  // (`gradient.tsx` and its two-stop ramp rule).
-  modules: 142,
+  // (`gradient.tsx` and its two-stop ramp rule); 142 → 144 for GravityStars
+  // (`gravity-stars.tsx` and its fall rule).
+  modules: 144,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
   // with Particles and 803 KiB with Stars; 820 KiB with CodeBlock (840 055
   // bytes), 827 KiB with ThemeToggler, 835 KiB with CopyButton, 848 KiB with
-  // PageTransition, 863 KiB with Bubbles, 881 KiB with Fireworks and 893 KiB with
-  // Gradient. The ceiling keeps the headroom a prose edit needs while a bulk
-  // addition still has to state itself; it moved 850 → 860 KiB with PageTransition
-  // (848 KiB left the next family only two), 860 → 875 KiB with Bubbles,
-  // 875 → 890 KiB with Fireworks and 890 → 900 KiB with Gradient.
-  bytes: 900 * 1024,
+  // PageTransition, 863 KiB with Bubbles, 881 KiB with Fireworks, 893 KiB with
+  // Gradient and 910 KiB with GravityStars (932 327 bytes). The ceiling keeps the
+  // headroom a prose edit needs while a bulk addition still has to state itself;
+  // it moved 850 → 860 KiB with PageTransition (848 KiB left the next family only
+  // two), 860 → 875 KiB with Bubbles, 875 → 890 KiB with Fireworks, 890 → 900 KiB
+  // with Gradient and 900 → 940 KiB with GravityStars.
+  bytes: 940 * 1024,
   /** Packages the entry's own modules import. */
   packages: ["@gpuix/react", "effect", "react"],
 } as const;

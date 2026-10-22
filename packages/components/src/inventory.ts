@@ -38,6 +38,7 @@ import { fieldsetMeta } from "./fieldset.js";
 import { fireworksMeta } from "./fireworks.js";
 import { formMeta } from "./form.js";
 import { gradientMeta } from "./gradient.js";
+import { gravityStarsMeta } from "./gravity-stars.js";
 import { highlightTextMeta } from "./highlight-text.js";
 import { hotkeyRecorderMeta } from "./hotkey-recorder.js";
 import { inlineEditMeta } from "./inline-edit.js";
@@ -124,6 +125,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   fireworksMeta,
   formMeta,
   gradientMeta,
+  gravityStarsMeta,
   highlightTextMeta,
   hotkeyRecorderMeta,
   inlineEditMeta,
