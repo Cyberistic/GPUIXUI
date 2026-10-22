@@ -2879,7 +2879,7 @@ three surfaces and appends the surface each close lands on, so the readout's
 | Escape 2 | the popover leaves, the dialog stays, `closes=0,1,1 dismissed=menu,popover`, focus back on the popover's trigger |
 | Escape 3 | the dialog leaves, `closes=1,1,1 dismissed=menu,popover,dialog`, focus back at the app's own opener |
 
-30 checks, `--only nested-overlay-lifecycle`, green on 0.11.0 (~7 s). Fixture:
+30 checks, `--only nested-overlay-lifecycle`, green on 0.11.0 (~6 s, three consecutive runs). Fixture:
 `src/live/nested-overlay.ts` — the ids, the three-surface state, its reducer and
 the readout. `nested-overlay.test.ts` (7 cases) holds the premise: an open is not
 a close, the outside-in order prints in the order it happened, a second close of

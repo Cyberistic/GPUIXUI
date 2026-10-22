@@ -1930,7 +1930,7 @@ a workaround for two live sessions sharing one worktree; see
       (`closes=0,1,1 dismissed=menu,popover`), Escape 3 the dialog
       (`closes=1,1,1 dismissed=menu,popover,dialog`, focus back at the app's
       opener). 30 checks, `--only nested-overlay-lifecycle`, green on 0.11.0
-      (~7 s, run twice). Fixture: `src/live/nested-overlay.ts` — the ids, the
+      (~6 s, green three consecutive runs). Fixture: `src/live/nested-overlay.ts` — the ids, the
       three-surface state, its reducer and the readout; `nested-overlay.test.ts`
       (7 cases) holds the order, the double-close count, the re-open rule, the
       readout shape and the printed check count. **The pointer half was measured
