@@ -23,9 +23,9 @@ compile error. Each scenario is one capability, one view, one `steps` effect: th
 core capabilities (including the three theme-gallery scenarios, the modal
 contract, floating placement and text selection), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `data-grid-fixed-header`,
-`virtualized-table`, `tree-view`, `log-viewer`, `workspace-tab-drag`,
-`docking-nested`, `drag-autoscroll`, `search-highlights`, `tab-overflow`,
-`editor-surface`), the app-level
+`virtualized-table`, `virtual-list-windowed`, `tree-view`, `log-viewer`,
+`workspace-tab-drag`, `docking-nested`, `drag-autoscroll`, `search-highlights`,
+`tab-overflow`, `editor-surface`), the app-level
 shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
@@ -82,7 +82,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (32/32 green); -> 2 on a host with no binding
+# -> 0 here (33/33 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -331,6 +331,47 @@ the zone (`drops=0`) until the probe pressed the sibling element first; the pres
 ends the platform's text-input session. The probe keeps that press so it is
 independent of what ran before it.
 
+## The windowed virtual list
+
+Every other virtual-list probe uses the **children** form: React and the retained
+tree hold all rows and GPUI skips only the build and paint of the off-screen
+ones. A data table with a hundred thousand rows needs the other mode —
+`itemCount` + `estimatedItemHeight` + `windowStart`, where the app renders
+`rows.slice(start, end)` and native positions the mounted slice by index — and
+nothing had measured it.
+
+`virtual-list-windowed` declares 100 000 logical rows, mounts a 60-row window and
+asserts, from the renderer:
+
+| Step | Check |
+| ---- | ----- |
+| mount | `wrow-0` and `wrow-59` are in the tree, `wrow-60` is not — mount cost follows the window, not the data |
+| mount | row 0 paints but row 59 does not, so the estimate is positioning rows the paint never reached |
+| mount | every painted row lies inside the mounted window |
+| two `deltaY = -560` wheels | the list's own offset moved; `onVisibleRange` fired |
+| the event | reports **absolute** indices (`20..27`), not offsets into the window, and never runs ahead of the paint |
+| the event handler | the app moved its window to `10..70`, which still covers the painted rows |
+| a press on a painted row | reports that row's absolute index |
+| press `Reveal 90000` | the app window becomes `90000..90060`, `File 90000` paints, the old window is dropped from the tree, and the offset is the estimate's arithmetic (`-90000 × 28` within one row) |
+
+22 checks, `--only virtual-list-windowed`, green on 0.11.0. Two measured rules
+for a table built this way:
+
+- **The window must be wider than the viewport plus overdraw.** `onVisibleRange`
+  lags the paint by one gesture here exactly as it does in the children form
+  (after two wheels the event still read `20..27` while the paint had reached
+  `40..46`), so a window sized to the viewport alone would show native's empty
+  estimate boxes for the rows the lag exposed. 60 rows against a 280px viewport
+  (10 painted rows plus 512px of overdraw) leaves the lag harmless.
+- **A reveal moves the app's window first, then calls `scrollToItem`.** The
+  window is app state, so a jump to row 90 000 is not something native can infer;
+  the queued scroll applies after that commit's child splice.
+
+Negative controls, measured: dropping the reveal's `scrollToItem` fails
+`the revealed row is painted` (the paint stays at the old offset, so nothing of
+the window renders) and mounting one row beyond the window fails
+`the row after the window is never mounted` — exit `1` each; restored, green.
+
 ## The example gallery
 
 `packages/components/examples/index.ts` is the registry of the 39 screens the
@@ -361,10 +402,10 @@ mounting every page from one component fails
 
 ## Evidence on this host
 
-The suite is **32/32 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **33/33 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-32/32 scenarios passed · capabilities: layout=verified text=verified
+33/33 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -383,7 +424,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down and `deltaX` negative to scroll right (the opposite of the DOM); an `overflowX` strip clamps exactly at `contentWidth − viewportWidth` |
 | panel | pointer capture + inclusive clamp |
-| virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
+| virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window. `itemCount` mode mounts only the 60-row window the app renders (`virtual-list-windowed`), and `onVisibleRange` reports absolute indices but lags the paint by one gesture in both modes |
 | table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
 | data grid | a header **outside** the row scroller keeps its painted y while the rows scroll (`position: "sticky"` paints nothing: a sticky sample *inside* the scroller moves by exactly the scroll amount, so the header must be a sibling); one `overflowX` scroller wrapping header and rows moves a header cell and its column's cells by the same x, keeping them aligned |
 | search highlights | a `highlight` spec paints a wash per match, and `SmokeHost.highlights()` (the renderer's `getPaintedHighlights`) reports each wash's run, `[start, end)` and boxes: three for `alpha`, two for `beta`, and none once the query is case-sensitive `ALPHA` or a whole-word `alp` — the insensitive/word-off queries mark them again. One `activeIndex` marks exactly one wash `active`. `ranges: [[0, 5)]` marks the same region `indexOf` would. A wash is a quad, so `text`/`paintedText` never report it |
@@ -1556,7 +1597,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (32/32), with a written report and screenshots.
+  (33/33), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

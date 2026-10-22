@@ -184,6 +184,11 @@ export const registry = [
     capability: "layout",
   },
   {
+    id: "virtual-list-windowed",
+    title: "Windowed virtual list: itemCount mounts only the slice it paints",
+    capability: "virtual-list",
+  },
+  {
     id: "virtualized-table",
     title: "Table inside <virtual-list>: window, click, selection",
     capability: "table",
