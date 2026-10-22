@@ -3,6 +3,7 @@ import {
   highContrastThemes,
   lightSeries,
   platformTheme,
+  retroStyles,
   seriesColors,
   themes,
   type Theme,
@@ -82,15 +83,19 @@ describe("the data-series specimen", () => {
     expect(wrong).toEqual([]);
   });
 
-  it("follows the platform switch and a look back to the base's scale", () => {
+  it("follows the platform switch and paints the scale a look declares", () => {
     const win32 = platformTheme(themes.light, "win32");
     const luna = resolvePlatformTheme("default", "light", "luna");
+    const lunaOwn = retroStyles.luna.series?.light;
 
-    // A platform style and an authored look own type, radii, density and chrome,
-    // not a categorical scale, so both resolve their base mode's series.
+    // A platform style owns chrome, so it resolves its base mode's scale; a
+    // look that repaints the surfaces a plot is drawn on declares its own —
+    // Luna's beige page swallows the shared light amber — and `applyStyle`
+    // passes it. A look that declared none would fall back to `lightSeries`.
     expect([...seriesColors(win32)]).toEqual([...lightSeries]);
-    expect([...seriesColors(luna)]).toEqual([...lightSeries]);
-    expect(swatches(render(luna)).get(5)).toContain(lightSeries[4]);
+    expect(lunaOwn).toBeDefined();
+    expect([...seriesColors(luna)]).toEqual([...(lunaOwn ?? lightSeries)]);
+    expect(swatches(render(luna)).get(5)).toContain(seriesColors(luna)[4]);
   });
 
   it("shows a theme's own scale when the theme carries one", () => {

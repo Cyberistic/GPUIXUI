@@ -5,17 +5,17 @@
  * library's measured geometry so a reader can see the shape of a component; the
  * shipping component is the native one, shown in the Code tab.
  *
- * The paint is the library's, not the site's. `.gx-demo` declares the dark
- * theme's roles and families as defaults — the landing's product window sits
- * outside a preview, so it needs them too — and a `PreviewSurface` overrides
- * every one inline from the platform theme the switch selected. The test beside
- * this file holds the defaults to `themes.dark` and rejects a colour literal
- * anywhere else, so the previews cannot drift from the tokens. Scoped under
- * `.gx-demo` so nothing leaks into the docs chrome.
+ * The paint is the library's, not the site's, and the two classes are separate
+ * on purpose. `.gx-demo` is the scene a preview draws in and declares **no**
+ * variable, so it inherits the platform theme a `PreviewSurface` writes inline.
+ * `.gx-base` carries the dark theme's roles and families as defaults for a
+ * scene with no preview above it — today only the landing's product window —
+ * and the test beside this file holds every default to `themes.dark`, refuses a
+ * variable on the scene, and rejects a colour literal anywhere else. Both are
+ * scoped classes, so nothing leaks into the docs chrome.
  */
 
-.gx-demo {
-  /* `themes.dark`, for surfaces with no PreviewSurface above them. */
+.gx-base {
   --background: #11141a;
   --foreground: #eef1f5;
   --card: #191d25;
@@ -42,7 +42,7 @@
   --hover: #272d37;
   --shadow: #00000080;
   --radius: 6px;
-  /* `themes.dark.density` (comfortable): a surface below no PreviewSurface. */
+  /* `themes.dark.density` (comfortable): a scene below no PreviewSurface. */
   --control-height-sm: 28px;
   --control-height-md: 32px;
   --control-height-lg: 36px;
@@ -61,7 +61,9 @@
   --secondary-pressed: #4d535c;
   --destructive-hover: #fd7b7c;
   --destructive-pressed: #fc8384;
+}
 
+.gx-demo {
   display: flex;
   flex-wrap: wrap;
   align-items: center;

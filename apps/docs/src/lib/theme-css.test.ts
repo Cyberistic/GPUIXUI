@@ -14,7 +14,7 @@ import {
   type SeriesColors,
   type Theme,
 } from "@gpuixui/tokens";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { cssFontStack } from "./fonts";
 import { resolvePlatformTheme } from "./platform";
@@ -34,6 +34,15 @@ import { toCssVars } from "./theme-css";
 
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
+
+/** Every non-test module the docs app ships. */
+const appSources = (): ReadonlyArray<string> =>
+  readdirSync(new URL("../", import.meta.url), {
+    recursive: true,
+    encoding: "utf8",
+  })
+    .filter((name) => /\.tsx?$/.test(name) && !name.includes(".test."))
+    .map((name) => `../${name}`);
 
 /** The style sheets that paint a library preview. */
 const previewCss = (): ReadonlyArray<readonly [string, string]> => [
@@ -198,9 +207,9 @@ describe("preview style sheets", () => {
     ]);
   });
 
-  it("keep the .gx-demo defaults equal to the dark theme", () => {
+  it("keep the .gx-base defaults equal to the dark theme", () => {
     const declared = declarations(
-      block(read("../styles/demos.css"), ".gx-demo"),
+      block(read("../styles/demos.css"), ".gx-base"),
     );
 
     expect(declared.length).toBeGreaterThan(10);
@@ -220,6 +229,31 @@ describe("preview style sheets", () => {
     // The landing's product window renders outside a PreviewSurface, so these
     // defaults are the only paint it gets: they must be the library's.
     expect(mismatched.map(({ name }) => name)).toEqual([]);
+  });
+
+  it("keep the scene free of variables, so a preview inherits its surface", () => {
+    // `.gx-demo` was both the scene and the defaults, and a demo's own root
+    // carries the class too — so every scene inside a `PreviewSurface`
+    // re-declared the dark theme and stopped following the platform switch.
+    // The scene declares no variable; the defaults live on `.gx-base`, which
+    // only a host outside a preview wears.
+    const scene = block(read("../styles/demos.css"), ".gx-demo");
+    expect(declarations(scene)).toEqual([]);
+    // The scene still paints: it reads the roles its surface wrote.
+    expect(scene).toContain("background-color: var(--background)");
+    expect(scene).toContain("color: var(--foreground)");
+
+    // The one host outside a preview is the landing's product window, and it
+    // must wear the defaults — a scene without them paints unstyled.
+    const landing = read("../components/landing/landing.tsx");
+    expect(landing).toContain('className="gx-base gx-demo"');
+
+    // Nothing else may sit outside a surface: every other `gx-demo` element is
+    // mounted under a `PreviewSurface` (or under the landing window above).
+    const hosts = appSources()
+      .filter((path) => read(path).includes('className="gx-demo"'))
+      .filter((path) => !path.endsWith("landing/landing.tsx"));
+    expect(hosts).toEqual([]);
   });
 
   it("read a control's geometry from the theme, not a fixed height", () => {
@@ -325,7 +359,7 @@ describe("preview style sheets", () => {
     const values = Object.values(darkColours).map((value) =>
       value.toLowerCase(),
     );
-    const defaults = block(read("../styles/demos.css"), ".gx-demo");
+    const defaults = block(read("../styles/demos.css"), ".gx-base");
 
     const literals = previewCss().flatMap(([sheet, css]) => {
       // The dashboard's chrome is its own illustration: the landing renders the

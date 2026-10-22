@@ -248,7 +248,9 @@ function CodeAndComponent() {
       <div className="landing-code">
         <DynamicCodeBlock lang="tsx" code={demo.source} />
         <div className="landing-code-preview">
-          <div className="gx-demo">{demo.render()}</div>
+          {/* The landing sits outside a `PreviewSurface`, so the scene needs the
+              dark defaults `gx-base` carries; on a docs page the surface does. */}
+          <div className="gx-base gx-demo">{demo.render()}</div>
         </div>
       </div>
 

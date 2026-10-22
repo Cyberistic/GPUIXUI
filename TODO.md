@@ -2743,6 +2743,26 @@ a workaround for two live sessions sharing one worktree; see
       paints nothing. Docs in `docs/tooltip.mdx` §Controlled/§API/§Keyboard/§Limitations/
       §Verification (the "wrapper only sets the delay" limitation is retracted),
       the `inventory.ts` record and the `COMPONENTS.md` Tooltips row
+`[x]` `packages/primitives`: the `Tooltip` page said a tip's `delay` defaulted to
+      "the provider's", but the package exported no provider — `TooltipProvider`
+      is the runtime's, so a toolbar had to import `@gpuix/react/tooltip` directly
+      and bypass this package's API to give its tips one delay. `TooltipProvider`
+      now wraps the runtime's provider with the package's names (`delay`,
+      `skipDelay`, `disableHoverableContent`), exported from the package root;
+      an omitted field keeps the runtime default (immediate open, a 300 ms reopen
+      window, hoverable content), a tip's own `delay` wins, and focus still opens
+      at once. Proof: `Tooltip.test.tsx`'s two `TooltipProvider` cases read the
+      three props off the provider element and hold omission to `None`, and
+      `runtime/fields.runtime.test.tsx`'s `takes one hover delay from the
+      TooltipProvider above it` hovers a tip under a `delay={120}` provider and
+      reads it closed, then open after 180 ms. Both directions measured:
+      rendering the tip with no provider fails the window case
+      (`expected [ 'Hover me', 'A hint' ] to not include 'A hint'`), and dropping
+      the forwarding fails the first element-tree case in `expectSome`. Docs in
+      `docs/tooltip.mdx` §One timing for a toolbar/§API/§Limitations/§Verification
+      and the `COMPONENTS.md` Tooltips row. `nub run --filter @gpuixui/primitives
+      test` 878/878 (49 files); `check-types` clean; runtime
+      `runtime/fields.runtime.test.tsx` 40/40
 `[x]` `packages/primitives`: the `Separator`'s line-style limit named the **wrong
       cause** — `docs/separator.mdx`, the inventory record and the
       `COMPONENTS.md` row all said a dashed rule was missing because "the runtime
@@ -4348,7 +4368,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 147/147
+`[x]` `[██████████]` 148/148
 
 `[x]` Curate the **Breadcrumb** page and hold its budget and separator pairing to the source — `/docs/components/breadcrumb` served only the package page (strategy 4: no preview), so the one component whose collapse is a **budget of rendered entries** had nothing a reader could change. The curated page shadows `packages/components/docs/breadcrumb.mdx` and teaches what a drawing cannot show: a trail that fits renders whole and a longer one keeps the first entry, an ellipsis and the last `maxItems - 2` entries, so the current page never collapses away (six entries at 5 / 4 / 3 print `Projects / … / components / src / breadcrumb.tsx`, `Projects / … / src / breadcrumb.tsx`, `Projects / … / breadcrumb.tsx`); a budget below three is clamped to three; a hidden entry takes **its own separator** with it because the list pairs each authored separator with the item that follows it; `maxItems` counts **direct** children, so a wrapper element is one entry; the current page is `text` with no tab stop and `aria-selected` (0.11.0 has no `aria-current`); the gap mark is not a public part, is named "More" and is not focusable; and the list is `flex-wrap`, so a long trail wraps rather than clipping — collapse is a budget, not an overflow strategy. Two browser previews: `breadcrumb-workflow` (a six-entry repository trail with a 3 / 4 / 5 / All budget control, a live separator count and a crumb that reports the path it opens) and `breadcrumb-states` (two levels, a custom `›` separator, a collapsed middle, and `maxItems={1}` clamped to three). The rule lives in `src/components/docs/breadcrumb-preview.ts` so it is testable: `breadcrumb-preview.test.ts` (5 cases) holds the preview's `collapseCrumbs` to the component's own `collapse` over 9 trail lengths × 8 budgets, pins the four printed crops and the clamp, counts separators against the rendered entries, and reads the open-path report. `component-page-truth.test.ts` gains the page and `holds the breadcrumb's budget, its separator pairing and its current crumb to the source`, which reads `breadcrumb.tsx`, `breadcrumb/logic.ts` and `BREADCRUMB_LIST` (the `minimum = 3` clamp, `takeRight(budget - 2)`, the `pending = child` pairing, the roles, `label="More"`, `role="presentation"`, the Enter/Space activation and `flex-wrap`). The sidebar (`meta.json` Navigation), the Components index, `/docs/theming`'s switch list, the strategy's "Curated today" line, `sources.ts`, the README ledger and `package-docs.test.ts`'s curated set name the page. Directions measured: changing the tail to `budget - 1` fails four cases by name (`expected 'Projects / … / src / breadcrumb.tsx' to be 'Projects / … / breadcrumb.tsx'`, the sweep, the clamp and the separator count), restored 5/5; and listing `BreadcrumbEllipsis` as a part failed `component-index.test.ts`'s `lists only parts the library actually exports`, so the gap mark is documented as drawn by the list rather than composed. `nub run --filter @gpuixui/docs test` green (88 files / 842 tests); `check-types`, `build`, `fmt` and `oxlint` clean. Verified in the dev server: `/docs/components/breadcrumb` answers `200` with its title and both previews, and `/api/search?query=breadcrumb` returns the page and its headings. The budget control was measured in a **hydrated** headless Chrome session (an ad-hoc DevTools probe, not committed): pressing 3 read `Projects / … / breadcrumb.tsx`, All read all six entries, 5 read `Projects / … / components / src / breadcrumb.tsx`, and pressing the first crumb read `Open Projects`. No native GPUix scenario applies (a docs page has no runtime path); the component's own evidence stays with its row.
 
@@ -4393,6 +4413,8 @@ took the three stale counts the suite caught — `dialog` 14 → 15, `dropdown-m
 `yes` runtime verdict while `COMPONENTS.md` records `partial` (losing the three
 measured limits that make it partial). `component-page-truth.test.ts` is 26/26;
 pages verified by reading the guard's own sources, no dev server needed.
+
+`[x]` Split the preview **scene** from the **defaults** so a preview follows the platform switch — `demos.css` declared the dark theme's roles and comfortable density on `.gx-demo`, and `.gx-demo` is also every demo's own scene root, so each scene inside a `PreviewSurface` re-declared the dark theme and threw away the theme the surface wrote. Measured in a headless browser on `/docs/components/checkbox`: the macOS surface read `--control-height-md` `28px` while its scene read `32px` (the dark default), and `?platform=win32` read `32px` in both — so the switch changed the surface and nothing inside it. The variables now live on `.gx-base`, worn by the one host outside a preview (the landing's product window, `className="gx-base gx-demo"`); `.gx-demo` declares none and inherits. Re-measured: macOS scene `28px`, Windows scene `32px`, each equal to its surface. `theme-css.test.ts` gains `keep the scene free of variables, so a preview inherits its surface` (the scene's declarations are empty, it still paints from the roles, the landing wears `gx-base`, and no other module hosts a bare `gx-demo`), and its defaults case reads `.gx-base`; `series-swatches.test.tsx`'s look case now holds Luna to the scale it declares (`retroStyles.luna.series`) instead of `lightSeries`, which the tokens pass landed. Directions measured: restoring `--background` on `.gx-demo` fails the scene case by name, and reverting the style sheet to `HEAD` makes the browser probe read darwin `surface 28 / scene 32`. Docs: `docs/preview-strategy.md` §the theme bridge. `nub run --filter @gpuixui/docs test` green (89 files / 849 tests), `check-types` and `build` green.
 
 `[x]` Document the **`clickWith`** verb the window host gained — `AsyncSmokeHost` took a chord press (`shift` extends, `cmd` toggles, `cmd-shift` adds the range; the protocol's locator takes the modifier string) while `/docs/testing`'s *In a window* table still listed `click`, `rightClick` and `hover` only, so `testing-page.test.ts`'s `documents every verb of the window host` was red on `['clickWith']`. The table gains the row with the chords it reaches. Direction measured: without the row the case fails naming the verb; with it, 89 files / 848 tests green.
 

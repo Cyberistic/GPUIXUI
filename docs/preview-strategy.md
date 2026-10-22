@@ -426,14 +426,22 @@ not the other, so a scheme cannot silently inherit a variable from its sibling.
   `src/lib/platform.ts` (`platformTheme(themes.dark, platform)`, then the
   authored look over it when one is chosen), plus `data-platform` and
   `data-look` markers.
-- `.gx-demo` in `demos.css` declares the dark theme's roles and its comfortable
-  density as defaults, because the landing's product window renders outside a
-  preview surface.
+- `.gx-demo` is the **scene** a preview draws in and declares no variable, so it
+  inherits whatever its surface wrote. `.gx-base` carries the dark theme's roles
+  and its comfortable density as defaults for a scene with no surface above it —
+  today only the landing's product window. Both classes used to be one: a demo's
+  own scene root carries `gx-demo` too, so every scene inside a surface
+  re-declared the dark theme and stopped following the platform switch.
+  Measured in a headless browser on `/docs/components/checkbox` — the macOS
+  surface's `--control-height-md` is `28px` and its scene read `32px`, the dark
+  default, while `?platform=win32` read `32px` in both; with the split the macOS
+  scene reads `28px` and Windows `32px`.
 - `src/lib/theme-css.test.ts` holds the seam: every `var(--…)` a preview style
-  sheet reads must exist in the bridge, the `.gx-demo` defaults must equal
-  `themes.dark` (colour roles and density alike), every control-shaped preview
-  rule must take its height from a density variable, and no preview rule may
-  carry a library colour literal. A preview therefore cannot drift from the
+  sheet reads must exist in the bridge, the `.gx-base` defaults must equal
+  `themes.dark` (colour roles and density alike), `.gx-demo` must declare no
+  variable, every `gx-demo` element outside the landing's window must sit under a
+  `PreviewSurface`, every control-shaped preview rule must take its height from a
+  density variable, and no preview rule may carry a library colour literal. A preview therefore cannot drift from the
   tokens, and a wider platform variant — macOS compact, Linux spacious, Windows
   comfortable — repaints and re-sizes the site with no docs change.
 
