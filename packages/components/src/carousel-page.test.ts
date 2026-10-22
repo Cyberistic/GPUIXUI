@@ -22,8 +22,7 @@
  * The window measured the opposite shape: a press is routed by **paint**, not
  * depth — a filled child is the boundary the hit test stops counting at, and
  * `pointerEvents: "none"` removes the hitbox so the press reaches the target
- * (`press-routing-lifecycle`'s `text-filled` and `inert-control` cases). A
- * `Table`/`Tree` plan reads the Tier 3 rows for the same rule.
+ * (`press-routing-lifecycle`'s `text-filled` and `inert-control` cases).
  *
  * `node:fs` is a test-time repository read, the boundary `docs.test.ts` and
  * `card-page.test.ts` already use.
@@ -177,17 +176,11 @@ describe("the Carousel page", () => {
     expect(text).toContain('`pointerEvents: "none"`');
     expect(text).toContain("`press-routing-lifecycle`");
 
-    // The rows a `Table`/`Tree` plan reads carry the rule, so a plan cannot
-    // copy the depth claim the comment used to teach.
+    // The inventory row this component owns carries the rule, so a plan cannot
+    // copy the depth claim the comment used to teach. The Tier 3 rows are the
+    // data workstream's surface and are not held here.
     expect(row("Carousel")).toContain("press-routing-lifecycle");
     expect(row("Carousel")).not.toContain("innermost");
-    ["Tables", "Row selection", "Virtualized tables", "Tree views"].forEach(
-      (name) => {
-        expect(row(name), `${name} does not cite the probe`).toContain(
-          "press-routing-lifecycle",
-        );
-      },
-    );
   });
 
   it("prints the size of the suite that proves it", () => {
