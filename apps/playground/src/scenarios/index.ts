@@ -31,6 +31,7 @@ import { virtualListExpandScenario } from "./virtual-list-expand.js";
 import { virtualListPrependScenario } from "./virtual-list-prepend.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { dataGridScenario } from "./data-grid.js";
+import { dataTableScenario } from "./data-table.js";
 import { dataGridFrozenColumnScenario } from "./data-grid-frozen-column.js";
 import { workspaceScenario } from "./workspace.js";
 import { dockReflowScenario } from "./dock-reflow.js";
@@ -79,6 +80,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "table-column-resize": tableColumnResizeScenario,
   "data-grid-frozen-column": dataGridFrozenColumnScenario,
   "data-grid-fixed-header": dataGridScenario,
+  "data-table-core": dataTableScenario,
   "workspace-tab-drag": workspaceScenario,
   "dock-reflow": dockReflowScenario,
   "a11y-tree": a11yTreeScenario,

@@ -15,6 +15,7 @@
     "@gpuix/native": "catalog:",
     "@gpuix/react": "catalog:",
     "@gpuixui/components": "workspace:*",
+    "@gpuixui/data": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/testing": "workspace:*",
     "@gpuixui/tokens": "workspace:*",

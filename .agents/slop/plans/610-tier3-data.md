@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | in progress — phases 1–2 landed 2026-10-22 (`packages/data`; `data-table-core` probe 1/1, package suite 34 cases + 7 native behaviour cases) |
 | Phase | D — data and workspace |
 | Owner | the `data` workstream |
 | Depends on | `@gpuixui/components`, `@gpuixui/primitives`, `@gpuixui/tw`, `@gpuixui/tokens`, `@gpuixui/motion` |
@@ -103,6 +103,23 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   upstream issue number, and the fallback is measured — not asserted.
 - Virtualization and selection are proven on a 1,000-row fixture in the real
   renderer, with a negative control (unmounting the window must fail the count).
+
+## 4a. Progress
+
+- **Phase 1 (table core) landed**: `packages/data/src/table/` — the parts, the
+  measured fixed-header composition (one horizontal scroller, header a sibling
+  of the row scroller) and the measured body height (0.11.0 sizes a scroller
+  from a definite height; a `flex-1` body inside the horizontal scroller grew to
+  8 880px for a 320px table, so the viewport and header report `onLayout`
+  heights and the body takes the difference).
+- **Phase 2 (sort, selection, filtering) landed**: the pure reducers in
+  `sort/`, `selection/`, `filter/`, the `TableSortHeader`, `TableFilterField`
+  and the `useTable` controller. The selection release runs during render, and
+  the keyboard walk moves native focus after the `tabIndex` commit (a call from
+  the key handler moved nothing — the row was still outside the tab order).
+- Evidence: `nub run --filter @gpuixui/data test` (34) and `test:behaviour` (7)
+  green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
+  1/1. Phases 3–7 are the open TODO rows.
 
 ## 5. Acceptance
 

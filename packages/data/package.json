@@ -1,0 +1,37 @@
+{
+  "name": "@gpuixui/data",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Data presentation — tables, sorting, selection, filtering, virtualisation, trees and charts — rendered by GPUix through React.",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./examples": "./examples/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:behaviour": "vitest run --config vitest.behaviour.config.ts"
+  },
+  "dependencies": {
+    "@gpuix/react": "catalog:",
+    "@gpuixui/primitives": "workspace:*",
+    "@gpuixui/tokens": "workspace:*",
+    "@gpuixui/tw": "workspace:*",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@gpuixui/config": "workspace:*",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

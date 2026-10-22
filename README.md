@@ -15,9 +15,18 @@ The last batch closed the twelve gap rows from plan 205 (Drawer, Navigation Menu
 Preview Card, Timeline, Countdown, Keyboard shortcuts, Carousel, Inline edit,
 Tag input, Mention input, Hotkey recorder, Color picker) — `nub run --filter
 @gpuixui/components test:behaviour` covers them in 451 tests.
+Phase D has started: **`packages/data` (`@gpuixui/data`) ships the table core
+with sort, selection and filtering** — the measured fixed header (one horizontal
+scroller, the header a sibling of the row scroller), measured body height, empty
+and loading states, `TableSortHeader`, `TableFilterField`, the pure
+`sort`/`selection`/`filter` reducers and the `useTable` controller, covered by 7
+native behaviour cases and the headless `data-table-core` probe. Its four Tier 3
+inventory rows are `done`; columns, virtualisation, trees, charts and the data
+surfaces are the remaining phases in `TODO.md`.
+
 The design tokens and theming layer (light, dark, high-contrast, density) is
-landed. Tier 1, data presentation, workspace and specialised components are
-tracked in `TODO.md`.
+landed. Tier 1, the rest of data presentation, workspace and specialised
+components are tracked in `TODO.md`.
 
 The docs site follows shadcn/ui's anatomy: a sectioned sidebar (Getting Started,
 Components, Contributing), a reusable component page with Preview/Code tabs, a
@@ -44,6 +53,7 @@ packages/motion     Motion physics (springs, easing, timelines, inertia) + React
 packages/primitives Tier 1 render primitives
 packages/icons      Icon set and sizing rules
 packages/components Tier 2 composition and feedback components
+packages/data       Tier 3 data presentation: tables, sort/selection/filter, charts
 packages/tw         shadcn class recipes → GPUix StyleDesc (with `cn`)
 packages/runtime    The pinned runtime's capability matrix + typed refusals
 packages/testing   Platform-free smoke suite: checks, runner, report, preflight

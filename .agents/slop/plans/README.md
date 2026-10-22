@@ -161,4 +161,4 @@ component call sites adopt the outline in their own workstream.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [610](./610-tier3-data.md) | Tier 3 data presentation: the `@gpuixui/data` package | D | components, primitives, tw, tokens, motion | planned |
+| [610](./610-tier3-data.md) | Tier 3 data presentation: the `@gpuixui/data` package | D | components, primitives, tw, tokens, motion | in progress — phases 1–2 landed |

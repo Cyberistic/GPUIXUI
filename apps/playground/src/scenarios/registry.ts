@@ -141,6 +141,12 @@ export const registry = [
     capability: "table",
   },
   {
+    id: "data-table-core",
+    title:
+      "@gpuixui/data: fixed header, sort, selection, filter and the empty set",
+    capability: "table",
+  },
+  {
     id: "data-grid-fixed-header",
     title:
       "Table: a fixed header with one shared horizontal scroll (no sticky in the runtime)",
