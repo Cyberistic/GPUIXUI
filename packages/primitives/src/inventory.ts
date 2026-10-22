@@ -411,7 +411,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "The trigger must be a focusable element: a host, or a control that forwards TooltipTriggerProps",
       "No arrow, no aria-describedby and no wrapping content",
       "A role is required to be in the accessibility tree, and only a TestRenderer exposes it",
-      "Open and close timing are the runtime's; a caller can take the open state through open/onOpenChange",
+      "Open and close timing are the runtime's: a TooltipProvider sets a group's delay and skip window, a tip's own delay wins, and a caller can take the open state through open/onOpenChange",
       "In a window a Tab traversal focuses the trigger without running its onFocus, so the tip stays closed and hover is the only open path (three runs on 0.11.0); the TestRenderer does dispatch the event",
     ],
     source: ["src/components/Tooltip.tsx"],
