@@ -1,12 +1,12 @@
 /**
  * Guards the totals the README prints against the registry.
  *
- * The README is what a release report and the docs site cite: "32/32 green" and
- * the capability list are the two things a reader uses to tell a complete run
- * from a partial one. Both are derived from `registry.ts` but written by hand, so
- * a scenario added without touching them leaves the document claiming the
- * previous total and nothing fails — which is how the headline stayed at 31/31
- * after the example gallery landed.
+ * The README is what a release report and the docs site cite: the "<n>/<n>
+ * green" headline and the capability list are the two things a reader uses to
+ * tell a complete run from a partial one. Both are derived from `registry.ts`
+ * but written by hand, so a scenario added without touching them leaves the
+ * document claiming the previous total and nothing fails — which is how the
+ * headline stayed at the previous count after the example gallery landed.
  *
  * `node:fs` is deliberate, as in `live/registry.test.ts`: this reads the
  * repository's own Markdown, never a runtime path.
