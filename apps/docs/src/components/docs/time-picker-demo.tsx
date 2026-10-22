@@ -214,10 +214,10 @@ const TimePickerWorkflow = () => {
 /** The states a drawing of one field cannot show side by side. */
 const TimePickerStates = () => {
   const [empty, setEmpty] = useState<string | null>(null);
-  const [set, setSet] = useState<string | null>("09:30");
+  const [filled, setFilled] = useState<string | null>("09:30");
   const [quarter, setQuarter] = useState<string | null>("09:30");
   const [midnight, setMidnight] = useState<string | null>("23:59");
-  const [disabled] = useState<string | null>("07:00");
+  const archived: string | null = "07:00";
 
   return (
     <div className="gx-demo gx-time gx-time-states">
@@ -237,11 +237,11 @@ const TimePickerStates = () => {
         <PreviewTimeField
           clearable
           label="Set time"
-          onChange={setSet}
-          value={set}
+          onChange={setFilled}
+          value={filled}
         />
         <span className="gx-time-state-note" role="status">
-          {describeValue(set)}
+          {describeValue(filled)}
         </span>
       </div>
       <div className="gx-time-state">
@@ -271,7 +271,7 @@ const TimePickerStates = () => {
           {describeValue(midnight)}
         </span>
       </div>
-      <div className="gx-time-state" data-wide>
+      <div className="gx-time-state">
         <span className="gx-time-state-label">
           Disabled — read-only, dimmed, out of the tab order, and no clear
         </span>
@@ -280,7 +280,7 @@ const TimePickerStates = () => {
           disabled
           label="Disabled time"
           onChange={() => undefined}
-          value={disabled}
+          value={archived}
         />
         <span className="gx-time-state-note">
           The value stays painted; no edit path exists.
