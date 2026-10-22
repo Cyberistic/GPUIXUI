@@ -91,6 +91,7 @@ cells on a second copy of the layout.
 | `useTable` | the uncontrolled controller joining sort, selection and filter |
 | `ColumnMenu`, `useColumns`, `TableColumnDivider` | the visible column list, its order, its widths and the resize strip |
 | `VirtualTable`, `VirtualList` | the runtime's `<virtual-list>` in its `itemCount` window mode |
+| `FrozenTable` | a pinned column in its own vertical scroller beside the panning grid, mirrored in both directions |
 
 A cell's content is the caller's — a `Text`, a control, a badge, a `Badge` — so
 the box forces no typographic role on it.
@@ -236,6 +237,8 @@ measured body height and a column's width.
 
 - [Data display](/docs/data-display) — the lane, the remaining rows and every
   measured rule a column menu, a virtual body or a tree starts from.
+- [Frozen columns](/docs/data-display/frozen-columns) — the pinned column
+  beside a grid that pans, and the two-way mirror it needs.
 - [List](/docs/components/list) — the roving tab stop and the chord selection
   the table reuses.
 - [Pagination](/docs/components/pagination) — the page window above a table.

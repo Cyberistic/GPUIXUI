@@ -848,9 +848,13 @@ describe("the curated component pages", () => {
 
     // One window function with both knobs, and the branch that keeps a
     // single hidden page as the page itself.
-    expect(source).toContain(
-      "pageWindow({ page: current, pageCount, siblingCount, showEdges })",
-    );
+    // One call, carrying the clamped page, the count and both knobs; read from
+    // the argument object so a reformat is not a behaviour change.
+    const call = /pageWindow\(\{([^}]*)\}\)/.exec(source)?.[1] ?? "";
+    expect(call).toContain("page: current");
+    expect(call).toContain("pageCount");
+    expect(call).toContain("siblingCount");
+    expect(call).toContain("showEdges");
     expect(logic).toContain(
       "if (siblings + 5 >= pageCount) return pages(1, pageCount);",
     );
@@ -2414,6 +2418,29 @@ describe("the curated component pages", () => {
     expect(text).not.toContain("`spacing.md`");
     // …and the retracted gap: a disabled field that a pointer could still clear.
     expect(text).not.toContain("press handler is still bound");
+  });
+
+  it("names the pinned column that ships beside the table", () => {
+    // `FrozenTable` shipped from `@gpuixui/data` with its own page, and this page
+    // is where a grid is designed: a reader planning a pinned column read a
+    // Composition table that stopped at `VirtualTable` and a Related list with no
+    // route to the component, so the pinned-column work looked unbuilt.
+    const table = pages.find((page) => page.file === "table.mdx");
+    expect(table, "the table page is not in the curated set").toBeDefined();
+    if (table === undefined) return;
+
+    expect(read("packages/data/src/index.ts")).toContain(
+      'export { FrozenTable } from "./table/frozen.js";',
+    );
+    expect(
+      read("packages/data/docs/frozen-columns.mdx"),
+      "the frozen-columns package page is gone",
+    ).toContain("title: Frozen columns");
+
+    const text = body(table).replace(/\s+/g, " ");
+    expect(text).toContain("`FrozenTable`");
+    expect(text).toContain("](/docs/data-display/frozen-columns)");
+    expect(text).toContain("mirrored in both directions");
   });
 
   it("refuse a disabled time field's edits, not only its tab stop", () => {
