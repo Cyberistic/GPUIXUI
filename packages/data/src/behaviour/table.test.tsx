@@ -7,6 +7,8 @@
  * - a header inside the row scroller (it must keep its painted `y` when the
  *   rows wheel under it — the runtime has no sticky);
  * - a plain press that does not paint the selection wash;
+ * - a selection box's painted target fixed to the card fill, so it reads as a
+ *   notch inside a chosen row;
  * - a Cmd press that replaces instead of toggling, or a Shift press that does
  *   not extend from the anchor;
  * - a sort that changes a label but not the painted order;
@@ -162,6 +164,40 @@ describe("the example table", () => {
     expect(styleOf().active).toMatchObject({
       backgroundColor: pointerWash(darkTheme, "active", "accent"),
     });
+  });
+
+  it("paints the box in the fill of the row it sits in", () => {
+    const root = mount();
+
+    // At rest the box's target is the table's own card fill, so it is invisible.
+    expect(
+      requireStyle(root, "files-select-file-3-target").backgroundColor,
+    ).toBe(darkTheme.colors.card);
+
+    click(root, "files-row-file-3");
+    root.renderer.flush();
+
+    expect(requireStyle(root, "files-row-file-3").backgroundColor).toBe(
+      darkTheme.colors.selected,
+    );
+    // The target is a painted child (that is what stops a box press reaching
+    // the row), so it has to follow the row's own fill: a target fixed to
+    // `card` reads as a card-coloured notch inside a chosen row.
+    expect(
+      requireStyle(root, "files-select-file-3-target").backgroundColor,
+    ).toBe(darkTheme.colors.selected);
+    // The header box sits on the card strip, not on a row, so it keeps it.
+    expect(requireStyle(root, "files-select-all-target").backgroundColor).toBe(
+      darkTheme.colors.card,
+    );
+
+    // Under the pointer it takes the same wash the chosen row takes.
+    const target = boundsOf(root, "files-select-file-3-target");
+    root.renderer.nativeSimulateMouseMove(target.x + 2, target.y + 2);
+    root.renderer.flush();
+    expect(
+      requireStyle(root, "files-select-file-3-target").hover,
+    ).toMatchObject({ backgroundColor: darkTheme.colors.accent });
   });
 
   it("lets a press on an unfilled part of a cell reach its row", () => {

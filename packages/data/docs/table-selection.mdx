@@ -61,7 +61,16 @@ const table = useTable({ rows: files, keyOf: (row) => row.id, columns });
 | `label` | `string` | header: `Select every row`; row: required | the box's accessible name |
 | `width` | `number` | `40` | the track width |
 | `disabled` | `boolean` | `false` | refuses the press |
-| `testId` | `string` | — | the box's id |
+| `testId` | `string` | — | the box's id; the target is `${testId}-target` and the cell `${testId}-cell` |
+
+## The painted target
+
+A press stops at the first child that paints a fill, and that painted target is
+what keeps a box press from also running its row's press (which would replace
+the set the box toggles). So the target must look like the surface it sits on:
+`card` at rest, `selected` in a chosen row, and the row's `accent` wash under the
+pointer. A target left on `card` reads as a notch inside a chosen row. The
+header's box sits on the card strip and keeps that fill.
 
 ## Limitations
 

@@ -6155,6 +6155,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
     bounds and the plot's height. Direction measured: with ascending paint the
     case fails `expected 259 to be less than 135`; with it 9/9 behaviour cases
     pass. `packages/data/docs/charts.mdx` and the README state the order.
+  - [x] Paint the **checkbox column's target in its row's fill** — the box's
+    painted target is the hit boundary that keeps a box press off its row, and
+    it was fixed to `card`, so a chosen row (`selected`) carried a card-coloured
+    square in its selection track and a hovered row carried one under the
+    pointer. The target now follows the surface: `card` at rest, `selected` when
+    the row is chosen, the row's `accent` wash under the pointer; the header's
+    box stays on the card strip. The target is locatable as `${testId}-target`
+    (the cell stays `${testId}-cell`). `table.test.tsx` gains `paints the box in
+    the fill of the row it sits in`, which reads the target, the row and the
+    header before and after choosing a row and its hover refinement. Directions
+    measured: with the target fixed to `card` the case fails `expected
+    '#191D25' to be '#2E2370'`; with the fill it is green (70 behaviour cases).
+    `docs/table-selection.mdx` §The painted target and the Tier 3 Row selection
+    row state the rule.
   - [x] Stop a **row claiming a state the window cannot hear** — `TableRow` wrote
     `aria-disabled={disabled}`, and the runtime's `aria-*` set is closed: it
     carries `aria-label`, `aria-description`, `aria-id`, `aria-expanded`,

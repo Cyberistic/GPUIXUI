@@ -29,17 +29,26 @@ export const SELECTION_COLUMN_WIDTH = 40;
 /**
  * The box's own painted target.
  *
- * It paints the table's `card` fill — invisible against the table, and the hit
+ * It paints the fill it stands in — invisible against the table, and the hit
  * boundary GPUI stops at, so a press on the box runs the box and not the row.
  * The `Checkbox`'s root paints no background (`Checkbox` reserves its paint for
  * the box's inside), so a bare box inside a row is the measured
  * `control-unfilled` case: both the box and the row hear the press.
+ *
+ * A body box follows its row: a chosen row fills `selected`, so its box does
+ * too, or the target would read as a `card` notch inside the selection. Under
+ * the pointer the box takes the row's own `accent` wash, for the same reason.
  */
-const selectionBox = (theme: Theme): StyleDesc => ({
+const selectionBox = (
+  theme: Theme,
+  fill: string,
+  interactive: boolean,
+): StyleDesc => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  backgroundColor: theme.colors.card,
+  backgroundColor: fill,
+  ...(interactive ? { hover: { backgroundColor: theme.colors.accent } } : {}),
 });
 
 /** {@link TableSelectionHeader} props. */
@@ -55,7 +64,7 @@ export interface TableSelectionHeaderProps {
   /** Defaults to {@link SELECTION_COLUMN_WIDTH}, which the body box must match. */
   readonly width?: number;
   readonly disabled?: boolean;
-  /** The box's test id; the header cell is `${testId}-cell`. */
+  /** The box's test id; the header cell is `${testId}-cell` and its target `${testId}-target`. */
   readonly testId?: string;
 }
 
@@ -81,7 +90,10 @@ export const TableSelectionHeader = ({
       align="center"
       testId={testId === undefined ? undefined : `${testId}-cell`}
     >
-      <div style={selectionBox(theme)}>
+      <div
+        testId={testId === undefined ? undefined : `${testId}-target`}
+        style={selectionBox(theme, theme.colors.card, false)}
+      >
         <Checkbox
           checked={checked}
           indeterminate={indeterminate}
@@ -107,7 +119,7 @@ export interface TableSelectionCellProps {
   /** Defaults to {@link SELECTION_COLUMN_WIDTH}, which the header must match. */
   readonly width?: number;
   readonly disabled?: boolean;
-  /** The box's test id; the cell is `${testId}-cell`. */
+  /** The box's test id; the cell is `${testId}-cell` and its target `${testId}-target`. */
   readonly testId?: string;
 }
 
@@ -133,7 +145,14 @@ export const TableSelectionCell = ({
       align="center"
       testId={testId === undefined ? undefined : `${testId}-cell`}
     >
-      <div style={selectionBox(theme)}>
+      <div
+        testId={testId === undefined ? undefined : `${testId}-target`}
+        style={selectionBox(
+          theme,
+          checked ? theme.colors.selected : theme.colors.card,
+          true,
+        )}
+      >
         <Checkbox
           checked={checked}
           onCheckedChange={onCheckedChange}
