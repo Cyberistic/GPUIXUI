@@ -86,6 +86,29 @@ A page that genuinely scrolls — a settings form, a dialog body — moves toget
 with a list inside it; that is a layout decision, not something a pane can
 guard against. See [Runtime](/docs/runtime) for the measurement.
 
+## One text session, one buffer per pane
+
+A window has a single platform text session, so a split's editor area is a
+composition rather than two independent fields. `multi-pane-editor` measured it
+in a window — two real `<textarea>` panes, the divider the shipped `SplitPane`:
+
+- **A press moves the editing session.** Typing after a press on the right pane
+  changed the right buffer and left the left one alone; a press on the left moved
+  the session back. The session follows the pointer, and each pane's buffer stays
+  in app state rather than in the field.
+- **A splitter drag does not take the session.** A +60 drag resized the split to
+  440 and left the focus in the right field, so the next key still reached it.
+  The clamps are the pane's own — a further drag stopped at 460, a −260 drag at
+  220 — and the session stayed where the reader left it.
+- **Closing a pane is a layout change, not data loss.** The closed pane painted
+  nothing, the surviving editor took the whole row, and both buffers were still
+  in the app; reopening painted the split at the width it held, with the right
+  editor taking its share again and accepting a key.
+
+`editor-overlay` settles the other half: a highlighted *editable* surface has no
+caret and reports no scroll offset in 0.11.0, so a pane is a field and a view
+rather than an overlay ([Runtime](/docs/runtime)).
+
 ## A find bar counts matches, not rows
 
 A workspace find bar searches a document the runtime never holds: a log viewer,

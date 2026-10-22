@@ -427,6 +427,52 @@ describe("the workspace page's pointer and terminal claims", () => {
     expect(workspace).toContain("676");
   });
 
+  it("shares one editing session between a split's panes", () => {
+    // Tier 4's multi-pane editing layout is composition, and a window has one
+    // platform text session. `multi-pane-editor` measured the press that moves
+    // it, the splitter that does not, the pane's own clamps and a closed pane
+    // keeping its buffer — and the page described the resize rules only, so a
+    // workspace plan had no contract for the session a split shares. The numbers
+    // are read from the fixture, so the page cannot print a stale clamp.
+    const fixture = readFileSync(
+      new URL(
+        "../../../../apps/playground/src/live/multi-pane.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    const bounds = /initial: (\d+),\s*min: (\d+),\s*max: (\d+),/.exec(fixture);
+    expect(bounds, "the multi-pane fixture lost its split bounds").not.toBeNull();
+    const [, initial = "", min = "", max = ""] = bounds ?? [];
+    expect(Number(initial)).toBeGreaterThan(Number(min));
+
+    const probe = readFileSync(
+      new URL(
+        "../../../../apps/playground/src/live/scenarios.tsx",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    const steps = [
+      "typing follows the session",
+      "the surviving pane takes the whole row",
+    ];
+    expect(
+      steps.filter((step) => !probe.includes(step)),
+      "the record cites a check the probe no longer asserts",
+    ).toEqual([]);
+
+    expect(workspace).toContain("multi-pane-editor");
+    expect(workspace).toContain("One text session, one buffer per pane");
+    expect(workspace).toContain("A press moves the editing session");
+    expect(workspace).toContain("does not take the session");
+    expect(workspace).toContain("Closing a pane is a layout change");
+    expect(workspace).toContain(`stopped at ${max}`);
+    expect(workspace).toContain(`${min}`);
+    expect(workspace).toContain(`${Number(initial) + 60}`);
+    expect(workspace).toContain("`editor-overlay`");
+  });
+
   it("restores the arrangement it saved, and opens the default on a bad one", () => {
     // Persistent panel state is the app's data — no renderer storage — so the
     // half a window can prove is the restore. `workspace-restore` measured the
