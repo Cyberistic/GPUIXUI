@@ -6015,11 +6015,11 @@ the old sentence fails the new page case. See the interlock row above.
 
 ## Phase G — release readiness
 
-`[ ]` `[░░░░░░░░░░]` 0/3
+`[ ]` `[███████░░░]` 2/3
 
-`[ ]` Clean-environment install and public-export checks
-`[ ]` Licence inventory and attribution complete
-`[ ]` All gates green (`nub run check`, `nub run lint`, `nub run test`)
+`[x]` Clean-environment install and public-export checks — a fresh clone installs with default settings (no `--minimum-release-age`; only a `defaultTrust` build-script notice for esbuild/workerd), and `nub run check` + `nub run test` pass. Every `packages/*` exports target resolves (new `scripts/check-exports.ts`, wired into `check`), and the documented subpaths (`@gpuixui/components/…`, `@gpuixui/primitives/…`, `@gpuixui/keyboard/react`) all resolve against the real maps. The only clean-clone failure was an `oxfmt` wrap in `scripts/check-tests.ts`, fixed.
+`[x]` Licence inventory and attribution complete — every source in the README "Built on" table has a `LICENSES/*.md` record with its verified licence and commit/tag: shadcn/ui (MIT, full text), Base UI (MIT, reference-only), Tailwind (MIT, reference-only), React (MIT, dependency), GPUix (Apache-2.0, dependency), open-gpui (Apache-2.0, full text added), gpui-motion (MIT, full text added), TanStack (MIT, full text), PanelUI (documentation-only). `LICENSES/README.md` maps each record to its README row. The aggregate `inventory.md`/`provenance.md` tables are still unwritten and stay named by the `/docs/license` footer.
+`[ ]` All gates green (`nub run check`, `nub run lint`, `nub run test`) — `check` and `lint` green. `nub run test` has 3 failures from other in-flight workstreams, none from this pass: `apps/docs` `architecture.test.ts` and `examples.test.ts` (the new `@gpuixui/data` package is not yet on the architecture page / example registry) and `apps/playground` `scenarios/registry.test.ts` (the README's printed scenario total lags the registry after the data/table scenarios landed). Out of scope.
 
 ## Swarm-owned blockers (fix these)
 
