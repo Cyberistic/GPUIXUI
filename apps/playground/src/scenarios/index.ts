@@ -27,6 +27,7 @@ import { panelScenario } from "./panel.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { virtualListWindowedScenario } from "./virtual-list-windowed.js";
 import { virtualListRowsScenario } from "./virtual-list-rows.js";
+import { virtualListExpandScenario } from "./virtual-list-expand.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { dataGridScenario } from "./data-grid.js";
 import { dataGridFrozenColumnScenario } from "./data-grid-frozen-column.js";
@@ -68,6 +69,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "virtual-list-window": virtualListScenario,
   "virtual-list-windowed": virtualListWindowedScenario,
   "virtual-list-rows": virtualListRowsScenario,
+  "virtual-list-expand": virtualListExpandScenario,
   "table-select-sort": tableSelectSortScenario,
   "table-column-resize": tableColumnResizeScenario,
   "data-grid-frozen-column": dataGridFrozenColumnScenario,

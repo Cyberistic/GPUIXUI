@@ -83,7 +83,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (35/35 green); -> 2 on a host with no binding
+# -> 0 here (36/36 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -400,6 +400,48 @@ grow fails `the grown first row paints its new height` (`expected 64, got 24`);
 dropping the reveal's `scrollToItem` fails `the revealed row is painted` — exit
 `1` each; restored, green.
 
+## An expanded row
+
+`virtual-list-rows` measured rows of different heights and a row that grows
+while it is **outside** the window. The case an expandable row needs is the
+other one: the reader presses a row on screen, its detail opens, and the layout
+below has to follow with no scroll event to prompt a re-measure.
+`virtual-list-expand` mounts 200 rows of 32px and opens an 88px detail on row 3.
+
+| Step | Check |
+| ---- | ----- |
+| mount | row 3 is 32px and row 4 starts one row lower |
+| `Toggle detail` | row 3 re-measures to 120px on the next frame — no scroll, no offset change, and row 0 has not moved |
+| the same frame | **row 4 leaves the painted window**: 3 × 32 + 120 leaves 24px of the 240px viewport, and the list paints only whole rows |
+| one wheel (−80) | row 4 paints again at `row 3 + 120`, so the layout below really moved (only the paint was deferred), and a press on it selects row 4 — the shift is not a stale hit-test |
+| `Toggle detail` again | row 3 paints 32px, the detail unpaints, and row 4 returns to one row pitch |
+| `Reveal 150` (detail open) | that row lands on the viewport's top edge, so the grown height joined the estimate — a reveal is not 88px out |
+| `Back to top` | row 3 still paints 120px after leaving the window and returning, so a row opened by state keeps its measured box |
+
+18 checks, `--only virtual-list-expand`, green on 0.11.0.
+
+What it settles, for an expandable row or an expandable table row:
+
+1. **No workaround is needed to make an expansion real.** The list re-measures a
+   painted row on the next frame and recomputes its window from measured heights,
+   so an app neither remounts the row nor forces a re-layout.
+2. **The list paints the rows that fit whole.** At mount it paints seven 32px
+   rows in a 240px viewport and leaves the eighth row's 16px unpainted, so a
+   growth that leaves less than one row below it defers the next row's paint
+   until the reader scrolls. An expandable table that wants the following row
+   visible sizes its viewport (or its overdraw) against the open row's height.
+3. **The measured height is remembered with the row.** A row reopened by state
+   keeps its box after leaving the window and painting again, and the grown
+   height joins `scrollToItem`'s arithmetic.
+
+Negative controls, measured: an expansion that does not change the row's height
+fails `the expanded row re-measures without a scroll` (`expected 120, got 32`);
+a 56px detail leaves a whole row of viewport free and fails
+`the row below leaves the painted window until the reader scrolls`
+(`expected true, got false`) — exit `1` each; restored, green.
+`expand-fixture.test.ts` guards the geometry those two checks depend on (3
+cases).
+
 ## A frozen data-grid column
 
 The runtime has no sticky, so a frozen first column is the header rule on the
@@ -459,10 +501,10 @@ mounting every page from one component fails
 
 ## Evidence on this host
 
-The suite is **35/35 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **36/36 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-35/35 scenarios passed · capabilities: layout=verified text=verified
+36/36 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -481,7 +523,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down and `deltaX` negative to scroll right (the opposite of the DOM); an `overflowX` strip clamps exactly at `contentWidth − viewportWidth` |
 | panel | pointer capture + inclusive clamp |
-| virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window. `itemCount` mode mounts only the 60-row window the app renders (`virtual-list-windowed`), and `onVisibleRange` reports absolute indices but lags the paint by one gesture in both modes. Rows may differ in height: each is measured and stacked (`virtual-list-rows`), and a row that grows while outside the window is not remeasured until it paints |
+| virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window. `itemCount` mode mounts only the 60-row window the app renders (`virtual-list-windowed`), and `onVisibleRange` reports absolute indices but lags the paint by one gesture in both modes. Rows may differ in height: each is measured and stacked (`virtual-list-rows`), and a row that grows while outside the window is not remeasured until it paints. A row that grows **while painted** re-measures on the next frame and the rows below shift by the growth; the list paints whole rows only, so a growth that leaves less than a row of viewport defers the following row's paint until a scroll (`virtual-list-expand`) |
 | table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
 | data grid | a frozen first column is its own vertical scroller beside the grid, mirrored in `onScrollChange` with a re-entrancy guard: a wheel over either pane moves both, the same row shares its `y` across the panes, a horizontal wheel pans the cells but not the frozen column, and both clamp at the same `-1440` (`data-grid-frozen-column`). A header **outside** the row scroller keeps its painted y while the rows scroll (`position: "sticky"` paints nothing: a sticky sample *inside* the scroller moves by exactly the scroll amount, so the header must be a sibling); one `overflowX` scroller wrapping header and rows moves a header cell and its column's cells by the same x, keeping them aligned |
 | search highlights | a `highlight` spec paints a wash per match, and `SmokeHost.highlights()` (the renderer's `getPaintedHighlights`) reports each wash's run, `[start, end)` and boxes: three for `alpha`, two for `beta`, and none once the query is case-sensitive `ALPHA` or a whole-word `alp` — the insensitive/word-off queries mark them again. One `activeIndex` marks exactly one wash `active`. `ranges: [[0, 5)]` marks the same region `indexOf` would. A wash is a quad, so `text`/`paintedText` never report it |
@@ -1601,6 +1643,7 @@ src/panels/split-pane.tsx the pointer-captured divider
 src/scenarios/*.tsx      one view + one steps effect per capability
 src/scenarios/theme.tsx  the token gallery (colour roles, type, ring, shadow)
 src/scenarios/shell.tsx  mounts the real App; guards the sidebar's scrolling
+src/scenarios/expand-fixture.ts the expandable-row geometry the probe asserts
 src/scenarios/virtual-table.tsx a 500-row table inside <virtual-list>
 src/scenarios/tree.tsx      indentation, expand/collapse, arrow keys
 src/scenarios/log-viewer.tsx bottom-anchored virtual list (tail, appends)
@@ -1614,7 +1657,6 @@ src/scenarios/examples.tsx  the shipped-example gallery: one page per registry i
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/scenarios/registry.test.ts the README's printed total and capability list against it
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
-src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
 src/live/registry.ts     live probe ids + capabilities (imports nothing native)
 src/live/scenarios.tsx   one window view + async steps per live probe
@@ -1654,7 +1696,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (35/35), with a written report and screenshots.
+  (36/36), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

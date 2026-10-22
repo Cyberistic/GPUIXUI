@@ -199,6 +199,12 @@ export const registry = [
     capability: "virtual-list",
   },
   {
+    id: "virtual-list-expand",
+    title:
+      "Virtual list re-measures a painted row that expands, and keeps it open",
+    capability: "virtual-list",
+  },
+  {
     id: "virtualized-table",
     title: "Table inside <virtual-list>: window, click, selection",
     capability: "table",
