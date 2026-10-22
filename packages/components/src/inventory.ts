@@ -44,6 +44,7 @@ import { navigationMenuMeta } from "./navigation-menu.js";
 import { paginationMeta } from "./pagination.js";
 import { popoverMeta } from "./popover.js";
 import { previewCardMeta } from "./preview-card.js";
+import { revealMeta } from "./reveal.js";
 import { rollingTextMeta } from "./rolling-text.js";
 import { rotatingTextMeta } from "./rotating-text.js";
 import { searchInputMeta } from "./search-input.js";
@@ -112,6 +113,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   paginationMeta,
   popoverMeta,
   previewCardMeta,
+  revealMeta,
   rollingTextMeta,
   rotatingTextMeta,
   searchInputMeta,

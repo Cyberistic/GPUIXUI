@@ -33,8 +33,9 @@ export const surfaceBudget = {
   // (`rotating-text.tsx` and its index rule), 98 → 100 for SplittingText
   // (`splitting-text.tsx` and the split rule beside it), 100 → 102 for
   // HighlightText (`highlight-text.tsx` and the mark rule beside it), 102 → 104
-  // for RollingText (`rolling-text.tsx` and the roll rule beside it).
-  modules: 104,
+  // for RollingText (`rolling-text.tsx` and the roll rule beside it), 104 → 106
+  // for Reveal (`reveal.tsx` and the direction rule beside it).
+  modules: 106,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   bytes: 690 * 1024,
   /** Packages the entry's own modules import. */

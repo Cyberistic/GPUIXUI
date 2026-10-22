@@ -1,0 +1,136 @@
+---
+title: Reveal
+description: Content that fades and travels a few pixels into place, on mount or when it opens.
+---
+
+`Reveal` is the house entrance as a component: an opacity run plus a short
+travel along one axis. Every overlay in the library arrives the same way through
+`internal/presence.tsx`; `Reveal` exposes that rule for a section, a list row, a
+notice or a disclosure's contents.
+
+## Usage
+
+```tsx
+import { Reveal } from "@gpuixui/components/reveal";
+
+<Reveal>
+  <text>Automatic updates are on.</text>
+</Reveal>;
+```
+
+A reveal is a **fade plus an offset**, never a scale or a blur: `0.11.0`'s
+`StyleDesc` has no `transform` (upstream issue #102) and no filter, so those
+effects have no honest mapping. The offset is a relative `top`/`left`, so it
+moves the content without reflowing anything beside it.
+
+## On mount, or on a state change
+
+```tsx
+// Arrives when it mounts and stays.
+<Reveal from="below" distance={12}>…</Reveal>
+
+// Enters and leaves with `open`; the subtree unmounts after the exit.
+<Reveal open={showing} from="right">…</Reveal>
+```
+
+Omit `open` for a mount-time reveal. Pass it when something else decides: a
+notice that a press dismisses, the contents of a disclosure, a toast. A closed
+reveal paints nothing at all, so nothing inside it keeps running; re-opening
+before the exit finishes retargets the same instance instead of remounting it.
+
+## Directions, distance and delay
+
+`from` names the **edge the content arrives from**:
+
+| `from` | Movement |
+| ------ | -------- |
+| `"below"` (default) | starts lower and rises |
+| `"above"` | starts higher and drops |
+| `"right"` | starts further right and slides left |
+| `"left"` | starts further left and slides right |
+| `"none"` | fades in place |
+
+`distance` is the travel in pixels (default `8`; a zero, negative or `NaN` value
+falls back to it rather than reaching the runtime as an invalid frame). `delayMs`
+starts the entry later, which is how a list is staggered:
+
+```tsx
+{lines.map((line, index) => (
+  <Reveal key={line} delayMs={index * 60}>{line}</Reveal>
+))}
+```
+
+## Timing and reduced motion
+
+`level` picks one of the house durations — `step` 120 ms, `fast` 160, `normal`
+200 (the default), `slow` 320, `notice` 500. The entry decelerates and the exit
+accelerates, and the exit's own duration is the mount window: the subtree
+unmounts when it ends.
+
+Under `MotionProvider preference="reduced"` the durations are zero, so the
+content paints at rest in the frame it appears and still unmounts on the same
+contract. The preference is the application's: the runtime exposes no query for
+it (`docs/gpuix-capabilities.md`).
+
+```tsx
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <App />
+</MotionProvider>;
+```
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `open` | `boolean` | — | Omit for a mount reveal; pass it to enter and leave. |
+| `from` | `RevealFrom` | `"below"` | The edge the content comes from, or `"none"` for a fade. |
+| `distance` | `number` | `8` | Pixels travelled; an unusable value falls back to the default. |
+| `level` | `MotionLevel` | `"normal"` | The house duration the entry and exit use. |
+| `delayMs` | `number` | `0` | Milliseconds before the entry starts. |
+| `className` | `string` | — | Joined after the resting style, so it wins conflicts. |
+| `style` | `StateStyle<RevealState>` | — | `RevealState` is `{ open, from, reducedMotion }`. |
+
+`Reveal` renders one `<div>` with `position: relative` and takes the GPUix host
+props (`testId`, `aria-*`, `onLayout`); `style` merges last.
+
+## Accessibility
+
+A reveal is decoration: it never changes what is readable, only how it arrives.
+`MotionProvider` is the honest place to remove the journey — there is no
+reduced-motion query in `0.11.0`, and the library does not sniff the platform on
+its own. Do not put content a reader must act on behind a delay longer than a
+few hundred milliseconds.
+
+## Limitations
+
+- **No zoom, no blur.** A scale needs `transform`; a blur needs a filter. Neither
+  is in `0.11.0`, so a caller asking for them is given a fade instead of a
+  different effect.
+- **The offset does not reflow.** The content's neighbours are where they were;
+  that is what makes a stagger cheap, and it also means a reveal cannot be used
+  to animate a size (use `AutoHeight` for that).
+- **One axis.** A diagonal arrival would need two offsets on one host, which the
+  runtime's `MotionStyle` cannot express.
+- **The mount window is a timer**, so a backgrounded window may unmount an exit
+  a frame late.
+- No scroll-triggered reveal: the runtime publishes no intersection signal, so
+  timing is the caller's (`delayMs`, or mounting the reveal when it is needed).
+
+## Related
+
+- [Auto height](/docs/components/auto-height) — a reveal that animates the
+  content's measured height as well.
+- [Rolling text](/docs/components/rolling-text) — a value that rolls between two
+  states rather than arriving once.
+- [Motion](/docs/motion) — the timing levels, easings and the reduced-motion
+  policy.
+
+## Verification
+
+`src/behaviour/reveal.test.tsx` renders the component in the real GPUix renderer
+(7 tests): the entry starting below and rising home, the right edge travelling on
+the horizontal axis, the above edge dropping, a fade-only reveal staying put, the
+reduced preference painting at rest with a zero duration, a closed reveal
+painting nothing and unmounting only after its exit, and the delay reaching the
+runtime in seconds. The direction and distance rules are the unit suite beside
+the logic (`src/reveal/frames.test.ts`).
