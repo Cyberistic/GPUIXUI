@@ -229,9 +229,7 @@ describe("Button", () => {
             );
             expect(Arr.length(dimmed)).toBeGreaterThan(0);
             Arr.forEach(dimmed, (failure) => {
-              expect(failure.ratio ?? 1).toBeLessThan(
-                contrastFloors.secondary,
-              );
+              expect(failure.ratio ?? 1).toBeLessThan(contrastFloors.secondary);
             });
 
             // The pair this opts out of is the one the design holds to 4.5:1.
@@ -366,6 +364,22 @@ describe("IconButton", () => {
     expect(button.renderer.findByTestId("icon-button")?.style.color).toBe(
       darkTheme.colors.mutedForeground,
     );
+
+    button.unmount();
+  });
+
+  it("keeps the keyboard dim on a ghost icon control", () => {
+    // The opt-out belongs to a filled action, whose label collapses into its
+    // own fill. An icon control paints no fill, so it keeps the cue.
+    const button = renderComponent(
+      <IconButton testId="icon-button" label="Close">
+        ✕
+      </IconButton>,
+    );
+
+    expect(
+      button.renderer.findByTestId("icon-button")?.style.keyboardFocusDim,
+    ).toBeUndefined();
 
     button.unmount();
   });

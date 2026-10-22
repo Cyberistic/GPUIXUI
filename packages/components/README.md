@@ -101,6 +101,15 @@ busy `…` stay typography: they are punctuation, not chrome.
 `src/behaviour/icons.test.tsx` measures the painted `<svg>` and sweeps the
 source for a returning text stand-in.
 
+A filled action paints `keyboardFocusDim: false`. The runtime dims every other
+focusable element to 40% while a keyboard user is on one, which composites a
+filled label into its own fill — 5.0–10.5:1 at rest becomes 1.3–3.2:1 on every
+strip — so `internal/button.tsx`'s `primary`, `danger` and `secondary` variants
+keep their label while a `ghost` action keeps the where-can-Tab-go cue.
+`src/behaviour/button.test.tsx` holds the declaration in both themes and measures
+the collapse with `keyboardDimFailures`; `docs/component-api.md` §3 states the
+rule.
+
 Two kinds of metric keep density, because they must stay aligned with the
 density-driven controls beside them: a list row's height
 (`theme.density.rowHeight`), and a control's height/side — the accordion

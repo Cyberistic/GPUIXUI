@@ -231,7 +231,6 @@ export const IconButton = ({
             color: theme.colors.foreground,
           },
           active: { backgroundColor: theme.colors.active },
-      ...keepLabel(),
           ...disabledStyle(disabled),
           ...keyboardRing(theme),
         },
