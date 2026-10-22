@@ -92,7 +92,9 @@ render(<App />, { terminal: true });
 Frames render offscreen and are drawn with the kitty graphics protocol; mouse,
 scroll, keyboard (with key-up), paste, focus and resize all reach the app.
 `ctrl-c` quits and the terminal is restored on quit, `SIGTERM`, `SIGINT`, panic
-or exit.
+or exit. A pty has measured the frame and the restore — the grid it arrives at,
+the app's own page pixels, a key repainting it and ctrl-c leaving the terminal as
+it found it — on [Runtime capabilities § Measured in a window](/docs/runtime#measured-in-a-window).
 
 A terminal has no titlebar, so drop any macOS traffic-light space with
 [`isTerminal()`](https://github.com/Cyberistic/GPUIXUI) — it is `false` until

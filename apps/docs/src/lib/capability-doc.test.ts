@@ -142,7 +142,7 @@ const citedProbes = (): ReadonlyArray<string> => {
   );
 };
 
-/** The probe ids the playground's headless and live registries declare. */
+/** The probe ids the playground's headless, live and terminal registries declare. */
 const registeredProbes = (): ReadonlySet<string> => {
   const ids = (path: string) =>
     [...read(path).matchAll(/\n\s*id: "([^"]+)",/g)].map(
@@ -151,6 +151,7 @@ const registeredProbes = (): ReadonlySet<string> => {
   return new Set([
     ...ids("apps/playground/src/scenarios/registry.ts"),
     ...ids("apps/playground/src/live/registry.ts"),
+    ...ids("apps/playground/src/terminal/run.ts"),
   ]);
 };
 
@@ -1084,6 +1085,66 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(tree?.[1]).toContain("ListBoxOption");
     expect(tree?.[1]).toContain('role="none"');
     expect(tree?.[2]).toContain("aria-valuetext");
+  });
+
+  it("records the terminal frame a pty painted, with the probes behind it", () => {
+    // "Terminal rendering" was declared supported with an evidence column of
+    // "—", so a plan could not tell a frame a terminal actually received from a
+    // type saying one would. `terminal-render` and `terminal-input` decode the
+    // kitty stream a 100x40 pty received: the frame is the grid, the page is the
+    // app's own colour, a key repaints it and ctrl-c restores the terminal.
+    const terminal = rowFor("Terminal rendering");
+    expect(terminal?.verdict).toBe("supported, with limits");
+    expect(terminal?.evidence).toContain("terminal-render");
+    expect(terminal?.evidence).toContain("terminal-input");
+
+    // The printed frame size is arithmetic on the probe's own grid and cell, so
+    // a changed cell cannot leave the record teaching the previous frame.
+    const probe = read("apps/playground/src/terminal/run.ts");
+    const grid = /TERMINAL_GRID = \{ columns: (\d+), rows: (\d+) \}/.exec(probe);
+    const cell = /TERMINAL_CELL = \{ width: (\d+), height: (\d+) \}/.exec(probe);
+    const columns = Number(grid?.[1] ?? 0);
+    const rows = Number(grid?.[2] ?? 0);
+    const cellWidth = Number(cell?.[1] ?? 0);
+    const cellHeight = Number(cell?.[2] ?? 0);
+    expect(
+      [columns, rows, cellWidth, cellHeight],
+      "the terminal probe no longer declares the grid and cell the record prints",
+    ).not.toContain(0);
+    expect(terminal?.evidence).toContain(
+      `${columns * cellWidth}×${rows * cellHeight}`,
+    );
+    expect(terminal?.evidence).toContain(`${columns}×${rows}-cell`);
+
+    const asserted = [
+      "the frame is the pty grid at one cell per character",
+      "the app fills the frame with its terminal page",
+      "the app reads isTerminal() as true",
+      "a key press repaints the page",
+      "the run restores the terminal",
+    ];
+    expect(
+      asserted.filter((line) => !probe.includes(line)),
+      "the record quotes a check the terminal probe no longer asserts",
+    ).toEqual([]);
+
+    // The two limits a reader of the record has to be able to act on.
+    expect(terminal?.workaround).toContain("kitty");
+    expect(terminal?.workaround).toContain("host element");
+    expect(terminal?.workaround).toContain("macOS-only");
+  });
+
+  it("publishes the terminal frame on /docs/runtime", () => {
+    const page = measuredRow("Terminal frame");
+    expect(
+      page,
+      "the page's measured table has no terminal-frame row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("terminal-render");
+    expect(page?.[1]).toContain("terminal-input");
+    expect(page?.[1]).toContain("99.78%");
+    expect(page?.[2]).toContain("kitty or Ghostty");
+    expect(page?.[2]).toContain("host element");
   });
 
   it("cites only registered probes, and owes every one of them in the record", () => {
