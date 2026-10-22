@@ -390,4 +390,21 @@ describe("the workspace page's pointer and terminal claims", () => {
     // The replace runs over the document, not the window the reader sees.
     expect(workspace).toContain("676");
   });
+
+  it("restores the arrangement it saved, and opens the default on a bad one", () => {
+    // Persistent panel state is the app's data — no renderer storage — so the
+    // half a window can prove is the restore. `workspace-restore` measured the
+    // re-mounted workspace, the default on a corrupt string and the clamp on a
+    // stale width; the page has to carry those three rules where a workspace is
+    // designed.
+    const restore = rowFor(record, "Workspace restore");
+
+    expect(restore).toContain("supported, with limits");
+    expect(restore).toContain("workspace-restore");
+    expect(restore).toContain("source=default");
+    expect(workspace).toContain("workspace-restore");
+    expect(workspace).toContain("A decode failure opens the default");
+    expect(workspace).toContain("Clamp a restored number to the pane's own bounds");
+    expect(workspace).toContain("first layout");
+  });
 });

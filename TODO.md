@@ -2887,7 +2887,33 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 98/98
+`[x]` `[██████████]` 99/99
+
+`[x]` Publish the **workspace restore** a probe measured — Tier 4's *persistent
+panel state* had no entry in the capability record or on `/docs/runtime`, and
+`/docs/workspace` §State and persistence stopped at "a layout is the app's
+data", so the half a window can prove was undocumented. The playground's
+`workspace-restore` (30 checks, 0.11.0) measured it: a sidebar width, a
+caller-owned document width, a chosen document and an inspector's scroll saved
+as a string and handed to a **re-mounted** workspace — `mount=2 source=stored`
+paints the sidebar at 0, the document at 360, the inspector taking the rest,
+`document=output`, a layout pass reporting 360 and the saved scroll at −120 —
+while a corrupt `not a workspace` opens `mount=3 source=default` at
+160 / 240 / explorer / 0 and a stored `sidebar:-5 document:9999 scroll:-30`
+clamps to 0 / 360 / 0. The record gains **Workspace restore** (`supported, with
+limits`, composed rather than provided) with the six measurements and the
+workaround (a typed decode at the boundary, the default on a failure, clamp to
+the pane's bounds, the saved scroll on the first layout pass);
+`/docs/runtime#measured-in-a-window` publishes the row, §5 owes the probe, and
+`/docs/workspace` gains the two measured rules plus both negative controls
+(restoring the default instead of the saved layout, and skipping the saved
+scroll — `expected -120 ± 1, got 0`). Guards: `capability-doc.test.ts` gained
+the record-and-page case and `lane-page.test.ts` the workspace case (both read
+the record's row, so the page cannot restate a different contract). Directions
+measured: deleting the record row fails both cases (`no row named Workspace
+restore`), deleting the page row fails the capability case by name, and deleting
+the workspace section fails the lane case. Suite 72 files / 633 tests,
+`check-types` green.
 
 `[x]` Record the **find-bar offset** a virtualized document needs — the record's
 highlight row said `useTextSearch`/`findRanges` highlight rendered text and

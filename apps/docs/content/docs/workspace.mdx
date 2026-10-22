@@ -133,6 +133,25 @@ panels then take plain numbers. A workspace does not render from
 `JSON.parse`, and a stale or hand-edited layout becomes a typed decode failure
 the app can reset, not a crash on mount.
 
+`workspace-restore` measured the half a window can prove. A re-mounted workspace
+paints the saved arrangement — widths, the chosen document and the inspector's
+scroll — and its layout pass reports the restored width, so a saved scroll lands
+on the first layout rather than being lost before the pane exists. Two rules come
+from it:
+
+- **A decode failure opens the default, never a partial layout.** A corrupt
+  `not a workspace` restored the default (160 / 240 / explorer / 0) at
+  `source=default`; an app that spread whatever decoded would open a workspace
+  missing the fields it could not read.
+- **Clamp a restored number to the pane's own bounds.** A stored
+  `sidebar:-5 document:9999 scroll:-30` restored **0 / 360 / 0**, because a
+  stale width must not push the inspector off the frame. The pane's caller-owned
+  width is the bound — a split's `max` is the caller's number, not the
+  container's.
+
+Both negative controls were measured: restoring the default instead of the saved
+layout, and skipping the saved-scroll application (`expected -120 ± 1, got 0`).
+
 ## The keyboard order a dock carries
 
 A dock is several focusable layers — a sidebar, a rail of documents, the pane —

@@ -716,6 +716,29 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("onLayout");
   });
 
+  it("records the arrangement a workspace restores", () => {
+    // Tier 4's persistent panel state is app-owned — the runtime publishes no
+    // storage — so the half a window can prove is the restore. `workspace-restore`
+    // measured a re-mounted workspace painting its saved widths, document and
+    // scroll, the default on a corrupt string, and the clamp on a stale width.
+    const restore = rowFor("Workspace restore");
+    expect(restore?.verdict).toBe("supported, with limits");
+    expect(restore?.evidence).toContain("workspace-restore");
+    expect(restore?.evidence).toContain("mount=2");
+    expect(restore?.evidence).toContain("−120");
+    expect(restore?.evidence).toContain("source=default");
+    expect(restore?.workaround).toContain("first layout pass");
+
+    const page = measuredRow("Workspace restore");
+    expect(
+      page,
+      "the page's measured table has no workspace-restore row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("workspace-restore");
+    expect(page?.[1]).toContain("mount");
+    expect(page?.[2]).toContain("first layout pass");
+  });
+
   it("records the drag reorder a captured pointer owns, and the hit test it needs", () => {
     // A row that follows the pointer is the one case where capture removes the
     // drop target: the dragged row keeps the release (`heard=0`), and a row's
