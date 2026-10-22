@@ -186,6 +186,13 @@ ends, until it is released. Measured in a real window (`pointer-capture`,
 `slider=66 sliderChanges=9`) and held in the TestRenderer by
 `runtime/value.runtime.test.tsx`.
 
+**Only the primary button's press is a value gesture.** The runtime delivers
+`mouseDown` for all three buttons while `onClick` is the primary button's own, so
+a right press (the context-menu gesture) and a middle press are refused — they
+neither move the value nor arm the drag that would move it on the next pointer
+move (`core/pointer.ts`'s `primaryButton`, held by `runtime/value.runtime.test.tsx`
+for both slider shapes).
+
 ## Limitations
 
 - **No `aria-valuenow`/`min`/`max`** (above), and **no `aria-orientation`**: a
@@ -220,8 +227,10 @@ ends, until it is released. Measured in a real window (`pointer-capture`,
   the track still follows the pointer (to 100) and stops on the release, the
   arrow keys move a vertical value, the ring follows focus, disabled is skipped
   by Tab, a `max: 10` / `step: 3` slider still reaches 10 by key and by press
-  and steps down from it onto 9. Measured 2026-10-17; plan 053 §11 records the
-  probes. The vertical cases were added 2026-10-22.
+  and steps down from it onto 9, and a right or middle press (with the move
+  after it) leaves the value alone. Measured 2026-10-17; plan 053 §11 records the
+  probes. The vertical cases were added 2026-10-22 and the button guard
+  2026-10-23.
   The capture cases are the headless half of the playground's `pointer-capture`
   probe (negative control measured: removing the track's `onMouseMove`, so the
   capture is never armed, leaves the value at 30 — `expected 30 to be 100`).

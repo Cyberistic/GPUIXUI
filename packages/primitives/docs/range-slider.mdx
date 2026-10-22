@@ -85,7 +85,17 @@ Each thumb is its own tab stop and answers:
 | `Home` / `End` | `min` / `max`, clamped at the other thumb |
 
 A press moves native focus to the thumb it grabbed, so the arrows that follow
-act on the end the user is holding. The focused thumb paints the ring.
+act on the end the user is holding. The focused thumb paints the ring. **Only the
+primary button's press grabs an end**: the runtime delivers `mouseDown` for all
+three buttons while `onClick` is the primary button's own, so a right press (the
+context-menu gesture) or a middle press is refused and neither moves a thumb nor
+arms the drag that would (`core/pointer.ts`'s `primaryButton`,
+`runtime/value.runtime.test.tsx`). **A move that cannot change an end reports
+nothing**: the span is compared by its two values, not by tuple identity, so a
+pointer held at a bound or an arrow pressed against the other thumb does not
+stream identical `onValueChange` calls (`src/components/Slider.test.tsx`'s
+`does not report a span an arrow could not move`,
+`runtime/value.runtime.test.tsx`'s drag-at-a-bound case).
 
 Only an unmodified press is this control's key. A chord carrying Ctrl, Alt or
 Cmd — `Cmd+A` select-all, `Ctrl+Space` (the macOS input source), `Alt+Arrow`
@@ -154,10 +164,12 @@ ceiling, say — and the order of the pair is still `[start, end]`, not
 - `runtime/value.runtime.test.tsx` — a real press at 10% moves the start, at 90%
   the end; focus follows the grabbed thumb; an arrow moves only that end; a
   start driven past the end stops on it; and a drag that leaves the track keeps
-  moving the end it grabbed until it stops on the other end. A vertical range
-  reads its ends from the floor (0.05 moves the start, 0.9 the end) on a track
-  whose width is the control's height. Measured 2026-10-17 (plan 053 §11); the
-  vertical case was added 2026-10-22.
+  moving the end it grabbed until it stops on the other end. A right or middle
+  press (and the move after it) changes nothing, and a drag held at a bound
+  reports the span once rather than on every frame. A vertical range reads its ends
+  from the floor (0.05 moves the start, 0.9 the end) on a track whose width is
+  the control's height. Measured 2026-10-17 (plan 053 §11); the vertical case was
+  added 2026-10-22 and the button guard and span comparison 2026-10-23.
 - `apps/playground`'s `slider-vertical-lifecycle` (0.11.0) — the vertical range
   painted in a real window: a press at the centre of a `10-90` pair moves the
   nearer end to `50-90`, a drag to the quarter mark moves that end to `25-90`

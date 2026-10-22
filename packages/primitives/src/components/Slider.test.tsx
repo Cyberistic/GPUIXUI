@@ -410,6 +410,30 @@ describe("RangeSlider", () => {
     expect(onSpanChange).toHaveBeenCalledWith([60, 60]);
   });
 
+  it("does not report a span an arrow could not move", () => {
+    // The bug guarded: the tuple was rebuilt on every interaction, so `Object.is`
+    // never saw the same span. An arrow at a bound reported the value it already
+    // held — a spurious dirty flag, save or analytics event — while the single
+    // slider reported nothing.
+    const onSpanChange = vi.fn();
+    const element = renderRangeSlider(
+      { label: "Price" },
+      testTheme,
+      spanOf(0, 60),
+      { focusedIndex: Option.some(0), onFocus: vi.fn(), onBlur: vi.fn() },
+      rangeHandlers(onSpanChange),
+    );
+    const [, start, , end] = partsOf(element);
+    expectSome(hostHandler(start ?? expect.fail("no thumb"), "onKeyDown"))(
+      keyEvent("left"),
+    );
+    expect(onSpanChange).not.toHaveBeenCalled();
+    expectSome(hostHandler(end ?? expect.fail("no thumb"), "onKeyDown"))(
+      keyEvent("right"),
+    );
+    expect(onSpanChange).toHaveBeenCalledWith([0, 61]);
+  });
+
   it("declares the keyboard ring on both thumbs, never a shadow", () => {
     // Each range thumb is its own tab stop, so both declare the outline; the
     // runtime paints it on the thumb holding keyboard focus.

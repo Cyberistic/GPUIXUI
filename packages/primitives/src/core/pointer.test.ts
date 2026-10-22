@@ -40,7 +40,7 @@ import {
 import { numberStepperStyle } from "./style.js";
 import { selectionBoxStyle, switchTrackStyle } from "./selection.js";
 import { buttonVariants, toggleVariants } from "./variants.js";
-import { pressWash } from "./pointer.js";
+import { pressWash, primaryButton } from "./pointer.js";
 
 /** Every shipped, high-contrast, platform and authored style, named. */
 const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
@@ -172,5 +172,20 @@ describe("the wash a control's press paints", () => {
         expect(paint(theme), `${name}: ${label}`).toBe(pressWash(theme));
       });
     });
+  });
+});
+
+describe("primaryButton", () => {
+  it("reads a press with no button, or the left one, as the primary gesture", () => {
+    expect(primaryButton({})).toBe(true);
+    expect(primaryButton({ button: 0 })).toBe(true);
+  });
+
+  it("refuses the right and middle presses the runtime also delivers", () => {
+    // `onClick` is the primary button's only, while `mouseDown` arrives for all
+    // three: a control that took any press moved its value on a context-menu
+    // gesture the caller never heard about.
+    expect(primaryButton({ button: 1 })).toBe(false);
+    expect(primaryButton({ button: 2 })).toBe(false);
   });
 });

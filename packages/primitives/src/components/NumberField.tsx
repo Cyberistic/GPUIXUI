@@ -37,6 +37,7 @@ import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
 import { isPlainKey } from "../core/keyboard.js";
+import { primaryButton } from "../core/pointer.js";
 import {
   clampNumeric,
   commitNumberDraft,
@@ -205,7 +206,7 @@ const useNumberScrub = ({
   return {
     onMouseDown: (event) => {
       // A secondary or middle press is not a step gesture.
-      if (event.button !== undefined && event.button !== 0) return;
+      if (!primaryButton(event)) return;
       // A new gesture starts clean: the previous drag's click may never have
       // arrived (the pointer was released outside the column).
       scrubbed.current = false;

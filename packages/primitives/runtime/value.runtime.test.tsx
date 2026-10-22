@@ -139,6 +139,72 @@ it("maps a real click to the value under the pointer", async () => {
   expect(announced(runtime, "Volume")).toBe("25");
 });
 
+it("ignores a press that is not the primary button", async () => {
+  // The bug guarded: the runtime delivers `mouseDown` for all three buttons, and
+  // the slider treated any press as a value gesture. A right press (the
+  // context-menu gesture) or a middle one moved the value, armed the drag, and
+  // then a move applied a second time — with no `onClick` for the caller to see.
+  const single = values();
+  const spans: Array<readonly [number, number]> = [];
+  const runtime = await mount(
+    <Stack direction="row">
+      <Slider
+        testId="s"
+        label="Volume"
+        defaultValue={20}
+        onValueChange={single.onChange}
+      />
+      <RangeSlider
+        testId="r"
+        label="Price"
+        defaultValue={[20, 60] as const}
+        onValueChange={(next) => spans.push(next)}
+      />
+    </Stack>,
+  );
+  const point = pointAt(runtime, "s", 0.75);
+  runtime.renderer.nativeSimulateMouseDown(point.x, point.y, 2);
+  runtime.renderer.nativeSimulateMouseUp(point.x, point.y, 2);
+  // A move with the primary button held is a drag only if the press armed one.
+  runtime.mouseMoveAt(point.x, point.y, 0);
+  runtime.flush();
+  expect(single.seen).toStrictEqual([]);
+  expect(announced(runtime, "Volume")).toBe("20");
+
+  const band = pointAt(runtime, "r", 0.9);
+  runtime.renderer.nativeSimulateMouseDown(band.x, band.y, 1);
+  runtime.renderer.nativeSimulateMouseUp(band.x, band.y, 1);
+  runtime.mouseMoveAt(band.x, band.y, 0);
+  runtime.flush();
+  expect(spans).toStrictEqual([]);
+  expect(announced(runtime, "Price maximum")).toBe("60");
+});
+
+it("does not report a range the pointer cannot move past a bound", async () => {
+  // The bug guarded: the span tuple was rebuilt on every pointer move, so a drag
+  // held against a bound reported the same span on every frame it stayed there —
+  // a stream of identical `onValueChange` calls while the pointer was still.
+  const spans: Array<readonly [number, number]> = [];
+  const runtime = await mount(
+    <RangeSlider
+      testId="r"
+      label="Price"
+      defaultValue={[40, 80] as const}
+      onValueChange={(next) => spans.push(next)}
+    />,
+  );
+  const box = boundsOf(runtime, "r");
+  const grab = pointAt(runtime, "r", 0.4);
+  runtime.mouseDownAt(grab.x, grab.y);
+  // Three moves held at the start end: the first reaches 0, the next two cannot.
+  Arr.forEach(Arr.range(1, 3), () => {
+    runtime.mouseMoveAt(box.x + 1, box.y + box.height / 2, 0);
+    runtime.flush();
+  });
+  expect(spans).toStrictEqual([[0, 80] as const]);
+  expect(announced(runtime, "Price minimum")).toBe("0");
+});
+
 it("maps a vertical track from its bottom edge", async () => {
   // The bug guarded: the vertical axis reuses the horizontal arithmetic, so the
   // bar fills from the ceiling and a reader who drags up gets a *lower* value.

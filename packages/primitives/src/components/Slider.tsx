@@ -46,6 +46,7 @@ import * as Arr from "effect/Array";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
 import { isPlainKey } from "../core/keyboard.js";
+import { primaryButton } from "../core/pointer.js";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import {
@@ -589,10 +590,12 @@ export const renderRangeSlider = (
         const end = index === 0 ? "start" : "end";
         Option.match(decideValueKey(value, range, event.key ?? ""), {
           onNone: () => {},
-          onSome: (next) =>
-            handlers.onSpanChange(
-              spanTuple(moveSpanEnd(span, end, next, range)),
-            ),
+          onSome: (next) => {
+            const moved = moveSpanEnd(span, end, next, range);
+            if (moved.start !== span.start || moved.end !== span.end) {
+              handlers.onSpanChange(spanTuple(moved));
+            }
+          },
         });
       }),
       onKeyUp: props.onKeyUp,
@@ -707,7 +710,7 @@ export const Slider = (props: SliderProps): ReactElement => {
       trackId.current = instance?.id ?? null;
     },
     onPointerDown: (event) => {
-      if (props.disabled === true) return;
+      if (props.disabled === true || !primaryButton(event)) return;
       dragging.current = true;
       apply(event);
     },
@@ -758,8 +761,19 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     });
     setFocusedIndex(Option.some(index));
   };
-  const change = (span: ValueSpan, end: "start" | "end", value: number): void =>
-    state.set(spanTuple(moveSpanEnd(span, end, value, range)));
+  const change = (
+    span: ValueSpan,
+    end: "start" | "end",
+    value: number,
+  ): void => {
+    const next = moveSpanEnd(span, end, value, range);
+    // A tuple is rebuilt on every interaction, so `Object.is` cannot see an
+    // unchanged span: an arrow at a bound or a press on a thumb reported the
+    // value the control already held. Report only a real move.
+    if (next.start !== span.start || next.end !== span.end) {
+      state.set(spanTuple(next));
+    }
+  };
   return renderRangeSlider(
     props,
     theme,
@@ -782,7 +796,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
         else thumbIds.current.set(index, instance.id);
       },
       onPointerDown: (event) => {
-        if (props.disabled === true) return;
+        if (props.disabled === true || !primaryButton(event)) return;
         const span = spanOf(state.value.current, range);
         Option.match(
           pointerOf(
