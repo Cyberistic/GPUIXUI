@@ -1073,6 +1073,16 @@ startup and shared. `bodyStrong` is its own role, so a brand that changes the
 body size names it too — the pair is one emphasis at one size, and
 `invalidNumbers` reports a strong role that does not follow as `emphasis`.
 
+**An override reaches colour everywhere and geometry where a component reads it.**
+A role resolves through the theme in both packages. A size, radius or type step
+reaches the primitives' recipes and the geometry the components package measures
+in `style` — a control's `controlHeight`, a row's `rowHeight`, a circle's
+`radius.full`, a drawer's offsets — while that package's resting recipes keep
+shadcn's fixed metrics (ADR 0006), so a `Card` keeps the 8px corner its recipe names until the caller
+names one in `className` or `style`. A brand that retunes the spacing or radius
+scale should check the surface it meant to move, and the catalogue's §Theme API
+records the same split.
+
 A brand may change any value but should not remove roles: every component
 expects the full role set. A theme restored from storage can still be missing a
 role it predates — the library adds roles additively. That is a report, not a

@@ -3252,6 +3252,24 @@ No runtime schema: themes authored in TypeScript are trusted at compile time.
 A theme loaded from a file or URL is unknown input and must be decoded by the
 application that owns that boundary.
 
+#### What an override reaches
+
+A theme's **colours** reach every component in both packages: a recipe's
+`bg-card` and `text-foreground` resolve through `theme.colors` (`ROLE` in
+`packages/tw/src/utilities.ts`), so a role a brand repaints repaints every
+surface that names it. The **numbers** are split. The primitives' recipes resolve
+height, side, padding, gap and type from the theme, so a `typography`, `spacing`
+or `radius` override resizes and retypes them. The components package compiles
+its resting recipe against `@gpuixui/tw`'s default registry — shadcn's fixed
+metrics (`px-4` = 16, `rounded-xl` = 12, `text-sm` = 14/20) — and reads the theme
+for the geometry it measures in `style`: a control's `controlHeight`, a row's
+`rowHeight`, a circle's `radius.full`, a drawer's offsets, a pagination's padding.
+So a brand that retunes `radius.md` sees its primitives round differently while a
+`Card` keeps the 8px corner its recipe names unless the caller overrides it in
+`className` or `style`. That is a deliberate decision (ADR 0006, `packages/components/README.md`
+§Styling), not a missed token: the fixed table is what keeps those recipes
+diffable against shadcn. `override-scope.test.ts` reads both halves.
+
 ### Persisted choices
 
 Seven unions are choices a consumer stores — a settings row, a URL parameter, a
