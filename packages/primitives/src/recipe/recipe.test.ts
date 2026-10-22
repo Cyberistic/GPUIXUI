@@ -21,7 +21,12 @@
 
 import { describe, expect, it } from "vitest";
 import type { StyleDesc } from "@gpuix/react";
-import { contrastFloors, contrastRatio, darkTheme, lightTheme } from "@gpuixui/tokens";
+import {
+  contrastFloors,
+  contrastRatio,
+  darkTheme,
+  lightTheme,
+} from "@gpuixui/tokens";
 import type { ControlSize } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import {
@@ -179,8 +184,9 @@ describe("Input recipe", () => {
       const painted = mergeStyle(resolved.style, resolved.invalid);
       const fill =
         painted.backgroundColor ?? expect.fail("the invalid field had no fill");
-      expect(contrastRatio(theme.colors.inputForeground, fill) ?? 0)
-        .toBeGreaterThanOrEqual(contrastFloors.body);
+      expect(
+        contrastRatio(theme.colors.inputForeground, fill) ?? 0,
+      ).toBeGreaterThanOrEqual(contrastFloors.body);
       // The premise: the fill the recipe used to paint cannot carry the value.
       expect(
         contrastRatio(theme.colors.inputForeground, theme.colors.destructive) ??

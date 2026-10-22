@@ -13,7 +13,12 @@ import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { contrastFloors, contrastRatio, darkTheme, lightTheme } from "@gpuixui/tokens";
+import {
+  contrastFloors,
+  contrastRatio,
+  darkTheme,
+  lightTheme,
+} from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton, type ButtonState } from "./Button.js";
 import type { ButtonVariant } from "../core/variants.js";
@@ -122,8 +127,7 @@ describe("Button", () => {
       );
       // The premise: the role it replaced cannot carry a control's shape.
       expect(
-        contrastRatio(theme.colors.border, theme.colors.background) ??
-          Infinity,
+        contrastRatio(theme.colors.border, theme.colors.background) ?? Infinity,
       ).toBeLessThan(contrastFloors.boundary);
     });
   });
