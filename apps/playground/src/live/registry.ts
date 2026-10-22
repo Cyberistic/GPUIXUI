@@ -330,6 +330,12 @@ export const liveRegistry = [
       "Modal: the shipped ConfirmDialog holds Cancel's focus, reports a confirm once, cancels on Enter and Escape, and returns focus to the app's opener",
     capability: "modal",
   },
+  {
+    id: "validation-lifecycle",
+    title:
+      "Input: the shipped Field submits on Enter, paints the schema's message and the destructive role when invalid, keeps the focus, and clears both on a valid value",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

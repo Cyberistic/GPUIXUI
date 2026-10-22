@@ -37,8 +37,9 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-49 probes a real window can prove, of which thirteen mount shipped
-`@gpuixui/components` (the dialog and its fade, the confirmation flow, the menu,
+50 probes a real window can prove, of which fourteen mount shipped
+`@gpuixui/components` (the dialog and its fade, the confirmation flow, the
+field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
 combobox and the modal focus rule), five mount
@@ -2760,6 +2761,48 @@ to the confirm event — a caller that treats a dismissal as confirmation — fa
 confirms=0 closes=1", got "…confirms=1 closes=1"`). Captures:
 `.artifacts/live/confirm-{open,cancelled,accepted,escaped}.png`.
 
+### `validation-lifecycle` — measured on 0.11.0 here
+
+The **validation** half of MISSION's "input update/validation": `text-input`
+measures the update, and this measures what a window does with an invalid value.
+`Field` never validates a keystroke — it paints the `error` its caller hands it —
+so the probe is the caller: the shipped `validate` runs when the field submits
+(through the host's `onSubmit`, the Enter path) and the schema's own `message`
+becomes the field's message. Every check reads something a declared style cannot
+promise: the text the field swapped in, the focus the submit left alone, and the
+destructive role **counted in the frame**.
+
+| Step | Measurement |
+| ---- | ----------- |
+| valid | `error=none applied=none submits=0`; the field paints its description and **no** pixel of the destructive role |
+| submit empty | `error=Use lowercase letters, numbers and single hyphens applied=none submits=1`; the message is the pattern's own wording, it **replaces** the description, the focus stays on `validation-input`, and the invalid edge and message paint the destructive role |
+| type `design`, Enter | `error=none applied=design submits=2`; the description is back and the destructive pixels are **gone** |
+| type a space, Enter | `error=… applied=design submits=3` — the value the field kept is what the next submit validates, and the focus is still in the field |
+
+15 checks, `--only validation-lifecycle`, green on 0.11.0 (~6 s). Fixture:
+`src/live/validation.ts` — the field/input/readout ids, the `WorkspaceSlug`
+pattern and its `message`, `submitSlug` (the shipped `validate` at the app's
+submit boundary, as `field.mdx` documents) and the readout.
+`validation.test.ts` (6 cases) holds the premise: the empty field and a
+separator-breaking value earn the pattern's message, a single word and
+hyphen-joined words pass, the readout prints every field, and the description
+cannot contain the message (or the "cleared" checks would read the description
+as the message).
+
+Negative controls measured, exit `1` each and restored green: validating
+`Schema.String` instead of the pattern fails `an empty submit paints the schema's
+own message` (`expected "error=Use lowercase letters…", got "error=none
+applied= submits=1"`), and counting the `foreground` role instead of the
+destructive one fails `a valid field paints none of the destructive role`
+(`expected 0, got 1016`). The second is why the paint check is measured both
+ways: a count that never reaches zero would pass an invalid frame and a valid
+one alike.
+
+Limitation, stated rather than implied: `FieldError` carries `role="alert"`, and
+a window's automation protocol has no accessibility verb — the role is proven
+offscreen by `a11y-tree`, not by this probe. Captures:
+`.artifacts/live/validation-{valid,rejected,accepted}.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -2872,7 +2915,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (49/49), with a written report and screenshots.
+  (50/50), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

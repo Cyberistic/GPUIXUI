@@ -25,6 +25,7 @@ import * as Str from "effect/String";
 import {
   extendTheme,
   keyboardFocusRing,
+  statusTone,
   textStyle,
   type FontSource,
   type PlatformName,
@@ -55,6 +56,8 @@ import {
   DialogTitle,
   DialogTrigger,
   DropdownMenu,
+  Field,
+  FieldInput,
   List,
   ListItem,
   ListItemTitle,
@@ -249,6 +252,15 @@ import {
   OUTER_VIEWPORT,
 } from "./nested-scroll.js";
 import { REVIEWERS } from "./combobox.js";
+import {
+  VALIDATION_DESCRIPTION,
+  VALIDATION_FIELD,
+  VALIDATION_INPUT,
+  VALIDATION_MESSAGE,
+  VALIDATION_READOUT,
+  submitSlug,
+  validationReadout,
+} from "./validation.js";
 import {
   CONFIRM_ACCEPT,
   CONFIRM_CANCEL,
@@ -854,6 +866,81 @@ const TextInputProbe = (): ReactNode => {
         </text>
       </div>
     </PrimitiveThemeProvider>
+  );
+};
+
+/**
+ * The shipped `Field` with a schema-backed message the caller owns.
+ *
+ * `Field` never validates on a keystroke — it paints the `error` it is handed —
+ * so the probe *is* the caller: `submitSlug` runs the package's `validate` when
+ * the field submits, and the field swaps its description for the schema's own
+ * message. What a window proves and a `TestRenderer` cannot: `Enter` in the
+ * field submits through the host, the focus stays in the field, and the invalid
+ * message is paint (counted in the frame) rather than a declared style.
+ */
+const ValidationProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [slug, setSlug] = useState("");
+  const [error, setError] = useState(Option.none<string>());
+  const [applied, setApplied] = useState(Option.none<string>());
+  const [submits, setSubmits] = useState(0);
+
+  /** The caller's half: validate on submit, and record what it accepted. */
+  const submit = (): void => {
+    setSubmits((count) => count + 1);
+    const message = submitSlug(slug);
+    setError(message);
+    if (Option.isNone(message)) setApplied(Option.some(slug));
+  };
+
+  return (
+    <div
+      testId="validation-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 520,
+          padding: theme.spacing.xl,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The shipped Field: validate on submit, one message at a time.
+        </text>
+        <Field
+          label="Workspace URL"
+          description={VALIDATION_DESCRIPTION}
+          error={Option.getOrUndefined(error)}
+          testId={VALIDATION_FIELD}
+        >
+          <FieldInput
+            testId={VALIDATION_INPUT}
+            placeholder="design-system"
+            value={slug}
+            onChange={(event) => setSlug(event.value ?? "")}
+            onSubmit={submit}
+          />
+        </Field>
+        <Readout testId={VALIDATION_READOUT}>
+          {validationReadout(error, applied, submits)}
+        </Readout>
+      </div>
+    </div>
   );
 };
 
@@ -3288,6 +3375,128 @@ const textInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "submits=1",
     );
     yield* ctx.host.capture("typed");
+  });
+
+/**
+ * Validates a shipped `Field` on submit and reads the invalid state back.
+ *
+ * MISSION names "input update/validation": `text-input` measures the update,
+ * and this measures validation as a window sees it. The caller owns the rule
+ * (`submitSlug`), the field paints `error`, and every check reads something a
+ * declared style cannot promise — the message text the field swapped in, the
+ * focus the submit left alone, and the destructive role counted in the frame.
+ */
+const validationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(VALIDATION_INPUT);
+    const destructive = yield* ctx.expectSome(
+      "the palette names the destructive text role",
+      Option.fromNullishOr(
+        Pixels.hexToRgba(statusTone(palettes.dark, "destructive").foreground),
+      ),
+    );
+
+    yield* ctx.expectEqual(
+      "the field starts valid and records nothing",
+      yield* ctx.host.text(VALIDATION_READOUT),
+      "error=none applied=none submits=0",
+    );
+    yield* ctx.expectContains(
+      "a valid field paints its description",
+      yield* ctx.host.text(VALIDATION_FIELD),
+      VALIDATION_DESCRIPTION,
+    );
+    yield* ctx.host.capture("validation-valid");
+    yield* ctx.expectEqual(
+      "a valid field paints none of the destructive role",
+      yield* paintedPixels(ctx, "validation-valid", destructive),
+      0,
+    );
+
+    // Submit the empty field: the shipped `validate` runs in the caller, and a
+    // failed submit must not move the reader out of the field they are fixing.
+    yield* ctx.host.focusElement(VALIDATION_INPUT);
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an empty submit paints the schema's own message",
+      yield* ctx.host.text(VALIDATION_READOUT),
+      `error=${VALIDATION_MESSAGE} applied=none submits=1`,
+    );
+    const rejected = yield* ctx.host.text(VALIDATION_FIELD);
+    yield* ctx.expectContains(
+      "the message reaches the field's own message slot",
+      rejected,
+      VALIDATION_MESSAGE,
+    );
+    yield* ctx.expectEqual(
+      "the message replaces the description rather than stacking",
+      Str.includes(VALIDATION_DESCRIPTION)(rejected),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "a failed submit leaves the focus in the field",
+      yield* focusedId(ctx),
+      VALIDATION_INPUT,
+    );
+    yield* ctx.host.capture("validation-rejected");
+    yield* ctx.expectEqual(
+      "the message and the invalid edge paint the destructive role",
+      (yield* paintedPixels(ctx, "validation-rejected", destructive)) > 0,
+      true,
+    );
+
+    // A usable slug: the next submit clears the message and records the value.
+    yield* ctx.host.key("d");
+    yield* ctx.host.key("e");
+    yield* ctx.host.key("s");
+    yield* ctx.host.key("i");
+    yield* ctx.host.key("g");
+    yield* ctx.host.key("n");
+    // The typing reaches React as a state update, so the submit that follows
+    // must see the rendered value rather than the closure's.
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a valid submit clears the message and records the slug",
+      yield* ctx.host.text(VALIDATION_READOUT),
+      "error=none applied=design submits=2",
+    );
+    const accepted = yield* ctx.host.text(VALIDATION_FIELD);
+    yield* ctx.expectContains(
+      "the field paints its description again",
+      accepted,
+      VALIDATION_DESCRIPTION,
+    );
+    yield* ctx.expectEqual(
+      "the cleared field paints none of the destructive role",
+      Str.includes(VALIDATION_MESSAGE)(accepted),
+      false,
+    );
+    yield* ctx.host.capture("validation-accepted");
+    yield* ctx.expectEqual(
+      "the message's pixels are gone with it",
+      yield* paintedPixels(ctx, "validation-accepted", destructive),
+      0,
+    );
+
+    // A trailing space is the last case: the value the field kept is what the
+    // next submit validates, so the failure is about content, not focus.
+    yield* ctx.host.key("space");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.key("enter");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a trailing space fails the next submit, and the last applied slug stays recorded",
+      yield* ctx.host.text(VALIDATION_READOUT),
+      `error=${VALIDATION_MESSAGE} applied=design submits=3`,
+    );
+    yield* ctx.expectEqual(
+      "the rejected field still holds the focus",
+      yield* focusedAfterPaint(ctx),
+      VALIDATION_INPUT,
+    );
   });
 
 const checkboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
@@ -13118,5 +13327,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "confirm-dialog-lifecycle",
     view: () => <ConfirmProbe />,
     steps: confirmSteps,
+  },
+  "validation-lifecycle": {
+    id: "validation-lifecycle",
+    view: () => <ValidationProbe />,
+    steps: validationSteps,
   },
 };
