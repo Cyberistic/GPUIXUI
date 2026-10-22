@@ -26,6 +26,19 @@ export interface IconProps {
 }
 
 /**
+ * A name worth publishing, or `undefined` for a decorative icon.
+ *
+ * An empty or whitespace-only label must not promote the icon: `role="img"`
+ * with no name is an unnamed image in the tree — a worse announcement than
+ * decoration. The primitives package owns the same rule (`accessibleName`), but
+ * importing it here would invert the dependency — primitives is built on icons.
+ */
+const iconLabel = (label: string | undefined): string | undefined => {
+  const trimmed = label?.trim();
+  return trimmed === undefined || trimmed === "" ? undefined : trimmed;
+};
+
+/**
  * A single monochrome icon.
  *
  * GPUix renders `SvgProps.source` — raw markup — natively, so an icon is data
@@ -40,6 +53,7 @@ export const Icon = ({
   testId,
 }: IconProps): ReactElement<SvgProps> => {
   const pixels = iconPixels(size);
+  const named = iconLabel(label);
   const style: NonNullable<SvgProps["style"]> = {
     width: pixels,
     height: pixels,
@@ -51,8 +65,8 @@ export const Icon = ({
   return (
     <svg
       source={icons[name]}
-      role={label === undefined ? "presentation" : "img"}
-      aria-label={label}
+      role={named === undefined ? "presentation" : "img"}
+      aria-label={named}
       testId={testId}
       style={style}
     />

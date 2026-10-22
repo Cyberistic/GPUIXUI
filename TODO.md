@@ -1919,6 +1919,7 @@ a workaround for two live sessions sharing one worktree; see
       same-colour control, and both differ — no defect found, a measured guard on
       the one `fill` glyph; `docs/icon.mdx` §Verification and the Icons row name
       both shapes. 205 runtime
+`[x]` `packages/icons`: a **blank label published an unnamed image** — `Icon` promoted any defined `label` to `role="img"` verbatim, so `label=""` produced an image node with no name and `label="  Search  "` published its padding — the empty-name state every name site in `packages/primitives` already avoids through `accessibleName`, and the one place a caller trying to *add* an announcement gets a worse tree than decoration. The name now goes through the same rule (trimmed; blank stays decorative), held by `Icon.test.ts`'s `keeps a blank label decorative instead of naming nothing` and `trims the name it publishes`; both directions measured (`expected 'img' to be 'presentation'` and `expected '  Search  ' to be 'Search'`). Docs in `docs/icon.mdx` §Accessibility/§API and the `COMPONENTS.md` Icons row.
 `[x]` `packages/primitives`: an **indeterminate `Progress` never visibly moved** —
       the track laid its segments out as blocks, so the moving lead's declared
       width advanced every step while the fill's **painted** `x` stayed at the

@@ -10,10 +10,11 @@ import { ICON_SIZES } from "./sizes.js";
  *
  * `Icon` is a pure function of its props — it renders no children and holds no
  * state — so asserting on the element it *returns* is a real behavioural test,
- * not a snapshot: it catches the two mistakes that matter. A decorative icon
+ * not a snapshot: it catches the three mistakes that matter. A decorative icon
  * that announces itself as an image pollutes the accessibility tree for every
- * screen reader user; an icon that does not disable pointer events eats the
- * click meant for the button around it.
+ * screen reader user; a blank label that promotes one publishes an unnamed
+ * image, which is worse than decoration; and an icon that does not disable
+ * pointer events eats the click meant for the button around it.
  *
  * There is no renderer in this package's own suite: `Icon` is a pure function,
  * so these cases assert on the element it returns and claim no painted result.
@@ -39,6 +40,30 @@ describe("Icon", () => {
     });
     expect(props.role).toBe("img");
     expect(props["aria-label"]).toBe("Validation failed");
+  });
+
+  it("keeps a blank label decorative instead of naming nothing", () => {
+    const empty = render({ name: "warning", color: "#123456", label: "" });
+    expect(empty.props.role).toBe("presentation");
+    expect(empty.props["aria-label"]).toBeUndefined();
+
+    const padded = render({
+      name: "warning",
+      color: "#123456",
+      label: "   ",
+    });
+    expect(padded.props.role).toBe("presentation");
+    expect(padded.props["aria-label"]).toBeUndefined();
+  });
+
+  it("trims the name it publishes", () => {
+    const { props } = render({
+      name: "search",
+      color: "#123456",
+      label: "  Search  ",
+    });
+    expect(props.role).toBe("img");
+    expect(props["aria-label"]).toBe("Search");
   });
 
   it("paints the requested geometry and tint", () => {
