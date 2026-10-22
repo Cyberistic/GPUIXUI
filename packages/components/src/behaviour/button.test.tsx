@@ -312,6 +312,33 @@ describe("Button", () => {
     );
   });
 
+  it("keeps the measured wash on an action with no fill", () => {
+    // A ghost action rests on the surface behind it, so its pointer states are
+    // the theme's `hover` / `active` washes. This is the case the outlined
+    // action's fix must not reach: deriving a fill for the ghost would paint an
+    // opaque button under the pointer (`filledHover(theme, "secondary")`) where
+    // the surface is meant to show through.
+    const button = renderComponent(
+      <Button testId="button" variant="ghost">
+        Cancel
+      </Button>,
+    );
+
+    hoverCentreOf(button, "button");
+
+    const style = button.renderer.findByTestId("button")?.style;
+
+    button.unmount();
+
+    expect(style?.backgroundColor).toBeUndefined();
+    expect(style?.hover).toMatchObject({
+      backgroundColor: darkTheme.colors.hover,
+    });
+    expect(style?.active).toMatchObject({
+      backgroundColor: darkTheme.colors.active,
+    });
+  });
+
   it("paints a secondary action's pointer step in a fill that changes", () => {
     // The bug: the outlined action swapped its fill for the `hover` / `active`
     // washes, and in several shipped styles that wash *is* the `secondary`

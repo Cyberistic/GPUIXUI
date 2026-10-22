@@ -127,8 +127,8 @@ const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc => ({
       ...keepLabel(),
     })),
     Match.when("ghost", () => ({
-      hover: { backgroundColor: filledHover(theme, "secondary") },
-      active: { backgroundColor: filledPressed(theme, "secondary") },
+      hover: { backgroundColor: theme.colors.hover },
+      active: { backgroundColor: theme.colors.active },
     })),
     Match.exhaustive,
   ),
