@@ -1,0 +1,74 @@
+---
+title: Toolbar
+description: A horizontal action strip with a roving tab stop and an overflow menu.
+---
+
+`Toolbar` is a horizontal action strip: `role="toolbar"`, one tab stop that roves
+between actions, arrow-key movement, grouped actions and an overflow menu when
+the strip exceeds `max`. The runtime reserves no titlebar, so the strip owns its
+row (`docs/gpuix-capabilities.md`, "Toolbars").
+
+## Anatomy
+
+```
+[Open] [Save] │ [Copy] [Link] │ [Image] [List] [Code]  [⋯]
+─────group──── ─────group───── ─────────group────────   ───
+                                     ↑ visible up to max   ↑ overflow trigger
+```
+
+A separator falls **between** groups (actions that share a `group` label are
+adjacent). When the action count exceeds `max`, the tail overflows into a menu
+behind the ellipsis trigger, which takes the last visible slot.
+
+## Usage
+
+```tsx
+import { Toolbar, type ToolbarAction } from "@gpuixui/shell";
+
+const actions: ReadonlyArray<ToolbarAction> = [
+  { id: "open", label: "Open", icon: "file", group: "file" },
+  { id: "save", label: "Save", icon: "download", group: "file" },
+  { id: "copy", label: "Copy", icon: "copy", group: "edit" },
+  { id: "link", label: "Link", icon: "link", group: "edit" },
+];
+
+<Toolbar label="Document" max={5} actions={actions} onAction={(id) => run(id)} />;
+```
+
+The runnable build is `examples/toolbar.example.tsx`.
+
+## Roving tab stop
+
+The strip is **one** stop in the tab order. Tab reaches the first enabled
+action; Left/Right move the stop (and the focus) between actions, wrapping and
+skipping disabled ones. Enter or Space activates the focused action.
+
+## API
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Toolbar` | `div` with `role="toolbar"` | `label?`, `actions` (required), `max?`, `onAction?`, `className?` |
+| `ToolbarAction` | one action | `id`, `label`, `icon?`, `group?`, `disabled?` |
+
+`onAction(id)` fires when an action is activated, from the strip or the overflow
+menu. The overflow split and the roving arithmetic — `splitOverflow`,
+`initialRoving`, `moveRoving` — are exported from `@gpuixui/shell` as pure
+functions.
+
+## Limitations
+
+- `max` is a **count** of visible slots, not a measured width. A width budget is
+  the caller's to compute (`max = Math.floor(width / 44)`), the same rule the
+  [Breadcrumbs](/docs/components/breadcrumb) collapse uses.
+- The overflow menu's rows are click- and Escape-operated; they do not re-run
+  the strip's arrow-key roving.
+
+## Verification
+
+`src/toolbar/logic.test.ts` (pure) holds the overflow and roving contracts: the
+split reserves the last slot for the overflow trigger, an arrow past the end
+wraps, a move skips a disabled action, and an all-disabled strip has no tab stop.
+
+```sh
+nub run --filter @gpuixui/shell test
+```

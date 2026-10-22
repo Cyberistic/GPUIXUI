@@ -1,0 +1,36 @@
+{
+  "name": "@gpuixui/shell",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Application chrome — menu bars, status bars and toolbars — rendered by GPUix through React.",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./examples": "./examples/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gpuix/react": "catalog:",
+    "@gpuixui/icons": "workspace:*",
+    "@gpuixui/keyboard": "workspace:*",
+    "@gpuixui/primitives": "workspace:*",
+    "@gpuixui/tokens": "workspace:*",
+    "@gpuixui/tw": "workspace:*",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@gpuixui/config": "workspace:*",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
