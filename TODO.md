@@ -2959,6 +2959,41 @@ a workaround for two live sessions sharing one worktree; see
 
 `[x]` `packages/components`: the **chosen colour swatch painted its selection mark in its own colour** — the only mark was a `foreground` border, and `foreground` is the last of the six default swatches, so choosing it drew the selection in the swatch's own colour (**1.00:1**) and a sighted reader could not see which colour they had picked; `aria-selected` carried the state for assistive technology only. The chosen cell now carries a two-tone pip (the page fill inside the body ink, a measured body pair) beside the strong edge, so at most one of the three marks can disappear into an arbitrary swatch, including a caller's own. `color-picker.test.tsx`'s `marks the selected swatch in a role the swatch cannot swallow` chooses every default swatch in both shipped themes and holds the best of the three marks to the 3:1 a non-text indicator needs, and also fails when a swatch is marked before it is chosen. Both directions measured: dropping the pip fails naming every swatch, and a one-role pip fails at 1.00 on the foreground swatch and 1.90/2.45/2.83 on the others. Docs in `docs/color-picker.mdx` §Accessibility/§Verification and the `COMPONENTS.md` row (8 → 9 native tests)
 
+`[x]` `packages/primitives`: **`Toggle` had no busy state** — a mode awaiting a
+      request was pressable, so a second press could start the work twice, and
+      nothing announced that the action was in flight (the page, the inventory
+      and the catalogue all recorded "no `loading` state"). `loading` now renders
+      a `Spinner` in the leading slot, sets `aria-description="Loading"`, refuses
+      every press and key while keeping the tab stop, and reports `disabled` to
+      the `style` callback — the contract `Button` just settled.
+      `toggleSpinnerAccent(pressed, disabled)` gives the dots the face's own
+      on-colour: `on-accent` on the pressed accent face (a brand dot on it is the
+      1.00:1 class), `on-disabled` when a pressed toggle is disabled and wears
+      the neutral pair, and `primary` at rest. `SPINNER_ACCENTS` gains
+      `on-accent` so the accent face and the widget agree, and `reducedMotion`
+      holds the lit dot. Proof: `Toggle.test.tsx` (4 cases: the spinner +
+      announced busy + refused Enter/Space, the three accents, the motion
+      preference, the style state), `loading.test.ts`'s `on-accent` mapping, and
+      `runtime/toggle.runtime.test.tsx` (a real click and both keys on a busy
+      toggle change nothing and the dots paint `accentForeground` in a window).
+      Direction measured: with `loading` ignored, all four unit cases fail by
+      name. Docs in `docs/toggle.mdx`
+      §API/§Theming/§Limitations/§Verification, `docs/spinner.mdx` §API, the
+      `Toggle` inventory record and its `COMPONENTS.md` row.
+
+`[x]` `packages/primitives`: **a busy `Button` told its `style` callback
+      `disabled: false`** — the doc contract says "`loading` is not a state — a
+      busy button reports `disabled`, because it refuses activation", but
+      `renderButton` handed `resolveStyle` the `disabled` *prop*, so the one
+      state a caller branches on said the control was pressable while it refused
+      every press and key. The callback now receives `disabled: busy` (the
+      `disabled` prop or `loading`), so a caller styles one state. Proof:
+      `Button.test.tsx`'s `tells a style callback that a busy button is disabled`
+      (the busy report plus an idle control as the negative control) —
+      `expected [ { disabled: false, focused: false } ] to deeply equal
+      [ { disabled: true, focused: false } ]` with the old line restored. Docs:
+      `docs/button.mdx` §Theming states what the flag means.
+
 `[x]` `packages/primitives`: **type-ahead in the three option groups** — a
       radio, checkbox or toggle group had none: the roving stop answered arrows
       and Home/End only, so a reader who knew an option's name had to arrow to it
@@ -2983,6 +3018,25 @@ a workaround for two live sessions sharing one worktree; see
       `docs/radio-group.mdx`/`docs/checkbox-group.mdx`/`docs/toggle-group.mdx`
       (§Keyboard/§Limitations/§Verification), the three `COMPONENTS.md` rows and
       the three `inventory.ts` records (the "no type-ahead" limitations are gone).
+
+`[x]` `packages/components`: the focus cue was missing on four focusable parts and
+      painted on parts that could not act. A colour swatch, a chip's remove
+      control, the command palette's field and the combobox trigger/search field
+      are all `role="button"`/`<input>` tab stops that declared no `focusVisible`
+      outline, so a keyboard reader saw nothing; meanwhile the local
+      Button/IconButton, tabs, list rows, accordion headers, InlineEdit,
+      HotkeyRecorder, ColorPicker and DatePicker's days declared the ring
+      unconditionally, and a control disabled while focused keeps the runtime's
+      focus, so the ring stayed painted on a part that refuses every key. The
+      seam gains `controlRing(theme, { disabled, invalid })` (the components'
+      counterpart of primitives' helper), every focusable part adopts it, and
+      `src/behaviour/focus-ring.test.tsx` grows from 5 to 8 cases: two hold the
+      ring on the four missed cues, one holds it off fifteen disabled parts.
+      Both directions measured: reverting one cue and the Button's helper fails
+      three cases by name (`picker-swatch-0 declares the outline`,
+      `header declares no outline while it cannot act`); restored, 8/8.
+      Docs in `docs/component-api.md` §3, the four package pages and the
+      `COMPONENTS.md` Focus state/Color picker/Tag/Comboboxes/Command menus rows
 
 ## Blockers (project-level, with evidence)
 
