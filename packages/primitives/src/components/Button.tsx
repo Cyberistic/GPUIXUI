@@ -199,7 +199,9 @@ export const renderButton = (
   const style = mergeStyle(
     shape,
     resolveStyle(callerStyle, {
-      disabled: disabled === true,
+      // A busy button refuses every activation, so that is what its callback is
+      // told: `loading` is not a second state a caller has to handle twice.
+      disabled: busy,
       focused: focus.focused,
     }),
   );

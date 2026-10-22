@@ -200,6 +200,11 @@ role decision, so a callback is the last word on a property the recipe also sets
 <Button style={(state) => ({ opacity: state.focused ? 1 : 0.9 })}>Save</Button>
 ```
 
+`disabled` is the state that **refuses activation**, not the prop of that name:
+a `loading` button reports `disabled: true` too, because it blocks every press
+and key. There is no separate `loading` flag to branch on — see
+`Button.test.tsx`'s "tells a style callback that a busy button is disabled".
+
 Inside an attached `ButtonGroup` the button squares its own corners: the group
 owns the silhouette and its radius plus `overflow: hidden` clip the two ends.
 Your `style` still merges last, so an end you want rounded is yours to paint.

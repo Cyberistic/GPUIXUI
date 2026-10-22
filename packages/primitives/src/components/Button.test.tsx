@@ -430,6 +430,39 @@ describe("Button", () => {
     );
   });
 
+  it("tells a style callback that a busy button is disabled, because it refuses activation", () => {
+    // The bug: the callback was handed the `disabled` prop alone, so a button
+    // that was busy but not disabled reported `disabled: false` while refusing
+    // every press and key — the one state a caller styles from was the state
+    // the control was not in.
+    const seen: ButtonState[] = [];
+    renderButton(
+      {
+        loading: true,
+        style: (state) => {
+          seen.push(state);
+          return {};
+        },
+      },
+      testTheme,
+      { focused: false },
+    );
+    expect(seen).toEqual([{ disabled: true, focused: false }]);
+
+    const rested: ButtonState[] = [];
+    renderButton(
+      {
+        style: (state) => {
+          rested.push(state);
+          return {};
+        },
+      },
+      testTheme,
+      { focused: false },
+    );
+    expect(rested).toEqual([{ disabled: false, focused: false }]);
+  });
+
   it("paints a filled action's feedback as an opaque, derived fill", () => {
     // The bug: the hover was a half-alpha lift (`bg-primary/90`), so the
     // surface behind the control showed through — the same action read as two
