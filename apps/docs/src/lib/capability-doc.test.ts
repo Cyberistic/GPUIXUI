@@ -1036,15 +1036,100 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(drops?.workaround).toContain("promptForPaths");
   });
 
-  it("leaves the uncertain rows uncertain", () => {
-    // Exactly the rows no probe has measured stay unverified; promoting one
-    // without evidence would be the confident lie this record exists to prevent.
+  it("leaves no row unverified now that both have an answer", () => {
+    // The verdict vocabulary keeps `unverified` for a gap nothing can measure,
+    // but no row uses it today: `window-backdrop` paints the option and the
+    // typings prove reduced motion absent. A new `unverified` row is therefore a
+    // deliberate change to this case, not something an edit can slip past.
     const unverified = rows
       .filter((row) => row.verdict === "unverified")
       .map((row) => row.label);
-    expect(unverified).toHaveLength(2);
-    expect(unverified.join(" ")).toContain("Window backdrop");
-    expect(unverified.join(" ")).toContain("Reduced-motion");
+    expect(unverified).toEqual([]);
+
+    const retired: ReadonlyArray<readonly [string, string]> = [
+      ["Window backdrop", "supported, with limits"],
+      ["Reduced-motion", "not supported"],
+    ];
+    const wrong = retired.flatMap(([label, verdict]) => {
+      const row = rowFor(label);
+      if (row === undefined) return [`no "${label}" row`];
+      return row.verdict === verdict
+        ? []
+        : [`"${label}" reads "${row.verdict}", not "${verdict}"`];
+    });
+    expect(wrong).toEqual([]);
+  });
+
+  it("records the window backdrop a probe painted, with its two limits", () => {
+    // The row said no probe paints a backdrop, so a workspace plan could not tell
+    // a translucent window from an ignored option. `window-backdrop` painted all
+    // three modes; the row has to carry what it measured and the two facts a
+    // capture cannot show — the blur is composited behind the window, and one
+    // window per process means the modes are separate runs.
+    const backdrop = rowFor("Window backdrop");
+    expect(backdrop?.verdict).toBe("supported, with limits");
+    expect(backdrop?.evidence).toContain("window-backdrop");
+    expect(backdrop?.evidence).toContain("alpha **255**");
+    expect(backdrop?.evidence).toContain("alpha **0**");
+    expect(backdrop?.evidence).toContain("byte-identical");
+    expect(backdrop?.evidence).toContain(
+      "A GPUI application already exists on this thread",
+    );
+    expect(backdrop?.evidence).toContain("rgba(109, 34, 22, 255)");
+    expect(backdrop?.workaround).toContain("unpainted");
+    expect(backdrop?.workaround).toContain("opaque");
+
+    // The row prints the probe's own numbers, so the mode table cannot move
+    // without the record moving with it.
+    const probe = read("apps/playground/src/live/backdrop.ts");
+    expect(probe).toContain('Match.when("opaque", () => 255)');
+    expect(probe).toContain('Match.when("transparent", () => 0)');
+    expect(probe).toContain('Match.when("blurred", () => 0)');
+
+    const page = measuredRow("Window backdrop");
+    expect(
+      page,
+      "the page's measured table has no window-backdrop row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("window-backdrop");
+    expect(page?.[1]).toContain("**255**");
+    expect(page?.[1]).toContain("byte-identical");
+    expect(page?.[2]).toContain("unpainted");
+  });
+
+  it("records reduced motion as a policy the app supplies", () => {
+    // The honest verdict is a measured absence, not an unrun probe: there is no
+    // preference query to call, so the row must say so and name the flag the
+    // library already takes. Both halves are read from sources — the installed
+    // typings for the absence, `@gpuixui/motion` for the workaround.
+    const reduced = rowFor("Reduced-motion");
+    expect(reduced?.verdict).toBe("not supported");
+    expect(reduced?.evidence).toContain("appearance");
+    expect(reduced?.evidence).toContain("prefers");
+    expect(reduced?.evidence).toContain("MotionValue.sample");
+    expect(reduced?.evidence).toContain("reducedMotion");
+    expect(reduced?.workaround).toContain("app owns the policy");
+
+    const typings = read("apps/docs/node_modules/@gpuix/native/index.d.ts");
+    expect(
+      /appearance|prefers|reduc/i.test(typings),
+      "the pinned typings now look like they carry a motion preference — re-measure the row",
+    ).toBe(false);
+
+    const motion = read("packages/motion/src/motion.ts");
+    expect(motion).toContain(
+      "sample(elapsedMs: number, reducedMotion = false)",
+    );
+    expect(read("packages/motion/src/react.ts")).toContain(
+      "reducedMotion?: boolean",
+    );
+
+    const page = typingsRow("Reduced-motion preference");
+    expect(page, "the page has no reduced-motion row").toBeDefined();
+    expect(page?.[1]).toContain("appearance");
+    expect(page?.[2]).toContain("MotionValue.sample");
+    expect(page?.[2]).toContain("reducedMotion");
+    expect(runtimePage).toContain("These seven are");
   });
 
   it("records the cross-pane drag the runtime's event protocol shapes", () => {
@@ -1222,6 +1307,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("frozen-column-lifecycle");
     expect(runtimePage).toContain("dock-focus-lifecycle");
     expect(runtimePage).toContain("header-menu-lifecycle");
+    expect(runtimePage).toContain("window-backdrop");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });

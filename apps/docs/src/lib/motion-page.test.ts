@@ -133,10 +133,16 @@ describe("the motion page", () => {
   });
 
   it("describes reduced motion as the app's policy, not a runtime capability", () => {
-    // The claim is true because the record keeps detection unverified and the
-    // value finishes an active run on the flag. If either changed, the page
-    // would be telling a reader to supply a preference the runtime reads.
-    expect(recordRow("Reduced-motion detection")).toContain("| unverified |");
+    // The claim is true because the record proves the typings publish no
+    // preference query and the value finishes an active run on the flag. If
+    // either changed, the page would be telling a reader to supply a preference
+    // the runtime reads.
+    expect(recordRow("Reduced-motion detection")).toContain(
+      "| not supported |",
+    );
+    expect(recordRow("Reduced-motion detection")).toContain(
+      "publishes no preference query",
+    );
     expect(motion).toContain("if (this.active && reducedMotion)");
     expect(motion).toContain("private finish(): void");
 
