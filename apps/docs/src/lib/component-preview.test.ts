@@ -111,6 +111,28 @@ describe("the component previews", () => {
     ).toEqual([]);
   });
 
+  it("says the carousel preview draws the corner the recipe fixes", () => {
+    // The track's `rounded-lg` is the recipe registry's fixed 8px, while the
+    // preview draws the platform radius plus two. Without the note, a reader
+    // switching to a platform whose `radius.md` is 8 believes the preview's
+    // corner is the shipped one.
+    const recipes = read("packages/tw/src/recipes.ts");
+    const at = recipes.indexOf("export const CAROUSEL_TRACK =");
+    expect(
+      at === -1 ? "" : recipes.slice(at).split("\n").slice(0, 2).join("\n"),
+      "the carousel track lost its fixed radius step",
+    ).toContain("rounded-lg");
+
+    const css = read("apps/docs/src/styles/demos.css");
+    const carousel = css.slice(css.indexOf("/* ---- carousel:"));
+    expect(carousel).toContain("border-radius: calc(var(--radius) + 2px)");
+
+    const strategy = read("docs/preview-strategy.md");
+    expect(strategy).toContain("carousel's track corner");
+    expect(strategy).toContain("calc(var(--radius) + 2px)");
+    expect(strategy).toContain("fixed 8px");
+  });
+
   it("says the overlay preview draws a corner the native surface does not", () => {
     // The native dialog compiles `rounded-4xl` (a fixed 32px) and paints the
     // theme's `elevation.lg` beside the recipe's ring, while `.gx-dialog` draws

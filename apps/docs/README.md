@@ -45,6 +45,7 @@ components/accordion.mdx     Curated: the two modes, the chevron swap, the unmou
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
 components/button.mdx        Curated: previews, install, source (the package page keeps the API)
 components/card.mdx          Curated: the three treatments, the recipe's fixed metrics
+components/carousel.mdx      Curated: discrete stepping, the dot pill and the kept slides
 components/checkbox.mdx      Curated: the three states, the 24px target, the mixed parent
 components/combobox.mdx      Curated: the ranked list, the disabled row, the create row
 components/command-menu.mdx  Curated: the palette's matcher, group ranking and keys
@@ -98,6 +99,8 @@ src/components/docs/preview-surface.tsx   A preview carrying the resolved theme'
 src/components/docs/demos.tsx             The browser renderings and their source strings
 src/components/docs/checkbox-preview.ts  The checkbox preview's group arithmetic and keyboard edges
 src/components/docs/checkbox-demo.tsx     The checkbox's two browser renderings and their source strings
+src/components/docs/carousel-preview.ts   The carousel preview's clamp, loop rule and dot metrics
+src/components/docs/carousel-demo.tsx     The carousel's two browser renderings and their source strings
 src/components/docs/combobox-preview.ts The combobox preview's ranking, highlight and selection model
 src/components/docs/combobox-demo.tsx     The combobox's two browser renderings and their source strings
 src/components/docs/drawer-preview.ts     The drawer preview's edge box, dismiss stack and filter rules

@@ -106,6 +106,7 @@ describe("the package docs collections", () => {
     "/docs/components/accordion",
     "/docs/components/alert",
     "/docs/components/card",
+    "/docs/components/carousel",
     "/docs/components/combobox",
     "/docs/components/command-menu",
     "/docs/components/confirm-dialog",

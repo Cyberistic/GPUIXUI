@@ -115,9 +115,11 @@ report. `indicatorRoles` is the closed set a mark may use, and
 `indicatorFailures(theme)` holds every one of them to the 3:1 non-text floor
 (`4.5:1` in a high-contrast theme) on the {indicatorSurfaces.length} strips
 `indicatorSurfaces` names
-(`background`, `card`, `popover`, `muted`, `hover`, `active`, `input`): the page,
-a card, a popover, a muted toolbar, the two washes a row tints under the pointer
-and a field's own fill, which carries its caret.
+(`background`, `card`, `popover`, `muted`, `hover`, `active`, `accent`, `selected`, `input`):
+the page, a card, a popover, a muted toolbar, the two
+washes a row tints under the pointer, the `accent` and `selected` fills a menu or
+a combobox row wears with its tick, and a field's own fill, which carries its
+caret.
 
 A **status** mark does not paint the tone's solid fill. That role is a surface
 designed to carry text — light `warning` is a pale amber with near-black text and
@@ -255,6 +257,7 @@ The curated component pages carry a live preview, so the switch repaints real
 shapes rather than only a colour swatch: the
 [Accordion](/docs/components/accordion), [Alert](/docs/components/alert),
 [Button](/docs/components/button), [Card](/docs/components/card),
+[Carousel](/docs/components/carousel),
 [Combobox](/docs/components/combobox),
 [Command menu](/docs/components/command-menu),
 [Confirmation dialog](/docs/components/confirm-dialog),

@@ -100,6 +100,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/card.tsx",
   },
   {
+    file: "carousel.mdx",
+    row: "Carousel",
+    suite: "packages/components/src/behaviour/carousel.test.tsx",
+    shadowed: "packages/components/docs/carousel.mdx",
+    source: "packages/components/src/carousel.tsx",
+  },
+  {
     file: "checkbox.mdx",
     row: "Checkboxes",
     source: "packages/primitives/src/components/Checkbox.tsx",
@@ -1482,6 +1489,81 @@ describe("the curated component pages", () => {
     expect(text).toContain('`pointerEvents: "none"`');
   });
 
+  it("holds the carousel's clamp, its dot pill and its control edge to the source", () => {
+    // A carousel page can drift in four silent ways: it can promise a slide
+    // animation the runtime cannot paint, describe a dot whose state is only a
+    // hue, print a press target smaller than the floor, or teach the decorative
+    // `border` role for a track the recipe paints in `input`. The first three
+    // are read from the painter; the edge is read from the recipe itself.
+    const page = pages.find((candidate) => candidate.file === "carousel.mdx");
+    expect(page, "the carousel page is not in the curated set").toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    const recipes = read("packages/tw/src/recipes.ts");
+
+    // One clamp and one loop rule, shared by the controls, the keys and the dots.
+    expect(source).toContain(
+      "const active = count === 0 ? 0 : Math.min(Math.max(value, 0), count - 1);",
+    );
+    expect(source).toContain("(next + count) % count");
+    expect(source).toContain('display: active ? "flex" : "none"');
+    // The region, its keys and its one roving stop on the active dot.
+    expect(source).toContain('role="group"');
+    expect(source).toContain("aria-label={label}");
+    expect(source).toContain("tabIndex={0}");
+    expect(source).toContain("aria-selected={selected}");
+    expect(source).toContain("tabIndex={selected ? 0 : -1}");
+    expect(source).toContain("Go to slide ${index + 1}");
+    // The drawing: a 24px target around a 6px dot that becomes a pill, in mark
+    // roles, with the drawing taking no press.
+    expect(source).toContain("width: targetSize.minimum");
+    expect(source).toContain("height: targetSize.minimum");
+    expect(source).toContain('pointerEvents: "none"');
+    expect(source).toContain("const DOT_HEIGHT = 6;");
+    expect(source).toContain("const DOT_ACTIVE_WIDTH = 18;");
+    expect(source).toContain("theme.colors.primary");
+    expect(source).toContain("theme.colors.mutedForeground");
+    // The control is pinned to `secondary`, and its chevron is that fill's own
+    // on-colour rather than a role chosen for another fill.
+    expect(source).toContain('const CONTROL_VARIANT = "secondary" as const;');
+    expect(source).toContain("actionOnColor(theme, CONTROL_VARIANT)");
+    // The track's edge is the `input` role the recipe names — and its corner is
+    // the recipe's fixed step, not the theme's radius.
+    const track = recipes.slice(recipes.indexOf("export const CAROUSEL_TRACK ="));
+    expect(track.split("\n").slice(0, 2).join(" ")).toContain("border-input");
+    expect(track.split("\n").slice(0, 2).join(" ")).toContain("rounded-lg");
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("discrete, not sliding");
+    expect(text).toContain("6 × 6px");
+    expect(text).toContain("18 × 6px");
+    expect(text).toContain("24 × 24px");
+    expect(text).toContain("8px");
+    expect(text).toContain("`aria-selected`");
+    expect(text).toContain("no `aria-current`");
+    expect(text).toContain("one roving tab stop");
+    expect(text).toContain("stays mounted");
+    expect(text).toContain("`secondaryForeground`");
+    expect(text).toContain("`filledHover`");
+    expect(text).toContain("`filledPressed`");
+    expect(text).toContain("`input`");
+    // The retracted shapes: a sliding track and a state carried only by colour.
+    expect(text).not.toContain("slides between");
+    expect(text).not.toContain("translates");
+
+    // The preview paints the same decisions from the theme's variables.
+    const css = read("apps/docs/src/styles/demos.css");
+    const carouselCss = css.slice(css.indexOf("/* ---- carousel:"));
+    expect(carouselCss).toContain("border: 1px solid var(--input)");
+    expect(carouselCss).toContain("background: var(--secondary)");
+    expect(carouselCss).toContain("var(--secondary-hover)");
+    expect(carouselCss).toContain("var(--secondary-pressed)");
+    expect(carouselCss).toContain("width: var(--control-height-md)");
+    expect(carouselCss).not.toContain("width: 6px");
+    expect(carouselCss).not.toContain("width: 18px");
+  });
+
   it("holds the form's submit lifecycle and its message block to the source", () => {
     // A form is the one component whose whole behaviour is a lifecycle, so the
     // page's most load-bearing claims are the four a screenshot cannot show: the
@@ -1564,8 +1646,8 @@ describe("the curated component pages", () => {
     expect(source).toContain("renderer?.focusElement?.(instance.id)");
     expect(source).toContain("readOnly={disabled}");
     expect(source).toContain("opacity: disabled ? 0.5 : 1");
-    expect(source).toContain("textHint(");
-    expect(source).toContain("renderHint(");
+    expect(source).toContain("fieldHint(");
+    expect(source).toContain("renderFieldHint(");
     expect(source).toContain('nativeTextTheme(theme, "background")');
     expect(source).toContain('role="button"');
     expect(source).toContain('aria-label="Clear search"');

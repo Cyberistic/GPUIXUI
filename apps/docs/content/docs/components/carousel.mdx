@@ -1,0 +1,245 @@
+---
+title: Carousel
+description: Discrete slide stepping with previous/next controls, a dot per slide and the arrow keys — every slide kept mounted.
+---
+
+`Carousel` steps through a fixed set of slides. It is **discrete, not sliding**:
+GPUix `motion` animates box geometry and opacity only — there is no `transform` —
+and the runtime has no scroll snap, so a translating track is not honestly
+expressible. The component says so rather than drawing a slide it cannot paint.
+
+Every slide stays mounted and only the active one is displayed. That keeps each
+slide's own component state: a form on slide three is still filled in after a
+reader visits slide one and comes back.
+
+<ComponentPreview name="carousel-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Carousel" />
+
+<ComponentSource name="carousel" file="packages/components/src/carousel.tsx" />
+
+## Usage
+
+```tsx
+import {
+  Carousel,
+  CarouselControl,
+  CarouselIndicators,
+  CarouselSlide,
+  CarouselTrack,
+} from "@gpuixui/components";
+import { useState } from "react";
+
+export const WorkspacePreviews = () => {
+  const [index, setIndex] = useState(0);
+
+  return (
+    <Carousel label="Workspace previews" onValueChange={setIndex} value={index}>
+      <CarouselTrack>
+        <CarouselSlide>Overview</CarouselSlide>
+        <CarouselSlide>Activity</CarouselSlide>
+        <CarouselSlide>Members</CarouselSlide>
+      </CarouselTrack>
+      <CarouselControl direction="previous" />
+      <CarouselControl direction="next" />
+      <CarouselIndicators />
+    </Carousel>
+  );
+};
+```
+
+**Declare slides directly inside `CarouselTrack`.** The track numbers its direct
+children, so wrapping them in a component or a fragment gives every slide the
+same index. A part declared outside its parent throws with a message naming the
+part it belongs in, rather than painting a track with no state.
+
+## States
+
+<ComponentPreview name="carousel-states" />
+
+| Piece | Measurement |
+| ----- | ----------- |
+| dot at rest | 6 × 6px |
+| active dot | 18 × 6px pill |
+| dot press target | 24 × 24px |
+| control | the `md` control height of the theme's density |
+| track | the recipe's fixed 8px corner |
+
+The active dot is a **wider pill**, not only a different hue: a state carried by
+colour alone tells a reader who cannot separate the two hues nothing. Both inks
+are mark roles — `primary` for the active dot, `mutedForeground` for the rest —
+and each 6px drawing sits inside the shared 24px press floor with
+`pointerEvents: "none"` on the drawing, so a press in the middle of a dot reaches
+its target.
+
+An edge disables its control unless `loop` is on, and an empty track disables
+both. A disabled control wears the theme's measured `disabled`/
+`disabledForeground` pair rather than a fade, because a fade composites the label
+into whatever is behind it.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Carousel` | the slide index, the loop rule, the region and the arrow keys |
+| `CarouselTrack` | the slide row; reports the slide count |
+| `CarouselSlide` | one slide; displayed only while active |
+| `CarouselControl` | a previous/next action, disabled at an edge |
+| `CarouselIndicators` | one press target per slide, marking the active one |
+
+The root owns the active index and the track reports the count, so the controls,
+the arrow keys and the dots share one clamp and one loop rule. The preview above
+uses all three routes: a control press, an arrow key and a dot press each land on
+the same slide.
+
+`Carousel` is not a tab set: slides are stepped in order, not chosen by their
+labels. Use [Tabs](/docs/components/tabs) when the reader picks a panel by name,
+and [Card](/docs/components/card) for the surface a slide usually contains.
+
+## Keyboard
+
+| Key | Where | Contract |
+| --- | ----- | -------- |
+| `ArrowRight` / `ArrowLeft` | the carousel, or a dot inside it | one slide forward/back, clamped or wrapping by `loop` |
+| `Home` / `End` | the carousel | first / last slide |
+| `Enter` | a focused dot | jumps to that dot's slide on the press |
+| `Space` | a focused dot | jumps on the release; the press is swallowed so the page does not scroll |
+| `Enter` / `Space` | a control | the button contract: `Enter` on the press, `Space` on the release |
+| `Tab` | the region | reaches the carousel once, then the controls, then the dots' single stop |
+
+The root is a tab stop that owns the arrow keys, so it declares the runtime's
+keyboard focus outline at rest. The dots hold **one roving tab stop** on the
+active dot: `Tab` reaches the group once and the arrows move the slide and the
+stop together.
+
+## API reference
+
+### `Carousel`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `label` | `string` | — | the region's accessible name; required |
+| `value` | `number` | — | controlled slide index; omit to let the carousel keep its own |
+| `defaultValue` | `number` | `0` | the opening slide when uncontrolled |
+| `onValueChange` | `(value: number) => void` | none | the next index, only when it changed |
+| `loop` | `boolean` | `false` | wraps past both ends and keeps both controls live |
+| `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `children` | `ReactNode` | none | the track and the controls, directly inside |
+
+### `CarouselTrack`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactNode` | none | the slides, as direct children |
+| `className` | `string` | — | joined after the recipe |
+
+### `CarouselSlide`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactNode` | none | the slide's content |
+| `style` | `StateStyle<CarouselSlideState>` | — | `{ active, index }`, merged last |
+| `className` | `string` | — | joined after the recipe |
+
+### `CarouselControl`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `direction` | `"previous" \| "next"` | — | which way it steps; required |
+| `label` | `string` | `"Previous slide"` / `"Next slide"` | the accessible name |
+| `disabled` | `boolean` | `false` | adds to the edge rule; never removes it |
+
+### `CarouselIndicators`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `label` | `string` | `"Choose a slide"` | the dot group's accessible name |
+| `style` | `StateStyle<CarouselIndicatorsState>` | — | `{ active, count }`, merged last |
+| `className` | `string` | — | joined after the recipe |
+
+`CarouselSlideState` is `{ active, index }` and
+`CarouselIndicatorsState` is `{ active, count }`. Every part also takes the GPUix
+host props (`style`, `testId`, `role`, `aria-*`) and merges `style` last.
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| track | `card` fill, `input` edge |
+| track corner | the recipe's fixed 8px (`rounded-lg`), not the theme's radius |
+| control fill | `secondary` |
+| control label and chevron | `secondaryForeground` |
+| control edge | `borderStrong` |
+| control pointer states | `filledHover` / `filledPressed` from `secondary` |
+| disabled control | `disabled` fill, `disabledForeground` label |
+| active dot | `primary` |
+| resting dot | `mutedForeground` |
+| focus ring | `ring` at `borderWidth.strong`, after Tab only |
+
+The control is pinned to the **`secondary`** variant rather than left to the
+button's default, so the chevron's on-colour and the fill it sits on are one
+decision. The chevron paints `secondaryForeground` through `actionOnColor`, and
+`contrastPairs` measures that pair in every shipped style — a chevron painted
+`secondaryForeground` on `primary` would be 1.42:1 in Windows dark.
+
+The track's edge is the **`input`** role the recipe names, not the decorative
+`border` role, which is the `secondary` fill in both shipped themes. The platform
+switch re-heights the controls with the platform's density and leaves the
+track's fixed 8px corner alone, exactly as it does in the runtime.
+
+## Accessibility and limitations
+
+- The root is a named `group` (`label` is required) and publishes no
+  `aria-roledescription="carousel"`: `@gpuix/native@0.11.0` has none, so the page
+  a screen reader sees is a group of slides, not a carousel.
+- A dot is a button named "Go to slide N" with **`aria-selected`** on the active
+  one: `0.11.0` has no `aria-current`, the substitution Pagination, Stepper and
+  Breadcrumb make. There is no slide-position announcement and no live region.
+- Inactive slides stay in the tree with `display: none`, so they are not
+  announced and their state survives. A heavy slide costs render time on every
+  frame even while hidden.
+- **No slide animation, no swipe and no drag:** the runtime has no transform and
+  no scroll snap, and there is no drag host feature to read a swipe from.
+- No auto-advance, no thumbnails and no lazy loading in this version; the dots
+  are press targets, not a progress indicator.
+- Slides are counted from their direct children, so a wrapper component or a
+  fragment gives every slide the same index.
+- A control's `disabled` prop can disable it anywhere; it cannot re-enable one
+  the edge rule disabled.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the index, the parts, the clamp and the dot drawing |
+| `effect` | `Array` for the dot list |
+| `@gpuix/react` | the host props, the key event and the context |
+| `@gpuix/react/floating` | `mergeStyles` and `resolveStyle` for the state callbacks |
+| `@gpuixui/icons` | the two chevrons |
+| `@gpuixui/tw` | the `CAROUSEL_*` recipes and `cn` |
+
+## Related
+
+- **Tabs** — panels chosen by their labels rather than stepped in order.
+- **Card** — the surface a slide usually contains.
+- **Pagination** — page numbers as targets, when the set is browsed not stepped.
+- **Stepper** — the same index model, for a process rather than a set of views.
+
+## Status
+
+`done` in `COMPONENTS.md` with a **`partial`** runtime verdict: the component is
+whole, while the runtime it is built on has no transform and no scroll snap, so
+the carousel steps instead of sliding. `docs/carousel.mdx` in the package records
+the same four limits.
+
+`src/behaviour/carousel.test.tsx` runs **15 native tests** in the real GPUix
+renderer on `@gpuix/native@0.11.0`: one displayed slide with every slide mounted,
+control stepping, edge clamping, loop wrapping, arrows and Home/End, a controlled
+carousel, region and control naming, the state callback in both themes, the
+chevron's role read back off the renderer, and the dots — one named target per
+slide, a press jumping to its slide, the roving stop following the slide, the
+24px target around the 6px drawing, both inks at the mark floor, and no dots for
+an empty track. `src/behaviour/focus-ring.test.tsx` holds the root's keyboard
+outline.

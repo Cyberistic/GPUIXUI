@@ -9,6 +9,12 @@ import {
   type ReactNode,
 } from "react";
 import {
+  CarouselStates,
+  CarouselWorkflow,
+  carouselStatesSource,
+  carouselWorkflowSource,
+} from "./carousel-demo";
+import {
   CheckboxStates,
   CheckboxWorkflow,
   checkboxStatesSource,
@@ -2472,6 +2478,14 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: CardComposition,
     source: cardCompositionSource,
     composition: true,
+  },
+  "carousel-states": {
+    render: CarouselStates,
+    source: carouselStatesSource,
+  },
+  "carousel-workflow": {
+    render: CarouselWorkflow,
+    source: carouselWorkflowSource,
   },
   "command-menu-demo": {
     render: CommandMenuDemo,

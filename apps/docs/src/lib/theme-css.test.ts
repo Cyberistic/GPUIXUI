@@ -96,6 +96,8 @@ const darkDensity: Readonly<Record<string, number>> = {
 const darkFills: Readonly<Record<string, string>> = {
   "primary-hover": filledHover(themes.dark, "primary"),
   "primary-pressed": filledPressed(themes.dark, "primary"),
+  "secondary-hover": filledHover(themes.dark, "secondary"),
+  "secondary-pressed": filledPressed(themes.dark, "secondary"),
   "destructive-hover": filledHover(themes.dark, "destructive"),
   "destructive-pressed": filledPressed(themes.dark, "destructive"),
 };
@@ -271,6 +273,45 @@ describe("preview style sheets", () => {
     );
     expect(block(css, ".gx-switch-thumb")).toContain(
       "transition: left 150ms ease-out",
+    );
+  });
+
+  it("reads a carousel's control fills and its track edge from the theme", () => {
+    // The control is the local `Button`'s `secondary` variant: `secondary` fill,
+    // `borderStrong` edge and the derived opaque pointer steps. The track's edge
+    // is the `input` role the recipe names — not `border`, which is decorative
+    // and is the `secondary` fill in both shipped themes.
+    const css = read("../styles/demos.css");
+
+    expect(block(css, ".gx-carousel-btn")).toContain(
+      "background: var(--secondary)",
+    );
+    expect(block(css, ".gx-carousel-btn")).toContain(
+      "border: 1px solid var(--border-strong)",
+    );
+    expect(block(css, ".gx-carousel-btn:hover:not(:disabled)")).toContain(
+      "var(--secondary-hover)",
+    );
+    expect(block(css, ".gx-carousel-btn:active:not(:disabled)")).toContain(
+      "var(--secondary-pressed)",
+    );
+    expect(block(css, ".gx-carousel-btn:disabled")).toContain(
+      "background: var(--disabled)",
+    );
+    expect(block(css, ".gx-carousel-card")).toContain(
+      "border: 1px solid var(--input)",
+    );
+    expect(block(css, ".gx-carousel-dot-mark[data-selected]")).toContain(
+      "var(--primary)",
+    );
+    // The pointer steps are the library's derivation, so the bridge must publish
+    // them: a preview that fell back to `.gx-demo`'s defaults would stop
+    // repainting when the platform switch changes the theme.
+    expect(toCssVars(themes.dark)["--secondary-hover"]).toBe(
+      filledHover(themes.dark, "secondary"),
+    );
+    expect(toCssVars(themes.dark)["--secondary-pressed"]).toBe(
+      filledPressed(themes.dark, "secondary"),
     );
   });
 

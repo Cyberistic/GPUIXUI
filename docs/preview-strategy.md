@@ -43,6 +43,14 @@ switch therefore reshapes the preview's corner and not the native one, so the tw
 agree on palette and lift and differ in radius — an approximation, not a
 measurement of the shipped surface.
 
+The same is true, more narrowly, of a **carousel's track corner**.
+`CAROUSEL_TRACK` names `rounded-lg`, which the recipe compiler resolves to a
+fixed 8px, while `.gx-carousel-card` draws the platform radius plus the two
+pixels between the `md` and `lg` steps (`calc(var(--radius) + 2px)`). The two
+agree in the default style and differ where a platform's `radius.md` is 8. The
+carousel page prints the fixed metric, and its preview is a rendering like every
+other.
+
 ### Strategy 1 is real: the GPUix web build
 
 `@gpuix/native@0.11.0` ships a second target beside the `.node` binding: a
@@ -228,9 +236,10 @@ command that cannot resolve on the section a reader follows first.
 
 A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source.
-Curated today: Accordion, Alert, Button, Card, Checkbox, Combobox, Command menu,
-Confirmation dialog, Dialog, Drawer, Dropdown menu, Field and inline validation,
-Form, List, Popover, Search input, Select, Switch, Tabs, Tooltip, Toast.
+Curated today: Accordion, Alert, Button, Card, Carousel, Checkbox, Combobox,
+Command menu, Confirmation dialog, Dialog, Drawer, Dropdown menu,
+Field and inline validation, Form, List, Popover, Search input, Select, Switch,
+Tabs, Tooltip, Toast.
 `src/lib/component-preview.test.ts` holds the preview registry from both sides:
 every `<ComponentPreview name>` on a page names a registered demo, and every demo
 is mounted by a page (a key nobody renders is dead code, and a typo throws in the

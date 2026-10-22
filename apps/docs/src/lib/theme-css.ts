@@ -62,6 +62,8 @@ export const toCssVars = (theme: Theme): CssVars => ({
   // alpha lift, so a preview shadowing a checked control must take them here.
   "--primary-hover": filledHover(theme, "primary"),
   "--primary-pressed": filledPressed(theme, "primary"),
+  "--secondary-hover": filledHover(theme, "secondary"),
+  "--secondary-pressed": filledPressed(theme, "secondary"),
   "--destructive-hover": filledHover(theme, "destructive"),
   "--destructive-pressed": filledPressed(theme, "destructive"),
   ...Object.fromEntries(

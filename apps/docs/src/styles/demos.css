@@ -54,6 +54,8 @@
   --target-size: 24px;
   --primary-hover: #b0b2fe;
   --primary-pressed: #b4b6fd;
+  --secondary-hover: #424751;
+  --secondary-pressed: #4d535c;
   --destructive-hover: #fd7b7c;
   --destructive-pressed: #fc8384;
 
@@ -3149,4 +3151,209 @@
   padding: 10px;
   border-radius: calc(var(--radius) + 4px);
   background: var(--muted);
+}
+
+/* ---- carousel: mirrors components/src/carousel.tsx ----
+   The track is `CAROUSEL_TRACK` (`rounded-lg border border-input bg-card`): a
+   card fill, the `input` role as its edge and the recipe's fixed 8px corner
+   drawn as `--radius` plus the two pixels between the md step and `lg`. Only the
+   active slide is displayed; every other slide stays mounted with `hidden`, so
+   a field on one keeps its draft. The control is the local `Button`'s
+   `secondary` variant — `secondary` fill, `borderStrong` edge, `secondaryForeground`
+   label and the theme's derived opaque hover/press — and a disabled one wears
+   the measured `disabled`/`disabledForeground` pair. A dot is a 24px target
+   (`--target-size`) around a 6px drawing that widens to an 18px pill on the
+   active slide, in two mark roles (`primary`, `mutedForeground`). */
+.gx-carousel-scene {
+  align-items: stretch;
+  gap: 18px;
+  min-height: 300px;
+  padding: 24px;
+}
+
+.gx-carousel-frame {
+  display: flex;
+  flex-direction: column;
+  width: min(520px, 100%);
+}
+
+.gx-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: calc(var(--radius) + 2px);
+}
+
+.gx-carousel:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-carousel-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 150px;
+  padding: 16px;
+  border: 1px solid var(--input);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-carousel-slide {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gx-carousel-slide[hidden] {
+  display: none;
+}
+
+.gx-carousel-kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--placeholder);
+}
+
+.gx-carousel-title {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.gx-carousel-copy {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.gx-carousel-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.gx-carousel-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-carousel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--control-height-md);
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gx-carousel-btn:hover:not(:disabled) {
+  background: var(--secondary-hover);
+}
+
+.gx-carousel-btn:active:not(:disabled) {
+  background: var(--secondary-pressed);
+}
+
+.gx-carousel-btn:disabled {
+  border-color: transparent;
+  background: var(--disabled);
+  color: var(--disabled-foreground);
+  cursor: not-allowed;
+}
+
+.gx-carousel-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-carousel-dots {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.gx-carousel-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.gx-carousel-dot:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+  border-radius: 9999px;
+}
+
+.gx-carousel-dot-mark {
+  display: block;
+  border-radius: 9999px;
+  background: var(--muted-foreground);
+  pointer-events: none;
+  transition: width 120ms ease-out;
+}
+
+.gx-carousel-dot-mark[data-selected] {
+  background: var(--primary);
+}
+
+.gx-carousel-readout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--placeholder);
+}
+
+.gx-carousel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.gx-carousel-field-label {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-carousel-input {
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--input);
+  color: var(--input-foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.gx-carousel-hint {
+  color: var(--placeholder);
+  font-size: 11px;
+  line-height: 16px;
 }
