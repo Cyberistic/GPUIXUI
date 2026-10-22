@@ -166,6 +166,12 @@ export const selectTriggerStyle = (
   );
   return (state) => {
     let style = mergeStyle(resolved.style, keepContent);
+    // GPUix's `SelectValue` paints its fallback inside the trigger, so the
+    // trigger's own colour is what a placeholder inherits. Without this an
+    // empty select paints its hint in the value role and reads as chosen.
+    if (state.placeholder === true) {
+      style = mergeStyle(style, { color: theme.colors.placeholder });
+    }
     if (spec.invalid === true) style = mergeStyle(style, resolved.invalid);
     if (state.disabled === true) {
       style = suppressFeedback(mergeStyle(style, resolved.disabled));
@@ -181,10 +187,9 @@ export const selectTriggerStyle = (
  *
  * A long list must be reachable, and the runtime's content sets no bound of its
  * own (its edge-scroll parts are empty in 0.11.0), so the surface caps at the
- * menus' 320px and scrolls. The wheel moves it; an arrow does not reveal its own
- * row — the runtime never scrolls the highlight into view — so a keyboard user
- * with more options than fit still cannot reach the tail (`select.mdx` records
- * it as the remaining gap).
+ * menus' 320px and scrolls. The wheel moves it; a highlighted row reveals itself
+ * after commit (`RevealOnHighlight`), because the runtime never scrolls its own
+ * highlight into view.
  */
 export const selectContentStyle = (theme: PrimitiveTheme): StyleDesc =>
   mergeStyle(recipeTw.classesToStyle(selectContentClass, theme).style, {

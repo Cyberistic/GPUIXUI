@@ -348,6 +348,46 @@ it("opens a Select's list and paints its options", async () => {
   expect(runtime.allText()).toContain("Apple");
 });
 
+/** The applied style of the element a `Select` painted as its trigger. */
+const triggerStyle = (runtime: Runtime, testId: string) =>
+  Option.getOrElse(runtime.element(testId), () =>
+    expect.fail(`the Select trigger ${testId} painted no element`),
+  ).style;
+
+it("paints an unchosen Select's hint in the placeholder role", async () => {
+  // The bug guarded: GPUix's `SelectValue` paints its fallback inside the
+  // trigger, so the trigger's own colour is what the hint inherits. It kept the
+  // value role, so an empty select read as a chosen one and the measured
+  // `placeholder` role was never painted by this control.
+  const runtime = await openWindow();
+  const field = recorder();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="fruit"
+        triggerTestId="fruit-trigger"
+        itemTestId={(value) => `fruit-${value}`}
+        label="Fruit"
+        placeholder="Pick one"
+        onValueChange={field.onChange}
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ]}
+      />
+    </Surface>,
+  );
+  expect(triggerStyle(runtime, "fruit-trigger")["color"]).toBe(
+    testTheme.colors.placeholder,
+  );
+  runtime.click("fruit-trigger");
+  runtime.click("fruit-pear");
+  // The hint has become a value, so the trigger returns to the value role.
+  expect(triggerStyle(runtime, "fruit-trigger")["color"]).toBe(
+    testTheme.colors.inputForeground,
+  );
+});
+
 /** The row an option label sits in. */
 const optionRowId = (runtime: Runtime, label: string): number =>
   Option.getOrElse(

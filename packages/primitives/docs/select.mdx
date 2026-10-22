@@ -115,8 +115,12 @@ declares the shared keyboard outline at rest (`keyboardRing`, destructive while
 `invalid`), so the runtime paints it after Tab and not after a mouse press; a
 disabled trigger declares none. The trigger shows the chosen value, so it also
 declares `keyboardFocusDim: false` and keeps that value readable while another
-control holds the keyboard focus. The list is one spacing step inset, full
-trigger width.
+control holds the keyboard focus. **An unchosen trigger's hint is painted in the
+`placeholder` role**, the hint role the contrast table measures on a field's own
+fill, and a chosen value keeps `inputForeground`: GPUix's `SelectValue` paints its
+fallback *inside* the trigger, so the trigger's own colour is what the hint
+inherits, and leaving it at the value role made an empty select read as a chosen
+one. The list is one spacing step inset, full trigger width.
 
 `triggerStyle` and `itemStyle` are the state-aware hooks. The trigger callback
 receives GPUix's own `{ open, disabled, placeholder }`, so a caller can paint the
@@ -154,7 +158,8 @@ state of its own.
 ## Verification
 
 - `src/components/Select.test.tsx` — trigger chrome, the keyboard ring (ring
-  role, destructive while invalid, absent while disabled), list surface and item
+  role, destructive while invalid, absent while disabled), the hint's
+  `placeholder` role and a chosen value's value role, list surface and item
   states, both state-aware callbacks receiving their live state and winning, and
   the selected row's mark coming from the state the runtime reports. Group cases:
   the flat list in render order, the caption's muted role and one-pixel rule, the
@@ -167,7 +172,10 @@ state of its own.
   clicked option in the real renderer; the trigger and an option row are
   addressed by `triggerTestId`/`itemTestId` rather than by walking children and
   searching the painted text (negative control measured: without the forwarding,
-  `runtime.element("fruit-trigger")` is `none`); exactly one row paints the mark,
+  `runtime.element("fruit-trigger")` is `none`); the trigger's own applied colour
+  is the `placeholder` role while unchosen and the value role once an option is
+  committed (negative control measured: without the paint the window reports
+  `expected '#000016' to be '#000017'`); exactly one row paints the mark,
   and the
   mark moves to the row that becomes selected (negative control measured:
   rendering the label alone fails `expected [] to have a length of 1`). Open

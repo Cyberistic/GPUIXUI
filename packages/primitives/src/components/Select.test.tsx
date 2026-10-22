@@ -230,6 +230,21 @@ describe("Select", () => {
     expect(trigger.borderColor).toBe(testTheme.colors.destructive);
   });
 
+  it("paints an empty trigger's hint in the placeholder role", () => {
+    // The bug guarded: GPUix's `SelectValue` paints its fallback inside the
+    // trigger, so the trigger's own colour is what a hint inherits. It kept the
+    // value role, so an unchosen select read as chosen and the measured
+    // `placeholder` role — the one the contrast table holds on the field's fill
+    // — was never painted by this control. A chosen value keeps the value role.
+    const trigger = (placeholder: boolean) =>
+      selectTriggerStyle(
+        { variant: fieldVariant, size: "md" },
+        testTheme,
+      )({ open: false, disabled: false, placeholder });
+    expect(trigger(true).color).toBe(testTheme.colors.placeholder);
+    expect(trigger(false).color).toBe(testTheme.colors.inputForeground);
+  });
+
   it("opens onto the popover surface", () => {
     expect(selectContentStyle(testTheme).backgroundColor).toBe(
       testTheme.colors.popover,
