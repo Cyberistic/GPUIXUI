@@ -31,19 +31,27 @@ export interface LabelProps {
   readonly testId?: string;
 }
 
+/** The props that name a control the way a visible `Label` does. */
+export interface ControlName {
+  readonly label: string;
+  /** Present only when the caller passed help; a blank one is not published. */
+  readonly description?: string;
+}
+
 /**
  * The props that give a control the name its visible `Label` shows.
  *
- * Returns the `label` prop every control reads, so the name is written once:
+ * Returns the `label` prop every control reads, so the name is written once,
+ * and the optional `description` the same `Label` paints, so the announced
+ * help is the visible help:
  *
  * ```tsx
- * <Label>{name}</Label>
- * <Input {...labelledBy(name)} />
+ * <Label description={help}>{name}</Label>
+ * <Input {...labelledBy(name, help)} />
  * ```
  */
-export const labelledBy = (name: string): { readonly label: string } => ({
-  label: name,
-});
+export const labelledBy = (name: string, description?: string): ControlName =>
+  description === undefined ? { label: name } : { label: name, description };
 
 export const renderLabel = ({
   required,

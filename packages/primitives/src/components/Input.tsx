@@ -31,6 +31,7 @@ import {
   valueChange,
   type FieldHostProps,
   type FocusState,
+  type HelpProps,
   type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
@@ -45,7 +46,11 @@ export interface FieldState {
 
 /** Props shared by `Input` and `TextArea`. */
 export interface FieldProps
-  extends ValueChangeProps<string>, InteractionProps, FieldHostProps {
+  extends
+    ValueChangeProps<string>,
+    InteractionProps,
+    FieldHostProps,
+    HelpProps {
   /** Controlled text. Omit it to let the field hold its own draft. */
   readonly value?: string;
   /** Initial text when uncontrolled. */
@@ -72,16 +77,6 @@ export interface FieldProps
   readonly fullWidth?: boolean;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
-  /**
-   * Announced help after the name — a format hint, or the message for an
-   * `invalid` field.
-   *
-   * There is no `aria-describedby`, so this is not a reference to painted text:
-   * it is the string the field carries as `aria-description`, and a blank one
-   * publishes nothing. A visible `Label` with a `description` paints the same
-   * words for a reader who can see it.
-   */
-  readonly description?: string;
   /**
    * The field's place in the runtime's tab order. A disabled field sits at `-1`
    * whatever this says, because it declares no ring and refuses every key.

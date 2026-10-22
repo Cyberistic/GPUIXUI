@@ -52,7 +52,9 @@ import {
   useControlState,
   useFocus,
   type CheckedChangeProps,
+  type FieldHostProps,
   type FocusState,
+  type HelpProps,
   type InteractionProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -75,7 +77,8 @@ export interface SwitchThumbProps {
   readonly className?: string;
 }
 
-export interface SwitchProps extends CheckedChangeProps, InteractionProps {
+export interface SwitchProps
+  extends CheckedChangeProps, InteractionProps, FieldHostProps, HelpProps {
   /** Controlled. Omit to let the switch hold its own state. */
   readonly checked?: boolean;
   readonly defaultChecked?: boolean;
@@ -221,11 +224,15 @@ export const renderSwitch = (
   );
   return (
     <div
+      ref={props.ref}
       role="switch"
       aria-label={accessibleName(props.label)}
+      aria-description={accessibleName(props.description)}
+      aria-id={props["aria-id"]}
       aria-valuetext={state.current ? "checked" : "unchecked"}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
+      onLayout={props.onLayout}
       onClick={composePress(props.disabled === true, props.onClick, toggle)}
       onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKey("down"))}
       onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKey("up"))}

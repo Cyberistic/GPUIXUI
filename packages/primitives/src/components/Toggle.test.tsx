@@ -293,3 +293,48 @@ describe("Toggle", () => {
     );
   });
 });
+
+describe("a toggle's address and help", () => {
+  it("hands its element the caller's ref, id, layout and help", () => {
+    // Bug guarded: a toolbar toggle was reachable only by `testId`, and the help
+    // a visible `Label` paints was announced by nothing. A tooltip arrives
+    // through the same channel, so the field-style help is the explicit one.
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const element = renderToggle(
+      {
+        label: "Bold",
+        description: "Applies to the next word.",
+        "aria-description": "A tooltip description",
+        ref,
+        "aria-id": "bold-toggle",
+        onLayout: layout,
+      },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(Option.getOrUndefined(hostProp(element, "ref"))).toBe(ref);
+    expect(expectSome(hostProp(element, "aria-id"))).toBe("bold-toggle");
+    expect(Option.getOrUndefined(hostHandler(element, "onLayout"))).toBe(
+      layout,
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Applies to the next word.",
+    );
+  });
+
+  it("still publishes a tooltip's description when no help is given", () => {
+    const element = renderToggle(
+      { label: "Bold", "aria-description": "Makes the text bold" },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Makes the text bold",
+    );
+  });
+});

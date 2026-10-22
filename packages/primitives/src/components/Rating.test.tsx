@@ -28,6 +28,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostRef,
   hostStyle,
   hostStyleRecord,
   hostStyleString,
@@ -317,5 +318,50 @@ describe("Rating", () => {
     expect(expectSome(hostStyleString(element, "backgroundColor"))).toBe(
       testTheme.colors.destructive,
     );
+  });
+});
+
+describe("a rating's address and help", () => {
+  it("announces the help on the group and addresses the star that holds the tab stop", () => {
+    // Bug guarded: a form could not focus the rating it failed on, and the help
+    // a `Label` paints reached nobody. Stars are the focusable elements, so the
+    // address lands on the tab stop rather than the unfocusable group.
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const element = render(
+      {
+        label: "Quality",
+        description: "Rate the last release.",
+        ref,
+        "aria-id": "quality-rating",
+        onLayout: layout,
+      },
+      3,
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Rate the last release.",
+    );
+    const third = starsOf(element)[2] ?? expect.fail("no third star");
+    const merged = Option.getOrElse(hostRef(third), () =>
+      expect.fail("the third star carried no ref"),
+    );
+    merged(null);
+    expect(ref).toHaveBeenCalledWith(null);
+    expect(expectSome(hostProp(third, "aria-id"))).toBe("quality-rating");
+    expect(Option.getOrUndefined(hostHandler(third, "onLayout"))).toBe(layout);
+    const first = starsOf(element)[0] ?? expect.fail("no first star");
+    expect(hostProp(first, "aria-id")).toStrictEqual(Option.none());
+  });
+
+  it("moves the address to the first star while the rating is unrated", () => {
+    const ref = vi.fn();
+    const element = render({ label: "Quality", ref, "aria-id": "quality" }, 0);
+    const first = starsOf(element)[0] ?? expect.fail("no first star");
+    const merged = Option.getOrElse(hostRef(first), () =>
+      expect.fail("the first star carried no ref"),
+    );
+    merged(null);
+    expect(ref).toHaveBeenCalledWith(null);
+    expect(expectSome(hostProp(first, "aria-id"))).toBe("quality");
   });
 });

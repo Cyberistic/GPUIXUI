@@ -8,6 +8,7 @@
  */
 
 import { Children, useEffect, useState, type ReactNode, type Ref } from "react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type {
   EventPayload,
@@ -87,13 +88,48 @@ export interface InteractionProps {
  * leaves the order whatever the caller asks for.
  */
 export interface FieldHostProps {
-  /** The native `<input>`/`<textarea>` — an address to focus, measure or anchor to. */
+  /** The element a form focuses, measures or anchors to. */
   readonly ref?: Ref<PublicInstance>;
   /** Author id exposed as `AXIdentifier` / UIA AutomationId. */
   readonly "aria-id"?: string;
-  /** The element's painted box after the first paint and each resize. */
+  /** The addressed element's painted box after the first paint and each resize. */
   readonly onLayout?: (event: EventPayload) => void;
 }
+
+/**
+ * The announced help a control carries.
+ *
+ * A `Label` beside a control paints its description; there is no
+ * `aria-describedby`, so the control also carries the words itself as
+ * `aria-description`. A blank one publishes nothing — the same rule as a blank
+ * name.
+ */
+export interface HelpProps {
+  /**
+   * Announced help after the name — a format hint, or the message for an
+   * `invalid` control. The words a visible `Label`'s `description` paints.
+   */
+  readonly description?: string;
+}
+
+/**
+ * Compose a caller's ref with a part's own.
+ *
+ * A control that owns an element for its own behaviour (a field focusing
+ * itself, a group's roving tab stop) still has to hand the same element to the
+ * caller, so both refs are written rather than one replacing the other.
+ */
+export const mergeRefs = <Instance>(
+  ...refs: ReadonlyArray<Ref<Instance> | undefined>
+): ((instance: Instance | null) => void) => {
+  return (instance) => {
+    Arr.forEach(refs, (ref) => {
+      if (ref === undefined || ref === null) return;
+      if (typeof ref === "function") ref(instance);
+      else ref.current = instance;
+    });
+  };
+};
 
 /**
  * The host props an action hands to its element unchanged.

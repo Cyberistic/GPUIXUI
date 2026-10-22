@@ -32,6 +32,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostRef,
   hostStyle,
   hostStyleRecord,
   hostStyleString,
@@ -290,5 +291,49 @@ describe("NumberField styles", () => {
       { disabled: false, focused: true, invalid: true },
     ]);
     expect(expectSome(hostStyle(element, "opacity"))).toBe(0.42);
+  });
+});
+
+describe("a number field's address and help", () => {
+  it("hands the address and help to the input, and keeps its own registration", () => {
+    // Bug guarded: a form could not focus the number field it failed on, and a
+    // `Label`'s description reached nobody. The address belongs to the inner
+    // `<input>` — the chrome is not focusable — and the field's own ref
+    // (which points native focus at the input when a stepper runs) must not be
+    // replaced by the caller's.
+    const registerInput = vi.fn();
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const { input } = partsOf(
+      render(
+        {
+          label: "Copies",
+          description: "One to ninety-nine.",
+          ref,
+          "aria-id": "copies",
+          onLayout: layout,
+        },
+        5,
+        "5",
+        idle,
+        { registerInput },
+      ),
+    );
+    expect(expectSome(hostProp(input, "aria-description"))).toBe(
+      "One to ninety-nine.",
+    );
+    expect(expectSome(hostProp(input, "aria-id"))).toBe("copies");
+    expect(Option.getOrUndefined(hostHandler(input, "onLayout"))).toBe(layout);
+    const merged = Option.getOrElse(hostRef(input), () =>
+      expect.fail("the input carried no ref"),
+    );
+    merged(null);
+    expect(registerInput).toHaveBeenCalledWith(null);
+    expect(ref).toHaveBeenCalledWith(null);
+  });
+
+  it("publishes nothing rather than a blank description", () => {
+    const { input } = partsOf(render({ description: " " }, 5, "5"));
+    expect(hostProp(input, "aria-description")).toStrictEqual(Option.none());
   });
 });

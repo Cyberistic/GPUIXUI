@@ -24,6 +24,7 @@ import {
   type CheckboxState,
 } from "./Checkbox.js";
 import { checkedChange, type FocusState } from "./internal.js";
+import { labelledBy } from "./Label.js";
 import { keyEvent } from "./testing/event.js";
 import {
   elementChildren,
@@ -290,5 +291,67 @@ describe("checkedChange", () => {
     const alias = vi.fn();
     checkedChange({ onChange: alias })?.(false);
     expect(alias).toHaveBeenCalledWith(false);
+  });
+});
+
+describe("a checkbox's address and help", () => {
+  it("hands its element the caller's ref, id, layout and help", () => {
+    // Bug guarded: a checkbox was reachable only by its `testId`, and the help
+    // a visible `Label` painted was announced to nobody. A form focuses the
+    // failed control, an automation host addresses it by `aria-id`, a layout
+    // measures it, and there is no `aria-describedby` — so the words ride the
+    // control itself.
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const element = renderCheckbox(
+      {
+        label: "Accept the terms",
+        description: "Required to continue.",
+        ref,
+        "aria-id": "accept-terms",
+        onLayout: layout,
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(Option.getOrUndefined(hostProp(element, "ref"))).toBe(ref);
+    expect(expectSome(hostProp(element, "aria-id"))).toBe("accept-terms");
+    expect(Option.getOrUndefined(hostHandler(element, "onLayout"))).toBe(
+      layout,
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Required to continue.",
+    );
+  });
+
+  it("publishes nothing rather than a blank description", () => {
+    const element = renderCheckbox(
+      { description: "   " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(element, "aria-description")).toStrictEqual(Option.none());
+  });
+
+  it("is what `labelledBy` writes when the label paints help", () => {
+    // One string names the box and describes it, so the visible `Label` and the
+    // announced help cannot disagree.
+    const element = renderCheckbox(
+      labelledBy("Accept the terms", "Required to continue."),
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "aria-label"))).toBe(
+      "Accept the terms",
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Required to continue.",
+    );
   });
 });

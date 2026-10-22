@@ -72,6 +72,8 @@ Fragments and arrays are transparent, so items can be grouped freely.
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the dot's fill |
 | `disabled` | `boolean` | `false` | disables every option |
 | `label` | `string` | none | accessible name for the group |
+| `description` | `string` | none | announced help for the group (`aria-description`); a blank one publishes nothing |
+| `ref` / `aria-id` / `onLayout` | host address | none | land on the row that holds the tab stop, so a form can focus the current choice |
 | `style` | `StateStyle<RadioGroupState>` | — | resolved against the live state, merged last on the group |
 | `itemStyle` | `StateStyle<RadioItemState>` | — | resolved per option row against that row's state, merged last |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the group's own, on the element that owns each: keys on the root, the press and focus on the option row |
@@ -116,6 +118,14 @@ Enter selects on the press.
   publishing an empty name; the visible text beside the circle is a separate
   `Text` (or a `RadioGroupItem`'s children).
 - Disabled options are skipped by the arrows and are not tab stops.
+- The group's help is announced on the `RadioGroup` node through
+  **`aria-description`** (0.11.0 has no `aria-describedby`), so a `Label
+  description` reaches assistive technology when it is passed as `description`
+  or through `labelledBy(name, help)`.
+- The group wrapper is not focusable, so the **address** lands on the row that
+  holds the tab stop: `ref` receives that row, `aria-id` is its automation id, and
+  `onLayout` reports its box. The address follows the selection as the tab stop
+  moves (`runtime/address.runtime.test.tsx`).
 - Every option declares the keyboard outline on its **row** (the `ring` role, at
   `borderWidth.strong`), because the runtime applies a `focusVisible` refinement
   only to an element it tracks focus for — a ring declared on the circle, which

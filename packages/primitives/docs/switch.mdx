@@ -52,6 +52,8 @@ const theme = useTheme();
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
 | `label` | `string` | none | accessible name |
+| `description` | `string` | none | announced help (`aria-description`); a blank one publishes nothing |
+| `ref` / `aria-id` / `onLayout` | host address | none | the press band is the addressed element: focus it, address it, measure it |
 | `reducedMotion` | `boolean` | `false` | the thumb lands on its position instead of sliding there |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the switch's own; yours runs first |
 | `style` | `StateStyle<SwitchState>` | — | resolved against the live state and merged last |
@@ -89,6 +91,12 @@ also scroll while the control waits for the release.
   there is no `aria-checked` in `@gpuix/native` 0.11.0.
 - `disabled` removes the tab stop; no `aria-disabled`.
 - The name comes from `label`; there is no `aria-labelledby`.
+- The help a visible `Label description` paints is announced through
+  **`aria-description`** (no `aria-describedby` exists); pass the same string as
+  `description`, or `labelledBy(name, help)`. A blank one publishes nothing.
+- The press band is the **address**: `ref`, `aria-id` and `onLayout` land on it,
+  so a form can focus the switch it failed on and a layout can measure it
+  (`runtime/address.runtime.test.tsx`).
 
 The five host handlers are `InteractionProps`: your handler runs first with the
 runtime's own event and the switch still toggles. A disabled switch installs no

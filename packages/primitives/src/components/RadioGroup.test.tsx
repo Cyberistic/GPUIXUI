@@ -33,6 +33,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostRef,
   hostStyle,
   hostStyleString,
   hostTag,
@@ -412,3 +413,62 @@ describe("RadioGroupItem", () => {
 // files: those two controls do not need the native binding, and keeping them in
 // one file made a `useGpuix` import in `RadioGroup` take their tests down with
 // it.
+
+describe("a radio group's address and help", () => {
+  it("announces the help on the group and addresses the row that holds the tab stop", () => {
+    // Bug guarded: a form could not focus the group it failed on, and a
+    // `Label`'s description reached nobody. The wrapper is not focusable, so
+    // the address lands on the roving row; the help describes the group, not
+    // each choice.
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const element = renderRadioGroup(
+      {
+        options,
+        label: "Plan",
+        description: "Choose the plan you want to bill.",
+        ref,
+        "aria-id": "plan-group",
+        onLayout: layout,
+      },
+      testTheme,
+      text("beta"),
+      1,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Choose the plan you want to bill.",
+    );
+    // `beta` is selected, so its row is the tab stop and therefore the address.
+    const beta = rows(element)[1] ?? expect.fail("no beta row");
+    const merged = Option.getOrElse(hostRef(beta), () =>
+      expect.fail("the beta row carried no ref"),
+    );
+    merged(null);
+    expect(ref).toHaveBeenCalledWith(null);
+    expect(expectSome(hostProp(beta, "aria-id"))).toBe("plan-group");
+    expect(Option.getOrUndefined(hostHandler(beta, "onLayout"))).toBe(layout);
+    const alpha = rows(element)[0] ?? expect.fail("no alpha row");
+    expect(hostProp(alpha, "aria-id")).toStrictEqual(Option.none());
+  });
+
+  it("moves the address with the tab stop when the selection moves", () => {
+    const ref = vi.fn();
+    const element = renderRadioGroup(
+      { options, ref, "aria-id": "plan-group" },
+      testTheme,
+      text("gamma"),
+      2,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const gamma = rows(element)[2] ?? expect.fail("no gamma row");
+    const merged = Option.getOrElse(hostRef(gamma), () =>
+      expect.fail("the gamma row carried no ref"),
+    );
+    merged(null);
+    expect(ref).toHaveBeenCalledWith(null);
+    expect(expectSome(hostProp(gamma, "aria-id"))).toBe("plan-group");
+  });
+});

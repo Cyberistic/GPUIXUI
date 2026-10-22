@@ -64,19 +64,26 @@ import { recipeTw } from "../recipe/registry.js";
 import type { FieldState } from "./Input.js";
 import {
   composeEvent,
+  mergeRefs,
   mergeStyle,
   suppressFeedback,
   useControlState,
   useFocus,
   valueChange,
+  type FieldHostProps,
   type FocusState,
+  type HelpProps,
   type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface NumberFieldProps
-  extends ValueChangeProps<number>, InteractionProps {
+  extends
+    ValueChangeProps<number>,
+    InteractionProps,
+    FieldHostProps,
+    HelpProps {
   /** Controlled value. Omit to let the field hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
@@ -136,6 +143,10 @@ export interface NumberFieldPart {
   readonly placeholder: string | undefined;
   readonly label: string | undefined;
   readonly autoFocus: boolean | undefined;
+  /** The address the caller gave the field; it lands on the input, not the chrome. */
+  readonly address: FieldHostProps;
+  /** The announced help, already blank-filtered. */
+  readonly description: string | undefined;
   /** The committed value, which the arrow keys step from. */
   readonly current: number;
   readonly range: NumberRange;
@@ -166,6 +177,8 @@ export const numberFieldPart = (
     placeholder: props.placeholder,
     label: accessibleName(props.label),
     autoFocus: disabled ? undefined : props.autoFocus,
+    address: props,
+    description: accessibleName(props.description),
     current: state.current,
     range: numberRange(props),
     focus,
@@ -220,7 +233,7 @@ export const renderNumberFieldInput = (
   );
   return (
     <input
-      ref={handlers.registerInput}
+      ref={mergeRefs(handlers.registerInput, part.address.ref)}
       testId={testId}
       value={part.text}
       placeholder={part.placeholder}
@@ -229,6 +242,9 @@ export const renderNumberFieldInput = (
       tabIndex={disabled ? -1 : undefined}
       theme={nativeTextTheme(part.theme)}
       aria-label={part.label}
+      aria-description={part.description}
+      aria-id={part.address["aria-id"]}
+      onLayout={part.address.onLayout}
       style={mergeStyle(chrome, style)}
       onChange={(event: EventPayload) => {
         if (disabled) return;

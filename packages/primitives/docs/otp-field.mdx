@@ -92,6 +92,8 @@ import { OTPField, OTPFieldInput, Separator, Stack } from "@gpuixui/primitives";
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border on every cell |
 | `label` | `string` | none | group name; each cell is named `<label> digit N` |
+| `description` | `string` | none | announced help, carried by **every** cell (`aria-description`); a blank one publishes nothing |
+| `ref` / `aria-id` / `onLayout` | host address | none | land on the **first cell**, the element a form focuses |
 | `autoFocus` | `boolean` | `false` | focuses the first cell on mount |
 | `style` | `StateStyle<FieldState>` | — | `StyleDesc` or `(state: { disabled, focused, invalid }) => StyleDesc` on the group; resolved against the live state and merged last |
 | `children` | `ReactNode` | `length` cells | the cell parts to draw |
@@ -144,6 +146,13 @@ and does not delete a second character.
 - A disabled field is `readOnly` and every cell is out of the tab order.
 - The code itself is the native input text; there is no `aria-valuetext` on a
   cell, so the value is not announced twice.
+- The help a visible `Label description` paints is announced on **every cell**
+  through `aria-description` (no `aria-describedby` exists), because any cell can
+  hold focus. A blank description publishes nothing.
+- The **address lands on the first cell** — the element a form focuses to start
+  typing the code: `ref` receives it, `aria-id` is its automation id, and
+  `onLayout` reports its box. The later cells keep their internal refs, and the
+  group wrapper is not focusable (`runtime/address.runtime.test.tsx`).
 
 ## Theming
 

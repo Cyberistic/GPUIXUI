@@ -238,3 +238,47 @@ describe("SwitchThumb", () => {
     expect(styleOf(thumb)["pointerEvents"]).toBe("none");
   });
 });
+
+describe("a switch's address and help", () => {
+  it("hands its element the caller's ref, id, layout and help", () => {
+    // Bug guarded: the track was reachable only by `testId`, and a `Label`'s
+    // description reached nobody — 0.11.0 has no `aria-describedby`, so the
+    // control has to carry the words itself.
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const element = renderSwitch(
+      {
+        label: "Notifications",
+        description: "Sends a digest every morning.",
+        ref,
+        "aria-id": "notification-switch",
+        onLayout: layout,
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(Option.getOrUndefined(hostProp(element, "ref"))).toBe(ref);
+    expect(expectSome(hostProp(element, "aria-id"))).toBe(
+      "notification-switch",
+    );
+    expect(Option.getOrUndefined(hostHandler(element, "onLayout"))).toBe(
+      layout,
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Sends a digest every morning.",
+    );
+  });
+
+  it("publishes nothing rather than a blank description", () => {
+    const element = renderSwitch(
+      { description: "" },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(element, "aria-description")).toStrictEqual(Option.none());
+  });
+});

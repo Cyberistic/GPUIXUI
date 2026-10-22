@@ -32,6 +32,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostRef,
   hostStyle,
   hostStyleRecord,
   hostStyleString,
@@ -281,5 +282,52 @@ describe("OTPField parts", () => {
       OTPFieldInput,
       OTPFieldInput,
     ]);
+  });
+});
+
+describe("an OTP field's address and help", () => {
+  it("carries the help on every cell and the address on the first", () => {
+    // Bug guarded: a form could not focus the code field it failed on, and the
+    // help a `Label` paints reached nobody. Every cell is independently
+    // focusable, so each announces the help; the first cell is the address a
+    // caller focuses or knows by `aria-id`.
+    const ref = vi.fn();
+    const layout = vi.fn();
+    const element = render(
+      {
+        length: 3,
+        label: "Verification code",
+        description: "Six digits from the email.",
+        ref,
+        "aria-id": "verification-code",
+        onLayout: layout,
+      },
+      "12",
+    );
+    const cells = cellsOf(element);
+    expect(
+      cells.map((input) => hostProp(input, "aria-description")),
+    ).toStrictEqual([
+      Option.some("Six digits from the email."),
+      Option.some("Six digits from the email."),
+      Option.some("Six digits from the email."),
+    ]);
+    const first = cells[0] ?? expect.fail("no first cell");
+    const second = cells[1] ?? expect.fail("no second cell");
+    const merged = Option.getOrElse(hostRef(first), () =>
+      expect.fail("the first cell carried no ref"),
+    );
+    merged(null);
+    expect(ref).toHaveBeenCalledWith(null);
+    expect(expectSome(hostProp(first, "aria-id"))).toBe("verification-code");
+    expect(Option.getOrUndefined(hostHandler(first, "onLayout"))).toBe(layout);
+    expect(hostProp(second, "aria-id")).toStrictEqual(Option.none());
+  });
+
+  it("publishes nothing rather than a blank description", () => {
+    const element = render({ length: 2, description: "  " }, "");
+    expect(hostProp(cell(element, 0), "aria-description")).toStrictEqual(
+      Option.none(),
+    );
   });
 });

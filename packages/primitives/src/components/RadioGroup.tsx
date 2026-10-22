@@ -58,10 +58,13 @@ import {
   composeEvent,
   composePress,
   decorative,
+  mergeRefs,
   mergeStyle,
   suppressSelectionFeedback,
   useControlState,
   valueChange,
+  type FieldHostProps,
+  type HelpProps,
   type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
@@ -89,7 +92,11 @@ export const radioItems = (props: {
   props.options ?? optionItems(props.children, RadioGroupItem);
 
 export interface RadioGroupProps
-  extends ValueChangeProps<string>, InteractionProps {
+  extends
+    ValueChangeProps<string>,
+    InteractionProps,
+    FieldHostProps,
+    HelpProps {
   /** The choices as data. Omit when the options are `RadioGroupItem` children. */
   readonly options?: ReadonlyArray<RadioOption>;
   /** The choices as items, when they carry rich content. */
@@ -234,6 +241,7 @@ export const renderRadioGroup = (
     <div
       role="radiogroup"
       aria-label={accessibleName(props.label)}
+      aria-description={accessibleName(props.description)}
       testId={props.testId}
       onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, onKeyDown)}
       onKeyUp={composeEvent<KeyEvent>(props.onKeyUp, onKeyUp)}
@@ -242,6 +250,9 @@ export const renderRadioGroup = (
       {Arr.map(options, (option, index) => {
         const current = itemState(option, state.current);
         const disabled = props.disabled === true || option.disabled === true;
+        // The address lands on the row that holds the tab stop, so a form can
+        // focus the group's current choice rather than an unfocusable wrapper.
+        const addressed = index === stopIndex;
         const spec: SelectionSpec = {
           state: current,
           size,
@@ -271,11 +282,17 @@ export const renderRadioGroup = (
         return (
           <div
             key={option.value}
-            ref={handlers.registerItem(index)}
+            ref={
+              addressed
+                ? mergeRefs(handlers.registerItem(index), props.ref)
+                : handlers.registerItem(index)
+            }
             role="radio"
             aria-label={optionName(option)}
+            aria-id={addressed ? props["aria-id"] : undefined}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
             tabIndex={disabled ? undefined : index === stopIndex ? 0 : -1}
+            onLayout={addressed ? props.onLayout : undefined}
             onClick={composePress(disabled, props.onClick, () => {
               select(index);
             })}

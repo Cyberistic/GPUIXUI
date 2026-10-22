@@ -79,6 +79,26 @@ export const hostHandler = (
     Schema.decodeUnknownOption(HostHandler)(value),
   );
 
+const HostRef = Schema.declare(
+  (input: unknown): input is (instance: unknown) => void =>
+    typeof input === "function",
+  { description: "A React ref callback handed to a host element." },
+);
+
+/**
+ * A ref callback a host element was given, decoded.
+ *
+ * A control that merges the caller's ref with its own hands down a composed
+ * callback, so a test calls it rather than comparing it with the caller's.
+ */
+export const hostRef = (
+  element: ReactElement,
+  name = "ref",
+): Option.Option<(instance: unknown) => void> =>
+  Option.flatMap(hostProp(element, name), (value) =>
+    Schema.decodeUnknownOption(HostRef)(value),
+  );
+
 const StyleRecord = Schema.Record(Schema.String, Schema.Unknown);
 
 /** One property of a host element's resolved `style` prop, still unknown. */

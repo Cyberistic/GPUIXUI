@@ -35,9 +35,11 @@ const help = "Shown on invitations and in the app switcher.";
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the name |
 
-`labelledBy(name): { label: string }` returns the prop every control reads, so a
-caller spreads it into an `Input`, `TextArea`, `Select`, `Checkbox`, `Switch` or
-`RadioGroup` instead of spelling the name twice.
+`labelledBy(name, help?)` returns `{ label }` — or `{ label, description }` when
+help is given — so a caller spreads it into an `Input`, `TextArea`, `Select`,
+`Checkbox`, `Switch`, `RadioGroup`, `Rating`, `NumberField`, `OTPField` or
+`Toggle` instead of spelling the name twice. The optional `description` is the
+same string the `Label` paints, handed to the control as `aria-description`.
 
 ## Keyboard
 
@@ -68,8 +70,9 @@ size or colour.
 - No click-to-focus: the runtime has no `for`/`htmlFor`, and the label cannot
   move focus to another element.
 - No association by reference (above) — the name is written in two places when
-  both the visible label and the control's name are needed. `labelledBy` keeps
-  the *control* side to one object, not the pair.
+  both the visible label and the control's name are needed. `labelledBy(name,
+  help)` writes both control-side props from one call, but the `Label` still
+  paints its own copy.
 - The visible description is a second copy: the control announces only the
   `description` handed to it. A form that paints help on the `Label` and stops
   there is a field whose help cannot be heard.

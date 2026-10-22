@@ -36,6 +36,8 @@ Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start)
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
 | `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
 | `label` | `string` | none | accessible name; required when icon-only |
+| `description` | `string` | none | announced help; wins over the tooltip's `aria-description` when both are present |
+| `ref` / `aria-id` / `onLayout` | host address | none | the button element is the addressed element |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the toggle's own; yours runs first |
 | `onMouseEnter` / `onMouseLeave` | host handlers | none | forwarded to the host; the pair a `Tooltip` trigger needs |
 | `aria-description` | `string` | none | supplementary description; `Tooltip` passes the tip here |
@@ -76,6 +78,12 @@ toggle waits for the release.
   component does not pretend otherwise.
 - The name comes from `label` or a plain text child; a blank label is omitted.
   Give an icon-only toggle a `label` — the icon is decorative.
+- A tooltip's tip and a caller's help share the `aria-description` channel:
+  `description` is the field-style help and wins when both are given, and a blank
+  either drops nothing rather than announcing an empty string.
+- The button element is the **address** — `ref`, `aria-id` and `onLayout` land on
+  it, so a toolbar can focus the mode it just changed and a layout can measure it
+  (`runtime/address.runtime.test.tsx`).
 
 ## Theming
 

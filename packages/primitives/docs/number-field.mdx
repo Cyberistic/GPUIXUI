@@ -77,6 +77,8 @@ import {
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border |
 | `label` | `string` | none | accessible name |
+| `description` | `string` | none | announced help on the input (`aria-description`); a blank one publishes nothing |
+| `ref` / `aria-id` / `onLayout` | host address | none | land on the inner `<input>`, the element a form focuses — not the chrome |
 | `placeholder` | `string` | none | empty-field hint |
 | `autoFocus` | `boolean` | `false` | focus on mount |
 | `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |
@@ -131,6 +133,13 @@ on a stepper returns focus to the input so the next arrow works.
 - A disabled field is `readOnly`, out of the tab order and paints the disabled
   chrome; assistive technology hears read-only, which is the honest state (the
   host has no `disabled` prop).
+- The help a visible `Label description` paints is announced on the input through
+  **`aria-description`** (no `aria-describedby`); a blank one publishes nothing.
+- The **address belongs to the input**, not the chrome the steppers sit in: a
+  form focuses the field it failed on through `ref`, an automation host addresses
+  it by `aria-id`, and `onLayout` reports the input's box. The field's own ref
+  (which points native focus at the input after a step) is composed with the
+  caller's, so neither replaces the other (`runtime/address.runtime.test.tsx`).
 
 ## Theming
 

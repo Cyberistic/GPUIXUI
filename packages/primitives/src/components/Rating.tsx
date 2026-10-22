@@ -36,16 +36,23 @@ import { controlRing } from "../core/focus.js";
 import {
   composeEvent,
   composePress,
+  mergeRefs,
   mergeStyle,
   useControlState,
   valueChange,
+  type FieldHostProps,
+  type HelpProps,
   type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface RatingProps
-  extends ValueChangeProps<number>, InteractionProps {
+  extends
+    ValueChangeProps<number>,
+    InteractionProps,
+    FieldHostProps,
+    HelpProps {
   /** Controlled rating, `0..max` (0 is unrated). */
   readonly value?: number;
   readonly defaultValue?: number;
@@ -161,12 +168,18 @@ export const renderRating = (
   const star = (index: number): ReactElement => (
     <div
       key={index}
-      ref={handlers.registerItem(index)}
+      ref={
+        index === tabStop
+          ? mergeRefs(handlers.registerItem(index), props.ref)
+          : handlers.registerItem(index)
+      }
       role="radio"
       aria-label={`${index} of ${max}`}
+      aria-id={index === tabStop ? props["aria-id"] : undefined}
       // The state stays the rating's: a previewed star is filled, not chosen.
       aria-valuetext={index <= value ? "checked" : "unchecked"}
       tabIndex={interactive ? (index === tabStop ? 0 : -1) : undefined}
+      onLayout={index === tabStop ? props.onLayout : undefined}
       onClick={composePress(!interactive, props.onClick, () => {
         handlers.onSelect(index);
       })}
@@ -190,6 +203,7 @@ export const renderRating = (
     <div
       role="radiogroup"
       aria-label={accessibleName(props.label)}
+      aria-description={accessibleName(props.description)}
       testId={props.testId}
       onKeyDown={composeEvent<KeyEvent>(props.onKeyDown, (event) => {
         if (!interactive) return;

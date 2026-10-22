@@ -41,13 +41,16 @@ import {
   suppressFeedback,
   useControlState,
   useFocus,
+  type FieldHostProps,
   type FocusState,
+  type HelpProps,
   type InteractionProps,
   type TooltipTriggerProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface ToggleProps extends InteractionProps, TooltipTriggerProps {
+export interface ToggleProps
+  extends InteractionProps, TooltipTriggerProps, FieldHostProps, HelpProps {
   /** Controlled pressed state. Omit to let the toggle own it. */
   readonly pressed?: boolean;
   readonly defaultPressed?: boolean;
@@ -124,12 +127,20 @@ export const renderToggle = (
   );
   return (
     <div
+      ref={props.ref}
       role="button"
       aria-label={accessibleName(props.label) ?? childrenName(props.children)}
-      aria-description={accessibleName(props["aria-description"])}
+      // A tooltip arrives through the same channel as the caller's help; an
+      // explicit `description` is the field-style help and wins.
+      aria-description={
+        accessibleName(props.description) ??
+        accessibleName(props["aria-description"])
+      }
+      aria-id={props["aria-id"]}
       aria-valuetext={pressedValueText(state.current)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
+      onLayout={props.onLayout}
       onClick={composePress(props.disabled === true, props.onClick, toggle)}
       onMouseEnter={props.onMouseEnter}
       onMouseLeave={props.onMouseLeave}

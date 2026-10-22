@@ -67,17 +67,24 @@ import { recipeTw } from "../recipe/registry.js";
 import type { FieldState } from "./Input.js";
 import {
   composeEvent,
+  mergeRefs,
   mergeStyle,
   suppressFeedback,
   useControlState,
   valueChange,
+  type FieldHostProps,
+  type HelpProps,
   type InteractionProps,
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface OTPFieldProps
-  extends ValueChangeProps<string>, InteractionProps {
+  extends
+    ValueChangeProps<string>,
+    InteractionProps,
+    FieldHostProps,
+    HelpProps {
   /** Number of cells. Defaults to 6. */
   readonly length?: number;
   /** Controlled code. Omit to let the field hold its own. */
@@ -142,6 +149,10 @@ export interface OTPFieldPart {
   readonly theme: PrimitiveTheme;
   readonly disabled: boolean;
   readonly label: string | undefined;
+  /** The announced help, already blank-filtered; every cell carries it. */
+  readonly description: string | undefined;
+  /** The caller's address: `ref`, `aria-id` and `onLayout` land on the first cell. */
+  readonly address: FieldHostProps;
   readonly testId: string | undefined;
   readonly autoFocus: boolean | undefined;
   /** The code split into one entry per cell, already normalised. */
@@ -187,6 +198,8 @@ export const otpFieldPart = (
     theme,
     disabled,
     label: accessibleName(props.label),
+    description: accessibleName(props.description),
+    address: props,
     testId: props.testId,
     autoFocus: disabled ? undefined : props.autoFocus,
     cells: otpCells(code, limit),
@@ -227,9 +240,12 @@ export const renderOtpFieldInput = (
   part: OTPFieldPart,
 ): ReactElement => {
   const { disabled, focus, handlers } = part;
+  // The address is the cell a form can focus: the first one. The later cells
+  // keep their own internal refs, and every cell carries the group's help.
+  const address: FieldHostProps = index === 0 ? part.address : {};
   return (
     <input
-      ref={handlers.registerCell(index)}
+      ref={mergeRefs(handlers.registerCell(index), address.ref)}
       testId={
         testId ??
         (part.testId === undefined
@@ -242,6 +258,9 @@ export const renderOtpFieldInput = (
       tabIndex={disabled ? -1 : index === part.rovingIndex ? 0 : -1}
       theme={nativeTextTheme(part.theme)}
       aria-label={otpCellLabel(part.label, index)}
+      aria-description={part.description}
+      aria-id={address["aria-id"]}
+      onLayout={address.onLayout}
       style={mergeStyle(
         mergeStyle(
           part.cellStyle,

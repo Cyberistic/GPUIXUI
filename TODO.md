@@ -2123,14 +2123,28 @@ a workaround for two live sessions sharing one worktree; see
       spread into the `Label` and the control), the `COMPONENTS.md` Text
       inputs/Text areas/Labels rows and their inventory records. 735 unit /
       212 runtime
-`[ ]` `packages/primitives`: give **`NumberField`, `OTPField` and the selection
+`[x]` `packages/primitives`: give **`NumberField`, `OTPField` and the selection
       controls** (`Checkbox`, `Switch`, `RadioGroup`, `Toggle`, `Rating`) the
       address and help surface a field now has — `description` →
-      `aria-description` and the host `ref`/`aria-id`/`onLayout` — so a form
-      addresses every control the way it addresses an `Input`. Their props are
-      separate types, and a composite (a number field's input, an OTP group's
-      cells) has to name which element the address lands on; `labelledBy` then
-      gains the description it can hand back.
+      `aria-description` and the host `ref`/`aria-id`/`onLayout`. The address
+      names its element because a composite has only one: a number field's inner
+      `<input>`, an OTP field's **first cell** (every cell carries the help), and
+      a radio group's or rating's **tab-stop row/star** (the wrapper is not
+      focusable; the group carries the help). A component that owns a ref for its
+      own behaviour (NumberField's focus-after-step) **composes** it with the
+      caller's through `mergeRefs`, so neither replaces the other. `labelledBy`
+      gained the optional description it hands back, so one call writes the name
+      and the help a visible `Label` paints. Unit evidence: `Checkbox.test.tsx`,
+      `Switch.test.tsx`, `Toggle.test.tsx`, `RadioGroup.test.tsx`,
+      `Rating.test.tsx`, `NumberField.test.tsx`, `OTPField.test.tsx` and
+      `presentational.test.tsx`; native evidence: `runtime/address.runtime.test.tsx`
+      (3 cases, 215/215). Both directions measured: dropping the checkbox's
+      `aria-description` fails the unit case and the runtime case
+      (`expected undefined to be 'Required to continue.'`), and replacing the
+      number field's merged ref with its own fails the "keeps its own
+      registration" case. Docs: each page's `## API` table and `## Accessibility`
+      section names where its address lands; `COMPONENTS.md`'s seven Tier 1 rows
+      record the support.
 `[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness

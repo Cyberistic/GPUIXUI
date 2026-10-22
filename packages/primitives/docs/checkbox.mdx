@@ -78,6 +78,8 @@ press that toggles the box.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name |
+| `description` | `string` | none | announced help (`aria-description`) for a format hint or an error message; a blank one publishes nothing |
+| `ref` / `aria-id` / `onLayout` | host address | none | the box is the addressed element: focus it, name it for an automation host, measure it |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the box's own; yours runs first |
 | `style` | `StateStyle<CheckboxState>` | — | resolved against the live state and merged last |
 | `testId` | `string` | — | stable locator |
@@ -127,6 +129,13 @@ also scroll while the control waits for the release.
 - The visible name is a separate `Label`, but it does not name the box: there is
   no `aria-labelledby`, so the box's own `label` prop is its accessible name —
   pass the same string, or spread `labelledBy(name)`.
+- The help a visible `Label description` paints is announced through
+  **`aria-description`**, because 0.11.0 has no `aria-describedby` to connect the
+  two nodes: pass the same string as `description`, or
+  `labelledBy(name, help)`. A blank description publishes nothing.
+- The box is the **address** a form focuses: `ref` receives the runtime's own
+  instance, `aria-id` is its automation id, and `onLayout` reports its box.
+  `runtime/address.runtime.test.tsx` reads all three back off a window.
 
 ## Theming
 

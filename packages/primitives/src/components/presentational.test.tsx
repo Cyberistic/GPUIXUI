@@ -411,6 +411,18 @@ describe("type", () => {
       "column",
     );
   });
+
+  it("hands back the description the label paints, when there is one", () => {
+    // The bug guarded: `labelledBy(name)` wrote only the name, so the help a
+    // visible `Label description` painted was announced to nobody — there is no
+    // `aria-describedby`. Passing the same string gives the control the words;
+    // the Checkbox suite proves a control consumes them.
+    expect(labelledBy("Email")).toStrictEqual({ label: "Email" });
+    expect(labelledBy("Email", "We never share it.")).toStrictEqual({
+      label: "Email",
+      description: "We never share it.",
+    });
+  });
 });
 
 describe("loading", () => {
