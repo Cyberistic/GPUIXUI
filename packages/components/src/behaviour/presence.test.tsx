@@ -38,6 +38,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "../dropdown-menu.js";
 import {
@@ -281,6 +284,75 @@ describe("an anchored surface", () => {
     await delay();
     expect(painted(page.renderer, "menu")).toBe(true);
     await waitFor(() => expect(painted(page.renderer, "menu")).toBe(false));
+    page.unmount();
+  });
+});
+
+describe("a submenu", () => {
+  /** A menu with one secondary level, so the submenu's own motion is measured. */
+  const SubmenuPage = ({
+    reducedMotion = false,
+  }: {
+    readonly reducedMotion?: boolean;
+  }) => (
+    <Page reducedMotion={reducedMotion}>
+      <DropdownMenu>
+        <DropdownMenuTrigger testId="open">Actions</DropdownMenuTrigger>
+        <DropdownMenuContent testId="menu" label="File actions">
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger testId="share">
+              Share
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent testId="submenu" label="Share">
+              <DropdownMenuItem>Copy link</DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </Page>
+  );
+
+  it("travels out from its row and keeps its box for the exit tween", async () => {
+    const page = renderComponent(<SubmenuPage />);
+    page.renderer.clockPause();
+    clickCentreOf(page, "open");
+    await delay();
+    clickCentreOf(page, "share");
+    await delay();
+    const entering = where(page.renderer, "submenu", "x");
+
+    page.renderer.clockFastForward(400);
+    await delay();
+    // Opened to its row's right, the surface enters from the row's side.
+    expect(where(page.renderer, "submenu", "x") - entering).toBe(4);
+
+    page.renderer.simulateKeystrokes("left");
+    await delay();
+    // Still painted while it leaves, and no longer a target...
+    expect(painted(page.renderer, "submenu")).toBe(true);
+    expect(page.renderer.findByTestId("submenu")?.style.pointerEvents).toBe(
+      "none",
+    );
+    // ...then unmounted when the tween's duration has elapsed.
+    await waitFor(() => expect(painted(page.renderer, "submenu")).toBe(false));
+    page.unmount();
+  });
+
+  it("paints at rest and unmounts at once under reduced motion", async () => {
+    const page = renderComponent(<SubmenuPage reducedMotion />);
+    page.renderer.clockPause();
+    clickCentreOf(page, "open");
+    await delay();
+    clickCentreOf(page, "share");
+    await delay();
+    const resting = where(page.renderer, "submenu", "x");
+
+    page.renderer.clockFastForward(400);
+    await delay();
+    expect(where(page.renderer, "submenu", "x")).toBe(resting);
+
+    page.renderer.simulateKeystrokes("left");
+    await waitFor(() => expect(painted(page.renderer, "submenu")).toBe(false));
     page.unmount();
   });
 });

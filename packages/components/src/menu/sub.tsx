@@ -38,6 +38,12 @@ import {
   type PartComponent,
   type PartsContract,
 } from "../internal/parts.js";
+import {
+  fadeFromAnchor,
+  presenceMotion,
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "../internal/presence.js";
 import { useMergedRef } from "../internal/ref.js";
 import { useTheme } from "../internal/theme.js";
 import {
@@ -182,9 +188,10 @@ export interface MenuSubContentProps extends Omit<Props, "children"> {
 }
 
 /**
- * The floating second level, rendered only while open. Its position is the
- * trigger row's right edge in window coordinates, clamped by the runtime's
- * `fit="snap"`; it owns its dismiss layer so Escape closes one level only.
+ * The floating second level, mounted while open and through its exit tween. Its
+ * position is the trigger row's right edge in window coordinates, clamped by the
+ * runtime's `fit="snap"`; it owns its dismiss layer so Escape closes one level
+ * only.
  */
 export const MenuSubContent = ({
   label,
@@ -291,11 +298,13 @@ export const MenuSubContent = ({
 
   const [point, setPoint] = useState<{ x: number; y: number } | undefined>();
 
+  const timing = useSurfaceTiming("normal");
+  const presence = useSurfacePresence(open, timing);
+
+  // The measured corner is kept while the surface leaves: the exit tween runs
+  // from where the open submenu was painted, not from a re-measure.
   useLayoutEffect(() => {
-    if (!open) {
-      setPoint(undefined);
-      return;
-    }
+    if (!open) return;
     const instance = trigger.current;
     if (instance === null) return;
     Option.match(
@@ -324,7 +333,7 @@ export const MenuSubContent = ({
     menu.step({ _tag: "First" });
   }, [menu, open]);
 
-  if (!open || point === undefined) return null;
+  if (!presence.mounted || point === undefined) return null;
 
   return (
     <MenuContext.Provider value={menu}>
@@ -340,6 +349,7 @@ export const MenuSubContent = ({
           ref={setSurface}
           testId={testId}
           label={label}
+          motion={presenceMotion(fadeFromAnchor("right", 4), presence)}
           {...rest}
           onKeyDown={(event) => {
             // Claim every key: the parent menu must not also move its highlight.
@@ -347,7 +357,16 @@ export const MenuSubContent = ({
             if (isLeft(event)) close("dismiss");
             onKeyDown?.(event);
           }}
-          style={mergeStyles({ maxHeight: 320, overflowY: "scroll" }, style)}
+          style={mergeStyles(
+            // A relative box is what the travel offset is measured against.
+            {
+              position: "relative",
+              maxHeight: 320,
+              overflowY: "scroll",
+              pointerEvents: presence.present ? "auto" : "none",
+            },
+            style,
+          )}
         >
           {children}
         </MenuSurface>

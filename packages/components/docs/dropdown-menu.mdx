@@ -42,7 +42,7 @@ import {
 | `DropdownMenuCheckboxItem` | an on/off row that stays open after toggling |
 | `DropdownMenuSub` | a group of actions behind a secondary level |
 | `DropdownMenuSubTrigger` | the row that opens the submenu |
-| `DropdownMenuSubContent` | the floating second level, rendered while open |
+| `DropdownMenuSubContent` | the floating second level, mounted while open and through its exit tween |
 | `DropdownMenuSeparator` | a hairline between groups |
 | `DropdownMenuLabel` | a small heading over a group |
 | `DropdownMenuGroup` | a labelled group of rows |
@@ -201,9 +201,11 @@ also closes both.
 
 The surface fades and travels 4px out from its trigger's side (`normal`,
 200 ms), and stays mounted for its exit tween — so a dismiss is immediate in
-state while the box fades out. Submenus mount with the same appearance rules;
-their own entry is not animated in v1. `MotionProvider` supplies the
-reduced-motion preference (`docs/component-api.md` §11).
+state while the box fades out. A submenu does the same from its row's side and
+also stays mounted for its exit, taking no presses while it leaves; it always
+enters from the left, so the rare submenu the runtime snaps to the row's left
+travels from the same edge. `MotionProvider` supplies the reduced-motion
+preference (`docs/component-api.md` §11).
 
 ## API
 

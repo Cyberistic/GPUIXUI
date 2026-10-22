@@ -434,7 +434,7 @@ later.
 | ------- | -------- | ----- |
 | Dialog, Command menu | fade + 8px rise | `slow` (320 ms) |
 | Drawer | fade + 12px from its own edge | `slow` |
-| Popover, Dropdown menu, Context menu | fade + 8px / 4px from the trigger's side | `normal` (200 ms) |
+| Popover, Dropdown menu, Context menu, submenu | fade + 8px / 4px from the trigger's (or row's) side | `normal` (200 ms) |
 | Navigation menu | fade + 4px out from its trigger's side | `normal` |
 | Preview card | fade + 4px from the trigger's side | `fast` (160 ms) |
 | Toast | fade + 16px from the right edge | `notice` (500 ms) |

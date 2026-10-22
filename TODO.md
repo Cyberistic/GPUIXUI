@@ -5545,6 +5545,15 @@ numbers).
       pointer guard the exit case fails `expected 'auto' to be 'none'`; with the preference
       ignored the reduced case fails `expected 76 to be 72`. Docs: `docs/navigation-menu.mdx`
       §Motion and the per-surface table in `docs/component-api.md` §11.
+`[x]` Animate the **submenu** level the menu family deferred "in v1": `MenuSubContent` — shared by
+      the dropdown and context menus — now enters with a fade plus 4px of travel out from its row
+      (`normal`, 200 ms), keeps its measured corner through the exit tween, and takes no presses
+      while it leaves, so a press inside its box belongs to what is underneath. `presence.test.tsx`
+      gains a `a submenu` suite (the measured travel and the exit window with `pointerEvents:
+      none`, and the reduced frame). Directions measured: without the seam the travel case fails
+      `expected +0 to be 4`; without the pointer guard the exit case fails `expected 'auto' to be
+      'none'`; with the preference ignored the reduced case fails `expected 230 to be 226`. Docs:
+      both menu pages' §Motion and the per-surface table in `docs/component-api.md` §11.
 `[x]` **playground**: the four live probes the motion wiring moved now read the
       frame a user is left with, and the auto-focus case follows the modal fix.
       `popover-lifecycle` takes its gap from a settled `y` (the 200ms entry first
