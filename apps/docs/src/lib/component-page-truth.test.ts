@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import {
   contrastRatio,
   elevationShadow,
@@ -8,6 +8,7 @@ import {
 import { switchThumbStyle, switchTrackStyle } from "@gpuixui/primitives/core";
 import { describe, expect, it } from "vitest";
 import { pageUrl, propsOf } from "./component-index";
+import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
 import { inventory } from "./inventory-data";
 
@@ -219,6 +220,12 @@ const pages: ReadonlyArray<CuratedPage> = [
     row: "Switches",
     suite: "packages/primitives/runtime/switch.runtime.test.tsx",
     source: "packages/primitives/src/components/Switch.tsx",
+  },
+  {
+    file: "table.mdx",
+    row: "Tables",
+    suite: "packages/data/src/behaviour/table.test.tsx",
+    source: "packages/data/src/table/table.tsx",
   },
   {
     file: "tag-input.mdx",
@@ -2405,9 +2412,9 @@ describe("the curated component pages", () => {
 /** Every `packages/<pkg>/docs/*.mdx` page the site mounts, as a repo path. */
 const packagePageFiles = (): ReadonlyArray<string> =>
   packageCollections.flatMap((collection) =>
-    readdirSync(new URL(`${collection.dir}/`, root))
-      .filter((name) => name.endsWith(".mdx"))
-      .map((name) => `${collection.dir}/${name}`),
+    collectionPages(root, collection).map(
+      (name) => `${collection.dir}/${name}`,
+    ),
   );
 
 /** The `## API…` section of a page, as text: tables and the prose beside them. */

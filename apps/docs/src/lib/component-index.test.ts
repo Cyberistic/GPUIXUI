@@ -14,6 +14,7 @@ import {
   type VerdictOf,
 } from "./component-index";
 import { componentIndex } from "./component-index-data";
+import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
 import { laneView, summarize } from "./inventory";
 import { inventory } from "./inventory-data";
@@ -75,9 +76,9 @@ const root = new URL("../../../../", import.meta.url);
 
 const packageFiles = (): ReadonlyArray<string> =>
   packageCollections.flatMap((collection) =>
-    readdirSync(new URL(`${collection.dir}/`, root))
-      .filter((name) => name.endsWith(".mdx"))
-      .map((name) => `${collection.dir}/${name}`),
+    collectionPages(root, collection).map(
+      (name) => `${collection.dir}/${name}`,
+    ),
   );
 
 describe("the index's URL mapping", () => {
@@ -536,10 +537,15 @@ describe("the real index", () => {
     expect(missing).toEqual([]);
   });
 
-  it("starts with the primitives and ends with the components", () => {
+  it("starts with the primitives and ends with the data surfaces", () => {
+    // The sections are the sidebar's order, read off the rows instead of
+    // retyped: a package that lands after the components appends a section,
+    // and a row that drifts back into an earlier section fails here.
     expect(componentIndex.length).toBeGreaterThan(0);
+    const sections = [...new Set(componentIndex.map((row) => row.section))];
+    expect(sections).toEqual(["Primitives", "Components", "Data display"]);
     expect(componentIndex[0]?.section).toBe("Primitives");
-    expect(componentIndex.at(-1)?.section).toBe("Components");
+    expect(componentIndex.at(-1)?.section).toBe("Data display");
   });
 
   it("marks exactly the pages the site curates with a preview", () => {

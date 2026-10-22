@@ -24,10 +24,19 @@ interface LanePage {
   readonly title: string;
 }
 
+/**
+ * The data lane's page lives in a folder, not beside the other two.
+ *
+ * The `@gpuixui/data` collection is mounted at `/docs/data-display`, so the
+ * package's own pages share the prefix with the lane page; the lane page moves
+ * into `data-display/index.mdx` to leave the folder free for them.
+ */
+const dataDisplayPage = "data-display/index.mdx";
+
 const pages: ReadonlyArray<LanePage> = [
   { file: "layouts.mdx", lane: "layout", title: "Layouts" },
   { file: "workspace.mdx", lane: "workspace", title: "Workspace" },
-  { file: "data-display.mdx", lane: "data-display", title: "Data display" },
+  { file: dataDisplayPage, lane: "data-display", title: "Data display" },
 ];
 
 /** The `pages` array of the root `meta.json`. */
@@ -68,7 +77,8 @@ describe("the composition pages", () => {
 
   it("sit in the sidebar, after the component sections", () => {
     const positions = pages.map(({ file }) => {
-      const slug = file.replace(/\.mdx$/, "");
+      // A lane page that moved into a folder is listed by its folder's name.
+      const slug = file.replace(/\/index\.mdx$/, "").replace(/\.mdx$/, "");
       return sidebar.indexOf(slug);
     });
 
@@ -111,7 +121,7 @@ const rowFor = (table: string, name: string): string => {
 };
 
 describe("the data-display page's drawing claims", () => {
-  const dataPage = read("data-display.mdx");
+  const dataPage = read(dataDisplayPage);
   const charts = rowFor(dataPage, "Charts");
 
   it("states the measured surface, not a plan", () => {
@@ -353,8 +363,10 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("onMouseDown");
     expect(dataPage).toContain("onMouseMove");
     expect(dataPage).toContain("nextSize");
-    // The gap row is where a reader looks for the limit, and it must carry the
-    // measured gesture rather than the old one-line verdict.
+    // The row is where a reader looks for the control, and it must carry the
+    // measured gesture rather than the old one-line verdict. The control ships
+    // now, so the row is in the shipped-surface table; the gaps table may not
+    // list it (held by the shipped-rows case below).
     expect(rowFor(dataPage, "Resizable columns")).toContain(
       "column-resize-lifecycle",
     );
@@ -695,7 +707,7 @@ describe("the workspace page's pointer and terminal claims", () => {
  * is read from the inventory rather than from memory.
  */
 describe("the data-display page's shipped rows", () => {
-  const dataPage = read("data-display.mdx");
+  const dataPage = read(dataDisplayPage);
   const lane = summarize(laneView(inventory, "data-display").rows);
 
   it("names the package that ships the rows the inventory calls done", () => {
@@ -723,5 +735,27 @@ describe("the data-display page's shipped rows", () => {
   it("still says what is pending, so the lane is not called whole", () => {
     expect(lane.pending).toBeGreaterThan(0);
     expect(dataPage).toContain("`todo`");
+  });
+
+  it("lists only the rows the inventory still calls pending as gaps", () => {
+    // The gaps table is where a reader decides what to build next. It kept
+    // "Resizable columns" after the column drag shipped, so a plan was written
+    // against a gap the package had already closed. Every row whose name the
+    // inventory knows must still be `todo`; the shipped controls are described
+    // above it.
+    const start = dataPage.indexOf("## Gaps, with the evidence");
+    expect(start, "the page has no gaps section").toBeGreaterThan(-1);
+    const section = dataPage.slice(start).split("\n## ")[0] ?? "";
+    const named = [...section.matchAll(/^\| ([^|]+) \|/gm)]
+      .map((match) => match[1]?.trim() ?? "")
+      .filter((name) => name !== "" && name !== "Gap" && !/^-+$/.test(name));
+
+    const closed = named.filter((name) => {
+      const row = inventory.rows.find((candidate) => candidate.name === name);
+      return row !== undefined && row.status !== "todo";
+    });
+
+    expect(named.length).toBeGreaterThanOrEqual(3);
+    expect(closed).toEqual([]);
   });
 });

@@ -22,4 +22,9 @@ export const componentDocs = defineDocs({
   docs: { files: ["**/*.mdx"] },
 });
 
+export const dataDocs = defineDocs({
+  dir: "../../packages/data/docs",
+  docs: { files: ["**/*.mdx"] },
+});
+
 export default defineConfig();

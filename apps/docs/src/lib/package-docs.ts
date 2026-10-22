@@ -3,6 +3,7 @@ import { defineDocs } from "fumadocs-mdx/macro";
 import type { PackageOrigin } from "./collection-routes";
 import {
   componentDocsRoute,
+  dataDocsRoute,
   iconDocsRoute,
   primitiveDocsRoute,
 } from "./shared";
@@ -42,10 +43,20 @@ const componentDocs = defineDocs({
   },
 });
 
+const dataDocs = defineDocs({
+  dir: "../../packages/data/docs",
+  docs: {
+    files: ["**/*.mdx"],
+    async: true,
+    postprocess: { includeProcessedMarkdown: true },
+  },
+});
+
 export const docsByOrigin = {
   primitives: primitiveDocs,
   icons: iconDocs,
   components: componentDocs,
+  data: dataDocs,
 } satisfies Record<PackageOrigin, typeof primitiveDocs>;
 
 const primitiveSource = loader({
@@ -63,14 +74,25 @@ const componentSource = loader({
   baseUrl: componentDocsRoute,
 });
 
+const dataSource = loader({
+  source: dataDocs.toFumadocsSource(),
+  baseUrl: dataDocsRoute,
+});
+
 export const sourceByOrigin = {
   primitives: primitiveSource,
   icons: iconSource,
   components: componentSource,
+  data: dataSource,
 } satisfies Record<PackageOrigin, typeof primitiveSource>;
 
 /** Every mounted package source, in sidebar order. */
-export const packageSources = [primitiveSource, iconSource, componentSource];
+export const packageSources = [
+  primitiveSource,
+  iconSource,
+  componentSource,
+  dataSource,
+];
 
 /** The pages a sidebar section lists, ready for `completeSection`. */
 export const sectionPages = (origins: ReadonlyArray<PackageOrigin>) =>

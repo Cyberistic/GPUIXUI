@@ -4,6 +4,7 @@ export const docsRoute = "/docs";
 export const primitiveDocsRoute = "/docs/primitives";
 export const componentDocsRoute = "/docs/components";
 export const iconDocsRoute = "/docs/icons";
+export const dataDocsRoute = "/docs/data-display";
 export const gitConfig = {
   user: "Cyberistic",
   repo: "GPUIXUI",

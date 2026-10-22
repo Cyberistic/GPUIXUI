@@ -111,6 +111,12 @@ import {
   tagInputWorkflowSource,
 } from "./tag-input-demo";
 import {
+  TableStates,
+  TableWorkflow,
+  tableStatesSource,
+  tableWorkflowSource,
+} from "./table-demo";
+import {
   TooltipDemo,
   TooltipStates,
   tipStatesSource,
@@ -2532,6 +2538,8 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: SwitchWorkflow,
     source: switchWorkflowSource,
   },
+  "table-states": { render: TableStates, source: tableStatesSource },
+  "table-workflow": { render: TableWorkflow, source: tableWorkflowSource },
   "tag-input-states": {
     render: TagInputStates,
     source: tagInputStatesSource,

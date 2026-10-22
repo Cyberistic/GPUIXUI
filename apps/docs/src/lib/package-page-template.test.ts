@@ -1,5 +1,6 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
 
 /**
@@ -45,8 +46,8 @@ const readPage = (path: string): PackagePage => ({
 
 const pages: ReadonlyArray<PackagePage> = packageCollections.flatMap(
   (collection) =>
-    readdirSync(new URL(`${collection.dir}/`, root))
-      .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
+    collectionPages(root, collection)
+      .filter((name) => name !== "index.mdx")
       .toSorted()
       .map((name) => readPage(`${collection.dir}/${name}`)),
 );

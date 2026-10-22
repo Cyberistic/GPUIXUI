@@ -90,6 +90,7 @@ const policySections = (): ReadonlyArray<string> => {
 const documentedPackages = [
   new URL("packages/primitives/src/", repo),
   new URL("packages/components/src/", repo),
+  new URL("packages/data/src/", repo),
 ];
 
 /**
@@ -202,9 +203,10 @@ describe("the curated component pages", () => {
     // `page-snippets.test.ts` checks the imports in a fence, not the prop names
     // in a row, so renaming `onActivate` in the component left the page teaching
     // a prop that no longer exists — the same "copyable code must resolve" rule
-    // the snippet walk exists for. This reads the two packages a curated page
-    // can document (primitives, and the components built on it) and holds every
-    // backticked name in the table's first column to a declaration there.
+    // the snippet walk exists for. This reads the packages a curated page can
+    // document (primitives, the components built on them, and the data surfaces)
+    // and holds every backticked name in the table's first column to a
+    // declaration there.
     //
     // It is a resolution check, not a completeness one: a prop a page omits is
     // a documentation gap, not a wrong name, and inherited `Omit`/`Props` types

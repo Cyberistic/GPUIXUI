@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join, relative } from "node:path";
+import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
 import {
   collectDependencies,
@@ -109,8 +110,8 @@ export const readPackagePages = (
 ): ReadonlyArray<PackagePageModule> => {
   const symbols = buildWorkspaceSymbolIndex(root);
   return packageCollections.flatMap((collection) =>
-    readdirSync(join(root, collection.dir))
-      .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
+    collectionPages(root, collection)
+      .filter((name) => name !== "index.mdx")
       .toSorted()
       .map((file) => {
         const page = basename(file, ".mdx");

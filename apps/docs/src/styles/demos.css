@@ -4803,3 +4803,269 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+
+/* The Table page's previews: a grid of rows drawn by hand, because the runtime
+   and the browser both refuse a styled `<table>` here. Geometry, type and colour
+   are the theme's, so the platform switch re-heights the rows and repaints the
+   washes the way the native parts do. */
+
+.gx-demo-table {
+  width: 100%;
+  justify-content: center;
+}
+
+.gx-table-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(540px, 100%);
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-table-states {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.gx-table-state {
+  width: 100%;
+  gap: 8px;
+  padding: 12px;
+}
+
+.gx-table-heading {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.gx-table-meta {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.gx-table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gx-table-filter {
+  flex-grow: 1;
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--input);
+  color: var(--input-foreground);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.gx-table-filter::placeholder {
+  color: var(--placeholder);
+}
+
+.gx-table-filter:focus-visible {
+  border-color: var(--ring);
+  outline: 2px solid var(--ring);
+  outline-offset: -1px;
+}
+
+.gx-table-count {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  overflow: hidden;
+}
+
+.gx-table-head-row {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.gx-table-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 0;
+  padding: 6px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+
+button.gx-table-head {
+  cursor: pointer;
+}
+
+button.gx-table-head:hover {
+  color: var(--foreground);
+}
+
+button.gx-table-head:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-table-glyph {
+  color: var(--placeholder);
+  font-size: 10px;
+}
+
+.gx-table-head[data-sorted] {
+  color: var(--foreground);
+}
+
+.gx-table-head[data-sorted] .gx-table-glyph {
+  color: var(--primary);
+}
+
+.gx-table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.gx-table-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: calc(var(--control-height-sm) + var(--spacing-md));
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  text-align: left;
+}
+
+.gx-table-row:last-child {
+  border-bottom: 0;
+}
+
+button.gx-table-row {
+  cursor: pointer;
+}
+
+button.gx-table-row:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-table-row[data-selected="true"] {
+  background: var(--selected);
+  color: var(--selected-foreground);
+}
+
+.gx-table-row[data-selected="true"]:hover {
+  background: var(--selected);
+  color: var(--selected-foreground);
+}
+
+button.gx-table-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-table-cell {
+  flex: 1 1 0;
+  overflow: hidden;
+  padding: 0 10px;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-table-service {
+  font-weight: 550;
+}
+
+.gx-table-number {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-align: right;
+}
+
+.gx-table-status {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.gx-table-status[data-status="ready"] {
+  background: var(--success-soft);
+  color: var(--success-soft-foreground);
+}
+
+.gx-table-status[data-status="building"] {
+  background: var(--info-soft);
+  color: var(--info-soft-foreground);
+}
+
+.gx-table-status[data-status="failed"] {
+  background: var(--destructive-soft);
+  color: var(--destructive-soft-foreground);
+}
+
+.gx-table-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 12px;
+  text-align: center;
+}
+
+.gx-table-empty-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.gx-table-empty-meta {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-table-skeleton {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--skeleton);
+}
+
+.gx-table-readout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--placeholder);
+}
+
+.gx-table-readout b {
+  color: var(--primary);
+  font-weight: 600;
+}

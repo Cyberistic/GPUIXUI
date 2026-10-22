@@ -1,5 +1,6 @@
 import {
   componentDocsRoute,
+  dataDocsRoute,
   iconDocsRoute,
   primitiveDocsRoute,
 } from "./shared";
@@ -14,7 +15,7 @@ import {
  */
 
 /** Which package a page came from. */
-export type PackageOrigin = "primitives" | "icons" | "components";
+export type PackageOrigin = "primitives" | "icons" | "components" | "data";
 
 /** One mounted package docs directory. */
 export interface PackageCollection {
@@ -58,12 +59,27 @@ const components: PackageCollection = {
   kind: "component",
 };
 
-export const packageCollections = [primitives, icons, components] as const;
+const data: PackageCollection = {
+  origin: "data",
+  dir: "packages/data/docs",
+  packageName: "@gpuixui/data",
+  route: dataDocsRoute,
+  section: "Data display",
+  kind: "data surface",
+};
+
+export const packageCollections = [
+  primitives,
+  icons,
+  components,
+  data,
+] as const;
 
 export const collectionByOrigin = {
   primitives,
   icons,
   components,
+  data,
 } satisfies Record<PackageOrigin, PackageCollection>;
 
 /**
@@ -86,5 +102,10 @@ export const packageSections: ReadonlyArray<{
     name: "Components",
     separator: "All components",
     origins: ["components"],
+  },
+  {
+    name: "Data display",
+    separator: "All data surfaces",
+    origins: ["data"],
   },
 ];

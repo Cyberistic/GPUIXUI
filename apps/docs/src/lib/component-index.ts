@@ -43,7 +43,7 @@ export interface ComponentEntry {
   readonly title: string;
   readonly description: string;
   readonly url: string;
-  /** The sidebar section the page belongs to: `Primitives` or `Components`. */
+  /** The sidebar section the page belongs to, e.g. `Primitives` or `Data display`. */
   readonly section: string;
   /** The inventory row the page reports, when `COMPONENTS.md` has one. */
   readonly verdict: PageVerdict | undefined;

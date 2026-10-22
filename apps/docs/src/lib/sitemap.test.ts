@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
 import { absoluteUrl, siteOrigin } from "./site";
 import { sitemapContentType, sitemapPaths, sitemapXml } from "./sitemap";
@@ -31,9 +32,9 @@ const sitePages = (dir: URL, slugs: ReadonlyArray<string> = []): string[] =>
 
 const packagedPages = (): string[] =>
   packageCollections.flatMap((collection) =>
-    readdirSync(new URL(`${collection.dir}/`, root))
-      .filter((name) => name.endsWith(".mdx"))
-      .map((name) => `${collection.route}/${name.replace(/\.mdx$/, "")}`),
+    collectionPages(root, collection).map(
+      (name) => `${collection.route}/${name.replace(/\.mdx$/, "")}`,
+    ),
   );
 
 const docsDir = new URL("apps/docs/content/docs/", root);

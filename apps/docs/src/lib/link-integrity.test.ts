@@ -1,5 +1,6 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { packageCollections } from "./collection-routes";
 
 /**
  * Every link a mounted page writes resolves to a mounted page (and heading).
@@ -61,15 +62,16 @@ const sitePages = walk(
 );
 
 /** The pages a package ships, mounted as collections. */
-const collections = ["components", "primitives", "icons"] as const;
-
-const packagePages = collections.flatMap((collection) =>
-  walk(
-    new URL(`packages/${collection}/docs/`, root),
-    `packages/${collection}/docs/`,
-    (slug) => `/docs/${collection}/${slug}`,
-  ),
-);
+const packagePages = packageCollections.flatMap((collection) => {
+  const dir = new URL(`${collection.dir}/`, root);
+  // A collection is mounted before its package writes its pages.
+  if (!existsSync(dir)) return [];
+  return walk(
+    dir,
+    `${collection.dir}/`,
+    (slug) => `${collection.route}/${slug}`,
+  );
+});
 
 const pages: ReadonlyArray<Page> = [...sitePages, ...packagePages];
 

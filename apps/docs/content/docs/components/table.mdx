@@ -1,0 +1,257 @@
+---
+title: Table
+description: A bounded grid of rows with a header that stays painted, a sortable column, a selection keyed by record and a filter that releases what it hides.
+---
+
+`Table` is `@gpuixui/data`'s presentation core. GPUix `@gpuix/native@0.11.0`
+paints no table element and no `position: "sticky"`, so the table is a column of
+`div` rows: **one horizontal scroller holds a header and a vertical row
+scroller as siblings**, which is how the header stays put while the rows move.
+The parts paint; the sort, the selection and the filter are pure reducers the
+package also exposes, and `useTable` joins the three.
+
+<ComponentPreview name="table-workflow" />
+
+The previews on this page are **illustrative browser approximations** of the
+native table — the same composition and the same rules, drawn in the docs
+theme. They are not the runtime surface; the native evidence is in
+`apps/playground/README.md` and [Runtime capabilities](/docs/runtime).
+
+## Installation
+
+<Install packageName="@gpuixui/data" importName="Table" />
+
+<ComponentSource name="table" file="packages/data/src/table/table.tsx" />
+
+## Usage
+
+```tsx
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+  TableViewport,
+  useTable,
+} from "@gpuixui/data";
+
+const table = useTable({ rows, keyOf: (row) => row.id, textOf, valueOf });
+
+<Table aria-label="Deploy queue" height={320}>
+  <TableViewport>
+    <TableHeader>
+      <TableRow>
+        <TableHeaderCell width={260}>Service</TableHeaderCell>
+        <TableHeaderCell width={140}>Environment</TableHeaderCell>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {table.rows.map((row) => (
+        <TableRow
+          key={row.id}
+          onClick={(event) => table.press(row.id, event.modifiers)}
+          selected={table.isSelected(row.id)}
+        >
+          <TableCell width={260}>{row.service}</TableCell>
+          <TableCell width={140}>{row.environment}</TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </TableViewport>
+</Table>;
+```
+
+A table is **bounded by a definite height**, not by its content: 0.11.0 sizes
+an `overflow-y: scroll` box from a definite height, and a `flex-1` body inside
+the horizontal scroller grew to its content (8 880px for a 320px table in the
+package's own suite). `Table` reads the viewport's and the header's `onLayout`
+heights and hands the difference to the body, so the header stays painted and
+the rows scroll. A column's width is data, not a token: the header and every
+row read the **same** column list, or hiding, moving or resizing one leaves the
+cells on a second copy of the layout.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Table` | the bounded surface: the card fill, the edge, the clip and the measured body height |
+| `TableViewport` | the one horizontal scroller the header and the rows share |
+| `TableHeader` | the header pane, a sibling of the row scroller — never a row inside it |
+| `TableBody` | the vertical scroller; only this pane moves when the reader wheels over the rows |
+| `TableRow` | one row; `selected` paints the selection wash and its own label role |
+| `TableHeaderCell` | a header box; a sort control or a `Text` lives inside it |
+| `TableCell` | a body box with the same inset; it paints **no** fill of its own |
+| `TableCaption` | the caption below the rows |
+| `TableEmpty` | the empty set's frame — one full-width row, not a blank body |
+| `TableSkeleton` | a placeholder bar inside a loading row |
+| `TableSortHeader` | the sortable header cell: the glyph, the announced name and the next `SortState` |
+| `TableFilterField` | the query field above the rows |
+| `useTable` | the uncontrolled controller joining sort, selection and filter |
+| `ColumnMenu`, `useColumns`, `TableColumnDivider` | the visible column list, its order, its widths and the resize strip |
+| `VirtualTable`, `VirtualList` | the runtime's `<virtual-list>` in its `itemCount` window mode |
+
+A cell's content is the caller's — a `Text`, a control, a badge, a `Badge` — so
+the box forces no typographic role on it.
+
+## Sorting, selection and filtering
+
+The three reducers import no React; a grid driven from Effect or from its own
+store reads the same functions `useTable` does. Their rules are the ones the
+package implements and a window measured (`table-lifecycle`,
+`table-filter-lifecycle`, `modifier-select-lifecycle`):
+
+- **Sort** — the first press sorts a column ascending, a press on the sorted
+  field flips it, and a press on another field starts at the direction the
+  header passes (`initialDirection`), so a numeric column can read largest-first
+  on its first press. The selected **record** survives a sort.
+- **Selection** — a set of row keys, never indices. A plain press replaces the
+  set and becomes the anchor, a `Cmd`/`Ctrl` press toggles one record and moves
+  the anchor, and `Shift` extends from the anchor **over the visible order** and
+  keeps it. `Shift` wins over the toggle chord.
+- **Filter** — one literal, case-insensitive substring over the row's own text,
+  trimmed and lowercased, never a pattern. An empty query restores the set. The
+  narrower set **releases a chosen record it hides** rather than keeping an
+  invisible selection, and drops an anchor it no longer shows.
+
+<ComponentPreview name="table-states" />
+
+## Keyboard
+
+The table parts ship **no key handling**: a row is presentational, and the app
+owns the cursor. The relation to build is the one the package's example does:
+
+- One roving tab stop across the rows (`tabIndex={0}` on the chosen row, `-1`
+  on the rest) rather than one stop per row.
+- An arrow moves the chosen record **and** native focus, because a selection the
+  keys moved but focus did not is a row the next key never reaches. The runtime
+  only focuses an element inside the tab order, so the example calls
+  `renderer.focusElement` after the `tabIndex` commit, from a layout pass.
+- A header control is a real focusable control, so a keyboard reader can sort
+  without a pointer.
+
+## API reference
+
+Every part takes the GPUix host props and merges `style` last. A width is data on
+both the header and the body, so the two read one column list.
+
+### Table
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `height` | `number` — a definite height; the header stays painted and the body scrolls | — |
+| `className` | `string` — joined after the recipe, so it wins conflicts | — |
+
+### TableViewport, TableHeader, TableBody
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `rows` | `number` — the skeleton's row count when the body has no children | `3` |
+| `height` | `number` — the body height `Table` measures and hands down | measured |
+| `className` | `string` | — |
+
+### TableRow
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `selected` | `boolean` — the chosen record's wash and label role | `false` |
+| `disabled` | `boolean` — no press, no pointer cursor | `false` |
+| `instanceRef` | `Ref<PublicInstance>` — the painted element, for `renderer.focusElement` | — |
+| `className` | `string` | — |
+
+### TableHeaderCell, TableCell
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `width` | `number` — a fixed track; omitted, the cell shares the leftover width | — |
+| `align` | `"left" \| "center" \| "right"` | `"left"` |
+| `className` | `string` | — |
+
+### TableSkeleton
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `rows` | `number` — bars, one row each | `3` |
+| `columns` | `number` — bars per row | `3` |
+
+The controllers (`useTable`, `useColumns`, `useVirtualRows`) and the pure
+reducers are documented where each lives on
+[Data display](/docs/data-display), together with the remaining rows.
+
+## Theming
+
+| Element | Recipe |
+| ------- | ------ |
+| surface | `bg-card` with a `border-input` edge, clipped to `rounded-lg` |
+| viewport | `flex flex-col flex-1 min-h-0` — the one horizontal scroller |
+| header cell | `px-3 py-2 text-sm font-medium text-muted-foreground` |
+| body cell | `px-3 py-2 text-sm` — the inset, no colour |
+| chosen row | `bg-selected` and `text-selected-foreground` |
+| interactive row | `hover:bg-hover` while the pointer is on it |
+| resize strip | `absolute inset-y-0 right-0 w-1.5 bg-border hover:bg-primary` |
+| caption | `px-3 py-2 text-xs text-muted-foreground` |
+| placeholder | `h-2 rounded-sm bg-skeleton` |
+
+The recipes compile through `@gpuixui/tw`'s default registry — shadcn's fixed
+metrics (12px cell inset, 14/20 type) — so a platform switch repaints the roles
+and changes the announced column, and does not reshape the cell. Geometry the
+runtime exposes as behaviour stays in `style`: the scroller's axes, the
+measured body height and a column's width.
+
+## Accessibility and limitations
+
+- **No table element.** A screen reader gets the rows and their chosen state
+  through `role` and `aria-selected`; there is no `aria-colindex`,
+  `aria-rowindex` or `aria-describedby` in `@gpuix/native@0.11.0`, so a cell
+  address is not announced.
+- **No `aria-sort`.** `TableSortHeader` carries the state in its accessible
+  name — "Service, sorted ascending" — rather than a glyph a reader cannot see.
+- **No `position: "sticky"`.** A header inside the row scroller scrolls away
+  (measured at `y = -36`); the sibling composition is the fixed header.
+- **A press stops at the first painted child.** A control inside a cell that
+  paints a fill takes the press alone, so a cell that must hand a press to its
+  row paints nothing — `TableCell` follows that rule. A `pointerEvents: "none"`
+  control does not put the press back.
+- **The wheel moves every scrollable ancestor.** Size the table to the height it
+  has and give the body the overflow; a wheel aimed inside it also moves an
+  ancestor that scrolls.
+- **A double press cannot be synthesized** in a window probe (`click_count` is
+  always 1), so an "open the record" gesture needs a keyboard path or a control.
+- **`Table` itself is not virtualized.** A windowed body is `VirtualTable` over
+  the runtime's `<virtual-list>` `itemCount` mode, where the app renders the
+  slice; the window must exceed the viewport plus overdraw.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the parts, the measured frame, the sort/selection/filter reducers and the controllers |
+| `@gpuix/react` | the host props, the layout report and the instance handle |
+| `@gpuix/react/floating` | `mergeStyles` for a caller's style over the recipe |
+| `@gpuixui/tw` | the recipe registry and `cn` conflict resolution |
+| `effect` | `Option` for the sort state and the chosen record |
+
+## Related
+
+- [Data display](/docs/data-display) — the lane, the remaining rows and every
+  measured rule a column menu, a virtual body or a tree starts from.
+- [List](/docs/components/list) — the roving tab stop and the chord selection
+  the table reuses.
+- [Pagination](/docs/components/pagination) — the page window above a table.
+- [Examples](/docs/examples) — the shipped `table.example.tsx`.
+
+## Status
+
+`done` in `COMPONENTS.md` with the `yes` runtime verdict its inventory row
+records (measured): 15 native behaviour cases mount the parts, the pressed cell
+and the measured body. Its rules are the ones a window measured —
+`table-lifecycle` (a press selects the record it hit and that row holds the
+focus, a header press sorts and a second flips, the header keeps its painted
+`y`), `data-grid-fixed-header` (the header is a sibling),
+`table-filter-lifecycle` (a hidden selection is released),
+`modifier-select-lifecycle` (the chords and the anchor) and
+`press-routing-lifecycle` (a filled child owns the press). Column
+configuration, resizing and `VirtualTable` ship beside it; the rows that remain
+— a tree, a chart surface — are recorded as gaps on
+[Data display](/docs/data-display).

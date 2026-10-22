@@ -6,10 +6,10 @@ description: The data-presentation lane — the table core that ships, what the 
 A data surface is rows, columns, a header that sorts them and a selection that
 survives a scroll. GPUix 0.11.0 has **no table host element**, so this lane is a
 composition of layout primitives, a pure row model and — since `@gpuixui/data`
-landed — a reusable table core. Four of the Tier 3 rows ship (Tables, Sortable
-tables, Row selection, Filtering controls); the rest are `todo`, and this page
-records what exists, what a missing row will be built from, and the evidence for
-each gap, so the next one does not start by re-discovering them.
+landed — a reusable table core. Most of the Tier 3 rows now ship from that
+package; three remain `todo` (tree views, expandable rows and charts), and this
+page records what exists, what a missing row will be built from, and the
+evidence for each gap, so the next one does not start by re-discovering them.
 
 ## The lane
 
@@ -25,19 +25,29 @@ The table core is the lane's own package: `@gpuixui/data` ships `Table`,
 `TableSortHeader`, `TableFilterField` and `useTable` joining a pure sort,
 selection and filter model. The shipped example is
 [`table.example.tsx`](https://github.com/Cyberistic/GPUIXUI/blob/master/packages/data/examples/table.example.tsx),
-and `/docs/examples` lists it under **Data display** until the package has
-component pages of its own. Its rules are measured, not planned — see
-[the table that ships](#the-table-that-ships) below.
+listed on `/docs/examples` under **Data display**. Its rules are measured, not
+planned — see [the table that ships](#the-table-that-ships) below.
 
-Most of the rest of a data surface is already here, one tier down:
+The package documents its own surfaces on this site:
+
+| Surface | Page | What it gives a data view |
+| ------- | ---- | ------------------------- |
+| Table | [Table](/docs/components/table) | the frame, the fixed header, the measured body, sort, selection, filter, the column menu, the resize strip and the virtual body |
+| Query builder | [Advanced filtering](/docs/data-display/advanced-filter) | a typed predicate tree a saved query and a table's filter share |
+| Toolbar | [Data toolbar](/docs/data-display/data-toolbar) | a row of controls above the set, with a debounced search field |
+| Resizable columns | [Table](/docs/components/table) | `TableColumnDivider`, the 6px strip whose drag `column-resize-lifecycle` measured |
+| Key-value | [Key-value](/docs/data-display/key-value) | one object as label/value rows, with no copy of it |
+| Property panel | [Property panel](/docs/data-display/property-panel) | editable and read-only rows over the same object |
+| Metric | [Stat card](/docs/data-display/stat-card) | a derived reading, its unit and its trend |
+
+Everything else in the lane is composed one tier down:
 
 | Piece | Page | What it gives the lane | Its limit |
 | ----- | ---- | ---------------------- | --------- |
-| Table core | `@gpuixui/data` | Measured header, sortable header, selection, filter field, empty and skeleton rows | Column configuration, resizing and virtualisation are `todo` |
 | List / ListItem | [List](/docs/components/list) | A roving tab stop, single and multiple selection, Shift ranges, `Cmd`/`Ctrl`+A, type-ahead, activation | Rows are compound children, so a list mounts all of them; a windowed list is `<virtual-list>`'s `itemCount` mode |
 | Pagination | [Pagination](/docs/components/pagination) | A derived page window with stable width | No page-size control |
 | Empty state | [Empty state](/docs/components/empty-state) | The no-rows state a table shows | No illustration slot; `TableEmpty` is the table's own row |
-| Cards, badges, progress | [Components](/docs/components) | Statistic cards and metric rows today | No chart component |
+| Cards, badges, progress | [Components](/docs/components) | The frame and the marks a data view composes | No chart component |
 | Message scroller | [Message scroller](/docs/components/message-scroller) | Append-follow, unread count, jump-to-latest | Every row renders: a compound-children list, where the windowed `itemCount` mode renders rows from data instead |
 | Command menu | [Command menu](/docs/components/command-menu) | Ranked filtering over a list | Per-group ranking, no column model |
 
@@ -47,9 +57,9 @@ in its own source, because there is no chart component.
 
 ## A data surface you can build now
 
-Two shipped primitives carry most of the lane: `Grid` for equal tracks and
-`List` for interacting rows. A statistic card is a `Card` with `Text` and
-`Badge`; a key/value panel is a two-column `Grid`.
+Two shipped primitives carry a minimal data view: `Grid` for equal tracks and
+`List` for interacting rows. Without the package a statistic card is a `Card`
+with `Text` and `Badge`, and a key/value panel is a two-column `Grid`.
 
 ```tsx
 import { Grid, Text } from "@gpuixui/primitives";
@@ -67,8 +77,10 @@ import { Grid, Text } from "@gpuixui/primitives";
 This is the honest ceiling **without** the table package: you own the row
 model, the sort and the selection, and you draw the header yourself. A header
 that sorts, a selection that survives sorting and a filter field are what
-`@gpuixui/data` adds — see below; what stays missing is column configuration and
-resizing, virtualisation, a tree and charts.
+`@gpuixui/data` adds — see below; a themed key/value list and metric card are
+its [Key-value](/docs/data-display/key-value) and
+[Stat card](/docs/data-display/stat-card) pages. What stays missing is a tree
+view, expandable rows and charts.
 
 ## A property panel is one object, read four ways
 
@@ -282,20 +294,20 @@ re-deriving them.
 | No table element | GPUix 0.11.0's element set has `div`, `text`, `img`, `svg`, `canvas`, `input`, `textarea`, `anchored`, `code`, `diff`, `markdown`, `virtual-list` — no table |
 | No cell-level accessibility | `role`, `aria-label`, `aria-selected` and `aria-level` exist; `aria-colindex`, `aria-rowindex` and `aria-describedby` do not |
 | Charts | No chart component; every drawing route is measured. `<svg source>` paints its markup as **one tint**, so a multi-series chart is one stacked `<svg>` per colour, and `<text>` inside the markup paints; a `setImagePixels` buffer keeps each pixel's own colour — three series inside one element — and its transparent margin composites onto the card behind it, uploaded from a layout effect; `setImage` decoding SVG **bytes** keeps every `fill`, which `<svg source>` cannot; `<canvas>` is measured **blank**, so the fill behind it shows through. Two limits: a translucent bar over another bar is unmeasured, and a buffer scales to its element's box, so a chart is drawn at its layout size |
-| Hierarchical data | A tree view needs a `<virtual-list>` plus our own flattening; hierarchical virtualization is ours. `virtual-tree-lifecycle` measured the shape: one `<virtual-list>` child per visible node, 4 000 rows from 40 open directories, arrows moving native focus through `renderer.focusElement`, and a reveal by index |
-| Resizable columns | Pointer events and `col-resize`/`row-resize` cursors exist; no column model, so the resize is application state. A window measured the drag (`column-resize-lifecycle`): a divider that listens to both `onMouseDown` and `onMouseMove` keeps **8 of 8** moves past its own box (160 → 220, a −150 drag clamping at **120**, the next +30 measuring from **150**, `right` stepping to **166** with header and cells on one offset), while a move-only divider hears **1 of 8** and resizes nothing |
+| Tree views | `todo` in `COMPONENTS.md`: a tree needs a `<virtual-list>` plus our own flattening; hierarchical virtualization is ours. `virtual-tree-lifecycle` measured the shape: one `<virtual-list>` child per visible node, 4 000 rows from 40 open directories, arrows moving native focus through `renderer.focusElement`, and a reveal by index |
+| Expandable rows | `todo` in `COMPONENTS.md`: a row height is a `motion` tween, measured by `motion-geometry`, and a painted row that grows re-measures on the next frame (`virtual-list-expand`); the rows below shift by the growth and the grown height joins `scrollToItem`'s estimate |
 
 The full runtime table is on [Runtime](/docs/runtime).
 
 ## Where a data change goes
 
-- A **row primitive** (selection, sorting, filtering) → a pure module with a
-  unit suite first; a component consumes it.
-- **Table, tree and toolbar components** → `@gpuixui/components`, each with a
-  native behaviour suite and a page under `packages/components/docs`.
-- A **statistic card or a chart** → a Block until the behaviour is reusable; a
-  chart composes a measured route — one tinted `<svg>` layer per series, a
-  `setImagePixels` buffer uploaded from a layout effect, or SVG bytes through
-  `setImage` — so it waits on a reusable chart component, not on a drawing
-  surface.
+- A **row primitive** (selection, sorting, filtering) → a pure module in
+  `@gpuixui/data` with a unit suite first; a component consumes it.
+- **Table, tree and toolbar components** → `@gpuixui/data`, each with a native
+  behaviour suite and a page under `packages/data/docs`.
+- A **statistic card or a chart** → `@gpuixui/data` once the behaviour is
+  reusable; a chart composes a measured route — one tinted `<svg>` layer per
+  series, a `setImagePixels` buffer uploaded from a layout effect, or SVG bytes
+  through `setImage` — so it waits on a reusable chart component, not on a
+  drawing surface.
 - A **column layout in one app** → the app, or a Block, not a library prop.
