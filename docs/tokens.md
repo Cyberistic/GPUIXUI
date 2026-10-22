@@ -2709,7 +2709,9 @@ export const brandTheme = createTheme({
 });
 
 export const scoped = extendTheme(darkTheme, {
-  typography: { body: { fontSize: 15 } },
+  // `bodyStrong` is `body`'s emphasis at the same size, and the role merge is
+  // per role, so the pair moves together.
+  typography: { body: { fontSize: 15 }, bodyStrong: { fontSize: 15 } },
 });
 ```
 
@@ -2725,7 +2727,9 @@ Merge rules:
   unchanged — inherits too, so it cannot erase a role the group must carry;
 - colour, spacing, radius, border width and icon overrides merge key by key;
 - typography text roles merge field by field, so `body.fontSize` keeps the base
-  leading and weight;
+  leading and weight; `bodyStrong` is its own role, so a brand that changes the
+  body size names it too — the pair is designed at one size and no report holds
+  the two together yet (`TODO.md` → Interlocks);
 - elevation levels **replace** the whole shadow array;
 - `density` accepts a preset name or `DensityOverrides`; a partial override keeps
   the base preset name and merges `controlHeight` and `controlPaddingX` size by

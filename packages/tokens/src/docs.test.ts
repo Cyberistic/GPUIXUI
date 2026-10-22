@@ -539,3 +539,24 @@ describe("the density override the pages teach", () => {
     expect(catalogue).toContain("`DensityOverrides`");
   });
 });
+
+/**
+ * `bodyStrong` is `body`'s emphasis at the same size and leading, and the
+ * typography merge is per role, so an example that raises the body size has to
+ * raise the pair. No report holds the two sizes together yet — that is the
+ * interlock row in `TODO.md` — so the catalogue's executed shape is the surface
+ * this guard keeps honest.
+ */
+describe("the emphasis pair the extension example raises", () => {
+  it("moves bodyStrong with the body size", () => {
+    expect(catalogue.replace(/\s+/g, " ")).toContain(
+      "typography: { body: { fontSize: 15 }, bodyStrong: { fontSize: 15 } }",
+    );
+  });
+
+  it("names the pair rule beside the merge rules", () => {
+    expect(catalogue.replace(/\s+/g, " ")).toContain(
+      "`bodyStrong` is its own role, so a brand that changes the body size names it too",
+    );
+  });
+});
