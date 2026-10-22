@@ -280,6 +280,42 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(caret?.workaround).toContain("<textarea>");
   });
 
+  it("records the editable overlay a window measured as not composable", () => {
+    // `editor-surface` records what a read-only view cannot do. `editor-overlay`
+    // measured the other half: a transparent field over a `<code>` view paints
+    // the code through it, so the composition looks like an editor — and the two
+    // things that make one (a caret and an offset) are missing. A plan that read
+    // only "edit in a field, display in code" could still build the overlay.
+    const overlay = rowFor("Editable highlighted overlay");
+    expect(overlay?.verdict).toBe("not supported");
+    expect(overlay?.evidence).toContain("editor-overlay");
+    expect(overlay?.evidence).toContain("14 028");
+    expect(overlay?.evidence).toContain("no caret");
+    expect(overlay?.evidence).toContain("no scroll offset");
+    expect(overlay?.workaround).toContain("<textarea>");
+    expect(overlay?.workaround).toContain("<code>");
+
+    const probe = read("apps/playground/src/live/scenarios.tsx");
+    const asserted = [
+      "a transparent field paints nothing over the code beneath it",
+      "a focused field paints no caret in any of five frames",
+      "the field reports no scroll offset of its own",
+    ];
+    expect(
+      asserted.filter((line) => !probe.includes(line)),
+      "the record quotes a check the probe no longer asserts",
+    ).toEqual([]);
+
+    const page = measuredRow("Editable code overlay");
+    expect(
+      page,
+      "the page's measured table has no editable-overlay row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("editor-overlay");
+    expect(page?.[1]).toContain("no caret");
+    expect(page?.[2]).toContain("<textarea>");
+  });
+
   it("records the focus path a `Tab` traversal delivers, with the probes behind it", () => {
     // The events row used to say `onFocus` never ran on a traversal, so a plan
     // that opens a tip or a hint on focus was told to substitute
