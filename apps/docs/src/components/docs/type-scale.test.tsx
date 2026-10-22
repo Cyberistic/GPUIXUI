@@ -66,4 +66,33 @@ describe("the typography page", () => {
       pages.indexOf("theming"),
     );
   });
+
+  it("counts the roles and families its description advertises", () => {
+    // The description is the page's search snippet, and it said "the ten type
+    // roles" while the specimen derives its rows from the theme: a role added to
+    // `typography` would leave the sentence counting the previous scale.
+    const words = [
+      "zero",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine",
+      "ten",
+      "eleven",
+      "twelve",
+    ];
+    const roles = words[themeRoles.length];
+    const families =
+      words[Object.keys(themes.dark.typography).length - themeRoles.length];
+
+    expect(roles).toBeDefined();
+    expect(families).toBeDefined();
+    expect(page).toContain(`The ${roles} type roles`);
+    expect(page).toContain(`the ${families} families`);
+  });
 });
