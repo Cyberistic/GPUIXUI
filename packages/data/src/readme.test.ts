@@ -20,6 +20,7 @@
  */
 
 import { readFileSync } from "node:fs";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 
@@ -107,5 +108,55 @@ describe("the data README's frozen column", () => {
     // ...and the two that make the composition a frozen grid are named.
     expect(passed).toContain("frozenWidth");
     expect(passed).toContain("contentWidth");
+  });
+});
+
+/** The table rows of the README — the runtime rules and the status table. */
+const tableRows: ReadonlyArray<string> = readme
+  .split("\n")
+  .filter((line) => line.startsWith("| ") && line.endsWith(" |"));
+
+/** The backticked tokens on those rows, in source order, once each. */
+const citedTokens: ReadonlyArray<string> = Arr.dedupe(
+  tableRows.flatMap((line) =>
+    [...line.matchAll(/`([^`]+)`/g)].map(([, token]) => token ?? ""),
+  ),
+);
+
+/** A probe id's shape: lowercase words joined by hyphens. */
+const isProbeId = (token: string): boolean =>
+  /^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(token);
+
+/** A public component, hook or module a status row may name. */
+const isComponentName = (token: string): boolean =>
+  /^(?:[A-Z]\w+|use[A-Z]\w*)$/.test(token);
+
+describe("the README's citations", () => {
+  it("names only probes the playground registers", () => {
+    const cited = citedTokens.filter(isProbeId);
+    // A floor: a parse that stopped reading the tables must not pass.
+    expect(cited.length).toBeGreaterThanOrEqual(12);
+    const registered = `${headlessRegistry}\n${liveRegistry}`;
+    expect(
+      cited.filter((id) => !registered.includes(`id: "${id}"`)),
+    ).toEqual([]);
+    // The frozen row is one of them, from both halves of the suite.
+    expect(cited).toContain("data-grid-frozen-column");
+    expect(cited).toContain("frozen-column-lifecycle");
+  });
+
+  it("names only components the package root exports", () => {
+    const named = citedTokens.filter(isComponentName);
+    expect(named.length).toBeGreaterThanOrEqual(15);
+    expect(
+      named.filter((name) => !new RegExp(`\\b${name}\\b`).test(index)),
+    ).toEqual([]);
+    // ...and the usage snippets only call things the root (or a subpath the
+    // README names) exports.
+    expect(
+      ["TableSortHeader", "ColumnMenu", "VirtualTable"].filter(
+        (name) => !index.includes(name),
+      ),
+    ).toEqual([]);
   });
 });
