@@ -68,6 +68,7 @@ components/stepper.mdx       Curated: the derived status, the raw value, the wor
 components/switch.mdx        Curated: the left-inset slide, the 24px band, the cleared dependent
 components/table.mdx         Curated: the model, the sort and selection rules, the fixed header
 components/tag-input.mdx     Curated: the commit rules, the cap, the 24px removal target, no Backspace
+components/timeline.mdx      Curated: the passed status, the rail that stops, the dot nobody could see
 components/tabs.mdx          Curated: the measured indicator
 components/time-picker.mdx   Curated: one clock behind typing, arrows and midnight
 components/toast.mdx         Curated: the bounded queue, one action, the hold
@@ -139,6 +140,8 @@ src/components/docs/search-input-preview.ts The search preview's filter, count a
 src/components/docs/search-input-demo.tsx The search field's two browser renderings and their source strings
 src/components/docs/stepper-preview.ts    The stepper preview's derived status and the step gate
 src/components/docs/stepper-demo.tsx      The stepper's two browser renderings and their source strings
+src/components/docs/timeline-preview.ts   The timeline preview's app-marked statuses and its cursor
+src/components/docs/timeline-demo.tsx     The timeline's two browser renderings and their source strings
 src/components/docs/switch-preview.ts      The switch preview's dependent-setting rule and its slide duration
 src/components/docs/switch-demo.tsx        The switch's two browser renderings and their source strings
 src/components/docs/table-preview.ts      The table preview's copy of the package's sort, selection and filter rules

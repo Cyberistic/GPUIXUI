@@ -100,6 +100,7 @@ const darkDensity: Readonly<Record<string, number>> = {
   "control-padding-x-lg": themes.dark.density.controlPaddingX.lg,
   "row-height": themes.dark.density.rowHeight,
   "spacing-md": themes.dark.spacing.md,
+  "spacing-lg": themes.dark.spacing.lg,
   "icon-size-sm": themes.dark.iconSize.sm,
   "icon-size-md": themes.dark.iconSize.md,
   "icon-size-lg": themes.dark.iconSize.lg,
@@ -137,6 +138,7 @@ describe("theme bridge", () => {
     );
     expect(vars["--row-height"]).toBe(`${themes.dark.density.rowHeight}px`);
     expect(vars["--spacing-md"]).toBe(`${themes.dark.spacing.md}px`);
+    expect(vars["--spacing-lg"]).toBe(`${themes.dark.spacing.lg}px`);
     // A drawn control's side is an icon step and its press target is the
     // shared floor around it, so a checkbox preview cannot carry its own 16px.
     expect(vars["--icon-size-md"]).toBe(`${themes.dark.iconSize.md}px`);
@@ -313,6 +315,37 @@ describe("preview style sheets", () => {
     expect(block(css, ".gx-switch-thumb")).toContain(
       "transition: left 150ms ease-out",
     );
+  });
+
+  it("takes a timeline's dot and rail from the roles the mark contract holds", () => {
+    // The dot is a mark: `primary` while current, `foreground` once complete and
+    // the muted **text** role while upcoming. The `muted` surface fill measured
+    // 1.06:1 on the page, so a preview that copied it would draw an invisible
+    // dot that a screenshot cannot show. The connector is a real 1px element and
+    // the content's bottom padding is the theme's `spacing.lg`, dropped on the
+    // last event — the rail's end.
+    const css = read("../styles/demos.css");
+
+    expect(block(css, ".gx-timeline-connector")).toContain("width: 1px");
+    expect(block(css, ".gx-timeline-connector")).toContain(
+      "background: var(--border)",
+    );
+    expect(block(css, ".gx-timeline-content")).toContain(
+      "padding-bottom: var(--spacing-lg)",
+    );
+    expect(
+      block(css, ".gx-timeline-item[data-last] .gx-timeline-content"),
+    ).toContain("padding-bottom: 0");
+
+    expect(
+      block(css, '.gx-timeline-item[data-status="complete"] .gx-timeline-dot'),
+    ).toContain("background: var(--foreground)");
+    expect(
+      block(css, '.gx-timeline-item[data-status="current"] .gx-timeline-dot'),
+    ).toContain("background: var(--primary)");
+    expect(
+      block(css, '.gx-timeline-item[data-status="upcoming"] .gx-timeline-dot'),
+    ).toContain("background: var(--muted-foreground)");
   });
 
   it("takes a stepper's marker from the density step the component reads", () => {

@@ -133,6 +133,7 @@ describe("the package docs collections", () => {
     "/docs/components/tag-input",
     "/docs/components/tabs",
     "/docs/components/time-picker",
+    "/docs/components/timeline",
     "/docs/components/toast",
   ]);
 

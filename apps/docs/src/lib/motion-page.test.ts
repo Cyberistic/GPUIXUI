@@ -29,6 +29,7 @@ const spring = readRepo("packages/motion/src/spring.ts");
 const progress = readRepo("packages/motion/src/progress.ts");
 const motion = readRepo("packages/motion/src/motion.ts");
 const inertia = readRepo("packages/motion/src/inertia.ts");
+const inertiaRead = readRepo("packages/motion/src/inertia-read.ts");
 const timeline = readRepo("packages/motion/src/timeline.ts");
 const react = readRepo("packages/motion/src/react.ts");
 const timing = readRepo("packages/motion/src/timing.ts");
@@ -179,7 +180,7 @@ describe("the motion page", () => {
     // `tween()`'s duration and `inertia()`'s time constant are the numbers a
     // caller relies on when they pass neither.
     const tweenMs = /export const DEFAULT_TWEEN_MS = (\d+)/.exec(motion)?.[1];
-    const tauMs = /const DEFAULT_TAU_MS = (\d+)/.exec(inertia)?.[1];
+    const tauMs = /const DEFAULT_TAU_MS = (\d+)/.exec(inertiaRead)?.[1];
 
     expect(tweenMs).toBeDefined();
     expect(tauMs).toBeDefined();
@@ -200,9 +201,14 @@ describe("the motion page", () => {
         : source.slice(start, end === -1 ? undefined : end);
     };
 
-    expect(inertia).toContain("const tauOf = (tau: number): number =>");
-    expect(inertia).toContain(
-      "const boundsOf = (min: number | null, max: number | null): Bounds =>",
+    // The repairs live in `inertia-read.ts` so the retained value can compare
+    // two declarations by the physics a sample reads; the samplers in
+    // `inertia.ts` call them, which the loop below proves.
+    expect(inertiaRead).toContain(
+      "export const tauOf = (tau: number): number =>",
+    );
+    expect(inertiaRead).toContain(
+      "export const boundsOf = (min: number | null, max: number | null): Bounds =>",
     );
     expect(inertia).toContain(
       "const finiteOr = (value: number, fallback: number): number =>",

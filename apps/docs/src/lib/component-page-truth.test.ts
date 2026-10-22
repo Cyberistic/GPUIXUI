@@ -263,6 +263,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/tabs.tsx",
   },
   {
+    file: "timeline.mdx",
+    row: "Timeline",
+    suite: "packages/components/src/behaviour/timeline.test.tsx",
+    shadowed: "packages/components/docs/timeline.mdx",
+    source: "packages/components/src/timeline.tsx",
+  },
+  {
     file: "time-picker.mdx",
     row: "Time pickers",
     suite: "packages/components/src/behaviour/time-picker.test.tsx",
@@ -1745,6 +1752,50 @@ describe("the curated component pages", () => {
     expect(text).toContain("`filledHover`");
     expect(text).toContain("`filledPressed`");
     expect(text).toContain("`iconSize`");
+  });
+
+  it("holds the timeline's passed status and the rail's end to the source", () => {
+    // Three silent drifts: a page that taught the stepper's derived status, a
+    // rail whose connector runs past the last event, or an upcoming dot painted
+    // in the `muted` surface fill that measured 1.06:1 on the page. Each is
+    // read from the painter, and the stepper's own source is read beside it so
+    // the contrast the page teaches is the code's.
+    const page = pages.find((candidate) => candidate.file === "timeline.mdx");
+    expect(page, "the timeline page is not in the curated set").toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    expect(source).toContain("readonly status?: TimelineStatus");
+    expect(source).toContain('status = "complete"');
+    expect(source).toContain('aria-selected={status === "current"}');
+    // The rail ends at the last direct child.
+    expect(source).toContain(
+      "{last ? null : <div style={recipeStyle(TIMELINE_CONNECTOR",
+    );
+    expect(source).toContain("value={{ last: index === lastItem }}");
+    // The dot is a mark, so its upcoming fill is the text role.
+    const dot = source.slice(
+      source.indexOf("const dotFill"),
+      source.indexOf("/** {@link Timeline} props. */"),
+    );
+    expect(dot).toContain("theme.colors.mutedForeground");
+    expect(/theme\.colors\.muted(?![A-Za-z])/.test(dot)).toBe(false);
+
+    // The contrast: a stepper derives its statuses from one value.
+    const stepper = read("packages/components/src/stepper.tsx");
+    expect(stepper).toContain("readonly value: number");
+    expect(stepper).toContain(
+      'step < current ? "complete" : step === current ? "current" : "upcoming"',
+    );
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("passed, not derived");
+    expect(text).toContain("measured 1.06:1 on the page");
+    expect(text).toContain("paints **no connector**");
+    expect(text).toContain("installs no key handler and no tab stop");
+    expect(text).toContain("7 native behaviour tests");
+    // The retracted shape: a component that counts from a value of its own.
+    expect(text).not.toContain("derives each event's status from a value");
   });
 
   it("holds the stepper's derived status and its raw value to the source", () => {

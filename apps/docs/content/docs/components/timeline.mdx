@@ -1,0 +1,198 @@
+---
+title: Timeline
+description: A read-only rail of events whose statuses the app marks, because a history has no current index to count from.
+---
+
+`Timeline` shows a history: one event per row, a dot on a vertical rail, an
+optional timestamp and description. It is display-only — there is no click, no
+selection and no "current index".
+
+Its statuses are **passed, not derived**. That is the opposite of
+[Stepper](/docs/components/stepper), which counts from one value the workflow
+owns: a history has no such index, so the consumer that knows the events marks
+them.
+
+<ComponentPreview name="timeline-workflow" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Timeline" />
+
+<ComponentSource
+  name="timeline"
+  file="packages/components/src/timeline.tsx"
+/>
+
+## Usage
+
+```tsx
+import { Timeline, TimelineItem } from "@gpuixui/components";
+
+<Timeline label="Release Aurora">
+  <TimelineItem status="complete" timestamp="09:41" title="Build started" />
+  <TimelineItem
+    description="412 tests, 0 failures"
+    status="complete"
+    timestamp="09:44"
+    title="Tests passed"
+  />
+  <TimelineItem status="current" timestamp="09:52" title="Deploying" />
+  <TimelineItem status="upcoming" title="Smoke checks" />
+</Timeline>;
+```
+
+The runnable build is `examples/timeline.example.tsx`, which the native
+playground mounts.
+
+## Statuses
+
+The status is a prop, and `complete` is the default:
+
+| `status` | Dot fill | Title |
+| -------- | -------- | ----- |
+| `complete` (default) | `foreground` | `foreground` |
+| `current` | `primary` | `foreground` |
+| `upcoming` | `mutedForeground` | `mutedForeground` |
+
+Every dot is a **mark**, so each fill clears the non-text floor on the page and
+on a card. The upcoming dot painted `muted` before: that role is a surface fill,
+and it measured 1.06:1 on the page — a dot nobody could see. The muted **text**
+role is the one the mark contract holds.
+
+<ComponentPreview name="timeline-states" />
+
+A run that has finished has no current event. The component does not care: the
+app simply marks every event `complete`, which is why the states above can show a
+history with no dot on the accent at all.
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Timeline` | the `role="list"`, the accessible name and the fact that tells each child where the rail ends |
+| `TimelineItem` | one `role="listitem"`: its timestamp, dot, connector, title and description |
+
+`Timeline` is the list; every row is a `TimelineItem`. The root tells each item
+whether it is the last one, and the last item paints **no connector** — that is
+the only fact an item needs from its siblings. Items must be **direct children**:
+the flag is computed from the root's own children, so a fragment of events is one
+child and every event inside it would be treated as last.
+
+The deploy run above is app composition: it keeps a cursor, marks every event
+with `mark(index, cursor)` and appends a time only for a step that has run. The
+component knows nothing about that rule.
+
+`TimelineItemState` is `{ status, last }`, so a style callback can react to
+either:
+
+```tsx
+<TimelineItem
+  status="current"
+  style={(state) => ({ opacity: state.last ? 1 : 0.6 })}
+  title="Deploying"
+/>
+```
+
+## Keyboard
+
+`Timeline` installs no key handler and no tab stop. It is a history a reader
+reads, not a control they operate: an event that needs to be activated belongs in
+a [`List`](/docs/components/list) row, which carries the roving tab stop, the
+range selection and the activation keys. Nothing inside the rail is focusable,
+including the timestamp and the description.
+
+## API reference
+
+### `Timeline`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `label` | `string` | none | the list's accessible name (`aria-label`) |
+| `children` | `ReactNode` | — | `TimelineItem` parts, passed directly |
+| `style` | `StyleDesc` | — | merged last |
+| `className` | `string` | — | compiled through `@gpuixui/tw`, joined after the recipe |
+| `testId` | `string` | — | stable locator |
+
+### `TimelineItem`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `title` | `string` | — | the event's name and its accessible name |
+| `description` | `string` | none | one line of support copy under the title |
+| `timestamp` | `string` | none | when it happened, as the consumer formats it |
+| `status` | `"complete" \| "current" \| "upcoming"` | `"complete"` | the dot's fill, and whether the title is muted |
+| `style` | `StateStyle<TimelineItemState>` | — | resolved against `{ status, last }`, merged last |
+| `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `testId` | `string` | — | stable locator |
+
+`TimelineItemState` is `{ status, last }`, handed to the `style` callback after
+the recipe. `className` compiles first, then the callback's `style` is merged
+last, so a callback can paint a property the recipe does not.
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| dot, complete | `foreground` |
+| dot, current | `primary` |
+| dot, upcoming | `mutedForeground` (the text role, not the `muted` surface) |
+| connector | `border`, a 1px element |
+| title | `foreground`, and `mutedForeground` while upcoming |
+| timestamp and description | `mutedForeground` |
+| gap between events | `spacing.lg` |
+
+The dot and connector are the recipe's **fixed** metrics — 8px dot, 16px rail,
+1px line — so a platform switch repaints the rail instead of reshaping it. The
+connector's bottom padding comes from `spacing.lg` and is dropped on the last
+event, which is where the rail stops. A custom theme changes the whole rail with
+no code change — see [Theming](/docs/theming).
+
+## Accessibility and limitations
+
+- The root is a named list when `label` is given; every event is a `listitem`
+  named by its `title`, so the timestamp and the description are not repeated in
+  the accessible name.
+- `@gpuix/native@0.11.0` has no `aria-current`, so the current event carries
+  `aria-selected` — the substitution Stepper and Pagination use. A browser
+  preview may show `aria-current`; the native rail does not.
+- `complete` and `upcoming` are **not announced**: the dot is a visual mark, so
+  a screen reader hears the title and the position, not the state. Do not put
+  information only a dot carries.
+- Display-only: no click, no row activation, no disabled policy.
+- `last` comes from **direct children**. A fragment of events counts as one
+  child, so pass items directly or the connector runs past the end.
+- No `aria-orientation` and no grouping or collapsing of old events.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the rail, the item, the status paint and the last-item flag |
+| `@gpuix/react` | the host style and event types |
+| `@gpuix/react/floating` | `mergeStyles`, `resolveStyle` and `StateStyle` for the callback |
+| `@gpuixui/tw` | the `TIMELINE_*` recipes and `cn` |
+
+## Related
+
+- **Stepper** — progress through steps, whose status is derived from one value.
+- **List** — selectable rows with a roving tab stop.
+- **Card** — a surface around a group of events.
+- **Message scroller** — an append-only stream that follows its tail.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `partial` runtime verdict: the rail is whole,
+but 0.11.0 has no `aria-current` (the current event travels as `aria-selected`),
+the connector is a real element because there are no pseudo-elements, and the
+last-item flag is computed from direct children.
+
+`src/behaviour/timeline.test.tsx` runs in the real GPUix renderer — 7 native
+behaviour tests: declaration order, the list and listitem roles, exactly one
+selected current event, the three dot fills, every dot held to the mark floor on
+the page and a card in both themes (the premise read from the token package's
+`indicatorRoles`), a connector after every event but the last, and a style
+callback receiving `{ status, last }`.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```

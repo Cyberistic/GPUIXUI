@@ -54,6 +54,7 @@ export const toCssVars = (theme: Theme): CssVars => ({
   "--control-padding-x-lg": `${theme.density.controlPaddingX.lg}px`,
   "--row-height": `${theme.density.rowHeight}px`,
   "--spacing-md": `${theme.spacing.md}px`,
+  "--spacing-lg": `${theme.spacing.lg}px`,
   "--icon-size-sm": `${theme.iconSize.sm}px`,
   "--icon-size-md": `${theme.iconSize.md}px`,
   "--icon-size-lg": `${theme.iconSize.lg}px`,

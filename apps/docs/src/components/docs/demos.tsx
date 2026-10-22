@@ -111,6 +111,12 @@ import {
   switchWorkflowSource,
 } from "./switch-demo";
 import {
+  TimelineStates,
+  TimelineWorkflow,
+  timelineStatesSource,
+  timelineWorkflowSource,
+} from "./timeline-demo";
+import {
   TagInputStates,
   TagInputWorkflow,
   tagInputStatesSource,
@@ -2551,6 +2557,11 @@ export const demos: Readonly<Record<string, Demo>> = {
   },
   "table-states": { render: TableStates, source: tableStatesSource },
   "table-workflow": { render: TableWorkflow, source: tableWorkflowSource },
+  "timeline-states": { render: TimelineStates, source: timelineStatesSource },
+  "timeline-workflow": {
+    render: TimelineWorkflow,
+    source: timelineWorkflowSource,
+  },
   "tag-input-states": {
     render: TagInputStates,
     source: tagInputStatesSource,

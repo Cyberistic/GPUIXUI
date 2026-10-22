@@ -51,6 +51,7 @@
   --control-padding-x-lg: 12px;
   --row-height: 32px;
   --spacing-md: 8px;
+  --spacing-lg: 12px;
   --icon-size-sm: 14px;
   --icon-size-md: 16px;
   --icon-size-lg: 20px;
@@ -5247,4 +5248,169 @@ button.gx-table-row:focus-visible {
   font-size: 10.5px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+/* ---- timeline: mirrors components/src/timeline.tsx's TIMELINE_* recipes ----
+   The rail is a 16px column (`w-4`) holding an 8px dot (`size-2`) and a 1px
+   `border`-coloured connector (`w-px flex-grow bg-border`), so the line is a
+   real element rather than a pseudo-element the runtime cannot paint. Those
+   sides are the recipe's fixed metrics, not density steps, so they stay
+   literal while the rail's gaps come from the theme. The dot
+   takes the fill `dotFill` names: `primary` while current, `foreground` once
+   complete, and the muted **text** role while upcoming — that role is a
+   surface fill and measured 1.06:1 on the page, a dot nobody could see. The
+   content's bottom padding is `spacing.lg`, dropped on the last event, which
+   is where the rail stops. */
+.gx-timeline-scene {
+  align-items: stretch;
+  gap: 10px;
+  padding: 24px;
+}
+
+.gx-timeline-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 420px;
+  max-width: 100%;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-timeline-title-line {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.gx-timeline-lede {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-timeline-item {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  align-self: stretch;
+  gap: var(--spacing-md);
+}
+
+.gx-timeline-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 16px;
+}
+
+.gx-timeline-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 4px;
+  border-radius: 9999px;
+}
+
+.gx-timeline-item[data-status="complete"] .gx-timeline-dot {
+  background: var(--foreground);
+}
+
+.gx-timeline-item[data-status="current"] .gx-timeline-dot {
+  background: var(--primary);
+}
+
+.gx-timeline-item[data-status="upcoming"] .gx-timeline-dot {
+  background: var(--muted-foreground);
+}
+
+.gx-timeline-connector {
+  width: 1px;
+  flex: 1 1 auto;
+  margin-top: 2px;
+  background: var(--border);
+}
+
+.gx-timeline-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 2px;
+  padding-bottom: var(--spacing-lg);
+}
+
+.gx-timeline-item[data-last] .gx-timeline-content {
+  padding-bottom: 0;
+}
+
+.gx-timeline-time {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-timeline-title {
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.gx-timeline-item[data-status="upcoming"] .gx-timeline-title {
+  color: var(--muted-foreground);
+}
+
+.gx-timeline-description {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.gx-timeline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gx-timeline-readout {
+  margin: 0;
+  color: var(--placeholder);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.gx-timeline-state {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-timeline-state-label {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gx-timeline-note {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 11.5px;
+  line-height: 1.7;
 }
