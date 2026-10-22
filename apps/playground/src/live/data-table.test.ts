@@ -64,7 +64,7 @@ describe("the data-table fixture", () => {
   it("reads the example's widths and derives the content from them", () => {
     Arr.forEach(DATA_TABLE_COLUMNS_ORDER, (id) => {
       const declared = new RegExp(
-        `\\{ id: "${id}", label: "[^"]+", width: (\\d+)`,
+        `\\{\\s*id: "${id}",\\s*label: "[^"]+",\\s*width: (\\d+)`,
       ).exec(example);
       expect(`${id}: ${declared?.[1]}`).toBe(
         `${id}: ${String(DATA_TABLE_WIDTHS[id])}`,
