@@ -78,7 +78,8 @@ export interface IndicatorFailure {
  * library draws it. Runs the same placements the built-in themes are tested
  * against, so a brand theme is held to the floor the library publishes rather
  * than to a second one. The floors come from `contrastFloors` (the theme's own
- * variant when `auditTheme` calls it).
+ * variant when `auditTheme` calls it). A mark or strip the theme does not carry
+ * is reported unmeasurable rather than skipped.
  *
  * @example
  * ```ts
@@ -88,7 +89,7 @@ export interface IndicatorFailure {
  * ```
  */
 export function indicatorFailures(
-  theme: { readonly colors: ThemeColors },
+  theme: { readonly colors: Partial<ThemeColors> },
   floors: ContrastFloors = contrastFloors,
 ): readonly IndicatorFailure[] {
   return indicatorRoles.flatMap((role) =>

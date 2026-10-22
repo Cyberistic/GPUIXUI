@@ -33,7 +33,7 @@
  * this covers the ones it cannot lay out or press.
  */
 
-import type { BoxShadow } from "./elevation.js";
+import type { BoxShadow, Elevation } from "./elevation.js";
 import { targetSize } from "./scale.js";
 import type { Theme } from "./theme.js";
 import type { TextStyle } from "./typography.js";
@@ -94,14 +94,15 @@ export interface InvalidNumber {
 /** The fields the number audit reads: every group of a theme except its colours. */
 export type NumberSource = Pick<
   Theme,
-  | "spacing"
-  | "radius"
-  | "borderWidth"
-  | "iconSize"
-  | "typography"
-  | "density"
-  | "elevation"
->;
+  "spacing" | "radius" | "borderWidth" | "iconSize" | "typography" | "density"
+> & {
+  /**
+   * A level the theme does not carry is the shadow report's business
+   * (`invalidShadowColors`), not a number this report can inspect, so a stored
+   * theme older than a level is measured over the levels it has.
+   */
+  readonly elevation: Partial<Elevation>;
+};
 
 /** Whether `value` meets `rule`. */
 const layable = (value: number, rule: SingleRule): boolean => {

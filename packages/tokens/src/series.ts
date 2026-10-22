@@ -339,7 +339,9 @@ export function simulateColorVision(
 }
 
 /** A theme with the fields a series audit reads. */
-type SeriesAuditSource = SeriesSource & { readonly colors: ThemeColors };
+type SeriesAuditSource = SeriesSource & {
+  readonly colors: Partial<ThemeColors>;
+};
 
 /**
  * Every way a theme's categorical scale fails its three contracts.

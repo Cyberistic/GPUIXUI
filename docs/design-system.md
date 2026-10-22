@@ -535,6 +535,16 @@ elevation level a brand supplies is outside that report — it reads `colors` �
 and an unpaintable shadow colour paints no shadow, so
 `invalidShadowColors(theme)` names the level and position (§7).
 
+A theme restored from storage can be **incomplete**: it may predate a role or an
+elevation level the library has added since. The reports carry the absence rather
+than throwing — `invalidColorRoles` returns the role with `value: undefined`,
+`invalidShadowColors` returns the level once at position `0` with no colour, and
+every contract that measures a pair reports it unmeasurable — so the gate returns
+a failing report that names the role instead of a `TypeError`
+(`docs/tokens.md` §Paint-ready values). A numeric group is not treated this way:
+adding one is a breaking change rather than an additive one, so the number report
+reads the groups the theme carries.
+
 A value it cannot **lay out** is the third: a style batch is JSON, so `NaN` and
 `Infinity` arrive as `null`, the property is dropped, and the element paints as
 if the value were never set. Measured in the runtime's test renderer, a `NaN`
@@ -641,7 +651,11 @@ replaced as whole arrays; the mode is immutable. Nothing mutates the base, so a
 theme can be created once at startup and shared.
 
 A brand may change any value but should not remove roles: every component
-expects the full role set. A brand that needs a different structure should add
+expects the full role set. A theme restored from storage can still be missing a
+role it predates — the library adds roles additively. That is a report, not a
+crash: `invalidColorRoles` names it with `value: undefined`, its pairs measure
+unmeasurable, and `passed` is false (§9), so the repair is one `extendTheme` call
+over the stored values. A brand that needs a different structure should add
 roles in the tokens package, not fork components.
 
 Overrides are plain data, so `extendTheme` cannot reject a colour the renderer

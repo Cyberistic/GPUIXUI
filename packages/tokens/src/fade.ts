@@ -39,16 +39,31 @@ export interface FadeFailure extends FadePair {
  * The control shows that share of its fill over the surface, and the label is
  * faded the same way over the *faded* fill — that second composite is the one a
  * hand calculation usually forgets, and it is why the label falls so much
- * further than the fill.
+ * further than the fill. A role the theme does not carry yields `undefined` for
+ * both, because there is no control to fade; the report that reads this then
+ * says it could not measure the pair.
  */
 export const fadedPair = (
-  colors: ThemeColors,
+  colors: Partial<ThemeColors>,
   { fill, label, over }: FadePair,
   opacity: number,
-): { readonly label: string; readonly fill: string } => {
-  const fadedFill = blend(colors[fill], colors[over], 1 - opacity);
+): {
+  readonly label: string | undefined;
+  readonly fill: string | undefined;
+} => {
+  const fillColour = colors[fill];
+  const overColour = colors[over];
+  const labelColour = colors[label];
+  if (
+    fillColour === undefined ||
+    overColour === undefined ||
+    labelColour === undefined
+  ) {
+    return { label: undefined, fill: undefined };
+  }
+  const fadedFill = blend(fillColour, overColour, 1 - opacity);
   return {
-    label: blend(colors[label], fadedFill, 1 - opacity),
+    label: blend(labelColour, fadedFill, 1 - opacity),
     fill: fadedFill,
   };
 };

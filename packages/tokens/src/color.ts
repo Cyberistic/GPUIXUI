@@ -562,6 +562,11 @@ const isChannelList = (args: string): boolean => {
  * black — which is what {@link invalidColorRoles} and
  * {@link invalidShadowColors} report.
  *
+ * The argument is `unknown` because this is the check a consumer runs on a
+ * value restored from storage: anything that is not a string — a missing key
+ * decoded from an older theme, a number, `null` — is not a colour the renderer
+ * can paint, and is reported rather than thrown on.
+ *
  * This is the **paint** grammar, not the **measurement** one: the shipped
  * palettes are `#RRGGBB`/`#RRGGBBAA` because every contrast and decorative
  * contract reads that form, and a role written as `hsl(...)` paints while
@@ -572,9 +577,13 @@ const isChannelList = (args: string): boolean => {
  * isPaintableColor("#2559D6"); // true
  * isPaintableColor("#2559D"); // false
  * isPaintableColor("oklch(0.62 0.26 29.2)"); // true
+ * isPaintableColor(undefined); // false — a role the theme does not carry
  * ```
  */
-export const isPaintableColor = (value: string): boolean => {
+export const isPaintableColor = (value: unknown): boolean => {
+  if (typeof value !== "string") {
+    return false;
+  }
   const colour = value.trim();
   if (paintedHex.test(colour) || namedColours.has(colour.toLowerCase())) {
     return true;
@@ -745,8 +754,11 @@ export const colorRoles = [
 export interface InvalidColorRole {
   /** The role, in documentation order. */
   readonly role: keyof ThemeColors;
-  /** The value the theme carries. */
-  readonly value: string;
+  /**
+   * The value the theme carries, or `undefined` when the role is absent — a
+   * theme restored from storage can predate a role the library added.
+   */
+  readonly value: string | undefined;
 }
 
 /**
@@ -758,20 +770,29 @@ export interface InvalidColorRole {
  * parser reads ({@link isPaintableColor}) — any hex length, a CSS named colour
  * or a colour function. The shipped palettes are written in the long hex form
  * the docs' tables print, and the contracts measure every hex length; a named
- * colour or a colour function paints but is reported unmeasurable by them. A
- * role missing from a hand-built theme literal is reported too, because the
- * runtime cannot paint what is not there.
+ * colour or a colour function paints but is reported unmeasurable by them.
+ *
+ * **A role the theme does not carry is reported with `value: undefined`**, not
+ * thrown on: a theme restored from storage can predate a role the library has
+ * added since, and the runtime cannot paint what is not there. The source is
+ * therefore `Partial<ThemeColors>`, so a complete theme and a decoded one are
+ * both accepted, and the contracts that measure a pair treat the absence as an
+ * unmeasurable pair rather than a crash.
  *
  * @example
  * ```ts
- * import { invalidColorRoles } from "@gpuixui/tokens";
+ * import { invalidColorRoles, lightColors } from "@gpuixui/tokens";
  *
  * invalidColorRoles({ colors: { ...lightColors, primary: "#7C5CF" } });
  * // [{ role: "primary", value: "#7C5CF" }]
+ *
+ * const { primary: _omitted, ...restored } = lightColors;
+ * invalidColorRoles({ colors: restored });
+ * // [{ role: "primary", value: undefined }] — a stored theme older than the role
  * ```
  */
 export function invalidColorRoles(theme: {
-  readonly colors: ThemeColors;
+  readonly colors: Partial<ThemeColors>;
 }): readonly InvalidColorRole[] {
   return colorRoles.flatMap((role) => {
     const value = theme.colors[role];

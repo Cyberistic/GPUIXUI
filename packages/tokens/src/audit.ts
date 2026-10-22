@@ -50,13 +50,13 @@ import {
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 /** A theme, or anything shaped like one, for the checks that only read colours. */
-type ColourSource = { readonly colors: ThemeColors };
+type ColourSource = { readonly colors: Partial<ThemeColors> };
 
 /** A theme's contrast variant, when it has declared one. */
 type ContrastSource = { readonly contrast?: ThemeContrast };
 
 /** The field the shadow audit reads: the elevation scale a theme paints. */
-type ShadowSource = { readonly elevation: Elevation };
+type ShadowSource = { readonly elevation: Partial<Elevation> };
 
 /** The fields a series audit reads: the mode, the variant and an authored scale. */
 type SeriesSource = {
@@ -118,6 +118,13 @@ export interface ThemeAudit {
  * 3:1, which is why that variant paints the role pair instead; and
  * `keyboardDimFailures` holds every variant to `decorativeFloor` (1.05:1),
  * because the dim is a where-can-Tab-go cue rather than a reading mode.
+ *
+ * An incomplete theme does not crash the gate. A theme restored from storage can
+ * predate a colour role or an elevation level the library has added since, so
+ * `invalidRoles` and `invalidShadows` name the absence and the contracts that
+ * measure a pair report it unmeasurable; `passed` is false either way. The
+ * numeric groups are read as they are, because a group is a breaking change
+ * rather than an additive one.
  *
  * `passed` is the only passing result — a report nobody checked is not a pass.
  *

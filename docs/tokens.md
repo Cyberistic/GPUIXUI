@@ -808,6 +808,12 @@ contract. The runtime **ignores** a colour string it cannot parse and keeps the
 property's previous value or paints black, and nothing else measures text
 against the surface behind it.
 
+The gate also audits a theme it cannot fully read: a role or an elevation level
+the theme does not carry — a theme restored from storage that predates it — is
+named by `invalidRoles`/`invalidShadows` and its pairs are reported unmeasurable,
+so `auditTheme` returns a failing report instead of throwing
+(§[Paint-ready values](#paint-ready-values)).
+
 `disabledFade` is the one report those floors do not reach: a fade is a
 mechanism rather than a readability claim, so `disabledFadeFailures` holds every
 variant to `contrastFloors.disabled` (1.5:1). The fade cannot clear a
@@ -842,26 +848,45 @@ the pinned `@gpuix/native@0.11.0` release ships it in
 `packages/native/src/color.rs` — so the paint grammar is CSS Color 4: hex in any
 of its four lengths, with or without the `#`; a CSS named colour; `transparent`;
 or an `rgb`/`hsl`/`hwb`/`hsv`/`lab`/`lch`/`oklab`/`oklch` function, absolute or
-relative. A role missing from a hand-built theme literal is reported too,
-because the runtime cannot paint what is not there.
+relative. A role the theme does not carry is reported with `value: undefined`,
+because the runtime cannot paint what is not there — which is the shape a theme
+restored from storage has when it predates a role the library added since.
 
 ```ts
-import { invalidColorRoles } from "@gpuixui/tokens";
+import { invalidColorRoles, lightColors } from "@gpuixui/tokens";
 
 invalidColorRoles({ colors: { ...lightColors, primary: "#7C5CF" } });
 // [{ role: "primary", value: "#7C5CF" }]
 
 invalidColorRoles({ colors: { ...lightColors, primary: "hsl(258 88% 58%)" } });
 // [] — the renderer paints it
+
+const { primary: _omitted, ...restored } = lightColors;
+invalidColorRoles({ colors: restored });
+// [{ role: "primary", value: undefined }] — a stored theme older than the role
 ```
 
 `isPaintableColor(value)` is that grammar on its own, for a caller validating one
 value — a theme editor's field, a persisted brand colour — before it reaches a
 style. It accepts an argument list whose channel count is wrong (`rgb(255, 0)`
 is two channels and paints nothing) and rejects a value no colour grammar reads;
-resolving the arithmetic inside a channel is the runtime's.
+resolving the arithmetic inside a channel is the runtime's. The argument is
+`unknown`, and anything that is not a string — a missing key in a decoded theme,
+a number, `null` — answers `false` instead of throwing, because that is the
+value a check exists to report rather than crash on.
 `invalidShadowColors(theme)` applies the same check to an elevation level a brand
-supplies, which the role report cannot see (§Elevation).
+supplies, which the role report cannot see (§Elevation); a level the theme does
+not carry is reported once, at position `0`, with `color: undefined`.
+
+**An incomplete theme is a report, not an exception.** Both paint reports take
+the partial group (`Partial<ThemeColors>` / `Partial<Elevation>`), and the
+contracts that measure a pair or a placement take the same colour source: a pair
+whose role is absent is reported **unmeasurable** (`ratio: undefined`) rather
+than skipped — a pair nobody can verify is not a pass — so `auditTheme` on a
+theme restored from storage returns a line naming the role and a failing gate,
+never a `TypeError`. A numeric group is the exception: adding one is a breaking
+change rather than an additive one, so the number report reads the groups a
+theme carries.
 
 **The measurement dialect is hex.** `contrastRatio`, `alphaOf`, `blend`,
 `selectionFailures` and the decorative contracts read hex in every length the

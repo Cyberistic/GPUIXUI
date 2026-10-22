@@ -207,7 +207,9 @@ export interface DecorativeFailure {
  * translucent veil is measured by the result a reader sees rather than rejected
  * as translucent, and a derived surface states the share it paints. `blend`
  * clamps the amount, so a theme cannot pass by carrying an alpha byte the
- * runtime would ignore.
+ * runtime would ignore. A surface whose role or strip the theme does not carry
+ * is reported unmeasurable — `invalidColorRoles` names the absence, and this
+ * report does not pretend a surface it could not composite is visible.
  *
  * @example
  * ```ts
@@ -217,16 +219,17 @@ export interface DecorativeFailure {
  * ```
  */
 export function decorativeFailures(
-  theme: { readonly colors: ThemeColors },
+  theme: { readonly colors: Partial<ThemeColors> },
   floor: number = decorativeFloor,
 ): readonly DecorativeFailure[] {
   return decorativeSurfaces.flatMap(({ surface, role, over, alpha }) => {
-    const painted = blend(
-      theme.colors[over],
-      theme.colors[role],
-      alpha ?? alphaOf(theme.colors[role]),
-    );
-    const ratio = contrastRatio(painted, theme.colors[over]);
+    const paintedOver = theme.colors[over];
+    const paintedRole = theme.colors[role];
+    const painted =
+      paintedOver === undefined || paintedRole === undefined
+        ? undefined
+        : blend(paintedOver, paintedRole, alpha ?? alphaOf(paintedRole));
+    const ratio = contrastRatio(painted, paintedOver);
     return ratio !== undefined && ratio >= floor
       ? []
       : [{ surface, role, over, ratio, floor }];

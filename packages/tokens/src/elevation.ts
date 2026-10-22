@@ -81,10 +81,16 @@ export function elevationShadow(
 export interface InvalidShadowColor {
   /** The level that carries it. */
   readonly level: ElevationLevel;
-  /** The shadow's position in the level's list. */
+  /**
+   * The shadow's position in the level's list, or `0` for a level the theme does
+   * not carry at all.
+   */
   readonly index: number;
-  /** The value the theme carries. */
-  readonly color: string;
+  /**
+   * The value the theme carries, or `undefined` when the level is absent — a
+   * theme restored from storage can predate a level the library added.
+   */
+  readonly color: string | undefined;
 }
 
 /**
@@ -96,6 +102,11 @@ export interface InvalidShadowColor {
  * caller's, the runtime ignores one it cannot parse, and the level then paints
  * no shadow at all: a raised card or a dialog silently sits flat. This is the
  * report that makes it visible, and `auditTheme` includes it.
+ *
+ * **A level the theme does not carry is reported once, at position `0`, with no
+ * colour**, rather than throwing: `elevationShadow` would read past the end of a
+ * missing list, so the missing level is the same silent flat surface as a colour
+ * the renderer ignores. The source is `Partial<Elevation>` for that reason.
  *
  * A level's geometry is not checked here: a number the renderer reads is
  * painted, so the failure this report covers is the silent one.
@@ -110,18 +121,25 @@ export interface InvalidShadowColor {
  *   },
  * });
  * invalidShadowColors(brand); // [] — the colour is one GPUix paints
+ *
+ * const { md: _omitted, ...restored } = lightTheme.elevation;
+ * invalidShadowColors({ elevation: restored });
+ * // [{ level: "md", index: 0, color: undefined }] — a stored theme older than the level
  * ```
  */
 export function invalidShadowColors(theme: {
-  readonly elevation: Elevation;
+  readonly elevation: Partial<Elevation>;
 }): readonly InvalidShadowColor[] {
-  return elevationLevels.flatMap((level) =>
-    theme.elevation[level].flatMap((shadow, index) =>
-      isPaintableColor(shadow.color)
-        ? []
-        : [{ level, index, color: shadow.color }],
-    ),
-  );
+  return elevationLevels.flatMap((level): ReadonlyArray<InvalidShadowColor> => {
+    const shadows = theme.elevation[level];
+    return shadows === undefined
+      ? [{ level, index: 0, color: undefined }]
+      : shadows.flatMap((shadow, index) =>
+          isPaintableColor(shadow.color)
+            ? []
+            : [{ level, index, color: shadow.color }],
+        );
+  });
 }
 
 /**

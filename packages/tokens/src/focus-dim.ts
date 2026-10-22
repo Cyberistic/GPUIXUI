@@ -79,7 +79,8 @@ export type KeyboardDimFailure = FadeFailure;
  * readable while the focus is elsewhere opts out of the dim
  * (`keyboardFocusDim: false`) rather than asking the palette for a contrast the
  * mechanism cannot keep. A pair that cannot be composited — a translucent or
- * non-hex role — is reported with `ratio: undefined` rather than skipped.
+ * non-hex role, or a role the theme does not carry — is reported with `ratio:
+ * undefined` rather than skipped.
  *
  * @example
  * ```ts
@@ -89,7 +90,7 @@ export type KeyboardDimFailure = FadeFailure;
  * ```
  */
 export function keyboardDimFailures(
-  theme: { readonly colors: ThemeColors },
+  theme: { readonly colors: Partial<ThemeColors> },
   floor: number = decorativeFloor,
 ): readonly KeyboardDimFailure[] {
   return keyboardDimPairs.flatMap((pair) => {

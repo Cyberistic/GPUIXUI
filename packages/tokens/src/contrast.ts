@@ -15,8 +15,8 @@ const channel = (rgb: string, at: number): number => {
 };
 
 /** WCAG 2.1 relative luminance of an opaque hex colour. */
-const relativeLuminance = (color: string): number | undefined => {
-  const rgb = opaqueRgb(color);
+const relativeLuminance = (color: string | undefined): number | undefined => {
+  const rgb = color === undefined ? undefined : opaqueRgb(color);
   return rgb === undefined
     ? undefined
     : 0.2126 * channel(rgb, 1) +
@@ -33,7 +33,9 @@ const relativeLuminance = (color: string): number | undefined => {
  * reaches for it. Returns `undefined` when either value is not that dialect: a
  * translucent colour's contrast depends on the surface painted behind it, so a
  * single ratio would be a guess (composite it first if it needs measuring), and
- * a named colour or `hsl()` value paints without resolving to channels here.
+ * a named colour or `hsl()` value paints without resolving to channels here. An
+ * absent role — a theme restored from storage that predates it — is the same
+ * unmeasurable answer rather than a crash.
  *
  * @example
  * ```ts
@@ -47,8 +49,8 @@ const relativeLuminance = (color: string): number | undefined => {
  * ```
  */
 export function contrastRatio(
-  foreground: string,
-  background: string,
+  foreground: string | undefined,
+  background: string | undefined,
 ): number | undefined {
   const first = relativeLuminance(foreground);
   const second = relativeLuminance(background);
@@ -347,7 +349,9 @@ export interface ContrastFailure {
  *
  * An empty array means the theme meets the contract. Runs the same pairs the
  * built-in themes are tested against, so a brand theme is held to the floors
- * the library publishes rather than to a second set.
+ * the library publishes rather than to a second set. A pair whose role the theme
+ * does not carry is reported unmeasurable (`ratio: undefined`) — the absence is
+ * named by `invalidColorRoles`, and a pair nobody can verify is not a pass.
  *
  * @example
  * ```ts
@@ -358,7 +362,7 @@ export interface ContrastFailure {
  * ```
  */
 export function contrastFailures(
-  theme: { readonly colors: ThemeColors },
+  theme: { readonly colors: Partial<ThemeColors> },
   floors: ContrastFloors = contrastFloors,
 ): readonly ContrastFailure[] {
   return contrastPairs.flatMap(({ foreground, background, floor }) => {

@@ -65,8 +65,9 @@ export type DisabledFadeFailure = FadeFailure;
  * Every faded control in a theme whose label misses the disabled floor.
  *
  * An empty array means the fade keeps the state readable. A pair that cannot be
- * composited — a translucent or non-hex role — is reported with `ratio:
- * undefined` rather than skipped, as every other report does.
+ * composited — a translucent or non-hex role, or a role the theme does not carry
+ * — is reported with `ratio: undefined` rather than skipped, as every other
+ * report does.
  *
  * @example
  * ```ts
@@ -76,7 +77,7 @@ export type DisabledFadeFailure = FadeFailure;
  * ```
  */
 export function disabledFadeFailures(
-  theme: { readonly colors: ThemeColors },
+  theme: { readonly colors: Partial<ThemeColors> },
   floor: number = contrastFloors.disabled,
 ): readonly DisabledFadeFailure[] {
   return disabledFadePairs.flatMap((pair) => {

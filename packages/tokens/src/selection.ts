@@ -71,8 +71,11 @@ export interface SelectionFailure {
   readonly foreground: keyof ThemeColors;
   /** The surface the wash is composited over. */
   readonly background: keyof ThemeColors;
-  /** The colour a reader sees, or the surface itself when it could not be blended. */
-  readonly wash: string;
+  /**
+   * The colour a reader sees, or `undefined` when it could not be blended — a
+   * transparent wash, or a surface the theme does not carry.
+   */
+  readonly wash: string | undefined;
   /**
    * The measured ratio, or `undefined` when it could not be measured because the
    * surface is translucent or not a colour the renderer paints. An unverifiable
@@ -83,9 +86,20 @@ export interface SelectionFailure {
   readonly floor: number;
 }
 
-/** The wash a reader sees over one surface: the role at the share it carries. */
-const washOver = (colors: ThemeColors, over: keyof ThemeColors): string =>
-  blend(colors[over], colors.selection, alphaOf(colors.selection));
+/**
+ * The wash a reader sees over one surface: the role at the share it carries, or
+ * `undefined` when the theme carries no wash or no surface to composite it over.
+ */
+const washOver = (
+  colors: Partial<ThemeColors>,
+  over: keyof ThemeColors,
+): string | undefined => {
+  const surface = colors[over];
+  const wash = colors.selection;
+  return surface === undefined || wash === undefined
+    ? undefined
+    : blend(surface, wash, alphaOf(wash));
+};
 
 /**
  * Every selection wash in a theme that misses one of its two floors.
@@ -99,7 +113,9 @@ const washOver = (colors: ThemeColors, over: keyof ThemeColors): string =>
  * `mutedForeground` line beside it.
  *
  * An empty array means the theme can be selected from. Runs over `selectionPairs`,
- * so a brand is held to the surfaces the library's own themes are.
+ * so a brand is held to the surfaces the library's own themes are. A pair whose
+ * surface or wash the theme does not carry is reported unmeasurable: the wash
+ * cannot be composited, and `invalidColorRoles` names the role.
  *
  * @example
  * ```ts
@@ -109,7 +125,7 @@ const washOver = (colors: ThemeColors, over: keyof ThemeColors): string =>
  * ```
  */
 export function selectionFailures(
-  theme: { readonly colors: ThemeColors },
+  theme: { readonly colors: Partial<ThemeColors> },
   floors: ContrastFloors = contrastFloors,
 ): readonly SelectionFailure[] {
   return selectionPairs.flatMap(({ foreground, background, floor }) => {

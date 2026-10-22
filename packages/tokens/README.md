@@ -475,15 +475,20 @@ Each report is also a function of its own:
   `csscolorparser` 0.8.3: hex in any of its four lengths, a named colour, or an
   `rgb`/`hsl`/`hwb`/`hsv`/`lab`/`lch`/`oklab`/`oklch` function. The runtime
   **ignores** a value it cannot parse, so a typo paints black instead of failing —
-  this is the warning that makes it visible. The measurement dialect is hex: the
-  contrast and decorative contracts read every length the renderer paints —
+  this is the warning that makes it visible. A role the theme does not carry is
+  reported with `value: undefined`, which is the shape a theme restored from
+  storage has when it predates a role the library added: the source is
+  `Partial<ThemeColors>` and `isPaintableColor` takes `unknown`, so absence is a
+  line in the report rather than a `TypeError`. The measurement dialect is hex:
+  the contrast and decorative contracts read every length the renderer paints —
   shorthand `#fff` widens, with or without the `#` — so a hand-written brand is
   measured, and a brand in a named colour or a colour function has its pairs
   reported unmeasurable rather than guessed.
 - `invalidShadowColors(theme)` applies the same grammar to every shadow in the
   elevation scale, which the role report cannot see: a level a brand supplies
   replaces the array whole, and a colour the runtime ignores paints no shadow at
-  all. `isPaintableColor(value)` is the grammar on its own.
+  all. A level the theme does not carry is reported once, at position `0`, with
+  no colour. `isPaintableColor(value)` is the grammar on its own.
 - `invalidNumbers(theme)` lists every numeric token the renderer cannot lay out
   or a pointer cannot press. A style batch is JSON, so `NaN` and `Infinity`
   reach native as `null` and the property is dropped — the element paints as if
