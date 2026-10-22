@@ -25,26 +25,39 @@ migrated onto it (plan 110 §7 and `TODO.md` → Interlocks)". `TODO.md` row
 **R1 — primitives' filled hover/press must be opaque.** The stand-in paints
 `filledHover`/`filledPressed` (commit `90f98987`), guarded by
 `src/behaviour/button.test.tsx`'s `paints an opaque derived hover and press on a
-filled action`. primitives still paints alpha lifts: `filled()` in
-`packages/primitives/src/core/variants.ts` and `hover:bg-primary/90` in the
-recipes. Adopting it today would regress a measured fix.
+filled action`. Both are now opaque on the primitive's side: `filled()` in
+`packages/primitives/src/core/variants.ts` derives `filledHover`/`filledPressed`,
+and `buttonClass` in `packages/primitives/src/recipe/index.ts` asks for
+`hover:fill-<action>` / `active:fill-<action>-pressed`.
+
+Check the **Button's** half only. `core/variants.ts` also holds the Toggle's
+`accent` on-state, which still lifts its alpha (`hover:bg-accent/90`,
+`active: bg-accent/80`) — a different control with its own tracked row
+(`COMPONENTS.md` → Action fills, `TODO.md` → Interlocks), not a Button
+regression. `packages/tw/src/recipes.ts`'s own `button` recipe still carries
+`hover:bg-primary/90`, but `Button` no longer compiles it.
 
 ```sh
-grep -n "backgroundColor: alpha\(" packages/primitives/src/core/variants.ts   # expected: no match
-grep -rn "hover:bg-primary/" packages/primitives/src/recipe packages/tw/src/recipes.ts  # expected: no match
+# expected: matches inside `filled()`, no `backgroundColor: alpha(` in it
+grep -n "hover: (theme) => ({ backgroundColor: filledHover" packages/primitives/src/core/variants.ts
+# expected: no alpha lift in the Button recipe
+grep -n "hover:bg-primary/" packages/primitives/src/recipe/index.ts   # expected: no match
+# expected: every action asks for the derived fill
+grep -n "hover:fill-" packages/primitives/src/recipe/index.ts
 ```
 
 **R2 — primitives' `outline` edge must paint `borderStrong`.** `outline` in
-`packages/primitives/src/core/variants.ts` currently paints `theme.colors.border`
-(the primitives half of `TODO.md` row 1243). The stand-in's `secondary` look
-carries a measured 3:1 edge (commit `d54b24e2`), so the migration must not land on
-a decorative border.
+`packages/primitives/src/core/variants.ts` painted `theme.colors.border` (the
+primitives half of `TODO.md` row 1243); it now paints the measured boundary role.
+The stand-in's `secondary` look carries a measured 3:1 edge (commit `d54b24e2`),
+so the migration must not land on a decorative border.
 
 ```sh
 grep -n "border: (theme) => theme.colors.borderStrong" packages/primitives/src/core/variants.ts  # expected: a match in outline
 ```
 
-If either command gives the wrong answer: **STOP**, report which prerequisite
+Both prerequisites were re-measured against this tree (2026-10-22) and pass. If
+either command gives the wrong answer: **STOP**, report which prerequisite
 failed and leave this plan active. Do not adjust primitives from this workstream.
 
 ## The API delta (measured, 0.11.0 workspace)
@@ -69,11 +82,13 @@ painted border colour in `src/behaviour/button.test.tsx`'s existing case.
 
 ```sh
 nub run --filter @gpuixui/components check-types
-nub run --filter @gpuixui/components test              # expected: 385
-nub run --filter @gpuixui/components test:behaviour    # expected: 508
+nub run --filter @gpuixui/components test              # 449 at the time of writing
+nub run --filter @gpuixui/components test:behaviour    # 585 at the time of writing
 ```
 
-Record both counts in the commit message. **STOP** if any is red before you
+Record the counts **you** measure in the commit message; the two above are what
+this tree printed on 2026-10-22, and other workstreams add cases, so a higher
+count is not a failure — a **red** suite is. **STOP** if any is red before you
 change anything.
 
 ## Phase 1 — inventory the 25 import sites (30 min)
@@ -146,7 +161,7 @@ alias rule, `docs/component-api.md` §2). Update both docs pages' API tables and
 
 ```sh
 nub run --filter @gpuixui/components check-types      # exit 0
-nub run --filter @gpuixui/components test             # 385 (plus the new case)
+nub run --filter @gpuixui/components test             # your Phase 0 count (plus the new case)
 nub run --filter @gpuixui/components test:behaviour   # same count as Phase 0 (plus the new case)
 nub run check && nub run lint && nub run test         # gates, at the end
 ```
