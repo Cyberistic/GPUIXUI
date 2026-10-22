@@ -1,0 +1,65 @@
+---
+title: Diff viewer
+description: Two sources compared into a unified or split diff, tinted by change.
+---
+
+`DiffViewer` compares two sources with a longest-common-subsequence walk — the
+minimal edit script — and paints it as a unified or split diff. An added line
+tints the `success` soft role, a removed line the `destructive` soft role, so a
+diff reads as change rather than as syntax.
+
+The runtime has a native `<diff>` host that paints a *patch string*; this
+component exists because its input is two strings, not a patch.
+
+## Usage
+
+```tsx
+import { DiffViewer } from "@gpuixui/editor";
+
+<DiffViewer before={before} after={after} mode="unified" />;
+```
+
+`mode="split"` lays the before and after sides side by side, a removed line
+beside the added line that follows it.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `before` | `string` | — | The before source. |
+| `after` | `string` | — | The after source. |
+| `mode` | `"unified" \| "split"` | `"unified"` | One merged column, or two. |
+| `lineNumbers` | `boolean` | `true` | Number the rows on both sides. |
+| `label` | `string` | `"Diff"` | The accessible name. |
+| `className` | `string` | — | A Tailwind class string, merged last. |
+| `style` | `StateStyle<DiffViewerState>` | — | The surface, or a function of `{ changed }`. |
+
+## The diff algorithm
+
+`src/diff/logic.ts` splits each source into lines (a trailing newline is not a
+line) and walks a longest-common-subsequence table. A changed line is either a
+removal from the before side or an addition to the after side, and the two
+together are exactly `n + m − 2·lcs` — the minimum, because every line outside
+the common subsequence must be reported once. Ties prefer a removal, anchoring
+the diff to the before side. The result is a flat edit script; line numbers are
+attached afterwards by `numberDiff`.
+
+## Limitations
+
+- **`O(n·m)` time and space.** The LCS table is the size of the two files, so
+  very large files are slow.
+- **No word-level diff.** A changed line is a whole line, not the words inside it.
+- **The diff text is presentational.** The rows are `role="presentation"` runs,
+  so a reader hears whether anything changed, not the diffed text itself.
+
+## Verification
+
+`src/diff/logic.test.ts` holds the algorithm: a minimal single-line removal, a
+line move reported as the minimal removal-plus-addition (not a
+delete-and-reinsert), both sides reconstructed without eating a line (with a
+negative control that drops an edit), and the line-numbering.
+
+## Related
+
+- [Code editor](/docs/components/code-editor) — the surface a diff is read against.
+- [Search and replace](/docs/components/search-replace) — find and replace over a text.
