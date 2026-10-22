@@ -222,6 +222,17 @@ describe("the curated component pages", () => {
   });
 });
 
+/** The sections the index's reader guide offers, split where it writes "/". */
+const offeredSections = (): ReadonlyArray<string> => {
+  const index = source("index.mdx");
+  const table = /## How to read a page\n([\s\S]*?)\n\n/.exec(index)?.[1] ?? "";
+  return [...table.matchAll(/^\| ([^|]+) \|/gm)]
+    .map((match) => match[1]?.trim() ?? "")
+    .filter((cell) => cell !== "Section" && !/^-+$/.test(cell))
+    .flatMap((cell) => cell.split("/").map((part) => part.trim()))
+    .filter((part) => part.length > 0);
+};
+
 describe("the component section index", () => {
   it("names every curated page, so a fifth cannot land as a fourth", () => {
     // The index listed Button, Dialog, Popover and Tabs while the Dropdown menu
@@ -267,17 +278,24 @@ describe("the component section index", () => {
     expect(index).not.toMatch(/example file/);
   });
 
+  it("offers every section the curated template requires", () => {
+    // The guide is the reader's map of a page, and it listed seven of the ten
+    // sections a curated page carries: a reader looking for the install block,
+    // the roles a component reads, the packages it needs or its status was told
+    // the page had none of them. The list is the template's own, so a section
+    // added to the policy cannot go unmentioned here.
+    const offered = offeredSections();
+
+    expect(offered.length).toBeGreaterThan(8);
+    expect(required.filter((section) => !offered.includes(section))).toEqual(
+      [],
+    );
+  });
+
   it("only offers a section some page actually uses", () => {
     // "How to read a page" is guidance, and a row naming a heading no page
     // carries sends a reader looking for something that does not exist.
-    const index = source("index.mdx");
-    const table =
-      /## How to read a page\n([\s\S]*?)\n\n/.exec(index)?.[1] ?? "";
-    const offered = [...table.matchAll(/^\| ([^|]+) \|/gm)]
-      .map((match) => match[1]?.trim() ?? "")
-      .filter((cell) => cell !== "Section" && !/^-+$/.test(cell))
-      .flatMap((cell) => cell.split("/").map((part) => part.trim()))
-      .filter((part) => part.length > 0);
+    const offered = offeredSections();
 
     const used = new Set(
       [...pages.map((name) => source(name)), ...packagePages].flatMap(sections),
