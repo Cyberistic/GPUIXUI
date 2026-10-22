@@ -382,11 +382,21 @@ export const DatePickerCalendar = ({
     useState<Option.Option<DateTime.Utc>>(selectedDay);
   const cellIds = useRef<Record<string, number>>({});
   const pendingFocus = useRef(false);
+  const focusTarget = useRef<Option.Option<DateTime.Utc>>(Option.none());
   const wasOpen = useRef(false);
 
-  /** Focus the active cell after the month it lives in has rendered. */
+  /**
+   * Focus the active cell after the month it lives in has rendered.
+   *
+   * The target is a ref, not the `active` state: the open effect sets the anchor
+   * in the same commit whose focus effect runs, and a state write is not visible
+   * to a sibling effect in that pass — an empty picker therefore focused the
+   * first of the month instead of the day it documents (`date-picker-lifecycle`
+   * measured `date-day-2026-03-01` against the anchor's `-11`).
+   */
   const focusActive = useCallback((day: DateTime.Utc) => {
     pendingFocus.current = true;
+    focusTarget.current = Option.some(day);
     setViewMonth(startOfMonth(day));
     setActive(Option.some(day));
   }, []);
@@ -400,6 +410,7 @@ export const DatePickerCalendar = ({
     const anchor = Option.getOrElse(selectedDay, () => todayDay);
     setViewMonth(startOfMonth(anchor));
     setActive(Option.some(anchor));
+    focusTarget.current = Option.some(anchor);
     pendingFocus.current = true;
     // `open` is the trigger; the anchor is stable while it is open.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -411,10 +422,12 @@ export const DatePickerCalendar = ({
 
   useLayoutEffect(() => {
     if (!pendingFocus.current) return;
-    const day = Option.getOrElse(active, () => startOfMonth(viewMonth));
-    const id = cellIds.current[formatIsoDay(day)];
+    const day = Option.orElse(focusTarget.current, () => active);
+    const target = Option.getOrElse(day, () => startOfMonth(viewMonth));
+    const id = cellIds.current[formatIsoDay(target)];
     if (id === undefined) return;
     pendingFocus.current = false;
+    focusTarget.current = Option.none();
     renderer?.focusElement?.(id);
   });
 
@@ -462,7 +475,18 @@ export const DatePickerCalendar = ({
     );
   };
 
-  const handleKeyDown = (event: KeyEvent): void => {
+  /**
+   * The movement keys the calendar answers, wherever the focus is.
+   *
+   * The month controls are the grid's **siblings**, so a key the runtime
+   * delivers to a month button does not bubble through the grid: a pointer press
+   * on a disabled month control parks the focus there (the runtime focuses the
+   * element it pressed, `date-picker-lifecycle` measured `date-next` holding it
+   * at its bound), and every later arrow moved nothing. Both containers answer
+   * the movement keys; only the grid answers activation, because `Enter`/`Space`
+   * on a month control is that control's own press.
+   */
+  const moveByKey = (event: KeyEvent): void => {
     if (swallowsDefault(event, "down")) event.preventDefault();
     Match.value(event).pipe(
       Match.when(isLeft, () => moveDays(-1)),
@@ -473,9 +497,13 @@ export const DatePickerCalendar = ({
       Match.when(isLast, () => moveToWeekEdge("last")),
       Match.when(isPageUp, () => moveMonths(-1)),
       Match.when(isPageDown, () => moveMonths(1)),
-      Match.when((press) => isActivation(press, "down"), chooseActive),
       Match.orElse(() => undefined),
     );
+  };
+
+  const handleKeyDown = (event: KeyEvent): void => {
+    moveByKey(event);
+    if (isActivation(event, "down")) chooseActive();
   };
 
   const grid = monthGrid(viewMonth, weekStartsOn);
@@ -489,7 +517,10 @@ export const DatePickerCalendar = ({
 
   return (
     <>
-      <div style={recipeStyle(DATE_PICKER_NAV, theme)}>
+      <div
+        style={recipeStyle(DATE_PICKER_NAV, theme)}
+        onKeyDown={moveByKey}
+      >
         <IconButton
           label="Previous month"
           size="sm"
@@ -522,8 +553,7 @@ export const DatePickerCalendar = ({
         onKeyDown={handleKeyDown}
         onKeyUp={(event) => {
           if (isActivation(event, "up")) chooseActive();
-        }}
-        style={recipeStyle(DATE_PICKER_GRID, theme)}
+        }}        style={recipeStyle(DATE_PICKER_GRID, theme)}
       >
         <div role="row" style={{ display: "flex", flexDirection: "row" }}>
           {Arr.map(weekdayLabels(weekStartsOn), (name) => (

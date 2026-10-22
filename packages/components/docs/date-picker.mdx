@@ -120,7 +120,11 @@ owns `null` as the "no date" state.
 
 One cell is the tab stop (the selected day, else the first selectable day of the
 viewed month); the arrow keys move real focus, so the highlight and the focus are
-the same cell.
+the same cell. **A month control answers the movement keys too**: the runtime
+focuses the element a pointer pressed even when it is disabled, so a press on
+`Next month` at its bound parks the focus on the control — the nav row carries
+the same movement keys as the grid, and the next arrow moves into the calendar
+rather than nothing happening. `Enter`/`Space` stay the control's own press.
 
 ## API
 
@@ -182,13 +186,14 @@ day of a month without `Date`, day identity, labels, ISO parsing (including
 `2026-02-30`), inclusive bounds, malformed bounds, clamping, month browse limits
 and `min` after `max`.
 
-`src/behaviour/date-picker.test.tsx` (16 tests) covers open + day focus, selection
+`src/behaviour/date-picker.test.tsx` (18 tests) covers open + day focus, selection
 as an ISO value with focus return, the controlled contract, arrow/Home/End focus,
 PageDown browsing without changing the value, Escape focus-return, the
 next-month control, both themes, a disabled trigger, an unavailable day, arrow
 clamping, the month-control bound, the clear action and its visibility rules, the
-trigger's own placeholder/name, and an empty surface when the calendar part is
-not composed.
+trigger's own placeholder/name, an empty surface when the calendar part is
+not composed, the movement keys a month control answers after the focus is
+parked on it, and an empty calendar anchoring on the day it calls today.
 
 ```sh
 nub run --filter @gpuixui/components test

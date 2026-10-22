@@ -284,6 +284,44 @@ describe("DatePicker", () => {
     picker.unmount();
   });
 
+  it("anchors an empty calendar on the day it calls today", () => {
+    // The bug: the open effect set the anchor and the same commit's focus effect
+    // read the *previous* state, so an empty picker focused the first of the
+    // month while the component documents today (`date-picker-lifecycle` read
+    // `date-day-2026-03-01` against the anchor's `-11`).
+    const picker = renderComponent(<Picker />);
+    open(picker);
+
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
+    expect(picker.renderer.findByText("October 2026")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("keeps the calendar's keys working from a month control", () => {
+    // The bug: the grid owned `onKeyDown`, and the month controls are its
+    // siblings, so a key delivered to a month button never reached the calendar.
+    // The runtime focuses the element a pointer pressed even when it is
+    // disabled (`date-picker-lifecycle` measured `date-next` holding the focus
+    // at its bound), so every later arrow moved nothing.
+    const picker = renderComponent(
+      <Picker defaultValue="2026-10-17" min="2026-10-01" max="2026-10-31" />,
+    );
+    open(picker);
+
+    const next = picker.renderer.findByTestId("date-next");
+    expect(next?.customProps?.tabIndex).toBe(-1);
+
+    picker.renderer.focusElement(next?.id ?? -1);
+    expect(focusedTestId(picker)).toEqual(Option.some("date-next"));
+
+    picker.renderer.simulateKeystrokes("right");
+
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-18"));
+
+    picker.unmount();
+  });
+
   it("clears the selection, closes and returns focus to the trigger", async () => {
     const onValueChange = vi.fn();
     const picker = renderComponent(
