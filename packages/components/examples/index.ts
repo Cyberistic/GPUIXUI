@@ -49,6 +49,7 @@ import { NavigationMenuExample } from "./navigation-menu.example.js";
 import { PaginationExample } from "./pagination.example.js";
 import { PopoverExample } from "./popover.example.js";
 import { PreviewCardExample } from "./preview-card.example.js";
+import { RotatingTextExample } from "./rotating-text.example.js";
 import { SearchInputExample } from "./search-input.example.js";
 import { StepperExample } from "./stepper.example.js";
 import { TabsExample } from "./tabs.example.js";
@@ -97,6 +98,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   pagination: PaginationExample,
   popover: PopoverExample,
   "preview-card": PreviewCardExample,
+  "rotating-text": RotatingTextExample,
   "search-input": SearchInputExample,
   stepper: StepperExample,
   tabs: TabsExample,

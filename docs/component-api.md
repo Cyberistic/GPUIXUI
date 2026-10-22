@@ -324,6 +324,7 @@ the honest parts.
 | Typing text | `TypingText` | — | plan 600 |
 | Counting number | `CountingNumber` | — | plan 600 |
 | Auto height | `AutoHeight` | — | plan 600 |
+| Rotating text | `RotatingText` | — | plan 600 |
 
 **Planned Tier 2 additions** — none. The last reserved family, Chat and
 Message (plan `207`), landed with its parts unchanged, so every part table above
