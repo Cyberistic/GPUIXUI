@@ -123,11 +123,39 @@ describe("decorative surfaces", () => {
   });
 
   it("measures a veil over the content surfaces a modal covers", () => {
-    const missing = ["card", "popover"].filter(
+    // A modal veils the whole window, not only the page under its own surface:
+    // the sidebar's toolbar, a segmented panel and the field behind it are all
+    // receded by the same role.
+    const missing = ["card", "popover", "muted", "secondary", "input"].filter(
       (over) => !measured("scrim", "overlay", over),
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it("reports a veil that cannot recede the sidebar it covers", () => {
+    // A veil painted in the toolbar's own colour leaves that strip at full
+    // contrast behind a modal — the state a window with a sidebar actually has.
+    const broken = { colors: { ...lightColors, overlay: lightColors.muted } };
+
+    expect(
+      decorativeFailures(broken).find(
+        ({ surface, over }) => surface === "scrim" && over === "muted",
+      ),
+    ).toMatchObject({ ratio: 1, floor: decorativeFloor });
+  });
+
+  it("prints the veil's strips in the catalogue, from the placements themselves", () => {
+    // The page lists the strips the veil is measured on, so a placement the table
+    // gains cannot stay unprinted and a row cannot name a strip nobody measures.
+    const strips = decorativeSurfaces
+      .filter(({ surface }) => surface === "scrim")
+      .map(({ over }) => `\`${over}\``)
+      .join(", ");
+
+    expect(
+      readFileSync(new URL("../../../docs/tokens.md", import.meta.url), "utf8"),
+    ).toContain(`| scrim | \`overlay\` | ${strips} |`);
   });
 
   it("measures every status edge where the message it bounds is measured", () => {

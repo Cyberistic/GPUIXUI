@@ -201,9 +201,16 @@ export const decorativeSurfaces: readonly DecorativeSurface[] = [
   { surface: "skeleton", role: "skeleton", over: "muted" },
   // A veil is measured over the surfaces a modal covers that carry content, not
   // over the page's void: a black page cannot be darkened by any scrim, and a
-  // theme with one separates its dialog with a border instead.
+  // theme with one separates its dialog with a border instead. The strips are
+  // the ones a window actually holds behind a modal — a card, a floating
+  // surface, a sidebar's `muted` toolbar, a segmented `secondary` panel and a
+  // field's `input` fill — because the veil covers the whole window: measured on
+  // the two page surfaces only, a modal over an undimmed sidebar passed.
   { surface: "scrim", role: "overlay", over: "card" },
   { surface: "scrim", role: "overlay", over: "popover" },
+  { surface: "scrim", role: "overlay", over: "muted" },
+  { surface: "scrim", role: "overlay", over: "secondary" },
+  { surface: "scrim", role: "overlay", over: "input" },
   // A scrollbar thumb is chrome: the platform paints and sizes it, and the role
   // only tints it. A thumb that matches the strip it moves along is a scroller a
   // reader cannot find, so it is measured wherever a scroller can sit.

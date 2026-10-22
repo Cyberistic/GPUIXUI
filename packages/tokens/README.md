@@ -553,7 +553,10 @@ Each report is also a function of its own:
   misses its floor, including one it cannot measure because a value is
   translucent.
 - `decorativeFailures(theme, floor?)` lists every subtle surface — a divider, a
-  skeleton fill, the modal veil, a status tone's soft tint and its edge, a
+  skeleton fill, the modal veil (on the content strips a window holds behind it:
+  a card, a popover, a `muted` toolbar, a `secondary` panel and a field's `input`
+  fill, with the page's void exempt because nothing can darken a black page), a
+  status tone's soft tint and its edge, a
   scrollbar thumb, the wash a hovered or selected row is tinted with, the fill a
   tonal action rests on — that is too close to what it is painted on to be seen,
   compositing a translucent role first. Each half found a shipped alias: the base
@@ -592,7 +595,7 @@ focus line — is held to the boundary floor on the six strips a control sits on
 four through the mark contract and two (`input`, `secondary`) through
 `contrastPairs`. The decorative surfaces use `decorativeFloor` (1.05:1), and
 `decorativeSurfaces` names the placements measured — dividers, skeleton fills,
-the modal veil, each status tone's soft tint on the four strips a message sits
+the modal veil on the strips a modal covers, each status tone's soft tint on the four strips a message sits
 on and its edge on those same four (read at the share `statusEdgeAlpha` that
 `statusTone` paints), the scrollbar thumb, `hover`/`active`/`selected`/`accent`
 and the `secondary` fill on the four strips a control can sit on, and the

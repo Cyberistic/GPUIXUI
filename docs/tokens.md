@@ -1572,7 +1572,7 @@ how a status edge is measured at the alpha its component actually uses:
 | ------- | ---- | ------------- |
 | divider | `border` | `background`, `card`, `popover`, `muted` |
 | skeleton | `skeleton` | `background`, `card`, `muted` |
-| scrim | `overlay` | `card`, `popover` |
+| scrim | `overlay` | `card`, `popover`, `muted`, `secondary`, `input` |
 | statusTint | each tone's `xSoft` | `background`, `card`, `popover`, `muted` |
 | statusEdge | each tone's solid role, at `statusEdgeAlpha` | its `xSoft` tint and the same four strips |
 | scrollbar | `scrollbar` | `background`, `card`, `popover`, `muted` |
@@ -1662,9 +1662,14 @@ spinner's lit dot paints, so `indicatorFailures` holds them to the non-text
 floor on the same four strips.
 
 A veiled page's **void** is not measured: a black page cannot be darkened by any
-scrim, and a high-contrast theme separates its dialog with a border instead. A
-surface that cannot be measured at all — a translucent page — is reported with
-`ratio: undefined`, exactly as a text pair is.
+scrim, and a high-contrast theme separates its dialog with a border instead. The
+strips a modal actually covers are: a card, a floating surface, the `muted`
+toolbar of a sidebar, a segmented `secondary` panel and a field's `input` fill.
+The veil was measured on the first two only — the strips of the page's own
+content — so a window whose sidebar sat behind a modal had a measured card and an
+undimmed toolbar, and a brand's dark `muted` surface could ship a veil that
+receded nothing. A surface that cannot be measured at all — a translucent page —
+is reported with `ratio: undefined`, exactly as a text pair is.
 
 The **elevation tint** is in the table too, and it is the surface this page used
 to say was deliberately outside it. A shadow is a blurred geometry, so a flat

@@ -626,9 +626,11 @@ tint and its edge, the scrollbar thumb, the wash a row is hovered, pressed,
 selected or accented with, the resting fill of a tonal action, the face a
 disabled control wears and the shadow of a
 raised surface are held to 1.05:1 against what they are painted on. The veil is composited over its surface rather than rejected as
-translucent, and the two places it is measured are the content surfaces a modal
-covers; a black page cannot be darkened, and a high-contrast theme separates its
-dialog with a border instead. The status edge is measured at the share
+translucent, and it is measured on every content strip a window holds behind a
+modal — a card, a popover, a sidebar's `muted` toolbar, a segmented `secondary`
+panel and a field's `input` fill; the page's own void is exempt, because a black
+page cannot be darkened and a high-contrast theme separates its dialog with a
+border instead. The status edge is measured at the share
 `statusTone` paints, on the tint it bounds and on the four strips a message sits
 on — so a warning alert in a confirmation dialog's body, or a soft badge in a
 muted sidebar, has its boundary measured where its tint is.
