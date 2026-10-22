@@ -144,6 +144,40 @@ it("fills a determinate Progress to its value", async () => {
   expect(partial.fill).toBeLessThan(partial.track);
 });
 
+it("paints a Progress's held-ahead buffer in the gap it reports", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Progress testId="pg" value={40} buffer={70} />
+    </Surface>,
+  );
+  const trackId = Option.getOrElse(Arr.head(childrenOf(runtime, "pg")), () =>
+    expect.fail("the Progress painted no track"),
+  );
+  const segments = childrenOfId(runtime, trackId);
+  const segmentId = (index: number): number =>
+    Option.getOrElse(Arr.get(segments, index), () =>
+      expect.fail(`the Progress painted no segment ${index}`),
+    );
+  const boxOf = (id: number) =>
+    Option.getOrElse(runtime.boundsOfId(id), () =>
+      expect.fail("the Progress painted no segment box"),
+    );
+  const track = boxOf(trackId);
+  const fill = boxOf(segmentId(0));
+  const bufferId = segmentId(1);
+  const buffer = boxOf(bufferId);
+  // The fill is the value's share; the buffer is the segment after it, ending
+  // at the buffer's own share.
+  expect(Math.abs(fill.width - track.width * 0.4)).toBeLessThan(2);
+  expect(Math.abs(buffer.x - (track.x + track.width * 0.4))).toBeLessThan(2);
+  expect(Math.abs(buffer.width - track.width * 0.3)).toBeLessThan(2);
+  // Painted in the mark role the indicator contract measures on the track.
+  expect(styleOf(runtime, bufferId)["backgroundColor"]).toBe(
+    testTheme.colors.mutedForeground,
+  );
+});
+
 it("paints a caller's Progress composition from the same resolved state", async () => {
   const runtime = await openWindow();
   runtime.render(
@@ -193,22 +227,32 @@ it("moves an indeterminate Progress's segment over time", async () => {
   expect(a11yValueOf(runtime.a11y(), { label: "Uploading" })).toEqual(
     Option.some("loading"),
   );
+  // The **painted** position of the moving fill is the measure, not the lead's
+  // declared width: the track used to lay its segments out as blocks, so the
+  // lead's width changed every step while the fill stayed pinned at the start
+  // of the bar and the motion was invisible.
   const offsets = await sample(
     runtime,
     () => {
       const track = Arr.head(childrenOf(runtime, "pg"));
-      const lead = Option.flatMap(track, (id) =>
-        Arr.head(childrenOfId(runtime, id)),
+      const fill = Option.flatMap(track, (id) =>
+        Option.fromNullishOr(childrenOfId(runtime, id)[1]),
       );
       return Option.getOrUndefined(
-        Option.flatMap(lead, (id) =>
-          Option.fromNullishOr(styleOf(runtime, id)["width"]),
+        Option.flatMap(fill, (id) =>
+          Option.map(runtime.boundsOfId(id), (box) => box.x),
         ),
       );
     },
     6,
   );
   expect(new Set(offsets).size).toBeGreaterThan(1);
+  // The moving fill is inside the track, not clipped below it.
+  const trackBox = Option.getOrElse(
+    Option.flatMap(Arr.head(childrenOf(runtime, "pg")), runtime.boundsOfId),
+    () => expect.fail("the Progress painted no track"),
+  );
+  expect(offsets.every((x) => x === undefined || x >= trackBox.x)).toBe(true);
 });
 
 it("paints an indeterminate Progress in its own tone", async () => {

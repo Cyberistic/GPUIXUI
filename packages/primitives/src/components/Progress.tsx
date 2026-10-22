@@ -34,7 +34,11 @@ import {
   type ProgressTone,
 } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { progressFillClass, progressTrackClass } from "../recipe/index.js";
+import {
+  progressBufferClass,
+  progressFillClass,
+  progressTrackClass,
+} from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle, useStep } from "./internal.js";
 import { Text } from "./Text.js";
@@ -43,6 +47,13 @@ import { useTheme } from "./ThemeProvider.js";
 export interface ProgressProps {
   /** 0–100. Omit for an indeterminate bar. */
   readonly value?: number;
+  /**
+   * How much of the bar is already held — a download's received-then-buffered
+   * share. Painted as one segment between `value` and this number, so a buffer
+   * behind the value paints nothing. Ignored while indeterminate: an
+   * indeterminate bar has no position to buffer around.
+   */
+  readonly buffer?: number;
   /** Defaults to `primary`. */
   readonly tone?: ProgressTone;
   /** Defaults to `md`. */
@@ -71,6 +82,8 @@ export interface ProgressPart {
   readonly theme: PrimitiveTheme;
   readonly determinate: boolean;
   readonly percent: number;
+  /** Where the held-ahead segment ends, or `undefined` when there is none. */
+  readonly bufferPercent: number | undefined;
   readonly tone: ProgressTone;
   readonly size: ProgressSpec["size"];
   readonly step: number;
@@ -81,7 +94,7 @@ export interface ProgressPart {
 
 /** Resolve a progress's shared state once, for its root and every part. */
 export const progressPart = (
-  { value, tone = "primary", size = "md", label }: ProgressProps,
+  { value, buffer, tone = "primary", size = "md", label }: ProgressProps,
   theme: PrimitiveTheme,
   step: number,
 ): ProgressPart => {
@@ -91,6 +104,12 @@ export const progressPart = (
     theme,
     determinate,
     percent,
+    // A buffer is a place on the bar, so it needs one: an indeterminate bar has
+    // none, and a buffer behind the value has nothing left to say.
+    bufferPercent:
+      determinate && buffer !== undefined
+        ? Math.max(percent, progressPercent(buffer))
+        : undefined,
     tone,
     size,
     step,
@@ -161,11 +180,15 @@ export interface ProgressIndicatorProps {
 /**
  * The filled segment.
  *
- * Determinate, it is one fill at the clamped percentage. Indeterminate, it is
- * the moving segment: a spacer and the fill, so a caller who composes their own
- * track still gets the motion instead of a fill pinned to the start. The tone
- * paints both — a bar that changes colour when it learns its value would be a
- * bar whose colour means nothing.
+ * Determinate, it is one fill at the clamped percentage, plus the buffer
+ * segment when the caller reports one. Indeterminate, it is the moving segment:
+ * a spacer and the fill, so a caller who composes their own track still gets the
+ * motion instead of a fill pinned to the start. The tone paints both — a bar
+ * that changes colour when it learns its value would be a bar whose colour
+ * means nothing. The buffer is painted after the fill rather than under it, so
+ * its own segment is the part between the value and the buffer: the runtime
+ * paints one child after another, and a segment is measurable where an overlay
+ * would need a positioned ancestor the runtime does not guarantee.
  */
 export const renderProgressIndicator = (
   { className, style, testId }: ProgressIndicatorProps,
@@ -181,7 +204,20 @@ export const renderProgressIndicator = (
       : mergeStyle(recipeTw.classesToStyle(className, part.theme).style, style),
   );
   if (part.determinate) {
-    return <div testId={testId} style={fill} />;
+    const held = part.bufferPercent;
+    return (
+      <>
+        <div testId={testId} style={fill} />
+        {held === undefined || held <= part.percent ? null : (
+          <div
+            style={mergeStyle(
+              recipeTw.classesToStyle(progressBufferClass, part.theme).style,
+              { width: `${held - part.percent}%` },
+            )}
+          />
+        )}
+      </>
+    );
   }
   const lead = mergeStyle(
     recipeTw.classesToStyle("shrink-0", part.theme).style,

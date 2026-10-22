@@ -89,6 +89,55 @@ describe("Progress", () => {
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("loading");
   });
 
+  it("paints the held-ahead buffer in the segment between value and buffer", () => {
+    // The bug guarded: a bar reported only `value`, so a download that had
+    // buffered further ahead painted as if nothing were held.
+    const element = renderProgress({ value: 40, buffer: 70 }, testTheme, 0);
+    const children = elementChildren(trackOf(element));
+    expect(children).toHaveLength(2);
+    expect(
+      expectSome(
+        hostStyleString(children[0] ?? expect.fail("no fill"), "width"),
+      ),
+    ).toBe("40%");
+    const held = children[1] ?? expect.fail("no buffer segment");
+    expect(expectSome(hostStyleString(held, "width"))).toBe("30%");
+    expect(expectSome(hostStyleString(held, "backgroundColor"))).toBe(
+      testTheme.colors.mutedForeground,
+    );
+  });
+
+  it("keeps the buffer clamped, ahead of the value, and out of an indeterminate bar", () => {
+    const bufferOf = (props: {
+      readonly value?: number;
+      readonly buffer: number;
+    }): Option.Option<ReactElement> =>
+      Option.fromNullishOr(
+        elementChildren(trackOf(renderProgress(props, testTheme, 0)))[1],
+      );
+    const widthOf = (props: {
+      readonly value?: number;
+      readonly buffer: number;
+    }): Option.Option<string> =>
+      Option.flatMap(bufferOf(props), (element) =>
+        hostStyleString(element, "width"),
+      );
+    // Past the end clamps to the bar's own end.
+    expect(widthOf({ value: 40, buffer: 250 })).toStrictEqual(
+      Option.some("60%"),
+    );
+    // Behind the value, there is no held segment left to paint.
+    expect(widthOf({ value: 70, buffer: 40 })).toStrictEqual(Option.none());
+    // A buffer is a place on the bar; an indeterminate bar has none.
+    expect(progressPart({ buffer: 70 }, testTheme, 0).bufferPercent).toBe(
+      undefined,
+    );
+    // An unreadable buffer is empty, like an unreadable value.
+    expect(widthOf({ value: 40, buffer: Number.NaN })).toStrictEqual(
+      Option.none(),
+    );
+  });
+
   it("has no aria-valuenow to read, so the value text is the only report", () => {
     const element = bar(Option.some(42));
     expect(hostProp(element, "aria-valuenow")).toStrictEqual(Option.none());
@@ -128,6 +177,15 @@ describe("Progress", () => {
     expect(textOf(renderProgressLabel({ children: "Saving" }, part))).toBe(
       "Saving",
     );
+  });
+
+  it("lays the bar's segments in a row", () => {
+    // The bug guarded: the track was a block, so the indeterminate lead and the
+    // fill stacked — the moving fill never left the start of the bar and every
+    // segment after the first was clipped below it.
+    const track = trackOf(bar(Option.some(42)));
+    expect(expectSome(hostStyleString(track, "display"))).toBe("flex");
+    expect(expectSome(hostStyleString(track, "flexDirection"))).toBe("row");
   });
 
   it("keeps the default composition to the track and its indicator", () => {

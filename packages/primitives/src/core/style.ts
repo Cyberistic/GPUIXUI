@@ -440,6 +440,8 @@ export const progressTrackStyle = (
   spec: ProgressSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => ({
+  display: "flex",
+  flexDirection: "row",
   width: "100%",
   height: theme.spacing[PROGRESS_HEIGHT[spec.size]],
   borderRadius: theme.radius.full,

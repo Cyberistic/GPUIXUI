@@ -2,8 +2,9 @@
  * Form example: a project-creation form.
  *
  * A controlled form, not a field sampler: every value lives in the caller, the
- * save button shows the busy state the library supports, and the progress bar
- * appears only while the request is in flight. `Label` carries the visible name
+ * save button shows the busy state the library supports, and the progress bars
+ * appear only while the request is in flight — one reporting work buffered
+ * ahead of the value. `Label` carries the visible name
  * and each control carries the same name for assistive technology, because the
  * runtime has no `aria-labelledby` (see `docs/label.mdx`).
  */
@@ -111,15 +112,20 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         {saving ? (
-          <Progress label="Creating project" value={62} tone="success">
-            <Stack direction="row" justify="between">
-              <ProgressLabel />
-              <ProgressValue />
-            </Stack>
-            <ProgressTrack>
-              <ProgressIndicator />
-            </ProgressTrack>
-          </Progress>
+          <Stack direction="column" gap="sm">
+            <Progress label="Creating project" value={62} tone="success">
+              <Stack direction="row" justify="between">
+                <ProgressLabel />
+                <ProgressValue />
+              </Stack>
+              <ProgressTrack>
+                <ProgressIndicator />
+              </ProgressTrack>
+            </Progress>
+            {/* A download's held-ahead share: the segment between the value
+                and the buffer is what is already received. */}
+            <Progress value={42} buffer={78} label="Uploading assets" />
+          </Stack>
         ) : null}
 
         <ButtonGroup

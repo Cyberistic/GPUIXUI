@@ -387,7 +387,8 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "No aria-valuenow: the value is announced as aria-valuetext",
       "The indeterminate segment is a discrete step, not a smooth sweep",
-      "No buffer value, stacked segments or in-track label",
+      "One buffer, no stacked segments and no in-track label",
+      "The buffer paints mutedForeground, so a muted-tone bar cannot show one",
       "reducedMotion holds the indeterminate segment; the preference is the caller's",
     ],
     source: ["src/components/Progress.tsx", "src/core/style.ts"],

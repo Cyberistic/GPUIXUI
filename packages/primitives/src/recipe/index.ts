@@ -642,9 +642,16 @@ const PROGRESS_HEIGHT_STEP: Readonly<Record<"sm" | "md", SpaceStep>> = {
   md: "sm",
 };
 
-/** The class string a progress or meter track resolves from. */
+/**
+ * The bar's background and the row its segments sit in.
+ *
+ * `flex-row` is load-bearing: the indeterminate bar is a spacer **and** a fill,
+ * and a buffer is a segment after the value's. Without the row they stacked, so
+ * the moving fill stayed at the start (measured in a window: its `x` never left
+ * the track's) and every segment after the first was clipped below the bar.
+ */
 export const progressTrackClass = (size: "sm" | "md"): string =>
-  `w-full h-space-${PROGRESS_HEIGHT_STEP[size]} rounded-full bg-muted overflow-hidden`;
+  `flex flex-row w-full h-space-${PROGRESS_HEIGHT_STEP[size]} rounded-full bg-muted overflow-hidden`;
 
 /** The colour role each progress tone paints. */
 const PROGRESS_TONE_CLASS: Readonly<Record<ProgressTone, string>> = {
@@ -657,6 +664,16 @@ const PROGRESS_TONE_CLASS: Readonly<Record<ProgressTone, string>> = {
 /** The class string a progress or meter fill resolves from. */
 export const progressFillClass = (tone: ProgressTone): string =>
   cn("h-full rounded-full", PROGRESS_TONE_CLASS[tone]);
+
+/**
+ * The class string a progress's held-ahead segment resolves from.
+ *
+ * The buffer is a **mark on the track**, so it paints the readable
+ * `mutedForeground` role — the one `indicatorRoles` measures on `muted` — rather
+ * than a translucent share of the fill's own tone, which no contract can
+ * measure.
+ */
+export const progressBufferClass = "h-full shrink-0 bg-muted-foreground";
 
 // ── Spinner / Skeleton ───────────────────────────────────────────────
 

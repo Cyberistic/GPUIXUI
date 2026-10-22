@@ -28,6 +28,13 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 <Progress label="Saving" />
 ```
 
+A download reports what it has buffered ahead of the value with `buffer`; the
+segment between the two is the held share:
+
+```tsx
+<Progress value={42} buffer={78} label="Downloading" />
+```
+
 The parts compose the bar for a caller who wants the value beside it:
 
 ```tsx
@@ -57,7 +64,7 @@ import {
 | ---- | -------------- |
 | `Progress` | role, accessible name, announced value, the frame |
 | `ProgressTrack` | the bar's background, height, radius and overflow clip |
-| `ProgressIndicator` | the fill; while indeterminate it is the moving segment |
+| `ProgressIndicator` | the fill, and the buffer segment after it; while indeterminate it is the moving segment |
 | `ProgressLabel` | visible task name, defaulting to the root's `label` |
 | `ProgressValue` | the clamped percentage, or `loading` with no value |
 
@@ -70,6 +77,7 @@ root uses — there is no second paint path.
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | — | 0–100 determinate fill; omit for indeterminate |
+| `buffer` | `number` | none | 0–100 held-ahead point; paints the segment between `value` and itself, and nothing while indeterminate or behind `value` |
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm` |
 | `label` | `string` | none | accessible name, and `ProgressLabel`'s default text |
@@ -86,7 +94,9 @@ part's `style` is merged last, after the recipe.
 
 Values outside 0–100 are clamped, so a bar can never paint outside its track.
 `NaN` is treated as empty, never as complete. The fill and `ProgressValue` read
-the same clamped number.
+the same clamped number. A `buffer` is clamped the same way, never paints behind
+`value`, and is ignored while the bar is indeterminate — a buffer is a place on
+a bar, and an indeterminate bar has no place to hold.
 
 ## Keyboard
 
@@ -96,7 +106,9 @@ Not focusable. Progress is status, not a control; there is no slider behaviour.
 
 - Role: `progressbar` (`ProgressIndicator` in AccessKit).
 - The value is announced through **`aria-valuetext`** — `"42%"` or
-  `"loading"` — because `@gpuix/native` 0.11.0 has no `aria-valuenow`.
+  `"loading"` — because `@gpuix/native` 0.11.0 has no `aria-valuenow`. A
+  `buffer` is **not announced**: the one supported attribute carries the value,
+  so a held-ahead share is a visual cue only.
 - The name comes from `label`. Without one, a progress bar is an unnamed
   progress bar; give it the task's name ("Uploading", "Saving").
 - `ProgressLabel` is visible text, not a second name: it does not replace the
@@ -104,10 +116,13 @@ Not focusable. Progress is status, not a control; there is no slider behaviour.
 
 ## Theming
 
-`progressTrackClass` paints `colors.muted`; `progressFillClass` paints the
-tone's role. Height is a spacing step and both ends are `radius.full`, so a
-density or radius change moves the whole family. The label and value parts use
-the `caption` type role in the `muted` text tone.
+`progressTrackClass` paints `colors.muted` and lays the bar's segments in one
+row — the moving lead, the fill and the buffer are siblings, so the fill's
+painted position is the motion; `progressFillClass` paints the tone's role.
+Height is a spacing step and both ends are `radius.full`, so a density or radius
+change moves the whole family. The buffer segment paints `mutedForeground`, the
+mark role `indicatorRoles` measures on a `muted` track. The label and value
+parts use the `caption` type role in the `muted` text tone.
 
 `reducedMotion` is the caller's: the runtime exposes no reduced-motion
 preference, so the host application reads the platform setting and passes it
@@ -120,11 +135,14 @@ no interval running; a determinate bar is unaffected because it never animated.
 
 ## Limitations
 
-- No `aria-valuenow` (above).
+- No `aria-valuenow` (above), so the buffer is not announced.
 - The indeterminate segment is a discrete step, not a smooth sweep; the runtime
   cannot interpolate position beyond the motion API this package does not import.
-- No buffer/secondary value and no stacked segments. The label and value parts
-  sit beside the track; painting text *inside* the bar is not a part.
+- One buffer, no stacked segments. The label and value parts sit beside the
+  track; painting text *inside* the bar is not a part.
+- The buffer is one role (`mutedForeground`), so a `tone="muted"` bar cannot show
+  one: the segment and the fill would be the same colour. Use another tone when
+  a bar reports held-ahead work.
 - The reduced-motion preference is the caller's to supply (above).
 
 ## Verification
@@ -132,16 +150,19 @@ no interval running; a determinate bar is unaffected because it never animated.
 - `src/core/style.test.ts` — clamping, including `NaN` and infinity.
 - `src/core/loading.test.ts` — the step maths and the rule that only a bar
   without a value animates.
-- `src/components/Progress.test.tsx` — the tree-level track/fill, the clamped
-  fill width, the value part agreeing with it, the indeterminate lead, the tone
+- `src/components/Progress.test.tsx` — the tree-level track/fill, the bar's
+  segments laid in one row, the clamped fill width, the value part agreeing with
+  it, the buffer segment between value and buffer (and its clamps, its absence
+  behind the value and on an indeterminate bar), the indeterminate lead, the tone
   on both the determinate and the indeterminate fill, a custom composition, the
   root frame's style merge, and the lead held at the resting offset under
   `reducedMotion`.
 - `runtime/loading.runtime.test.tsx` — announces `"42%"`, clamps 140 to `"100%"`
-  and −5 to `"0%"`, the fill tracks the value inside the track, the
-  indeterminate segment moves over real time in its own tone, a step counter
-  that is not running stays still, and a `reducedMotion` bar's lead width is one
-  value across six samples.
+  and −5 to `"0%"`, the fill tracks the value inside the track, the buffer paints
+  the gap it reports (its painted box and mark role), the indeterminate segment's
+  **painted x** moves over real time in its own tone, a step counter that is not
+  running stays still, and a `reducedMotion` bar's lead width is one value across
+  six samples.
 
 ```sh
 nub run --filter @gpuixui/primitives test
