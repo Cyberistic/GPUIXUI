@@ -11,7 +11,12 @@
 
 import * as Arr from "effect/Array";
 import type { StyleDesc } from "@gpuix/react";
-import { alpha, targetInset, targetSize } from "@gpuixui/tokens";
+import {
+  filledHover,
+  filledPressed,
+  targetInset,
+  targetSize,
+} from "@gpuixui/tokens";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 
 export const SELECTION_STATES = [
@@ -64,11 +69,36 @@ export const selectionMarkColor = (
       : theme.colors.mutedForeground;
 
 /**
+ * The fill a filled selection control paints while hovered or pressed.
+ *
+ * Derived from the theme and **opaque**, like a filled action's feedback: a
+ * half-alpha lift (`alpha(primary, 0.9)`) let the surface behind the box
+ * through, so the same checked box read as two colours on a card and on a
+ * dialog, and the mark painted over it could not be measured for contrast at
+ * all. The edge goes transparent with it — the fill *is* the edge once the box
+ * is filled, and a resting role left on the border would draw a 1px ring of the
+ * old colour around the new fill.
+ */
+const feedbackFill = (
+  spec: SelectionSpec,
+  theme: PrimitiveTheme,
+  phase: "hover" | "press",
+): StyleDesc => ({
+  backgroundColor:
+    phase === "hover"
+      ? filledHover(theme, spec.accent)
+      : filledPressed(theme, spec.accent),
+  borderColor: "transparent",
+});
+
+/**
  * The square a checkbox or radio paints.
  *
  * The side is the theme's icon size for the control size, so a checkbox lines
  * up with the icon on the label beside it without a bespoke scale. Feedback is
- * declared: the border darkens on hover and takes the ring role while pressed.
+ * declared: an empty box's border darkens on hover and takes the ring role
+ * while pressed; a filled box moves to another **opaque** fill, because the
+ * mark is painted on it.
  */
 export const selectionBoxStyle = (
   spec: SelectionSpec,
@@ -92,12 +122,11 @@ export const selectionBoxStyle = (
     color: selectionMarkColor(spec, theme),
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
     hover: filled(spec)
-      ? {
-          backgroundColor: alpha(role.background, 0.9),
-          borderColor: alpha(role.background, 0.9),
-        }
+      ? feedbackFill(spec, theme, "hover")
       : { borderColor: theme.colors.borderStrong },
-    active: { borderColor: theme.colors.ring },
+    active: filled(spec)
+      ? feedbackFill(spec, theme, "press")
+      : { borderColor: theme.colors.ring },
   };
   if (spec.disabled === true) {
     style.opacity = 0.5;
@@ -219,12 +248,11 @@ export const switchTrackStyle = (
     backgroundColor: filled(spec) ? role.background : theme.colors.muted,
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
     hover: filled(spec)
-      ? {
-          backgroundColor: alpha(role.background, 0.9),
-          borderColor: alpha(role.background, 0.9),
-        }
+      ? feedbackFill(spec, theme, "hover")
       : { borderColor: theme.colors.borderStrong },
-    active: { borderColor: theme.colors.ring },
+    active: filled(spec)
+      ? feedbackFill(spec, theme, "press")
+      : { borderColor: theme.colors.ring },
   };
   if (spec.disabled === true) {
     style.opacity = 0.5;

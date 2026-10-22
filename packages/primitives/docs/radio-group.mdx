@@ -126,7 +126,10 @@ Enter selects on the press.
 
 The circle is `selectionBoxStyle` with `shape: "circle"` and the dot is
 `radioDotStyle`, both from `core/selection.ts`, so a radio and a checkbox of the
-same size are the same square/circle family. The row's style — the pressable
+same size are the same square/circle family. A chosen circle's hover and press
+paint the theme's **opaque** derived fill (`filledHover`/`filledPressed`) with
+the edge transparent, like the checkbox's, because the pip is painted on that
+fill. The row's style — the pressable
 floor, the ring, the cursor — comes from `group.tsx`'s `optionRowStyle`, and the
 circle's from the shared `decorative` guard, so the group controls — and the
 standalone selection controls — cannot disagree about

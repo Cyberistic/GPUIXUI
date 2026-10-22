@@ -106,7 +106,11 @@ can interpolate a `left` inset, so the component hands that same value to
 the runtime exposes no reduced-motion preference, so the caller passes its own.
 Disabled adds half opacity and removes feedback — the `pointerEvents: "none"`
 guard on the track removes the blocking, not its hitbox, so the hover and press
-refinements still paint. `invalid` gives an off-switch the destructive border,
+refinements still paint. A checked track's feedback is another **opaque** fill
+(the theme's `filledHover`/`filledPressed` for its accent, edge transparent), not
+a half-alpha lift: the thumb and any glyph on it sit on that fill, so a
+translucent one would read differently on every surface and could not be
+measured. `invalid` gives an off-switch the destructive border,
 the same role a checkbox uses. The target is `switchTargetStyle`, and it carries
 the focus: the shared keyboard outline is declared at rest (`controlRing`),
 which the runtime paints after keyboard focus only; a disabled switch declares

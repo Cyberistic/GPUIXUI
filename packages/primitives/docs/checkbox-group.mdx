@@ -128,7 +128,9 @@ value: unlike a radio group, a checkbox group has no "selection follows focus".
 ## Theming
 
 Each box compiles `selectionBoxClass` — side from `iconSize`, radius from
-`radius.sm`, border from `input`/`destructive`, fill from the accent role — and
+`radius.sm`, border from `input`/`destructive`, fill from the accent role, and a
+checked box's hover/press from the theme's opaque `filledHover`/`filledPressed`
+— and
 is kept out of the press by the shared `decorative` guard. The **row** is the control: it
 takes the shared keyboard ring from `controlRing` and reserves the 24px
 pressable floor, both from `group.tsx`'s `optionRowStyle`, so radio and checkbox

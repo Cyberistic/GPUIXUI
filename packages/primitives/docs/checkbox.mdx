@@ -135,7 +135,12 @@ also scroll while the control waits for the release.
 the accent role, and the mark colour from `selectionMarkColor`. Hover and press
 are declared in `style.hover`/`style.active`, not scripted — and they still paint
 on a drawing that takes no press: `pointerEvents: "none"` removes the blocking,
-not the element's hitbox. Disabled adds half opacity and removes pointer
+not the element's hitbox. A filled box's feedback is another **opaque** fill —
+the theme's `filledHover`/`filledPressed` for its accent, with the edge going
+transparent — because the mark is painted on that fill: a half-alpha lift let
+the surface behind the box through, so the same checked box read as two colours
+on a card and on a dialog, and the mark could not be measured against it.
+Disabled adds half opacity and removes pointer
 feedback. The target is `selectionTargetStyle` (`targetInset`, the shared floor
 arithmetic) and carries the focus: the keyboard outline is declared at rest
 (`controlRing`, `colors.ring` at `borderWidth.strong`), painted by the runtime

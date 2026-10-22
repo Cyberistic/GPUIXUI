@@ -525,7 +525,10 @@ export const selectionBoxClass = ({
     filled
       ? cn(
           `bg-${bg} border-${bg} text-${fg}`,
-          `hover:bg-${bg}/90 hover:border-${bg}/90 active:border-ring`,
+          // The fill *is* the edge once the box is filled, and the feedback is
+          // the theme's derived opaque fill (`fill-<role>`), not an alpha lift:
+          // the mark is painted on this fill, so it has to stay measurable.
+          `hover:fill-${bg} hover:border-transparent active:fill-${bg}-pressed active:border-transparent`,
         )
       : cn(
           invalid === true ? "border-destructive" : "border-input",
@@ -572,7 +575,9 @@ export const switchTrackClass = ({
     filled
       ? cn(
           `bg-${bg} border-${bg}`,
-          `hover:bg-${bg}/90 hover:border-${bg}/90 active:border-ring`,
+          // A checked track's feedback is the derived opaque fill, like the
+          // checkbox's: the thumb and any glyph on it sit on this fill.
+          `hover:fill-${bg} hover:border-transparent active:fill-${bg}-pressed active:border-transparent`,
         )
       : cn(
           "bg-muted",

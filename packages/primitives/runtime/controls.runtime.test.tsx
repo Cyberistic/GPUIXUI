@@ -177,6 +177,44 @@ it("paints a filled Button's hover as the theme's opaque derived fill", async ()
   );
 });
 
+it("paints a checked Checkbox's feedback as the theme's opaque derived fill", async () => {
+  // The bug: the box's hover and press were an alpha lift, exactly like the
+  // filled button's were — the surface behind the box showed through, so the
+  // same checked box read as two colours on a card and on a dialog, and the
+  // mark painted on that fill could not be measured for contrast. The drawing
+  // is the element that paints the fill (the target around it is transparent),
+  // so the runtime's own style report is where the fill is read back.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Checkbox
+        testId="check"
+        label="Agree"
+        checked
+        onCheckedChange={() => {}}
+      />
+    </Surface>,
+  );
+  const drawingId = Option.getOrElse(
+    Option.flatMap(runtime.element("check"), (element) =>
+      Option.fromNullishOr(element.children[0] ?? null),
+    ),
+    () => expect.fail("the runtime retained no checkbox drawing"),
+  );
+  const style = Option.getOrElse(
+    Option.flatMap(Option.fromNullishOr(drawingId), (id) =>
+      Option.fromNullishOr(runtime.renderer.getElement(id)?.style),
+    ),
+    () => expect.fail("the runtime reported no style for the drawing"),
+  );
+  expect(bucketFill(style, "hover")).toBe(filledHover(testTheme, "primary"));
+  expect(bucketFill(style, "active")).toBe(filledPressed(testTheme, "primary"));
+  // The old recipe lifted the fill's alpha; the derived fill does not.
+  expect(bucketFill(style, "hover")).not.toBe(
+    alpha(testTheme.colors.primary, 0.9),
+  );
+});
+
 it("paints a disabled filled Button with the measured pair, not a fade", async () => {
   // The bug: a disabled filled action faded itself to 50%, which composites the
   // label into the surface behind the control — under the disabled floor on the

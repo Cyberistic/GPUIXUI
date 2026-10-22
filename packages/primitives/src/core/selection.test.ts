@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
-import { targetInset, targetSize } from "@gpuixui/tokens";
+import {
+  contrastFloorsFor,
+  contrastRatio,
+  darkTheme,
+  filledHover,
+  filledPressed,
+  lightTheme,
+  targetInset,
+  targetSize,
+} from "@gpuixui/tokens";
 import {
   SELECTION_STATES,
   selectionBoxStyle,
@@ -94,6 +103,58 @@ describe("selectionBoxStyle", () => {
     expect(style.hover?.backgroundColor).toBeDefined();
   });
 
+  it("paints a filled box's feedback as the theme's opaque derived fill", () => {
+    // The bug: the hover and the press were an alpha lift
+    // (`alpha(primary, 0.9)`), so the surface behind the box showed through —
+    // the same checked box read as two colours on a card and on a dialog — and
+    // the mark painted over it could not be measured for contrast at all. The
+    // fill is derived instead: opaque, and it belongs to the theme.
+    const accents = ["primary", "destructive"] as const;
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      Arr.forEach(accents, (accent) => {
+        Arr.forEach(["checked", "indeterminate"] as const, (state) => {
+          const current = spec({ state, accent });
+          const style = selectionBoxStyle(current, theme);
+          expect(style.hover?.backgroundColor, `${accent} hover`).toBe(
+            filledHover(theme, accent),
+          );
+          expect(style.active?.backgroundColor, `${accent} press`).toBe(
+            filledPressed(theme, accent),
+          );
+          // Opaque: an eight-digit value is an alpha lift, which is exactly the
+          // shape this fix removes.
+          Arr.forEach(
+            [style.hover?.backgroundColor, style.active?.backgroundColor],
+            (fill) => {
+              expect(fill).toMatch(/^#[0-9A-F]{6}$/);
+            },
+          );
+          // The edge goes with the fill: a resting role left on the border
+          // would draw a 1px ring of the old colour around the new fill.
+          expect(style.hover?.borderColor).toBe("transparent");
+          expect(style.active?.borderColor).toBe("transparent");
+          // And the mark keeps the text floor on both fills, which is the
+          // reason the fill is derived rather than lifted.
+          const mark = selectionMarkColor(current, theme);
+          Arr.forEach(
+            [style.hover?.backgroundColor, style.active?.backgroundColor],
+            (fill) => {
+              expect(
+                contrastRatio(mark, fill ?? "") ?? 0,
+              ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).secondary);
+            },
+          );
+        });
+      });
+    });
+  });
+
+  it("keeps an empty box's border feedback", () => {
+    const style = selectionBoxStyle(spec(), testTheme);
+    expect(style.hover).toEqual({ borderColor: testTheme.colors.borderStrong });
+    expect(style.active).toEqual({ borderColor: testTheme.colors.ring });
+  });
+
   it("removes pointer feedback while disabled", () => {
     const style = selectionBoxStyle(spec({ disabled: true }), testTheme);
     expect(style.opacity).toBeLessThan(1);
@@ -137,6 +198,34 @@ describe("switch", () => {
     const thumb = switchThumbStyle(spec({ state: "checked" }), testTheme);
     expect(thumb.backgroundColor).toBe(testTheme.colors.primaryForeground);
     expect(thumb.backgroundColor).not.toBe(on.backgroundColor);
+  });
+
+  it("paints a checked track's feedback as the theme's opaque derived fill", () => {
+    // The same defect the box had, on the other filled selection control: a
+    // half-alpha lift let the page through, so a checked switch read differently
+    // on a card and on a dialog, and the thumb on the track could not be
+    // measured against it.
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      const style = switchTrackStyle(spec({ state: "checked" }), theme);
+      expect(style.hover?.backgroundColor).toBe(filledHover(theme, "primary"));
+      expect(style.active?.backgroundColor).toBe(
+        filledPressed(theme, "primary"),
+      );
+      expect(style.hover?.backgroundColor).toMatch(/^#[0-9A-F]{6}$/);
+      expect(style.active?.backgroundColor).toMatch(/^#[0-9A-F]{6}$/);
+      expect(style.hover?.borderColor).toBe("transparent");
+      expect(style.active?.borderColor).toBe("transparent");
+      // The knob is painted on the fill, so it keeps its floor on both.
+      const thumb = switchThumbStyle(spec({ state: "checked" }), theme);
+      Arr.forEach(
+        [style.hover?.backgroundColor, style.active?.backgroundColor],
+        (fill) => {
+          expect(
+            contrastRatio(thumb.backgroundColor ?? "", fill ?? "") ?? 0,
+          ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).secondary);
+        },
+      );
+    });
   });
 
   it("moves the thumb across the pill by the travel it can animate", () => {
