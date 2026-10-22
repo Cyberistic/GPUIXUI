@@ -781,6 +781,17 @@ import {
 } from "./box-paint.js";
 import { bandPoint, leftOf, RING_OFFSET } from "./ring-offset.js";
 import {
+  decodeReadout,
+  localPoint,
+  MOVED_BY,
+  SURFACE_ORIGIN_MOVE,
+  SURFACE_ORIGIN_NUDGE,
+  SURFACE_ORIGIN_PROBE,
+  SURFACE_ORIGIN_READOUT,
+  SURFACE_ORIGIN_TARGET,
+  type SurfaceReadout,
+} from "./surface-origin.js";
+import {
   ACTION_RING_DANGER,
   ACTION_RING_NEIGHBOUR,
   ACTION_RING_PRIMARY,
@@ -1029,6 +1040,164 @@ const ActionRingProbe = (): ReactNode => {
         />
       </div>
     </PrimitiveThemeProvider>
+  );
+};
+
+/**
+ * A surface that can be moved without being resized, and a one-pixel probe at
+ * its origin.
+ *
+ * The control above opens a panel, which pushes the surface down by
+ * `MOVED_BY`; the surface's size is unchanged, so its own `onLayout` — which
+ * the runtime fires on a size change — has nothing to report. The probe's
+ * width alternates on every pointer read, and its report carries the origin
+ * the surface has now. The readout publishes the frame facts the probe
+ * asserts, so a failure names the numbers it read.
+ */
+const SurfaceOriginProbeView = (): ReactNode => {
+  const theme = useTheme();
+  const [pad, setPad] = useState(0);
+  const [surface, setSurface] = useState(0);
+  const [probe, setProbe] = useState(0);
+  const [origin, setOrigin] = useState<Option.Option<Painted>>(Option.none());
+  const [reported, setReported] = useState<Option.Option<Painted>>(
+    Option.none(),
+  );
+  const [point, setPoint] = useState<Option.Option<Point>>(Option.none());
+  const [nudge, setNudge] = useState(0);
+  const number = (value: Option.Option<number>): string =>
+    Option.match(value, {
+      onNone: () => "none",
+      onSome: (at) => `${Math.round(at)}`,
+    });
+  const xOf = (value: Option.Option<Point | Painted>): string =>
+    number(Option.map(value, (at) => at.x));
+  const yOf = (value: Option.Option<Point | Painted>): string =>
+    number(Option.map(value, (at) => at.y));
+  return (
+    <div
+      testId={SURFACE_ORIGIN_PROBE}
+      style={{
+        width: 560,
+        height: 420,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A moved surface reports no layout; a nudged probe reports its origin.
+      </text>
+      <div
+        testId={SURFACE_ORIGIN_MOVE}
+        role="button"
+        tabIndex={0}
+        aria-label="Open a panel above the surface"
+        onClick={() => setPad(MOVED_BY)}
+        style={{
+          height: theme.density.controlHeight.md,
+          borderRadius: theme.radius.sm,
+          backgroundColor: theme.colors.secondary,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "label"),
+            color: theme.colors.secondaryForeground,
+          }}
+        >
+          Open a panel above
+        </text>
+      </div>
+      <div
+        style={{
+          height: pad,
+          backgroundColor: theme.colors.muted,
+        }}
+      />
+      <div
+        onLayout={(payload) => {
+          setSurface((count) => count + 1);
+          Option.match(boxOf(payload), {
+            onNone: () => {},
+            onSome: (box) => setReported(Option.some(box)),
+          });
+        }}
+        style={{
+          position: "relative",
+          width: 240,
+          height: 60,
+          borderRadius: theme.radius.md,
+          backgroundColor: theme.colors.card,
+        }}
+      >
+        <div
+          testId={SURFACE_ORIGIN_NUDGE}
+          onLayout={(payload) => {
+            setProbe((count) => count + 1);
+            Option.match(boxOf(payload), {
+              onNone: () => {},
+              onSome: (box) => setOrigin(Option.some(box)),
+            });
+          }}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: 1 + nudge,
+            height: 1,
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          testId={SURFACE_ORIGIN_TARGET}
+          onMouseMove={(event) => {
+            Option.all([
+              Option.fromNullishOr(event.x),
+              Option.fromNullishOr(event.y),
+            ]).pipe(
+              Option.match({
+                onNone: () => {},
+                onSome: ([x, y]) => {
+                  setPoint(Option.some({ x, y }));
+                  // The repair a pointer-driven surface performs: ask for a
+                  // fresh origin by changing the probe's own size.
+                  setNudge((value) => (value === 0 ? 1 : 0));
+                },
+              }),
+            );
+          }}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: 240,
+            height: 60,
+            borderRadius: theme.radius.md,
+            backgroundColor: theme.colors.card,
+          }}
+        />
+      </div>
+      <text
+        testId={SURFACE_ORIGIN_READOUT}
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.foreground,
+        }}
+      >
+        {`pad=${pad} surface=${surface} probe=${probe} originX=${xOf(origin)} originY=${yOf(origin)} pointX=${xOf(point)} pointY=${yOf(point)} reportedX=${xOf(reported)} reportedY=${yOf(reported)}`}
+      </text>
+    </div>
   );
 };
 
@@ -3964,6 +4133,148 @@ const actionRingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "the ring takes no space in the layout beside the action",
       boxText(yield* paintedBox(ctx, ACTION_RING_NEIGHBOUR)),
       boxText(neighbourBefore),
+    );
+  });
+
+/**
+ * Whether two coordinates name the same point to within a rounding point.
+ *
+ * The window reports whole points while a centre is a box plus half a side, so
+ * an exact comparison would fail on the arithmetic rather than on the paint.
+ */
+const nearPoint = (left: number, right: number): boolean =>
+  Math.abs(left - right) <= 1;
+
+const surfaceOriginSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(SURFACE_ORIGIN_PROBE);
+
+    const readout = Effect.flatMap(
+      ctx.host.text(SURFACE_ORIGIN_READOUT),
+      (text) => Effect.succeed(decodeReadout(text)),
+    );
+    /** The readout once it decodes and holds, or the last line it rendered. */
+    const settled = (holds: (readout: SurfaceReadout) => boolean) =>
+      settleUntil(readout, (value) =>
+        Option.match(value, { onNone: () => false, onSome: holds }),
+      );
+    const at = (value: Option.Option<SurfaceReadout>, label: string) =>
+      ctx.expectSome(label, value);
+
+    // A pointer read at rest: the probe reports the origin the surface itself
+    // reports, so the two agree before anything moves.
+    yield* ctx.host.hover(SURFACE_ORIGIN_TARGET);
+    const rest = yield* at(
+      yield* settled((value) => value.surface >= 1 && value.probe >= 1),
+      "the surface and its probe report a box at rest",
+    );
+    yield* ctx.expectEqual(
+      "the probe starts at the origin the surface reports",
+      rest.originY,
+      rest.reportedY,
+    );
+    yield* ctx.expectEqual(
+      "one layout report each at rest",
+      `${rest.surface},${rest.probe > 0}`,
+      "1,true",
+    );
+    yield* ctx.host.capture("surface-origin-rest");
+    const restLocal = localPoint(
+      { x: rest.originX, y: rest.originY },
+      { x: rest.pointX, y: rest.pointY },
+    );
+
+    // Opening a panel above the surface moves it without resizing it. The
+    // runtime reports a layout on a size change, so the surface's own report —
+    // the box a pointer surface would keep — does not move with it.
+    yield* ctx.host.click(SURFACE_ORIGIN_MOVE);
+    const moved = yield* at(
+      yield* settled((value) => value.pad === MOVED_BY),
+      "the panel above the surface is open",
+    );
+    yield* ctx.expectEqual(
+      "a moved surface delivers no layout report of its own",
+      moved.surface,
+      rest.surface,
+    );
+    yield* ctx.expectEqual(
+      "the surface's own report still names the old origin",
+      moved.reportedY,
+      rest.reportedY,
+    );
+    yield* ctx.host.capture("surface-origin-moved");
+
+    // The pointer read that follows is what a surface asks for a fresh origin
+    // with: the probe's width changes, so the runtime lays the probe out again
+    // and its report carries the origin the surface has now.
+    yield* ctx.host.hover(SURFACE_ORIGIN_TARGET);
+    const after = yield* at(
+      yield* settled(
+        (value) =>
+          value.probe > moved.probe &&
+          nearPoint(value.pointY, rest.pointY + MOVED_BY),
+      ),
+      "the probe reports after the move, and the pointer is on the surface",
+    );
+
+    yield* ctx.host.capture("surface-origin-fresh");
+
+    // The pointer payload is fresh: it moved with the surface.
+    yield* ctx.expectEqual(
+      "the pointer's own point moves with the surface",
+      nearPoint(after.pointY - rest.pointY, MOVED_BY),
+      true,
+    );
+
+    // The probe's report is fresh too, which is the whole repair.
+    yield* ctx.expectEqual(
+      "the nudged probe reports the origin the surface has now",
+      nearPoint(after.originY - rest.originY, MOVED_BY),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the surface's own report is still the stale one",
+      nearPoint(after.originY - after.reportedY, MOVED_BY),
+      true,
+    );
+
+    // Reading the fresh point against the fresh origin is the same local point
+    // as at rest; reading it against the surface's own report is a local point
+    // a panel's height too far down, which is the defect the repair removes.
+    const afterLocal = localPoint(
+      { x: after.originX, y: after.originY },
+      { x: after.pointX, y: after.pointY },
+    );
+    const staleLocal = localPoint(
+      { x: after.reportedX, y: after.reportedY },
+      { x: after.pointX, y: after.pointY },
+    );
+    yield* ctx.expectEqual(
+      "a fresh point read against the fresh origin is the same local point",
+      `${nearPoint(afterLocal.x, restLocal.x)},${nearPoint(afterLocal.y, restLocal.y)}`,
+      "true,true",
+    );
+    yield* ctx.expectEqual(
+      "the surface's own report would read the point a panel too far down",
+      nearPoint(staleLocal.y - restLocal.y, MOVED_BY),
+      true,
+    );
+
+    // The repair is a paint: the probe is one pixel wide, and neither the move
+    // nor the pointer read resized the surface.
+    const nudge = yield* ctx.expectSome(
+      "the probe paints a box",
+      Option.fromNullishOr(yield* ctx.host.bounds(SURFACE_ORIGIN_NUDGE)),
+    );
+    yield* ctx.expectEqual(
+      "the probe takes one point of the layout, at most",
+      nudge.width <= 2 && nudge.height <= 1,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "neither the move nor the pointer read resized the surface",
+      after.surface,
+      rest.surface,
     );
   });
 
@@ -23053,8 +23364,9 @@ const dataTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
 
     // The reveal is the app's action, not the tree's key handler: it opens the
-    // path and moves the cursor, while the focus stays on the button the reader
-    // pressed — a search hit needs its own `focusElement` to hand the row over.
+    // path and moves the cursor, and the tree follows the **committed** cursor,
+    // so the revealed row takes the focus after its subtree mounts — the shape
+    // a search hit or a "show this file" command needs.
     yield* ctx.host.click(DATA_TREE_REVEAL);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -23068,9 +23380,9 @@ const dataTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
     yield* ctx.expectEqual(
-      "a reveal from a button leaves the focus on that button (measured limit)",
+      "the reveal leaves the focus on the row it reveals",
       yield* focusedAfterPaint(ctx),
-      DATA_TREE_REVEAL,
+      dataTreeRow(DATA_TREE_REVEALED),
     );
     yield* ctx.host.capture("data-tree-revealed");
 
@@ -23963,5 +24275,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "data-tree-lifecycle",
     view: () => <DataTreeProbe />,
     steps: dataTreeSteps,
+  },
+  "surface-origin": {
+    id: "surface-origin",
+    view: () => <SurfaceOriginProbeView />,
+    steps: surfaceOriginSteps,
   },
 };
