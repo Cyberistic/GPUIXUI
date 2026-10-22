@@ -41,21 +41,52 @@ export const disabledOpacity = 0.5;
 export type DisabledFadePair = FadePair;
 
 /**
+ * The fills a field paints. A plain field fills `input`; a composite field — a
+ * search, tag or mention field, the inline edit, the chat composer, the colour
+ * picker's hex field — paints the **page** role as its own fill
+ * (`SEARCH_INPUT`, `TAG_INPUT_ROOT`, `MENTION_INPUT_FIELD`,
+ * `COLOR_PICKER_INPUT` and `CHAT_COMPOSER` are `bg-background` in
+ * `@gpuixui/tw`'s recipes).
+ */
+const fieldFills = ["input", "background"] as const;
+
+/**
+ * The two labels a field carries: its value and its hint. The placeholder is the
+ * lowest-contrast label a field paints at rest (the secondary floor), so the
+ * value alone says nothing about the first thing a reader loses when the field
+ * stops accepting input.
+ */
+const fieldLabels = ["inputForeground", "placeholder"] as const;
+
+/** The surfaces a field can sit on. */
+const fieldStrips = ["background", "card", "popover"] as const;
+
+/**
  * The controls that fade rather than swap roles: the three filled actions and a
- * field, whose fill only replaces `input` on the content surfaces a field can
- * sit on.
+ * field.
  *
  * The filled actions are measured on the page only, because that is the strip
  * the fade keeps the floor on — see {@link disabledAction} for the paint a
  * disabled action wears on a card, a popover or a group strip.
+ *
+ * A field is measured on every content surface with both of its fills and both
+ * of its labels. The table carried only the plain field's `input` fill and its
+ * value, so the fade a composite field paints — the page role, the one a
+ * toolbar's search or a command panel's mention field uses — was the one control
+ * no report composited. Every placement clears the floor (tightest: the authored
+ * Windows 7 look's composite hint, 1.95:1), so this is coverage rather than a
+ * palette change: the pair is what stops a brand that tints its page from
+ * shipping a hint nobody can read.
  */
 export const disabledFadePairs: readonly DisabledFadePair[] = [
   { fill: "primary", label: "primaryForeground", over: "background" },
   { fill: "destructive", label: "destructiveForeground", over: "background" },
   { fill: "secondary", label: "secondaryForeground", over: "background" },
-  { fill: "input", label: "inputForeground", over: "background" },
-  { fill: "input", label: "inputForeground", over: "card" },
-  { fill: "input", label: "inputForeground", over: "popover" },
+  ...fieldFills.flatMap((fill) =>
+    fieldLabels.flatMap((label) =>
+      fieldStrips.map((over) => ({ fill, label, over })),
+    ),
+  ),
 ];
 
 /** One faded control whose label is too close to the faded fill it sits on. */

@@ -240,7 +240,9 @@ skipped; the whole `packages/components` package is now on `@gpuixui/tw`
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 99/99
+`[x]` `[██████████]` 100/100
+
+`[x]` Measure **a field's second fill and second label** — both fade tables carried one field: `disabledFadePairs` measured a plain field's `input` fill with its value (`inputForeground`), and `keyboardDimPairs` the same pair plus its placeholder, so the fields a toolbar or a command panel actually shows were measured by nothing: a composite field — `SearchInput`, `TagInput`, `MentionInput`, `InlineEdit`, `ChatComposer`, the colour picker's hex field — paints the **page** role as its own fill (`bg-background` in `@gpuixui/tw`'s recipes) and every field carries a **hint** as well as a value, and a hint is the lowest-contrast label at rest (the secondary floor). So `extendTheme(lightTheme, { colors: { background: "#101010" } })` could ship a faded search hint nobody can read with every report empty. `disabledFadePairs` 6 → 15 and `keyboardDimPairs` 32 → 40: both fills (`input`, `background`) × both labels (value, hint) on the three content surfaces a field sits on (four strips for the dim). No palette moved — every placement clears its floor, the tightest being the authored Windows 7 light look's composite hint at **1.95:1** faded and **1.67:1** dimmed — so the pairs close a gap rather than fix a shipped style. `disabled.test.ts` holds the coverage, reads the primitives' `FIELD_BASE` (`bg-input`) and the five shared `bg-background` recipes so a pair cannot outlive its painter, sweeps all 16 styles to the printed 1.95 and holds the page to the fills and labels; `focus-dim.test.ts` holds the 40 placements, the field half's tightest 1.67 and the page's sentence; `design-system-docs.test.ts` derives the count from the table. Two directions measured per table (dropping the composite fill fails the coverage/tightest cases by name; a stale printed value fails the page case) and the painter case was measured failing on a renamed recipe. Docs in `docs/tokens.md` §The fade a disabled control paints/§The dim a control paints while Tab is elsewhere, `docs/design-system.md` §8, the package README and the `Contrast contract`/`Keyboard focus dim` rows
 
 `[x]` Measure a **control's edge and a message's boundary on a floating surface** — a dialog's footer holds the `secondary` cancel action (`ConfirmDialog`'s `Button` takes the default variant, which paints `borderStrong`) on the `popover` fill `DIALOG_CONTENT` paints, and a popover holding a form holds the same control; `contrastPairs` measured `borderStrong` on `background`, `card`, `input`, `muted`, `secondary`, `hover` and `active` and on `popover` only for the **ring**, so the edge drawn around the same focused control was the one boundary strip nothing checked. The status edge had the mirror gap: each tone's `xSoft` tint is measured on the four strips a message sits on (page, card, popover, muted toolbar) while its edge was measured on the tint and the two page surfaces, so a warning alert in a confirmation dialog's body and a soft badge in a muted sidebar had a measured tint and an unmeasured boundary. One pair joined `contrastPairs` (81 → 82, boundary floor) and eight placements joined `decorativeSurfaces` (`statusEdge` on `popover` and `muted`, four tones each). No palette moved: every shipped, high-contrast, platform and authored style already cleared both, the tightest being the base dark theme's edge on its popover at 3.95:1 and Luna light's `warning` edge on its muted toolbar at 1.11:1. `contrast.test.ts`'s boundary suite holds the coverage, reads the composition the pair exists for (the default-variant `Button`, `borderStrong`, `DIALOG_CONTENT`/`POPOVER_CONTENT`'s `bg-popover`), sweeps all 16 styles and reads the catalogue's printed 3.95; `decorative.test.ts` holds the coverage, derives the edge strips from the tint's own placements so a message's boundary is measured wherever its surface is, reports a tone painted in the strip it bounds, and sweeps the new strips to the printed 1.11. Directions measured: removing the pair fails the coverage case and the docs count; reverting the edge placements fails three decorative cases by name; a stale printed `3.96` and `1.12` each fail their sweep. Docs in `docs/tokens.md` §Contrast/§Decorative surfaces, `docs/design-system.md` §7/§9, the package README, the `Contrast contract`/`Status tones` inventory rows.
 
@@ -2981,6 +2983,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Publish the **workspace restore** measurement a dock owes — the live `workspace-restore` probe measured the app-owned half of Tier 4's *persistent panel state*: a schema-encoded arrangement (sidebar width, caller-owned document width, chosen document, inspector scroll) handed back to a re-mounted workspace paints 0 / 360 / `output` / −120 (`mount=2 source=stored`), the pane's layout pass reports the restored 360, a string that is not a layout opens the default (`source=default`), and a stored `sidebar:-5 document:9999 scroll:-30` restores clamped to 0 / 360 / 0. Nothing in `docs/gpuix-capabilities.md`, `/docs/runtime` or the Tier 4 **Workspace layouts** / **Persistent panel state** rows (`?`) states that the runtime has no storage and the restore is app-owned, or that a re-mount is the honest stand-in for a relaunch (one window per process) | docs-site (the capability record + `/docs/runtime`) and components (the two Tier 4 rows) | open — publish the row, add `workspace-restore` to §5's owed-probe list, and name the rule (persist the arrangement, decode it at the boundary with a schema, clamp a stored width to the pane's bounds, restore scroll on the first layout) where a workspace is designed. Evidence: `apps/playground/README.md` §`workspace-restore`, 30 checks, two negative controls, `.artifacts/live/workspace-restored.png` |
 
 | Measure a chart swatch on the **quiet strip** a plot can be drawn in — `seriesSurfaces` names the page, a card and a popover, while `Box`/`surfaceStyle` also paints a `muted` panel (a toolbar, a status bar, a quiet tile) and a sparkline or a small plot sits there. Measured on 2026-10-22 over the four shipped tables: the light amber `#B57600` lands at **2.75:1** on Luna's beige `muted` (`#E0DCCB`) — a status-bar chart in the authored look has one swatch nobody can find — and Aero light's 3.05:1 is the tightest placement that still clears the 3:1 boundary floor. The tokens half is a contract change plus a style-level scale: `seriesSurfaces` gains `muted` (4 surfaces), `PlatformStyle` gains an optional per-mode `series` that `applyStyle` passes under the same `contrast` rule as `colors`, and Luna light carries `["#5F4BDB", "#1B45AC", "#158754", "#9A6300", "#A5262B"]` (verified on all four surfaces, both distinctness floors and all three deficiencies; `#8E5B00` fails deuteranopia against the red at 0.044). The cascade: the catalogue's plot-surface list and tightest printed value (3.55 → 3.05), `docs/tokens.md` §Data series/§Authored looks, `docs/design-system.md` §3/§9, the README, the `Data series` row, and `series.test.ts`'s surface-count cases (`3`→`4`, `15`→`20`) | tokens-theme + docs-site | open — the tokens half was prototyped and measured, then reverted to keep the shared tree green: `/docs/themes` and `/docs/theming` print the surface list as literal backticked names (only the count is interpolated), and `theming-page.test.ts`'s `the theming pages' series surfaces` holds each page to the package's list, so both pages need `muted` in the same push |
+| Correct the **Card package page** the site no longer serves — `packages/components/docs/card.mdx` says the outline edge is the `border` role, `elevated` paints the `md` elevation, and colour, spacing, radius and type all come from the theme. The compiled recipe is `border border-input` (the `input` role), `shadow-sm` (`elevation.sm`: a 1px offset, a 2px blur), and `components` compiles against the default registry's fixed metrics (ADR 0006), so the theme's `radius`/`density` never reshape a card. The curated page (`/docs/components/card`) now states the measured truth and shadows the package page on the site, but the page still ships in `@gpuixui/components` for a consumer reading the package. The same page's footer recipe (`CARD_FOOTER` in `packages/tw/src/recipes.ts`) is `px-3 pt-3` with no bottom padding, so a control in it sits on the card's bottom edge; decide whether the recipe takes `pb-3` or the page documents the override (the curated page documents it today) | components (owns the package page) + tw (owns `CARD_FOOTER`) | open — rewrite the three paint claims from the recipe and settle the footer's bottom padding; `component-page-truth.test.ts` already holds the curated page to the recipe, so the package page can cite the same guard |
 
 ## Phase D — data and workspace components
 
@@ -3036,7 +3039,37 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 101/101
+`[x]` `[██████████]` 102/102
+
+`[x]` Curate the **Card** page and correct what a card actually paints — the
+site served `packages/components/docs/card.mdx`, which said the outline edge was
+the `border` role, that `elevated` painted an `md` elevation, and that colour,
+spacing, radius and type all came from the theme. The recipe says otherwise:
+`CARD_VARIANTS.outline` is `border border-input` (the **`input`** role, which is
+the same white as `card` in the base light theme, so the fill against the page
+draws the card), `elevated` is `shadow-sm` (the registry maps it to
+`elevation.sm` — a 1px offset and a 2px blur), and `packages/components` compiles
+against the **default registry's** fixed metrics (ADR 0006), so a platform switch
+repaints a card but never reshapes it. The curated page documents the three
+treatments, the recipe's fixed steps, the level-3 heading and its fixed level,
+the render-time part placement, the footer's missing bottom padding (a control
+adds it through `style`, as the composition does), the three packages the module
+imports and the `done`/`yes` status with its 5 native tests. Two previews ship —
+the three treatments and a notifications card — drawn from the recipe's own
+metrics. `component-page-truth.test.ts` gained the card entry plus a case that
+reads `CARD_VARIANTS`, the registry's elevation map, `lightElevation` and the
+fixed `RADIUS.lg`, so the page cannot return to `elevation.md`, `radius.lg` or a
+wrong offset; the displaced-props, preview-registry, curated-section,
+package-shadow and index guards picked the page up with no further change.
+Directions measured: planting `elevation.md` fails ``contain '`elevation.sm`'``,
+planting a 4px/12px lift fails `contain '1px offset'`, printing 12px corners
+fails `contain '8px'`, and renaming `variant` in the API table fails both the
+displaced-props case and the declared-name case. Verified in the dev server:
+`/docs/components/card` renders both previews (`gx-card-grid` and
+`gx-card-wide`), the platform switch renders the row, `/docs/components` marks it
+**Browser preview**, and `/api/search?query=CardFooter` returns it. The shipped
+package page's stale claims are the interlock row below (the curated page shadows
+it on the site).
 
 `[x]` Say **which palette a preview paints** — the site has a light/dark
 switch of its own (Fumadocs' theme provider) and the component previews do not

@@ -38,22 +38,34 @@ export type KeyboardDimPair = FadePair;
 const strips = ["background", "card", "popover", "muted"] as const;
 
 /**
+ * The fills a field paints: a plain field's `input`, and the page role a
+ * composite field (search, tag, mention, inline edit, chat composer, the colour
+ * picker's hex field) paints as its own fill.
+ */
+const fieldFills = ["input", "background"] as const;
+
+/** The two labels a field carries: its value and its hint. */
+const fieldLabels = ["inputForeground", "placeholder"] as const;
+
+/**
  * Every control the keyboard dim is measured on: the three filled actions, a
- * field (its value and its placeholder), a focusable row's own text, and a
- * selected row, on each strip a control sits on.
+ * field (both of its fills, its value and its placeholder), a focusable row's
+ * own text, and a selected row, on each strip a control sits on.
  *
  * A focusable row with no fill of its own — a menu row, a tab, a checkbox's
  * label — names the surface it sits on as its own fill: that composite is the
  * one the runtime paints, because the fill blends with itself and stays put
- * while the text fades over it.
+ * while the text fades over it. A composite field is not one of those: it has a
+ * fill, it is just the page role, so it is listed by that fill.
  */
 export const keyboardDimPairs: readonly KeyboardDimPair[] = strips.flatMap(
   (over) => [
     { fill: "primary", label: "primaryForeground", over },
     { fill: "secondary", label: "secondaryForeground", over },
     { fill: "destructive", label: "destructiveForeground", over },
-    { fill: "input", label: "inputForeground", over },
-    { fill: "input", label: "placeholder", over },
+    ...fieldFills.flatMap((fill) =>
+      fieldLabels.map((label) => ({ fill, label, over })),
+    ),
     { fill: over, label: "foreground", over },
     { fill: over, label: "mutedForeground", over },
     { fill: "selected", label: "selectedForeground", over },

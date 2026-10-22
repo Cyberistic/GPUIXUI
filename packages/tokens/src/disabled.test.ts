@@ -85,12 +85,96 @@ describe("disabledFadePairs", () => {
     expect(missing).toEqual([]);
   });
 
-  it("measures a field on every surface it can sit on", () => {
-    const missing = ["background", "card", "popover"]
-      .filter((over) => !measured("input", over))
-      .map((over) => `input/${over}`);
+  it("measures a field on every surface, fill and label it paints", () => {
+    // A field is two fills — a plain field's `input`, a composite field's page
+    // role — and two labels: its value and its hint.
+    const missing = (["input", "background"] as const).flatMap((fill) =>
+      (["inputForeground", "placeholder"] as const).flatMap((label) =>
+        (["background", "card", "popover"] as const)
+          .filter(
+            (over) =>
+              !disabledFadePairs.some(
+                (pair) =>
+                  pair.fill === fill &&
+                  pair.label === label &&
+                  pair.over === over,
+              ),
+          )
+          .map((over) => `${fill}/${label} on ${over}`),
+      ),
+    );
 
     expect(missing).toEqual([]);
+  });
+
+  it("reads each field's fill from the painter that paints it", () => {
+    // The table is only honest while the recipes paint those fills: a plain
+    // field's `bg-input` (the primitives' `FIELD_BASE`), a composite field's
+    // `bg-background` (the shared recipes), and the fade on both. Renaming a
+    // recipe or moving a fill fails here before the coverage above can claim a
+    // surface nobody paints.
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8");
+    const recipe = (source: string, name: string): string => {
+      const at = source.indexOf(`const ${name}`);
+      expect(at, name).toBeGreaterThanOrEqual(0);
+      return source.slice(at, source.indexOf(";", at));
+    };
+
+    const primitiveField = read("../../primitives/src/recipe/index.ts");
+    expect(recipe(primitiveField, "FIELD_BASE")).toContain("bg-input");
+    expect(recipe(primitiveField, "FIELD_BASE")).toContain(
+      "disabled:opacity-50",
+    );
+
+    const tw = read("../../tw/src/recipes.ts");
+    [
+      "SEARCH_INPUT",
+      "TAG_INPUT_ROOT",
+      "MENTION_INPUT_FIELD",
+      "COLOR_PICKER_INPUT",
+      "INLINE_EDIT_INPUT",
+      "CHAT_COMPOSER",
+    ].forEach((name) => {
+      expect(recipe(tw, name), name).toContain("bg-background");
+    });
+    // A composite field fades with the same share as a plain one.
+    expect(tw).toContain("disabled:opacity-50");
+  });
+
+  it("measures the tightest field placement the shipped styles paint", () => {
+    // The number `docs/tokens.md` prints: the hue of the muted strip pushes a
+    // composite field's hint lowest in the authored Windows 7 light look. A
+    // palette edit that moves it fails here and in the page.
+    const tightest = [...shipped, ...styled, ...looks]
+      .flatMap((theme) =>
+        disabledFadePairs
+          .filter(({ fill }) => fill === "input" || fill === "background")
+          .map((pair) => {
+            const faded = fadedPair(theme.colors, pair, disabledOpacity);
+            return {
+              theme: theme.name,
+              pair: `${pair.fill}/${pair.label} on ${pair.over}`,
+              ratio: contrastRatio(faded.label, faded.fill),
+            };
+          }),
+      )
+      .reduce((low, entry) =>
+        (entry.ratio ?? 0) < (low.ratio ?? 0) ? entry : low,
+      );
+
+    expect(tightest.theme).toBe("Light · Windows 7 (Aero)");
+    expect(tightest.pair).toBe("background/placeholder on background");
+    expect(tightest.ratio?.toFixed(2)).toBe("1.95");
+
+    // The catalogue prints the same number and names the fills and labels the
+    // table measures, so the page cannot teach a placement the report dropped.
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    expect(page).toContain("composite hint at **1.95:1**");
+    expect(page).toContain("both of its fills and both of its labels");
   });
 });
 
@@ -159,12 +243,18 @@ describe("disabledFadeFailures", () => {
   it("cannot reach the high-contrast disabled floor at the shipped share", () => {
     // The measurement behind the design decision: a high-contrast theme fades a
     // filled action to ~1.7:1, under the 3:1 its variant's disabled floor asks
-    // for, so that theme's `disabled` state is the role pair. If the fade ever
-    // clears it, this case fails and the documentation moves with it.
+    // for, so that theme's `disabled` state is the role pair. The fields are
+    // measured on the same floor and some of their placements clear it; the
+    // actions are the ones the mechanism cannot carry. If the fade ever clears
+    // it for them, this case fails and the documentation moves with it.
     const faded = disabledFadeFailures(
       highContrastLightTheme,
       highContrastFloors.disabled,
-    ).map(({ fill }) => fill);
+    )
+      .filter(({ fill }) =>
+        ["primary", "destructive", "secondary"].includes(fill),
+      )
+      .map(({ fill }) => fill);
 
     expect(faded).toEqual(["primary", "destructive"]);
   });
@@ -175,8 +265,11 @@ describe("the fade's page scope", () => {
     // A fade's result is a property of the strip behind it, so a filled action
     // is measured where the fade keeps the floor. A card placement would fail
     // four shipped light styles (the case below), so the table cannot gain one.
+    // A field is the mechanism's other half: it is measured on every content
+    // surface, because its fill is a quiet surface the fade carries there.
+    const actions = ["primary", "destructive", "secondary"];
     const offPage = disabledFadePairs
-      .filter(({ fill }) => fill !== "input")
+      .filter(({ fill }) => actions.includes(fill))
       .filter(({ over }) => over !== "background")
       .map(({ fill, over }) => `${fill}/${over}`);
 

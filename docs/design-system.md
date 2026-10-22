@@ -463,9 +463,15 @@ floor the page clears. So the fade is measured on `background` for a filled
 action, and a disabled action on a card, a popover or a group strip paints the
 neutral pair instead: `disabledAction(theme)` is `disabled` behind
 `disabledForeground`, the pair the contrast table already measures on every
-surface a control sits on. A filled action and the menu row already paint the
-pair; the two recipe sets and the components' own `Button` remain the interlock
-in `TODO.md` → Interlocks.
+surface a control sits on. **A field is measured on all three content surfaces**,
+with both fills and both labels: a plain field paints `input`, a composite field
+— a search, tag or mention field, the inline edit, the chat composer, the colour
+picker's hex field — paints the page role as its own fill, and each carries a
+value and a hint. The tightest of those placements is the authored Windows 7
+light look's composite hint at **1.95:1**, above its floor; the pairs are
+coverage, so a brand that tints its page cannot ship a hint nobody can read. A
+filled action and the menu row already paint the pair; the two recipe sets and
+the components' own `Button` remain the interlock in `TODO.md` → Interlocks.
 
 **The disabled fill must not wear an enabled control's face.** A disabled
 control does not sit on a strip, it replaces the control, so the neutral fill is
@@ -492,12 +498,15 @@ the tightest shipped placement is Linux light's `primary` over a card at 1.27:1
 (`#C8DDF5` on `#A4C6EF`). So the contract is the same one the disabled state
 carries — the label is still seen — at `decorativeFloor` (1.05:1), not a
 readability floor, and a control whose text must stay readable while the focus
-is elsewhere opts out of the dim. `keyboardDimFailures` measures the 32
-placements the three filled actions, a field, a focusable row and a selected row
-sit on; the composite is the disabled fade's, with the label over the *dimmed*
+is elsewhere opts out of the dim. `keyboardDimFailures` measures the 40
+placements the three filled actions, a field (both of its fills, its value and
+its placeholder), a focusable row and a selected row sit on; the composite is
+the disabled fade's, with the label over the *dimmed*
 fill — measured in the `keyboard-focus-dim` window capture, which paints the
 dark `muted` fill `#222730` as `#181C23` and the `foreground` text `#EEF1F5` as
-`#6E7177`. It is the gate's tenth report (`audit.keyboardDim`): the dim and the
+`#6E7177`. The lowest field placement is the authored Windows 7 light look's
+composite hint on a muted strip at **1.67:1**, still above the cue's floor.
+It is the gate's tenth report (`audit.keyboardDim`): the dim and the
 disabled fade are the same composite with two shares, so no palette fails the
 dim alone — the dim's band sits inside the fade's — and what the report adds is
 the placement and the mechanism, so a consumer knows which control has to

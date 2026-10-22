@@ -300,13 +300,16 @@ with `keyboardFocusDim: false`. The share is measured, not assumed: the
 `#222730` as `#181C23` and its `foreground` text `#EEF1F5` as `#6E7177` over that
 fill, which is `blend(colour, behind, 1 - 0.4)`.
 
-`keyboardDimPairs` is the 32 placements the three filled actions, a field's value
-and placeholder, a focusable row's own text and a selected row sit on, and
+`keyboardDimPairs` is the 40 placements the three filled actions, a field's
+value and placeholder in both of its fills (a plain field's `input` and the page
+role a composite field paints), a focusable row's own text and a selected row sit
+on, and
 `keyboardDimFailures(theme, floor?)` composites each one. The floor is
 `decorativeFloor` (1.05:1) rather than a readability floor — the dim is a
 where-can-Tab-go cue — and the tightest shipped placement is Linux light's
 `primary` over a card at 1.27:1, so a control whose text must stay readable while
-the focus is elsewhere opts out of the dim.
+the focus is elsewhere opts out of the dim; the lowest field placement is the
+authored Windows 7 light look's composite hint at 1.67:1.
 
 ## Text selection
 

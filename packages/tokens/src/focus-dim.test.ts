@@ -158,24 +158,27 @@ describe("keyboardDimPairs", () => {
         "destructive/destructiveForeground",
         "input/inputForeground",
         "input/placeholder",
+        "background/inputForeground",
+        "background/placeholder",
         `${over}/foreground`,
         `${over}/mutedForeground`,
         "selected/selectedForeground",
       ]);
     });
-    expect(keyboardDimPairs).toHaveLength(32);
+    expect(keyboardDimPairs).toHaveLength(40);
   });
 
   it("names the surface as the fill for a row that has none", () => {
     // A menu row, tab or checkbox label has no fill of its own, so the text
     // fades over the page while the page stays: the surface is its own fill.
-    for (const pair of keyboardDimPairs.filter(
-      (pair) => pair.fill === pair.over,
-    )) {
-      expect(
-        pair.label === "foreground" || pair.label === "mutedForeground",
-      ).toBe(true);
-    }
+    // A composite field's fill is the page role too, but it *has* a fill, so
+    // the row pairs are the two text roles a row carries, not every pair whose
+    // fill and strip happen to be the same role.
+    const rows = keyboardDimPairs.filter(({ label }) =>
+      ["foreground", "mutedForeground"].includes(label),
+    );
+    expect(rows).toHaveLength(8);
+    expect(rows.every((pair) => pair.fill === pair.over)).toBe(true);
   });
 });
 
@@ -220,6 +223,49 @@ describe("keyboardDimFailures", () => {
     expect(tightest.painted).toBe("#C8DDF5 on #A4C6EF");
     expect(tightest.ratio).toBeCloseTo(1.27, 2);
     expect(tightest.ratio).toBeGreaterThan(decorativeFloor);
+  });
+
+  it("measures a field's two fills and its two labels, and the tightest", () => {
+    // A field is two fills — a plain field's `input`, a composite field's page
+    // role — and two labels: its value and its hint. The table carried one fill
+    // and one label, so a composite field (a toolbar's search, a mention field)
+    // dimmed into its own page with nothing measuring the hint it loses first.
+    const field = keyboardDimPairs.filter(
+      ({ fill, label }) =>
+        (fill === "input" || fill === "background") &&
+        (label === "inputForeground" || label === "placeholder"),
+    );
+    expect(field).toHaveLength(16);
+
+    const tightest = allThemes
+      .flatMap((theme) =>
+        field.map((pair) => {
+          const dimmed = fadedPair(theme.colors, pair, keyboardFocusDimOpacity);
+          return {
+            theme: theme.name,
+            pair,
+            ratio: contrastRatio(dimmed.label, dimmed.fill) ?? 0,
+          };
+        }),
+      )
+      .reduce((low, next) => (next.ratio < low.ratio ? next : low));
+
+    expect(tightest.theme).toBe("Light · Windows 7 (Aero)");
+    expect(tightest.pair).toEqual({
+      fill: "background",
+      label: "placeholder",
+      over: "muted",
+    });
+    expect(tightest.ratio).toBeCloseTo(1.67, 2);
+
+    // The number the catalogue prints, and the field coverage it names, so the
+    // page cannot teach a placement the table dropped.
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    expect(page).toContain("composite hint on a muted strip at **1.67:1**");
+    expect(page).toContain("in both of its fills");
   });
 
   it("reports a dimmed label that lands on its own fill", () => {

@@ -1420,7 +1420,17 @@ make the library's own disabled state disappear), and
 
 Each `DisabledFadePair` names a control the fade is applied to — `fill`, `label`
 and the `over` surface — for the three filled actions on the page and a field on
-`background`, `card` and `popover`; `disabledFadePairs` is that table. The three
+`background`, `card` and `popover`; `disabledFadePairs` is that table. A field is
+listed with **both of its fills and both of its labels**: a plain field fills
+`input`, while a composite field — a search, tag or mention field, the inline
+edit, the chat composer and the colour picker's hex field — paints the page role
+as its own fill (`bg-background` in `@gpuixui/tw`'s recipes), and each carries a
+value and a hint. The pairing is the coverage: the table held one fill and one
+label, so the fade a composite field paints was the one control no report
+composited, and a hint is the lowest-contrast label a field carries at rest. Every
+placement clears the floor — the tightest is the authored Windows 7 light look's
+composite hint at **1.95:1** — so the pairs close a gap rather than move a
+palette. The three
 filled actions stay in it although the shipped painter wears the pair: the table
 measures the paint a re-introduced fade would produce, and the gate reports it.
 The measurement composites twice, because the
@@ -1471,7 +1481,8 @@ Measured, both high-contrast themes shipped `disabled` equal to `secondary`, so
 an unavailable action and an enabled tonal action painted the same box in the
 variant a reader selects for clarity; `disabled` is the quiet step now. A
 **field** keeps fading on `background`, `card` and `popover`: its fill is
-`input`, and the faded label clears the floor on all three. A filled action and
+`input` (a composite field's is the page role), and the faded value and hint
+clear the floor on all three. A filled action and
 the menu row already paint the pair in `packages/primitives`; the two recipe sets
 and the components' `Button` are the interlock left in `TODO.md`.
 
@@ -1501,11 +1512,14 @@ composite) and the floor.
 
 `keyboardFocusDimOpacity` is a runtime constant rather than a `Theme` group:
 every element the runtime dims gets this share, so a brand that set its own
-would describe a paint the library does not have. `keyboardDimPairs` is the 32
-placements the three filled actions, a field's value and placeholder, a
-focusable row's own text and a selected row sit on across `background`, `card`,
+would describe a paint the library does not have. `keyboardDimPairs` is the 40
+placements the three filled actions, a field's value and placeholder in both of
+its fills (`input` and the page role a composite field paints), a focusable row's
+own text and a selected row sit on across `background`, `card`,
 `popover` and `muted`; a row with no fill of its own names the surface as its
-fill, which is that composite.
+fill, which is that composite, while a composite field has a fill and is listed
+by it. The lowest field placement is the authored Windows 7 light look's
+composite hint on a muted strip at **1.67:1**.
 
 The floor is `decorativeFloor` (1.05:1), deliberately **not** a readability
 floor: the dim is a where-can-Tab-go cue whose job is to keep the control
