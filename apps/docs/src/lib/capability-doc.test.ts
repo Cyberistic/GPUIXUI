@@ -964,6 +964,36 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(selection?.[2]).toContain("alignSelf");
   });
 
+  it("records the window selection event a probe published, with its two limits", () => {
+    // `Text selection` proves the wash and `getSelectedText()`; neither tells the
+    // app the reader picked something, so a selection-aware toolbar, an inspector
+    // that follows the text or a "quote selection" action had no documented route.
+    // `window-selection-lifecycle` measured the one the runtime publishes,
+    // `render(<App/>, { onSelectionChange })`: a drag reports the run, a clear
+    // reports again with no run, and a line that opted out reports nothing.
+    const event = rowFor("Window selection event");
+    expect(event?.verdict).toBe("supported, with limits");
+    expect(event?.evidence).toContain("window-selection-lifecycle");
+    expect(event?.evidence).toContain("onSelectionChange");
+    expect(event?.evidence).toContain("getSelectedText");
+    expect(event?.evidence).toContain("last=none");
+    expect(event?.evidence).toContain("joined text only");
+    expect(event?.workaround).toContain("empty change");
+    expect(event?.workaround).toContain("root");
+  });
+
+  it("publishes the window selection event on /docs/runtime", () => {
+    const event = measuredRow("Window selection event");
+    expect(
+      event,
+      "the page's measured table has no window-selection row",
+    ).toBeDefined();
+    expect(event?.[1]).toContain("onSelectionChange");
+    expect(event?.[1]).toContain("window-selection-lifecycle");
+    expect(event?.[1]).toContain("last=none");
+    expect(event?.[2]).toContain("empty change");
+  });
+
   it("records the accessibility tree a test renderer reported", () => {
     // The record's aria row says which attributes are accepted, and nothing said
     // what they become — or that a node without a role is not in the tree at

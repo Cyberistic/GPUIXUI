@@ -147,6 +147,16 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   sortable header whose centre is clipped by the horizontal viewport sorts
   nothing — keep sortable columns inside the frame, or pan the header before
   expecting a press to land (`table-lifecycle`).
+- **A selection toolbar is told, and told when it empties** — the runtime has
+  one app-level selection event, `render(<App/>, { onSelectionChange })`, and a
+  window measured the contract (`window-selection-lifecycle`): a pointer drag
+  over a selectable line reports the run `getSelectedText()` returns,
+  `clearSelection()` reports **again** with no run (`last=none`), and a line
+  that opted out of selection reports nothing. So a toolbar hides on the empty
+  change instead of timing out, and it is installed once at the app root —
+  there is no per-component hook. The payload carries the joined text only: no
+  pane identity, no offsets, so a "comment on this line" action is a line
+  press rather than a selection range.
 
 ## Gaps, with the evidence
 

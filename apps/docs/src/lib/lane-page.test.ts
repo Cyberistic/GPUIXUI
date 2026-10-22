@@ -293,6 +293,24 @@ describe("the data-display page's drawing claims", () => {
     expect(dataPage).toContain("findRanges");
     expect(dataPage).toContain("row index");
   });
+
+  it("tells a selection toolbar when the reader's selection empties", () => {
+    // The page taught a table how a row is selected and nothing about the
+    // window-level event a selection toolbar, an inspector or a "quote the
+    // selection" action needs. `window-selection-lifecycle` measured the one
+    // route the runtime publishes — `render(<App/>, { onSelectionChange })` —
+    // and that an empty change is delivered rather than left to a timeout.
+    const event = rowFor(record, "Window selection event");
+
+    expect(event).toContain("supported, with limits");
+    expect(event).toContain("window-selection-lifecycle");
+    expect(event).toContain("last=none");
+    expect(dataPage).toContain("window-selection-lifecycle");
+    expect(dataPage).toContain("onSelectionChange");
+    expect(dataPage).toContain("hides on the empty");
+    expect(dataPage).toContain("instead of timing out");
+    expect(dataPage).toContain("joined text only");
+  });
 });
 
 /**
@@ -404,7 +422,9 @@ describe("the workspace page's pointer and terminal claims", () => {
     expect(restore).toContain("source=default");
     expect(workspace).toContain("workspace-restore");
     expect(workspace).toContain("A decode failure opens the default");
-    expect(workspace).toContain("Clamp a restored number to the pane's own bounds");
+    expect(workspace).toContain(
+      "Clamp a restored number to the pane's own bounds",
+    );
     expect(workspace).toContain("first layout");
   });
 });
