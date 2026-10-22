@@ -237,6 +237,27 @@ describe("the curated component pages", () => {
     expect(text).toContain(`(${ratio?.toFixed(2)}:1)`);
   });
 
+  it("derive a link's paint from the brand-text the registry registers", () => {
+    // The page taught that `link` paints "the primary role". It does not: a
+    // `primary` is a fill chosen to carry `primaryForeground`, and as text it is
+    // under the 4.5:1 floor on most styles (4.30:1 on the base light theme's
+    // pressed wash, 3.10:1 in macOS dark), so the primitives register
+    // `text-brand` and the link paints `brandText(theme)`. A reader who tuned
+    // `primary` for links would not get the colour the page promised.
+    const button = pages.find((page) => page.file === "button.mdx");
+    expect(button, "the button page is not in the curated set").toBeDefined();
+    if (button === undefined) return;
+
+    expect(read("packages/primitives/src/recipe/registry.ts")).toContain(
+      '"text-brand": (theme) => ({ color: brandText(theme) })',
+    );
+
+    const text = body(button).replace(/\s+/g, " ");
+    expect(text).toContain("`brandText(theme)`");
+    expect(text).not.toContain("text in the primary role");
+    expect(text).not.toContain("| `link` | `primary` |");
+  });
+
   it("agree with the inventory row for the component", () => {
     const disagreeing = pages.flatMap((page) => {
       const row = inventory.rows.find(

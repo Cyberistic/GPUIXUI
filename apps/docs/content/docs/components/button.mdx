@@ -44,7 +44,7 @@ component cannot enforce it, but the theme makes a second one obvious.
 | `outline` | border only |
 | `ghost` | no chrome at rest |
 | `destructive` | `destructive` fill, for deletes and revokes |
-| `link` | text in the primary role, underlined on hover |
+| `link` | text in `brandText(theme)`, underlined on hover |
 
 The variants come from `core/variants.ts`, the same table the library and this
 page read. A variant maps to colour roles, never to a colour.
@@ -121,12 +121,18 @@ a button's paint is decided:
 | `outline` | `border` at rest, the `hover` fill |
 | `ghost` | `foreground` text, the `hover` fill |
 | `destructive` | `destructive` and `destructiveForeground` |
-| `link` | `primary` |
+| `link` | `brandText(theme)` — the brand moved until it reads as text |
 | every variant | `radius.md` corners, `density` height, the `focusVisible` ring |
 
 Changing `primary`, `radius.md` or the density repaints and resizes every button
 without touching component code; the docs platform switch changes the type face
 and metrics, not the shape.
+
+A `link` is the exception: it does not read `primary` directly, because `primary`
+is a **fill** chosen to carry `primaryForeground`, and as text it is under the
+4.5:1 floor on most styles. It paints `brandText(theme)` instead — the brand kept
+where it already reads and moved toward `foreground` where it does not — which is
+the `text-brand` utility the [recipe layer](/docs/styling) registers.
 
 ## Accessibility and limitations
 
