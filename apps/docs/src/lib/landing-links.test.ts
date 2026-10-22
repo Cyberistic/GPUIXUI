@@ -48,11 +48,11 @@ const mounted: ReadonlyArray<Mounted> = [
 
 const urls = new Set(["/", ...mounted.map(({ url }) => url)]);
 
-const landingFiles: ReadonlyArray<string> = [
-  ...readdirSync(join(appDir, "src/components/landing"))
-    .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
-    .map((name) => join(appDir, `src/components/landing/${name}`)),
-];
+const landingFiles: ReadonlyArray<string> = readdirSync(
+  join(appDir, "src/components/landing"),
+)
+  .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
+  .map((name) => join(appDir, `src/components/landing/${name}`));
 
 /** Every internal path the landing's components and data write. */
 const links: ReadonlyArray<{ readonly file: string; readonly href: string }> =
