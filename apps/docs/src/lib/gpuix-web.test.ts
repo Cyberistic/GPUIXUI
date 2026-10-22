@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { themes } from "@gpuixui/tokens";
 
 /**
  * The GPUix web build, and what the preview policy may say about it.
@@ -182,5 +183,26 @@ describe("the GPUix web build", () => {
       appSources().filter((path) => path.includes("chrome-session")),
     ).toEqual([]);
     expect(policy).toContain("nub apps/docs/scripts/live-route-probe.ts");
+  });
+
+  it("quotes the roles the route sample was taken from", () => {
+    // The route probe reads three pixels out of a real frame: the button's
+    // fill, the banner's resting fill and the banner's fill after a press.
+    // All three are opaque role literals — `controlStyle`'s `primary`, the
+    // banner's `muted` and the listener's `successSoft` — so a palette move
+    // makes the printed sample a measurement of a theme that no longer ships.
+    // The values come from the package, never retyped, so the next move fails
+    // here instead of leaving the policy quoting an old hex.
+    const dark = themes.dark.colors;
+    expect(dark.primary.toLowerCase()).toBe("#a7a9ff");
+    expect(policy).toContain(
+      `\`${dark.primary.toLowerCase()}\` (\`controlStyle\`'s dark primary)`,
+    );
+    expect(policy).toContain(
+      `the banner \`${dark.muted.toLowerCase()}\` (\`muted\`)`,
+    );
+    expect(policy).toContain(
+      `\`${dark.successSoft.toLowerCase()}\` (\`successSoft\`)`,
+    );
   });
 });

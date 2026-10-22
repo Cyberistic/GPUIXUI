@@ -2130,6 +2130,45 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(row?.workaround).toContain("lines × lineHeight");
   });
 
+  it("holds the truncation row to the checks the probe asserts", () => {
+    // The row printed 29 checks and ended on "the window probe's assertion
+    // still describes the pre-fix component", which stopped being true when the
+    // playground's probe grew `the shipped Text's clamp prop paints the two
+    // lines`. A record that lags its probe in count *or* in verdict sends the
+    // next plan to re-measure a fix that landed, so both are read from the
+    // probe: the count from its own assertion sites, the verdict from the
+    // assertion text.
+    const steps = read("apps/playground/src/live/scenarios.tsx");
+    const start = steps.indexOf("const truncationSteps");
+    const body = steps.slice(
+      start,
+      steps.indexOf("const VerticalSliderProbe", start),
+    );
+    expect(start).toBeGreaterThan(0);
+    const asserted = body.match(/ctx\.expect[A-Za-z]+\(/g)?.length ?? 0;
+    expect(asserted).toBeGreaterThan(20);
+    expect(body).toContain(
+      "the shipped Text's clamp prop paints the two lines",
+    );
+
+    const row = rowFor("Text truncation");
+    expect(row?.evidence).toContain(`${asserted} checks`);
+    expect(row?.evidence).not.toContain("29 checks");
+    expect(row?.evidence).not.toContain(
+      "still describes the pre-fix component",
+    );
+    expect(row?.evidence).toContain("paints **two** lines");
+
+    // The README prints the same count, so a probe that grows an assertion
+    // fails here until both records move together.
+    const readme = read("apps/playground/README.md");
+    const section = readme.slice(readme.indexOf("### `text-truncation`"));
+    const printed = Number(
+      /(\d+) checks, `--only text-truncation`/.exec(section)?.[1] ?? Number.NaN,
+    );
+    expect(printed).toBe(asserted);
+  });
+
   it("publishes the measured gaps on /docs/runtime", () => {
     expect(runtimePage).toContain("data-grid-fixed-header");
     expect(runtimePage).toContain("editor-surface");

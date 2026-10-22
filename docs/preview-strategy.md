@@ -184,7 +184,7 @@ nub apps/docs/scripts/live-route-probe.ts
 Frames land in `.artifacts/live/docs-live-route-{before,after}.png`, which are
 verification-only and gitignored. Measured on 2026-10-22, macOS 15.8.1 x86_64,
 headless Google Chrome 155.0.8059.80 over SwiftShader: the button sampled
-`#a7a9ff` (`controlStyle`'s dark primary), the banner `#222730` (`muted`), and
+`#a7a9ff` (`controlStyle`'s dark primary), the banner `#1e222a` (`muted`), and
 after a press `#0e5135` (`successSoft`) with the status reading "Pressed 1 time".
 
 **Owed:** the React reconciler mount. `render(<App />, { renderer })` takes an
