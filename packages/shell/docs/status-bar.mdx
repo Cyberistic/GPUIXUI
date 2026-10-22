@@ -1,0 +1,77 @@
+---
+title: Status bar
+description: The bottom strip of the application chrome — left/right groups, tones, separators and truncation.
+---
+
+`StatusBar` is the bottom row of the application chrome: a `role="status"` bar
+with a leading and a trailing group of items, a `tone` per item, hairline
+separators and text truncation. The runtime reserves no titlebar and paints no
+status strip, so the chrome is the app's to paint (`docs/gpuix-capabilities.md`,
+"Status bars"); this bar owns its row.
+
+## Anatomy
+
+```
+main │ Ln 12, Col 4            UTF-8 │ 3 errors │ Lint passed
+───── ─────────────            ───── ────────── ─────────────
+left group          (spacer)      right group
+```
+
+A separator falls **between** consecutive items in a group; the spacer pushes
+the right group to the trailing edge. Every item truncates with an ellipsis
+when the bar is narrower than its content.
+
+## Usage
+
+```tsx
+import { StatusBar } from "@gpuixui/shell";
+
+<StatusBar
+  label="Editor status"
+  left={[
+    { id: "branch", label: "main" },
+    { id: "position", label: "Ln 12, Col 4" },
+  ]}
+  right={[
+    { id: "encoding", label: "UTF-8" },
+    { id: "errors", label: "3 errors", tone: "destructive" },
+  ]}
+/>;
+```
+
+The runnable build is `examples/status-bar.example.tsx`.
+
+## Tones
+
+An item's `tone` is `default` (the bar's own foreground) or one of the four
+status tones — `info`, `success`, `warning`, `destructive`. A named tone paints
+its soft-surface foreground role (`@gpuixui/tokens`' `statusTone`), the same
+readable colour an [Alert](/docs/components/alert) or [Badge](/docs/components/badge)
+uses, so a status item never mixes a readable colour by hand.
+
+## API
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `StatusBar` | `div` with `role="status"` | `label?`, `left?`, `right?`, `className?` |
+| `StatusBarItem` | one `<text>` in a group | `id`, `label`, `tone?` |
+
+The tone-to-role mapping — `statusToneOf`, `toneForeground` — is exported from
+`@gpuixui/shell` as pure functions.
+
+## Limitations
+
+- Truncation is `whiteSpace: "nowrap"` + `overflow: "hidden"` +
+  `textOverflow: "ellipsis"` on each item; a bar whose groups still overflow
+  clips the last item.
+- Separators are 1px elements, not borders: one element carries one border colour.
+
+## Verification
+
+`src/status-bar/logic.test.ts` (pure) holds the tone-to-role contract: a named
+tone changes the foreground role, the default tone keeps the bar's foreground,
+and two tones never resolve to the same readable colour.
+
+```sh
+nub run --filter @gpuixui/shell test
+```

@@ -1,0 +1,98 @@
+---
+title: Application menu
+description: The in-window menu bar — File / Edit / View — with keyboard traversal and accelerator labels.
+---
+
+`AppMenu` is the application's menu bar, drawn inside the window. The pinned
+runtime installs a fixed macOS menu bar and publishes no API to add to it, so
+the chrome is the app's own (`docs/gpuix-capabilities.md`, "Application menu").
+It is a `role="menubar"` row of buttons; each open menu's dropdown is a
+`FloatingLayer` anchored below the button that opened it.
+
+## Anatomy
+
+```
+File    Edit    View          ← menubar buttons (one tab stop)
+┌───────────────────────┐
+│ New file          ⌘ N │     ← dropdown rows, accelerator on the right
+│ Open…             ⌘ O │
+│ Save              ⌘ S │
+└───────────────────────┘
+```
+
+The bar is **one** keyboard surface: Left/Right move between menus (wrapping),
+Down or Enter opens the highlighted menu's dropdown, Up/Down move the
+highlighted row (wrapping and skipping disabled rows), Enter selects it, and
+Escape closes the dropdown and returns focus to the trigger. Rows are
+highlighted, not focused — the same rule the [command menu](/docs/components/command-menu)
+uses, so the bar owns the focus while the highlight moves.
+
+## Usage
+
+```tsx
+import { AppMenu, type AppMenuEntry } from "@gpuixui/shell";
+
+const menus: ReadonlyArray<AppMenuEntry> = [
+  {
+    id: "file",
+    label: "File",
+    items: [
+      { id: "new", label: "New file", accelerator: "mod+n" },
+      { id: "save", label: "Save", accelerator: "mod+s" },
+    ],
+  },
+  { id: "edit", label: "Edit", items: [{ id: "undo", label: "Undo", accelerator: "mod+z" }] },
+];
+
+<AppMenu label="Editor" menus={menus} onSelect={(menuId, itemId) => run(menuId, itemId)} />;
+```
+
+The runnable build is `examples/app-menu.example.tsx`.
+
+## The accelerator label
+
+A row's `accelerator` is display-only, rendered with `@gpuixui/keyboard`'s
+`formatSymbols`: `mod+n` draws ⌘ N on macOS and Ctrl N elsewhere. The app binds
+the chord itself (the runtime's window-level `onKeyDown` is the path). The
+grammar and glyph table are shared with
+[keyboard shortcuts](/docs/components/keyboard-shortcuts).
+
+## API
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `AppMenu` | `div` with `role="menubar"` | `label?`, `menus` (required), `platform?`, `onSelect?`, `className?` |
+| `AppMenuItem` | a dropdown row | `id`, `label`, `accelerator?`, `disabled?` |
+| `AppMenuEntry` | a top-level menu | `id`, `label`, `disabled?`, `items` |
+
+`onSelect(menuId, itemId)` fires when a runnable row is chosen. The navigation
+rules — `step`, `dismiss`, `initial` — are exported from `@gpuixui/shell` as
+pure functions.
+
+## Accessibility
+
+- The bar is a named `menubar`; each button is a `menuitem` with
+  `aria-haspopup="menu"` and `aria-expanded`; the dropdown is a named `menu` of
+  `menuitem` rows.
+- The highlighted row publishes `aria-selected`; a disabled row publishes
+  `aria-disabled`.
+- Escape returns focus to the menu's trigger; Tab leaves the bar.
+
+## Limitations
+
+- **No native menu bar.** The runtime's menu is fixed and not addressable from
+  the app; this is an in-window `div` + dropdowns, and its keyboard traversal is
+  the app's own.
+- **Highlight, not focus.** Rows are highlighted with `aria-selected`; a screen
+  reader gets no `aria-activedescendant` (0.11.0 publishes none).
+- Accelerator labels are display-only; no chord is registered.
+
+## Verification
+
+`src/app-menu/logic.test.ts` (pure) holds the navigation contract: Left/Right
+wrap between menus, Up/Down wrap within a dropdown, moves skip disabled
+menus/rows, and Escape names the trigger that should regain focus.
+
+```sh
+nub run --filter @gpuixui/shell test
+```
