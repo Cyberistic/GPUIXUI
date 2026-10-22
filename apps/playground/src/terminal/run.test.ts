@@ -19,13 +19,17 @@ import {
   TERMINAL_INK_FILL,
   TERMINAL_NO_TERMINAL,
   TERMINAL_NO_TERMINAL_FILL,
+  TERMINAL_CLICK_INK,
+  TERMINAL_CLICK_INK_FILL,
   TERMINAL_PRESSED,
   TERMINAL_PRESSED_FILL,
   TERMINAL_REST,
   TERMINAL_REST_FILL,
   terminalFill,
+  terminalInk,
 } from "./logic.js";
 import {
+  POINTER_CLICK,
   TERMINAL_GRID,
   evidenceOf,
   firstPainted,
@@ -38,8 +42,24 @@ import {
   terminalRegistry,
 } from "./run.js";
 
+/** A page frame with a run of ink pixels, the shape a click repaints. */
+const inked = (
+  page: Pixels.Rgba,
+  ink: Pixels.Rgba,
+  count: number,
+): KittyFrame => {
+  const frame = solidFrame(page, 20, 10);
+  for (let at = 0; at < count; at += 1) {
+    frame.pixels.data[at * 4] = ink.r;
+    frame.pixels.data[at * 4 + 1] = ink.g;
+    frame.pixels.data[at * 4 + 2] = ink.b;
+    frame.pixels.data[at * 4 + 3] = ink.a;
+  }
+  return frame;
+};
+
 /** A solid frame, the shape a terminal capture decodes to. */
-const frame = (colour: Pixels.Rgba, width = 4, height = 2): KittyFrame => {
+const solidFrame = (colour: Pixels.Rgba, width = 4, height = 2): KittyFrame => {
   const data = new Uint8Array(width * height * 4);
   for (let at = 0; at < data.length; at += 4) {
     data[at] = colour.r;
@@ -53,6 +73,8 @@ const frame = (colour: Pixels.Rgba, width = 4, height = 2): KittyFrame => {
     pixels: new Pixels.Pixels({ width, height, data }),
   });
 };
+
+const frame = (colour: Pixels.Rgba): KittyFrame => solidFrame(colour);
 
 describe("the fixture colours", () => {
   it("paints the fill a terminal run read terminal mode", () => {
@@ -102,6 +124,21 @@ describe("reading a run's frames", () => {
     expect(Option.isNone(paintedOf([frame(TERMINAL_PRESSED)]))).toBe(true);
   });
 
+  it("reads a press as a repaint of the ink, not the page", () => {
+    expect(terminalInk(false)).toBe(TERMINAL_INK_FILL);
+    expect(terminalInk(true)).toBe(TERMINAL_CLICK_INK_FILL);
+    const painted = paintedOf([
+      frame(TERMINAL_REST),
+      inked(TERMINAL_REST, TERMINAL_CLICK_INK, 150),
+    ]);
+    expect(Option.isSome(painted) && Option.isSome(painted.value.clicked)).toBe(
+      true,
+    );
+    expect(Option.isSome(painted) && Option.isNone(painted.value.pressed)).toBe(
+      true,
+    );
+  });
+
   it("does not read a page frame as a repaint", () => {
     const painted = paintedOf([frame(TERMINAL_REST), frame(TERMINAL_REST)]);
     expect(Option.isSome(painted) && Option.isNone(painted.value.pressed)).toBe(
@@ -140,6 +177,10 @@ describe("the command this runner spawns", () => {
     expect(terminalCommand("/tmp/it's here/main.js")).toBe(
       `stty rows ${TERMINAL_GRID.rows} cols ${TERMINAL_GRID.columns}; exec nub '/tmp/it'\\''s here/main.js'`,
     );
+  });
+
+  it("aims a left press at the frame's centre", () => {
+    expect(POINTER_CLICK).toBe("\x1b[<0;400;320M\x1b[<0;400;320m");
   });
 
   it("forwards our writes through a cat, because script needs a pipe", () => {

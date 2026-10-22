@@ -54,8 +54,22 @@ export const TERMINAL_INK = new Pixels.Rgba({
 /** {@link TERMINAL_INK} as the app writes it. */
 export const TERMINAL_INK_FILL = "#FFFFFF";
 
+/** The ink the word takes once a pointer press has reached the app. */
+export const TERMINAL_CLICK_INK = new Pixels.Rgba({
+  r: 0xff,
+  g: 0xf2,
+  b: 0x00,
+  a: 255,
+});
+/** {@link TERMINAL_CLICK_INK} as the app writes it. */
+export const TERMINAL_CLICK_INK_FILL = "#FFF200";
+
 /** The one word the frame draws, centred on both axes. */
 export const TERMINAL_WORD = "TERMINAL";
+
+/** The ink the word paints: white at rest, the press ink after a click. */
+export const terminalInk = (clicked: boolean): string =>
+  clicked ? TERMINAL_CLICK_INK_FILL : TERMINAL_INK_FILL;
 
 /** The page colour for a run: terminal mode, and how many keys it has seen. */
 export const terminalFill = (terminal: boolean, keys: number): string =>

@@ -39,6 +39,7 @@ import {
   type KittyStream,
 } from "./kitty.js";
 import {
+  TERMINAL_CLICK_INK,
   TERMINAL_INK,
   TERMINAL_NO_TERMINAL,
   TERMINAL_PRESSED,
@@ -66,6 +67,20 @@ export const KEY_T = "\x1b[116u";
 
 /** The quit gesture: ctrl-c, which the platform leaves unhandled and quits on. */
 export const CTRL_C = "\u0003";
+
+/**
+ * A left press and release at the frame's centre, in SGR pixel coordinates.
+ *
+ * The platform enables `?1016h` (SGR-Pixels), so a coordinate is a pixel of the
+ * 800×640 frame; the centre is over the word's box, which is the app's page.
+ */
+export const POINTER_AT = {
+  x: (TERMINAL_GRID.columns * TERMINAL_CELL.width) / 2,
+  y: (TERMINAL_GRID.rows * TERMINAL_CELL.height) / 2,
+} as const;
+
+/** The press and release a click is, as the terminal reports one. */
+export const POINTER_CLICK = `\x1b[<0;${POINTER_AT.x};${POINTER_AT.y}M\x1b[<0;${POINTER_AT.x};${POINTER_AT.y}m`;
 
 const FIRST_FRAME_ATTEMPTS = 150;
 const KEY_FRAME_ATTEMPTS = 100;
@@ -101,6 +116,12 @@ export const terminalRegistry: ReadonlyArray<TerminalScenarioMeta> = [
     title:
       "Terminal: the runtime paints an app into a pty through the kitty graphics protocol",
     capability: "content",
+  },
+  {
+    id: "terminal-pointer",
+    title:
+      "Terminal: a pointer press reaches the app and repaints the word, not the page",
+    capability: "input",
   },
   {
     id: "terminal-input",
@@ -152,6 +173,10 @@ export const shareOf = (frame: KittyFrame, colour: Pixels.Rgba): number =>
   Pixels.countColour(frame.pixels, colour) /
   (frame.pixels.width * frame.pixels.height);
 
+/** How many pixels of a frame paint `colour` exactly. */
+const inkPixelsOf = (frame: KittyFrame, colour: Pixels.Rgba): number =>
+  Pixels.countColour(frame.pixels, colour);
+
 /** The first frame in `frames` whose `colour` covers `share` of it. */
 export const firstPainted = (
   frames: ReadonlyArray<KittyFrame>,
@@ -163,6 +188,7 @@ export const firstPainted = (
 /** The app's page colour in a run of frames, and the ink its word paints. */
 export interface Painted {
   readonly rest: KittyFrame;
+  readonly clicked: Option.Option<KittyFrame>;
   readonly pressed: Option.Option<KittyFrame>;
 }
 
@@ -178,6 +204,12 @@ export const paintedOf = (
     (index) =>
       Option.map(Arr.get(frames, index), (rest) => ({
         rest,
+        // A click repaints a few hundred ink pixels, not a page, so it is
+        // found by ink count rather than by the page share.
+        clicked: Arr.findFirst(
+          Arr.drop(frames, index + 1),
+          (frame) => inkPixelsOf(frame, TERMINAL_CLICK_INK) > 100,
+        ),
         pressed: firstPainted(
           Arr.drop(frames, index + 1),
           TERMINAL_PRESSED,
@@ -200,6 +232,7 @@ export const evidenceOf = (
   Option.map(Arr.head(frames), (first) =>
     Option.getOrElse(paintedOf(frames), () => ({
       rest: first,
+      clicked: Option.none(),
       pressed: Option.none(),
     })),
   );
@@ -377,6 +410,7 @@ const spawnTerminal = (
 /** The assertions a capture supports, split by the scenario that owns each. */
 interface Checks {
   readonly render: ReadonlyArray<Verdict>;
+  readonly pointer: ReadonlyArray<Verdict>;
   readonly input: ReadonlyArray<Verdict>;
 }
 
@@ -412,6 +446,15 @@ const checksOf = (
     onSome: (frame) => ({
       present: true,
       rest: shareOf(frame, TERMINAL_REST),
+    }),
+  });
+  const click = Option.match(painted.clicked, {
+    onNone: () => ({ present: false, rest: -1, ink: 0, white: -1 }),
+    onSome: (frame) => ({
+      present: true,
+      rest: shareOf(frame, TERMINAL_REST),
+      ink: inkPixelsOf(frame, TERMINAL_CLICK_INK),
+      white: inkPixelsOf(frame, TERMINAL_INK),
     }),
   });
   const restored = Arr.every(
@@ -509,6 +552,26 @@ const checksOf = (
         }),
       },
     ],
+    pointer: [
+      {
+        label: "a pointer press reaches the app",
+        holds: click.present,
+        expected: `a frame painted ${rgbaText(TERMINAL_CLICK_INK)} ink`,
+        actual: click.present ? "painted" : "no press frame",
+      },
+      {
+        label: "the press repaints the ink, not the page",
+        holds:
+          click.present &&
+          click.rest >= PAGE_SHARE &&
+          click.white === 0 &&
+          click.ink > 100,
+        expected: `the rest page kept, ${rgbaText(TERMINAL_INK)} gone and more than 100 ${rgbaText(TERMINAL_CLICK_INK)} ink pixels`,
+        actual: click.present
+          ? `${click.rest.toFixed(3)} page, ${click.white} white, ${click.ink} pressed ink`
+          : "no press frame",
+      },
+    ],
     input: [
       {
         label: "a key press repaints the page",
@@ -565,7 +628,11 @@ const reportOf = (
         title: meta.title,
         capability: meta.capability,
         checks: Arr.map(
-          meta.id === "terminal-render" ? checks.render : checks.input,
+          meta.id === "terminal-render"
+            ? checks.render
+            : meta.id === "terminal-pointer"
+              ? checks.pointer
+              : checks.input,
           check,
         ),
         durationMs: now - startedAt,
@@ -576,15 +643,25 @@ const reportOf = (
     startedAt,
     durationMs: now - startedAt,
     scenarios,
-    capabilities: Arr.map(scenarios, (scenario) => ({
-      capability: scenario.capability,
-      status: Arr.every(
-        scenario.checks,
-        (result) => result.outcome instanceof Smoke.Passed,
-      )
-        ? ("verified" as const)
-        : ("failed" as const),
-    })),
+    capabilities: Arr.map(
+      Arr.dedupe(Arr.map(scenarios, (scenario) => scenario.capability)),
+      (capability) => ({
+        capability,
+        status: Arr.every(
+          Arr.filter(
+            scenarios,
+            (scenario) => scenario.capability === capability,
+          ),
+          (scenario) =>
+            Arr.every(
+              scenario.checks,
+              (result) => result.outcome instanceof Smoke.Passed,
+            ),
+        )
+          ? ("verified" as const)
+          : ("failed" as const),
+      }),
+    ),
   });
 };
 
@@ -668,6 +745,15 @@ const capture = (
       // still quits and reports, so the wrong paint is measured rather than
       // hidden behind "no evidence".
       if (Option.isSome(paintedOf(first.frames))) {
+        yield* child.write(new TextEncoder().encode(POINTER_CLICK));
+        yield* settle(
+          child.output,
+          (stream) =>
+            Option.exists(paintedOf(stream.frames), (painted) =>
+              Option.isSome(painted.clicked),
+            ),
+          KEY_FRAME_ATTEMPTS,
+        );
         yield* child.write(new TextEncoder().encode(KEY_T));
         yield* settle(
           child.output,
@@ -734,6 +820,10 @@ const capture = (
           yield* fileSystem.writeFile(path.join(directory, name), png);
         });
       yield* write("frame.png", painted.value.rest);
+      yield* Option.match(painted.value.clicked, {
+        onNone: () => Effect.void,
+        onSome: (frame) => write("clicked.png", frame),
+      });
       yield* Option.match(painted.value.pressed, {
         onNone: () => Effect.void,
         onSome: (frame) => write("pressed.png", frame),
