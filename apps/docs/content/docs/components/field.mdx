@@ -140,17 +140,18 @@ Every part takes the GPUix host props and merges `style` last.
 | Element | Role |
 | ------- | ---- |
 | label | the `label` type role in `colors.foreground` |
-| required marker | `colors.destructive` |
+| required marker | `statusTone(theme, "destructive").foreground` |
 | description | the `caption` role in `colors.mutedForeground` |
 | message | the `caption` role in `statusTone(theme, "destructive").foreground` |
 | input | `colors.input` / `colors.inputForeground`, edge `colors.border` |
 | invalid input | the edge in `colors.destructive` and the ring in the same role |
 | disabled input | `colors.disabled` / `colors.disabledForeground` |
 
-The message deliberately avoids the solid `destructive` fill: that role is a
-**fill**, and `contrastPairs` measures it as a mark, not as text. The tone's
-`foreground` is the role measured at the body floor on the page and a card, so a
-brand that moves the palette moves a readable message.
+The message and the required marker deliberately avoid the solid `destructive`
+fill: that role is a **fill**, and `contrastPairs` measures it as a mark, not as
+text. The tone's `foreground` is the role measured at the body floor on the page
+and a card, so a brand that moves the palette moves a readable message — and a
+marker that is meant to be read rather than merely seen.
 
 A disabled field does not fade itself. It paints the theme's neutral disabled
 pair, because a fade composites the label into the fill it sits on and a control
@@ -198,7 +199,7 @@ re-exports the token helpers; the component imports no token module directly.
 
 `done` · runtime support `partial`.
 
-7 native behaviour tests in `packages/components/src/behaviour/field.test.tsx`
+8 native behaviour tests in `packages/components/src/behaviour/field.test.tsx`
 prove the label, description and control rendering, the error replacing the
 description with `role="alert"`, the measured message colour rather than the
 solid fill, the required marker with a clean accessible name, the destructive

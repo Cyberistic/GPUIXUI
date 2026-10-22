@@ -209,6 +209,27 @@ const pages: ReadonlyArray<CuratedPage> = [
 const body = (page: CuratedPage): string =>
   read(`apps/docs/content/docs/components/${page.file}`);
 
+/**
+ * One row of a page's `## Theming` table, by its first cell.
+ *
+ * Returns the whole row so a case can hold both the role a page prints and the
+ * role the component paints; `undefined` when the table or the row is gone.
+ */
+const themingRow = (
+  page: CuratedPage,
+  element: string,
+): string | undefined => {
+  const text = body(page);
+  const start = text.indexOf("## Theming");
+  if (start === -1) return undefined;
+  const end = text.indexOf("\n## ", start + 1);
+  const section = text.slice(start, end === -1 ? undefined : end);
+
+  return section
+    .split("\n")
+    .find((line) => line.replace(/^\|/, "").trimStart().startsWith(element));
+};
+
 /** The `## Status` section, which is where a page makes its claims. */
 const status = (page: CuratedPage): string => {
   const text = body(page);
@@ -442,9 +463,32 @@ describe("the curated component pages", () => {
     expect(error).toBeGreaterThan(description);
     expect(source).toContain('role="alert"');
 
-    // The required marker is a label, not part of the name.
+    // The required marker is a label, not part of the name, and it is **text**:
+    // it paints the tone's readable role, never the solid fill. The row and the
+    // painter are read together, so a page cannot teach the fill the component
+    // stopped using (and a painter that moved back to the fill fails beside it).
     expect(source).toContain('aria-label="Required"');
     expect(source).toContain("${text}. Required");
+
+    const marker = source.slice(
+      source.indexOf('aria-label="Required"'),
+      source.indexOf("</text>", source.indexOf('aria-label="Required"')),
+    );
+    expect(
+      marker,
+      "the required marker no longer paints the tone's readable role",
+    ).toContain('statusTone(theme, "destructive").foreground');
+    expect(marker).not.toContain("theme.colors.destructive");
+
+    const markerRow = themingRow(field, "required marker");
+    expect(
+      markerRow,
+      "the field page's Theming table has no required-marker row",
+    ).toBeDefined();
+    expect(markerRow).toContain(
+      'statusTone(theme, "destructive").foreground',
+    );
+    expect(markerRow).not.toContain("`colors.destructive`");
 
     // The invalid edge and the message's measured role.
     expect(source).toContain("theme.colors.destructive");
@@ -479,7 +523,7 @@ describe("the curated component pages", () => {
     expect(text).toContain(
       "No `aria-describedby`, `aria-invalid` or `aria-required`",
     );
-    expect(text).toContain("7 native behaviour tests");
+    expect(text).toContain("8 native behaviour tests");
     expect(text).toContain("There is no auto-validate on every keystroke");
     // The retracted shapes: a field that validates itself, or a faded control.
     expect(text).not.toContain("validates on every keystroke and");

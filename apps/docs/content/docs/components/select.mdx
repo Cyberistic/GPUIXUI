@@ -240,13 +240,14 @@ directly; the component reads roles, never colours.
 
 ## Status
 
-`done` in `COMPONENTS.md` with a `yes` runtime verdict: GPUix publishes the
+`done` in `COMPONENTS.md` with a `partial` runtime verdict: GPUix publishes the
 Select parts this wrapper themes, so open state, positioning and dismissal are
-supported rather than reimplemented. The paint and data mapping are held by
+supported rather than reimplemented. The row is `partial` rather than `yes`
+because three measured limits remain below — a group caption is painted but not
+announced, there is no type-ahead, and the highlight reveal is the wrapper's
+arithmetic over painted boxes. The paint and data mapping are held by
 `packages/primitives/src/components/Select.test.tsx`; the reveal arithmetic by
 `packages/primitives/src/core/scroll.test.ts`; and the 320px box, the wheel
 offset, both placement cases and the keyboard reveal by
-`packages/primitives/runtime/fields.runtime.test.tsx` in a real renderer. Three
-limits remain and are recorded above rather than hidden: group captions are not
-announced, there is no type-ahead, and the highlight reveal is the wrapper's
-arithmetic because the runtime does not move the list itself.
+`packages/primitives/runtime/fields.runtime.test.tsx` in a real renderer. The
+three limits are recorded above rather than hidden.
