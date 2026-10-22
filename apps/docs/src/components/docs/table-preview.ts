@@ -4,9 +4,10 @@
  * The shipped table is presentational: `@gpuixui/data`'s controllers own the
  * sort, the selection and the filter, and a preview that re-invented them would
  * teach a model the package does not implement. So this module is a small,
- * plain copy of those three reducers, and `table-preview.test.ts` holds it to
- * the package's own functions over a sweep — the preview cannot drift from
- * `sort/logic.ts`, `selection/logic.ts` or `filter/logic.ts` without failing.
+ * plain copy of those three rules, and `table-preview.test.ts` holds it to the
+ * package's own functions over a sweep — the preview cannot drift from
+ * `sort/logic.ts`, `selection/logic.ts` or the filtered row model `grid-core.ts`
+ * configures without failing.
  *
  * Nothing here is imported by the native package; the page states that the
  * previews are illustrative, and this file is why they are also accurate.
@@ -67,9 +68,13 @@ export const TABLE_ROWS: ReadonlyArray<PreviewTableRow> = [
   },
 ];
 
-/** Every cell's text, which is what one filter query is matched against. */
-export const textOf = (row: PreviewTableRow): string =>
-  `${row.service} ${row.environment} ${row.status} ${row.duration}`;
+/** The four cells a row paints, each one searched on its own. */
+export const cellsOf = (row: PreviewTableRow): ReadonlyArray<string> => [
+  row.service,
+  row.environment,
+  row.status,
+  `${row.duration}`,
+];
 
 /** The value one column sorts by: numbers as numbers, everything else as text. */
 export const valueOf = (row: PreviewTableRow, field: string): string | number =>
@@ -105,7 +110,13 @@ export const nextSort = (
 export const normalizeQuery = (query: string): string =>
   query.trim().toLowerCase();
 
-/** The rows a literal, case-insensitive query keeps. */
+/**
+ * The rows a literal, case-insensitive query keeps.
+ *
+ * Each cell is matched on its own, which is the rule the core's global filter
+ * takes: every column's accessor value is lowercased and asked whether it
+ * contains the query. A query therefore cannot span two cells.
+ */
 export const filterRows = (
   rows: ReadonlyArray<PreviewTableRow>,
   query: string,
@@ -113,7 +124,9 @@ export const filterRows = (
   const needle = normalizeQuery(query);
   return needle === ""
     ? rows
-    : rows.filter((row) => textOf(row).toLowerCase().includes(needle));
+    : rows.filter((row) =>
+        cellsOf(row).some((cell) => cell.toLowerCase().includes(needle)),
+      );
 };
 
 /** The order two rows take under one column, ignoring the direction. */

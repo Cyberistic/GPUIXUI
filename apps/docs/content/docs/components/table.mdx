@@ -37,7 +37,16 @@ import {
   useTable,
 } from "@gpuixui/data";
 
-const table = useTable({ rows, keyOf: (row) => row.id, textOf, valueOf });
+const table = useTable({
+  rows,
+  keyOf: (row) => row.id,
+  // One column list is what the header paints, what the core sorts by and
+  // what the filter searches.
+  columns: [
+    { id: "service", valueOf: (row) => row.service },
+    { id: "environment", valueOf: (row) => row.environment },
+  ],
+});
 
 <Table aria-label="Deploy queue" height={320}>
   <TableViewport>

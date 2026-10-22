@@ -128,9 +128,10 @@ re-deriving them.
 
 - **Rows and columns** — `Grid` for equal tracks; a whole row is one child, so
   the header and body share one column count.
-- **Sort** — a pure module over the row array, like `menu/logic.ts` and
-  `calendar/logic.ts`: `sortRows(rows, key, direction)` with the column
-  definition owning the comparison. A component never sorts in render.
+- **Sort** — the core's sorted row model (`sortFn: "basic"`, so a number column
+  orders numerically and text by code unit), with the column definition owning
+  the `valueOf` it sorts and filters by. Narrow first, then sort the narrowed
+  set, and never sort in render.
 - **Selection** — a set of row ids, not indices, so it survives a sort; Range
   and `Cmd`/`Ctrl` semantics are the ones [List](/docs/components/list) already
   proves.
@@ -273,13 +274,15 @@ re-deriving them.
   So keep the selection by **record** and clear it when the record leaves the
   set, leave the text session in the field while rows come and go, reset the
   scroller on a filter change, and walk the filtered array on arrow keys.
-- **A release is a view, not a write** — the controller keeps the chosen records
-  and computes the visible selection during **render**, so a query hides a
-  choice without dropping it: typing `001` narrowed the set to one row and
-  `0 selected`, and typing `file` over the narrowed field brought the whole 60
-  back with the **2 chosen records** painted again (`data-table-lifecycle`).
-  Hide is not release, so a grid that needs a permanent one commits `clear()`
-  on the query change instead of expecting the next widening query to forget.
+- **A release is a view, not a write** — the chosen ids live in the grid's
+  **row model** (`@tanstack/table-core`'s `rowSelection`, read back through
+  `getSelectedRowIds()`), and the visible selection is derived from them
+  during **render**, so a query hides a choice without dropping it: typing
+  `001` narrowed the set to one row and `0 selected`, and typing `file` over
+  the narrowed field brought the whole 60 back with the **2 chosen records**
+  painted again (`data-table-lifecycle`). Hide is not release, so a grid that
+  needs a permanent one commits `clear()` on the query change instead of
+  expecting the next widening query to forget.
 - **A column menu is app state, and a window measured what hiding or moving one
   costs** — the runtime has no table element, so the visible columns are one
   ordered list the header and every row read; the runtime still owns the

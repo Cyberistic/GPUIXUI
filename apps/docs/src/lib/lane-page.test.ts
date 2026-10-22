@@ -801,10 +801,15 @@ describe("the data-display page's shipped rows", () => {
 
 /**
  * The page taught a filter and a window as two separate contracts, and the
- * controller holds one rule in each that a grid plan cannot re-derive: a
- * released selection is retained during **render** (so a widening query paints
- * the choice again), and a narrowed set's scroll offset is clamped in the same
+ * grid holds one rule in each that a table plan cannot re-derive: a released
+ * selection is retained during **render** (so a widening query paints the
+ * choice again), and a narrowed set's scroll offset is clamped in the same
  * commit (or the window keeps rows the set no longer has).
+ *
+ * The chosen records live in `@tanstack/table-core`'s row model now. The
+ * controller derived `chosen` from `getSelectedRowIds()` and clears through
+ * that set; the guard read the pre-migration `clearSelection(selection)` and
+ * went red on the committed tree while the page still described a reducer.
  */
 describe("the data-display page's controller rules", () => {
   const dataPage = read(dataDisplayPage);
@@ -830,9 +835,14 @@ describe("the data-display page's controller rules", () => {
   it("retains a released selection and names the call that drops it", () => {
     // The release is a view of `chosen`, computed in render — an effect would
     // make the hide a write and the widening query would not paint it again.
+    // `chosen` is the row model's own ids, so the core holds the choice.
+    expect(controller).toContain(
+      "HashSet.fromIterable(table.getSelectedRowIds())",
+    );
     expect(controller).toContain("retainSelection(chosen, keys)");
     expect(controller).not.toContain("useEffect");
-    expect(controller).toContain("clearSelection(selection)");
+    expect(controller).toContain("clearSelection(chosen)");
+    expect(controller).not.toContain("clearSelection(selection)");
     expect(controller).toContain("clear: () =>");
     // Both directions the page prints are the probe's own assertions.
     expect(probe).toContain("clearing the query restores the whole set");
@@ -842,6 +852,10 @@ describe("the data-display page's controller rules", () => {
 
     expect(dataPage).toContain("data-table-lifecycle");
     expect(dataPage).toContain("A release is a view, not a write");
+    // The rule belongs to the row model, and the page must say so: the ids stay
+    // in the core's `rowSelection`, which is what makes the release a view.
+    expect(dataPage).toContain("row model");
+    expect(dataPage).toContain("`getSelectedRowIds()`");
     expect(dataPage).toContain("during **render**");
     expect(dataPage).toContain("`clear()`");
     expect(dataPage).toContain("**2 chosen records**");

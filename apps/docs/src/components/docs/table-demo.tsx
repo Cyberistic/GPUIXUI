@@ -27,7 +27,7 @@ import {
  * previews paint the same three decisions in the browser so a reader can press
  * them — they are **illustrative approximations** of the native table, labelled
  * on the page, and their rules come from `table-preview.ts`, which the suite
- * holds to the package's own reducers.
+ * holds to the package's own rules.
  */
 
 /** One row of the preview's grid: the record, the cells and its state. */
@@ -367,9 +367,22 @@ export const TableStates = () => {
   );
 };
 
-export const tableWorkflowSource = `import { Table, TableBody, TableCell, TableEmpty, TableHeader, TableHeaderCell, TableRow, TableSortHeader, TableViewport, useTable } from "@gpuixui/data";
+export const tableWorkflowSource = `import * as Option from "effect/Option";
+import { Table, TableBody, TableCell, TableFilterField, TableHeader, TableHeaderCell, TableRow, TableSortHeader, TableViewport, useTable } from "@gpuixui/data";
 
-const table = useTable({ rows, keyOf: (row) => row.id, textOf, valueOf });
+// One column list is what the header paints, what the core sorts by and what
+// the filter searches — a hidden column cannot leave a second copy behind.
+const table = useTable({
+  rows,
+  keyOf: (row) => row.id,
+  columns: [
+    { id: "service", valueOf: (row) => row.service },
+    { id: "environment", valueOf: (row) => row.environment },
+    { id: "status", valueOf: (row) => row.status },
+  ],
+});
+
+<TableFilterField value={table.query} onValueChange={table.setQuery} />
 
 <Table height={320} aria-label="Deploy queue">
   {/* One horizontal scroller; the header is a sibling of the row scroller. */}
@@ -379,7 +392,7 @@ const table = useTable({ rows, keyOf: (row) => row.id, textOf, valueOf });
         <TableSortHeader
           field="service"
           label="Service"
-          onSort={(next) => table.setSort(Some(next))}
+          onSort={(next) => table.setSort(Option.some(next))}
           sort={table.sort}
           width={260}
         />

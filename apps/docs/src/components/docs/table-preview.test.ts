@@ -1,6 +1,8 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { tableWorkflowSource } from "./table-demo";
 import {
+  cellsOf,
   filterRows,
   INITIAL_SORT,
   normalizeQuery,
@@ -23,16 +25,31 @@ import {
  * re-invented one would teach a model `@gpuixui/data` does not implement.
  *
  * The preview's copy is pinned here case by case, and the rules it copies are
- * read out of `packages/data/src` so the two cannot drift apart: a filter that
- * stops lowercasing, a sort that stops flipping on the sorted field, or a
- * selection that releases no hidden record fails by name.
+ * read out of `packages/data/src` so the two cannot drift apart: a sort that
+ * stops flipping on the sorted field, a selection that releases no hidden
+ * record, or a filter that starts matching across cells fails by name.
+ *
+ * The filter's rule moved with the table-core migration: `filter/logic.ts` is
+ * gone and the query is the core's global filter, configured in `grid-core.ts`.
+ * The guard read the deleted module, so the whole suite died at import with
+ * `ENOENT` and the preview's filter went unpinned — including the joined-text
+ * match the old `textOf` had, which let a query span two cells.
  */
 
 const root = new URL("../../../../../", import.meta.url);
-const read = (path: string): string =>
-  readFileSync(new URL(path, root), "utf8");
 
-const filterLogic = read("packages/data/src/filter/logic.ts");
+/** Read a source file, naming the one that is gone rather than dying in Vite. */
+const read = (path: string): string => {
+  const file = new URL(path, root);
+  if (!existsSync(file)) {
+    throw new Error(
+      `the table preview's guard reads ${path}, which no longer exists — point it at the module that owns the rule now`,
+    );
+  }
+  return readFileSync(file, "utf8");
+};
+
+const gridCore = read("packages/data/src/grid-core.ts");
 const sortLogic = read("packages/data/src/sort/logic.ts");
 const selectionLogic = read("packages/data/src/selection/logic.ts");
 
@@ -41,13 +58,12 @@ const ids = (
 ): ReadonlyArray<string> => rows.map((row) => row.id);
 
 describe("the preview's filter", () => {
-  it("matches one literal, case-insensitive query over every cell", () => {
-    // The rule the package owns (`filter/logic.ts`): trimmed, lowercased, never
-    // a pattern, and matched as a substring of the row's own text.
-    expect(filterLogic).toContain("pipe(query, Str.trim, Str.toLowerCase)");
-    expect(filterLogic).toContain(
-      "Str.includes(needle, 0)(Str.toLowerCase(text))",
-    );
+  it("matches one literal, case-insensitive query over each cell", () => {
+    // The rule the package owns (`grid-core.ts`): the core's `includesString`
+    // global filter, fed a trimmed query, over every column's accessor value.
+    expect(gridCore).toContain('globalFilterFn: "includesString"');
+    expect(gridCore).toContain("globalFilter: state.globalFilter.trim()");
+    expect(gridCore).toContain("accessorFn: column.valueOf");
 
     expect(TABLE_ROWS.length).toBe(6);
     expect(ids(filterRows(TABLE_ROWS, ""))).toEqual(ids(TABLE_ROWS));
@@ -73,6 +89,42 @@ describe("the preview's filter", () => {
     // A query is not a pattern.
     expect(filterRows(TABLE_ROWS, ".*")).toEqual([]);
     expect(normalizeQuery("  PROD ")).toBe("prod");
+
+    // A query is matched against one cell at a time. `billing-api` and
+    // `production` are two cells of one row, so the joined text used to match
+    // this and the core does not.
+    expect(
+      cellsOf({
+        id: "billing",
+        service: "billing-api",
+        environment: "production",
+        status: "ready",
+        duration: 92,
+      }),
+    ).toEqual(["billing-api", "production", "ready", "92"]);
+    expect(filterRows(TABLE_ROWS, "api production")).toEqual([]);
+  });
+
+  it("keeps the page's copyable source on the controller the package ships", () => {
+    // The snippet a reader copies. It still passed `textOf`/`valueOf` to
+    // `useTable` after those options were replaced by one `columns` list, and
+    // the lane page still described the sort as a `sortRows` helper the package
+    // no longer has.
+    expect(gridCore).toContain("readonly valueOf: (row: Row) => string | number");
+    expect(read("packages/data/src/use-table.ts")).toContain("readonly columns");
+
+    expect(tableWorkflowSource).toContain("columns: [");
+    expect(tableWorkflowSource).not.toContain("textOf");
+    expect(tableWorkflowSource).toContain("table.query");
+    expect(tableWorkflowSource).toContain("table.setQuery");
+
+    const tablePage = read("apps/docs/content/docs/components/table.mdx");
+    expect(tablePage).toContain("columns: [");
+    expect(tablePage).not.toContain("textOf");
+
+    const dataPage = read("apps/docs/content/docs/data-display/index.mdx");
+    expect(dataPage).toContain('sortFn: "basic"');
+    expect(dataPage).not.toContain("sortRows");
   });
 });
 
