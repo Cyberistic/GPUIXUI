@@ -548,6 +548,18 @@ describe("the theming page's data series", () => {
     expect(series).not.toMatch(/scale of \d+ colours/);
   });
 
+  it("names the bridge's variables without printing a terminal index", () => {
+    // The sentence ended at `--series-5` while the length above it was derived,
+    // so it was one scale edit away from naming a variable no bridge writes. An
+    // open range cannot fall behind: the first two are shown, the rest implied.
+    const printed = [...series.matchAll(/`--series-(\d+)`/g)].flatMap((match) =>
+      match[1] === undefined ? [] : [Number(match[1])],
+    );
+
+    expect(seriesColors(themes.dark).length).toBeGreaterThan(2);
+    expect(printed).toEqual([1, 2]);
+  });
+
   it("states the three contracts the scale is held to, and the reason it exists", () => {
     // The section is why a component has no hex of its own: a role carries
     // status, the series carries identity, and the scale is measured — against

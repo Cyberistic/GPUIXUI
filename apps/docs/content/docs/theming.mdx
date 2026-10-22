@@ -97,8 +97,9 @@ another, and only the simulation sees it.
 
 A theme that carries `series` replaces the scale whole; every other theme —
 including the platform styles and the authored looks — resolves the scale for its
-mode and contrast. The browser bridge publishes it as `--series-1` to
-`--series-5`, so a preview charts in the theme the switch is showing.
+mode and contrast. The browser bridge publishes one variable per swatch
+(`--series-1`, `--series-2`, …), so a preview charts in the theme the switch is
+showing.
 `seriesFailures(theme)` reports a broken scale, and `auditTheme` runs it beside
 the contrast and decorative reports.
 
