@@ -19,13 +19,20 @@ export const resolveRetroTheme = (mode: ThemeMode, name: RetroName): Theme =>
  * are the same roles every component reads, so a brand owns the values it
  * changes and inherits the rest. A look is data, not a preset — read
  * `retroStyles`, override what you want, and check the result.
+ *
+ * The brand owns `primary` **per mode**: it is also the mark a checked menu row
+ * paints, and the look's dark washes are light enough that a single dark blue
+ * sat at 1.70:1 and 1.46:1 on the row a reader points at (the mark contract
+ * measures those strips). Light keeps the era's deep blue with white; dark takes
+ * the light blue the brand already uses as its ring, with the near-black it
+ * carries.
  */
 export const resolveRetroBrand = (mode: ThemeMode): Theme =>
   extendTheme(resolveRetroTheme(mode, "aero"), {
     name: "Aero brand",
     colors: {
-      primary: "#0F5E8C",
-      primaryForeground: "#FFFFFF",
+      primary: mode === "dark" ? "#4FA9E0" : "#0F5E8C",
+      primaryForeground: mode === "dark" ? "#06222F" : "#FFFFFF",
       ring: mode === "dark" ? "#4FA9E0" : "#0F7BB8",
       accent: mode === "dark" ? "#163A4E" : "#BFE1F9",
       accentForeground: mode === "dark" ? "#BFE2F5" : "#0A3A56",

@@ -1786,6 +1786,21 @@ a workaround for two live sessions sharing one worktree; see
       Proof: `Slider.test.tsx`'s `derives the thumb names from the group's
       trimmed name` (both directions measured: the old interpolation reports
       `"  Price   minimum"`). Docs in `docs/range-slider.mdx`. 705 unit
+`[x]` `packages/primitives`: the **scroll region's tab stop was invisible to
+      assistive technology** — the viewport declared `role="group"` only when a
+      caller passed `label`, and GPUix builds an accessibility node only for an
+      element with a role, so the default `<ScrollArea>` was a keyboard stop the
+      tree could not hold. Measured in the window: 12 tab stops, 11 nodes, with
+      the scroller the missing one. A focusable viewport is now a named `group`
+      — `DEFAULT_SCROLL_NAME` (`"Scroll region"`) when the caller names nothing,
+      `label` when it does — and `focusable={false}` with no label still adds
+      neither stop nor node. `presentational.test.tsx` holds the default name,
+      the caller's override and the opt-out; the native `layout.runtime.test.tsx`
+      reads the unnamed region's node and its `Focus` action. Both directions
+      measured: without the default name the unit case reports
+      `expected undefined to be 'group'` and the window case finds no node. Docs
+      in `docs/scroll-area.mdx` §Accessibility/§API/§Limitations/§Verification,
+      the inventory record and the `COMPONENTS.md` row. 709 unit / 203 runtime
 `[x]` `packages/primitives`: the **OTP record denied an alphabet the field
       keeps** — the `COMPONENTS.md` row said "digit-only input" while
       `normalizeOtp` keeps every letter and digit (`A1B2` types in, and

@@ -46,14 +46,23 @@ export const indicatorRoles = [
 
 /**
  * The strips a mark is drawn on: the page, a card, a floating surface and a
- * muted toolbar strip. Each is a surface the library already paints a bar or a
- * dot on, and each is where the mark has to be found.
+ * muted toolbar strip at rest, plus the two washes a row tints under itself
+ * while the pointer is over it. Each is a surface the library already paints a
+ * bar or a dot on, and each is where the mark has to be found.
+ *
+ * The washes are not decoration: a menu item's tick
+ * (`packages/components/src/menu/item.tsx`) and a combobox's selected check
+ * (`packages/components/src/combobox.tsx`) are both painted `primary`, and both
+ * rows set `hover` on the pointer and `active` while pressed — so the mark is
+ * read on those strips, not on the popover it rests on.
  */
 export const indicatorSurfaces = [
   "background",
   "card",
   "popover",
   "muted",
+  "hover",
+  "active",
 ] as const;
 
 /** One indicator mark that cannot be found on the strip it is drawn on. */

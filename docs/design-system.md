@@ -512,7 +512,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
 | focus ring (on background, card, popover, muted and secondary, and on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs) and `borderStrong` on those strips, on the field, and on the `hover`/`active` wash a bordered control tints | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
-| an indicator mark — a progress fill, spinner dot, slider fill or presence dot — on background, card, popover and a muted strip | 3:1 | 4.5:1 |
+| an indicator mark — a progress fill, spinner dot, slider fill, presence dot or a checked row's tick — on background, card, popover and a muted strip, and on the `hover`/`active` wash a row tints under the pointer | 3:1 | 4.5:1 |
 | soft status surface against `background`, `card`, `popover` and a muted strip | 1.05:1 | 1.05:1 |
 | decorative surfaces: divider, skeleton fill, modal veil, status edge, scrollbar thumb, state wash, elevation shadow (at its deepest level) | 1.05:1 | 1.05:1 |
 | a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |

@@ -789,7 +789,9 @@ import { extendTheme, retroTheme, themes } from "@gpuixui/tokens";
 
 const brand = extendTheme(retroTheme(themes.dark, "aero"), {
   name: "Aero brand",
-  colors: { primary: "#0F5E8C", primaryForeground: "#FFFFFF" },
+  // The mark a checked row paints is the same role: a dark wash needs the
+  // light blue here, so the brand owns `primary` per mode.
+  colors: { primary: "#4FA9E0", primaryForeground: "#06222F" },
   radius: { md: 6, lg: 8 },
 });
 ```
@@ -1545,8 +1547,9 @@ A mark still has one job: a reader has to find it from across a panel. So it is
 held to the theme's non-text floor — `contrastFloors.boundary`, 3:1 (4.5:1 in a
 high-contrast theme) — on every strip a bar or dot is drawn on.
 
-The 8 mark roles, on the 4 strips, are `indicatorRoles` and `indicatorSurfaces`
-— `background`, `card`, `popover` and a `muted` toolbar strip:
+The 8 mark roles, on the 6 strips, are `indicatorRoles` and `indicatorSurfaces`
+— `background`, `card`, `popover` and a `muted` toolbar strip at rest, plus the
+`hover` and `active` wash a row tints under itself while the pointer is on it:
 
 | Mark | Role |
 | ---- | ---- |
@@ -1572,12 +1575,23 @@ indicatorFailures(lightTheme); // [] — every shipped mark is visible
 // [{ role: "primary", surface: "background", ratio: 1.04, floor: 3 }]
 ```
 
+The two washes are not decoration: a checked menu item's tick and a combobox's
+selected check are painted `primary`, and both rows set `hover` on the pointer
+and `active` while pressed, so the mark is read on those strips rather than on
+the popover it rests on. That pair found the documented **Aero brand**: its
+single dark blue sat at 1.70:1 and 1.46:1 on the look's own dark washes — a tick
+that vanished as soon as the reader pointed at its row — so the brand owns
+`primary` per mode now (`#0F5E8C` with white in light, `#4FA9E0` with the
+near-black it carries in dark).
+
 `indicatorFailures(theme, floors?)` names each mark and strip that misses the
 floor, reports one it cannot measure (a translucent role) rather than skipping
 it, and is part of [`auditTheme`](#checking-your-own-theme). Every shipped,
 high-contrast, platform and authored theme passes; the tightest placement is
-Luna light's `success` mark on its muted strip at 3.30:1. `indicator.test.ts`
-holds the sweep, the rule, the unmeasurable case and a caller's stricter floor.
+Luna light's `success` mark on the pressed wash its own pointer paints, at
+3.05:1. `indicator.test.ts` holds the sweep, the rule, the two washes and their
+painters, the Aero pre-fix values, the unmeasurable case and a caller's
+stricter floor.
 
 ### Every role is measured
 

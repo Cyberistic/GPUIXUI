@@ -222,7 +222,14 @@ describe("editing an authored look", () => {
       const brand = resolveRetroBrand(mode);
       const aero = retroTheme(themes[mode], "aero");
       expect(brand.name).toBe("Aero brand");
-      expect(brand.colors.primary).toBe("#0F5E8C");
+      // The brand owns its primary per mode: it is also the mark a checked row
+      // paints, and the look's dark washes are too light for the era's deep blue.
+      expect(brand.colors.primary).toBe(
+        mode === "dark" ? "#4FA9E0" : "#0F5E8C",
+      );
+      expect(brand.colors.primaryForeground).toBe(
+        mode === "dark" ? "#06222F" : "#FFFFFF",
+      );
       expect(brand.colors.card).toBe(aero.colors.card);
       expect(brand.radius.md).toBe(6);
       expect(brand.radius.sm).toBe(aero.radius.sm);

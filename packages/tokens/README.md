@@ -422,7 +422,9 @@ import { extendTheme, retroStyles, retroTheme, themes } from "@gpuixui/tokens";
 retroStyles.aero.colors.dark.primary; // "#5FB6F2"
 const brand = extendTheme(retroTheme(themes.dark, "aero"), {
   name: "Aero brand",
-  colors: { primary: "#0F5E8C", primaryForeground: "#FFFFFF" },
+  // The mark a checked row paints is the same role: a dark wash needs the
+  // light blue here, so the brand owns `primary` per mode.
+  colors: { primary: "#4FA9E0", primaryForeground: "#06222F" },
 });
 ```
 

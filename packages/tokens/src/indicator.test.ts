@@ -89,10 +89,77 @@ describe("every shipped theme shows its marks", () => {
           : low,
       );
 
+    // A pressed row's wash is the tightest strip in the whole set: Luna light's
+    // success mark against the wash its own pointer paints is 3.05:1.
     expect(tightest.role).toBe("success");
-    expect(tightest.surface).toBe("muted");
+    expect(tightest.surface).toBe("active");
     expect(tightest.theme).toBe("Light · Windows XP (Luna)");
-    expect(tightest.ratio).toBeCloseTo(3.3, 1);
+    expect(tightest.ratio).toBeCloseTo(3.05, 2);
+  });
+});
+
+/**
+ * Guards the mark a checked or selected row carries on the wash it tints.
+ *
+ * The mark contract measured the four resting strips, and a checked menu row or
+ * a selected combobox row is exactly where a mark sits while the row reacts: the
+ * tick is painted `primary` (`menu/item.tsx`, `combobox.tsx`) and the row washes
+ * itself `hover` on the pointer and `active` while pressed. Nothing measured
+ * those two strips, and the documented Aero brand's dark `primary` measured
+ * 1.70:1 and 1.46:1 on them — a tick that vanished the moment the reader moved
+ * the pointer onto its own row. The washes now join `indicatorSurfaces`, so the
+ * report and the audit gate cover them with no new API.
+ */
+describe("a mark on the wash a row tints", () => {
+  it("measures the two washes a row repaints", () => {
+    expect(indicatorSurfaces).toEqual(
+      expect.arrayContaining(["hover", "active"]),
+    );
+  });
+
+  it("holds the two painters the strips exist for", () => {
+    const menu = readFileSync(
+      new URL("../../components/src/menu/item.tsx", import.meta.url),
+      "utf8",
+    );
+    const combobox = readFileSync(
+      new URL("../../components/src/combobox.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(menu).toContain("color={theme.colors.primary}");
+    expect(menu).toContain("hover: disabled ? undefined");
+    expect(menu).toContain("backgroundColor: theme.colors.hover");
+    expect(menu).toContain("backgroundColor: theme.colors.active");
+    expect(combobox).toContain("color={theme.colors.primary}");
+    expect(combobox).toContain(
+      "backgroundColor: state.highlighted ? theme.colors.hover : undefined",
+    );
+  });
+
+  it("reports the brand tick the washes hid", () => {
+    // The documented Aero brand, before it owned a per-mode primary: its single
+    // dark blue sat on the look's own dark washes.
+    const look = retroTheme(themes.dark, "aero");
+    const brand = extendTheme(look, {
+      colors: {
+        primary: "#0F5E8C",
+        primaryForeground: "#FFFFFF",
+      },
+    });
+    const marked = indicatorFailures(brand)
+      .filter(({ role }) => role === "primary")
+      .map(({ surface, ratio }) => [
+        surface,
+        ratio === undefined ? undefined : ratio.toFixed(2),
+      ]);
+
+    expect(marked).toEqual(
+      expect.arrayContaining([
+        ["hover", "1.70"],
+        ["active", "1.46"],
+      ]),
+    );
   });
 });
 
