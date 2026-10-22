@@ -1,15 +1,13 @@
 # 160 — Retire the components package's local Button stand-in
 
 **Owner:** components · **Size:** multi-phase (≈2 sessions) · **Status:**
-**blocked at Phase 2 on the disabled tab stop** — R1/R2 pass, the primitives'
-`Button` now forwards the host props Phase 1 asked for, `onActivate` carries the
-`EventPayload`, `useTheme` reads `useThemePresence`, and `@gpuixui/primitives/button`
-is a declared export (measured 159 own modules / 999 KiB for the entry, 5 modules
-/ 49 KiB for the subpath). The adapter's remaining gap is one property:
-primitives writes `tabIndex={undefined}` for a disabled action while three
-trigger suites and the Tier 2 rows read `-1`, and `ActionHostProps` omits
-`tabIndex`, so a caller cannot supply it. See §Measured STOP — Phase 2, the
-disabled tab stop.
+**Phase 2 landed 2026-10-23** — `internal/button.tsx` is a thin adapter over
+`@gpuixui/primitives/button`; every STOP below is closed (the disabled stop
+paints `-1`, the event payload reaches activation, the subpath exports the two
+actions). Phase 3 (base the two public prop types on the primitives') and Phase 4
+(delete the adapter, rewrite the 17 call sites) remain. See §Adapter landed for
+the measured deltas a Phase 4 executor must carry over — in particular the key
+order, which is not visible in the primitive's API.
 
 ## Why
 
@@ -177,7 +175,10 @@ Two workarounds were rejected rather than shipped: wrapping each adapter instanc
 in its own `ThemeProvider`, and reaching for primitives' unexported
 `renderButton`. Both hide a seam the next consumer would hit.
 
-## Measured STOP — Phase 2, the disabled tab stop (2026-10-22)
+## Measured STOP — Phase 2, the disabled tab stop (2026-10-22) — **closed 2026-10-23**
+
+The primitives now paint `tabIndex={-1}` for a disabled action, so the three
+cases below pass unchanged and the adapter keeps the stop. History follows.
 
 Item 4 is closed: `@gpuixui/primitives/button` is a declared export
 (`src/button.ts`, guarded by `src/button-entry.test.ts`) and this plan's adapter
@@ -201,6 +202,39 @@ The unblocking change belongs to `@gpuixui/primitives`: let a disabled action
 paint the `-1` it always has (a one-line writer, plus its own case) or publish a
 prop that names the stop. Filed in `TODO.md` → Interlocks; Phase 2 does not start
 until it lands. Do not relax the three cases and do not wrap the action.
+
+## Adapter landed — measured deltas (2026-10-23)
+
+`src/internal/button.tsx` (322 lines → 175) now renders the primitives' `Button`
+and `IconButton`; it keeps this package's `ButtonVariant`/`ButtonSize` names, maps
+`danger → destructive`, `secondary` to the recipe plus `border border-strong`, and
+an `IconButton` to a square ghost action with the glyph tint. The remaining
+behaviours a Phase 4 executor must preserve are not all visible in the
+primitives' props:
+
+| Delta | What the adapter does | Evidence |
+| ----- | --------------------- | -------- |
+| **Key order** | Installs `activationHandlers` itself and does **not** pass `onActivate`, because the primitive runs a caller's key handler *before* its own activation (`composeEvent(caller, internal)`) while this package's triggers open on `Enter`'s `onKeyDown`, record the row to focus, then receive the activation. With the primitive's order the record was cleared and a menu focused its surface instead of its first row. | 44 behaviour cases red across `activation-release.test.tsx` and `dropdown-menu.test.tsx` (first: `expected Some("menu") … Some("rename")`); green with the adapter's order |
+| **Pointer press** | Passes the caller's `onClick` to the primitive, which refuses it while disabled. Activation on keys goes through the adapter. | `button.test.tsx` `runs its handler once per click`, the Enter/Space pair and the held-key case; `greps` show no second call |
+| **Paint metrics** | The primitive's recipe is the fixed shadcn scale (ADR 0006): a **6px** corner (`rounded-md`) and `borderStrong` on `secondary`, so a theme radius no longer reshapes an action. | `page-radius-truth.test.ts` reads `BUTTON_BASE` from the primitives' source and compiles its radius token; `button.test.tsx` reads the `borderStrong` edge |
+| **Disabled stop** | The primitives now paint `-1` (the STOP section below is closed), so the three trigger suites read the same stop. | `pagination.test.tsx`, `navigation-menu.test.tsx`, `dropdown-menu.test.tsx` |
+
+Two consequences landed with the migration. The outside-press gesture window in
+`internal/dismiss-layer.ts` widened from 16 ms to **64 ms**: one press's queued
+handlers are drained across the top surface's close re-render, which outlasted a
+single frame once the action paint moved, and two overlay cases closed the dialog
+and the popover on one press. And the pagination page now prints the fixed 6px
+corner instead of `radius.md`.
+
+Measured after the change (2026-10-23): `check-types` clean, unit **869/869**
+(the one inventory case in the tree at the time belongs to another workstream's
+in-flight Tabs case), behaviour green on every file touched here (the Tabs file
+was mid-edit by its owner), and the headless probes `examples-mount`,
+`overlay-dialog`, `modal-focus-trap` and `focus-traversal` all pass.
+
+Two docs-site guards still read the retired painter and are recorded in `TODO.md`
+→ Interlocks: the curated pagination page's `radius.md` claim and
+`component-page-truth.test.ts`'s `tabIndex={disabled ? -1 : 0}` source assertion.
 
 ## Phase 0 — baseline (10 min)
 
