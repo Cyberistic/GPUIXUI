@@ -21,7 +21,10 @@ import { RippleButton } from "@gpuixui/components/ripple-button";
 
 The ripple belongs to the action rather than to a wrapper, because the layer needs
 the press point. A wrapper would have to rely on a host event reaching it from a
-child, and the runtime dispatches a pointer event to the element that was hit.
+child, and the runtime dispatches a pointer event to the element that was hit:
+measured on `0.11.0`, two nested `div`s that each declare a click handler report
+the press on the **inner** one only — the enclosing handler never runs, so a
+wrapper around a button cannot know where the press landed.
 
 ## How the disc is painted
 
