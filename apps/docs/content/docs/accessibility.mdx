@@ -1,0 +1,172 @@
+---
+title: Accessibility
+description: What a screen reader hears from a GPUix surface, which states have no attribute, and how to prove the tree.
+---
+
+GPUix paints a retained tree, not HTML, so the browser's accessibility model does
+not come with it. The runtime publishes a small, closed ARIA subset; the library
+names its controls through that subset and documents every state the subset
+cannot carry instead of implying it is announced.
+
+This page is the consumer side of that contract — how to name a control, which
+states have no attribute, what to do about an announcement, and how to prove the
+tree. The measurements behind it are on [Runtime](/docs/runtime#measured-offscreen),
+and every component page states its own budget under **Accessibility** or
+**Limitations**.
+
+## What assistive technology receives
+
+A node exists in the tree only if it has a **role**. A `div` carrying only an
+`aria-label` paints nothing a screen reader can read, and `role="none"` removes
+the node entirely. Give an element that must be announced a role and its name
+together.
+
+Once a node has a role, exactly seven `aria-*` attributes are published:
+
+| Attribute | Type | Reaches the tree as |
+| --------- | ---- | ------------------- |
+| `aria-label` | string | `label` |
+| `aria-description` | string | `description` |
+| `aria-id` | string | `author_id` |
+| `aria-expanded` | boolean | `expanded` |
+| `aria-selected` | boolean | `selected` |
+| `aria-valuetext` | string | `value` |
+| `aria-level` | number | `level` |
+
+An `onClick` with a `tabIndex` surfaces as the `Click` and `Focus` actions, and a
+`text` element is a `Label` node whose value is its content.
+
+The role token is translated to the **platform's** name, so a test asserts what
+the platform reports rather than the token it passed:
+
+| You write | The tree reports |
+| --------- | ---------------- |
+| `role="button"` | `Button` |
+| `role="option"` | `ListBoxOption` |
+| `role="heading"` | `Heading` |
+| `role="progressbar"` | `ProgressIndicator` |
+
+## The attributes that do not exist
+
+The set is closed. There is **no** `aria-checked`, `aria-valuenow`,
+`aria-valuemin`, `aria-valuemax`, `aria-labelledby`, `aria-describedby`,
+`aria-orientation`, `aria-controls`, `aria-disabled`, `aria-pressed`,
+`aria-haspopup`, `aria-current`, `aria-activedescendant`, `aria-live` or
+`aria-atomic`.
+
+Each absence has a consequence, and the honest alternative is a different shape
+rather than an attribute that paints nothing:
+
+| Intent | Not available | What the library does instead |
+| ------ | ------------- | ----------------------------- |
+| a visible label names the control | `aria-labelledby` | the control carries its own `label`/`aria-label`; a visible `Label` is text beside it, not a reference (see below) |
+| visible help is the control's description | `aria-describedby` | the control carries its own `description`; the caller writes the visible help too |
+| a checked or pressed state is announced | `aria-checked`, `aria-pressed` | the component paints the state and its page states the gap. Nothing announces the change, so do not build a flow that depends on hearing it |
+| a numeric value is announced | `aria-valuenow`, `aria-valuemin`, `aria-valuemax` | `aria-valuetext` on a role that has a value (`progressbar`, `meter`, a custom slider), written as the readable value including its unit — `"42%"` |
+| a disabled group, a current page, an expanded menu, an orientation | `aria-disabled`, `aria-current`, `aria-haspopup`, `aria-orientation` | visual state plus a guarded handler; the tree is unchanged, so say it in the copy |
+| a change is announced | `aria-live`, `aria-atomic` | move the focus to the new content, or name the control that changed. A `role="status"` is a marker, not an announcement |
+
+The last row is the one most easily overstated. The [Toast](/docs/components/toast)
+viewport is `role="status"`, [Countdown](/docs/components/countdown) and
+[MessageScroller](/docs/components/message-scroller) document the same limit: a
+new message, a ticking countdown or a toast is **not** announced. Moving focus
+is the strongest path the runtime offers, and a flow that must interrupt a
+screen-reader user has to be given one.
+
+## Naming a control
+
+There is no `aria-labelledby`, so a name cannot be a reference to painted text.
+It is a string the control carries, and `labelledBy` builds those props so the
+visible label and the announced name are written once:
+
+```tsx
+import { Input, Label, labelledBy } from "@gpuixui/primitives";
+
+const name = "Contact email";
+const help = "Where notifications are delivered.";
+
+<Label description={help}>{name}</Label>
+<Input
+  {...labelledBy(name)}
+  description={help}
+  value={value}
+  onValueChange={setValue}
+  placeholder="you@example.com"
+  fullWidth
+/>;
+```
+
+- A visible `Label` beside a control is **not** associated with it, and clicking
+  it does not focus the control. It is a second, painted copy of the name.
+- A blank name is not published: `accessibleName` drops a whitespace-only label,
+  so a control falls back to its content name instead of announcing an empty
+  string.
+- The description is a string, not a reference, so visible help is the caller's
+  second copy rather than something the runtime reads off the page.
+
+## Focus is the keyboard path
+
+The focus cue is declared **at rest** and the runtime decides when to paint it.
+`keyboardFocusRing(theme)` sets the runtime's `focusVisible` outline: a `Tab`
+paints it, a mouse press does not. A programmatic focus before any keyboard input
+does not paint it either, so a mouse-opened overlay keeps `focusRing(theme)` — the
+unconditional shadow — for that path.
+
+- A `Tab` traversal runs React's `onFocus`, so a focus-only surface may open on
+  it. A key **move** reads the key event's own element id: the first arrow after
+  a traversal must move off the tab it reached.
+- An overlay returns the focus to its trigger when it closes; that is part of the
+  [keyboard](/docs/keyboard) contract, not an accessibility add-on.
+- The runtime dims every other focusable element to `keyboardFocusDimOpacity`
+  (`0.4`) while one holds keyboard focus, which makes "where can Tab go next"
+  visible. A focused `input` or `textarea` dims nothing — typing is keyboard
+  input too — and a filled action opts out with `keyboardFocusDim: false`, so its
+  label stays readable while Tab is elsewhere. `filled-action-dim` measured both
+  halves in a window.
+- A list or tree keeps one tab stop and moves real focus
+  (`renderer.focusElement`), rather than mounting a stop per row.
+
+## Proving it
+
+The tree is a **`TestRenderer` fact**: a window's automation protocol has no
+accessibility verb, so a live probe cannot prove a label. The offscreen renderer
+exposes `getA11yTree()`, and `@gpuixui/testing`'s `Native.createTestHost` decodes
+it into `Smoke.A11yTree` for a scenario's `host.a11yTree()`:
+
+```ts
+import type { Smoke } from "@gpuixui/testing";
+import * as Option from "effect/Option";
+
+/** Whether the painted frame announced a node with this exact name. */
+const announced = (tree: Smoke.A11yTree, name: string): boolean =>
+  tree.nodes.some((node) =>
+    Option.match(node.label, {
+      onNone: () => false,
+      onSome: (label) => label === name,
+    }),
+  );
+```
+
+The harness mounts one node per shape the closed set offers and is run as the
+`a11y-tree` scenario; it holds the role mapping, the attribute mapping, the
+role-required rule and the `<text>` node in both directions:
+
+```sh
+nub run --filter playground build && nub apps/playground/dist/smoke/run.js --only a11y-tree
+```
+
+[Testing](/docs/testing) documents the host and the report; the assertion to keep
+is the platform's role name, not the ARIA token.
+
+## Related
+
+- [Runtime](/docs/runtime#not-in-the-typings) — the same absences in the
+  capability record, with the row for each.
+- [Keyboard](/docs/keyboard) — the chord grammar, focus scopes and the runtime's
+  key path.
+- [Testing](/docs/testing) — the scenario host, its verbs and its exit codes.
+- [Theming](/docs/theming) — the focus ring's colour and width, from the theme.
+- [Motion](/docs/motion) — reduced motion is a policy the app supplies; the
+  runtime exposes no preference query.
+- [Components](/docs/components) and [Primitives](/docs/primitives) — every page
+  ends with its own accessibility budget.

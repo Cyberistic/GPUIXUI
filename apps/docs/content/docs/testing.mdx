@@ -142,7 +142,9 @@ Four of those are measured facts rather than conveniences:
   selection listeners during **paint**, so a hand-rolled down/move/up with no
   flush between the steps selects nothing.
 - `a11yTree` is the only channel that sees a `role` or an `aria-*` attribute;
-  painted text never carries one.
+  painted text never carries one. What a node must have to exist in the tree, and
+  what each attribute becomes, is the [Accessibility](/docs/accessibility)
+  contract.
 - `<virtual-list>` and `<anchored>` paint no bounds of their own, so `bounds`
   walks up to the nearest painted ancestor rather than reporting a zero box.
 - A style the runtime reports with an unexpected type fails the whole

@@ -380,6 +380,17 @@ name that no longer exists. It is a resolution check rather than a completeness
 one — a prop the page omits is a documentation gap, and inherited `Omit`/`Props`
 types make "every prop" a compiler question rather than a regex one.
 
+The **Accessibility and limitations** row has a shared half as well as a
+per-component one. A page states what its own control does and cannot do; the
+runtime's whole ARIA budget — the role-required rule, the seven attributes that
+are published, the fifteen it refuses, the absent live region, the focus ring
+and the keyboard dim — is the cross-cutting contract on `/docs/accessibility`,
+so a page does not have to restate the runtime in order to be honest.
+`src/lib/accessibility-page.test.ts` holds that page to the installed typings,
+the capability record, the primitives' label rule, the tokens' focus helpers and
+the two probes (`a11y-tree`, `filled-action-dim`), so a runtime bump or a
+capability row that changes cannot leave the contract teaching the old budget.
+
 The **Theming** section is held the same way, because a page's description of
 how a component paints drifts faster than its props. The curated Tabs page was
 still calling the selected surface a fill "painted per trigger" that "jumps
@@ -391,6 +402,17 @@ in the source, the timing level and duration come from the component's
 `useSurfaceTiming` call and the motion package's table, and the printed contrast
 ratio is computed from the role pair the component's own comment cites — so a
 page that describes a different component fails by name.
+
+The **Accessibility and limitations** row has a shared half as well as a
+per-component one. A page states what its own control does and cannot do; the
+runtime's whole ARIA budget — the role-required rule, the seven attributes that
+are published, the fifteen it refuses, the absent live region, the focus ring
+and the keyboard dim — is the cross-cutting contract on `/docs/accessibility`,
+so a page does not have to restate the runtime in order to be honest.
+`src/lib/accessibility-page.test.ts` holds that page to the installed typings,
+the capability record, the primitives' label rule, the tokens' focus helpers and
+the two probes (`a11y-tree`, `filled-action-dim`), so a runtime bump or a
+capability row that changes cannot leave the contract teaching the old budget.
 
 One line above every page body is **not** the author's: the site mounts the
 worked-example strip (and, on a package page, the status strip) from the example

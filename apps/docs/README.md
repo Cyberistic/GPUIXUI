@@ -26,6 +26,7 @@ theming.mdx                  Semantic roles, themes, the platform switch, the lo
 dark-mode.mdx                App-owned mode switching — no hidden OS-mode listener
 typography.mdx               The ten type roles, the two families, the platform rule
 runtime.mdx                  What the pinned GPUix provides, what it does not, and the workaround
+accessibility.mdx            What a screen reader hears, which states have no attribute, proving the tree
 motion.mdx                   Springs, keyframes, inertia, the React hooks and the reduced-motion policy
 layouts.mdx                  The layout lane: primitives, the window frame, runtime facts
 workspace.mdx                The desktop-shell lane: composing parts, the docking gate
