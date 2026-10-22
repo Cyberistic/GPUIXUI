@@ -85,12 +85,25 @@ printed beside it so the reader can see the translation.
 
 ## Acceptance
 
-- [ ] XP and Aero theme files exist, copyable, with the limits documented.
-- [ ] The Omarchy adapter follows a theme change live on Linux.
-- [ ] `paletteToTokens` is unit-tested in both directions.
+- [x] XP and Aero theme files exist, copyable, with the limits documented —
+      `retroStyles` (`packages/tokens/src/retro.ts`), `docs/tokens.md` §Authored
+      looks, `retro.test.ts`.
+- [ ] The Omarchy adapter follows a theme change live on Linux. **The tokens half
+      is landed**: `paletteToTokens` / `paletteMode` / `watchSystemTheme` in
+      `packages/tokens/src/system-theme.ts`, held by `system-theme.test.ts` (16
+      cases) and documented on `docs/tokens.md` §System palettes. Measured limit
+      the pages now teach: a palette names the roles it owns, and the roles it
+      does not name stay the base theme's, so the gate reports the mix (the
+      example night palette's one red carries its chosen ink at 4.39:1 and a mark
+      on the base wash at 2.93:1). **Open:** the consumer's `colors.toml` decoder,
+      the docs page, and the playground probe that runs `omarchy-theme-set` while
+      a window is open. Do not claim a live follow until that probe is recorded.
+- [x] `paletteToTokens` is unit-tested in both directions — the ink choice fails
+      by name when it returns the palette's first ink; removing the watcher's
+      change key fails the three re-apply cases.
 - [ ] Both docs pages show the real result (native capture or clearly labelled
       approximation), and credit Omarchy and the two references with their licences.
-- [ ] No component code was forked to achieve either recipe — tokens only.
+- [x] No component code was forked to achieve either recipe — tokens only.
 
 ## STOP conditions
 
