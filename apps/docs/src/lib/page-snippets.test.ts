@@ -21,10 +21,11 @@ import { repoRoot } from "./public-symbols-source";
  * against the package source, so the page tests can focus on what makes their
  * page unique.
  *
- * One package page gets an import wrong today. It belongs to another
- * workstream, so the defect is recorded here with its owner: an unrecorded
- * problem fails, and the entry fails once the page is fixed, so the list cannot
- * outlive the defect.
+ * The walk found one package page whose snippet imported a symbol its package
+ * does not publish (`primitives/docs/tooltip.mdx` took `Icon` from
+ * `@gpuixui/primitives` instead of `@gpuixui/icons`); the primitives workstream
+ * fixed the page, so the record that excused it is gone rather than standing
+ * empty.
  */
 
 /** Every MDX file under a directory, as absolute paths. */
@@ -64,18 +65,6 @@ const findings: ReadonlyArray<string> = perPage.flatMap(({ imports, page }) =>
   unresolvedImports(imports).map((problem) => `${page}: ${problem}`),
 );
 
-/**
- * A copyable snippet that names a symbol its package does not publish, on a page
- * this workstream does not own.
- */
-const knownGaps = [
-  {
-    page: "packages/primitives/docs/tooltip.mdx",
-    problem: "@gpuixui/primitives does not export Icon",
-    owner: "primitives (Icon lives in @gpuixui/icons)",
-  },
-] as const;
-
 describe("the site's snippets", () => {
   // The symbol index walks every package and builds a scanner over the source;
   // under a full parallel suite it needs more than the default five seconds.
@@ -87,23 +76,7 @@ describe("the site's snippets", () => {
     const withImports = perPage.filter(({ imports }) => imports.length > 0);
     expect(withImports.length).toBeGreaterThanOrEqual(60);
 
-    const recorded = knownGaps.map(
-      ({ page, problem }) => `${page}: ${problem}`,
-    );
-
-    expect(findings.filter((finding) => !recorded.includes(finding))).toEqual(
-      [],
-    );
-  });
-
-  it("records no defect a page no longer has", () => {
-    // A fix must delete its entry, so an exemption cannot quietly outlive the
-    // page it excuses.
-    const stale = knownGaps
-      .map(({ page, problem }) => `${page}: ${problem}`)
-      .filter((finding) => !findings.includes(finding));
-
-    expect(stale).toEqual([]);
+    expect(findings).toEqual([]);
   });
 });
 

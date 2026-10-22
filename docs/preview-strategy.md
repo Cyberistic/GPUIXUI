@@ -64,11 +64,20 @@ page — the site's own and each package's — has its `@gpuixui/*` imports reso
 against the package source by `src/lib/page-snippets.test.ts`, because the build
 renders a snippet with the wrong export name exactly like a right one. A plain
 `ts` fence counts: `/docs/runtime` prints its capability calls in one, and a walk
-that read only `tsx` fences never saw it. The walk found one page that names a
-symbol its package does not publish — `primitives/docs/tooltip.mdx` imports
+that read only `tsx` fences never saw it. The walk found one page that named a
+symbol its package does not publish — `primitives/docs/tooltip.mdx` imported
 `Icon` from `@gpuixui/primitives`, while `Icon` lives in `@gpuixui/icons` — and
-that page belongs to `primitives`, so the guard records the defect with its owner
-and fails once the page is fixed.
+the primitives workstream fixed the page; the defect record was deleted in the
+same pass rather than left standing empty.
+
+**A source accordion is the real file.** A curated page's `<ComponentSource>`
+names a key in `src/components/docs/sources.ts`, and MDX does not typecheck that
+prop: the Dropdown menu page passed a *demo* key, so the accordion under
+Installation printed an empty code block. `src/lib/component-source.test.ts`
+holds the three things that must agree — the key is registered, the `file` the
+page labels the accordion with is the file the registry's `?raw` import reads,
+and that file exists — and reads the registry from the other side, so a key no
+page mounts is not shipped dead.
 
 A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source. Curated today: Button, Dialog,
