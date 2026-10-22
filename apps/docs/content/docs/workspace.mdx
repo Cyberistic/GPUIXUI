@@ -91,7 +91,7 @@ the app can reset, not a crash on mount.
 | Gap | Evidence | Strongest honest alternative |
 | --- | -------- | ---------------------------- |
 | Resizable panes | No split-pane component and no per-child basis; capture is available, but only to an element that listens to both `onMouseDown` and `onMouseMove` | A keyboard-and-pointer divider that writes a number to app state, subscribing to both listeners |
-| Detachable / movable tabs | Needs a portal or drag model; the runtime has neither | Tabs that switch panels in one window |
+| Detachable / movable tabs | The portal exists and a window measured it (`portal-layer`): a portalled surface paints in another layer, outside an ancestor's clip, with context and input intact. A **new OS window** is the gap — the binding opens one window per process and has no drag host feature | Move a tab to another layer or pane in the same window through `createPortal`; detaching it into its own window stays unavailable |
 | Docking layouts | Composition over split panes, which do not exist yet | A fixed, hand-built layout |
 | Persistent panel state | No renderer storage | `Schema`-encoded app state, decoded at the entrypoint |
 | Application menus | The macOS menu bar is a renderer API; cross-platform menus are ours | `DropdownMenu` in the window |

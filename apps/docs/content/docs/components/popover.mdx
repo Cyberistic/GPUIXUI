@@ -149,5 +149,6 @@ popover and a dialog lift by the same rule.
 `done`, with the runtime support marked `partial` in `COMPONENTS.md`: 12 native
 behaviour tests, both themes. The runtime snaps a surface but does not flip it
 and centres `align="center"` on the containing block, so the component flips a
-snapped surface back off its trigger and measures the centre itself. There is no
-portal and no `aria-haspopup`.
+snapped surface back off its trigger and measures the centre itself. It paints
+an anchored surface rather than a portalled one, and there is no
+`aria-haspopup`.

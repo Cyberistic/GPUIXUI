@@ -192,4 +192,19 @@ describe("the workspace page's pointer and terminal claims", () => {
     expect(workspace).toContain("hosts a PTY");
     expect(workspace).not.toContain("No terminal host element");
   });
+
+  it("moves a tab through the portal a window measured, instead of denying one", () => {
+    // The page sent a would-be detachable tab away with "needs a portal or drag
+    // model; the runtime has neither". `@gpuix/react` publishes `createPortal`
+    // and `portal-layer` painted it in a window, so the remaining gap is the
+    // second OS window — not the layer move a portal does give a component.
+    const portal = rowFor(record, "Portals");
+
+    expect(portal).toContain("supported, with limits");
+    expect(portal).toContain("portal-layer");
+    expect(portal).toContain("one window per process");
+    expect(workspace).toContain("portal-layer");
+    expect(workspace).toContain("createPortal");
+    expect(workspace).not.toContain("the runtime has neither");
+  });
 });

@@ -331,6 +331,43 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(image?.[2]).toContain("useLayoutEffect");
   });
 
+  it("records the portal a window measured, with its two limits", () => {
+    // `@gpuix/react` publishes `createPortal`, and the only documentation a
+    // consumer had was its own example. `portal-layer` measured what a dialog,
+    // a toast viewport or a "move this tab to another layer" action asks of it,
+    // plus the two facts that decide how a component uses it: a clip is a pixel
+    // fact that the paint report cannot see, and the clipping box has to be the
+    // child's containing block. One window per process, so a detach is a layer
+    // move rather than a new OS window.
+    const portal = rowFor("Portals");
+    expect(portal?.verdict).toBe("supported, with limits");
+    expect(portal?.evidence).toContain("portal-layer");
+    expect(portal?.evidence).toContain("getPaintedText");
+    expect(portal?.evidence).toContain("containing block");
+    expect(portal?.workaround).toContain("capture");
+    expect(portal?.workaround).toContain("same window");
+  });
+
+  it("publishes the portal measurement on /docs/runtime", () => {
+    const portal = measuredRow("Portals");
+    expect(
+      portal,
+      "the page's measured table has no portal row",
+    ).toBeDefined();
+    expect(portal?.[1]).toContain("portal-layer");
+    expect(portal?.[1]).toContain("getPaintedText");
+    expect(portal?.[2]).toContain("capture");
+  });
+
+  it("keeps a component page from denying the portal the runtime publishes", () => {
+    // The curated Popover page said "There is no portal" — a claim about the
+    // runtime, not about the component. `createPortal` is published and a
+    // window measured it, so the page now says which surface it paints.
+    const popover = read("apps/docs/content/docs/components/popover.mdx");
+    expect(popover).not.toContain("There is no portal");
+    expect(popover).toContain("portalled");
+  });
+
   it("records the reveal and the range a window measured on a virtual list", () => {
     // `COMPONENTS.md`'s Tree, Virtualized table and Log viewer rows all read
     // `<virtual-list>`, and the record said only "read the painted window, not
@@ -524,6 +561,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("selection-lifecycle");
     expect(runtimePage).toContain("clipboard-lifecycle");
     expect(runtimePage).toContain("virtual-tree-lifecycle");
+    expect(runtimePage).toContain("portal-layer");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });
