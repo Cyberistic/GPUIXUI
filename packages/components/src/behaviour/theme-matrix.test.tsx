@@ -25,6 +25,8 @@ import {
   BreadcrumbPage,
 } from "../breadcrumb.js";
 import { Button } from "../internal/button.js";
+import { Carousel, CarouselSlide, CarouselTrack } from "../carousel.js";
+import { ChatComposer, ChatRoot } from "../chat.js";
 import {
   Collapsible,
   CollapsibleContent,
@@ -37,6 +39,7 @@ import {
   CommandMenuList,
 } from "../command-menu.js";
 import { ConfirmDialog } from "../confirm-dialog.js";
+import { Countdown } from "../countdown.js";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -44,15 +47,23 @@ import {
   ContextMenuTrigger,
 } from "../context-menu.js";
 import { EmptyState } from "../empty-state.js";
+import { InlineEdit } from "../inline-edit.js";
 import { darkTheme, lightTheme, type Theme } from "../internal/theme.js";
 import { List, ListItem, ListItemTitle } from "../list.js";
+import { MentionInput } from "../mention-input.js";
 import {
   MessageScroller,
   MessageScrollerItem,
   MessageScrollerJumpToLatest,
   MessageScrollerViewport,
 } from "../message-scroller.js";
+import {
+  PreviewCard,
+  PreviewCardContent,
+  PreviewCardTrigger,
+} from "../preview-card.js";
 import { SearchInput } from "../search-input.js";
+import { TagInput, TagInputChip } from "../tag-input.js";
 import {
   TimePicker,
   TimePickerSegment,
@@ -325,6 +336,137 @@ describe("theme matrix", () => {
         expect(
           root.renderer.findByTestId("command-menu")?.style.backgroundColor,
         ).toBe(theme.colors.popover);
+      },
+    );
+  });
+
+  it("Carousel's track takes the card surface from the theme", () => {
+    bothThemes(
+      () => (
+        <Carousel label="Screenshots">
+          <CarouselTrack testId="track">
+            <CarouselSlide>
+              <text>Slide one</text>
+            </CarouselSlide>
+          </CarouselTrack>
+        </Carousel>
+      ),
+      (root, theme) => {
+        expect(root.renderer.findByTestId("track")?.style.backgroundColor).toBe(
+          theme.colors.card,
+        );
+      },
+    );
+  });
+
+  it("Countdown takes its clock colour from the theme", () => {
+    bothThemes(
+      () => <Countdown testId="countdown" remainingMs={65_000} />,
+      (root, theme) => {
+        expect(root.renderer.findByTestId("countdown")?.style.color).toBe(
+          theme.colors.foreground,
+        );
+      },
+    );
+  });
+
+  it("InlineEdit swaps to a themed display and input", () => {
+    bothThemes(
+      () => (
+        // One host element: a render root paints a single child of a
+        // multi-child fragment, so the display and the input would not both
+        // be in the tree.
+        <div>
+          <InlineEdit
+            value="Renamable"
+            label="Rename"
+            onCommit={() => undefined}
+          />
+          <InlineEdit
+            testId="edit"
+            value="Renamable"
+            label="Rename"
+            editing
+            onCommit={() => undefined}
+          />
+        </div>
+      ),
+      (root, theme) => {
+        // The display text colour lives on the nested `<text>` host, not on the
+        // control div that carries the test id — and a GPUix `<text>` wraps an
+        // anonymous child, so only the wrapper carries the style.
+        expect(
+          root.renderer
+            .findByType("text")
+            .filter((element) => element.style.color !== undefined)
+            .map((element) => element.style.color),
+        ).toEqual([theme.colors.foreground]);
+        expect(root.renderer.findByTestId("edit")?.style.backgroundColor).toBe(
+          theme.colors.background,
+        );
+      },
+    );
+  });
+
+  it("MentionInput takes its field text from the theme", () => {
+    bothThemes(
+      () => <MentionInput testId="mention" label="Comment" />,
+      (root, theme) => {
+        expect(root.renderer.findByTestId("mention")?.style.color).toBe(
+          theme.colors.inputForeground,
+        );
+      },
+    );
+  });
+
+  it("PreviewCard takes its surface from the theme", () => {
+    bothThemes(
+      () => (
+        <PreviewCard open>
+          <PreviewCardTrigger>design-system.md</PreviewCardTrigger>
+          <PreviewCardContent label="Design system" testId="preview">
+            <text>Tokens, roles and themes.</text>
+          </PreviewCardContent>
+        </PreviewCard>
+      ),
+      (root, theme) => {
+        expect(
+          root.renderer.findByTestId("preview")?.style.backgroundColor,
+        ).toBe(theme.colors.popover);
+      },
+    );
+  });
+
+  it("TagInput paints chips with the muted role", () => {
+    bothThemes(
+      () => (
+        <TagInput
+          label="Tags"
+          value={["design"]}
+          onValueChange={() => undefined}
+        >
+          <TagInputChip testId="chip" value="design" />
+        </TagInput>
+      ),
+      (root, theme) => {
+        expect(root.renderer.findByTestId("chip")?.style.backgroundColor).toBe(
+          theme.colors.muted,
+        );
+      },
+    );
+  });
+
+  it("Chat's composer takes its field text from the theme", () => {
+    bothThemes(
+      () => (
+        <ChatRoot onSubmit={() => undefined}>
+          <ChatComposer />
+        </ChatRoot>
+      ),
+      (root, theme) => {
+        expect(root.renderer.findByTestId("chat-field")?.style.color).toBe(
+          theme.colors.inputForeground,
+        );
       },
     );
   });
