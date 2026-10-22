@@ -92,6 +92,9 @@ import {
   RangeSlider,
   Select as PrimitiveSelect,
   Slider,
+  SliderIndicator,
+  SliderThumb,
+  SliderTrack,
   Text,
   ThemeProvider as PrimitiveThemeProvider,
   Tooltip,
@@ -560,6 +563,13 @@ import {
   TRUNCATION_PROSE,
   TRUNCATION_WIDTH,
 } from "./truncation.js";
+import {
+  inkBounds,
+  thumbCentreAt,
+  VERTICAL_FRACTION,
+  VERTICAL_SLIDER_HEIGHT,
+  VERTICAL_SLIDER_IDS,
+} from "./vertical-slider.js";
 import {
   BOX_PAINT_BORDER,
   BOX_PAINT_BORDER_WIDTH,
@@ -17534,8 +17544,330 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
- * A box's own edges and fill.
+ * The vertical slider, painted in a window.
  *
+ * `Slider`/`RangeSlider` grew an `orientation` axis on the offscreen renderer's
+ * reading alone (`runtime/value.runtime.test.tsx`): the parts turned onto the
+ * other axis and the track mirrors them because the runtime has no
+ * `column-reverse`. Nothing had painted one, so the layout under a real window
+ * and the pointer path — which the window delivers as `event.y` — were still the
+ * renderer's claim. The probe mounts both a single slider and a range on a
+ * 200-point track, one pressed at its centre and dragged to a quarter from the
+ * floor, and reads the value plus the thumb's paint.
+ */
+const VerticalSliderProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [value, setValue] = useState(0);
+  const [changes, setChanges] = useState(0);
+  const [range, setRange] = useState<readonly [number, number]>([10, 90]);
+  const [rangeChanges, setRangeChanges] = useState(0);
+  return (
+    <PrimitiveThemeProvider theme={palettes.dark}>
+      <div
+        testId={VERTICAL_SLIDER_IDS.probe}
+        style={{
+          width: window.width,
+          height: window.height,
+          padding: theme.spacing.xl,
+          backgroundColor: theme.colors.background,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.xl,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          A vertical slider runs up: a press at the track's centre reports half,
+          a drag to a quarter from the floor reports 25, and the thumb's paint
+          follows.
+        </text>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "flex-start",
+            gap: theme.spacing.xl,
+          }}
+        >
+          <Slider
+            testId={VERTICAL_SLIDER_IDS.slider}
+            label="Vertical volume"
+            orientation="vertical"
+            value={value}
+            style={{ height: VERTICAL_SLIDER_HEIGHT }}
+            onValueChange={(next) => {
+              setValue(next);
+              setChanges((count) => count + 1);
+            }}
+          >
+            <SliderTrack testId={VERTICAL_SLIDER_IDS.rail}>
+              <SliderIndicator />
+              <SliderThumb />
+            </SliderTrack>
+          </Slider>
+          <RangeSlider
+            testId={VERTICAL_SLIDER_IDS.range}
+            label="Vertical price range"
+            orientation="vertical"
+            value={range}
+            style={{ height: VERTICAL_SLIDER_HEIGHT }}
+            onValueChange={(next) => {
+              setRange(next);
+              setRangeChanges((count) => count + 1);
+            }}
+          >
+            <SliderTrack testId={VERTICAL_SLIDER_IDS.rangeRail}>
+              <SliderIndicator index={0} />
+              <SliderThumb index={0} />
+              <SliderIndicator index={1} />
+              <SliderThumb index={1} />
+            </SliderTrack>
+          </RangeSlider>
+        </div>
+        <text
+          testId={VERTICAL_SLIDER_IDS.readout}
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`value=${value} changes=${changes}`}
+        </text>
+        <text
+          testId={VERTICAL_SLIDER_IDS.rangeReadout}
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          {`range=${range[0]}-${range[1]} changes=${rangeChanges}`}
+        </text>
+      </div>
+    </PrimitiveThemeProvider>
+  );
+};
+
+const verticalSliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(VERTICAL_SLIDER_IDS.slider);
+    yield* Effect.sleep(SETTLE);
+    const theme = palettes.dark;
+    const window = yield* ctx.host.windowSize();
+    const track = yield* paintedBox(ctx, VERTICAL_SLIDER_IDS.slider);
+    const rail = yield* paintedBox(ctx, VERTICAL_SLIDER_IDS.rail);
+    const rangeTrack = yield* paintedBox(ctx, VERTICAL_SLIDER_IDS.range);
+    const rangeRail = yield* paintedBox(ctx, VERTICAL_SLIDER_IDS.rangeRail);
+
+    /** Captures the window and returns the frame the checks read. */
+    const captured = (name: string) =>
+      Effect.gen(function* () {
+        yield* ctx.host.capture(name);
+        return yield* ctx.host.pixels(name);
+      });
+
+    const first = yield* captured("slider-vertical");
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(first, window),
+    );
+
+    // 1. The box is the horizontal one turned onto its other side: the caller
+    //    supplies the length, the control's own height becomes the width, and
+    //    half a thumb is reserved at each end so a thumb at an end is centred.
+    yield* ctx.expectEqual(
+      "the vertical track takes the caller's height",
+      track.height,
+      VERTICAL_SLIDER_HEIGHT,
+    );
+    yield* ctx.expectEqual(
+      "the vertical track's width is the control's height",
+      track.width,
+      theme.density.controlHeight.md,
+    );
+    yield* ctx.expectNear(
+      "the rail is the track inside half a thumb at each end",
+      rail.height,
+      track.height - theme.iconSize.md,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the rail is one spacing step wide",
+      rail.width,
+      theme.spacing.xs,
+    );
+    yield* ctx.expectNear(
+      "the rail starts one inset below the track's top",
+      rail.y,
+      track.y + Math.round(theme.iconSize.md / 2),
+      1,
+    );
+
+    // 2. At rest the value is the floor, and the paint says so: a track that
+    //    packed its parts from the ceiling would put the thumb at the top.
+    yield* ctx.expectEqual(
+      "the slider starts at the floor",
+      yield* ctx.host.text(VERTICAL_SLIDER_IDS.readout),
+      "value=0 changes=0",
+    );
+    const floorInk = yield* ctx.expectSome(
+      "the thumb paints its fill at rest",
+      inkBounds(first, track, scale, theme.colors.input),
+    );
+    yield* ctx.expectNear(
+      "a thumb at zero is centred on the rail's floor",
+      floorInk.y + floorInk.height / 2,
+      thumbCentreAt(rail, 0),
+      1,
+    );
+
+    // 3. A press at the track's centre is half the value, because the usable
+    //    span is the rail and the pointer maps from the bottom.
+    yield* ctx.host.click(VERTICAL_SLIDER_IDS.slider);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press at the track's centre reports half",
+      yield* ctx.host.text(VERTICAL_SLIDER_IDS.readout),
+      "value=50 ",
+    );
+    const half = yield* captured("slider-vertical-half");
+    const halfInk = yield* ctx.expectSome(
+      "the thumb paints its fill after the press",
+      inkBounds(half, track, scale, theme.colors.input),
+    );
+    yield* ctx.expectNear(
+      "the thumb is centred at the value it reports",
+      halfInk.y + halfInk.height / 2,
+      thumbCentreAt(rail, 0.5),
+      1,
+    );
+
+    // 4. Drag from that centre to a quarter from the floor. The delta is the
+    //    rail's own arithmetic, so a wrong inset cannot hide in a round number.
+    const quarter = thumbCentreAt(rail, VERTICAL_FRACTION);
+    yield* ctx.host.drag(
+      VERTICAL_SLIDER_IDS.slider,
+      0,
+      quarter - (track.y + track.height / 2),
+    );
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a drag to a quarter from the floor reports 25",
+      yield* ctx.host.text(VERTICAL_SLIDER_IDS.readout),
+      "value=25 ",
+    );
+    const dragged = yield* captured("slider-vertical-quarter");
+    const quarterInk = yield* ctx.expectSome(
+      "the thumb paints its fill after the drag",
+      inkBounds(dragged, track, scale, theme.colors.input),
+    );
+    yield* ctx.expectNear(
+      "the thumb follows the pointer to the quarter mark",
+      quarterInk.y + quarterInk.height / 2,
+      quarter,
+      1,
+    );
+    const above = yield* ctx.expectSome(
+      "the rail above the value paints",
+      colourAt(
+        dragged,
+        { x: rail.x + rail.width / 2, y: rail.y + rail.height * 0.1 },
+        scale,
+      ),
+    );
+    yield* ctx.expectEqual(
+      "no fill paints above the thumb: the bar grows from the floor",
+      isColour(above, theme.colors.muted),
+      true,
+    );
+
+    // 5. A drag that leaves the box keeps following, clamps at the ceiling, and
+    //    stops on the release: a move afterwards leaves the value where it was.
+    yield* ctx.host.drag(VERTICAL_SLIDER_IDS.slider, 0, -(track.height + 100));
+    yield* Effect.sleep(SETTLE);
+    const atTop = yield* ctx.host.text(VERTICAL_SLIDER_IDS.readout);
+    yield* ctx.expectContains(
+      "a drag past the top reports the maximum",
+      atTop,
+      "value=100 ",
+    );
+    yield* ctx.host.hover(VERTICAL_SLIDER_IDS.slider);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a pointer move after the release does not move the value",
+      yield* ctx.host.text(VERTICAL_SLIDER_IDS.readout),
+      atTop,
+    );
+    const top = yield* captured("slider-vertical-top");
+    const topInk = yield* ctx.expectSome(
+      "the thumb paints its fill at the ceiling",
+      inkBounds(top, track, scale, theme.colors.input),
+    );
+    yield* ctx.expectNear(
+      "a thumb at the maximum is centred on the rail's ceiling",
+      topInk.y + topInk.height / 2,
+      thumbCentreAt(rail, 1),
+      1,
+    );
+
+    // 6. The range is the same axis with two ends: a press at the centre grabs
+    //    the nearer end (a tie at 50 goes to the start), and only that end moves.
+    yield* ctx.expectEqual(
+      "the range starts where the caller set it",
+      yield* ctx.host.text(VERTICAL_SLIDER_IDS.rangeReadout),
+      "range=10-90 changes=0",
+    );
+    yield* ctx.host.click(VERTICAL_SLIDER_IDS.range);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "a press at the centre moves the nearer end and holds the other",
+      yield* ctx.host.text(VERTICAL_SLIDER_IDS.rangeReadout),
+      "range=50-90 ",
+    );
+    yield* ctx.host.drag(
+      VERTICAL_SLIDER_IDS.range,
+      0,
+      thumbCentreAt(rangeRail, VERTICAL_FRACTION) -
+        (rangeTrack.y + rangeTrack.height / 2),
+    );
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectContains(
+      "the range's active end follows a drag to the quarter mark",
+      yield* ctx.host.text(VERTICAL_SLIDER_IDS.rangeReadout),
+      "range=25-90 ",
+    );
+
+    // The two thumbs paint `input` inside one rail: their bound's top and
+    // bottom are the upper and lower ends of the two, which is where the axis
+    // says they are.
+    const rangeFrame = yield* captured("slider-vertical-range");
+    const rangeInk = yield* ctx.expectSome(
+      "the range's thumbs paint their fill",
+      inkBounds(rangeFrame, rangeTrack, scale, theme.colors.input),
+    );
+    // Both thumbs paint `input` inside one rail, so the union's top and bottom
+    // are the outer halves of the two; the single thumb's painted height is the
+    // half each centre is measured from.
+    const inkHalf = floorInk.height / 2;
+    yield* ctx.expectNear(
+      "the range's lower thumb is centred on its value",
+      rangeInk.y + rangeInk.height - inkHalf,
+      thumbCentreAt(rangeRail, VERTICAL_FRACTION),
+      2,
+    );
+    yield* ctx.expectNear(
+      "the range's upper thumb is centred on its value",
+      rangeInk.y + inkHalf,
+      thumbCentreAt(rangeRail, 0.9),
+      2,
+    );
+  });
+
+/**
  * The library's `Box` page tells a consumer to pass a dashed border, a per-side
  * width and a per-corner radius through `style`, and the capability record calls
  * a two-stop gradient supported; every one of them is declared in `StyleDesc`
@@ -19167,5 +19499,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "movable-tabs-lifecycle",
     view: () => <MovableTabsProbe />,
     steps: movableTabsSteps,
+  },
+  "slider-vertical-lifecycle": {
+    id: "slider-vertical-lifecycle",
+    view: () => <VerticalSliderProbe />,
+    steps: verticalSliderSteps,
   },
 };

@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-66 probes a real window can prove, of which fifteen mount shipped
+67 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -3725,6 +3725,61 @@ What it settles, for a dock's tab strip:
 
 Captures: `.artifacts/live/movable-tabs.png`.
 
+### `slider-vertical-lifecycle` — measured on 0.11.0 here
+
+**The value that runs up.** `Slider`/`RangeSlider` grew an `orientation` axis on
+the offscreen renderer's reading alone: the parts turn onto the other axis and
+the track mirrors its composition because the runtime has no `column-reverse`.
+No window had painted one, so both the layout and the pointer path — which the
+window delivers as `event.y` — were still the renderer's claim. The probe mounts
+a `Slider orientation="vertical"` and a vertical `RangeSlider` on a 200-point
+track, presses and drags through the window's own pointer path, and reads the
+value plus the thumb's paint: the thumb's `input` fill is the only `input` ink
+inside the slider's own box, so the centre of its painted box is the thumb's
+centre.
+
+| State | Measured |
+| ----- | -------- |
+| the caller gives the track `height: 200` | the track paints **32 × 200** — its width is the control's own height (`density.controlHeight.md`) — and the rail **4 × 184**, starting 8 points below its top, because half a thumb is reserved at each end |
+| at rest (`value=0`) | the thumb's **11**-point ink is centred at **240**, the rail's floor; a track that packed its parts from the ceiling would paint it at 56 |
+| a press at the track's centre | `value=50`, and the thumb is centred at **148**, the rail's middle |
+| a drag from that centre to a quarter from the floor | `value=25`, the thumb is centred at **194**, and the rail above it still paints `muted` — the bar grows from the floor |
+| a drag that leaves the box upward (`-300`) | `value=100`, the thumb is centred at **56**, the rail's ceiling; a pointer move after the release leaves the value at 100 |
+| the range at `10-90` | a press at the centre moves the nearer end to 50 (`50-90`), and a drag to the quarter mark moves that end to 25 (`25-90`) while the other end stays; the two thumbs' ink is centred at **194** and **74.5**, their values' marks |
+
+31 checks, `--only slider-vertical-lifecycle`, green on 0.11.0 (~8 s). Fixture:
+`src/live/vertical-slider.ts` — `thumbCentreAt` (a rail fraction as a y, measured
+from the floor) and `inkBounds`/`thumbCentreY` (a colour's painted box inside the
+slider's own box, back in logical points).
+
+Two negative controls were measured, exit `1` each, then restored green:
+
+- a ceiling-first `thumbCentreAt` (`rail.y + fraction × height`) fails `a thumb
+  at zero is centred on the rail's floor` with **`expected 56 ± 1, got 240`** —
+  the axis is the assertion, not a comment.
+- interleaving the range's parts as two indicators and then two thumbs (the
+  order the track's mirror does **not** expect) fails `the range's lower thumb is
+  centred on its value` with **`expected 194 ± 2, got 134.25`** — the mirror only
+  works when the caller's start-to-end order is kept.
+
+What it settles, for a dock or a mixer that wants a fader:
+
+1. **The length is the caller's and the width is the control's.** A vertical
+   track has no natural length, so `height` is required; the width comes from the
+   density's control height and the rail keeps one spacing step, exactly as the
+   horizontal axis turns it.
+2. **The value's floor is the floor.** The thumb at zero sits on the rail's
+   bottom edge, not its top, and the fill grows upward; `event.y` is mapped from
+   the bottom against the rail (the track minus one thumb inset at each end).
+3. **The pointer path is the horizontal one.** A press at the centre is half,
+   a drag follows wherever the pointer goes (including past the box), the
+   release stops it, and the range moves only the end it grabbed — the same
+   `pointer-capture` rule the horizontal probe measured.
+4. **A mirrored composition must keep the caller's order.** The track reverses
+   the children it is given, so a composed range writes
+   `indicator(0)`, `thumb(0)`, `indicator(1)`, `thumb(1)`; grouping the two
+   indicators first paints the thumbs in the wrong order.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -3939,8 +3994,8 @@ narrower. Each deviation is deliberate and measured:
   them. The full live suite is the release gate, and this line is its result.
   Measured alone since then: `inspector-lifecycle`,
   `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`,
-  `elevation-paint`, `opacity-paint` and `movable-tabs-lifecycle` (eight probes,
-  each run alone).
+  `elevation-paint`, `opacity-paint`, `movable-tabs-lifecycle` and
+  `slider-vertical-lifecycle` (nine probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

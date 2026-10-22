@@ -432,6 +432,12 @@ export const liveRegistry = [
       "Workspace: a dragged tab lands in the strip the drop is over, its panel follows with the app's draft, a gap is a miss, and Cmd+Shift+Arrow steps it without wrapping",
     capability: "workspace",
   },
+  {
+    id: "slider-vertical-lifecycle",
+    title:
+      "Input: a vertical slider takes the caller's height, runs from the floor, positions by press and drag on the other axis, and its range moves only the nearer end",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
