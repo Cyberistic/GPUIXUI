@@ -167,7 +167,7 @@ host props (`style`, `testId`, `role`, `aria-*`) and merges `style` last.
 
 | Element | Role |
 | ------- | ---- |
-| track | `card` fill, `input` edge |
+| track | `card` fill, `border` edge |
 | track corner | the recipe's fixed 8px (`rounded-lg`), not the theme's radius |
 | control fill | `secondary` |
 | control label and chevron | `secondaryForeground` |
@@ -184,10 +184,13 @@ decision. The chevron paints `secondaryForeground` through `actionOnColor`, and
 `contrastPairs` measures that pair in every shipped style — a chevron painted
 `secondaryForeground` on `primary` would be 1.42:1 in Windows dark.
 
-The track's edge is the **`input`** role the recipe names, not the decorative
-`border` role, which is the `secondary` fill in both shipped themes. The platform
-switch re-heights the controls with the platform's density and leaves the
-track's fixed 8px corner alone, exactly as it does in the runtime.
+The track's edge is the **`border`** role. The recipe says `border-input`, and
+`@gpuixui/tw` resolves that name to `border`: shadcn's `--input` names a border,
+while this library's `input` role is the field fill — the card's own white in
+the base light theme, which would paint no edge at all. A theme repaints
+`border`, not `input`, to move the track's outline. The platform switch
+re-heights the controls with the platform's density and leaves the track's fixed
+8px corner alone, exactly as it does in the runtime.
 
 ## Accessibility and limitations
 

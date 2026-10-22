@@ -1499,15 +1499,16 @@ describe("the curated component pages", () => {
   it("holds the carousel's clamp, its dot pill and its control edge to the source", () => {
     // A carousel page can drift in four silent ways: it can promise a slide
     // animation the runtime cannot paint, describe a dot whose state is only a
-    // hue, print a press target smaller than the floor, or teach the decorative
-    // `border` role for a track the recipe paints in `input`. The first three
-    // are read from the painter; the edge is read from the recipe itself.
+    // hue, print a press target smaller than the floor, or read the recipe's
+    // `border-input` class literally as the `input` role. The first three are
+    // read from the painter; the edge is read through the compiler's remap.
     const page = pages.find((candidate) => candidate.file === "carousel.mdx");
     expect(page, "the carousel page is not in the curated set").toBeDefined();
     if (page === undefined) return;
 
     const source = read(page.source);
     const recipes = read("packages/tw/src/recipes.ts");
+    const utilities = read("packages/tw/src/utilities.ts");
 
     // One clamp and one loop rule, shared by the controls, the keys and the dots.
     expect(source).toContain(
@@ -1535,11 +1536,18 @@ describe("the curated component pages", () => {
     // on-colour rather than a role chosen for another fill.
     expect(source).toContain('const CONTROL_VARIANT = "secondary" as const;');
     expect(source).toContain("actionOnColor(theme, CONTROL_VARIANT)");
-    // The track's edge is the `input` role the recipe names — and its corner is
-    // the recipe's fixed step, not the theme's radius.
+    // The track's edge is the `border` role: `border-input` is shadcn's name
+    // for a border, and the compiler resolves it to `border` because this
+    // library's `input` is the field fill (the card's own white in the base
+    // light theme, which would paint no edge). Its corner is the recipe's
+    // fixed step, not the theme's radius.
     const track = recipes.slice(recipes.indexOf("export const CAROUSEL_TRACK ="));
     expect(track.split("\n").slice(0, 2).join(" ")).toContain("border-input");
     expect(track.split("\n").slice(0, 2).join(" ")).toContain("rounded-lg");
+    expect(utilities).toContain(
+      'if (name === "border-input") return { borderColor: theme.colors.border };',
+    );
+    expect(lightTheme.colors.input).not.toBe(lightTheme.colors.border);
 
     const text = body(page).replace(/\s+/g, " ");
     expect(text).toContain("discrete, not sliding");
@@ -1554,7 +1562,15 @@ describe("the curated component pages", () => {
     expect(text).toContain("`secondaryForeground`");
     expect(text).toContain("`filledHover`");
     expect(text).toContain("`filledPressed`");
-    expect(text).toContain("`input`");
+    expect(text).toContain("`border-input`");
+    expect(text).toContain("the **`border`** role");
+    // The Theming cell is read directly: a bold marker would hide a retracted
+    // "`input` edge" from a prose-only check.
+    const theming = body(page).slice(body(page).indexOf("## Theming"));
+    const trackRow = /\| track \| ([^|\n]+) \|/.exec(theming)?.[1] ?? "";
+    expect(trackRow).toContain("`border`");
+    expect(trackRow).not.toContain("`input`");
+    expect(text).not.toContain("the **`input`** role");
     // The retracted shapes: a sliding track and a state carried only by colour.
     expect(text).not.toContain("slides between");
     expect(text).not.toContain("translates");
@@ -1562,7 +1578,10 @@ describe("the curated component pages", () => {
     // The preview paints the same decisions from the theme's variables.
     const css = read("apps/docs/src/styles/demos.css");
     const carouselCss = css.slice(css.indexOf("/* ---- carousel:"));
-    expect(carouselCss).toContain("border: 1px solid var(--input)");
+    const cardRule =
+      /\.gx-carousel-card \{([\s\S]*?)\n\}/.exec(carouselCss)?.[1] ?? "";
+    expect(cardRule).toContain("border: 1px solid var(--border)");
+    expect(cardRule).not.toContain("var(--input)");
     expect(carouselCss).toContain("background: var(--secondary)");
     expect(carouselCss).toContain("var(--secondary-hover)");
     expect(carouselCss).toContain("var(--secondary-pressed)");

@@ -3155,7 +3155,10 @@
 
 /* ---- carousel: mirrors components/src/carousel.tsx ----
    The track is `CAROUSEL_TRACK` (`rounded-lg border border-input bg-card`): a
-   card fill, the `input` role as its edge and the recipe's fixed 8px corner
+   card fill, the `border` role as its edge — the recipe's `border-input` is
+   shadcn's name for a border, and the registry resolves it to this library's
+   `border` role, because `input` here is the field fill — and the recipe's
+   fixed 8px corner
    drawn as `--radius` plus the two pixels between the md step and `lg`. Only the
    active slide is displayed; every other slide stays mounted with `hidden`, so
    a field on one keeps its draft. The control is the local `Button`'s
@@ -3195,7 +3198,7 @@
   gap: 10px;
   min-height: 150px;
   padding: 16px;
-  border: 1px solid var(--input);
+  border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 2px);
   background: var(--card);
 }
