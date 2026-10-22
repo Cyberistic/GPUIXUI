@@ -510,7 +510,9 @@ Each report is also a function of its own:
   row height, reserving no extra hit area on either, and a control height must
   contain the leading of the `label` or `body` text a control paints — the box is
   exactly that height, so a brand that grows its type past it is reported as
-  `fits` while every number is still layable.
+  `fits` while every number is still layable. The strong border must paint: it
+  is the width of both focus rings, so a zero there leaves the outline and the
+  fallback shadow invisible while every colour report stays clean.
 - `invalidScales(theme)` lists every named step that does not exceed the one
   before it — spacing, radii, border weights, icon sizes, the type hierarchy and
   the control heights and paddings. Every value can be layable while the name

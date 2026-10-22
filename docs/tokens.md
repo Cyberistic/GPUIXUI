@@ -931,7 +931,8 @@ by group, path, value and the rule it missed:
 | ----- | ------- | ---- |
 | `spacing` | every step | finite, `>= 0` |
 | `radius` | every step | finite, `>= 0` (`none` is 0) |
-| `borderWidth` | `thin`, `strong` | finite, `>= 0` |
+| `borderWidth` | `thin` | finite, `>= 0` (a decorative divider may be dropped) |
+| `borderWidth` | `strong` | finite, `> 0` — the focus ring's width |
 | `iconSize` | `xs`…`xl` | finite, `> 0` |
 | `typography` | every role's size | finite, `> 0` |
 | `typography` | every role's leading | finite, `> 0`, and at least the role's size (`leading`) |
@@ -945,7 +946,12 @@ The rule follows the design, not a blanket "must be positive". A shadow may be
 offset up and in, so a negative offset or spread is a decision; a zero radius, a
 zero border and a zero-blur shadow are how a square, borderless or flat surface
 is stated. A size a reader has to see is the one place zero is not allowed: a
-zero height or type size is a control that paints nothing. A control height is
+zero height or type size is a control that paints nothing. **The strong border is
+one of those sizes**: it is the width of both focus rings — `keyboardFocusRing`'s
+outline and `focusRing`'s spread — so a brand that zeroes it keeps every colour
+report clean (the `ring` role is still readable) while the keyboard focus cue
+paints nothing. `invalidNumbers` reports it as `positive`; the decorative `thin`
+divider may still be zero. A control height is
 also the box the pointer presses, and the library reserves no hit-area padding
 on top of it, so the rule for `controlHeight` is the pressable floor rather than
 just "greater than zero": a brand that shrinks one to 20px ships a target a
@@ -1004,13 +1010,16 @@ invalidNumbers(
   }),
 );
 // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
+invalidNumbers(extendTheme(lightTheme, { borderWidth: { strong: 0 } }));
+// [{ group: "borderWidth", path: "strong", value: 0, rule: "positive" }]
 ```
 
-`src/numbers.example.ts` holds four brands: one whose corner radius came from a
+`src/numbers.example.ts` holds five brands: one whose corner radius came from a
 scale factor nobody set, one whose "dense" preset shaves two control heights and
 a row under the pressable floor, one whose type scale multiplied the leadings
-under the sizes, and one that grew its body leading past the smallest control it
-still ships. `numbers.test.ts` runs all four audits, proves none of the
+under the sizes, one that grew its body leading past the smallest control it
+still ships, and one that zeroed the strong border and so left the focus ring
+nothing to paint. `numbers.test.ts` runs all five audits, proves none of the
 colour reports can see their defects, and holds all 16 shipped, platform and
 authored themes to an empty report — the shipped scale's tightest role is the
 display step at 28/36, well clear of the floor.

@@ -29,8 +29,10 @@ import {
   densityNames,
   densityPresets,
   extendTheme,
+  focusRing,
   highContrastThemes,
   invalidNumbers,
+  keyboardFocusRing,
   lightTheme,
   platformNames,
   platformTheme,
@@ -43,6 +45,7 @@ import {
 } from "./index.js";
 import {
   crushedTypeAudit,
+  invisibleRingAudit,
   squatDensityAudit,
   tallTypeAudit,
   tallTypeTheme,
@@ -199,6 +202,20 @@ describe("the documents name the number rules", () => {
     );
   });
 
+  it("prints the strong-border rule in the catalogue, with a report the code actually returns", () => {
+    const catalogue = page("../../../docs/tokens.md");
+    const [failure] = invalidNumbers(brand({ borderWidth: { strong: 0 } }));
+
+    expect(failure).toBeDefined();
+    expect(catalogue).toContain(
+      "| `borderWidth` | `strong` | finite, `> 0` — the focus ring's width |",
+    );
+    // The snippet is the real report, not an illustration of one.
+    expect(catalogue).toContain(
+      `// [{ group: "borderWidth", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
+    );
+  });
+
   it("states the rule and its consequence in the design system", () => {
     const design = page("../../../docs/design-system.md");
 
@@ -239,7 +256,7 @@ describe("every group of numbers is inspected", () => {
         group: "borderWidth",
         path: "strong",
         value: Number.NaN,
-        rule: "nonNegative",
+        rule: "positive",
       },
     ]);
   });
@@ -575,6 +592,54 @@ describe("the rule is precise", () => {
     ).toEqual([
       { group: "spacing", path: "md", value: Number.NaN, rule: "nonNegative" },
     ]);
+  });
+});
+
+describe("the focus ring's width paints", () => {
+  // A brand that states "no heavy lines" by zeroing `borderWidth.strong` keeps
+  // every colour report clean — the `ring` role is still readable — while the
+  // outline it colours is zero pixels wide and the unconditional ring's shadow
+  // has neither spread nor blur. The keyboard focus cue is then invisible, so
+  // the strong border is the one width that has to paint; the decorative
+  // divider may still be zero.
+  const invisibleRing = brand({ borderWidth: { strong: 0 } });
+
+  it("reports a strong border a focus ring cannot draw", () => {
+    expect(invalidNumbers(invisibleRing)).toEqual([
+      { group: "borderWidth", path: "strong", value: 0, rule: "positive" },
+    ]);
+  });
+
+  it("is the width both ring builders paint, so the report guards a real cue", () => {
+    expect(keyboardFocusRing(invisibleRing).focusVisible.outlineWidth).toBe(0);
+    expect(focusRing(invisibleRing).boxShadow.spreadRadius).toBe(0);
+    expect(
+      keyboardFocusRing(lightTheme).focusVisible.outlineWidth,
+    ).toBeGreaterThan(0);
+  });
+
+  it("still allows a decorative divider to be zero", () => {
+    expect(invalidNumbers(brand({ borderWidth: { thin: 0 } }))).toEqual([]);
+  });
+
+  it("fails the gate on it, with no colour report involved", () => {
+    const audit = auditTheme(invisibleRing);
+
+    expect(audit.invalidNumbers.map(({ rule }) => rule)).toEqual(["positive"]);
+    expect(audit.invalidRoles).toEqual([]);
+    expect(audit.invalidShadows).toEqual([]);
+    expect(audit.contrast).toEqual([]);
+    expect(audit.decorative).toEqual([]);
+    expect(audit.indicators).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("executes the documented example", () => {
+    expect(invisibleRingAudit.invalidNumbers).toEqual([
+      { group: "borderWidth", path: "strong", value: 0, rule: "positive" },
+    ]);
+    expect(invisibleRingAudit.contrast).toEqual([]);
+    expect(invisibleRingAudit.passed).toBe(false);
   });
 });
 

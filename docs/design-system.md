@@ -601,7 +601,13 @@ laid out — a shadow offset may be negative, a type size must be positive, a
 control height and a row height must reach the pressable-target floor,
 and a type role's leading must reach its own size, because a shorter one starts
 the next line inside this line's glyph box (§10, `docs/tokens.md` §Numbers).
-It is also the one report that compares two groups: a control height that cannot
+A zero `borderWidth.strong` is the same silent class, not a flat design choice:
+that width is the width of both focus rings, so the outline is zero pixels wide
+and the fallback shadow has no spread — the only keyboard focus cue the library
+paints would be invisible while every colour report stayed clean. The rule for
+the strong border is therefore `positive`; the decorative `thin` divider may
+still be zero. It is
+also the one report that compares two groups: a control height that cannot
 contain the `label` or `body` leading a control paints is reported as `fits`,
 because the box is exactly that height and the text would spill or clip while
 every number is still layable (§6).

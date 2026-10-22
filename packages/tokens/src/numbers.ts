@@ -36,6 +36,12 @@
  * a label taller than the control that carries it. Every number stays finite,
  * positive and pressable, so nothing else sees it.
  *
+ * A zero `borderWidth.strong` is the same class one role over: that width is the
+ * width of **both** focus rings — `keyboardFocusRing`'s outline and
+ * `focusRing`'s spread — and the ring's colour is measured against the fills it
+ * hugs, so a brand can keep every colour report clean while the focus cue paints
+ * nothing. The decorative `thin` divider may be zero; the strong width may not.
+ *
  * `invalidColorRoles` covers the values the renderer cannot parse as a colour;
  * this covers the ones it cannot lay out or press.
  */
@@ -61,8 +67,8 @@ export type NumberGroup =
  * - `finite` — any real number, including a negative shadow offset;
  * - `nonNegative` — a length that cannot go below zero but may be zero
  *   (`radius.none`, a hairline divider, a shadow with no blur);
- * - `positive` — a size a reader has to see (a type size, an icon), where zero
- *   paints nothing;
+ * - `positive` — a size a reader has to see (a type size, an icon, the strong
+ *   border that is the focus ring's width), where zero paints nothing;
  * - `pressable` — a control height or a dense list row, which is also the box a
  *   pointer presses, so it reaches {@link targetSize.minimum}. The library
  *   builds a control at its `controlHeight` and a dense row at its `rowHeight`
@@ -157,6 +163,19 @@ const inspectLengths = <Scale extends object>(
       : [],
   );
 
+/**
+ * Every border width, each held to its own rule. `thin` is a decorative divider
+ * a surface may drop to zero; `strong` is the width of both focus rings, so a
+ * zero there removes the only cue keyboard focus has.
+ */
+const inspectBorderWidths = (
+  borderWidth: NumberSource["borderWidth"],
+): readonly InvalidNumber[] => [
+  ...inspect("borderWidth", "thin", borderWidth.thin, "nonNegative"),
+  ...inspect("borderWidth", "strong", borderWidth.strong, "positive"),
+];
+
+/** The size and leading of every text role, and the leading against its size. */
 const isTextStyle = (value: unknown): value is TextStyle =>
   typeof value === "object" && value !== null && "fontSize" in value;
 
@@ -279,9 +298,10 @@ const inspectShadow = (
  * paints an element no one can find, a control height under
  * {@link targetSize.minimum} is a press target the library's own components do
  * not pad up, the same floor holds a dense list row to `rowHeight`, a leading
- * shorter than its type stacks the next line into the current one, and a
- * control height below the leading of the label or value it paints clips the
- * text — all reported by path instead of shipping as a default.
+ * shorter than its type stacks the next line into the current one, a control
+ * height below the leading of the label or value it paints clips the text, and a
+ * zero `borderWidth.strong` leaves the focus ring nothing to paint — all
+ * reported by path instead of shipping as a default.
  *
  * @example
  * ```ts
@@ -305,13 +325,15 @@ const inspectShadow = (
  *   }),
  * );
  * // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
+ * invalidNumbers(extendTheme(lightTheme, { borderWidth: { strong: 0 } }));
+ * // [{ group: "borderWidth", path: "strong", value: 0, rule: "positive" }]
  * ```
  */
 export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
   return [
     ...inspectLengths("spacing", theme.spacing, "nonNegative"),
     ...inspectLengths("radius", theme.radius, "nonNegative"),
-    ...inspectLengths("borderWidth", theme.borderWidth, "nonNegative"),
+    ...inspectBorderWidths(theme.borderWidth),
     ...inspectLengths("iconSize", theme.iconSize, "positive"),
     ...inspectType(theme.typography),
     ...inspectControlHeights(theme.density, theme.typography),

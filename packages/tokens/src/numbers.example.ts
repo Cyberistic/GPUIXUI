@@ -70,3 +70,18 @@ export const tallTypeTheme = extendTheme(lightTheme, {
 
 /** What the gate reports for it: the one box the leading outgrew, by size. */
 export const tallTypeAudit = auditTheme(tallTypeTheme);
+
+/**
+ * A brand that states "no heavy lines" by setting the strong border to zero.
+ * Every number is finite and non-negative, so nothing looks broken — and the
+ * strong width is the width of the focus ring: `keyboardFocusRing`'s outline is
+ * zero pixels wide and `focusRing`'s shadow has neither spread nor blur, so a
+ * keyboard reader has no focus cue at all while every colour report passes.
+ */
+export const invisibleRingTheme = extendTheme(lightTheme, {
+  name: "Invisible ring",
+  borderWidth: { strong: 0 },
+});
+
+/** What the gate reports for it: the strong border, by name, as a size. */
+export const invisibleRingAudit = auditTheme(invisibleRingTheme);
