@@ -61,6 +61,7 @@ license.mdx                  Licenses and attribution, read from LICENSES/*.md
 ```
 plugins/public-symbols-plugin.ts    Build-time module: the public symbol index
 plugins/page-dependencies-plugin.ts Build-time module: the packages each package page's component imports
+plugins/page-source-plugin.ts       Build-time module: each package page's module, as a lazy loader
 
 src/start.ts                        TanStack Start instance and the Worker cache policy
 src/router.tsx                      The router instance
@@ -86,7 +87,8 @@ src/components/docs/demos.tsx             The browser renderings and their sourc
 src/components/docs/menu-preview.ts       The menu preview's row model and arrow arithmetic
 src/components/docs/command-preview.ts    The palette preview's matcher and group ranking
 src/components/docs/sources.ts            The real source files the Code tab shows
-src/components/docs/component-source.tsx  The copyable source block
+src/components/docs/component-source.tsx  The copyable source block, for a curated page
+src/components/docs/package-source.tsx    The generated source block a package page ends with
 src/components/docs/install.tsx           The nub / manual install tabs
 src/components/docs/copy-page.tsx         Copy the page as Markdown
 src/components/docs/status-strip.tsx      The generated COMPONENTS.md status and verdict
@@ -146,6 +148,8 @@ src/lib/public-symbols-data.ts      The index, read from the plugin's build-time
 src/lib/page-dependencies.ts        The dependency model: a page's component imports, grouped by package
 src/lib/page-dependencies-source.ts Reads each page's component module at build time
 src/lib/page-dependencies-data.ts   The dependency index, read from the plugin's build-time module
+src/lib/page-source.ts              The source model: a page's module and the loader that reads it
+src/lib/page-source-data.ts         The source index, read from the plugin's build-time module
 src/lib/examples.ts                 The example registry: ids, paths and header summaries
 src/lib/examples-data.ts            Reads packages/*/examples/*.example.tsx at build time
 src/lib/component-index.ts          The component index: URL mapping, curated shadowing, filter

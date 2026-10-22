@@ -86,20 +86,48 @@ const importsOf = (path: string): ReadonlyArray<string> => {
   );
 };
 
-/** The whole index, for the plugin's virtual module and the guard. */
-export const readPageDependencies = (root: string): PageDependencyIndex => {
+/** A page a package ships, and the module it documents. */
+export interface PackagePageModule {
+  /** The URL the page renders at. */
+  readonly url: string;
+  /** The component's module, repository-relative; absent when nothing resolved. */
+  readonly module?: string;
+  /** The page writes its own `## Dependencies`, so the generated strip stays off. */
+  readonly writesDependencies: boolean;
+}
+
+/**
+ * Every page the packages ship, and the module each documents.
+ *
+ * Two readers want this inventory: the dependency strip (which skips a page
+ * that lists its own packages) and the source block (which does not care — the
+ * implementation is worth showing either way). Reading it once keeps both
+ * from resolving a page differently.
+ */
+export const readPackagePages = (
+  root: string,
+): ReadonlyArray<PackagePageModule> => {
   const symbols = buildWorkspaceSymbolIndex(root);
-  const read = packageCollections.flatMap((collection) =>
+  return packageCollections.flatMap((collection) =>
     readdirSync(join(root, collection.dir))
       .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
       .toSorted()
-      .flatMap((file) => {
+      .map((file) => {
         const page = basename(file, ".mdx");
-        const url = `${collection.route}/${page}`;
         const markdown = readFileSync(join(root, collection.dir, file), "utf8");
-        if (/^## Dependencies\s*$/m.test(markdown)) return [];
-        return [{ url, module: moduleFor(root, collection, page, symbols) }];
+        return {
+          url: `${collection.route}/${page}`,
+          module: moduleFor(root, collection, page, symbols),
+          writesDependencies: /^## Dependencies\s*$/m.test(markdown),
+        };
       }),
+  );
+};
+
+/** The whole index, for the plugin's virtual module and the guard. */
+export const readPageDependencies = (root: string): PageDependencyIndex => {
+  const read = readPackagePages(root).flatMap((page) =>
+    page.writesDependencies ? [] : [page],
   );
 
   return read.reduce<{
@@ -126,3 +154,32 @@ export const readPageDependencies = (root: string): PageDependencyIndex => {
     { pages: {}, unresolved: [] },
   );
 };
+
+/**
+ * Every package page's module, including one that lists its own packages.
+ *
+ * The source block reads this: the implementation is the page's subject whether
+ * or not the page chose to write its dependency list by hand.
+ */
+export const readPageModules = (
+  root: string,
+): {
+  readonly pages: ReadonlyArray<{
+    readonly url: string;
+    readonly module: string;
+  }>;
+  readonly unresolved: ReadonlyArray<string>;
+} =>
+  readPackagePages(root).reduce<{
+    pages: Array<{ url: string; module: string }>;
+    unresolved: string[];
+  }>(
+    (index, page) =>
+      page.module === undefined
+        ? { ...index, unresolved: [...index.unresolved, page.url] }
+        : {
+            ...index,
+            pages: [...index.pages, { url: page.url, module: page.module }],
+          },
+    { pages: [], unresolved: [] },
+  );

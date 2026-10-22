@@ -256,6 +256,43 @@ every printed link on a mounted page. Deleting the strip's mount fails the
 frame case; emptying the index fails five cases across the two guards.
 
 
+### The source block is generated, not written
+
+`MISSION.md` asks every component page for copyable source, and a package page
+is Markdown: it can describe the component but cannot embed it. Before this
+block, only the nine curated pages carried a source accordion — a reader of the
+other sixty could read behaviour, theming and API and still not see the file
+they would own if they copied the component.
+
+The site resolves the module a page documents at build time, reusing the
+decision the dependency line already makes (`page-dependencies-source.ts`'s
+`readPackagePages`; the published symbol wins, a page-stem file is the fallback)
+and prints that file's own text:
+
+- `src/lib/page-source.ts` is the model: a page's module, a loader for it, and
+  the cache that keeps one promise per page so a re-render cannot suspend on a
+  fresh one.
+- `plugins/page-source-plugin.ts` serves each module as a **dynamic** import of
+  `<absolute path>?raw`, so a page downloads its own component and not the
+  workspace's ninety-six modules.
+- `<SourceAccordion>` is the one block both callers render: a curated page hands
+  it a hand-named file (`sources.ts`), a package page hands it the resolved
+  module. It is collapsed, shows the repository-relative path and links the file
+  on GitHub.
+- `<PackageSource url>` mounts at the end of the package page frame — after the
+  page's own prose, so the component's behaviour still opens the page.
+
+`src/lib/page-source.test.ts` holds both directions: every package page resolves
+to a readable module (with a floor, so a scan that stopped matching cannot
+pass), the text it prints **is** the file on disk rather than a second copy, a
+page with no loader is reported instead of rendering an empty Code block, and
+the mount sits on the package frame rather than the curated one. Measured both
+ways: removing the mount fails the frame case (`expected … to contain
+'<PackageSource url={url} />'`), and pointing the loader at another file fails
+the copy case with the wrong text. Verified in a browser on
+`/docs/primitives/switch`: the accordion opens, prints 9,709 characters of
+`Switch.tsx`, and the GitHub link is that file's own path.
+
 ### The status strip is generated, not written
 
 A package page describes its component but does not decide whether that
@@ -374,7 +411,7 @@ no keyboard path, it says so rather than leaving the reader to guess.
 | frontmatter | `title`, one-sentence `description` |
 | intro | one paragraph: what it is, what it is not, any runtime gap it absorbs |
 | preview | `<ComponentPreview name="…" />` — the most representative composition |
-| Installation | `<Install packageName importName />` + `<ComponentSource name file />` |
+| Installation | `<Install packageName importName />` + `<ComponentSource name file />` — a package page gets the generated `<PackageSource>` instead |
 | Usage | a realistic snippet, not a bare prop dump |
 | Variants | table of variants → role mapping; one `ComponentPreview` |
 | Sizes / States | tables that name the token (`density.controlHeight.md`), previews |

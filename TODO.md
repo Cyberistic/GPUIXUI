@@ -3216,6 +3216,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Teach `/docs/testing` the two **paint-comparison** verbs — `packages/testing` gained `Pixels.crop` and `Pixels.countDifferingPixels` (with `PixelRegion`) for the `editor-overlay` probe, which compares one box against another in the same capture and reports `null` rather than `0` when the two frames are not the same shape. The package's own README lists them; `/docs/testing` still describes `Pixels` as `decodePng`/`pixelAt`/`countColour`/`hexToRgba` only, and its prose explains counts of an exact colour rather than a comparison | docs-site (`apps/docs/content/docs/testing.mdx`) | open — add the two verbs to the `Pixels` row and one sentence to the paint section (what `crop` clamps, why a different shape is `null`), and cite `editor-overlay` as the consumer |
 
+| The **Pinned list row is outside the Tier 3 table** — `COMPONENTS.md` separates `| Pinned list | … |` from the rows above it with a blank line, so it is not a table row: the docs site's parser reads the table above it and reports `packages/components/docs/pinned-list.mdx: COMPONENTS.md has no row for this page` (`inventory-status.test.ts`, two cases), which means the page renders no status strip and the index wears no verdict for a component the inventory says is `done` / `partial`. The row is otherwise complete. | components (`COMPONENTS.md`) | **open** — delete the blank line before the row; the site needs no change |
+
 ## Phase D — data and workspace components
 
 `[ ]` `[░░░░░░░░░░]` 0/3
@@ -3270,7 +3272,36 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 111/111
+`[x]` `[██████████]` 112/112
+
+`[x]` Put the **source on every package page**, generated from the module the
+page documents — `MISSION.md` asks every component page for copyable source, and
+only the nine curated pages had it: the other sixty (and every primitive and the
+icon page) described behaviour, theming and API and never showed the file a
+reader would own. The site now resolves each page's module through the **same**
+inventory the dependency strip uses (`readPackagePages`: published symbol first,
+page-stem file as the fallback) and prints that file's own text:
+`src/lib/page-source.ts` is the model (a page's module, a loader, and one cached
+promise per page so a re-render cannot suspend on a fresh one),
+`plugins/page-source-plugin.ts` serves each module as a **dynamic**
+`?raw` import so a page downloads its own component rather than the workspace's
+96 modules, and `<SourceAccordion>` is the one block a curated page and a
+package page both render (a curated page names its file by hand). `<PackageSource
+url>` mounts at the end of the package frame, after the page's prose.
+`src/lib/page-source.test.ts` (6 cases) holds both directions: every package page
+resolves to a readable module with a floor of 55 (a scan that stopped matching
+cannot pass), the text printed **is** the file on disk (`/docs/components/dialog`,
+`/docs/primitives/button`), the loader reads once, a module with no loader is
+reported instead of rendering an empty Code block, no page the packages do not
+ship is listed, and the mount is on the package frame and not the curated one.
+Directions measured: removing the mount fails the frame case (`expected … to
+contain '<PackageSource url={url} />'`), and pointing the loader at another file
+fails the copy case (`expected '# GPUIXUI…' to be '/**\n * Dialog…'`). Verified
+in a browser on `/docs/primitives/switch`: the accordion opens, prints 9,709
+characters of `Switch.tsx` in one `<pre>`, and its GitHub link is that file's own
+path. Docs in `docs/preview-strategy.md` §The source block is generated, not
+written and §The component page template; the ledger lists the five new modules.
+Suite 73 files / 666 tests, `check-types` and `build` green.
 
 `[x]` Mark the **runtime support verdict on the index row** — `/docs/components`
 told a reader "status is per component, not per page" and then showed 88 rows

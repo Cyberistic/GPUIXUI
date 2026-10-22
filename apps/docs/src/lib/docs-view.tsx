@@ -14,6 +14,7 @@ import { mdxComponents } from "@/components/mdx";
 import { CopyPage } from "@/components/docs/copy-page";
 import { DependencyStrip } from "@/components/docs/dependency-strip";
 import { NativeRunNote } from "@/components/docs/native-run-note";
+import { PackageSource } from "@/components/docs/package-source";
 import { PageExample } from "@/components/docs/page-example";
 import {
   PlatformProvider,
@@ -191,6 +192,7 @@ function PackageContent({
         path={`${collection.dir}/${path.replace(/\.mdx$/, "")}.mdx`}
       />
       <MDX components={mdxComponents} />
+      <PackageSource url={url} />
     </PageFrame>
   );
 }
