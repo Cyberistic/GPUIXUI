@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   brandText,
@@ -6,6 +7,7 @@ import {
   contrastRatio,
   darkTheme,
   disabledAction,
+  disabledOpacity,
   elevationShadow,
   lightTheme,
 } from "@gpuixui/tokens";
@@ -156,12 +158,26 @@ describe("controlStyle", () => {
     // floor there; an unfilled control has no fill to swap for the pair.
     Arr.forEach([fieldVariant, buttonVariants.ghost] as const, (variant) => {
       const style = controlStyle(spec({ variant, disabled: true }), testTheme);
-      expect(style.opacity).toBe(0.5);
+      expect(style.opacity).toBe(disabledOpacity);
       // The label is not swapped for the disabled role: the fade is the state.
       expect(style.color).not.toBe(testTheme.colors.disabledForeground);
       expect(style.hover?.backgroundColor).toBe(style.backgroundColor);
       expect(style.active?.backgroundColor).toBe(style.backgroundColor);
     });
+  });
+
+  it("writes every fade from the token package's share, not a copy", () => {
+    // `disabledOpacity` is the share `disabledFadeFailures` composites, so a
+    // literal here would keep the old 0.5 when the constant moves. The three
+    // fades are the unfilled control, a slider's thumb and a rating's star;
+    // `@gpuixui/tokens`' `disabled.test.ts` reads the same file and only counts
+    // a name that is imported from the package (`fadeShares`).
+    const source = readFileSync(new URL("./style.ts", import.meta.url), "utf8");
+    expect(source).toMatch(
+      /import\s*\{[^}]*\bdisabledOpacity\b[^}]*\}\s*from\s*"@gpuixui\/tokens"/,
+    );
+    expect(source.match(/style\.opacity = disabledOpacity;/g)).toHaveLength(3);
+    expect(source).not.toMatch(/style\.opacity = [\d.]+;/);
   });
 
   it("switches the border and the ring to the destructive role when invalid", () => {
