@@ -2395,6 +2395,8 @@ src/live/fonts.ts        the probe typeface's bytes and its declared advances
 src/live/loading-row.ts  the loading-row fixture, its pixel arithmetic and the restore rule
 src/live/content.ts      the chart/image fixtures the content probe paints
 src/live/virtual-tree.ts the 4 000-node file-tree fixture and its flattening
+src/live/dock-focus.ts   the dock fixture and the Tab stop rule the probe measures
+src/live/header-menu.ts  the header widths and trigger-cell arithmetic the probe asserts
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
 ```
