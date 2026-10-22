@@ -18,6 +18,7 @@ import type { StyleDesc } from "@gpuix/react";
 import {
   alpha,
   avatarSize,
+  controlFocusRing,
   controlHeight,
   controlPaddingX,
   currentPlatform,
@@ -46,6 +47,7 @@ import {
 export {
   alpha,
   avatarSize,
+  controlFocusRing,
   controlHeight,
   controlPaddingX,
   currentPlatform,
@@ -81,20 +83,11 @@ export { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
  * focus, so a part no longer tracks focus to draw a ring: it states the ring as
  * a resting style and the runtime decides whether a press or a Tab shows it. The
  * outline takes no layout space, so measured geometry does not change while a
- * control holds focus. `invalid` swaps the line to `destructive`, matching the
- * primitive package's `keyboardRing` policy.
+ * control holds focus. `invalid` swaps the line to `destructive`; the rule
+ * itself is `@gpuixui/tokens`' `controlFocusRing`.
  */
-export const keyboardRing = (theme: Theme, invalid = false): StyleDesc => {
-  const { focusVisible } = keyboardFocusRing(theme);
-  return invalid
-    ? {
-        focusVisible: {
-          ...focusVisible,
-          outlineColor: theme.colors.destructive,
-        },
-      }
-    : { focusVisible };
-};
+export const keyboardRing = (theme: Theme, invalid = false): StyleDesc =>
+  controlFocusRing(theme, { invalid }) ?? {};
 
 /** What a control's focus cue depends on besides the theme. */
 export interface ControlRingState {
@@ -109,14 +102,14 @@ export interface ControlRingState {
  *
  * A control disabled while it holds focus keeps that focus — the runtime has no
  * "blur on disable" — so a ring declared unconditionally would stay painted on
- * a control that refuses every key. `@gpuixui/primitives` states the same rule
- * in `controlRing`; this is the components' half of it.
+ * a control that refuses every key. The rule is `@gpuixui/tokens`'
+ * `controlFocusRing`; this wrapper is the components' `StyleDesc` spelling of
+ * it, so a call site never branches on the state.
  */
 export const controlRing = (
   theme: Theme,
   state: ControlRingState = {},
-): StyleDesc =>
-  state.disabled === true ? {} : keyboardRing(theme, state.invalid === true);
+): StyleDesc => controlFocusRing(theme, state) ?? {};
 
 /**
  * The wash behind text a reader selects.
