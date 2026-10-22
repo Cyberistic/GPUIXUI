@@ -11,11 +11,13 @@
  * a just-opened section shut again on each repeat of the key.
  */
 
+import * as Option from "effect/Option";
+import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
 import { createRef } from "react";
-import * as Option from "effect/Option";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
   Accordion,
@@ -273,8 +275,47 @@ describe("Accordion", () => {
     faq.unmount();
   });
 
-  it("feeds both the internal and the caller's header ref", () => {
-    const ref = createRef<PublicInstance>();
+  it("signals the hover with the measured state wash, not the brand fill", () => {
+    // The bug: hover repainted the label in `colors.primary` — a fill role
+    // designed to carry `primaryForeground` — so the header fell to 5.61:1 on
+    // the base light page and 4.38:1 on Linux light's, under the body floor,
+    // while every other trigger in the library tints the `hover` wash and
+    // keeps the label role the contract measures on it.
+    const faq = renderComponent(<Faq />, "light");
+    const hover = faq.renderer.findByTestId("trigger-two")?.style.hover;
+
+    expect(hover).toMatchObject({
+      backgroundColor: lightTheme.colors.hover,
+    });
+    // The label keeps the role it has at rest, which the pair table holds to
+    // the body floor on the wash.
+    expect(hover).toMatchObject({ color: null });
+    expect(
+      contrastRatio(
+        lightTheme.colors.foreground,
+        lightTheme.colors.hover,
+      ) ?? 0,
+    ).toBeGreaterThanOrEqual(contrastFloors.body);
+    // The premise: the role the header used to paint cannot meet that floor.
+    expect(
+      contrastRatio(lightTheme.colors.primary, lightTheme.colors.background) ??
+        0,
+    ).toBeLessThan(contrastFloors.body);
+
+    faq.unmount();
+  });
+
+  it("signals the hover the same way in a dark theme", () => {
+    const faq = renderComponent(<Faq />, "dark");
+
+    expect(faq.renderer.findByTestId("trigger-two")?.style.hover).toMatchObject({
+      backgroundColor: darkTheme.colors.hover,
+    });
+
+    faq.unmount();
+  });
+
+  it("feeds both the internal and the caller's header ref", () => {    const ref = createRef<PublicInstance>();
     const faq = renderComponent(
       <Accordion type="multiple">
         <AccordionItem value="one">

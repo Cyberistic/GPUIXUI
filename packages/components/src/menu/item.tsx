@@ -301,7 +301,7 @@ export const MenuCheckboxItem = ({
               <Icon
                 name="check"
                 size="sm"
-                color={theme.colors.accent}
+                color={theme.colors.primary}
                 label="Checked"
               />
             ) : null}

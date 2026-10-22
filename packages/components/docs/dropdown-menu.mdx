@@ -144,6 +144,10 @@ must not re-open it — without that guard the menu flickers shut and open.
 
 A checkbox row does not close the menu — toggling several settings in one visit
 is the point. It shows a check icon when checked and carries `aria-selected`.
+The mark paints `colors.primary`, a role `indicatorRoles` measures at the 3:1
+mark floor on the popover and on the `hover` wash a highlighted row tints; the
+`accent` wash it used to paint is 1.26:1 on the light popover, so a toggle that
+was on said nothing on screen.
 
 `tone="destructive"` paints the row in the status tone's page-text role
 (`statusTone(theme, "destructive").foreground`) — the role the contrast contract
@@ -257,7 +261,7 @@ above — needs no override.
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (38
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (39
 tests): the `menu` role, keyboard opening on the first/last enabled row, a
 disabled trigger that stays out of the tab order and refuses ArrowDown, Enter and
 a press, a
@@ -265,7 +269,8 @@ centred surface and a near-bottom surface that opens above its trigger, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
 restoring focus, a held Enter toggling a checkbox row once, clicked and disabled
 rows, Escape/outside press/trigger re-press
-dismissal, checkbox toggling and its check mark, the destructive row's measured
+dismissal, checkbox toggling and its check mark's measured role, the destructive
+row's measured
 page-text role, the
 surface in both themes, type-ahead (prefix, repeat cycling, disabled skip,
 Shift, window expiry, unmatched-prefix reset), and the submenu rules — keyboard,

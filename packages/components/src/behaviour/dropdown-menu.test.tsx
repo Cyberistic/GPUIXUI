@@ -7,9 +7,12 @@
  * after Enter or Escape; a press on the open trigger flickering the menu back open;
  * a checkbox row toggling the wrong way; a held Enter toggling a checkbox row
  * back again on each repeat of the key; a destructive row painted in the
- * solid `destructive` fill role, which no contrast pair measures as text; and a
- * disabled row dimmed with a 50% fade, which composites its label into its own
- * fill instead of painting the measured `disabledForeground` role.
+ * solid `destructive` fill role, which no contrast pair measures as text; a
+ * checked row's mark painted in the `accent` wash role, which is 1.26:1 on the
+ * light popover and 1.14:1 on the dark one, so a toggle that was on said
+ * nothing; and a disabled row dimmed with a 50% fade, which composites its
+ * label into its own fill instead of painting the measured `disabledForeground`
+ * role.
  *
  * Keyboard-opening regression: a menu opened from the trigger landed on the
  * surface with nothing highlighted, so Enter ran nothing and ArrowDown/ArrowUp on
@@ -484,6 +487,38 @@ describe("DropdownMenu", () => {
     expect(
       nodesWithRole(menu.renderer, "image").map((node) => node.name),
     ).toContain("Checked");
+
+    menu.unmount();
+  });
+
+  it("paints the checked mark in a role the mark floor measures", () => {
+    // The bug: the check painted `colors.accent`, a wash role — 1.26:1 on the
+    // light popover and 1.14:1 on the dark one, so a menu toggle was on with
+    // nothing on screen saying so.
+    const menu = renderComponent(
+      <FileActions onSelect={vi.fn()} />,
+      "light",
+    );
+    clickCentreOf(menu, "trigger");
+    clickCentreOf(menu, "hidden");
+
+    const mark = menu.renderer
+      .findByType("svg")
+      .find((element) => element.customProps?.["aria-label"] === "Checked");
+
+    expect(mark?.style.color).toBe(lightTheme.colors.primary);
+    expect(
+      Arr.every(
+        ["popover", "hover"] as const,
+        (surface) =>
+          (contrastRatio(lightTheme.colors.primary, lightTheme.colors[surface]) ??
+            0) >= contrastFloors.boundary,
+      ),
+    ).toBe(true);
+    // The premise: the wash it used to paint cannot be found on the surface.
+    expect(
+      contrastRatio(lightTheme.colors.accent, lightTheme.colors.popover) ?? 0,
+    ).toBeLessThan(contrastFloors.boundary);
 
     menu.unmount();
   });
