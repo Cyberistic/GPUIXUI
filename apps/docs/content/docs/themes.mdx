@@ -3,7 +3,7 @@ title: Theme
 description: A live editor for the library's semantic tokens — preview, copy and share.
 ---
 
-import { contrastFloors, contrastPairs, selectionPairs, targetSize } from "@gpuixui/tokens";
+import { contrastFloors, contrastPairs, decorativeFloor, decorativeSurfaces, selectionPairs, targetSize } from "@gpuixui/tokens";
 
 Edit the semantic tokens the library ships and watch them apply to a preview in
 real time. The editor reads its defaults from `@gpuixui/tokens` — the base is
@@ -73,17 +73,31 @@ call reports ten independent failures:
   puts the next baseline inside this line's glyphs, and a control height must
   contain the leading of the tallest label a control paints (`label` or `body`),
   because the box is exactly that height and a shorter one clips the text it
-  exists to show. Those are the report's two rules about a pair of tokens, so
-  each is measured on the pair.
+  exists to show. A third pair sits inside the type scale: `bodyStrong` shares
+  `body`'s size and leading by design, so its weight is the whole difference
+  between reading and emphasis, and a brand that forwards one weight to every
+  role paints the two identically. Those are the report's three rules about a
+  pair of tokens, so each is measured on the pair.
 - **Contrast**: `contrastFailures` checks {contrastPairs.length} role pairs — body
   text at 7:1, secondary text at 4.5:1, boundaries and focus rings at 3:1 — and
   the readout names every pair an edit breaks, with its measured ratio. A
   translucent value is reported as **unmeasurable** rather than counted as a pass,
   because its contrast depends on the surface behind it.
-- **Decorative surfaces**: dividers, skeleton fills, the modal veil and status
-  edges carry no text, so WCAG gives them no floor at all. `decorativeFailures`
-  holds them to 1.05:1 against the surface they sit on — editing `border` towards
-  `background` is how a card loses its edge, and no contrast pair would see it.
+- **Decorative surfaces**: the {decorativeSurfaces.length} placements
+  `decorativeFailures` measures carry no text, so WCAG gives them no floor at
+  all. Nine kinds are measured, each where a component paints it: a `divider`
+  rules a region, a `skeleton` stands in for content that has not loaded, a
+  `scrim` is the veil under a modal, a `statusTint` is the soft fill behind a
+  status message and a `statusEdge` bounds it, a `scrollbar` is the thumb a
+  scroller tints, a `stateWash` is the tint behind a hovered, pressed, selected
+  or accented row, a `filledAction` is the resting face of a `secondary` action
+  (the one filled variant with no brand colour of its own and no border), and an
+  `elevation` is the shadow a raised surface drops — measured at the scale's
+  deepest level, because if the strongest step cannot differ from the strip the
+  whole scale is flat there. Each is held to {decorativeFloor}:1 against the
+  strip it sits on: editing `border` towards `background` is how a card loses
+  its edge, a `hover` equal to `popover` is a row that never looks hovered, and
+  neither is a contrast pair.
 - **Data series**: `seriesFailures` measures the five categorical colours a chart
   paints against the three surfaces a plot is drawn on (`background`, `card`,
   `popover`) at the boundary floor, each pair against `seriesDistinctnessFloor`

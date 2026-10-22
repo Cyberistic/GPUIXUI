@@ -6,6 +6,7 @@ import {
   contrastFloors,
   contrastRatio,
   createTheme,
+  decorativeSurfaces,
   extendTheme,
   indicatorFailures,
   isThemeMode,
@@ -206,6 +207,52 @@ describe("the theme page", () => {
       unnamed,
       "the selection bullet does not name these surfaces",
     ).toEqual([]);
+  });
+
+  it("names the emphasis rule the number report can return", () => {
+    // `bodyStrong` shares `body`'s size and leading, so the weight is the whole
+    // difference between reading and emphasis — and the number report gained an
+    // `emphasis` rule for a brand that forwards one weight to every role. The
+    // bullet described two pair rules, so a theme whose strong text painted like
+    // body text was described by nothing.
+    const audit = section(page("themes.mdx"), "The theme audit");
+    const flat = auditTheme(
+      extendTheme(themes.light, {
+        typography: {
+          bodyStrong: { fontWeight: themes.light.typography.body.fontWeight },
+        },
+      }),
+    );
+
+    expect(flat.invalidNumbers.map(({ rule }) => rule)).toEqual(["emphasis"]);
+    expect(audit).toContain("bodyStrong");
+    expect(audit).toContain("three rules about a");
+    expect(audit).not.toContain("two rules about a pair of tokens");
+  });
+
+  it("names every decorative surface kind the report measures", () => {
+    // The bullet listed four kinds — dividers, skeleton fills, the modal veil
+    // and status edges — while `decorativeSurfaces` measured nine. The scrollbar
+    // thumb, the four state washes, the `secondary` action face and the
+    // elevation shadow were all measured by a report the page described with a
+    // list that stopped before them, so a reader who edited `hover` towards
+    // `popover` had no sentence telling them what had failed.
+    const audit = section(page("themes.mdx"), "The theme audit");
+    const kinds = [
+      ...new Set(decorativeSurfaces.map(({ surface }) => surface)),
+    ];
+
+    expect(kinds.length).toBeGreaterThanOrEqual(9);
+    expect(
+      kinds.filter((kind) => !audit.includes(`\`${kind}\``)),
+      "the decorative bullet does not name these surface kinds",
+    ).toEqual([]);
+    // The count and the floor are the package's, not a number to fall behind.
+    expect(audit).toContain("{decorativeSurfaces.length}");
+    expect(audit).toContain("{decorativeFloor}");
+    expect(audit).not.toContain(
+      "dividers, skeleton fills, the modal veil and status",
+    );
   });
 
   it("says what the readout prints for a role or a wash that is not there", () => {

@@ -437,6 +437,29 @@ describe("theme-editor audit readout", () => {
     expect(audit.passed).toBe(false);
   });
 
+  it("words an emphasis that weighs the same as the body it lifts", () => {
+    // `bodyStrong` shares `body`'s size and leading by design, so the weight is
+    // the whole difference between reading and emphasis. A brand that forwards
+    // one stored weight to every role keeps every number usable while the
+    // emphasis paints exactly like the text it was meant to lift; the readout
+    // must say which pair, not print the rule's name.
+    const audit = auditTheme(
+      extendTheme(themes.light, {
+        typography: {
+          bodyStrong: { fontWeight: themes.light.typography.body.fontWeight },
+        },
+      }),
+    );
+    const findings = auditFindings(audit).filter(
+      (finding) => finding.kind === "number",
+    );
+
+    expect(findings.map((finding) => finding.text)).toEqual([
+      `typography bodyStrong.fontWeight — ${String(themes.light.typography.body.fontWeight)} cannot be laid out (needs a weight that exceeds the body text it emphasises)`,
+    ]);
+    expect(audit.passed).toBe(false);
+  });
+
   it("reports a faded label the disabled state erases, which the enabled pair passes", () => {
     // `primaryForeground` on `primary` clears 4.5:1 enabled, so the contrast
     // table is silent; `disabledOpacity` composites the label into its own faded
