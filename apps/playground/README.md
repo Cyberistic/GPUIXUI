@@ -2792,14 +2792,18 @@ component's docs name.
 | cancel | a press on Cancel dismisses and reports nothing (`confirms=1` still), focus back on the opener |
 | Escape | dismisses and reports nothing either (`opens=4 closes=4`), with the focus back on the opener |
 
-18 checks, `--only confirm-dialog-lifecycle`, green on 0.11.0. Fixture:
+17 checks, `--only confirm-dialog-lifecycle`, green on 0.11.0. Fixture:
 `src/live/confirm.ts` — the opener and readout ids, the shipped controls' ids,
-the `ConfirmFlow` state and its reducer. `confirm.test.ts` (6 cases) holds the
+the `ConfirmFlow` state and its reducer. `confirm.test.ts` (7 cases) holds the
 premise: a confirm reports once **and** closes, a cancel closes without
 reporting, a duplicated confirm is two reports (so the single-report check can
 fail), every open counts, the shipped source still carries the two locators,
 Cancel as `initialFocus` and a confirm that only reports, and the fixture's ids
-are the ones the probe addresses.
+are the ones the probe addresses. It also holds the **check count printed above**
+to the probe: this section printed 18 while `confirmSteps` asserts 17, so
+`prints the check count the probe actually asserts` reads the sentence and counts
+the effect's `ctx.expect*` sites — an assertion added without the sentence, and
+a sentence edited alone, both fail.
 
 Negative controls measured, exit `1` each and restored green: duplicating the
 confirm call in the fixture fails `the confirmation reports once and the caller

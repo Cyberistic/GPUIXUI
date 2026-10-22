@@ -4,9 +4,10 @@
  * The bugs these catch: a confirm that is counted twice (the probe's
  * single-report check would pass a dialog that fired `onConfirm` per render), a
  * cancel that reports a confirm (the destructive action would run on the safe
- * path), and a locator that no longer names the shipped control (the window
+ * path), a locator that no longer names the shipped control (the window
  * probe would fail on a locator error instead of naming the contract that
- * moved).
+ * moved), and a README check count that disagrees with the probe (it printed
+ * **18** while `confirmSteps` asserts **17**).
  *
  * `node:fs` is deliberate, as in `registry.test.ts`: this checks the repository's
  * own source, not a runtime path.
@@ -33,6 +34,35 @@ const shipped = readFileSync(
   ),
   "utf8",
 );
+
+const readme = readFileSync(
+  new URL("../../README.md", import.meta.url),
+  "utf8",
+);
+
+const scenarios = readFileSync(
+  new URL("./scenarios.tsx", import.meta.url),
+  "utf8",
+);
+
+/**
+ * The `confirmSteps` effect, bounded to the next top-level declaration.
+ *
+ * It has no loop or helper that adds a check, so its `ctx.expect*` call sites
+ * are the number of checks the window runs — which is what the README prints.
+ */
+const confirmSteps = (() => {
+  const start = scenarios.indexOf("const confirmSteps");
+  const end = scenarios.indexOf("\nconst ", start + 1);
+  return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
+})();
+
+/** The count the README prints for the confirmation probe, if any. */
+const printedCheckCount = (): number =>
+  Number(
+    /(\d+) checks, `--only confirm-dialog-lifecycle`/.exec(readme)?.[1] ??
+      Number.NaN,
+  );
 
 /** Replays `events` from a fresh flow. */
 const replay = (events: ReadonlyArray<ConfirmEvent>): ConfirmFlow =>
@@ -86,5 +116,14 @@ describe("the confirmation flow the probe records", () => {
       "confirm-open",
       "confirm-readout",
     ]);
+  });
+
+  it("prints the check count the probe actually asserts", () => {
+    // The README printed 18 while the probe asserts 17: a count a reader uses
+    // to tell a partial run from a complete one, so both directions are held —
+    // an assertion added without the sentence, and a sentence edited alone.
+    const asserted = confirmSteps.match(/ctx\.expect[A-Za-z]+\(/g)?.length ?? 0;
+    expect(asserted).toBeGreaterThan(1);
+    expect(printedCheckCount()).toBe(asserted);
   });
 });
