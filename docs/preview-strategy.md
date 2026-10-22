@@ -225,6 +225,36 @@ names a registered demo, and every demo is mounted by a page (a key nobody
 renders is dead code, and a typo throws in the browser rather than failing the
 build).
 
+### The dependency line is generated, not written
+
+`MISSION.md` asks every component page for the packages it needs, and the
+package pages are Markdown the site mounts. Asking seventy-odd authors to keep a
+list beside their imports would drift the first time an import moved, so the
+site reads the component's own module instead:
+
+- `src/lib/page-dependencies.ts` is the model: a page's component imports,
+  grouped by workspace package (`@gpuixui/*`, `@gpuix/*`), with the page that
+  documents each one. A package the site has no page for stays plain text.
+- `src/lib/page-dependencies-source.ts` resolves the page's component. The
+  published symbol wins, because a page stem is not always a file name: `grid`
+  finds the `Grid` declared in `Stack.tsx`, `spacer` finds `Separator.tsx`. A
+  family that publishes no symbol under its own name falls back to the file of
+  the same name (`chat` → `chat.tsx`). A page that resolves to no module is
+  reported, not guessed, and the guard fails until it has a source to read.
+- `plugins/page-dependencies-plugin.ts` serves that index as a build-time
+  module, so neither the browser bundle nor the Worker opens the workspace.
+- `<DependencyStrip>` prints it under the status strip, names the module the
+  imports were read from, and links each package to its page. It renders nothing
+  on a page whose author wrote `## Dependencies` itself (today,
+  `packages/primitives/docs/tooltip.mdx`) or whose component imports no
+  workspace package.
+
+`src/lib/page-dependencies.test.ts` holds both directions of the reading — every
+workspace import the module makes is listed and nothing invented — and keeps
+every printed link on a mounted page. Deleting the strip's mount fails the
+frame case; emptying the index fails five cases across the two guards.
+
+
 ### The status strip is generated, not written
 
 A package page describes its component but does not decide whether that
@@ -334,7 +364,7 @@ no keyboard path, it says so rather than leaving the reader to guess.
 | API reference | table: prop → type → default → consequence |
 | Theming | which roles it reads, and what a theme change does |
 | Accessibility and limitations | role/name, and every unsupported attribute with the alternative |
-| Dependencies | the packages it needs, and why |
+| Dependencies | the packages it needs, and why — curated pages write the table; a package page gets the generated strip |
 | Related | siblings, parents, alternatives |
 | Status | `done` / `partial`, with the runtime evidence, when it is not `done` |
 

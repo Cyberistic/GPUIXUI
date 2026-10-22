@@ -12,6 +12,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Suspense, use } from "react";
 import { mdxComponents } from "@/components/mdx";
 import { CopyPage } from "@/components/docs/copy-page";
+import { DependencyStrip } from "@/components/docs/dependency-strip";
 import { NativeRunNote } from "@/components/docs/native-run-note";
 import { PageExample } from "@/components/docs/page-example";
 import {
@@ -184,6 +185,7 @@ function PackageContent({
       url={url}
     >
       <StatusStrip title={page.title} />
+      <DependencyStrip url={url} />
       <NativeRunNote
         kind={collection.kind}
         path={`${collection.dir}/${path.replace(/\.mdx$/, "")}.mdx`}

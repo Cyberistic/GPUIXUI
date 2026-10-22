@@ -21,6 +21,8 @@ export interface PackageCollection {
   readonly origin: PackageOrigin;
   /** The package directory, relative to the repository root. */
   readonly dir: string;
+  /** The published package the pages belong to, e.g. `@gpuixui/primitives`. */
+  readonly packageName: string;
   /** Where the collection's pages render. */
   readonly route: string;
   /** The sidebar folder the pages fill. */
@@ -32,6 +34,7 @@ export interface PackageCollection {
 const primitives: PackageCollection = {
   origin: "primitives",
   dir: "packages/primitives/docs",
+  packageName: "@gpuixui/primitives",
   route: primitiveDocsRoute,
   section: "Primitives",
   kind: "primitive",
@@ -40,6 +43,7 @@ const primitives: PackageCollection = {
 const icons: PackageCollection = {
   origin: "icons",
   dir: "packages/icons/docs",
+  packageName: "@gpuixui/icons",
   route: iconDocsRoute,
   section: "Primitives",
   kind: "icon set",
@@ -48,6 +52,7 @@ const icons: PackageCollection = {
 const components: PackageCollection = {
   origin: "components",
   dir: "packages/components/docs",
+  packageName: "@gpuixui/components",
   route: componentDocsRoute,
   section: "Components",
   kind: "component",

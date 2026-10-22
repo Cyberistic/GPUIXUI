@@ -56,6 +56,7 @@ license.mdx                  Licenses and attribution, read from LICENSES/*.md
 
 ```
 plugins/public-symbols-plugin.ts    Build-time module: the public symbol index
+plugins/page-dependencies-plugin.ts Build-time module: the packages each package page's component imports
 
 src/start.ts                        TanStack Start instance and the Worker cache policy
 src/router.tsx                      The router instance
@@ -85,6 +86,7 @@ src/components/docs/component-source.tsx  The copyable source block
 src/components/docs/install.tsx           The nub / manual install tabs
 src/components/docs/copy-page.tsx         Copy the page as Markdown
 src/components/docs/status-strip.tsx      The generated COMPONENTS.md status and verdict
+src/components/docs/dependency-strip.tsx  The generated "Built on" line: the component's workspace imports
 src/components/docs/native-run-note.tsx   The note above a package page: the playground command and its page
 src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
@@ -137,6 +139,9 @@ src/lib/public-api-data.ts          The entry points, at build time
 src/lib/public-symbols.ts           The symbol index model: kinds, modules and summaries
 src/lib/public-symbols-source.ts    Reads the workspace source the index describes
 src/lib/public-symbols-data.ts      The index, read from the plugin's build-time module
+src/lib/page-dependencies.ts        The dependency model: a page's component imports, grouped by package
+src/lib/page-dependencies-source.ts Reads each page's component module at build time
+src/lib/page-dependencies-data.ts   The dependency index, read from the plugin's build-time module
 src/lib/examples.ts                 The example registry: ids, paths and header summaries
 src/lib/examples-data.ts            Reads packages/*/examples/*.example.tsx at build time
 src/lib/component-index.ts          The component index: URL mapping, curated shadowing, filter
