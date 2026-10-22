@@ -3,7 +3,7 @@ title: Theme
 description: A live editor for the library's semantic tokens — preview, copy and share.
 ---
 
-import { contrastFloors, contrastPairs, decorativeFloor, decorativeSurfaces, indicatorSurfaces, selectionPairs, seriesColors, seriesSurfaces, targetSize, themes } from "@gpuixui/tokens";
+import { contrastFloors, contrastPairs, decorativeFloor, decorativeSurfaces, indicatorSurfaces, keyboardFocusDimOpacity, selectionPairs, seriesColors, seriesSurfaces, targetSize, themes } from "@gpuixui/tokens";
 
 Edit the semantic tokens the library ships and watch them apply to a preview in
 real time. The editor reads its defaults from `@gpuixui/tokens` — the base is
@@ -146,16 +146,17 @@ call reports ten independent failures:
 - **The disabled fade**: a faded control paints a share of its fill over the
   surface and fades its label over *that* faded fill, which is the composite a
   hand calculation usually forgets. `disabledFadeFailures` holds each of those
-  pairs to 1.5:1 — deliberately not a readability claim, because WCAG exempts an
-  inactive component, but the reader still has to see one — and shows why a
-  label that clears 4.5:1 enabled can fall to 1.04:1 disabled. The editor does
-  not edit the disabled roles, but every filled action is one of these pairs, so
-  an action-fill edit can erase a disabled label.
+  pairs to {contrastFloors.disabled}:1 — deliberately not a readability claim,
+  because WCAG exempts an inactive component, but the reader still has to see one
+  — and shows why a label that clears {contrastFloors.secondary}:1 enabled can
+  fall to 1.04:1 disabled. The editor does not edit the disabled roles, but every
+  filled action is one of these pairs, so an action-fill edit can erase a
+  disabled label.
 - **The keyboard dim**: while one control holds keyboard focus the runtime paints
   every other focusable at 40% of itself, so a filled action's label composites
   into its own dimmed fill — as low as 1.27:1 in a shipped palette — and a
   reader who tabs away loses the words of the control beside them.
-  `keyboardDimFailures` holds each of those pairs to 1.05:1, deliberately not a
+  `keyboardDimFailures` holds each of those pairs to {decorativeFloor}:1, deliberately not a
   readability floor: the dim is the runtime's where-can-Tab-go cue, so the claim
   is only that the label is still a label. A control whose text must stay
   readable opts out with `keyboardFocusDim: false`, which the library's filled

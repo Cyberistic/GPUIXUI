@@ -11,6 +11,7 @@ import {
   indicatorFailures,
   indicatorSurfaces,
   isThemeMode,
+  keyboardFocusDimOpacity,
   retroStyles,
   selectionPairs,
   seriesColors,
@@ -332,6 +333,27 @@ describe("the theme page", () => {
     expect(audit).toContain("keyboardDimFailures");
     expect(audit).toContain("cannot paint");
     expect(audit).toContain("localStorage");
+  });
+
+  it("derives the floors the fade and the dim are held to", () => {
+    // Both bullets printed the number the package owns: the disabled fade's
+    // 1.5:1 and the keyboard dim's 1.05:1 floor, plus the 4.5:1 the fade example
+    // starts from. Each is an export (`contrastFloors.disabled`,
+    // `decorativeFloor`, `contrastFloors.secondary`), so a floor the tokens
+    // package moved would leave the page describing the old contract — and the
+    // runtime's own 40% share had the same shape.
+    const fade = bullet(page("themes.mdx"), "The disabled fade");
+    const dim = bullet(page("themes.mdx"), "The keyboard dim");
+
+    expect(fade).toContain("{contrastFloors.disabled}:1");
+    expect(fade).toContain("{contrastFloors.secondary}:1");
+    expect(fade).not.toContain("to 1.5:1");
+    expect(fade).not.toContain("clears 4.5:1");
+
+    expect(dim).toContain("{decorativeFloor}:1");
+    expect(dim).not.toContain("to 1.05:1");
+    // A percentage is derived on the page, not printed: the export is a share.
+    expect(dim).toContain(`${Math.round(keyboardFocusDimOpacity * 100)}%`);
   });
 });
 
