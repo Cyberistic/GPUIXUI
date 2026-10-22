@@ -435,6 +435,30 @@ describe("the measured target rows", () => {
     });
   });
 
+  it("states the anchored menu measured in a scrolled header", () => {
+    const readme = readFileSync(
+      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
+      "utf8",
+    );
+    expect(readme).toContain(
+      "### `header-menu-lifecycle` — measured on 0.11.0 here",
+    );
+    expect(readme).toContain("20 checks, `--only header-menu-lifecycle`");
+
+    const notes = Option.getOrElse(
+      Option.map(
+        Arr.findFirst(targetRows(), (row) => row.name === "Column configuration"),
+        (row) => row.notes,
+      ),
+      () => "",
+    );
+    expect(notes).toContain("`header-menu-lifecycle`");
+    expect(notes).toContain("20 checks");
+    // The two rules a column menu is planned around.
+    expect(notes).toContain("22px inside its cell");
+    expect(notes).toContain("**before** the anchor");
+  });
+
   it("states a verdict instead of a question mark", () => {
     const rows = targetRows();
     const problems = Arr.flatMap(CITATIONS, ([name]) =>
