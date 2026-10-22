@@ -161,6 +161,8 @@ export interface OTPFieldPart {
   readonly autoFocus: boolean | undefined;
   /** The code split into one entry per cell, already normalised. */
   readonly cells: ReadonlyArray<string>;
+  /** Whether a drawn cell holds the focus; a stale index does not count. */
+  readonly focused: boolean;
   /** The one cell in the tab order: where the code has got to, or the focus. */
   readonly rovingIndex: number;
   /** Enter in any cell, or none while the field is disabled. */
@@ -198,6 +200,13 @@ export const otpFieldPart = (
     );
   }
   const code = normalizeOtp(state.current, limit);
+  // A focus index outlives the cell it names when `length` shrinks under it.
+  // The group's one tab stop must land on a cell it actually draws, so an
+  // out-of-range index is no focus at all rather than an index no cell takes.
+  const focused = Option.filter(
+    focus.focusedIndex,
+    (index) => Number.isInteger(index) && index >= 0 && index < limit,
+  );
   return {
     theme,
     disabled,
@@ -207,7 +216,8 @@ export const otpFieldPart = (
     testId: props.testId,
     autoFocus: disabled ? undefined : props.autoFocus,
     cells: otpCells(code, limit),
-    rovingIndex: Option.getOrElse(focus.focusedIndex, () =>
+    focused: Option.isSome(focused),
+    rovingIndex: Option.getOrElse(focused, () =>
       Math.min(code.length, Math.max(0, limit - 1)),
     ),
     onSubmit: disabled ? undefined : props.onSubmit,
@@ -327,7 +337,7 @@ export const renderOtpField = (
         group,
         resolveStyle(props.style, {
           disabled,
-          focused: !disabled && Option.isSome(focus.focusedIndex),
+          focused: !disabled && part.focused,
           invalid: props.invalid === true,
         }),
       )}

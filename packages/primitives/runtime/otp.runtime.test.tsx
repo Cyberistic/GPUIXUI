@@ -317,3 +317,32 @@ it("is one tab stop, on the cell the code has reached", async () => {
   runtime.focusNext();
   expect(focusedId(runtime)).toBe("after");
 });
+
+it("keeps its tab stop when the field shortens under a focused cell", async () => {
+  // The bug guarded: `length` is a prop, so a field that shrinks (6 -> 4) while
+  // its last cell held focus kept the stale index. The stop was written only on
+  // that cell, which no longer existed, and every remaining cell painted
+  // `tabIndex: -1` — Tab skipped the field entirely. The code is full, so the
+  // cell it has reached is the new last one.
+  const runtime = await openWindow();
+  const field = (length: number): ReactNode => (
+    <Surface>
+      <Stack direction="row">
+        <Button testId="before">Before</Button>
+        <OTPField
+          testId="otp"
+          length={length}
+          label="Verification code"
+          defaultValue="123456"
+        />
+        <Button testId="after">After</Button>
+      </Stack>
+    </Surface>
+  );
+  runtime.render(field(6));
+  runtime.click("otp-cell-6");
+  runtime.render(field(4));
+  runtime.click("before");
+  runtime.focusNext();
+  expect(focusedId(runtime)).toBe("otp-cell-4");
+});

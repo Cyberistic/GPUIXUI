@@ -233,6 +233,42 @@ describe("OTPField", () => {
     expect(expectSome(hostStyle(element, "opacity"))).toBe(0.25);
   });
 
+  it("keeps a reachable tab stop when a focused cell leaves the field", () => {
+    // Bug guarded: `length` is a prop, so a field that shrinks under a focused
+    // cell (6 -> 4) kept the old index in `focusedIndex`. The stop was written
+    // only on that index, which no longer exists, so every drawn cell painted
+    // `tabIndex: -1` and the group had no tab stop at all — unreachable by Tab.
+    // The group also stopped reporting a focus it no longer had.
+    const seen: Array<FieldState> = [];
+    const staleFocus: OTPFieldFocus = {
+      ...idle,
+      focusedIndex: Option.some(5),
+    };
+    const element = render(
+      {
+        length: 4,
+        style: (state) => {
+          seen.push(state);
+          return { opacity: 0.25 };
+        },
+      },
+      "12",
+      staleFocus,
+    );
+    const stops = Arr.map(cellsOf(element), (input) =>
+      hostProp(input, "tabIndex"),
+    );
+    expect(stops).toStrictEqual([
+      Option.some(-1),
+      Option.some(-1),
+      Option.some(0),
+      Option.some(-1),
+    ]);
+    expect(seen).toStrictEqual([
+      { disabled: false, focused: false, invalid: false },
+    ]);
+  });
+
   it("is a row of equal square cells at the size's control height", () => {
     const size: ControlSize = "md";
     const element = render({ length: 2, size }, "1");
