@@ -356,20 +356,27 @@ alone, and the components package's `FieldInput` paints the destructive edge
 under `input`. `packages/primitives/src/recipe/recipe.test.ts` holds the painted
 roles and `runtime/fields.runtime.test.tsx` reads them back off a window.
 
-**Disabled ships two ways today, and only one of them is the contract.** A
-disabled field, a select's value and a fieldset legend paint the role pair —
+**Disabled ships two ways, and only one of them is the contract.** A disabled
+field, a select's value and a fieldset legend paint the role pair —
 `disabled` behind `disabledForeground` — which is what `contrastFloors.disabled`
-measures. The rest of the library fades the whole control with a 50% opacity: the
-`disabled:opacity-50` utility in the `@gpuixui/tw` recipes and in
-`packages/primitives/src/recipe/index.ts`, the `opacity = 0.5` helpers in
-`packages/primitives/src/core/style.ts`, and a menu row's own `opacity` in
-`packages/components/src/menu/item.tsx`. That share is `disabledOpacity`, and
+measures. A **filled action** paints it too: `paintsFilledSurface` (`primary`,
+`secondary`, `destructive`) resolves to `disabledAction(theme)` in
+`packages/primitives/src/core/style.ts`, the recipe's disabled bucket is
+`disabled:bg-disabled disabled:text-disabled-foreground`, and a menu row
+(`packages/components/src/menu/item.tsx`) paints `disabledForeground`. The
+deviation that remains fades the whole control with a 50% opacity: the
+`disabled:opacity-50` utility in the `@gpuixui/tw` recipes, the `opacity = 0.5`
+a field, a slider and a rating's part still take, and the components package's
+own `Button` (`packages/components/src/internal/button.tsx`, `opacity: 0.5`).
+An unfilled action has no fill to collapse into and keeps the fade. That share
+is `disabledOpacity`, and
 `disabledFadeFailures` measures the fade by compositing it — twice, because the
 label is faded over the *faded* fill. Measured: a filled action's label lands at
 1.51:1–2.83:1, and in a high-contrast theme at 1.74:1–2.23:1, under the 3:1 that
 variant's disabled floor asks for, so the fade cannot carry the state there. The
-role pair is therefore the contract and the fade is the deviation; replacing it
-is recorded in `TODO.md` → Interlocks. The fade is measured by the gate as
+role pair is therefore the contract and the fade is the deviation; the filled
+action and the menu row have adopted it, and the remaining replacement is
+recorded in `TODO.md` → Interlocks. The fade is measured by the gate as
 `audit.disabledFade`, at `contrastFloors.disabled` in every variant — a brand
 whose label composites into its own faded fill fails by name even while every
 enabled pair passes.
@@ -382,8 +389,9 @@ floor the page clears. So the fade is measured on `background` for a filled
 action, and a disabled action on a card, a popover or a group strip paints the
 neutral pair instead: `disabledAction(theme)` is `disabled` behind
 `disabledForeground`, the pair the contrast table already measures on every
-surface a control sits on. Replacing the fade in the recipes and the primitive
-cores remains the interlock in `TODO.md` → Interlocks.
+surface a control sits on. A filled action and the menu row already paint the
+pair; the two recipe sets and the components' own `Button` remain the interlock
+in `TODO.md` → Interlocks.
 
 **Keyboard focus dims every other control, and that is a paint too.** While one
 element has keyboard focus, `@gpuix/native` multiplies every other focusable

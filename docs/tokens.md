@@ -1187,10 +1187,19 @@ a theme that erases the state fails by name instead of shipping it.
 
 #### The fade a disabled control paints
 
-The role pair is one of two mechanisms in the workspace. The `@gpuixui/tw`
-recipes and the primitives' core styles instead fade the whole control with
-`disabled:opacity-50` / `opacity = 0.5`, which `contrastRatio` refuses: a
-translucent control shows whatever is behind it, so no role pair can measure the
+The role pair is the contract, and a filled action already paints it: the
+primitives resolve `paintsFilledSurface` (`primary`, `secondary`, `destructive`)
+to `disabledAction(theme)` in `core/style.ts`, the recipe's disabled bucket is
+`disabled:bg-disabled disabled:text-disabled-foreground`, and a menu row
+(`packages/components/src/menu/item.tsx`) paints `disabledForeground`. Two
+painters still fade the whole control: the `@gpuixui/tw` recipes'
+`disabled:opacity-50`, and the components package's own `Button`
+(`packages/components/src/internal/button.tsx`, `opacity: 0.5`). An unfilled
+action — `outline`, `ghost`, `link`, a `Toggle` — has no fill to collapse into
+and fades with them, and a **field** keeps the fade because its fill is `input`
+and the faded label clears the floor on every content surface it sits on
+(§The fade is a page mechanism). A fade is translucent, which `contrastRatio`
+refuses: it shows whatever is behind it, so no role pair can measure the
 result. `disabledOpacity` is that share (`0.5`, a design constant rather than a
 `Theme` group — a brand that lowered it would make the library's own disabled
 state disappear), and `disabledFadeFailures(theme, floor?)` measures the fade by
@@ -1198,8 +1207,10 @@ compositing it.
 
 Each `DisabledFadePair` names a control the fade is applied to — `fill`, `label`
 and the `over` surface — for the three filled actions on the page and a field on
-`background`, `card` and `popover`; `disabledFadePairs` is that table. The
-measurement composites twice, because the
+`background`, `card` and `popover`; `disabledFadePairs` is that table. The three
+filled actions stay in it although the shipped painter wears the pair: the table
+measures the paint a re-introduced fade would produce, and the gate reports it.
+The measurement composites twice, because the
 label is faded over the *faded* fill: a disabled filled button shows half its
 fill over the page, then half its label over that, which is why the label falls
 so much further than the fill. A `DisabledFadeFailure` carries the pair, the
@@ -1216,7 +1227,7 @@ is the point rather than an oversight: a high-contrast theme fades a filled
 action's label to between 1.74:1 and 2.23:1, under the 3:1 its own variant asks
 of the role pair, and no share a component can pick fixes that. So the fade
 cannot carry the state in a high-contrast theme — which is the measured reason
-the role pair is the contract and the fade is the deviation to be replaced
+the role pair is the contract and the fade is the deviation still being replaced
 (`TODO.md` → Interlocks). `disabled.test.ts` holds every shipped, platform and
 authored theme to the floor, the composite, the erased-label case and that gap.
 The report is part of `auditTheme`, as `audit.disabledFade`, so a brand's gate
@@ -1242,8 +1253,9 @@ That is the pair `contrastPairs` already measures — the label on its own fill,
 the three page surfaces and on the two group strips — so the replacement is a
 measured state rather than a second composite nothing checks. A **field** keeps
 fading on `background`, `card` and `popover`: its fill is `input`, and the faded
-label clears the floor on all three. Adopting the pair in the recipes and the
-primitive cores is the interlock in `TODO.md`.
+label clears the floor on all three. A filled action and the menu row already
+paint the pair; the two recipe sets and the components' `Button` are the
+interlock left in `TODO.md`.
 
 #### The dim a control paints while Tab is elsewhere
 

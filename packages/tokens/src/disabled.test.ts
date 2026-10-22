@@ -9,8 +9,20 @@
  * action's label lands between 1.51:1 and 2.83:1, and a high-contrast theme's
  * between 1.74:1 and 2.23:1 — under the 3:1 its variant asks for, which is the
  * measured reason the role pair is the contract and the fade is the deviation.
+ *
+ * The second bug is a page outliving its painter: both token pages taught that
+ * the primitive cores and the menu row faded the state after `controlStyle`
+ * painted `disabledAction(theme)` for a filled action, the recipe's disabled
+ * bucket became the neutral pair and the menu row painted `disabledForeground`.
+ * The pages are held to the sources below, not to the mechanism they once
+ * described.
+ *
+ * `node:fs` is deliberate, as in `docs.test.ts`: this is a check over the
+ * repository's own Markdown and source, and the package keeps zero runtime
+ * dependencies by design.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { blend, lightColors } from "./color.js";
 import {
@@ -216,6 +228,77 @@ describe("the fade's page scope", () => {
         contrastRatio(paint.color, paint.backgroundColor),
         theme.name,
       ).toBeGreaterThanOrEqual(contrastFloors.disabled);
+    });
+  });
+});
+
+/**
+ * The two pages a consumer reads about the disabled state, and the painters
+ * they name. The pages teach which mechanism each package uses, so a page that
+ * names a mechanism the source no longer has sends a reader to repaint the
+ * state the pages call the contract.
+ */
+describe("the pages that teach the disabled state", () => {
+  const read = (path: string): string =>
+    readFileSync(new URL(path, import.meta.url), "utf8");
+  const flat = (text: string): string => text.replace(/\s+/g, " ");
+
+  const pages = {
+    "docs/tokens.md": flat(read("../../../docs/tokens.md")),
+    "docs/design-system.md": flat(read("../../../docs/design-system.md")),
+  } as const;
+
+  const painters = {
+    control: read("../../primitives/src/core/style.ts"),
+    recipe: read("../../primitives/src/recipe/index.ts"),
+    menuRow: read("../../components/src/menu/item.tsx"),
+    componentButton: read("../../components/src/internal/button.tsx"),
+    twRecipes: read("../../tw/src/recipes.ts"),
+  };
+
+  it("reads the painter behind every claim", () => {
+    // A guard reading a renamed file would pass by finding nothing.
+    expect(painters.control).toContain("disabledAction(theme)");
+    expect(painters.recipe).toContain(
+      "disabled:bg-disabled disabled:text-disabled-foreground",
+    );
+    expect(painters.menuRow).toContain("theme.colors.disabledForeground");
+    expect(painters.componentButton).toContain("opacity: disabled ? 0.5 : 1");
+    expect(painters.twRecipes).toContain("disabled:opacity-50");
+  });
+
+  it("names the pair a filled action and a menu row wear", () => {
+    Object.entries(pages).forEach(([page, text]) => {
+      expect(text, page).toContain("`disabledAction(theme)`");
+      expect(text, page).toContain("paintsFilledSurface");
+      expect(text, page).toContain("`packages/components/src/menu/item.tsx`");
+    });
+  });
+
+  it("names the two painters that still fade", () => {
+    Object.entries(pages).forEach(([page, text]) => {
+      expect(text, page).toContain("`@gpuixui/tw`");
+      expect(text, page).toContain(
+        "`packages/components/src/internal/button.tsx`",
+      );
+    });
+  });
+
+  it("retracts the painters that no longer fade", () => {
+    // Restoring either page's old sentence fails here rather than sending a
+    // reader to fade a state its painter has already replaced with the pair.
+    const retracted = [
+      "the primitives' core styles instead fade",
+      "`opacity = 0.5` helpers in `packages/primitives/src/core/style.ts`",
+      "a menu row's own `opacity`",
+      "Adopting the pair in the recipes and the primitive cores",
+      "Replacing the fade in the recipes and the primitive cores remains",
+    ];
+
+    Object.entries(pages).forEach(([page, text]) => {
+      retracted.forEach((sentence) => {
+        expect(text, `${page}: ${sentence}`).not.toContain(sentence);
+      });
     });
   });
 });
