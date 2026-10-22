@@ -1,0 +1,143 @@
+---
+title: Sliding number
+description: A number whose digits roll into place like a mechanical counter.
+---
+
+`SlidingNumber` shows a number as a row of digits, and when the value changes each
+digit that moved rolls to its next one. It is a reading, not a control: no tab
+stop, no buttons, no editable state — the caller owns the actions that change
+`value`.
+
+## Usage
+
+```tsx
+import { SlidingNumber } from "@gpuixui/components/sliding-number";
+
+<SlidingNumber value={deploys} role="display" label={`${deploys} deploys`} />;
+```
+
+Step it from your own buttons:
+
+```tsx
+const [count, setCount] = useState(99);
+
+<SlidingNumber value={count} />
+<Button onClick={() => setCount((n) => n + 1)}>One more</Button>;
+```
+
+## How a digit rolls
+
+The runtime cannot animate the characters of a text node and has **no
+`transform`** (upstream issue `#102`), so a digit is not a rotated glyph. Each
+digit is its own **column**:
+
+1. the column is a one-line clipping frame;
+2. inside it, the ten digits are stacked — the column's whole vocabulary;
+3. the stack sits on a plate whose `top` the runtime tweens, one line per digit,
+   so the frame shows exactly one digit at a time.
+
+A column is keyed by its **decimal place** — `i0` is the ones digit, `i1` the
+tens, `f1` the tenths, `point` the separator — so a value that gains a digit
+(`9` → `10`) mounts one column and leaves the others where they are. Only the
+column whose digit changed travels, which is what makes a counter read as a
+counter rather than as a whole number fading. A column that mounts paints at its
+own digit; it does not roll up from zero.
+
+## The reading it publishes
+
+Ten stacked glyphs are one value, not ten, so every digit is painted
+`role="presentation"` and the row as a whole is a `status` named with the
+reading (`-3.50`, or `label` if the caller names it).
+
+`0.11.0` has no `aria-hidden`, which is why a per-digit odometer was recorded as
+blocked. It is not needed: a node is in the accessibility tree only with a role,
+so a presentational digit publishes no node at all — measured in
+`src/behaviour/sliding-number.test.tsx`, which fails with the twenty glyphs read
+as `label:0`…`label:9` when the attribute is dropped. The reading is the same
+under any motion preference.
+
+## Timing and reduced motion
+
+One roll is one house level: `normal` (200 ms) by default, and `level` picks any
+other level from `@gpuixui/motion`. A roll takes its level whatever distance it
+travels, so a carry that crosses the whole column is simply faster than a step of
+one.
+
+`MotionProvider preference="reduced"` zeroes the duration, so the new digits paint
+in the frame the value changes. The runtime exposes no reduced-motion query, so
+the preference is the application's to supply.
+
+```tsx
+import { MotionProvider } from "@gpuixui/components";
+import { SlidingNumber } from "@gpuixui/components/sliding-number";
+
+<MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+  <SlidingNumber value={count} />
+</MotionProvider>;
+```
+
+## Formatting
+
+`decimals` cuts the value (and is what puts the point in the row), `prefix` and
+`suffix` paint and read around the digits, and `label` replaces the accessible
+name without changing the paint. A value no column can paint — `NaN`, an
+infinity, or a magnitude `toFixed` writes in exponent form — is painted as one
+static run of its own text rather than as ten blanks.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `value` | `number` | — | The number to show; a change rolls the columns whose digits moved. |
+| `decimals` | `number` | `0` | Digits after the point, clamped to `0…6`. |
+| `prefix` | `string` | — | Painted and read before the sign, e.g. `"$"`. |
+| `suffix` | `string` | — | Painted and read after the last digit, e.g. `"/mo"`. |
+| `label` | `string` | the reading | The accessible name; the reading is the default so a reader hears `-3.50`. |
+| `level` | `MotionLevel` | `"normal"` | How long one roll runs. |
+| `role` | `TextRole` | `"body"` | A typographic role from the theme. |
+| `className` | `string` | — | Joined after the resting recipe, so it wins. |
+| `style` | `StateStyle` | — | A style, or a function of `{ value, text, reducedMotion }`, merged last. |
+
+The component takes the GPUix host-prop surface and keeps the two fields its own
+contract needs: `role` is `"status"` and `aria-label` is the reading, so a caller
+cannot make a readout that names nothing.
+
+## Limitations
+
+- **A column is as wide as its widest digit.** The ten glyphs define the column,
+  so the row is tabular by construction; a font's proportional figures do not
+  change the spacing. The runtime cannot measure a single glyph before it is laid
+  out, so there is no per-glyph width to opt into.
+- **A carry rolls back through its column.** `19` → `20` sends the ones column
+  from `9` to `0` the long way round rather than wrapping forward, because one
+  tween runs from where the plate is to the target it names.
+- **A digit that leaves is gone at once.** `100` → `99` drops the hundreds column
+  without an exit; only the columns that remain roll.
+- **No grouping or currency formatting.** `decimals`, `prefix` and `suffix` are
+  the whole format; a thousands separator would be a static cell between columns,
+  which the catalogue has not asked for yet.
+- **Not a live region.** `role="status"` is a marker with a name that updates;
+  `0.11.0` publishes no `aria-live`, so a changing value is not announced on its
+  own.
+
+## Verification
+
+Ten native behaviour cases in `src/behaviour/sliding-number.test.tsx` (10 tests)
+read the plate's rise per column on the renderer's motion clock: the mounted
+value, the one digit each column's frame shows, a change that rolls only the ones
+column, a column that appears at its own digit, the point and the fraction
+columns, a caller's affixes, the accessible name, a caller's label, the reduced
+frame, and a value no column can paint. The
+layout rules — decimal-place keys, the clamped decimals, the affixes, the
+fallback and the plate arithmetic — are `src/sliding-number/logic.test.ts`
+(8 tests). Two directions measured: a plate that starts at zero instead of its
+digit fails four behaviour cases, and a digit without `role="presentation"` fails
+the name case with the twenty glyphs in the tree.
+
+## Related
+
+- [Rolling text](/docs/components/rolling-text) — a whole value rolling, where
+  this rolls one digit at a time.
+- [Counting number](/docs/components/counting-number) — a number counting to its
+  value instead of rolling its digits.
+- [Reveal](/docs/components/reveal) — the house fade-and-offset entrance.
