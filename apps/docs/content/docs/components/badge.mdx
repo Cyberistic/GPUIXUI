@@ -1,0 +1,209 @@
+---
+title: Badge
+description: A short status label on a pill — never a control, and never the only signal.
+---
+
+`Badge` labels something: a state, a count or a category. It is **not a
+control** — no tab stop, no press, no dismiss — and its fill is never the only
+signal, so the words on it always carry the meaning.
+
+The paints and the two measured routes below were read on
+`@gpuix/native@0.11.0`.
+
+<ComponentPreview name="badge-workflow" />
+
+The preview draws the pill with the theme bridge; the shipped component is a
+GPUix host tree and its Code tab is the real usage. The deployments panel
+around the pills — the selectable rows, the filter and the eager-pill control —
+is **app composition**: the component draws one pill and owns none of it.
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Badge" />
+
+<ComponentSource name="badge" file="packages/components/src/badge.tsx" />
+
+## Usage
+
+```tsx
+import { Badge } from "@gpuixui/components/badge";
+
+<Badge variant="success" size="sm">
+  Passed
+</Badge>;
+// Without a variant it is the neutral pill.
+<Badge>main</Badge>;
+```
+
+A badge is one line of type: it hugs its text and never wraps. Inside a column
+it also hugs horizontally (`alignSelf: "flex-start"`), so it does not stretch
+into a full-width bar; pass `style={{ alignSelf: "stretch" }}` when you do want
+that. Its own `className` is joined after the recipe and its `style` is merged
+last, so a caller can restyle every rule without forking the component.
+
+## Variants
+
+| `variant` | Fill | Text | Edge |
+| --------- | ---- | ---- | ---- |
+| `neutral` (default) | `muted` | `mutedForeground` | — |
+| `primary` | `primary` | `primaryForeground` | — |
+| `success` | `successSoft` | `successSoftForeground` | 30% `success` |
+| `warning` | `warningSoft` | `warningSoftForeground` | 30% `warning` |
+| `danger` | `destructiveSoft` | `destructiveSoftForeground` | 30% `destructive` |
+| `info` | `infoSoft` | `infoSoftForeground` | 30% `info` |
+| `outline` | none | `mutedForeground` | `borderStrong` |
+
+The four status variants draw from one soft-tone palette shared with
+[Alert](/docs/components/alert) and the toast viewport, so a status cannot drift
+between components. The soft fills and their readable foregrounds are the
+tokens package's measured pair, and — because a pale `warning` fill carries
+near-black text but is too close to a light card to be read as a wash — the
+light `warning` pill prints the tone's readable role rather than its solid fill.
+`outline` is the variant for a **label** (a branch, a version), not a state: it
+is the one variant with no fill, so its edge is the whole pill.
+
+<ComponentPreview name="badge-states" />
+
+## Sizes
+
+| `size` | Type step | Height | Padding |
+| ------ | --------- | ------ | ------- |
+| `sm` | `text-xs` (12/16) | 20px | 8px × 2px |
+| `md` (default) | `text-sm` (14/20, weight 500) | 24px | 8px × 2px |
+
+There is no height literal: the pill's height is the step's leading plus its 2px
+top and bottom padding. Both the type step and the padding are the registry's
+**fixed** metrics (ADR 0006), so a theme that restyles its type scale or its
+spacing leaves the pill where it is; the colour roles it paints follow the
+theme, and so does the platform switch's family.
+
+## The pill is not a control
+
+Two decisions are in the code and neither is visible in a drawing:
+
+- **Nothing inside a badge is clickable.** A badge has no tab stop, no
+  `onClick` and no role of its own. A badge that should do something when
+  pressed is a [`Button`](/docs/components/button) with the pill's styling
+  passed as `className`.
+- **A status pill stays out of the pointer.** The pill paints a fill, and a
+  filled child is the boundary the runtime's hit test stops counting at, so a
+  badge in a selectable row would otherwise swallow the row's press. The
+  component declares `pointerEvents: "none"`, and the live `list-row-press`
+  probe measures the fixed route: a press on the shipped pill inside a list row
+  selects the row (`selected=badge`), while the same pill with a caller's
+  `style` handing the pointer back — the `badge-eager` control — selects
+  nothing (`selected=none`), because a hit target of its own stops the press
+  again.
+
+The preview above makes both routes reachable: press a row's status pill and
+the row selects; turn the eager-pill control on and the same press reaches
+nothing.
+
+## Composition
+
+`Badge` is one part: there is no icon slot, no `BadgeGroup` and no dismiss
+control to place.
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Badge` | one line of text on a pill, painted from its variant's roles |
+
+Typical placements are a list row's trailing slot, a card header's meta row and
+a table's status column. The word is the content: `Passed`, `3 seats`, `beta`.
+A tag that can be removed is a chip, which this library does not build yet —
+use a [`Button`](/docs/components/button) beside the pill and remove the row
+yourself.
+
+## Keyboard
+
+None. A badge is not focusable, is not in the tab order (`tabIndex` is never
+set) and handles no key. A screen reader meets its text where it appears, which
+is why the text has to name the state.
+
+## API reference
+
+`Badge` takes the GPUix host props (`style`, `testId`, `role`, `aria-*`, pointer
+and key handlers) and **merges `style` last**, so a consumer can override any
+rule — including the pointer refusal — without forking the component.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `variant` | `"neutral" \| "primary" \| "success" \| "warning" \| "danger" \| "info" \| "outline"` | `"neutral"` | the fill, ink and edge in the table above |
+| `size` | `"sm" \| "md"` | `"md"` | the fixed type step and the pill's height |
+| `className` | `string` | none | a recipe class string joined after the component's own, so it wins a conflict |
+| `style` | `StyleDesc` | none | merged last, after the compiled recipe and the pointer refusal |
+| `children` | `ReactNode` | — | the label: a word, a count or a short version |
+
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| neutral pill | `muted` fill, `mutedForeground` ink |
+| primary pill | `primary` fill, `primaryForeground` ink |
+| status pills | the tone's `xSoft` fill, `xSoftForeground` ink and a 30% share of the tone for the edge |
+| outline edge | `borderStrong` — not the decorative `border` |
+| size and weight | the fixed `text-xs` (12/16) and `text-sm` (14/20, weight 500) steps |
+| corners | the registry's `full` radius |
+
+**The outline variant's edge is the boundary role, not the divider.** A badge is
+what a list row's trailing slot holds, so its edge is drawn on whatever wash the
+row is wearing. The decorative `border` role measures ~1.00:1 on the row's
+`accent` hover wash and ~1.06:1 on its `selected` fill, under the 3:1 a control's
+boundary needs — the pill had a boundary at rest and none the moment its row was
+hovered or chosen. `borderStrong` clears the boundary floor on the page, a card
+and both washes in every shipped theme, so the edge survives the pointer.
+
+Two consequences a reader should not have to discover:
+
+- Changing a role repaints the pills that read it; changing the theme's type
+  scale, spacing or radius does **not** resize or reshape them, because the
+  recipe compiles fixed metrics. Pass `className` or `style` to own the metrics.
+- The platform switch repaints the palette and the type family; a macOS pill and
+  a Windows pill are the same 20/24px box.
+
+## Accessibility and limitations
+
+- A badge contributes **no role of its own**: a status is announced as its text
+  ("Failed"), which is why the text has to carry the meaning and the colour must
+  not be the only signal. A card whose only indication of failure is a red pill
+  fails this rule.
+- It is not focusable and not reachable by keyboard, because it is nothing to
+  operate. `tabIndex` is not set.
+- Out of the pointer by design. A caller can hand the pointer back with
+  `style`, but then the pill becomes a hit target that stops the press its row
+  would have heard — the control the live probe names `badge-eager`.
+- No dismiss control, no icon slot, no count animation. Removing a label is the
+  app's job; a chip with a close affordance is not built yet.
+- The preview above is a browser rendering of the recipe. The shipped badge is
+  a GPUix host tree; the Code tab and the source accordion are the real usage.
+
+## Dependencies
+
+| Package | Why |
+| ------- | --- |
+| `@gpuix/react` | the host element and its props |
+| `@gpuix/react/floating` | `mergeStyles`, so a caller's `style` merges last |
+| `@gpuixui/tw` | the `BADGE_*` recipe and `cn` |
+| `@gpuixui/tokens` | the roles the recipe resolves and the theme seam |
+
+No overlay, no runtime service and no state: a badge is one painted box.
+
+## Related
+
+- **Alert** — the same status palette, for a message that stays in the flow.
+- **Card** — the surface a badge usually sits on.
+- **List** — rows whose trailing slot is a status pill.
+- **Table** — a status column built from badges.
+- **Toast** — the transient message that shares the tone roles.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `yes` runtime verdict: a badge is a `div` with
+a compiled recipe, so it needs no runtime feature. 9 native behaviour tests in
+`packages/components/src/behaviour/badge.test.tsx` hold the label as text, each
+non-status variant's role, each status variant's shared tone, a status fill that
+moves with the theme (both themes), both sizes' measured heights, a consumer
+`style` winning, the pill's `pointerEvents: "none"` with an opt-in, the pill
+radius on every variant, and the outline edge clearing the 3:1 boundary floor on
+a row's hover and selected washes. `badge-preview.test.ts` and
+`badge-demo.test.tsx` hold this page's previews to the same recipe.

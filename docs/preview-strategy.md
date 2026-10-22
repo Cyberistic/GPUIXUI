@@ -326,8 +326,8 @@ command that cannot resolve on the section a reader follows first.
 
 A curated page in `content/docs/components/` wins its URL and adds the previews,
 the install block and the copyable source.
-Curated today: Accordion, Alert, Avatar, Breadcrumb, Button, Card, Carousel,
-Checkbox, Collapsible, Color picker, Combobox, Command menu,
+Curated today: Accordion, Alert, Avatar, Badge, Breadcrumb, Button, Card,
+Carousel, Checkbox, Collapsible, Color picker, Combobox, Command menu,
 Confirmation dialog, Context menu, Date picker, Dialog, Drawer, Dropdown menu,
 Field and inline validation, Form, Inline edit, List, Pagination, Popover,
 Search input, Select, Stepper, Switch, Table, Tag input, Tabs, Time picker,

@@ -15,6 +15,12 @@ import {
   avatarWorkflowSource,
 } from "./avatar-demo";
 import {
+  BadgeStates,
+  BadgeWorkflow,
+  badgeStatesSource,
+  badgeWorkflowSource,
+} from "./badge-demo";
+import {
   CarouselStates,
   CarouselWorkflow,
   carouselStatesSource,
@@ -2543,6 +2549,8 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: AvatarWorkflow,
     source: avatarWorkflowSource,
   },
+  "badge-states": { render: BadgeStates, source: badgeStatesSource },
+  "badge-workflow": { render: BadgeWorkflow, source: badgeWorkflowSource },
   "breadcrumb-states": {
     render: BreadcrumbStates,
     source: breadcrumbStatesSource,

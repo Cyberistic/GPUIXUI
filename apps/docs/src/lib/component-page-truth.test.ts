@@ -98,6 +98,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/avatar.tsx",
   },
   {
+    file: "badge.mdx",
+    row: "Badges",
+    suite: "packages/components/src/behaviour/badge.test.tsx",
+    shadowed: "packages/components/docs/badge.mdx",
+    source: "packages/components/src/badge.tsx",
+  },
+  {
     file: "breadcrumb.mdx",
     row: "Breadcrumbs",
     suite: "packages/components/src/behaviour/breadcrumb.test.tsx",
@@ -998,6 +1005,59 @@ describe("the curated component pages", () => {
     expect(text).toContain("clamped");
     expect(text).toContain("direct** children");
     expect(text).toContain("No `aria-current`");
+  });
+
+  it("holds the badge's press route and its outline edge to the source", () => {
+    // A badge is the one component whose whole contract is a refusal: it takes
+    // no pointer, so a status pill in a selectable row must not swallow the
+    // row's press — and the one variant with no fill carries its boundary on
+    // whatever wash the row wears. Both are invisible in a screenshot, so the
+    // painter, the recipe and the live probe's fixture are read together.
+    const badge = pages.find((page) => page.file === "badge.mdx");
+    expect(badge, "the badge page is not in the curated set").toBeDefined();
+    if (badge === undefined) return;
+
+    const source = read(badge.source);
+    const recipes = read("packages/tw/src/recipes.ts");
+    const fixture = read("apps/playground/src/live/list-row.ts");
+
+    // The refusal, and the caller's style that can hand the pointer back.
+    expect(source).toContain('{ pointerEvents: "none" }');
+    expect(source).toContain("the caller's `style` below can hand it back");
+
+    // The one variant with no fill draws its edge in the boundary role.
+    const badgeRecipes = recipes.slice(
+      recipes.indexOf("export const BADGE_VARIANTS"),
+      recipes.indexOf("} as const;", recipes.indexOf("export const BADGE_VARIANTS")),
+    );
+    const outline = /outline: "([^"]+)"/.exec(badgeRecipes)?.[1] ?? "";
+    expect(outline).toContain("border-strong");
+    expect(outline).not.toContain("border-input");
+
+    // The two measured routes, from the probe's own table: the shipped pill
+    // selects its row, and the eager pill selects nothing.
+    const shipped = fixture.slice(
+      fixture.indexOf("  badge: {"),
+      fixture.indexOf("  \"badge-eager\": {"),
+    );
+    const eager = fixture.slice(
+      fixture.indexOf("  \"badge-eager\": {"),
+      fixture.indexOf("  \"badge-inert\": {"),
+    );
+    expect(shipped).toContain('selects: "badge",');
+    expect(eager).toContain('selects: "",');
+
+    const text = body(badge).replace(/\s+/g, " ");
+    expect(text).toContain("`pointerEvents: \"none\"`");
+    expect(text).toContain("selected=badge");
+    expect(text).toContain("selected=none");
+    expect(text).toContain("`borderStrong`");
+    expect(text).toContain("~1.00:1");
+    expect(text).toContain("3:1");
+    // The retracted shape: a badge that is a control, or one that keeps the
+    // press its row should have heard.
+    expect(text).not.toContain("a badge is a button");
+    expect(text).not.toContain("takes the press itself");
   });
 
   it("hold the select's list cap and its reveal to the source", () => {

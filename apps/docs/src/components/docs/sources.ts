@@ -1,6 +1,7 @@
 import accordion from "../../../../../packages/components/src/accordion.tsx?raw";
 import alert from "../../../../../packages/components/src/alert.tsx?raw";
 import avatar from "../../../../../packages/components/src/avatar.tsx?raw";
+import badge from "../../../../../packages/components/src/badge.tsx?raw";
 import breadcrumb from "../../../../../packages/components/src/breadcrumb.tsx?raw";
 import button from "../../../../../packages/primitives/src/components/Button.tsx?raw";
 import card from "../../../../../packages/components/src/card.tsx?raw";
@@ -44,6 +45,7 @@ export const componentSources = {
   accordion,
   alert,
   avatar,
+  badge,
   breadcrumb,
   button,
   card,

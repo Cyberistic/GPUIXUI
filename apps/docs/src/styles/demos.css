@@ -5921,3 +5921,289 @@ button.gx-table-row:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 1px;
 }
+
+/* Badge — the pill, its seven variants and the deployments panel.
+   The roles are the recipe's (`BADGE_VARIANTS` in packages/tw/src/recipes.ts),
+   and `badge-preview.test.ts` compiles that recipe and holds every declaration
+   below to it. The pill takes no pointer, as the component declares. */
+.gx-badge-demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: 100%;
+  max-width: 560px;
+}
+
+.gx-badge-head {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.gx-badge-title {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.gx-badge-readout,
+.gx-badge-foot,
+.gx-badge-status,
+.gx-badge-selected {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.gx-badge-foot {
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border);
+}
+
+.gx-badge-status {
+  min-height: 18px;
+  color: var(--foreground);
+}
+
+.gx-badge-selected {
+  color: var(--muted-foreground);
+}
+
+.gx-badge-filters {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+
+.gx-badge-choice {
+  min-height: var(--target-size);
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--card);
+  color: var(--card-foreground);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-badge-choice[data-chosen] {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.gx-badge-choice:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-badge-deploys {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-badge-deploy-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  width: 100%;
+  min-height: var(--row-height);
+  padding: 0 12px;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-badge-deploy-row:hover {
+  background: var(--hover);
+}
+
+.gx-badge-deploy-row[data-selected] {
+  background: var(--selected);
+  color: var(--selected-foreground);
+}
+
+.gx-badge-deploy-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-badge-deploy-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.gx-badge-deploy-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.gx-badge-deploy-when {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-badge-deploy-meta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-badge-eager {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-badge-run {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.gx-badge-run-label {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gx-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.gx-badge-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.gx-badge-state-label {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+/* The pill itself: the recipe's `rounded-full px-2 py-0.5`, and the two fixed
+   type steps. A border is always present so both sizes keep one height; the
+   variants that paint no edge draw a transparent one. */
+.gx-badge {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  align-self: flex-start;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  padding: 0 8px;
+  font-family: var(--font-sans);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.gx-badge-sm {
+  height: 20px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-badge-md {
+  height: 24px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+/* The `badge-eager` control: a caller's `style` hands the pointer back, so the
+   pill becomes the boundary the press stops at. */
+.gx-badge[data-eager] {
+  pointer-events: auto;
+}
+
+.gx-badge-neutral {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.gx-badge-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-badge-success {
+  background: var(--success-soft);
+  color: var(--success-soft-foreground);
+  border-color: color-mix(in srgb, var(--success) 30%, transparent);
+}
+
+.gx-badge-warning {
+  background: var(--warning-soft);
+  color: var(--warning-soft-foreground);
+  border-color: color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+.gx-badge-danger {
+  background: var(--destructive-soft);
+  color: var(--destructive-soft-foreground);
+  border-color: color-mix(in srgb, var(--destructive) 30%, transparent);
+}
+
+.gx-badge-info {
+  background: var(--info-soft);
+  color: var(--info-soft-foreground);
+  border-color: color-mix(in srgb, var(--info) 30%, transparent);
+}
+
+.gx-badge-outline {
+  color: var(--muted-foreground);
+  border-color: var(--border-strong);
+}
+
+/* The three surfaces an outline pill is measured on. */
+.gx-badge-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.gx-badge-stage[data-wash="page"] {
+  background: var(--background);
+}
+
+.gx-badge-stage[data-wash="hover"] {
+  background: var(--hover);
+}
+
+.gx-badge-stage[data-wash="selected"] {
+  background: var(--selected);
+}

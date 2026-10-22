@@ -44,6 +44,7 @@ components/index.mdx         The filterable component index
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
 components/avatar.mdx        Curated: the fallback table, the measured dot roles, the roster panel
+components/badge.mdx         Curated: the seven variants, the fixed sizes, the press it leaves to its row
 components/breadcrumb.mdx    Curated: the collapse budget, the separator that leaves with its item
 components/button.mdx        Curated: previews, install, source (the package page keeps the API)
 components/card.mdx          Curated: the three treatments, the recipe's fixed metrics
@@ -149,6 +150,8 @@ src/components/docs/stepper-preview.ts    The stepper preview's derived status a
 src/components/docs/stepper-demo.tsx      The stepper's two browser renderings and their source strings
 src/components/docs/avatar-preview.ts     The avatar preview's initials, roster and presence words
 src/components/docs/avatar-demo.tsx       The avatar's roster panel and state gallery
+src/components/docs/badge-preview.ts       The badge preview's statuses, filter and press route
+src/components/docs/badge-demo.tsx        The badge's deployments panel and state gallery
 src/components/docs/timeline-preview.ts   The timeline preview's app-marked statuses and its cursor
 src/components/docs/timeline-demo.tsx     The timeline's two browser renderings and their source strings
 src/components/docs/switch-preview.ts      The switch preview's dependent-setting rule and its slide duration
