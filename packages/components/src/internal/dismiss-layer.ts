@@ -9,13 +9,15 @@
  * the combobox first.
  *
  * The event itself is the unit of consumption. A key bubbles from the focused
- * node up through every enclosing overlay, and the runtime hands each handler
- * its own payload object, so object identity cannot identify one keystroke:
- * `keystrokeId` is the id GPUI gives every handler of the same key dispatch.
+ * node up through every enclosing overlay, and the runtime rebuilds the payload
+ * per handler — the native side queues one event per element — so object
+ * identity identifies nothing: `keystrokeId` is the id GPUI gives every handler
+ * of the same key dispatch, and a press is identified by the fields every
+ * handler of it shares (`pressShape`) for as long as one gesture can last.
  * Without that guard the combobox would close and then the dialog would close on
- * the same keystroke. A pointer event is one shared object, so a `WeakSet`
- * identifies it. `preventDefault` alone would stop the platform default but not
- * the second overlay's own handler.
+ * the same keystroke, and one outside press would close two overlays.
+ * `preventDefault` alone would stop the platform default but not the second
+ * overlay's own handler.
  *
  * The stack is ordered by **containment depth**, not by when an overlay pushed:
  * React runs a child's layout effect before its parent's, so two surfaces open
@@ -27,8 +29,10 @@
 
 import type { EventPayload } from "@gpuix/react";
 import * as Arr from "effect/Array";
+import * as Duration from "effect/Duration";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
+import { monotonicNanos } from "./clock.js";
 
 /** A layer's dismiss handler: it must close only the overlay that pushed it. */
 export type DismissHandler = (event: EventPayload) => void;
@@ -40,7 +44,6 @@ interface Layer {
 }
 
 let layers: ReadonlyArray<Layer> = [];
-const handled = new WeakSet<EventPayload>();
 
 /**
  * The last key dispatch a layer consumed. Key payloads are rebuilt per handler,
@@ -49,18 +52,67 @@ const handled = new WeakSet<EventPayload>();
  */
 let dismissedKeystroke: Option.Option<number> = Option.none();
 
+/** A press as every handler of it sees it, and when the stack consumed it. */
+interface Press {
+  readonly shape: string;
+  readonly at: bigint;
+}
+
+/** The last press a layer consumed, at the monotonic time it was offered. */
+let dismissedPress: Option.Option<Press> = Option.none();
+
+/**
+ * How long a press shape identifies the same gesture. The runtime queues one
+ * payload per handler, and every one of them is dispatched in the frame the
+ * press arrived in; a reader cannot press twice inside one frame, and a second
+ * click at one point counts 2 anyway. The window is the frame rather than the
+ * task boundary because the drain is not part of the published API.
+ */
+export const pointerGestureWindow: Duration.Duration = Duration.millis(16);
+
+const PRESS_WINDOW_NANOS =
+  BigInt(Duration.toMillis(pointerGestureWindow)) * 1_000_000n;
+
+/**
+ * The parts of a press every handler of it shares. `elementId` is left out: it
+ * names the handler's own element, so the two overlays one outside press reaches
+ * carry different ids for the same gesture.
+ */
+const pressShape = (event: EventPayload): string =>
+  Arr.join(":")(
+    Arr.map(
+      [event.eventType, event.x, event.y, event.button, event.clickCount],
+      (part) => (part === undefined ? "" : `${part}`),
+    ),
+  );
+
+/** Whether an earlier layer already consumed this press. Records it if not. */
+const consumedPress = (event: EventPayload, now: bigint): boolean => {
+  const shape = pressShape(event);
+  const repeated = Option.exists(
+    dismissedPress,
+    (press) => press.shape === shape && now - press.at <= PRESS_WINDOW_NANOS,
+  );
+  if (!repeated) dismissedPress = Option.some({ shape, at: now });
+  return repeated;
+};
+
+/** Whether an earlier layer already consumed this key dispatch. Records it if not. */
+const consumedKeystroke = (keystrokeId: number): boolean => {
+  if (Option.contains(dismissedKeystroke, keystrokeId)) return true;
+  dismissedKeystroke = Option.some(keystrokeId);
+  return false;
+};
+
 /**
  * Whether an earlier layer already consumed `event`. Records the event, so the
  * answer differs on a second call for the same gesture.
  */
-const consume = (event: EventPayload): boolean => {
-  if (handled.has(event)) return true;
-  handled.add(event);
-  if (event.keystrokeId === undefined) return false;
-  if (Option.contains(dismissedKeystroke, event.keystrokeId)) return true;
-  dismissedKeystroke = Option.some(event.keystrokeId);
-  return false;
-};
+const consume = (event: EventPayload, now: bigint): boolean =>
+  Option.match(Option.fromNullishOr(event.keystrokeId), {
+    onNone: () => consumedPress(event, now),
+    onSome: consumedKeystroke,
+  });
 
 const byDepth: Order.Order<Layer> = Order.mapInput(
   Order.Number,
@@ -83,7 +135,10 @@ export const pushDismissLayer = (
   layers = Arr.append(layers, layer);
   return () => {
     layers = Arr.filter(layers, (candidate) => candidate !== layer);
-    if (Arr.length(layers) === 0) dismissedKeystroke = Option.none();
+    if (Arr.length(layers) === 0) {
+      dismissedKeystroke = Option.none();
+      dismissedPress = Option.none();
+    }
   };
 };
 
@@ -91,9 +146,15 @@ export const pushDismissLayer = (
  * Offer `event` to the topmost layer. Returns whether a layer consumed it — a
  * second call for the same gesture is always `false`, so one keystroke or press
  * dismisses one overlay.
+ *
+ * `now` is the monotonic reading a press is measured against; tests pass it to
+ * model two gestures, the runtime takes the frame's.
  */
-export const dismissTopLayer = (event: EventPayload): boolean => {
-  if (consume(event)) return false;
+export const dismissTopLayer = (
+  event: EventPayload,
+  now: bigint = monotonicNanos(),
+): boolean => {
+  if (consume(event, now)) return false;
   return Option.match(topmost(), {
     onNone: () => false,
     onSome: (onDismiss) => {

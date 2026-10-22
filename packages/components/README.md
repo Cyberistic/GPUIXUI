@@ -277,7 +277,7 @@ duration: `docs/component-api.md` §11.
 | `src/liquid-button.tsx`, `src/liquid-button/logic.ts` | LiquidButton: a wash that floods in from the pointer's edge and drains to the edge it leaves by (plan 600) |
 | `src/splitting-text.tsx`, `src/splitting-text/logic.ts` | SplittingText: a phrase revealed unit by unit, each unit fading and rising (plan 600) |
 | `src/highlight-text.tsx`, `src/highlight-text/logic.ts` | HighlightText: a marker wash swept across a query's matches by the runtime's `highlight` layer (plan 600) |
-| `src/internal/dismiss-layer.ts`, `src/internal/dismiss-scope.tsx` | the overlay stack: the deepest open surface wins, one event closes one overlay; the scope gives each surface its containment depth |
+| `src/internal/dismiss-layer.ts`, `src/internal/dismiss-scope.tsx` | the overlay stack: the deepest open surface wins, one event closes one overlay — a keystroke by its `keystrokeId` and a press by the type, point, button and click count every handler of it shares, because the runtime rebuilds the payload per handler; the scope gives each surface its containment depth |
 | `src/internal/controllable.ts` | `useControllableState` — `value`/`defaultValue`/`onValueChange` in one hook |
 | `src/core/runtime.ts` | the shared state model: `createRuntime({ initial, reduce, query })` with a pure command fold (`run`); no React, no GPUix (plan 201) |
 | `src/internal/placement.ts`, `src/internal/use-placement.ts` | the measured anchored-placement rule: true `center` and a one-shot flip off the trigger when GPUix's snap would cover it (plan 323) |

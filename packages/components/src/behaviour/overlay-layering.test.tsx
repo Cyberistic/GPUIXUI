@@ -126,6 +126,39 @@ describe("overlay layering", () => {
     nested.unmount();
   });
 
+  it("closes one overlay per outside press, outside-in", async () => {
+    // The bug this guards: one outside press raises every open overlay's
+    // `onMouseDownOutside`, and each handler dismissed the topmost layer — so
+    // the app saw the same overlay close twice and the next press never reached
+    // the surface it should have closed.
+    const stack = renderComponent(<Stack />);
+
+    expect(stack.renderer.findByTestId("menu-panel")).toBeDefined();
+    expect(stack.renderer.findByTestId("popover-panel")).toBeDefined();
+    expect(stack.renderer.findByTestId("dialog-panel")).toBeDefined();
+
+    stack.renderer.nativeSimulateClick(1000, 700);
+    await waitFor(() =>
+      expect(stack.renderer.findByTestId("dialog-panel")).toBeUndefined(),
+    );
+    expect(stack.renderer.findByTestId("popover-panel")).toBeDefined();
+    expect(stack.renderer.findByTestId("menu-panel")).toBeDefined();
+
+    // A later press elsewhere is a new gesture and reaches what is now topmost.
+    stack.renderer.nativeSimulateClick(1050, 720);
+    await waitFor(() =>
+      expect(stack.renderer.findByTestId("popover-panel")).toBeUndefined(),
+    );
+    expect(stack.renderer.findByTestId("menu-panel")).toBeDefined();
+
+    stack.renderer.nativeSimulateClick(1100, 740);
+    await waitFor(() =>
+      expect(stack.renderer.findByTestId("menu-panel")).toBeUndefined(),
+    );
+
+    stack.unmount();
+  });
+
   it("dismisses a dialog over a popover over a menu outside-in", async () => {
     const stack = renderComponent(<Stack />);
 
