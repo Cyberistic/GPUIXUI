@@ -4,7 +4,9 @@
  * The bugs these guard: a submit that calls the consumer with an invalid value;
  * messages that are not shown, or shown one blob instead of one per issue; a
  * pending form that submits again; a raw value reaching `onSubmit` instead of the
- * decoded one; and a summary that ignores the destructive role.
+ * decoded one; a summary that ignores the destructive role; and a form that
+ * could never submit again after a failed submit left a message on a field with
+ * no mounted `FieldApi`.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -62,6 +64,11 @@ const Harness = ({
     {(form) => (
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <text testId="state">{`${form.errors.length}:${form.pending}`}</text>
+        <text testId="form-state">
+          {`attempts=${form.form.state.submissionAttempts} submitting=${String(
+            form.form.state.isSubmitting,
+          )}`}
+        </text>
         <Button testId="submit" onClick={form.submit}>
           Create account
         </Button>
@@ -192,6 +199,35 @@ describe("Form", () => {
     expect(nodesWithRole(form.renderer, "alert")).toHaveLength(0);
     expect(form.renderer.getAllText()).toContain("0:false");
     expect(onSubmit).not.toHaveBeenCalled();
+
+    form.unmount();
+  });
+
+  it("submits a corrected value after a schema failure", async () => {
+    const onSubmit = vi.fn();
+    const form = renderComponent(
+      <Harness value={invalid} onSubmit={onSubmit} />,
+    );
+
+    clickCentreOf(form, "submit");
+    await waitFor(() =>
+      expect(nodesWithRole(form.renderer, "alert")).toHaveLength(1),
+    );
+    // The failed run settles before the value is corrected; a second press sent
+    // while it is still in flight would be the caller's `pending` to refuse.
+    await waitFor(() =>
+      expect(form.renderer.getAllText()).toContain(
+        "attempts=1 submitting=false",
+      ),
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    form.rerender(<Harness value={valid} onSubmit={onSubmit} />);
+    clickCentreOf(form, "submit");
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0]?.[0]).toBeInstanceOf(Signup);
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject(valid);
 
     form.unmount();
   });

@@ -86,6 +86,10 @@ touched/dirty tracking.
    are the schema's own text, never a package invention.
 4. On success, `onSubmit` receives the decoded value — a class instance if
    `schema` is a `Schema.Class`, not the raw object.
+5. A corrected value can be submitted again: each submit first forgets the
+   per-field submit errors the form's own validator left, so a field with no
+   mounted `FieldApi` cannot keep the previous failure and refuse the next run.
+   A consumer's own field validator is untouched.
 
 The submit is asynchronous now: `handleSubmit` validates and calls `onSubmit`
 after the schema runs, and the summary follows through the core's store. The

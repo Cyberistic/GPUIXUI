@@ -23,6 +23,7 @@ import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import {
   useCallback,
@@ -95,6 +96,30 @@ const syncValues = (form: SchemaFormApi, value: unknown): void => {
 };
 
 /**
+ * Forget the submit errors a previous run left on a field.
+ *
+ * The whole-value validator maps each message to the field its path names, and
+ * form-core writes that into the field's meta without a `FieldApi` mounted for
+ * it. A new submit first validates every **mounted field** and then reads each
+ * field's `isValid`, so an unmounted field keeps the previous failure and
+ * `handleSubmit` returns before the schema runs again — a corrected value could
+ * never be submitted a second time. Clearing only the errors this form's
+ * validator owns (`errorSourceMap.onSubmit === "form"`) leaves a consumer's own
+ * field validators untouched, and `handleSubmit` repopulates the map from the
+ * run it is about to make.
+ */
+const clearSubmitErrors = (form: SchemaFormApi): void => {
+  Arr.forEach(R.keys(form.state.fieldMeta), (name) => {
+    if (form.state.fieldMeta[name]?.errorSourceMap?.onSubmit !== "form") return;
+    form.setFieldMeta(name, (meta) => ({
+      ...meta,
+      errorMap: { ...meta.errorMap, onSubmit: undefined },
+      errorSourceMap: { ...meta.errorSourceMap, onSubmit: undefined },
+    }));
+  });
+};
+
+/**
  * A form boundary: run the schema, show the messages, submit the decoded value.
  */
 export const Form = <T,>({
@@ -135,6 +160,7 @@ export const Form = <T,>({
   const submit = useCallback((): void => {
     if (pending) return;
     syncValues(form, value);
+    clearSubmitErrors(form);
     void form.handleSubmit();
   }, [form, pending, value]);
 
