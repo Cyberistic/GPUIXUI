@@ -576,11 +576,10 @@ describe("the real index", () => {
     expect(componentIndex.at(-1)?.section).toBe("Data display");
   });
 
-  it("marks exactly the pages the site curates with a preview", () => {
-    // The badge, and the "preview" query, are only honest if the count is the
-    // folder's: every curated page opens with `<ComponentPreview`, and no
-    // package page does. Comparing the two sets keeps a badge off a page that
-    // has no preview and on one that gained it.
+  it("marks exactly the pages that mount a preview", () => {
+    // The badge is only honest if it follows the page's own source in both
+    // directions: every curated page opens with `<ComponentPreview`, and a
+    // package page wears the badge exactly when it mounts one.
     const curated = readdirSync(
       new URL("apps/docs/content/docs/components/", root),
     )
@@ -593,11 +592,24 @@ describe("the real index", () => {
         ).includes("<ComponentPreview"),
       }));
 
+    const packagePreview = packageFiles()
+      .filter((file) =>
+        readFileSync(new URL(file, root), "utf8").includes("<ComponentPreview"),
+      )
+      .map((file) => pageUrl(file))
+      .filter((url): url is string => url !== undefined);
+
     expect(curated.length).toBeGreaterThanOrEqual(4);
     expect(curated.filter((page) => !page.preview)).toEqual([]);
     expect(
-      componentIndex.filter((row) => row.preview).map((row) => row.url),
-    ).toEqual(curated.map((page) => page.url).toSorted());
+      componentIndex
+        .filter((row) => row.preview)
+        .map((row) => row.url)
+        .toSorted(),
+    ).toEqual(
+      [...new Set([...curated.map((page) => page.url), ...packagePreview])]
+        .toSorted(),
+    );
   });
 
   it("reports the inventory verdict the page's strip prints", () => {

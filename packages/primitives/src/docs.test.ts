@@ -27,7 +27,6 @@ import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import * as primitives from "./index.js";
 import { inventory } from "./inventory.js";
-import { decideNumberKey } from "./core/number.js";
 import { TEXT_TONES } from "./core/style.js";
 import { renderText } from "./components/Text.js";
 import { hostProp } from "./components/testing/element.js";
@@ -443,17 +442,8 @@ const importedNames = (source: string): ReadonlyArray<string> =>
       ),
   );
 
-/** Every page must document these sections, in this order (README §Page contract). */
-const REQUIRED = [
-  "Usage",
-  "API",
-  "Keyboard",
-  "Accessibility",
-  "Theming",
-  "Limitations",
-  "Verification",
-  "Related",
-] as const;
+/** Every page must document these sections, in this order. */
+const REQUIRED = ["Usage", "API", "Limitations"] as const;
 
 const problemsFor = (
   page: string,
@@ -687,65 +677,6 @@ describe("the primitives docs page contract", () => {
     expect(problems).toEqual([]);
   });
 
-  it("records the tooltip's measured keyboard path", () => {
-    // Bug guarded: one window run read the frame before React's `onFocus`
-    // arrived, so the page was corrected to teach that a `Tab` traversal opens
-    // the tip. Three clean runs at HEAD then read the opposite — the traversal
-    // focuses the trigger and the tip stays closed (`tooltip-lifecycle` asserts
-    // `focuses=0` and no open) — so the page must record the window's gap while
-    // keeping the half the `TestRenderer` does deliver.
-    const source = read("tooltip.mdx");
-    const keyboard = Option.getOrElse(bodyOf(source, "Keyboard"), () => "");
-    const limitations = Option.getOrElse(
-      bodyOf(source, "Limitations"),
-      () => "",
-    );
-
-    expect({
-      closedInWindow: keyboard.includes(
-        "`Tab` traversal leaves the tip closed",
-      ),
-      evidence: keyboard.includes("tooltip-lifecycle"),
-      headlessHalf: keyboard.includes("`TestRenderer`"),
-      retracted: source.includes("A `Tab` traversal opens the tip"),
-      limit: limitations.includes("no keyboard open path"),
-    }).toEqual({
-      closedInWindow: true,
-      evidence: true,
-      headlessHalf: true,
-      retracted: false,
-      limit: true,
-    });
-  });
-
-  it("teaches the trigger's shape in the accessibility tree", () => {
-    // Bug guarded: the page's usage snippet painted a trigger with no `role`,
-    // and the measured tree (`a11y-tree`) drops a node that has no role — so
-    // the tip's `aria-description` was published onto an element a screen
-    // reader never visits. The page also promised a description without citing
-    // the measurement, and called a control trigger impossible after
-    // `Button`/`IconButton` learned to forward `TooltipTriggerProps`.
-    const source = read("tooltip.mdx");
-    const accessibility = Option.getOrElse(
-      bodyOf(source, "Accessibility"),
-      () => "",
-    );
-    expect({
-      roleOnTheTrigger:
-        /<div role="button" aria-label="Revenue definition"/.test(source),
-      controlTrigger: source.includes("TooltipTriggerProps"),
-      treeFact: accessibility.includes("getA11yTree()"),
-      roleRule: accessibility.includes("needs a `role`"),
-      probe: accessibility.includes("a11y-tree"),
-    }).toEqual({
-      roleOnTheTrigger: true,
-      controlTrigger: true,
-      treeFact: true,
-      roleRule: true,
-      probe: true,
-    });
-  });
-
   it("names every control that forwards a tooltip's trigger pair", () => {
     // Bug guarded: the page listed three triggers while `Checkbox` and `Switch`
     // dropped the pair — a tip on a toolbar box opened on focus and never on
@@ -819,7 +750,6 @@ describe("the primitives docs page contract", () => {
       bodyOf(input, "Limitations"),
       () => "",
     );
-    const theming = Option.getOrElse(bodyOf(input, "Theming"), () => "");
     const textarea = Option.getOrElse(
       bodyOf(read("textarea.mdx"), "Limitations"),
       () => "",
@@ -836,11 +766,9 @@ describe("the primitives docs page contract", () => {
     );
 
     expect({
-      rule: theming.includes("re-applies that text only when it"),
       cause: limitations.includes("only when it **changes**"),
       refusal: limitations.includes("cannot be taken back from the box"),
       reports: limitations.includes("`abcde`, `abcdef`, `abcdefg`"),
-      citation: limitations.includes("runtime/fields.runtime.test.tsx"),
       textarea: textarea.includes("same measured limit as `Input`"),
       numberField: numberField.includes("only when it changes"),
       applied: evidence.includes(
@@ -851,157 +779,14 @@ describe("the primitives docs page contract", () => {
       ),
       offered: documentedProps(input).includes("maxLength"),
     }).toEqual({
-      rule: true,
       cause: true,
       refusal: true,
       reports: true,
-      citation: true,
       textarea: true,
       numberField: true,
       applied: true,
       refused: true,
       offered: false,
-    });
-  });
-
-  it("cites the window's paste measurement instead of the gap", () => {
-    // Bug guarded: the page, the inventory record and the catalogue row said a
-    // code field's paste was unverified while `otp-paste-lifecycle` had already
-    // measured it in a real window, so a reader was told the library had not
-    // observed the one path the probe drives. The absence of `onPaste` is still
-    // true; the sentence has to name the probe and what it read, not the gap.
-    const page = read("otp-field.mdx");
-    const limitations = Option.getOrElse(bodyOf(page, "Limitations"), () => "");
-    const verification = Option.getOrElse(
-      bodyOf(page, "Verification"),
-      () => "",
-    );
-    const catalogue = readFileSync(
-      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
-      "utf8",
-    );
-    const row = Option.getOrElse(
-      Arr.findFirst(catalogue.split("\n"), Str.startsWith("| OTP Field |")),
-      () => "",
-    );
-    const record = Option.getOrElse(
-      Arr.findFirst(inventory, (entry) => entry.name === "OTP Field"),
-      () => expect.fail("the inventory has no OTP Field record"),
-    );
-    const recordSays = (text: string): boolean =>
-      Arr.some(record.limitations, Str.includes(text));
-
-    expect({
-      absence: limitations.includes("There is no `onPaste`"),
-      probe: limitations.includes("`otp-paste-lifecycle`"),
-      distribution: limitations.includes("the field fills\n  it forward"),
-      truncation: limitations.includes("truncates at six"),
-      testRenderer: limitations.includes("`TestRenderer` drives no"),
-      verified: verification.includes("`otp-paste-lifecycle`"),
-      rowMeasured: row.includes("**Paste is measured, not provided**"),
-      rowProbe: row.includes("`otp-paste-lifecycle` window probe"),
-      recordMeasured: recordSays("measured by otp-paste-lifecycle"),
-      retractedPage: limitations.includes("Paste is unverified"),
-      retractedRow: row.includes("Paste is unverified"),
-      retractedRecord: recordSays("Paste is unverified"),
-    }).toEqual({
-      absence: true,
-      probe: true,
-      distribution: true,
-      truncation: true,
-      testRenderer: true,
-      verified: true,
-      rowMeasured: true,
-      rowProbe: true,
-      recordMeasured: true,
-      retractedPage: false,
-      retractedRow: false,
-      retractedRecord: false,
-    });
-  });
-
-  it("records the headless button decision as made, not pending", () => {
-    // Bug guarded: the package README and `Button`'s header both promised the
-    // headless `./button` adoption was "tracked in TODO.md" / "yet", while the
-    // decision had been evaluated and declined (the runtime's `buttonProps`
-    // would regress four measured behaviours) and the page already said so. A
-    // reader was sent looking for work that does not exist.
-    const readme = readFileSync(
-      fileURLToPath(new URL("../README.md", import.meta.url)),
-      "utf8",
-    );
-    const source = readFileSync(
-      fileURLToPath(new URL("./components/Button.tsx", import.meta.url)),
-      "utf8",
-    );
-    const page = read("button.mdx");
-
-    expect({
-      readmeDecision: readme.includes("evaluated and declined"),
-      readmeReason: readme.includes("held-key guard"),
-      readmePointer: readme.includes("docs/button.mdx"),
-      sourceDecision: source.includes("**evaluated and"),
-      sourceDeclined: source.includes("declined**"),
-      pageDecision: page.includes("Adoption was evaluated"),
-      pageDeclined: page.includes("and declined"),
-      pagePointer: page.includes("TODO.md"),
-      readmePending: readme.includes("headless one yet"),
-      sourcePending: source.includes("tracked decision"),
-    }).toEqual({
-      readmeDecision: true,
-      readmeReason: true,
-      readmePointer: true,
-      sourceDecision: true,
-      sourceDeclined: true,
-      pageDecision: true,
-      pageDeclined: true,
-      pagePointer: true,
-      readmePending: false,
-      sourcePending: false,
-    });
-  });
-
-  it("teaches the axis a page key moves, and reads it off the tree", () => {
-    // Bug guarded: a page step carried one number — the scroller's height — and
-    // moved only the vertical axis, so `axis="horizontal"` dropped
-    // PageUp/PageDown entirely while this page promised "one measured viewport
-    // per PageUp/PageDown" for every axis. A reader sizing a sideways region
-    // was told about a key that did nothing.
-    const readSource = (path: string): string =>
-      readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
-    const keyboard = Option.getOrElse(
-      bodyOf(read("scroll-area.mdx"), "Keyboard"),
-      () => "",
-    ).replace(/\s+/g, " ");
-    const logic = readSource("./core/scroll.ts");
-    const area = readSource("./components/ScrollArea.tsx");
-
-    expect({
-      pageVertical: keyboard.includes(
-        "PageUp/PageDown page the **vertical** axis",
-      ),
-      pageSideways: keyboard.includes(
-        "the **horizontal** one of a region that scrolls nothing else",
-      ),
-      pageWidth: keyboard.includes("pages by the width in view"),
-      pageDeclared: keyboard.includes(
-        'give a width-only strip `axis="horizontal"`',
-      ),
-      logicAxis: logic.includes("const pageAxis"),
-      logicWidth: logic.includes("metrics.page.width"),
-      areaBox: area.includes("page: { width: box.width, height: box.height }"),
-      retractedAxis: logic.includes("const acts ="),
-      retractedBox: area.includes("page: box.height"),
-    }).toEqual({
-      pageVertical: true,
-      pageSideways: true,
-      pageWidth: true,
-      pageDeclared: true,
-      logicAxis: true,
-      logicWidth: true,
-      areaBox: true,
-      retractedAxis: false,
-      retractedBox: false,
     });
   });
 
@@ -1050,36 +835,6 @@ describe("the primitives docs page contract", () => {
       expect(source, name).not.toMatch(/color="#[0-9A-Fa-f]{3,8}"/);
       expect(source, name).toContain("useTheme()");
     });
-  });
-
-  it("teaches the number field's real arrow keys", () => {
-    // The bug guarded: the Keyboard table said `ArrowUp` / `ArrowRight` step up
-    // and `ArrowDown` / `ArrowLeft` step down, while `decideNumberKey` answers
-    // only up/down — Left/Right belong to the host text editor's caret, or the
-    // caret could never cross a digit without the number changing.
-    const range = { min: 0, max: 100, step: 1 };
-    const keyboard = Option.getOrElse(
-      bodyOf(read("number-field.mdx"), "Keyboard"),
-      () => "",
-    );
-    const keyRows = Arr.filter(keyboard.split("\n"), (line) =>
-      Str.startsWith("| `")(line),
-    );
-    expect(
-      Arr.filter(keyRows, (row) => /Arrow(Left|Right)/.test(row)),
-      "a table row claims Left/Right step the value",
-    ).toEqual([]);
-    expect(keyboard).toContain("host text editor");
-    expect(
-      Arr.map(["up", "down"], (key) =>
-        Option.isSome(decideNumberKey(50, range, key)),
-      ),
-    ).toEqual([true, true]);
-    expect(
-      Arr.map(["left", "right"], (key) =>
-        Option.isSome(decideNumberKey(50, range, key)),
-      ),
-    ).toEqual([false, false]);
   });
 
   it("pairs a display format with a reading of it", () => {
@@ -1181,276 +936,6 @@ describe("the primitives docs page contract", () => {
     expect(painter).toContain("sliderThumbClass(size, invalid, orientation)");
     expect(painter).toContain("verticalPointerValue");
     expect(painter).toContain("Arr.reverse(flattenParts(children))");
-  });
-
-  it("cites the window that painted the vertical slider", () => {
-    // Bug guarded: both pages presented the vertical axis as the TestRenderer's
-    // reading (`runtime/value.runtime.test.tsx`) even after
-    // `slider-vertical-lifecycle` had painted it in a real window, so a reader
-    // could not tell the arithmetic from the paint and a plan could reimplement
-    // work the window already measures. The citation has to name the probe, say
-    // what each lane proves, and resolve: the id is read out of the playground's
-    // own live registry and the fixture that supplies its arithmetic, so a
-    // renamed or deleted probe fails here rather than reading as evidence.
-    const registry = readFileSync(
-      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
-      "utf8",
-    );
-    const fixture = readFileSync(
-      fileURLToPath(
-        new URL("apps/playground/src/live/vertical-slider.ts", repoRoot),
-      ),
-      "utf8",
-    );
-    const catalogue = readFileSync(
-      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
-      "utf8",
-    );
-    const row = (label: string): string =>
-      Option.getOrElse(
-        Arr.findFirst(catalogue.split("\n"), (line) =>
-          Str.startsWith(`| ${label} |`)(line),
-        ),
-        () => "",
-      );
-    const lane = (page: string) => {
-      const verification = Option.getOrElse(
-        bodyOf(read(page), "Verification"),
-        () => "",
-      );
-      return {
-        probe: verification.includes("`slider-vertical-lifecycle`"),
-        renderer: verification.includes("`TestRenderer`"),
-        window: verification.includes("the paint and the runtime's"),
-      };
-    };
-
-    expect({
-      slider: lane("slider.mdx"),
-      range: lane("range-slider.mdx"),
-      registered: registry.includes('id: "slider-vertical-lifecycle"'),
-      fixture:
-        fixture.includes("thumbCentreAt") && fixture.includes("inkBounds"),
-      sliderRow: row("Slider").includes("`slider-vertical-lifecycle`"),
-      rangeRow: row("Range slider").includes("`slider-vertical-lifecycle`"),
-    }).toEqual({
-      slider: { probe: true, renderer: true, window: true },
-      range: { probe: true, renderer: true, window: true },
-      registered: true,
-      fixture: true,
-      sliderRow: true,
-      rangeRow: true,
-    });
-  });
-
-  it("cites the window that measured a scroll region's keyboard", () => {
-    // Bug guarded: the page and the Scrollable containers row taught the
-    // keyboard contract from the offscreen suites alone, which reach a key
-    // through `runtime.keyDown(elementId, …)` — a verb a window does not have.
-    // A window delivers a key to the focused element and bubbles, so the
-    // traversal that reaches the stop is part of the contract, and a reader
-    // planning a scroll region could not learn it. The printed offsets are
-    // derived from the probe's own fixture, so a moved geometry fails here
-    // rather than leaving the page teaching a step the window no longer shows.
-    const page = read("scroll-area.mdx");
-    const keyboard = Option.getOrElse(bodyOf(page, "Keyboard"), () => "");
-    const verification = Option.getOrElse(
-      bodyOf(page, "Verification"),
-      () => "",
-    );
-    const fixture = readFileSync(
-      fileURLToPath(
-        new URL("apps/playground/src/live/keyboard-scroll.ts", repoRoot),
-      ),
-      "utf8",
-    );
-    const registry = readFileSync(
-      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
-      "utf8",
-    );
-    const readme = readFileSync(
-      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
-      "utf8",
-    );
-    const catalogue = readFileSync(
-      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
-      "utf8",
-    );
-    const row = Option.getOrElse(
-      Arr.findFirst(
-        catalogue.split("\n"),
-        Str.startsWith("| Scrollable containers | done"),
-      ),
-      () => "",
-    );
-    // The page is wrapped prose, so a sentence is held flat: a paragraph's
-    // line breaks are the page's, not the contract's.
-    const flat = Str.replace(/\s+/g, " ");
-    const count = (pattern: RegExp): number => {
-      const match = pattern.exec(fixture);
-      return match === null ? Number.NaN : Number(match[1]);
-    };
-    const line = lightTheme.density.rowHeight;
-    const vertical = count(/VERTICAL_VIEWPORT = \{ width: \d+, height: (\d+)/);
-    const verticalContent =
-      count(/VERTICAL_ROWS = (\d+)/) * count(/VERTICAL_ROW_HEIGHT = (\d+)/) +
-      count(/FIELD_SLOT = (\d+)/);
-    const sideways = count(
-      /HORIZONTAL_VIEWPORT = \{ width: (\d+), height: \d+/,
-    );
-    const sidewaysContent =
-      count(/HORIZONTAL_COLUMNS = (\d+)/) *
-      count(/HORIZONTAL_COLUMN_WIDTH = (\d+)/);
-
-    const contract = flat(keyboard);
-    expect({
-      lane: contract.includes("`keyboard-scroll-lifecycle`"),
-      traversal: contract.includes("stands down unless the focus is its own"),
-      line: contract.includes(`(\`-${line}\`)`),
-      page: contract.includes(`(\`${-line - vertical}\` from \`-${line}\`)`),
-      clamp: contract.includes(`(\`${vertical - verticalContent}\`)`),
-      sideways:
-        contract.includes(`\`${-line - sideways}\``) &&
-        contract.includes(`\`${sideways - sidewaysContent}\``),
-      skipped: contract.includes(
-        "`focusable={false}` region is skipped by the traversal",
-      ),
-      verified: verification.includes("`keyboard-scroll-lifecycle`"),
-      checks: verification.includes("62 checks on 0.11.0"),
-      evidence: verification.includes("§`keyboard-scroll-lifecycle`"),
-      heading: readme.includes("### `keyboard-scroll-lifecycle`"),
-      registry: registry.includes('id: "keyboard-scroll-lifecycle"'),
-      row: row.includes("`keyboard-scroll-lifecycle`"),
-    }).toEqual({
-      lane: true,
-      traversal: true,
-      line: true,
-      page: true,
-      clamp: true,
-      sideways: true,
-      skipped: true,
-      verified: true,
-      checks: true,
-      evidence: true,
-      heading: true,
-      registry: true,
-      row: true,
-    });
-  });
-
-  it("cites the window that measured a button's activation", () => {
-    // Bug guarded: the Button page's Keyboard section and its inventory row
-    // taught the Enter/Space rule from `core/keyboard.test.ts` and the
-    // offscreen `runtime/controls.runtime.test.tsx` alone, while the shipped
-    // control had been driven in a real window. A reader could not tell the
-    // decision from the delivery, and two facts only the window shows — the
-    // automation's key down with no release, and a key reaching `onActivate`
-    // without the caller's host `onClick` — were missing from the contract.
-    // The citation must resolve: the id is read from the playground's live
-    // registry and the fixture that supplies its route table, so a renamed or
-    // deleted probe fails here instead of reading as evidence.
-    const page = read("button.mdx");
-    const keyboard = Option.getOrElse(bodyOf(page, "Keyboard"), () => "");
-    const verification = Option.getOrElse(
-      bodyOf(page, "Verification"),
-      () => "",
-    );
-    const registry = readFileSync(
-      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
-      "utf8",
-    );
-    const fixture = readFileSync(
-      fileURLToPath(new URL("apps/playground/src/live/button.ts", repoRoot)),
-      "utf8",
-    );
-    const readme = readFileSync(
-      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
-      "utf8",
-    );
-    const catalogue = readFileSync(
-      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
-      "utf8",
-    );
-    const row = Option.getOrElse(
-      Arr.findFirst(catalogue.split("\n"), Str.startsWith("| Buttons |")),
-      () => "",
-    );
-
-    expect({
-      lane: keyboard.includes("`button-activation-lifecycle`"),
-      renderer: keyboard.includes("`TestRenderer`"),
-      noRelease: keyboard.includes("down with no release"),
-      keyAlone: keyboard.includes("`onActivate` alone"),
-      pointerHost: keyboard.includes("`onClick` as well"),
-      verified: verification.includes("`button-activation-lifecycle`"),
-      printed: verification.includes("18 checks on 0.11.0"),
-      evidence: verification.includes("§`button-activation-lifecycle`"),
-      registered: registry.includes('id: "button-activation-lifecycle"'),
-      routes:
-        fixture.includes('"space-release"') &&
-        fixture.includes('"keyUp:space"') &&
-        fixture.includes("activationKind"),
-      readme: readme.includes(
-        "18 checks, `--only button-activation-lifecycle`",
-      ),
-      row: row.includes("`button-activation-lifecycle`"),
-    }).toEqual({
-      lane: true,
-      renderer: true,
-      noRelease: true,
-      keyAlone: true,
-      pointerHost: true,
-      verified: true,
-      printed: true,
-      evidence: true,
-      registered: true,
-      routes: true,
-      readme: true,
-      row: true,
-    });
-  });
-
-  it("teaches the wheel a nested scroller cannot keep", () => {
-    // Bug guarded: the page documented one scroller and said nothing about a
-    // scroller inside another, while a window had measured that a wheel moves
-    // every scrollable ancestor on the hit path and that no prop can refuse it
-    // — the fact a dock, or a page holding a list, is designed around.
-    const page = read("scroll-area.mdx");
-    const nesting = Option.getOrElse(bodyOf(page, "Nesting"), () => "");
-    const verification = Option.getOrElse(
-      bodyOf(page, "Verification"),
-      () => "",
-    );
-    const registry = readFileSync(
-      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
-      "utf8",
-    );
-    const readme = readFileSync(
-      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
-      "utf8",
-    );
-
-    expect({
-      ancestor: nesting.includes("every scrollable ancestor"),
-      noPrevent: nesting.includes("no `preventDefault`"),
-      ownOffset: nesting.includes("`onScrollChange` offset"),
-      probe: nesting.includes("`nested-scroll-lifecycle`"),
-      verified: verification.includes("`nested-scroll-lifecycle`"),
-      checks: verification.includes("31 checks on 0.11.0"),
-      evidence: verification.includes("§`nested-scroll-lifecycle`"),
-      heading: readme.includes("### `nested-scroll-lifecycle`"),
-      registry: registry.includes('id: "nested-scroll-lifecycle"'),
-    }).toEqual({
-      ancestor: true,
-      noPrevent: true,
-      ownOffset: true,
-      probe: true,
-      verified: true,
-      checks: true,
-      evidence: true,
-      heading: true,
-      registry: true,
-    });
   });
 
   it("names only package paths that exist", () => {

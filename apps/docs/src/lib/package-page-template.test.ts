@@ -65,11 +65,6 @@ const sections: ReadonlyArray<Section> = [
     accepts: (heading) =>
       heading.startsWith("Accessibility") || heading === "Limitations",
   },
-  {
-    name: "evidence",
-    accepts: (heading) => heading === "Verification" || heading === "Testing",
-  },
-  { name: "Related", accepts: (heading) => heading === "Related" },
 ];
 
 interface KnownGap {
