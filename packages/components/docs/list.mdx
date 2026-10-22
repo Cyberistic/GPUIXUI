@@ -225,8 +225,12 @@ an untouched row repaints.
 
 A row is `density.rowHeight + spacing.md` tall (40px on the default comfortable
 density) and `density.rowHeight` when `dense` (32px). Selection paints
-`colors.selected` / `colors.selectedForeground`; hover paints `colors.accent`;
-a disabled row is drawn at 50% opacity.
+`colors.selected` behind the row and `colors.selectedForeground` for its text —
+the title included, because a selected fill is saturated and the page's body role
+is not its on-colour. `ListItemDescription` keeps `colors.mutedForeground`, the
+pair the token contract measures on that fill at the secondary floor; hover paints
+`colors.accent`; a disabled row is drawn at 50% opacity. A caller's `style` is the
+last word, including on a selected title.
 
 ## Style by state
 
@@ -278,7 +282,7 @@ is on.
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (38 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (39 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching, and
 `src/list/selection.test.ts` for the multiple-selection rules: the modes and
@@ -289,7 +293,9 @@ height, the controlled list not moving its own selection, type-ahead jumping and
 cycling while skipping disabled and unlabelled rows, activation by `Enter` and by
 click (and not by `Space`, a disabled row or a plain list without the prop), the
 arrow key reaching the row that activates, both text parts clipped to one line
-and bounded by the row, and — in multiple mode —
+and bounded by the row, the selected title painted in the row's on-colour (held
+to the body floor on the fill it sits on) while the description keeps its muted
+role and a caller's `style` still wins, and — in multiple mode —
 plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow` ranges, `Cmd`/`Ctrl`+A
 selecting every enabled row, and a disabled row never entering a selection.
 

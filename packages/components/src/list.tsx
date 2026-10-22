@@ -107,6 +107,15 @@ interface ListContextValue {
 
 const ListContext = createContext<ListContextValue | undefined>(undefined);
 
+/**
+ * Whether the row around a text part is selected.
+ *
+ * The row paints its own on-colour, but a text part sets one from its recipe, so
+ * the title has to know the selection to keep the role the row declares. It is a
+ * boolean rather than the row's whole state because a title only reads this.
+ */
+const RowSelectedContext = createContext(false);
+
 /** The list a {@link ListItem} belongs to. Throws when there is none. */
 const useListContext = (): ListContextValue => {
   const value = useContext(ListContext);
@@ -781,7 +790,9 @@ export const ListItem = ({
           minWidth: 0,
         }}
       >
-        {children}
+        <RowSelectedContext.Provider value={isSelected}>
+          {children}
+        </RowSelectedContext.Provider>
       </div>
       {trailing === undefined ? null : (
         <div
@@ -806,8 +817,11 @@ export interface ListItemTitleProps extends Props {
 
 /**
  * The row's one-line label. The row's height is fixed, so the title is clipped
- * rather than wrapped; the description's recipe carries the same pair, but
- * `@gpuixui/tw` owns that table (TODO → Interlocks).
+ * rather than wrapped.
+ *
+ * A selected row is a saturated fill, so its title takes the row's on-colour
+ * (`selectedForeground`) instead of the recipe's page role; the description
+ * keeps its muted role, which the token contract measures on that fill.
  */
 export const ListItemTitle = ({
   className,
@@ -815,6 +829,7 @@ export const ListItemTitle = ({
   ...rest
 }: ListItemTitleProps) => {
   const theme = useTheme();
+  const selected = useContext(RowSelectedContext);
   return (
     <text
       {...rest}
@@ -822,6 +837,7 @@ export const ListItemTitle = ({
         mergeStyles(recipeStyle(cn(LIST_ITEM_TITLE, className), theme), {
           whiteSpace: "nowrap",
           textOverflow: "ellipsis",
+          ...(selected ? { color: theme.colors.selectedForeground } : {}),
         }),
         style,
       )}

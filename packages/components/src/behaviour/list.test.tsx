@@ -24,11 +24,16 @@
  * a disabled row won the match, an uppercase letter never matched, a missed
  * prefix poisoned the next search, and a typed jump must not change the
  * selection in multiple mode.
+ *
+ * Selection paint: a selected row declares `selectedForeground` for its text,
+ * but the title's own recipe painted the page's `foreground` over it, so the
+ * on-colour the row hands everything else never reached its label.
  */
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
+import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -187,6 +192,57 @@ describe("List", () => {
       "Gamma",
       "third",
     ]);
+
+    list.unmount();
+  });
+
+  it("paints a selected row's title in the row's on-colour", () => {
+    const list = renderComponent(
+      <List testId="list" selectionMode="single" defaultValue="a">
+        <ListItem testId="row-a" value="a">
+          <ListItemTitle testId="title-a">Alpha</ListItemTitle>
+          <ListItemDescription testId="description-a">
+            first
+          </ListItemDescription>
+        </ListItem>
+        <ListItem testId="row-b" value="b">
+          <ListItemTitle testId="title-b">Beta</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c">
+          <ListItemTitle testId="title-c" style={{ color: "#FF0000" }}>
+            Gamma
+          </ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    const painted = (testId: string): unknown =>
+      list.renderer.findByTestId(testId)?.style.color;
+
+    // The row's on-colour, not the page's body role: `selected` is the fill and
+    // the title sits on it, so the recipe's `text-foreground` erased the role
+    // the row declares. The token contract holds this pair to the body floor.
+    expect(painted("title-a")).toBe(darkTheme.colors.selectedForeground);
+    expect(
+      contrastRatio(
+        darkTheme.colors.selectedForeground,
+        darkTheme.colors.selected,
+      ) ?? 0,
+    ).toBeGreaterThanOrEqual(contrastFloors.body);
+    expect(painted("title-b")).toBe(darkTheme.colors.foreground);
+    // The second line keeps its muted role, which the contract measures on the
+    // same fill at the secondary floor.
+    expect(painted("description-a")).toBe(darkTheme.colors.mutedForeground);
+
+    clickCentreOf(list, "row-b");
+
+    expect(painted("title-b")).toBe(darkTheme.colors.selectedForeground);
+    expect(painted("title-a")).toBe(darkTheme.colors.foreground);
+
+    // A caller's `style` is still the last word.
+    clickCentreOf(list, "row-c");
+
+    expect(painted("title-c")).toBe("#FF0000");
 
     list.unmount();
   });
