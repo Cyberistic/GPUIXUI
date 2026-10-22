@@ -75,9 +75,9 @@ describe("a window's Tab traversal and React's onFocus", () => {
   });
 
   it("the probe's own screen and the registry title say what it measures", () => {
-    expect(scenarios).toContain(
-      "A Tab traversal focuses the trigger without running",
-    );
+    // The caption wraps in the JSX source, so the claim is two fragments.
+    expect(scenarios).toContain("A Tab traversal focuses the trigger without");
+    expect(scenarios).toContain("running its onFocus, so the tip stays closed");
     expect(registry).toContain("while a Tab traversal leaves it closed");
     expect(registry).not.toContain("opens on hover and on a keyboard focus");
   });
