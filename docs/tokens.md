@@ -1107,13 +1107,16 @@ primitive cores is the interlock in `TODO.md`.
 #### The dim a control paints while Tab is elsewhere
 
 `@gpuix/native` fades **every other focusable element** while one control has
-keyboard focus, so a keyboard user can see where Tab can go. The element keeps
-40% of itself and shows the surface behind it; the runtime's `keyboardFocusDim`
-field is on by default, is per element, and an element that draws its own focus
-look opts out with `keyboardFocusDim: false`. `contrastRatio` refuses the
-result, so the one paint every focused state in the library triggers was
-measured by nothing. `keyboardFocusDimOpacity` is that share (`0.4`) and
-`keyboardDimFailures(theme, floor?)` measures it by compositing.
+keyboard focus, so a keyboard user can see where Tab can go. One element is
+exempt: a focused `input`/`textarea` dims nothing, because typing is keyboard
+input too — the runtime returns no dim path for a field rather than fading only
+its siblings, so a filled action beside a form keeps its label while a reader
+types. The element keeps 40% of itself and shows the surface behind it; the
+runtime's `keyboardFocusDim` field is on by default, is per element, and an
+element that draws its own focus look opts out with `keyboardFocusDim: false`.
+`contrastRatio` refuses the result, so the one paint every focused state in the
+library triggers was measured by nothing. `keyboardFocusDimOpacity` is that share
+(`0.4`) and `keyboardDimFailures(theme, floor?)` measures it by compositing.
 
 The share is measured, not assumed: the `keyboard-focus-dim` window capture on
 0.11.0 paints the dark theme's `muted` fill `#222730` as `#181C23` over the

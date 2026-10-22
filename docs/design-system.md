@@ -286,7 +286,7 @@ it. It is held instead to one shadow per level, tinted by the `shadow` role (see
 | link | `brandText(theme)` — the brand derived into a text colour that reads on all six surfaces it can sit on, with `hover` / `active` washes behind it; never the raw `primary` fill role |
 | loading | a mark — `primary`, or a status tone's readable role — never the disabled fade: a busy control keeps its label, its tab stop and its announcement |
 | focus | `keyboardFocusRing(theme)` — an `outline` in the runtime's `focusVisible` state, painted only after keyboard input; `focusRing(theme)` — the unconditional shadow for a programmatic focus (a mouse-opened overlay) |
-| dimmed | `keyboardFocusDimOpacity` — every other focusable keeps 40% of itself while one control has keyboard focus; a control whose text must stay readable opts out with `keyboardFocusDim: false` |
+| dimmed | `keyboardFocusDimOpacity` — every other focusable keeps 40% of itself while one control has keyboard focus, except that a focused `input`/`textarea` dims nothing (typing is keyboard input too); a control whose text must stay readable opts out with `keyboardFocusDim: false` |
 | text selection | `selection` translucent wash, measured by `selectionFailures` — visible on its surface, and the text it covers still at the body floor (secondary text at the secondary floor) |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
 
@@ -359,11 +359,14 @@ cores remains the interlock in `TODO.md` → Interlocks.
 **Keyboard focus dims every other control, and that is a paint too.** While one
 element has keyboard focus, `@gpuix/native` multiplies every other focusable
 element's opacity by `keyboardFocusDimOpacity` (`0.4`, on by default and per
-element; `keyboardFocusDim: false` opts out). It is a where-can-Tab-go cue, not
-a reading mode: dimming a saturated fill toward a light page closes it on its
-label, and the tightest shipped placement is Linux light's `primary` over a card
-at 1.27:1 (`#C8DDF5` on `#A4C6EF`). So the contract is the same one the disabled
-state carries — the label is still seen — at `decorativeFloor` (1.05:1), not a
+element; `keyboardFocusDim: false` opts out). One element is exempt: a focused
+`input`/`textarea` dims nothing, because typing is keyboard input too, so a
+filled action beside a form keeps its label while a reader types. It is a
+where-can-Tab-go cue, not a reading mode: dimming a saturated fill toward a light
+page closes it on its label, and
+the tightest shipped placement is Linux light's `primary` over a card at 1.27:1
+(`#C8DDF5` on `#A4C6EF`). So the contract is the same one the disabled state
+carries — the label is still seen — at `decorativeFloor` (1.05:1), not a
 readability floor, and a control whose text must stay readable while the focus
 is elsewhere opts out of the dim. `keyboardDimFailures` measures the 32
 placements the three filled actions, a field, a focusable row and a selected row

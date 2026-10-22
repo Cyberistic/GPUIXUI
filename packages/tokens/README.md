@@ -271,9 +271,11 @@ and a programmatic focus after a Tab paints it. A runnable example lives in
 ## Keyboard focus dim
 
 While one element has keyboard focus, GPUix multiplies **every other focusable
-element's** opacity by `keyboardFocusDimOpacity` (`0.4`); the field is on by
-default, per element, and an element that draws its own focus look opts out with
-`keyboardFocusDim: false`. The share is measured, not assumed: the
+element's** opacity by `keyboardFocusDimOpacity` (`0.4`) — but a focused
+`input`/`textarea` dims nothing, because typing is keyboard input too, so a
+filled action beside a form keeps its label while a reader types. The field is
+on by default, per element, and an element that draws its own focus look opts out
+with `keyboardFocusDim: false`. The share is measured, not assumed: the
 `keyboard-focus-dim` window capture paints the dark theme's `muted` fill
 `#222730` as `#181C23` and its `foreground` text `#EEF1F5` as `#6E7177` over that
 fill, which is `blend(colour, behind, 1 - 0.4)`.

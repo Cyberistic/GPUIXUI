@@ -10,8 +10,17 @@
  * the dark theme's `muted` fill `#222730` as `#181C23` over the page and its
  * `foreground` text `#EEF1F5` as `#6E7177` over that fill, which is
  * `blend(colour, behind, 1 - 0.4)`.
+ *
+ * It also holds the runtime's one exclusion: `renderer.rs`'s
+ * `keyboard_focus_path` returns no path when the focused element is an
+ * `input`/`textarea` ("typing is keyboard input too, and dimming the window
+ * while someone types is noise"), so a field dims nothing. The token pages
+ * claimed every other focusable fades, full stop; the `filled-action-dim` probe
+ * measured the opposite — tabbing into a shipped `Input` left a ghost action's
+ * 611 label pixels untouched.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { darkColors, lightColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
@@ -49,6 +58,40 @@ const allThemes = [
     retroTheme(darkTheme, look),
   ]),
 ] as const;
+
+/**
+ * Every surface that describes the dim. `node:fs` is deliberate, as in
+ * `fonts.test.ts` and `docs.test.ts`: this checks the repository's own prose,
+ * and the package keeps zero runtime dependencies. Whitespace is flattened so a
+ * Markdown line wrap cannot hide a missing clause.
+ */
+const dimSurfaces = (): Record<string, string> => {
+  const read = (path: string): string =>
+    readFileSync(new URL(path, import.meta.url), "utf8");
+  const flatten = (text: string): string => text.replace(/\s+/g, " ");
+  const inventory = read("../../../COMPONENTS.md")
+    .split("\n")
+    .find((line) => line.startsWith("| Keyboard focus dim |"));
+  return {
+    "docs/tokens.md": flatten(read("../../../docs/tokens.md")),
+    "docs/design-system.md": flatten(read("../../../docs/design-system.md")),
+    "README.md": flatten(read("../README.md")),
+    "COMPONENTS.md": flatten(inventory ?? ""),
+  };
+};
+
+describe("the dim a focused field casts", () => {
+  it("states the exclusion and the runtime's reason on every surface", () => {
+    Object.entries(dimSurfaces()).forEach(([name, text]) => {
+      expect(text, `${name} no longer states the field exemption`).toContain(
+        "a focused `input`/`textarea` dims nothing",
+      );
+      expect(text, `${name} no longer gives the runtime's reason`).toContain(
+        "typing is keyboard input too",
+      );
+    });
+  });
+});
 
 describe("keyboardFocusDimOpacity", () => {
   it("is the runtime's measured share, not a theme group", () => {
