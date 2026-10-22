@@ -3849,20 +3849,29 @@ a workaround for two live sessions sharing one worktree; see
       caller's parser is tried first, text it declines falls back to the decimal
       grammar (a grouped field stays hand-editable), a non-finite answer is not a
       value, and a blank field is never one whatever a parser says. `formatValue`
-      is documented as display-only and `parseValue` is its declared counterpart;
-      the edit and commit paths both read through the one helper, so `Enter`
-      reformats through `formatValue`. Proof: `core/number.test.ts` gains five
-      `parseNumberText` cases (a grouped and a comma-decimal parser, the decimal
-      fallback, the blank field, an unpaintable answer) and
-      `runtime/number-field.runtime.test.tsx` gains `reads back the display format
-      its caller's formatValue painted` (a field showing `1,234` reports `12345`
-      after typing `5` and commits as `12,345`). Directions measured: without the
-      wiring the window case fails with `the field reported no change at all`;
-      removing the API row fails `docs.test.ts`'s `pairs a display format with a
-      reading of it` with `row: false`. `nub run --filter @gpuixui/primitives
-      test` 874/874 (49 files), `test:runtime` 261/261 (20 files), `check-types`
-      and the repo `lint` clean. Docs `number-field.mdx` §API/§Theming/§Limitations/
-      §Verification, the inventory record and the Tier 1 `Number Field` row.
+      is documented as display-only and `parseValue` is its declared counterpart.
+      **The controlled half is the same seam**: `syncNumberDraft` compared an
+      owner's echo through the decimal grammar, so a controlled field showing
+      `1,234` reformatted to `12,345` on the first keystroke and dropped the
+      draft under the caret; the fold now takes the same reader, so the grouped
+      draft survives exactly as `1.` does. The edit and commit paths and the fold
+      all read through the one helper, so `Enter` reformats through
+      `formatValue`. Proof: `core/number.test.ts` gains five cases (four
+      `parseNumberText` — a grouped and a comma-decimal parser, the decimal
+      fallback, the blank field, an unpaintable answer — and a grouped draft an
+      owner echoes) and `runtime/number-field.runtime.test.tsx` gains `reads back
+      the display format its caller's formatValue painted` (a field showing
+      `1,234` reports `12345` after typing `5` and commits as `12,345`) and
+      `keeps a grouped draft the controlled owner echoes` (`1,2345` survives the
+      echo, then commits as `12,345`). Directions measured: without the wiring
+      the first window case fails with `the field reported no change at all`, and
+      without the reader on the fold the second fails with `expected '12,345' to
+      be '1,2345'`; removing the API row fails `docs.test.ts`'s `pairs a display
+      format with a reading of it` with `row: false`. `nub run --filter
+      @gpuixui/primitives test` 875/875 (49 files), `test:runtime` 262/262
+      (20 files), `check-types` and the repo `lint` clean. Docs
+      `number-field.mdx` §API/§Theming/§Limitations/§Verification, the inventory
+      record and the Tier 1 `Number Field` row.
 
 ## Blockers (project-level, with evidence)
 

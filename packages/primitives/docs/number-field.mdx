@@ -148,6 +148,13 @@ A blank field has no value whatever a parser answers, and a parser that answers
 `NaN` or `Infinity` is not a reading: only finite numbers reach the value
 channel, and the decimal grammar still gets its turn.
 
+A **controlled** field keeps the draft too: the owner's echo is compared with the
+text through the same reading the field edits with, so an owner that answers the
+value the reader just typed does not reformat the grouped text under the caret.
+That is the `1.` rule applied to a display format — measured in a window, since
+the decimal grammar would otherwise judge `1,2345` meaningless and replace it
+with `12,345` on the first keystroke.
+
 ## Keyboard
 
 | Key | Effect |
@@ -242,8 +249,9 @@ so a caller that composes its own parts still gets the hint.
   that rounding must not erase, Home/End only with a bound, a value that is not a
   number read as a bound, the `formatValue`/`parseValue` reading (a grouped and a
   comma-decimal parser, the decimal fallback, a blank field, an unpaintable
-  answer), and fixed-decimal text that keeps no negative zero and expands past
-  the platform's `1e21` exponential bound.
+  answer, and the grouped draft a controlled owner echoes), and fixed-decimal
+  text that keeps no negative zero and expands past the platform's `1e21`
+  exponential bound.
 - `src/components/NumberField.test.tsx` — the draft value, the key contract, the
   raw edit report, the submit channel (commit first, no listener while
   disabled), steppers as presentation, one tab stop, disabled/invalid,
@@ -270,7 +278,9 @@ so a caller that composes its own parts still gets the hint.
   without the field's listener the text stayed `1.5` and the report never came);
   **a grouped display is read back** — a field showing `1,234` reports `12345`
   after typing `5` and commits as `12,345` through the `parseValue` pair
-  (measured 2026-10-22; without `parseValue` the field reported no change at all).
+  (measured 2026-10-22; without `parseValue` the field reported no change at all),
+  and a **controlled** owner's echo keeps the grouped draft (`1,2345`) instead of
+  reformatting it under the caret.
   Measured in a window 2026-10-17.
 
 ```sh

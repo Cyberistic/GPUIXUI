@@ -275,8 +275,14 @@ export const commitNumberDraft = (draft: NumberDraft): NumberDraft => ({
 });
 
 /** The value a piece of text means, once it is clamped into the range. */
-const meansValue = (text: string, range: NumberRange): Option.Option<number> =>
-  Option.map(parseNumericText(text), (parsed) => clampNumeric(parsed, range));
+const meansValue = (
+  text: string,
+  range: NumberRange,
+  parseValue?: ParseValue,
+): Option.Option<number> =>
+  Option.map(parseNumberText(text, parseValue), (parsed) =>
+    clampNumeric(parsed, range),
+  );
 
 /**
  * Fold the owner's value into the draft.
@@ -288,12 +294,15 @@ const meansValue = (text: string, range: NumberRange): Option.Option<number> =>
  * value: `1.` means 1, so a field whose owner echoes 1 keeps the `1.` the user
  * typed, while an owner that pushes 99 replaces the text with 99. A value that
  * arrives after the field was mounted is the same case: the field was empty
- * and now has something to show.
+ * and now has something to show. `parseValue` is the same reader the field
+ * edits through, so a grouped `1,2345` a controlled owner echoes is the draft
+ * that survives rather than text the decimal grammar rewrites under the caret.
  */
 export const syncNumberDraft = (
   draft: NumberDraft,
   incoming: Option.Option<number>,
   range: NumberRange,
+  parseValue?: ParseValue,
 ): Option.Option<NumberDraft> => {
   // No owner: the field owns its value, and nothing can override it.
   if (Option.isNone(incoming)) return Option.none();
@@ -306,7 +315,7 @@ export const syncNumberDraft = (
     return Option.none();
   const kept = Option.match(draft.text, {
     onSome: (text) =>
-      Option.match(meansValue(text, range), {
+      Option.match(meansValue(text, range, parseValue), {
         onNone: () => false,
         onSome: (meant) => meant === value,
       }),

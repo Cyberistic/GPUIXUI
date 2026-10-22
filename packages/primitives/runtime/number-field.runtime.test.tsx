@@ -49,6 +49,15 @@ const lastValue = (values: ReadonlyArray<number>): number =>
     expect.fail("the field reported no change at all"),
   );
 
+/** A grouped display and the reading that pairs with it: `1,234` is 1234. */
+const grouped = (value: number): string => value.toLocaleString("en-US");
+const readGrouped = (text: string): Option.Option<number> => {
+  const digits = text.replaceAll(",", "").trim();
+  return /^[+-]?\d+(?:\.\d+)?$/.test(digits)
+    ? Option.some(Number(digits))
+    : Option.none();
+};
+
 /** The native `<input>` inside the field's chrome and its hint frame. */
 const inputOf = (runtime: Runtime, testId: string) =>
   Option.getOrElse(
@@ -327,13 +336,6 @@ it("reads back the display format its caller's formatValue painted", async () =>
   // changes after typing "5"). `parseValue` is the counterpart that reads the
   // text the caller's own format painted, and committing reformats through it.
   const field = recorder();
-  const grouped = (value: number): string => value.toLocaleString("en-US");
-  const readGrouped = (text: string): Option.Option<number> => {
-    const digits = text.replaceAll(",", "").trim();
-    return /^[+-]?\d+(?:\.\d+)?$/.test(digits)
-      ? Option.some(Number(digits))
-      : Option.none();
-  };
   const runtime = await mount(
     <NumberField
       testId="nf"
@@ -348,6 +350,38 @@ it("reads back the display format its caller's formatValue painted", async () =>
   expect(textOf(runtime, "Amount")).toBe("1,234");
   runtime.type("5");
   expect(lastValue(field.values)).toBe(12345);
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "enter");
+  runtime.flush();
+  expect(textOf(runtime, "Amount")).toBe("12,345");
+});
+
+it("keeps a grouped draft the controlled owner echoes", async () => {
+  // The bug guarded: the draft an owner echoes is compared with its value
+  // through the same reading the field edits with. Before that, a controlled
+  // field showing `1,234` reformatted to `12,345` on the first keystroke — the
+  // owner's echo was judged meaningless because the decimal grammar could not
+  // read the grouped text, so the draft was dropped under the caret.
+  const Owner = () => {
+    const [value, setValue] = useState(1234);
+    return (
+      <NumberField
+        testId="nf"
+        label="Amount"
+        autoFocus
+        value={value}
+        formatValue={grouped}
+        parseValue={readGrouped}
+        onChange={setValue}
+      />
+    );
+  };
+  const runtime = await mount(<Owner />);
+  expect(textOf(runtime, "Amount")).toBe("1,234");
+  runtime.type("5");
+  // The text being typed survives the owner's echo, exactly as the `1.` draft
+  // does in an unformatted field.
+  expect(textOf(runtime, "Amount")).toBe("1,2345");
   const input = inputOf(runtime, "nf");
   runtime.renderer.nativeSimulateKeyDown(input.id, "enter");
   runtime.flush();

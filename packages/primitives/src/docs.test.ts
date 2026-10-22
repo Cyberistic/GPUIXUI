@@ -860,8 +860,10 @@ describe("the primitives docs page contract", () => {
     // locale decimal "needs `formatValue` for display and parsing before the
     // value reaches the field" — a route the field never had. A field showing a
     // grouped "1,234" therefore dropped every keystroke (measured in a window:
-    // no change at all). The page now names the `parseValue` counterpart, and
-    // both suites that prove it are cited.
+    // no change at all), and a controlled owner's echo reformatted the text
+    // under the caret because the draft was judged through the decimal grammar.
+    // The page now names the `parseValue` counterpart, and both suites that
+    // prove it are cited.
     const page = read("number-field.mdx");
     const api = Option.getOrElse(bodyOf(page, "API"), () => "");
     const runtime = readFileSync(
@@ -880,6 +882,10 @@ describe("the primitives docs page contract", () => {
       retracted: page.includes("display and parsing"),
       reading: page.includes("consulted before the decimal grammar"),
       edited: runtime.includes("reads back the display format"),
+      controlled: runtime.includes(
+        "keeps a grouped draft the controlled owner",
+      ),
+      draft: page.includes("owner's echo"),
       unit: core.includes('describe("parseNumberText"'),
     }).toEqual({
       row: true,
@@ -887,6 +893,8 @@ describe("the primitives docs page contract", () => {
       retracted: false,
       reading: true,
       edited: true,
+      controlled: true,
+      draft: true,
       unit: true,
     });
   });

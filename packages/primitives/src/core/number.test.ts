@@ -27,6 +27,24 @@ import {
 } from "./number.js";
 
 const RANGE: NumberRange = { min: 0, max: 100, step: 1 };
+/** A range with no bound, for a value a display format makes large. */
+const UNBOUNDED: NumberRange = { step: 1 };
+
+/** A reader for a grouped display: `1,234` is 1234. */
+const grouped: ParseValue = (text) => {
+  const cleaned = text.replaceAll(",", "");
+  return /^[+-]?\d+(?:\.\d+)?$/.test(cleaned)
+    ? Option.some(Number(cleaned))
+    : Option.none();
+};
+
+/** A reader for a comma-decimal display: `1,5` is 1.5. */
+const commaDecimal: ParseValue = (text) => {
+  const cleaned = text.replace(",", ".");
+  return /^[+-]?\d+(?:\.\d+)?$/.test(cleaned)
+    ? Option.some(Number(cleaned))
+    : Option.none();
+};
 
 describe("parseNumericText", () => {
   it("reads decimal notation, including a leading dot and an exponent", () => {
@@ -56,19 +74,6 @@ describe("parseNumericText", () => {
 });
 
 describe("parseNumberText", () => {
-  const grouped: ParseValue = (text) => {
-    const cleaned = text.replaceAll(",", "");
-    return /^[+-]?\d+(?:\.\d+)?$/.test(cleaned)
-      ? Option.some(Number(cleaned))
-      : Option.none();
-  };
-  const commaDecimal: ParseValue = (text) => {
-    const cleaned = text.replace(",", ".");
-    return /^[+-]?\d+(?:\.\d+)?$/.test(cleaned)
-      ? Option.some(Number(cleaned))
-      : Option.none();
-  };
-
   it("reads the format a caller's formatValue painted", () => {
     // The bug guarded: `formatValue` is display-only, so a grouped "1,234" or a
     // locale "1,5" is not decimal notation — the field reported no change for
@@ -302,6 +307,31 @@ describe("the draft a number field keeps", () => {
     const folded = syncNumberDraft(draft, Option.some(1), RANGE);
     expect(Option.getOrElse(folded, () => draft).text).toStrictEqual(
       Option.some("1."),
+    );
+  });
+
+  it("keeps a grouped draft while it means the value the owner echoes", () => {
+    // The bug guarded: the controlled-field echo was compared through the
+    // decimal grammar only, so typing a fifth digit into a grouped `1,234` made
+    // the owner echo `12345`, the draft was judged meaningless, and the field
+    // reformatted to `12,345` under the caret.
+    const draft = withNumberDraftText(
+      initNumberDraft(Option.some(1234), true),
+      "1,2345",
+    );
+    const folded = syncNumberDraft(
+      draft,
+      Option.some(12345),
+      UNBOUNDED,
+      grouped,
+    );
+    expect(Option.getOrElse(folded, () => draft).text).toStrictEqual(
+      Option.some("1,2345"),
+    );
+    // Without the reading it is the decimal grammar's call, which drops it.
+    const decimal = syncNumberDraft(draft, Option.some(12345), UNBOUNDED);
+    expect(Option.getOrElse(decimal, () => draft).text).toStrictEqual(
+      Option.none(),
     );
   });
 

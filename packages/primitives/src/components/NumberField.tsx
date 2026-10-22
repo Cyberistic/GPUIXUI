@@ -476,7 +476,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   // The owner's value moved: fold it into the draft, so a controlled field
   // shows what its owner says — a value that arrives after mount included —
   // while the text being typed survives only while it still means that value.
-  const folded = syncNumberDraft(draft, incoming, range);
+  const folded = syncNumberDraft(draft, incoming, range, props.parseValue);
   if (Option.isSome(folded)) setDraft(folded.value);
   const effective = Option.getOrElse(folded, () => draft);
   const text = numberDraftText(
