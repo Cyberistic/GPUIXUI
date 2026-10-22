@@ -370,6 +370,16 @@ paints the outline and dims the other focusables, a mouse press paints neither,
 and a programmatic focus after a Tab paints it. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
+A **filled action's** own face is the one the ring cannot be measured on. `ring`
+*is* the brand, so the line merges with `primary`/`destructive` (**1.00–1.38:1**
+and **1.00–1.54:1** in all sixteen styles), and at `outlineOffset: 0` one colour
+would have to clear the boundary floor against both the face and the page — the
+feasible luminance set is empty in **8 of the sixteen** styles for `primary` and
+9 for `destructive`, and where one exists it is ≥0.11 from the brand. The ring
+stays measured on the strips a filled action sits on; `ring-fill.test.ts` holds
+the arithmetic and `docs/tokens.md` §Contrast the reasoning, and separating the
+ring from the fill is the interlock in `TODO.md`.
+
 A **control** declares its ring through `controlFocusRing(theme, { disabled, invalid })`,
 because its own state changes what it may paint: the same outline while it can
 act, the `destructive` role while it failed validation (so its focus line and

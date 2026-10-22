@@ -281,19 +281,21 @@ describe("the ring on a filled action", () => {
     expect(variants).toContain("destructive:");
   });
 
-  it("teaches the exception on both pages", () => {
-    const catalogue = document("docs/tokens.md");
-    const design = document("docs/design-system.md");
+  it("teaches the exception on every surface", () => {
+    const surfaces = [
+      document("docs/tokens.md"),
+      document("docs/design-system.md"),
+      document("packages/tokens/README.md"),
+    ];
     const numbers = [
       spread(ratios("primary", "rest")),
       spread(ratios("destructive", "rest")),
       `${misses("secondary", "pressed").length} of the sixteen`,
     ];
     numbers.forEach((value) => {
-      expect(catalogue).toContain(value);
-      expect(design).toContain(value);
+      surfaces.forEach((text) => expect(text).toContain(value));
     });
-    [catalogue, design].forEach((text) => {
+    surfaces.forEach((text) => {
       expect(text).toContain("filled action");
       expect(text).toContain("outlineOffset");
     });

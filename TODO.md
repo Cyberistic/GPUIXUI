@@ -731,9 +731,10 @@ needs no second transfer function), the offset-0 geometry with both ring seams
 and the primitive's face table, and both pages. Directions measured: a printed
 `1.00–1.39` fails the page case by name; `outlineOffset: 2` fails the geometry
 case; pairing `ring`/`primary` fails the coverage case (`['destructive']`); and a
-black light ring fails three cases, the 0.11 distance among them. Docs in
-`docs/tokens.md` §Contrast and `docs/design-system.md` §8/§9 (the table row now
-names the exception). The fix is the Interlocks row below.
+black light ring fails three cases, the 0.11 distance among them. Docs in `docs/tokens.md` §Contrast,
+`docs/design-system.md` §8/§9 (the table row now names the exception) and the
+package README §Focus, all three held by the suite. The fix is the Interlocks row
+below.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
