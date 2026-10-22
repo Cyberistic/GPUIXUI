@@ -4786,11 +4786,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
     the wheel case; dropping the ref fails the reveal (`[0…9]` does not include
     1200). Verified: `test:behaviour` (18/18, including the table file).
     `itemCount` mode is exposed; its window arithmetic is phase 4b.
-  - [ ] Tier 3 phase 4b — `useVirtualRows` and `VirtualTable`: the windowed
-    mode's `windowStart` state (window wider than viewport + overdraw, reveal
-    moves the window before `scrollToItem`) and a table body that composes the
-    fixed header with a virtual body. `virtual-list-windowed` and
-    `virtualized-table` are the evidence.
+  - [x] Tier 3 phase 4b — `useVirtualRows` and `VirtualTable`: the windowed
+    mode's `windowStart` state and a table body that composes the fixed header
+    with a virtual body. **The window follows the runtime's scroll anchor, not
+    the range the runtime reports** — `onVisibleRange` lags the paint by one
+    gesture (it read `20..27` while the paint had reached `40..46`), and a
+    window built from the lagging range paints blank rows: measured, the window
+    stayed at rows 0–17 while the paint was at 16–24 and nothing painted. The
+    body therefore reads `getListScrollTop` and hands the offset and the
+    measured body height to **`@tanstack/virtual-core`** (the owner's call for
+    the windowing arithmetic), whose range becomes the list's `windowStart`;
+    the core is driven without a DOM (`getScrollElement` answers `null`, so it
+    never registers its observers) and mounts overdraw on each side. **A reveal
+    moves the window before the scroll**: `useVirtualRows` moves the window to
+    the row's own position in the same render and the body calls
+    `scrollToItem` in the layout effect after that commit. The shipped
+    1 000-row example and 6 native behaviour cases measure it: only a window
+    paints (`file-1000.ts` is retained and never painted), the header keeps its
+    painted `y` through a wheel, a chosen record survives the window leaving
+    and returning, a filter narrows to the empty state, and a sort reorders the
+    whole set rather than the mounted window. Two test corrections came with
+    it: a wheel over a row's *box* can land on the header (the header is a
+    sibling of the row scroller, and the window's first row is half scrolled
+    out), so the suite wheels below the header; and the sort press must land on
+    the header cell's own button, not on the cell's padding.
   - [ ] Tier 3 phase 5 — `TreeView`, `useExpandedRows`, expandable table rows
     (`virtual-tree-lifecycle`, `virtual-list-expand`)
   - [ ] Tier 3 phase 6 — SVG charts (`BarChart`, `LineChart`, `DonutChart`,

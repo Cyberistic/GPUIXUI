@@ -2,8 +2,9 @@
 
 Data presentation rendered by GPUix through React — the table core, the
 sort/selection/filter controller it runs on, column configuration with resizing,
-and the virtualized list over the runtime's own `<virtual-list>`. Plan 610 owns
-the phases still to land (the virtual table, trees, charts, the data surfaces).
+the virtualized list over the runtime's own `<virtual-list>`, and the
+virtualized table that composes it with a fixed header. Plan 610 owns the
+phases still to land (trees, charts, the data surfaces).
 
 ## Why a package
 
@@ -29,7 +30,8 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | A resize divider arms the capture | `column-resize-lifecycle` | `TableColumnDivider` listens to `onMouseDown` **and** `onMouseMove`, holds the press in a ref, and reads the width at each press. Its width is clamped to the column's own bounds. |
 | A press stops at the first painted child | `press-routing-lifecycle` | A cell control that must hand a press to its row declares `pointerEvents: "none"`; a filled child is the hit-test boundary, not the innermost handler. |
 | A list builds only a window | `virtual-list-lifecycle`, `virtual-list-windowed` | `VirtualList` wraps the host element: children mode retains every React child and skips build/paint off screen; `itemCount` + `estimatedItemHeight` + `windowStart` retains only the app's slice. A list sizes its viewport from a definite height. |
-| `onVisibleRange` lags the paint | `virtual-list-windowed` | The app's window exceeds the viewport plus overdraw, and a reveal moves `windowStart` before `scrollToItem` (via the list's ref). |
+| `onVisibleRange` lags the paint | `virtual-list-windowed` | The reported range is **not** the window's source: the window follows the runtime's **scroll anchor** (`getListScrollTop`), which is exact even while the row heights are estimates. A window built from the reported range paints blank rows. |
+| A reveal moves the window first | `virtual-list-windowed` | `useVirtualRows` moves the window to the row's own position in the same render, and the body scrolls to it in the layout effect after that commit. |
 
 ## Shape
 
@@ -41,7 +43,8 @@ src/
   selection/  press modes, range + anchor, retention, neighbour step
   filter/     the literal query, narrowTable, TableFilterField
   columns/    visibility, order, resize bounds, ColumnMenu, TableColumnDivider
-  virtual/    VirtualList over the runtime's <virtual-list>, both modes
+  virtual/    VirtualList over the runtime's <virtual-list>, both modes;
+              VirtualTable, useVirtualRows, the window calculator
   use-table   the uncontrolled controller joining sort, selection and filter
   use-columns the uncontrolled column controller
   internal/   the compile cache and the behaviour suites' test root
@@ -49,7 +52,10 @@ examples/     mountable screens (registered in examples/index.ts)
 ```
 
 The reducers import no React: an application driving a grid from Effect or from
-its own store reads the same functions that `useTable` does.
+its own store reads the same functions that `useTable` does. The window
+arithmetic is **`@tanstack/virtual-core`'s** — this package hands it the scroll
+offset and the viewport and reads the range back — so the grid's windowing is
+the same one a browser grid uses, driven without a DOM.
 
 ## Usage
 
@@ -140,9 +146,33 @@ the viewport plus overdraw. A reveal moves `windowStart` first and then calls
 the reveal needs. `VirtualList` paints no chrome: a row is the caller's `div` or
 `TableRow`.
 
+A **table** over a long set composes that list with the measured fixed header.
+`VirtualTable` owns the window: it reads the runtime's scroll anchor, hands the
+offset and the measured body height to `@tanstack/virtual-core`, and gives the
+runtime the `windowStart` the range produced.
+
+```tsx
+<VirtualTable
+  height={320}
+  count={rows.length}
+  rowHeight={36}
+  header={<TableRow><TableSortHeader field="name" label="Name" … /></TableRow>}
+  row={(index) => (
+    <TableRow key={rows[index].id} selected={table.isSelected(rows[index].id)}>
+      <TableCell>{rows[index].name}</TableCell>
+    </TableRow>
+  )}
+/>
+```
+
+The row must paint exactly `rowHeight`: the window's positions come from the
+runtime's estimate, so a taller row would push the rows below it out of place.
+A row of a different height uses `VirtualList` in children mode instead.
+
 The full screens — the files table with filter, sort headers, column menu and
-keyboard walk, and the 2 000-row list — are `examples/table.example.tsx` and
-`examples/virtual-list.example.tsx`.
+keyboard walk, the 2 000-row list, and the 1 000-row virtualized table — are
+`examples/table.example.tsx`, `examples/virtual-list.example.tsx` and
+`examples/virtual-table.example.tsx`.
 
 ## Styling
 
@@ -163,8 +193,9 @@ in the primitives' registry and a column width is data.
 | Column visibility + order (`ColumnMenu`, `useColumns`) | shipped, window-verified |
 | Resizable columns (`TableColumnDivider`) | shipped, window-verified |
 | Virtualized lists (`VirtualList`, both host modes) | shipped, window-verified |
+| Virtualized table (`VirtualTable`, `useVirtualRows`) | shipped, window-verified |
 | Pinned / frozen columns | composition, not shipped (`data-grid-frozen-column`) |
-| Virtual table, trees, charts, data surfaces | plan 610 phases 4b–7 |
+| Trees, charts, data surfaces | plan 610 phases 5–7 |
 
 ## Commands
 

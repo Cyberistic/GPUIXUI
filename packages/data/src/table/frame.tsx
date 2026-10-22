@@ -50,6 +50,24 @@ const TableFrameContext = createContext<Option.Option<TableFrame>>(
 export const useTableFrame = (): Option.Option<TableFrame> =>
   useContext(TableFrameContext);
 
+/**
+ * The row scroller's height: the viewport's painted height minus the header's.
+ *
+ * `@gpuix/native@0.11.0` sizes an `overflow-y: scroll` box from a definite
+ * height, so a body cannot take a flex share of the horizontal scroller (a
+ * `flex-1` body grew to its content — 8 880px for a 320px table, measured in the
+ * package's behaviour suite). The virtual body needs the same number the plain
+ * body does.
+ */
+export const useMeasuredBodyHeight = (): Option.Option<number> => {
+  const frame = useTableFrame();
+  return Option.flatMap(frame, (value) =>
+    Option.map(value.viewportHeight, (viewport) =>
+      Math.max(0, viewport - Option.getOrElse(value.headerHeight, () => 0)),
+    ),
+  );
+};
+
 /** How a part reports a height, ignoring an unchanged one. */
 const useHeightReport = (
   initial?: number,

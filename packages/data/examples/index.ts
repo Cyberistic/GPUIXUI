@@ -11,9 +11,11 @@
 import type { ComponentType } from "react";
 import { TableExample } from "./table.example.js";
 import { VirtualListExample } from "./virtual-list.example.js";
+import { VirtualTableExample } from "./virtual-table.example.js";
 
 /** One mountable screen per data surface. */
 export const examples: Readonly<Record<string, ComponentType>> = {
   table: TableExample,
   "virtual-list": VirtualListExample,
+  "virtual-table": VirtualTableExample,
 };

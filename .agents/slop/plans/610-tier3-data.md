@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | in progress — phases 1–3 and 4a landed 2026-10-22 (`packages/data`; `data-table-core` probe 1/1, package suite 52 cases + 18 native behaviour cases) |
+| Status | in progress — phases 1–3 and 4 landed 2026-10-22 (`packages/data`; `data-table-core` probe 1/1, package suite 63 cases + 24 native behaviour cases) |
 | Phase | D — data and workspace |
 | Owner | the `data` workstream |
 | Depends on | `@gpuixui/components`, `@gpuixui/primitives`, `@gpuixui/tw`, `@gpuixui/tokens`, `@gpuixui/motion` |
@@ -133,9 +133,18 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   2 000-row example proves only a window paints and a far row reveals. The
   windowed mode's state (`windowStart`, overdraw, reveal order) stays app-owned
   until phase 4b composes it with the table.
-- Evidence: `nub run --filter @gpuixui/data test` (52) and `test:behaviour` (18)
+- **Phase 4b (virtual table) landed**: `VirtualTable`/`VirtualTableBody`
+  compose the measured fixed header with a `<virtual-list>` in `itemCount` mode.
+  **The window follows the runtime's scroll anchor (`getListScrollTop`), not the
+  range the runtime reports** — `onVisibleRange` lags the paint by one gesture,
+  and a window built from the lagging range paints blank rows (measured: the
+  window stayed at rows 0–17 while the paint was at 16–24 and nothing painted).
+  The window's arithmetic is **`@tanstack/virtual-core`'s**, driven without a
+  DOM; a reveal moves the window to the row's own position in the same render
+  and the body scrolls after that commit.
+- Evidence: `nub run --filter @gpuixui/data test` (63) and `test:behaviour` (24)
   green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
-  1/1. Phases 4b–7 and frozen columns are the open TODO rows.
+  1/1. Phases 5–7 and frozen columns are the open TODO rows.
 
 ## 5. Acceptance
 

@@ -1,7 +1,9 @@
 # TanStack — headless cores
 
 - Repository: <https://github.com/TanStack> (table, virtual, form, pacer, hotkeys)
-- Package read: `@tanstack/hotkeys` `0.17.0` (read 2026-10-22)
+- Packages read: `@tanstack/hotkeys` `0.17.0`, `@tanstack/table-core` `9.3.1`,
+  `@tanstack/virtual-core` `3.19.6`, `@tanstack/pacer` `0.23.1`
+  (read 2026-10-22)
 - Licence: MIT — `Copyright (c) Tanner Linsley` (the year line varies by package)
 
 ## What we use

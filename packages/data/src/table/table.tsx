@@ -42,7 +42,12 @@ import * as Option from "effect/Option";
 import type { ReactNode, Ref } from "react";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
-import { reportBoth, TableFrameProvider, useTableFrame } from "./frame.js";
+import {
+  reportBoth,
+  TableFrameProvider,
+  useMeasuredBodyHeight,
+  useTableFrame,
+} from "./frame.js";
 import {
   TABLE_BODY,
   TABLE_CAPTION,
@@ -260,18 +265,8 @@ export const TableBody = ({
   ...rest
 }: TableBodyProps) => {
   const theme = useTheme();
-  const frame = useTableFrame();
   const empty = children === undefined || children === null;
-  const measured = Option.match(frame, {
-    onNone: () => undefined,
-    onSome: (value) =>
-      Option.match(value.viewportHeight, {
-        onNone: () => undefined,
-        onSome: (viewport) =>
-          Math.max(0, viewport - Option.getOrElse(value.headerHeight, () => 0)),
-      }),
-  });
-  const definite = height ?? measured;
+  const definite = height ?? Option.getOrUndefined(useMeasuredBodyHeight());
   return (
     <div
       {...rest}

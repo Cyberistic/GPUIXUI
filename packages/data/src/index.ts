@@ -130,3 +130,27 @@ export type {
 
 export { VirtualList, visibleRange } from "./virtual/list.js";
 export type { VirtualListProps, VisibleRange } from "./virtual/list.js";
+
+export {
+  DEFAULT_OVERDRAW,
+  anchorOffset,
+  createWindowCalculator,
+} from "./virtual/window.js";
+export type {
+  VirtualWindow,
+  WindowCalculator,
+  WindowSpec,
+} from "./virtual/window.js";
+
+export { useVirtualRows } from "./virtual/use-virtual-rows.js";
+export type {
+  UseVirtualRowsOptions,
+  VirtualReveal,
+  VirtualRowsController,
+} from "./virtual/use-virtual-rows.js";
+
+export { VirtualTable, VirtualTableBody } from "./virtual/table.js";
+export type {
+  VirtualTableBodyProps,
+  VirtualTableProps,
+} from "./virtual/table.js";
