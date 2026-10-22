@@ -2821,16 +2821,49 @@ a workaround for two live sessions sharing one worktree; see
       measured: hardcoding the word fails the three unit cases by name
       (`expected 'Loading' to be 'Chargement'`) and the runtime case
       (`expected [ 'Loading' ] to include 'Chargement'`)
-`[ ]` `packages/primitives`: the **state words** the other controls announce are
-      still English — `checked`/`unchecked`/`mixed` (Checkbox, CheckboxGroup,
+`[x]` `packages/primitives`: the **state words** the other controls announce were
+      English — `checked`/`unchecked`/`mixed` (Checkbox, CheckboxGroup,
       RadioGroup, Switch), `pressed`/`not pressed` (Toggle, ToggleGroup),
       `Scroll region` (ScrollArea's default region name) and `Code digit N`
-      (every OTP cell) — so a localised interface hears its own words beside
-      these. The busy state now has a per-control seam (`loadingLabel` here,
-      `loadingText` on Progress); a package-wide answer needs the choice between
-      a `messages` map on the provider (one seam, but the pure `render*`
-      functions take no context) and a word prop per control (small, but one
-      prop per state). Record the decision before writing code
+      (every OTP cell). **Decision: one `messages` table on the provider, not a
+      word prop per control** — the words are interface copy for the whole tree
+      (per-instance props repeat one vocabulary at every checkbox and let a
+      field deep in a form be forgotten), and the "the `render*` functions take
+      no context" objection is answered by handing the resolved table to each
+      render function as its last argument, so their unit tests still run with
+      no renderer. `core/messages.ts` owns the table (`defaultMessages`,
+      `resolveMessages`, `selectionWord`, `pressWord`); `ThemeProvider` takes
+      `messages`; `MessagesProvider` is the same seam without a theme and
+      **extends** the table above it; `useMessages()` reads it. The public word
+      functions (`selectionValueText`, `pressedValueText`, `otpCellLabel`) take
+      the table and keep the shipped English as their default, so nothing
+      changed for a caller who names no words. Proof: `src/components/
+      messages.test.tsx` (11 — defaults, group-whole replacement, a group left
+      out, nested extension, and all eight render paths: checkbox, checkbox
+      group, radio group, switch, toggle, toggle group, scroll region, code
+      cell) and `runtime/messages.runtime.test.tsx` (3 — a French table reaches
+      eight controls' accessibility nodes, a nested provider extends instead of
+      resetting, an unnamed tree still announces English). Both directions
+      measured: reverting one render path fails its unit case by name, dropping
+      the merge fails the nested case, and dropping the provider's `messages`
+      fails two window cases. Docs: `docs/theme-provider.mdx` §Words/§API/
+      §Limitations/§Verification, the nine control pages' Accessibility
+      sections, the package README, the `COMPONENTS.md` rows and the inventory
+      record (the ScrollArea "fixed English" limitation is retracted).
+      `nub run --filter @gpuixui/primitives test`: 51 files / 898 tests;
+      `test:runtime`: 21 files / 267 tests. **Not covered:** `Rating`'s star
+      words (`checked`/`half`/`unchecked`) and its `N of M` name are a separate
+      vocabulary, and the playground's smoke suite was not re-run (no playground
+      path changed) — both are noted as the next seam, below
+`[ ]` `packages/primitives`: `Rating` announces **fixed English** outside the
+      messages seam — each star's `aria-valuetext` is `checked`/`half`/
+      `unchecked` (a star-fill vocabulary, not a selection state) and each star's
+      name is the `N of M` sentence, so a localised interface hears both in
+      English. The seam is already the shape: add a star words group and a name
+      template to `core/messages.ts`, map the announced text through it in
+      `renderRating` (the paint keeps reading `starState`), and hold it with
+      `messages.test.tsx` plus a window case. Not folded into the row above
+      because these are sentences rather than state words
 `[x]` `packages/primitives`: give `ButtonGroup` its **second axis** — the shadcn
       reference takes `orientation`, and the primitive only ever laid a row, so a
       column of attached actions had to be hand-built outside the group and lost

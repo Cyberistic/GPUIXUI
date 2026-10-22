@@ -8,23 +8,28 @@
  * measured: a child that **paints a fill** is the boundary GPUI's hit test
  * stops counting hovered elements at, so a filled badge in a row's slot can
  * take the press the row never hears — a dead zone over the row's own status
- * text.
+ * text. The shipped `Badge` closed that by declaring `pointerEvents: "none"`
+ * (`f9288fba`), so the fixture now measures the fixed route in a window **and**
+ * keeps the rule visible: the same pill with the pointer handed back still
+ * swallows the press, which is what an interactive badge opts into.
  *
- * The fixture mounts the shipped `List` with the three shapes a reader composes
- * (the shipped badge, the same badge opting out of the pointer, a plain text
- * slot) and records the row a press selects. The expectation is the measured
- * route; `formatSelection` is its one spelling.
+ * The fixture mounts the shipped `List` with the shapes a reader composes (the
+ * shipped badge, that badge with the pointer handed back, the same badge
+ * opting out explicitly, a plain text slot) and records the row a press
+ * selects. The expectation is the measured route; `formatSelection` is its one
+ * spelling.
  *
  * Kept native-free so the table is testable on a host with no binding.
  */
 import * as Arr from "effect/Array";
 
 /** One row: the shape its trailing slot paints. */
-export type TrailingShape = "badge" | "badge-inert" | "text";
+export type TrailingShape = "badge" | "badge-eager" | "badge-inert" | "text";
 
 /** The rows the frame mounts, each reporting its own name as the value. */
 export const LIST_ROW_ROWS: ReadonlyArray<TrailingShape> = [
   "badge",
+  "badge-eager",
   "badge-inert",
   "text",
 ];
@@ -32,6 +37,7 @@ export const LIST_ROW_ROWS: ReadonlyArray<TrailingShape> = [
 /** The presses the probe makes, in the order the frame names them. */
 export const LIST_ROW_PRESS_IDS = [
   "badge",
+  "badge-eager",
   "badge-inert",
   "text",
   "badge-body",
@@ -67,17 +73,23 @@ export const listRowTrailingId = (row: TrailingShape): string =>
 /**
  * The presses, measured on `@gpuix/native@0.11.0` by `--only list-row-press`.
  *
- * A press on the shipped badge selects nothing because the badge paints a fill
- * and the row's press never runs; the same badge declaring `pointerEvents:
- * "none"` lets the press reach the row, which is the workaround a caller has
- * today. The row's own body and a plain text slot select as the component
- * documents.
+ * A press on the shipped badge now reaches its row: the pill declares
+ * `pointerEvents: "none"`, so the fill it paints is not the boundary the press
+ * stops at. Handing the pointer back through the caller's `style` restores the
+ * old behaviour, which is the control that the route is decided by the
+ * pointer and not by anything else in the row.
  */
 const byId: Record<ListRowPressId, ListRowPress> = {
   badge: {
     id: "badge",
     caption: "a press on the shipped badge in the trailing slot",
     target: listRowTrailingId("badge"),
+    selects: "badge",
+  },
+  "badge-eager": {
+    id: "badge-eager",
+    caption: "a press on a badge whose caller hands the pointer back",
+    target: listRowTrailingId("badge-eager"),
     selects: "",
   },
   "badge-inert": {

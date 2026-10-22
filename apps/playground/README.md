@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-72 probes a real window can prove, of which fifteen mount shipped
+73 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -54,7 +54,8 @@ mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 own wheel and size, a split pane, a virtual list, a paginated list's loading-row
 restore, a dock's keyboard order, an anchored menu in a scrolled header, the
 window's own backdrop, the app-level key handler, the app-level selection
-handler, a field's hint and value ink, a configurable data grid, a generated
+handler, a field's hint and value ink, a configurable data grid, a resizable
+data-grid column, a generated
 SVG pattern, a property inspector beside its preview, a table's chorded
 selection, right-to-left text shaping and a code host's syntax palette).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
@@ -4056,40 +4057,95 @@ Two negative controls measured, exit `1` each, then restored green:
 **Does a press on a selectable row's `trailing` slot reach the row?** The slot is
 documented as "a badge, a shortcut", and `Badge` is "non-interactive by design —
 a badge is never a button and nothing inside one is clickable". `press-routing-lifecycle`
-measured why that pair is dangerous: a child that paints a fill is the boundary
-GPUI's hit test stops counting hovered elements at, so a filled badge can take a
-press the row never hears.
+measured why that pair was dangerous: a child that paints a fill is the boundary
+GPUI's hit test stops counting hovered elements at, so a filled badge could take
+a press the row never heard. The shipped `Badge` closed that by declaring
+`pointerEvents: "none"` (`f9288fba`), and this probe is the window's measurement
+of the fix and of the rule behind it.
 
-The shipped `List` is mounted with the three shapes a reader composes and each
+The shipped `List` is mounted with the four shapes a reader composes and each
 press is read from the list's own `onValueChange` through a readout:
 
 | Press | What it lands on | Selected after |
 | ----- | ---------------- | -------------- |
-| `badge` | a press on the shipped badge in the trailing slot | `selected=none` |
+| `badge` | a press on the shipped badge in the trailing slot | `selected=badge` |
+| `badge-eager` | a press on a badge whose caller hands the pointer back | `selected=none` |
 | `badge-inert` | a press on the same badge declaring `pointerEvents: none` | `selected=badge-inert` |
 | `text` | a press on a plain text slot | `selected=text` |
 | `badge-body` | a press on the badge row's own body | `selected=badge` |
 
-The first row is a **measured defect**, not a contract: a non-interactive badge in
-the status column of a selectable list is a dead zone — the press selects
-nothing, and the row's title and body still select, so the row looks half
-clickable. `Badge` is the component to fix: it has no handler, its own header
-says nothing inside it is clickable, and `pointerEvents: "none"` (the carousel
-drawing's rule) is what makes it transparent to the row. The second row is the
-workaround a caller can apply today, and the last two are the controls that prove
-the list itself takes a press and the failure is the badge's.
+The first row is the fixed route: a status pill in a selectable row is no longer
+a dead zone, and the row's title and body still select. The second row is the
+rule kept visible — handing the pointer back through the caller's `style` (what
+an interactive badge would do) restores the old behaviour, so the route is
+decided by the pointer and not by something else in the row. `badge-inert`
+repeats the opt-out explicitly, which is the workaround a caller on an older
+`Badge` still needs.
 
-5 checks, `--only list-row-press`, green on 0.11.0 (~0.5 s). Fixture:
+6 checks, `--only list-row-press`, green on 0.11.0 (~0.6 s). Fixture:
 `src/live/list-row.ts` (`LIST_ROW_PRESSES` is the table; `formatSelection` its one
 spelling); `list-row.test.ts` (4 cases) holds the presses to the mounted rows, a
 single target each, and this section's table to the measured selections. Evidence:
 `.artifacts/live/list-row-press.png`.
 
-Negative control measured, exit `1`, restored green: expecting the shipped badge
-to reach its row fails `a press on the shipped badge in the trailing slot leaves
-selected=badge` with **`expected "selected=none", got "selected=badge"`** — the
-press really does not reach the row, so the defect is a measurement and not a
-missing mount.
+The fix and the probe moved together: while the `badge` case still asserted
+`selected=none`, the fixed `Badge` failed it with **`expected "selected=none",
+got "selected=badge"`**, which is how a defect row becomes a contract row. The
+control that stands in the frame is `badge-eager` — the same pill with the
+pointer handed back — and it selects nothing, so the route turns on
+`pointerEvents` rather than on the row.
+
+Negative control measured, exit `1`, restored green: giving the `badge-eager`
+pill `pointerEvents: "none"` too fails `a press on a badge whose caller hands
+the pointer back leaves selected=none` with **`expected "selected=none", got
+"selected=badge-eager"`**.
+
+### `column-resize-lifecycle` — measured on 0.11.0 here
+
+**Does a column's divider keep a drag the way a split pane's does?** Tier 3's
+*Resizable columns* row cites only the headless `table-column-resize` scenario,
+where the pointer is synthesised, and plan 610's Phase 3 builds drag-resize from
+that row. A reader's drag is the path that can differ: a window delivers the
+press and every move before React commits the press's render (the rule
+`SplitPane` documents), and the drag survives leaving the divider's own 6px box
+only because the divider listens to both `onMouseDown` and `onMouseMove` (the
+pair `pointer-capture` measured).
+
+The probe paints a 160 / 100 / 80 grid in a 300-point viewport over 12 rows, with
+one divider after the first column and one **move-only** divider under the grid
+as the negative control. Every drag is the automation's eight moves, and the
+readout counts the ones the divider heard and how many landed outside its box:
+
+| Gesture | Readout | What it proves |
+| ------- | ------- | -------------- |
+| open | `w=160 … moves=0 outside=0` | the declared width paints, header and cells alike |
+| drag `+60` | `w=220 moves=8 outside=8` | the divider heard every move past its own 6px box |
+| hover after the release | unchanged | the press is cleared: a later move resizes nothing |
+| drag `-150` | `w=120 moves=8 outside=0` | the clamp holds at the 120-point floor, not at 70 |
+| drag `+30` | `w=150 moves=8 outside=8` | a new gesture reads the width its own press saw |
+| wheel `-20` | offset `-20` | the widened grid still pans in one scroller |
+| `right` on the focused divider | `w=166` | the divider is a control: the key step resizes it too |
+| drag the move-only divider `+60` | `w=166 ctrl=90 … ctrlMoves=1` | one move of eight, and the control's column never moves |
+
+The header and the row cells share one width and one `x` at every stop, and every
+later column shifts by exactly the amount the first one grew — the drift a table
+cannot afford. The move-only control hears **1** of the eight moves: the press and
+the first move land while the pointer is still inside its 6px box, and the other
+seven go to whatever the pointer is over, because the capture was never armed.
+
+29 checks, `--only column-resize-lifecycle`, green on 0.11.0 (~1.3 s). Fixture:
+`src/live/column-resize.ts` (the widths, the clamp — `nextSize`, the split pane's
+own arithmetic — the outside-box rule and the readout); `column-resize.test.ts`
+holds the clamp at both ends, the content's overflow, the readout spelling, the
+listener pair the claim rests on and this section's check count. Evidence:
+`.artifacts/live/column-resize.png`.
+
+Negative control measured, exit `1`, restored green: deleting the divider's
+`onMouseDown` (leaving only the move half, which is the control's shape) fails
+`the divider follows a 60-point drag past its own box` with **`expected "w=220
+ctrl=90 moves=8 outside=8 ctrlMoves=0", got "w=160 ctrl=90 moves=0 outside=0
+ctrlMoves=0"`** — the drag is only a resize because the press arms the capture,
+and a divider with one listener hears none of it.
 
 ## Terminal mode: the pty probe
 
@@ -4307,8 +4363,8 @@ narrower. Each deviation is deliberate and measured:
   `otp-paste-lifecycle`, `otp-keys-lifecycle`, `text-truncation`, `box-paint`,
   `elevation-paint`, `opacity-paint`, `movable-tabs-lifecycle`,
   `slider-vertical-lifecycle`, `modifier-select-lifecycle`, `rtl-text`,
-  `syntax-palette`, `press-routing-lifecycle` and `list-row-press` (fourteen
-  probes, each run alone).
+  `syntax-palette`, `press-routing-lifecycle`, `list-row-press` and
+  `column-resize-lifecycle` (fifteen probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

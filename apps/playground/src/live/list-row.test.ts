@@ -6,8 +6,9 @@
  * README table that stopped printing the measured selection would all leave the
  * probe green against a fixture that no longer describes a list. The rule the
  * probe teaches lives in `press-routing-lifecycle`: a filled child is the
- * boundary a press stops at, so the shipped badge swallows the press and the
- * same badge declaring `pointerEvents: "none"` does not.
+ * boundary a press stops at, so the shipped badge declares `pointerEvents:
+ * "none"` to let the row hear the press, and the same badge with the pointer
+ * handed back still swallows it.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";

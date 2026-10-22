@@ -465,8 +465,14 @@ export const liveRegistry = [
   {
     id: "list-row-press",
     title:
-      "Input: a selectable row takes a press on a badge in its trailing slot only when the badge steps out of the pointer",
+      "Input: a status badge in a selectable row's trailing slot reaches the row, and a pill handed the pointer back does not",
     capability: "input",
+  },
+  {
+    id: "column-resize-lifecycle",
+    title:
+      "Table: a column's divider keeps a drag past its own box, header and cells share the width it clamps to, and a move-only divider keeps none of it",
+    capability: "table",
   },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 

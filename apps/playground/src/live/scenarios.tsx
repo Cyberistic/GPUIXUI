@@ -131,7 +131,12 @@ import {
 } from "@gpuix/react/select";
 import { Pixels, Smoke } from "@gpuixui/testing";
 import { nextPalette, palettes, type PaletteId } from "../palettes.js";
-import { SplitPane, SPLIT_DIVIDER_WIDTH } from "../panels/split-pane.js";
+import {
+  SplitPane,
+  SPLIT_DIVIDER_WIDTH,
+  SPLIT_KEYBOARD_STEP,
+} from "../panels/split-pane.js";
+import { isResizeKey, keySize } from "../panels/resize.js";
 import { Body, Pressable, Readout, Toolbar } from "../ui.js";
 import { useWindowKey, useWindowSelection } from "../window-handlers.js";
 import { useWindowFacts } from "./window-facts.js";
@@ -302,6 +307,17 @@ import {
   visibleColumns,
   type ColumnId,
 } from "./table-columns.js";
+import {
+  COLUMN_RESIZE,
+  COLUMN_RESIZE_IDS,
+  COLUMN_RESIZE_ROWS,
+  CONTROL_MOVES,
+  DRAG_STEPS,
+  columnResizeReadout,
+  movedPastDivider,
+  resizeContentWidth,
+  resizedWidth,
+} from "./column-resize.js";
 import {
   FADE_BACKING,
   FADE_BACKING_RGBA,
@@ -20313,6 +20329,16 @@ const ListRowPressProbe = (): ReactNode => {
           Ready
         </Badge>
       )),
+      Match.when("badge-eager", () => (
+        <Badge
+          testId={listRowTrailingId("badge-eager")}
+          variant="success"
+          size="sm"
+          style={{ pointerEvents: "auto" }}
+        >
+          Ready
+        </Badge>
+      )),
       Match.when("badge-inert", () => (
         <Badge
           testId={listRowTrailingId("badge-inert")}
@@ -20445,6 +20471,463 @@ const listRowPressSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
 
     yield* ctx.host.capture("list-row-press");
+  });
+
+/**
+ * A grid whose first column is drag-resized in a real window.
+ *
+ * Tier 3's **Resizable columns** row cites only the headless
+ * `table-column-resize` scenario, where the pointer is synthesised. A reader's
+ * drag differs in the way `SplitPane` documents: a window delivers the press and
+ * every move before React commits the press's render, so the press is a **ref**,
+ * and the drag survives leaving the divider's own 6px box only because the
+ * divider listens to both `onMouseDown` and `onMouseMove` (the rule
+ * `pointer-capture` measured). The rows beside the dragged column are the reason
+ * the measurement matters: a width the header and the cells do not share is a
+ * table that drifts.
+ *
+ * The divider is a control, not a decoration, so it is a tab stop with the split
+ * pane's key contract — arrows move it a step, clamped through `keySize` — and
+ * announces its width through `aria-valuetext` (the runtime has no
+ * `aria-valuenow`).
+ *
+ * The divider under the grid keeps only the `onMouseMove` half: it is the
+ * negative control, and a drag on it must move nothing.
+ */
+const ColumnResizeProbe = (): ReactNode => {
+  const theme = useTheme();
+  const press = useRef(
+    Option.none<{ readonly x: number; readonly width: number }>(),
+  );
+  const [width, setWidth] = useState<number>(COLUMN_RESIZE.name);
+  const [moves, setMoves] = useState(0);
+  const [outside, setOutside] = useState(0);
+  const [controlMoves, setControlMoves] = useState(0);
+  const content = resizeContentWidth(width);
+
+  const cellStyle = (column: number): StyleDesc => ({
+    display: "flex",
+    alignItems: "center",
+    flexShrink: 0,
+    width: column,
+    height: COLUMN_RESIZE.rowHeight,
+    paddingLeft: theme.spacing.sm,
+    borderRightWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+  });
+
+  const headerStyle = (column: number): StyleDesc => ({
+    ...cellStyle(column),
+    backgroundColor: theme.colors.muted,
+  });
+
+  const dividerStyle: StyleDesc = {
+    display: "flex",
+    flexShrink: 0,
+    width: COLUMN_RESIZE.divider,
+    height: COLUMN_RESIZE.rowHeight,
+    cursor: "col-resize",
+    backgroundColor: theme.colors.border,
+    hover: { backgroundColor: theme.colors.primary },
+    ...keyboardFocusRing(theme),
+  };
+
+  return (
+    <div
+      testId={COLUMN_RESIZE_IDS.probe}
+      style={{
+        width: 560,
+        height: 460,
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A resizable column: the divider keeps the whole drag past its own box,
+        the header and its cells share the width, and the width clamps.
+      </text>
+      <Readout testId={COLUMN_RESIZE_IDS.readout}>
+        {columnResizeReadout({
+          width,
+          control: COLUMN_RESIZE.control,
+          moves,
+          outside,
+          controlMoves,
+        })}
+      </Readout>
+      <div
+        testId={COLUMN_RESIZE_IDS.grid}
+        style={{
+          width: COLUMN_RESIZE.viewport,
+          height: COLUMN_RESIZE.viewportHeight,
+          overflowX: "scroll",
+          overflowY: "scroll",
+          backgroundColor: theme.colors.card,
+          borderWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+        }}
+      >
+        <div
+          style={{ width: content, display: "flex", flexDirection: "column" }}
+        >
+          <div role="row" style={{ display: "flex", flexDirection: "row" }}>
+            <div
+              testId={COLUMN_RESIZE_IDS.header}
+              role="columnheader"
+              style={headerStyle(width)}
+            >
+              <text
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: theme.colors.mutedForeground,
+                }}
+              >
+                name
+              </text>
+            </div>
+            <div
+              testId={COLUMN_RESIZE_IDS.divider}
+              role="separator"
+              aria-label="Resize the name column"
+              aria-valuetext={`${width} pixels`}
+              tabIndex={0}
+              style={dividerStyle}
+              onMouseDown={(event) => {
+                press.current = Option.some({
+                  x: event.x ?? 0,
+                  width,
+                });
+                setMoves(0);
+                setOutside(0);
+              }}
+              onMouseMove={(event) =>
+                Option.match(press.current, {
+                  onNone: () => {},
+                  onSome: (start) => {
+                    const x = event.x ?? 0;
+                    setWidth(resizedWidth(start.width, x - start.x));
+                    setMoves((count) => count + 1);
+                    if (movedPastDivider(start.x, x)) {
+                      setOutside((count) => count + 1);
+                    }
+                  },
+                })
+              }
+              onMouseUp={() => (press.current = Option.none())}
+              onKeyDown={(event) =>
+                isResizeKey(event.key) &&
+                setWidth(
+                  keySize({
+                    size: width,
+                    key: event.key,
+                    step: SPLIT_KEYBOARD_STEP,
+                    min: COLUMN_RESIZE.min,
+                    max: COLUMN_RESIZE.max,
+                  }),
+                )
+              }
+            />
+            <div
+              testId={COLUMN_RESIZE_IDS.statusHeader}
+              role="columnheader"
+              style={headerStyle(COLUMN_RESIZE.status)}
+            >
+              <text
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: theme.colors.mutedForeground,
+                }}
+              >
+                status
+              </text>
+            </div>
+            <div role="columnheader" style={headerStyle(COLUMN_RESIZE.size)}>
+              <text
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: theme.colors.mutedForeground,
+                }}
+              >
+                size
+              </text>
+            </div>
+          </div>
+          {Arr.map(COLUMN_RESIZE_ROWS, (row) => (
+            <div
+              key={row}
+              role="row"
+              style={{ display: "flex", flexDirection: "row" }}
+            >
+              <div
+                testId={COLUMN_RESIZE_IDS.cell(row)}
+                style={cellStyle(width)}
+              >
+                <text
+                  style={{
+                    ...textStyle(theme, "caption"),
+                    color: theme.colors.foreground,
+                  }}
+                >
+                  {`Item ${row}`}
+                </text>
+              </div>
+              <div style={{ width: COLUMN_RESIZE.divider, flexShrink: 0 }} />
+              <div style={cellStyle(COLUMN_RESIZE.status)}>
+                <text
+                  style={{
+                    ...textStyle(theme, "caption"),
+                    color: theme.colors.foreground,
+                  }}
+                >
+                  ready
+                </text>
+              </div>
+              <div style={cellStyle(COLUMN_RESIZE.size)}>
+                <text
+                  style={{
+                    ...textStyle(theme, "caption"),
+                    color: theme.colors.foreground,
+                  }}
+                >
+                  {`${16 + ((row + 2) % 7) * 8} B`}
+                </text>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <div
+          testId={COLUMN_RESIZE_IDS.controlHeader}
+          style={headerStyle(COLUMN_RESIZE.control)}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            owner
+          </text>
+        </div>
+        <div
+          testId={COLUMN_RESIZE_IDS.controlDivider}
+          role="separator"
+          aria-label="A divider with only the move half"
+          style={dividerStyle}
+          onMouseMove={() => setControlMoves((count) => count + 1)}
+        />
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+            paddingLeft: theme.spacing.sm,
+          }}
+        >
+          move-only
+        </text>
+      </div>
+    </div>
+  );
+};
+
+const columnResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(COLUMN_RESIZE_IDS.grid);
+    yield* Effect.sleep(SETTLE);
+
+    const readout = () => ctx.host.text(COLUMN_RESIZE_IDS.readout);
+    const offsetX = () =>
+      Effect.map(ctx.host.scrollOffset(COLUMN_RESIZE_IDS.grid), (found) =>
+        Option.match(Option.fromNullishOr(found), {
+          onNone: () => Number.NaN,
+          onSome: (value) => value.x,
+        }),
+      );
+
+    // 1. The grid opens at the width the fixture declares.
+    const opened = {
+      width: COLUMN_RESIZE.name,
+      control: COLUMN_RESIZE.control,
+      moves: 0,
+      outside: 0,
+      controlMoves: 0,
+    };
+    yield* ctx.expectEqual(
+      "the grid opens at its declared width",
+      yield* readout(),
+      columnResizeReadout(opened),
+    );
+    yield* ctx.expectNear(
+      "the resized column paints the width the grid declares",
+      (yield* paintedBox(ctx, COLUMN_RESIZE_IDS.header)).width,
+      COLUMN_RESIZE.name,
+      1,
+    );
+    const viewport = yield* paintedBox(ctx, COLUMN_RESIZE_IDS.grid);
+    const lastHeader = yield* paintedBox(ctx, COLUMN_RESIZE_IDS.statusHeader);
+    yield* ctx.expectEqual(
+      "the content is wider than the viewport it pans in",
+      lastHeader.x + lastHeader.width + COLUMN_RESIZE.size >
+        viewport.x + COLUMN_RESIZE.viewport,
+      true,
+    );
+
+    // 2. The divider keeps the whole drag, past its own 6px box.
+    yield* ctx.host.drag(COLUMN_RESIZE_IDS.divider, 60, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the divider follows a 60-point drag past its own box",
+      yield* readout(),
+      columnResizeReadout({
+        ...opened,
+        width: 220,
+        moves: DRAG_STEPS,
+        outside: DRAG_STEPS,
+      }),
+    );
+    const widened = yield* paintedBox(ctx, COLUMN_RESIZE_IDS.header);
+    yield* ctx.expectNear(
+      "the widened header paints the new width",
+      widened.width,
+      220,
+      1,
+    );
+    const rowCell = yield* paintedBox(ctx, COLUMN_RESIZE_IDS.cell(0));
+    yield* ctx.expectEqual(
+      "the row's cell takes the width the header took",
+      rowCell.width,
+      widened.width,
+    );
+    yield* ctx.expectEqual(
+      "the cell starts where its header starts",
+      rowCell.x,
+      widened.x,
+    );
+    yield* ctx.expectNear(
+      "every later column shifts with the resized one",
+      (yield* paintedBox(ctx, COLUMN_RESIZE_IDS.statusHeader)).x - lastHeader.x,
+      60,
+      1,
+    );
+
+    // 3. The release ends the gesture: a move over the divider after it resizes
+    //    nothing, however far the pointer is from where the press began.
+    yield* ctx.host.hover(COLUMN_RESIZE_IDS.divider);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a move after the release resizes nothing",
+      yield* readout(),
+      columnResizeReadout({
+        ...opened,
+        width: 220,
+        moves: DRAG_STEPS,
+        outside: DRAG_STEPS,
+      }),
+    );
+
+    // 4. A drag past the floor clamps, and the header paints the clamp.
+    yield* ctx.host.drag(COLUMN_RESIZE_IDS.divider, -150, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a drag past the narrowest width clamps to it",
+      yield* readout(),
+      columnResizeReadout({
+        ...opened,
+        width: COLUMN_RESIZE.min,
+        moves: DRAG_STEPS,
+        outside: 0,
+      }),
+    );
+    yield* ctx.expectNear(
+      "the clamped header paints the floor, not where the pointer went",
+      (yield* paintedBox(ctx, COLUMN_RESIZE_IDS.header)).width,
+      COLUMN_RESIZE.min,
+      1,
+    );
+
+    // 5. A second drag starts from the width its own press saw, not the last
+    //    gesture's start.
+    yield* ctx.host.drag(COLUMN_RESIZE_IDS.divider, 30, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a second drag measures from the width it found",
+      yield* readout(),
+      columnResizeReadout({
+        ...opened,
+        width: 150,
+        moves: DRAG_STEPS,
+        outside: DRAG_STEPS,
+      }),
+    );
+
+    // 6. The widened grid still pans in one scroller, header and cells together.
+    yield* ctx.host.wheel(COLUMN_RESIZE_IDS.grid, -20, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "the wheel pans the widened content",
+      yield* offsetX(),
+      -20,
+      2,
+    );
+    const pannedHeader = yield* paintedBox(ctx, COLUMN_RESIZE_IDS.header);
+    yield* ctx.expectEqual(
+      "the panning header and its cells share one offset",
+      (yield* paintedBox(ctx, COLUMN_RESIZE_IDS.cell(0))).x,
+      pannedHeader.x,
+    );
+
+    // 7. The divider is a control: a key resizes it too.
+    yield* ctx.host.focusElement(COLUMN_RESIZE_IDS.divider);
+    yield* ctx.host.key("right");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "an arrow key widens the column by the step",
+      yield* readout(),
+      columnResizeReadout({
+        ...opened,
+        width: 150 + SPLIT_KEYBOARD_STEP,
+        moves: DRAG_STEPS,
+        outside: DRAG_STEPS,
+      }),
+    );
+    yield* ctx.expectNear(
+      "the keyboard's width is the width the header paints",
+      (yield* paintedBox(ctx, COLUMN_RESIZE_IDS.header)).width,
+      150 + SPLIT_KEYBOARD_STEP,
+      1,
+    );
+
+    // 8. The negative control: a divider with only the move half keeps none of
+    //    the drag, so its column never changes width.
+    yield* ctx.host.drag(COLUMN_RESIZE_IDS.controlDivider, 60, 0);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "a divider with only the move half hears one move and resizes nothing",
+      yield* readout(),
+      columnResizeReadout({
+        ...opened,
+        width: 150 + SPLIT_KEYBOARD_STEP,
+        moves: DRAG_STEPS,
+        outside: DRAG_STEPS,
+        controlMoves: CONTROL_MOVES,
+      }),
+    );
+    yield* ctx.expectNear(
+      "the move-only divider's column paints its declared width",
+      (yield* paintedBox(ctx, COLUMN_RESIZE_IDS.controlHeader)).width,
+      COLUMN_RESIZE.control,
+      1,
+    );
+    yield* ctx.host.capture("column-resize");
   });
 
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
@@ -20809,5 +21292,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "list-row-press",
     view: () => <ListRowPressProbe />,
     steps: listRowPressSteps,
+  },
+  "column-resize-lifecycle": {
+    id: "column-resize-lifecycle",
+    view: () => <ColumnResizeProbe />,
+    steps: columnResizeSteps,
   },
 };
