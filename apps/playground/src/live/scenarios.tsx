@@ -1182,9 +1182,9 @@ const nameOf = (value: Option.Option<string>): string =>
 /**
  * What the topmost hit belongs to: a row of this list, another element, nothing.
  *
- * The distinction is the reason the drop rule looks past the first id: a row's
- * `<text>` label paints above the row, so `own` with the row's id second is the
- * normal case rather than an oddity.
+ * The distinction is the reason the drop rule looks past the first id: the
+ * pointer is often over a painted child (a row's `<text>` label), which reads
+ * `other` while the row beneath it is the target.
  */
 const topOf = (
   hits: ReadonlyArray<number>,

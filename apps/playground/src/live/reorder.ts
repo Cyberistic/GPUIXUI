@@ -14,7 +14,7 @@ import { pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 
-/** One native element a row owns: its own box or a painted child inside it. */
+/** One native element a row owns: its own box, or a child it chooses to register. */
 export interface RowHandle<A> {
   readonly id: number;
   readonly row: A;
