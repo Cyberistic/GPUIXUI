@@ -769,6 +769,29 @@ describe("the preference", () => {
     expect(painted(page.renderer, "toast-1")).toBe(false);
     page.unmount();
   });
+
+  it("removes a panel at once when the setting turns on while it leaves", async () => {
+    // The same rule for the seam itself, which a panel uses rather than the
+    // toast stack: a dismissed dialog is kept painted for its `slow` window
+    // (320 ms) and the window is read from the timing on every render, so the
+    // preference must rescale the leave already in flight — not only the next
+    // one. The bug this guards: a window read once at the start of the leave,
+    // which would keep the panel on screen for the journey the reader removed.
+    const page = renderComponent(<PreferencePage reduced={false} />);
+    clickCentreOf(page, "open");
+    await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(true));
+    await delay();
+    page.renderer.simulateKeystrokes("escape");
+    await delay();
+    expect(painted(page.renderer, "dialog")).toBe(true);
+
+    page.rerender(<PreferencePage reduced />);
+    await delay();
+    await delay();
+    // Well inside the 320 ms the animated window would still be running.
+    expect(painted(page.renderer, "dialog")).toBe(false);
+    page.unmount();
+  });
 });
 
 describe("a leaving subtree", () => {
