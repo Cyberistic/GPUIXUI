@@ -86,39 +86,67 @@ const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
     (index) => left[index] === right[index],
   );
 
+/**
+ * Capture one icon in two colours, plus a same-colour control.
+ *
+ * The tint is read from painted pixels, not from props: a colour prop that
+ * arrives while the renderer paints the markup's own colour would pass a style
+ * read and fail a reader. The control (two captures of one frame) says a
+ * difference is the colour and not capture noise.
+ */
+const tintedFrames = (
+  runtime: Runtime,
+  name: "check" | "star-filled",
+): Effect.Effect<
+  {
+    readonly red: Uint8Array;
+    readonly alsoRed: Uint8Array;
+    readonly blue: Uint8Array;
+  },
+  unknown
+> =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const directory = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "gpuixui-icon-",
+      });
+      const capture = (color: string, file: string) =>
+        Effect.gen(function* () {
+          mount(
+            runtime,
+            <Icon name={name} color={color} size="xl" testId={ICON} />,
+          );
+          const target = path.join(directory, `${file}.png`);
+          runtime.renderer.captureScreenshot(target);
+          return yield* fileSystem.readFile(target);
+        });
+      return {
+        red: yield* capture("#FF0000", "red"),
+        alsoRed: yield* capture("#FF0000", "also-red"),
+        blue: yield* capture("#0000FF", "blue"),
+      };
+    }),
+  ).pipe(Effect.provide(NodeFileSystem.layer), Effect.provide(NodePath.layer));
+
 it("tints the painted mark from the colour it was given", async () => {
   const runtime = await openWindow();
-  const captured = await Effect.runPromise(
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const directory = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "gpuixui-icon-",
-        });
-        const capture = (color: string, name: string) =>
-          Effect.gen(function* () {
-            mount(
-              runtime,
-              <Icon name="check" color={color} size="xl" testId={ICON} />,
-            );
-            const file = path.join(directory, `${name}.png`);
-            runtime.renderer.captureScreenshot(file);
-            return yield* fileSystem.readFile(file);
-          });
-        return {
-          red: yield* capture("#FF0000", "red"),
-          alsoRed: yield* capture("#FF0000", "also-red"),
-          blue: yield* capture("#0000FF", "blue"),
-        };
-      }),
-    ).pipe(
-      Effect.provide(NodeFileSystem.layer),
-      Effect.provide(NodePath.layer),
-    ),
-  );
+  const captured = await Effect.runPromise(tintedFrames(runtime, "check"));
   // The control: two captures of the same frame are byte-identical, so the
   // difference below can only come from the colour.
+  expect(sameBytes(captured.alsoRed, captured.red)).toBe(true);
+  expect(sameBytes(captured.blue, captured.red)).toBe(false);
+});
+
+it("tints a filled glyph too, which is how a chosen star reads", async () => {
+  // `star-filled` is the one icon drawn with `fill`, and `Rating` paints every
+  // chosen star with it. A tint that reached only `stroke` would paint the
+  // filled star black in every theme — a shape a stroke-icon test cannot see.
+  const runtime = await openWindow();
+  const captured = await Effect.runPromise(
+    tintedFrames(runtime, "star-filled"),
+  );
   expect(sameBytes(captured.alsoRed, captured.red)).toBe(true);
   expect(sameBytes(captured.blue, captured.red)).toBe(false);
 });

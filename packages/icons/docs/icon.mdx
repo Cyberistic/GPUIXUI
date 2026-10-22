@@ -91,7 +91,9 @@ paint values a monochrome tint can use. No individual icon carries a colour.
 - `packages/primitives/runtime/icons.runtime.test.tsx` — the raw `<svg source>`
   paints at 20×20 (`lg`) and 24×24 (`xl`); a decorative icon is absent from the
   accessibility tree while a labelled one is an `Image`; a red versus blue
-  capture differs byte-wise, so the tint reaches the paint.
+  capture differs byte-wise, so the tint reaches the paint — for a **stroke**
+  glyph (`check`) and for `star-filled`, the one icon drawn with `fill`, which
+  is what `Rating` paints every chosen star with.
 
 ```sh
 nub run --filter @gpuixui/icons test
