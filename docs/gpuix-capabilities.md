@@ -88,6 +88,7 @@ Verdicts: **supported** · **supported, with limits** · **not supported** ·
 | Window-level key events | supported, with limits | `render({ onKeyDown })` is the **only** app-level key path: the focused element's own `onKeyDown` runs first and the window handler after it, with `event.modifiers` set. **Measured** by the headless `window-key-shortcut` (`simulateKeystrokes("cmd-k")` runs the element handler and then the window handler, with the modifier set) and by `window-shortcut-lifecycle` in a window: the runner installs the handler once and forwards to the shipped `useWindowKey` seam; `cmd-k` opens the palette (`open=true last=cmd-k`, its text painted), `Escape` closes it, and after a press on another element — `getFocusedElementId` names the other element, not the probe — `cmd-k` still opens it. Dropping the runner's forwarding is the negative control (nothing reaches the app) | install one handler at the root and route accelerators from it; the focused element sees the key first, so a chord a field needs belongs to the field. A shortcut fires only while the window is focused, so a background hotkey needs a runtime change |
 | Global / system shortcut | not supported | key events fire only while the window is focused | window-level `onKeyDown`; a background hotkey needs a runtime change |
 | Tray / menu bar / status item | not supported | no such host | ship an in-window menu |
+| Application menu (adding items) | not supported | the runtime installs a **fixed macOS menu bar** at window init — an Apple menu (Services, Hide, Hide Others, Show All, Quit) and a Window menu (Minimize, Zoom, Close), with **no Edit menu** on purpose so ⌘C/⌘V reach the window's text handling; ⌘Q/⌘H/⌥⌘H/⌘M/⌘W are bound. There is no API to add, remove or reorder an item: `app_menu::init` and `default_menus` are `pub(crate)`, `WindowOptions.appName` only names the Hide/Quit items, and no napi method takes a menu in `@gpuix/native` 0.11.0's `index.d.ts`. Read from the pinned source, not from a type | draw the menu **inside** the window — a `div` over the shipped dropdown/context-menu parts; a native item's callback cannot be attached, and the fixed bar exists only on macOS, so Linux and Windows menus are the app's own |
 | Native view / webview / embedded browser | not supported | no child-view host | `markdown`/`code`/`diff` surfaces |
 | Image painting | supported, with limits | `<img>` paints a path, an http(s) URL and a data-URL PNG; a pixel buffer through `ref.setImagePixels(width, height, …)` paints **only from a layout effect** — from a passive `useEffect` the element keeps its `img: no src` fallback. **Measured** by `content-surfaces` in both directions | upload pixels in `useLayoutEffect`/`useEffect`-before-paint (the upstream waveform example's pattern, not a preference); a data URL needs no timing |
 | Terminal rendering | supported | `render(<App />, { terminal: true })`, `isTerminal()` | — |
@@ -193,7 +194,9 @@ out.
   `onContextMenu`, `onPaste` and the closed `aria-*` set — are held from both
   sides too: a row dropped from this file, a page row dropped from
   `/docs/runtime`, or an `aria-*` absence the inventory names but this file does
-  not, fails by name.
+  not, fails by name. The application menu is a sixth absence, but it is proven
+  by the runtime's pinned **source** (`app_menu.rs`) rather than by a type, so a
+  row giving it a `supported` verdict is a claim no API can keep.
 - The probe measurements themselves are asserted by the suite
   (`apps/playground`), not here: this document records the verdict and points at
   the evidence.

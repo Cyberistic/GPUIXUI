@@ -845,7 +845,8 @@ describe("docs/gpuix-capabilities.md", () => {
     // `COMPONENTS.md`'s rows relied on five absences the record never named, so
     // a plan reading only the record could pass `href`, `fieldset`, `onPaste`
     // or `onContextMenu` and see nothing happen — and could promise an
-    // announced toast on a runtime with no live region.
+    // announced toast on a runtime with no live region. The application menu is
+    // the sixth: the typings expose `appName` and no way to add an item.
     const links = rowFor("Links and anchors");
     expect(links?.verdict).toBe("not supported");
     expect(links?.evidence).toContain("ElementType");
@@ -864,6 +865,13 @@ describe("docs/gpuix-capabilities.md", () => {
     const paste = rowFor("Paste event");
     expect(paste?.verdict).toBe("not supported");
     expect(paste?.evidence).toContain("onChange");
+
+    const menu = rowFor("Application menu");
+    expect(menu?.verdict).toBe("not supported");
+    expect(menu?.evidence).toContain("app_menu::init");
+    expect(menu?.evidence).toContain("appName");
+    expect(menu?.evidence).toContain("⌘Q");
+    expect(menu?.workaround).toContain("inside");
 
     const aria = rowFor("the `aria-*` subset");
     expect(aria?.verdict).toBe("supported, with limits");
@@ -911,6 +919,12 @@ describe("docs/gpuix-capabilities.md", () => {
     ).toBeDefined();
     expect(accessibility?.[1]).toContain("aria-live");
     expect(accessibility?.[2]).toContain("aria-valuetext");
+
+    const menu = typingsRow("Application menu");
+    expect(menu, "the page has no application-menu row").toBeDefined();
+    expect(menu?.[1]).toContain("appName");
+    expect(menu?.[1]).toContain("⌘C");
+    expect(menu?.[2]).toContain("inside");
   });
 
   it("records the file-drop probe that retired the unverified row", () => {

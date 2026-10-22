@@ -78,10 +78,11 @@ verb. It is listed apart so the section above stays a record of paints.
 
 ## Not in the typings
 
-The matrix above is built from `@gpuixui/runtime`'s own keys. These five are
-different: the pinned typings declare neither the host nor the prop, so there is
-nothing to pass and no probe to run — a component composes the alternative
-instead. `COMPONENTS.md`'s rows rely on each of them.
+The matrix above is built from `@gpuixui/runtime`'s own keys. These six are
+different: the pinned typings declare neither the host nor the prop — or no
+public method takes one — so there is nothing to pass and no probe to run — a
+component composes the alternative instead. `COMPONENTS.md`'s rows rely on each
+of them.
 
 | Capability | What the pinned typings have instead | Use instead |
 | --- | --- | --- |
@@ -90,6 +91,7 @@ instead. `COMPONENTS.md`'s rows rely on each of them.
 | Context-menu event (`onContextMenu`) | `HostProps` declares no `onContextMenu`; a right press arrives as `onAuxClick`, which `isRightClick` distinguishes — the shipped `ContextMenu` uses that path, and `context-menu-lifecycle` measured a right press opening the surface at the press point | handle `onAuxClick` and place your own surface at the pointer |
 | Paste event (`onPaste`) | `HostProps` declares no `onPaste`; a paste runs inside a focused field and reaches `onChange` with the new value (`clipboard-lifecycle`) | read the pasted text from the new value in `onChange`; there is no paste payload, caret or insert-at-selection API |
 | Accessibility attributes | the closed set is `role`, `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext` and `aria-level` — no checked or pressed state, no `aria-labelledby`, and no `aria-live` | name the control itself, put a numeric value in `aria-valuetext`, and do not present a toast or a countdown as announced |
+| Application menu | the typings expose only `WindowOptions.appName`, which names the Hide and Quit items. The macOS bar the runtime installs is **fixed** — Apple (Services, Hide, Hide Others, Show All, Quit) and Window (Minimize, Zoom, Close), with no Edit menu so ⌘C/⌘V reach the window's text handling — and no public method takes a menu (`app_menu::init` is `pub(crate)`) | draw the menu **inside** the window with the dropdown parts; a native item's callback cannot be attached, and a Linux or Windows menu bar is the app's own |
 
 ## What to do instead
 
