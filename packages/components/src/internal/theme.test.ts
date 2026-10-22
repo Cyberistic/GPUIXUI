@@ -120,7 +120,10 @@ describe("the provider is the token package's one", () => {
     // wrap twice and two themes can disagree. The seam re-exports one, and
     // this scan keeps a second one from growing back.
     const sources = Arr.filter(
-      readdirSync(fileURLToPath(sourceRoot), { recursive: true }),
+      readdirSync(fileURLToPath(sourceRoot), {
+        recursive: true,
+        encoding: "utf8",
+      }),
       (entry) =>
         (entry.endsWith(".ts") || entry.endsWith(".tsx")) &&
         !entry.endsWith(".test.ts") &&
