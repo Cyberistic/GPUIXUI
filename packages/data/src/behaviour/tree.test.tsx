@@ -147,5 +147,9 @@ describe("the file tree", () => {
 
     expect(readout(root)).toContain("active=row.tsx");
     expect(root.renderer.findByTestId("tree-row-row.tsx")).toBeDefined();
+    // The reveal is the caller's move, not the tree's key handler: the focus
+    // follows the committed cursor, so a search hit or a "show this file"
+    // command leaves the reader on the row it revealed.
+    expect(focusedTestId(root)).toEqual(Option.some("tree-row-row.tsx"));
   });
 });

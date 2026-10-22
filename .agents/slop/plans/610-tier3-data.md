@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | done — phases 1–7 and 3b landed 2026-10-22/23 (`packages/data`; headless probes `data-table-core`, `data-tree-core`, `data-expandable-rows-core`, `data-charts-core`; package suite 112 cases + 55 native behaviour cases). Frozen columns ship as `FrozenTable` |
+| Status | done — phases 1–7 and 3b landed 2026-10-22/23 (`packages/data`; headless probes `data-table-core`, `data-tree-core`, `data-expandable-rows-core`, `data-charts-core`; package suite 115 cases + 55 native behaviour cases). Frozen columns ship as `FrozenTable` |
 | Phase | D — data and workspace |
 | Owner | the `data` workstream |
 | Depends on | `@gpuixui/components`, `@gpuixui/primitives`, `@gpuixui/tw`, `@gpuixui/tokens`, `@gpuixui/motion` |

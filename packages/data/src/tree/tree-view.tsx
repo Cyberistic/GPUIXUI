@@ -228,21 +228,23 @@ export const TreeView = <T,>({
   const resolved = cursor ?? uncontrolled;
   const elements = useRef(new Map<string, number>());
   const buffer = useRef<TypeAheadBuffer>(idleTypeAhead);
-  /** The row a key or a press moved the cursor to, until focus has followed. */
-  const pendingFocus = useRef<Option.Option<string>>(Option.none());
+  /**
+   * The row the tree has focused, across renders.
+   *
+   * A reveal moves the cursor from the **caller** (`tree.reveal`), not through
+   * this component's own handler, so the tree learns about it only from the
+   * committed cursor. The baseline is the first paint's cursor, so mounting a
+   * tree does not take focus from the rest of the window
+   * (`virtual-tree-lifecycle`).
+   */
+  const focused = useRef<Option.Option<string>>(resolved.active);
 
   const commit = useCallback(
     (next: TreeCursor) => {
-      if (
-        Option.getOrUndefined(next.active) !==
-        Option.getOrUndefined(resolved.active)
-      ) {
-        pendingFocus.current = next.active;
-      }
       if (cursor === undefined) setUncontrolled(next);
       onCursorChange?.(next);
     },
-    [cursor, onCursorChange, resolved.active],
+    [cursor, onCursorChange],
   );
 
   const paintRow =
@@ -264,10 +266,15 @@ export const TreeView = <T,>({
   // runs after every paint and acts only on a row the cursor has just moved to,
   // so mounting a tree does not take focus from the rest of the window.
   useLayoutEffect(() => {
-    Option.match(pendingFocus.current, {
+    if (
+      Option.getOrUndefined(resolved.active) ===
+      Option.getOrUndefined(focused.current)
+    )
+      return;
+    focused.current = resolved.active;
+    Option.match(resolved.active, {
       onNone: () => {},
       onSome: (key) => {
-        pendingFocus.current = Option.none();
         const id = elements.current.get(key);
         if (id !== undefined) renderer?.focusElement?.(id);
       },
