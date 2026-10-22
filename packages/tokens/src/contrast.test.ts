@@ -13,6 +13,7 @@
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { contrastFloorsFor } from "./audit.js";
 import {
   contrastFailures,
   contrastFloors,
@@ -525,6 +526,145 @@ describe("ring and selection surfaces", () => {
           foreground === "mutedForeground" && background === "selected",
       ),
     ).toMatchObject({ ratio: 1, floor: contrastFloors.secondary });
+  });
+});
+
+/**
+ * Guards the text a **selected row** paints. The table measured a selection's
+ * second line (`mutedForeground`/`selected`) and the two page roles on the
+ * `hover`, `active` and `accent` washes, and nothing measured the pair the
+ * components actually paint for the row's *title*: `ListItemTitle`'s recipe is
+ * `text-foreground` and `list.tsx` fills `selected` behind it, so a brand that
+ * brings its selection close to the page erases the label it just selected —
+ * while the secondary line beside it still passes. The row also sets
+ * `color: selectedForeground` and then tints a wash under itself as the pointer
+ * arrives, so the role it hands its children is a pair of its own on every wash:
+ * a press that matches that role leaves the row blank.
+ */
+describe("the text a selected row keeps", () => {
+  const washes = ["hover", "active", "accent"] as const;
+
+  it("measures the title on its selection and the row's role on every wash", () => {
+    const missing = [
+      ...(contrastPairs.some(
+        (pair) =>
+          pair.foreground === "foreground" &&
+          pair.background === "selected" &&
+          pair.floor === "body",
+      )
+        ? []
+        : ["foreground/selected"]),
+      ...washes
+        .filter(
+          (background) =>
+            !contrastPairs.some(
+              (pair) =>
+                pair.foreground === "selectedForeground" &&
+                pair.background === background &&
+                pair.floor === "secondary",
+            ),
+        )
+        .map((background) => `selectedForeground/${background}`),
+    ];
+
+    expect(missing).toEqual([]);
+  });
+
+  it("holds the roles the row painters actually use", () => {
+    // The pairs only mean something if the shipped row still paints them: the
+    // title's recipe sets its own colour, the row fills `selected` and hands its
+    // children `selectedForeground`, and the two washes it tints while the
+    // pointer moves are the ones measured above.
+    const recipes = readFileSync(
+      new URL("../../tw/src/recipes.ts", import.meta.url),
+      "utf8",
+    );
+    const row = readFileSync(
+      new URL("../../components/src/list.tsx", import.meta.url),
+      "utf8",
+    );
+    const title = recipes.slice(
+      recipes.indexOf("export const LIST_ITEM_TITLE ="),
+      recipes.indexOf("export const LIST_ITEM_DESCRIPTION ="),
+    );
+
+    expect(title).toContain("text-foreground");
+    expect(row).toContain("backgroundColor: theme.colors.selected");
+    expect(row).toContain("color: theme.colors.selectedForeground");
+    expect(row).toContain("{ backgroundColor: theme.colors.accent }");
+    expect(row).toContain("{ backgroundColor: theme.colors.active }");
+  });
+
+  it("reports a selection that swallows the title it carries", () => {
+    const broken = {
+      colors: { ...lightColors, selected: lightColors.foreground },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "foreground" && background === "selected",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
+  });
+
+  it("reports a wash that matches the text a selected row keeps", () => {
+    const broken = {
+      colors: { ...lightColors, accent: lightColors.selectedForeground },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "selectedForeground" && background === "accent",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.secondary });
+  });
+
+  it("clears the floor in every shipped theme, tightest on the base dark press", () => {
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const placements = shipped.flatMap((theme) => [
+      {
+        name: `${theme.name}/foreground/selected`,
+        ratio: contrastRatio(theme.colors.foreground, theme.colors.selected),
+        floor: contrastFloorsFor(theme).body,
+      },
+      ...washes.map((background) => ({
+        name: `${theme.name}/selectedForeground/${background}`,
+        ratio: contrastRatio(
+          theme.colors.selectedForeground,
+          theme.colors[background],
+        ),
+        floor: contrastFloorsFor(theme).secondary,
+      })),
+    ]);
+    const hidden = placements.filter(
+      ({ ratio, floor }) => ratio === undefined || ratio < floor,
+    );
+    const tightest = placements.reduce((low, next) =>
+      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+    );
+
+    expect(hidden).toEqual([]);
+    expect(tightest.name).toBe("Dark/selectedForeground/active");
+    expect(tightest.ratio?.toFixed(2)).toBe("7.31");
+    // The catalogue prints the number this suite measures, so a palette edit
+    // moves the sentence instead of leaving a stale claim.
+    expect(
+      readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(`pressed wash at ${tightest.ratio?.toFixed(2)}:1`);
   });
 });
 

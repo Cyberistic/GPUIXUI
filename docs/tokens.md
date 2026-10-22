@@ -1041,10 +1041,12 @@ so a single number would be a guess — or carries no channels here at all (a
 named colour, an `hsl()`-family function). Shorthand hex is measured.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 65 pairs cover the text role
+— an empty array means the theme is readable. The 69 pairs cover the text role
 on each surface it can sit on: body and popover text, the text typed into an
 `input`, secondary text on `background`, `card`, `muted`, `popover` and a
-selected row, every status and soft-status pair, each status tone's readable text
+selected row, the selected row's title on that selection and the
+`selectedForeground` it hands its children on the `hover`/`active`/`accent` wash
+it tints, every status and soft-status pair, each status tone's readable text
 as **page** text on `background`, `card` and `popover` (a field error, an inline
 warning or a destructive menu row is not on the tone's own tinted surface),
 the unavailable label on the fill that disables it, on the three page
@@ -1088,6 +1090,23 @@ instead (1.19:1 on the light page) and reaches `borderStrong` only on hover, in
 (`packages/components/src/field.tsx`); §Limitations records the deviation and
 `TODO.md` → Interlocks the adoption. `field-boundary.test.ts` reads both painters
 so the page cannot describe a field the library does not ship.
+
+A **selected row** adds the one selection pair the table used to skip: its
+**title**. `ListItemTitle`'s recipe is `text-foreground`, painted over the
+`selected` fill `list.tsx` puts behind it, and the primitives compose the same
+pair from `surface="selected"` and a default `Text` — so the body role is
+measured on the selection itself, beside the secondary line that already was.
+The row also sets `color: selectedForeground` for the children that inherit it
+and then tints a wash under itself as the pointer arrives (`accent` on hover,
+`active` on press), so that role is measured on every wash a row can be tinted
+with. Every shipped, high-contrast, platform and authored theme clears both
+floors, the tightest of the four placements being the base dark theme's pressed
+wash at 7.31:1, so no palette moved: what the pairs close is the gap a brand
+could fall into, where a `selected` close to its page — or a wash close to
+`selectedForeground` — erases the label it just selected with every other report
+empty. `contrast.test.ts`'s `the text a selected row keeps` suite reads both
+painters, reports the erased title at 1.00:1 and the erased wash, and holds all
+16 styles to the floors.
 
 `contrastFloors` and `highContrastFloors` are the
 floors the shipped themes meet, and `contrastPairs` is the pair table they apply

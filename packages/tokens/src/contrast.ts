@@ -241,6 +241,30 @@ export const contrastPairs: readonly ContrastPair[] = [
   { foreground: "mutedForeground", background: "hover", floor: "secondary" },
   { foreground: "mutedForeground", background: "active", floor: "secondary" },
   { foreground: "mutedForeground", background: "accent", floor: "secondary" },
+  // A selected row is the fourth wash, and the one a row's *title* is painted
+  // on: the components' `ListItemTitle` recipe is `text-foreground` and the row
+  // fills `selected` behind it, while the primitives compose the same pair from
+  // `surface="selected"` and a default `Text`. Only the row's secondary line was
+  // measured, so a selection that drifted toward the body role could erase the
+  // label it selects. The row also keeps a text role of its own — it sets
+  // `color: selectedForeground` and then tints a wash under it as the pointer
+  // moves — so that role is measured on every wash a row can be tinted with.
+  { foreground: "foreground", background: "selected", floor: "body" },
+  {
+    foreground: "selectedForeground",
+    background: "hover",
+    floor: "secondary",
+  },
+  {
+    foreground: "selectedForeground",
+    background: "active",
+    floor: "secondary",
+  },
+  {
+    foreground: "selectedForeground",
+    background: "accent",
+    floor: "secondary",
+  },
   // A row floating on a popover keeps the *surface's* text role, not the page's:
   // a menu or combobox row is `popoverForeground`, and a destructive row is the
   // tone's readable role. So a wash painted under either is a surface those

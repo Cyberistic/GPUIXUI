@@ -312,6 +312,19 @@ washes at 6.93:1 and 6.77:1, so every light theme carries red 900 as
 `destructiveSoftForeground` — the same value the deeper soft surface needs for
 its label, rather than flattening press into hover.
 
+A **selected row** is the fourth wash, and the one a row's *title* is painted on.
+The title's recipe is `text-foreground`, painted over the `selected` fill the row
+paints behind it, so `foreground` on `selected` is a pair of its own — beside the
+secondary line that was already measured. The row also hands its children
+`selectedForeground` and then tints a wash under itself as the pointer arrives
+(`accent` on hover, `active` on press), so that role is measured on every wash a
+row can be tinted with; the tightest of the four placements is the base dark
+theme's pressed wash at 7.31:1. Every shipped, high-contrast, platform and
+authored style clears both floors, so no palette moved: the pairs close the gap a
+brand could fall into, where a selection close to its page — or a wash close to
+the text the row keeps — erases the label it just selected while every other
+report passes.
+
 It is also measured as a surface, because a wash with no contrast against the row
 it tints is a state nobody sees: `decorativeFailures` holds each of `hover`,
 `active`, `selected` and `accent` to 1.05:1 on `background`, `card`, `popover`
@@ -441,6 +454,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | body text on background/card/popover | 7:1 | 7:1 |
 | text typed into an input, on `input` | 7:1 | 7:1 |
 | secondary text on background/card/muted/popover and on a selected row | 4.5:1 | 7:1 |
+| a selected row's title on its own selection, and the `selectedForeground` it hands its children on the `hover`/`active`/`accent` wash it tints | 7:1 / 4.5:1 | 7:1 / 7:1 |
 | on-colour text, placeholder | 4.5:1 | 7:1 |
 | brand text — a link or text action — on background, card, popover, muted and the hover/active washes it tints (`brandText`) | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
