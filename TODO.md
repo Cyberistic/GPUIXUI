@@ -1208,6 +1208,16 @@ a workaround for two live sessions sharing one worktree; see
       cases. Docs on the five pages, the docs index's guard list and the five
       Tier 1 inventory rows; adopting it in `packages/components`' own fields is
       the interlock row below
+`[x]` `packages/primitives`: `TextArea` ignored its documented `onValueChange` — the
+      component handed `props.onChange` to `useControlState` while every other
+      value control resolves its callback through `valueChange`, so a caller who
+      migrated off the deprecated alias was never notified. It now uses the
+      shared helper and joined `valueChange`'s contract sweep
+      (`src/components/change.test.ts`), with a native case typing into a
+      textarea carrying both names (`runtime/fields.runtime.test.tsx`). Both
+      directions measured: adding the file to the sweep fails naming
+      `TextArea.tsx`, and the native case fails without the fix because the field
+      reports no change at all
 `[x]` `packages/icons`: the icon page's printed set size and size table are
       held to the package — the description said "Forty-seven monochrome icons"
       while `ICON_NAMES` shipped 48, and the `xs`…`xl` table printed pixels that
