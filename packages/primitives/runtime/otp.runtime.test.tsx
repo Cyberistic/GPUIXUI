@@ -85,6 +85,27 @@ it("fills the code one key at a time and completes once", async () => {
   expect(field.complete).toStrictEqual(["123456"]);
 });
 
+it("reports Enter as a submit and leaves the code alone", async () => {
+  const field = recorder();
+  let submitted = 0;
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      label="Verification code"
+      autoFocus
+      onChange={field.onChange}
+      onSubmit={() => {
+        submitted += 1;
+      }}
+    />,
+  );
+  runtime.type("1");
+  runtime.type("2");
+  runtime.type("enter");
+  expect(lastValue(field.values)).toBe("12");
+  expect(submitted).toBe(1);
+});
+
 it("moves native focus into the next cell as a character lands", async () => {
   const runtime = await mount(
     <OTPField testId="otp" label="Verification code" autoFocus />,
@@ -189,6 +210,7 @@ it("declares the keyboard ring on every cell and paints no shadow ring", async (
 
 it("refuses input and leaves the tab order while disabled", async () => {
   const field = recorder();
+  let submitted = 0;
   const runtime = await mount(
     <Stack direction="row">
       <Button testId="before" label="Before" onActivate={() => {}}>
@@ -199,12 +221,16 @@ it("refuses input and leaves the tab order while disabled", async () => {
         label="Verification code"
         disabled
         onChange={field.onChange}
+        onSubmit={() => {
+          submitted += 1;
+        }}
       />
     </Stack>,
   );
   runtime.click("otp-cell-1");
-  runtime.type("1 2 3");
+  runtime.type("1 2 3 enter");
   expect(field.values).toStrictEqual([]);
+  expect(submitted).toBe(0);
   runtime.click("before");
   runtime.focusNext();
   expect(

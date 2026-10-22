@@ -34,6 +34,12 @@ const [code, setCode] = useState("");
 typing into a cell beyond the current code appends at the end rather than
 leaving a hole.
 
+Enter is the caller's key, not the field's: pass `onSubmit` and the runtime
+reports it as a submit with the code untouched, so a verification form can send
+it. Without the prop Enter does nothing — the runtime only turns the key into a
+submit when a listener exists (the same contract as `Input`, and the reason
+`TextArea` omits it). A disabled field installs no listener at all.
+
 ## Parts
 
 | Part | Responsibility |
@@ -81,6 +87,7 @@ import { OTPField, OTPFieldInput, Separator, Stack } from "@gpuixui/primitives";
 | `onChange` | `(value: string) => void` | — | deprecated alias for `onValueChange`; the new name runs when both are passed |
 | `onValueChange` | `(value: string) => void` | — | the code after every edit that changed it |
 | `onComplete` | `(value: string) => void` | — | fires when an edit makes the code full |
+| `onSubmit` | `(event: EventPayload) => void` | — | Enter in any cell, with the code unchanged; no listener is installed while `disabled` |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | cell height and width, from the density scale |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border on every cell |
@@ -110,6 +117,7 @@ code longer than `length` is truncated rather than partially applied.
 | `Home` / `End` | first / last cell |
 | `Backspace` | deletes the current character; in an empty cell, clears the one before and moves there |
 | `Delete` | deletes the current character (native) |
+| `Enter` | reports `onSubmit`; the code is unchanged (nothing happens without the prop) |
 
 The group is **one tab stop**. The tabbable cell is the one the code has
 reached — the first empty cell, or the last cell when the code is full — and it
@@ -176,16 +184,17 @@ fill. The ring still marks where the focus is.
 - `src/components/OTPField.test.tsx` — `length` named inputs, per-cell handlers,
   click-to-pick, autoFocus on the first cell, one ring, destructive borders,
   square geometry, disabled guards, one roving tab stop (partial, full and
-  focused), a composed cell carrying its index's value, name and handlers, and a
-  caller composing the cells.
+  focused), a composed cell carrying its index's value, name and handlers, a
+  caller composing the cells, the caller's `onSubmit` on every cell, and no
+  submit installed while disabled.
 - `runtime/otp.runtime.test.tsx` — six digits **typed one at a time** fill six
-  cells and complete once; focus advances and moves back with the arrow keys;
-  Backspace clears backwards on an empty cell and only one character on a
-  filled one; the a11y tree has a `Group` and six `TextInput`s; invalid paints
-  every cell; one ring; disabled refuses input and leaves the tab order; Tab
-  enters once at the cell the code reached and leaves the group; a caller's cell
-  composition still types, distributes and reports the code.
-  Measured 2026-10-17 (plan 054 §9).
+  cells and complete once; Enter reaches `onSubmit` with the code unchanged; focus
+  advances and moves back with the arrow keys; Backspace clears backwards on an
+  empty cell and only one character on a filled one; the a11y tree has a `Group`
+  and six `TextInput`s; invalid paints every cell; one ring; disabled refuses
+  input, submit and the tab order; Tab enters once at the cell the code reached
+  and leaves the group; a caller's cell composition still types, distributes and
+  reports the code. Measured 2026-10-17 (plan 054 §9), Enter on 2026-10-22.
 
 ```sh
 nub run --filter @gpuixui/primitives test

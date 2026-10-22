@@ -130,6 +130,26 @@ describe("OTPField", () => {
     expect(onKey).toHaveBeenCalledWith(1, "left");
   });
 
+  it("reports Enter from the cell that has the caret, through onSubmit", () => {
+    // A code is entered to be sent: the runtime turns Enter into a submit only
+    // when the field installs a listener, so every cell carries the caller's.
+    const onSubmit = vi.fn();
+    const element = render({ length: 4, onSubmit }, "12");
+    cellsOf(element).forEach((input) => {
+      expectSome(hostHandler(input, "onSubmit"))(changeEvent(""));
+    });
+    expect(onSubmit).toHaveBeenCalledTimes(4);
+  });
+
+  it("installs no submit on a disabled field", () => {
+    const onSubmit = vi.fn();
+    const element = render({ length: 3, disabled: true, onSubmit }, "1");
+    cellsOf(element).forEach((input) => {
+      expect(hostProp(input, "onSubmit")).toStrictEqual(Option.none());
+    });
+    expect(onSubmit).toHaveBeenCalledTimes(0);
+  });
+
   it("points focus at the clicked cell", () => {
     const onPick = vi.fn();
     const element = render({ length: 4 }, "1", idle, { onPick });

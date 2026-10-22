@@ -21,6 +21,10 @@
  * arrives through `onChange`; the key-up handler must not delete the previous
  * cell as well, so it remembers that this key already emptied the cell.
  *
+ * Enter is not part of the code contract: the runtime turns it into a submit
+ * when the field installs `onSubmit`, so the key is the caller's to handle and
+ * never edits a cell. Without that prop Enter does nothing.
+ *
  * The resting appearance is a Tailwind recipe (`recipe/otpGroupClass` and
  * `recipe/fieldSquareClass`), compiled through `@gpuixui/tw`; the caller's
  * `className` is joined last so it wins conflicts exactly as `cn` resolves them.
@@ -81,6 +85,13 @@ export interface OTPFieldProps
   readonly defaultValue?: string;
   /** Called once when an edit makes the code complete. */
   readonly onComplete?: (value: string) => void;
+  /**
+   * Enter in any cell. The runtime turns Enter into a submit only when the
+   * field installs a listener, so a code field with a form to send needs this
+   * — without it the key does nothing. The code is unchanged by the submit;
+   * a disabled field installs no listener at all (the `Input` contract).
+   */
+  readonly onSubmit?: (event: EventPayload) => void;
   /** Defaults to `md`. */
   readonly size?: ControlSize;
   /** Read-only, out of the tab order and inert. */
@@ -137,6 +148,8 @@ export interface OTPFieldPart {
   readonly cells: ReadonlyArray<string>;
   /** The one cell in the tab order: where the code has got to, or the focus. */
   readonly rovingIndex: number;
+  /** Enter in any cell, or none while the field is disabled. */
+  readonly onSubmit: ((event: EventPayload) => void) | undefined;
   readonly cellStyle: StyleDesc;
   readonly focus: OTPFieldFocus;
   readonly handlers: OTPFieldHandlers;
@@ -180,6 +193,7 @@ export const otpFieldPart = (
     rovingIndex: Option.getOrElse(focus.focusedIndex, () =>
       Math.min(code.length, Math.max(0, limit - 1)),
     ),
+    onSubmit: disabled ? undefined : props.onSubmit,
     cellStyle,
     focus,
     handlers,
@@ -239,6 +253,7 @@ export const renderOtpFieldInput = (
         if (disabled) return;
         handlers.onEdit(index, event.value ?? "");
       }}
+      onSubmit={part.onSubmit}
       onKeyUp={composeEvent<KeyEvent>(part.interaction.onKeyUp, (event) => {
         if (disabled) return;
         handlers.onKey(index, event.key ?? "");
