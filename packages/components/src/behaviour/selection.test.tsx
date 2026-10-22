@@ -6,8 +6,10 @@
  * host in this package painted a wash the design system never checked. Each one
  * now declares the theme's own `selection` role — the wash `selectionFailures`
  * holds to a visibility and a legibility floor. The combobox's own search field
- * was the last host still handing the runtime's default (it passes only the
- * recipe and the ring), so a run selected there kept a wash no contract measured.
+ * was the last `<input>` host still handing the runtime's default (it passes only
+ * the recipe and the ring), so a run selected there kept a wash no contract
+ * measured; the chat composer's `<textarea>` was the last host the suite did not
+ * read back, and it is covered now too.
  *
  * The second bug these guard: a message's own tint is not one of those content
  * tones, so the designed role leaves a selectable run's copy under the body floor
@@ -26,6 +28,7 @@ import {
 } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { Alert, AlertDescription, type AlertTone } from "../alert.js";
+import { ChatComposer, ChatRoot } from "../chat.js";
 import {
   Combobox,
   ComboboxContent,
@@ -165,6 +168,22 @@ describe("selection wash", () => {
     settle(root);
 
     expect(washes(root)).toEqual([darkTheme.colors.selection]);
+
+    root.unmount();
+  });
+
+  it("declares it on the chat composer's textarea", () => {
+    const root = renderComponent(
+      <ChatRoot onSubmit={() => undefined}>
+        <ChatComposer testId="composer" />
+      </ChatRoot>,
+    );
+
+    const declared = Arr.map(
+      root.renderer.findByType("textarea"),
+      (element) => element.style.selectionColor,
+    );
+    expect(declared).toEqual([darkTheme.colors.selection]);
 
     root.unmount();
   });
