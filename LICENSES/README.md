@@ -1,37 +1,49 @@
 # LICENSES/ — licences and attribution
 
-A release requirement, not paperwork. The library reimplements behaviour from
-other projects and may reuse source; every one of those needs its licence
-verified, its provenance recorded, and its notices preserved.
+The release inventory. `README.md`'s "Built on" table credits every project the
+library stands on; the records here verify each one's licence, record where it
+was read from, and say whether we ship, derive from, or only reference it. The
+records render on `/docs/license`, so a file added here appears on the site
+with no docs change.
 
-## What must be answered before release
+## Mapping
 
-| Question | Where the answer goes |
-| -------- | --------------------- |
-| What licence does each reference actually ship? | `inventory.md` |
-| Which implementations are *inspiration* and which are *copied or adapted*? | `provenance.md` |
-| Which notices must be redistributed with our package? | `packages/motion/NOTICE` |
-| Which assets (icons, images) are we shipping, and under what terms? | `inventory.md` |
-| Are any logos or trademarks being reused? | **must be "no"** — the identity is original |
+| `LICENSES/` file | `README.md` "Built on" row | Licence | Relationship |
+| ---------------- | -------------------------- | ------- | ------------ |
+| `shadcn-ui.md` | shadcn/ui | MIT | derive — class recipes reused verbatim, docs anatomy |
+| `base-ui.md` | Base UI | MIT | reference-only — behaviour and parts model |
+| `tailwind.md` | Tailwind | MIT | reference-only — utility syntax and recipe model |
+| `react.md` | React | MIT | dependency — the runtime surface (JSX, hooks) |
+| `gpuix.md` | GPUix | Apache-2.0 | dependency — the native renderer |
+| `open-gpui.md` | open-gpui | Apache-2.0 | ship — spring/sequence physics ported |
+| `gpui-motion.md` | gpui-motion | MIT | derive — motion API surface as a spec |
+| `tanstack.md` | TanStack | MIT | dependency — headless cores adopted |
+| `panelui.md` | PanelUI | none (documentation) | reference-only — no public source repository |
+| `base-gpui.md` | *(design reference, not in the table)* | MIT | reference-only — compound-part contract |
+| `lucide.md` | *(icons, not in the table)* | ISC + MIT | ship — icon geometry |
 
-## Files
+## How a record is written
 
-| File | Purpose |
-| ---- | ------- |
-| `inventory.md` | one row per dependency and reference: name, version/commit, licence, use, obligations |
-| `provenance.md` | one row per adapted implementation: source, commit, what changed, licence |
-| `packages/motion/NOTICE` | the notices the motion port must redistribute: both open-gpui NOTICE copyright lines (Apache-2.0 §4(d)) and the gpui-ce-motion MIT text |
+- The licence is read from the licence file in the clone, at the commit or tag
+  the record names — never from a README badge.
+- A record we ship or derive from carries the full licence text; a reference or
+  dependency record names what we take and states that no code was copied.
+- Notices a redistribution must carry live in `packages/motion/NOTICE`, beside
+  the port.
 
 ## Non-negotiables
 
 - **Do not copy logos or trademarks** into the new identity.
 - **Do not reuse source** unless the licence permits it *and* the notice is
-  preserved and recorded in `provenance.md`.
-- **Verify the licence by reading the file in the clone** at
-  `references/<repo>/LICENSE*` and record the commit it was read at. A README
-  badge is not evidence.
+  preserved and recorded.
+- **Verify the licence by reading the file in the clone** at the commit the
+  record names. A README badge is not evidence.
 - A package that cannot be licensed compatibly is not a dependency — replace it
   or reimplement it.
 
-Nothing is recorded yet: Phase A produces the first inventory, because a
-licence inventory written after the code is a rewrite.
+## Status
+
+Every source named in the "Built on" table has a record with its verified
+licence. The aggregate tables `inventory.md` and `provenance.md` are not
+written yet, so `/docs/license` still names them in its footer; they are a
+separate, follow-up artefact over these records.
