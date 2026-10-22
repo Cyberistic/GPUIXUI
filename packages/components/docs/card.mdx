@@ -42,9 +42,12 @@ import {
     <CardDescription>Everything in Starter, plus seats and invoicing.</CardDescription>
   </CardHeader>
   <CardContent>{/* rows, a form, a chart */}</CardContent>
-  <CardFooter>{/* actions */}</CardFooter>
+  <CardFooter className="pb-3">{/* actions */}</CardFooter>
 </Card>;
 ```
+
+The footer adds `pb-3` because the footer recipe has no bottom padding; see
+§Theming for the measurement.
 
 The full build is the `card` example in
 `packages/components/examples/card.example.tsx`, which the native playground
@@ -52,11 +55,21 @@ mounts.
 
 ## Variants
 
-| `variant` | Surface |
-| --------- | ------- |
-| `outline` (default) | 1px `border` and the `card` fill |
-| `elevated` | the `card` fill and the `md` elevation shadow |
-| `plain` | the `card` fill only — for a card inside another surface |
+| `variant` | Recipe | Paints |
+| --------- | ------ | ------ |
+| `outline` (default) | `border border-input` | a 1px edge in the `border` role on the `card` fill |
+| `elevated` | `shadow-sm` | the `card` fill and `elevation.sm`: a 1px offset and a 2px blur, tinted by the `shadow` role |
+| `plain` | — | the `card` fill only — for a card inside another surface |
+
+`border-input` is shadcn's name for its border, and `@gpuixui/tw` resolves it to
+the **`border` role**: this library's `input` role is the field *fill*, which in
+the base light theme is the card's own white and would draw no edge at all. A
+theme that wants a darker outline repaints `border`, not `input`.
+
+`elevated` is the variant with a lift: the recipe carries no ring, so its
+`shadow-sm` is the one shadow on the box. The overlay surfaces order `ring-1`
+after `shadow-*`, which is why they paint an edge without a lift; a card does
+not.
 
 ## API
 
@@ -79,11 +92,32 @@ any rule without forking the component.
 
 ## Theming
 
-All colour, spacing, radius, elevation and type come from the theme
-(`colors.card`, `colors.border`, `spacing.*`, `radius.lg`, `elevation.md`,
-`textStyle("h3")` / `textStyle("body")`). There are no literal colours or sizes
-in the component, so a custom theme changes the card with no code change. See
-`docs/tokens.md` for the roles and the extension mechanism.
+The colours and the elevation's tint come from the theme; the geometry and the
+type steps are the recipe's, compiled against the **default registry** (shadcn's
+fixed metrics) rather than the primitives' density scale — the seam every Tier 2
+component compiles through, recorded in ADR 0006.
+
+| Part | Reads |
+| ---- | ----- |
+| surface | the `card` fill |
+| title | `foreground`, at the registry's `base` step (16/24, weight 600) |
+| description | `mutedForeground`, at the registry's `sm` step (14/20) |
+| outline and footer edge | the `border` role |
+| elevated lift | `elevation.sm`, tinted by the `shadow` role |
+| corners | the registry's 8px `lg` step |
+| header and footer padding | the registry's `px-4 pt-4 pb-3` and `px-3 pt-3` |
+
+Two consequences a reader should not have to discover:
+
+- Changing `colors.card`, `colors.foreground` or `colors.mutedForeground`
+  repaints every card. Changing the theme's `radius` or `density` does **not**
+  reshape it: a card is 8px-rounded with 16px header padding on every platform,
+  and the platform switch repaints its colours and its type family but not its
+  geometry or its type sizes. Pass `className` or `style` to own the metrics.
+- The footer recipe is `px-3 pt-3` with **no bottom padding**, so a control in a
+  default footer sits on the card's bottom edge. Add `className="pb-3"` (12px),
+  as the usage above does, or `style={{ paddingBottom: 12 }}`. The shipped
+  example uses text actions for the same reason.
 
 ## Accessibility
 
@@ -108,6 +142,11 @@ fill from both themes. Run it with:
 ```sh
 nub run --filter @gpuixui/components test:behaviour
 ```
+
+`src/card-page.test.ts` (8 tests) compiles the `CARD_*` recipes through
+`@gpuixui/tw` and holds this page's paint claims to what the renderer is given:
+the `border` role the compiler resolves `border-input` to, `elevation.sm`, the
+fixed metrics on a platform theme, and the footer's missing bottom padding.
 
 It needs a host with a GPUix native binding — macOS arm64, Linux x64 or Windows
 x64, plus this Intel Mac, where a locally built `darwin-x64` binding from plan
