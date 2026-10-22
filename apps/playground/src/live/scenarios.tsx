@@ -280,6 +280,20 @@ import {
   confirmReadout,
   initialConfirmFlow,
 } from "./confirm.js";
+import {
+  NESTED_DIALOG,
+  NESTED_MENU_ITEM,
+  NESTED_MENU_PANEL,
+  NESTED_MENU_TRIGGER,
+  NESTED_OPENER,
+  NESTED_POPOVER_PANEL,
+  NESTED_POPOVER_TRIGGER,
+  NESTED_READOUT,
+  initialNestedFlow,
+  nestedFlow,
+  nestedReadout,
+  type NestedSurface,
+} from "./nested-overlay.js";
 import { listAnchorOf } from "./host.js";
 import { LIST_ROWS, TYPEAHEAD_LETTER, type ListRow } from "./list.js";
 import {
@@ -13218,6 +13232,292 @@ const themeSwitchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/**
+ * The shipped `Dialog` holding the shipped `Popover` holding the shipped
+ * `DropdownMenu` — the three-level stack the shared dismiss layer exists for.
+ *
+ * Every surface is controlled by the fixture (`nestedFlow`), so a dismissal the
+ * stack resolves reaches React and the readout prints which surface each
+ * keystroke landed on. A skipped surface is the claim under test: one Escape
+ * must close the menu **only**, the next the popover, the last the dialog.
+ */
+const NestedOverlayProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const [flow, dispatch] = useReducer(nestedFlow, initialNestedFlow);
+  const change =
+    (surface: NestedSurface) =>
+    (open: boolean): void => {
+      dispatch({ surface, open });
+    };
+  return (
+    <div
+      testId="nested-overlay-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        position: "relative",
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <div
+        style={{
+          width: 720,
+          padding: theme.spacing.xl,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          Three shipped surfaces, nested: one Escape dismisses one of them.
+        </text>
+        <Pressable
+          testId={NESTED_OPENER}
+          onClick={() => dispatch({ surface: "dialog", open: true })}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.foreground,
+            }}
+          >
+            Open dialog
+          </text>
+        </Pressable>
+        <Dialog open={flow.open.dialog} onOpenChange={change("dialog")}>
+          <DialogContent testId={NESTED_DIALOG} label="Nested overlays">
+            <DialogHeader>
+              <DialogTitle>Nested overlays</DialogTitle>
+              <DialogDescription>
+                A popover inside a dialog, and a menu inside that.
+              </DialogDescription>
+            </DialogHeader>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: theme.spacing.lg,
+              }}
+            >
+              <Popover
+                open={flow.open.popover}
+                onOpenChange={change("popover")}
+              >
+                <PopoverTrigger testId={NESTED_POPOVER_TRIGGER}>
+                  Filters
+                </PopoverTrigger>
+                <PopoverContent testId={NESTED_POPOVER_PANEL}>
+                  <DropdownMenu
+                    open={flow.open.menu}
+                    onOpenChange={change("menu")}
+                  >
+                    <DropdownMenuTrigger testId={NESTED_MENU_TRIGGER}>
+                      Sort
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      testId={NESTED_MENU_PANEL}
+                      label="Sort order"
+                    >
+                      <DropdownMenuItem testId={NESTED_MENU_ITEM}>
+                        Newest first
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>Oldest first</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </PopoverContent>
+              </Popover>
+            </div>
+          </DialogContent>
+        </Dialog>
+        <Readout testId={NESTED_READOUT}>{nestedReadout(flow)}</Readout>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Drives one Escape at a time through a three-level overlay stack, and reads
+ * which surface it landed on.
+ *
+ * The claim under test is the one `internal/dismiss-layer.ts` is written for: a
+ * keystroke bubbles through every enclosing surface, and only the deepest one
+ * may consume it. A missing guard closes the menu **and** the popover **and**
+ * the dialog on one Escape, which no single-surface probe can see. The stack is
+ * three shipped components, so the measurement is also the one a consumer
+ * composition gets.
+ *
+ * The pointer half of the same rule is **not** asserted here: measured on
+ * 0.11.0 (2026-10-22), one press outside the popover and the menu raised both
+ * surfaces' `onMouseDownOutside`, and the app saw the menu closed **twice**
+ * (`closes=1,1,3`, `dismissed=menu,popover,dialog,menu,menu`) because the guard
+ * keys the gesture on the payload's identity and the runtime builds one payload
+ * per handler. That is a defect in the component package, filed as an interlock
+ * row in `TODO.md`; this probe will carry the press checks when it is fixed.
+ */
+const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(NESTED_OPENER);
+    yield* ctx.expectEqual(
+      "the stack starts closed",
+      yield* ctx.host.text(NESTED_READOUT),
+      nestedReadout(initialNestedFlow),
+    );
+    yield* ctx.expectEqual(
+      "a closed stack paints no dialog",
+      yield* settleGone(ctx, NESTED_DIALOG),
+      true,
+    );
+
+    /** Focuses an app control, presses it and waits for `painted` to arrive. */
+    const press = (testId: string, painted: string) =>
+      Effect.gen(function* () {
+        yield* ctx.host.focusElement(testId);
+        yield* ctx.host.click(testId);
+        yield* settlePainted(ctx, painted);
+      });
+
+    yield* press(NESTED_OPENER, NESTED_DIALOG);
+    yield* ctx.expectEqual(
+      "the opener paints the dialog",
+      (yield* paintedBox(ctx, NESTED_DIALOG)).height > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the dialog alone is painted",
+      [
+        yield* settleGone(ctx, NESTED_POPOVER_PANEL),
+        yield* settleGone(ctx, NESTED_MENU_PANEL),
+      ].every(Boolean),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "focus enters the dialog surface",
+      yield* focusedAfterPaint(ctx),
+      NESTED_DIALOG,
+    );
+    yield* ctx.expectEqual(
+      "the open reaches the fixture",
+      yield* ctx.host.text(NESTED_READOUT),
+      "dialog=open popover=closed menu=closed opens=1,0,0 closes=0,0,0 dismissed=none",
+    );
+
+    yield* press(NESTED_POPOVER_TRIGGER, NESTED_POPOVER_PANEL);
+    yield* ctx.expectEqual(
+      "the popover opens inside the dialog without dismissing it",
+      [
+        (yield* paintedBox(ctx, NESTED_DIALOG)).height > 0,
+        (yield* paintedBox(ctx, NESTED_POPOVER_PANEL)).height > 0,
+        yield* settleGone(ctx, NESTED_MENU_PANEL),
+      ].every(Boolean),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "focus enters the popover surface",
+      yield* focusedAfterPaint(ctx),
+      NESTED_POPOVER_PANEL,
+    );
+
+    yield* press(NESTED_MENU_TRIGGER, NESTED_MENU_PANEL);
+    yield* ctx.expectEqual(
+      "the menu opens inside the popover without dismissing either surface",
+      [
+        (yield* paintedBox(ctx, NESTED_DIALOG)).height > 0,
+        (yield* paintedBox(ctx, NESTED_POPOVER_PANEL)).height > 0,
+        (yield* paintedBox(ctx, NESTED_MENU_PANEL)).height > 0,
+      ].every(Boolean),
+      true,
+    );
+    // Measured, not assumed: a standalone menu leaves a pointer open's focus on
+    // its trigger, while this one's surface takes it — so one arrow is what a
+    // reader needs before Enter can activate a row.
+    yield* ctx.expectEqual(
+      "a pointer-opened menu nested in a popover takes the surface's focus",
+      yield* focusedAfterPaint(ctx),
+      NESTED_MENU_PANEL,
+    );
+    yield* ctx.host.key("down");
+    yield* ctx.expectEqual(
+      "one arrow reaches the menu's first row",
+      yield* focusedAfterPaint(ctx),
+      NESTED_MENU_ITEM,
+    );
+    yield* ctx.expectEqual(
+      "the three opens reached the fixture",
+      yield* ctx.host.text(NESTED_READOUT),
+      "dialog=open popover=open menu=open opens=1,1,1 closes=0,0,0 dismissed=none",
+    );
+    yield* ctx.host.capture("nested-open");
+
+    // One Escape, one surface: the keystroke reaches all three handlers, and
+    // only the deepest layer may consume it.
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "Escape unpaints the menu only",
+      [
+        yield* settleGone(ctx, NESTED_MENU_PANEL),
+        (yield* paintedBox(ctx, NESTED_POPOVER_PANEL)).height > 0,
+        (yield* paintedBox(ctx, NESTED_DIALOG)).height > 0,
+      ].every(Boolean),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the same Escape left the popover and the dialog open",
+      yield* ctx.host.text(NESTED_READOUT),
+      "dialog=open popover=open menu=closed opens=1,1,1 closes=0,0,1 dismissed=menu",
+    );
+    yield* ctx.expectEqual(
+      "dismissing the menu returns focus to its trigger",
+      yield* focusedAfterPaint(ctx),
+      NESTED_MENU_TRIGGER,
+    );
+    yield* ctx.host.capture("nested-menu-dismissed");
+
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "the second Escape unpaints the popover only",
+      [
+        yield* settleGone(ctx, NESTED_POPOVER_PANEL),
+        (yield* paintedBox(ctx, NESTED_DIALOG)).height > 0,
+      ].every(Boolean),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the second Escape left the dialog open",
+      yield* ctx.host.text(NESTED_READOUT),
+      "dialog=open popover=closed menu=closed opens=1,1,1 closes=0,1,1 dismissed=menu,popover",
+    );
+    yield* ctx.expectEqual(
+      "dismissing the popover returns focus to its trigger",
+      yield* focusedAfterPaint(ctx),
+      NESTED_POPOVER_TRIGGER,
+    );
+
+    yield* ctx.host.key("escape");
+    yield* ctx.expectEqual(
+      "the third Escape dismisses the dialog",
+      yield* settleGone(ctx, NESTED_DIALOG),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the stack dismissed outside-in",
+      yield* ctx.host.text(NESTED_READOUT),
+      "dialog=closed popover=closed menu=closed opens=1,1,1 closes=1,1,1 dismissed=menu,popover,dialog",
+    );
+    yield* ctx.expectEqual(
+      "the dialog returns focus to the app's opener",
+      yield* focusedAfterPaint(ctx),
+      NESTED_OPENER,
+    );
+    yield* ctx.host.capture("nested-dismissed");
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -13475,5 +13775,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "validation-lifecycle",
     view: () => <ValidationProbe />,
     steps: validationSteps,
+  },
+  "nested-overlay-lifecycle": {
+    id: "nested-overlay-lifecycle",
+    view: () => <NestedOverlayProbe />,
+    steps: nestedOverlaySteps,
   },
 };

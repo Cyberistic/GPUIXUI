@@ -342,6 +342,12 @@ export const liveRegistry = [
       "Input: the shipped Field submits on Enter, paints the schema's message and the destructive role when invalid, keeps the focus, and clears both on a valid value",
     capability: "input",
   },
+  {
+    id: "nested-overlay-lifecycle",
+    title:
+      "Overlay: a dialog holding a popover holding a menu dismisses exactly one surface per Escape, outside-in, and returns focus at each layer",
+    capability: "overlay",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

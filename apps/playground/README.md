@@ -37,12 +37,12 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-51 probes a real window can prove, of which fourteen mount shipped
+52 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
-combobox and the modal focus rule), five mount
+combobox, the nested overlay stack and the modal focus rule), five mount
 `@gpuixui/primitives` (the Input, Checkbox, Slider, Text and Tooltip), one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
@@ -755,7 +755,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 
 | Critical interaction | Probes | What a window measures |
 | -------------------- | ------ | ---------------------- |
-| dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter |
+| dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape, outside-in |
 | menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
 | input update/validation | `text-input`, `validation-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
@@ -2856,6 +2856,51 @@ a window's automation protocol has no accessibility verb — the role is proven
 offscreen by `a11y-tree`, not by this probe. Captures:
 `.artifacts/live/validation-{valid,rejected,accepted}.png`.
 
+### `nested-overlay-lifecycle` — measured on 0.11.0 here
+
+The **nested overlays** MISSION lists under interaction: the shipped `Dialog`
+holding the shipped `Popover` holding the shipped `DropdownMenu`. Each component
+pushes a dismiss layer onto the shared stack in
+`packages/components/src/internal/dismiss-layer.ts`, and the stack exists for one
+claim: a keystroke bubbles through **every** enclosing surface, so only the
+deepest open one may consume it. A missing guard closes the menu, the popover
+and the dialog on one Escape — which no single-surface probe can see.
+
+The probe is the caller: `nestedFlow` (`src/live/nested-overlay.ts`) controls all
+three surfaces and appends the surface each close lands on, so the readout's
+`dismissed=` list is the order the stack actually resolved.
+
+| Step | Measurement |
+| ---- | ----------- |
+| open | the dialog is alone; the popover and the menu are unpainted; focus is on the dialog surface; `opens=1,0,0` |
+| popover | opens inside the dialog without dismissing it (dialog and popover painted, menu not); focus enters the popover surface |
+| menu | opens inside the popover with all three painted; a **pointer**-opened menu nested in a popover takes the surface's focus (one arrow then reaches its first row — a standalone menu leaves a pointer open's focus on its trigger) |
+| Escape 1 | the menu leaves, the popover and the dialog stay painted, `closes=0,0,1 dismissed=menu`, and focus returns to the menu's trigger |
+| Escape 2 | the popover leaves, the dialog stays, `closes=0,1,1 dismissed=menu,popover`, focus back on the popover's trigger |
+| Escape 3 | the dialog leaves, `closes=1,1,1 dismissed=menu,popover,dialog`, focus back at the app's own opener |
+
+30 checks, `--only nested-overlay-lifecycle`, green on 0.11.0 (~7 s). Fixture:
+`src/live/nested-overlay.ts` — the ids, the three-surface state, its reducer and
+the readout. `nested-overlay.test.ts` (7 cases) holds the premise: an open is not
+a close, the outside-in order prints in the order it happened, a second close of
+one surface counts twice (so the "one Escape, one surface" checks can fail), a
+re-open clears only its own flag, the readout prints every surface, and the
+README's printed check count equals the probe's assertions (the explicit
+`ctx.expect*` sites plus every `paintedBox` read, which asserts its own
+presence).
+
+**Not asserted, and measured instead**: the same rule for a **pointer**. One
+press outside the popover and the menu raised both surfaces'
+`onMouseDownOutside` handlers, and the fixture recorded the menu closed
+**twice** on that one gesture (`closes=1,1,3`,
+`dismissed=menu,popover,dialog,menu,menu`); a following press on the same target
+did not reach the popover's handler at all, though Escape then closed it. The
+stack identifies a pointer gesture by the payload's object identity, and the
+runtime builds one payload per handler, so two layers each dismiss the topmost
+one. That is a defect in `packages/components`, recorded as an interlock row in
+`TODO.md`; this probe will carry the press checks when it is fixed. Captures:
+`.artifacts/live/nested-{open,menu-dismissed,dismissed}.png`.
+
 ## Release gate
 
 The live suite is **not** part of `nub run check`: it needs a desktop session
@@ -2968,7 +3013,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop, the app-level shortcut and selection probes pass in real GPUix 0.11.0 on this host
-  (51/51), with a written report and screenshots.
+  (52/52), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls
