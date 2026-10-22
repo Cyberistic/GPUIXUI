@@ -1096,6 +1096,15 @@ The extension mechanism is deliberately small:
   brand theme or a high-contrast theme.
 - `applyStyle(base, style)` — apply a whole look (`PlatformStyle`) at once;
   `platformTheme` and `retroTheme` are the two tables it reads.
+- `paletteToTokens(palette, base)` — wear the colours a desktop's theme offers
+  (`SystemPalette`: a page, an ink, an accent, a quiet strip, a border, an error
+  colour, a selection wash). It chooses each filled role's on-colour by
+  measurement and names no colour of its own; `watchSystemTheme` follows a
+  palette through a poll, because the runtime has no file watcher. A partial
+  palette is a recolour — the roles it does not name stay the base's, and the
+  audit reports the mix — so a look that owns its surfaces is a `PlatformStyle`,
+  and the catalogue's [System palettes](./tokens.md#system-palettes) section
+  records the measured limit.
 - `ThemeProvider theme={…}` — scope a theme to a subtree; nested providers
   allow a branded panel inside a neutral shell.
 - Every choice a consumer can persist — mode, contrast, platform, look,
