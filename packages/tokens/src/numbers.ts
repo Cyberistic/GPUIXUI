@@ -29,12 +29,19 @@
  * factor can produce one (`lineHeight: size * 0.9`) and every suite would stay
  * green, so the pair is compared rather than the numbers alone.
  *
+ * A control height is the other pair across groups: the box is exactly
+ * `density.controlHeight[size]` and the text inside it is laid at
+ * `typography.label`'s or `typography.body`'s leading, so a brand that grows its
+ * type without growing the box (or shaves the box while keeping its type) paints
+ * a label taller than the control that carries it. Every number stays finite,
+ * positive and pressable, so nothing else sees it.
+ *
  * `invalidColorRoles` covers the values the renderer cannot parse as a colour;
  * this covers the ones it cannot lay out or press.
  */
 
 import type { BoxShadow, Elevation } from "./elevation.js";
-import { targetSize } from "./scale.js";
+import { controlSizes, targetSize, type ControlSize } from "./scale.js";
 import type { Theme } from "./theme.js";
 import type { TextStyle } from "./typography.js";
 
@@ -64,17 +71,25 @@ export type NumberGroup =
  * - `leading` — a type role's line height, which reaches the role's own font
  *   size. Below that the next baseline sits inside this line's glyph box, so the
  *   two lines collide. It is the one rule about two tokens, so it is applied
- *   where the pair sits together ({@link inspectType}) rather than to one value.
+ *   where the pair sits together ({@link inspectType}) rather than to one value;
+ * - `fits` — a control height, which contains the leading of the tallest type
+ *   role a control paints (`label` or `body`). The box is exactly
+ *   `density.controlHeight[size]` and both painters lay their text at that
+ *   leading, so a box below it clips or spills the label while every number is
+ *   finite, positive and pressable. Reported on the height, the number that has
+ *   to grow, and only once: a height that already misses the pressable floor is
+ *   reported as `pressable`.
  */
 export type NumberRule =
   | "finite"
   | "positive"
   | "nonNegative"
   | "pressable"
-  | "leading";
+  | "leading"
+  | "fits";
 
 /** The rules one value can be measured against on its own. */
-type SingleRule = Exclude<NumberRule, "leading">;
+type SingleRule = Exclude<NumberRule, "leading" | "fits">;
 
 /** One numeric token that is not a number the renderer can lay out. */
 export interface InvalidNumber {
@@ -184,6 +199,54 @@ const inspectType = (
       : measured;
   });
 
+/**
+ * The leading a control's box has to contain: the taller of the two roles a
+ * control paints. A button, a toggle and a select trigger lay their text at
+ * `typography.label`'s leading; a field lays its value at `typography.body`'s
+ * (`packages/primitives/src/core/style.ts`'s `controlStyle` and
+ * `fieldTextStyle`). An unusable leading is the type report's, not this one's.
+ */
+const controlLeading = (
+  typography: NumberSource["typography"],
+): number | undefined => {
+  const leadings = [typography.label.lineHeight, typography.body.lineHeight];
+  return leadings.every(Number.isFinite) ? Math.max(...leadings) : undefined;
+};
+
+/**
+ * Every control height, held to the pressable floor and to the leading it
+ * carries. A height that is not pressable is reported once, by that rule; the
+ * fit is measured only on a height a pointer can already press, so one shrunken
+ * box is not two defects.
+ */
+const inspectControlHeights = (
+  density: NumberSource["density"],
+  typography: NumberSource["typography"],
+): readonly InvalidNumber[] =>
+  controlSizes.flatMap((size: ControlSize) => {
+    const value = density.controlHeight[size];
+    const pressable = inspect(
+      "density",
+      `controlHeight.${size}`,
+      value,
+      "pressable",
+    );
+    if (pressable.length > 0) {
+      return pressable;
+    }
+    const leading = controlLeading(typography);
+    return leading === undefined || value >= leading
+      ? []
+      : [
+          {
+            group: "density",
+            path: `controlHeight.${size}`,
+            value,
+            rule: "fits",
+          },
+        ];
+  });
+
 /** The four numbers a shadow carries. Offsets and spread may be negative. */
 const inspectShadow = (
   level: string,
@@ -209,14 +272,16 @@ const inspectShadow = (
  * cannot press.
  *
  * An empty array means every size, length and shadow a theme carries is one the
- * runtime can paint, every control height and row height is one a reader can hit
- * and every type role's leading reaches its own size. A number
+ * runtime can paint, every control height and row height is one a reader can hit,
+ * every control height contains the text it carries, and every type role's
+ * leading reaches its own size. A number
  * that is not finite is dropped rather than clamped, a size at or below zero
  * paints an element no one can find, a control height under
  * {@link targetSize.minimum} is a press target the library's own components do
- * not pad up, the same floor holds a dense list row to `rowHeight`, and a
- * leading shorter than its type stacks the next line into the current one — all
- * reported by path instead of shipping as a default.
+ * not pad up, the same floor holds a dense list row to `rowHeight`, a leading
+ * shorter than its type stacks the next line into the current one, and a
+ * control height below the leading of the label or value it paints clips the
+ * text — all reported by path instead of shipping as a default.
  *
  * @example
  * ```ts
@@ -233,6 +298,13 @@ const inspectShadow = (
  *   extendTheme(lightTheme, { typography: { body: { lineHeight: 12 } } }),
  * );
  * // [{ group: "typography", path: "body.lineHeight", value: 12, rule: "leading" }]
+ * invalidNumbers(
+ *   extendTheme(lightTheme, {
+ *     density: "compact",
+ *     typography: { body: { lineHeight: 26 } },
+ *   }),
+ * );
+ * // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
  * ```
  */
 export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
@@ -242,12 +314,7 @@ export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
     ...inspectLengths("borderWidth", theme.borderWidth, "nonNegative"),
     ...inspectLengths("iconSize", theme.iconSize, "positive"),
     ...inspectType(theme.typography),
-    ...inspectLengths(
-      "density",
-      theme.density.controlHeight,
-      "pressable",
-      "controlHeight.",
-    ),
+    ...inspectControlHeights(theme.density, theme.typography),
     ...inspectLengths(
       "density",
       theme.density.controlPaddingX,

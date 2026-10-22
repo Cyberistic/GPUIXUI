@@ -935,7 +935,7 @@ by group, path, value and the rule it missed:
 | `iconSize` | `xs`…`xl` | finite, `> 0` |
 | `typography` | every role's size | finite, `> 0` |
 | `typography` | every role's leading | finite, `> 0`, and at least the role's size (`leading`) |
-| `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`) |
+| `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`), and at least the tallest control leading (`fits`) |
 | `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`) |
 | `density` | `controlPaddingX` per size | finite, `>= 0` |
 | `elevation` | every shadow's `offsetX`, `offsetY`, `spreadRadius` | finite |
@@ -964,6 +964,20 @@ reader cannot reliably hit while every control height is right, and
 `invalidNumbers` reports `rowHeight` by name. Every shipped preset clears it —
 the density table below prints each one.
 
+A control's box also has to contain the text it carries. The box is exactly
+`density.controlHeight[size]`, and the two painters lay their text at a type
+role's leading: `controlStyle` uses `label` for a button, a toggle and a select
+trigger, and `fieldTextStyle` uses `body` for a field's value
+(`packages/primitives/src/core/style.ts`). A brand that grows its reading size
+without growing the box — or shaves the box while keeping its type — paints a
+line taller than the control around it, and every number is finite, positive and
+pressable. `invalidNumbers` reports the height as `fits`, on the number that has
+to grow: `compact` is 24/28/32, so a 26px body leading outgrows only its `sm`
+control. A height exactly equal to the leading passes, because the line fills the
+box rather than spilling out of it, and a box that already misses the pressable
+floor is reported once, by `pressable`. Every shipped preset clears it — the
+tallest control role is `body` at 20px, four pixels under `compact` `sm`.
+
 Two numbers only mean something together: a type role's leading and its size. A
 leading shorter than the size puts the next baseline inside this line's glyph
 box, so ascenders and descenders collide — and a scale computed from a factor
@@ -983,12 +997,20 @@ invalidNumbers(
   extendTheme(lightTheme, { typography: { body: { lineHeight: 10 } } }),
 );
 // [{ group: "typography", path: "body.lineHeight", value: 10, rule: "leading" }]
+invalidNumbers(
+  extendTheme(lightTheme, {
+    density: "compact",
+    typography: { body: { lineHeight: 26 } },
+  }),
+);
+// [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
 ```
 
-`src/numbers.example.ts` holds three brands: one whose corner radius came from a
+`src/numbers.example.ts` holds four brands: one whose corner radius came from a
 scale factor nobody set, one whose "dense" preset shaves two control heights and
-a row under the pressable floor, and one whose type scale multiplied the leadings
-under the sizes. `numbers.test.ts` runs all three audits, proves none of the
+a row under the pressable floor, one whose type scale multiplied the leadings
+under the sizes, and one that grew its body leading past the smallest control it
+still ships. `numbers.test.ts` runs all four audits, proves none of the
 colour reports can see their defects, and holds all 16 shipped, platform and
 authored themes to an empty report — the shipped scale's tightest role is the
 display step at 28/36, well clear of the floor.

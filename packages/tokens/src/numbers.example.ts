@@ -54,3 +54,19 @@ export const crushedTypeTheme = extendTheme(lightTheme, {
 
 /** What the gate reports for it: each leading that fell under its own size. */
 export const crushedTypeAudit = auditTheme(crushedTypeTheme);
+
+/**
+ * A brand that grew its reading size and kept the smallest density: the body
+ * leading is 26px inside `compact`'s 24px `sm` control, so the line is taller
+ * than the box that carries it. Every number is finite, positive and pressable,
+ * the type scale is in order, and the colours are untouched — only the pair
+ * across the two groups fails.
+ */
+export const tallTypeTheme = extendTheme(lightTheme, {
+  name: "Tall type",
+  density: "compact",
+  typography: { body: { lineHeight: 26 } },
+});
+
+/** What the gate reports for it: the one box the leading outgrew, by size. */
+export const tallTypeAudit = auditTheme(tallTypeTheme);

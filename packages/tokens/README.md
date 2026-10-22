@@ -498,10 +498,13 @@ Each report is also a function of its own:
   nothing usable. Each failure names its group, path, value and the rule it
   missed; a shadow offset may be negative, but a type size must be positive, a
   type role's leading must reach its own size (a shorter one starts the next
-  line inside this line's glyphs), and
+  line inside this line's glyphs),
   a control height and a row height must reach `targetSize.minimum`, because the
   library builds the control box at that height and a `dense` list row at the
-  row height, reserving no extra hit area on either.
+  row height, reserving no extra hit area on either, and a control height must
+  contain the leading of the `label` or `body` text a control paints — the box is
+  exactly that height, so a brand that grows its type past it is reported as
+  `fits` while every number is still layable.
 - `invalidScales(theme)` lists every named step that does not exceed the one
   before it — spacing, radii, border weights, icon sizes, the type hierarchy and
   the control heights and paddings. Every value can be layable while the name

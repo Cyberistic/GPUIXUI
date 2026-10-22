@@ -44,6 +44,8 @@ import {
 import {
   crushedTypeAudit,
   squatDensityAudit,
+  tallTypeAudit,
+  tallTypeTheme,
   unmeasuredBrandAudit,
   unmeasuredBrandTheme,
 } from "./numbers.example.js";
@@ -183,6 +185,20 @@ describe("the documents name the number rules", () => {
     );
   });
 
+  it("prints the fit rule in the catalogue, with a report the code actually returns", () => {
+    const catalogue = page("../../../docs/tokens.md");
+    const [failure] = invalidNumbers(tallTypeTheme);
+
+    expect(failure).toBeDefined();
+    expect(catalogue).toContain(
+      "| `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`), and at least the tallest control leading (`fits`) |",
+    );
+    // The snippet is the real report, not an illustration of one.
+    expect(catalogue).toContain(
+      `// [{ group: "density", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
+    );
+  });
+
   it("states the rule and its consequence in the design system", () => {
     const design = page("../../../docs/design-system.md");
 
@@ -190,6 +206,8 @@ describe("the documents name the number rules", () => {
     expect(design).toContain(
       "`invalidNumbers` reports the role's `lineHeight` as `leading`",
     );
+    expect(design).toContain("A control's box contains the text it carries");
+    expect(design).toContain("reports it as `fits`");
   });
 });
 
@@ -403,6 +421,117 @@ describe("a row height a pointer cannot reach", () => {
     expect(audit.contrast).toEqual([]);
     expect(audit.decorative).toEqual([]);
     expect(audit.passed).toBe(false);
+  });
+});
+
+describe("a control's box fits the text it carries", () => {
+  it("reports the size whose box is shorter than its body text", () => {
+    // `compact` is 24/28/32 and a control lays its value at `body`'s leading, so
+    // a 26px leading outgrows only the smallest box.
+    expect(
+      invalidNumbers(
+        brand({ density: "compact", typography: { body: { lineHeight: 26 } } }),
+      ),
+    ).toEqual([
+      {
+        group: "density",
+        path: "controlHeight.sm",
+        value: 24,
+        rule: "fits",
+      },
+    ]);
+  });
+
+  it("measures the label a button paints as well as the value a field does", () => {
+    // A button, toggle and select trigger lay their text at `label`'s leading;
+    // a field at `body`'s. The taller of the two is what the box must contain.
+    expect(
+      invalidNumbers(
+        brand({
+          density: "compact",
+          typography: { label: { lineHeight: 26 } },
+        }),
+      ),
+    ).toEqual([
+      {
+        group: "density",
+        path: "controlHeight.sm",
+        value: 24,
+        rule: "fits",
+      },
+    ]);
+  });
+
+  it("accepts a box exactly as tall as the leading, where the line fills it", () => {
+    expect(
+      invalidNumbers(
+        brand({ density: "compact", typography: { body: { lineHeight: 24 } } }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("reports a shrunken box once, as the pressable floor", () => {
+    // A box under 24px is already a target a reader cannot hit; naming the fit
+    // as well would count one shrunken control as two defects.
+    expect(
+      invalidNumbers(
+        brand({
+          density: { controlHeight: { sm: 20, md: 28, lg: 32 } },
+          typography: { body: { lineHeight: 26 } },
+        }),
+      ),
+    ).toEqual([
+      {
+        group: "density",
+        path: "controlHeight.sm",
+        value: 20,
+        rule: "pressable",
+      },
+    ]);
+  });
+
+  it("leaves an unusable leading to the type report", () => {
+    expect(
+      invalidNumbers(
+        brand({
+          density: "compact",
+          typography: { label: { lineHeight: Number.NaN } },
+        }),
+      ),
+    ).toEqual([
+      {
+        group: "typography",
+        path: "label.lineHeight",
+        value: Number.NaN,
+        rule: "positive",
+      },
+    ]);
+  });
+
+  it("fails the gate on a scale that outgrows its controls, with no colour report involved", () => {
+    const audit = tallTypeAudit;
+
+    expect(audit.invalidNumbers.map(({ path, rule }) => [path, rule])).toEqual([
+      ["controlHeight.sm", "fits"],
+    ]);
+    expect(audit.invalidRoles).toEqual([]);
+    expect(audit.contrast).toEqual([]);
+    expect(audit.decorative).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("holds every shipped preset above the leading a control paints", () => {
+    const leading = Math.max(
+      typography.label.lineHeight,
+      typography.body.lineHeight,
+    );
+    const squashed = densityNames.filter((name) =>
+      Object.values(densityPresets[name].controlHeight).some(
+        (height) => height < leading,
+      ),
+    );
+
+    expect(squashed).toEqual([]);
   });
 });
 
