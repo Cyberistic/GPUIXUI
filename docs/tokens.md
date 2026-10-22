@@ -1190,10 +1190,10 @@ tightest being Windows XP (Luna) dark's pressed wash at 7.88:1. A row
 surface's role rather than the page's — a menu or combobox row is
 `popoverForeground` — and a destructive row paints the tone's readable role, so
 the table measures both on the `hover` and `active` wash `menuRowStyle` paints
-under them, and the popover's text role on the `selected` wash a chosen row
-fills (`selectItemClass` paints `text-popover-foreground` over `bg-selected`,
-so a selection that drifted toward its own text would erase the row it just
-chose). That pair found two shipped misses: Windows light's pressed wash
+under them, and the popover's text role on the `selected` wash a chosen row fills
+(`selectItemClass` paints `text-popover-foreground` over `bg-selected`, so a
+selection that drifted toward its own text would erase the row it just chose).
+That pair found two shipped misses: Windows light's pressed wash
 left the destructive row at 6.93:1 and Luna light's at 6.77:1, under the body
 floor. Every light theme now carries red 900 (`#5C1619`) as
 `destructiveSoftForeground`: it is both the label the deeper soft surface needs
@@ -1366,20 +1366,21 @@ a theme that erases the state fails by name instead of shipping it.
 The role pair is the contract, and a filled action already paints it: the
 primitives resolve `paintsFilledSurface` (`primary`, `secondary`, `destructive`)
 to `disabledAction(theme)` in `core/style.ts`, the recipe's disabled bucket is
-`disabled:bg-disabled disabled:text-disabled-foreground`, and a menu row
-(`packages/components/src/menu/item.tsx`) paints `disabledForeground`. Two
-painters still fade the whole control: the `@gpuixui/tw` recipes'
-`disabled:opacity-50`, and the components package's own `Button`
-(`packages/components/src/internal/button.tsx`, `opacity: 0.5`). An unfilled
-action — `outline`, `ghost`, `link`, a `Toggle` — has no fill to collapse into
-and fades with them, and a **field** keeps the fade because its fill is `input`
-and the faded label clears the floor on every content surface it sits on
-(§The fade is a page mechanism). A fade is translucent, which `contrastRatio`
-refuses: it shows whatever is behind it, so no role pair can measure the
-result. `disabledOpacity` is that share (`0.5`, a design constant rather than a
-`Theme` group — a brand that lowered it would make the library's own disabled
-state disappear), and `disabledFadeFailures(theme, floor?)` measures the fade by
-compositing it.
+`disabled:bg-disabled disabled:text-disabled-foreground`, a menu row
+(`packages/components/src/menu/item.tsx`) paints `disabledForeground`, and the
+components package's own `Button`
+(`packages/components/src/internal/button.tsx`) paints the pair for every
+variant that has a fill. Two painters still fade the whole control: the
+`@gpuixui/tw` recipes' `disabled:opacity-50`, and the components' `Button` for
+its **unfilled** variants (`opacity: disabledOpacity`), which have no fill to
+collapse into. A `Toggle` is unfilled too, and a **field** keeps the fade
+because its fill is `input` and the faded label clears the floor on every
+content surface it sits on (§The fade is a page mechanism). A fade is
+translucent, which `contrastRatio` refuses: it shows whatever is behind it, so
+no role pair can measure the result. `disabledOpacity` is that share (`0.5`, a
+design constant rather than a `Theme` group — a brand that lowered it would
+make the library's own disabled state disappear), and
+`disabledFadeFailures(theme, floor?)` measures the fade by compositing it.
 
 Each `DisabledFadePair` names a control the fade is applied to — `fill`, `label`
 and the `over` surface — for the three filled actions on the page and a field on
@@ -1435,8 +1436,8 @@ an unavailable action and an enabled tonal action painted the same box in the
 variant a reader selects for clarity; `disabled` is the quiet step now. A
 **field** keeps fading on `background`, `card` and `popover`: its fill is
 `input`, and the faded label clears the floor on all three. A filled action and
-the menu row already paint the pair; the two recipe sets and the components'
-`Button` are the interlock left in `TODO.md`.
+the menu row already paint the pair in both packages; the `@gpuixui/tw` recipe
+set is what is left in `TODO.md` → Interlocks.
 
 #### The dim a control paints while Tab is elsewhere
 
@@ -1829,12 +1830,19 @@ the base dark theme's placeholder on its own field fill at 4.54:1 — 0.04 of
 headroom, recorded rather than widened, because every dark palette's placeholder
 is a step deliberately fainter than its secondary text. No other value moved.
 
-**Adoption.** `packages/primitives` keeps a private copy of this mapping
-(`src/core/style.ts`) and the components package's fields pass no host theme at
-all, so their placeholder and caret are the runtime's defaults today; passing
-this seam on every field host is recorded in `TODO.md` → Interlocks. The mapping
-is held by [`src/native-text.test.ts`](../packages/tokens/src/native-text.test.ts),
-which runs every shipped theme and both fills through the same floors.
+**Adoption.** Both packages carry the seam. `packages/primitives/src/core/style.ts`
+re-exports it, so `Input`, `TextArea`, `NumberField` and `OTPField` share one
+rule rather than a copy (`src/core/native-text.test.ts` holds the identity).
+Every host in `packages/components` passes it: `FieldInput` (`field.tsx`),
+`SearchInput`, `TagInputField`, `MentionInput`, `InlineEdit`, `ColorPicker`'s hex
+field, `ChatComposer`, `TimePicker`'s segments, `CommandMenuInput` and
+`ComboboxInput` — the last two through the runtime's part props. Each names the
+fill it paints: `input` for a plain field, `background` for the composite ones.
+The mapping is held by
+[`src/native-text.test.ts`](../packages/tokens/src/native-text.test.ts), which
+runs every shipped theme and both fills through the same floors and fails when a
+components file that renders an `<input>`, `<textarea>` or `<code>` stops passing
+the seam.
 
 ## Spacing
 

@@ -4,22 +4,23 @@
  * A GPUix `<input>`, `<textarea>` or `<code>` takes its palette through a
  * `theme` prop, not through the properties `styles.ts` resolves — and a host
  * given no theme layers on the runtime's **built-in dark theme** (the pinned
- * typings say so). The components package's fields set their own fill, value
- * colour and selection wash and pass no host theme, so their placeholder and
- * caret are painted for a dark surface in a light theme: a role the contrast
- * table measures is skipped, and the caret is a mark nobody checked.
+ * typings say so). Before this seam existed the components package's fields
+ * passed no host theme, so their placeholder and caret were painted for a dark
+ * surface in a light theme: a role the contrast table measures was skipped, and
+ * the caret was a mark nobody checked.
  *
  * `nativeTextTheme` is the one place the answer lives, and it names the fill the
  * host's value and placeholder sit on, because the library's fields paint two:
  * `input` for a plain field, the page role for a composite one. The cases below
- * hold the mapping, the fill, and the floors the roles must clear on that fill.
+ * hold the mapping, the fill, the floors the roles must clear on that fill, and
+ * the adoption both packages carry.
  *
- * `node:fs` is deliberate, as in `docs.test.ts`: the last case reads the
- * catalogue it holds a printed number to, and the package keeps zero runtime
+ * `node:fs` is deliberate, as in `docs.test.ts`: the last cases read the
+ * catalogue and the two packages' sources, and the package keeps zero runtime
  * dependencies by design.
  */
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { darkColors } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
@@ -218,6 +219,84 @@ describe("nativeTextTheme", () => {
 
     expect(catalogue).toContain(
       `The tightest placement over both fills is the base dark theme's placeholder on its own field fill at ${tightest.toFixed(2)}:1`,
+    );
+  });
+});
+
+/**
+ * The seam is only worth its mapping if the hosts actually take it. Both
+ * packages carry it now: the primitives re-export the functions rather than
+ * copying them, and every components host passes the theme and names the fill it
+ * paints. The catalogue used to say the components' fields "pass no host theme
+ * at all", which would have sent a reader to fix a defect that was already
+ * closed, so the page is held to the sources here.
+ */
+describe("the adoption both packages carry", () => {
+  const componentsDir = new URL("../../components/src/", import.meta.url);
+  const sources = readdirSync(componentsDir)
+    .filter((file) => file.endsWith(".tsx"))
+    .map((file) => ({
+      file,
+      text: readFileSync(new URL(file, componentsDir), "utf8"),
+    }));
+
+  it("gives every components host the theme and the fill its value sits on", () => {
+    const hosts = sources.filter(({ text }) =>
+      /<(input|textarea|code)[\s>]/.test(text),
+    );
+
+    // A rule that finds no host would pass by measuring nothing.
+    expect(hosts.length).toBeGreaterThanOrEqual(9);
+    const missing = hosts
+      .filter(({ text }) => !text.includes("nativeTextTheme("))
+      .map(({ file }) => file);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("names one of the two fills at every call site", () => {
+    // The pattern is built rather than written as a literal: `scripts/check-tests.ts`
+    // walks a regex written mid-expression into the code after it and reports the
+    // whole test as assertionless.
+    const call = new RegExp("nativeTextTheme\\(([^)]*)\\)", "g");
+    const quoted = new RegExp('"(\\w+)"');
+    const named = sources.flatMap(({ file, text }) =>
+      [...text.matchAll(call)].map((match) => ({
+        file,
+        fill: quoted.exec(match[1] ?? "")?.[1],
+      })),
+    );
+    const unknown = named.filter(
+      ({ fill }) =>
+        fill !== undefined && !nativeTextFills.some((known) => known === fill),
+    );
+
+    expect(named.length).toBeGreaterThanOrEqual(10);
+    expect(unknown).toEqual([]);
+  });
+
+  it("re-exports the seam from the primitives instead of copying it", () => {
+    const primitives = readFileSync(
+      new URL("../../primitives/src/core/style.ts", import.meta.url),
+      "utf8",
+    );
+
+    expect(primitives).toContain("nativeTextTheme");
+    expect(primitives).toContain("nativeTextFills");
+    // A local re-implementation would be the duplication the boundaries forbid.
+    expect(primitives).not.toMatch(/function nativeTextTheme/);
+  });
+
+  it("teaches both halves on the catalogue, and retracts the stale one", () => {
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(catalogue).toContain("Both packages carry the seam");
+    expect(catalogue).toContain("`ComboboxInput`");
+    expect(catalogue).not.toContain(
+      "the components package's fields pass no host theme",
     );
   });
 });
