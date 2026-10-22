@@ -4,7 +4,8 @@
  * Two bounded numbers where typing is the point — a copy count and a render
  * resolution — with the panel's state controlling both and the summary derived
  * from it. The copy count shows the `1–99` guard a print dialog actually has;
- * the resolution shows a larger step, so the arrows are visibly coarser.
+ * the resolution shows a larger step, so the arrows are visibly coarser and a
+ * drag across the spin column travels twelve dots per step.
  */
 
 import { useState, type ReactElement } from "react";
@@ -91,7 +92,7 @@ export const NumberFieldExample = (): ReactElement => {
         <Separator orientation="horizontal" />
 
         <Text role="caption" tone="muted">
-          {`${copies} ${copies === 1 ? "print" : "prints"} at ${dpi} DPI. Type a value, or use ↑ ↓ and PageUp/PageDown.`}
+          {`${copies} ${copies === 1 ? "print" : "prints"} at ${dpi} DPI. Type a value, step with ↑ ↓ and PageUp/PageDown, or drag a stepper to scrub.`}
         </Text>
       </Stack>
     </Box>
