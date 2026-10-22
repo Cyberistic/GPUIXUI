@@ -12,6 +12,7 @@
  */
 
 import { expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
 import { Box } from "../src/components/Box.js";
@@ -27,7 +28,7 @@ import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import type { Density } from "../src/core/theme.js";
-import { a11yNode, type Bounds, type Runtime } from "./harness.js";
+import { a11yNode, a11yNodes, type Bounds, type Runtime } from "./harness.js";
 import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
 const next = { width: WINDOW.width - testTheme.spacing.lg * 2 } as const;
@@ -165,6 +166,28 @@ it("draws a horizontal Separator as one border step across the surface", async (
   );
   expect(rule.height).toBe(testTheme.borderWidth.thin);
   expect(rule.width).toBe(next.width);
+});
+
+it("keeps a static rule out of the tree, because a separator maps to a splitter", async () => {
+  // The measured reason this component publishes no role. The one ARIA token a
+  // rule could carry, `separator`, maps to the platform's **Splitter** — the
+  // role of a draggable divider — so a static rule announced that way invites an
+  // interaction it does not have. A focusable divider is a split pane's job, so
+  // the rule stays decorative; this case proves the mapping and that the shipped
+  // rule adds no node of its own.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Separator orientation="horizontal" />
+      <div role="separator" aria-label="Probe rule" />
+    </Surface>,
+  );
+  const splitters = Arr.filter(
+    a11yNodes(runtime.a11y()),
+    (node) => node.aria?.role === "Splitter",
+  );
+  expect(splitters).toHaveLength(1);
+  expect(splitters[0]?.aria?.label).toBe("Probe rule");
 });
 
 it("lets a Spacer push its sibling to the far edge", async () => {

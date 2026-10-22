@@ -79,6 +79,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "A filled 1px rule, not a border, so borderStyle does not apply: no dashed or dotted divider (compose a Box for one)",
       "No draggable splitter and no resize event",
+      "No role: 0.11.0 maps the separator token to Splitter, the role of a draggable divider, so a static rule stays decorative (measured)",
     ],
     source: ["src/components/Separator.tsx", "src/core/style.ts"],
     docs: "docs/separator.mdx",
