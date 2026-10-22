@@ -78,11 +78,11 @@ export const surfaceBudget = {
   // 159 → 161 for GradientText (`gradient-text.tsx` and the ramp rule beside it).
   // 161 → 163 for Glyph (`glyph.tsx` and the wall rule beside it): the one
   // background pattern the runtime paints as text rather than as one mask, so
-  // its cells are hosts rather than a path.
-  // 163 → 164 for CodeBlock's tokenizer (`code-block/tokenize.ts`): the block now
-  // highlights its own source with `@tanstack/highlight` instead of handing it to
-  // the runtime's `<code>` host, so the class→role map is a module of its own.
-  modules: 164,
+  // its cells are hosts rather than a path. 163 → 164 for CodeBlock's tokenizer
+  // (`code-block/tokenize.ts`) and 164 → 165 for Form's validator seam
+  // (`form/validator.ts`, the Effect/Schema ↔ `@tanstack/form-core` adapter), so
+  // each adoption adds exactly the module it names.
+  modules: 165,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -103,7 +103,7 @@ export const surfaceBudget = {
   // family's headroom.
   bytes: 1070 * 1024,
   /** Packages the entry's own modules import. */
-  // `@tanstack/highlight` joined when CodeBlock adopted it as its tokenizer:
-  // every consumer of the entry now loads the tokenizer beside the block.
-  packages: ["@gpuix/react", "@tanstack/highlight", "effect", "react"],
+  // `@tanstack/form-core` joined with Form's validator seam and
+  // `@tanstack/highlight` with CodeBlock's tokenizer.
+  packages: ["@gpuix/react", "@tanstack/form-core", "@tanstack/highlight", "effect", "react"],
 } as const;

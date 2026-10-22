@@ -21,6 +21,9 @@ catalogs:
     '@tailwindcss/vite':
       specifier: ^4.3.2
       version: 4.3.3
+    '@tanstack/form-core':
+      specifier: 1.33.5
+      version: 1.33.5
     '@tanstack/highlight':
       specifier: 1.1.0
       version: 1.1.0
@@ -260,6 +263,9 @@ importers:
       '@gpuixui/tw':
         specifier: workspace:*
         version: link:../tw
+      '@tanstack/form-core':
+        specifier: 'catalog:'
+        version: 1.33.5
       '@tanstack/highlight':
         specifier: 'catalog:'
         version: 1.1.0
@@ -314,7 +320,7 @@ importers:
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.5(effect@4.0.5)(vitest@5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5)))
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))
       '@gpuixui/config':
         specifier: workspace:*
         version: link:../config
@@ -332,7 +338,7 @@ importers:
         version: 7.0.2
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5))
+        version: 5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
   packages/deploy:
     devDependencies:
@@ -2445,6 +2451,14 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7 || ^8
 
+  '@tanstack/devtools-event-client@0.4.4':
+    resolution: {integrity: sha512-6T5Yop/793YI+H+5J8Hsyj4kCih9sl4t3ElLgKioW5hk3ocn+ZdSJ94tT7vL7uabxSugWYBZlOTMPzEw2puvQw==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  '@tanstack/form-core@1.33.5':
+    resolution: {integrity: sha512-3dfx9MBP0aq5sXKteikG629X9oviptrQj0IFRk9YGcb+lB7Kv5x8S17oOSk1wUWgjQZ4xVJEMbKwOAODymocgA==}
+
   '@tanstack/highlight@1.1.0':
     resolution: {integrity: sha512-mDn/fhny+WgSVHUH0sAcARlSfbXCQJWebu2NRmCOcD+3I4/73m2D9rcMISgIiXJrhl1vyk9hmAJn7sSnWAbfvQ==}
     engines: {node: '>=18'}
@@ -2456,6 +2470,10 @@ packages:
   '@tanstack/hotkeys@0.17.0':
     resolution: {integrity: sha512-HhgfF+Wqz3ofCQaDHXSkItRbLXmigoHsxJsQGbGc3Kgu/gunwcFLqVubfoUmdRK/YN7fuZYN2vEOk3oMGxSWTg==}
     engines: {node: '>=20'}
+
+  '@tanstack/pacer-lite@0.1.1':
+    resolution: {integrity: sha512-y/xtNPNt/YeyoVxE/JCx+T7yjEzpezmbb+toK8DDD1P4m7Kzs5YR956+7OKexG3f8aXgC3rLZl7b1V+yNUSy5w==}
+    engines: {node: '>=18'}
 
   '@tanstack/react-router@1.170.45':
     resolution: {integrity: sha512-6tuiIAFb82zsk/YxveJRyGjbsm6kIfgUuoH7qCp2R2aSHveW6W0t/6j+Sn4m1iIlA2lLU4cvooqks08/YMOThw==}
@@ -5975,6 +5993,14 @@ snapshots:
       tailwindcss: 4.3.3
       vite: 8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
 
+  '@tanstack/devtools-event-client@0.4.4': {}
+
+  '@tanstack/form-core@1.33.5':
+    dependencies:
+      '@tanstack/devtools-event-client': 0.4.4
+      '@tanstack/pacer-lite': 0.1.1
+      '@tanstack/store': 0.11.2
+
   '@tanstack/highlight@1.1.0': {}
 
   '@tanstack/history@1.162.5': {}
@@ -5982,6 +6008,8 @@ snapshots:
   '@tanstack/hotkeys@0.17.0':
     dependencies:
       '@tanstack/store': 0.11.2
+
+  '@tanstack/pacer-lite@0.1.1': {}
 
   '@tanstack/react-router@1.170.45(react@19.3.1)(react-dom@19.3.1(react@19.3.1))':
     dependencies:

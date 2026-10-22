@@ -1,36 +1,58 @@
 /**
  * Form: schema validation and the submit lifecycle around a group of fields.
  *
- * The runtime has no form element and no DOM to read values from, so the form is
- * **owned-value**: the caller passes the value it already holds and receives the
- * decoded value only when the schema accepts it. `Field` still paints one
- * message; this component decides when validation runs and what a failed submit
- * shows.
- *
- * The submit handler is the runtime boundary: `validation/logic.ts` and the
- * decoder are pure, non-failing effects with no requirements, so they run with
- * `Effect.runSync` there. A failed submit turns messages on, and they are then
- * derived from the caller's live value — fixing a field clears (or replaces) its
- * message without a second submit, while a form that has never been submitted
- * never nags. The flag is the state; the messages are not, so an edit cannot
- * leave a stale list behind.
+ * The state is `@tanstack/form-core`: one `FormApi` owns the values, the field
+ * meta (touched/dirty/errors) and the submit lifecycle. Validation stays
+ * Effect/Schema — `schemaValidator` adapts `Schema.decodeUnknownEffect` into the
+ * core's validator shape and returns the messages mapped to the fields their
+ * paths name, while the summary is the same schema's messages derived from the
+ * live `value`. The caller still owns the value and receives the decoded one:
+ * `submit` pushes the current `value` into the core, then `handleSubmit` runs the
+ * schema and calls `onSubmit` only when it decodes.
  *
  * `Form` has no compound parts (`docs/component-api.md` §8), so its children are
- * a render prop: that is how the consumer reaches `submit` without a part the
- * contract does not allow.
+ * a render prop: that is how the consumer reaches `submit` — and now the
+ * `FormApi` for field registration — without a part the contract does not allow.
  */
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { cn, FORM_ERROR, FORM_ERRORS, FORM_ROOT } from "@gpuixui/tw";
+import { FormApi } from "@tanstack/form-core";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
-import * as Result from "effect/Result";
+import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
-import { useCallback, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import {
+  decode,
+  schemaValidator,
+  type SchemaValidator,
+} from "./form/validator.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { statusTone, useTheme } from "./internal/theme.js";
 import { validateAll } from "./validation/logic.js";
+
+/** The form-core instance `Form` drives: unknown values, one schema validator. */
+export type SchemaFormApi = FormApi<
+  unknown,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  SchemaValidator,
+  undefined,
+  undefined,
+  undefined,
+  undefined
+>;
 
 /** What the render prop receives. */
 export interface FormState {
@@ -38,8 +60,10 @@ export interface FormState {
   readonly errors: ReadonlyArray<string>;
   /** Mirrors the `pending` prop; a pending form ignores `submit`. */
   readonly pending: boolean;
-  /** Validate `value` and call `onSubmit` only when it decodes. */
+  /** Push the current value into the core, validate and submit when it decodes. */
   readonly submit: () => void;
+  /** The form-core instance: values, field meta, reset and field registration. */
+  readonly form: SchemaFormApi;
 }
 
 /** {@link Form} props. */
@@ -59,6 +83,17 @@ export interface FormProps<T> extends Omit<Props, "children" | "onSubmit"> {
   readonly children: (state: FormState) => ReactNode;
 }
 
+/** Push the caller's live `value` into the core without touching fields. */
+const syncValues = (form: SchemaFormApi, value: unknown): void => {
+  if (!P.isObject(value) || Array.isArray(value)) return;
+  Arr.forEach(Object.entries(value), ([key, next]) =>
+    form.setFieldValue(key, () => next, {
+      dontUpdateMeta: true,
+      dontValidate: true,
+    }),
+  );
+};
+
 /**
  * A form boundary: run the schema, show the messages, submit the decoded value.
  */
@@ -74,26 +109,41 @@ export const Form = <T,>({
   ...rest
 }: FormProps<T>) => {
   const theme = useTheme();
-  // The one piece of state: whether a submit has failed. The messages themselves
-  // are derived from the caller's current value, so an edit cannot leave a
-  // stale list on screen.
-  const [showErrors, setShowErrors] = useState(false);
-  // `validateAll` is a non-failing `Effect.succeed`; running it here reads a
-  // value at the render boundary rather than starting anything.
-  const errors = showErrors ? Effect.runSync(validateAll(schema)(value)) : [];
+  // The core owns the state; the schema and the consumer callback are read when
+  // the form mounts (the core's `defaultValues` have the same lifetime).
+  const [form] = useState<SchemaFormApi>(
+    () =>
+      new FormApi({
+        defaultValues: value,
+        validators: { onSubmit: schemaValidator(schema) },
+        onSubmit: ({ value: rawValue }) =>
+          Option.match(decode(schema)(rawValue), {
+            onNone: () => undefined,
+            onSome: onSubmit,
+          }),
+      }),
+  );
+  // A submit's result arrives asynchronously; subscribe so the summary follows.
+  const state = useSyncExternalStore(
+    useCallback(
+      (onChange: () => void) => form.store.subscribe(onChange).unsubscribe,
+      [form],
+    ),
+    () => form.state,
+  );
 
   const submit = useCallback((): void => {
     if (pending) return;
+    syncValues(form, value);
+    void form.handleSubmit();
+  }, [form, pending, value]);
 
-    const decoded = Schema.decodeUnknownResult(schema)(value);
-    if (Result.isFailure(decoded)) {
-      setShowErrors(true);
-      return;
-    }
-
-    setShowErrors(false);
-    onSubmit(decoded.success);
-  }, [onSubmit, pending, schema, value]);
+  // A form that has never been submitted nags nobody; after one, the messages
+  // are derived from the caller's live value, so an edit re-derives them.
+  const errors =
+    state.submissionAttempts > 0
+      ? Effect.runSync(validateAll(schema)(value))
+      : [];
 
   return (
     <div
@@ -119,7 +169,7 @@ export const Form = <T,>({
           </div>
         ),
       })}
-      {children({ errors, pending, submit })}
+      {children({ errors, pending, submit, form })}
     </div>
   );
 };
@@ -133,7 +183,7 @@ export const formMeta = {
   limitations: [
     "owned-value: the caller passes the value and receives the decoded one; there is no runtime form element",
     "a render-prop child is the only way to reach submit, because the contract fixes Form as one part",
-    "messages are derived from the live value after a failed submit; there is no field-to-message mapping, because validateAll returns messages, not paths",
+    "the schema and the submit handler are read when the form mounts, matching the core's defaultValues lifetime",
   ],
   docs: "docs/form.mdx",
   example: "examples/form.example.tsx",
