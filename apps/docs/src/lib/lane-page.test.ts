@@ -732,6 +732,39 @@ describe("the data-display page's shipped rows", () => {
     expect(parts.filter((part) => !dataPage.includes(part))).toEqual([]);
   });
 
+  it("names the pinned column it ships, with the page that documents it", () => {
+    // `FrozenTable` shipped from the package, and the lane page taught a frozen
+    // column only as a runtime rule a reader had to compose. A data plan that
+    // read the page would build the two panes the package already ships, so the
+    // page names the surface, links its package page and its example, and each
+    // of those is read here rather than trusted.
+    const index = readFileSync(
+      new URL("../../../../packages/data/src/index.ts", import.meta.url),
+      "utf8",
+    );
+    expect(index).toContain('export { FrozenTable } from "./table/frozen.js";');
+    expect(index).toContain("FrozenTableProps");
+
+    const packagePage = readFileSync(
+      new URL(
+        "../../../../packages/data/docs/frozen-columns.mdx",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    expect(packagePage).toContain("title: Frozen columns");
+
+    const registry = readFileSync(
+      new URL("../../../../packages/data/examples/index.ts", import.meta.url),
+      "utf8",
+    );
+    expect(registry).toContain('"frozen-table": FrozenTableExample');
+
+    expect(dataPage).toContain("`FrozenTable`");
+    expect(dataPage).toContain("](/docs/data-display/frozen-columns)");
+    expect(dataPage).toContain("frozen-table.example.tsx");
+  });
+
   it("calls the lane whole only when the inventory does", () => {
     // The lane's premise is read from the inventory: while a row is pending the
     // page has to say so, and once none is it must not keep a stale `todo` — a

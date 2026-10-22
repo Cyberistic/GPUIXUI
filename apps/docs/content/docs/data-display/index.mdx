@@ -21,10 +21,13 @@ Rows and statuses come from `COMPONENTS.md`.
 The table core is the lane's own package: `@gpuixui/data` ships `Table`,
 `TableViewport`, `TableHeader`, `TableBody`, `TableRow`, `TableHeaderCell`,
 `TableCell`, `TableCaption`, `TableEmpty` and `TableSkeleton`, with
-`TableSortHeader`, `TableFilterField` and `useTable` joining a pure sort,
-selection and filter model. The shipped example is
-[`table.example.tsx`](https://github.com/Cyberistic/GPUIXUI/blob/master/packages/data/examples/table.example.tsx),
-listed on `/docs/examples` under **Data display**. Its rules are measured, not
+`TableSortHeader`, `TableFilterField`, `useTable` and the pinned-column
+`FrozenTable` joining a pure sort, selection and filter model. The shipped
+examples are
+[`table.example.tsx`](https://github.com/Cyberistic/GPUIXUI/blob/master/packages/data/examples/table.example.tsx)
+and
+[`frozen-table.example.tsx`](https://github.com/Cyberistic/GPUIXUI/blob/master/packages/data/examples/frozen-table.example.tsx),
+listed on `/docs/examples` under **Data display**. Their rules are measured, not
 planned — see [the table that ships](#the-table-that-ships) below.
 
 The package documents its own surfaces on this site:
@@ -35,6 +38,7 @@ The package documents its own surfaces on this site:
 | Query builder | [Advanced filtering](/docs/data-display/advanced-filter) | a typed predicate tree a saved query and a table's filter share |
 | Toolbar | [Data toolbar](/docs/data-display/data-toolbar) | a row of controls above the set, with a debounced search field |
 | Resizable columns | [Table](/docs/components/table) | `TableColumnDivider`, the 6px strip whose drag `column-resize-lifecycle` measured |
+| Frozen columns | [Frozen columns](/docs/data-display/frozen-columns) | `FrozenTable`: a pinned column in its own vertical scroller beside a grid that pans, mirrored both ways |
 | Tree view | [Tree views](/docs/data-display/tree-view) | one tab stop, arrow keys, type-ahead and a hierarchy the reader opens |
 | Expandable rows | [Expandable rows](/docs/data-display/expandable-rows) | a detail panel under the row it describes, without a row span |
 | Key-value | [Key-value](/docs/data-display/key-value) | one object as label/value rows, with no copy of it |
