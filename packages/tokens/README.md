@@ -223,7 +223,19 @@ const hover = filledHover(theme, "primary");
 const pressed = filledPressed(theme, "accent");
 ```
 
-Ghost and subtle surfaces keep the `hover` / `active` washes.
+Ghost and subtle surfaces keep the `hover` / `active` washes — but a **filled**
+action must never take them, because the wash is often the fill it replaces:
+the components package's `secondary` variant still does, so 15 of the variant's 32
+pointer placements sit under the 1.05:1 perceptibility floor over the 16 styles
+(hovered 1.000:1 in High contrast light, High contrast dark and Light · macOS,
+pressed 1.000:1 in Dark · Windows; base light 1.036:1). The derivation's step is
+measured too — `actionFeedbackPlacements` and `actionFeedbackFailures` hold both
+states of all four roles against the fill each replaces, inside the
+`decorative` report, which is how Windows dark's `#60CDFF` primary hover at
+1.05:1 was found and fixed (`#59C9FF`, 1.059:1) and how a one-hue brand whose
+`foreground` sits on its own action fill is caught. `filledFeedback(source,
+role, state)` is the derivation for a stored theme, and answers `undefined` for
+a role the theme lost.
 
 ## Brand text
 
@@ -612,7 +624,9 @@ Each report is also a function of its own:
   nothing can darken a black page), a
   status tone's soft tint and its edge, a
   scrollbar thumb, the wash a hovered or selected row is tinted with, the fill a
-  tonal action rests on — that is too close to what it is painted on to be seen,
+  tonal action rests on, the derived hover and press of every filled role (a
+  step that lands on the fill it replaces) — that is too close to what it is
+  painted on to be seen,
   compositing a translucent role first. Each half found a shipped alias: the base
   dark theme's `hover` was its `popover`, so a hovered menu row painted nothing;
   light `secondary` was its `muted` value and paints no border, so a secondary

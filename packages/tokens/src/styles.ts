@@ -2,7 +2,7 @@ import { alpha, blend, type ThemeColors } from "./color.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import type { BoxShadow } from "./elevation.js";
 import type { ControlSize } from "./scale.js";
-import type { Theme } from "./theme.js";
+import type { Theme, ThemeContrast } from "./theme.js";
 import type { FontWeight, TextRole } from "./typography.js";
 
 /** Text style properties accepted by GPUix's `StyleDesc`. */
@@ -285,7 +285,34 @@ export type FilledAction = "primary" | "secondary" | "destructive";
  * to lift the role's alpha, which let the surface behind the control through —
  * the defect the derived fills were written for.
  */
-export type FilledRole = FilledAction | "accent";
+export const filledRoles = [
+  "primary",
+  "secondary",
+  "destructive",
+  "accent",
+] as const;
+
+/** A role a control paints as its whole face, in documentation order. */
+export type FilledRole = (typeof filledRoles)[number];
+
+/** The two pointer states a filled role derives a fill for. */
+export const filledFeedbackStates = ["hover", "pressed"] as const;
+
+/** A pointer state a filled role paints a derived fill for. */
+export type FilledFeedbackState = (typeof filledFeedbackStates)[number];
+
+/**
+ * A colour source the derived fills read. A {@link Theme} is one; a theme
+ * restored from storage that predates a role is the other, which is why the
+ * roles are optional — the derivation answers `undefined` rather than a colour
+ * it could not build.
+ */
+export interface FilledFeedbackSource {
+  /** The roles the source carries. */
+  readonly colors: Partial<ThemeColors>;
+  /** The contrast variant, whose label floor clamps the step. */
+  readonly contrast?: ThemeContrast;
+}
 
 /** The label role each filled role carries its text and marks in. */
 const filledOnColour: Readonly<Record<FilledRole, keyof ThemeColors>> = {
@@ -328,17 +355,19 @@ const STEP_LADDER: readonly number[] = Array.from(
  * as well as the contrast.
  */
 const readableStep = (
-  theme: Theme,
+  source: FilledFeedbackSource,
   role: FilledRole,
   nominal: number,
 ): number => {
-  const onColour = theme.colors[filledOnColour[role]];
-  const floor = contrastFloorsFor(theme).secondary;
+  const fill = source.colors[role];
+  const foreground = source.colors.foreground;
+  if (fill === undefined || foreground === undefined) {
+    return nominal;
+  }
+  const onColour = source.colors[filledOnColour[role]];
+  const floor = contrastFloorsFor(source).secondary;
   const reads = (step: number): boolean => {
-    const ratio = contrastRatio(
-      onColour,
-      blend(theme.colors[role], theme.colors.foreground, step),
-    );
+    const ratio = contrastRatio(onColour, blend(fill, foreground, step));
     return ratio !== undefined && ratio >= floor;
   };
   return reads(0)
@@ -346,13 +375,37 @@ const readableStep = (
     : nominal;
 };
 
-/** A filled role's fill after moving as far as the nominal step allows. */
-const filledFill = (theme: Theme, role: FilledRole, step: number): string =>
-  blend(
-    theme.colors[role],
-    theme.colors.foreground,
-    readableStep(theme, role, step),
-  );
+/**
+ * The fill a filled role paints in a pointer state, from a source that may be a
+ * theme restored without every role.
+ *
+ * `undefined` when the source lacks the role or the `foreground` it moves
+ * toward: the derivation reports the absence rather than inventing a colour, the
+ * same rule {@link elevationShadow} follows for an absent level. A complete
+ * theme always has both, which is why {@link filledHover} and
+ * {@link filledPressed} return a colour outright.
+ *
+ * @example
+ * ```ts
+ * import { filledFeedback } from "@gpuixui/tokens";
+ *
+ * filledFeedback(theme, "primary", "hover"); // the paint
+ * filledFeedback(storedTheme, "primary", "pressed"); // undefined when the role is gone
+ * ```
+ */
+export function filledFeedback(
+  source: FilledFeedbackSource,
+  role: FilledRole,
+  state: FilledFeedbackState,
+): string | undefined {
+  const fill = source.colors[role];
+  const foreground = source.colors.foreground;
+  if (fill === undefined || foreground === undefined) {
+    return undefined;
+  }
+  const nominal = state === "hover" ? HOVER_STEP : PRESS_STEP;
+  return blend(fill, foreground, readableStep(source, role, nominal));
+}
 
 /**
  * The fill a filled role paints while it is hovered.
@@ -365,7 +418,10 @@ const filledFill = (theme: Theme, role: FilledRole, step: number): string =>
  * dialog read as two different colours.
  *
  * The rule is derived from the theme rather than stored as a role, so a brand
- * that overrides `primary` gets a hover that belongs to it.
+ * that overrides `primary` gets a hover that belongs to it — and the step is
+ * **seen** against the fill it replaces: `decorativeFailures` measures it at the
+ * perceptibility floor, so a theme whose `foreground` sits on its own action
+ * role cannot ship a hover that paints nothing.
  *
  * @example
  * ```tsx
@@ -373,7 +429,11 @@ const filledFill = (theme: Theme, role: FilledRole, step: number): string =>
  * ```
  */
 export function filledHover(theme: Theme, role: FilledRole): string {
-  return filledFill(theme, role, HOVER_STEP);
+  return blend(
+    theme.colors[role],
+    theme.colors.foreground,
+    readableStep(theme, role, HOVER_STEP),
+  );
 }
 
 /**
@@ -388,5 +448,9 @@ export function filledHover(theme: Theme, role: FilledRole): string {
  * ```
  */
 export function filledPressed(theme: Theme, role: FilledRole): string {
-  return filledFill(theme, role, PRESS_STEP);
+  return blend(
+    theme.colors[role],
+    theme.colors.foreground,
+    readableStep(theme, role, PRESS_STEP),
+  );
 }

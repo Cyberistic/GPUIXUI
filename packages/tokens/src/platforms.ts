@@ -254,7 +254,13 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         active: "#3A3A3A",
         border: "#3D3D3D",
         borderStrong: "#9D9D9D",
-        primary: "#60CDFF",
+        // The accent is one step deeper than the Fluent value (`#60CDFF`):
+        // a filled action's hover moves 12% toward `foreground`, and from a
+        // fill this light the step landed at 1.05:1 — a primary button on a
+        // Windows window that did not answer the pointer. This step keeps the
+        // hover and press visible (1.059 / 1.086) while the dark on-colour
+        // stays at 9.86:1.
+        primary: "#59C9FF",
         primaryForeground: "#11141A",
         ring: "#60CDFF",
         accent: "#1B3A50",

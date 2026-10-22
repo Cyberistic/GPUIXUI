@@ -396,6 +396,22 @@ clamp: pressed at the full step its label lands at 4.13:1 in macOS dark (under
 4.5) and 6.90 / 6.94:1 in the two high-contrast themes (under 7), so those three
 styles press at 14% and 17%. Every action keeps the full step everywhere.
 
+The step must also be **seen**, so the eight placements (four roles × hover and
+press) are measured against the fill they replace at the decorative floor —
+`actionFeedbackPlacements` and `actionFeedbackFailures` in §9 — because the
+contrast table measures role pairs and a derived fill is not a role. That found
+Windows dark's `#60CDFF` primary hovered at 1.05:1 (a primary button that never
+answered the pointer; the platform carries `#59C9FF` now, 1.059:1) and it holds
+the catalogue's one-hue brand, whose page copy and `primary` are the same navy so
+its hover lands on its own fill. The components package's `Button` paints the
+derived fills for `primary` and `danger` but its **`secondary` variant still
+swaps in the `hover` / `active` washes**, so 15 of the variant's 32 pointer
+placements sit under the floor: hovered, **1.000:1** in High contrast light,
+High contrast dark and Light · macOS, and pressed **1.000:1** in Dark · Windows,
+with the base light theme's hover at 1.036:1. That branch belongs to the
+components package (`TODO.md` → Interlocks); the derived fill clears the floor in
+all 16 shipped styles.
+
 A **selected row** is the fourth wash, and the one a row's *title* is painted on.
 `ListItemTitle` overrides its recipe's colour with the row's own role
 (`selectedForeground`), and the row paints the `selected` fill behind it, so that
@@ -594,6 +610,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | status text on `background`/`card`/`popover`/a `muted` strip and on the `hover`/`active` wash a floating row tints (a field error, an inline warning, a message in a muted sidebar, a destructive menu row) | 7:1 | 7:1 |
 | disabled text on its own `disabled` fill, on `background`/`card`/`popover` and on a `muted` toolbar or `secondary` panel (WCAG-exempt, still visible) | 1.5:1 | 3:1 |
 | the dim another focusable keeps while one has keyboard focus (`keyboardFocusDimOpacity`) | 1.05:1 | 1.05:1 |
+| a filled role's derived pointer step (`filledHover` / `filledPressed` through `actionFeedbackPlacements`) against the fill it replaces | 1.05:1 | 1.05:1 |
 | focus ring (on background, card, popover, muted and secondary, and on the `input`/`selected`/`hover`/`active`/`accent` fill it hugs) and `borderStrong` on those same strips (a floating surface included), on the field, on a soft status tint (an action inside a message), and on the `hover`/`active` wash a bordered control tints, and on the `accent`/`selected` wash a row paints under the same action | 3:1 | 4.5:1 |
 | the invalid edge — `destructive` as a field's border and focus line — on background, card, popover, input, muted and secondary | 3:1 | 4.5:1 |
 | an indicator mark — a progress fill, spinner dot, slider fill, presence dot, a checked row's tick or a field's caret — on background, card, popover, a muted strip, a field's `input` fill, and on the `hover`/`active` wash a row tints under the pointer | 3:1 | 4.5:1 |

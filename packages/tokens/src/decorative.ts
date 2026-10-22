@@ -3,8 +3,8 @@
  * skeleton fills, the modal veil, a status message's soft surface and its edge,
  * the scrollbar thumb, the wash a control tints its surface with while it is
  * hovered, pressed, selected or accented, the fill a tonal action rests on, the
- * face a control wears while it is unavailable, and the shadow a raised surface
- * drops.
+ * face a control wears while it is unavailable, the derived hover and press a
+ * filled role paints, and the shadow a raised surface drops.
  *
  * WCAG's text and non-text floors do not cover them — they are decorative, and
  * the veil's job is to suppress what is behind it — so they have no floor at all
@@ -17,15 +17,25 @@
  * a message with no boundary; a hover that matches the row it tints is a menu
  * with no feedback; a tonal action painted in its toolbar's own colour is a
  * label a reader cannot tell is a button; a disabled control painted in the face
- * of the one it replaced looks available; a shadow that cannot darken the page
- * it falls on leaves every raised surface flat. One floor covers all ten,
- * 1.05:1.
+ * of the one it replaced looks available; a filled action's derived step that
+ * lands on the fill it replaces is an action that does not answer the pointer; a
+ * shadow that cannot darken the page it falls on leaves every raised surface
+ * flat. One floor covers all eleven, 1.05:1.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import type { Elevation, ElevationLevel } from "./elevation.js";
-import { statusEdgeAlpha, statusTones } from "./styles.js";
+import {
+  filledFeedback,
+  filledFeedbackStates,
+  filledRoles,
+  statusEdgeAlpha,
+  statusTones,
+  type FilledFeedbackState,
+  type FilledRole,
+} from "./styles.js";
+import type { ThemeContrast } from "./theme.js";
 
 /**
  * The perceptibility floor a decorative surface meets: 1.05:1 against what it
@@ -44,7 +54,10 @@ export interface DecorativeSurface {
    * thumb a scroller paints, `stateWash` is the tint behind a hovered, pressed,
    * selected or accented row, `filledAction` is the resting fill of a tonal
    * action, `disabledFace` is the fill a control wears while it is unavailable,
-   * `elevation` is the shadow a raised surface drops.
+   * `actionFeedback` is the derived hover or press a filled role paints (its
+   * placements are {@link actionFeedbackPlacements}, because the paint is
+   * derived rather than a role), and `elevation` is the shadow a raised surface
+   * drops.
    */
   readonly surface:
     | "divider"
@@ -56,6 +69,7 @@ export interface DecorativeSurface {
     | "stateWash"
     | "filledAction"
     | "disabledFace"
+    | "actionFeedback"
     | "elevation";
   /** The role painted. Its alpha, if it has one, is part of the measurement. */
   readonly role: keyof ThemeColors;
@@ -151,6 +165,85 @@ const stateWashStrips = ["background", "card", "popover", "muted"] as const;
  */
 const filledActionRole = "secondary" as const;
 const filledActionStrips = ["background", "card", "popover", "muted"] as const;
+
+/**
+ * The pointer feedback a filled role paints: its hover and its press, each a
+ * derived fill the role moves toward the theme's foreground (`filledHover` /
+ * `filledPressed`).
+ *
+ * This is the one surface a control cannot do without — it is the whole of what
+ * happens between the pointer arriving and the press landing — and nothing
+ * measured it, because the two fills are derived rather than stored, so neither
+ * the contrast table (a role pair) nor the state-wash placements (a role over a
+ * strip) could name it. A step that is invisible is a step the reader never
+ * sees: the derivation moves 12% / 18% of the way toward `foreground`, which
+ * assumes the foreground is far from the action fill. That holds in every
+ * shipped theme and is not guaranteed by the type — a brand built in one hue
+ * (`foreground` and `primary` both a dark navy, so the page text reads and the
+ * fill carries its own on-colour) paints a hover the fill cannot show.
+ *
+ * The fill it replaces is the role itself, so `over` is the same role: the
+ * comparison is the resting face against the pointer's face.
+ */
+export interface ActionFeedbackPlacement {
+  /** The role whose resting fill the pointer state replaces. */
+  readonly role: FilledRole;
+  /** The pointer state whose derived fill is measured. */
+  readonly state: FilledFeedbackState;
+}
+
+/** Every filled role's hover and press, the two states a control paints. */
+export const actionFeedbackPlacements: readonly ActionFeedbackPlacement[] =
+  filledRoles.flatMap((role) =>
+    filledFeedbackStates.map(
+      (state): ActionFeedbackPlacement => ({ role, state }),
+    ),
+  );
+
+/**
+ * The derived pointer fills of a theme that cannot be seen against the fill they
+ * replace.
+ *
+ * Held to {@link decorativeFloor}: a pointer step is a state change, not text,
+ * and a step under the floor is a control that does not answer the pointer. A
+ * source that does not carry the role, `foreground` or the on-colour the step is
+ * clamped by reports the placement **unmeasurable** rather than skipping it, the
+ * same rule every other contract follows for a theme stored by an older release.
+ *
+ * @example
+ * ```ts
+ * import { actionFeedbackFailures, type Theme } from "@gpuixui/tokens";
+ *
+ * actionFeedbackFailures(brandTheme); // [] when every hover and press is visible
+ * ```
+ */
+export function actionFeedbackFailures(
+  theme: {
+    readonly colors: Partial<ThemeColors>;
+    readonly contrast?: ThemeContrast;
+  },
+  floor: number = decorativeFloor,
+): readonly DecorativeFailure[] {
+  return actionFeedbackPlacements.flatMap(({ role, state }) => {
+    const resting = theme.colors[role];
+    const painted = filledFeedback(theme, role, state);
+    const ratio =
+      resting === undefined || painted === undefined
+        ? undefined
+        : contrastRatio(painted, resting);
+    return ratio !== undefined && ratio >= floor
+      ? []
+      : [
+          {
+            surface: "actionFeedback" as const,
+            role,
+            over: role,
+            ratio,
+            floor,
+          },
+        ];
+  });
+}
 
 /**
  * The faces a control can wear while it is available.
@@ -355,33 +448,44 @@ export interface DecorativeFailure {
  * absence, and this report does not pretend a surface it could not composite is
  * visible.
  *
+ * The derived fills a filled role paints answer to the same floor through
+ * {@link actionFeedbackPlacements}: a hover or press that lands on the fill it
+ * replaces is an action that never answers the pointer, and the derivation's
+ * step is relative to `foreground`, which a brand is free to put on top of its
+ * own action role.
+ *
  * @example
  * ```ts
  * import { decorativeFailures, type Theme } from "@gpuixui/tokens";
  *
- * decorativeFailures(brandTheme).length === 0; // every divider, skeleton, veil and shadow is visible
+ * decorativeFailures(brandTheme).length === 0; // every divider, skeleton, veil, pointer step and shadow is visible
  * ```
  */
 export function decorativeFailures(
   theme: {
     readonly colors: Partial<ThemeColors>;
     readonly elevation?: Partial<Elevation>;
+    readonly contrast?: ThemeContrast;
   },
   floor: number = decorativeFloor,
 ): readonly DecorativeFailure[] {
-  return decorativeSurfaces.flatMap(({ surface, role, over, alpha, level }) => {
-    const paintedOver = theme.colors[over];
-    const paintedRole =
-      level === undefined
-        ? theme.colors[role]
-        : theme.elevation?.[level]?.[0]?.color;
-    const painted =
-      paintedOver === undefined || paintedRole === undefined
-        ? undefined
-        : blend(paintedOver, paintedRole, alpha ?? alphaOf(paintedRole));
-    const ratio = contrastRatio(painted, paintedOver);
-    return ratio !== undefined && ratio >= floor
-      ? []
-      : [{ surface, role, over, ratio, floor }];
-  });
+  const surfaces = decorativeSurfaces.flatMap(
+    ({ surface, role, over, alpha, level }) => {
+      const paintedOver = theme.colors[over];
+      const paintedRole =
+        level === undefined
+          ? theme.colors[role]
+          : theme.elevation?.[level]?.[0]?.color;
+      const painted =
+        paintedOver === undefined || paintedRole === undefined
+          ? undefined
+          : blend(paintedOver, paintedRole, alpha ?? alphaOf(paintedRole));
+      const ratio = contrastRatio(painted, paintedOver);
+      return ratio !== undefined && ratio >= floor
+        ? []
+        : [{ surface, role, over, ratio, floor }];
+    },
+  );
+  const feedback = actionFeedbackFailures(theme, floor);
+  return [...surfaces, ...feedback];
 }

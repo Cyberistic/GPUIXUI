@@ -68,6 +68,7 @@ import {
 } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import {
+  actionFeedbackPlacements,
   decorativeFailures,
   decorativeFloor,
   decorativeSurfaces,
@@ -928,8 +929,10 @@ describe("decorativeFailures", () => {
 
   it("takes a floor, so a stricter brand can run the check it needs", () => {
     expect(decorativeFailures(lightTheme, 1)).toEqual([]);
+    // Every role placement plus every derived pointer state: an impossible
+    // floor has to fail all of them, or a placement is being skipped.
     expect(decorativeFailures(lightTheme, 21).length).toBe(
-      decorativeSurfaces.length,
+      decorativeSurfaces.length + actionFeedbackPlacements.length,
     );
   });
 });

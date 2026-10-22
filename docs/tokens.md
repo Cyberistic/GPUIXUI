@@ -351,14 +351,62 @@ and on a dialog. The derivation is checked like a role pair: the on-colour text
 keeps its contrast floor on both fills in every shipped theme (4.5:1 default,
 7:1 high contrast), and both fills are opaque and move toward the foreground.
 
+A pointer step has to be **seen**, and nothing measured that until it joined the
+decorative contract: the contrast table measures role pairs and
+`decorativeSurfaces` measures roles on strips, while a derived fill is neither.
+`actionFeedbackPlacements` publishes the eight placements — every `filledRole`
+(`filledRoles`) in both `filledFeedbackStates` — and `actionFeedbackFailures`
+holds each one to `decorativeFloor` against the fill it replaces; the
+`decorative` report a brand already runs carries them, so the audit's shape did
+not change. `filledFeedback(source, role, state)` is the derivation on its own for
+a source that may be a theme restored from storage: it answers `undefined` when
+the source lacks the role or the `foreground` it moves toward, and that placement
+is reported unmeasurable rather than skipped.
+
+The check is reachable, not theoretical. The step is 12% / 18% of the way toward
+`foreground`, which assumes the foreground is far from the action fill — true in
+`Light`, `Dark` and every platform and authored style, and **not** guaranteed by
+the type: `invisibleFeedbackBrand` (a brand whose page text and `primary` are both
+a deep navy, so the page still reads and the fill still carries its white label)
+hovers to exactly the fill it replaces, and the gate reports it. One shipped step
+sat on the floor: Windows dark's `#60CDFF` primary hovered to **1.05:1**, a
+primary button that never answered the pointer, so the platform carries
+`#59C9FF` (1.059:1 hover, 1.086:1 press) and you can see the change in the
+[platform chrome table](#platform-styles). The tightest placement over all 16
+shipped, high-contrast, platform and authored styles is **1.06:1** (high-contrast
+dark's primary hover).
+
+```ts
+import {
+  actionFeedbackFailures,
+  actionFeedbackPlacements,
+  filledFeedback,
+  filledFeedbackStates,
+  filledRoles,
+  type ActionFeedbackPlacement,
+  type FilledFeedbackSource,
+  type FilledFeedbackState,
+} from "@gpuixui/tokens";
+
+const placements: ReadonlyArray<ActionFeedbackPlacement> =
+  actionFeedbackPlacements; // 4 roles × hover/pressed
+const hover: FilledFeedbackState = filledFeedbackStates[0];
+const stored: FilledFeedbackSource = { colors: { primary: "#1E3478" } };
+filledRoles.map((role) => filledFeedback(theme, role, hover)); // the paints
+placements.map(({ role }) => filledFeedback(stored, role, hover)); // undefined — no foreground
+actionFeedbackFailures(theme); // [] when every hover and press is visible
+```
+
 Ghost and subtle surfaces are the other case: they paint no fill at rest and
-take the `hover` / `active` washes instead. A **filled action's resting fill** is
+take the `hover` / `active` washes instead. A filled action's **resting fill** is
 measured too, because the tonal one has no border: `secondary` is held to the
 perceptibility floor on every strip it can sit on (see
 [Decorative surfaces](#decorative-surfaces)), which is why the base light
 `secondary` is `#E1E5EC` rather than the `muted` value it used to be. A runnable
 example spreads the three fills onto a control; see
-[`src/action-states.example.ts`](../packages/tokens/src/action-states.example.ts).
+[`src/action-states.example.ts`](../packages/tokens/src/action-states.example.ts),
+and [`src/action-feedback.example.ts`](../packages/tokens/src/action-feedback.example.ts)
+is the brand whose pointer step disappears.
 
 ## Brand text
 
@@ -639,7 +687,7 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 | `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#D6D6D6` | `#3A3A3A` |
 | `border` | `#D9D9E0` | `#3A3A40` | `#D4D2CF` | `#464646` | `#E5E5E5` | `#3D3D3D` |
 | `borderStrong` | `#75757A` | `#9C9CA1` | `#76746F` | `#A0A0A0` | `#757575` | `#9D9D9D` |
-| `primary` | `#0A6CD6` | `#0A84FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
+| `primary` | `#0A6CD6` | `#0A84FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#59C9FF` |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` |
 | `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
 | `accent` | `#CCE0F9` | `#1A3D60` | `#D2E4F7` | `#1B3E60` | `#CFE6F9` | `#1B3A50` |
@@ -3150,19 +3198,27 @@ or dropped is named rather than passing silently.
 - Motion — durations, easings, springs, inertia — lives in `@gpuixui/motion`,
   not here: a second copy would duplicate the package that owns reduced-motion
   policy. No component consumes it yet.
-- The derived fills are adopted by both packages' buttons: the
-  components package's `Button`/`IconButton` (`filledHover` / `filledPressed` in
-  `packages/components/src/internal/button.tsx`) and `packages/primitives`'
-  recipes, which ask their own registry for `hover:fill-<action>` and
-  `active:fill-<action>-pressed` (`packages/primitives/src/recipe/index.ts`). A
-  filled checkbox or radio paints the same two helpers
-  (`packages/primitives/src/core/selection.ts`), so its mark sits on an opaque
-  fill, and a pressed `Toggle` takes them for its `accent` face
-  (`packages/primitives/src/core/variants.ts`). One deviation remains: the
+- The derived fills are adopted by both packages' buttons — with one measured
+  exception. `packages/primitives`' recipes ask their own registry for
+  `hover:fill-<action>` and `active:fill-<action>-pressed`
+  (`packages/primitives/src/recipe/index.ts`); a filled checkbox or radio paints
+  the same two helpers (`packages/primitives/src/core/selection.ts`), so its mark
+  sits on an opaque fill; a pressed `Toggle` takes them for its `accent` face
+  (`packages/primitives/src/core/variants.ts`); and the components package's
+  `Button` derives `primary` and `danger`. **The `secondary` variant does not**:
+  it swaps the fill to the `hover` / `active` washes and keeps
+  `secondaryForeground` (`packages/components/src/internal/button.tsx`), so its
+  pointer feedback is as visible as those two roles happen to be against the
+  `secondary` fill. Measured, 15 of the variant's 32 pointer placements sit under
+  the 1.05:1 perceptibility floor: hovered it is **1.000:1** in High contrast
+  light, High contrast dark and Light · macOS — the variants a reader selects for
+  clarity — and pressed it is **1.000:1** in Dark · Windows, while the base light
+  theme's hover reads only 1.036:1. The fixed paint is one branch onto
+  `filledHover` / `filledPressed`, which clears the floor in all 16 styles; it is
+  the components package's half, recorded in `TODO.md` → Interlocks. The
   `@gpuixui/tw` `button` recipe the components package compiles against still
-  lifts the fill's alpha (`hover:bg-primary/90` in
-  `packages/tw/src/recipes.ts`). It is the owning package's half, recorded in
-  `TODO.md` → Interlocks.
+  lifts the fill's alpha (`hover:bg-primary/90` in `packages/tw/src/recipes.ts`) —
+  the other owning package's half.
 - A field's **resting edge** is the decorative `border` role rather than the
   functional `borderStrong` one: `fieldVariant`
   (`packages/primitives/src/core/variants.ts`) and `FieldInput`
