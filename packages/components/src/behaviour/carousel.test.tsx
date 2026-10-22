@@ -18,11 +18,16 @@ import { useState } from "react";
 import {
   Carousel,
   CarouselControl,
+  CarouselIndicators,
   CarouselSlide,
   CarouselTrack,
 } from "../carousel.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
-import { darkTheme, lightTheme } from "../internal/theme.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  sizeOf,
+} from "../internal/interaction.js";
+import { darkTheme, lightTheme, targetSize } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -62,6 +67,7 @@ const Gallery = ({
         <CarouselControl direction="previous" testId="prev" />
         <CarouselControl direction="next" testId="next" />
       </div>
+      <CarouselIndicators testId="dots" />
     </Carousel>
   </div>
 );
@@ -94,6 +100,18 @@ const displays = (root: ComponentTestRoot): ReadonlyArray<unknown> =>
   [0, 1, 2].map(
     (index) => root.renderer.findByTestId(`slide-${index}`)?.style.display,
   );
+
+/** The dot a press target draws — its one painted child. */
+const dotted = (root: ComponentTestRoot, testId: string) => {
+  const target = root.renderer.findByTestId(testId);
+  const drawn = target?.children
+    .map((id) => root.renderer.getElement(id))
+    .find((element) => element?.type === "div");
+  if (drawn === undefined) {
+    throw new Error(`behaviour: "${testId}" drew no dot`);
+  }
+  return drawn;
+};
 
 describe("Carousel", () => {
   it("mounts every slide and displays only the active one", () => {
@@ -294,5 +312,162 @@ describe("Carousel", () => {
         }
       },
     );
+  });
+
+  it("names one press target per slide and marks the active one", () => {
+    const gallery = renderComponent(<Gallery value={1} />);
+
+    try {
+      const labels = [0, 1, 2].map(
+        (index) =>
+          gallery.renderer.findByTestId(`dots-${index}`)?.customProps?.[
+            "aria-label"
+          ],
+      );
+      expect(labels).toEqual([
+        "Go to slide 1",
+        "Go to slide 2",
+        "Go to slide 3",
+      ]);
+
+      const selected = [0, 1, 2].map(
+        (index) =>
+          gallery.renderer.findByTestId(`dots-${index}`)?.customProps?.[
+            "aria-selected"
+          ],
+      );
+      expect(selected).toEqual([false, true, false]);
+
+      // One roving stop, on the slide on screen: Tab reaches the dots once and
+      // the arrows move the stop with the slide.
+      const stops = [0, 1, 2].map(
+        (index) =>
+          gallery.renderer.findByTestId(`dots-${index}`)?.customProps?.tabIndex,
+      );
+      expect(stops).toEqual([-1, 0, -1]);
+    } finally {
+      gallery.unmount();
+    }
+  });
+
+  it("jumps to the slide a dot names", () => {
+    const onValueChange = vi.fn();
+    const gallery = renderComponent(
+      <StatefulGallery onValueChange={onValueChange} />,
+    );
+
+    try {
+      clickCentreOf(gallery, "dots-2");
+
+      expect(onValueChange).toHaveBeenLastCalledWith(2);
+      expect(displays(gallery)).toEqual(["none", "none", "flex"]);
+    } finally {
+      gallery.unmount();
+    }
+  });
+
+  it("moves the dot's tab stop with the slide and steps from a focused dot", () => {
+    const onValueChange = vi.fn();
+    const gallery = renderComponent(
+      <StatefulGallery onValueChange={onValueChange} />,
+    );
+
+    try {
+      gallery.renderer.focusElement(
+        gallery.renderer.findByTestId("dots-0")?.id ?? -1,
+      );
+      expect(focusedTestId(gallery)).toEqual(Option.some("dots-0"));
+
+      // The root owns the arrow keys, and a key dispatched at a dot reaches it.
+      gallery.renderer.simulateKeystrokes("right");
+
+      expect(onValueChange).toHaveBeenLastCalledWith(1);
+      expect(
+        gallery.renderer.findByTestId("dots-0")?.customProps?.tabIndex,
+      ).toBe(-1);
+      expect(
+        gallery.renderer.findByTestId("dots-1")?.customProps?.tabIndex,
+      ).toBe(0);
+    } finally {
+      gallery.unmount();
+    }
+  });
+
+  it("reserves the press floor around a smaller drawing", () => {
+    // A dot is a small mark but a real press target: the 24px floor WCAG 2.2
+    // SC 2.5.8 asks for, with the drawing inside it and the press hit-tested on
+    // the target rather than on six painted pixels.
+    const gallery = renderComponent(<Gallery value={0} />);
+
+    try {
+      const target = sizeOf(gallery, "dots-0");
+      expect(Option.map(target, (size) => size.height)).toEqual(
+        Option.some(targetSize.minimum),
+      );
+
+      const drawing = dotted(gallery, "dots-1");
+      const painted = gallery.renderer.getElementBounds(drawing.id);
+      expect(painted?.height).toBe(6);
+      expect(painted?.width).toBe(6);
+    } finally {
+      gallery.unmount();
+    }
+  });
+
+  it("marks the active dot in a measured role and widens it, in both themes", () => {
+    // The bugs these guard: a mark painted in a role that vanishes into the
+    // page, and a state carried by hue alone. `indicatorRoles` measures both
+    // inks at the mark floor; the active drawing is a pill, so its state
+    // survives a reader who cannot separate the two hues.
+    Arr.forEach(
+      [
+        ["dark", darkTheme],
+        ["light", lightTheme],
+      ] as const,
+      ([mode, theme]) => {
+        const gallery = renderComponent(<Gallery value={0} />, mode);
+
+        try {
+          const active = dotted(gallery, "dots-0");
+          const rest = dotted(gallery, "dots-1");
+          const activeInk = String(active.style.backgroundColor);
+          const restInk = String(rest.style.backgroundColor);
+
+          expect(activeInk).toBe(theme.colors.primary);
+          expect(restInk).toBe(theme.colors.mutedForeground);
+
+          // Both inks are marks on the strip the carousel paints: the page,
+          // because the root has no surface of its own.
+          Arr.forEach([activeInk, restInk], (ink) => {
+            expect(
+              contrastRatio(ink, theme.colors.background) ?? 0,
+            ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).boundary);
+          });
+
+          expect(Number(active.style.width)).toBeGreaterThan(
+            Number(rest.style.width),
+          );
+        } finally {
+          gallery.unmount();
+        }
+      },
+    );
+  });
+
+  it("paints no indicators for a track with no slides", () => {
+    const empty = renderComponent(
+      <Carousel testId="carousel" label="Screenshots">
+        <CarouselTrack />
+        <CarouselIndicators testId="dots" />
+      </Carousel>,
+    );
+
+    try {
+      // A dot per slide: with no slides there is nothing to jump to, so the
+      // group is not mounted rather than mounted empty.
+      expect(empty.renderer.findByTestId("dots")).toBeUndefined();
+    } finally {
+      empty.unmount();
+    }
   });
 });

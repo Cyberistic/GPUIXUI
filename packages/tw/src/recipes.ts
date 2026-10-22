@@ -189,6 +189,8 @@ export const BREADCRUMB_ELLIPSIS = "text-xs font-sans text-muted-foreground";
 /** `carousel.tsx` — the slide shell. The slide's `display` is the component's
  * active-index switch and stays in `style`. */
 export const CAROUSEL_ROOT = "flex flex-col gap-2";
+export const CAROUSEL_INDICATORS =
+  "flex flex-row items-center justify-center gap-1";
 export const CAROUSEL_TRACK =
   "flex flex-row overflow-hidden rounded-lg border border-input bg-card";
 export const CAROUSEL_SLIDE = "flex flex-col flex-grow";

@@ -61,6 +61,7 @@ import {
   BREADCRUMB_PAGE,
   BREADCRUMB_ROOT,
   BREADCRUMB_SEPARATOR,
+  CAROUSEL_INDICATORS,
   CAROUSEL_ROOT,
   CAROUSEL_SLIDE,
   CAROUSEL_TRACK,
@@ -607,6 +608,13 @@ describe("Carousel recipe", () => {
       display: "flex",
       flexDirection: "column",
       flexGrow: 1,
+    });
+    expect(style(CAROUSEL_INDICATORS)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 4,
     });
   });
 });
@@ -2160,6 +2168,7 @@ describe("no unsupported classes", () => {
       BREADCRUMB_PAGE,
       BREADCRUMB_SEPARATOR,
       BREADCRUMB_ELLIPSIS,
+      CAROUSEL_INDICATORS,
       CAROUSEL_ROOT,
       CAROUSEL_TRACK,
       CAROUSEL_SLIDE,

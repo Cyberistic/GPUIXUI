@@ -2,13 +2,15 @@
  * Carousel example: a three-panel gallery with previous/next controls.
  *
  * The slides stay mounted; only the active one is displayed. Arrow keys work
- * while the carousel has focus, and Home/End jump to the ends.
+ * while the carousel has focus, and Home/End jump to the ends. The dots are the
+ * second route to a slide: one press target per panel, named for it.
  */
 
 import { useState } from "react";
 import {
   Carousel,
   CarouselControl,
+  CarouselIndicators,
   CarouselSlide,
   CarouselTrack,
 } from "../src/carousel.js";
@@ -50,6 +52,7 @@ export const CarouselExample = () => {
           <CarouselControl direction="previous" />
           <CarouselControl direction="next" />
         </div>
+        <CarouselIndicators />
       </Carousel>
     </div>
   );

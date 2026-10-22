@@ -3,8 +3,8 @@ title: Carousel
 description: Discrete slide stepping, with every slide kept mounted.
 ---
 
-`Carousel` steps through a fixed set of slides with previous/next controls and
-the arrow keys. It is **discrete**, not sliding: GPUix `motion` animates box
+`Carousel` steps through a fixed set of slides with previous/next controls, a dot
+per slide and the arrow keys. It is **discrete**, not sliding: GPUix `motion` animates box
 geometry (width, height, insets, radius) and opacity only — no transform — and
 scroll snap is unavailable, so a translating track is not honestly expressible.
 
@@ -18,6 +18,7 @@ three).
 import {
   Carousel,
   CarouselControl,
+  CarouselIndicators,
   CarouselSlide,
   CarouselTrack,
 } from "@gpuixui/components";
@@ -31,6 +32,7 @@ import {
     <CarouselControl direction="previous" />
     <CarouselControl direction="next" />
   </div>
+  <CarouselIndicators />
 </Carousel>;
 ```
 
@@ -47,12 +49,39 @@ slide the same index.
 | ------ | ------ |
 | `next` / `previous` | moves one slide; a no-op at an edge unless `loop` |
 | `loop` | wraps in both directions |
-| `ArrowRight` / `ArrowLeft` (carousel focused) | same as the controls |
+| `ArrowRight` / `ArrowLeft` (carousel or a dot focused) | same as the controls |
 | `Home` / `End` | first / last slide |
 | `value` controlled | the caller's index wins; the control still reports |
 
 The root is focusable and named by `label`. The active index is clamped to the
 slide count, so a controlled value past the end cannot blank the carousel.
+
+## Indicators
+
+`CarouselIndicators` is the second route to a slide: **one press target per
+slide**, so a reader jumps three panels without stepping through them. It reads
+the slide count from the track and the active index from the root, so it never
+keeps a copy of either.
+
+```tsx
+<Carousel label="Workspace previews">
+  <CarouselTrack>{/* … */}</CarouselTrack>
+  <CarouselIndicators />
+</Carousel>;
+```
+
+The drawing is a small dot — a **wider pill on the active slide**, because a
+state carried by hue alone tells a reader who cannot separate the two hues
+nothing. Both inks are mark roles: `primary` for the active dot and
+`mutedForeground` for the rest, each measured at the 3:1 non-text floor on the
+page the carousel is painted on. Each target is 24 × 24 px — the press floor
+WCAG 2.2 SC 2.5.8 asks for — around the 6px drawing, and the drawing takes no
+pointer input so a press in the middle of a dot reaches its target.
+
+The group holds **one roving tab stop**, on the active dot: Tab reaches the dots
+once, the arrows move the slide and the stop together, and `Enter` (on the
+press) or `Space` (on the release) jumps to the focused dot. A track with no
+slides paints no indicators.
 
 ## API
 
@@ -65,8 +94,11 @@ merges `style` last.
 | `CarouselTrack` | the slide row | children |
 | `CarouselSlide` | one slide, `display` toggled | `style?: StateStyle<CarouselSlideState>`, children |
 | `CarouselControl` | button | `direction: "previous" \| "next"`, `label?`, `disabled?` |
+| `CarouselIndicators` | `role="group"` of named dots | `label?` (default "Choose a slide"), `style?: StateStyle<CarouselIndicatorsState>` |
 
-`CarouselSlideState` is `{ active, index }`.
+`CarouselSlideState` is `{ active, index }`; `CarouselIndicatorsState` is
+`{ active, count }`. A dot is named "Go to slide N" and publishes
+`aria-selected` for the active one.
 
 ## Theming
 
@@ -90,6 +122,10 @@ theme changes the frame with no code change — see [Theming](/docs/theming).
   edge is disabled (out of the tab order, painted with the theme's
   `disabled`/`disabledForeground` pair) unless `loop`. The control is a filled
   `secondary` action, so it wears the measured pair rather than a fade.
+- Dots are buttons named "Go to slide N", with `aria-selected` on the active one
+  — `0.11.0` has no `aria-current`, the substitution Pagination, Stepper and
+  Breadcrumb use. The active dot is also wider, so the state is not
+  colour-only.
 - Inactive slides stay in the tree with `display: none`; a screen reader does not
   announce them, and their component state survives.
 - There is no `aria-roledescription="carousel"` or slide-position announcement
@@ -99,18 +135,23 @@ theme changes the frame with no code change — see [Theming](/docs/theming).
 
 - **No slide animation** (no transform in `motion`).
 - **No swipe/drag** (no drag host feature).
-- No indicator dots, auto-advance or thumbnails in v1.
+- No auto-advance or thumbnails in v1; the dots are press targets, not a
+  progress indicator.
 - Slides must be direct children of the track.
 - Inactive slides stay mounted: many heavy slides cost render time.
 
 ## Verification
 
-`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (9 tests):
+`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (15 tests):
 every slide mounted and one displayed, control stepping, edge clamping, loop
 wrapping, arrows and Home/End, a controlled carousel, region naming and disabled
-edges, a style callback receiving `{ active, index }` in both themes, and the
+edges, a style callback receiving `{ active, index }` in both themes, the
 chevron read back off the renderer against the label role and the mark floor of
-the fill it sits on. `src/behaviour/focus-ring.test.tsx` holds the root's
+the fill it sits on, and the indicators — one named target per slide with
+`aria-selected` on the active one, a press jumping to the slide it names, the
+roving stop following the slide with the arrows still stepping from a dot, the
+24px target around the 6px drawing, both dot inks held to the mark floor in both
+themes with the active one wider, and no indicators for an empty track. `src/behaviour/focus-ring.test.tsx` holds the root's
 keyboard outline — declared at rest, kept while the region has focus, with no
 spread shadow behind it.
 
