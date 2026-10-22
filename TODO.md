@@ -5512,6 +5512,21 @@ coordinator's call and would discard the stale session's in-flight work (plan
 stays `2` and the condition **cannot** be met by agent discipline; it needs plan
 022 §5's pinned-session fix (coordinator, `scripts/`). Component code stays
 paused on a green, pushed `HEAD`; plan 118 carries the measurement.
+**Re-measured 2026-10-23 02:18–02:28 in the playground workstream:** two live
+`swarm:playground` sessions held `apps/playground` —
+`ses_e9a1dddb2ffe5I03LfSG0Nzqz1` (started 02:11) and
+`ses_e9a17943fffe6mtdvKiQRkvHQw` (started 02:18) — while only one
+`opencode run` pid existed, because the server keeps an older turn executing
+after its CLI call ended. Both wrote `src/live/image-fit*` and the README
+between 02:20 and 02:22: the older turn's write replaced the newer turn's
+`image-fit.test.ts` between its write and its `vitest` run (the run then failed
+on a file neither session had authored), and the older turn committed
+`deb01403` at 02:27:53 and went idle at 02:28:07. The duplicate was read from
+the server's own session table (`session_v2`/`session_message`), not from
+process titles: the idle/resume check must count live sessions, as plan 022 §5
+says. The newer turn yielded the probe to the older one and landed a
+non-overlapping probe (`grid-focus-lifecycle`) afterwards, so no work was lost
+this time.
 
 ## Interlocks (cross-workstream dependencies)
 
