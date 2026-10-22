@@ -5491,7 +5491,6 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[ ]` Performance and packaging
   - [x] The **components test suite's `motion-claims` case read the tree
     17 980 times** — the record resolver re-read `src/inventory.ts`, every
-    record module and its import graph per record, and each page walk re-read
     the graph again, so the case spent ~2.7 s in isolation and exceeded the
     suite's 5 s default under load (the full `packages/components` run failed
     there on 2026-10-23 while every case passed alone). `readText`, `importsOf`
