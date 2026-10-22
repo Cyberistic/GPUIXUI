@@ -10,7 +10,9 @@
  * What stays here is the part a window measured and a headless core cannot
  * know: the press cycle a header reports, the pointer gesture a chord means
  * (`selection/logic`), the render-time release a filter owes a selection, and
- * the arrow walk that moves native focus with the cursor.
+ * the arrow walk that moves native focus with the cursor. The checkbox column
+ * reads the same state: `allSelected`/`someSelected` are computed over the
+ * painted keys, and `toggleSelection`/`setAllSelected` write it.
  *
  * The order a reader expects: narrow first, then sort the narrowed set, and
  * measure a Shift range over what is painted. A filter that hides a chosen
@@ -60,6 +62,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { RowData, SortingState } from "@tanstack/table-core";
 import { constructGrid, type GridColumn, type GridTable } from "./grid-core.js";
 import {
+  allSelected,
   clearSelection,
   currentKey,
   isSelected,
@@ -69,6 +72,7 @@ import {
   retainSelection,
   selectAll,
   selectionSize,
+  someSelected,
   type SelectionState,
 } from "./selection/logic.js";
 import { toggleSort as nextSort, type SortState } from "./sort/logic.js";
@@ -101,6 +105,10 @@ export interface TableController<Row extends RowData> {
   readonly kept: ReadonlyArray<Row>;
   /** How many records are chosen. */
   readonly selectedCount: number;
+  /** Every visible record is chosen — the header checkbox's checked state. */
+  readonly allSelected: boolean;
+  /** Some visible records are chosen — the header checkbox's mixed state. */
+  readonly someSelected: boolean;
   /** The record that owns the roving tab stop, when one is chosen. */
   readonly activeKey: Option.Option<string>;
   /** The core table the controller runs on, for a consumer that needs more. */
@@ -110,6 +118,10 @@ export interface TableController<Row extends RowData> {
   readonly setQuery: (query: string) => void;
   readonly press: (key: string, modifiers?: EventModifiers) => void;
   readonly pressRow: (row: Row, modifiers?: EventModifiers) => void;
+  /** Flip one record from its checkbox, without disturbing the rest of the set. */
+  readonly toggleSelection: (key: string) => void;
+  /** Choose every visible record, or clear the set — the header checkbox. */
+  readonly setAllSelected: (selected: boolean) => void;
   readonly selectAllRows: () => void;
   readonly clear: () => void;
   readonly move: (delta: number) => void;
@@ -227,6 +239,8 @@ export const useTable = <Row extends RowData>({
     query,
     selection,
     selectedCount: selectionSize(selection),
+    allSelected: allSelected(selection, keys),
+    someSelected: someSelected(selection, keys),
     activeKey: currentKey(selection),
     setSort: (next) => setSorting(sortingOf(next)),
     toggleSort: (field) =>
@@ -236,6 +250,10 @@ export const useTable = <Row extends RowData>({
       write(pressSelection(chosen, key, pressMode(modifiers), keys)),
     pressRow: (row, modifiers) =>
       write(pressSelection(chosen, keyOf(row), pressMode(modifiers), keys)),
+    toggleSelection: (key) =>
+      write(pressSelection(chosen, key, "toggle", keys)),
+    setAllSelected: (selected) =>
+      write(selected ? selectAll(chosen, keys) : clearSelection(chosen)),
     selectAllRows: () => write(selectAll(chosen, keys)),
     clear: () => write(clearSelection(chosen)),
     move: (delta) => write(moveSelection(chosen, keys, delta)),

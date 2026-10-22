@@ -15,6 +15,7 @@ import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import {
+  allSelected,
   clearSelection,
   emptySelection,
   isSelected,
@@ -24,6 +25,7 @@ import {
   retainSelection,
   selectAll,
   selectionSize,
+  someSelected,
   type SelectionState,
 } from "./logic.js";
 
@@ -136,6 +138,48 @@ describe("select all and clear", () => {
     const cleared = clearSelection(state);
     expect(selectionSize(cleared)).toBe(0);
     expect(cleared.anchor).toEqual(Option.none());
+  });
+});
+
+describe("the header checkbox's three states", () => {
+  it("is unchecked, mixed and checked as the visible set fills", () => {
+    const none = emptySelection;
+    const some = pressSelection(none, "r2", "replace", order);
+    const all = selectAll(none, order);
+
+    expect([allSelected(none, order), someSelected(none, order)]).toEqual([
+      false,
+      false,
+    ]);
+    expect([allSelected(some, order), someSelected(some, order)]).toEqual([
+      false,
+      true,
+    ]);
+    expect([allSelected(all, order), someSelected(all, order)]).toEqual([
+      true,
+      false,
+    ]);
+  });
+
+  it("reads the visible order, not every record the state still holds", () => {
+    // A query that hides a chosen record paints a table with nothing chosen, so
+    // the header cannot claim a hidden record is visible. The retention is the
+    // controller's view (`retainSelection`), and this is the same rule stated
+    // over the keys the header actually paints.
+    const state = pressSelection(emptySelection, "r4", "replace", order);
+    const visible = ["r1", "r2"];
+
+    expect(allSelected(retainSelection(state, visible), visible)).toBe(false);
+    expect(someSelected(retainSelection(state, visible), visible)).toBe(false);
+  });
+
+  it("does not call an empty table fully chosen", () => {
+    // Both false is what leaves the header unchecked and `disabled` over no
+    // rows; `every` over an empty array would otherwise claim the whole set.
+    expect([
+      allSelected(emptySelection, []),
+      someSelected(emptySelection, []),
+    ]).toEqual([false, false]);
   });
 });
 

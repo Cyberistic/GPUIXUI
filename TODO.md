@@ -5522,6 +5522,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
     released during render, literal case-insensitive narrowing, the arrow walk
     with native focus moved after the `tabIndex` commit. Direction measured:
     without the render-time retention the filter case reports `1 selected`.
+  - [x] Ship a **checkbox column** (plan 610 phase 2) — `TableSelectionHeader`
+    (tri-state select-all over the painted order) and `TableSelectionCell` in
+    `selection/column.tsx`, with `useTable`'s `allSelected`, `someSelected`,
+    `toggleSelection` and `setAllSelected`. The box's target paints the table's
+    `card` fill: a bare `Checkbox` root paints nothing, and the measured
+    `control-unfilled` route ran both the box and the row, so a box press after
+    a row press lost the row's record (measured `1 selected` in the new
+    behaviour case before the paint). Three unit cases hold the three states,
+    the visible-order rule and the empty table; three behaviour cases mount the
+    shipped example (a box press after a row press paints `2 selected`, the
+    header chooses all 60 and clears them, a partial set reads `mixed`).
+    `packages/data/docs/table-selection.mdx` and the `Row selection` row ship
+    with it. `nub run --filter @gpuixui/data test` 121, `test:behaviour` 60.
   - [x] Example, README and the four Tier 3 inventory rows (`Tables`,
     `Sortable tables`, `Row selection`, `Filtering controls`) in
     `COMPONENTS.md`; `nub run --filter @gpuixui/data test` (34 cases) and

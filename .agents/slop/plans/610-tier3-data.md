@@ -178,6 +178,19 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   filter) and the premise retention rests on (the core keeps the chosen id a
   filter hides). `nub run --filter @gpuixui/data test` (116) and
   `test:behaviour` (55) green on 0.11.0.
+- **Phase 2's checkbox column landed**: `TableSelectionHeader`/
+  `TableSelectionCell` (`selection/column.tsx`) are a fixed
+  `SELECTION_COLUMN_WIDTH` track in the header and every row. The controller
+  supplies `allSelected`/`someSelected` over the **painted** keys and
+  `toggleSelection`/`setAllSelected`; the header is a tri-state
+  (`aria-valuetext` `checked`/`unchecked`/`mixed` — 0.11.0 has no
+  `aria-checked`). The box's target paints the table's `card` fill, because a
+  bare `Checkbox` root paints nothing and the measured `control-unfilled` route
+  runs both the box and the row: without the paint the behaviour case measured
+  a box press after a row press painting `1 selected` (the row replaced the
+  set). `selection/logic.test.ts` holds the three states, the visible-order
+  rule and the empty table; three behaviour cases mount the shipped example.
+  The page is `docs/table-selection.mdx` and the `Row selection` row names it.
 - **Phase 4a (virtual list) landed**: `VirtualList` wraps the runtime's
   `<virtual-list>` with both host modes as a discriminated union, a definite
   `height`, a typed `VisibleRange` and a forwarded ref for `scrollToItem`. The

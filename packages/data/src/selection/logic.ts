@@ -9,6 +9,11 @@
  * that hides a chosen record clears it rather than keeping it invisibly
  * (`table-filter-lifecycle`).
  *
+ * The checkbox column (`selection/column.tsx`) reads the same state: a row's
+ * box toggles its record, and the header's box is `allSelected`/`someSelected`
+ * over the **visible** order, so a grid cannot claim a hidden record is
+ * painted.
+ *
  * Nothing here imports React: the hook is a thin `useState` over these
  * reducers, and an application can drive the same rules from Effect.
  */
@@ -61,6 +66,33 @@ export const isSelected = (state: SelectionState, key: string): boolean =>
 /** How many records are chosen. */
 export const selectionSize = (state: SelectionState): number =>
   HashSet.size(state.selected);
+
+/**
+ * Whether every record in a visible order is chosen.
+ *
+ * An empty set is not "all": a header checkbox over no rows is unchecked and
+ * disabled, not a claim that nothing is chosen.
+ */
+export const allSelected = (
+  state: SelectionState,
+  visible: ReadonlyArray<string>,
+): boolean =>
+  visible.length > 0 &&
+  Arr.every(visible, (key) => HashSet.has(state.selected, key));
+
+/**
+ * Whether some — but not all — of a visible order is chosen.
+ *
+ * The `all` case is deliberately false: a checkbox that is fully chosen paints
+ * a check, not a dash. This is the other half of the header column's
+ * tri-state (`Checkbox`'s `indeterminate`).
+ */
+export const someSelected = (
+  state: SelectionState,
+  visible: ReadonlyArray<string>,
+): boolean =>
+  !allSelected(state, visible) &&
+  Arr.some(visible, (key) => HashSet.has(state.selected, key));
 
 /** The index of a key in the visible order. */
 const indexIn = (

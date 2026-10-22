@@ -10,6 +10,8 @@
  * - a `TableSortHeader` reports the next `SortState`, and the controller sorts;
  * - a row press reports the record and the runtime's modifier flags, so a plain
  *   press replaces, Cmd/Ctrl toggles and Shift extends;
+ * - a selection box toggles one record without replacing the set, because the
+ *   box paints and GPUI's hit test stops at the first painted child;
  * - ArrowUp/ArrowDown move the chosen row **and** native focus, because a
  *   selection the keyboard moved but focus did not is a row the next key does
  *   not reach;
@@ -52,6 +54,10 @@ import { TableSortHeader } from "../src/sort/header.js";
 import { TableFilterField } from "../src/filter/field.js";
 import { useTable } from "../src/use-table.js";
 import { neighbourKey, selectionSize } from "../src/selection/logic.js";
+import {
+  TableSelectionCell,
+  TableSelectionHeader,
+} from "../src/selection/column.js";
 import { textStyle, useTheme } from "../src/theme.js";
 
 interface FileRow {
@@ -123,6 +129,7 @@ const FileRow = ({
   elements,
   onPress,
   onKeyDown,
+  onToggleSelection,
 }: {
   readonly row: FileRow;
   readonly columns: ReturnType<typeof useColumns>["visible"];
@@ -131,6 +138,7 @@ const FileRow = ({
   readonly elements: { readonly current: Map<string, number> };
   readonly onPress: (event: EventPayload) => void;
   readonly onKeyDown: (event: EventPayload) => void;
+  readonly onToggleSelection: () => void;
 }) => {
   const theme = useTheme();
   const attach = useCallback(
@@ -149,6 +157,12 @@ const FileRow = ({
       onClick={onPress}
       onKeyDown={onKeyDown}
     >
+      <TableSelectionCell
+        checked={selected}
+        onCheckedChange={onToggleSelection}
+        label={`Select ${row.name}`}
+        testId={`files-select-${row.id}`}
+      />
       {Arr.map(columns, (column) => (
         <TableCell
           key={column.id}
@@ -277,6 +291,13 @@ export const TableExample = () => {
         <TableViewport>
           <TableHeader>
             <TableRow>
+              <TableSelectionHeader
+                checked={table.allSelected}
+                indeterminate={table.someSelected}
+                onCheckedChange={table.setAllSelected}
+                disabled={table.rows.length === 0}
+                testId="files-select-all"
+              />
               {Arr.map(columns.visible, (column) => {
                 const resize = {
                   minWidth: column.minWidth,
@@ -376,6 +397,7 @@ export const TableExample = () => {
                   elements={elements}
                   onPress={(event) => table.press(row.id, event.modifiers)}
                   onKeyDown={onRowKeyDown(row.id)}
+                  onToggleSelection={() => table.toggleSelection(row.id)}
                 />
               ))
             )}

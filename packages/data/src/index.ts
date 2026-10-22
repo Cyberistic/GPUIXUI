@@ -112,6 +112,7 @@ export { directionOf, sortLabel, toggleSort } from "./sort/logic.js";
 export type { SortDirection, SortState, SortValue } from "./sort/logic.js";
 
 export {
+  allSelected,
   clearSelection,
   currentKey,
   emptySelection,
@@ -123,12 +124,22 @@ export {
   retainSelection,
   selectAll,
   selectionSize,
+  someSelected,
 } from "./selection/logic.js";
 export type {
   PressMode,
   PressModifiers,
   SelectionState,
 } from "./selection/logic.js";
+export {
+  SELECTION_COLUMN_WIDTH,
+  TableSelectionCell,
+  TableSelectionHeader,
+} from "./selection/column.js";
+export type {
+  TableSelectionCellProps,
+  TableSelectionHeaderProps,
+} from "./selection/column.js";
 
 export { TableFilterField } from "./filter/field.js";
 export type { TableFilterFieldProps } from "./filter/field.js";

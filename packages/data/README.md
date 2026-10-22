@@ -50,7 +50,8 @@ src/
               TableHeaderCell, TableCell, TableCaption, TableEmpty, TableSkeleton,
               FrozenTable (the pinned-column composition)
   sort/       the press cycle, the announced label, TableSortHeader
-  selection/  press modes, range + anchor, retention, neighbour step
+  selection/  press modes, range + anchor, retention, neighbour step,
+              the header/row checkbox column
   filter/     TableFilterField (the field above the rows)
   grid-core   the @tanstack/table-core features and constructGrid
   columns/    visibility, order, resize bounds, ColumnMenu, TableColumnDivider
@@ -109,6 +110,29 @@ const table = useTable({ rows, keyOf: (row) => row.id, columns });
   </TableViewport>
 </Table>;
 ```
+
+A **checkbox column** is a fixed track at the head of the header and every row.
+The controller supplies the tri-state over the painted set, so the header cannot
+claim a record a filter hides:
+
+```tsx
+<TableSelectionHeader
+  checked={table.allSelected}
+  indeterminate={table.someSelected}
+  onCheckedChange={table.setAllSelected}
+  disabled={table.rows.length === 0}
+/>
+
+<TableSelectionCell
+  checked={table.isSelected(row.id)}
+  onCheckedChange={() => table.toggleSelection(row.id)}
+  label={`Select ${row.name}`}
+/>
+```
+
+The box paints a fill, so it takes its own press (`press-routing-lifecycle`):
+toggling one record leaves the row press's set alone. The page is
+`docs/table-selection.mdx`.
 
 A column set is one ordered list the header and every row read. The controller
 holds visibility, order and widths; the menu drives the first two and a divider
@@ -345,6 +369,7 @@ in the primitives' registry and a column width is data.
 | Table core, fixed header, empty and loading states | shipped, window-verified |
 | Sort reducer + `TableSortHeader` | shipped, window-verified |
 | Selection reducer + row paint + keyboard walk | shipped (the walk is composed in the example; no roving-focus API in the runtime) |
+| Selection column (`TableSelectionHeader`, `TableSelectionCell`) | shipped, window-verified |
 | Filter reducer + `TableFilterField` | shipped, window-verified |
 | Column visibility + order (`ColumnMenu`, `useColumns`) | shipped, window-verified |
 | Resizable columns (`TableColumnDivider`) | shipped, window-verified |

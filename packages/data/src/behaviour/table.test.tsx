@@ -183,6 +183,46 @@ describe("the example table", () => {
     expect(readout(root)).toContain("1 selected");
   });
 
+  it("toggles a record from its box without replacing the set a row press made", () => {
+    const root = mount();
+
+    click(root, "files-row-file-2");
+    click(root, "files-select-file-5");
+    root.renderer.flush();
+
+    // The box paints a fill, so GPUI's hit test stops there
+    // (`press-routing-lifecycle`): the box toggles its record and the row it
+    // sits in does not also run its press, which would replace the set.
+    expect(
+      root.renderer.findByTestId("files-row-file-2")?.style.backgroundColor,
+    ).toBe(darkTheme.colors.selected);
+    expect(readout(root)).toContain("2 selected");
+    expect(checkboxWord(root, "files-select-file-5")).toBe("checked");
+  });
+
+  it("chooses every painted row from the header box and clears it on the next press", () => {
+    const root = mount();
+
+    click(root, "files-select-all");
+    root.renderer.flush();
+    expect(readout(root)).toContain("60 selected");
+    expect(checkboxWord(root, "files-select-all")).toBe("checked");
+
+    click(root, "files-select-all");
+    root.renderer.flush();
+    expect(readout(root)).toContain("0 selected");
+    expect(checkboxWord(root, "files-select-all")).toBe("unchecked");
+  });
+
+  it("paints a partial set as mixed on the header box", () => {
+    const root = mount();
+
+    click(root, "files-row-file-2");
+    root.renderer.flush();
+
+    expect(checkboxWord(root, "files-select-all")).toBe("mixed");
+  });
+
   it("toggles with the command chord and extends with shift", () => {
     const root = mount();
 
@@ -264,6 +304,10 @@ describe("the example table", () => {
 
 /** The width a divider announces through the only channel 0.11.0 publishes. */
 const announcedWidth = (root: DataTestRoot, testId: string): string =>
+  `${root.renderer.getElement(findId(root, testId))?.customProps?.["aria-valuetext"] ?? ""}`;
+
+/** A checkbox's state: 0.11.0 has no `aria-checked`, so it is `aria-valuetext`. */
+const checkboxWord = (root: DataTestRoot, testId: string): string =>
   `${root.renderer.getElement(findId(root, testId))?.customProps?.["aria-valuetext"] ?? ""}`;
 
 /**
