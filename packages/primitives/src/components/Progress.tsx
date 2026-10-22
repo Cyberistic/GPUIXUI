@@ -211,7 +211,10 @@ export const renderProgressIndicator = (
         {held === undefined || held <= part.percent ? null : (
           <div
             style={mergeStyle(
-              recipeTw.classesToStyle(progressBufferClass, part.theme).style,
+              recipeTw.classesToStyle(
+                progressBufferClass(part.tone),
+                part.theme,
+              ).style,
               { width: `${held - part.percent}%` },
             )}
           />

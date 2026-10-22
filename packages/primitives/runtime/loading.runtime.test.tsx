@@ -178,6 +178,31 @@ it("paints a Progress's held-ahead buffer in the gap it reports", async () => {
   );
 });
 
+it("paints a muted bar's held share in a role its fill does not use", async () => {
+  // The bug guarded: a `muted` fill is `mutedForeground`, the buffer's own
+  // role, so a 20%-complete bar buffered to 80% painted one continuous 80% bar
+  // and read as finished. Measured in a window, in the colours the runtime kept.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Progress testId="pg" value={20} buffer={80} tone="muted" />
+    </Surface>,
+  );
+  const trackId = Option.getOrElse(Arr.head(childrenOf(runtime, "pg")), () =>
+    expect.fail("the Progress painted no track"),
+  );
+  const segments = childrenOfId(runtime, trackId);
+  const segmentId = (index: number): number =>
+    Option.getOrElse(Arr.get(segments, index), () =>
+      expect.fail(`the Progress painted no segment ${index}`),
+    );
+  const fill = styleOf(runtime, segmentId(0))["backgroundColor"];
+  const buffer = styleOf(runtime, segmentId(1))["backgroundColor"];
+  expect(fill).toBe(testTheme.colors.mutedForeground);
+  expect(buffer).toBe(testTheme.colors.borderStrong);
+  expect(buffer).not.toBe(fill);
+});
+
 it("paints a caller's Progress composition from the same resolved state", async () => {
   const runtime = await openWindow();
   runtime.render(

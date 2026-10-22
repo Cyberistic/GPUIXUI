@@ -25,6 +25,7 @@ import {
   contrastPairs,
   contrastRatio,
   darkTheme,
+  highContrastThemes,
   lightTheme,
   type ControlSize,
   type Theme,
@@ -51,6 +52,7 @@ import {
   numberStepperStyle,
   progressFillStyle,
   progressTrackStyle,
+  PROGRESS_TONES,
   sliderFillStyle,
   sliderRailStyle,
   sliderThumbStyle,
@@ -70,6 +72,7 @@ import {
   numberInputClass,
   numberStepperClass,
   numberStepperColumnClass,
+  progressBufferClass,
   progressFillClass,
   progressTrackClass,
   radioDotClass,
@@ -338,6 +341,54 @@ describe("progress and meter recipes", () => {
       recipeTw.classesToStyle(progressTrackClass("md"), repainted).style.height,
     ).toBe(99);
   });
+
+  it("paints the buffer in a role the tone's fill does not use", () => {
+    // The bug guarded: a `muted` fill is `mutedForeground`, which was the
+    // buffer's own role, so `value={20} buffer={80}` painted one continuous
+    // 80% bar and read as finished. Both segments are marks on the `muted`
+    // track, so each has to clear the floor `contrastPairs` applies there.
+    const background = (style: StyleDesc): string =>
+      Option.getOrElse(Option.fromNullishOr(style.backgroundColor), () => "");
+    Arr.forEach(
+      [
+        lightTheme,
+        darkTheme,
+        highContrastThemes.light,
+        highContrastThemes.dark,
+      ],
+      (theme) => {
+        Arr.forEach(PROGRESS_TONES, (tone) => {
+          const fill = background(
+            recipeTw.classesToStyle(progressFillClass(tone), theme).style,
+          );
+          const buffer = background(
+            recipeTw.classesToStyle(progressBufferClass(tone), theme).style,
+          );
+          const label = `${theme.mode} ${tone}`;
+          expect(buffer, label).not.toBe(fill);
+          Arr.forEach([fill, buffer], (colour) => {
+            expect(
+              contrastRatio(colour, theme.colors.muted) ?? 0,
+              label,
+            ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).boundary);
+          });
+        });
+      },
+    );
+    // The one tone whose fill already is the buffer's role takes the boundary
+    // role for its held share; every other tone keeps `mutedForeground`.
+    expect(
+      background(
+        recipeTw.classesToStyle(progressBufferClass("muted"), lightTheme).style,
+      ),
+    ).toBe(lightTheme.colors.borderStrong);
+    expect(
+      background(
+        recipeTw.classesToStyle(progressBufferClass("primary"), lightTheme)
+          .style,
+      ),
+    ).toBe(lightTheme.colors.mutedForeground);
+  });
 });
 
 describe("spinner and skeleton recipes", () => {
@@ -414,6 +465,8 @@ describe("the geometry recipes register no unsupported classes", () => {
       sliderThumbClass("md", false),
       progressTrackClass("md"),
       progressFillClass("primary"),
+      progressBufferClass("primary"),
+      progressBufferClass("muted"),
       spinnerGroupClass,
       spinnerDotClass("primary"),
       skeletonClass({ circle: true }),

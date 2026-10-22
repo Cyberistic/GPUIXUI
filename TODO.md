@@ -2526,6 +2526,29 @@ a workaround for two live sessions sharing one worktree; see
       the window case fail. Docs in `docs/progress.mdx`
       §Usage/§API/§Theming/§Limitations/§Verification, the form example's saving
       state, the inventory record and the `COMPONENTS.md` row.
+`[x]` `packages/primitives`: a **`muted` bar's held share was the fill's own
+      colour** — `progressBufferClass` was one constant, `mutedForeground`, and a
+      `muted` fill **is** that role, so `value={20} buffer={80}` painted one
+      continuous 80% bar and read as finished while the docs only told a caller
+      to pick another tone. The buffer is now resolved from the tone: every
+      chromatic tone keeps `mutedForeground`, and a `muted` bar's held share
+      takes the boundary role `borderStrong` — the next neutral step down, whose
+      `muted` pair `contrastPairs` already holds at the same 3:1/4.5:1 floor, and
+      the only quieter mark on the track that clears it. Proof:
+      `Progress.test.tsx`'s `paints the buffer in a role its tone's fill does not
+      already use` (every tone, plus the two roles by name),
+      `recipe/geometry.test.ts`'s `paints the buffer in a role the tone's fill
+      does not use` (all four tones in the two shipped and two high-contrast
+      themes, each segment held to the mark floor on the `muted` track, and the
+      unsupported-class sweep covers both buffer classes), and
+      `runtime/loading.runtime.test.tsx`'s `paints a muted bar's held share in a
+      role its fill does not use` (the two painted colours in a window). Both
+      directions measured: with the single-role constant restored, the two unit
+      cases fail by name and the window case reads `expected '#00000C' to be
+      '#000014'` (1 failed / 14 passed). Docs in `docs/progress.mdx`
+      §Theming/§Limitations/§Verification (the workaround limit is retracted),
+      the inventory record and the `COMPONENTS.md` row. `nub run --filter
+      @gpuixui/primitives test` 799, `test:runtime` 19 files / 230 green
 `[x]` `packages/primitives`: the **switch-slide window test compared an
       animating pixel exactly** — after `click` + `flush` it asserted the thumb
       was still at the resting offset, but a frame delivered under load has

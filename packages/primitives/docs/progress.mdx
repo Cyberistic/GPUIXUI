@@ -121,8 +121,12 @@ row — the moving lead, the fill and the buffer are siblings, so the fill's
 painted position is the motion; `progressFillClass` paints the tone's role.
 Height is a spacing step and both ends are `radius.full`, so a density or radius
 change moves the whole family. The buffer segment paints `mutedForeground`, the
-mark role `indicatorRoles` measures on a `muted` track. The label and value
-parts use the `caption` type role in the `muted` text tone.
+mark role `indicatorRoles` measures on a `muted` track — except on a `muted`
+bar, whose fill **is** that role: its buffer takes the boundary role
+`borderStrong` instead, the next neutral step down, whose `muted` pair
+`contrastPairs` holds to the same floor. Without that, `value={20} buffer={80}`
+painted one continuous 80% bar that read as finished. The label and value parts
+use the `caption` type role in the `muted` text tone.
 
 `reducedMotion` is the caller's: the runtime exposes no reduced-motion
 preference, so the host application reads the platform setting and passes it
@@ -140,9 +144,6 @@ no interval running; a determinate bar is unaffected because it never animated.
   cannot interpolate position beyond the motion API this package does not import.
 - One buffer, no stacked segments. The label and value parts sit beside the
   track; painting text *inside* the bar is not a part.
-- The buffer is one role (`mutedForeground`), so a `tone="muted"` bar cannot show
-  one: the segment and the fill would be the same colour. Use another tone when
-  a bar reports held-ahead work.
 - The reduced-motion preference is the caller's to supply (above).
 
 ## Verification
@@ -153,17 +154,23 @@ no interval running; a determinate bar is unaffected because it never animated.
 - `src/components/Progress.test.tsx` — the tree-level track/fill, the bar's
   segments laid in one row, the clamped fill width, the value part agreeing with
   it, the buffer segment between value and buffer (and its clamps, its absence
-  behind the value and on an indeterminate bar), the indeterminate lead, the tone
+  behind the value and on an indeterminate bar, and a role the tone's fill does
+  not already paint — the `muted` collision the old code shipped), the
+  indeterminate lead, the tone
   on both the determinate and the indeterminate fill, a custom composition, the
   root frame's `style` and `className` merge (a caller's `flex-row` wins over the
   frame's resting column), and the lead held at the resting offset under
   `reducedMotion`.
 - `runtime/loading.runtime.test.tsx` — announces `"42%"`, clamps 140 to `"100%"`
   and −5 to `"0%"`, the fill tracks the value inside the track, the buffer paints
-  the gap it reports (its painted box and mark role), the indeterminate segment's
-  **painted x** moves over real time in its own tone, a step counter that is not
-  running stays still, and a `reducedMotion` bar's lead width is one value across
-  six samples.
+  the gap it reports (its painted box and mark role), a `muted` bar's buffer
+  paints `borderStrong` while its fill paints `mutedForeground` (the collision
+  the old code shipped), the indeterminate segment's **painted x** moves over
+  real time in its own tone, a step counter that is not running stays still, and
+  a `reducedMotion` bar's lead width is one value across six samples.
+- `src/recipe/geometry.test.ts` — every tone's buffer role differs from its fill's
+  and both clear the mark floor on the `muted` track, in the two shipped and two
+  high-contrast themes.
 
 ```sh
 nub run --filter @gpuixui/primitives test

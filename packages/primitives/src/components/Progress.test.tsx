@@ -12,8 +12,10 @@
 
 import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import { PROGRESS_TONES, type ProgressTone } from "../core/style.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   progressPart,
@@ -105,6 +107,41 @@ describe("Progress", () => {
     expect(expectSome(hostStyleString(held, "backgroundColor"))).toBe(
       testTheme.colors.mutedForeground,
     );
+  });
+
+  it("paints the buffer in a role its tone's fill does not already use", () => {
+    // The bug guarded: a `muted` bar's fill is `mutedForeground`, which was the
+    // buffer's role too, so `value={20} buffer={80}` painted one continuous
+    // 80% bar and read as finished. Every tone's held share must be its own mark.
+    const segmentsOf = (
+      tone: ProgressTone,
+    ): { readonly fill: ReactElement; readonly buffer: ReactElement } => {
+      const children = elementChildren(
+        trackOf(renderProgress({ value: 20, buffer: 80, tone }, testTheme, 0)),
+      );
+      return {
+        fill: children[0] ?? expect.fail("no fill"),
+        buffer: children[1] ?? expect.fail("no buffer"),
+      };
+    };
+    const colourOf = (element: ReactElement): string =>
+      expectSome(hostStyleString(element, "backgroundColor"));
+    Arr.forEach(PROGRESS_TONES, (tone) => {
+      const segments = segmentsOf(tone);
+      expect(colourOf(segments.buffer), tone).not.toBe(colourOf(segments.fill));
+    });
+    expect(colourOf(segmentsOf("muted").fill)).toBe(
+      testTheme.colors.mutedForeground,
+    );
+    expect(colourOf(segmentsOf("muted").buffer)).toBe(
+      testTheme.colors.borderStrong,
+    );
+    // The three chromatic tones keep the role the indicator contract measures.
+    Arr.forEach(["primary", "success", "destructive"] as const, (tone) => {
+      expect(colourOf(segmentsOf(tone).buffer), tone).toBe(
+        testTheme.colors.mutedForeground,
+      );
+    });
   });
 
   it("keeps the buffer clamped, ahead of the value, and out of an indeterminate bar", () => {

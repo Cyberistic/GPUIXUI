@@ -675,9 +675,17 @@ export const progressFillClass = (tone: ProgressTone): string =>
  * The buffer is a **mark on the track**, so it paints the readable
  * `mutedForeground` role — the one `indicatorRoles` measures on `muted` — rather
  * than a translucent share of the fill's own tone, which no contract can
- * measure.
+ * measure. A `muted` fill *is* that role: the same colour on the same track made
+ * `value={20} buffer={80}` paint one continuous 80% bar that read as finished, so
+ * that tone's buffer takes the boundary role `borderStrong` — the next neutral
+ * step down, whose `muted` pair `contrastPairs` holds to the same floor, and the
+ * only quieter role on the track that clears it.
  */
-export const progressBufferClass = "h-full shrink-0 bg-muted-foreground";
+export const progressBufferClass = (tone: ProgressTone): string =>
+  cn(
+    "h-full shrink-0",
+    tone === "muted" ? "bg-border-strong" : "bg-muted-foreground",
+  );
 
 // ── Spinner / Skeleton ───────────────────────────────────────────────
 
