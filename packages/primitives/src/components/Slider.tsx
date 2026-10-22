@@ -472,10 +472,15 @@ export const renderRangeSlider = (
   const span = spanOf(state.current, range);
   const size = props.size ?? "md";
   const invalid = props.invalid === true;
+  // The group's name is the subject the two ends are derived from, so it takes
+  // the package's name rule first: a padded label would otherwise announce its
+  // padding in both thumb names, and a blank one would name the ends " minimum"
+  // and " maximum" instead of leaving them unnamed like an unnamed group.
+  const name = accessibleName(props.label);
   const labels =
-    props.label === undefined
+    name === undefined
       ? ([undefined, undefined] as const)
-      : ([`${props.label} minimum`, `${props.label} maximum`] as const);
+      : ([`${name} minimum`, `${name} maximum`] as const);
   const thumbPart = (index: 0 | 1): ThumbPart => {
     const value = index === 0 ? span.start : span.end;
     return {

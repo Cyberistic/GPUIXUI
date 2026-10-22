@@ -269,6 +269,33 @@ describe("RangeSlider", () => {
     ).toStrictEqual([0, 0]);
   });
 
+  it("derives the thumb names from the group's trimmed name", () => {
+    // The bug guarded: both names interpolated `label` raw, so a padded group
+    // name announced its padding twice and a blank one named the ends
+    // " minimum"/" maximum" instead of leaving them unnamed like an unnamed
+    // group (the case below).
+    const thumbsOf = (label: string) => {
+      const [, start, , end] = partsOf(
+        renderRangeSlider(
+          { label },
+          testTheme,
+          spanOf(20, 60),
+          { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+          rangeHandlers(vi.fn()),
+        ),
+      );
+      return [start, end].map((thumb) =>
+        hostProp(thumb ?? expect.fail("no thumb"), "aria-label"),
+      );
+    };
+
+    expect(thumbsOf("  Price  ")).toStrictEqual([
+      Option.some("Price minimum"),
+      Option.some("Price maximum"),
+    ]);
+    expect(thumbsOf("   ")).toStrictEqual([Option.none(), Option.none()]);
+  });
+
   it("moves the end the arrow belongs to, and never past the other end", () => {
     const onSpanChange = vi.fn();
     const element = render(onSpanChange);

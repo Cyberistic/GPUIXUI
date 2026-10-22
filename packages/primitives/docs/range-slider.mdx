@@ -50,7 +50,7 @@ rather than skipping it.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb and track metrics |
 | `disabled` | `boolean` | `false` | both thumbs leave the tab order |
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |
-| `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` |
+| `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` (trimmed; a blank label leaves both unnamed) |
 | `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
 | `style` | `StateStyle<SliderState>` | — | resolved against the live state, merged last on the track |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
@@ -92,7 +92,9 @@ act on the end the user is holding. The focused thumb paints the ring.
   `aria-valuenow`/`min`/`max` in `@gpuix/native` 0.11.0, so the two values reach a screen
   reader but the range does not.
 - The default names — `"Budget minimum"`, `"Budget maximum"` — are derived from
-  `label`, so a group with one name is never two unnamed sliders.
+  `label` after the package's name rule: trimmed, and absent when blank. A group
+  with one name is never two unnamed sliders, and a blank label does not name
+  the ends `" minimum"` / `" maximum"`.
 
 ## Theming
 

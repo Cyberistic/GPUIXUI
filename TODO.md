@@ -1717,6 +1717,16 @@ a workaround for two live sessions sharing one worktree; see
       measured, the window reporting `[ '   ', '  Yankee  ' ]` where
       `[ undefined, 'Yankee' ]` is required. Docs: the three pages' Accessibility
       sections and the `label` API rows. 704 unit / 201 runtime
+`[x]` `packages/primitives`: a **range slider's thumb names carried the group
+      label raw** — both ends interpolated `label` before the package's name
+      rule, so `label="  Price  "` named them `"  Price   minimum"` /
+      `"  Price   maximum"` and a whitespace-only label named them
+      `" minimum"` / `" maximum"` instead of leaving them unnamed the way an
+      absent label does. The names are now built from `accessibleName(label)`,
+      so a padded name is trimmed and a blank one leaves both thumbs unnamed.
+      Proof: `Slider.test.tsx`'s `derives the thumb names from the group's
+      trimmed name` (both directions measured: the old interpolation reports
+      `"  Price   minimum"`). Docs in `docs/range-slider.mdx`. 705 unit
 `[x]` `packages/primitives`: the **OTP record denied an alphabet the field
       keeps** — the `COMPONENTS.md` row said "digit-only input" while
       `normalizeOtp` keeps every letter and digit (`A1B2` types in, and
