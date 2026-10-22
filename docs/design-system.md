@@ -388,7 +388,7 @@ levels.
 | State | Role / mechanism |
 | ----- | ---------------- |
 | hover | `hover` wash on ghost and subtle surfaces; a filled role — an action, or a toggle's `accent` on-state — moves to `filledHover(theme, role)` |
-| pressed | `active` wash; a filled role moves to `filledPressed(theme, role)`, a step further than its hover unless the label's floor stops it |
+| pressed | `active` wash, derived against the wash the row already wears — `pointerWash(theme, "active", replaced)`; a filled role moves to `filledPressed(theme, role)`, a step further than its hover unless the label's floor stops it |
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible; held to `contrastFloors.disabled` so the state stays visible rather than to a readability floor, and its fill is held apart from every enabled control face (§8/§9) |
 | invalid | the `destructive` role as the field's edge and as its `focusVisible` line; the fill and text roles do not change, so the value and placeholder stay readable |
@@ -427,9 +427,27 @@ other wash, and it found **eleven of the sixteen** shipped styles with no step a
 all — the four base and high-contrast palettes at 1.00:1 — so each carries a
 `selected` one step stronger than its accent (macOS light moves its `accent`
 instead, and every text role measured on those fills keeps its floor), and the
-base dark theme's chosen row is the tightest at 1.05:1. The press that follows a hover
-is the same defect one state over, and it needs a derived step rather than a
-palette edit — `TODO.md` → Interlocks.
+base dark theme's chosen row is the tightest at 1.05:1.
+
+The **press** that follows a hover is the same defect one state over, and it
+needed a derivation rather than a palette edit: a row's press replaces the wash
+the row is already wearing — `active` over the `accent` a list row tints under
+the pointer, and `active` over the `hover` a menu row tints — so it is measured
+against the wash, not against the strip under the row. Measured over the sixteen
+shipped, high-contrast, platform and authored styles, the press was invisible in
+**six**: macOS light's `active` sat 1.026:1 from its `accent` and macOS dark's
+1.011:1, Linux dark's 1.015:1, Windows dark's 1.044:1, Luna light's 1.016:1 and
+Aero light's 1.020:1 — and macOS light's press in its own hover at 1.037:1. No
+palette can close it: macOS dark's `accent` carries a 7:1 label and a 3:1 primary
+tick, and `selectedForeground` on the lightened `active` is pinned at 7:1, so
+the three roles have no room between them. `pointerWash(theme, wash, replaced)`
+is therefore the rule — `filledHover`'s step applied to a wash: the **smallest
+move toward the theme's `foreground`** that clears the 1.05:1 floor against the
+wash the row already wears, never one that costs a label the floor it holds on
+the role the wash plays. Zero is a step, so a palette that already answers the
+pointer is painted as it is; the derivation repairs all six shipped styles and
+the tightest placement over every style is the macOS dark press at **1.052:1**.
+The painters are the components' workstreams — `TODO.md` → Interlocks.
 
 A **filled role's pointer feedback** is derived, never a lifted alpha: a
 half-alpha fill shows the surface behind the control, so the same face reads as
@@ -933,7 +951,10 @@ dim is a where-can-Tab-go cue rather than a reading mode, so it is held to
 public too: `contrastRatio(foreground, background)`
 measures two opaque roles, `contrastPairs` with `contrastFloors` /
 `highContrastFloors` names the text and boundary pairs and their floors,
-`decorativeFailures(theme, floor?)` measures the subtle surfaces,
+`decorativeFailures(theme, floor?)` measures the subtle surfaces, and
+`pointerWashFailures(theme, floor?)` names the pointer states a palette cannot
+answer — the derived wash a row paints in a press (§8), which rides the
+decorative report so the gate holds it,
 `seriesFailures(theme)` measures a categorical scale — on its plot, against
 itself and after each colour-vision deficiency — while
 `selectionFailures(theme, floors?)`

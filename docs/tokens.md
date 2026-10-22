@@ -1889,13 +1889,14 @@ keyboardDimFailures(lightTheme); // [] — every dimmed label stays visible
 
 ### Decorative surfaces
 
-Twelve surfaces carry no text and are not an essential boundary, so WCAG's floors
+Thirteen surfaces carry no text and are not an essential boundary, so WCAG's floors
 do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
 (`overlay`), a status message's soft tint and its edge, a scrollbar thumb, the
 wash a row is tinted with while it is hovered, pressed, selected or accented, the
 resting fill of a tonal action (`secondary`), the rail a bar draws its value
 inside (`muted`), the face a control wears while it
-is unavailable (`disabled`), the derived hover and press a filled role paints, and
+is unavailable (`disabled`), the derived hover and press a filled role paints, the
+derived wash a row paints in a pointer state, and
 the shadow a raised surface drops. They still
 have one job — be seen — so they get one floor of their own,
 `decorativeFloor = 1.05:1`. Below it a
@@ -1999,11 +2000,38 @@ had to keep the text roles measured on those fills and the accent face's own
 7:1 label, so the four base palettes moved `selected` by three or two percent
 rather than a ramp step. The chosen row's pointer step is now measured on all
 sixteen styles, and the base dark theme's chosen row is the tightest at 1.05:1.
-The **press** that follows a hover is the same defect one state over and is
-recorded with its measurement in `TODO.md` → Interlocks: separating `active`
-from the two washes it replaces needs a move that macOS dark's pinned accent
-label and primary mark do not allow, so it wants a derived step rather than a
-palette edit.
+The **press** that follows a hover is the same defect one state over, and it
+needed a derivation rather than a palette edit.
+
+A **pointer state** replaces the wash the row is already wearing: a list row
+tints `accent` under the pointer and paints `active` while the press is down
+(`list.tsx`), a menu row, a ghost action or a table row tints `hover` and
+repaints `active` under the press (`menu/item.tsx`, the primitives' recipe). So
+the step is the wash against the wash, not a wash on a strip — and the strips are
+the page under a row, the one surface every wash passes. Measured over the
+sixteen shipped, high-contrast, platform and authored styles, the press was
+invisible in **six** of them: macOS light's `active` sat 1.026:1 from its
+`accent` and macOS dark's 1.011:1, Linux dark's 1.015:1, Windows dark's 1.044:1,
+Luna light's 1.016:1 and Aero light's 1.020:1 — and macOS light's press in its
+own hover at 1.037:1. A palette cannot close it: macOS dark's `accent` carries a
+7:1 label and a 3:1 primary tick, and `selectedForeground` on the lightened
+`active` is pinned at 7:1, so the three roles have no room between them.
+
+`pointerWash(theme, wash, replaced)` is therefore the derivation — `filledHover`'s
+rule applied to a wash. It takes the **smallest move toward the theme's
+`foreground`** that clears the 1.05:1 floor against the wash the row already
+wears, and never one that costs a label the floor it holds on the role the wash
+plays: the row's own text, the secondary line beside it, a checked row's tick,
+and the ring and the edge that hug the fill. Zero is a step, so a palette whose
+own wash already answers the pointer is painted as it is. The three transitions
+are `pointerWashTransitions` — `accent` over `selected` (the pointer arriving on
+a chosen row), `active` over `accent` (the list row's press) and `active` over
+`hover` (the menu row's press) — and `pointerWashFailures` names the ones a
+palette cannot answer; the report rides the `decorative` one, so the gate holds
+it without a twelfth contract. The derivation repairs all six shipped styles
+(macOS light 1.053:1, macOS dark 1.052:1, Linux dark 1.080:1, Windows dark
+1.077:1, Luna light 1.065:1, Aero light 1.060:1), and the tightest placement
+over every style is the macOS dark press at **1.052:1**.
 
 A **filled action** is the same defect one control over. `secondary` is the one
 filled variant with no brand colour and no border — `packages/primitives` paints
@@ -3274,6 +3302,10 @@ Rules:
 7. A chart or legend mark takes its colour from `seriesColors(theme)`; a series
    colour is categorical, so it is neither a semantic role nor a chart-local
    hex. See [Data series](#data-series).
+8. A row's pointer state is `pointerWash(theme, wash, replaced)`, not the bare
+   `hover` / `active` role: the step replaces the wash the row is already
+   wearing, so it is derived against that one. See
+   [Decorative surfaces](#decorative-surfaces).
 
 ```tsx
 const theme = useTheme();
@@ -3401,6 +3433,16 @@ platform rows that sit under a lighter popover, and both dark authored looks
 1.001–1.049:1 from a strip they sit on; each now carries a control face, and the
 suite names the shipped alias (`secondary`/`muted` at 1.00:1) and fails when a
 placement leaves the table or a face is reverted.
+
+`packages/tokens/src/pointer-wash.test.ts` covers the wash a pointer state
+paints: the three transitions — `accent` over `selected`, `active` over
+`accent`, `active` over `hover` — are named and read against the painters that
+wear them (the components' list row and menu row, the primitives' ghost recipe),
+a palette whose own wash already answers the pointer is painted as it is, a brand
+whose press *is* its hover is separated by the derivation, the labels the wash
+plays keep their floors on the derived colour, a palette with nowhere to move is
+reported by name, and every shipped, platform and authored style clears the
+floor — the tightest being the macOS dark press at 1.052:1.
 
 `packages/tokens/src/selection.test.ts` covers the wash behind a selected run:
 `selectionPairs` names the surfaces text is selected from and keeps the text role

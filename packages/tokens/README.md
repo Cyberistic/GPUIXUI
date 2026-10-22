@@ -252,6 +252,39 @@ states of all four roles against the fill each replaces, inside the
 role, state)` is the derivation for a stored theme, and answers `undefined` for
 a role the theme lost.
 
+## Pointer states
+
+A row's pointer state is a **wash**, and a wash that replaces another wash has
+to be seen against the one it replaces. `pointerWash(theme, wash, replaced)` is
+that derivation: the **smallest move toward the theme's `foreground`** that
+clears the 1.05:1 perceptibility floor against the wash the row is already
+wearing, and never one that costs a label the floor it holds on the role the
+wash plays. Zero is a step, so a palette whose own wash already answers the
+pointer is painted as it is.
+
+```ts
+import { pointerWash } from "@gpuixui/tokens";
+
+// The list row's press: the `active` wash over the `accent` it tints.
+const press = pointerWash(theme, "active", "accent");
+
+// A menu row's press: the `active` wash over the `hover` it tints.
+const menuPress = pointerWash(theme, "active", "hover");
+```
+
+`pointerWashTransitions` names the three states a row takes — `accent` over
+`selected` (the pointer arriving on a chosen row), `active` over `accent` (the
+list row's press) and `active` over `hover` (the menu row's press) — and
+`pointerWashFailures` reports the ones a palette cannot answer, inside the
+`decorative` report of the gate. Measured over the 16 shipped, high-contrast,
+platform and authored styles, the raw press was invisible in **six**: macOS
+light's `active` sat 1.026:1 from its `accent` and macOS dark's 1.011:1, Linux
+dark's 1.015:1, Windows dark's 1.044:1, Luna light's 1.016:1 and Aero light's
+1.020:1. No palette can close it — macOS dark's `accent` carries a 7:1 label and
+a 3:1 primary tick, and `selectedForeground` on the lightened `active` is pinned
+at 7:1 — so the step is derived; the derivation repairs all six, and the
+tightest placement over every style is the macOS dark press at **1.052:1**.
+
 ## Brand text
 
 `primary` is a fill, not a text colour: it is designed to carry
@@ -556,7 +589,7 @@ audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
 audit.invalidNumbers; // [] — every size, length and shadow is layable, every weight and leading is usable, every control height and row height is pressable, and the strong body role shares the body's size and leading and outweighs it
 audit.contrast; // [] — every measured pair meets its floor
-audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face, disabled face and shadow is visible
+audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face, disabled face and shadow is visible, and every pointer state answers the wash it replaces
 audit.series; // [] — every chart swatch is perceivable and distinct
 audit.syntax; // [] — every code token is readable on the fill a code host paints
 audit.selection; // [] — every selection wash is visible and keeps its text readable

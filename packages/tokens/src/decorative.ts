@@ -2,8 +2,8 @@
  * The perceptibility contract for the surfaces that carry no text: dividers,
  * skeleton fills, the modal veil, a status message's soft surface and its edge,
  * the scrollbar thumb, the wash a control tints its surface with while it is
- * hovered, pressed, selected or accented — and the wash a chosen row is
- * repainted with when the pointer arrives — the fill a tonal action rests on, the
+ * hovered, pressed, selected or accented — the wash a row is repainted with when
+ * the pointer arrives or the press lands — the fill a tonal action rests on, the
  * rail a bar draws its value inside, the face a control wears while it is
  * unavailable, the derived hover and press a filled role paints, and the shadow a
  * raised surface drops.
@@ -24,12 +24,19 @@
  * on is a bar with no total; a disabled control painted in the face
  * of the one it replaced looks available; a filled action's derived step that
  * lands on the fill it replaces is an action that does not answer the pointer; a
+ * row's derived press that lands on the wash it replaces is a row that does not
+ * answer the pointer either; a
  * shadow that cannot darken the page it falls on leaves every raised surface
- * flat. One floor covers all twelve, 1.05:1.
+ * flat. One floor covers all thirteen, 1.05:1.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
-import { contrastRatio } from "./contrast.js";
+import {
+  contrastFloorsFor,
+  contrastPairs,
+  contrastRatio,
+  type ContrastPair,
+} from "./contrast.js";
 import type { Elevation, ElevationLevel } from "./elevation.js";
 import {
   filledFeedback,
@@ -62,8 +69,9 @@ export interface DecorativeSurface {
    * inside, `disabledFace` is the fill a control wears while it is unavailable,
    * `actionFeedback` is the derived hover or press a filled role paints (its
    * placements are {@link actionFeedbackPlacements}, because the paint is
-   * derived rather than a role), and `elevation` is the shadow a raised surface
-   * drops.
+   * derived rather than a role), `pointerWash` is the derived wash a row paints
+   * over the wash it already wears (see {@link pointerWashTransitions}), and
+   * `elevation` is the shadow a raised surface drops.
    */
   readonly surface:
     | "divider"
@@ -77,6 +85,7 @@ export interface DecorativeSurface {
     | "track"
     | "disabledFace"
     | "actionFeedback"
+    | "pointerWash"
     | "elevation";
   /** The role painted. Its alpha, if it has one, is part of the measurement. */
   readonly role: keyof ThemeColors;
@@ -267,6 +276,190 @@ export function actionFeedbackFailures(
             surface: "actionFeedback" as const,
             role,
             over: role,
+            ratio,
+            floor,
+          },
+        ];
+  });
+}
+
+/**
+ * The wash a row is wearing when a pointer state replaces it: the `selected`
+ * fill a chosen list row holds, the `accent` a list row tints under the pointer,
+ * or the `hover` a menu, ghost action or table row tints.
+ */
+export type PointerWashSurface = "selected" | "accent" | "hover";
+
+/** The role a pointer state derives its wash from. */
+export type PointerWashRole = "accent" | "active";
+
+/** One wash a pointer step replaces, and the role it paints instead. */
+export interface PointerWashTransition {
+  /** The role the pointer state derives a wash from. */
+  readonly wash: PointerWashRole;
+  /** The wash the row already wears, which the step must be seen against. */
+  readonly replaced: PointerWashSurface;
+}
+
+/**
+ * The three steps a row's pointer states take.
+ *
+ * A chosen list row is filled `selected` and tints `accent` when the pointer
+ * arrives, then `active` while the press is down (`list.tsx`); a menu row, a
+ * ghost action or a table row tints `hover` and repaints `active` under the
+ * press. Every one of them replaces a wash the row is already wearing, so the
+ * step is not "a wash on a strip" — it is the wash against the wash.
+ */
+export const pointerWashTransitions: readonly PointerWashTransition[] = [
+  { wash: "accent", replaced: "selected" },
+  { wash: "active", replaced: "accent" },
+  { wash: "active", replaced: "hover" },
+];
+
+/**
+ * The label pairs the derived wash must still carry.
+ *
+ * Read from {@link contrastPairs} rather than restated, and keyed by the role the
+ * derived wash **plays** rather than by the wash it replaces. The derived wash is
+ * a `hover` wash or a press wash, so it is held to the labels the table measures
+ * on that role — the row's own text, the secondary line beside it, a checked
+ * row's tick and the ring and edge that hug the fill (`outlineOffset: 0`). The
+ * labels of the wash it *replaces* are the labels of a different state: a menu
+ * row's `popoverForeground` and a navigation link's `accentForeground` belong to
+ * the wash the row is leaving, and holding the derived wash to them would pin a
+ * palette that has no room for the step. A pair added to the table clamps the
+ * derivation without an edit here.
+ */
+const pointerWashLabels: Readonly<
+  Record<PointerWashRole, readonly ContrastPair[]>
+> = {
+  accent: contrastPairs.filter(({ background }) => background === "accent"),
+  active: contrastPairs.filter(({ background }) => background === "active"),
+};
+
+/**
+ * The share of the way to the foreground a pointer step may move.
+ *
+ * The ceiling is the press step a filled action takes: a row that needed more
+ * than a fifth of the way would be a row whose palette has no room left for the
+ * state.
+ */
+const POINTER_STEP_CEILING = 0.18;
+
+/**
+ * Candidate steps, smallest first, so the derivation takes the least paint.
+ *
+ * Zero is a step: the wash a theme authors is painted as it is when it already
+ * answers the pointer, so the derivation only moves a palette that cannot.
+ */
+const POINTER_STEPS: readonly number[] = [
+  0,
+  ...Array.from(
+    { length: Math.round(POINTER_STEP_CEILING * 100) },
+    (_, offset) => (offset + 1) / 100,
+  ),
+];
+
+/**
+ * The wash a row paints in a pointer state, derived from the role it names.
+ *
+ * A role cannot close this on its own. `active` has to be seen against the
+ * `accent` a hovered list row wears and the `hover` a menu row wears, while the
+ * same `active` carries the row's title in `selectedForeground` at the body floor
+ * and, in macOS dark, a checked row's `primary` tick at 3.06:1 — a palette with
+ * room to separate the washes has none left for the label above them. Measured,
+ * six of the sixteen shipped styles painted the press in the wash it replaced,
+ * and macOS light's press in its hover (see `docs/tokens.md` §Decorative
+ * surfaces).
+ *
+ * The step is therefore the smallest move toward the theme's `foreground` that
+ * clears {@link decorativeFloor} against the wash it replaces, and never one that
+ * costs a label the floor it holds on the role the wash plays. Zero is a step
+ * too: a palette whose own wash already answers the pointer is painted as it
+ * is. A theme with no feasible step paints the strongest one its labels allow,
+ * and {@link pointerWashFailures} reports that the state cannot be seen.
+ *
+ * `undefined` when the source lacks the role, the wash it replaces or the
+ * `foreground` it moves toward: the absence rule {@link elevationShadow} follows,
+ * rather than a colour the derivation could not build.
+ *
+ * @example
+ * ```tsx
+ * <div style={{ backgroundColor: pointerWash(theme, "active", "accent") }} />
+ * ```
+ */
+export function pointerWash(
+  source: {
+    readonly colors: Partial<ThemeColors>;
+    readonly contrast?: ThemeContrast;
+  },
+  wash: PointerWashRole,
+  replaced: PointerWashSurface,
+  floor: number = decorativeFloor,
+): string | undefined {
+  const base = source.colors[wash];
+  const over = source.colors[replaced];
+  const toward = source.colors.foreground;
+  if (base === undefined || over === undefined || toward === undefined) {
+    return undefined;
+  }
+  const floors = contrastFloorsFor(source);
+  const paintedAt = (step: number): string => blend(base, toward, step);
+  const seenAt = (step: number): boolean => {
+    const ratio = contrastRatio(paintedAt(step), over);
+    return ratio !== undefined && ratio >= floor;
+  };
+  const readableAt = (step: number): boolean =>
+    pointerWashLabels[wash].every(({ foreground, floor: kind }) => {
+      const ratio = contrastRatio(source.colors[foreground], paintedAt(step));
+      return ratio !== undefined && ratio >= floors[kind];
+    });
+  const firstSeen = POINTER_STEPS.find(seenAt);
+  const lastReadable = [...POINTER_STEPS].reverse().find(readableAt);
+  return paintedAt(
+    Math.min(
+      firstSeen ?? POINTER_STEP_CEILING,
+      lastReadable ?? POINTER_STEP_CEILING,
+    ),
+  );
+}
+
+/**
+ * The pointer washes a theme cannot paint visibly.
+ *
+ * Each transition is held to {@link decorativeFloor} against the wash it
+ * replaces: a press that lands on the wash the row already wears is a row that
+ * does not answer the pointer. A source that lacks a role reports the placement
+ * unmeasurable rather than skipping it. The failure names the role the wash is
+ * derived from and the wash it replaces, so a reader can tell which state broke.
+ *
+ * @example
+ * ```ts
+ * import { pointerWashFailures, type Theme } from "@gpuixui/tokens";
+ *
+ * pointerWashFailures(brandTheme); // [] when every row answers the pointer
+ * ```
+ */
+export function pointerWashFailures(
+  theme: {
+    readonly colors: Partial<ThemeColors>;
+    readonly contrast?: ThemeContrast;
+  },
+  floor: number = decorativeFloor,
+): readonly DecorativeFailure[] {
+  return pointerWashTransitions.flatMap(({ wash, replaced }) => {
+    const painted = pointerWash(theme, wash, replaced, floor);
+    const ratio =
+      painted === undefined
+        ? undefined
+        : contrastRatio(painted, theme.colors[replaced]);
+    return ratio !== undefined && ratio >= floor
+      ? []
+      : [
+          {
+            surface: "pointerWash" as const,
+            role: wash,
+            over: replaced,
             ratio,
             floor,
           },
@@ -579,7 +772,9 @@ export interface DecorativeFailure {
  * {@link actionFeedbackPlacements}: a hover or press that lands on the fill it
  * replaces is an action that never answers the pointer, and the derivation's
  * step is relative to `foreground`, which a brand is free to put on top of its
- * own action role.
+ * own action role. The derived washes a row paints answer it the same way
+ * through {@link pointerWashTransitions}: a press that lands on the wash the row
+ * already wears is a row that does not answer the pointer.
  *
  * @example
  * ```ts
@@ -623,5 +818,6 @@ export function decorativeFailures(
     },
   );
   const feedback = actionFeedbackFailures(theme, floor);
-  return [...surfaces, ...feedback];
+  const washes = pointerWashFailures(theme, floor);
+  return [...surfaces, ...feedback, ...washes];
 }
