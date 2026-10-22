@@ -85,6 +85,13 @@ a public state object instead:
 - Every token lookup goes through the theme seam (`internal/theme.ts`); a
   component never repeats a raw role name or writes a colour/shadow/radius
   literal.
+- The runtime dims every other focusable element while one holds keyboard focus
+  (`keyboardFocusDim`, 40%). On a **filled action** that composites the label
+  into its own fill — 5.0–10.5:1 at rest becomes 1.3–3.2:1 on every strip — so
+  `internal/button.tsx`'s three filled variants paint
+  `keyboardFocusDim: false` and keep their label (`button.test.tsx` holds the
+  declaration and measures the collapse with `keyboardDimFailures`). A ghost
+  action has no fill to collapse into, so it keeps the cue.
 
 Which parts have a state, and which do not, is a measured line:
 

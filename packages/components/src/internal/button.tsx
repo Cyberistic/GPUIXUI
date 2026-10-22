@@ -55,6 +55,19 @@ export interface IconButtonProps extends Props {
   readonly disabled?: boolean;
 }
 
+/**
+ * A filled action's label is the control, so it stays at full opacity while
+ * another control has keyboard focus.
+ *
+ * The runtime dims every other focusable element to `keyboardFocusDimOpacity`
+ * (`0.4`) as a "where can Tab go" cue, and on a filled action that composites
+ * the label into its own fill: 5.0–10.5:1 at rest becomes 1.3–3.2:1 on every
+ * strip (`src/behaviour/button.test.tsx` measures it with
+ * `keyboardDimFailures`). A ghost action has no fill to collapse into and keeps
+ * the cue.
+ */
+const keepLabel = (): StyleDesc => ({ keyboardFocusDim: false });
+
 /** One variant's fill, text colour and interaction states. */
 const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc =>
   Match.value(value).pipe(
@@ -65,12 +78,14 @@ const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc =>
       // surface behind the button through, so one button reads two colours.
       hover: { backgroundColor: filledHover(theme, "primary") },
       active: { backgroundColor: filledPressed(theme, "primary") },
+      ...keepLabel(),
     })),
     Match.when("danger", () => ({
       backgroundColor: theme.colors.destructive,
       color: theme.colors.destructiveForeground,
       hover: { backgroundColor: filledHover(theme, "destructive") },
       active: { backgroundColor: filledPressed(theme, "destructive") },
+      ...keepLabel(),
     })),
     Match.when("secondary", () => ({
       backgroundColor: theme.colors.secondary,
@@ -82,6 +97,7 @@ const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc =>
       borderColor: theme.colors.borderStrong,
       hover: { backgroundColor: theme.colors.hover },
       active: { backgroundColor: theme.colors.active },
+      ...keepLabel(),
     })),
     Match.when("ghost", () => ({
       color: theme.colors.foreground,
@@ -215,6 +231,7 @@ export const IconButton = ({
             color: theme.colors.foreground,
           },
           active: { backgroundColor: theme.colors.active },
+      ...keepLabel(),
           ...disabledStyle(disabled),
           ...keyboardRing(theme),
         },

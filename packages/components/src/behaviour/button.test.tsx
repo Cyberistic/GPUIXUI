@@ -16,7 +16,11 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
+import {
+  contrastFloors,
+  contrastRatio,
+  keyboardDimFailures,
+} from "@gpuixui/tokens";
 import { describe, expect, it, vi } from "vitest";
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button, IconButton } from "../internal/button.js";
@@ -199,6 +203,88 @@ describe("Button", () => {
     expect(button.renderer.findByTestId("button")?.style.active).toMatchObject({
       backgroundColor: darkTheme.colors.active,
     });
+
+    button.unmount();
+  });
+
+  it("keeps a filled action's label while another control holds keyboard focus", () => {
+    Arr.forEach(
+      [
+        ["primary", "primary", "primaryForeground"],
+        ["danger", "destructive", "destructiveForeground"],
+        ["secondary", "secondary", "secondaryForeground"],
+      ] as const,
+      ([variant, fill, label]) => {
+        Arr.forEach(
+          [
+            ["dark", darkTheme],
+            ["light", lightTheme],
+          ] as const,
+          ([mode, theme]) => {
+            // The mechanism: the runtime keeps 40% of every other focusable
+            // element, which composites this label into its own fill.
+            const dimmed = Arr.filter(
+              keyboardDimFailures(theme, contrastFloors.secondary),
+              (failure) => failure.fill === fill && failure.label === label,
+            );
+            expect(Arr.length(dimmed)).toBeGreaterThan(0);
+            Arr.forEach(dimmed, (failure) => {
+              expect(failure.ratio ?? 1).toBeLessThan(
+                contrastFloors.secondary,
+              );
+            });
+
+            // The pair this opts out of is the one the design holds to 4.5:1.
+            expect(
+              contrastRatio(theme.colors[label], theme.colors[fill]) ?? 0,
+            ).toBeGreaterThanOrEqual(contrastFloors.secondary);
+
+            const button = renderComponent(
+              <Button testId="button" variant={variant}>
+                Save
+              </Button>,
+              mode,
+            );
+
+            expect(
+              button.renderer.findByTestId("button")?.style.keyboardFocusDim,
+            ).toBe(false);
+
+            button.unmount();
+          },
+        );
+      },
+    );
+  });
+
+  it("leaves the dim on an action with no fill to collapse into", () => {
+    const button = renderComponent(
+      <Button testId="button" variant="ghost">
+        Cancel
+      </Button>,
+    );
+
+    expect(
+      button.renderer.findByTestId("button")?.style.keyboardFocusDim,
+    ).toBeUndefined();
+
+    button.unmount();
+  });
+
+  it("lets a consumer put the dim back on a filled action", () => {
+    const button = renderComponent(
+      <Button
+        testId="button"
+        variant="primary"
+        style={{ keyboardFocusDim: true }}
+      >
+        Save
+      </Button>,
+    );
+
+    expect(button.renderer.findByTestId("button")?.style.keyboardFocusDim).toBe(
+      true,
+    );
 
     button.unmount();
   });
