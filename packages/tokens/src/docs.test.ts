@@ -273,7 +273,7 @@ describe("the motion claim", () => {
   it("matches the sources: the seam composes the timing and components use it", () => {
     const seam = read("../../../packages/components/src/internal/presence.tsx");
 
-    expect(seam).toContain("from \"@gpuixui/motion/timing\"");
+    expect(seam).toContain('from "@gpuixui/motion/timing"');
     expect(seam).toContain("motionTiming");
 
     // The retracted claim was "none"; a floor is enough to keep the page honest
