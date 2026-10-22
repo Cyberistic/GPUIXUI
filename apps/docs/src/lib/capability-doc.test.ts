@@ -346,8 +346,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(capture?.[2]).toContain("onMouseMove");
   });
 
-  it("records what a chart or an image can draw, with the probe that measured it", () => {
-    // `<svg>` is in `ElementType` and `setImagePixels` is on the renderer, so the
+  it("records what a chart or an image can draw, with the probe that measured it", () => {    // `<svg>` is in `ElementType` and `setImagePixels` is on the renderer, so the
     // typings made both look like general-purpose drawing. `content-surfaces`
     // measured that an SVG paints as one tint and that a pixel buffer only
     // reaches the frame from a layout effect — the two facts a chart or an image
@@ -383,6 +382,58 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(image?.[1]).toContain("layout effect");
     expect(image?.[1]).toContain("content-surfaces");
     expect(image?.[2]).toContain("useLayoutEffect");
+  });
+
+  it("records the chart surface a probe painted, with its two limits", () => {
+    // `Canvas drawing` says "render svg" and `Inline SVG painting` says one tint
+    // per element, which together read as "a plot is drawable but for a stack of
+    // masks". `chart-raster` measured the two routes a multi-colour plot actually
+    // has — a pixel buffer that keeps each pixel's own colour and SVG bytes that
+    // keep their `fill`s — plus the two facts that decide how a chart is built:
+    // a translucent bar over another bar is unmeasured, and the buffer scales to
+    // the element's box.
+    const chart = rowFor("Raster and vector chart surfaces");
+    expect(chart?.verdict).toBe("supported");
+    expect(chart?.evidence).toContain("chart-raster");
+    expect(chart?.evidence).toContain("setImagePixels");
+    expect(chart?.evidence).toContain("setImage");
+    expect(chart?.evidence).toContain("translucent");
+    expect(chart?.evidence).toContain("layout size");
+    expect(chart?.workaround).toContain("layout effect");
+    expect(chart?.workaround).toContain("<text>");
+  });
+
+  it("publishes the chart surface on /docs/runtime", () => {
+    const chart = measuredRow("Chart surfaces");
+    expect(chart, "the page's measured table has no chart-surface row").toBeDefined();
+    expect(chart?.[1]).toContain("chart-raster");
+    expect(chart?.[1]).toContain("setImagePixels");
+    expect(chart?.[2]).toContain("layout effect");
+    expect(chart?.[2]).toContain("<text>");
+  });
+
+  it("records the window chrome a probe painted, with its two limits", () => {
+    // A Tier 4 toolbar or status bar has to know whether the runtime already
+    // reserves the titlebar. Nothing said; `window-chrome` measured that it does
+    // not — the app's own bar is the capture's first row — and that the reported
+    // insets are empty on this host. The two limits are the ones a plan would
+    // otherwise assume away: a capture cannot prove the OS titlebar is hidden,
+    // and an IME inset cannot be started from the automation protocol.
+    const chrome = rowFor("Window chrome and insets");
+    expect(chrome?.verdict).toBe("supported, with limits");
+    expect(chrome?.evidence).toContain("window-chrome");
+    expect(chrome?.evidence).toContain("first row");
+    expect(chrome?.evidence).toContain("not app-visible");
+    expect(chrome?.evidence).toContain("IME inset is unmeasurable");
+    expect(chrome?.workaround).toContain("trafficLightX");
+  });
+
+  it("publishes the window chrome on /docs/runtime", () => {
+    const chrome = measuredRow("Window chrome");
+    expect(chrome, "the page's measured table has no window-chrome row").toBeDefined();
+    expect(chrome?.[1]).toContain("window-chrome");
+    expect(chrome?.[1]).toContain("first row");
+    expect(chrome?.[2]).toContain("trafficLightX");
   });
 
   it("records the portal a window measured, with its two limits", () => {
@@ -1308,6 +1359,8 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("dock-focus-lifecycle");
     expect(runtimePage).toContain("header-menu-lifecycle");
     expect(runtimePage).toContain("window-backdrop");
+    expect(runtimePage).toContain("chart-raster");
+    expect(runtimePage).toContain("window-chrome");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });
