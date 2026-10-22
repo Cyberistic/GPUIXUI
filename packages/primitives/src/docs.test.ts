@@ -15,7 +15,7 @@
  */
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { lightTheme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
@@ -130,6 +130,142 @@ const deniedProps = (source: string): ReadonlyArray<string> =>
     [...source.matchAll(/[Tt]here is no `([^`]+)` prop/g)],
     (match) => Result.succeed(match[1] ?? ""),
   );
+
+/** The first cell of a markdown table row, trimmed. */
+const firstCell = (line: string): string =>
+  /^\|\s*([^|]*)/.exec(line)?.[1]?.trim() ?? "";
+
+/** The backticked prop names in one table row's first cell, `/`-split. */
+const rowNames = (line: string): ReadonlyArray<string> =>
+  Arr.flatMap([...firstCell(line).matchAll(/`([^`]+)`/g)], (match) =>
+    Arr.filter(Arr.map((match[1] ?? "").split("/"), Str.trim), Str.isNonEmpty),
+  );
+
+/**
+ * The prop names a page's API **prop** tables document.
+ *
+ * {@link documentedProps} reads every backticked first cell under `## API`,
+ * which is right for the denial check but also reads the size, key and part
+ * tables. A prop table is the one whose header's first cell is `Prop`; this
+ * reads only those, so an icon's `xl` size cannot look like a prop.
+ */
+const propTableNames = (source: string): ReadonlyArray<string> => {
+  interface Scan {
+    readonly names: ReadonlyArray<string>;
+    readonly inTable: boolean;
+    readonly propTable: boolean;
+    readonly header: boolean;
+  }
+  const start: Scan = {
+    names: [],
+    inTable: false,
+    propTable: false,
+    header: false,
+  };
+  return Arr.reduce(
+    Option.getOrElse(bodyOf(source, "API"), () => "").split("\n"),
+    start,
+    (scan, line) => {
+      if (!Str.startsWith("|")(line))
+        return { ...scan, inTable: false, propTable: false, header: false };
+      if (!scan.inTable)
+        return {
+          ...scan,
+          inTable: true,
+          propTable: firstCell(line) === "Prop",
+          header: true,
+        };
+      // The row under the header is its separator, never a prop.
+      if (scan.header) return { ...scan, header: false };
+      return scan.propTable
+        ? { ...scan, names: [...scan.names, ...rowNames(line)] }
+        : scan;
+    },
+  ).names;
+};
+
+/** A relative specifier, the only kind that reaches another module in this repo. */
+const RELATIVE_IMPORT = new RegExp('(?:from|import)\\s+"(\\.[^"]+)"', "g");
+
+/** The module a relative specifier names, or none when no file matches it. */
+const resolveModule = (
+  from: string,
+  specifier: string,
+): Option.Option<string> => {
+  const base = fileURLToPath(
+    new URL(Str.replace(/\.js$/, "")(specifier), pathToFileURL(from)),
+  );
+  return Option.map(
+    Arr.findFirst([".ts", ".tsx"], (extension) =>
+      existsSync(`${base}${extension}`),
+    ),
+    (extension) => `${base}${extension}`,
+  );
+};
+
+/**
+ * The text of every module a component's own sources reach, imports included.
+ *
+ * A documented prop may be declared on a shared spec rather than the component
+ * file — `Box`'s `shrink` is `core/layout.ts`'s and `Button`'s host handlers are
+ * `components/internal.ts`'s — so a prop table is compared with the component's
+ * module graph, not one file. A source outside this package (`../icons/src`)
+ * resolves the same way, from its own directory.
+ */
+const sourceClosure = (sources: ReadonlyArray<string>): string => {
+  const visit = (
+    file: string,
+    seen: ReadonlySet<string>,
+  ): ReadonlySet<string> =>
+    seen.has(file)
+      ? seen
+      : Arr.reduce<RegExpMatchArray, ReadonlySet<string>>(
+          Arr.fromIterable(
+            readFileSync(file, "utf8").matchAll(RELATIVE_IMPORT),
+          ),
+          new Set([...seen, file]),
+          (reached, match) =>
+            Option.match(resolveModule(file, match[1] ?? ""), {
+              onNone: () => reached,
+              onSome: (next) => visit(next, reached),
+            }),
+        );
+  const files = Arr.reduce<string, ReadonlySet<string>>(
+    sources,
+    new Set<string>(),
+    (seen, source) => visit(fileURLToPath(new URL(source, packageRoot)), seen),
+  );
+  return Arr.join(
+    Arr.map(Arr.fromIterable(files), (file) => readFileSync(file, "utf8")),
+    "\n",
+  );
+};
+
+/**
+ * Host props a component forwards rather than declares.
+ *
+ * `ActionHostProps` is `Omit<Props, …>`, so the runtime's own host surface owns
+ * these names: a trigger's announced state has no property signature in this
+ * package, and the forwarding type is its declaration. Naming them here keeps
+ * an invented prop failing while a forwarded one does not.
+ */
+const FORWARDED_HOST_PROPS = HashSet.fromIterable([
+  "aria-expanded",
+  "aria-selected",
+]);
+
+/**
+ * Whether a module graph declares `name` as a property.
+ *
+ * Every props interface in these packages writes `readonly name: …` or
+ * `name?: …`; an object literal key (`{ name: icon }`) is neither, and a
+ * parameter ends in a comma. A name that is only mentioned in prose is not a
+ * declaration.
+ */
+const declaresProp = (source: string, name: string): boolean => {
+  const property = `(?:"${RegExp.escape(name)}"|${RegExp.escape(name)})`;
+  return new RegExp(`(?:readonly\\s+${property}|${property}\\?)`).test(source);
+};
 
 /**
  * The plan paths a document cites, e.g. the plan file a comment names with `§9`.
@@ -502,6 +638,35 @@ describe("the primitives docs page contract", () => {
         ),
       ),
     ).toEqual([]);
+  });
+
+  it("lists only props its module graph declares", () => {
+    // The bug guarded: the Switches inventory row promised a `loading` prop
+    // while `SwitchProps` declares none (see `inventory.test.ts`'s `keeps the
+    // switch's pending state honest`), and no page suite compared a prop table
+    // with the component. A page is copyable source, so a prop no interface in
+    // the component's own graph declares is code a reader cannot compile: the
+    // comparison reads that graph and not the whole package, so a prop borrowed
+    // from a sibling component fails too, and prose that mentions a word is not
+    // a declaration.
+    const problems = Arr.flatMap(inventory, (record) => {
+      const declared = sourceClosure(record.source);
+      const page = readFileSync(
+        fileURLToPath(new URL(record.docs, packageRoot)),
+        "utf8",
+      );
+      return Arr.filter(
+        propTableNames(page),
+        (name) =>
+          !HashSet.has(FORWARDED_HOST_PROPS, name) &&
+          !declaresProp(declared, name),
+      ).map(
+        (name) =>
+          `${record.docs}: lists ${name}, which its module graph never declares`,
+      );
+    });
+
+    expect(problems).toEqual([]);
   });
 
   it("records the tooltip's measured keyboard path", () => {

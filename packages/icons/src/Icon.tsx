@@ -6,14 +6,14 @@ import { iconPixels, type IconSize } from "./sizes.js";
 
 export interface IconProps {
   /** Which icon to paint. */
-  name: IconName;
+  readonly name: IconName;
   /**
    * Tint. GPUix paints a monochrome `<svg>` in `style.color`, so the icon
    * always needs a colour from the surrounding design system — pass a theme
    * role such as `theme.colors.mutedForeground`. Text and Button supply their
    * own tone; only a standalone icon needs this spelled out.
    */
-  color: string;
+  readonly color: string;
   /** A name in the size scale, or a raw pixel count. Defaults to `"md"`. */
   size?: IconSize | number;
   /**
