@@ -181,8 +181,22 @@ recorded instead.
 The template is a contract, not a suggestion: a page missing a section is a page
 that hides a decision from the reader, so `src/lib/component-page.test.ts`
 checks every curated page for the required sections and their order, a preview,
-and the package it installs from. The package's own pages are exempt — they are
-the component's doc file.
+and the package it installs from.
+
+The package's own pages are the component's doc file and use strategy 4 from the
+top of this file: no browser preview, and a section that does not apply (no
+sizes, no keyboard path) is omitted rather than faked. Four sections are not
+optional on any component page, though — `## API`, an accessibility or
+limitations section, the evidence section (`## Verification` or `## Testing`)
+and `## Related` — and `src/lib/package-page-template.test.ts` holds every page
+under `packages/*/docs` to them, across all three collections. A page could
+otherwise lose its prop table or its accessibility budget while the site kept
+rendering it as the component's documentation. The guard scans 70+ pages with a
+floor, so a walk that stopped matching cannot pass. It found one page without
+`## Related` (`packages/components/docs/message-scroller.mdx`, owned by
+`components`); that gap is recorded in `TODO.md` and in the guard's own list,
+and the guard fails once the section is added, so the entry cannot outlive the
+fix.
 
 ## The getting-started page
 

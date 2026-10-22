@@ -166,6 +166,11 @@ stricter: frontmatter must be valid YAML and prose may not contain a raw
 `<tag>` outside code. `src/lib/package-docs.test.ts` guards that, that every
 `packages/*/docs` directory is mounted, and that the primitives index links every
 page it ships — a violation fails the collection, not just one page.
+`src/lib/package-page-template.test.ts` holds every package page to the
+component-page template's invariant core — `## API`, an accessibility or
+limitations section, the evidence section and `## Related` — so a page cannot
+drop one silently; the one page missing a related list is recorded with its
+owner and the guard fails once it is added.
 
 Every package page opens with a **status strip** generated from its
 `COMPONENTS.md` row (`src/components/docs/status-strip.tsx`): the inventory's
