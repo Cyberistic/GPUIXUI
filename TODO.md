@@ -5530,6 +5530,17 @@ numbers).
 > painted honestly has shipped; the blocked row waits on a capability, not on a
 > plan.
 `[x]` Phase 0: wire `@gpuixui/motion` into Dialog, Drawer, Popover, DropdownMenu, CommandMenu, Toast, Accordion, Tabs and PreviewCard (shadcn/Base UI enter-exit patterns; fade + offset, never `transform`) — the timing policy is `motionTiming` in `@gpuixui/motion`, the frames and mount window are `packages/components/src/internal/presence.tsx`, the preference is `MotionProvider`, and `src/behaviour/presence.test.tsx` measures the movement and exit in the real renderer
+`[x]` Close the popup family the nine Phase 0 surfaces left out: `NavigationMenuContent` was the
+      last anchored panel in `packages/components` that popped into place, so it now enters and
+      leaves through the same seam — a fade plus 4px of travel out from its trigger (`normal`,
+      200 ms), mounted through its exit tween and taking no presses while it leaves (a press
+      inside its box reaches the control underneath), with the reduced preference painting the
+      resting frame. `src/behaviour/navigation-menu.test.tsx` (21) measures the entry travel on a
+      paused clock, the exit with a press passing through it, and the reduced frame. Directions
+      measured: without the seam the travel case fails `expected +0 to be 4`; without the
+      pointer guard the exit case fails `expected 'auto' to be 'none'`; with the preference
+      ignored the reduced case fails `expected 76 to be 72`. Docs: `docs/navigation-menu.mdx`
+      §Motion and the per-surface table in `docs/component-api.md` §11.
 `[x]` **playground**: the four live probes the motion wiring moved now read the
       frame a user is left with, and the auto-focus case follows the modal fix.
       `popover-lifecycle` takes its gap from a settled `y` (the 200ms entry first

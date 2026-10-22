@@ -14,6 +14,10 @@
  * Measured gaps in 0.11.0: no anchor/href element, so `NavigationMenuLink` is a
  * button with `onSelect`; no `aria-haspopup`. ArrowDown opens and moves focus to
  * the panel surface, not straight to the first link.
+ *
+ * The panel enters with the house appearance — a fade plus 4px of travel out
+ * from its trigger — and stays mounted for its exit tween, taking no presses
+ * while it leaves (`internal/presence.tsx`).
  */
 
 import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
@@ -54,6 +58,12 @@ import {
   isRight,
 } from "./internal/key.js";
 import { overlaySurfaceStyle } from "./internal/overlay.js";
+import {
+  fadeFromAnchor,
+  presenceMotion,
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "./internal/presence.js";
 import {
   assertParts,
   type PartChildren,
@@ -547,7 +557,7 @@ export interface NavigationMenuContentProps extends Omit<Props, "children"> {
   readonly children?: PartChildren;
 }
 
-/** The anchored panel for its item, rendered only while that item is open. */
+/** The anchored panel for its item, mounted while open and through its exit. */
 export const NavigationMenuContent = ({
   children,
   className,
@@ -564,6 +574,8 @@ export const NavigationMenuContent = ({
     useNavigationMenu();
   const [panel, setPanel] = useState<PublicInstance | undefined>(undefined);
   const panelId = panel?.id;
+  const timing = useSurfaceTiming("normal");
+  const presence = useSurfacePresence(open, timing);
   assertParts(navigationMenuContent, children);
 
   useLayoutEffect(() => {
@@ -572,10 +584,11 @@ export const NavigationMenuContent = ({
     clearPanelFocus();
   }, [clearPanelFocus, open, panelFocus, panelId, renderer, value]);
 
-  if (!open) return null;
+  if (!presence.mounted) return null;
 
   return (
     <FloatingLayer
+      motion={presenceMotion(fadeFromAnchor("bottom", 4), presence)}
       side="bottom"
       align="start"
       sideOffset={4}
@@ -599,7 +612,12 @@ export const NavigationMenuContent = ({
         dismissTopLayer(event);
       }}
       style={mergeStyles(
-        overlaySurfaceStyle(NAVIGATION_MENU_CONTENT, className, theme),
+        mergeStyles(
+          overlaySurfaceStyle(NAVIGATION_MENU_CONTENT, className, theme),
+          {
+            pointerEvents: presence.present ? "auto" : "none",
+          },
+        ),
         style,
       )}
     >

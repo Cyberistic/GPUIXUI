@@ -72,7 +72,7 @@ merges `style` last.
 | `NavigationMenuList` | `role="list"` row | children |
 | `NavigationMenuItem` | `role="listitem"`; owns its value | `value` (required), children |
 | `NavigationMenuTrigger` | button with `aria-expanded`; `disabled` leaves the tab order and opens nothing | button props |
-| `NavigationMenuContent` | anchored `role="group"` panel, rendered while open | children |
+| `NavigationMenuContent` | anchored `role="group"` panel, mounted through its exit tween | children |
 | `NavigationMenuLink` | a full-width button row | `onSelect?`, button props |
 
 ## Theming
@@ -81,6 +81,16 @@ The panel uses `popover` / `popoverForeground`, `border`, `radius.lg` and the
 medium elevation; links use the ghost-button roles with an `accent` hover. Items
 sit `spacing["2xs"]` apart. A custom theme changes it with no code change — see
 [Theming](/docs/theming).
+
+## Motion
+
+The panel fades and travels 4px out from its trigger's side (`normal`, 200 ms),
+and stays mounted for its exit tween: a dismissal is immediate in state (the
+trigger reports `aria-expanded: false`, focus returns) while the box fades out,
+and the panel takes no presses while it leaves, so a control underneath keeps
+them. `MotionProvider preference="reduced"` supplies the reduced-motion
+preference (the runtime exposes none), which paints the resting frame with no
+travel — see `docs/component-api.md` §11.
 
 ## Accessibility
 
@@ -109,14 +119,16 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 ## Verification
 
 `src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer
-(18 tests): declaration order, press-to-open with `aria-expanded`, a disabled
+(21 tests): declaration order, press-to-open with `aria-expanded`, a disabled
 trigger that opens nothing on hover, press or key, one panel at a
 time, Enter/ArrowDown with panel focus, Left/Right/Home/End between triggers,
 Escape with focus return, outside-press dismissal, a link running once and
-closing, a controlled nav staying closed, both themes, and the pointer policy —
+closing, a controlled nav staying closed, both themes, the pointer policy —
 open only after the delay, survival across the trigger-to-panel gap, switching
 panels by moving between triggers, an explicit key beating a pending hover open,
-and a pressed-closed panel staying shut.
+and a pressed-closed panel staying shut — and the panel's motion: the 4px entry
+travel, the exit tween with its press passing through, and the reduced-motion
+resting frame.
 
 One measured implementation fact: the trigger registry updates its ordered key
 list only when the key sequence changes. An always-new array (or a ref callback
