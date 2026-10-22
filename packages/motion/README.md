@@ -5,7 +5,7 @@ React hooks that drive GPUix `motion.div` numeric targets.
 
 The math is pure TypeScript with no runtime dependencies and no timers: every
 function samples from an explicit elapsed time, so it is deterministic and the
-caller owns the clock. GPUix 0.10 is a *declarative tween executor* (it tweens
+caller owns the clock. GPUix 0.11 is a *declarative tween executor* (it tweens
 `initial` → `animate` → `exit` on its own clock); this package adds the
 physics/state layer the runtime does not compute — springs, retarget,
 keyframes, momentum, and reduced-motion-as-policy.
@@ -89,6 +89,14 @@ start value — `useTransition(1284, { durationMs: 320 }, { initial: 0 })` count
 up on mount — and is read once, because the presentation on screen is the truth
 after it.
 
+The hooks own one clock, so they **sample once before retargeting**: a run that
+has come to rest is not advanced while nothing moves, and handing the retained
+value a new target without that sample would count the pause as elapsed motion
+and jump. A `CountingNumber` that rests at `100` and is later set to `200`
+therefore counts again over the full duration rather than repainting `200` in
+one frame. A consumer driving `MotionValue` directly owns the same rule: sample
+at the moment you retarget.
+
 ## The runtime's declarative timing
 
 GPUix executes a tween over a duration and an easing it is told. That timing is
@@ -114,7 +122,7 @@ not load the spring and timeline maths (`@gpuixui/components` imports exactly
 
 ## What is deferred to the runtime
 
-GPUix 0.10 has **no `transform`**. Scale, rotate and translate have no style key
+GPUix 0.11 has **no `transform`**. Scale, rotate and translate have no style key
 today, so the hooks cannot drive them directly. The computed `value` is still
 exposed — a consumer can apply it once the runtime patch (plan 525) lands. Do
 not fake `transform` with a decorative placeholder.

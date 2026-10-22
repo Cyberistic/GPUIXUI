@@ -74,6 +74,31 @@ describe("CountingNumber", () => {
     }
   });
 
+  it("counts again after the number has rested, instead of jumping", async () => {
+    // The hook stops sampling at rest, so the retained value's last sample is
+    // older than the moment the caller retargets it. A retarget that measures
+    // from that stale sample counts the pause as elapsed motion and lands on
+    // the new value in one frame; the pause is not part of the run.
+    const page = renderComponent(
+      <CountingNumber testId="count" value={100} from={0} durationMs={120} />,
+    );
+    try {
+      await waitFor(() => expect(painted(page)).toBe("100"));
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      page.rerender(
+        <CountingNumber testId="count" value={200} durationMs={400} />,
+      );
+      await waitFor(() => {
+        const value = Number(painted(page));
+        expect(value).toBeGreaterThan(100);
+        expect(value).toBeLessThan(200);
+      });
+      await waitFor(() => expect(painted(page)).toBe("200"));
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("paints the target on the first frame under the reduced preference", () => {
     const page = renderComponent(
       <MotionProvider preference="reduced">

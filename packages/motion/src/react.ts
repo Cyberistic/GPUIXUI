@@ -3,14 +3,14 @@
  *
  * Each hook returns a scalar `{ value, velocity, complete }` the caller maps
  * onto a GPUix `MotionStyle` field (`width` / `height` / `top` / `right` /
- * `bottom` / `left` / `opacity` / `borderRadius`). GPUix 0.10 has no
+ * `bottom` / `left` / `opacity` / `borderRadius`). GPUix 0.11 has no
  * `transform`, so scale/rotate/translate have no style key yet — the hook still
  * exposes the computed `value`, which becomes usable once the runtime patch
  * (plan 525) lands. Pass `options.reducedMotion` from your platform's
  * reduced-motion preference; it completes immediately at the target.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
   DEFAULT_TWEEN_MS,
   MotionValue,
@@ -58,6 +58,39 @@ const initialFrame = (value: number): MotionFrame => ({
   complete: false,
 });
 
+const reduced = (options: MotionOptions): boolean =>
+  options.reducedMotion === true;
+
+/**
+ * Publish a sample taken before a retarget, so the frame on screen moves with
+ * it. The sample is only published when it changed the painted value.
+ */
+const publish = (
+  setFrame: Dispatch<SetStateAction<MotionFrame>>,
+  frame: MotionFrame,
+): void =>
+  setFrame((previous) =>
+    previous.value === frame.value && previous.velocity === frame.velocity
+      ? previous
+      : frame,
+  );
+
+/**
+ * Close the gap since the last sample before retargeting.
+ *
+ * A {@link MotionValue} measures a run from its previous sample, and a hook
+ * stops sampling once its run is at rest. Handing the retained value a new
+ * target without a sample would count the idle pause as elapsed motion, so a
+ * value changed after a wait would land on the new target in one frame. One
+ * sample at the moment of the retarget makes the pause elapsed time that moved
+ * nothing.
+ */
+const settleBefore = (
+  motion: MotionValue,
+  origin: number,
+  reducedMotion: boolean,
+): MotionFrame => motion.sample(performance.now() - origin, reducedMotion);
+
 /**
  * The retained-motion hook: animates `target` with `transition` on a monotonic
  * `performance.now()` clock. `transition` must be a stable reference (pass a
@@ -74,12 +107,13 @@ export const useMotion = (
   const [frame, setFrame] = useState<MotionFrame>(() => initialFrame(start));
 
   useEffect(() => {
+    publish(setFrame, settleBefore(motion, origin, reduced(options)));
     motion.animate(target, transition);
     let handle: ReturnType<typeof setTimeout> | undefined;
     const tick = (): void => {
       const next = motion.sample(
         performance.now() - origin,
-        options.reducedMotion === true,
+        reduced(options),
       );
       setFrame(next);
       if (next.active) handle = setTimeout(tick, FRAME_MS);
@@ -143,12 +177,13 @@ export const useInertia = (
   const [frame, setFrame] = useState<MotionFrame>(() => initialFrame(0));
 
   useEffect(() => {
+    publish(setFrame, settleBefore(motion, start, reduced(options)));
     motion.coast(inertia, velocity);
     let handle: ReturnType<typeof setTimeout> | undefined;
     const tick = (): void => {
       const next = motion.sample(
         performance.now() - start,
-        options.reducedMotion === true,
+        reduced(options),
       );
       setFrame(next);
       if (next.active) handle = setTimeout(tick, FRAME_MS);

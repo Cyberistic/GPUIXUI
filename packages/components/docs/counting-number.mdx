@@ -21,7 +21,10 @@ paints at rest — the component is not a mount decoration, and a panel that
 re-renders must not re-count a metric the reader was already looking at.
 
 A later `value` **retargets from the number on screen**, so a live metric that
-updates mid-tween continues from where the reader saw it.
+updates mid-tween continues from where the reader saw it. That holds after the
+number has come to rest too: the hook samples once before retargeting, so a
+value that waited a while still counts over the full duration instead of
+counting the pause as elapsed motion and landing in one frame.
 
 ## Formatting
 
@@ -90,9 +93,9 @@ The accessible name is the **target**, never the frame: a screen reader hears
 ## Verification
 
 `src/behaviour/counting-number.test.tsx` renders the component in the real GPUix
-renderer (6 tests): a count from `from` to the target, a rest paint with no
+renderer (7 tests): a count from `from` to the target, a rest paint with no
 `from`, an intermediate value proving it does not jump, a retarget from the
-number on screen, the reduced preference painting the target at once, and a
-formatted text whose accessible name is the target from the first frame. The
-formatting and duration rules are the unit suite beside the logic
-(`src/counting-number/logic.test.ts`).
+number on screen, a retarget after the count has rested, the reduced preference
+painting the target at once, and a formatted text whose accessible name is the
+target from the first frame. The formatting and duration rules are the unit
+suite beside the logic (`src/counting-number/logic.test.ts`).
