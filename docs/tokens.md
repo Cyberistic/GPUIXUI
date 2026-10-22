@@ -311,9 +311,10 @@ filledPressed(theme, toggleOn); // a further step, as far as its label allows
 ```
 
 `FilledAction` is the three button families. `FilledRole` adds `accent`, the one
-non-action face: a toggle's on-state paints it, and the primitives' `Toggle`
-lifts its alpha for pointer feedback (`0.9` / `0.8`) instead, which is the
-defect the derived fills exist for. Each role names the on-colour it carries (`primaryForeground`,
+non-action face: a toggle's on-state paints it, so the primitives' `Toggle` takes
+the same two helpers (`fill-accent` / `fill-accent-pressed`) and a pressed mode
+is an opaque fill rather than a lifted alpha. Each role names the on-colour it
+carries (`primaryForeground`,
 `accentForeground`, …), and **18% is a ceiling rather than a promise**: the step
 stops where that label would lose the floor its theme declares
 (`contrastFloorsFor(theme).secondary` — 4.5:1 default, 7:1 high contrast). The
@@ -2133,11 +2134,11 @@ inside it keeps the role it already had. A translucent colour has no ratio of it
 own — `contrastRatio` refuses it — so the wash is measured **after** it is
 composited over the surface it sits on.
 
-`selectionPairs` names the surfaces text is selected from: the four content
-surfaces body text is read on — a field's value, prose on the page, a card and a
-popover — and the three prose surfaces again for the secondary
-`mutedForeground` line beside it (a caption, a table's second line, a log row).
-Each pair keeps the text role that surface already carries.
+`selectionPairs` names the surfaces text is selected from: the five content
+surfaces body text is read on — a field's value, prose on the page, a card, a
+popover and a message bubble's `muted` fill — and the three prose surfaces again
+for the secondary `mutedForeground` line beside it (a caption, a table's second
+line, a log row). Each pair keeps the text role that surface already carries.
 `selectionFailures(theme, floors?)` measures two things per pair:
 
 | Contract | Floor | What it catches |
@@ -2171,6 +2172,14 @@ lighter than the base theme's, which left body text at 6.63:1, 6.33:1 and
 now. A brand that wants a stronger wash should deepen its hue or its surface
 rather than raise the share: the contract measures the composite, and 30% of a
 mid accent over a light card is exactly what put those three under the floor.
+
+**It found one more on the bubble.** The fifth content surface is `muted` — the
+fill a user message bubble is painted on (`MESSAGE_BUBBLES.user` is `bg-muted`)
+— and a selectable `Text` inside it hands the runtime the same wash over that
+fill. Aero dark still carried a 30% share, which left the bubble's body text at
+6.55:1, so it takes the 24% its siblings use; the tightest placement over a
+bubble is Windows XP (Luna) dark at 7.12:1. The bubble paints no author line of
+its own, so the muted surface is measured for the body role alone.
 
 **It then found the palette had no headroom.** Measuring secondary text under
 the same wash left `mutedForeground` at 4.25–4.44:1 on the light platform themes
@@ -2640,14 +2649,12 @@ or dropped is named rather than passing silently.
   `active:fill-<action>-pressed` (`packages/primitives/src/recipe/index.ts`). A
   filled checkbox or radio paints the same two helpers
   (`packages/primitives/src/core/selection.ts`), so its mark sits on an opaque
-  fill. Two deviations remain: the `@gpuixui/tw` `button` recipe the components
-  package compiles against still lifts the fill's alpha
-  (`hover:bg-primary/90` in `packages/tw/src/recipes.ts`), and a pressed `Toggle`
-  washes its `accent` fill at 0.9/0.8 alpha in
-  `packages/primitives/src/core/variants.ts`. The second is adoption rather than
-  a missing token: `filledHover` / `filledPressed` take a `FilledRole`, which
-  includes `accent`, and clamp the step to the label's floor (§Action fills). Both
-  are the owning packages' halves, recorded in `TODO.md` → Interlocks.
+  fill, and a pressed `Toggle` takes them for its `accent` face
+  (`packages/primitives/src/core/variants.ts`). One deviation remains: the
+  `@gpuixui/tw` `button` recipe the components package compiles against still
+  lifts the fill's alpha (`hover:bg-primary/90` in
+  `packages/tw/src/recipes.ts`). It is the owning package's half, recorded in
+  `TODO.md` → Interlocks.
 - A field's **resting edge** is the decorative `border` role rather than the
   functional `borderStrong` one: `fieldVariant`
   (`packages/primitives/src/core/variants.ts`) and `FieldInput`

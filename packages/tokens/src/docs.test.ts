@@ -276,16 +276,19 @@ describe("filled action adoption claim", () => {
     expect(limitation).toContain("hover:bg-primary/90");
   });
 
-  it("names the toggle's accent as adoption rather than a missing token", () => {
-    // The page said the tokens package did not expose a general-role derived
-    // fill, so the pressed toggle's alpha wash was a gap in the tokens. It is
-    // not: `FilledRole` covers `accent`, and the wash in the primitives is the
-    // remaining adopter. Both halves are read from the sources.
+  it("names the toggle's accent as an adopter, not a deviation", () => {
+    // The page once recorded a pressed `Toggle`'s 0.9/0.8 alpha wash as the
+    // remaining deviation; the primitives now paint the derived fills for the
+    // accent face too, so both halves are read from the sources and the page
+    // must name the adopter beside the two buttons.
     const source = read("../../../packages/primitives/src/core/variants.ts");
 
-    expect(source).toContain("alpha(theme.colors.accent, 0.9)");
+    expect(source).toContain('filledHover(theme, "accent")');
+    expect(source).toContain('filledPressed(theme, "accent")');
+    expect(source).not.toContain("alpha(theme.colors.accent, 0.9)");
+    expect(catalogue).toContain("`fill-accent` / `fill-accent-pressed`");
     expect(limitation).toContain("packages/primitives/src/core/variants.ts");
-    expect(limitation).toContain("FilledRole");
+    expect(limitation).not.toContain("0.9/0.8");
     expect(limitation).not.toContain("does not expose yet");
   });
 

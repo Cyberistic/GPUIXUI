@@ -24,6 +24,15 @@
  * dark sets a step lighter (`#C1C7D1`), and every platform and authored style
  * inherits the headroom. The one wash that changed is the high-contrast dark
  * one — 30% to 26% — because its secondary text is held to the AAA floor.
+ *
+ * The fifth content surface is **`muted`**, the fill the library paints behind a
+ * user's chat bubble (`MESSAGE_BUBBLES.user` is `bg-muted`) and behind a
+ * `surface="muted"` box, and a `Text selectable` inside either one hands the
+ * runtime the wash over that fill. It was measured by nothing, and it found one
+ * style: Aero dark's 30% wash buried the bubble's body text at 6.55:1 under the
+ * 7:1 floor, so the look carries the same 24% share its siblings use. The
+ * bubble paints body copy only — its author line sits outside it — so the muted
+ * surface is measured for the body role alone.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
@@ -38,19 +47,25 @@ import { decorativeFloor } from "./decorative.js";
 /**
  * The text pairs a reader can select, and the surface each keeps its role on.
  *
- * The four content surfaces — a field's value, prose on the page, a card and a
- * popover — where the resting pair is already held to the body floor, so a wash
- * that lowers what the reader can read is measured against the same floor the
- * unselected text is. The three prose surfaces also carry secondary text
- * (`mutedForeground`) — a caption, a table's second line, a log row — at the
- * secondary floor, so a wash readable for a heading but not for the line under
- * it is reported rather than passing on the heading alone.
+ * The five content surfaces — a field's value, prose on the page, a card, a
+ * popover and a message bubble's `muted` fill — where the resting pair is
+ * already held to the body floor, so a wash that lowers what the reader can read
+ * is measured against the same floor the unselected text is. The three prose
+ * surfaces also carry secondary text (`mutedForeground`) — a caption, a table's
+ * second line, a log row — at the secondary floor, so a wash readable for a
+ * heading but not for the line under it is reported rather than passing on the
+ * heading alone.
  */
 export const selectionPairs: readonly ContrastPair[] = [
   { foreground: "inputForeground", background: "input", floor: "body" },
   { foreground: "foreground", background: "background", floor: "body" },
   { foreground: "cardForeground", background: "card", floor: "body" },
   { foreground: "popoverForeground", background: "popover", floor: "body" },
+  // A user message is `bg-muted`, the bubble paints no colour of its own, and a
+  // selectable `Text` inside it washes the run over that fill — so the muted
+  // surface is read in the same `foreground` role the page is. The bubble's
+  // author line is painted outside it, so it carries body copy only.
+  { foreground: "foreground", background: "muted", floor: "body" },
   {
     foreground: "mutedForeground",
     background: "background",

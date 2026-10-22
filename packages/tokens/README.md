@@ -313,16 +313,16 @@ paints it through the `selectionColor` style property, which inherits down a
 subtree and defaults to the theme accent at 35%; a component passes
 `theme.colors.selection` to keep the selection in the design system's palette.
 
-`selectionPairs` names the surfaces text is selected from: the four content
-surfaces body text is read on (a field's value, prose, a card, a popover) and
-the three prose surfaces again for the secondary `mutedForeground` line beside
-it. `selectionFailures(theme, floors?)` composites the wash over each one and
-checks both jobs: it is visible against its surface (`decorativeFloor`, 1.05:1)
-and the text inside it keeps the floor its unselected pair already met — the
-theme variant's body floor (7:1) for body text, its secondary floor (4.5:1) for
-the line under a heading. A failure names its `kind` (`visibility` or
-`legibility`), the pair, the composited colour and the ratio; `auditTheme`
-includes the report.
+`selectionPairs` names the surfaces text is selected from: the five content
+surfaces body text is read on (a field's value, prose, a card, a popover and a
+message bubble's `muted` fill) and the three prose surfaces again for the
+secondary `mutedForeground` line beside it. `selectionFailures(theme, floors?)`
+composites the wash over each one and checks both jobs: it is visible against
+its surface (`decorativeFloor`, 1.05:1) and the text inside it keeps the floor
+its unselected pair already met — the theme variant's body floor (7:1) for body
+text, its secondary floor (4.5:1) for the line under a heading. A failure names
+its `kind` (`visibility` or `legibility`), the pair, the composited colour and
+the ratio; `auditTheme` includes the report.
 
 It found three shipped styles under the body floor — Linux dark at 6.63:1 on its
 card, Windows dark at 6.33:1 and Luna dark at 6.80:1 on its popover — from a 30%
@@ -332,7 +332,10 @@ headroom for any wash: the grey ramp's 600 and 400 steps sat at the 4.5:1 floor,
 so the wash buried them. The base light secondary text is `#4B5362` and the dark
 one `#C1C7D1` — a step further from their surfaces — with the two authored looks
 carrying their own tint, and the high-contrast dark wash at 26% so its 7:1
-secondary text clears the composite. A runnable example lives in
+secondary text clears the composite. The bubble was the fifth surface it found:
+Aero dark's 30% share left a user message's body text at 6.55:1, so that look
+carries the 24% its siblings use, and the tightest bubble in the library is Luna
+dark at 7.12:1. A runnable example lives in
 [`src/selection.example.ts`](./src/selection.example.ts).
 
 ## Platform styles

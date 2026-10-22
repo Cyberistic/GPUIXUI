@@ -171,7 +171,7 @@ const aeroColors: Readonly<Record<"light" | "dark", Partial<ThemeColors>>> = {
     accentForeground: "#C6E4F8",
     selected: "#1F4560",
     selectedForeground: "#D3ECFF",
-    selection: "#5FB6F24D",
+    selection: "#5FB6F23D",
     placeholder: "#90A7B9",
     disabled: "#1D2F3D",
     disabledForeground: "#6C8191",

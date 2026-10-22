@@ -20,7 +20,7 @@
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { lightColors, palette } from "./color.js";
+import { alphaOf, blend, lightColors, palette } from "./color.js";
 import { contrastFloors, contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import { platformNames } from "./platforms.js";
@@ -61,12 +61,16 @@ const retroThemes = retroNames.flatMap((look) => [
 const measured = (over: string): boolean =>
   selectionPairs.some((pair) => pair.background === over);
 
+const read = (path: string): string =>
+  readFileSync(new URL(path, import.meta.url), "utf8");
+
 /** The text role each content surface already carries before a wash is painted. */
 const restingText: Readonly<Record<string, string>> = {
   input: "inputForeground",
   background: "foreground",
   card: "cardForeground",
   popover: "popoverForeground",
+  muted: "foreground",
 };
 
 /** The prose surfaces that also carry secondary text beside their body text. */
@@ -121,6 +125,26 @@ describe("every theme the library ships", () => {
       shippedThemes.length + platformThemes.length + retroThemes.length,
     ).toBeGreaterThanOrEqual(16);
   });
+
+  it("keeps the tightest bubble readable and prints that ratio", () => {
+    // The catalogue prints the tightest shipped placement so a reader can see
+    // how much room the contract has; a palette edit that lowers the floor has
+    // to move the page with it.
+    const ratios = [...shippedThemes, ...platformThemes, ...retroThemes].map(
+      (theme) => {
+        const wash = blend(
+          theme.colors.muted,
+          theme.colors.selection,
+          alphaOf(theme.colors.selection),
+        );
+        return contrastRatio(theme.colors.foreground, wash) ?? 0;
+      },
+    );
+    const tightest = Math.min(...ratios);
+
+    expect(tightest).toBeCloseTo(7.12, 2);
+    expect(read("../../../docs/tokens.md")).toContain(tightest.toFixed(2));
+  });
 });
 
 describe("selectionFailures", () => {
@@ -141,6 +165,39 @@ describe("selectionFailures", () => {
     expect(failure?.ratio).toBeCloseTo(6.63, 2);
   });
 
+  it("reports the wash Aero dark painted over its own message bubble", () => {
+    // The regression: the fifth content surface is the `muted` bubble a chat
+    // user message is painted on (`MESSAGE_BUBBLES.user` is `bg-muted`), and a
+    // selectable `Text` inside it washes its run over that fill. Aero dark's
+    // 30% wash took the bubble's body text to 6.55:1 against the 7:1 floor.
+    const before = {
+      colors: {
+        ...retroTheme(themes.dark, "aero").colors,
+        selection: "#5FB6F24D",
+      },
+    };
+    const failure = selectionFailures(before).find(
+      ({ kind, background }) => kind === "legibility" && background === "muted",
+    );
+
+    expect(failure?.floor).toBe(7);
+    expect(failure?.ratio).toBeCloseTo(6.55, 2);
+    expect(selectionFailures(retroTheme(themes.dark, "aero"))).toEqual([]);
+  });
+
+  it("holds the pair to the bubble that paints it", () => {
+    // A pair that outlives its painter is a contract for a colour nothing
+    // paints: the recipe is the bubble's fill, the box tone is the other host a
+    // `surface="muted"` block uses, and `selectionColor` is the property a
+    // selectable `Text` hands the runtime.
+    const recipes = read("../../tw/src/recipes.ts");
+    const style = read("../../primitives/src/core/style.ts");
+
+    expect(recipes).toContain('user: "bg-muted"');
+    expect(style).toContain("muted: (theme) => theme.colors.muted");
+    expect(style).toContain("style.selectionColor = theme.colors.selection;");
+  });
+
   it("reports a wash that hides the text it selects", () => {
     const failures = selectionFailures(unreadableSelectionBrand);
 
@@ -154,12 +211,14 @@ describe("selectionFailures", () => {
       "legibility",
       "legibility",
       "legibility",
+      "legibility",
     ]);
     expect(failures.map(({ background }) => background)).toEqual([
       "input",
       "background",
       "card",
       "popover",
+      "muted",
       "background",
       "card",
       "popover",
@@ -196,6 +255,7 @@ describe("selectionFailures", () => {
     const failures = selectionFailures(invisibleSelectionBrand);
 
     expect(failures.map(({ kind }) => kind)).toEqual([
+      "visibility",
       "visibility",
       "visibility",
       "visibility",
@@ -254,9 +314,6 @@ describe("the documented example", () => {
 });
 
 describe("the documents describe the contract they are held to", () => {
-  const read = (path: string): string =>
-    readFileSync(new URL(path, import.meta.url), "utf8");
-
   it("documents the check, every floor and the surfaces", () => {
     const catalogue = read("../../../docs/tokens.md");
     const design = read("../../../docs/design-system.md");
@@ -265,6 +322,12 @@ describe("the documents describe the contract they are held to", () => {
     expect(catalogue).toContain("selectionFailures");
     expect(catalogue).toContain("## Text selection");
     expect(catalogue).toContain(`${decorativeFloor}:1`);
+    // The fifth surface is the bubble the library paints; a page that stops
+    // naming it teaches the contract as the four page surfaces.
+    expect(catalogue).toContain("message bubble");
+    expect(catalogue).toContain("MESSAGE_BUBBLES.user");
+    expect(design).toContain("message bubble");
+    expect(readme).toContain("message bubble");
     // The secondary half is the contract a reader copies: the page has to name
     // the role, its floor and the value the palette carries for it, or the next
     // palette edit that drops the headroom is taught as fine.

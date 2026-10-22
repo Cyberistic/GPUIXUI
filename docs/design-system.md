@@ -548,7 +548,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | a filled action's resting fill (`secondary`, which paints no border) on background, card, popover and a muted strip | 1.05:1 | 1.05:1 |
 | a disabled action's fill against each face an enabled control wears (`primary`, `secondary`, `destructive`, `accent`, `input`) | 1.05:1 | 1.05:1 |
 | filled action label on its derived hover and press fill | 4.5:1 | 7:1 |
-| text inside the selection wash (input, page, card, popover) | 7:1 | 7:1 |
+| text inside the selection wash (input, page, card, popover, a message bubble's muted fill) | 7:1 | 7:1 |
 | secondary text inside the selection wash (page, card, popover) | 4.5:1 | 7:1 |
 | the selection wash against the surface it covers | 1.05:1 | 1.05:1 |
 | data series on `background`, `card` and `popover` | 3:1 | 4.5:1 |
@@ -558,6 +558,14 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 The test runs for every shipped colour set — light, dark, both high-contrast
 variants and all six platform themes — and is part of the normal test suite. It
 can fail: a palette edit that reduces contrast fails the gate.
+
+A **message bubble** is the fifth content surface in the selection contract. A
+user message is painted on the `muted` fill and its body copy keeps
+`foreground`, so a selectable run inside it is washed over the bubble rather
+than the page. Measured, Aero dark's 30% share left it at 6.55:1; the look
+carries the 24% its siblings use (7.49:1), and the tightest bubble in the
+library is Windows XP (Luna) dark at 7.12:1. The bubble paints no secondary
+line of its own, so it is measured for the body role alone.
 
 The **second field fill** was the last surface a field's text had no pair on:
 a composite field paints the page role, so its value and placeholder sit on
