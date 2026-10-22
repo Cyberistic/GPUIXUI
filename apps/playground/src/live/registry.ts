@@ -522,6 +522,12 @@ export const liveRegistry = [
       "Table: the shipped data table selects and focuses the row a press hit, walks records by arrow, keeps a selection through a sort and a hidden column, and resizes its track",
     capability: "table",
   },
+  {
+    id: "surface-origin",
+    title:
+      "Layout: a surface moved by a layout above delivers no layout report, and a nudged one-pixel probe reports the origin it has now",
+    capability: "layout",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

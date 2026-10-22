@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-81 probes a real window can prove, of which eighteen mount shipped
+82 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -4414,17 +4414,18 @@ names the gesture rather than the component.
 | `down` | `5 rows · active=index.ts` | the walk skips a closed branch's hidden children |
 | `left` | `5 rows · active=src` | Left leaves a branch for its parent |
 | type `p`, `a` | `5 rows · active=package.json` | the type-ahead buffer jumps, and the jump moves the focus too |
-| press Reveal row.tsx | `9 rows · active=row.tsx` | the reveal opens the whole path and moves the cursor — while the focus stays on the **button** (measured limit) |
+| press Reveal row.tsx | `9 rows · active=row.tsx` | the reveal opens the whole path, moves the cursor **and** leaves native focus on the revealed row |
 | Collapse all | `3 rows · active=row.tsx` | every branch folds; the cursor keeps a key whose row is hidden |
 | Expand all | `11 rows · active=row.tsx` | every row paints again, deepest file included |
 
-The reveal row is the one a consumer has to act on: the app's own action changes
-the tree's cursor through its controlled props, and the tree's focus effect does
-not run for a cursor it did not move — so a search hit or a "show this file"
-command must call `focusElement` on the revealed row itself, or a keyboard reader
-is left on the button. The collapse/expand rows are the same shape: batch actions
-move the row set, not the cursor, and the readout prints the key the controller
-still holds.
+The reveal row is the one the component owns: the app's action changes the tree's
+cursor through its controlled props, so `TreeView` compares the committed cursor
+with the last row it focused and calls `focusElement` after the newly opened rows
+attach their instances — a search hit or a "show this file" command leaves a
+keyboard reader on the row it revealed. The first paint is the baseline, so
+mounting a tree does not steal focus. The collapse/expand rows are the other
+shape: batch actions move the row set, not the cursor, and the readout prints the
+key the controller still holds.
 
 22 checks, `--only data-tree-lifecycle`, green on 0.11.0 (~0.8 s, three
 consecutive runs). Negative control measured, exit `1`, restored green:
@@ -4530,6 +4531,57 @@ Negative control measured, exit `1`, restored green: expecting the down step to
 land on `files-row-file-4` fails `ArrowDown moves the choice and the focus to the
 next record` with **`expected "files-row-file-4", got "files-row-file-3"`** — the
 check reads the window's focused element, not the key it sent.
+
+### `surface-origin` — measured on 0.11.0 here
+
+**Does a surface learn that a layout above it moved it?** `Magnetic` and
+`ImageZoom` keep the box from their last `onLayout` and subtract a fresh pointer
+point from it, and a command palette, a popover or a magnifier is moved — not
+resized — when a pane opens, a sidebar collapses or a dialog above it changes
+height. The runtime reports a layout on a **size** change, and nothing had
+measured whether a moved surface hears anything at all, or whether the candidate
+repair — a nudged one-pixel probe at the surface's origin, whose width
+alternates on each pointer read — actually produces a report carrying the new
+origin.
+
+The probe mounts a 240×60 surface under a panel that opens on a press, and a
+1×1 probe at the surface's own origin. The readout publishes the counts and the
+three coordinates the checks read:
+
+| Step | Readout | What it proves |
+| ---- | ------- | -------------- |
+| mount | `surface=1 probe=1 originY=88 reportedY=88` | the probe and the surface agree before anything moves |
+| move the pointer over it | `originY=88 pointY=118` | a move on the surface is a pointer read, with the point the window delivered |
+| open the panel | `pad=120 surface=1 reportedY=88` | **a moved surface delivers no layout report**, so the box it stores is the old one |
+| move the pointer again | `probe=3 originY=208 pointY=238 reportedY=88` | the nudged probe **does** re-report, and its report is the moved origin (88 → 208) |
+
+The two local points are the consequence a component cares about:
+
+- read against the probe's fresh origin, the fresh pointer point is **the same
+  local point** as at rest — `120,30` before the move and `120,30` after it, so a
+  lean or a pan stays centred;
+- read against the surface's own last report, the same point is `120` further
+  down the box (local `120,150`) — the measured defect: a magnetic plate leans
+  the wrong way and a zoom pans as if the pointer were somewhere else until
+  something resizes the surface.
+
+The probe is a paint, not a layout: the nudge is one point wide, and the
+surface's report count stays at 1 through the move and both reads, so neither
+the move nor the pointer read resized it.
+
+15 checks, `--only surface-origin`, green on 0.11.0 (~0.3 s without captures,
+~2.4 s with them). Fixture: `src/live/surface-origin.ts` (the ids, `MOVED_BY`,
+the local-point arithmetic and the readout codec) + `surface-origin.test.ts`
+(12 cases: every published field, a non-number word refused rather than read as
+a zero, a lost field and an unpainted pointer refused, the arithmetic on both
+origins, the one-pixel nudge and the panel-not-a-resize premise, the ids, the
+handler the pointer reaches, the registry entry and this section). Evidence:
+`.artifacts/live/surface-origin-{rest,moved,fresh}.png`.
+
+Negative control measured, exit `1`, restored green: dropping the `setNudge`
+call — the repair itself — fails `the nudged probe reports the origin the
+surface has now` with **`expected true, got false`**, because the stale report
+stays at `88` while the surface paints at `208`.
 
 ## Terminal mode: the pty probe
 
@@ -4751,8 +4803,8 @@ narrower. Each deviation is deliberate and measured:
   `column-resize-lifecycle`, `button-activation-lifecycle` and
   `date-picker-lifecycle`, `data-table-lifecycle`, `virtual-table-lifecycle` and
   `data-tree-lifecycle`, `keyboard-scroll-lifecycle`, `focus-ring-offset`,
-  `action-ring`
-  (twenty-three probes, each run alone).
+  `action-ring`, `surface-origin`
+  (twenty-four probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
