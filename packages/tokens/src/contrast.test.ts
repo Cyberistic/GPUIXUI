@@ -2055,10 +2055,10 @@ describe("the ring on the strip behind the control", () => {
     expect(missing).toEqual([]);
   });
 
-  it("holds the painters that put a ring on a wash", () => {
+  it("holds the painters that put a control on a wash", () => {
     // The pairs only mean something while the elements still paint them: the
-    // list row declares the ring at rest and tints all three of its own washes,
-    // and the ghost and outline actions do the same under their own ring.
+    // list row fills `selected` and tints its hover and press washes, so a
+    // control inside the row is drawn on those surfaces.
     const row = readFileSync(
       new URL("../../components/src/list.tsx", import.meta.url),
       "utf8",
@@ -2068,10 +2068,10 @@ describe("the ring on the strip behind the control", () => {
       "utf8",
     );
 
-    // The combobox row is the painter of the `hover` wash under a ring: its rows
-    // are focusable, declare the ring and tint `hover` while the keyboard moves
-    // the highlight. The button declares the ring too, but its pointer states
-    // are derived fills now, not washes.
+    // The rows are what paint these washes: a list row fills `selected` and
+    // tints `accent`, a combobox row tints `hover` as the keyboard moves the
+    // highlight, and both offer a focusable child (a `trailing` action) the
+    // surface it is drawn on. The line itself sits outside each row.
     const combobox = readFileSync(
       new URL("../../components/src/combobox.tsx", import.meta.url),
       "utf8",
@@ -2105,7 +2105,7 @@ describe("the ring on the strip behind the control", () => {
     ).toBe(true);
   });
 
-  it("reports a ring that disappears into the row it surrounds", () => {
+  it("reports a ring that disappears into the row it is drawn on", () => {
     const broken = { colors: { ...lightColors, ring: lightColors.selected } };
 
     expect(
