@@ -1747,6 +1747,56 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("onSubmit");
   });
 
+  it("records the edit a controlled field cannot take back, with the suite behind it", () => {
+    // A controlled field re-applies its `value` only when that value changes,
+    // so a clamp or a filter that removes the character just typed paints text
+    // the owner's value does not contain. The fields ship no `maxLength` for
+    // this reason, and a plan reading only the validation row would assume a
+    // keystroke can be refused.
+    const suite = read("packages/primitives/runtime/fields.runtime.test.tsx");
+    const at = suite.indexOf("cannot take back an edit");
+    expect(at, "the field-edit case left the runtime suite").toBeGreaterThan(
+      -1,
+    );
+    const measured = suite.slice(at);
+    const clamp =
+      /setText\(next\.slice\(0, (\d+)\)\)/.exec(measured)?.[1] ?? "";
+    expect(clamp).toBe("5");
+    const reported = [
+      ...(/toStrictEqual\(\[([\s\S]*?)\]\)/.exec(measured)?.[1] ?? "").matchAll(
+        /"([a-g]+)"/g,
+      ),
+    ].map((match) => match[1] ?? "");
+    expect(reported).toEqual([
+      "a",
+      "ab",
+      "abc",
+      "abcd",
+      "abcde",
+      "abcdef",
+      "abcdefg",
+    ]);
+
+    const edit = rowFor("Field edit");
+    expect(edit?.verdict).toBe("supported, with limits");
+    expect(edit?.evidence).toContain("only when it changes");
+    expect(edit?.evidence).toContain(`next.slice(0, ${clamp})`);
+    expect(edit?.evidence).toContain("`abcde`");
+    expect(edit?.evidence).toContain("`abcdef`");
+    expect(edit?.evidence).toContain("`abcdefg`");
+    expect(edit?.evidence).toContain("cannot take back an edit");
+    expect(edit?.workaround).toContain("boundary");
+
+    const page = measuredRow("Field edit");
+    expect(
+      page,
+      "the page's measured table has no field-edit row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("only when that value changes");
+    expect(page?.[1]).toContain("abcdefg");
+    expect(page?.[2]).toContain("boundary");
+  });
+
   it("publishes the measured gaps on /docs/runtime", () => {
     expect(runtimePage).toContain("data-grid-fixed-header");
     expect(runtimePage).toContain("editor-surface");
