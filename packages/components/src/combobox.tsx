@@ -91,6 +91,7 @@ import {
   disabledFade,
   keepContent,
   nativeTextTheme,
+  selectionWash,
   useTheme,
   type Theme,
 } from "./internal/theme.js";
@@ -536,6 +537,7 @@ export const ComboboxInput = ({
     height: controlHeight(theme, "sm"),
     ...controlRing(theme),
     ...keepContent,
+    ...selectionWash(theme),
   });
   const hint = fieldHint({ placeholder }, theme, query, {
     origin: "host",

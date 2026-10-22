@@ -185,7 +185,10 @@ The trigger paints `colors.background`, a `borderWidth.thin` border in
 and `controlHeight(theme, "md")`, with `colors.mutedForeground` for the
 placeholder. The popup paints `colors.popover`, the same fixed 6px corner, the
 `md` elevation, a `maxHeight` of 280 with scrolling, and rows highlight with
-`colors.hover`. The selected check is `colors.primary`.
+`colors.hover`. The selected check is `colors.primary`. **The search field
+paints the theme's measured `selection` role** behind a selected run
+(`selectionWash`), so the wash is held to `selectionFailures`' visibility and
+legibility floors rather than the runtime's unmeasured accent default.
 
 ## Style by state
 

@@ -5,7 +5,9 @@
  * theme accent at 35%, a colour no token contract measures, so every selectable
  * host in this package painted a wash the design system never checked. Each one
  * now declares the theme's own `selection` role — the wash `selectionFailures`
- * holds to a visibility and a legibility floor.
+ * holds to a visibility and a legibility floor. The combobox's own search field
+ * was the last host still handing the runtime's default (it passes only the
+ * recipe and the ring), so a run selected there kept a wash no contract measured.
  *
  * The second bug these guard: a message's own tint is not one of those content
  * tones, so the designed role leaves a selectable run's copy under the body floor
@@ -24,11 +26,18 @@ import {
 } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { Alert, AlertDescription, type AlertTone } from "../alert.js";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxTrigger,
+} from "../combobox.js";
 import { ColorPicker } from "../color-picker.js";
 import { CommandMenu, CommandMenuInput } from "../command-menu.js";
 import { Field, FieldInput } from "../field.js";
 import { InlineEdit } from "../inline-edit.js";
-import { clickCentreOf } from "../internal/interaction.js";
+import { clickCentreOf, settle } from "../internal/interaction.js";
 import {
   darkTheme,
   lightTheme,
@@ -135,6 +144,25 @@ describe("selection wash", () => {
     );
 
     clickCentreOf(root, "name");
+
+    expect(washes(root)).toEqual([darkTheme.colors.selection]);
+
+    root.unmount();
+  });
+
+  it("declares it on the combobox search field", () => {
+    const root = renderComponent(
+      <Combobox options={[{ value: "calendar", label: "Calendar" }]}>
+        <ComboboxTrigger label="Assign reviewer" />
+        <ComboboxContent>
+          <ComboboxInput />
+          <ComboboxList />
+        </ComboboxContent>
+      </Combobox>,
+    );
+
+    clickCentreOf(root, "combobox-trigger");
+    settle(root);
 
     expect(washes(root)).toEqual([darkTheme.colors.selection]);
 
