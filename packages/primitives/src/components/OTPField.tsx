@@ -245,6 +245,7 @@ export const renderOtpFieldInput = (
   const address: FieldHostProps = index === 0 ? part.address : {};
   return (
     <input
+      key={`cell-${index}`}
       ref={mergeRefs(handlers.registerCell(index), address.ref)}
       testId={
         testId ??

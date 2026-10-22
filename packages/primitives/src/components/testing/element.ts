@@ -70,6 +70,15 @@ export const elementProp = propOf(propsOf);
  */
 export const hostProp = propOf(hostProps);
 
+/**
+ * The React key an element carries, as a string.
+ *
+ * React strips `key` out of the props into the element itself, so a suite that
+ * guards a list's keys reads it here rather than from `props`.
+ */
+export const elementKey = (element: ReactElement): Option.Option<string> =>
+  Option.fromNullishOr(element.key);
+
 /** A named event handler, decoded. */
 export const hostHandler = (
   element: ReactElement,

@@ -4,13 +4,16 @@
  * The bug this suite guards at the tree level: a code field must be `length`
  * named single-character inputs over one value, must keep its handlers per cell
  * (GPUix dispatches to the element that owns the handler), must not paint a ring
- * on six cells at once, and must remove every tab stop when disabled. The
- * distribution and key contract live in `core/otp.ts`; the native editing,
- * focus movement and paste-shaped insert are the runtime suite's.
+ * on six cells at once, and must remove every tab stop when disabled. The default
+ * cell list is a React array, so each cell must carry its own key or React warns
+ * in every window that mounts the field. The distribution and key contract live
+ * in `core/otp.ts`; the native editing, focus movement and paste-shaped insert
+ * are the runtime suite's.
  */
 
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -29,6 +32,7 @@ import type { FieldState } from "./Input.js";
 import { changeEvent, keyUpEvent, clickEvent } from "./testing/event.js";
 import {
   elementChildren,
+  elementKey,
   expectSome,
   hostHandler,
   hostProp,
@@ -76,7 +80,25 @@ const cellsOf = (element: ReactElement): ReadonlyArray<ReactElement> => {
 const cell = (element: ReactElement, index: number): ReactElement =>
   cellsOf(element)[index] ?? expect.fail(`the field has no cell ${index + 1}`);
 
+/** The React key of every cell, `none` where the tree gave none. */
+const cellKeys = (
+  element: ReactElement,
+): ReadonlyArray<Option.Option<string>> =>
+  Arr.map(cellsOf(element), elementKey);
+
 describe("OTPField", () => {
+  it("keys every default cell as an entry of the list it draws", () => {
+    // Bug guarded: the default cells are the children React reconciles as an
+    // array, and an unkeyed entry makes React warn on every window that mounts
+    // the shipped field ("Each child in a list should have a unique key").
+    expect(cellKeys(render({ length: 4 }, "12"))).toStrictEqual([
+      Option.some("cell-0"),
+      Option.some("cell-1"),
+      Option.some("cell-2"),
+      Option.some("cell-3"),
+    ]);
+  });
+
   it("renders one named input per cell from a single code", () => {
     const element = render({ length: 4, label: "Verification code" }, "12");
     const cells = cellsOf(element);
