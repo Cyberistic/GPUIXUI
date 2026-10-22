@@ -690,7 +690,7 @@ a workaround for two live sessions sharing one worktree; see
       while `bounds()` still reports the cell's width. **`lineClamp` does not
       paint**: a five-line paragraph still paints five with the clamp on the text
       and on the box, and only a definite two-line height with `overflow: "hidden"`
-      painted two — a `maxLines` label is silently uncut in a window. 24 checks,
+      painted two — a `maxLines` label is silently uncut in a window. 26 checks,
       `--only text-truncation`, green on 0.11.0 (~0.4 s). Fixture:
       `src/live/truncation.ts` + `truncation.test.ts` (10 cases: the reader held
       to a drawn frame where a stem and a row of dots are known, at both device
@@ -4022,7 +4022,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 138/138
+`[x]` `[██████████]` 139/139
+
+`[x]` Curate the **Carousel** page and hold its clamp, its loop rule, its dot pill and its control edge to the source — `/docs/components/carousel` served only the package page (strategy 4: no preview), so the library's one stepped collection had nothing a reader could press. The curated page shadows `packages/components/docs/carousel.mdx` and teaches what a drawing cannot show: every slide stays mounted and is hidden with `display`, so a draft typed on slide three survives a visit to slide one; one clamp and one loop rule sit behind three routes (the controls, the arrow keys and the dots); an edge disables its control unless `loop`, and an empty track disables both; a dot is a 24px target around a 6px drawing that widens to an 18px pill in two mark roles, because a state carried by hue alone is invisible to a reader who cannot separate the hues; `aria-selected` stands in for the absent `aria-current`; the control is pinned to `secondary` so its chevron paints that fill's own on-colour; and the track's edge is the recipe's `input` role with the registry's fixed 8px corner. Two browser previews: `carousel-workflow` (a workspace gallery whose Members slide keeps a typed invite across a visit to another slide) and `carousel-states` (edge vs loop, dots only, an empty track). The arithmetic lives in `src/components/docs/carousel-preview.ts` so it is testable: `carousel-preview.test.ts` (10 cases) fails when a step wraps without `loop`, when a control stays live at an edge, when the active dot stops being wider, or when the drawing leaves the 24px floor. `component-page-truth.test.ts` gained the page and `holds the carousel's clamp, its dot pill and its control edge to the source`, which reads `carousel.tsx` (the clamp, `(next + count) % count`, the `display` toggle, the roles and names, the dot constants and the target, `CONTROL_VARIANT`/`actionOnColor`) and `CAROUSEL_TRACK`'s `border-input`/`rounded-lg`. `theme-css.test.ts` gained the carousel rule case and the bridge's derived `--secondary-hover`/`--secondary-pressed` (the control's opaque pointer steps, so a platform switch repaints them); `component-preview.test.ts` gained the corner note. The sidebar (`meta.json` Collections), the Components index list, `/docs/theming`'s switch list, the strategy's "Curated today" line and its corner note, `sources.ts`, the app README ledger and `package-docs.test.ts`'s curated set name the page. Directions measured: removing the loop branch fails `wraps past both ends when the carousel loops` (`expected 3 to be +0`); a page printing `16 × 6px` fails the truth case by name; removing the two derived fills from the bridge fails the carousel rule case (`expected undefined to be '#424751'`). The full docs suite is 83 files / 797 tests green; `check-types` and `build` are green. Verified in the dev server: `/docs/components/carousel` answers `200` with its title, both preview frames (the workflow printing `Slide 1 of 4 · wraps at both ends`), five dot labels, and `/api/search?query=carousel` returns the page and its headings. No native scenario applies (a docs page has no runtime path); the component's own evidence stays with its row.
 
 `[x]` Curate the **Drawer** page and hold its edge box, its dismiss stack and its exit frame to the source — `/docs/components/drawer` served only the package page (strategy 4: no preview), so the library's fourth modal surface had nothing a reader could press even though it is the edge-anchored member of the same family as Dialog. The curated page shadows `packages/components/docs/drawer.mdx` and teaches what a drawing cannot show: the requested size is **clamped by the window** on the axis it asks for (a `lg` column is `min(560, window.width)` and a bottom sheet `min(420, window.height)`), the topmost dismiss layer **consumes** an Escape or outside press even when `dismissible={false}` closes nothing (so the dialog beneath does not also close), focus leaves on `open` rather than when the 320 ms exit tween ends, the surface stays mounted for that tween and takes no presses, and the surface is **square** because `DRAWER_CONTENT` names no radius utility while the page's frame is rounded. Two browser previews: `drawer-workflow` (an issues list narrowed by a right-edge filter drawer, Apply/Reset, Escape and backdrop close, focus returned to the opener) and `drawer-sides` (all three edges, the three sizes, the `dismissible` switch and the outcome a gesture has). The arithmetic lives in `src/components/docs/drawer-preview.ts` so it is testable: `drawer-preview.test.ts` (12 cases) fails when a size table moves away from `drawer.tsx`, when a column stops clamping to a narrow window, when a bottom sheet guesses a width, when one Escape closes two layers, or when a non-dismissible top layer lets the gesture through. `component-page-truth.test.ts` gained the page and `hold the drawer's edges, its exit frame and its dismiss stack to the source`, which reads `drawer.tsx` (both size tables, the two `Math.min` clamps, `fadeFromSide(side, 12)`, the `slow` level, the exit `pointerEvents`, `presence.mounted`, the named close control), `internal/modal.ts` (the `dismissible` gate and the focus keyed on `open`), `internal/dismiss-layer.ts` (the consumed gesture) and `DRAWER_CONTENT` (square, `lg` lift), and holds the page's printed 400 × 800 / 320 × 800 / 1280 × 420 boxes and its runtime budget. The sidebar (`meta.json` Overlays), the Components index sentence, `/docs/theming`'s switch list, the strategy's "Curated today" line, `sources.ts`, the README ledger, `package-docs.test.ts`'s curated set and `component-page.test.ts`/`component-preview.test.ts` name the page. Directions measured: a `sm: 321` preview table fails `mirrors the size tables the component ships` and the box case by name; a page printing `401 × 800` fails the truth case (`expected … to contain '400 × 800'`). The full docs suite is 82 files / 784 tests green; `check-types`, `check:tests` and `build` are green. Verified in the dev server: `/docs/components/drawer` answers `200` with its title, both preview frames, the sidebar's current mark, and `/api/search?query=drawer` returns the page and its headings. No native scenario applies (a docs page has no runtime path), so no scenario ids were run; the component's own evidence stays with its row.
 
@@ -5624,6 +5626,27 @@ numbers).
       `expected +0 to be 4`; without the pointer guard the exit case fails `expected 'auto' to be
       'none'`; with the preference ignored the reduced case fails `expected 230 to be 226`. Docs:
       both menu pages' §Motion and the per-surface table in `docs/component-api.md` §11.
+`[x]` Close the **context menu's ghost** — the pointer-positioned surface was the one
+      overlay whose exit tween still took input: `MenuSurface` rests at
+      `pointerEvents: "auto"` and `ContextMenuContent` never overrode it, and its
+      `anchored` host kept `occlude` for the whole mount, so for the 200 ms a
+      dismissed menu stayed painted over the control it was opened from, a press
+      inside that box went to the ghost (or was swallowed by the occlusion)
+      instead of the control underneath — the press the dismissal was for needed
+      a second click. The content now merges
+      `pointerEvents: presence.present ? "auto" : "none"` into the surface and
+      passes `occlude={presence.present}` to the anchored host, so the box is
+      still painted for its exit but stops hit-testing the moment the menu
+      closes. `presence.test.tsx` gains a `a context menu` case over a full-page
+      action and a short row: the right press opens the menu below the row,
+      `Escape` leaves it painted with `pointerEvents: "none"`, and a press inside
+      its box runs the action underneath once before the surface unmounts.
+      Directions measured: at `HEAD` the case fails on
+      `expected 'auto' to be 'none'`, and with only the style guard the press
+      case fails `expected +0 to be 1` (the anchored occlusion still blocks it),
+      so both halves are held. Docs: `docs/component-api.md` §11 states a leaving
+      surface takes no presses, `docs/context-menu.mdx` §Motion names the dropped
+      occlusion, and the Context menus inventory row carries it.
 `[x]` **playground**: the four live probes the motion wiring moved now read the
       frame a user is left with, and the auto-focus case follows the modal fix.
       `popover-lifecycle` takes its gap from a settled `y` (the 200ms entry first

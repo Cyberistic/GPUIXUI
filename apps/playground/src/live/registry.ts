@@ -402,6 +402,12 @@ export const liveRegistry = [
       "Workspace: an inspector beside its preview reads one object four ways, a field edits it without losing the session, a toolbar action sizes all three views, and its own wheel scrolls only the inspector",
     capability: "workspace",
   },
+  {
+    id: "text-truncation",
+    title:
+      "Content: a clipped run stops at its box and slices the last glyph, an ellipsis replaces the tail, ellipsis-start keeps it, a clamp cuts a paragraph, and an unclipped box lets the run escape",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

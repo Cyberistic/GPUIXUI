@@ -45,7 +45,7 @@ const scenarios = readFileSync(
 /** The `inspectorSteps` effect, bounded by the declaration that follows it. */
 const inspectorSteps = (() => {
   const start = scenarios.indexOf("const inspectorSteps");
-  const end = scenarios.indexOf("/** The bodies", start);
+  const end = scenarios.indexOf("\nconst ", start + 1);
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
 })();
 

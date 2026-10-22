@@ -514,6 +514,15 @@ import {
   updateWorkspace,
   type WorkspaceTab,
 } from "./workspace-restore.js";
+import {
+  readTruncation,
+  TRUNCATION_BLEED,
+  TRUNCATION_CLAMP_LINES,
+  TRUNCATION_IDS,
+  TRUNCATION_LABEL,
+  TRUNCATION_PROSE,
+  TRUNCATION_WIDTH,
+} from "./truncation.js";
 
 /** Long enough for one paint after an input reaches the window. */
 const SETTLE = Duration.millis(40);
@@ -16890,6 +16899,356 @@ const inspectorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("inspector");
   });
 
+/**
+ * One measured box: the fixed width a table cell gives its label, and the clip
+ * a cell has to declare for a run to stop at its edge.
+ *
+ * `lineClamp` is a box prop because the runtime's clamp is a text style on the
+ * container, so the probe measures both places a component can put it.
+ */
+const TruncationBox = ({
+  testId,
+  clip = true,
+  lineClamp,
+  children,
+}: {
+  readonly testId: string;
+  readonly clip?: boolean;
+  readonly lineClamp?: number;
+  readonly children: ReactNode;
+}): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      testId={testId}
+      style={{
+        width: TRUNCATION_WIDTH,
+        position: "relative",
+        paddingTop: theme.spacing.xs,
+        paddingBottom: theme.spacing.xs,
+        borderRadius: theme.radius.sm,
+        backgroundColor: theme.colors.card,
+        ...(lineClamp === undefined ? {} : { lineClamp }),
+        ...(clip ? { overflow: "hidden" } : {}),
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+/** A row of boxes, so six measurements fit one window. */
+const TruncationRow = ({
+  children,
+}: {
+  readonly children: ReactNode;
+}): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: theme.spacing.xl,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+/**
+ * What a window paints for a line that does not fit.
+ *
+ * Tier 3 and 4 keep their labels on one line — a table cell, a tab, a tree row,
+ * a list title — and the capability record called truncation supported because
+ * `StyleDesc` declares the fields. No probe had painted one, so this view asks
+ * the questions a component needs answered: does the run stop at the box, is the
+ * cut marked with an ellipsis or does the last glyph get sliced, does
+ * `ellipsis-start` keep the tail instead, and where does `lineClamp` have to be
+ * written for a paragraph to be cut at two lines.
+ */
+const TruncationProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const line = {
+    ...textStyle(theme, "body"),
+    color: theme.colors.foreground,
+    whiteSpace: "nowrap" as const,
+  };
+  const prose = { ...textStyle(theme, "body"), color: theme.colors.foreground };
+  return (
+    <div
+      testId="truncation-probe"
+      style={{
+        width: window.width,
+        height: window.height,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A line that does not fit: the run stops at its box, the ellipsis
+        replaces the tail, and a clamp shortens a paragraph.
+      </text>
+      <TruncationBox testId={TRUNCATION_IDS.plain}>
+        <text style={line}>{TRUNCATION_LABEL}</text>
+      </TruncationBox>
+      <TruncationBox testId={TRUNCATION_IDS.ellipsis}>
+        <text style={{ ...line, textOverflow: "ellipsis" }}>
+          {TRUNCATION_LABEL}
+        </text>
+      </TruncationBox>
+      <TruncationBox testId={TRUNCATION_IDS.start}>
+        <text style={{ ...line, textOverflow: "ellipsis-start" }}>
+          {TRUNCATION_LABEL}
+        </text>
+      </TruncationBox>
+      <text
+        testId={TRUNCATION_IDS.own}
+        style={{
+          ...line,
+          width: TRUNCATION_WIDTH,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {TRUNCATION_LABEL}
+      </text>
+      <TruncationRow>
+        <TruncationBox testId={TRUNCATION_IDS.wrapped} clip={false}>
+          <text style={prose}>{TRUNCATION_PROSE}</text>
+        </TruncationBox>
+        <TruncationBox testId={TRUNCATION_IDS.clamp} clip={false}>
+          <text style={{ ...prose, lineClamp: TRUNCATION_CLAMP_LINES }}>
+            {TRUNCATION_PROSE}
+          </text>
+        </TruncationBox>
+      </TruncationRow>
+      <TruncationRow>
+        <TruncationBox
+          testId={TRUNCATION_IDS.clampBox}
+          lineClamp={TRUNCATION_CLAMP_LINES}
+        >
+          <text style={prose}>{TRUNCATION_PROSE}</text>
+        </TruncationBox>
+        <TruncationBox testId={TRUNCATION_IDS.clampSized} clip={false}>
+          <text
+            style={{
+              ...prose,
+              lineClamp: TRUNCATION_CLAMP_LINES,
+              height: (prose.lineHeight ?? 20) * TRUNCATION_CLAMP_LINES,
+              overflow: "hidden",
+            }}
+          >
+            {TRUNCATION_PROSE}
+          </text>
+        </TruncationBox>
+      </TruncationRow>
+      <TruncationBox testId={TRUNCATION_IDS.bleed} clip={false}>
+        <text testId={TRUNCATION_IDS.bleedText} style={line}>
+          {TRUNCATION_LABEL}
+        </text>
+      </TruncationBox>
+    </div>
+  );
+};
+
+const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(TRUNCATION_IDS.plain);
+    const window = yield* ctx.host.windowSize();
+    yield* ctx.host.capture("truncation");
+    const frame = yield* ctx.host.pixels("truncation");
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+    const ink = palettes.dark.colors.foreground;
+
+    /**
+     * The box a fixture element painted, and what its run measures there.
+     *
+     * `bleed` widens the read past the box so a run that escapes is measured
+     * rather than clipped by the reader's own crop — the answer the clip
+     * question depends on.
+     */
+    const read = (id: string, bleed = 0) =>
+      Effect.gen(function* () {
+        const box = yield* ctx.expectSome(
+          `${id} reports its painted box`,
+          Option.fromNullishOr(yield* ctx.host.bounds(id)),
+        );
+        const measured = yield* ctx.expectSome(
+          `${id} paints its ink`,
+          readTruncation(
+            frame,
+            { ...box, width: box.width + bleed },
+            scale,
+            ink,
+          ),
+        );
+        return { box, measured };
+      });
+
+    /**
+     * Whether an end paints a mark rather than a whole glyph.
+     *
+     * A capital stem inks dozens of pixels in the upper half of its line; an
+     * ellipsis inks a handful near the baseline. The comparison is against the
+     * same end of the unmarked run, so the font and the box cancel out.
+     */
+    const marked = (end: number, whole: number): boolean => end * 3 < whole;
+
+    // 1. A clip with no mark: the run ends at the box and slices the glyph.
+    const plain = yield* read(TRUNCATION_IDS.plain, TRUNCATION_BLEED);
+    yield* ctx.expectEqual(
+      "a clipped run keeps one line",
+      plain.measured.lines,
+      1,
+    );
+    yield* ctx.expectNear(
+      "a clipped run stops at its box",
+      plain.measured.right,
+      plain.box.width,
+      2,
+    );
+    yield* ctx.expectEqual(
+      "a clipped run has a whole glyph at its head",
+      plain.measured.headUpper > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "a clipped run slices its last glyph instead of marking the cut",
+      marked(plain.measured.tailUpper, plain.measured.headUpper),
+      false,
+    );
+
+    // 2. The same box with `textOverflow`: the ellipsis stands where the tail was.
+    const ellipsis = yield* read(TRUNCATION_IDS.ellipsis, TRUNCATION_BLEED);
+    yield* ctx.expectEqual(
+      "an ellipsized run keeps one line",
+      ellipsis.measured.lines,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "an ellipsized run ends inside the box where a sliced glyph runs to the edge",
+      ellipsis.measured.right < plain.measured.right,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "an ellipsized run keeps a whole glyph at its head",
+      marked(ellipsis.measured.headUpper, plain.measured.headUpper),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "an ellipsis replaces the tail of the run",
+      marked(ellipsis.measured.tailUpper, plain.measured.tailUpper),
+      true,
+    );
+
+    // 3. `ellipsis-start` marks the other end.
+    const start = yield* read(TRUNCATION_IDS.start, TRUNCATION_BLEED);
+    yield* ctx.expectEqual(
+      "an ellipsis-start run marks its head",
+      marked(start.measured.headUpper, plain.measured.headUpper),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "an ellipsis-start run keeps a whole glyph at its tail",
+      marked(start.measured.tailUpper, plain.measured.tailUpper),
+      false,
+    );
+
+    // 4. A `<text>` that carries the clip itself, without a wrapping cell.
+    const own = yield* read(TRUNCATION_IDS.own, TRUNCATION_BLEED);
+    yield* ctx.expectNear(
+      "a text element that clips itself is its box's width",
+      own.box.width,
+      TRUNCATION_WIDTH,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "a text element that clips itself keeps one line",
+      own.measured.lines,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "a text element that clips itself marks its own tail",
+      marked(own.measured.tailUpper, own.measured.headUpper),
+      true,
+    );
+
+    // 5. The clamp: where a paragraph is asked for two lines, and what paints.
+    const wrapped = yield* read(TRUNCATION_IDS.wrapped);
+    const clamp = yield* read(TRUNCATION_IDS.clamp);
+    const clampBox = yield* read(TRUNCATION_IDS.clampBox);
+    const clampSized = yield* read(TRUNCATION_IDS.clampSized);
+    yield* ctx.expectEqual(
+      "the control paragraph wraps to the five lines this section quotes",
+      wrapped.measured.lines,
+      5,
+    );
+    yield* ctx.expectEqual(
+      "a clamp on the text paints every line of the paragraph",
+      clamp.measured.lines,
+      wrapped.measured.lines,
+    );
+    yield* ctx.expectEqual(
+      "a clamp on the box paints every line too",
+      clampBox.measured.lines,
+      wrapped.measured.lines,
+    );
+    yield* ctx.expectNear(
+      "a clamp on the box leaves its height where the paragraph put it",
+      clampBox.box.height,
+      wrapped.box.height,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "a definite height with a hidden overflow paints the two lines",
+      clampSized.measured.lines,
+      TRUNCATION_CLAMP_LINES,
+    );
+    yield* ctx.expectNear(
+      "the two-line box is only as tall as the two lines",
+      clampSized.box.height,
+      48,
+      2,
+    );
+    yield* ctx.expectEqual(
+      "the cut box is shorter than the uncut one",
+      clampSized.box.height < wrapped.box.height,
+      true,
+    );
+
+    // 6. No clip declared: the run paints past the box it was given.
+    const bleed = yield* read(TRUNCATION_IDS.bleed, TRUNCATION_BLEED);
+    yield* ctx.expectEqual(
+      "an unclipped box lets the run paint past its edge",
+      bleed.measured.right > bleed.box.width,
+      true,
+    );
+    const bleedText = yield* ctx.expectSome(
+      "the unclipped run reports its own box",
+      Option.fromNullishOr(yield* ctx.host.bounds(TRUNCATION_IDS.bleedText)),
+    );
+    yield* ctx.expectEqual(
+      "the layout report keeps an overflowing run inside its cell, so only paint shows the escape",
+      bleedText.width > bleed.box.width,
+      false,
+    );
+  });
+
 /** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
@@ -17197,5 +17556,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "inspector-lifecycle",
     view: () => <InspectorProbe />,
     steps: inspectorSteps,
+  },
+  "text-truncation": {
+    id: "text-truncation",
+    view: () => <TruncationProbe />,
+    steps: truncationSteps,
   },
 };

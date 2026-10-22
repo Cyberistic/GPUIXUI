@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-61 probes a real window can prove, of which fifteen mount shipped
+62 probes a real window can prove, of which fifteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -3440,6 +3440,66 @@ Three negative controls were measured, exit `1` each, then restored green:
 Captures: `.artifacts/live/inspector.png` (the workspace after the type, the
 resize, the reset and the scroll).
 
+### `text-truncation` — measured on 0.11.0 here
+
+**What a line that does not fit actually paints.** Every table cell, tab label,
+tree row and list title in the library keeps its text on one line, and the
+capability record called truncation supported because `StyleDesc` declares
+`whiteSpace`, `textOverflow` and `lineClamp` — no probe had painted one. The
+probe mounts a 200-point cell holding a run longer than it under each cut the
+runtime offers, and reads the frame.
+
+| State | Measured |
+| ----- | -------- |
+| a cell clipped with `overflow: hidden`, no mark | one line; the ink stops at the cell's **200**-point edge and both ends paint whole glyphs — the run is sliced mid-glyph, not marked |
+| the same cell with `textOverflow: "ellipsis"` | one line; the ink ends at **186**, 14 points inside the cell, and the last 12 points carry **7** upper pixels where the same window carries **82** in the unmarked cell — the ellipsis stands where the glyphs stopped |
+| the same with `textOverflow: "ellipsis-start"` | one line; the head carries **14** upper pixels where a whole glyph carries **72**, and the ink ends at **197.5** on a whole glyph — the tail survives |
+| a `<text>` carrying `width: 200`, `overflow: hidden` and the ellipsis | one line, the tail marked (**7**), the ink ending at **186** — a text node can be its own cell |
+| a paragraph in a 200-point cell | **five** lines, and the cell is 108 points tall |
+| the same paragraph with `lineClamp: 2` on the `<text>` | **five** lines — the clamp paints nothing, and the box stays 108 |
+| the same with `lineClamp: 2` on the cell that holds the text | **five** lines — the clamp paints nothing there either |
+| the same with a definite two-line height and `overflow: hidden` | **two** lines in a 48-point box — the only cut that painted |
+| a 200-point cell with no `overflow` declared | the run paints to **303**, 103 points past the cell and over its neighbour, while `bounds()` still reports the cell's **200** |
+
+26 checks, `--only text-truncation`, green on 0.11.0 (~0.4 s). Fixture:
+`src/live/truncation.ts` — the ids, the run and the paragraph, and
+`readTruncation`, which counts the painted lines, the ink's right edge, and the
+upper-half ink at each end of the lowest line; `truncation.test.ts` (10 cases)
+holds the reader to a drawn frame where a stem and a row of dots are known, at
+both device scales, refuses a blank or unreadable region, and holds this
+section's heading, count and `lineClamp` sentence to the steps that assert them.
+
+Two negative controls were measured, exit `1` each, then restored green:
+
+- dropping `textOverflow` from the second cell fails `an ellipsized run ends
+  inside the box where a sliced glyph runs to the edge` — the mark is the
+  property, not the clip.
+- raising the workaround's height to six lines fails `a definite height with a
+  hidden overflow paints the two lines` with **`expected 2, got 5`** — the cut
+  is the height, and nothing else in the fixture makes it.
+
+What it settles, for the data and workspace components:
+
+1. **A one-line label is four properties, not one.** The cell needs a definite
+   width, `position: "relative"` and `overflow: "hidden"`, and the run needs
+   `whiteSpace: "nowrap"`; `textOverflow` then replaces the sliced glyph with
+   an ellipsis. `ellipsis-start` is real and keeps the tail.
+2. **`lineClamp` does not paint in 0.11.0.** It is accepted on the text and on
+   the box and every line still paints, so a `maxLines` label cannot be built
+   from it: the component has to own a definite height equal to
+   `lines × lineHeight` and declare `overflow: "hidden"`.
+3. **Do not trust `bounds()` for an overflow.** The layout report keeps an
+   escaping run inside its cell's width; only the captured paint shows the
+   103-point escape. A probe that asks "did it overflow" must read the frame.
+4. **A text node can be its own cell.** `width` + `overflow` + `textOverflow` on
+   the `<text>` marks the tail exactly as a wrapping cell does, so a component
+   does not need a wrapper div for truncation.
+
+The capability record's **Text truncation** row now carries this: the clip and
+both marks are supported, `lineClamp` is not. The library's own
+`truncate({ maxLines })` spec still writes `lineClamp`, which is the interlock
+row in `TODO.md`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -3653,7 +3713,8 @@ narrower. Each deviation is deliberate and measured:
   paint, which records all three measured shapes and the waits that replaced
   them. The full live suite is the release gate, and this line is its result.
   Measured alone since then: `inspector-lifecycle`,
-  `otp-paste-lifecycle` and `otp-keys-lifecycle` (three probes, each run alone).
+  `otp-paste-lifecycle`, `otp-keys-lifecycle` and `text-truncation` (four
+  probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
