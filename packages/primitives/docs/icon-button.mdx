@@ -62,7 +62,7 @@ sets both sides of the square from `density.controlHeight`.
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
 | `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
 | `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot; forwarded to `Spinner` |
-| `onActivate` | `() => void` | none | click or activating key; not called while busy |
+| `onActivate` | `(event: EventPayload) => void` | none | click or activating key, with the event that caused it; not called while busy |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; yours runs first |
 | `ref` | `Ref<PublicInstance>` | — | the element itself: a trigger anchors the surface it opens to it |
 | `aria-expanded` / `aria-selected` | `boolean` | — | announced state, forwarded through `ActionHostProps` |
@@ -77,6 +77,10 @@ installs no `onClick` at all. The runtime's remaining host props
 (`ActionHostProps`) pass through `iconButtonProps` to the element, so an
 icon-only menu trigger carries its own `ref` and `aria-expanded` exactly as a
 text `Button` does.
+
+`onActivate` is `Button`'s contract, so it carries the event that activated the
+action: the runtime's `click` payload (with the press point) for a pointer, the
+`keyDown`/`keyUp` payload the button decided on for a key.
 
 ## Keyboard
 
@@ -135,7 +139,8 @@ after the recipe, so a callback is the last word:
 
 - `src/components/IconButton.test.tsx` — the label is the name, the box is
   square at the density height, ghost is the default, the activation contract
-  and busy/disabled refusals hold, the busy spinner receives the caller's
+  and busy/disabled refusals hold, the activation event reaches `onActivate` as
+  it does on `Button`, the busy spinner receives the caller's
   `reducedMotion`, the tooltip trigger pair reaches its `Button`, and the
   caller's `style` wins; a trigger's `ref` and `aria-expanded` reach the element
   too.

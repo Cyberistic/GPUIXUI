@@ -214,13 +214,13 @@ export const composeEvent = <Event>(
 export const composePress = (
   blocked: boolean,
   caller: ((event: EventPayload) => void) | undefined,
-  action: () => void,
+  action: (event: EventPayload) => void,
 ): ((event: EventPayload) => void) | undefined =>
   blocked
     ? undefined
     : (event) => {
         caller?.(event);
-        action();
+        action(event);
       };
 
 /** A disabled control keeps its resting fill and drops hover/active feedback. */

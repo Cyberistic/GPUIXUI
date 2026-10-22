@@ -34,7 +34,7 @@ import {
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton, type ButtonState } from "./Button.js";
 import { buttonVariants, type ButtonVariant } from "../core/variants.js";
-import { keyEvent } from "./testing/event.js";
+import { keyEvent, keyUpEvent } from "./testing/event.js";
 import {
   elementChildren,
   elementProp,
@@ -84,6 +84,37 @@ describe("Button", () => {
     const onActivate = vi.fn();
     press(resting({ onActivate }), "enter", "down", true);
     expect(onActivate).toHaveBeenCalledTimes(0);
+  });
+
+  it("hands the activation the event that caused it", () => {
+    // The bug (plan 160's measured Phase 2 STOP): `onActivate` carried no
+    // event, so an adapter mapping a trigger's `onClick` to it either dropped
+    // the payload or ran the handler twice, and a ripple had no press point.
+    const onActivate = vi.fn();
+    const element = resting({ onActivate });
+    const click = {
+      elementId: 7,
+      eventType: "click",
+      x: 12,
+      y: 34,
+      button: 0,
+    } as const;
+    expectSome(hostHandler(element, "onClick"))(click);
+    expect(onActivate).toHaveBeenLastCalledWith(click);
+    expect(onActivate).toHaveBeenCalledTimes(1);
+
+    // Enter reports the key-down it decided on...
+    const enter = keyEvent("enter");
+    expectSome(hostHandler(element, "onKeyDown"))(enter);
+    expect(onActivate).toHaveBeenLastCalledWith(enter);
+
+    // ...and Space the release, which is the event that activated.
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("space"));
+    expect(onActivate).toHaveBeenCalledTimes(2);
+    const space = keyUpEvent("space");
+    expectSome(hostHandler(element, "onKeyUp"))(space);
+    expect(onActivate).toHaveBeenLastCalledWith(space);
+    expect(onActivate).toHaveBeenCalledTimes(3);
   });
 
   it("is a named button the runtime can hit-test", () => {

@@ -84,8 +84,16 @@ export interface ButtonProps
   readonly trailing?: ReactNode;
   /** Accessible name. Required when the button has only an icon. */
   readonly label?: string;
-  /** Called for a click or an activating key. Not called while busy or disabled. */
-  readonly onActivate?: () => void;
+  /**
+   * Called for a click or an activating key, with the event that caused it.
+   *
+   * A pointer activation hands over the runtime's `click` payload, whose `x`/`y`
+   * is the press point (a ripple measures it); a keyboard activation hands over
+   * the `keyDown`/`keyUp` payload the button decided on. `KeyEvent` extends
+   * `EventPayload`, so one handler reads both and `eventType` says which.
+   * Not called while busy or disabled.
+   */
+  readonly onActivate?: (event: EventPayload) => void;
   /**
    * Extra style, resolved against the button's live state and merged last.
    *
@@ -153,16 +161,16 @@ export const renderButton = (
     ...host
   } = props;
   const busy = isBusy({ disabled, loading });
-  const activate = (): void => {
+  const activate = (event: EventPayload): void => {
     if (busy) return;
-    onActivate?.();
+    onActivate?.(event);
   };
   const onKey =
     (phase: "down" | "up") =>
     (event: KeyEvent): void => {
       if (swallowKeyDefault(event.key ?? "", phase)) event.preventDefault();
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
-        activate();
+        activate(event);
     };
 
   const resolved = recipeTw.classesToStyle(

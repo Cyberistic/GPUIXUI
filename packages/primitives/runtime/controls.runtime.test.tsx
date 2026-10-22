@@ -20,6 +20,7 @@ import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import { alpha, filledHover, filledPressed } from "@gpuixui/tokens";
+import type { EventPayload } from "@gpuix/react";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
@@ -101,6 +102,44 @@ it("activates a Button on a real click", async () => {
   const { runtime, calls } = await renderButton();
   runtime.click("b");
   expect(calls()).toBe(1);
+});
+
+it("hands the activation the event the platform dispatched", async () => {
+  // The bug (plan 160's measured Phase 2 STOP): `onActivate` carried no event,
+  // so an adapter switching a trigger's `onClick` onto it dropped the press,
+  // and a ripple had no point to be born at. A pointer activation now carries
+  // the runtime's own `click` payload with the press coordinates; a keyboard
+  // activation carries the key payload the button decided on.
+  const runtime = await openWindow();
+  const seen: Array<EventPayload> = [];
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button
+          testId="b"
+          onActivate={(event) => {
+            seen.push(event);
+          }}
+        >
+          Save
+        </Button>
+      </Stack>
+    </Surface>,
+  );
+  const box = boundsOf(runtime, "b");
+  runtime.click("b");
+  const click = seen[0] ?? expect.fail("the click reported no activation");
+  expect(click.eventType).toBe("click");
+  expect(click.x).toBeGreaterThanOrEqual(box.x);
+  expect(click.x).toBeLessThanOrEqual(box.x + box.width);
+  expect(click.y).toBeGreaterThanOrEqual(box.y);
+  expect(click.y).toBeLessThanOrEqual(box.y + box.height);
+
+  runtime.keyDown("b", "enter");
+  const key = seen[1] ?? expect.fail("Enter reported no activation");
+  expect(key.eventType).toBe("keyDown");
+  expect(key.key).toBe("enter");
+  expect(seen.length).toBe(2);
 });
 
 it("paints an outlined Button's edge in the measured boundary role", async () => {

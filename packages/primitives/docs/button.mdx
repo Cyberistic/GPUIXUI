@@ -85,7 +85,7 @@ keeps the text floor on both fills.
 | `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot; forwarded to `Spinner` |
 | `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
 | `label` | `string` | none | accessible name; required for an icon-only button |
-| `onActivate` | `() => void` | none | click or activating key; not called while busy |
+| `onActivate` | `(event: EventPayload) => void` | none | click or activating key, with the event that caused it; not called while busy |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; yours runs first |
 | `onMouseEnter` / `onMouseLeave` | host handlers | none | forwarded to the host; the pair a `Tooltip` trigger needs |
 | `aria-description` | `string` | none | supplementary description; `Tooltip` passes the tip here, and a busy button announces `Loading` instead |
@@ -100,6 +100,25 @@ The five host handlers are `InteractionProps`. They are **composed**, never
 substituted: your handler runs first with the runtime's own event and the button
 still activates. A busy or disabled button installs no `onClick` at all, so
 neither your handler nor `onActivate` runs; keys and focus stay observable.
+
+`onActivate` carries the event that activated the button rather than nothing: a
+pointer activation hands over the runtime's `click` payload, whose `x`/`y` is the
+point that was pressed, and a keyboard activation hands over the
+`keyDown`/`keyUp` payload the button decided on. `KeyEvent` extends
+`EventPayload`, so one handler serves both and `eventType` says which happened —
+a ripple can be born at the press point and a trigger can forward the caller's
+own `onClick` without losing it:
+
+```tsx
+<Button
+  onActivate={(event) => {
+    // A pointer press carries x/y; a key carries `key`.
+    recordActivation(event);
+  }}
+>
+  Save
+</Button>;
+```
 
 The pointer pair and `aria-description` are `TooltipTriggerProps`: GPUix's
 `TooltipTrigger asChild` merges its handlers into the element it wraps, and the
@@ -245,10 +264,14 @@ the dim back with `style`, which merges last.
   neutral pair on every filled variant with the fade's under-floor card as the
   premise, while an unfilled action keeps the fade; a trigger's host props
   (`ref`, `aria-expanded`/`aria-selected`, `onLayout`) reaching the element while
-  the component still writes its own role and tab stop.
+  the component still writes its own role and tab stop, and the activation
+  event: a click hands `onActivate` its own payload with the press point, Enter
+  hands the key-down it decided on and Space the release.
 - `src/components/handlers.test.tsx` — a caller's click, keys and focus run
   before the button's own action, and a busy button installs no press handler.
-- `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter
+- `runtime/controls.runtime.test.tsx` — a hit-tested click activates once and
+  hands `onActivate` the runtime's own payload with coordinates inside the
+  button, while Enter hands it the key payload; Enter
   on down, Space on up, a held key ignored; disabled and loading refuse both and
   a busy button still announces its role and name; a filled button's painted
   `keyboardFocusDim: false` and a ghost button's absent declaration are read off

@@ -129,6 +129,20 @@ describe("IconButton", () => {
     expect(hostProp(disabled, "tabIndex")).toStrictEqual(Option.none());
   });
 
+  it("forwards the activation event Button reports", () => {
+    // The bug guarded: an icon trigger is the one a toolbar uses for its
+    // overflow action, and `onActivate` reached it with no payload, so the
+    // caller could not tell a click from a key or read the press point.
+    const onActivate = vi.fn();
+    const element = resting({ label: "Layers", icon: glyph, onActivate });
+    const click = { elementId: 0, eventType: "click", x: 4, y: 5 } as const;
+    expectSome(hostHandler(element, "onClick"))(click);
+    expect(onActivate).toHaveBeenLastCalledWith(click);
+    const enter = keyEvent("enter");
+    expectSome(hostHandler(element, "onKeyDown"))(enter);
+    expect(onActivate).toHaveBeenLastCalledWith(enter);
+  });
+
   it("stays focusable while busy and blocks activation", () => {
     const onActivate = vi.fn();
     const loading = resting({

@@ -22,6 +22,7 @@
  */
 
 import type { ReactElement, ReactNode } from "react";
+import type { EventPayload } from "@gpuix/react";
 import type { StateStyle } from "@gpuix/react/floating";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ButtonVariant } from "../core/variants.js";
@@ -54,8 +55,12 @@ export interface IconButtonProps
   readonly loading?: boolean;
   /** Holds the busy spinner's lit dot, for a reader who asked for no motion. */
   readonly reducedMotion?: boolean;
-  /** Called for a click or an activating key. Not called while busy or disabled. */
-  readonly onActivate?: () => void;
+  /**
+   * Called for a click or an activating key, with the event that caused it —
+   * the click payload's `x`/`y` or the key payload the button decided on.
+   * Not called while busy or disabled.
+   */
+  readonly onActivate?: (event: EventPayload) => void;
   /** Extra style, resolved against the button's live state and merged last. */
   readonly style?: StateStyle<ButtonState>;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
