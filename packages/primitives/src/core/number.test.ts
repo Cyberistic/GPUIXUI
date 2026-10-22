@@ -96,6 +96,28 @@ describe("formatNumber", () => {
     // handed to the runtime to fail on.
     expect(formatNumber(1.23456789, 40)).toHaveLength(22);
   });
+
+  it("does not sign a value that rounds to zero", () => {
+    // The bug guarded: `(-0.004).toFixed(2)` is `-0.00`, so a field with
+    // `precision={2}` painted a negative number that means zero. The sign
+    // belongs to the value, not to the rounding.
+    expect(formatNumber(-0.004, 2)).toBe("0.00");
+    expect(formatNumber(-0.0001)).toBe("0");
+    expect(formatNumber(-0.4)).toBe("0");
+    expect(formatNumber(-1.5, 2)).toBe("-1.50");
+    expect(formatNumber(-0.5)).toBe("-1");
+    expect(formatNumber(-0.04)).toBe("0");
+  });
+
+  it("keeps its fixed decimals past the exponential bound", () => {
+    // The bug guarded: `toFixed` switches to the exponential form at 1e21, so a
+    // value the parser accepts ("1e21") committed as "1e+21" under a promise of
+    // fixed decimals. Every double that large is an integer.
+    expect(formatNumber(1e21)).toBe("1000000000000000000000");
+    expect(formatNumber(1.5e21, 2)).toBe("1500000000000000000000.00");
+    expect(formatNumber(-1e21)).toBe("-1000000000000000000000");
+    expect(formatNumber(1e-7, 8)).toBe("0.00000010");
+  });
 });
 
 describe("stepNumber", () => {

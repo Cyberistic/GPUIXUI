@@ -101,9 +101,12 @@ and only refuses the action.
 While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
 the caret never jumps. Every edit that parses reports the clamped number
 through `onValueChange`; on blur or `Enter` the draft is reformatted to `precision`.
-Enter is the runtime's own **Submit** action on a single-line `<input>` — it never
-arrives as a keydown — so the field commits from that action and reports the same
-event through `onSubmit`, which is how a form sends from the field.
+A value that rounds to zero keeps no sign (`-0.004` at two decimals shows
+`0.00`, not `-0.00`), and a magnitude past `1e21` keeps its fixed decimals
+rather than the platform's exponential `1e+21`. Enter is the runtime's own
+**Submit** action on a single-line `<input>` — it never arrives as a keydown —
+so the field commits from that action and reports the same event through
+`onSubmit`, which is how a form sends from the field.
 
 A step is exact at decimal precision: stepping `0.2` by `0.1` reports `0.3`, not
 the binary `0.30000000000000004`, because the move is rounded to the finer of
@@ -199,7 +202,9 @@ so a caller that composes its own parts still gets the hint.
 
 - `src/core/number.test.ts` — decimal-only parsing, clamping, precision,
   noisy-free decimal steps (ten 0.1 steps reach 1 exactly), a large integer step
-  that rounding must not erase, Home/End only with a bound.
+  that rounding must not erase, Home/End only with a bound, a value that is not a
+  number read as a bound, and fixed-decimal text that keeps no negative zero and
+  expands past the platform's `1e21` exponential bound.
 - `src/components/NumberField.test.tsx` — the draft value, the key contract, the
   raw edit report, the submit channel (commit first, no listener while
   disabled), steppers as presentation, one tab stop, disabled/invalid,

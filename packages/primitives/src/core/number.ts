@@ -8,6 +8,7 @@
  */
 
 import * as Option from "effect/Option";
+import * as Str from "effect/String";
 
 /** Optional bounds with a mandatory step. */
 export interface NumberRange {
@@ -68,9 +69,41 @@ export const clampNumeric = (value: number, range: NumberRange): number => {
   return max === undefined ? aboveMin : Math.min(max, aboveMin);
 };
 
-/** Fixed decimals, never a thousands separator. */
-export const formatNumber = (value: number, precision = 0): string =>
-  value.toFixed(Math.min(20, Math.max(0, Math.trunc(precision))));
+/** A fixed-decimal string that renders zero with a negative sign. */
+const NEGATIVE_ZERO = /^-0(?:\.0+)?$/;
+
+/**
+ * A `toFixed` result in plain decimal, in the one case it is not.
+ *
+ * `toFixed` switches to the exponential form at `1e21` (the spec's bound), so a
+ * value the caller can type — the parser accepts an exponent — used to commit
+ * as `1e+21` under a contract that promises fixed decimals. Every double that
+ * large is an integer, so the expansion is the mantissa's digits, the zeros its
+ * exponent asks for, and the requested decimals.
+ */
+const plainFixed = (text: string, decimals: number): string => {
+  const [mantissa = "0", exponentText = "0"] = text.split(/e/i);
+  const negative = Str.startsWith("-")(mantissa);
+  const unsigned = negative ? Str.slice(1)(mantissa) : mantissa;
+  const [whole = "0", fraction = ""] = unsigned.split(".");
+  const shift = Number(exponentText) - Str.length(fraction);
+  const digits = `${whole}${fraction}${Str.repeat(Math.max(0, shift))("0")}`;
+  const point = decimals > 0 ? `.${Str.repeat(decimals)("0")}` : "";
+  return `${negative ? "-" : ""}${digits}${point}`;
+};
+
+/**
+ * Fixed decimals, never a thousands separator.
+ *
+ * A value that rounds to zero loses the sign `toFixed` keeps on it: `-0.004` at
+ * two decimals is `-0.00`, which reads as a negative number.
+ */
+export const formatNumber = (value: number, precision = 0): string => {
+  const decimals = Math.min(20, Math.max(0, Math.trunc(precision)));
+  const fixed = value.toFixed(decimals);
+  const text = Str.includes("e")(fixed) ? plainFixed(fixed, decimals) : fixed;
+  return NEGATIVE_ZERO.test(text) ? Str.slice(1)(text) : text;
+};
 
 /**
  * The decimal places a number's shortest representation carries.
