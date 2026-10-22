@@ -157,6 +157,11 @@ export const registry = [
     capability: "workspace",
   },
   {
+    id: "dock-reflow",
+    title: "Dock reflow: a pane's onLayout reports the width a sibling takes",
+    capability: "workspace",
+  },
+  {
     id: "window-key-shortcut",
     title: "App-level window shortcut: cmd-k palette and Escape",
     capability: "workspace",

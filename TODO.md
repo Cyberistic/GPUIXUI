@@ -492,7 +492,30 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 51/51
+`[x]` `[██████████]` 52/52
+
+`[x]` Land the `dock-reflow` headless scenario and measure **the re-clamp signal
+      a dock needs** — `docking-nested` pins a fixed-width split because a
+      split's `max` is the caller's number and an inner split does not re-clamp
+      when its parent shrinks, and the stated way out ("a dock passes its own
+      bounds", via `onLayout`) had never been measured: an `onLayout` that fired
+      only for the first paint would make the workaround useless. A 560px row of
+      a 120px sidebar, a flexible centre and a fixed 100px inspector; `Widen
+      sidebar` takes 100px from the centre. Measured on 0.11.0: the commit's
+      layout pass arrives **before** the new width applies and reports the box
+      the pane still has (`w=340 reports=2`); the settled pass reads `w=240` on
+      the next frame and equals the pane's painted `bounds`; the 100px inspector
+      keeps its box and **still receives a report** (its count reaches 2); and
+      narrowing reports the original 340 again. So the signal exists, but a
+      report is not a "you changed" event — a stale pass arrives first and an
+      unchanged pane is reported to — so a re-clamp acts on the width the payload
+      carries and is idempotent. 12 checks, `--only dock-reflow`, green on
+      0.11.0 (the counts behind it re-run three times); full headless suite
+      re-run 37/37. Two negative controls measured (a centre that does not flex:
+      `the widened sidebar shrinks the centre by exactly what it took — expected
+      240, got 289`; dropping the inspector's `onLayout`: `a pane that kept its
+      box still got a report — expected 2, got 1`, exit `1` each). Evidence:
+      `apps/playground/README.md` §Dock reflow
 
 `[x]` Land the `virtual-list-expand` headless scenario and measure **a row that
       expands while it is painted** — `virtual-list-rows` measured rows of
@@ -1523,7 +1546,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | `/docs/themes`'s **Text selection** bullet still describes the old contract: it says `selectionFailures` measures "the four content surfaces body text can be selected from" against "two floors", while `selectionPairs` now also carries `mutedForeground` on the page, a card and a popover at the secondary floor (the tokens workstream measured it and moved the palettes' secondary text). The readout itself needs no new line — the editor never edits `selection`, and `formatSelectionFailure` already words any pair the report returns | docs-site | **resolved** — the bullet now interpolates the pair count (`{selectionPairs.length}`) and both floors (`{contrastFloors.body}` / `{contrastFloors.secondary}`) from the package, names the four content surfaces plus the `mutedForeground` line on the three prose surfaces, and says the caption or second line under a heading is measured too. `theming-page.test.ts` gained a case holding the page to `selectionPairs`: the import must carry `selectionPairs` and `contrastFloors`, every surface the report composites over must be named, both floors must be interpolated, and the retracted "four content surfaces" sentence must not return (measured: the case failed on the import before the fix, and fails on the old sentence if restored) |
 
-| Record the **expandable-row** rule the runtime measured — the capability record's Virtualized list row covers the rows' heights (`virtual-list-rows`) but says nothing about a row that grows **while it is painted**, which is what an expandable row or an expandable table row is. The playground's `virtual-list-expand` (18 checks on 0.11.0) measured: the row re-measures on the next frame with no scroll and no offset change; the rows below shift by the growth and a press lands on the shifted row; the measured height is remembered across the window round-trip; the grown height joins `scrollToItem`'s arithmetic; and the list paints whole rows, so a growth that leaves less than a row of the 240px viewport drops the following row out of the painted window until a scroll | docs-site (capability record + `/docs/runtime`), and the Tier 3 Expandable rows component | open — the record owes the row and §5's owed-probe list owes `virtual-list-expand`; `COMPONENTS.md`'s Virtualized lists and Expandable rows rows carry the measurement already. Evidence: `apps/playground/README.md` §An expanded row |
+| Record the **expandable-row** rule the runtime measured — the capability record's Virtualized list row covers the rows' heights (`virtual-list-rows`) but says nothing about a row that grows **while it is painted**, which is what an expandable row or an expandable table row is. The playground's `virtual-list-expand` (18 checks on 0.11.0) measured: the row re-measures on the next frame with no scroll and no offset change; the rows below shift by the growth and a press lands on the shifted row; the measured height is remembered across the window round-trip; the grown height joins `scrollToItem`'s arithmetic; and the list paints whole rows, so a growth that leaves less than a row of the 240px viewport drops the following row out of the painted window until a scroll | docs-site (capability record + `/docs/runtime`), and the Tier 3 Expandable rows component | open — the record owes the row and §5's owed-probe list owes `virtual-list-expand`; §3 also owes `dock-reflow` beside the split-pane row (a pane's `onLayout` re-fires on a sibling reflow, reports the painted box, and also reports a stale pass and unchanged panes). `COMPONENTS.md`'s Virtualized lists, Expandable rows, Resizable split panes and Docking layouts rows carry the measurements already. Evidence: `apps/playground/README.md` §An expanded row, §Dock reflow |
 
 ## Phase D — data and workspace components
 

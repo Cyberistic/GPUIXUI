@@ -24,9 +24,9 @@ core capabilities (including the three theme-gallery scenarios, the modal
 contract, floating placement and text selection), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `data-grid-fixed-header`,
 `data-grid-frozen-column`, `virtualized-table`, `virtual-list-windowed`,
-`virtual-list-rows`, `tree-view`, `log-viewer`, `workspace-tab-drag`,
-`docking-nested`, `drag-autoscroll`, `search-highlights`, `tab-overflow`,
-`editor-surface`), the app-level
+`virtual-list-rows`, `virtual-list-expand`, `tree-view`, `log-viewer`,
+`workspace-tab-drag`, `dock-reflow`, `docking-nested`, `drag-autoscroll`,
+`search-highlights`, `tab-overflow`, `editor-surface`), the app-level
 shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
@@ -83,7 +83,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (36/36 green); -> 2 on a host with no binding
+# -> 0 here (37/37 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -442,6 +442,46 @@ a 56px detail leaves a whole row of viewport free and fails
 `expand-fixture.test.ts` guards the geometry those two checks depend on (3
 cases).
 
+## Dock reflow: `onLayout` reports the width a sibling takes
+
+`docking-nested` pins a **fixed-width** split, because a split's `max` is the
+caller's number and an inner split does not re-clamp when its parent shrinks.
+The stated way out is the container's own `onLayout` — "a dock passes its own
+bounds" — and nothing had measured that a reflow reports at all: an `onLayout`
+that fired only for the first paint would make the workaround useless.
+
+`dock-reflow` mounts a 560px row of a 120px sidebar, a flexible centre pane and
+a fixed 100px inspector. `Widen sidebar` takes 100px from the centre.
+
+| Step | Check |
+| ---- | ----- |
+| mount | the centre takes `560 − 120 − 100 = 340` and the inspector keeps 100 |
+| mount | the centre's reported width is its painted `bounds`, not the style's intent |
+| `Widen sidebar`, before a frame | a layout pass arrives with the box the pane **still** has (`w=340 reports=2`) — the commit reports before the new width applies |
+| one frame later | the settled report reads `w=240`, exactly the 100px the sidebar took, and it still equals `bounds` |
+| the inspector | keeps its 100px and **still receives a report** (its count reaches 2), although its box never changed |
+| `Narrow sidebar` | the centre returns to 340 and reports again, still agreeing with `bounds` |
+
+12 checks, `--only dock-reflow`, green on 0.11.0 (three consecutive runs of the
+counts behind it).
+
+What it settles for a docking package:
+
+1. **The re-clamp signal exists.** A flex child's `onLayout` fires again when a
+   sibling takes space, and the settled payload is the painted box.
+2. **A report is not an event that says "you changed".** The same reflow
+   produced a stale pass first, and it also reported to the pane whose box did
+   not change. A handler must therefore re-clamp from the width it is *given* and
+   be idempotent — setting a size that is already set must not start a loop —
+   rather than treating every report as a change or reading a container's width
+   in the same tick as the state change.
+
+Negative controls, measured: a centre that does not flex fails
+`the widened sidebar shrinks the centre by exactly what it took`
+(`expected 240, got 289`); dropping the inspector's `onLayout` fails
+`a pane that kept its box still got a report` (`expected 2, got 1`) — exit `1`
+each; restored, green.
+
 ## A frozen data-grid column
 
 The runtime has no sticky, so a frozen first column is the header rule on the
@@ -501,10 +541,10 @@ mounting every page from one component fails
 
 ## Evidence on this host
 
-The suite is **36/36 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **37/37 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-36/36 scenarios passed · capabilities: layout=verified text=verified
+37/37 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -528,7 +568,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | data grid | a frozen first column is its own vertical scroller beside the grid, mirrored in `onScrollChange` with a re-entrancy guard: a wheel over either pane moves both, the same row shares its `y` across the panes, a horizontal wheel pans the cells but not the frozen column, and both clamp at the same `-1440` (`data-grid-frozen-column`). A header **outside** the row scroller keeps its painted y while the rows scroll (`position: "sticky"` paints nothing: a sticky sample *inside* the scroller moves by exactly the scroll amount, so the header must be a sibling); one `overflowX` scroller wrapping header and rows moves a header cell and its column's cells by the same x, keeping them aligned |
 | search highlights | a `highlight` spec paints a wash per match, and `SmokeHost.highlights()` (the renderer's `getPaintedHighlights`) reports each wash's run, `[start, end)` and boxes: three for `alpha`, two for `beta`, and none once the query is case-sensitive `ALPHA` or a whole-word `alp` — the insensitive/word-off queries mark them again. One `activeIndex` marks exactly one wash `active`. `ranges: [[0, 5)]` marks the same region `indexOf` would. A wash is a quad, so `text`/`paintedText` never report it |
 | editor | a `<textarea>` edits lines: Enter inserts a newline (a field with an `onSubmit` listener reports Enter **instead**, so an editor must not set one), and the arrow keys move the native caret (two lefts from the end of `cd` put the next character before its `c`). `<code code language showLineNumbers>` paints its source and every line, scrolls in a bounded viewport, and `<diff patch>` paints both sides of a changed line. **No caret or selection API exists**, so a highlighted editable surface cannot be built: the honest editor is edit in the textarea, display in `<code>` |
-| docking | nested splits compose: each level keeps its own width, so an outer drag moves the inner split's origin and leaves its width alone, and an inner drag leaves the sidebar alone. A caller-owned sidebar collapses to 0 (the nested split takes the width) and reopens at the width it had; a tab switch inside a pane repaints it without moving it. A split's `max` is the **caller's number**, not the container's width: a nested split does not re-clamp when its parent shrinks, so a dock passes its own bounds (0.11.0's `onLayout` is the way to measure them) |
+| docking | nested splits compose: each level keeps its own width, so an outer drag moves the inner split's origin and leaves its width alone, and an inner drag leaves the sidebar alone. A caller-owned sidebar collapses to 0 (the nested split takes the width) and reopens at the width it had; a tab switch inside a pane repaints it without moving it. A split's `max` is the **caller's number**, not the container's width: a nested split does not re-clamp when its parent shrinks, so a dock passes its own bounds — and `dock-reflow` measured the signal: a pane's `onLayout` fires again when a sibling takes 100px, the settled payload equals the painted `bounds`, but a stale pass arrives first with the pane's current box and a pane whose box did not change is still reported to, so the handler must re-clamp from the width it is given and be idempotent |
 | drag auto-scroll | a drag at a scroller's edge does **not** move it: the offset stays `0` across eight moves. `renderer.scrollTo(id, 0, y)` from the component's `onMouseMove`, using the rail's own `getElementBounds` for the edge band, is the measured alternative (`y = -128` for 8 × 16px). `scrollTo` paints synchronously, so state after the call is not committed when the drag returns — keep the offset in a ref |
 | virtual table | `onVisibleRange` **lags the painted window by one gesture** — after two wheel gestures the painted rows were `32–40` while the range read `16`; an index-driven feature must use the painted rows as the current window |
 | tree | `paddingLeft` indents exactly (16px per depth); expand/collapse repaints the subtree; a clicked row takes native focus and receives arrow keys. Focus movement from component code is measured separately (`modal`), so a roving-tabindex tree can use `renderer.focusElement` |
@@ -1650,6 +1690,7 @@ src/scenarios/log-viewer.tsx bottom-anchored virtual list (tail, appends)
 src/scenarios/modal.tsx     focus entry, Tab trap, focus return, nested Escape
 src/scenarios/floating.tsx  side/align/offset placement and the window snap
 src/scenarios/docking.tsx   nested splits, a caller-owned sidebar and a tabbed pane
+src/scenarios/dock-reflow.tsx a pane's onLayout reports the width a sibling takes
 src/scenarios/data-grid.tsx a fixed header over a vertical scroller, one shared x offset
 src/scenarios/search-highlights.tsx the runtime's find: query, case, word and ranges
 src/scenarios/editor.tsx    a textarea that edits lines, <code> and <diff> read-only
@@ -1696,7 +1737,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (36/36), with a written report and screenshots.
+  (37/37), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

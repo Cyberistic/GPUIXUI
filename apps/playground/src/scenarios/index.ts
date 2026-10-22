@@ -32,6 +32,7 @@ import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { dataGridScenario } from "./data-grid.js";
 import { dataGridFrozenColumnScenario } from "./data-grid-frozen-column.js";
 import { workspaceScenario } from "./workspace.js";
+import { dockReflowScenario } from "./dock-reflow.js";
 import { dragAutoscrollScenario } from "./drag-autoscroll.js";
 import { dockingScenario } from "./docking.js";
 import { shortcutScenario } from "./shortcuts.js";
@@ -75,6 +76,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "data-grid-frozen-column": dataGridFrozenColumnScenario,
   "data-grid-fixed-header": dataGridScenario,
   "workspace-tab-drag": workspaceScenario,
+  "dock-reflow": dockReflowScenario,
   "drag-autoscroll": dragAutoscrollScenario,
   "docking-nested": dockingScenario,
   "window-key-shortcut": shortcutScenario,
