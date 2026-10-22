@@ -2701,8 +2701,9 @@ resolves a control's height, side and horizontal padding from the theme
 The components package compiles against `@gpuixui/tw`'s **default** registry —
 shadcn's fixed metrics (`h-9` = 36, `px-4` = 16) — by decision (ADR 0006), and
 keeps density for the one thing that has to line up with the controls beside it:
-a control's box (`controlHeight`, in the fields, the accordion trigger, tabs, the
-stepper, the pickers and the recorders) and a list row (`rowHeight`,
+a control's box (`controlHeight`, in the fields, menu and command rows, the
+accordion trigger, tabs, the stepper, the pickers, the pagination and the
+recorders) and a list row (`rowHeight`,
 `packages/components/src/list.tsx`). Everything else in those components is a
 fixed number of pixels, so a `density` override does not resize a card's padding,
 a menu panel or a tab; a consumer who wants that names it in `className` or

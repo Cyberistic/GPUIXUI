@@ -229,8 +229,8 @@ their recipes against a density-driven registry, so a control's box, side and
 padding are the theme's. The components package compiles against `@gpuixui/tw`'s
 default registry — shadcn's fixed metrics — and keeps density only where a box has
 to line up with the density-driven controls beside it: a control's
-`controlHeight` (the fields, the accordion trigger, tabs, the stepper, the
-pickers, the recorders) and a list row's `rowHeight`. A card's padding, a menu
+`controlHeight` (the fields, menu and command rows, the accordion trigger, tabs,
+the stepper, the pickers, the pagination and the recorders) and a list row's `rowHeight`. A card's padding, a menu
 panel or a tab is a fixed number of pixels there, so a brand that wants them
 denser names the numbers in `className` or `style` (ADR 0006). Each package's
 compile seam is where that choice lives, and `density-adoption.test.ts` reads
