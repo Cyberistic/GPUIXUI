@@ -7,8 +7,13 @@ description: The primary action — clickable and keyboard-activatable, with bus
 `Button`/`buttonProps`; this component keeps its own activation contract
 (`core/keyboard.ts`: Enter on key down, Space on key up, a held key ignored) and
 adds the recipe, `loading`, and the parts contract on top, so the keyboard rules
-it ships are the ones its tests and runtime probes measure. Adopting the
-headless primitive is tracked in `TODO.md` rather than assumed.
+it ships are the ones its tests and runtime probes measure. **The headless
+primitive is not adopted, and that is a decision with a reason**: `buttonProps`
+keeps a disabled button in the tab order (`tabIndex: -1`) where this component
+removes the stop, exposes only `{ disabled }` to its `style` callback where this
+one reports focus too, and has no `loading`/`Spinner` state or
+`aria-description="Loading"`. Its Space release also fires without the held-key
+guard this component applies. The measured comparison is in `TODO.md` §Salvage.
 
 ## Usage
 
@@ -127,9 +132,11 @@ refuses activation.
 - An icon-only button must pass `label`; use `IconButton`, whose required prop is
   the name.
 - No native button element: the runtime exposes a `div` with role and handlers.
-- Duplicates the runtime's headless `Button`: `@gpuix/react` 0.11.0 ships
-  `Button`/`buttonProps`, and this component predates it. Adoption is a tracked
-  decision (`TODO.md`), not an assumption that the runtime has no button.
+- Overlaps the runtime's headless `Button`: `@gpuix/react` 0.11.0 ships
+  `Button`/`buttonProps`, and this component predates it. Adoption was evaluated
+  and declined — `buttonProps` lacks `loading`, the focused `style` state and the
+  held-key guard, and keeps a disabled button in the tab order; the comparison is
+  in `TODO.md` §Salvage, so nobody re-litigates it from memory.
 
 ## Verification
 
