@@ -270,6 +270,7 @@ duration: `docs/component-api.md` §11.
 | `src/counting-number.tsx`, `src/counting-number/logic.ts` | CountingNumber: a number interpolated by `@gpuixui/motion` and painted each frame |
 | `src/rotating-text.tsx`, `src/rotating-text/logic.ts` | RotatingText: a phrase rotation on an interval, one fade per step |
 | `src/rolling-text.tsx`, `src/rolling-text/logic.ts` | RollingText: a value that rolls vertically inside one clipped line, two halves and a swap (plan 600) |
+| `src/sliding-text.tsx`, `src/sliding-text/logic.ts` | SlidingText: the same swap on the horizontal axis, inside a box that reports the width it travels |
 | `src/reveal.tsx`, `src/reveal/frames.ts` | Reveal: the house fade-and-offset entrance on mount or on an `open` change (plan 600) |
 | `src/ripple-button.tsx`, `src/ripple-button/logic.ts` | RippleButton: a press spreads a disc from the pointer by growing its box, never a transform (plan 600) |
 | `src/shine-button.tsx`, `src/shine-button/logic.ts` | ShineButton: a sheen of two two-stop halves crossing the action on hover (plan 600) |
@@ -284,6 +285,7 @@ duration: `docs/component-api.md` §11.
 | `src/internal/theme.ts` | the one seam over `@gpuixui/tokens`: re-exports `alpha`, `focusRing`, `elevationShadow` and `statusTone`, and maps the component tone `danger` to the token role `destructive` (plan 157) |
 | `src/internal/measure.ts` | the one reader of an `onLayout` box (four sides, or nothing) and of a pointer's point, for the components that measure themselves |
 | `src/internal/recipe.ts` | the one seam over `@gpuixui/tw`: compiles a class-string recipe to the resting `StyleDesc` (ADR 0006) |
+| `src/internal/text-swap.ts` | the two-phase swap `RollingText` and `SlidingText` share: which phase, what a mid-run value does, and the frames a travel on `top` or `left` paints |
 | `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
