@@ -11,7 +11,8 @@
     "fmt": "oxfmt --check --ignore-path .oxfmtrc-ignore",
     "fmt:fix": "oxfmt --write --ignore-path .oxfmtrc-ignore",
     "check:tests": "nub scripts/check-tests.ts",
-    "check": "nub run check:tests && nub run lint && nub run fmt && nub run check-types",
+    "check:exports": "nub scripts/check-exports.ts",
+    "check": "nub run check:tests && nub run check:exports && nub run lint && nub run fmt && nub run check-types",
     "dev:docs": "nub run --filter @gpuixui/docs dev",
     "dev:playground": "nub run --filter playground dev",
     "deploy:docs": "nub run --filter @gpuixui/deploy deploy:docs"
