@@ -2055,6 +2055,40 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("boundary");
   });
 
+  it("records the clamp the shipped Text paints without lineClamp", () => {
+    // The window measured `lineClamp: 2` painting all five lines — and it read
+    // the shipped `Text`'s own `clamp` prop among the counter-examples. That
+    // was the component's defect, not the route: `clamp` now resolves a
+    // definite box (the role's leading times the line count, with a hidden
+    // overflow) and never sets `lineClamp`, and the runtime suite holds it. A
+    // record still naming the component as the broken case sends the next plan
+    // to reimplement a fix that already landed. The raw declaration's absence
+    // stands, so the row keeps both halves.
+    const style = read("packages/primitives/src/core/style.ts");
+    const clamp = style.slice(style.indexOf("if (spec.clamp !== undefined)"));
+    expect(clamp).toContain(
+      "style.height = role.lineHeight * clampLines(spec.clamp);",
+    );
+    expect(clamp).toContain('style.overflow = "hidden";');
+    expect(clamp).not.toContain("style.lineClamp");
+
+    const suite = read("packages/primitives/runtime/layout.runtime.test.tsx");
+    expect(suite).toContain("clamps a Text after its own line count");
+    expect(suite).toContain("clamps each node to its own line count");
+
+    const row = rowFor("Text truncation");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("**`lineClamp` paints nothing**");
+    expect(row?.evidence).toContain("no longer sets `lineClamp`");
+    expect(row?.evidence).toContain("the role's leading times the line count");
+    expect(row?.evidence).toContain("layout.runtime.test.tsx");
+    expect(row?.evidence).not.toContain(
+      "through the shipped `Text`'s own `clamp` prop",
+    );
+    expect(row?.workaround).toContain("`Text clamp`");
+    expect(row?.workaround).toContain("lines × lineHeight");
+  });
+
   it("publishes the measured gaps on /docs/runtime", () => {
     expect(runtimePage).toContain("data-grid-fixed-header");
     expect(runtimePage).toContain("editor-surface");
