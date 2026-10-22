@@ -95,6 +95,15 @@ hit test stops, so the chevron is an `<svg>` with `pointerEvents: "none"` and
 the row answers the press. A control that must take its own press — a checkbox
 in a file tree's row — paints, which is what makes it take it.
 
+`hover-routing-lifecycle` measured the same boundary for the pointer's **hover**:
+a row's `hover` wash comes from the same hit test as the press, so an unfilled
+label leaves the row both its fill and its enter, while a `<text>` or `<div>`
+that paints a fill takes both and hears its own enter. `pointerEvents: "none"`
+puts the row back in the pointer's path and still runs the child's own listener.
+A decorative badge or metric in a file tree's row therefore declares
+`pointerEvents: "none"`; a control that must answer the pointer keeps its fill
+and paints the row's hover itself.
+
 ## API
 
 | Prop | Type | Default | Consequence |

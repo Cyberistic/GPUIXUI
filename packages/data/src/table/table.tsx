@@ -323,6 +323,14 @@ export interface TableRowProps extends Omit<Props, "children"> {
  * press on it reaches this row; a composed control that must hand the press on —
  * a badge, an icon with a background — declares `pointerEvents: "none"`, the
  * same rule the shipped `Badge` and `Keycap` follow.
+ *
+ * The pointer's hover takes the **same hit test** as its press
+ * (`hover-routing-lifecycle`): an unfilled label leaves this row both its
+ * `hover` wash and its enter event, while a child that paints a fill takes both
+ * and hears its own enter. A decorative child — a status pill, a metric — that
+ * should not swallow the row's feedback declares `pointerEvents: "none"`; the
+ * child's own listener still runs, because opting out removes the fill's
+ * hitbox rather than the handler.
  */
 export const TableRow = ({
   selected,

@@ -180,6 +180,14 @@ const Row = <T,>({
  * The caller names the tree with `aria-label`: a role-less node never reaches
  * the accessibility tree, and `role="tree"` is written here so a consumer cannot
  * forget it.
+ *
+ * A row's pointer feedback is the runtime's native `hover` refinement, whose
+ * hovered set takes the **same hit test** as a press (`hover-routing-lifecycle`):
+ * an unfilled label leaves the row its wash, while a child that paints a fill
+ * takes the row's hover and hears its own enter. The chevron is an `<svg>` with
+ * `pointerEvents: "none"`, so the row keeps both its press and its hover; a
+ * decorative pill in a row's `renderRow` should declare the same, and a control
+ * that must answer the pointer keeps its fill.
  */
 export const TreeView = <T,>({
   rows,
