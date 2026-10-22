@@ -4,8 +4,14 @@
  * platform themes are held to. A ratio that silently accepted a translucent
  * colour would let a theme claim a contrast it cannot have, because a
  * translucent fill takes the surface behind it.
+ *
+ * The catalogue's printed tightest placement is read here, as `docs.test.ts`
+ * and `selection.test.ts` read it: the page states the number this suite
+ * measures, so the two cannot drift apart. The read is synchronous and happens
+ * once, when the suite loads; the package keeps no runtime dependency.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   contrastFailures,
@@ -16,12 +22,17 @@ import {
 } from "./contrast.js";
 import { highContrastDarkColors, lightColors } from "./color.js";
 import { indicatorRoles, indicatorSurfaces } from "./indicator.js";
+import { platformNames } from "./platforms.js";
+import { retroNames, retroTheme } from "./retro.js";
 import { statusTones } from "./styles.js";
 import {
   darkTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
+  highContrastThemes,
   lightTheme,
+  platformTheme,
+  themes,
 } from "./theme.js";
 
 describe("contrastRatio", () => {
@@ -192,7 +203,14 @@ describe("text on the state washes", () => {
  * an AA claim: the floor only says a disabled control is still seen as one.
  */
 describe("disabled text", () => {
-  const surfaces = ["disabled", "background", "card", "popover"] as const;
+  const surfaces = [
+    "disabled",
+    "background",
+    "card",
+    "popover",
+    "muted",
+    "secondary",
+  ] as const;
 
   it("measures the unavailable label on the fill and the page", () => {
     const missing = surfaces
@@ -240,6 +258,59 @@ describe("disabled text", () => {
     expect(failures).toContain("disabledForeground/background");
     expect(failures).toContain("disabledForeground/card");
     expect(failures).toContain("disabledForeground/popover");
+  });
+
+  it("reports an unavailable label that matches the group strip it sits in", () => {
+    // A disabled field inside a toolbar or a segmented panel: `disabled` is the
+    // `muted` value in the base light theme, so the label has no fill of its own
+    // and the strip around it is the only background it has.
+    const broken = {
+      colors: { ...lightColors, disabledForeground: lightColors.muted },
+    };
+    const failures = contrastFailures(broken).map(
+      ({ foreground, background }) => `${foreground}/${background}`,
+    );
+
+    expect(failures).toContain("disabledForeground/muted");
+    expect(failures).toContain("disabledForeground/secondary");
+  });
+
+  it("has the least headroom on the panel the catalogue names", () => {
+    // The page prints a tightest placement, so the measurement and the sentence
+    // move together: a palette that closes the gap fails here first.
+    const shipped = [
+      ...Object.values(themes),
+      ...Object.values(highContrastThemes),
+      ...platformNames.flatMap((platform) =>
+        Object.values(themes).map((theme) => platformTheme(theme, platform)),
+      ),
+      ...retroNames.flatMap((look) =>
+        Object.values(themes).map((theme) => retroTheme(theme, look)),
+      ),
+    ];
+    const tightest = shipped
+      .flatMap((theme) =>
+        (["muted", "secondary"] as const).map((background) => ({
+          name: `${theme.name}/${background}`,
+          ratio:
+            contrastRatio(
+              theme.colors.disabledForeground,
+              theme.colors[background],
+            ) ?? 0,
+        })),
+      )
+      .reduce((low, next) => (next.ratio < low.ratio ? next : low));
+
+    expect(tightest.name).toBe("Dark · Linux/secondary");
+    expect(tightest.ratio.toFixed(2)).toBe("1.56");
+    expect(
+      readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " "),
+    ).toContain(
+      `label on its \`secondary\` panel at ${tightest.ratio.toFixed(2)}:1`,
+    );
   });
 });
 

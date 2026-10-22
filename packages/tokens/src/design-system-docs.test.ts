@@ -18,6 +18,7 @@ import { describe, expect, it } from "vitest";
 import { colorRoles, darkColors, lightColors } from "./color.js";
 import {
   contrastFloors,
+  contrastPairs,
   contrastRatio,
   highContrastFloors,
 } from "./contrast.js";
@@ -220,17 +221,29 @@ describe("docs/design-system.md", () => {
   });
 
   it("prints the disabled floor and the surfaces it applies to", () => {
-    const row =
-      /disabled text on its own fill and on `background`\/`card`\/`popover`[^\n|]*\| ([\d.]+):1 \| ([\d.]+):1 \|/.exec(
-        doc,
-      );
+    const line = doc
+      .split("\n")
+      .find((text) => text.startsWith("| disabled text on its own"));
+    const floors = /(\d+(?:\.\d+)?):1 \| (\d+(?:\.\d+)?):1 \|/.exec(line ?? "");
 
     expect(
-      row,
+      line,
       "docs/design-system.md no longer states the disabled floor by name",
     ).toBeDefined();
-    expect(Number(row?.[1])).toBe(contrastFloors.disabled);
-    expect(Number(row?.[2])).toBe(highContrastFloors.disabled);
+    expect(Number(floors?.[1])).toBe(contrastFloors.disabled);
+    expect(Number(floors?.[2])).toBe(highContrastFloors.disabled);
+
+    // The row lists the surfaces the table actually measures, so a pair the
+    // contract gains cannot go unprinted here.
+    const unprinted = contrastPairs
+      .filter(
+        (pair) =>
+          pair.foreground === "disabledForeground" && pair.floor === "disabled",
+      )
+      .map((pair) => pair.background)
+      .filter((background) => !(line ?? "").includes(`\`${background}\``));
+
+    expect(unprinted).toEqual([]);
     // The §8 interaction-state table points at the floor by its export name, so
     // a reader who lands there rather than in §9 still finds it.
     expect(doc).toContain("`contrastFloors.disabled`");

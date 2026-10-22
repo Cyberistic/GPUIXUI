@@ -900,14 +900,15 @@ value is translucent or not hex — a translucent colour's ratio depends on the
 surface behind it, so a single number would be a guess.
 
 `contrastFailures(theme, floors?)` runs every pair and returns the ones that miss
-— an empty array means the theme is readable. The 59 pairs cover the text role
+— an empty array means the theme is readable. The 61 pairs cover the text role
 on each surface it can sit on: body and popover text, the text typed into an
 `input`, secondary text on `background`, `card`, `muted`, `popover` and a
 selected row, every status and soft-status pair, each status tone's readable text
 as **page** text on `background`, `card` and `popover` (a field error, an inline
 warning or a destructive menu row is not on the tone's own tinted surface),
-the unavailable label on the fill that disables it and on the three page
-surfaces, accent and selected, the state washes,
+the unavailable label on the fill that disables it, on the three page
+surfaces and on the two group strips a disabled control sits in (`muted`,
+`secondary`), accent and selected, the state washes,
 the placeholder, and the essential boundaries and focus ring — the ring and the
 strong boundary on every surface a focused control can sit on, including a
 toolbar strip (`muted`), a segmented group (`secondary`) and the `hover`/`active`
@@ -1002,11 +1003,17 @@ quiet. What the state is still held to is being **seen**: a value that matches
 the fill it sits on leaves an empty box, and a reader cannot tell a disabled
 field from one that failed to paint. So `contrastFloors.disabled` is `1.5:1`
 (`highContrastFloors.disabled` is `3:1`), measured on the label over its own fill
-(`disabled`) and over the three page surfaces a disabled field or fieldset legend
-sits on: `background`, `card` and `popover`. Every shipped, high-contrast,
-platform and authored theme clears it; the tightest is Linux dark's unavailable
-label on a popover at 1.76:1. It is a backstop, not a design target: the floor
-exists so a theme that erases the state fails by name instead of shipping it.
+(`disabled`), over the three page surfaces a disabled field or fieldset legend
+sits on — `background`, `card` and `popover` — and over the two group strips a
+disabled control sits inside: a `muted` toolbar and a segmented `secondary`
+panel. The base light theme's `disabled` fill *is* its `muted` value, so a
+disabled field in a toolbar has no fill of its own and the strip around it is the
+only background its label has. Every shipped, high-contrast, platform and
+authored theme clears the floor; of the page placements the tightest is Linux
+dark's unavailable label on a popover at 1.76:1, and the two group strips add the
+tightest pair in the set — Linux dark's label on its `secondary` panel at 1.56:1,
+0.06 above the floor. It is a backstop, not a design target: the floor exists so
+a theme that erases the state fails by name instead of shipping it.
 
 #### The fade a disabled control paints
 

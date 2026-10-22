@@ -286,6 +286,16 @@ export const contrastPairs: readonly ContrastPair[] = [
     background: "popover",
     floor: "disabled",
   },
+  // A disabled control also sits inside a group strip: a toolbar's `muted`
+  // surface, a segmented `secondary` panel. The disabled fill can be the strip's
+  // own value (base light `disabled` *is* `muted`), so the label's only
+  // background is the toolbar or the panel around it.
+  { foreground: "disabledForeground", background: "muted", floor: "disabled" },
+  {
+    foreground: "disabledForeground",
+    background: "secondary",
+    floor: "disabled",
+  },
   // A selected row keeps the secondary text role its siblings use, so the
   // selection tint is a surface that text sits on.
   {
