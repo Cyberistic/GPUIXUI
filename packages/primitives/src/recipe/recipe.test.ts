@@ -286,6 +286,26 @@ describe("Text recipe", () => {
     });
   });
 
+  it("matches on a shipped theme, where a brand tone is derived", () => {
+    // The bug guarded: the fixture above leaves `brandText` equal to the brand,
+    // because its washes are translucent and the derivation leaves an
+    // unmeasurable colour alone. On a shipped theme `text-brand` moves the base
+    // light brand while the core resolver kept the raw `primary` fill, so the
+    // two paint paths disagreed exactly where a reader sees it.
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      Arr.forEach(roles, (role) => {
+        Arr.forEach(
+          ["default", "muted", "primary", "destructive", "inherit"] as const,
+          (tone) => {
+            expect(
+              recipeTw.classesToStyle(textClass({ role, tone }), theme).style,
+            ).toEqual(textStyle({ role, tone }, theme));
+          },
+        );
+      });
+    });
+  });
+
   it("matches the align, truncate, clamp and select modifiers", () => {
     const cases: ReadonlyArray<TextSpec> = [
       { role: "body", tone: "default", align: "center" },

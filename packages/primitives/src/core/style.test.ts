@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  brandText,
+  brandTextSurfaces,
+  contrastFloorsFor,
+  contrastRatio,
   darkTheme,
   disabledAction,
   elevationShadow,
@@ -292,6 +296,27 @@ describe("textStyle", () => {
 
   it("inherits the surrounding colour when asked to", () => {
     expect(text({ role: "body", tone: "inherit" }).color).toBeUndefined();
+  });
+
+  it("paints a brand-toned run in the derived brand text, not the fill role", () => {
+    // The bug: this resolver kept `theme.colors.primary` after the shipped
+    // `Text` moved to `text-brand`, so the two paint paths disagreed — and a
+    // consumer calling `textStyle` got the fill role as text, 4.30:1 on the
+    // base light theme's pressed wash and 3.10:1 in macOS dark. The recipe
+    // equivalence case could not see it, because the test fixture's washes are
+    // translucent, so `brandText` returns its brand unchanged there.
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      const colour = textStyle({ role: "body", tone: "primary" }, theme).color;
+      expect(colour).toBe(brandText(theme));
+      Arr.forEach(brandTextSurfaces, (surface) => {
+        expect(
+          contrastRatio(colour ?? "", theme.colors[surface]) ?? 0,
+        ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).secondary);
+      });
+    });
+    expect(
+      textStyle({ role: "body", tone: "primary" }, lightTheme).color,
+    ).not.toBe(lightTheme.colors.primary);
   });
 
   it("truncates on one line, and clamps on several", () => {

@@ -62,8 +62,9 @@ carries `primaryForeground`, and no contract measures it as text, so it reads
 `brandText(theme)` derives a text colour from it — the brand moved toward
 `foreground` until every surface a link sits on clears the theme's floor, or the
 brand itself where it already reads. The `text-brand` utility in the primitives'
-registry resolves it, so `tone="primary"` and `Button variant="link"` paint one
-colour and the caller's `className`/`style` still win.
+registry resolves it, so `tone="primary"`, `Button variant="link"` and the
+`core/style.ts` `textStyle` resolver a consumer can call without React paint one
+colour; the caller's `className`/`style` still win.
 
 ## API
 
@@ -140,13 +141,18 @@ is reported as unsupported instead of painting an uncut paragraph.
 
 - `src/core/variants.test.ts` — every role resolves from the theme.
 - `src/core/style.test.ts` — the clamp's box (height, hidden overflow, no
-  `lineClamp`) and the one-line floor for a count that cannot be laid out.
+  `lineClamp`), the one-line floor for a count that cannot be laid out, and the
+  `textStyle` resolver's brand tone as `brandText` clearing the floor on every
+  surface a link sits on.
 - `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp,
   selectable, the heading/code semantics (level and name, with body copy left
   plain), the status role an error paints, and a brand-toned run's derived
   colour clearing the floor on every surface a link sits on.
-- `src/recipe/recipe.test.ts` — the clamp's height resolved from the role its
-  class names, and an unknown role reported as unsupported.
+- `src/recipe/recipe.test.ts` — the compiled recipe equal to `textStyle` for
+  every role and tone **on the shipped themes as well as the fixture** (the
+  fixture's translucent washes leave `brandText` unchanged, so it cannot see a
+  derived tone drift), the clamp's height resolved from the role its class
+  names, and an unknown role reported as unsupported.
 - `runtime/layout.runtime.test.tsx` — the string is painted, its box height
   equals the role's line height, and the a11y tree reports a heading's level
   (`h1` = 1, `h3` = 3) with body copy carrying no heading role; a clamp over

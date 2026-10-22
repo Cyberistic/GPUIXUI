@@ -63,7 +63,7 @@ test fixture — the theme is the only source of those values.
 | ----- | ---------------- | ------------------ |
 | `core/` | theme re-export, `style.ts` (spec → `StyleDesc`), `variants.ts`, `keyboard.ts`, `state.ts`, `loading.ts`, `layout.ts`, `selection.ts` | pure and runtime-free: this is the part that can be proven without a GPUix runtime, and where the design decisions actually live |
 | `recipe/` | `@gpuixui/tw` registry + class-string builders for the components already migrated | the Tailwind recipe is the single source of truth for a component's resting appearance; `recipe.test.ts` proves it compiles to the same `StyleDesc` as `core/` |
-| `components/` | thin renderers over GPUix host elements | each is a resolver call plus, at most, React-local focus or value state |
+| `components/` | thin renderers over GPUix host elements | each is a recipe call plus, at most, React-local focus or value state |
 
 `core/` must not import `@gpuix/react` at runtime (type-only imports are erased).
 `components/` may import the published `/select`, `/tooltip`, `/floating`
@@ -97,10 +97,15 @@ required name.
 **Feedback** `Progress` `Spinner` `Skeleton` `Tooltip` `TooltipProvider`
 **Theming** `ThemeProvider` `MessagesProvider` `useMessages`
 
-Every component is themed by a resolver in `core/style.ts` (`controlStyle`,
-`surfaceStyle`, `textStyle`, `ruleStyle`, `progress*Style`) or `core/selection.ts`;
-none paints a literal and none scripts hover or press
-(GPUIx applies `style.hover`/`style.active` natively).
+Every component's resting appearance is a class string in `recipe/` compiled
+through `recipeTw`; none paints a literal and none scripts hover or
+press (GPUIx applies `style.hover`/`style.active` natively). The pure resolvers
+in `core/style.ts` (`controlStyle`, `surfaceStyle`, `textStyle`, `ruleStyle`,
+`progress*Style`) and `core/selection.ts` stay public as the spec → `StyleDesc`
+seam a consumer can call without React, and `recipe.test.ts` holds both
+expressions equal — including on the shipped themes, where a derived value
+differs from the role it starts from (`tone="primary"` paints `brandText`, as
+`text-brand` does).
 
 ### What GPUix does not provide, and what this package does instead
 

@@ -13,6 +13,7 @@
 
 import type { StyleDesc } from "@gpuix/react";
 import {
+  brandText,
   disabledAction,
   elevationShadow,
   targetSize,
@@ -230,7 +231,8 @@ export type TextTone = (typeof TEXT_TONES)[number];
 const tones: Record<TextTone, Paint> = {
   default: (theme) => theme.colors.foreground,
   muted: (theme) => theme.colors.mutedForeground,
-  primary: (theme) => theme.colors.primary,
+  /** `primary` is a fill role, so brand text is the derived colour, as a link. */
+  primary: brandText,
   /** The status text role tokens measure as page text, not the solid fill. */
   destructive: (theme) => theme.colors.destructiveSoftForeground,
   /** Take the colour already in effect — for text on a coloured surface. */
@@ -499,7 +501,7 @@ export const PROGRESS_TONES = [
 export type ProgressTone = (typeof PROGRESS_TONES)[number];
 
 const progressTones: Record<ProgressTone, ColorRef> = {
-  primary: (theme) => theme.colors.primary,
+  primary: brandText,
   success: (theme) => theme.colors.success,
   destructive: (theme) => theme.colors.destructive,
   muted: (theme) => theme.colors.mutedForeground,
