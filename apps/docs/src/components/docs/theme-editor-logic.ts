@@ -233,7 +233,8 @@ const numberRequirement: Record<NumberRule, string> = {
   pressable: `a pressable height of ${targetSize.minimum} or more`,
   leading: "a line height at least its own font size",
   fits: "a height that contains the tallest label or icon it carries",
-  emphasis: "the size and leading the body text sets, and a weight that exceeds it",
+  emphasis:
+    "the size and leading the body text sets, and a weight that exceeds it",
 };
 
 /**

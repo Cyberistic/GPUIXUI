@@ -215,10 +215,7 @@ const body = (page: CuratedPage): string =>
  * Returns the whole row so a case can hold both the role a page prints and the
  * role the component paints; `undefined` when the table or the row is gone.
  */
-const themingRow = (
-  page: CuratedPage,
-  element: string,
-): string | undefined => {
+const themingRow = (page: CuratedPage, element: string): string | undefined => {
   const text = body(page);
   const start = text.indexOf("## Theming");
   if (start === -1) return undefined;
@@ -485,9 +482,7 @@ describe("the curated component pages", () => {
       markerRow,
       "the field page's Theming table has no required-marker row",
     ).toBeDefined();
-    expect(markerRow).toContain(
-      'statusTone(theme, "destructive").foreground',
-    );
+    expect(markerRow).toContain('statusTone(theme, "destructive").foreground');
     expect(markerRow).not.toContain("`colors.destructive`");
 
     // The invalid edge and the message's measured role.
