@@ -25,6 +25,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../collapsible.js";
+import { Carousel, CarouselControl, CarouselTrack } from "../carousel.js";
 import { Field, FieldInput } from "../field.js";
 import { focusedTestId } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
@@ -81,11 +82,17 @@ describe("focus ring", () => {
           onCommit={() => undefined}
           testId="inline"
         />
+        <Carousel label="Screenshots" defaultValue={0} testId="carousel">
+          <CarouselTrack>
+            <text>One</text>
+          </CarouselTrack>
+          <CarouselControl direction="next" />
+        </Carousel>
       </div>,
     );
 
     Arr.forEach(
-      ["tab", "row", "header", "search", "collapsible", "inline"],
+      ["tab", "row", "header", "search", "collapsible", "inline", "carousel"],
       (testId) =>
         expect(
           root.renderer.findByTestId(testId)?.style.focusVisible,
@@ -108,10 +115,15 @@ describe("focus ring", () => {
           </TabsList>
         </Tabs>
         <SearchInput testId="search" aria-label="Search" />
+        <Carousel label="Screenshots" defaultValue={0} testId="carousel">
+          <CarouselTrack>
+            <text>One</text>
+          </CarouselTrack>
+        </Carousel>
       </div>,
     );
 
-    Arr.forEach(["tab", "search"], (testId) => {
+    Arr.forEach(["tab", "search", "carousel"], (testId) => {
       root.renderer.focusElement(root.renderer.findByTestId(testId)?.id ?? -1);
       root.renderer.flush();
 

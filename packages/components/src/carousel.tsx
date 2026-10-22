@@ -38,7 +38,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { useTheme } from "./internal/theme.js";
+import { keyboardRing, useTheme } from "./internal/theme.js";
 
 /** The rules a carousel part follows; throws outside a {@link Carousel}. */
 interface CarouselContextValue {
@@ -148,7 +148,13 @@ export const Carousel = ({
           onKeyDown?.(event);
         }}
         style={mergeStyles(
-          recipeStyle(cn(CAROUSEL_ROOT, className), theme),
+          mergeStyles(
+            recipeStyle(cn(CAROUSEL_ROOT, className), theme),
+            // The root is a tab stop that owns the arrow keys, so a Tab must show
+            // where those keys will act — the runtime paints this outline only
+            // after keyboard focus, never after a pointer press.
+            keyboardRing(theme),
+          ),
           style,
         )}
       >
