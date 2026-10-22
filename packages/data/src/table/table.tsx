@@ -296,7 +296,13 @@ export const TableBody = ({
 export interface TableRowProps extends Omit<Props, "children"> {
   /** The row is chosen: it paints the selection wash and its label role. */
   readonly selected?: boolean;
-  /** The row cannot be chosen or activated. */
+  /**
+   * The row cannot be chosen or activated.
+   *
+   * 0.11.0 has no `aria-disabled`, so the state is the row's own: it installs
+   * no press handler and answers no pointer. A row whose reason must be read
+   * belongs in its cells' text.
+   */
   readonly disabled?: boolean;
   /**
    * The row's painted element, for moving native focus to it.
@@ -331,6 +337,12 @@ export interface TableRowProps extends Omit<Props, "children"> {
  * should not swallow the row's feedback declares `pointerEvents: "none"`; the
  * child's own listener still runs, because opting out removes the fill's
  * hitbox rather than the handler.
+ *
+ * A row's `disabled` state is **not announced**: the runtime's `aria-*` set is
+ * closed and carries no `aria-disabled` (`docs/gpuix-capabilities.md`), so the
+ * row writes none — an attribute the runtime drops reads like a state a reader
+ * can hear. What is left is the behaviour: no press handler, no pointer wash.
+ * Put the reason in a cell's text when it has to be read.
  */
 export const TableRow = ({
   selected,
@@ -356,7 +368,6 @@ export const TableRow = ({
       ref={instanceRef}
       role="row"
       aria-selected={selected}
-      aria-disabled={disabled}
       onClick={disabled === true ? undefined : onClick}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(recipe, className), theme), {

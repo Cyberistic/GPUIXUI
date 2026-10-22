@@ -290,6 +290,14 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   case hold it; directions measured: the per-series measure fails the three
   cases by name (`expected 100 to be 200`), and dropping `scaleOf` fails the
   window case on the missing `tick-200`. 128 unit / 68 behaviour green.
+- **A disabled row stopped claiming an attribute the runtime drops**: `TableRow`
+  wrote `aria-disabled`, which the closed `aria-*` set does not carry, so a
+  disabled row read as an ordinary row while its press handler was gone. The row
+  now states the state as behaviour (no handler, no pointer wash) and says where
+  a reason belongs; `src/table/aria.test.ts` sweeps the shipped sources against
+  the seven measured attributes, holds the docs and re-reads the capability
+  record. Directions measured: restoring the attribute fails the sweep naming
+  `table/table.tsx: aria-disabled`. 131 unit / 68 behaviour green.
 
 ## 5. Acceptance
 
