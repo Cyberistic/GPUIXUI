@@ -417,9 +417,10 @@ compliant as single parts.
 
 ## 11. Motion
 
-The library's overlays and the tab rail **move**: a surface fades and travels a
-few pixels, and the tab pill slides between its triggers. Three packages hold
-that contract between them, and no component re-implements a part of it.
+The library's overlays, the tab rail and the carousel's indicator **move**: a
+surface fades and travels a few pixels, the tab pill slides between its triggers,
+and the active dot grows. Three packages hold that contract between them, and no
+component re-implements a part of it.
 
 | Piece | Owns |
 | ----- | ---- |
@@ -462,6 +463,14 @@ the tree a level's duration later.
 | Toast | fade + 16px from the right edge | `notice` (500 ms) |
 | Accordion panel | height from 0 to the body's measured height, plus a fade | `normal` |
 | Tabs pill | `left`/`top`/`width`/`height` between measured trigger boxes | `normal` |
+| Carousel indicator | `width` between the 6px dot and the 18px pill (both dots retarget from the widths on screen) | `fast` (160 ms) |
+
+A surface that **enters** or **leaves** moves through the seam's frames; the two
+that only ever move **between two resting states** — the tab pill and the
+carousel's indicator — are motion targets retargeted from the box (or width) on
+screen, with `initial: false` so a mount paints at rest. Neither travels the
+whole box: the tab pill is the library's one sliding surface, and a carousel
+track cannot slide while the frame is sized by the slide on screen.
 
 **The preference is the application's.** GPUix exposes no reduced-motion query,
 so `MotionProvider` takes it:

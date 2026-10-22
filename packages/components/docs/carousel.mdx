@@ -4,13 +4,21 @@ description: Discrete slide stepping, with every slide kept mounted.
 ---
 
 `Carousel` steps through a fixed set of slides with previous/next controls, a dot
-per slide and the arrow keys. It is **discrete**, not sliding: GPUix `motion` animates box
-geometry (width, height, insets, radius) and opacity only — no transform — and
-scroll snap is unavailable, so a translating track is not honestly expressible.
+per slide and the arrow keys. It is **discrete**: the frame is sized by the slide
+on screen, so the track itself does not travel between two slides. What moves is
+the **indicator** — the active dot grows from a 6px circle to an 18px pill on the
+runtime's own clock, because `motion` interpolates box geometry (`width`) and has
+no `transform` (upstream issue #102).
 
 Every slide stays mounted and only the active one is displayed, which preserves
 each slide's component state (a form on slide two is not reset by visiting slide
 three).
+
+A travelling track would have to lay every slide out in one box so both the
+outgoing and the incoming slide could be painted at once, and the frame would then
+take its height from the tallest slide rather than the one being read. That is a
+layout decision, not a missing effect: the carousel keeps the content-sized frame
+and animates the one state it can, the indicator.
 
 ## Usage
 
@@ -56,6 +64,43 @@ slide the same index.
 The root is focusable and named by `label`. The active index is clamped to the
 slide count, so a controlled value past the end cannot blank the carousel.
 
+## Motion
+
+The carousel moves the one value a step changes and a reader can follow: the
+active dot's **width**. A selection retargets both the dot that lost the state and
+the one that gained it from the widths painted on screen, so the two travel
+against each other instead of swapping in one frame.
+
+```tsx
+// Inside CarouselIndicators, once per dot.
+<div
+  motion={{
+    initial: false,
+    animate: { width: selected ? 18 : 6 },
+    transition: timing.enter, // `fast` — 160 ms, the level an indicator uses
+  }}
+  style={{ height: 6, borderRadius: 3 }}
+/>;
+```
+
+`initial: false` paints a rail that mounts on a selection at rest, so only a
+change of slide travels. `"fast"` (160 ms) is the level `@gpuixui/motion` names
+for an indicator, and the easing is the seam's enter curve. The two inks change
+in the frame the selection does, because `motion` interpolates numbers and has no
+colour — a dot mid-travel is therefore already the new role.
+
+`MotionProvider preference="reduced"` is a zero-duration assignment: the dot
+paints at its new width in the frame the slide changes, with no journey. The
+measurement is `src/behaviour/carousel.test.tsx`'s `grows the active dot over its
+level instead of jumping` (on a paused clock) and its reduced case, which freezes
+the clock so a journey could never arrive.
+
+The track itself does not travel: the frame is sized by the slide on screen, and
+a travel would need every slide laid out in one absolutely positioned box, which
+would take the frame's height from the tallest slide. The reasoning is the
+component's header comment and `COMPONENTS.md`'s row; there is no honest way to
+keep a content-sized frame and slide two slides past each other at once.
+
 ## Indicators
 
 `CarouselIndicators` is the second route to a slide: **one press target per
@@ -80,6 +125,10 @@ painted child is the boundary the runtime's hit test stops counting at, so the
 drawing declares `pointerEvents: "none"` and a press on the middle of a dot
 reaches its target. The routes are measured by `press-routing-lifecycle`:
 `text-filled` runs nothing, while `inert-control` reaches both handlers.
+
+The active drawing's width is a **motion target** — see [Motion](#motion) — so a
+step grows one dot and shrinks the one it replaced rather than swapping two
+styles in one frame.
 
 The group holds **one roving tab stop**, on the active dot: Tab reaches the dots
 once, the arrows move the slide and the stop together, and `Enter` (on the
@@ -143,8 +192,13 @@ theme changes the frame with no code change — see [Theming](/docs/theming).
 
 ## Limitations
 
-- **No slide animation** (no transform in `motion`).
-- **No swipe/drag** (no drag host feature).
+- **The track does not travel between slides.** The frame is sized by the slide
+  on screen, so a travel would need every slide laid out in one absolutely
+  positioned box and the frame would take the tallest slide's height. The
+  indicator's width is the movement the component ships.
+- The dot's two inks swap in the frame the slide changes; `motion` interpolates
+  numbers, so the colour is not part of the travel.
+- **No swipe/drag** (no drag host feature) and no scroll snap.
 - No auto-advance or thumbnails in v1; the dots are press targets, not a
   progress indicator.
 - Slides must be direct children of the track.
@@ -152,7 +206,7 @@ theme changes the frame with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (15 tests):
+`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (17 tests):
 every slide mounted and one displayed, control stepping, edge clamping, loop
 wrapping, arrows and Home/End, a controlled carousel, region naming and disabled
 edges, a style callback receiving `{ active, index }` in both themes, the
@@ -161,7 +215,10 @@ the fill it sits on, and the indicators — one named target per slide with
 `aria-selected` on the active one, a press jumping to the slide it names, the
 roving stop following the slide with the arrows still stepping from a dot, the
 24px target around the 6px drawing, both dot inks held to the mark floor in both
-themes with the active one wider, and no indicators for an empty track. `src/behaviour/focus-ring.test.tsx` holds the root's
+themes, the active drawing read back at 18px from the renderer's own bounds, the
+width travelling between the two dots on a paused motion clock, the reduced
+preference painting the new width with the clock frozen, and no indicators for an
+empty track. `src/behaviour/focus-ring.test.tsx` holds the root's
 keyboard outline — declared at rest, kept while the region has focus, with no
 spread shadow behind it.
 

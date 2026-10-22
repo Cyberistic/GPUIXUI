@@ -3,7 +3,10 @@
  *
  * The bugs these guard: every slide painted at once, a step that runs past the
  * last slide, loop ignored, arrow keys that do not move, a controlled carousel
- * that moves on its own, and a style callback that cannot see the active slide.
+ * that moves on its own, a style callback that cannot see the active slide, an
+ * indicator that jumps between its two widths because the state is a style
+ * value rather than a motion target, and a reduced-motion reader who is made to
+ * watch the dot travel anyway.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -25,8 +28,11 @@ import {
 import {
   clickCentreOf,
   focusedTestId,
+  settle,
   sizeOf,
+  waitFor,
 } from "../internal/interaction.js";
+import { MotionProvider } from "../motion.js";
 import { darkTheme, lightTheme, targetSize } from "../internal/theme.js";
 import {
   renderComponent,
@@ -112,6 +118,23 @@ const dotted = (root: ComponentTestRoot, testId: string) => {
   }
   return drawn;
 };
+
+/** The width `testId`'s dot is painted at, from the renderer's own bounds. */
+const dotWidth = (root: ComponentTestRoot, testId: string): number => {
+  const bounds = root.renderer.getElementBounds(dotted(root, testId).id);
+  if (bounds === null) {
+    throw new Error(`behaviour: "${testId}" drew no box`);
+  }
+  return bounds.width;
+};
+
+/** Let the renderer's frame loop publish what the last commit queued. */
+const delay = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, 30));
+
+/** The two widths a dot is drawn at: the resting circle and the active pill. */
+const DOT_REST = 6;
+const DOT_ACTIVE = 18;
 
 describe("Carousel", () => {
   it("mounts every slide and displays only the active one", () => {
@@ -448,14 +471,71 @@ describe("Carousel", () => {
             ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).boundary);
           });
 
-          expect(Number(active.style.width)).toBeGreaterThan(
-            Number(rest.style.width),
+          expect(dotWidth(gallery, "dots-0")).toBeGreaterThan(
+            dotWidth(gallery, "dots-1"),
           );
         } finally {
           gallery.unmount();
         }
       },
     );
+  });
+
+  it("grows the active dot over its level instead of jumping", async () => {
+    // The bug this guards: the width was a style value, so a selection swapped
+    // the two dots' widths in one frame and the reader had to compare a dot with
+    // the one it replaced. It is a motion target now, so both dots travel from
+    // the widths on screen — `fast`, the level the motion package names for an
+    // indicator.
+    const gallery = renderComponent(<StatefulGallery />);
+
+    try {
+      settle(gallery);
+      await waitFor(() => expect(dotWidth(gallery, "dots-0")).toBe(DOT_ACTIVE));
+      const from = dotWidth(gallery, "dots-0");
+      const rest = dotWidth(gallery, "dots-2");
+      expect(rest).toBe(DOT_REST);
+
+      gallery.renderer.clockPause();
+      clickCentreOf(gallery, "dots-2");
+      await delay();
+
+      // One frame in, neither dot has moved: the run starts from what is painted.
+      expect(dotWidth(gallery, "dots-0")).toBe(from);
+      expect(dotWidth(gallery, "dots-2")).toBe(rest);
+
+      gallery.renderer.clockFastForward(400);
+      await delay();
+
+      expect(dotWidth(gallery, "dots-0")).toBe(DOT_REST);
+      expect(dotWidth(gallery, "dots-2")).toBe(DOT_ACTIVE);
+    } finally {
+      gallery.unmount();
+    }
+  });
+
+  it("paints the dot at its new width in the frame a reduced reader changes slide", async () => {
+    const gallery = renderComponent(
+      <MotionProvider preference="reduced">
+        <StatefulGallery />
+      </MotionProvider>,
+    );
+
+    try {
+      settle(gallery);
+      await waitFor(() => expect(dotWidth(gallery, "dots-0")).toBe(DOT_ACTIVE));
+
+      // The clock is frozen, so a journey would never arrive: the assertion is
+      // that the preference removes the travel rather than shortening it.
+      gallery.renderer.clockPause();
+      clickCentreOf(gallery, "dots-2");
+      await delay();
+
+      expect(dotWidth(gallery, "dots-2")).toBe(DOT_ACTIVE);
+      expect(dotWidth(gallery, "dots-0")).toBe(DOT_REST);
+    } finally {
+      gallery.unmount();
+    }
   });
 
   it("paints no indicators for a track with no slides", () => {

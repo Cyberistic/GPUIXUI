@@ -1,15 +1,18 @@
 /**
- * Carousel: discrete slide stepping.
+ * Carousel: discrete slide stepping, with an animated selection indicator.
  *
- * `motion` in 0.11.0 animates box geometry (width, height, insets, radius) and
- * opacity only — there is no transform/translate — and scroll snap is
- * unavailable, so a sliding track is not honestly expressible. Every slide stays
- * mounted and only the active one is displayed. That keeps each slide's
- * component state (a form on slide two is not reset by visiting slide three) and
- * needs no positioning trick.
+ * The frame is sized by the slide on screen: every slide stays mounted and only
+ * the active one is laid out (`display`), which keeps each slide's component
+ * state — a form on slide two is not reset by visiting slide three — and needs no
+ * absolute positioning. A track that travelled between two slides would have to
+ * lay all of them out in one box, and the frame would then take its height from
+ * the tallest slide rather than the one being read, so the track does not travel.
  *
- * The root owns the active index; the track reports its slide count, so the
- * controls and the arrow keys share one clamp and one loop rule.
+ * What does move is the indicator: the active dot grows from the 6px circle to
+ * the 18px pill on the runtime's own clock, because `motion` interpolates
+ * `width` (it has no `transform`, upstream issue #102). The root owns the active
+ * index; the track reports its slide count, so the controls and the arrow keys
+ * share one clamp and one loop rule.
  */
 
 import type { KeyEvent, Props } from "@gpuix/react";
@@ -51,6 +54,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
+import { useSurfaceTiming } from "./internal/presence.js";
 import {
   controlRing,
   keyboardRing,
@@ -334,9 +338,6 @@ export interface CarouselIndicatorsState {
 /**
  * The drawn dot: a circle at rest, a pill on the active slide.
  *
- * The drawing is smaller than the target that carries it, and the **width** is
- * what makes the active state readable beyond colour — a dot that differs only
- * in hue is a dot a reader who cannot separate the two hues is told nothing by.
  * Both inks are mark roles (`indicatorRoles`): `primary` for the active dot and
  * `mutedForeground` for the rest, each measured at the mark floor on the page.
  */
@@ -353,6 +354,13 @@ const DOT_ACTIVE_WIDTH = 18;
  * one roving tab stop on the active dot, and `aria-selected` carries the state
  * because `0.11.0` has no `aria-current` — the substitution Pagination, Stepper
  * and Breadcrumb use.
+ *
+ * The drawing's **width** is the state a reader who cannot separate the two inks
+ * can still see, so it is a motion target: a selection retargets the two dots
+ * from the widths on screen, and `initial: false` paints a rail that mounts with
+ * a selection already at rest. `"fast"` is the level `@gpuixui/motion` names for
+ * an indicator, and the reduced preference is the seam's zero-duration
+ * assignment, so the dot lands rather than travelling.
  */
 export const CarouselIndicators = ({
   label,
@@ -362,6 +370,7 @@ export const CarouselIndicators = ({
 }: CarouselIndicatorsProps) => {
   const { active, count, goTo } = useCarousel();
   const theme = useTheme();
+  const timing = useSurfaceTiming("fast");
 
   if (count === 0) return null;
 
@@ -402,8 +411,16 @@ export const CarouselIndicators = ({
             }}
           >
             <div
+              motion={{
+                // A rail that mounts with a selection is already resting; only a
+                // change of slide travels, from the width painted on screen.
+                initial: false,
+                animate: {
+                  width: selected ? DOT_ACTIVE_WIDTH : DOT_REST_WIDTH,
+                },
+                transition: timing.enter,
+              }}
               style={{
-                width: selected ? DOT_ACTIVE_WIDTH : DOT_REST_WIDTH,
                 height: DOT_HEIGHT,
                 borderRadius: DOT_HEIGHT / 2,
                 // The target is the press: the dot paints a fill, and a
@@ -454,8 +471,9 @@ export const carouselMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "discrete stepping only: motion has no transform and scroll snap is unavailable",
-    "no swipe gesture (no drag host feature) and no slide animation",
+    "the track does not travel between slides: the frame sizes itself to the slide on screen, so a travel would lay every slide out in one box and take its height from the tallest slide",
+    "the active indicator grows between the 6px dot and the 18px pill on the runtime's clock (`fast`, 160 ms); the two inks change with the selection in the same frame, because `motion` interpolates numbers and has no colour",
+    "no swipe gesture (no drag host feature) and no scroll snap",
     "no auto-advance or thumbnails in v1",
     "inactive slides stay mounted and are hidden with display: none",
   ],
