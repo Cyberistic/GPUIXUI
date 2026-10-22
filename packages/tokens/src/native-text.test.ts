@@ -100,7 +100,7 @@ describe("nativeTextTheme", () => {
     );
   });
 
-  it("rejects a fill that is not one a field paints", () => {
+  it("names the two fills a field paints, and reads the one it is given", () => {
     expect(nativeTextFills).toEqual(["input", "background"]);
     nativeTextFills.forEach((fill: NativeTextFill) =>
       expect(nativeTextTheme(lightTheme, fill).bg).toBe(
