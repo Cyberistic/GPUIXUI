@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 154/154
+`[x]` `[██████████]` 155/155
 
 `[x]` Hold the painter guards to the **press a row derives**, and measure the veil and the shadow on it — the components and primitives adopted `pressWash`/`pointerWash` for a row's press (a list row's `active` role sat under the 1.05:1 floor beside the `accent` it replaces in six styles), and eight token cases still read the retired literal: `contrast.test.ts`'s menu, list, selected-row and ring painters, `decorative.test.ts`'s badge-on-a-wash and surface-origin readers, and `indicator.test.ts`'s two mark painters each required `backgroundColor: theme.colors.active`, which no painter writes any more, so the suite was red on `master` (8 failed / 2 404 passed) with every case failing on the paint it exists to protect. Each now holds the derived expression and the wash it replaces (`active: { backgroundColor: pressWash(theme, "accent") }`, the menu row's `pressWash(theme, "hover")`), and the origin reader asks each role for its own paint, so a row that stops pressing fails by name. **The paint became the measured one**: a context menu, confirmation dialog or command palette opens *from* the row the press landed on, so the veil recedes the derived press and every raised level's shadow falls on it — the decorative table names the `active` role, while the row wears a wash the derivation moved toward `foreground`, the colour a veil is built from. `pointer-wash.test.ts` gains `keeps the veil and every raised level visible over the press a row derives`: two replaced washes per style, each measured for the veil and all three raised levels — 128 measurements over the 16 shipped, high-contrast, platform and authored styles — all clean, the tightest being High contrast dark at **1.08:1**, plus a brand whose `shadow` *is* its derived press, which reports 1.00 and fails the case. Directions measured: reverting the list painter's press to the bare role fails 7 cases by name (the six guards and `pointer-wash.test.ts`'s own painter case); with the derived paint restored, 39 files / 2 413 tests green, `check-types` clean. No palette and no source paint moved — the findings were in the guards and the composition nobody measured. `packages/data`'s table row derives its press from `pointerWash` directly rather than the components' seam, which is its owner's call.
 `[x]` Report **a type role the theme lost** instead of throwing a bare `TypeError` — a stored theme older than a role is the one way a complete theme becomes incomplete, and `auditTheme` already refuses it by path (`requireSteps`), but the two public reports the pages tell a brand to run did not keep the sibling rule: `invalidNumbers` reads the emphasis pair (`bodyStrong` against `body`) and a control's fit (`label`/`body` leadings) directly, so a theme missing either threw `TypeError: Cannot read properties of undefined (reading 'fontWeight')` / `(reading 'lineHeight')`, and `invalidScales` read `typography[role].fontSize` at every rung but the two mono roles, throwing `(reading 'fontSize')` on any absent one — while `docs/tokens.md` §Paint-ready values promised `invalidNumbers` "walks the steps a theme carries and says nothing about one that is not there". Both reports now skip a role the theme does not carry, the same rule the elevation ladder already follows: the emphasis and the fit skip a missing member, and a type role that is gone stops being a rung so the steps either side are compared with each other. `NumberSource.typography` and `ScaleSource.typography` say `Partial` — the shape storage hands back — and no shipped style moved. `numbers.test.ts` gains `a theme that lost a type role` (3 cases: four absent roles, a shortened control still reported, the gate's own refusal named) and `scales.test.ts` gains `a type role the theme does not carry` (3: the absent rung skipped, the ladder compared across the gap to the printed `previous`, the page's clause). Directions measured: with the two guards reverted, four cases fail by name with those exact `TypeError`s. Docs in `docs/tokens.md` §Numbers/§Scale order, the package README §Incomplete themes and the reports list.
@@ -877,6 +877,38 @@ green (43 files / 2 434 tests), `check-types` clean.
       platform file's decoder (Omarchy's `colors.toml`, a macOS appearance, a
       Windows accent) and the live Linux follow — `omarchy-theme-set` repainting a
       running window — is the playground's probe to record (plan 433 Recipe B).
+
+`[x]` Paint a **desktop's selection colour as the wash the role is** —
+`paletteToTokens` handed a palette's `selection` over unchanged, and that role
+is the one **translucent** role a theme carries: it is composited behind the run
+the reader selected, and the run keeps its own text role. A desktop does not
+offer a wash, it offers a **filled** selection — Omarchy's
+`selection_background`, macOS's selected-content colour, Windows' highlight, the
+three decoders the module itself names — so a palette decoded from one is
+opaque, and the mapper painted that colour over the page. Measured on the
+example night palette: an opaque `#B49CFF` leaves the body ink at
+**1.81:1** on the page and **8 of the 8** `selectionPairs` placements fail
+(`input`, `background`, `card`, `popover`, `muted` and the three secondary
+lines), while the same hue at the base theme's own share (`#B49CFF3D`, 24%)
+clears every placement and reads **8.47:1** on the page. One local rule now
+decides it (`selectionWash`): a share the palette states is its own, an opaque
+value takes `alphaOf(base.colors.selection)` — the share the selection contract
+already measures for that theme, so a high-contrast brand keeps its own 26% — and
+a colour this package cannot measure is handed over unchanged, the rule `alpha`
+follows, which the gate reports. Nothing is blended (the hue is the platform's)
+and no second colour is invented. `system-theme.test.ts` (16 → 18 cases) holds
+the rule: the derived hue and share, the empty selection report, the pre-fix
+**1.81:1**/8 failures built as the mapper used to build it, a stated share kept
+exactly, the high-contrast base's own share, and a case that reads the three
+records so the printed numbers cannot drift. The no-new-colour case now includes
+the opaque palette and the rule's own derived value as the one exception.
+**Limits made explicit:** a desktop's `selection_foreground` cannot be honoured,
+because the runtime paints the wash behind a run that keeps its own role.
+Directions measured: reverting the mapper fails both new cases by name
+(`expected '#B49CFF' to be '#B49CFF3D'`, `expected [ …(8) ] to deeply equal []`),
+and a printed `1.82:1` fails the records case. Docs in `docs/tokens.md` §System
+palettes (a third rule), `docs/design-system.md` §11, the package README and the
+`System palettes` inventory row.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 

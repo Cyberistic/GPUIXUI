@@ -1099,7 +1099,9 @@ The extension mechanism is deliberately small:
 - `paletteToTokens(palette, base)` — wear the colours a desktop's theme offers
   (`SystemPalette`: a page, an ink, an accent, a quiet strip, a border, an error
   colour, a selection wash). It chooses each filled role's on-colour by
-  measurement and names no colour of its own; `watchSystemTheme` follows a
+  measurement and names no colour of its own; a selection colour arrives as a
+  **fill** and is painted at the base theme's share, because the role is a wash
+  behind text that keeps its own colour; `watchSystemTheme` follows a
   palette through a poll, because the runtime has no file watcher. A partial
   palette is a recolour — the roles it does not name stay the base's, and the
   audit reports the mix — so a look that owns its surfaces is a `PlatformStyle`,

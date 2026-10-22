@@ -5,15 +5,19 @@
  * colours role-for-role leaves every filled role carrying the palette's body
  * ink — reading, on a violet accent, at whatever the two happen to measure —
  * and it leaves a deleted theme file in place, so the window keeps wearing a
- * palette the desktop no longer has. The mapper picks each on-colour by
- * measuring the palette's own inks, keeps every role the palette does not name
- * from the base theme, and names no colour of its own; the watcher applies the
- * first read at once and only re-applies a palette that changed.
+ * palette the desktop no longer has. A desktop's selection colour is a **fill**
+ * rather than the wash the role is, so handing it over unchanged covers the page
+ * it selects on. The mapper picks each on-colour by measuring the palette's own
+ * inks, restates an opaque selection colour at the base theme's share, keeps
+ * every role the palette does not name from the base theme, and names no colour
+ * of its own; the watcher applies the first read at once and only re-applies a
+ * palette that changed.
  */
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
+import { alpha, alphaOf, blend } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import {
   followDesktop,
@@ -22,6 +26,7 @@ import {
   nightPalette,
   paperPalette,
 } from "./system-theme.example.js";
+import { selectionFailures } from "./selection.js";
 import {
   intervalTimer,
   paletteMode,
@@ -96,12 +101,103 @@ describe("the palette a desktop hands over", () => {
     expect(paper.colors.destructiveForeground).toBe(paperPalette.background);
   });
 
+  it("paints a desktop's opaque selection colour at the theme's share", () => {
+    const opaque: SystemPalette = { ...nightPalette, selection: "#B49CFF" };
+    const night = paletteToTokens(opaque, darkTheme);
+
+    // The platform's hue, at the base theme's own share rather than its opacity.
+    expect(night.colors.selection).toBe(
+      alpha("#B49CFF", alphaOf(darkTheme.colors.selection)),
+    );
+    expect(alphaOf(night.colors.selection)).toBeCloseTo(
+      alphaOf(darkTheme.colors.selection),
+      5,
+    );
+    // The wash this rule exists for: the run keeps its own text role.
+    expect(selectionFailures(night)).toEqual([]);
+
+    // The failure it prevents, built as the mapper used to: the same colour
+    // handed over unchanged covers the page it is drawn on.
+    const handedOver = extendTheme(paletteToTokens(nightPalette, darkTheme), {
+      colors: { selection: "#B49CFF" },
+    });
+    const legibility = selectionFailures(handedOver).filter(
+      ({ kind }) => kind === "legibility",
+    );
+    const onPage = legibility.find(
+      ({ background }) => background === "background",
+    );
+    expect(legibility).toHaveLength(8);
+    expect(onPage?.ratio).toBeCloseTo(1.81, 2);
+
+    // A share the palette states itself is its own decision.
+    expect(
+      paletteToTokens({ ...opaque, selection: "#B49CFF26" }, darkTheme).colors
+        .selection,
+    ).toBe("#B49CFF26");
+
+    // And the share is the base theme's, so a high-contrast brand keeps its own.
+    const high = paletteToTokens(opaque, highContrastDarkTheme);
+    expect(alphaOf(high.colors.selection)).toBeCloseTo(
+      alphaOf(highContrastDarkTheme.colors.selection),
+      5,
+    );
+    expect(selectionFailures(high)).toEqual([]);
+  });
+
+  it("prints the selection rule it applies", () => {
+    const catalogue = read("../../../docs/tokens.md");
+    const design = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+    const opaque: SystemPalette = { ...nightPalette, selection: "#B49CFF" };
+    const night = paletteToTokens(opaque, darkTheme);
+    const legibility = selectionFailures(
+      extendTheme(paletteToTokens(nightPalette, darkTheme), {
+        colors: { selection: "#B49CFF" },
+      }),
+    ).filter(({ kind }) => kind === "legibility");
+    const wash = blend(
+      night.colors.background,
+      night.colors.selection,
+      alphaOf(night.colors.selection),
+    );
+    const readable = contrastRatio(night.colors.foreground, wash) ?? 0;
+
+    // The numbers the page prints are the ones the mapper's rule produces.
+    const onPage = legibility.find(
+      ({ background }) => background === "background",
+    );
+    expect(catalogue).toContain(`${(onPage?.ratio ?? 0).toFixed(2)}:1`);
+    expect(catalogue).toContain(`${legibility.length} of its placements`);
+    expect(catalogue).toContain("A selection colour becomes a wash");
+    expect(catalogue).toContain("`selection_foreground` cannot be honoured");
+    expect(design).toContain("painted at the base theme's share");
+    expect(readme).toContain(`${legibility.length} selection placements`);
+    expect(readme).toContain(`${(onPage?.ratio ?? 0).toFixed(2)}:1`);
+    // The derived wash is the readable one, which is why the rule exists.
+    expect(selectionFailures(night)).toEqual([]);
+    expect(readable).toBeGreaterThan(7);
+  });
+
   it("names no colour of its own", () => {
-    [nightPalette, paperPalette].forEach((palette) => {
+    [
+      nightPalette,
+      paperPalette,
+      // A desktop's selection colour is opaque, so the mapper restates it at the
+      // base theme's share — the one value in the theme that is neither the
+      // palette's nor the base's, and the rule the "selection" case below holds.
+      { ...nightPalette, selection: "#B49CFF" },
+    ].forEach((palette) => {
       const theme = paletteToTokens(palette, lightTheme);
+      const derivedWash =
+        palette.selection === undefined
+          ? undefined
+          : alpha(palette.selection, alphaOf(lightTheme.colors.selection));
 
       Object.values(theme.colors).forEach((value) => {
-        expect(isBaseValue(lightTheme, palette, value)).toBe(true);
+        expect(
+          isBaseValue(lightTheme, palette, value) || value === derivedWash,
+        ).toBe(true);
       });
     });
   });

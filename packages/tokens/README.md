@@ -606,12 +606,16 @@ A palette names roles, and each maps to the role of the same name (`accent` is
 the `primary` fill, `danger` is `destructive`); an unnamed role keeps the base
 theme's value. The mapper chooses each filled role's on-colour by measuring the
 palette's own page and ink — it never blends a new colour — and the first read is
-applied at once while an unchanged palette calls nothing. `auditTheme` is the
-contract: a partial palette is a mix, and a palette whose one red cannot serve
-both a fill and a mark is reported, not repaired — measured on the example night
-palette at 4.39:1 to its chosen ink and 2.93:1 as a mark. The consumer owns the
-platform file's decoder; the live Linux follow is the playground's to record.
-Runnable call sites are in
+applied at once while an unchanged palette calls nothing. A selection colour
+arrives as a **fill** and is painted at the base theme's share, because the role
+is a wash behind text that keeps its own colour: handed over opaque, the example
+night palette's body ink reads **1.81:1** on the page and 8 selection placements
+fail, while the same hue at the theme's 24% clears the contract.
+`auditTheme` is the contract: a partial palette is a mix, and a palette whose one
+red cannot serve both a fill and a mark is reported, not repaired — measured on
+the example night palette at 4.39:1 to its chosen ink and 2.93:1 as a mark. The
+consumer owns the platform file's decoder; the live Linux follow is the
+playground's to record. Runnable call sites are in
 [`src/system-theme.example.ts`](./src/system-theme.example.ts).
 
 ## Checking a theme

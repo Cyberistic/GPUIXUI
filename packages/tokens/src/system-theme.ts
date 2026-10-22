@@ -22,6 +22,16 @@
  * read on its own accent is a palette the gate reports, not one this function
  * quietly repairs.
  *
+ * It **restates a selection colour at the theme's share**, because `selection` is
+ * the one role that is a wash rather than a fill: it is composited behind the run
+ * the reader selected, and the run keeps its own text role. A desktop paints
+ * selected text as a filled pair — Omarchy's `selection_background`, macOS's
+ * selected-content colour, Windows' highlight — so a palette decoded from one is
+ * opaque, and handed over unchanged it covers the page: measured on the example
+ * night palette, the body ink reads **1.81:1** on the page and eight selection
+ * placements fail. The hue is the platform's and the share is the theme's, so an
+ * opaque value takes the base theme's own share and the wash clears the contract.
+ *
  * The base theme still matters: the surfaces a palette does not name (a card, a
  * modal, a wash) come from it, so the reader who wants a coherent look follows
  * the platform's page with {@link paletteMode} and hands the matching built-in
@@ -35,6 +45,7 @@
  */
 
 import type { ThemeColors } from "./color.js";
+import { alpha, alphaOf } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { extendTheme, getTheme, type Theme, type ThemeMode } from "./theme.js";
 
@@ -62,7 +73,13 @@ export interface SystemPalette {
   readonly border?: string;
   /** The platform's error colour, painted as the `destructive` fill. */
   readonly danger?: string;
-  /** The colour of selected text, painted as the `selection` wash. */
+  /**
+   * The colour the desktop paints behind selected text, painted as the
+   * `selection` wash. A desktop hands this over as a **fill** (a highlight with
+   * its own foreground), while the role is a translucent wash behind text that
+   * keeps its own colour, so an opaque value takes the base theme's share — see
+   * {@link paletteToTokens}. A share the palette states itself is kept.
+   */
   readonly selection?: string;
 }
 
@@ -123,6 +140,29 @@ export function paletteMode(palette: SystemPalette): ThemeMode | undefined {
 }
 
 /**
+ * A desktop's selection colour as the **wash** this library paints.
+ *
+ * `selection` is composited behind the run the reader selected, and the run keeps
+ * its own text role, so the role is a share rather than a fill. A desktop hands
+ * over a filled selection — a highlight with a foreground of its own — so an
+ * opaque value would paint that colour over the page and hide the text: measured
+ * on the example night palette, the body ink reads **1.81:1** on the page and
+ * eight selection placements fail. The share is the theme's (`alphaOf` of the
+ * base's own wash, the share the selection contract already measures for that
+ * theme) and the hue is the platform's; a palette that states a share keeps it,
+ * because a decoder that already knows the role is a wash has answered the
+ * question. A value no colour grammar reads is returned unchanged, the rule
+ * `alpha` follows, and the gate reports it.
+ *
+ * A desktop's `selection_foreground` cannot be honoured: the runtime paints the
+ * wash behind a run that keeps the text role it already had.
+ */
+const selectionWash = (selection: string, base: Theme): string =>
+  alphaOf(selection) < 1
+    ? selection
+    : alpha(selection, alphaOf(base.colors.selection));
+
+/**
  * A theme wearing a system palette over a base theme.
  *
  * The palette's page, ink, accent, muted strip, border, danger colour and
@@ -130,7 +170,8 @@ export function paletteMode(palette: SystemPalette): ThemeMode | undefined {
  * `primary` fill; `danger` is `destructive`). A filled role the palette names
  * takes its on-colour from the palette's own page or ink — the one that reads
  * on it — and every unnamed role, including the on-colours of fills the palette
- * does not name, stays the base theme's.
+ * does not name, stays the base theme's. A selection colour arrives as a fill and
+ * is painted as a wash at the base theme's share (see {@link selectionWash}).
  *
  * The result is an ordinary theme: `extendTheme` it to keep the palette but
  * change a value, and run `auditTheme` to see which pairs the palette cannot
@@ -179,7 +220,7 @@ export function paletteToTokens(
         }),
     ...(palette.selection === undefined
       ? {}
-      : { selection: palette.selection }),
+      : { selection: selectionWash(palette.selection, base) }),
   };
   return extendTheme(base, { colors });
 }

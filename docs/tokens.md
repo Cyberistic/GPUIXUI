@@ -979,7 +979,7 @@ const palette: SystemPalette = readSystemPalette(); // your decoder
 const theme = paletteToTokens(palette, getTheme(paletteMode(palette) ?? "light"));
 ```
 
-The mapping has two rules, and both matter more than they look.
+The mapping has three rules, and all of them matter.
 
 - **A role maps to the role of the same name.** `background`, `foreground`,
   `muted`, `border`, `danger` and `selection` land on their roles; `accent` is
@@ -993,6 +993,18 @@ The mapping has two rules, and both matter more than they look.
   cannot read on its own accent is what the gate is for: run
   `auditTheme(theme)` and read the pairs the palette cannot serve. The mapper
   does not quietly repair a palette.
+- **A selection colour becomes a wash.** `selection` is the one role that is a
+  share rather than a fill: it is composited behind the run the reader selected,
+  and the run keeps its own text role. A desktop hands over a **filled**
+  selection instead — Omarchy's `selection_background`, macOS's
+  selected-content colour, Windows' highlight — and handed over unchanged that
+  colour covers the page: on the example night palette the body ink reads
+  **1.81:1** on the page and 8 of its placements fail. So an opaque value takes
+  the base theme's own share (`alphaOf(theme.colors.selection)`, the share the
+  selection contract already measures for that theme) and keeps the platform's
+  hue; a palette that states its own share keeps it. A desktop's
+  `selection_foreground` cannot be honoured — the runtime paints the wash behind
+  a run that keeps the colour it already had.
 
 `paletteMode(palette)` reads the mode from the page itself: a page that white
 contrasts with more than black is dark. Use it to hand the matching built-in
