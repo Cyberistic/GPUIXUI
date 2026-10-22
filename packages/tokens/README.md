@@ -196,17 +196,23 @@ A runnable example lives in
 
 ## Action fills
 
-A filled action's hover and press are derived, not stored roles:
-`filledHover(theme, action)` and `filledPressed(theme, action)` move the role a
-step toward the theme's `foreground`, so the fill darkens in a light theme,
-lightens in a dark one, and stays opaque — it never shows the surface behind the
+A filled face's hover and press are derived, not stored roles:
+`filledHover(theme, role)` and `filledPressed(theme, role)` move the role a step
+toward the theme's `foreground`, so the fill darkens in a light theme, lightens
+in a dark one, and stays opaque — it never shows the surface behind the
 control. A brand's `primary` carries its own states with no second edit.
+
+`FilledRole` is the three actions plus `accent`, the toggle's on-state. The step
+is a ceiling: it stops where the role's on-colour would lose the floor the theme
+declares, which the accent face does in macOS dark (4.13:1 pressed at the full
+step, under 4.5) and both high-contrast themes (6.90/6.94:1, under 7). Every
+action keeps the full 12% hover and 18% press in all 16 shipped styles.
 
 ```ts
 import { filledHover, filledPressed } from "@gpuixui/tokens";
 
 const hover = filledHover(theme, "primary");
-const pressed = filledPressed(theme, "primary");
+const pressed = filledPressed(theme, "accent");
 ```
 
 Ghost and subtle surfaces keep the `hover` / `active` washes.

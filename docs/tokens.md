@@ -289,20 +289,41 @@ A runnable example spreads the result onto a container and its text; see
 
 ## Action fills
 
-A filled action — `primary`, `secondary` or `destructive` — needs a hover and a
-press fill. Neither is a stored role. `filledHover(theme, action)` and
-`filledPressed(theme, action)` derive an **opaque** fill by moving the action's
-role toward the theme's `foreground`: a step darker in a light theme, a step
-lighter in a dark one, so the fill always moves away from the canvas. Hover
-moves 12% of the way, press 18%.
+A filled face — an action (`primary`, `secondary`, `destructive`) or a toggle's
+on-state (`accent`) — needs a hover and a press fill. Neither is a stored role.
+`filledHover(theme, role)` and `filledPressed(theme, role)` derive an **opaque**
+fill by moving the role toward the theme's `foreground`: a step darker in a light
+theme, a step lighter in a dark one, so the fill always moves away from the
+canvas. Hover moves 12% of the way, press 18%.
 
 ```ts
-import { filledHover, filledPressed, type FilledAction } from "@gpuixui/tokens";
+import {
+  filledHover,
+  filledPressed,
+  type FilledAction,
+  type FilledRole,
+} from "@gpuixui/tokens";
 
 const action: FilledAction = "primary";
+const toggleOn: FilledRole = "accent";
 filledHover(theme, action); // the hover fill
-filledPressed(theme, action); // a further step
+filledPressed(theme, toggleOn); // a further step, as far as its label allows
 ```
+
+`FilledAction` is the three button families. `FilledRole` adds `accent`, the one
+non-action face: a toggle's on-state paints it, and the primitives' `Toggle`
+lifts its alpha for pointer feedback (`0.9` / `0.8`) instead, which is the
+defect the derived fills exist for. Each role names the on-colour it carries (`primaryForeground`,
+`accentForeground`, …), and **18% is a ceiling rather than a promise**: the step
+stops where that label would lose the floor its theme declares
+(`contrastFloorsFor(theme).secondary` — 4.5:1 default, 7:1 high contrast). The
+accent face is the one that needs the clamp: at the full press step its label
+lands at **4.13:1** in macOS dark, under 4.5, and at **6.90:1** and **6.94:1** in
+the two high-contrast themes, under 7, so those three styles press at 14% / 17% /
+17%. Every action keeps the full 18% in all 16 shipped, high-contrast, platform
+and authored styles, so no shipped fill moved. A theme whose *resting* pair
+already misses its floor cannot be protected — the gate reports it — so the
+helpers keep the nominal step rather than removing the pointer cue as well.
 
 Derived rather than six more roles for two reasons: a brand that overrides
 `primary` gets a hover that belongs to it with no second edit, and the fill
@@ -2463,19 +2484,21 @@ or dropped is named rather than passing silently.
 - Motion — durations, easings, springs, inertia — lives in `@gpuixui/motion`,
   not here: a second copy would duplicate the package that owns reduced-motion
   policy. No component consumes it yet.
-- The derived action fills are adopted by both packages' buttons: the
+- The derived fills are adopted by both packages' buttons: the
   components package's `Button`/`IconButton` (`filledHover` / `filledPressed` in
   `packages/components/src/internal/button.tsx`) and `packages/primitives`'
   recipes, which ask their own registry for `hover:fill-<action>` and
-  `active:fill-<action>-pressed` (`packages/primitives/src/recipe/index.ts`).
-  Two deviations remain: the `@gpuixui/tw` `button` recipe the components
+  `active:fill-<action>-pressed` (`packages/primitives/src/recipe/index.ts`). A
+  filled checkbox or radio paints the same two helpers
+  (`packages/primitives/src/core/selection.ts`), so its mark sits on an opaque
+  fill. Two deviations remain: the `@gpuixui/tw` `button` recipe the components
   package compiles against still lifts the fill's alpha
-  (`hover:bg-primary/90` in `packages/tw/src/recipes.ts`), and a filled
-  checkbox or radio paints its selection role at 0.9 alpha in
-  `packages/primitives/src/core/selection.ts`, while a pressed `Toggle` washes
-  its `accent` fill at 0.9/0.8 alpha in `packages/primitives/src/core/variants.ts`
-  — a general-role derived fill the tokens package does not expose yet. All are
-  the owning packages' halves, recorded in `TODO.md` → Interlocks.
+  (`hover:bg-primary/90` in `packages/tw/src/recipes.ts`), and a pressed `Toggle`
+  washes its `accent` fill at 0.9/0.8 alpha in
+  `packages/primitives/src/core/variants.ts`. The second is adoption rather than
+  a missing token: `filledHover` / `filledPressed` take a `FilledRole`, which
+  includes `accent`, and clamp the step to the label's floor (§Action fills). Both
+  are the owning packages' halves, recorded in `TODO.md` → Interlocks.
 - A field's **resting edge** is the decorative `border` role rather than the
   functional `borderStrong` one: `fieldVariant`
   (`packages/primitives/src/core/variants.ts`) and `FieldInput`

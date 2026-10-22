@@ -13,10 +13,10 @@
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { contrastFloorsFor } from "./audit.js";
 import {
   contrastFailures,
   contrastFloors,
+  contrastFloorsFor,
   contrastPairs,
   contrastRatio,
   highContrastFloors,

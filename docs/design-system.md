@@ -314,8 +314,8 @@ card, popover and toolbar.
 
 | State | Role / mechanism |
 | ----- | ---------------- |
-| hover | `hover` wash on ghost and subtle surfaces; a filled action moves to `filledHover(theme, action)` |
-| pressed | `active` wash; a filled action moves to `filledPressed(theme, action)` |
+| hover | `hover` wash on ghost and subtle surfaces; a filled role — an action, or a toggle's `accent` on-state — moves to `filledHover(theme, role)` |
+| pressed | `active` wash; a filled role moves to `filledPressed(theme, role)`, a step further than its hover unless the label's floor stops it |
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible; held to `contrastFloors.disabled` so the state stays visible rather than to a readability floor |
 | invalid | the `destructive` role as the field's edge and as its `focusVisible` line; the fill and text roles do not change, so the value and placeholder stay readable |
@@ -341,6 +341,16 @@ are measured on the same washes; that check found the two light looks' pressed
 washes at 6.93:1 and 6.77:1, so every light theme carries red 900 as
 `destructiveSoftForeground` — the same value the deeper soft surface needs for
 its label, rather than flattening press into hover.
+
+A **filled role's pointer feedback** is derived, never a lifted alpha: a
+half-alpha fill shows the surface behind the control, so the same face reads as
+two colours on a card and on a dialog. `filledHover` / `filledPressed` take a
+`FilledRole` — the three actions plus a toggle's `accent` on-state — and move the
+role 12% / 18% of the way toward `foreground`, clamped so the role's on-colour
+keeps the floor its theme declares. The accent face is the one that needs the
+clamp: pressed at the full step its label lands at 4.13:1 in macOS dark (under
+4.5) and 6.90 / 6.94:1 in the two high-contrast themes (under 7), so those three
+styles press at 14% and 17%. Every action keeps the full step everywhere.
 
 A **selected row** is the fourth wash, and the one a row's *title* is painted on.
 The title's recipe is `text-foreground`, painted over the `selected` fill the row

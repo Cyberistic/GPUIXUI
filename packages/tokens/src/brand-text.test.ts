@@ -16,8 +16,8 @@
 import { describe, expect, it } from "vitest";
 import { brandText, brandTextSurfaces } from "./brand-text.js";
 import { linkStyles, paleBrand } from "./brand-text.example.js";
-import { contrastFloorsFor } from "./audit.js";
 import { alpha } from "./color.js";
+import { contrastFloorsFor } from "./contrast.js";
 import { contrastFloors, contrastRatio } from "./contrast.js";
 import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";

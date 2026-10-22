@@ -22,8 +22,7 @@ import {
 } from "./color.js";
 import {
   contrastFailures,
-  contrastFloors,
-  highContrastFloors,
+  contrastFloorsFor,
   type ContrastFailure,
   type ContrastFloors,
 } from "./contrast.js";
@@ -63,22 +62,6 @@ type SeriesSource = {
   readonly mode: ThemeMode;
   readonly series?: SeriesColors;
 };
-
-/**
- * The floors a theme's own contrast variant is held to.
- *
- * A theme that declares `contrast: "high"` is held to the AAA floors, not to the
- * default ones — the floors follow the declaration rather than the caller's
- * memory. A hand-built theme declares nothing and gets the default floors.
- *
- * @example
- * ```ts
- * contrastFloorsFor(highContrastDarkTheme); // { body: 7, secondary: 7, boundary: 4.5 }
- * ```
- */
-export function contrastFloorsFor(theme: ContrastSource): ContrastFloors {
-  return theme.contrast === "high" ? highContrastFloors : contrastFloors;
-}
 
 /** Everything a theme must be free of before it ships. */
 export interface ThemeAudit {

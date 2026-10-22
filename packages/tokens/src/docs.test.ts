@@ -247,7 +247,7 @@ describe("filled action adoption claim", () => {
    * is still there (the `@gpuixui/tw` recipe).
    */
   const limitation = (() => {
-    const start = catalogue.indexOf("- The derived action fills");
+    const start = catalogue.indexOf("- The derived fills");
     const end = catalogue.indexOf("\n- ", start + 1);
     return catalogue.slice(start, end).replace(/\s+/g, " ");
   })();
@@ -274,6 +274,19 @@ describe("filled action adoption claim", () => {
     expect(source).toContain("hover:bg-primary/90");
     expect(limitation).toContain("packages/tw/src/recipes.ts");
     expect(limitation).toContain("hover:bg-primary/90");
+  });
+
+  it("names the toggle's accent as adoption rather than a missing token", () => {
+    // The page said the tokens package did not expose a general-role derived
+    // fill, so the pressed toggle's alpha wash was a gap in the tokens. It is
+    // not: `FilledRole` covers `accent`, and the wash in the primitives is the
+    // remaining adopter. Both halves are read from the sources.
+    const source = read("../../../packages/primitives/src/core/variants.ts");
+
+    expect(source).toContain("alpha(theme.colors.accent, 0.9)");
+    expect(limitation).toContain("packages/primitives/src/core/variants.ts");
+    expect(limitation).toContain("FilledRole");
+    expect(limitation).not.toContain("does not expose yet");
   });
 
   it("no longer calls every component package's hover translucent", () => {

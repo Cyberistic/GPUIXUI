@@ -8,6 +8,7 @@
 
 import type { ThemeColors } from "./color.js";
 import { opaqueRgb } from "./hex.js";
+import type { ThemeContrast } from "./theme.js";
 
 const channel = (rgb: string, at: number): number => {
   const srgb = Number.parseInt(rgb.slice(at, at + 2), 16) / 255;
@@ -100,6 +101,24 @@ export const highContrastFloors: ContrastFloors = {
   boundary: 4.5,
   disabled: 3,
 };
+
+/**
+ * The floors a theme's own contrast variant is held to.
+ *
+ * A theme that declares `contrast: "high"` is held to the AAA floors, not to the
+ * default ones — the floors follow the declaration rather than the caller's
+ * memory. A hand-built theme declares nothing and gets the default floors.
+ *
+ * @example
+ * ```ts
+ * contrastFloorsFor(highContrastDarkTheme); // { body: 7, secondary: 7, boundary: 4.5 }
+ * ```
+ */
+export function contrastFloorsFor(theme: {
+  readonly contrast?: ThemeContrast;
+}): ContrastFloors {
+  return theme.contrast === "high" ? highContrastFloors : contrastFloors;
+}
 
 /** One role pair a theme is measured on, and the floor it must reach. */
 export interface ContrastPair {

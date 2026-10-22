@@ -16,9 +16,12 @@
  * derivation is only visible where the fill role genuinely cannot be read.
  */
 
-import { contrastFloorsFor } from "./audit.js";
 import { blend } from "./color.js";
-import { contrastRatio, type ContrastFloors } from "./contrast.js";
+import {
+  contrastFloorsFor,
+  contrastRatio,
+  type ContrastFloors,
+} from "./contrast.js";
 import type { Theme } from "./theme.js";
 
 /**

@@ -1,4 +1,5 @@
-import { alpha, blend } from "./color.js";
+import { alpha, blend, type ThemeColors } from "./color.js";
+import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import type { BoxShadow } from "./elevation.js";
 import type { ControlSize } from "./scale.js";
 import type { Theme } from "./theme.js";
@@ -221,25 +222,85 @@ export function keyboardFocusRing(theme: Theme): KeyboardFocusRing {
 export type FilledAction = "primary" | "secondary" | "destructive";
 
 /**
- * How far a filled action's hover moves from its fill, as a share of the way
- * to the theme's foreground.
+ * Every role a control can paint as its whole face while it accepts pointer
+ * feedback, so the fill owns a paired on-colour and the pair can be measured.
+ *
+ * The three {@link FilledAction} families are the buttons. `accent` is the one
+ * non-action face: a toggle's on-state paints it, and its hover and press used
+ * to lift the role's alpha, which let the surface behind the control through —
+ * the defect the derived fills were written for.
+ */
+export type FilledRole = FilledAction | "accent";
+
+/** The label role each filled role carries its text and marks in. */
+const filledOnColour: Readonly<Record<FilledRole, keyof ThemeColors>> = {
+  primary: "primaryForeground",
+  secondary: "secondaryForeground",
+  destructive: "destructiveForeground",
+  accent: "accentForeground",
+};
+
+/**
+ * How far a filled role's hover moves from its fill, as a share of the way to
+ * the theme's foreground.
  */
 const HOVER_STEP = 0.12;
 
 /**
- * How far a filled action's press moves from its fill. A press is a further
- * step than the hover, and it stops where the on-colour text would lose its
- * contrast floor: in the high-contrast dark theme a filled secondary button
- * has room for 18% and no more.
+ * How far a filled role's press moves from its fill. A press is a further step
+ * than the hover, and it is a ceiling rather than a promise: the step stops
+ * where the on-colour text would lose its contrast floor.
  */
 const PRESS_STEP = 0.18;
 
-/** A filled action's fill after moving `step` of the way to the foreground. */
-const filledFill = (theme: Theme, action: FilledAction, step: number): string =>
-  blend(theme.colors[action], theme.colors.foreground, step);
+/** Candidate shares, largest first, so a clamp takes the biggest that reads. */
+const STEP_LADDER: readonly number[] = Array.from(
+  { length: Math.round(PRESS_STEP * 100) + 1 },
+  (_, offset) => (Math.round(PRESS_STEP * 100) - offset) / 100,
+);
 
 /**
- * The fill a filled action paints while it is hovered.
+ * The largest step no bigger than `nominal` whose fill still carries the
+ * role's label.
+ *
+ * A filled action has 18% of headroom in every shipped theme, but the accent
+ * face does not: pressed, macOS dark's accent label lands at 4.13:1 under its
+ * 4.5 floor at the full step, and both high-contrast themes at 6.90:1 and
+ * 6.94:1 under 7:1, so the fixed step was a label the theme could not carry.
+ * The clamp keeps the derived fill opaque and the label measured. A theme whose
+ * resting pair already misses its floor has nothing left to protect — the gate
+ * reports it — so it keeps the nominal step rather than losing the pointer cue
+ * as well as the contrast.
+ */
+const readableStep = (
+  theme: Theme,
+  role: FilledRole,
+  nominal: number,
+): number => {
+  const onColour = theme.colors[filledOnColour[role]];
+  const floor = contrastFloorsFor(theme).secondary;
+  const reads = (step: number): boolean => {
+    const ratio = contrastRatio(
+      onColour,
+      blend(theme.colors[role], theme.colors.foreground, step),
+    );
+    return ratio !== undefined && ratio >= floor;
+  };
+  return reads(0)
+    ? (STEP_LADDER.find((step) => step <= nominal && reads(step)) ?? 0)
+    : nominal;
+};
+
+/** A filled role's fill after moving as far as the nominal step allows. */
+const filledFill = (theme: Theme, role: FilledRole, step: number): string =>
+  blend(
+    theme.colors[role],
+    theme.colors.foreground,
+    readableStep(theme, role, step),
+  );
+
+/**
+ * The fill a filled role paints while it is hovered.
  *
  * The fill moves toward the theme's **foreground** — away from the canvas: a
  * step darker in a light theme, a step lighter in a dark one. The result is an
@@ -256,19 +317,21 @@ const filledFill = (theme: Theme, action: FilledAction, step: number): string =>
  * <div style={{ backgroundColor: filledHover(theme, "primary") }} />
  * ```
  */
-export function filledHover(theme: Theme, action: FilledAction): string {
-  return filledFill(theme, action, HOVER_STEP);
+export function filledHover(theme: Theme, role: FilledRole): string {
+  return filledFill(theme, role, HOVER_STEP);
 }
 
 /**
- * The fill a filled action paints while it is pressed. The press is a further
- * step from the fill than the hover, so a held button reads as held.
+ * The fill a filled role paints while it is pressed. The press is a further
+ * step from the fill than the hover, so a held control reads as held — unless
+ * the role's label floor stops the step short, which the accent face does in
+ * three shipped styles (see `docs/tokens.md` §Action fills).
  *
  * @example
  * ```tsx
- * <div style={{ backgroundColor: filledPressed(theme, "primary") }} />
+ * <div style={{ backgroundColor: filledPressed(theme, "accent") }} />
  * ```
  */
-export function filledPressed(theme: Theme, action: FilledAction): string {
-  return filledFill(theme, action, PRESS_STEP);
+export function filledPressed(theme: Theme, role: FilledRole): string {
+  return filledFill(theme, role, PRESS_STEP);
 }
