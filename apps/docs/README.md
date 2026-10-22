@@ -239,20 +239,7 @@ component renders through GPUix. The same page carries the real source, so the
 reader can run it in `apps/playground`. `src/lib/theme-css.ts` is the one bridge
 from a `Theme` to CSS variables, and the previews take their values from the
 resolved platform theme, so a preview cannot carry a colour literal the library
-does not ship. `docs/preview-strategy.md` is the full policy — including the one
-route that could stop being an approximation: `@gpuix/native`'s wasm browser
-build is a real GPUix surface (one document-owned canvas, cross-origin
-isolation), which the site does **not** mount yet. `src/lib/gpuix-web.test.ts`
-holds that status, the build's size and its shared-memory requirement to the
-installed package, and plan `440-live-gpuix-web-surface` is the spike that would
-mount it.
-
-That spike's riskiest step is measured rather than assumed: `scripts/live-surface-probe.ts`
-boots the wasm in headless Chrome, applies one mutation batch and reads the
-frame's pixel back out of the screenshot, so a frame is only a paint when it
-carries the fill the batch set. It lives outside `src/` — it is a host tool, and
-the docs app still imports no renderer — and `scripts/live-frame.ts` is the frame
-contract it judges against.
+does not ship. `docs/preview-strategy.md` is the full policy.
 
 A block page mounts its reproduction by registry key (`<BlockPreview
 name="dashboard-01" />`); `src/lib/block-page.test.ts` holds every page to a
@@ -263,6 +250,38 @@ element per colour — because the page used to call a single element a native
 chart. The Code tab is the real source too: `src/lib/block-source.test.ts`
 resolves every recipe's `@gpuixui/*` imports against the workspace, so a renamed
 export fails instead of teaching a broken import.
+
+## The live surface
+
+`/live` is the one page that is not an approximation: `@gpuix/native`'s wasm
+browser build is a real GPUix surface (one document-owned canvas, cross-origin
+isolation), and the route paints a `@gpuixui/primitives` filled action on it.
+`src/lib/live-batch.ts` is the screen, with every `StyleDesc` resolved by
+`@gpuixui/primitives/core`; `src/components/docs/live-surface.tsx` boots the
+renderer inside an effect, mounts once, and reports the element bounds it laid
+out. `vite.config.ts` resolves the wasm glue past the package's `exports` (its
+`browser.mjs` uses a bundler-only `with { type: "file" }` import) and asks Vite
+for the wasm as an asset; `/live` alone is cross-origin isolated, in dev
+(`vite.config.ts`) and in production (`src/start.ts`). Every component page's
+preview note links here.
+
+Both probes live outside `src/`: they are host tools, and the browser driver they
+share is `scripts/chrome-session.ts`. `scripts/live-surface-probe.ts` proves the
+renderer paints at all; `scripts/live-route-probe.ts` holds the page a reader
+opens to the same rule — it samples the button's fill, the banner's resting fill,
+presses through `renderer.simulateClick`, and samples the banner again.
+`scripts/live-frame.ts` is the frame contract both judge against.
+
+Measured 2026-10-22, macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
+over SwiftShader: the button sampled `#a7a9ff` (`controlStyle`'s dark primary),
+the banner `#222730` (`muted`), and after a press `#0e5135` (`successSoft`) with
+the status line reading "Pressed 1 time". Frames:
+`.artifacts/live/docs-live-route-{before,after}.png` (verification-only).
+
+Owed: the React reconciler mount. `render(<App/>, { renderer })` takes an
+injected renderer, but `@gpuix/react` imports `@gpuix/native/runtime` and
+`@gpuix/native/automation` at module scope and nothing has measured that graph in
+a browser, so the route drives the batch protocol by hand.
 
 ## The platform switch and the look picker
 
