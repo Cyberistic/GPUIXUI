@@ -86,6 +86,28 @@ A page that genuinely scrolls — a settings form, a dialog body — moves toget
 with a list inside it; that is a layout decision, not something a pane can
 guard against. See [Runtime](/docs/runtime) for the measurement.
 
+## A find bar counts matches, not rows
+
+A workspace find bar searches a document the runtime never holds: a log viewer,
+a code pane or a table mounts a window of rows. `getPaintedHighlights()` reports
+only that window, so `activeIndex` would mean "the nth match on screen". The
+seam is `matchIndexOffset` — the number of **matches** above the window, not a
+row index, because rows hold different numbers of matches.
+
+`search-virtual-document` measured it across 400 rows: the document holds 676
+matches, 540 of them above row 320, and `scrollToItem(320)` with offset 540
+marks exactly one active wash (the row's second match, document index 541). The
+row index 320 marks none at all, an off-by-one marks the match before the named
+one, and a negative offset drops the whole spec. Only mounted rows wash, so the
+document's count and the paint are different numbers — count with `findRanges`
+over every row and offset with the matches above `windowStart`. A replace-all
+runs over the document too: it cleared all 676 occurrences across unmounted rows
+and left the reader's row where it was.
+
+A find bar therefore keeps three numbers: the document's matches, the matches
+above the window, and the cursor. The last is the app's; the offset is
+arithmetic over the first two, recomputed whenever the window moves.
+
 ## State and persistence
 
 There is no renderer storage, so a layout is the app's data. Model it once and

@@ -89,6 +89,16 @@ lane. The shape the inventory names is a grid of `div` rows, not a `<table>`:
   `onVisibleRange` — read the painted rows or the list's anchor, and never
   paginate from that event across a row-count change
   (`virtual-tree-lifecycle`).
+- **A find bar offsets by matches, not rows** — a search over a virtualized
+  table searches a document the runtime never holds, and `getPaintedHighlights()`
+  reports only the mounted window, so a row index cannot place the cursor.
+  `matchIndexOffset` is a **match** count above the window: sum `findRanges` over
+  the rows before `windowStart`. The document's count and the paint are different
+  numbers — 676 matches across 400 rows, of which only the mounted rows wash —
+  the row index `320` marks no match against a match numbered `541`, an
+  off-by-one marks the match before the named one, and a negative offset drops
+  the whole spec. A replace-all runs across the document, not the window
+  (`search-virtual-document`).
 - **An arriving page owes a re-anchor while a loading void is the anchor** — a
   paginated table, log or feed paints a void row at the edge a page arrives
   from, and `<virtual-list>` anchors on that row, so the splice replaces the

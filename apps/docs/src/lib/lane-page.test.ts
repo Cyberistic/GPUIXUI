@@ -276,6 +276,23 @@ describe("the data-display page's drawing claims", () => {
       "takes an item count, not compound children",
     );
   });
+
+  it("holds a find bar to the match offset a virtualized document needs", () => {
+    // The page taught a table its window, its reveal and its pagination, and
+    // nothing about searching it. A find bar cannot count rows: only the
+    // mounted rows wash, so `matchIndexOffset` is a **match** count above the
+    // window, and the probe measured the row index, an off-by-one and a
+    // negative offset each marking the wrong thing.
+    const find = rowFor(record, "Find in a virtualized document");
+
+    expect(find).toContain("supported, with limits");
+    expect(find).toContain("search-virtual-document");
+    expect(find).toContain("matchIndexOffset");
+    expect(dataPage).toContain("matchIndexOffset");
+    expect(dataPage).toContain("search-virtual-document");
+    expect(dataPage).toContain("findRanges");
+    expect(dataPage).toContain("row index");
+  });
 });
 
 /**
@@ -354,5 +371,23 @@ describe("the workspace page's pointer and terminal claims", () => {
     expect(workspace).toContain("nested-scroll-lifecycle");
     expect(workspace).toContain("The workspace does not scroll");
     expect(workspace).toContain("onScrollChange");
+  });
+
+  it("counts a find bar's matches instead of rows", () => {
+    // A workspace find bar is Tier 4's Search and replace, and a log viewer or a
+    // code pane mounts a window of rows. The page described the dock's panes and
+    // its scrollers and nothing about searching them, so the match offset a
+    // virtualized document needs had no route where a workspace is designed.
+    const find = rowFor(record, "Find in a virtualized document");
+
+    expect(find).toContain("supported, with limits");
+    expect(find).toContain("search-virtual-document");
+    expect(find).toContain("matchIndexOffset");
+    expect(workspace).toContain("matchIndexOffset");
+    expect(workspace).toContain("search-virtual-document");
+    expect(workspace).toContain("windowStart");
+    expect(workspace).toContain("A find bar counts matches, not rows");
+    // The replace runs over the document, not the window the reader sees.
+    expect(workspace).toContain("676");
   });
 });

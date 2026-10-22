@@ -562,6 +562,33 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(virtual?.[2]).toContain("overdraw");
   });
 
+  it("records the find-bar offset a virtualized document needs", () => {
+    // A find bar over a `<virtual-list>` searches a document the runtime never
+    // holds, and only the mounted rows wash. The seam is `matchIndexOffset` — a
+    // match count, not a row index — and the probe measured all four wrong
+    // answers a plan can reach for: the row index, an off-by-one prefix sum, a
+    // negative offset and a replace that only touched the window.
+    const find = rowFor("Find in a virtualized document");
+    expect(find?.verdict).toBe("supported, with limits");
+    expect(find?.evidence).toContain("search-virtual-document");
+    expect(find?.evidence).toContain("matchIndexOffset");
+    expect(find?.evidence).toContain("676");
+    expect(find?.evidence).toContain("540");
+    expect(find?.evidence).toContain("exactly one active");
+    expect(find?.workaround).toContain("windowStart");
+    expect(find?.workaround).toContain("row index");
+
+    const page = measuredRow("Find in a virtualized document");
+    expect(
+      page,
+      "the page's measured table has no find-offset row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("search-virtual-document");
+    expect(page?.[1]).toContain("matchIndexOffset");
+    expect(page?.[1]).toContain("676");
+    expect(page?.[2]).toContain("windowStart");
+  });
+
   it("records the variable row heights a wrapped table needs", () => {
     // Every virtual-list probe declared fixed heights, so "rows do not need
     // equal heights" was a claim. `virtual-list-rows` measured 400 rows cycling
