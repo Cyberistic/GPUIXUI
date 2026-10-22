@@ -217,6 +217,12 @@ import {
   INNER_ROWS,
   INNER_STEP,
   INNER_VIEWPORT,
+  PANE_FILLER_HEIGHT,
+  PANE_FILLER_ROWS,
+  PANE_VIEWPORT,
+  PANE_ROWS,
+  PANE_ROW_HEIGHT,
+  PANE_PAGE_VIEWPORT,
   OUTER_ONLY_ROW,
   OUTER_MAX,
   OUTER_VIEWPORT,
@@ -6409,6 +6415,8 @@ const NestedScrollProbe = (): ReactNode => {
   const [outer, setOuter] = useState<Smoke.Offset>({ x: 0, y: 0 });
   const [innerEvents, setInnerEvents] = useState(0);
   const [outerEvents, setOuterEvents] = useState(0);
+  const [listPage, setListPage] = useState<Smoke.Offset>({ x: 0, y: 0 });
+  const [listEvents, setListEvents] = useState(0);
 
   return (
     <div
@@ -6419,48 +6427,74 @@ const NestedScrollProbe = (): ReactNode => {
         padding: theme.spacing.xl,
         backgroundColor: theme.colors.background,
         display: "flex",
-        flexDirection: "column",
-        gap: theme.spacing.sm,
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: theme.spacing.xl,
       }}
     >
-      <text
-        style={{
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-        }}
-      >
-        Wheeling over the list scrolls the page behind it too: one wheel moves
-        every scroller above the pointer.
-      </text>
       <div
-        testId="nested-outer"
         style={{
-          ...OUTER_VIEWPORT,
-          overflow: "scroll",
-          backgroundColor: theme.colors.card,
+          width: OUTER_VIEWPORT.width,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.sm,
         }}
-        onScroll={() => setOuterEvents((current) => current + 1)}
-        onScrollChange={(event) =>
-          setOuter({ x: event.scrollX ?? 0, y: event.scrollY ?? 0 })
-        }
       >
-        <div
-          testId="nested-inner"
+        <text
           style={{
-            ...INNER_VIEWPORT,
-            overflow: "scroll",
-            backgroundColor: theme.colors.muted,
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
           }}
-          onScroll={() => setInnerEvents((current) => current + 1)}
+        >
+          Wheeling over the list scrolls the page behind it too: one wheel moves
+          every scroller above the pointer.
+        </text>
+        <div
+          testId="nested-outer"
+          style={{
+            ...OUTER_VIEWPORT,
+            overflow: "scroll",
+            backgroundColor: theme.colors.card,
+          }}
+          onScroll={() => setOuterEvents((current) => current + 1)}
           onScrollChange={(event) =>
-            setInner({ x: event.scrollX ?? 0, y: event.scrollY ?? 0 })
+            setOuter({ x: event.scrollX ?? 0, y: event.scrollY ?? 0 })
           }
         >
-          {Array.from({ length: INNER_ROWS }, (_, index) => (
+          <div
+            testId="nested-inner"
+            style={{
+              ...INNER_VIEWPORT,
+              overflow: "scroll",
+              backgroundColor: theme.colors.muted,
+            }}
+            onScroll={() => setInnerEvents((current) => current + 1)}
+            onScrollChange={(event) =>
+              setInner({ x: event.scrollX ?? 0, y: event.scrollY ?? 0 })
+            }
+          >
+            {Array.from({ length: INNER_ROWS }, (_, index) => (
+              <div
+                key={index}
+                testId={`nested-inner-row-${index}`}
+                style={{ height: INNER_ROW_HEIGHT }}
+              >
+                <text
+                  style={{
+                    ...textStyle(theme, "body"),
+                    color: theme.colors.foreground,
+                  }}
+                >
+                  {`inner ${index}`}
+                </text>
+              </div>
+            ))}
+          </div>
+          {Array.from({ length: FILLER_ROWS }, (_, index) => (
             <div
               key={index}
-              testId={`nested-inner-row-${index}`}
-              style={{ height: INNER_ROW_HEIGHT }}
+              testId={`nested-filler-${index}`}
+              style={{ height: FILLER_ROW_HEIGHT }}
             >
               <text
                 style={{
@@ -6468,46 +6502,111 @@ const NestedScrollProbe = (): ReactNode => {
                   color: theme.colors.foreground,
                 }}
               >
-                {`inner ${index}`}
+                {`page ${index}`}
               </text>
             </div>
           ))}
         </div>
-        {Array.from({ length: FILLER_ROWS }, (_, index) => (
-          <div
-            key={index}
-            testId={`nested-filler-${index}`}
-            style={{ height: FILLER_ROW_HEIGHT }}
-          >
-            <text
-              style={{
-                ...textStyle(theme, "body"),
-                color: theme.colors.foreground,
-              }}
-            >
-              {`page ${index}`}
-            </text>
-          </div>
-        ))}
+        <text
+          testId="nested-inner-offset"
+          style={{
+            ...textStyle(theme, "code"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          {`inner=x${inner.x} y${inner.y} events=${innerEvents}`}
+        </text>
+        <text
+          testId="nested-outer-offset"
+          style={{
+            ...textStyle(theme, "code"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          {`outer=x${outer.x} y${outer.y} events=${outerEvents}`}
+        </text>
       </div>
-      <text
-        testId="nested-inner-offset"
+      <div
         style={{
-          ...textStyle(theme, "code"),
-          color: theme.colors.mutedForeground,
+          width: PANE_PAGE_VIEWPORT.width,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.sm,
         }}
       >
-        {`inner=x${inner.x} y${inner.y} events=${innerEvents}`}
-      </text>
-      <text
-        testId="nested-outer-offset"
-        style={{
-          ...textStyle(theme, "code"),
-          color: theme.colors.mutedForeground,
-        }}
-      >
-        {`outer=x${outer.x} y${outer.y} events=${outerEvents}`}
-      </text>
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          The same page with a virtual list as the pane:
+        </text>
+        <div
+          testId="nested-list-page"
+          style={{
+            ...PANE_PAGE_VIEWPORT,
+            overflow: "scroll",
+            backgroundColor: theme.colors.card,
+          }}
+          onScroll={() => setListEvents((current) => current + 1)}
+          onScrollChange={(event) =>
+            setListPage({ x: event.scrollX ?? 0, y: event.scrollY ?? 0 })
+          }
+        >
+          <div
+            testId="nested-list-frame"
+            style={{ height: PANE_VIEWPORT, display: "flex" }}
+          >
+            <virtual-list
+              testId="nested-list"
+              style={{ flexGrow: 1, minHeight: 0 }}
+            >
+              {Array.from({ length: PANE_ROWS }, (_, index) => (
+                <div
+                  key={index}
+                  testId={`nested-list-row-${index}`}
+                  style={{ height: PANE_ROW_HEIGHT }}
+                >
+                  <text
+                    style={{
+                      ...textStyle(theme, "body"),
+                      color: theme.colors.foreground,
+                    }}
+                  >
+                    {`pane row ${index}`}
+                  </text>
+                </div>
+              ))}
+            </virtual-list>
+          </div>
+          {Array.from({ length: PANE_FILLER_ROWS }, (_, index) => (
+            <div
+              key={index}
+              testId={`nested-list-filler-${index}`}
+              style={{ height: PANE_FILLER_HEIGHT }}
+            >
+              <text
+                style={{
+                  ...textStyle(theme, "body"),
+                  color: theme.colors.foreground,
+                }}
+              >
+                {`list page ${index}`}
+              </text>
+            </div>
+          ))}
+        </div>
+        <text
+          testId="nested-list-offset"
+          style={{
+            ...textStyle(theme, "code"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          {`page=x${listPage.x} y${listPage.y} events=${listEvents}`}
+        </text>
+      </div>
     </div>
   );
 };
@@ -6616,7 +6715,6 @@ const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    yield* ctx.host.capture("nested-scroll");
     yield* ctx.expectEqual(
       "the inner readout carries the end and every wheel it heard",
       yield* ctx.host.text("nested-inner-offset"),
@@ -6627,6 +6725,41 @@ const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text("nested-outer-offset"),
       `outer=x0 y${OUTER_MAX} events=3`,
     );
+
+    // The same question for the pane a dock actually ships: a virtual list,
+    // which is a native scroll host rather than an `overflow: "scroll"` box.
+    yield* ctx.host.waitFor("nested-list-row-0");
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectEqual(
+      "the list page starts at the top",
+      (yield* offsetOf("nested-list-page")).y,
+      0,
+    );
+    yield* ctx.expectEqual(
+      "the virtual list paints its first row",
+      Arr.contains(yield* ctx.host.paintedText(), "pane row 0"),
+      true,
+    );
+    yield* ctx.host.wheel("nested-list-frame", 0, INNER_STEP);
+    yield* Effect.sleep(Duration.millis(300));
+    yield* ctx.expectEqual(
+      "the wheel reached the virtual list, whose first row is now gone",
+      Arr.contains(yield* ctx.host.paintedText(), "pane row 0"),
+      false,
+    );
+    const listPageMoved = yield* offsetOf("nested-list-page");
+    yield* ctx.expectNear(
+      "the page behind the virtual list scrolls by the same wheel",
+      listPageMoved.y,
+      INNER_STEP,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the list page's readout carries the offset and the wheel it heard",
+      yield* ctx.host.text("nested-list-offset"),
+      `page=x0 y${INNER_STEP} events=1`,
+    );
+    yield* ctx.host.capture("nested-scroll");
   });
 
 /** The split probe's container width, inside the window. */

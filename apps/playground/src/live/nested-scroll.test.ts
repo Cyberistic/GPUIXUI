@@ -17,12 +17,21 @@ import {
   INNER_STEP,
   INNER_TOP,
   INNER_VIEWPORT,
+  PANE_CONTENT,
+  PANE_FILLER_HEIGHT,
+  PANE_FILLER_ROWS,
+  PANE_PAGE_MAX,
+  PANE_VIEWPORT,
+  PANE_ROWS,
+  PANE_ROW_HEIGHT,
+  PANE_PAGE_VIEWPORT,
   OUTER_CONTENT,
   OUTER_MAX,
   OUTER_ONLY_ROW,
   OUTER_VIEWPORT,
   fillerTop,
   innerRowTop,
+  paneFillerTop,
 } from "./nested-scroll.js";
 
 describe("the nested-scroll fixture", () => {
@@ -59,5 +68,22 @@ describe("the nested-scroll fixture", () => {
     expect(innerRowTop(INNER_ROWS - 1) + INNER_ROW_HEIGHT).toBeLessThanOrEqual(
       -INNER_MAX + INNER_VIEWPORT.height,
     );
+  });
+
+  it("gives the page around a virtual list its own travel", () => {
+    expect(PANE_PAGE_MAX).toBe(-160);
+    expect(PANE_ROWS * PANE_ROW_HEIGHT).toBeGreaterThan(PANE_VIEWPORT);
+    expect(PANE_CONTENT).toBe(
+      PANE_VIEWPORT + PANE_FILLER_ROWS * PANE_FILLER_HEIGHT,
+    );
+  });
+
+  it("aims the list page's filler row below the pane, inside its viewport", () => {
+    const top = paneFillerTop(0);
+    expect(top).toBe(PANE_VIEWPORT);
+    expect(top + PANE_FILLER_HEIGHT / 2).toBeLessThan(
+      PANE_PAGE_VIEWPORT.height,
+    );
+    expect(top).toBeLessThan(PANE_CONTENT);
   });
 });

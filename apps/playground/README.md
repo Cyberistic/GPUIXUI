@@ -1581,17 +1581,19 @@ routing rule, and it is not "the innermost scroller takes it":
 | wheel `+100` over a **filler row below the list** | the page returns to `0` and the list stays at `-100` — the one wheel that moves a single scroller is the one that never reaches the other |
 | wheel `-100000` over the inner list | the list clamps at `-340` (its content's end) and the page clamps at `-360` (its own): each scroller takes the **whole** delta and clamps against its own content, not against the other's end |
 | readouts | the list heard both wheels aimed at it (`events=2`); the page counted all three, including the two aimed inside the list (`events=3`) |
+| wheel `-100` over a **`<virtual-list>`** pane in the same page | the list paints past its first row **and the page behind it moves to `-100`** with `events=1` — the rule belongs to the native scroll host, not to the `overflow: "scroll"` box |
 
 One wheel scrolls **every scrollable ancestor** on the hit path by the same
-delta. There is no wheel handler and no `preventDefault` in the host props, so a
-pane cannot keep a wheel from its page: a dock's outer layout must not be a
-scroller around pane scrollers (size the workspace to the window and let each
-pane scroll), and a page that does scroll will move together with a list inside
-it. `onScroll` fires on the ancestor for a wheel aimed inside the descendant, so
-a page listener cannot tell which scroller the reader rolled from the event
-alone — read each scroller's own `onScrollChange` offset instead.
+delta, and that holds for a `<virtual-list>` pane as well as for a div scroller.
+There is no wheel handler and no `preventDefault` in the host props, so a pane
+cannot keep a wheel from its page: a dock's outer layout must not be a scroller
+around pane scrollers (size the workspace to the window and let each pane
+scroll), and a page that does scroll will move together with a list inside it.
+`onScroll` fires on the ancestor for a wheel aimed inside the descendant, so a
+page listener cannot tell which scroller the reader rolled from the event alone —
+read each scroller's own `onScrollChange` offset instead.
 
-24 checks, `--only nested-scroll-lifecycle`, green on 0.11.0. Two negative
+31 checks, `--only nested-scroll-lifecycle`, green on 0.11.0. Two negative
 controls measured, each exit `1`: removing the page's `overflow: "scroll"` fails
 `the nested-outer scroller reports an offset` (`expected a value, got none`),
 and aiming the first wheel at the filler row instead of the list fails

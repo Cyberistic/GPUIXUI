@@ -17,7 +17,7 @@
  */
 
 /** The outer scroller: the page or workspace a pane's scroller sits in. */
-export const OUTER_VIEWPORT = { width: 420, height: 260 } as const;
+export const OUTER_VIEWPORT = { width: 380, height: 260 } as const;
 
 /** The inner scroller: the pane's own list. */
 export const INNER_VIEWPORT = { width: 320, height: 140 } as const;
@@ -61,3 +61,26 @@ export const fillerTop = (row: number): number =>
 
 /** The top edge of the inner list's `row` inside the inner's content. */
 export const innerRowTop = (row: number): number => row * INNER_ROW_HEIGHT;
+
+/**
+ * The second composition: the same page with a `<virtual-list>` as the pane.
+ *
+ * A dock pane is a virtual list in practice, and a list is a native scroll host
+ * rather than an `overflow: "scroll"` box, so the routing rule measured on two
+ * div scrollers has to be measured here too before a docking plan rests on it.
+ */
+export const PANE_PAGE_VIEWPORT = { width: 260, height: 220 } as const;
+export const PANE_VIEWPORT = 140;
+export const PANE_ROWS = 40;
+export const PANE_ROW_HEIGHT = 28;
+export const PANE_FILLER_ROWS = 4;
+export const PANE_FILLER_HEIGHT = 60;
+
+/** The list pane plus its filler rows: the page's own content. */
+export const PANE_CONTENT =
+  PANE_VIEWPORT + PANE_FILLER_ROWS * PANE_FILLER_HEIGHT;
+export const PANE_PAGE_MAX = scrollMax(PANE_PAGE_VIEWPORT.height, PANE_CONTENT);
+
+/** A filler row's top edge inside the list page's content, at rest. */
+export const paneFillerTop = (row: number): number =>
+  PANE_VIEWPORT + row * PANE_FILLER_HEIGHT;
