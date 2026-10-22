@@ -257,10 +257,11 @@ a second button.
 
 `done` in `COMPONENTS.md` with a `partial` runtime verdict: the runtime
 publishes no form element and no value reader, so the form is the callers' bytes
-plus a schema rather than a rewrite of a host. The behaviour is held by 9 native behaviour tests in
-`packages/components/src/behaviour/form.test.tsx` — the failed submit, the
-derived messages, the edit that clears one, the decoded value, `pending`
-refusing a second submit and the named root — and the core adoption by
+plus a schema rather than a rewrite of a host. The behaviour is held by 10 native behaviour tests in
+`packages/components/src/behaviour/form.test.tsx` — the
+failed submit, the derived messages, the edit that clears one, the corrected
+value that submits on the next press, the decoded value, `pending` refusing a
+second submit and the named root — and the core adoption by
 `packages/components/src/form/validator.test.ts`, which runs the validator where
 `window` and `document` are undefined. The chrome is held by
 `packages/components/src/recipe/recipe.test.ts` (the compiled `FORM_*` values in
