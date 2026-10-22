@@ -889,6 +889,73 @@ const colourRows = (body: string): ReadonlyArray<RoleRow> =>
         : [{ role, light, dark }];
     });
 
+describe("the theming page's focus-ring section", () => {
+  it("draws the keyboard ring away from the fill it belongs to", () => {
+    // The ring was documented nowhere on the site, and the geometry moved: it
+    // used to sit on the control's edge (`outlineOffset: 0`), where a focused
+    // primary action drew its line in its own fill. The section now teaches the
+    // two helpers and the separation, so both are read from the package that
+    // decides them.
+    const stylesheet = readFileSync(
+      new URL("../../../../packages/tokens/src/styles.ts", import.meta.url),
+      "utf8",
+    );
+    const keyboard = stylesheet.slice(
+      stylesheet.indexOf("export function keyboardFocusRing"),
+      stylesheet.indexOf("export interface ControlFocusState"),
+    );
+    expect(keyboard).toContain("outlineOffset: theme.borderWidth.strong");
+    expect(keyboard).not.toContain("outlineOffset: 0");
+
+    const shadow = stylesheet.slice(
+      stylesheet.indexOf("export function focusRing"),
+      stylesheet.indexOf("export interface FocusVisibleOutline"),
+    );
+    expect(shadow).toContain("spreadRadius: theme.borderWidth.strong");
+    expect(shadow).toContain("blurRadius: 0");
+
+    const control = stylesheet.slice(
+      stylesheet.indexOf("export function controlFocusRing"),
+      stylesheet.indexOf("export type FilledAction"),
+    );
+    expect(control).toContain("if (state.disabled === true) {");
+    expect(control).toContain("outlineColor: theme.colors.destructive");
+
+    // The measured reason the line has to move: in both base themes `ring` is
+    // the primary fill, and the tokens suite pins the range over every style.
+    expect(
+      contrastRatio(themes.light.colors.ring, themes.light.colors.primary),
+    ).toBe(1);
+    expect(
+      contrastRatio(themes.dark.colors.ring, themes.dark.colors.primary),
+    ).toBe(1);
+    const measured = readFileSync(
+      new URL("../../../../packages/tokens/src/ring-fill.test.ts", import.meta.url),
+      "utf8",
+    );
+    expect(measured).toContain(
+      'expect(spread(ratios("primary", "rest"))).toBe("1.00–1.38")',
+    );
+    expect(measured).toContain(
+      'expect(spread(ratios("destructive", "rest"))).toBe("1.00–1.54")',
+    );
+
+    const text = section(page("theming.mdx"), "Focus rings").replace(/\s+/g, " ");
+    expect(text).toContain("`keyboardFocusRing(theme)`");
+    expect(text).toContain("`focusRing(theme)`");
+    expect(text).toContain("`controlFocusRing(theme, { disabled, invalid })`");
+    expect(text).toContain("separated from the control's own fill");
+    expect(text).toContain("borderWidth.strong");
+    expect(text).toContain("1.00–1.38:1");
+    expect(text).toContain("1.00–1.54:1");
+    expect(text).toContain("focus-ring-offset");
+    expect(text).toContain("no ring at all");
+    // The retracted geometry: the line on the control's own edge.
+    expect(text).not.toContain("outlineOffset: 0");
+    expect(text).not.toContain("keeps the line on the control's edge");
+  });
+});
+
 describe("the theming page's colour-role table", () => {
   it("prints the palette the package ships, from the package itself", () => {
     // A palette edit is exactly when a hand-written table rots, and the table

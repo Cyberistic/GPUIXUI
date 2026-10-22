@@ -5421,7 +5421,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 173/173
+`[x]` `[██████████]` 174/174
+
+`[x]` Teach the **separated focus ring** on `/docs/theming` — the tokens
+workstream moved `keyboardFocusRing`'s outline from `outlineOffset: 0` to one
+`borderWidth.strong`, because `ring` is the brand: in both base themes it **is**
+`primary` (1.00:1), and a line on a brand-filled action's edge is drawn in its
+own colour (1.00–1.38:1 on `primary`, 1.00–1.54:1 on `destructive` over the
+sixteen styles). The site taught no focus geometry at all. `/docs/theming` gains
+**Focus rings**: the two helpers and the path each serves (`keyboardFocusRing`
+for a Tab or a field, `focusRing` for a mouse-opened surface whose programmatic
+focus paints no outline), the gap that shows the strip the ring is measured
+against, the window probe's geometry (`focus-ring-offset`: two points out, the
+strip in the gap, boxes unchanged), and `controlFocusRing`'s two states (an
+invalid field repaints the line `destructive`; a disabled one gets no ring at
+all, because the runtime leaves the focus where it was). The page interpolates
+the base pair's ratio and the offset from `@gpuixui/tokens`.
+`theming-page.test.ts` gained `draws the keyboard ring away from the fill it
+belongs to`: it reads `styles.ts`'s three helpers (offset, zero-blur spread, the
+disabled/invalid branches), the tokens suite's pinned 1.00–1.38/1.00–1.54
+ranges, and the page's sentences, refusing `outlineOffset: 0`. Direction
+measured: rewording the page's sentence fails it by name; restored, 40/40 and
+the docs suite 97 files / 963 tests.
 
 `[x]` Carry the **disabled time field's inertness** to the page the site
 serves — the components workstream made `edit` and `handleKeyDown` return early

@@ -3,7 +3,7 @@ title: Theming
 description: Semantic colour roles, typography, spacing, radius and density — one theme shape for light, dark and high contrast.
 ---
 
-import { colorRoles, contrastFloors, indicatorSurfaces, seriesColors, seriesSurfaces, themes } from "@gpuixui/tokens";
+import { colorRoles, contrastFloors, contrastRatio, indicatorSurfaces, keyboardFocusRing, seriesColors, seriesSurfaces, themes } from "@gpuixui/tokens";
 import { TokenList } from "@/components/docs/token-list";
 import { previewMode } from "@/lib/platform";
 
@@ -226,6 +226,38 @@ so macOS, Linux and Windows show their own radii and control heights. Values are
 pixels at the surface; a component names the token, never the number.
 
 <TokenScales />
+
+## Focus rings
+
+The theme carries one ring colour, `ring`, and the library draws it on two paths
+because the runtime paints two:
+
+| Focus arrives by | Helper | What paints |
+| ---------------- | ------ | ----------- |
+| `Tab`, or a field taking focus | `keyboardFocusRing(theme)` | the `focusVisible` outline — `ring`, `borderWidth.strong` wide, **separated from the control's own fill** by the same width |
+| a press, or code opening a surface | `focusRing(theme)` | a zero-blur box shadow of the same width and colour, because a programmatic focus paints no outline until a key reaches the window |
+
+The separation is what lets a filled action show a ring at all. In both shipped
+base themes `ring` **is** `primary` — measured
+{contrastRatio(themes.light.colors.ring, themes.light.colors.primary)?.toFixed(2)}:1 —
+so a line sitting on a primary action's edge is drawn in that action's own
+colour; across the shipped, high-contrast, platform and authored styles the
+same line reads 1.00–1.38:1 on `primary` and 1.00–1.54:1 on `destructive`.
+Offsetting the line by one border width
+({keyboardFocusRing(themes.light).focusVisible.outlineOffset} points in the
+shipped themes) shows the strip behind the control through the gap, so the ring
+is read against that strip rather than the fill it borders, and no single colour
+has to clear both. The playground's `focus-ring-offset` probe measured the
+geometry in a window on `0.11.0`: a two-point offset paints the ring three
+points out with the strip visible in the gap, and the control and its sibling
+keep identical boxes.
+
+A component declares its ring through
+`controlFocusRing(theme, { disabled, invalid })`, which composes the same helper:
+an invalid field repaints the line with the `destructive` role, and a disabled
+one gets **no ring at all** — the runtime does not move the focus off a control
+that becomes disabled, so a declaration made anyway would stay painted on
+something that refuses every key.
 
 ## Platform styles
 
