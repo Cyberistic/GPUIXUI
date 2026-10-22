@@ -222,6 +222,13 @@ describe("the motion page", () => {
     expect(pageText).toContain(
       "finishes an active run immediately at its target",
     );
+    // The page must carry the record's verdict, not the softer one it used to
+    // print: detection is a measured absence (`not supported`), and a page that
+    // called it `unverified` told a reader to wait for a probe that had run.
+    expect(pageText).toContain("calls detection **`not supported`**");
+    expect(pageText).toContain("a measured absence rather than an unrun probe");
+    expect(pageText).not.toContain("unverified");
+    expect(pageText).not.toContain("says not to claim a mode");
     expect(pageText).not.toContain("reads the system preference");
     expect(pageText).not.toContain("detects the system");
   });

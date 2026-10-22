@@ -236,7 +236,8 @@ animated; motion on those axes waits on a runtime change.
 ## Reduced motion is a policy, not a capability
 
 The pinned runtime exposes no reduced-motion preference — the capability record
-keeps detection `unverified` and says not to claim a mode — so the app supplies
+calls detection **`not supported`**, a measured absence rather than an unrun
+probe, because the typings publish no preference query — so the app supplies
 one. Every hook takes `reducedMotion`, and `MotionValue.sample(elapsed, true)`
 finishes an active run immediately at its target with zero velocity, including
 an inertial coast. The library never guesses the preference; the same split
