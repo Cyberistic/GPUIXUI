@@ -59,8 +59,11 @@ is read-only rather than inert, so it keeps them — the value still cannot chan
 | Enter | reaches `onSubmit` with the runtime event |
 | Tab | moves focus with the runtime's own order |
 
-There is no `onKeyDown` prop; a shortcut belongs to the application's window key
-handler, not to a field.
+`onKeyDown`/`onKeyUp` are the `InteractionProps` handlers: yours runs first
+with the runtime's own event and the field still edits. A *global* shortcut — a
+window chord, a command that means the same thing in every field — belongs to the
+application's window key handler; a key the field sees is the one the runtime
+delivered to the focused element.
 
 ## Accessibility
 

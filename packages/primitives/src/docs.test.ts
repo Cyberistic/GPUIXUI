@@ -60,6 +60,42 @@ const bodyOf = (source: string, heading: string): Option.Option<string> =>
     (section) => section.body,
   );
 
+/**
+ * The prop names a page's API table puts in backticks in its first column.
+ *
+ * Rows name several props with `/` — `onClick` / `onKeyDown` — so each name is
+ * split out; a row's prose, a part name and the header row are not props.
+ */
+const documentedProps = (source: string): ReadonlyArray<string> =>
+  Arr.flatMap(
+    Option.getOrElse(bodyOf(source, "API"), () => "").split("\n"),
+    (line) => {
+      const cell = /^\|\s*([^|]*)/.exec(line)?.[1];
+      return Arr.flatMap([...(cell ?? "").matchAll(/`([^`]+)`/g)], (match) =>
+        Arr.filter(
+          Arr.map((match[1] ?? "").split("/"), (name) => name.trim()),
+          Str.isNonEmpty,
+        ),
+      );
+    },
+  );
+
+/**
+ * Props a page denies in the sentence "There is no `onKeyDown` prop".
+ *
+ * `docs/input.mdx` said that while its API table listed `onKeyDown`, and the
+ * component accepts it: `FieldProps` extends `InteractionProps`, whose handlers
+ * are composed with the field's own. A page teaching a caller that a prop does
+ * not exist is worse than one that omits it. The pattern is deliberately the
+ * component-level phrasing: "GPUix has no `disabled` prop" is a true statement
+ * about the host, and `disabled` is still the component's prop.
+ */
+const deniedProps = (source: string): ReadonlyArray<string> =>
+  Arr.filterMap(
+    [...source.matchAll(/[Tt]here is no `([^`]+)` prop/g)],
+    (match) => Result.succeed(match[1] ?? ""),
+  );
+
 /** The names a page's snippets import from this package, aliases resolved. */
 const importedNames = (source: string): ReadonlyArray<string> =>
   Arr.flatMap(
@@ -191,6 +227,20 @@ describe("the primitives docs page contract", () => {
         [],
       );
     });
+  });
+
+  it("does not deny a prop its own API table lists", () => {
+    expect(
+      Arr.flatMap(pages, (page) =>
+        Arr.map(
+          Arr.filter(deniedProps(read(page)), (name) =>
+            Arr.contains(documentedProps(read(page)), name),
+          ),
+          (name) =>
+            `${page}: says there is no ${name} prop, and its API table lists it`,
+        ),
+      ),
+    ).toEqual([]);
   });
 
   it("records the tooltip's measured keyboard limit", () => {
