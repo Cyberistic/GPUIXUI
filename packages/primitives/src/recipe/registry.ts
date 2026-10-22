@@ -171,9 +171,8 @@ export const recipeTw = createTw({
     "overflow-x-scroll": () => ({ overflowX: "scroll" }),
     "overflow-y-hidden": () => ({ overflowY: "hidden" }),
     "overflow-y-scroll": () => ({ overflowY: "scroll" }),
-    // An empty selection border is the field *fill* colour, not shadcn's
-    // `--input` border role (which the built-in table maps to `border`).
-    "border-input": (theme) => ({ borderColor: theme.colors.input }),
+    // `border-input` is deliberately not overridden: `input` is a field *fill*
+    // in this system, and an edge takes `border` or the measured `border-strong`.
     // Brand-coloured text is derived, not named: `primary` is a fill role, so
     // `text-primary` paints a link at 4.30:1 on the base light theme's pressed
     // wash and 3.10:1 in macOS dark. `brandText` moves the brand toward

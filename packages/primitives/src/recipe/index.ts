@@ -531,9 +531,13 @@ export const selectionBoxClass = ({
           `hover:fill-${bg} hover:border-transparent active:fill-${bg}-pressed active:border-transparent`,
         )
       : cn(
-          invalid === true ? "border-destructive" : "border-input",
+          // The edge *is* the control while the box is empty, so it takes the
+          // measured boundary role: the field fill it used to paint is 1.00:1
+          // on a card. Feedback is a state wash, so the edge — including an
+          // invalid one — is never replaced under the pointer.
+          invalid === true ? "border-destructive" : "border-strong",
           invalid === true ? "text-destructive" : "text-muted-foreground",
-          "hover:border-border-strong active:border-ring",
+          "hover:bg-hover active:bg-active",
         ),
   );
 };
@@ -581,8 +585,8 @@ export const switchTrackClass = ({
         )
       : cn(
           "bg-muted",
-          invalid === true ? "border-destructive" : "border-input",
-          "hover:border-border-strong active:border-ring",
+          invalid === true ? "border-destructive" : "border-strong",
+          "hover:bg-hover active:bg-active",
         ),
   );
 };

@@ -20,8 +20,17 @@
 import { describe, expect, it } from "vitest";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
-import type { ControlSize } from "@gpuixui/tokens";
+import {
+  contrastFloorsFor,
+  contrastPairs,
+  contrastRatio,
+  darkTheme,
+  lightTheme,
+  type ControlSize,
+  type Theme,
+} from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import {
   spinnerDotStyle,
   skeletonStyle,
@@ -178,6 +187,78 @@ describe("selection recipes", () => {
     expect(
       suppressSelectionFeedback(mergeStyle(resolved.style, resolved.disabled)),
     ).toEqual(selectionBoxStyle(spec, testTheme));
+  });
+
+  /**
+   * The bug this guards: an empty box's edge was the `input` role, which in
+   * this design system is a field *fill*. In the light theme `input`, `card`
+   * and `popover` are all `#FFFFFF`, so an unchecked box inside a card drew its
+   * whole resting state at 1.00:1 — the mark only appears once checked. The
+   * design system's rule is that a control is carried by its edge, and the
+   * measured boundary role is `borderStrong`.
+   *
+   * The strips are derived from the token contract itself, so a new surface the
+   * table measures a boundary on is measured here without a second list.
+   */
+  const boundaryStrips = Arr.flatMap(contrastPairs, (pair) =>
+    pair.foreground === "borderStrong" && pair.floor === "boundary"
+      ? [pair.background]
+      : [],
+  );
+
+  const boundaryEdge = (style: StyleDesc): string =>
+    // `StyleDesc.borderColor` is the runtime's own optional shape, so the
+    // absent case is converted once here rather than probed at each call.
+    Option.getOrElse(Option.fromNullishOr(style.borderColor), () => "");
+
+  const expectOnEveryStrip = (
+    edge: string,
+    label: string,
+    theme: Theme,
+  ): void => {
+    Arr.forEach(boundaryStrips, (strip) => {
+      expect(
+        contrastRatio(edge, theme.colors[strip]) ?? 0,
+        `${label} on ${strip}`,
+      ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).boundary);
+    });
+  };
+
+  it("carries an empty box's edge in the measured boundary role", () => {
+    expect(boundaryStrips.length).toBeGreaterThan(5);
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      Arr.forEach(["square", "circle"] as const, (shape) => {
+        const edge = boundaryEdge(
+          recipeTw.classesToStyle(
+            selectionBoxClass(boxSpec("unchecked", { shape })),
+            theme,
+          ).style,
+        );
+        expect(edge, `${theme.mode} ${shape}`).toBe(theme.colors.borderStrong);
+        expectOnEveryStrip(edge, `${theme.mode} ${shape}`, theme);
+      });
+    });
+    // The field fill the box used to paint is not an edge: it is the card's own
+    // white in the light palette, which is what made the box disappear.
+    expect(contrastRatio(lightTheme.colors.input, lightTheme.colors.card)).toBe(
+      1,
+    );
+    // And the utility that used to map the fill onto an edge is the default
+    // table's border role again, so a re-added override fails here.
+    expect(
+      recipeTw.classesToStyle("border-input", lightTheme).style.borderColor,
+    ).toBe(lightTheme.colors.border);
+  });
+
+  it("carries an empty switch track's edge in the same role", () => {
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      const edge = boundaryEdge(
+        recipeTw.classesToStyle(switchTrackClass(boxSpec("unchecked")), theme)
+          .style,
+      );
+      expect(edge, `${theme.mode} switch`).toBe(theme.colors.borderStrong);
+      expectOnEveryStrip(edge, `${theme.mode} switch`, theme);
+    });
   });
 });
 

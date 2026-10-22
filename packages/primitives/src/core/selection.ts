@@ -95,10 +95,12 @@ const feedbackFill = (
  * The square a checkbox or radio paints.
  *
  * The side is the theme's icon size for the control size, so a checkbox lines
- * up with the icon on the label beside it without a bespoke scale. Feedback is
- * declared: an empty box's border darkens on hover and takes the ring role
- * while pressed; a filled box moves to another **opaque** fill, because the
- * mark is painted on it.
+ * up with the icon on the label beside it without a bespoke scale. An empty box
+ * is carried by its edge, so that edge is the measured control-boundary role
+ * (`borderStrong`, 3:1 on every strip a control sits on) rather than a fill
+ * role — `input` is the card's own white in the light theme. Feedback is a state
+ * wash under the mark, so the edge survives hover and press, including a
+ * destructive one.
  */
 export const selectionBoxStyle = (
   spec: SelectionSpec,
@@ -107,7 +109,9 @@ export const selectionBoxStyle = (
   const side = theme.iconSize[spec.size];
   const role = accentRole(spec, theme);
   const emptyBorder =
-    spec.invalid === true ? theme.colors.destructive : theme.colors.input;
+    spec.invalid === true
+      ? theme.colors.destructive
+      : theme.colors.borderStrong;
   const style: StyleDesc = {
     display: "flex",
     alignItems: "center",
@@ -123,10 +127,10 @@ export const selectionBoxStyle = (
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
     hover: filled(spec)
       ? feedbackFill(spec, theme, "hover")
-      : { borderColor: theme.colors.borderStrong },
+      : { backgroundColor: theme.colors.hover },
     active: filled(spec)
       ? feedbackFill(spec, theme, "press")
-      : { borderColor: theme.colors.ring },
+      : { backgroundColor: theme.colors.active },
   };
   if (spec.disabled === true) {
     style.opacity = 0.5;
@@ -233,7 +237,9 @@ export const switchTrackStyle = (
   const height = theme.iconSize[spec.size];
   const role = accentRole(spec, theme);
   const emptyBorder =
-    spec.invalid === true ? theme.colors.destructive : theme.colors.input;
+    spec.invalid === true
+      ? theme.colors.destructive
+      : theme.colors.borderStrong;
   const style: StyleDesc = {
     display: "flex",
     flexDirection: "row",
@@ -249,10 +255,10 @@ export const switchTrackStyle = (
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
     hover: filled(spec)
       ? feedbackFill(spec, theme, "hover")
-      : { borderColor: theme.colors.borderStrong },
+      : { backgroundColor: theme.colors.hover },
     active: filled(spec)
       ? feedbackFill(spec, theme, "press")
-      : { borderColor: theme.colors.ring },
+      : { backgroundColor: theme.colors.active },
   };
   if (spec.disabled === true) {
     style.opacity = 0.5;

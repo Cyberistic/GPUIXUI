@@ -42,10 +42,13 @@ const spec = (over: Partial<SelectionSpec> = {}): SelectionSpec => ({
 });
 
 describe("selectionBoxStyle", () => {
-  it("leaves an unchecked box unfilled, on the input border role", () => {
+  it("leaves an unchecked box unfilled, on the measured boundary role", () => {
+    // The bug this guarded: the edge was the `input` role — a field *fill* in
+    // this system — so an empty box on a card was `#FFFFFF` on `#FFFFFF`
+    // (1.00:1). The whole resting state of a checkbox is that edge.
     const style = selectionBoxStyle(spec(), testTheme);
     expect(style.backgroundColor).toBeUndefined();
-    expect(style.borderColor).toBe(testTheme.colors.input);
+    expect(style.borderColor).toBe(testTheme.colors.borderStrong);
   });
 
   it("fills a checked box with the accent and makes the mark legible", () => {
@@ -149,17 +152,25 @@ describe("selectionBoxStyle", () => {
     });
   });
 
-  it("keeps an empty box's border feedback", () => {
+  it("tints an empty box under the pointer without moving its edge", () => {
+    // Feedback used to move the edge itself (`borderStrong` on hover, the ring
+    // on press), which also erased an invalid box's destructive edge on hover.
     const style = selectionBoxStyle(spec(), testTheme);
-    expect(style.hover).toEqual({ borderColor: testTheme.colors.borderStrong });
-    expect(style.active).toEqual({ borderColor: testTheme.colors.ring });
+    expect(style.hover).toEqual({ backgroundColor: testTheme.colors.hover });
+    expect(style.active).toEqual({ backgroundColor: testTheme.colors.active });
+    expect(selectionBoxStyle(spec({ invalid: true }), testTheme).hover).toEqual(
+      {
+        backgroundColor: testTheme.colors.hover,
+      },
+    );
   });
 
   it("removes pointer feedback while disabled", () => {
     const style = selectionBoxStyle(spec({ disabled: true }), testTheme);
     expect(style.opacity).toBeLessThan(1);
     expect(style.cursor).toBe("not-allowed");
-    expect(style.hover?.borderColor).toBe(testTheme.colors.input);
+    expect(style.hover?.borderColor).toBe(testTheme.colors.borderStrong);
+    expect(style.hover?.backgroundColor).toBeUndefined();
   });
 
   it("honours a destructive accent over the brand", () => {
@@ -255,7 +266,7 @@ describe("switch", () => {
       switchTrackStyle(spec({ invalid: true }), testTheme).borderColor,
     ).toBe(testTheme.colors.destructive);
     expect(switchTrackStyle(spec(), testTheme).borderColor).toBe(
-      testTheme.colors.input,
+      testTheme.colors.borderStrong,
     );
   });
 

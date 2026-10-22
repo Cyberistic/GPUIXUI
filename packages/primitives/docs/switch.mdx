@@ -118,7 +118,10 @@ can interpolate a `left` inset, so the component hands that same value to
 the runtime exposes no reduced-motion preference, so the caller passes its own.
 Disabled adds half opacity and removes feedback — the `pointerEvents: "none"`
 guard on the track removes the blocking, not its hitbox, so the hover and press
-refinements still paint. A checked track's feedback is another **opaque** fill
+refinements still paint. An off track is carried by its edge: the measured
+boundary role (`borderStrong`, 3:1 on every strip a control sits on), never the
+`input` fill, and pointer feedback is a state wash under the thumb so the edge
+survives the pointer. A checked track's feedback is another **opaque** fill
 (the theme's `filledHover`/`filledPressed` for its accent, edge transparent), not
 a half-alpha lift: the thumb and any glyph on it sit on that fill, so a
 translucent one would read differently on every surface and could not be
@@ -147,8 +150,12 @@ the recipe also sets.
 ## Verification
 
 - `src/core/selection.test.ts` — track and thumb geometry across sizes and
-  states, the two thumb positions and the travel between them; the destructive
-  border when `invalid`; the keyboard ring.
+  states, the two thumb positions and the travel between them; the measured
+  boundary edge on an off track and the state wash it takes under the pointer;
+  the destructive border when `invalid`; the keyboard ring.
+- `src/recipe/geometry.test.ts` — the compiled track and thumb equal the
+  resolver, and an off track's edge clears the boundary floor on every measured
+  strip.
 - `src/components/Switch.test.tsx` — the knob's geometry from the theme scale,
   the declared slide (the `left` inset and the motion target agree, and the two
   targets differ by the travel), the slide's duration falling to zero under

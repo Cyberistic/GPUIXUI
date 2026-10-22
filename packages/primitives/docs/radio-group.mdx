@@ -138,10 +138,13 @@ Enter selects on the press.
 
 The circle is `selectionBoxStyle` with `shape: "circle"` and the dot is
 `radioDotStyle`, both from `core/selection.ts`, so a radio and a checkbox of the
-same size are the same square/circle family. A chosen circle's hover and press
-paint the theme's **opaque** derived fill (`filledHover`/`filledPressed`) with
-the edge transparent, like the checkbox's, because the pip is painted on that
-fill. The row's style — the pressable
+same size are the same square/circle family. An empty circle is carried by its
+edge — the measured boundary role (`borderStrong`, 3:1 on every strip a control
+sits on), never the `input` fill — and pointer feedback is a state wash under
+the dot, so the edge survives hover and press, including a destructive one. A
+chosen circle's hover and press paint the theme's **opaque** derived fill
+(`filledHover`/`filledPressed`) with the edge transparent, like the checkbox's,
+because the pip is painted on that fill. The row's style — the pressable
 floor, the ring, the cursor — comes from `group.tsx`'s `optionRowStyle`, and the
 circle's from the shared `decorative` guard, so the group controls — and the
 standalone selection controls — cannot disagree about
@@ -173,6 +176,8 @@ Both merge after every role decision, so a callback is the last word.
   Home/End landing on the nearest enabled end.
 - `src/core/selection.test.ts` — circle and dot paint; the ring is not part of
   the resting paint, so the recipe oracle stays comparable.
+- `src/recipe/geometry.test.ts` — the compiled circle equals the resolver and an
+  empty circle's edge clears the boundary floor on every measured strip.
 - `src/components/RadioGroup.test.tsx` — roving index and data options; an arrow
   asks the group to move focus to the option it landed on; item children produce
   the same option list as `options`, the arrow path skips a disabled item, and an

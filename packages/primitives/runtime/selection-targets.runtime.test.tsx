@@ -15,6 +15,7 @@
  *    exactly one change.
  */
 
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { expect, it } from "vitest";
 import { targetSize } from "@gpuixui/tokens";
@@ -94,4 +95,31 @@ it("toggles a Switch from its padding and its track exactly once each", async ()
   runtime.clickAt(target.x + target.width / 2, target.y + target.height / 2);
   runtime.flush();
   expect(changes).toBe(2);
+});
+
+it("paints an empty box's and track's edge in the measured boundary role", async () => {
+  // The bug this guards: the empty edge was the `input` role, which is a field
+  // *fill* in this system — `#FFFFFF` on a `#FFFFFF` card in the light theme
+  // (1.00:1), so an unchecked box drawn its whole resting state invisibly. The
+  // declared colour is read back off the mounted window, not off the recipe.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Checkbox testId="check" label="Agree" />
+        <Switch testId="toggle" label="Notify" />
+      </Stack>
+    </Surface>,
+  );
+  const edges = Arr.map(
+    Arr.filter(
+      runtime.all(),
+      (element) => element.style.borderColor !== undefined,
+    ),
+    (element) => element.style.borderColor,
+  );
+  expect(edges).toStrictEqual([
+    testTheme.colors.borderStrong,
+    testTheme.colors.borderStrong,
+  ]);
 });

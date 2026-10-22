@@ -144,8 +144,13 @@ also scroll while the control waits for the release.
 ## Theming
 
 `selectionBoxClass` compiles the box through the recipe registry: side from
-`iconSize`, radius from `radius.sm`, border from `input`/`destructive`, fill from
-the accent role, and the mark colour from `selectionMarkColor`. Hover and press
+`iconSize`, radius from `radius.sm`, the empty box's edge from the measured
+boundary role (`borderStrong`, or `destructive` while invalid), fill from
+the accent role, and the mark colour from `selectionMarkColor`. An empty box is
+carried by its edge alone, so the edge is never the `input` role — that is a
+field *fill* here, and it is the card's own white in the light theme. Pointer
+feedback is a state wash (`hover`/`active`) under the mark rather than a change
+of edge, so a destructive edge stays destructive while hovered. Hover and press
 are declared in `style.hover`/`style.active`, not scripted — and they still paint
 on a drawing that takes no press: `pointerEvents: "none"` removes the blocking,
 not the element's hitbox. A filled box's feedback is another **opaque** fill —
@@ -175,7 +180,12 @@ on a property the recipe also sets.
 
 ## Verification
 
-- `src/core/selection.test.ts` — the three-state paint and mark colour.
+- `src/core/selection.test.ts` — the three-state paint and mark colour; the
+  measured boundary edge on an empty box (and the state wash that replaces the
+  old edge change).
+- `src/recipe/geometry.test.ts` — the compiled recipe equals the resolver for
+  every state and shape, and an empty box's edge clears the boundary floor on
+  every strip `contrastPairs` measures a `borderStrong` boundary on.
 - `src/components/Checkbox.test.tsx` — toggle, indeterminate and disabled
   wiring; the mark's state flows into its colour; a custom glyph replaces the
   default; the mark keeps the pointer guard; the callback name and its alias;
@@ -191,7 +201,8 @@ on a property the recipe also sets.
   dispatch alongside the toggle, and a disabled box delivers no press.
 - `runtime/selection-targets.runtime.test.tsx` — the 24px target around the
   16px drawing, a press on the padding and a press on the drawing each reporting
-  exactly one change.
+  exactly one change, and an empty box's edge read back off the window in the
+  measured boundary role.
 - `runtime/labelling.runtime.test.tsx` — a `Label` beside the box paints its
   text but does not name the box; the same string through `labelledBy` does.
 - `runtime/fields.runtime.test.tsx` — a `Tooltip` wrapping the box opens on
