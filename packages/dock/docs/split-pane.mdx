@@ -1,0 +1,84 @@
+---
+title: Split pane
+description: Two panes and a draggable, keyboard-operable divider between them.
+---
+
+`SplitPane` is the Tier 4 resize primitive: two panes and one divider. The
+first pane takes a caller-owned pixel size and the second fills the rest, so a
+drag or an arrow key changes one number and nothing else.
+
+## Usage
+
+```tsx
+import { SplitPane } from "@gpuixui/dock";
+import { useState } from "react";
+
+const [size, setSize] = useState(240);
+
+<SplitPane
+  size={size}
+  onResize={setSize}
+  min={160}
+  max={400}
+  dividerLabel="Sidebar width"
+  first={<Sidebar />}
+  second={<Document />}
+/>;
+```
+
+The full screen is `packages/dock/examples/split-pane.example.tsx`.
+
+## Behaviour
+
+- The divider is a `role="separator"` tab stop. It declares the keyboard ring at
+  rest, announces `aria-valuetext` (`240 px`), and steps 16 px on the arrows;
+  Home and End name the bounds. A divider is therefore operable without a
+  pointer (WCAG 2.1.1), not only draggable.
+- The divider listens to **both** `onMouseDown` and `onMouseMove`: the runtime
+  arms pointer capture only for an element subscribed to the pair, so a drag
+  that leaves the 6 px box keeps reporting until release.
+- A drag and a key both clamp to `min`/`max`. The bound is the **caller's**
+  number, not the container's width — the caller owns the re-clamp when a
+  sibling or the window reflows.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `size` | `number` | — | the first pane's size in pixels; controlled |
+| `onResize` | `(size: number) => void` | — | the first pane's settled size |
+| `min` | `number` | `0` | the first pane's floor |
+| `max` | `number` | unbounded | the first pane's ceiling |
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | left/right vs stacked |
+| `first` / `second` | `ReactNode` | — | the two panes |
+| `dividerLabel` | `string` | — | the divider's accessible name |
+| `disabled` | `boolean` | `false` | refuses the drag and the keys |
+
+## Measured rules
+
+- **Pointer capture on the pair** (`pointer-capture`, `split-pane-lifecycle`): a
+  divider subscribed to `onMouseMove` only keeps 1 move of 8; this one keeps all
+  eight moves 80 px outside its box.
+- **No `transform`** (upstream issue #102): the pane is sized by `flexBasis`,
+  never scaled, so the layout reflows instead of scaling. The divider's pressed
+  feedback is an opacity fade of a highlight layer, timed by `@gpuixui/motion`,
+  never a translated surface.
+- **A divider is a control**: the keyboard ring, the `aria-valuetext` and the
+  Home/End bounds are all measured on 0.11.0 (there is no `aria-valuenow`).
+
+## Accessibility
+
+- The divider carries a `label`; an unnamed divider is anonymous in the tree.
+- The value reaches assistive technology through `aria-valuetext` only, because
+  0.11.0 has no `aria-valuenow`.
+
+## Verification
+
+- `packages/dock/src/split-pane.test.ts` holds the clamp, the keyboard step and
+  the rule guards (the pointer pair, the `role="separator"`, `flexBasis` over
+  `transform`).
+
+## Related
+
+- [Panel groups](./panel-group.mdx) — the N-pane composition over this divider.
+- [Docking layouts](./dock-layout.mdx) — the tree that nests splits and tabs.

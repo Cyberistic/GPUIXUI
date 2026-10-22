@@ -1,0 +1,89 @@
+---
+title: Panel groups
+description: N panes in a row or column, with fractions and a collapse toggle per pane.
+---
+
+`PanelGroup` is N panes in a row or column, built on the same divider a
+`SplitPane` uses. Each pane takes a **fraction** of the axis, and a collapsible
+pane carries a header toggle. The whole shape — axis, fractions, collapse flags
+— is one `PanelLayout` that round-trips through a JSON string.
+
+## Usage
+
+```tsx
+import { PanelGroup, PanelLayout, Panel } from "@gpuixui/dock";
+import { useState } from "react";
+
+const initial = new PanelLayout({
+  orientation: "horizontal",
+  panels: [
+    new Panel({ id: "sidebar", label: "Sidebar", size: 0.2, collapsible: true }),
+    new Panel({ id: "editor", label: "Editor", size: 0.8 }),
+  ],
+});
+
+const [layout, setLayout] = useState(initial);
+
+<PanelGroup
+  layout={layout}
+  onLayoutChange={setLayout}
+  renderPanel={(id) => <Pane id={id} />}
+/>;
+```
+
+The full screen is `packages/dock/examples/panel-group.example.tsx`.
+
+## Behaviour
+
+- A pane paints `flexGrow` from its fraction, so the shape needs no pixel
+  measurement to lay out. Fractions need not sum to one; `normalizePanels`
+  rescales them for a readable percentage.
+- A divider between two panes trades space between them and only them; the
+  others keep their share. A divider reports a pixel delta and the group
+  converts it to a fraction against the pane space it measures once on layout.
+- A collapse toggle flips `collapsed`. While collapsed a pane shrinks to its
+  header and its content leaves the tree, so the remaining panes fill the gap.
+  The toggle is the primitives' `Button`.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `layout` | `PanelLayout` | — | the persisted shape; controlled |
+| `onLayoutChange` | `(layout: PanelLayout) => void` | — | the next shape after a resize or a collapse |
+| `renderPanel` | `(id: string) => ReactNode` | — | one pane's content |
+| `className` | `string` | — | joined after the recipe |
+
+`Panel` fields: `id`, `label`, `size` (fraction), `collapsible` and `collapsed`
+(both default `false`). `PanelLayout` is `orientation` plus an ordered `panels`.
+
+## Persistence
+
+```ts
+import { PanelLayoutJson } from "@gpuixui/dock";
+import * as Schema from "effect/Schema";
+
+const saved = Schema.encodeUnknownSync(PanelLayoutJson)(layout);
+const restored = Schema.decodeUnknownSync(PanelLayoutJson)(saved);
+```
+
+A string that is not a layout is a decode failure — the caller's signal to open
+the default, never to paint a partial arrangement (`workspace-restore`).
+
+## Measured rules
+
+- **One divider for the group's whole gap** (`inspector-lifecycle`): the 6 px
+  divider is the gap, and a pane's own scroller moves without moving its pane.
+- **A collapsible pane reopens at the width it held** (`docking-nested`): the
+  fraction is the persisted size, so a collapse is not a resize.
+
+## Verification
+
+- `packages/dock/src/panel-group.test.ts` holds the collapse, the resize clamp
+  and the `PanelLayout` round-trip, plus the rule guards (fractions, no
+  `transform`).
+
+## Related
+
+- [Split pane](./split-pane.mdx) — the divider this group composes.
+- [Docking layouts](./dock-layout.mdx) — the tree form of the same workspace.
