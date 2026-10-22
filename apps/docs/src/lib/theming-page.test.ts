@@ -9,6 +9,7 @@ import {
   indicatorFailures,
   isThemeMode,
   retroStyles,
+  selectionPairs,
   themes,
   type Theme,
 } from "@gpuixui/tokens";
@@ -118,6 +119,40 @@ describe("the theme page", () => {
     // The pressable rule's floor is read from the token, never printed.
     expect(tokensImport).toContain("targetSize");
     expect(page("themes.mdx")).toContain("{targetSize.minimum}");
+  });
+
+  it("measures both the body text and the secondary line a reader can select", () => {
+    // The bullet described "the four content surfaces body text can be selected
+    // from" at 7:1. `selectionPairs` grew to seven when a `mutedForeground` line
+    // on the three prose surfaces joined at the secondary floor, so the caption,
+    // table second line or log row a reader selects was measured by a report the
+    // page never described.
+    const audit = section(page("themes.mdx"), "The theme audit");
+    const tokensImport = page("themes.mdx")
+      .split("\n")
+      .find(
+        (line) =>
+          line.startsWith("import ") && line.includes("@gpuixui/tokens"),
+      );
+
+    expect(tokensImport).toContain("selectionPairs");
+    expect(tokensImport).toContain("contrastFloors");
+    expect(page("themes.mdx")).toContain("{selectionPairs.length}");
+    expect(audit).toContain("mutedForeground");
+    expect(audit).toContain("{contrastFloors.body}");
+    expect(audit).toContain("{contrastFloors.secondary}");
+    expect(audit).not.toContain(
+      "the four content surfaces body text can be selected from",
+    );
+
+    // Every surface the report composites over is named on the page, so a pair
+    // added to the contract cannot leave the bullet describing an older table.
+    const unnamed = [
+      ...new Set(selectionPairs.map((pair) => pair.background)),
+    ].filter((surface) => !audit.includes(`\`${surface}\``));
+    expect(unnamed, "the selection bullet does not name these surfaces").toEqual(
+      [],
+    );
   });
 
   it("describes the whole audit the readout runs, not only its contrast half", () => {

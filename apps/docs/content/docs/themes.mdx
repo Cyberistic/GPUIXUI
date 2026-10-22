@@ -3,7 +3,7 @@ title: Theme
 description: A live editor for the library's semantic tokens — preview, copy and share.
 ---
 
-import { contrastPairs, targetSize } from "@gpuixui/tokens";
+import { contrastFloors, contrastPairs, selectionPairs, targetSize } from "@gpuixui/tokens";
 
 Edit the semantic tokens the library ships and watch them apply to a preview in
 real time. The editor reads its defaults from `@gpuixui/tokens` — the base is
@@ -87,12 +87,16 @@ call reports nine independent failures:
   reports it because `auditTheme` does, and a line that only appears for some
   themes would make a passing readout mean less than it says.
 - **Text selection**: `selectionFailures` composites the `selection` wash over
-  the four content surfaces body text can be selected from (`input`,
-  `background`, `card`, `popover`) and holds the result to two floors — visible
-  against what it covers (1.05:1) and readable inside it (the theme's body
-  floor, 7:1). `contrastRatio` refuses a translucent colour, so the wash and the
-  text in it were measured nowhere before this report; the editor does not edit
-  `selection`, but a change to a surface under it can still bury a selected run.
+  the **{selectionPairs.length}** text pairs a reader can select from — each
+  content surface at its own body role (`input`, `background`, `card`,
+  `popover`) and a `mutedForeground` line on the three prose surfaces — and holds
+  every result to two floors: visible against what it covers (1.05:1) and
+  readable inside it, at the floor the unselected pair already meets
+  ({contrastFloors.body}:1 for body text, {contrastFloors.secondary}:1 for the
+  secondary line). `contrastRatio` refuses a translucent colour, so the wash and
+  the text in it were measured nowhere before this report; the editor does not
+  edit `selection`, but a change to a surface under it can still bury a selected
+  run — including the caption or second line beneath a heading.
 - **Indicator marks**: `indicatorFailures` holds the roles a component paints
   when it *shows* rather than says something — a progress fill, a spinner's lit
   dot, a slider's filled span, a switch's on-state, a presence dot — to the 3:1
