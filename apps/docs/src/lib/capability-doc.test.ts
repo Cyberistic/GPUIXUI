@@ -1409,6 +1409,87 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("root");
   });
 
+  it("records the confirmation flow, with the readout the probe asserts", () => {
+    // MISSION lists "dialog open/close/confirm" among the interactions to
+    // verify, and the record published the open/close half (`dialog-lifecycle`)
+    // but not the two actions that make a confirmation safe: `ConfirmDialog`
+    // has no trigger, reports `onConfirm` and leaves the close to the caller, so
+    // a plan for a destructive action had no measured contract to read. The
+    // readouts are held to the probe's own source, so a fixture whose arithmetic
+    // moves cannot leave the record teaching the old line.
+    const probes = read("apps/playground/src/live/scenarios.tsx");
+    const confirm = rowFor("Confirmation flow");
+    expect(confirm?.verdict).toBe("supported, with limits");
+    expect(confirm?.evidence).toContain("confirm-dialog-lifecycle");
+    expect(confirm?.evidence).toContain("dialog-lifecycle");
+    expect(confirm?.evidence).toContain("Cancel");
+    expect(confirm?.evidence).toContain("reports **once**");
+    expect(confirm?.workaround).toContain("onConfirm");
+
+    const readouts = [
+      "confirms=0 closes=1",
+      "confirms=1 closes=2",
+      "opens=4 confirms=1 closes=4",
+    ];
+    expect(
+      readouts.filter((line) => !(confirm?.evidence ?? "").includes(line)),
+      "the record does not print the readout the probe measured",
+    ).toEqual([]);
+    expect(
+      readouts.filter((line) => !probes.includes(line)),
+      "the record prints a readout the probe never asserts",
+    ).toEqual([]);
+
+    const page = measuredRow("Confirmation flow");
+    expect(
+      page,
+      "the page's measured table has no confirmation row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("confirm-dialog-lifecycle");
+    expect(page?.[1]).toContain("Cancel");
+    expect(page?.[2]).toContain("onConfirm");
+  });
+
+  it("records the field validation flow, and what a submit leaves alone", () => {
+    // The other half of MISSION's "input update/validation": `text-input`
+    // measures the update, and `Field` never validates a keystroke — it paints
+    // the `error` its caller hands it, so the schema runs at the submit
+    // boundary. The record named neither the submit path nor the two things a
+    // failed submit must leave alone (the value and the focus), so a validated
+    // form had no measured contract either.
+    const probes = read("apps/playground/src/live/scenarios.tsx");
+    const validation = rowFor("Field validation flow");
+    expect(validation?.verdict).toBe("supported, with limits");
+    expect(validation?.evidence).toContain("validation-lifecycle");
+    expect(validation?.evidence).toContain("onSubmit");
+    expect(validation?.workaround).toContain("submit");
+
+    const readouts = [
+      "error=none applied=none submits=0",
+      "applied=none submits=1",
+      "error=none applied=design submits=2",
+      "submits=3",
+    ];
+    expect(
+      readouts.filter((line) => !(validation?.evidence ?? "").includes(line)),
+      "the record does not print the readout the probe measured",
+    ).toEqual([]);
+    expect(
+      readouts.filter((line) => !probes.includes(line)),
+      "the record prints a readout the probe never asserts",
+    ).toEqual([]);
+
+    const page = measuredRow("Validation flow");
+    expect(
+      page,
+      "the page's measured table has no validation row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("validation-lifecycle");
+    expect(page?.[1]).toContain("in place of");
+    expect(page?.[1]).toContain("focus");
+    expect(page?.[2]).toContain("onSubmit");
+  });
+
   it("publishes the measured gaps on /docs/runtime", () => {
     expect(runtimePage).toContain("data-grid-fixed-header");
     expect(runtimePage).toContain("editor-surface");
@@ -1443,6 +1524,8 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("window-backdrop");
     expect(runtimePage).toContain("chart-raster");
     expect(runtimePage).toContain("window-chrome");
+    expect(runtimePage).toContain("confirm-dialog-lifecycle");
+    expect(runtimePage).toContain("validation-lifecycle");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
   });
