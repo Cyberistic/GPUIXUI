@@ -470,6 +470,28 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("ref");
   });
 
+  it("records the floating placement a window measured, including the centre quirk", () => {
+    // The headless `floating-placement` scenario drove the engine against a
+    // `TestRenderer`; a window measured the horizontal sides and found that
+    // `align="center"` ends the panel at the anchor's centre line rather than
+    // centring it — the quirk every overlay component compensates for. A plan
+    // building its own anchored surface would otherwise hit it unpinned.
+    const floating = rowFor("Floating layer placement");
+    expect(floating?.verdict).toBe("supported, with limits");
+    expect(floating?.evidence).toContain("floating-sides");
+    expect(floating?.evidence).toContain("align=\"center\"");
+    expect(floating?.workaround).toContain("align=\"start\"");
+
+    const page = measuredRow("Floating layer");
+    expect(
+      page,
+      "the page's measured table has no floating-layer row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("floating-sides");
+    expect(page?.[1]).toContain("centre line");
+    expect(page?.[2]).toContain("align=\"start\"");
+  });
+
   it("records the Select reveal gap a window and a runtime suite measured", () => {
     // `Select` is named in §2 as provided, so the record read as "a Select is
     // just a wrapper". A window measured the overlay half (`select-lifecycle`)
@@ -656,6 +678,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(runtimePage).toContain("virtual-list-rows");
     expect(runtimePage).toContain("data-grid-frozen-column");
     expect(runtimePage).toContain("select-lifecycle");
+    expect(runtimePage).toContain("floating-sides");
     expect(runtimePage).toContain("portal-layer");
     expect(runtimePage).toContain("docs/gpuix-capabilities.md");
     expect(runtimePage).toContain("outside");
