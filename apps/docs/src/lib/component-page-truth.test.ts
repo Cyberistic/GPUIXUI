@@ -133,6 +133,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/dialog.tsx",
   },
   {
+    file: "drawer.mdx",
+    row: "Drawer",
+    suite: "packages/components/src/behaviour/drawer.test.tsx",
+    shadowed: "packages/components/docs/drawer.mdx",
+    source: "packages/components/src/drawer.tsx",
+  },
+  {
     file: "dropdown-menu.mdx",
     row: "Dropdown menus",
     suite: "packages/components/src/behaviour/dropdown-menu.test.tsx",
@@ -523,6 +530,94 @@ describe("the curated component pages", () => {
     // The retracted shapes: a field that validates itself, or a faded control.
     expect(text).not.toContain("validates on every keystroke and");
     expect(text).not.toContain("fades the whole control");
+  });
+
+  it("hold the drawer's edges, its exit frame and its dismiss stack to the source", () => {
+    // A drawer is the modal whose position is the whole component, and three of
+    // its decisions are invisible in a screenshot: the requested size is
+    // clamped by the window, a non-dismissible surface consumes the gesture
+    // instead of passing it to the dialog beneath, and the surface stays
+    // mounted for an exit tween while taking no presses. Each is read from the
+    // painter or the rule that owns it, so the page cannot teach a surface the
+    // component does not paint.
+    const drawer = pages.find((page) => page.file === "drawer.mdx");
+    expect(drawer, "the drawer page is not in the curated set").toBeDefined();
+    if (drawer === undefined) return;
+
+    const source = read(drawer.source);
+    const flatSource = source.replace(/\s+/g, " ");
+    const modal = read("packages/components/src/internal/modal.ts").replace(
+      /\s+/g,
+      " ",
+    );
+    const dismiss = read(
+      "packages/components/src/internal/dismiss-layer.ts",
+    ).replace(/\s+/g, " ");
+
+    // The box: the component's two size tables, and the window clamp on each.
+    expect(source).toContain(
+      "const WIDTH: Readonly<Record<DrawerSize, number>>",
+    );
+    expect(source).toContain(
+      "const HEIGHT: Readonly<Record<DrawerSize, number>>",
+    );
+    expect(flatSource).toContain("sm: 320, md: 400, lg: 560");
+    expect(flatSource).toContain("sm: 240, md: 320, lg: 420");
+    expect(flatSource).toContain("width: Math.min(WIDTH[size], window.width)");
+    expect(flatSource).toContain(
+      "height: Math.min(HEIGHT[size], window.height)",
+    );
+
+    // The dismiss rule: the topmost layer consumes the gesture, and a
+    // non-dismissible one closes nothing; focus leaves on `open`, not when the
+    // exit tween ends.
+    expect(modal).toContain("if (dismissible) setOpen(false);");
+    expect(modal).toContain("if (contentId === undefined || !open) return;");
+    expect(dismiss).toContain(
+      "onSome: (onDismiss) => { onDismiss(event); return true; },",
+    );
+
+    // The exit frame: the surface stays mounted, refuses presses, and travels
+    // 12px on an inset at the `slow` level.
+    expect(source).toContain("fadeFromSide(side, 12)");
+    expect(source).toContain('useSurfaceTiming("slow")');
+    expect(source).toContain(
+      'pointerEvents: presence.present ? "auto" : "none"',
+    );
+    expect(source).toContain("if (!presence.mounted) return null;");
+    expect(source).toContain('label="Close drawer"');
+
+    // The surface is square: the recipe names no radius utility, which is the
+    // difference the page draws beside Dialog.
+    const recipes = read("packages/tw/src/recipes.ts");
+    const at = recipes.indexOf("export const DRAWER_CONTENT =");
+    const recipe =
+      at === -1 ? "" : recipes.slice(at).split("\n").slice(0, 2).join(" ");
+    expect(recipe).toContain("bg-popover");
+    expect(recipe).toContain("shadow-lg");
+    expect(recipe).not.toContain("rounded");
+
+    const text = body(drawer).replace(/\s+/g, " ");
+    // The measured boxes, read off the 1280 × 800 window the suite uses.
+    expect(text).toContain("400 × 800");
+    expect(text).toContain("320 × 800");
+    expect(text).toContain("1280 × 420");
+    // The three decisions a drawing cannot show.
+    expect(text).toContain("is **clamped by the window**");
+    expect(text).toContain("still **consumes** the gesture and closes nothing");
+    expect(text).toContain("survives");
+    expect(text).toContain("12px");
+    expect(text).toContain("320 ms");
+    expect(text).toContain("The surface is **square**");
+    // The runtime budget the page must not overstate.
+    expect(text).toContain("no `aria-modal`");
+    expect(text).toContain("no `aria-labelledby`");
+    expect(text).toContain("Not portalled");
+    expect(text).toContain("No swipe-to-dismiss");
+    // The retracted shapes: a rounded native surface and a surface that leaves
+    // before its tween, neither of which the code paints.
+    expect(text).not.toContain("rounded-4xl");
+    expect(text).not.toContain("unmounts immediately");
   });
 
   it("hold the select's list cap and its reveal to the source", () => {

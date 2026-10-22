@@ -110,6 +110,7 @@ describe("the package docs collections", () => {
     "/docs/components/command-menu",
     "/docs/components/confirm-dialog",
     "/docs/components/dialog",
+    "/docs/components/drawer",
     "/docs/components/dropdown-menu",
     "/docs/components/field",
     "/docs/components/form",

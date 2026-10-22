@@ -515,6 +515,264 @@
   margin-top: 18px;
 }
 
+/* ---- drawer: mirrors components/src/drawer.tsx ----
+   The surface is the popover role with a border edge and the recipe's `lg`
+   lift — and it is **square**, because `DRAWER_CONTENT` names no radius
+   utility. The veil is the theme's overlay over the whole frame, and the box
+   comes from `drawer-preview.ts` (the component's own size tables, clamped to
+   the window). The drawing is static: the native surface fades and travels
+   12px on an inset, which is motion the page describes rather than fakes. */
+.gx-drawer-scene {
+  position: relative;
+}
+
+.gx-drawer-frame {
+  position: relative;
+  min-height: 340px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--background);
+}
+
+.gx-drawer-appbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-drawer-apptitle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gx-drawer-readout,
+.gx-drawer-hint {
+  margin: 0;
+  padding: 10px 14px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.gx-drawer-readout {
+  padding-bottom: 0;
+}
+
+.gx-drawer-hint {
+  padding-top: 4px;
+}
+
+.gx-drawer-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 14px 14px;
+  list-style: none;
+}
+
+.gx-drawer-issue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+
+.gx-drawer-issue:hover {
+  background: var(--hover);
+}
+
+.gx-drawer-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.gx-drawer-issue[data-status="closed"] .gx-drawer-dot {
+  background: var(--muted-foreground);
+}
+
+.gx-drawer-issue[data-status="closed"] .gx-drawer-issue-title {
+  color: var(--muted-foreground);
+}
+
+.gx-drawer-issue-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-drawer-issue-meta {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.gx-drawer-empty {
+  padding: 8px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+.gx-drawer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.gx-drawer-select {
+  width: auto;
+  height: var(--control-height-sm);
+  padding: 0 6px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+}
+
+/* The veil covers the drawing's window, as the native veil covers the whole
+   window. It is the one outside-press target the preview offers. */
+.gx-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  background: var(--overlay);
+  backdrop-filter: blur(2px);
+}
+
+.gx-drawer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 100%;
+  max-height: 100%;
+  padding: 20px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 24px 60px var(--shadow);
+}
+
+.gx-drawer[data-side="right"] {
+  margin-left: auto;
+}
+
+.gx-drawer[data-side="left"] {
+  margin-right: auto;
+}
+
+.gx-drawer[data-side="bottom"] {
+  margin-top: auto;
+}
+
+.gx-drawer-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 24px;
+}
+
+.gx-drawer-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.gx-drawer-desc {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.gx-drawer-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gx-drawer-close:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-drawer-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.gx-drawer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-drawer-legend {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gx-drawer-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.gx-drawer-field input {
+  accent-color: var(--primary);
+}
+
+.gx-drawer-copy,
+.gx-drawer-preview-count {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.gx-drawer-preview-count {
+  margin-top: auto;
+  font-family: var(--font-mono);
+}
+
+.gx-drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: auto;
+}
+
 /* ---- confirm dialog: mirrors components/src/confirm-dialog.tsx ----
    The dialog's `sm` surface with no close control. Cancel is the local
    `Button`'s default `secondary` variant, so it paints the measured boundary

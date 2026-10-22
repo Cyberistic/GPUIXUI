@@ -33,6 +33,12 @@ import {
   listMultipleSource,
 } from "./list-demo";
 import {
+  DrawerSides,
+  DrawerWorkflow,
+  drawerSidesSource,
+  drawerWorkflowSource,
+} from "./drawer-demo";
+import {
   FormStates,
   FormWorkflow,
   formStatesSource,
@@ -2488,6 +2494,8 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: confirmStatesSource,
   },
   "dialog-demo": { render: DialogDemo, source: dialogSource },
+  "drawer-sides": { render: DrawerSides, source: drawerSidesSource },
+  "drawer-workflow": { render: DrawerWorkflow, source: drawerWorkflowSource },
   "dropdown-menu-demo": {
     render: DropdownMenuDemo,
     source: dropdownMenuSource,

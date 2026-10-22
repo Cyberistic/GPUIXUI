@@ -50,6 +50,7 @@ components/combobox.mdx      Curated: the ranked list, the disabled row, the cre
 components/command-menu.mdx  Curated: the palette's matcher, group ranking and keys
 components/confirm-dialog.mdx Curated: Cancel first, confirm never closes, the frozen busy mark
 components/dialog.mdx        Curated: a real confirmation workflow
+components/drawer.mdx        Curated: the edge box, the dismiss stack, the exit frame
 components/dropdown-menu.mdx Curated: highlighted row is the focused row
 components/field.mdx        Curated: one message slot, submit-time validation, no fade
 components/form.mdx         Curated: the submit lifecycle, derived messages, no field-to-message map
@@ -99,6 +100,8 @@ src/components/docs/checkbox-preview.ts  The checkbox preview's group arithmetic
 src/components/docs/checkbox-demo.tsx     The checkbox's two browser renderings and their source strings
 src/components/docs/combobox-preview.ts The combobox preview's ranking, highlight and selection model
 src/components/docs/combobox-demo.tsx     The combobox's two browser renderings and their source strings
+src/components/docs/drawer-preview.ts     The drawer preview's edge box, dismiss stack and filter rules
+src/components/docs/drawer-demo.tsx       The drawer's two browser renderings and their source strings
 src/components/docs/list-preview.ts       The list preview's arrow order, type-ahead and selection rules
 src/components/docs/list-demo.tsx         The list's two browser renderings and their source strings
 src/components/docs/menu-preview.ts       The menu preview's row model and arrow arithmetic

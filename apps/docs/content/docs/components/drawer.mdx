@@ -1,0 +1,240 @@
+---
+title: Drawer
+description: A modal panel anchored to a window edge — filters on the right, navigation on the left, a sheet at the bottom.
+---
+
+`Drawer` is not a route or a navigation state: it is a modal panel that owns a
+window edge until it is dismissed. It shares Dialog's rules — a window veil, the
+topmost dismiss layer, focus in and back, and a Tab trap — and differs in where
+the surface sits and which edge it arrives from.
+
+<ComponentPreview name="drawer-workflow" />
+
+The list above is the app's: the drawer only reports the open state, and the
+filter runs when the caller applies it. A press on **Filters** opens the
+surface; **Apply filters** accepts the draft and closes.
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Drawer" />
+
+<ComponentSource
+  name="drawer"
+  file="packages/components/src/drawer.tsx"
+/>
+
+## Usage
+
+```tsx
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@gpuixui/components/drawer";
+
+<Drawer>
+  <DrawerTrigger>Filters</DrawerTrigger>
+  <DrawerContent label="Filters" side="right" size="md">
+    <DrawerHeader>
+      <DrawerTitle>Filters</DrawerTitle>
+      <DrawerDescription>Narrow the result set.</DrawerDescription>
+    </DrawerHeader>
+    <DrawerFooter>
+      <DrawerClose variant="ghost">Cancel</DrawerClose>
+      <DrawerClose variant="primary">Apply filters</DrawerClose>
+    </DrawerFooter>
+  </DrawerContent>
+</Drawer>;
+```
+
+`label` is required: it is the dialog's accessible name, because
+`@gpuix/native@0.11.0` has no `aria-labelledby` and the title is a separate
+heading.
+
+## Sides and sizes
+
+<ComponentPreview name="drawer-sides" />
+
+| `side` | Surface | `sm` | `md` (default) | `lg` |
+| ------ | ------- | ---- | -------------- | ---- |
+| `"right"` | full-height column at the right edge | 320px wide | 400px wide | 560px wide |
+| `"left"` | full-height column at the left edge | 320px wide | 400px wide | 560px wide |
+| `"bottom"` | full-width sheet at the bottom edge | 240px tall | 320px tall | 420px tall |
+
+A column takes the window's whole height; a sheet takes its whole width. Either
+one is **clamped by the window**: the surface is `min(requested, window)` on the
+axis it asks for, so a `lg` drawer in a narrow window is the window rather than
+a surface past its edge. The numbers are layout constants — tokens carry no
+drawer-size role — and are measured in the real renderer at 1280 × 800: a
+`right`/`md` surface is 400 × 800 at the right edge, a `left`/`sm` one is
+320 × 800 at the left, and a `bottom`/`lg` one is 1280 × 420 at the bottom.
+
+The surface is **square**, because `DRAWER_CONTENT` names no radius utility;
+only the drawing in this page is rounded. It is not portalled: the veil is an
+`<anchored>` element at window coordinates, so a drawer mounted inside a
+scrolled container still paints at the window origin.
+
+## Composition
+
+| Part | Renders | Responsibility |
+| ---- | ------- | -------------- |
+| `Drawer` | nothing | owns `open`/`defaultOpen`/`onOpenChange`, `dismissible` and the dismiss layer |
+| `DrawerTrigger` | button | toggles the drawer and reports `aria-expanded` |
+| `DrawerClose` | button | closes the drawer it sits in |
+| `DrawerContent` | veil + `role="dialog"` surface | focus in, Tab trap, Escape, outside press, the close control |
+| `DrawerHeader` | a heading block | clears the close control and stacks the title and description |
+| `DrawerTitle` | level-2 heading | the surface's title, announced separately from its name |
+| `DrawerDescription` | muted copy | one line of supporting text |
+| `DrawerFooter` | right-aligned actions row | the surface's actions |
+
+The parts validate their placement: a `DrawerContent` outside `Drawer`, or a
+`DrawerTitle` outside `DrawerContent`, fails with a message naming the family.
+Put `DrawerTrigger`, `DrawerClose` and `DrawerContent` directly inside `Drawer`.
+
+Dismissal is a stack, not a flag: open overlays push themselves in containment
+order, and an Escape or an outside press is offered to the **topmost** layer
+only. A drawer opened inside a dialog therefore closes first, and one event
+cannot close both. With `dismissible={false}` the top layer still **consumes**
+the gesture and closes nothing, so the dialog beneath it stays open; the close
+control stays an explicit action and always closes.
+
+## Keyboard
+
+| Key | Contract |
+| ---- | -------- |
+| `Tab` | the next focusable inside the surface, wrapping at the end |
+| `Shift+Tab` | the previous focusable, wrapping at the start |
+| `Escape` | dismisses the topmost layer when it is dismissible; focus returns to the opener |
+| `Enter` / `Space` | activates the focused action or the close control |
+
+The trap cancels the platform's default move and drives the wrap through the
+renderer's `focusNextWithin`/`focusPreviousWithin`, so focus cannot leave the
+surface by keyboard while it is open. Focus moves in when the surface mounts;
+it returns to the opener when `open` becomes false, **before** the exit tween
+finishes.
+
+## API reference
+
+### `Drawer`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `open` | `boolean` | uncontrolled | controlled state; omit to let the drawer keep its own |
+| `defaultOpen` | `boolean` | `false` | the initial state when uncontrolled |
+| `onOpenChange` | `(open: boolean) => void` | none | reports the next state; a controlled drawer does not move until the caller re-renders |
+| `dismissible` | `boolean` | `true` | whether Escape and an outside press close the surface; the close control is unaffected |
+| `children` | parts | none | `DrawerTrigger`, `DrawerClose` and `DrawerContent` |
+
+### `DrawerContent`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `label` | `string` (required) | none | the dialog's accessible name |
+| `side` | `"left" \| "right" \| "bottom"` | `"right"` | the edge the surface is anchored to |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | the requested width or height, clamped by the window |
+| `showClose` | `boolean` | `true` | renders the close control, a `@gpuixui/icons` `x` named "Close drawer" |
+| `initialFocus` | `() => number \| null` | none | the native id to focus after the surface receives focus |
+| `className` | `string` | none | compiled through `@gpuixui/tw` and joined after the recipe |
+| `children` | parts | none | the header, title, description, body and footer |
+
+`DrawerContent` takes the GPUix host props (`style`, `testId`, `ref`, `aria-*`,
+`onKeyDown`, `onMouseDownOutside`) and merges `style` last. It renders nothing
+while the drawer is closed, and for the whole exit tween after a close: the
+surface stays mounted, takes no presses (`pointerEvents: "none"`), and unmounts
+when the 320 ms fade ends.
+
+### `DrawerTrigger` and `DrawerClose`
+
+Both are the package's local button. `DrawerTrigger` adds `aria-expanded`;
+`DrawerClose` closes. They take `onClick`, `variant`, `size`, `disabled`,
+`className` and `children`, and compose the caller's handler first.
+
+### `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter`
+
+The layout parts take `children` and `className`; the title and description are
+`<text>` elements and take the text host's props. None of them takes a required
+prop of its own.
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| veil | `overlay` — the theme's scrim, never a literal black |
+| surface | `popover` fill, `popoverForeground` text, `border` edge, `elevation.lg` lift |
+| title | `popoverForeground` |
+| description | `mutedForeground` |
+| close control | `mutedForeground` glyph on a transparent control, `hover` wash and `foreground` glyph under the pointer |
+| actions | the button roles |
+
+The scrim being a role is the deliberate departure from shadcn's `bg-black/50`:
+a literal black cannot follow a high-contrast theme, and `overlay` does.
+
+Motion is the surface's, not the app's: it fades and travels **12px** out from
+its own edge on the `slow` level (320 ms), while the veil only fades. The
+surface's box does not change, so nothing inside re-lays out — a full-width
+slide needs `transform`, which the runtime does not have. The surface stays
+mounted for the exit tween, refuses presses while it leaves, and returns focus
+as soon as `open` flips rather than a duration later.
+
+## Accessibility and limitations
+
+- The runtime role is **`dialog`**, named by the required `label`.
+  `@gpuix/native@0.11.0` has no `aria-modal` and no `aria-labelledby`; the title
+  is a level-2 heading, not the dialog's accessible name, so pass the same
+  string to both.
+- Focus enters the surface on open and returns to the opener on close, unless
+  the opener has been destroyed in the meantime — the renderer's own bounds
+  check decides that, so a destroyed opener is not focused and one that
+  survives is.
+- `dismissible={false}` consumes Escape and an outside press. A surface that
+  cannot be dismissed must still show a visible close control, because the
+  keyboard and the backdrop will not end it.
+- **No swipe-to-dismiss**: `0.11.0` has no drag host feature.
+- **No full-width slide and no `transform`**: the surface travels 12px on an
+  inset; animating `width`/`left` instead would reflow its contents on every
+  frame.
+- **Not portalled**: the veil is an `<anchored>` element at window coordinates.
+- Sizes are layout constants, not tokens; the close control is an icon named
+  "Close drawer".
+- The drawing on this page is a browser approximation: the native surface is
+  square and animates an inset, while the drawing is static and rounded by the
+  page's own frame.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the parts, the modal rules, the size tables and the motion seam |
+| `@gpuix/react` | the host props, the key payload and `useWindowSize` |
+| `@gpuix/react/floating` | `mergeStyles` for the surface and part styles |
+| `@gpuixui/icons` | the `x` in the close control |
+| `@gpuixui/tw` | the drawer recipes and `cn` conflict resolution |
+
+## Related
+
+- **Dialog** — the centred modal; the same rules in the middle of the window.
+- **Confirmation dialog** — a destructive decision in a fixed-size surface.
+- **Popover** — a non-modal anchored panel that does not take the window.
+- **Tabs** — the panel content a drawer often switches between.
+
+## Status
+
+**Status: `done`.** `COMPONENTS.md` records the runtime support as `partial`,
+and the missing half is the surface itself: no swipe-to-dismiss, no full-width
+slide (`transform`), no `aria-modal`/`aria-labelledby`, and no portal. The size
+table is a layout constant rather than a token.
+
+`packages/components/src/behaviour/drawer.test.tsx` runs **10 native behaviour
+tests** in the real renderer on `@gpuix/native@0.11.0`: the closed mount, the
+named dialog and `aria-expanded`, the full-window veil, focus in and its return
+on Escape, a backdrop press that closes while a press inside does not, the Tab
+trap at both ends, all three sides and sizes, both themes, an uninterruptible
+drawer, and a controlled drawer that stays closed. The shared rules were
+extracted from Dialog into `internal/modal.ts` with no behaviour change, and
+`dialog.test.tsx` (15 tests) and `confirm-dialog.test.tsx` (7) stay as the
+guard.

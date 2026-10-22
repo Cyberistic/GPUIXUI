@@ -20,6 +20,7 @@
     "search-input",
     "---Overlays---",
     "dialog",
+    "drawer",
     "confirm-dialog",
     "popover",
     "dropdown-menu",
