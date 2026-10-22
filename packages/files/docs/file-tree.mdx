@@ -1,0 +1,109 @@
+---
+title: File trees
+description: A hierarchical file tree with a glyph per kind, single and multi selection, one roving tab stop and type-ahead.
+---
+
+`FileTree` paints a file tree over `@gpuixui/data`'s tree: the expansion set, the
+cursor, the arrow keys and type-ahead are `useExpandedRows` + `TreeView`, and the
+component adds the two things a file tree owns — a **glyph** per kind and
+**selection** (a press chooses one row, the leading checkbox toggles a row in a
+set).
+
+The nesting is pure: `buildFileTree` turns a flat list of `/`-separated paths
+into the nested `FileNode` tree the generic controller flattens, and a nested
+tree is passed straight through.
+
+## Usage
+
+```tsx
+import { buildFileTree, FileTree } from "@gpuixui/files";
+
+const roots = buildFileTree([
+  "src/index.ts",
+  "src/components/button.tsx",
+  "readme.md",
+]);
+
+<FileTree
+  aria-label="Project files"
+  height={280}
+  roots={roots}
+  keyOf={(node) => node.path}
+  childrenOf={(node) => node.children ?? []}
+  labelOf={(node) => node.name}
+  onSelectionChange={(keys) => setChosen(keys)}
+  onActivate={(node) => open(node.path)}
+/>;
+```
+
+The full screen is `packages/files/examples/file-tree.example.tsx`, which the
+native playground mounts as the `file-tree` example.
+
+## Behaviour
+
+A press on a row chooses it alone (replacing the selection) and reports the node
+through `onActivate`; the leading `Checkbox` toggles the row in the selection, so
+several files can be chosen at once. The selection is `@gpuixui/data`'s
+`pressSelection`, so the same replace/toggle/range rules a table reads apply
+here; `onSelectionChange` reports the chosen keys after every press.
+
+Expansion, the single roving tab stop, the arrow keys and type-ahead are
+`TreeView`'s: `Right` opens a branch or steps into it, `Left` closes it or steps
+out, and a typed prefix jumps to the first row **after** the cursor whose label
+matches. A typed prefix skips a collapsed branch because the branch's children
+are not painted rows.
+
+## Icons per kind
+
+`fileKindOf` classifies a name into `folder`, `image`, `code`, `config`, `data`
+or `file`; `fileIcon` answers the glyph, with an open folder painting
+`folder-open`. A directory is always a folder; an unknown extension falls back to
+the plain `file` glyph. Override the mapping with `kindOf`.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `roots` | `T[]` | — | the tree's roots, in paint order |
+| `keyOf` | `(node: T) => string` | — | the stable identity a row is addressed by |
+| `childrenOf` | `(node: T) => T[]` | — | the children, in paint order |
+| `labelOf` | `(node: T) => string` | — | the row's name and what type-ahead matches |
+| `kindOf` | `(node: T, hasChildren: boolean) => FileKind` | `fileKindOf` | the glyph a row paints |
+| `initialSelected` | `Iterable<string>` | none | the keys selected at first paint |
+| `onSelectionChange` | `(keys: string[]) => void` | — | reports the chosen keys after every press |
+| `onActivate` | `(node: T) => void` | — | a press or Enter on a row, after the selection is replaced |
+| `height` | `number` | — | a definite height; the rows scroll inside it |
+| `testId` | `string` | — | the tree; each row is `${testId}-row-${key}` |
+
+## Theming
+
+The row chrome is `TreeView`'s; the glyph paints `mutedForeground`, or
+`selectedForeground` on the active row, and the label paints `foreground` or
+`selectedForeground`. Row height is the active density's `rowHeight`.
+
+## Accessibility
+
+- The frame is `role="tree"` and each row `role="treeitem"`, with `aria-level`,
+  `aria-selected` and `aria-expanded` on a branch. Set `aria-label` on the tree.
+- One tab stop: a `Tab` into the tree lands on the cursor's row.
+- Each checkbox names itself `Select ${label}`.
+
+## Limitations
+
+- Selection is press-and-checkbox, not a Shift-drag range; the range mode of
+  `pressSelection` is available to a caller driving the reducer directly.
+- The tree does not virtualize itself. A large tree composes `@gpuixui/data`'s
+  `VirtualTree` with the same `renderRow` content.
+- The docs site cannot render this component live — it is a GPUix host tree,
+  not DOM. The code above is the real source.
+
+## Verification
+
+`src/tree/logic.test.ts` (8 tests) holds the nesting (a flat list nests folders
+first, a bare path with descendants is a folder, a duplicated path paints once),
+the expansion round-trip, type-ahead skipping a collapsed branch, and the kind
+classification with its fallback.
+
+```sh
+nub run --filter @gpuixui/files test
+```

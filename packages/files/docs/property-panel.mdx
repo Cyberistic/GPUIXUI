@@ -1,0 +1,79 @@
+---
+title: Property panels
+description: A labelled key/value editor with text, number, boolean and select fields, reporting the whole record on every edit.
+---
+
+`PropertyPanel` edits one object through rows of `{ key, type, value }`, where
+`type` is `text`, `number`, `boolean` or `select` and the value's type rides with
+the row. Each row renders the matching `@gpuixui/primitives` field — `Input`,
+`NumberField`, `Switch` or `Select` — and every edit calls `onChange` with the
+**whole record**, so a preview and the panel can read the same object without a
+second copy of it.
+
+## Usage
+
+```tsx
+import { PropertyPanel, type PropertyRow } from "@gpuixui/files";
+
+const rows: ReadonlyArray<PropertyRow> = [
+  { type: "text", key: "name", label: "Name", value: name },
+  { type: "number", key: "count", label: "Count", value: count },
+  { type: "boolean", key: "active", label: "Active", value: active },
+  { type: "select", key: "kind", label: "Kind", value: kind, options: KINDS },
+];
+
+<PropertyPanel title="Shape" rows={rows} onChange={(record) => apply(record)} />;
+```
+
+The full screen is `packages/files/examples/property-panel.example.tsx`, which
+the native playground mounts as the `property-panel` example.
+
+## The record
+
+`propertyRecord` folds the rows into `Record<string, string | number | boolean>`;
+`setProperty` is the one-row edit that returns a new object, never mutating the
+source. A duplicated key keeps its last row's value. The panel owns no copy of
+the object: `onChange` is the whole record, so the caller's state is the single
+source of truth.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `rows` | `PropertyRow[]` | — | the rows, in paint order |
+| `onChange` | `(record: PropertyRecord) => void` | — | receives the whole record after every edit |
+| `title` | `string` | — | the panel's header title |
+| `labelWidth` | `number` | `120` | the label column's width, in pixels |
+| `testId` | `string` | — | the panel; each label is `${testId}-label-${key}` |
+
+`PropertyRow` is a discriminated union: `{ type: "text", value: string }`,
+`{ type: "number", value: number }`, `{ type: "boolean", value: boolean }` and
+`{ type: "select", value: string, options: SelectOption[] }`. The guards
+`isTextRow`, `isNumberRow`, `isBooleanRow` and `isSelectRow` narrow a row to its
+variant.
+
+## Theming
+
+The panel is the card surface; the label column paints `mutedForeground` and is
+fixed, so every field begins at the same `x`. Each field is the primitives'
+default field chrome, so the platform text session and the focus ring are
+shared with every other control.
+
+## Limitations
+
+- One `type` per row; a property whose type changes is a different row, not a
+  switch the panel animates.
+- A select's options are data (`{ value, label }`), so there is no rich option
+  content — the same shape the primitives' `Select` accepts.
+- The docs site cannot render this component live — it is a GPUix host tree,
+  not DOM. The code above is the real source.
+
+## Verification
+
+`src/property/logic.test.ts` (4 tests) holds the record fold, the empty record,
+a one-row edit that leaves the neighbours, and that an edit never mutates the
+source record.
+
+```sh
+nub run --filter @gpuixui/files test
+```
