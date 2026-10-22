@@ -152,6 +152,7 @@ src/components/docs/platform-toggle.tsx   The platform and look switch, and its 
 src/components/docs/license-table.tsx     LICENSES/*.md, rendered
 src/components/docs/patterns.tsx          The pattern workflows and the chooser
 src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
+src/components/docs/token-list.tsx       A contract's roles or surfaces, rendered from the package's array
 src/components/docs/block-index.tsx       The Blocks index
 src/components/docs/blocks.tsx            The Login, Settings and Dashboard recipes
 src/components/docs/block-preview.tsx     A block's browser rendering

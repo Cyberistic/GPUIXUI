@@ -4,6 +4,7 @@ description: A live editor for the library's semantic tokens — preview, copy a
 ---
 
 import { contrastFloors, contrastPairs, decorativeFloor, decorativeSurfaces, indicatorSurfaces, keyboardFocusDimOpacity, selectionPairs, seriesColors, seriesSurfaces, targetSize, themes } from "@gpuixui/tokens";
+import { TokenList } from "@/components/docs/token-list";
 
 Edit the semantic tokens the library ships and watch them apply to a preview in
 real time. The editor reads its defaults from `@gpuixui/tokens` — the base is
@@ -107,8 +108,9 @@ call reports ten independent failures:
   neither is a contrast pair.
 - **Data series**: `seriesFailures` measures the
   {seriesColors(themes.dark).length} categorical colours a chart paints against
-  the {seriesSurfaces.length} surfaces a plot is drawn on (`background`, `card`,
-  `popover`) at the {contrastFloors.boundary}:1 boundary floor, each pair against
+  the {seriesSurfaces.length} surfaces a plot is drawn on
+  (<TokenList names={seriesSurfaces} />) at the {contrastFloors.boundary}:1
+  boundary floor, each pair against
   `seriesDistinctnessFloor` in OKLab — a blue and a violet of one lightness pass
   contrast and still read as one series — and each pair again through every
   `colorVisionDeficiencies` simulation (`protanopia`, `deuteranopia`,

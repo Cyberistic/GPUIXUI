@@ -1,12 +1,17 @@
 import {
+  applyStyle,
   darkSeries,
   filledHover,
   filledPressed,
+  highContrastLightSeries,
+  highContrastThemes,
   lightSeries,
+  platformStyles,
   platformTheme,
   retroStyles,
   targetSize,
   themes,
+  type SeriesColors,
   type Theme,
 } from "@gpuixui/tokens";
 import { readFileSync } from "node:fs";
@@ -340,9 +345,27 @@ describe("preview style sheets", () => {
 });
 
 describe("the data series", () => {
-  /** The scale as a style sheet spells it: lowercase hex. */
-  const cssSeries = (scale: ReadonlyArray<string>): ReadonlyArray<string> =>
-    scale.map((colour) => colour.toLowerCase());
+  /**
+   * The scale as a style sheet spells it: lowercase hex. An absent variable is
+   * carried through rather than dropped, so a bridge that stopped writing a
+   * position fails the comparison instead of shortening it.
+   */
+  const cssSeries = (
+    scale: ReadonlyArray<string | undefined>,
+  ): ReadonlyArray<string | undefined> =>
+    scale.map((colour) => colour?.toLowerCase());
+
+  /**
+   * A look's own table, which no shipped style declares: five hues a reader can
+   * tell apart from the shared light scale on every position.
+   */
+  const lookSeries: SeriesColors = [
+    "#9A6300",
+    "#0F6E8C",
+    "#7A2E8F",
+    "#2D6A2D",
+    "#8C3A00",
+  ];
 
   it("publishes the theme's five colours as --series-1 to --series-5", () => {
     const series = (theme: Theme) =>
@@ -354,10 +377,37 @@ describe("the data series", () => {
     // platform switch showing one theme's bars on another theme's page.
     expect(series(themes.dark)).toEqual([...darkSeries]);
     expect(series(themes.light)).toEqual([...lightSeries]);
-    // A look owns type, radii, density and chrome, not a categorical scale.
-    expect(series(resolvePlatformTheme("default", "light", "luna"))).toEqual([
-      ...lightSeries,
-    ]);
+
+    // A look may declare the table its own plot surfaces were designed for,
+    // and the bridge publishes the look's scale — not the base's. The shipped
+    // looks are read from their declaration, so one that gains a table lands
+    // here without an edit and one that has none keeps its base.
+    const look = (name: "luna" | "aero") => {
+      const theme = resolvePlatformTheme("default", "light", name);
+      const declared = retroStyles[name].series?.light;
+      expect(theme.series?.length ?? 0).toBe(declared?.length ?? 0);
+      expect(cssSeries(series(theme))).toEqual(
+        cssSeries(declared ?? lightSeries),
+      );
+    };
+    look("luna");
+    look("aero");
+
+    // The rule itself, with a style that declares one: a look is not stuck
+    // with a scale designed for another page.
+    const lookWithSeries = {
+      ...platformStyles.default,
+      series: { light: lookSeries },
+    };
+    expect(cssSeries(series(applyStyle(themes.light, lookWithSeries)))).toEqual(
+      cssSeries(lookSeries),
+    );
+
+    // And the variant guard: a high-contrast base keeps its own table, because
+    // a scale designed for a look's surfaces is not a high-contrast scale.
+    expect(
+      cssSeries(series(applyStyle(highContrastThemes.light, lookWithSeries))),
+    ).toEqual(cssSeries(highContrastLightSeries));
   });
 
   it("keeps the dashboard's fallbacks on the dark theme's scale", () => {

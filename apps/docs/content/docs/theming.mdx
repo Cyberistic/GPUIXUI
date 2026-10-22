@@ -4,6 +4,7 @@ description: Semantic colour roles, typography, spacing, radius and density — 
 ---
 
 import { colorRoles, contrastFloors, indicatorSurfaces, seriesColors, seriesSurfaces, themes } from "@gpuixui/tokens";
+import { TokenList } from "@/components/docs/token-list";
 import { previewMode } from "@/lib/platform";
 
 A GPUIxUI theme is plain data. Components never carry a colour literal; they read
@@ -85,8 +86,8 @@ warning, and a hex per chart is the scattered literal the system forbids. A them
 therefore owns one categorical scale of {seriesColors(themes.dark).length}
 colours, `seriesColors(theme)`, designed per mode and contrast variant. Every
 colour is measured against the {seriesSurfaces.length} surfaces a plot is drawn
-on (`background`, `card`, `popover`) at the {contrastFloors.boundary}:1 non-text
-floor, and no two are closer than
+on (<TokenList names={seriesSurfaces} />) at the {contrastFloors.boundary}:1
+non-text floor, and no two are closer than
 `seriesDistinctnessFloor` in OKLab — contrast alone cannot tell a blue from a
 violet of the same lightness. Both of those contracts assume full colour vision,
 so every pair is also simulated for each `colorVisionDeficiencies` entry
@@ -96,11 +97,15 @@ another, and only the simulation sees it.
 
 <SeriesSwatches />
 
-A theme that carries `series` replaces the scale whole; every other theme —
-including the platform styles and the authored looks — resolves the scale for its
-mode and contrast. The browser bridge publishes one variable per swatch
-(`--series-1`, `--series-2`, …), so a preview charts in the theme the switch is
-showing.
+A theme that carries `series` replaces the scale whole, and a **look** may
+declare its own per mode: a look that repaints the surfaces a plot is drawn on
+needs one — Luna's beige page swallows the shared light amber — and `applyStyle`
+passes it, so the look is not stuck with a scale designed for another page. A
+mode a look omits, and every style that declares none, resolves the base theme's
+scale; a high-contrast base keeps its own, because a table designed for a look's
+surfaces is not a high-contrast scale. The browser bridge publishes one variable
+per swatch (`--series-1`, `--series-2`, …), so a preview charts in the theme the
+switch is showing.
 `seriesFailures(theme)` reports a broken scale, and `auditTheme` runs it beside
 the contrast and decorative reports.
 

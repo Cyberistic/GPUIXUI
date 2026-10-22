@@ -681,20 +681,19 @@ describe("the theming page's data series", () => {
 });
 
 describe("the theming pages' series surfaces", () => {
-  // Both bullets printed "the three surfaces a plot is drawn on" while
-  // `seriesSurfaces` was the authority, and `/docs/themes` also printed "the
-  // five categorical colours" while `/docs/theming` derived the length. A
-  // surface or a scale length added to the package would leave one page
-  // describing a contract the library no longer runs.
-  const printed = `(${seriesSurfaces.map(backticked).join(", ")})`;
-  /** Prose wraps, so the list's own line breaks are not a defect. */
-  const flat = (text: string): string => text.replace(/\s+/g, " ");
+  // Both bullets printed a literal `(`background`, `card`, `popover`)` while
+  // `seriesSurfaces` was the authority, so the `muted` toolbar — added once a
+  // look that repaints its own plot strips needed measuring — would have left a
+  // page naming three of four surfaces. The list is now the package's array
+  // rendered by `TokenList`, so a fourth surface reaches both pages without an
+  // edit; the guard holds the mount and refuses the literal.
   const pages = [
     { name: "themes.mdx", heading: "The theme audit" },
     { name: "theming.mdx", heading: "Data series" },
   ] as const;
 
-  it("derives the count and names every surface a plot is drawn on", () => {
+  it("mounts the package's array and prints no literal surface list", () => {
+    const literal = `(${seriesSurfaces.map(backticked).join(", ")})`;
     const wrong = pages.flatMap(({ name, heading }) => {
       const body = page(name);
       const marks = section(body, heading);
@@ -712,16 +711,25 @@ describe("the theming pages' series surfaces", () => {
         ...(marks.includes("{seriesSurfaces.length}")
           ? []
           : [`${name}: prints a literal surface count`]),
-        ...(flat(marks).includes(printed)
+        ...(marks.includes("<TokenList names={seriesSurfaces} />")
           ? []
-          : [`${name}: does not print ${printed}`]),
-        ...(/\b(three|[0-9]+) surfaces\b/.test(flat(marks))
+          : [`${name}: does not render <TokenList names={seriesSurfaces} />`]),
+        ...(marks.includes(literal)
+          ? [`${name}: keeps the literal list ${literal}`]
+          : []),
+        ...(/\b(three|four|[0-9]+) surfaces\b/.test(marks)
           ? [`${name}: keeps a stale surface count`]
           : []),
       ];
     });
 
     expect(wrong).toEqual([]);
+  });
+
+  it("has more than the three surfaces the literal list named", () => {
+    // The premise the old guard hid: `seriesSurfaces` is what the package
+    // measures, and a list typed into a page can only ever be behind it.
+    expect(seriesSurfaces.length).toBeGreaterThanOrEqual(3);
   });
 
   it("derives the scale's length on both pages", () => {
