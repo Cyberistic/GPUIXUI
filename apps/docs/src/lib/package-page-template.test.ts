@@ -84,13 +84,7 @@ interface KnownGap {
  * case below fails once the owner adds the section, so the entry is deleted in
  * the same change.
  */
-const knownGaps: ReadonlyArray<KnownGap> = [
-  {
-    page: "packages/components/docs/message-scroller.mdx",
-    section: "Related",
-    owner: "components",
-  },
-];
+const knownGaps: ReadonlyArray<KnownGap> = [];
 
 const missing = pages.flatMap((page) =>
   sections.flatMap((section) =>
