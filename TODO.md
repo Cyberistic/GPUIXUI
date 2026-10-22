@@ -7057,6 +7057,19 @@ fails the case by name; restored, the file is 44/44 and
       hold a second splitter). Docs: `docs/separator.mdx`
       §Accessibility/§Verification, the `Separators` inventory record and its
       `COMPONENTS.md` row.
+`[x]` `packages/primitives`: **a page handed a long list to a package that does
+      not exist** — `docs/scroll-area.mdx` §Limitations said
+      "`packages/data-grid` owns the virtual-list work when it lands", while this
+      workspace has never had that directory and `@gpuixui/data` had already
+      shipped `VirtualList` (a typed seam over the runtime's `<virtual-list>`).
+      The bullet now names that composition and what `ScrollArea` is instead
+      (the frame around content that is already mounted).
+      `src/docs.test.ts` gains `names only package paths that exist`: every
+      `packages/<name>` any primitives page cites must be a real workspace
+      directory, and the page's limitations must point at `VirtualList` /
+      `@gpuixui/data`. Directions measured: restoring the dead bullet fails by
+      name (`scroll-area.mdx: names packages/data-grid, which does not exist`),
+      and with the fix the file is 31/31.
 
 ## Swarm-owned blockers (fix these)
 

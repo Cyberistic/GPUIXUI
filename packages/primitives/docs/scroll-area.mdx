@@ -231,8 +231,10 @@ scrollbar's paint is otherwise the platform's. The keyboard step is the theme's
 - **No fade mask** at the edges.
 - **No smooth scrolling.** A key jumps the offset; the runtime has no
   transform/animation path for a scroll position.
-- **No virtualisation.** A long list mounts every row. `packages/data-grid` owns
-  the virtual-list work when it lands.
+- **No virtualisation.** A long list mounts every row. `@gpuixui/data`'s
+  `VirtualList` is the composition for a list that must window — a typed seam
+  over the runtime's `<virtual-list>` — while `ScrollArea` is the frame around
+  content that is already mounted.
 
 ## Verification
 

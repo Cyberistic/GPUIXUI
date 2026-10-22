@@ -1390,6 +1390,39 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("names only package paths that exist", () => {
+    // Bug guarded: ScrollArea's limitations handed the virtual-list work to
+    // `packages/data-grid`, "when it lands" — a path this workspace has never
+    // had — while `@gpuixui/data` had already shipped `VirtualList`. A citation
+    // to a directory no reader can open is a dead end, so every
+    // `packages/<name>` a page names must be a real workspace package.
+    const missing = Arr.flatMap(pages, (page) =>
+      Arr.filterMap(
+        [...read(page).matchAll(/packages\/([a-z0-9-]+)/g)],
+        (match) => {
+          const name = match[1] ?? "";
+          return existsSync(
+            fileURLToPath(new URL(`packages/${name}`, repoRoot)),
+          )
+            ? Result.failVoid
+            : Result.succeed(
+                `${page}: names packages/${name}, which does not exist`,
+              );
+        },
+      ),
+    );
+    expect(missing).toEqual([]);
+
+    // The positive half: the page has to point at the composition that really
+    // windows a list, not merely stop naming the dead path.
+    const limitations = Option.getOrElse(
+      bodyOf(read("scroll-area.mdx"), "Limitations"),
+      () => "",
+    );
+    expect(limitations).toContain("`VirtualList`");
+    expect(limitations).toContain("@gpuixui/data");
+  });
+
   it("cites only plans that exist", () => {
     // The bug guarded: completed plans are deleted (`.agents/slop/plans/README.md`),
     // but this workstream still sent readers to four completed plans for the
