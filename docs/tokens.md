@@ -1971,7 +1971,7 @@ import { nativeTextTheme } from "@gpuixui/tokens";
 const host = nativeTextTheme(theme);
 host.appearance; // theme.mode — the field's own defaults follow it
 host.bg; // theme.colors.input
-host.text; // inputForeground
+host.text; // inputForeground — the ink a <code>/<diff>/<markdown> host paints
 host.textFaint; // placeholder — the faint role a code block's gutter paints
 host.caret; // primary
 host.fontSans; // typography.sans
@@ -1981,11 +1981,26 @@ host.diffDel; // the destructive tone's readable role
 host.diffHunkBg; // muted — the hunk header's chrome stripe
 ```
 
+A field is not painted from `host.text`: an `<input>`/`<textarea>` paints its
+value from the element's own `color`, so a field hands the role over as a
+property beside the object (§What a field's value actually paints):
+
+```tsx
+<input
+  theme={nativeTextTheme(theme)}
+  style={{
+    backgroundColor: theme.colors.input,
+    color: theme.colors.inputForeground,
+  }}
+/>
+```
+
 | Host field | Role |
 | ---------- | ---- |
 | `appearance` | the theme's `mode` |
 | `bg` | the fill the field paints — `input`, or the page role (see below) |
-| `text` / `textMuted` | `inputForeground` / `mutedForeground` |
+| `text` / `textMuted` | `inputForeground` / `mutedForeground` — the ink a `<code>`, `<diff>` or `<markdown>` host paints |
+| a field's value | not this object: `<input>`/`<textarea>` paint the element's `color`, so pass `inputForeground` (above) |
 | `textFaint` | `placeholder` |
 | `accent` / `caret` | `primary` |
 | `fontSans` / `fontMono` | `typography.sans` / `typography.mono` |
@@ -2062,6 +2077,35 @@ the 1.05:1 decorative floor. A table rule takes `border`, the role a divider is
 measured by. The numbers with no token of their own stay the runtime's: a code
 block's gutter, a diff's paddings and accent bar, and a document's table column
 minima (§Limitations).
+
+### What a field's value actually paints
+
+The seam hands `text: inputForeground`, and that role is the ink a `<code>`, a
+`<diff>` and a `<markdown>` host paint. A **field** is different: at the pinned
+`@gpuix/native@0.11.0` an `<input>`/`<textarea>` paints its value from the
+element's `style.color` (`custom_elements/input.rs`), so the theme object's `text`
+never reaches a field and a host given only the seam paints the platform default
+— near-black on a dark fill. The playground's `field-ink` probe measured it off a
+captured frame on 0.11.0: a value typed into a host given only the seam peaked at
+its own border's **47.5** luminance, i.e. darker than the fill it sits on, while
+the same host with `color: inputForeground` peaked at **240.7** — the ink's own —
+and the shipped `Input` matches that (22 checks, `--only field-ink`). So a field
+host passes the role as a property:
+
+```tsx
+<input
+  theme={nativeTextTheme(theme)}
+  style={{
+    backgroundColor: theme.colors.input,
+    color: theme.colors.inputForeground,
+  }}
+/>
+```
+
+The library's own fields already do — `Input`'s recipe paints
+`text-input-foreground` — which is why no component suite could see it. The
+contract is unchanged: the value is still `inputForeground` on both fills, so
+`contrastPairs` measures the ink a field actually paints.
 
 ### What a field's placeholder actually paints
 

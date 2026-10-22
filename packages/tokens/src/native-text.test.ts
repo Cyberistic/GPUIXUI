@@ -444,6 +444,39 @@ describe("nativeTextTheme", () => {
     expect(catalogue).toContain("its default is 12.5/18");
     expect(catalogue).toContain("syntax palette");
   });
+
+  it("teaches that a field's value is the element's colour, not the object's text", () => {
+    // The bug this holds: this page and the seam's own snippet showed
+    // `<input theme={nativeTextTheme(theme)} />` and said the object carries the
+    // value. At the pinned `@gpuix/native@0.11.0` an `<input>`/`<textarea>`
+    // paints its value from the element's `style.color`
+    // (`custom_elements/input.rs`), so `text` never reaches a field: the
+    // playground's `field-ink` probe typed into a host given only the seam and
+    // its brightest pixel was the field's **47.5** border luminance — darker than
+    // its own fill — while the same host with `color: inputForeground` peaked at
+    // **240.7**, the ink's own. Following the page shipped a near-black value on
+    // a dark fill.
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const seam = readFileSync(
+      new URL("./native-text.ts", import.meta.url),
+      "utf8",
+    );
+
+    expect(catalogue).toContain("### What a field's value actually paints");
+    expect(catalogue).toContain(
+      "paints its value from the element's `style.color`",
+    );
+    expect(catalogue).toContain("color: theme.colors.inputForeground");
+    expect(catalogue).toContain("47.5");
+    expect(catalogue).toContain("240.7");
+    // The seam's own example is what a consumer copies, so it carries the role
+    // too, and its `text` field says which hosts read it.
+    expect(seam).toContain("color: theme.colors.inputForeground");
+    expect(seam).toContain("paints its value from the element's");
+  });
 });
 
 /**

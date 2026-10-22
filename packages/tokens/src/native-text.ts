@@ -11,14 +11,22 @@
  * value and selection wash come from this package. That is the gap this seam
  * closes: one call turns a `Theme` into the object the host takes.
  *
- * The roles are the ones the contrast table measures for a field: the value is
- * `inputForeground` on the fill, the placeholder is `placeholder` on the fill
- * at the secondary floor, and the caret is the `primary` mark on the fill at
+ * The roles are the ones the contrast table measures for a field: the value's
+ * role is `inputForeground` on the fill, the placeholder is `placeholder` on the
+ * fill at the secondary floor, and the caret is the `primary` mark on the fill at
  * the non-text floor. `nativeTextFills` names the fills the library's fields
  * paint — a plain field paints `input`, while a composite field (search, tag
  * and mention fields, the chat composer, the inline edit, the colour picker's
  * hex field) paints the page role, so the host has to be told which one its
  * values and placeholder sit on.
+ *
+ * Only a `<code>`, `<diff>` and `<markdown>` host paints its ink from this
+ * object: at the pinned release an `<input>`/`<textarea>` paints its value from
+ * the element's own `style.color` (`custom_elements/input.rs`), so `text` never
+ * reaches a field and a host handed only this object paints the platform
+ * default — near-black on a dark fill. Pass the role as a property too
+ * ({@link nativeTextTheme} carries the example); the playground's `field-ink`
+ * probe measured the difference off a captured frame.
  *
  * The palette is not the only thing a host takes from this object: a `<code>`
  * host sizes its block from the runtime theme's `metrics`, so the type scale's
@@ -113,7 +121,11 @@ export interface NativeTextTheme {
   readonly appearance: ThemeMode;
   /** The fill behind the value, from the field's own fill role. */
   readonly bg: string;
-  /** The value the reader typed or the code being shown. */
+  /**
+   * The ink a `<code>`, `<diff>` and `<markdown>` host paints. A field does not
+   * read it: an `<input>`/`<textarea>` paints its value from the element's
+   * `color`, which a field hands over beside this object (see the example).
+   */
   readonly text: string;
   /** Secondary text inside the host, from `mutedForeground`. */
   readonly textMuted: string;
@@ -155,14 +167,29 @@ export interface NativeTextTheme {
 /**
  * The theme a native text host takes for one of a field's fills.
  *
+ * The object does not paint a field's value on its own: pass the role as the
+ * element's `color` beside it, the pair the contrast table measures on the fill.
+ *
  * @example
  * ```tsx
  * import { nativeTextTheme } from "@gpuixui/tokens";
  *
- * <input theme={nativeTextTheme(theme)} style={{ backgroundColor: theme.colors.input }} />
+ * <input
+ *   theme={nativeTextTheme(theme)}
+ *   style={{
+ *     backgroundColor: theme.colors.input,
+ *     color: theme.colors.inputForeground,
+ *   }}
+ * />
  * // A composite field paints the page role instead, so the host is told which
  * // surface its placeholder is measured on:
- * <input theme={nativeTextTheme(theme, "background")} />
+ * <input
+ *   theme={nativeTextTheme(theme, "background")}
+ *   style={{
+ *     backgroundColor: theme.colors.background,
+ *     color: theme.colors.inputForeground,
+ *   }}
+ * />
  * ```
  */
 export function nativeTextTheme(
