@@ -6803,6 +6803,11 @@ the old sentence fails the new page case. See the interlock row above.
       list open and `false` again once an option commits (negative control:
       without the attribute the node publishes no `expanded`), and the unit case
       holds a pure render with no state to no `expanded` rather than a guess.
+      **The controlled half is measured too**: a host that wires `open` to its
+      own state opens and closes from the trigger and an option, and a host that
+      holds `open` true while refusing `onOpenChange` keeps its list open when an
+      option commits (direction measured: a wrapper reading only its own mirror
+      closes it, failing the case).
       Docs: `docs/select.mdx`
       §Usage/§API/§Accessibility/§Theming/§Limitations/§Verification, the package
       README's Select-parts row, the `Selects` inventory record and its

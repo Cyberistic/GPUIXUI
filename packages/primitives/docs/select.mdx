@@ -132,7 +132,10 @@ list's painted boxes), which also works for a row nested in a group.
   measured in a window (`runtime/fields.runtime.test.tsx`): `false` at rest,
   `true` once the list opens, and `false` again when an option commits. GPUix
   reports the changes but publishes no state to read, so the wrapper mirrors them
-  and a caller may take the state over with `open`/`onOpenChange`.
+  and a caller may take the state over with `open`/`onOpenChange`. A controlled
+  select is really controlled: a host that holds `open` true and refuses the
+  change keeps its list open when an option commits (the same window case),
+  rather than the wrapper's mirror winning.
 - Disabled items are painted from the `disabled` state GPUix reports and cannot
   be committed.
 
@@ -217,7 +220,9 @@ state of its own.
   without the group's it holds no `Group`); the trigger's `expanded` is `false`
   at rest, `true` with the list open and `false` again once an option commits
   (negative control measured: without the attribute the node publishes no
-  `expanded`); it opens, paints its options and
+  `expanded`), and a controlled select's `open` is the state it renders — a host
+  that refuses a close keeps the list open (negative control measured: ignoring
+  the prop closes it); it opens, paints its options and
   commits a clicked option in the real renderer; the trigger and an option row are
   addressed by `triggerTestId`/`itemTestId` rather than by walking children and
   searching the painted text (negative control measured: without the forwarding,

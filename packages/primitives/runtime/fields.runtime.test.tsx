@@ -581,6 +581,69 @@ it("publishes whether its list is open", async () => {
   expect(expanded()).toStrictEqual(Option.some(false));
 });
 
+it("lets a caller own the open state", async () => {
+  // The controlled half of the contract: `open`/`onOpenChange` hand the state to
+  // the caller, and the trigger's `expanded` follows what the caller renders —
+  // so a component that opens its list from a command can publish it too.
+  const runtime = await openWindow();
+  const Controlled = () => {
+    const [open, setOpen] = useState(false);
+    return (
+      <Surface>
+        <Select
+          label="Fruit"
+          placeholder="Pick one"
+          triggerTestId="fruit-trigger"
+          itemTestId={(value) => `fruit-${value}`}
+          open={open}
+          onOpenChange={setOpen}
+          options={[
+            { value: "apple", label: "Apple" },
+            { value: "pear", label: "Pear" },
+          ]}
+        />
+      </Surface>
+    );
+  };
+  runtime.render(<Controlled />);
+  const expanded = () =>
+    Option.flatMap(
+      a11yNode(runtime.a11y(), { role: "ComboBox", label: "Fruit" }),
+      (node) => Option.fromNullishOr(node.aria?.expanded),
+    );
+  expect(expanded()).toStrictEqual(Option.some(false));
+  runtime.click("fruit-trigger");
+  runtime.flush();
+  expect(expanded()).toStrictEqual(Option.some(true));
+  runtime.click("fruit-pear");
+  runtime.flush();
+  expect(expanded()).toStrictEqual(Option.some(false));
+  // The caller's prop is the state, not a hint: a host that holds `open` true
+  // and refuses the change keeps its list open when an option commits, where a
+  // wrapper listening only to its own mirror would have closed it.
+  runtime.render(
+    <Surface>
+      <Select
+        label="Fruit"
+        placeholder="Pick one"
+        triggerTestId="fruit-trigger"
+        itemTestId={(value) => `fruit-${value}`}
+        open
+        onOpenChange={() => {}}
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.flush();
+  expect(expanded()).toStrictEqual(Option.some(true));
+  runtime.click("fruit-pear");
+  runtime.flush();
+  expect(expanded()).toStrictEqual(Option.some(true));
+});
+
 it("lifts a Select's list like every other floating surface", async () => {
   // The bug guarded: the list floats over page content and was the one floating
   // surface with no lift at all. `selectContentStyle` bounds it (the only
