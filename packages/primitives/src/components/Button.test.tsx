@@ -377,6 +377,14 @@ describe("Button", () => {
         expect(expectSome(hostStyleString(element, "color"))).toBe(pair.color);
         // No fade is left on top of the opaque pair.
         expect(hostStyle(element, "opacity")).toStrictEqual(Option.none());
+        // And the pointer states are paint-stable: a disabled action does not
+        // change colour under the pointer.
+        expect(expectSome(hostStyle(element, "hover"))).toEqual({
+          backgroundColor: pair.backgroundColor,
+        });
+        expect(expectSome(hostStyle(element, "active"))).toEqual({
+          backgroundColor: pair.backgroundColor,
+        });
         // The pair reads on every surface a disabled action can sit on.
         Arr.forEach(surfaces, (surface) => {
           expect(
