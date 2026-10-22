@@ -4816,8 +4816,34 @@ Work that this workstream needs but does not own. Another agent owns each row.
     (`virtual-tree-lifecycle`, `virtual-list-expand`)
   - [ ] Tier 3 phase 6 — SVG charts (`BarChart`, `LineChart`, `DonutChart`,
     `Sparkline`, `StackedBar`; `chart-raster`)
-  - [ ] Tier 3 phase 7 — `KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar`,
-    `AdvancedFilter` (`inspector-lifecycle`)
+  - [x] Tier 3 phase 7 — the **data surfaces**: `KeyValue`, `StatCard`,
+    `PropertyPanel`, `DataToolbar` and `AdvancedFilter` (`inspector-lifecycle`).
+    The surfaces live in `packages/data/src/surfaces/`; the advanced filter's
+    **predicate tree** is the pure part (`surfaces/logic.ts`: a predicate, an
+    `all`, an `any`, a `not`; five literal comparisons; `filterByTree`,
+    `matchesTree`, `describeTree`, `clauseCount`, `clauseAt`, `updateAt`,
+    `updatePredicate`, `removeAt`, `appendClause`), and the builder paints that
+    tree and reports every edit — the tree stays the caller's, so a saved
+    query, a table's filter and the builder read one shape. The runtime forces
+    the shape: no menu host (the pickers are the component package's measured
+    `DropdownMenu`), no canvas and no transform, and the label column is a
+    fixed measurement rather than a token. **22 unit cases** hold the tree
+    (every comparison, the three combinators, an empty tree matching
+    everything, an edit that keeps the clauses the reader did not touch, a
+    removal that removes the right sibling, and a `not` that cannot be left
+    empty) and **5 native behaviour cases** mount the shipped example in the
+    real renderer: the label column's fixed width and the value column's shared
+    `x`, a width action moving the statistic card's reading in the same frame
+    (9600 → 19200), a property panel's edit reaching the readout in the frame it
+    lands, the builder's clause narrowing the painted rows (4 of 4 → 1 of 4),
+    and the toolbar's search reporting **only after** its `@tanstack/pacer`
+    debounce. Directions measured: dropping the label column's width fails the
+    column case, reporting the search at once fails the debounce case, and
+    swapping the sides of a `contains` fails the comparison case. Five docs
+    pages ship in `packages/data/docs/` (`key-value`, `stat-card`,
+    `property-panel`, `data-toolbar`, `advanced-filter`) and the five inventory
+    rows moved to `done`. `nub run --filter @gpuixui/data test` is 85/85 and
+    `test:behaviour` 29/29 on 0.11.0.
   - [x] Register the data package on the site — `@gpuixui/data` shipped its table
     and virtual-list examples with no docs surface, so three site guards failed
     and one page lied. `examples.ts` gained a **lane home**: a package with no

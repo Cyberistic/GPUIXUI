@@ -1,0 +1,96 @@
+---
+title: Data toolbars
+description: The row of controls a data surface acts from, with a search field that reports a debounced query.
+---
+
+`DataToolbar` is the row of controls above a data surface: a search field at its
+head, and whatever actions the caller puts beside it.
+
+The runtime provides no toolbar host and needs none — a toolbar is a row.
+`inspector-lifecycle` measured two actions sharing one `y`, both above the
+rows they act on, each hit-tested by a press and each moving the object every
+view reads (the width 120 → 240 and back).
+
+The search field **debounces** through `@tanstack/pacer`: a query over a long
+set is not worth a re-filter per keystroke, and the core's debouncer owns the
+wait. The table's own filter field is a different control and is **not**
+debounced — `table-filter-lifecycle` measured the set narrowing as the reader
+types, and a delay there would be a regression.
+
+## Usage
+
+```tsx
+import { DataToolbar } from "@gpuixui/data";
+
+<DataToolbar search={{ value: query, onValueChange: setQuery }}>
+  <Button onActivate={reset}>Reset</Button>
+</DataToolbar>;
+```
+
+The full build is the `surfaces` example in
+`packages/data/examples/surfaces.example.tsx`, which the native playground
+mounts.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactNode` | — | the controls the row holds |
+| `search` | `ToolbarSearch` | — | the field at the head of the row |
+| `testId` | `string` | — | the field derives from it: `${testId}-search` |
+
+A `ToolbarSearch` is `{ value, onValueChange, placeholder?, label?,
+debounceMs? }`. `debounceMs` defaults to `150`; zero reports every edit at
+once.
+
+```tsx
+<DataToolbar
+  search={{ value: query, onValueChange: setQuery, debounceMs: 300 }}
+/>
+```
+
+## Theming
+
+| Part | Reads |
+| ---- | ----- |
+| the row's surface | the `muted` strip, with the `border` edge |
+| the padding | the registry's `px-2 py-1`, the row's `gap-2` |
+| the field | the primitives' `Input` recipe, at the `sm` control height |
+
+A toolbar sits on the `muted` strip, so the tokens package measures that strip
+as one of the surfaces a control's boundary and a disabled label are measured
+on.
+
+## Accessibility
+
+- The search field is named: it takes a `label` (default `Search`) and a
+  `placeholder` (default `Search…`).
+- The debounce is a **reporting** delay, not a typing delay: the field shows
+  every keystroke at once, and the consumer hears the query when the wait is
+  over.
+- The actions are the caller's controls: a toolbar adds no roles of its own.
+
+## Limitations
+
+- The toolbar does not own the query. It reports a debounced value; the
+  consumer stores it.
+- A pending query is **dropped** when the toolbar unmounts — the debouncer is
+  cancelled with it.
+- The toolbar does not lay its children out beyond one row: an action that
+  needs a second row belongs in a panel.
+
+## Verification
+
+`src/behaviour/surfaces.test.tsx` runs in the real GPUix renderer: a typed
+query leaves the set whole while the wait runs and narrows it afterwards, and
+the narrowing is measured in the same paint. Run it with:
+
+```sh
+nub run --filter @gpuixui/data test:behaviour
+```
+
+## Related
+
+- **Filtering controls** — the field above a table's rows, which is not
+  debounced.
+- **Property panels** — the panel the toolbar's actions change.

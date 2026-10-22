@@ -1,0 +1,398 @@
+/**
+ * The advanced filter: a builder over a typed predicate tree.
+ *
+ * A query builder is **data**, not a string: every clause names a field, a
+ * comparison and a value, and the clauses combine with `all`, `any` and `not`.
+ * The tree is the caller's — this component paints it and reports every edit —
+ * so a builder, a saved query and a table's own filter all read one shape.
+ *
+ * The tree's rules are the pure ones in `surfaces/logic.ts`: the comparisons are
+ * literal, a numeric comparison reads both sides as numbers, and an empty
+ * `all` matches everything (which is what an empty builder means).
+ *
+ * The runtime paints no menu of its own, so the field and comparison pickers
+ * are the component package's measured `DropdownMenu` — the same surface the
+ * column configuration uses, not a second menu implementation.
+ *
+ * ```tsx
+ * const [tree, setTree] = useState<FilterTree>(emptyTree);
+ * <AdvancedFilter
+ *   fields={[{ field: "status", label: "Status" }]}
+ *   tree={tree}
+ *   onChange={setTree}
+ * />
+ * ```
+ */
+
+import type { Props } from "@gpuix/react";
+import { mergeStyles } from "@gpuix/react/floating";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@gpuixui/components/dropdown-menu";
+import { Button, Input } from "@gpuixui/primitives";
+import { cn } from "@gpuixui/tw";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import type { ReactNode } from "react";
+import { recipeStyle } from "../recipe.js";
+import { useTheme } from "../theme.js";
+import {
+  appendClause,
+  comparisons,
+  describeTree,
+  emptyTree,
+  removeAt,
+  updateAt,
+  type Comparison,
+  type FieldPredicate,
+  type FilterPath,
+  type FilterTree,
+} from "./logic.js";
+import {
+  ADVANCED_FILTER,
+  FILTER_CLAUSE,
+  FILTER_GROUP,
+  FILTER_SENTENCE,
+} from "./recipe.js";
+
+/** One field a clause may name. */
+export interface AdvancedFilterField {
+  /** The field the clause reads. */
+  readonly field: string;
+  /** The words the builder shows for it. */
+  readonly label: string;
+}
+
+/** {@link AdvancedFilter} props. */
+export interface AdvancedFilterProps extends Omit<
+  Props,
+  "children" | "onChange"
+> {
+  /** The fields a clause may name, in the order the picker lists them. */
+  readonly fields: ReadonlyArray<AdvancedFilterField>;
+  /** The tree the builder paints. */
+  readonly tree: FilterTree;
+  /** Receives every edited tree. */
+  readonly onChange: (next: FilterTree) => void;
+  /** The title above the builder. Defaults to `Filters`. */
+  readonly title?: string;
+  readonly className?: string;
+  /**
+   * The trigger's test id. Every row derives from it:
+   * `${testId}-field-${at}`, `${testId}-comparison-${at}`,
+   * `${testId}-value-${at}` and `${testId}-remove-${at}`.
+   */
+  readonly testId?: string;
+}
+
+/** The words a comparison is shown by. */
+export const comparisonLabels: Readonly<Record<Comparison, string>> = {
+  equals: "equals",
+  notEquals: "does not equal",
+  contains: "contains",
+  greaterThan: "greater than",
+  lessThan: "less than",
+};
+
+/** The words a group is shown by. */
+export const groupLabels: Readonly<Record<"all" | "any" | "not", string>> = {
+  all: "all of",
+  any: "any of",
+  not: "not",
+};
+
+/** The label a field is shown by, falling back to its own name. */
+const labelOf = (
+  fields: ReadonlyArray<AdvancedFilterField>,
+  field: string,
+): string =>
+  Arr.findFirst(fields, (candidate) => candidate.field === field).pipe(
+    Option.map((candidate) => candidate.label),
+    Option.getOrElse(() => field),
+  );
+
+/** One clause: a field, a comparison, a value and a way out. */
+const ClauseRow = ({
+  root,
+  clause,
+  path,
+  fields,
+  onChange,
+  testId,
+  at,
+}: {
+  /** The whole tree: an edit is written back into it by path. */
+  readonly root: FilterTree;
+  readonly clause: FieldPredicate;
+  readonly path: FilterPath;
+  readonly fields: ReadonlyArray<AdvancedFilterField>;
+  readonly onChange: (next: FilterTree) => void;
+  readonly testId: string | undefined;
+  readonly at: number;
+}) => {
+  const theme = useTheme();
+  const id = testId === undefined ? undefined : `${testId}-${at}`;
+  const replace = (change: Partial<FieldPredicate>): void => {
+    onChange(updateAt(root, path, { ...clause, ...change }));
+  };
+  return (
+    <div style={recipeStyle(FILTER_CLAUSE, theme)}>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          variant="secondary"
+          size="sm"
+          testId={id === undefined ? undefined : `${id}-field`}
+        >
+          {labelOf(fields, clause.field)}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent label="Field">
+          {Arr.map(fields, (field) => (
+            <DropdownMenuItem
+              key={field.field}
+              onSelect={() => replace({ field: field.field })}
+              testId={
+                id === undefined ? undefined : `${id}-field-${field.field}`
+              }
+            >
+              {field.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          variant="secondary"
+          size="sm"
+          testId={id === undefined ? undefined : `${id}-comparison`}
+        >
+          {comparisonLabels[clause.comparison]}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent label="Comparison">
+          {Arr.map(comparisons, (comparison) => (
+            <DropdownMenuItem
+              key={comparison}
+              onSelect={() => replace({ comparison })}
+              testId={
+                id === undefined ? undefined : `${id}-comparison-${comparison}`
+              }
+            >
+              {comparisonLabels[comparison]}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Input
+        label={`${labelOf(fields, clause.field)} value`}
+        value={clause.value}
+        onValueChange={(value) => replace({ value })}
+        size="sm"
+        testId={id === undefined ? undefined : `${id}-value`}
+      />
+      <Button
+        variant="ghost"
+        size="sm"
+        label="Remove clause"
+        onActivate={() => onChange(removeAt(root, path))}
+        testId={id === undefined ? undefined : `${id}-remove`}
+      >
+        Remove
+      </Button>
+    </div>
+  );
+};
+
+/** A group of clauses, or a negated one. */
+const Group = ({
+  kind,
+  children,
+  onRemove,
+  testId,
+}: {
+  readonly kind: "all" | "any" | "not";
+  readonly children: ReactNode;
+  /** The group's own removal, when it sits in a group that can drop it. */
+  readonly onRemove?: () => void;
+  readonly testId: string | undefined;
+}) => {
+  const theme = useTheme();
+  return (
+    <div style={recipeStyle(FILTER_GROUP, theme)}>
+      <div
+        style={recipeStyle("text-xs font-medium text-muted-foreground", theme)}
+      >
+        {groupLabels[kind]}
+      </div>
+      {children}
+      {Option.match(Option.fromNullishOr(onRemove), {
+        onNone: () => null,
+        onSome: (remove) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            label="Remove group"
+            onActivate={remove}
+            testId={testId === undefined ? undefined : `${testId}-group-remove`}
+          >
+            Remove group
+          </Button>
+        ),
+      })}
+    </div>
+  );
+};
+
+/** The tree, painted. */
+const Tree = ({
+  root,
+  node,
+  path,
+  fields,
+  onChange,
+  testId,
+  removable,
+}: {
+  /** The whole tree: an edit is written back into it by path. */
+  readonly root: FilterTree;
+  /** The node this call paints. */
+  readonly node: FilterTree;
+  readonly path: FilterPath;
+  readonly fields: ReadonlyArray<AdvancedFilterField>;
+  readonly onChange: (next: FilterTree) => void;
+  readonly testId: string | undefined;
+  /** Whether the node sits in a group that can drop it. */
+  readonly removable: boolean;
+}) => {
+  if (node.kind === "predicate") {
+    return (
+      <ClauseRow
+        root={root}
+        clause={node}
+        path={path}
+        fields={fields}
+        onChange={onChange}
+        testId={testId}
+        at={path.length === 0 ? 0 : (path[path.length - 1] ?? 0)}
+      />
+    );
+  }
+  if (node.kind === "not") {
+    return (
+      <Group
+        kind="not"
+        testId={testId}
+        onRemove={removable ? () => onChange(removeAt(root, path)) : undefined}
+      >
+        <Tree
+          root={root}
+          node={node.child}
+          path={[...path, 0]}
+          fields={fields}
+          onChange={onChange}
+          testId={testId}
+          removable={false}
+        />
+      </Group>
+    );
+  }
+  return (
+    <Group
+      kind={node.kind}
+      testId={testId}
+      onRemove={removable ? () => onChange(removeAt(root, path)) : undefined}
+    >
+      {Arr.map(node.children, (child, at) => (
+        <Tree
+          key={`${at}`}
+          root={root}
+          node={child}
+          path={[...path, at]}
+          fields={fields}
+          onChange={onChange}
+          testId={testId}
+          removable
+        />
+      ))}
+    </Group>
+  );
+};
+
+/**
+ * The builder.
+ *
+ * The tree is the caller's, so a saved query, a table's filter and this
+ * builder read one shape; the component paints the tree and reports every
+ * edit — a clause's field, comparison or value, a clause removed, a clause
+ * added and the whole tree cleared.
+ */
+export const AdvancedFilter = ({
+  fields,
+  tree,
+  onChange,
+  title = "Filters",
+  className,
+  style,
+  testId,
+  ...rest
+}: AdvancedFilterProps) => {
+  const theme = useTheme();
+  const addClause = (): void => {
+    const clause: FieldPredicate = {
+      kind: "predicate",
+      field: Arr.head(fields).pipe(
+        Option.map((field) => field.field),
+        Option.getOrElse(() => ""),
+      ),
+      comparison: "equals",
+      value: "",
+    };
+    onChange(appendClause(tree, clause));
+  };
+  return (
+    <div
+      {...rest}
+      style={mergeStyles(
+        recipeStyle(cn(ADVANCED_FILTER, className), theme),
+        style,
+      )}
+    >
+      <div
+        style={recipeStyle("text-xs font-medium text-muted-foreground", theme)}
+      >
+        {title}
+      </div>
+      <div style={recipeStyle(FILTER_SENTENCE, theme)}>
+        {describeTree(tree)}
+      </div>
+      <Tree
+        root={tree}
+        node={tree}
+        path={[]}
+        fields={fields}
+        onChange={onChange}
+        testId={testId}
+        removable={false}
+      />
+      <div style={recipeStyle("flex flex-row items-center gap-2", theme)}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onActivate={addClause}
+          testId={testId === undefined ? undefined : `${testId}-add`}
+        >
+          Add clause
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onActivate={() => onChange(emptyTree)}
+          testId={testId === undefined ? undefined : `${testId}-clear`}
+        >
+          Clear
+        </Button>
+      </div>
+    </div>
+  );
+};

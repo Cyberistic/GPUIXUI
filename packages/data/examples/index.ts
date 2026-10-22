@@ -9,6 +9,7 @@
  */
 
 import type { ComponentType } from "react";
+import { SurfacesExample } from "./surfaces.example.js";
 import { TableExample } from "./table.example.js";
 import { VirtualListExample } from "./virtual-list.example.js";
 import { VirtualTableExample } from "./virtual-table.example.js";
@@ -18,4 +19,5 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   table: TableExample,
   "virtual-list": VirtualListExample,
   "virtual-table": VirtualTableExample,
+  surfaces: SurfacesExample,
 };

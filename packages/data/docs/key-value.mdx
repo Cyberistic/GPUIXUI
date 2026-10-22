@@ -1,0 +1,106 @@
+---
+title: Key-value displays
+description: A two-column list of labels and values, with a fixed label column so the values line up.
+---
+
+`KeyValue` is the list an inspector reads: a label on the left, its value on
+the right. It holds **no state** — the entries are the caller's — so a panel, a
+preview and a card can all read the same object without a second copy of it.
+
+The measured rule (`inspector-lifecycle`) is a **fixed label column**: every
+label cell holds one `x`, every value cell holds one `x`, and the values begin
+at the same place, so the list scans down two columns instead of drifting row by
+row.
+
+## Usage
+
+```tsx
+import { KeyValue } from "@gpuixui/data";
+
+<KeyValue
+  entries={[
+    { key: "width", label: "Width", value: "120" },
+    { key: "height", label: "Height", value: "80" },
+  ]}
+/>;
+```
+
+The full build is the `surfaces` example in
+`packages/data/examples/surfaces.example.tsx`, which the native playground
+mounts.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `entries` | `KeyValueEntry[]` | — | the rows, in the order they paint |
+| `labelWidth` | `number` | `120` | the label column's width, in pixels |
+| `valueWidth` | `number` | — | the value column's width; omit it and the value fills the row |
+| `testId` | `string` | — | every cell derives from it: `${testId}-label-${key}` and `${testId}-value-${key}` |
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
+pointer and key handlers) and **merges `style` last**, so a consumer can
+override any rule without forking the component.
+
+```tsx
+<KeyValue
+  labelWidth={140}
+  entries={[{ key: "id", label: "Identifier", value: "file-1" }]}
+/>
+```
+
+## Theming
+
+The colours and the type steps are the recipe's, compiled against
+`@gpuixui/tw`'s default registry (shadcn's fixed metrics — `text-xs` is
+12/16). The label column's width is **data**, not a token: it is set in
+`style`, because a label column is a measurement of the words it holds.
+
+| Part | Reads |
+| ---- | ----- |
+| label | `mutedForeground`, at the registry's `xs` step |
+| value | `foreground`, at the registry's `xs` step |
+| the gap between the columns | the theme's `spacing.sm` |
+| the row's vertical padding | the registry's `py-1` |
+
+A theme that repaints `foreground` or `mutedForeground` repaints the list.
+
+## Accessibility
+
+- The list is a `div`: it carries no role of its own, so a reader's screen
+  reader sees the labels and values as plain text in tree order.
+- A value may be any node the caller renders — a `Text`, a `Badge`, a field.
+- Set `aria-label` on the list when the surrounding panel does not already name
+  it.
+
+## Limitations
+
+- The label column is fixed, not measured: a label longer than `labelWidth`
+  wraps rather than widening the column. Measure your labels and pass the
+  width, or leave the value column free.
+- The list does not scroll. A panel that owns its overflow scrolls the list
+  inside it.
+- The docs site cannot render this component live — it is a GPUix host tree,
+  not DOM. The code above is the real source.
+
+## Verification
+
+`src/behaviour/surfaces.test.tsx` runs in the real GPUix renderer (5 tests
+across the five data surfaces): the label column's fixed width and the value
+column's shared `x`, a width action moving the statistic card's reading in the
+same frame, a property panel's edit reaching the readout, the advanced filter
+narrowing the rows, and the toolbar's search reporting only after its
+debounce. Run it with:
+
+```sh
+nub run --filter @gpuixui/data test:behaviour
+```
+
+`src/surfaces/logic.test.ts` (22 tests) holds the predicate tree the advanced
+filter composes.
+
+## Related
+
+- **Property panels** — the panel that owns these rows.
+- **Statistic / metric cards** — the same object, read as a number.
+- **Data toolbars** — the row of actions above the list.

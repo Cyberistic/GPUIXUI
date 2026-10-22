@@ -154,3 +154,58 @@ export type {
   VirtualTableBodyProps,
   VirtualTableProps,
 } from "./virtual/table.js";
+
+export { KeyValue, DEFAULT_LABEL_WIDTH } from "./surfaces/key-value.js";
+export type { KeyValueEntry, KeyValueProps } from "./surfaces/key-value.js";
+
+export { StatCard, trendTone } from "./surfaces/stat-card.js";
+export type { StatCardProps, StatTrend } from "./surfaces/stat-card.js";
+
+export { PropertyPanel, isEditable } from "./surfaces/property-panel.js";
+export type {
+  EditablePropertyRow,
+  PropertyPanelProps,
+  PropertyRow,
+  ReadonlyPropertyRow,
+} from "./surfaces/property-panel.js";
+
+export { DataToolbar, DEFAULT_SEARCH_DEBOUNCE_MS } from "./surfaces/toolbar.js";
+export type { DataToolbarProps, ToolbarSearch } from "./surfaces/toolbar.js";
+
+export {
+  AdvancedFilter,
+  comparisonLabels,
+  groupLabels,
+} from "./surfaces/advanced-filter.js";
+export type {
+  AdvancedFilterField,
+  AdvancedFilterProps,
+} from "./surfaces/advanced-filter.js";
+
+export {
+  appendClause,
+  clauseAt,
+  clauseCount,
+  comparisons,
+  describeTree,
+  emptyTree,
+  filterByTree,
+  isAll,
+  isAny,
+  isNot,
+  isPredicate,
+  matchesComparison,
+  matchesTree,
+  removeAt,
+  updateAt,
+  updatePredicate,
+} from "./surfaces/logic.js";
+export type {
+  AllClause,
+  AnyClause,
+  Comparison,
+  FieldPredicate,
+  FilterPath,
+  FilterTree,
+  NotClause,
+} from "./surfaces/logic.js";

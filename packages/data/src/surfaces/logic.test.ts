@@ -1,0 +1,389 @@
+/**
+ * The predicate tree an advanced filter composes.
+ *
+ * The bugs these guard:
+ *
+ * - a comparison that reads the wrong side (a `contains` that matched the
+ *   clause's value instead of the field's);
+ * - a numeric comparison that compared text lexicographically, so `9` was
+ *   "greater than" `10`;
+ * - a `not` that negated the whole tree instead of its own child;
+ * - an edit that rebuilt the tree around a nested clause and lost the clauses
+ *   the reader did not touch;
+ * - a removal that removed the wrong sibling;
+ * - an empty builder that matched nothing instead of everything.
+ */
+
+import { Match } from "effect";
+import { describe, expect, it } from "vitest";
+import * as Option from "effect/Option";
+import {
+  appendClause,
+  clauseAt,
+  clauseCount,
+  comparisons,
+  describeTree,
+  emptyTree,
+  filterByTree,
+  isAll,
+  isAny,
+  isNot,
+  isPredicate,
+  matchesComparison,
+  matchesTree,
+  removeAt,
+  updateAt,
+  updatePredicate,
+  type FieldPredicate,
+  type FilterPath,
+  type FilterTree,
+} from "./logic.js";
+
+interface Row {
+  readonly name: string;
+  readonly size: number;
+  readonly status: string;
+}
+
+const rows: ReadonlyArray<Row> = [
+  { name: "readme.md", size: 120, status: "tracked" },
+  { name: "main.ts", size: 2048, status: "tracked" },
+  { name: "notes.txt", size: 90, status: "ignored" },
+];
+
+/** A row's field, read the way the tree's caller reads it. */
+const valueOf = (row: Row, field: string): string | number =>
+  Match.value(field).pipe(
+    Match.when("name", () => row.name),
+    Match.when("size", () => row.size),
+    Match.when("status", () => row.status),
+    Match.orElse(() => ""),
+  );
+
+/**
+ * The clause a path names, or a sentinel that no assertion can match.
+ *
+ * The sentinel is a clause that names no field, so a path that finds nothing
+ * fails the assertion instead of throwing inside the test.
+ */
+const clauseOf = (tree: FilterTree, path: FilterPath): FieldPredicate =>
+  Option.getOrElse(clauseAt(tree, path), () => ({
+    kind: "predicate",
+    field: "",
+    comparison: "equals",
+    value: "",
+  }));
+
+const clause = (
+  field: string,
+  comparison: "equals" | "notEquals" | "contains" | "greaterThan" | "lessThan",
+  value: string,
+): FieldPredicate => ({ kind: "predicate", field, comparison, value });
+
+describe("the comparisons", () => {
+  it("compares a field with a clause's value", () => {
+    expect(matchesComparison("equals", "tracked", "tracked")).toBe(true);
+    expect(matchesComparison("equals", "tracked", "untracked")).toBe(false);
+    expect(matchesComparison("notEquals", "tracked", "ignored")).toBe(true);
+    expect(matchesComparison("notEquals", "tracked", "tracked")).toBe(false);
+  });
+
+  it("reads a contains as the field holding the clause's text", () => {
+    expect(matchesComparison("contains", "readme.md", "readme")).toBe(true);
+    expect(matchesComparison("contains", "readme.md", "README")).toBe(true);
+    expect(matchesComparison("contains", "readme.md", "main")).toBe(false);
+  });
+
+  it("reads an order as numbers, not as text", () => {
+    expect(matchesComparison("greaterThan", 9, "10")).toBe(false);
+    expect(matchesComparison("greaterThan", 10, "9")).toBe(true);
+    expect(matchesComparison("lessThan", 90, "120")).toBe(true);
+    expect(matchesComparison("greaterThan", 2048, "1024")).toBe(true);
+  });
+
+  it("never satisfies an order with a value that is not a number", () => {
+    expect(matchesComparison("greaterThan", "wide", "10")).toBe(false);
+    expect(matchesComparison("lessThan", "wide", "10")).toBe(false);
+  });
+
+  it("lists the comparisons a builder offers", () => {
+    expect(comparisons).toEqual([
+      "equals",
+      "notEquals",
+      "contains",
+      "greaterThan",
+      "lessThan",
+    ]);
+  });
+});
+
+describe("the tree", () => {
+  it("keeps the rows every clause matches", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        clause("size", "greaterThan", "1024"),
+      ],
+    };
+
+    expect(filterByTree(rows, tree, valueOf).map((row) => row.name)).toEqual([
+      "main.ts",
+    ]);
+  });
+
+  it("keeps a row any one clause matches", () => {
+    const tree: FilterTree = {
+      kind: "any",
+      children: [
+        clause("status", "equals", "ignored"),
+        clause("size", "greaterThan", "1024"),
+      ],
+    };
+
+    expect(filterByTree(rows, tree, valueOf).map((row) => row.name)).toEqual([
+      "main.ts",
+      "notes.txt",
+    ]);
+  });
+
+  it("negates its own child, not the whole tree", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        { kind: "not", child: clause("size", "greaterThan", "1024") },
+      ],
+    };
+
+    expect(filterByTree(rows, tree, valueOf).map((row) => row.name)).toEqual([
+      "readme.md",
+    ]);
+    // The negated clause alone keeps the row the whole tree drops.
+    expect(
+      matchesTree(
+        { kind: "not", child: clause("size", "greaterThan", "1024") },
+        rows[0] ?? { name: "", size: 0, status: "" },
+        valueOf,
+      ),
+    ).toBe(true);
+  });
+
+  it("matches everything when it is empty", () => {
+    expect(filterByTree(rows, emptyTree, valueOf)).toHaveLength(3);
+    expect(clauseCount(emptyTree)).toBe(0);
+  });
+
+  it("counts the clauses a tree holds", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        {
+          kind: "any",
+          children: [
+            clause("size", "greaterThan", "1024"),
+            { kind: "not", child: clause("name", "contains", "main") },
+          ],
+        },
+      ],
+    };
+
+    expect(clauseCount(tree)).toBe(3);
+  });
+
+  it("reads the sentence a tree means", () => {
+    expect(describeTree(emptyTree)).toBe("everything");
+    expect(describeTree(clause("status", "equals", "tracked"))).toBe(
+      "status equals tracked",
+    );
+    expect(
+      describeTree({
+        kind: "all",
+        children: [clause("status", "equals", "tracked")],
+      }),
+    ).toBe("all of (status equals tracked)");
+    expect(
+      describeTree({ kind: "not", child: clause("name", "contains", "main") }),
+    ).toBe("not (name contains main)");
+  });
+
+  it("names its own shape", () => {
+    expect(isPredicate(clause("status", "equals", "tracked"))).toBe(true);
+    expect(isAll({ kind: "all", children: [] })).toBe(true);
+    expect(isAny({ kind: "any", children: [] })).toBe(true);
+    expect(
+      isNot({ kind: "not", child: clause("status", "equals", "tracked") }),
+    ).toBe(true);
+    expect(isAll(emptyTree)).toBe(true);
+    expect(isPredicate(emptyTree)).toBe(false);
+  });
+});
+
+describe("editing a tree", () => {
+  it("changes one clause and keeps the others", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        clause("size", "greaterThan", "1024"),
+      ],
+    };
+
+    const next = updateAt(tree, [1], clause("size", "lessThan", "1024"));
+
+    expect(next).not.toBe(tree);
+    expect(clauseCount(next)).toBe(2);
+    expect(clauseOf(next, [0])).toMatchObject({
+      field: "status",
+      value: "tracked",
+    });
+    expect(clauseOf(next, [1])).toMatchObject({
+      comparison: "lessThan",
+      value: "1024",
+    });
+  });
+
+  it("changes a nested clause without rebuilding the tree around it", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        {
+          kind: "not",
+          child: clause("name", "contains", "main"),
+        },
+      ],
+    };
+
+    const next = updateAt(tree, [1, 0], clause("name", "contains", "notes"));
+
+    expect(clauseOf(next, [1, 0])).toMatchObject({
+      value: "notes",
+    });
+    expect(clauseOf(next, [0])).toMatchObject({
+      value: "tracked",
+    });
+  });
+
+  it("finds the clause a path names, and no clause for a group", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        { kind: "not", child: clause("name", "contains", "main") },
+      ],
+    };
+
+    expect(clauseOf(tree, [0])).toMatchObject({
+      field: "status",
+    });
+    expect(clauseOf(tree, [1, 0])).toMatchObject({
+      field: "name",
+    });
+    expect(Option.isNone(clauseAt(tree, [1]))).toBe(true);
+    expect(Option.isNone(clauseAt(tree, [9]))).toBe(true);
+  });
+
+  it("removes the clause a path names and keeps the rest", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        clause("size", "greaterThan", "1024"),
+      ],
+    };
+
+    const next = removeAt(tree, [0]);
+
+    expect(clauseCount(next)).toBe(1);
+    expect(clauseOf(next, [0])).toMatchObject({
+      field: "size",
+    });
+  });
+
+  it("keeps a group that loses its last child, so an empty builder matches everything", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [clause("status", "equals", "tracked")],
+    };
+
+    const next = removeAt(tree, [0]);
+
+    expect(isAll(next)).toBe(true);
+    expect(clauseCount(next)).toBe(0);
+    expect(filterByTree(rows, next, valueOf)).toHaveLength(3);
+  });
+
+  it("leaves a not's own child alone, because a not cannot be empty", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        { kind: "not", child: clause("name", "contains", "main") },
+      ],
+    };
+
+    const next = removeAt(tree, [1, 0]);
+
+    expect(next).toEqual(tree);
+    expect(clauseCount(next)).toBe(2);
+  });
+
+  it("adds a clause to the group that holds them", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [clause("status", "equals", "tracked")],
+    };
+
+    const next = appendClause(tree, clause("size", "greaterThan", "1024"));
+
+    expect(clauseCount(next)).toBe(2);
+    expect(clauseOf(next, [1])).toMatchObject({
+      field: "size",
+    });
+  });
+
+  it("turns a lone clause into a group when a second one arrives", () => {
+    const tree = clause("status", "equals", "tracked");
+
+    const next = appendClause(tree, clause("size", "greaterThan", "1024"));
+
+    expect(isAll(next)).toBe(true);
+    expect(clauseCount(next)).toBe(2);
+  });
+
+  it("changes a predicate's field, comparison or value in place", () => {
+    const tree = clause("status", "equals", "tracked");
+
+    expect(updatePredicate(tree, { value: "ignored" })).toMatchObject({
+      value: "ignored",
+      field: "status",
+      comparison: "equals",
+    });
+    expect(updatePredicate(tree, { comparison: "contains" })).toMatchObject({
+      comparison: "contains",
+    });
+    expect(updatePredicate(tree, { field: "size" })).toMatchObject({
+      field: "size",
+    });
+  });
+
+  it("changes every clause of a group when it is asked to", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        clause("status", "equals", "ignored"),
+      ],
+    };
+
+    const next = updatePredicate(tree, { comparison: "contains" });
+
+    expect(clauseOf(next, [0]).comparison).toBe("contains");
+    expect(clauseOf(next, [1]).comparison).toBe("contains");
+    // The two clauses now contradict each other, so the group keeps nothing:
+    // a row cannot both contain "tracked" and contain "ignored".
+    expect(filterByTree(rows, next, valueOf)).toEqual([]);
+  });
+});

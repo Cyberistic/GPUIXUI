@@ -2,9 +2,11 @@
 
 Data presentation rendered by GPUix through React — the table core, the
 sort/selection/filter controller it runs on, column configuration with resizing,
-the virtualized list over the runtime's own `<virtual-list>`, and the
-virtualized table that composes it with a fixed header. Plan 610 owns the
-phases still to land (trees, charts, the data surfaces).
+the virtualized list over the runtime's own `<virtual-list>`, the virtualized
+table that composes it with a fixed header, and the **data surfaces** (a
+key-value list, a statistic card, a property panel, a toolbar and the advanced
+filter's predicate tree). Plan 610 owns the phases still to land (trees and
+charts).
 
 ## Why a package
 
@@ -45,6 +47,8 @@ src/
   columns/    visibility, order, resize bounds, ColumnMenu, TableColumnDivider
   virtual/    VirtualList over the runtime's <virtual-list>, both modes;
               VirtualTable, useVirtualRows, the window calculator
+  surfaces/   KeyValue, StatCard, PropertyPanel, DataToolbar, AdvancedFilter
+              and the predicate tree they read
   use-table   the uncontrolled controller joining sort, selection and filter
   use-columns the uncontrolled column controller
   internal/   the compile cache and the behaviour suites' test root
@@ -170,9 +174,51 @@ runtime's estimate, so a taller row would push the rows below it out of place.
 A row of a different height uses `VirtualList` in children mode instead.
 
 The full screens — the files table with filter, sort headers, column menu and
-keyboard walk, the 2 000-row list, and the 1 000-row virtualized table — are
-`examples/table.example.tsx`, `examples/virtual-list.example.tsx` and
-`examples/virtual-table.example.tsx`.
+keyboard walk, the 2 000-row list, the 1 000-row virtualized table and the
+**data surfaces** over one object — are `examples/table.example.tsx`,
+`examples/virtual-list.example.tsx`, `examples/virtual-table.example.tsx` and
+`examples/surfaces.example.tsx`.
+
+## The data surfaces
+
+One object, read four ways: a toolbar that acts on it, a statistic card that
+shows a derived reading, a key-value list that scans down two columns, and a
+property panel that edits it. None of them keeps a copy of the object.
+
+```tsx
+import { AdvancedFilter, DataToolbar, KeyValue, PropertyPanel, StatCard } from "@gpuixui/data";
+
+<DataToolbar search={{ value: query, onValueChange: setQuery }}>
+  <Button onActivate={() => setWidth(240)}>Wide</Button>
+</DataToolbar>
+
+<StatCard label="Area" value={`${width * height}`} unit="px²" />
+
+<KeyValue entries={[{ key: "name", label: "Name", value: name }]} />
+
+<PropertyPanel
+  title="Properties"
+  rows={[{ kind: "editable", key: "name", label: "Name", value: name, onChange: setName }]}
+/>
+
+<AdvancedFilter fields={FIELDS} tree={tree} onChange={setTree} />
+```
+
+The advanced filter's state is a **predicate tree**, not a string: a predicate
+(field, comparison, value), an `all`, an `any` and a `not`. The tree is the
+caller's, so a builder, a saved query and a table's own filter read one shape,
+and the evaluation is a pure function:
+
+```ts
+const kept = filterByTree(rows, tree, (row, field) => row[field]);
+```
+
+The comparisons are literal — a value is never a pattern — and an order reads
+both sides as numbers. An empty `all` matches everything, which is what an
+empty builder means. The toolbar's search is the one **debounced** field (the
+core's `@tanstack/pacer` debouncer owns the wait); the table's own filter field
+is deliberately not, because `table-filter-lifecycle` measured the set narrowing
+as the reader types.
 
 ## Styling
 
@@ -194,8 +240,9 @@ in the primitives' registry and a column width is data.
 | Resizable columns (`TableColumnDivider`) | shipped, window-verified |
 | Virtualized lists (`VirtualList`, both host modes) | shipped, window-verified |
 | Virtualized table (`VirtualTable`, `useVirtualRows`) | shipped, window-verified |
+| Data surfaces (`KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar`, `AdvancedFilter`) | shipped, window-verified |
 | Pinned / frozen columns | composition, not shipped (`data-grid-frozen-column`) |
-| Trees, charts, data surfaces | plan 610 phases 5–7 |
+| Trees, charts | plan 610 phases 5–6 |
 
 ## Commands
 

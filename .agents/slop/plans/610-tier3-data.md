@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | in progress — phases 1–3 and 4 landed 2026-10-22 (`packages/data`; `data-table-core` probe 1/1, package suite 63 cases + 24 native behaviour cases) |
+| Status | in progress — phases 1–4 and 7 landed 2026-10-22 (`packages/data`; `data-table-core` probe 1/1, package suite 85 cases + 29 native behaviour cases) |
 | Phase | D — data and workspace |
 | Owner | the `data` workstream |
 | Depends on | `@gpuixui/components`, `@gpuixui/primitives`, `@gpuixui/tw`, `@gpuixui/tokens`, `@gpuixui/motion` |
@@ -145,6 +145,25 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
 - Evidence: `nub run --filter @gpuixui/data test` (63) and `test:behaviour` (24)
   green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
   1/1. Phases 5–7 and frozen columns are the open TODO rows.
+- **Phase 7 (the data surfaces) landed**: `packages/data/src/surfaces/` —
+  `KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar` and `AdvancedFilter`,
+  over one object that none of them copies. The advanced filter's state is a
+  **predicate tree** (`surfaces/logic.ts`: a predicate, an `all`, an `any`, a
+  `not`), not a string: the comparisons are literal, an order reads both sides
+  as numbers, and an empty `all` matches everything. The tree is the caller's,
+  so a builder, a saved query and a table's filter read one shape. The runtime
+  forces the rest: there is no menu host (the pickers are the component
+  package's measured `DropdownMenu`), no canvas and no transform, and a label
+  column is a measurement rather than a token. 22 unit cases hold the tree and
+  5 native behaviour cases mount the shipped example: the label column's fixed
+  width and the value column's shared `x`, a width action moving the card's
+  reading in the same frame (9600 → 19200), a panel edit reaching the readout,
+  the builder's clause narrowing the rows (4 of 4 → 1 of 4), and the toolbar's
+  search reporting only after its `@tanstack/pacer` debounce. Five docs pages
+  ship in `packages/data/docs/`. Directions measured: dropping the label
+  column's width, reporting the search at once, and swapping the sides of a
+  `contains` each fail their case. The suite is 85 unit / 29 behaviour green.
+  Phases 5–6 and the frozen columns are the open TODO rows.
 
 ## 5. Acceptance
 
