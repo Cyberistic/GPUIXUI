@@ -13,7 +13,7 @@ import * as Schema from "effect/Schema";
 import { Form } from "../form.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button } from "../internal/button.js";
-import { clickCentreOf } from "../internal/interaction.js";
+import { clickCentreOf, waitFor } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -95,20 +95,20 @@ describe("Form", () => {
     form.unmount();
   });
 
-  it("submits the decoded value when the schema accepts it", () => {
+  it("submits the decoded value when the schema accepts it", async () => {
     const onSubmit = vi.fn();
     const form = renderComponent(<Harness value={valid} onSubmit={onSubmit} />);
 
     clickCentreOf(form, "submit");
 
-    expect(onSubmit).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0]?.[0]).toBeInstanceOf(Signup);
     expect(onSubmit.mock.calls[0]?.[0]).toMatchObject(valid);
 
     form.unmount();
   });
 
-  it("shows every message and never submits an invalid value", () => {
+  it("shows every message and never submits an invalid value", async () => {
     const onSubmit = vi.fn();
     const form = renderComponent(
       <Harness value={invalid} onSubmit={onSubmit} />,
@@ -116,23 +116,26 @@ describe("Form", () => {
 
     clickCentreOf(form, "submit");
 
-    expect(onSubmit).not.toHaveBeenCalled();
-    expect(form.renderer.getAllText()).toEqual(
-      expect.arrayContaining([...expectedMessages]),
+    await waitFor(() =>
+      expect(form.renderer.getAllText()).toEqual(
+        expect.arrayContaining([...expectedMessages]),
+      ),
     );
+    expect(onSubmit).not.toHaveBeenCalled();
 
     form.unmount();
   });
 
-  it("renders the messages in one alert as separate text nodes", () => {
+  it("renders the messages in one alert as separate text nodes", async () => {
     const form = renderComponent(
       <Harness value={invalid} onSubmit={() => undefined} />,
     );
 
     clickCentreOf(form, "submit");
 
-    const alerts = nodesWithRole(form.renderer, "alert");
-    expect(alerts).toHaveLength(1);
+    await waitFor(() =>
+      expect(nodesWithRole(form.renderer, "alert")).toHaveLength(1),
+    );
 
     const messages = form.renderer
       .getAllText()
@@ -157,15 +160,17 @@ describe("Form", () => {
     form.unmount();
   });
 
-  it("revalidates on an edit after a failed submit, and clears when fixed", () => {
+  it("revalidates on an edit after a failed submit, and clears when fixed", async () => {
     const onSubmit = vi.fn();
     const form = renderComponent(
       <Harness value={invalid} onSubmit={onSubmit} />,
     );
 
     clickCentreOf(form, "submit");
-    expect(form.renderer.getAllText()).toEqual(
-      expect.arrayContaining([...expectedMessages]),
+    await waitFor(() =>
+      expect(form.renderer.getAllText()).toEqual(
+        expect.arrayContaining([...expectedMessages]),
+      ),
     );
 
     const partial = { email: "nope", name: "Ada" };
@@ -209,8 +214,11 @@ describe("Form", () => {
     form.unmount();
   });
 
-  it("lets a consumer's style win and paints every message in the readable role", () => {
-    const assertTheme = (theme: TestTheme, readable: string): void => {
+  it("lets a consumer's style win and paints every message in the readable role", async () => {
+    const assertTheme = async (
+      theme: TestTheme,
+      readable: string,
+    ): Promise<void> => {
       const form = renderComponent(
         <Harness
           value={invalid}
@@ -223,17 +231,19 @@ describe("Form", () => {
       expect(form.renderer.findByTestId("form")?.style.gap).toBe(99);
 
       clickCentreOf(form, "submit");
-      expect(
-        expectedMessages.map(
-          (message) => styledMessage(form, message)?.style.color,
-        ),
-      ).toEqual(expectedMessages.map(() => readable));
+      await waitFor(() =>
+        expect(
+          expectedMessages.map(
+            (message) => styledMessage(form, message)?.style.color,
+          ),
+        ).toEqual(expectedMessages.map(() => readable)),
+      );
 
       form.unmount();
     };
 
-    assertTheme("dark", darkTheme.colors.destructiveSoftForeground);
-    assertTheme("light", lightTheme.colors.destructiveSoftForeground);
+    await assertTheme("dark", darkTheme.colors.destructiveSoftForeground);
+    await assertTheme("light", lightTheme.colors.destructiveSoftForeground);
   });
 
   it("is a named form landmark", () => {

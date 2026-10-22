@@ -28,24 +28,44 @@ const isTag =
   ): issue is Extract<SchemaIssue.Issue, { _tag: T }> =>
     issue._tag === tag;
 
+/** A schema message and the path of the value it reports on. */
+export interface LocatedMessage {
+  /** The property-key path to the failing value; empty for a form-level issue. */
+  readonly path: ReadonlyArray<PropertyKey>;
+  /** The schema's own message text. */
+  readonly message: string;
+}
+
 /**
- * Every message an issue carries, in issue order.
+ * Every message an issue carries, with the path to the value it reports on, in
+ * issue order.
  *
  * A `Composite` reports one failure per field, so all of its messages are kept.
- * `Pointer` and `Encoding` only record where the failure was — the JSON pointer
- * to the field, and the class's encode/decode seam — so both are transparent and
- * the path is dropped: the caller already knows which field it asked about. Any
- * other node (a filter, a union) reads as one message.
+ * `Pointer` wraps its inner issue with one more path segment; the walker
+ * accumulates it so a nested field lands with its full path. `Encoding` only
+ * records the class's encode/decode seam, so it is transparent. Any other node
+ * (a filter, a union) reads as one message.
  */
-const messagesOf = (issue: SchemaIssue.Issue): ReadonlyArray<string> =>
+export const locatedMessages = (
+  issue: SchemaIssue.Issue,
+  prefix: ReadonlyArray<PropertyKey> = [],
+): ReadonlyArray<LocatedMessage> =>
   Match.value(issue).pipe(
     Match.when(isTag("Composite"), (composite) =>
-      Arr.flatMap(composite.issues, messagesOf),
+      Arr.flatMap(composite.issues, (child) => locatedMessages(child, prefix)),
     ),
-    Match.when(isTag("Pointer"), (pointer) => messagesOf(pointer.issue)),
-    Match.when(isTag("Encoding"), (encoding) => messagesOf(encoding.issue)),
-    Match.orElse((leaf) => Arr.of(format(leaf))),
+    Match.when(isTag("Pointer"), (pointer) =>
+      locatedMessages(pointer.issue, Arr.appendAll(prefix, pointer.path)),
+    ),
+    Match.when(isTag("Encoding"), (encoding) =>
+      locatedMessages(encoding.issue, prefix),
+    ),
+    Match.orElse((leaf) => [{ path: prefix, message: format(leaf) }]),
   );
+
+/** The message text of every located message, in issue order, path dropped. */
+const messagesOf = (issue: SchemaIssue.Issue): ReadonlyArray<string> =>
+  Arr.map(locatedMessages(issue), ({ message }) => message);
 
 /**
  * The first message `validateAll` would report for `value`, or `None` when the

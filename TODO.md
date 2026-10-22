@@ -6769,12 +6769,12 @@ numbers).
 
 ## TanStack cores
 
-`[ ]` `[░░░░░░░░░░]` 0/5
+`[ ]` `[██░░░░░░░░]` 1/5
 
 `[ ]` Adopt `@tanstack/table-core` in `packages/data` — sorting, filtering, grouping, selection, column visibility/order/pinning and pagination; render the rows on GPUix
 `[ ]` Adopt `@tanstack/virtual-core` — windowing math with our own scroll offset and row measurement
 `[ ]` Adopt `@tanstack/pacer` — debounce/throttle for search, filter and scroll
-`[ ]` Adopt `@tanstack/form-core` in `packages/components` — replace the hand-rolled form state; validation stays Effect/Schema
+`[x]` Adopt `@tanstack/form-core` in `packages/components` — replace the hand-rolled form state; validation stays Effect/Schema. `Form` now drives its state (values, touched/dirty, field meta, submit lifecycle) through a `FormApi`; `schemaValidator`/`fieldSchemaValidator` (`src/form/validator.ts`) adapt `Schema.decodeUnknownEffect` into the core's validator shape and map each message to the field its path names; the render prop gains the `form` instance for field registration, and the summary stays derived from the live `value`. `src/form/validator.test.ts` holds the core adoption in a DOM-free Node suite (submit/change/blur modes, field mapping, cross-field, reset, each with a negative control); `src/behaviour/form.test.tsx` stays 9 native tests
 `[ ]` Adopt `@tanstack/highlight` — the tokenizer behind `code-block` and the syntax palette
 
 `[ ]` Wire `@gpuixui/data` into the docs architecture page, the example registry and the playground scenario count — the release pass measured three red tests that belong to other workstreams: `apps/docs` `architecture.test.ts` and `examples.test.ts` do not list the new package, and `apps/playground` `scenarios/registry.test.ts` lags the registry after the data scenarios landed. Owners: docs-site + playground.

@@ -78,8 +78,10 @@ export const surfaceBudget = {
   // 159 → 161 for GradientText (`gradient-text.tsx` and the ramp rule beside it).
   // 161 → 163 for Glyph (`glyph.tsx` and the wall rule beside it): the one
   // background pattern the runtime paints as text rather than as one mask, so
-  // its cells are hosts rather than a path.
-  modules: 163,
+  // its cells are hosts rather than a path. 163 → 164 when Form adopted
+  // `@tanstack/form-core` (`form/validator.ts` joins the graph as the
+  // Effect/Schema ↔ core validator seam).
+  modules: 164,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
@@ -100,5 +102,5 @@ export const surfaceBudget = {
   // family's headroom.
   bytes: 1070 * 1024,
   /** Packages the entry's own modules import. */
-  packages: ["@gpuix/react", "effect", "react"],
+  packages: ["@gpuix/react", "@tanstack/form-core", "effect", "react"],
 } as const;

@@ -45,6 +45,7 @@
       "@gpuix/native": "0.11.0",
       "@gpuix/react": "0.11.0",
       "@tailwindcss/vite": "^4.3.2",
+      "@tanstack/form-core": "1.33.5",
       "@tanstack/hotkeys": "0.17.0",
       "@tanstack/react-router": "^1.170.44",
       "@tanstack/react-start": "^1.169.2",

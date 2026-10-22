@@ -4,13 +4,15 @@ description: Schema validation and a submit lifecycle around a group of fields.
 ---
 
 `Form` joins two things the package already ships: the schema-to-message
-validation in `validation/logic.ts`, and the `Field` parts around each control. A
-submit runs the schema; a failure shows every message; a success calls
-`onSubmit` with the **decoded** value.
+validation in `validation/logic.ts`, and the `Field` parts around each control.
+Its state is `@tanstack/form-core`: one `FormApi` owns the values, the field meta
+(`isTouched`/`isDirty`/errors) and the submit lifecycle. A submit runs the
+schema; a failure shows every message; a success calls `onSubmit` with the
+**decoded** value.
 
 It is **owned-value**: the runtime has no form element and no DOM to read values
-from, so you pass the value you already hold. `Form` never invents a second
-source of truth.
+from, so you pass the value you already hold. `Form` pushes that value into the
+core when you submit and never invents a second source of truth.
 
 ## Usage
 
@@ -61,23 +63,34 @@ interface FormState {
   readonly errors: ReadonlyArray<string>;
   readonly pending: boolean;
   readonly submit: () => void;
+  readonly form: SchemaFormApi;
 }
 ```
 
 `Form` renders the error summary itself, so the render prop does not have to. The
-summary is an `role="alert"` row with one `<text>` per message, in schema order.
+summary is an `` `role="alert"` `` row with one `` `<text>` `` per message, in
+schema order.
+
+`form` is the `@tanstack/form-core` instance the component drives, so a field can
+opt into the core's state without leaving the component: read a value with
+`form.getFieldValue(name)`, a field's error with `form.getFieldMeta(name)`, reset
+with `form.reset()`, or register a `FieldApi` for per-field validators and
+touched/dirty tracking.
 
 ## Submit lifecycle
 
 1. `submit()` is a no-op while `pending` is true.
-2. The value is decoded with your `schema` (`Schema.decodeUnknownResult`).
-3. On failure, the messages from `validateAll` are shown and `onSubmit` is not
-   called. The messages are the schema's own text, never a package invention.
-4. On success, the errors clear and `onSubmit` receives the decoded value — a
-   class instance if `schema` is a `Schema.Class`, not the raw object.
+2. The current `value` is pushed into the core, then `handleSubmit` runs the
+   schema validator.
+3. On failure, the messages are shown and `onSubmit` is not called. The messages
+   are the schema's own text, never a package invention.
+4. On success, `onSubmit` receives the decoded value — a class instance if
+   `schema` is a `Schema.Class`, not the raw object.
 
-The caller owns the request: pass `pending` while it runs, then re-render with a
-new value. The form does not track a request, so it never claims one finished.
+The submit is asynchronous now: `handleSubmit` validates and calls `onSubmit`
+after the schema runs, and the summary follows through the core's store. The
+caller owns the request: pass `pending` while it runs, then re-render with a new
+value.
 
 ## API
 
@@ -94,12 +107,13 @@ Every part takes the GPUix host props and merges `style` last.
   reaches the user verbatim.
 - One submit reports every failing field (`validateAll` uses `errors: "all"`), in
   schema order, with duplicate messages removed.
-- There is no validate-on-blur or validate-per-field. `Field` still paints a
-  per-field message you pass; that is the caller's separate decision.
+- The core's `schemaValidator` runs `Schema.decodeUnknownEffect` and returns the
+  messages mapped to the fields their paths name, so `form.getFieldMeta(name)`
+  carries the message for that field rather than one flat list.
 - A form that has never been submitted shows nothing, however the value changes.
-  After a failed submit the messages are **derived from the live value**, so
+  After a failed submit the summary is **derived from the live value**, so
   fixing a field clears its message (and breaking another adds one) without a
-  second submit — the state is the "a submit failed" flag, never a copied list.
+  second submit.
 
 ## Theming
 
@@ -118,9 +132,10 @@ The form's layout uses `spacing.lg`; the summary uses `caption` type in
 
 ## Limitations
 
-- Owned-value: the caller passes the value; there is no field registration.
-- `validateAll` returns messages, not paths, so Form cannot attach a message to a
-  particular `Field`. Per-field messages stay the `Field` API.
+- Owned-value: the caller passes the value; the core's own values are synced from
+  it at submit.
+- The `schema` and the submit handler are read when the form mounts, matching the
+  core's `defaultValues` lifetime.
 - The docs site cannot render this component live — it is a GPUix host tree, not
   DOM. The code above is the real source.
 
@@ -132,8 +147,8 @@ every message and never submitting, one alert with separate message nodes,
 revalidation on an edit after a failed submit (a fixed field clears, a still-bad
 one updates), no messages before the first submit, `pending` blocking a submit, a
 consumer `style` winning while every message paints the tone's readable role in
-both themes,
-and the named form landmark.
+both themes, and the named form landmark. `src/form/validator.test.ts` holds the
+core adoption where `window` and `document` are undefined.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
