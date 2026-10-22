@@ -1,0 +1,246 @@
+---
+title: Styling and recipes
+description: How a class string becomes a GPUix style, which registry a package compiles against, and how to extend the rules without editing the library.
+---
+
+A GPUix element takes a flat `StyleDesc`, not CSS. Every component in this
+library therefore holds its resting appearance as a **class-string recipe** —
+readable, copyable, close to the shadcn source it came from — and one registry
+compiles that string against the active theme into the style the renderer paints.
+
+The layer is `@gpuixui/tw`. You do not need it to use a component: pass
+`className` and `style` and the component merges them last. You need it when you
+copy a component out of the library, add a variant, or wonder why a Tailwind
+class did nothing.
+
+## The pipeline
+
+```tsx
+import { BUTTON_BASE, BUTTON_SIZES, BUTTON_VARIANTS, cn, classesToStyle } from "@gpuixui/tw";
+import { useTheme } from "@gpuixui/tokens/react";
+
+const theme = useTheme();
+const recipe = cn(
+  BUTTON_BASE,
+  BUTTON_VARIANTS[variant],
+  BUTTON_SIZES[size],
+  className,
+);
+const { style, focus, invalid, disabled } = classesToStyle(recipe, theme);
+```
+
+Four things happen in that call:
+
+1. **`cn-*` hooks expand** into the luma recipe they stand for, before `cn` runs,
+   so a caller's `px-6` still beats `cn-input`'s padding.
+2. **`cn` joins and resolves conflicts** with Tailwind's own rules: a later class
+   wins the property it sets. The component passes the caller's `className`
+   last, which is why an override works without a fork.
+3. **Each token is bucketed** — a resting property, a `hover`/`active` nesting,
+   or one of the `focus`/`invalid`/`disabled`/`open`/`closed` state styles the
+   component applies when its own state matches. Motion and responsive tokens are
+   recorded separately.
+4. **The theme resolves every value.** A colour class names a role
+   (`bg-card` is `theme.colors.card`), never a hex; swap the theme and the same
+   recipe paints the other palette.
+
+The caller's `style` prop is merged after the compiled result, so data wins over
+the recipe exactly as in the components: percentage fills, measured sizes and
+caller geometry travel through `style`, while token arithmetic stays a named
+class.
+
+## Two registries
+
+The compiler is one function with a registry parameter. The workspace ships two,
+because the two tiers choose different metrics:
+
+| Registry | Compiles against | Who uses it |
+| -------- | ---------------- | ------------ |
+| the default registry | Tailwind's and shadcn's fixed metrics — `h-9` is 36, `px-3` is 12, `text-sm` is 14/20 | `@gpuixui/components` (`src/internal/recipe.ts`), so a Tier 2 part matches shadcn's drawing (ADR 0006) |
+| `recipeTw` | the theme's named steps — `h-md` is the active density's control height, `gap-sm` is the spacing scale, `type-body` is the type role | `@gpuixui/primitives` (`src/recipe/registry.ts`), so Tier 1 follows density and the type scale |
+
+`recipeTw` is not a fork: it is `createTw({ utilities })` over the same table, so
+every class the default registry knows still resolves, and only the named steps
+it adds are new. A component that needs a value the theme owns asks for the step
+(`h-md`); a component whose metric is fixed by shadcn's drawing asks for the
+number (`h-9`).
+
+### What the default registry compiles
+
+| Class | Resolves to |
+| ----- | ----------- |
+| `h-9` | `height: 36` |
+| `px-3` | `paddingLeft`/`paddingRight: 12` |
+| `gap-2` | `gap: 8` |
+| `rounded-lg` | `borderRadius: 8` |
+| `border` | `borderWidth: 1` |
+| `border-strong` | `borderColor` — the 3:1 boundary role |
+| `bg-card` | `backgroundColor` — the `card` role |
+| `text-foreground` | `color` — the `foreground` role |
+| `bg-primary/90` | the `primary` role at 90% alpha |
+| `shadow-md` | the theme's `md` elevation |
+| `grid-cols-3` | `gridTemplateColumns: 3` |
+
+The colour names are the token roles, not Tailwind's palette: `bg-destructive` is
+the theme's destructive role, and `dark:` classes are skipped because the theme
+already carries both modes.
+
+### What the library's registry adds
+
+| Class | Resolves to |
+| ----- | ----------- |
+| `h-md` | `density.controlHeight.md` |
+| `px-sm` | `density.controlPaddingX.sm` |
+| `gap-sm` | `spacing.sm` |
+| `type-body` | `typography.body` — size, leading and weight |
+| `type-size-caption` | `typography.caption` — size and leading, keeping the inherited weight |
+| `rounded-md` | `radius.md` |
+| `size-icon-md` | `iconSize.md`, as a square |
+| `size-dot-md` | half the icon side, rounded |
+| `size-thumb-md` | the icon side less two `spacing.2xs` |
+| `switch-track-md` | 1.75 × the icon side wide, one icon side tall |
+| `text-brand` | `brandText(theme)` — the brand moved until it reads as text |
+| `fill-primary` | `filledHover(theme, "primary")` |
+| `fill-primary-pressed` | `filledPressed(theme, "primary")` |
+| `select-text` | selectable text plus the measured `selection` wash |
+| `border-input` | the field's **fill** role, not the border role |
+
+That last row is the one deliberate difference between the registries: shadcn's
+`--input` is a border, while this library's `input` role is the field's surface,
+so the primitives' registry remaps the class.
+
+## The three tiers
+
+A class in a recipe is one of three things, in increasing specificity:
+
+1. **A static utility** — a fixed number or a named role (`p-3`, `bg-card`).
+2. **A derived, theme-owned value** — a named step or formula (`h-md`,
+   `size-icon-md`, `switch-track-md`, `fill-primary`). This is the preferred form
+   for anything the theme can change, because density, platform style and a
+   brand override all flow through it.
+3. **Compile-time numeric `calc()`** — arithmetic over the theme's numeric scales,
+   evaluated against the theme and emitted as a plain number:
+
+```tsx
+const recipe = "w-[calc(var(--icon-size-md)*2+var(--spacing-xs))]";
+```
+
+The token names a `calc()` may read are `--icon-size-*`, `--spacing-*`,
+`--radius-*`, `--border-width-*`, `--control-height-*`, `--control-padding-*`
+and `--row-height`. Percentages, units, `min()`/`max()`/`clamp()`, an unknown
+function and an unknown step are refused with a reason, never guessed.
+
+## States and buckets
+
+A state prefix does not paint on its own: it lands in a bucket the component
+applies when its state matches.
+
+| Prefix | Bucket | Component applies it when |
+| ------ | ------ | ------------------------ |
+| `hover:` / `active:` | `style.hover` / `style.active` | always — the runtime's own pointer states |
+| `focus:` / `focus-visible:` | `focus` | the element has keyboard focus |
+| `aria-invalid:` | `invalid` | the field is invalid |
+| `disabled:` | `disabled` | the control is disabled |
+| `data-open:` / `data-closed:` | `open` / `closed` | the surface is open or closed |
+| `has-[>svg]`, `has-data-[icon=inline-*]`, `data-expanded`, `aria-expanded`, `data-behind`, `data-limited` | resolved at compile time | the component passes the matching `TwState` |
+| `dark:` | skipped | never — the theme already resolved the mode |
+| `md:` | recorded on `responsive` | it paints at base today; the runtime has no breakpoints |
+| `animate-in`, `fade-in-0`, `slide-in-from-*`, `duration-*`, `ease-*` | `motion` | handed to the component's motion props |
+
+A state-bearing class the compiler cannot resolve honestly is reported as
+unsupported rather than applied to the wrong element — that is why a
+`has-[…]` variant needs the component to say what its children are.
+
+## What is refused, and why
+
+The runtime's `StyleDesc` is a closed set, so a class outside it is named in
+`unsupported` instead of being silently dropped. `unsupportedReason` gives the
+recorded reason for a class family:
+
+| Class | Why it cannot paint |
+| ----- | ------------------- |
+| `rotate-45` | no `transform` in the runtime; animate with `@gpuixui/motion` |
+| `col-span-2` | the grid has integer tracks but no span |
+| `grid-area-main` | no named grid areas |
+| `z-50` | the published `StyleDesc` has no `zIndex`; paint order is tree order |
+| `transition-opacity` | no CSS transitions; motion props animate explicit styles |
+| `placeholder:text-muted-foreground` | no pseudo-elements exist to style |
+| `sr-only` | needs clipping and a 1px box the native style cannot express |
+| `top-1/2` | percentage offsets have no native number |
+| `[--gap:0.75rem]` | arbitrary CSS variables, `calc()` and `color-mix()` have no `StyleDesc` value |
+
+An unknown class — a typo — is also carried in `unsupported`, but
+`unsupportedReason` returns nothing for it: the reason table only documents the
+families the library knows it cannot express.
+
+## Extending the rules
+
+`createTw` adds utilities, state variants, recipe aliases and unsupported reasons
+without editing the package. A utility may return a style, or a number for a
+square derived length; a key without a suffix receives no value, and a key with
+one receives the suffix.
+
+```tsx
+import { brandText } from "@gpuixui/tokens";
+import { createTw } from "@gpuixui/tw";
+
+const tw = createTw({
+  utilities: {
+    "h-card": () => ({ height: 44 }),
+    tone: (_theme, value) => ({ opacity: Number(value) / 100 }),
+    "text-brand": (theme) => ({ color: brandText(theme) }),
+  },
+  variants: [
+    (variants, state) =>
+      variants.includes("when-expanded") && state.expanded ? "open" : undefined,
+  ],
+  aliases: { "cn-card": "rounded-lg border bg-card" },
+  unsupported: { "bg-card": "Card surfaces are painted by the panel host." },
+});
+
+tw.classesToStyle("cn-card h-card", theme);
+```
+
+`createTwRegistry` returns the merged registry for a compiler you own, and
+`classesToStyle` takes it as the third argument. The primitives' `text-brand`
+and `fill-primary` are exactly this: their registry's extensions, not classes
+the package hard-codes.
+
+`TwProvider` supplies a registry to every `TwHost` and `Tw` wrapper, and
+`TwHost` also takes a `registry` prop.
+
+## The React wrappers
+
+`@gpuixui/tw/react` exports `Tw`, one wrapper per classed GPUix host element
+(`<Tw.input className="h-9 px-3" />`). Each wrapper reads the nearest theme and
+resolves the class string at render time; components and host elements that take
+no `className` go straight to React.
+
+The package also publishes a JSX runtime, so a project can set
+`"jsxImportSource": "@gpuixui/tw"` and keep shadcn TSX host elements as written.
+
+## Merging and caching
+
+- The caller's `className` is joined last through `cn`; the caller's `style` is
+  merged after the compiled result. Nothing else overrides a caller.
+- `@gpuixui/components` caches a compile per theme object and recipe string (a
+  `WeakMap` of up to 512 recipes, frozen), because a composite repaints every
+  part's appearance on each render and the compile depends only on those two.
+
+## Dependencies
+
+| Package | Why it is needed |
+| ------- | ---------------- |
+| `@gpuixui/tokens` | every colour role, scale and density value the classes resolve to |
+| `cn` | the join and conflict resolution shadcn uses (MIT) |
+| `@gpuix/react` | the `StyleDesc` type the compiler emits |
+
+The recipe strings and the `cn-*` aliases are adapted from shadcn/ui (MIT); see
+[License and attribution](/docs/license).
+
+## Related
+
+- [Architecture](/docs/architecture) — where a new utility, recipe or component belongs.
+- [Theming](/docs/theming) — the roles and scales these classes name.
+- [Runtime](/docs/runtime) — the measured gaps behind every refusal.
+- [API reference](/docs/reference) — the `@gpuixui/tw` entry points.

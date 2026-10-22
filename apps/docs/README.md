@@ -21,6 +21,7 @@ index.mdx                    Introduction (served at /docs)
 installation.mdx             Requirements, nub, first component, terminal mode
 getting-started.mdx          A first screen: theme, card, state, run it natively
 architecture.mdx             The package graph, the recipe pipeline, where a change goes
+styling.mdx                  The class recipe layer: two registries, states, refusals, extension
 theming.mdx                  Semantic roles, themes, the platform switch, the look picker
 dark-mode.mdx                App-owned mode switching — no hidden OS-mode listener
 typography.mdx               The ten type roles, the two families, the platform rule
@@ -332,7 +333,7 @@ suite actually runs.
 
 The copies are checked on every page the site mounts, not only the curated ones:
 `src/lib/page-snippets.test.ts` resolves each `@gpuixui/*` import in every `ts`
-and `tsx` fence — 98 pages, the site's own plus the 71 the packages ship —
+and `tsx` fence — 105 pages, the site's own 32 plus the 73 the packages ship —
 against the package source, so a renamed export fails the docs suite instead of
 reaching a reader as working code. One defect on a page this app does not own is
 recorded with its owner in that guard, and the entry fails once the page is

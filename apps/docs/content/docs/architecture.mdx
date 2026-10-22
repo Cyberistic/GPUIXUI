@@ -60,7 +60,9 @@ Button variant + size ──▶ className recipe ──▶ classesToStyle(theme)
 A caller's `className` and `style` are merged last, so an app can override any
 resting appearance without forking the component. The three tiers of the registry
 — static utilities, derived token arithmetic (`h-md`, `px-inset-*`) and
-compile-time numeric `calc()` — are documented in `packages/tw`.
+compile-time numeric `calc()` — are documented on [Styling and
+recipes](/docs/styling), with the two registries the packages compile against
+and the rules for extending them.
 
 ## Effect at the boundaries
 
