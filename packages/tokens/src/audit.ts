@@ -116,6 +116,11 @@ interface RequiredStep {
    * for a token that is a value, such as a spacing step or a font family.
    */
   readonly fields?: readonly string[];
+  /**
+   * A font family, which is a **name** rather than a value: it has to be there
+   * and it has to say something.
+   */
+  readonly family?: boolean;
 }
 
 /** Every key of a flat record of tokens, with an optional nesting prefix. */
@@ -130,7 +135,8 @@ const recordSteps = (
  * Every step a theme must carry, derived from the scales this release ships, so
  * a step added to one is required on the next release without a second list to
  * edit. The families are steps too: `textStyle` hands the runtime
- * `fontFamily: undefined` for a theme missing one, and the batch drops it.
+ * `fontFamily: undefined` for a theme missing one, and the batch drops it — and
+ * an empty one names no face, so the renderer's fallback paints instead.
  */
 const requiredSteps: readonly RequiredStep[] = [
   ...recordSteps("spacing", spacing),
@@ -140,7 +146,7 @@ const requiredSteps: readonly RequiredStep[] = [
   ...Object.entries(shippedTypography).map(
     ([role, value]): RequiredStep =>
       typeof value === "string"
-        ? { group: "typography", path: role }
+        ? { group: "typography", path: role, family: true }
         : { group: "typography", path: role, fields: Object.keys(value) },
   ),
   ...recordSteps("density", defaultDensity.controlHeight, "controlHeight."),
@@ -163,7 +169,7 @@ const readPath = (source: unknown, path: string): unknown =>
 
 /**
  * Refuse a theme that is missing a step of a group it carries, naming every
- * path.
+ * path — and a family that is present but blank.
  *
  * The group rule one level up covers a stored theme that predates a whole scale;
  * this covers the theme that predates a step inside it, which fails the same way:
@@ -174,6 +180,13 @@ const readPath = (source: unknown, path: string): unknown =>
  * theme carries, so it returns nothing for a step that is not there — which is
  * why the gate refuses the theme instead of passing it. An absent role is named
  * once, rather than once per field it would have carried.
+ *
+ * A family is a **name**, so the same rule covers the one way a present step can
+ * still carry nothing: `sans: ""` is what a design-tool export or a stored
+ * preference writes when the face is gone, and the runtime then paints its own
+ * fallback for every text role — the identity a theme exists to state, gone with
+ * every report empty. The refusal names the family, because "empty" is not a
+ * colour or a number a report could measure.
  */
 const requireSteps = (theme: NumericGroupSource): void => {
   const missing = requiredSteps.flatMap(({ group, path, fields }) => {
@@ -185,16 +198,29 @@ const requireSteps = (theme: NumericGroupSource): void => {
       .filter((field) => readPath(step, field) === undefined)
       .map((field) => `${group}.${path}.${field}`);
   });
-  if (missing.length === 0) {
-    return;
+  if (missing.length > 0) {
+    throw new Error(
+      `a theme must carry every numeric step: ${missing
+        .map((path) => `\`${path}\``)
+        .join(", ")} ${
+        missing.length === 1 ? "is" : "are"
+      } missing. A step is what the components read, so a theme stored by an older release must be rebuilt from a shipped one with \`extendTheme\`.`,
+    );
   }
-  throw new Error(
-    `a theme must carry every numeric step: ${missing
-      .map((path) => `\`${path}\``)
-      .join(", ")} ${
-      missing.length === 1 ? "is" : "are"
-    } missing. A step is what the components read, so a theme stored by an older release must be rebuilt from a shipped one with \`extendTheme\`.`,
-  );
+  const unnamed = requiredSteps.flatMap(({ group, path, family }) => {
+    const value = readPath(theme[group], path);
+    const named = typeof value === "string" && value.trim() !== "";
+    return family === true && !named ? [`${group}.${path}`] : [];
+  });
+  if (unnamed.length > 0) {
+    throw new Error(
+      `a theme must name every font family: ${unnamed
+        .map((path) => `\`${path}\``)
+        .join(", ")} ${
+        unnamed.length === 1 ? "is" : "are"
+      } blank. A family is the face every text role is laid out in, so an empty one paints the renderer's fallback instead of the theme — a theme stored without it must be rebuilt from a shipped one with \`extendTheme\`.`,
+    );
+  }
 };
 
 /** A theme, or anything shaped like one, for the checks that only read colours. */
@@ -267,8 +293,11 @@ export interface ThemeAudit {
  * components read every step, and `invalidNumbers` walks the steps a theme
  * carries, so it says nothing about one that is not there while the first paint
  * that asks for it throws — so a theme missing a group, or a step inside one, is
- * refused with an error naming the path. Such a theme must be rebuilt from a
- * shipped one: a step is a breaking change rather than an additive one.
+ * refused with an error naming the path. A font family is refused the same way:
+ * it is present but **blank**, so no report can measure it, while every text
+ * role paints the renderer's fallback instead of the face the theme names. Such
+ * a theme must be rebuilt from a shipped one: a step is a breaking change rather
+ * than an additive one.
  *
  * `passed` is the only passing result — a report nobody checked is not a pass.
  *

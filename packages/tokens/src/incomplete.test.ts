@@ -102,6 +102,20 @@ const elevationWithout = (theme: Theme, level: ElevationLevel) =>
 const recolour = (level: readonly BoxShadow[], color: string): BoxShadow[] =>
   level.map((shadow) => ({ ...shadow, color }));
 
+/** A theme as storage hands it back: the type says complete, the value is not. */
+const stored = (overrides: Partial<Record<keyof Theme, unknown>>): Theme =>
+  ({ ...lightTheme, ...overrides }) as Theme;
+
+/** The refusal's message, or `undefined` when the gate read the theme. */
+const refusedWith = (theme: Theme): string | undefined => {
+  try {
+    auditTheme(theme);
+    return undefined;
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
+};
+
 describe("an absent role", () => {
   it("is not a colour the paint check accepts, instead of a crash", () => {
     expect(isPaintableColor(undefined)).toBe(false);
@@ -310,20 +324,6 @@ describe("an absent numeric group", () => {
  * list to edit.
  */
 describe("an absent numeric step", () => {
-  /** A theme as storage hands it back: the type says complete, the value is not. */
-  const stored = (overrides: Partial<Record<keyof Theme, unknown>>): Theme =>
-    ({ ...lightTheme, ...overrides }) as Theme;
-
-  /** The refusal's message, or `undefined` when the gate read the theme. */
-  const refusedWith = (theme: Theme): string | undefined => {
-    try {
-      auditTheme(theme);
-      return undefined;
-    } catch (error) {
-      return error instanceof Error ? error.message : String(error);
-    }
-  };
-
   it("is a theme no report describes and no paint survives", () => {
     const missingRole = stored({
       typography: omit(lightTheme.typography, "codeBlock"),
@@ -450,5 +450,68 @@ describe("an absent numeric step", () => {
     expect(catalogue).toContain("`typography.codeBlock`");
     expect(catalogue).toContain("`density.controlHeight.sm`");
     expect(designSystem).toContain("every numeric step");
+  });
+});
+
+/**
+ * The bug this holds: every family is a **string the theme must name**, and the
+ * gate asked only that it be there. `sans: ""` is present, so `requireSteps`'
+ * absence rule read it as complete while `textStyle` handed the runtime
+ * `fontFamily: ""` and every text role painted the renderer's fallback — the
+ * face a theme exists to state, gone with every report empty. The playground's
+ * `register-font` probe measures what an unknown family does: the installed face
+ * lays `ABm` out at its own 80px and a family no runtime knows paints the
+ * fallback's 44px, so an empty name is the whole identity lost, not a cosmetic
+ * detail. No report can describe it — `invalidNumbers` reads numbers,
+ * `invalidColorRoles` colours — so the gate refuses it, the same rule the missing
+ * step and group above follow.
+ */
+describe("an unnamed font family", () => {
+  it("is a theme no report measures and every role falls back from", () => {
+    const blank = stored({
+      typography: { ...lightTheme.typography, sans: "" },
+    });
+
+    // Every other contract reads its own kind of value, so each is silent.
+    expect(invalidNumbers(blank)).toEqual([]);
+    expect(invalidColorRoles(blank)).toEqual([]);
+    // The string the batch would hand the runtime for every sans role.
+    expect(textStyle(blank, "body").fontFamily).toBe("");
+    expect(refusedWith(blank)).toContain("`typography.sans` is blank");
+  });
+
+  it("names every blank family at once, whitespace included", () => {
+    const blank = stored({
+      typography: { ...lightTheme.typography, sans: "  ", mono: "" },
+    });
+
+    expect(refusedWith(blank)).toContain(
+      "`typography.sans`, `typography.mono` are blank",
+    );
+  });
+
+  it("reads a named custom face and every shipped style", () => {
+    const brand = extendTheme(lightTheme, {
+      typography: { sans: "Inter", mono: "JetBrains Mono" },
+    });
+
+    expect(refusedWith(brand)).toBeUndefined();
+    // A family is a name, so the face a machine lacks is still a name.
+    expect(shipped.filter((theme) => refusedWith(theme) !== undefined)).toEqual(
+      [],
+    );
+  });
+
+  it("is taught on both token pages", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const catalogue = read("../../../docs/tokens.md");
+    const designSystem = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+
+    expect(catalogue).toContain("a theme must name every font family:");
+    expect(catalogue).toContain("`typography.sans`");
+    expect(designSystem).toContain("every font family");
+    expect(readme).toContain("every font family");
   });
 });

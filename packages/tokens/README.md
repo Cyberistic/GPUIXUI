@@ -568,8 +568,11 @@ carries, so it says nothing about one that is not there, while
 at the first paint that asks for the role. So `auditTheme` refuses a theme missing
 a step — or a whole numeric group — and names the path (`typography.codeBlock`,
 `density.controlHeight.sm`); such a theme is rebuilt from a shipped one with
-`extendTheme`. The required steps are derived from the scales the package ships,
-so a role or metric added to one is required on the next release.
+`extendTheme`. A font family is refused the same way when it is blank: the gate
+asks every font family to name a face, because `sans: ""` is present but paints
+the renderer's fallback for every text role instead of the face the theme states.
+The required steps are derived from the scales the package ships, so a role or
+metric added to one is required on the next release.
 
 `keyboardDimFailures(theme, floor?)` is the eleventh report (`audit.keyboardDim`):
 it measures the dim the runtime paints on every other focusable while one has

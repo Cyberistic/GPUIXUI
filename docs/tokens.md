@@ -1097,6 +1097,25 @@ are refused the same way, by path. The required list is derived from the scales
 this package ships, so a role or a metric added to one is required on the next
 release without a second list to edit.
 
+A font family is the third refusal, and it is not about absence: `typography.sans`
+and `typography.mono` are **names**, so the gate asks that each say something —
+
+```
+a theme must name every font family: `typography.sans` is blank. A family is the
+face every text role is laid out in, so an empty one paints the renderer's
+fallback instead of the theme — a theme stored without it must be rebuilt from a
+shipped one with `extendTheme`.
+```
+
+— because `sans: ""` is present, so no report can see it, while `textStyle` hands
+the runtime `fontFamily: ""` for every sans role and the text paints in the
+renderer's fallback. The playground's `register-font` probe measures what a
+family no runtime knows does: the installed face lays `ABm` out at 80px and the
+unknown one at the fallback's 44px. A face the machine lacks is still a **name** —
+the gate reads a non-blank string, not a registered one — so a custom family
+passes, and an uninstalled face is the font limitation in §Limitations rather
+than a theme defect.
+
 **The measurement dialect is hex.** `contrastRatio`, `alphaOf`, `blend`,
 `selectionFailures` and the decorative contracts read hex in every length the
 renderer paints, with or without the `#` — shorthand `#fff`/`#fff8` widens to
