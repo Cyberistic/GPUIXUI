@@ -480,6 +480,56 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("on screen");
   });
 
+  it("records the expandable row a window measured", () => {
+    // The virtual-list row covered rows of different heights and a row that grows
+    // *outside* the window, which is the case an expandable row does not have:
+    // the reader presses a row on screen and the layout below must follow with no
+    // scroll to prompt a re-measure. `virtual-list-expand` measured that, plus
+    // the rule a table has to design around — a growth that leaves less than one
+    // row of viewport drops the next row's paint until a scroll.
+    const virtual = rowFor("Virtualized list");
+    expect(virtual?.evidence).toContain("virtual-list-expand");
+    expect(virtual?.evidence).toContain("120px");
+    expect(virtual?.evidence).toContain("painted window");
+    expect(virtual?.evidence).toContain("row 3 + 120");
+    expect(virtual?.workaround).toContain("open");
+
+    const page = measuredRow("Expandable rows");
+    expect(
+      page,
+      "the page's measured table has no expandable-row row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("virtual-list-expand");
+    expect(page?.[1]).toContain("next frame");
+    expect(page?.[1]).toContain("painted window");
+    expect(page?.[2]).toContain("**open** row height");
+  });
+
+  it("records the dock reflow signal, with the stale pass and the unchanged pane", () => {
+    // A fixed-width split cannot re-clamp when its parent shrinks, and the stated
+    // way out — a dock passing its own bounds through `onLayout` — had never been
+    // measured. `dock-reflow` measured that the report exists, that the **first**
+    // pass of a reflow carries the old box, and that a pane whose box did not
+    // change is still reported to; a handler that reads a report as "you changed"
+    // loops. The record had no split-pane row at all.
+    const dock = rowFor("Resizable panels and dock reflow");
+    expect(dock?.verdict).toBe("supported, with limits");
+    expect(dock?.evidence).toContain("dock-reflow");
+    expect(dock?.evidence).toContain("w=340");
+    expect(dock?.evidence).toContain("w=240");
+    expect(dock?.evidence).toContain("reports=2");
+    expect(dock?.evidence).toContain("split-pane-lifecycle");
+    expect(dock?.evidence).toContain("docking-nested");
+    expect(dock?.workaround).toContain("idempotent");
+
+    const page = measuredRow("Dock reflow");
+    expect(page, "the page's measured table has no dock-reflow row").toBeDefined();
+    expect(page?.[1]).toContain("dock-reflow");
+    expect(page?.[1]).toContain("w=340");
+    expect(page?.[1]).toContain("w=240");
+    expect(page?.[2]).toContain("idempotent");
+  });
+
   it("records the frozen column a table composes from two scrollers", () => {
     // The runtime paints no sticky, so a pinned column is not a provided
     // capability — but `data-grid-frozen-column` measured the composition that
