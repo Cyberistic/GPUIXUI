@@ -69,7 +69,7 @@ The icon package has its own page: [`@gpuixui/icons`](../../icons/docs/icon.mdx)
 
 ## Cross-component guards
 
-Two suites hold rules no single page owns:
+Three suites hold rules no single page owns:
 
 - `src/components/handlers.test.tsx` — a caller's host handlers are **composed**
   with each part's own, never substituted, and a blocked control installs none.
@@ -79,12 +79,10 @@ Two suites hold rules no single page owns:
 - `src/components/focus-matrix.test.tsx` — one row per focusable control
   (Button, IconButton, Toggle, Checkbox, CheckboxGroup, ToggleGroup, Switch,
   RadioGroup, Rating, Slider, RangeSlider, Input, TextArea, NumberField,
-  OTPField): the tab stops it owes at
-  rest, and that a disabled control has no tab stop and paints no ring. `Select`
-  is absent because its trigger and items are GPUix's own components, so the
-  element tree never holds their host nodes; its ring and stops are pinned on its
-  page and in the runtime suite.
-
+  OTPField): the tab stops it owes at rest, and that a disabled control has no
+  tab stop and paints no ring. `Select` is absent because its trigger and items
+  are GPUix's own components, so the element tree never holds their host nodes;
+  its ring and stops are pinned on its page and in the runtime suite.
 - `src/components/keyboard-dim.test.tsx` — the runtime dims every other
   focusable element to 40% while one has keyboard focus, so a control whose own
   text is **content** (a field's value and placeholder, an OTP cell's digit, a
