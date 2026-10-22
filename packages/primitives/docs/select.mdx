@@ -104,9 +104,10 @@ list's painted boxes), which also works for a row nested in a group.
 ## Theming
 
 `selectTriggerStyle`, `selectContentStyle` and `selectItemStyle` resolve the
-trigger (`controlStyle`), the list (`surfaceStyle` with `popover` +
-`radius.md` + `elevation.overlay`) and the item states (`selected`, `hover`,
-`disabledForeground`). A selected row also paints a **check mark** in the
+trigger (the field chrome), the list (`popover` fill, `radius.md`, a `border`
+rule and **`elevation.lg`** — the lift every floating surface in this library
+takes, read through `elevationShadow` rather than a literal shadow) and the item
+states (`selected`, `hover`, `disabledForeground`). A selected row also paints a **check mark** in the
 `popoverForeground` role at its end: the row's children are a function of the
 state GPUix reports, so an uncontrolled select needs no mirror of its value and
 the mark cannot disagree with the selection. It is decorative — the row is
@@ -159,7 +160,8 @@ state of its own.
 
 - `src/components/Select.test.tsx` — trigger chrome, the keyboard ring (ring
   role, destructive while invalid, absent while disabled), the hint's
-  `placeholder` role and a chosen value's value role, list surface and item
+  `placeholder` role and a chosen value's value role, the list's `lg` lift (held
+  to `elevationShadow(theme, "lg")`, not a literal shadow), list surface and item
   states, both state-aware callbacks receiving their live state and winning, and
   the selected row's mark coming from the state the runtime reports. Group cases:
   the flat list in render order, the caption's muted role and one-pixel rule, the
@@ -175,7 +177,9 @@ state of its own.
   `runtime.element("fruit-trigger")` is `none`); the trigger's own applied colour
   is the `placeholder` role while unchosen and the value role once an option is
   committed (negative control measured: without the paint the window reports
-  `expected '#000016' to be '#000017'`); exactly one row paints the mark,
+  `expected '#000016' to be '#000017'`); the list carries a shadow in the
+  renderer once it is open (negative control measured: without the recipe's
+  lift, `expected false to be true`); exactly one row paints the mark,
   and the
   mark moves to the row that becomes selected (negative control measured:
   rendering the label alone fails `expected [] to have a length of 1`). Open

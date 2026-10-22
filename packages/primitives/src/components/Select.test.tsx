@@ -18,6 +18,7 @@ import {
   contrastFloors,
   contrastRatio,
   darkTheme,
+  elevationShadow,
   lightTheme,
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -248,6 +249,16 @@ describe("Select", () => {
   it("opens onto the popover surface", () => {
     expect(selectContentStyle(testTheme).backgroundColor).toBe(
       testTheme.colors.popover,
+    );
+  });
+
+  it("lifts the list like every other floating surface", () => {
+    // The bug guarded: the list floats over page content and was the one
+    // floating surface with no lift — the page even claimed the reserved,
+    // empty `overlay` level. It takes `lg`, the level dialogs, popovers and
+    // menus paint, read from the same token table.
+    expect(selectContentStyle(testTheme).boxShadow).toEqual(
+      elevationShadow(testTheme, "lg"),
     );
   });
 

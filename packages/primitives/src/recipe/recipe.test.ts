@@ -557,7 +557,7 @@ describe("Select recipe", () => {
   it("matches the popover list surface", () => {
     const oracle = {
       ...surfaceStyle(
-        { tone: "popover", radius: "md", border: true, elevation: "overlay" },
+        { tone: "popover", radius: "md", border: true, elevation: "lg" },
         testTheme,
       ),
       padding: testTheme.spacing.xs,

@@ -388,6 +388,38 @@ it("paints an unchosen Select's hint in the placeholder role", async () => {
   );
 });
 
+it("lifts a Select's list like every other floating surface", async () => {
+  // The bug guarded: the list floats over page content and was the one floating
+  // surface with no lift at all. `selectContentStyle` bounds it (the only
+  // element carrying an overflow axis here), so that is also the element the
+  // lift has to reach in the renderer.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Fruit"
+        placeholder="Pick one"
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  const list = Option.getOrElse(
+    Arr.findFirst(
+      runtime.all(),
+      (element) => element.style["overflowY"] === "scroll",
+    ),
+    () => expect.fail("the Select list painted no bounded scroller"),
+  );
+  expect(Option.isSome(Option.fromNullishOr(list.style["boxShadow"]))).toBe(
+    true,
+  );
+});
+
 /** The row an option label sits in. */
 const optionRowId = (runtime: Runtime, label: string): number =>
   Option.getOrElse(

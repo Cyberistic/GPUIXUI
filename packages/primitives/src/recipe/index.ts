@@ -430,7 +430,7 @@ export const selectTriggerClass = (options: {
 
 /** The class string the select list's popover surface resolves to. */
 export const selectContentClass =
-  "flex flex-col bg-popover rounded-md border border-border p-xs gap-2xs min-w-full";
+  "flex flex-col bg-popover rounded-md border border-border p-xs gap-2xs min-w-full shadow-lg";
 
 /** The row inside a select item: the label, then the selected mark at the end. */
 export const selectItemRowClass =
