@@ -3,7 +3,7 @@ title: Theme
 description: A live editor for the library's semantic tokens — preview, copy and share.
 ---
 
-import { contrastFloors, contrastPairs, decorativeFloor, decorativeSurfaces, selectionPairs, targetSize } from "@gpuixui/tokens";
+import { contrastFloors, contrastPairs, decorativeFloor, decorativeSurfaces, indicatorSurfaces, selectionPairs, targetSize } from "@gpuixui/tokens";
 
 Edit the semantic tokens the library ships and watch them apply to a preview in
 real time. The editor reads its defaults from `@gpuixui/tokens` — the base is
@@ -129,14 +129,17 @@ call reports ten independent failures:
 - **Indicator marks**: `indicatorFailures` holds the roles a component paints
   when it *shows* rather than says something — a progress fill, a spinner's lit
   dot, a slider's filled span, a switch's on-state, a presence dot — to the 3:1
-  non-text floor on the four strips a mark is drawn on (`background`, `card`,
-  `popover`, `muted`). A mark is neither text nor a boundary, so no contrast pair
-  saw it: `primary` was only measured against its own on-colour, and a bar
-  painted in a role that matches the page passed every other report. A status
-  mark paints the tone's readable role (`statusTone(...).foreground`), never its
-  solid fill — light `warning` is a pale amber designed to carry near-black text
-  and disappears on the page as a dot. The editor does not edit a mark's role
-  directly, but `primary` is one, so an action-fill edit can hide a bar.
+  non-text floor on all {indicatorSurfaces.length} strips `indicatorSurfaces`
+  names (`background`, `card`, `popover`, `muted`, `hover`, `active`, `input`):
+  the page, a card, a popover, a muted toolbar, the two washes a row tints under
+  the pointer and a field's own fill, which carries its caret. A mark is neither
+  text nor a boundary, so no contrast pair saw it: `primary` was only measured
+  against its own on-colour, and a bar painted in a role that matches the page
+  passed every other report. A status mark paints the tone's readable role
+  (`statusTone(...).foreground`), never its solid fill — light `warning` is a
+  pale amber designed to carry near-black text and disappears on the page as a
+  dot. The editor does not edit a mark's role directly, but `primary` is one, so
+  an action-fill edit can hide a bar.
 - **The disabled fade**: a faded control paints a share of its fill over the
   surface and fades its label over *that* faded fill, which is the composite a
   hand calculation usually forgets. `disabledFadeFailures` holds each of those

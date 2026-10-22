@@ -9,6 +9,7 @@ import {
   decorativeSurfaces,
   extendTheme,
   indicatorFailures,
+  indicatorSurfaces,
   isThemeMode,
   retroStyles,
   selectionPairs,
@@ -353,6 +354,52 @@ describe("the theming page's indicator marks", () => {
   });
 });
 
+describe("the theming pages' indicator strips", () => {
+  // Both pages printed "the four strips a mark is drawn on" while
+  // `indicatorSurfaces` had grown to seven: the `hover` and `active` washes a
+  // row tints under the pointer, and a field's `input` fill, which carries its
+  // caret. A reader editing an action fill was told a mark is measured on a set
+  // the package no longer uses. The count is interpolated and the printed list
+  // is the package's own array, so an eighth strip fails here by page name.
+  const printed = `(${indicatorSurfaces
+    .map((surface) => `\`${surface}\``)
+    .join(", ")})`;
+  const pages = [
+    { name: "themes.mdx", heading: "The theme audit" },
+    { name: "theming.mdx", heading: "Indicator marks" },
+  ] as const;
+
+  it("derives the count and names every strip the package measures", () => {
+    const wrong = pages.flatMap(({ name, heading }) => {
+      const body = page(name);
+      const marks = section(body, heading);
+      const tokensImport = body
+        .split("\n")
+        .find(
+          (line) =>
+            line.startsWith("import ") && line.includes("@gpuixui/tokens"),
+        );
+
+      return [
+        ...(tokensImport?.includes("indicatorSurfaces")
+          ? []
+          : [`${name}: does not import indicatorSurfaces`]),
+        ...(marks.includes("{indicatorSurfaces.length}")
+          ? []
+          : [`${name}: prints a literal strip count`]),
+        ...(marks.includes(printed)
+          ? []
+          : [`${name}: does not print ${printed}`]),
+        ...(/\b(four|seven) strips\b/.test(marks)
+          ? [`${name}: keeps a stale strip count`]
+          : []),
+      ];
+    });
+
+    expect(wrong).toEqual([]);
+  });
+});
+
 describe("the theme page's copy-theme note", () => {
   it("names every report the audit folds, so a consumer can run one of them alone", () => {
     // The note is the list a consumer starts from. `auditTheme` returned six
@@ -484,8 +531,12 @@ describe("the theming page's data series", () => {
 
   it("mounts the generated swatches", () => {
     expect(series).toContain("<SeriesSwatches />");
-    expect(body).toContain(
-      'import { colorRoles, seriesColors, themes } from "@gpuixui/tokens";',
+    // Read the members, not the line: another section's import is its own.
+    expect(body).toMatch(
+      /import \{[^}]*\bseriesColors\b[^}]*\} from "@gpuixui\/tokens";/,
+    );
+    expect(body).toMatch(
+      /import \{[^}]*\bthemes\b[^}]*\} from "@gpuixui\/tokens";/,
     );
   });
 
