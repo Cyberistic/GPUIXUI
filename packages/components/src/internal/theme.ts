@@ -18,6 +18,7 @@ import type { StyleDesc } from "@gpuix/react";
 import {
   alpha,
   avatarSize,
+  brandTextOn,
   controlFocusRing,
   controlHeight,
   controlPaddingX,
@@ -42,6 +43,7 @@ import {
   type StatusTone,
   type TextRole,
   type Theme,
+  type ThemeColors,
 } from "@gpuixui/tokens";
 
 export {
@@ -164,6 +166,27 @@ export const tone = (theme: Theme, value: Tone): ToneStyle => {
   );
   return { bg: background, border, fg: foreground };
 };
+
+/** The soft surface each component tone paints, as a token role name. */
+const softRoles: Readonly<Record<Tone, keyof ThemeColors>> = {
+  info: "infoSoft",
+  success: "successSoft",
+  warning: "warningSoft",
+  danger: "destructiveSoft",
+};
+
+/**
+ * The colour brand-coloured text paints on one message's own tint.
+ *
+ * A message's fill is its tone's soft role, which is **not** one of the surfaces
+ * the shared `brandText` answers for: measured, that colour is under the text
+ * floor on 29 of the 64 tint placements across the shipped styles (macOS dark's
+ * brand on `warningSoft` reads 3.43:1). The surface is known here, so the
+ * derivation is held to it and the run keeps as much of the brand as the tint
+ * allows — the same 2% step toward `foreground`, the theme's own floor.
+ */
+export const messageLink = (theme: Theme, value: Tone): string =>
+  brandTextOn(theme, softRoles[value]);
 
 /**
  * One tone as a whole surface: soft fill, tone text and a tinted border. Badge

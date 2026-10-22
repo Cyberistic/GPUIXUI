@@ -30,7 +30,13 @@ import {
   ThemeProvider as TokenThemeProvider,
   useTheme as tokenUseTheme,
 } from "@gpuixui/tokens/react";
-import { ThemeProvider, tone, toneSurface, useTheme } from "./theme.js";
+import {
+  ThemeProvider,
+  messageLink,
+  tone,
+  toneSurface,
+  useTheme,
+} from "./theme.js";
 
 /** The package's `src/` directory: this file lives one level below it. */
 const sourceRoot = new URL("../", import.meta.url);
@@ -99,6 +105,77 @@ describe("toneSurface", () => {
         borderColor: alpha(theme.colors.destructive, 0.3),
       });
     });
+  });
+});
+
+describe("messageLink", () => {
+  const tones = ["info", "success", "warning", "danger"] as const;
+
+  /** The role each component tone paints as its soft surface. */
+  const softRoles = {
+    info: "infoSoft",
+    success: "successSoft",
+    warning: "warningSoft",
+    danger: "destructiveSoft",
+  } as const;
+
+  /** The sixteen styles the token package ships: base, high contrast, platform, look. */
+  const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
+    ["light", lightTheme],
+    ["dark", darkTheme],
+    ["high-contrast light", Tokens.highContrastLightTheme],
+    ["high-contrast dark", Tokens.highContrastDarkTheme],
+    ...Arr.flatMap(Tokens.platformNames, (name) => [
+      [`${name} light`, Tokens.platformTheme(lightTheme, name)] as const,
+      [`${name} dark`, Tokens.platformTheme(darkTheme, name)] as const,
+    ]),
+    ...Arr.flatMap(Tokens.retroNames, (look) => [
+      [`${look} light`, Tokens.retroTheme(lightTheme, look)] as const,
+      [`${look} dark`, Tokens.retroTheme(darkTheme, look)] as const,
+    ]),
+  ];
+
+  it("derives against the tone's own soft role", () => {
+    Arr.forEach(everyStyle, ([name, theme]) => {
+      Arr.forEach(tones, (value) => {
+        expect(messageLink(theme, value), `${name} ${value}`).toBe(
+          Tokens.brandTextOn(theme, softRoles[value]),
+        );
+      });
+    });
+  });
+
+  it("repairs the tint the shared page colour cannot read", () => {
+    // Measured: macOS dark's brand is 3.43:1 on its own `warningSoft`, so a
+    // link painted the page's colour would be the one label in the message
+    // nobody can read.
+    const macOSDark = Tokens.platformTheme(darkTheme, "darwin");
+    const shared = Tokens.brandText(macOSDark);
+    const tint = macOSDark.colors.warningSoft;
+    const floor = Tokens.contrastFloorsFor(macOSDark).secondary;
+
+    expect(Tokens.contrastRatio(shared, tint)).toBeLessThan(floor);
+
+    const derived = messageLink(macOSDark, "warning");
+    expect(derived).not.toBe(shared);
+    expect(Tokens.contrastRatio(derived, tint)).toBeGreaterThanOrEqual(floor);
+  });
+
+  it("holds every tone on its own tint in every shipped style", () => {
+    const problems = Arr.flatMap(everyStyle, ([name, theme]) =>
+      Arr.flatMap(tones, (value) => {
+        const ratio = Tokens.contrastRatio(
+          messageLink(theme, value),
+          tone(theme, value).bg,
+        );
+        const floor = Tokens.contrastFloorsFor(theme).secondary;
+        return ratio === undefined || ratio < floor
+          ? [`${name} ${value}: ${ratio ?? "unmeasurable"}`]
+          : [];
+      }),
+    );
+
+    expect(problems).toEqual([]);
   });
 });
 

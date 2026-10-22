@@ -6,13 +6,14 @@
  * own is a toast; a message that blocks the window is a dialog.
  *
  * Compound parts (`docs/component-api.md` §8): the root owns `role="alert"` and
- * the tone; `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription` and
- * `AlertDismiss` read that tone through a context, so a part is never given a
- * duplicated `tone` prop. The resting appearance is a Tailwind recipe
- * (`ALERT_*`), compiled against shadcn's fixed metrics; the caller's `className`
- * is joined after each part's recipe and its `style` is merged last. The tone's
- * readable foreground is still one dynamic value, so the icon and title paint it
- * through `style`.
+ * the tone; `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`,
+ * `AlertLink` and `AlertDismiss` read that tone through a context, so a part is
+ * never given a duplicated `tone` prop. The resting appearance is a Tailwind
+ * recipe (`ALERT_*`), compiled against shadcn's fixed metrics; the caller's
+ * `className` is joined after each part's recipe and its `style` is merged last.
+ * The tone's readable foreground is still one dynamic value, so the icon and
+ * title paint it through `style`; a link action's colour is derived against the
+ * message's own tint, which is not a page surface.
  */
 
 import type { Props } from "@gpuix/react";
@@ -29,6 +30,7 @@ import {
 } from "@gpuixui/tw";
 import { createContext, useContext } from "react";
 import { IconButton } from "./internal/button.js";
+import { activationHandlers } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -36,7 +38,13 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { tone, useTheme } from "./internal/theme.js";
+import {
+  keyboardRing,
+  messageLink,
+  targetSize,
+  tone,
+  useTheme,
+} from "./internal/theme.js";
 
 /** The four status tones an alert can carry. */
 export type AlertTone = "info" | "success" | "warning" | "danger";
@@ -228,6 +236,79 @@ export const AlertDismiss = ({
   );
 };
 
+/** {@link AlertLink} props. */
+export interface AlertLinkProps extends Props {
+  /** Called on click, or on Enter/Space while the link holds focus. */
+  readonly onSelect?: () => void;
+  readonly className?: string;
+}
+
+/**
+ * A text action inside the message: "Try again", "View the log", "Learn more".
+ *
+ * It paints the brand **derived against this message's own tint** rather than
+ * the shared link colour, because a tint is not a page surface: measured, the
+ * page's brand is under the text floor on 29 of the 64 tint placements the
+ * shipped styles carry (`brandTextOn` in `@gpuixui/tokens`). The run tints no
+ * wash of its own, so the underline is the pointer cue and the tint is the only
+ * surface the colour is read on. It is a block-level row, so it starts its own
+ * line inside `AlertDescription`.
+ */
+export const AlertLink = ({
+  onSelect,
+  onClick,
+  onKeyDown,
+  onKeyUp,
+  onFocus,
+  onBlur,
+  className,
+  style,
+  children,
+  ...rest
+}: AlertLinkProps) => {
+  const theme = useTheme();
+  const { tone: value } = useAlert();
+
+  return (
+    <div
+      role="link"
+      tabIndex={0}
+      {...rest}
+      onClick={(event) => {
+        onClick?.(event);
+        onSelect?.();
+      }}
+      {...activationHandlers(() => onSelect?.(), { onKeyDown, onKeyUp })}
+      onFocus={(event) => onFocus?.(event)}
+      onBlur={(event) => onBlur?.(event)}
+      style={mergeStyles(
+        mergeStyles(
+          recipeStyle(
+            cn(
+              ALERT_DESCRIPTION,
+              "flex flex-row items-center self-start",
+              className,
+            ),
+            theme,
+          ),
+          {
+            // A pressable target, not a run of prose: the target floor is the
+            // same 24px every clear and remove control reaches.
+            height: targetSize.minimum,
+            color: messageLink(theme, value),
+            hover: { textDecoration: "underline" },
+            cursor: "pointer",
+            ...keyboardRing(theme),
+          },
+        ),
+        style,
+      )}
+    >
+      {children}
+    </div>
+  );
+};
+
 /** Every part of Alert, so a misplaced sibling is named. */
 const alertParts: ReadonlyArray<PartComponent> = [
   Alert,
@@ -236,6 +317,7 @@ const alertParts: ReadonlyArray<PartComponent> = [
   AlertTitle,
   AlertDescription,
   AlertDismiss,
+  AlertLink,
 ];
 
 const alertRoot: PartsContract = {
@@ -247,6 +329,7 @@ const alertRoot: PartsContract = {
     AlertTitle,
     AlertDescription,
     AlertDismiss,
+    AlertLink,
   ],
   hint: "Put the icon, content and dismiss control directly inside Alert.",
 };

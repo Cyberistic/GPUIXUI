@@ -10,6 +10,7 @@
  */
 
 import * as Arr from "effect/Array";
+import { contrastFloorsFor, contrastRatio } from "@gpuixui/tokens";
 import { describe, expect, it, vi } from "vitest";
 import {
   Alert,
@@ -17,13 +18,14 @@ import {
   AlertDescription,
   AlertDismiss,
   AlertIcon,
+  AlertLink,
   AlertTitle,
   type AlertTone,
 } from "../alert.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button } from "../internal/button.js";
 import { clickCentreOf } from "../internal/interaction.js";
-import { darkTheme, lightTheme, tone } from "../internal/theme.js";
+import { darkTheme, lightTheme, messageLink, tone } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
 /** Every tone, so a missing case fails rather than going unnoticed. */
@@ -224,6 +226,67 @@ describe("Alert", () => {
     );
 
     expect(alert.renderer.findByTestId("alert")?.style.borderRadius).toBe(0);
+
+    alert.unmount();
+  });
+
+  it("paints a link action on the message's own tint", () => {
+    const styles = [
+      ["dark", darkTheme],
+      ["light", lightTheme],
+    ] as const;
+
+    Arr.forEach(styles, ([name, theme]) => {
+      Arr.forEach(tones, (value) => {
+        const alert = renderComponent(
+          <Alert tone={value}>
+            <AlertDescription>
+              <AlertLink testId="alert-link">View the log</AlertLink>
+            </AlertDescription>
+          </Alert>,
+          name,
+        );
+
+        expect(
+          alert.renderer.findByTestId("alert-link")?.style.color,
+          `${name} ${value}`,
+        ).toBe(messageLink(theme, value));
+        // The tint the message paints is the surface the colour must read on,
+        // and it is not a page surface `brandText` answers for.
+        expect(
+          contrastRatio(messageLink(theme, value), tone(theme, value).bg),
+          `${name} ${value}`,
+        ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).secondary);
+
+        alert.unmount();
+      });
+    });
+  });
+
+  it("activates a link action by click and by Enter, and names it a link", () => {
+    const onClick = vi.fn();
+    const onSelect = vi.fn();
+    const alert = renderComponent(
+      <Alert tone="danger">
+        <AlertDescription>
+          <AlertLink testId="alert-link" onClick={onClick} onSelect={onSelect}>
+            View the log
+          </AlertLink>
+        </AlertDescription>
+      </Alert>,
+    );
+
+    clickCentreOf(alert, "alert-link");
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledTimes(1);
+
+    alert.renderer.focusElement(
+      alert.renderer.findByTestId("alert-link")?.id ?? -1,
+    );
+    alert.renderer.simulateKeystrokes("enter");
+    expect(onSelect).toHaveBeenCalledTimes(2);
+
+    expect(nodesWithRole(alert.renderer, "link")).toHaveLength(1);
 
     alert.unmount();
   });

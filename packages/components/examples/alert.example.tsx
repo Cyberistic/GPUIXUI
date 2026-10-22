@@ -12,6 +12,7 @@ import {
   AlertContent,
   AlertDescription,
   AlertDismiss,
+  AlertLink,
   AlertTitle,
 } from "../src/alert.js";
 import { Button } from "../src/internal/button.js";
@@ -78,6 +79,9 @@ export const AlertExample = () => {
                 The network was unreachable after 30 seconds.
               </text>
               <Button onClick={() => undefined}>Try again</Button>
+              <AlertLink onSelect={() => undefined}>
+                View the upload log
+              </AlertLink>
             </div>
           </AlertDescription>
         </AlertContent>
