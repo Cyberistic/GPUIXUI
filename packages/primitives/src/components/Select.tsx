@@ -116,7 +116,18 @@ export interface SelectProps extends ValueChangeProps<string> {
   readonly triggerStyle?: StateStyle<SelectTriggerState>;
   /** Extra style for every option, resolved against that option's state. */
   readonly itemStyle?: StateStyle<SelectItemState>;
+  /**
+   * Stable locator for the root, which paints nothing but the wrapper's width.
+   * Press the control through `triggerTestId`: the root is not the trigger.
+   */
   readonly testId?: string;
+  /** Stable locator for the trigger, the element that opens the list. */
+  readonly triggerTestId?: string;
+  /**
+   * Stable locator for an option row, derived from its value — rows are data,
+   * so one string cannot name them.
+   */
+  readonly itemTestId?: (value: string) => string;
 }
 
 /** The trigger is the field chrome with the value pushed to the far edge. */
@@ -200,6 +211,8 @@ export const renderSelect = (
     triggerStyle,
     itemStyle,
     testId,
+    triggerTestId,
+    itemTestId,
   }: SelectProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
@@ -215,6 +228,7 @@ export const renderSelect = (
       key={option.value}
       value={option.value}
       disabled={option.disabled}
+      testId={itemTestId?.(option.value)}
       style={selectItemStyle(theme, itemStyle)}
     >
       {(state) => (
@@ -252,6 +266,7 @@ export const renderSelect = (
     >
       <SelectTrigger
         disabled={disabled}
+        testId={triggerTestId}
         style={selectTriggerStyle(spec, theme, triggerStyle)}
       >
         <SelectValue placeholder={placeholder} />

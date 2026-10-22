@@ -313,6 +313,60 @@ describe("Select", () => {
   });
 });
 
+describe("Select locators", () => {
+  it("puts the trigger id on the trigger and derives one per option row", () => {
+    // The bug guarded: `testId` landed on the root, which paints nothing but
+    // the wrapper's width, so an automation host could address neither the
+    // control nor a row and had to walk children and label text instead.
+    const select = renderSelect(
+      {
+        options: [
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ],
+        testId: "fruit",
+        triggerTestId: "fruit-trigger",
+        itemTestId: (value) => `fruit-${value}`,
+      },
+      testTheme,
+    );
+    const trigger = Arr.head(elementChildren(select));
+    expect(
+      Option.map(trigger, (element) =>
+        expectSome(elementProp(element, "testId")),
+      ),
+    ).toStrictEqual(Option.some("fruit-trigger"));
+    expect(
+      Arr.map(itemParts(select), (item) =>
+        expectSome(elementProp(item, "testId")),
+      ),
+    ).toEqual(["fruit-apple", "fruit-pear"]);
+  });
+
+  it("keeps the root id off the trigger and the rows", () => {
+    // A caller passing only `testId` gets a locator for a wrapper that paints
+    // no control: the trigger and every row stay unaddressable, by design.
+    const select = renderSelect(
+      {
+        options: [{ value: "apple", label: "Apple" }],
+        testId: "fruit",
+      },
+      testTheme,
+    );
+    const trigger = Arr.head(elementChildren(select));
+    expect(
+      Option.isNone(
+        Option.flatMap(trigger, (element) => elementProp(element, "testId")),
+      ),
+    ).toBe(true);
+    expect(
+      Arr.map(itemParts(select), (item) =>
+        Option.isNone(elementProp(item, "testId")),
+      ),
+    ).toEqual([true]);
+  });
+});
+
 describe("Tooltip", () => {
   it("wears the popover surface and the caption type", () => {
     const style = tooltipStyle(testTheme);

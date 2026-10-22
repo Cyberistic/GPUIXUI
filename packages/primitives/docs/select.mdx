@@ -73,7 +73,14 @@ import { Select } from "@gpuixui/primitives";
 | `style` | `StyleDesc` | — | merged last on the select root, which only carries its width |
 | `triggerStyle` | `StateStyle<SelectTriggerState>` | — | resolved against the trigger's live state, merged last |
 | `itemStyle` | `StateStyle<SelectItemState>` | — | resolved per option against that option's state, merged last |
-| `testId` | `string` | — | stable locator |
+| `testId` | `string` | — | stable locator for the root, which paints only the wrapper's width |
+| `triggerTestId` | `string` | — | stable locator for the trigger, the element that opens the list |
+| `itemTestId` | `(value: string) => string` | — | stable locator for each option row, derived from its value |
+
+The root `testId` is not the control: it sits on a positioning wrapper that
+paints nothing but its width. An automation host presses `triggerTestId` and
+clicks `itemTestId(value)`, rather than walking the root's children and reading
+painted label text.
 
 ## Keyboard
 
@@ -148,7 +155,11 @@ state of its own.
   rule, the group/rule/group tree, and a grouped row still being a real item with
   its own state function.
 - `runtime/fields.runtime.test.tsx` — opens, paints its options and commits a
-  clicked option in the real renderer; exactly one row paints the mark, and the
+  clicked option in the real renderer; the trigger and an option row are
+  addressed by `triggerTestId`/`itemTestId` rather than by walking children and
+  searching the painted text (negative control measured: without the forwarding,
+  `runtime.element("fruit-trigger")` is `none`); exactly one row paints the mark,
+  and the
   mark moves to the row that becomes selected (negative control measured:
   rendering the label alone fails `expected [] to have a length of 1`). Open
   state and dismissal are GPUix's. Two placement cases measure the limits above:

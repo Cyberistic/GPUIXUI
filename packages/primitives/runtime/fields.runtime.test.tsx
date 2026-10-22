@@ -458,6 +458,36 @@ it("selects a Select option by clicking it", async () => {
   expect(lastValue(field.values)).toBe("pear");
 });
 
+it("addresses a Select's trigger and an option row by test id", async () => {
+  // The bug guarded: `testId` reached the root only — a wrapper that paints
+  // nothing but its width — so an automation host had to walk the root's
+  // children for the trigger and search the painted text for a row.
+  const runtime = await openWindow();
+  const field = recorder();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="fruit"
+        triggerTestId="fruit-trigger"
+        itemTestId={(value) => `fruit-${value}`}
+        label="Fruit"
+        placeholder="Pick one"
+        onValueChange={field.onChange}
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ]}
+      />
+    </Surface>,
+  );
+  expect(Option.isNone(runtime.element("fruit-trigger"))).toBe(false);
+  runtime.click("fruit-trigger");
+  expect(runtime.allText()).toContain("Pear");
+  expect(Option.isSome(runtime.bounds("fruit-pear"))).toBe(true);
+  runtime.click("fruit-pear");
+  expect(lastValue(field.values)).toBe("pear");
+});
+
 it("marks the selected row in the list and moves the mark with the selection", async () => {
   const runtime = await openWindow();
   runtime.render(
