@@ -1354,22 +1354,24 @@ light's field's own fill at 7.64:1, so no palette moved.
 three painters, reports a role equal to its own fill at 1.00:1 and sweeps the 16
 styles.
 
-A **selected row** adds the one selection pair the table used to skip: its
-**title**. `ListItemTitle`'s recipe is `text-foreground`, painted over the
-`selected` fill `list.tsx` puts behind it, and the primitives compose the same
-pair from `surface="selected"` and a default `Text` — so the body role is
-measured on the selection itself, beside the secondary line that already was.
-The row also sets `color: selectedForeground` for the children that inherit it
-and then tints a wash under itself as the pointer arrives (`accent` on hover,
-`active` on press), so that role is measured on every wash a row can be tinted
-with. Every shipped, high-contrast, platform and authored theme clears both
-floors, the tightest of the four placements being the base dark theme's pressed
-wash at 7.31:1, so no palette moved: what the pairs close is the gap a brand
-could fall into, where a `selected` close to its page — or a wash close to
+A **selected row** carries a **title**, and the table used to read that title as
+the recipe's page role. It is not: `ListItemTitle` overrides its recipe's colour
+with the row's own role — `theme.colors.selectedForeground` — and `list.tsx`
+fills `selected` behind it, while the primitives compose the page-role pair in the
+same slot from `surface="selected"` and a default `Text`. A row title is body
+text, so `selectedForeground` is held to the **body** floor on the selection and
+on the `accent`/`active` wash the row tints while the pointer moves: held at the
+secondary floor, a 5:1 title passed the gate while the inventory promised 7:1.
+The descriptive line beside it stays `mutedForeground` on `selected` at the
+secondary floor, and `foreground`/`selected` keeps the primitives' painter
+measured. Every shipped, high-contrast, platform and authored theme clears the
+body floor, the tightest of the five placements being the base dark theme's
+pressed wash at 7.31:1, so no palette moved: what the pairs close is the gap a
+brand could fall into, where a `selected` close to its page — or a wash close to
 `selectedForeground` — erases the label it just selected with every other report
 empty. `contrast.test.ts`'s `the text a selected row keeps` suite reads both
-painters, reports the erased title at 1.00:1 and the erased wash, and holds all
-16 styles to the floors.
+painters, reports a title held at 5:1 that the old floor passed, and holds all 16
+styles to the body floor.
 
 A **focused row** is the fifth case, and the ring's own surface is the one the
 table skipped. `outlineOffset: 0` draws the `focusVisible` line on the border
@@ -2606,10 +2608,12 @@ that fill — but both tones are drawn from the same accent family as the wash, 
 a selection moves the fill *toward* the text instead of away from it. Measured
 across the sixteen shipped, high-contrast, platform and authored styles, the
 wash costs contrast in **every one of the 80 placements** on those two tones (it
-never once helps) and leaves **26 of the 80 under the floor the unwashed pair
-already met**. The tightest is Windows XP (Luna) dark's secondary line on a
-selected row at **3.78:1** against 4.5, with its body text on the same fill at
-**5.54:1** against 7. No share can serve both jobs: one strong enough to be seen
+never once helps) and leaves **39 of the 80 under the floor the unwashed pair
+already met** — the selected row's title, now held to the body floor on the same
+role, accounts for the increase. The tightest is Windows XP (Luna) dark's secondary
+line on a selected row at **3.78:1** against 4.5, with the tightest body
+placement the base dark theme's selected row title at **5.33:1** against 7. No
+share can serve both jobs: one strong enough to be seen
 on the page is exactly what erases text on a saturated fill, and one weak enough
 to keep that text readable is invisible on the page. So a selectable run belongs
 on a content tone, a state row that needs selectable text paints it on one, and
@@ -3120,7 +3124,7 @@ or dropped is named rather than passing silently.
 - The selection wash is measured on the content tones; a run marked `selectable`
   inside an `accent` or `selected` box is outside the contract, because one
   translucent role cannot be both strong enough for the page and weak enough for
-  a saturated fill (measured: 26 of the 80 placements there miss their floor).
+  a saturated fill (measured: 39 of the 80 placements there miss their floor).
   A selectable run belongs on a content tone.
 - No font family is bundled: `registerFonts` is consumer-only, so there is no
   redistribution licence to review yet. Shipping one needs the same review

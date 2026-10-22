@@ -1171,20 +1171,23 @@ describe("ring and selection surfaces", () => {
 
 /**
  * Guards the text a **selected row** paints. The table measured a selection's
- * second line (`mutedForeground`/`selected`) and the two page roles on the
- * `hover`, `active` and `accent` washes, and nothing measured the pair the
- * components actually paint for the row's *title*: `ListItemTitle`'s recipe is
- * `text-foreground` and `list.tsx` fills `selected` behind it, so a brand that
- * brings its selection close to the page erases the label it just selected —
- * while the secondary line beside it still passes. The row also sets
- * `color: selectedForeground` and then tints a wash under itself as the pointer
- * arrives, so the role it hands its children is a pair of its own on every wash:
- * a press that matches that role leaves the row blank.
+ * second line (`mutedForeground`/`selected`) and read the row's *title* as the
+ * recipe's `text-foreground`, while `ListItemTitle` overrides that colour with
+ * the row's own role (`theme.colors.selectedForeground`). The role the title
+ * really paints was held to the **secondary** floor — a label on a filled action
+ * — even though a row title is body text, so a brand whose selected row sits at
+ * 5:1 passed the gate the inventory says holds it to the body floor. The row
+ * also tints a wash under itself while the pointer moves (`accent` on hover,
+ * `active` on press) and the title keeps its role on that wash, so all four
+ * surfaces carry a body-floor pair. `foreground` on `selected` stays measured
+ * for the primitives' `surface="selected"` + default `Text`, which paints the
+ * page role in the same slot.
  */
 describe("the text a selected row keeps", () => {
   const washes = ["hover", "active", "accent"] as const;
+  const titleSurfaces = ["selected", ...washes] as const;
 
-  it("measures the title on its selection and the row's role on every wash", () => {
+  it("holds the title's role to the body floor on its fill and every wash", () => {
     const missing = [
       ...(contrastPairs.some(
         (pair) =>
@@ -1194,14 +1197,14 @@ describe("the text a selected row keeps", () => {
       )
         ? []
         : ["foreground/selected"]),
-      ...washes
+      ...titleSurfaces
         .filter(
           (background) =>
             !contrastPairs.some(
               (pair) =>
                 pair.foreground === "selectedForeground" &&
                 pair.background === background &&
-                pair.floor === "secondary",
+                pair.floor === "body",
             ),
         )
         .map((background) => `selectedForeground/${background}`),
@@ -1212,9 +1215,10 @@ describe("the text a selected row keeps", () => {
 
   it("holds the roles the row painters actually use", () => {
     // The pairs only mean something if the shipped row still paints them: the
-    // title's recipe sets its own colour, the row fills `selected` and hands its
-    // children `selectedForeground`, and the two washes it tints while the
-    // pointer moves are the ones measured above.
+    // title overrides its recipe with the row's role, the row fills `selected`,
+    // and the two washes it tints while the pointer moves are the ones measured
+    // above. The recipe's `text-foreground` stays asserted because it is the
+    // primitives' painter for the same slot, not this one.
     const recipes = readFileSync(
       new URL("../../tw/src/recipes.ts", import.meta.url),
       "utf8",
@@ -1227,15 +1231,20 @@ describe("the text a selected row keeps", () => {
       recipes.indexOf("export const LIST_ITEM_TITLE ="),
       recipes.indexOf("export const LIST_ITEM_DESCRIPTION ="),
     );
+    const titlePart = row.slice(
+      row.indexOf("export const ListItemTitle ="),
+      row.indexOf("export const ListItemDescription ="),
+    );
 
     expect(title).toContain("text-foreground");
+    expect(titlePart).toContain("theme.colors.selectedForeground");
     expect(row).toContain("backgroundColor: theme.colors.selected");
     expect(row).toContain("color: theme.colors.selectedForeground");
     expect(row).toContain("{ backgroundColor: theme.colors.accent }");
     expect(row).toContain("{ backgroundColor: theme.colors.active }");
   });
 
-  it("reports a selection that swallows the title it carries", () => {
+  it("reports a primitive surface that swallows the text on it", () => {
     const broken = {
       colors: { ...lightColors, selected: lightColors.foreground },
     };
@@ -1258,7 +1267,27 @@ describe("the text a selected row keeps", () => {
         ({ foreground, background }) =>
           foreground === "selectedForeground" && background === "accent",
       ),
-    ).toMatchObject({ ratio: 1, floor: contrastFloors.secondary });
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.body });
+  });
+
+  it("fails a title the secondary floor would have passed", () => {
+    // 5:1 on the light selection: above the 4.5 the role used to be held to,
+    // under the 7 a row title has to reach.
+    const broken = {
+      colors: { ...lightColors, selectedForeground: "#5F5F5F" },
+    };
+    const ratio = contrastRatio(
+      broken.colors.selectedForeground,
+      broken.colors.selected,
+    );
+    const failure = contrastFailures(broken).find(
+      ({ foreground, background }) =>
+        foreground === "selectedForeground" && background === "selected",
+    );
+
+    expect(ratio).toBeGreaterThan(contrastFloors.secondary);
+    expect(ratio).toBeLessThan(contrastFloors.body);
+    expect(failure).toMatchObject({ floor: contrastFloors.body });
   });
 
   it("clears the floor in every shipped theme, tightest on the base dark press", () => {
@@ -1272,19 +1301,31 @@ describe("the text a selected row keeps", () => {
         Object.values(themes).map((theme) => retroTheme(theme, look)),
       ),
     ];
+    /** The floor the contract gives a pair, so the sweep holds no second copy. */
+    const floorOf = (
+      theme: (typeof shipped)[number],
+      foreground: keyof ThemeColors,
+      background: keyof ThemeColors,
+    ): number => {
+      const pair = contrastPairs.find(
+        (entry) =>
+          entry.foreground === foreground && entry.background === background,
+      );
+      return pair === undefined ? 0 : contrastFloorsFor(theme)[pair.floor];
+    };
     const placements = shipped.flatMap((theme) => [
       {
         name: `${theme.name}/foreground/selected`,
         ratio: contrastRatio(theme.colors.foreground, theme.colors.selected),
-        floor: contrastFloorsFor(theme).body,
+        floor: floorOf(theme, "foreground", "selected"),
       },
-      ...washes.map((background) => ({
+      ...titleSurfaces.map((background) => ({
         name: `${theme.name}/selectedForeground/${background}`,
         ratio: contrastRatio(
           theme.colors.selectedForeground,
           theme.colors[background],
         ),
-        floor: contrastFloorsFor(theme).secondary,
+        floor: floorOf(theme, "selectedForeground", background),
       })),
     ]);
     const hidden = placements.filter(
@@ -1295,6 +1336,11 @@ describe("the text a selected row keeps", () => {
     );
 
     expect(hidden).toEqual([]);
+    // Every placement takes the body floor, including the title's role: this is
+    // what makes the sweep the contract's, not a lower local one.
+    expect(placements.map(({ floor }) => floor)).toEqual(
+      placements.map(() => contrastFloors.body),
+    );
     expect(tightest.name).toBe("Dark/selectedForeground/active");
     expect(tightest.ratio?.toFixed(2)).toBe("7.31");
     // The catalogue prints the number this suite measures, so a palette edit

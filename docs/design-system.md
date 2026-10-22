@@ -395,17 +395,17 @@ clamp: pressed at the full step its label lands at 4.13:1 in macOS dark (under
 styles press at 14% and 17%. Every action keeps the full step everywhere.
 
 A **selected row** is the fourth wash, and the one a row's *title* is painted on.
-The title's recipe is `text-foreground`, painted over the `selected` fill the row
-paints behind it, so `foreground` on `selected` is a pair of its own — beside the
-secondary line that was already measured. The row also hands its children
-`selectedForeground` and then tints a wash under itself as the pointer arrives
-(`accent` on hover, `active` on press), so that role is measured on every wash a
-row can be tinted with; the tightest of the four placements is the base dark
-theme's pressed wash at 7.31:1. Every shipped, high-contrast, platform and
-authored style clears both floors, so no palette moved: the pairs close the gap a
-brand could fall into, where a selection close to its page — or a wash close to
-the text the row keeps — erases the label it just selected while every other
-report passes.
+`ListItemTitle` overrides its recipe's colour with the row's own role
+(`selectedForeground`), and the row paints the `selected` fill behind it, so that
+is the title's body-floor pair; `foreground` on `selected` stays measured for the
+primitives' `surface="selected"` + default `Text` in the same slot. The row also
+tints a wash under itself as the pointer arrives (`accent` on hover, `active` on
+press) and the title keeps its role there, so `selectedForeground` is held to the
+body floor on all four surfaces; the tightest is the base dark theme's pressed
+wash at 7.31:1. Every shipped, high-contrast, platform and authored style clears
+it, so no palette moved: the pairs close the gap a brand could fall into, where a
+selection close to its page — or a wash close to the text the row keeps — erases
+the label it just selected while every other report passes.
 
 It is also measured as a surface, because a wash with no contrast against the row
 it tints is a state nobody sees: `decorativeFailures` holds each of `hover`,
@@ -578,7 +578,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | body text on background/card/popover/muted and on the accent and selected washes | 7:1 | 7:1 |
 | text typed into an input, on `input` and on the page role a composite field paints its fill with | 7:1 | 7:1 |
 | secondary text on background/card/muted/popover, on a selected row, and inside a field's own fill (`input`) | 4.5:1 | 7:1 |
-| a selected row's title on its own selection, the `selectedForeground` it hands its children on the `hover`/`active`/`accent` wash it tints, and a chosen row inside a popover resting in its surface's role (`popoverForeground` on `selected`) | 7:1 / 4.5:1 | 7:1 / 7:1 |
+| a selected row's title on its own selection and on the `hover`/`active`/`accent` wash it tints (the `selectedForeground` it paints, held to the body floor), the `foreground` a default `Text` keeps on a selected surface, and a chosen row inside a popover resting in its surface's role (`popoverForeground` on `selected`) | 7:1 | 7:1 |
 | on-colour text, placeholder (on `input` and on the page fill) | 4.5:1 | 7:1 |
 | a secondary action's label (`secondaryForeground`) on the `hover`/`active` wash it tints | 4.5:1 | 7:1 |
 | brand text — a link or text action — on background, card, popover, muted, the hover/active washes it tints and the `accent`/`selected` washes a row paints under it (`brandText`) | 4.5:1 | 7:1 |
@@ -619,9 +619,11 @@ A **saturated state tone** is not a selection surface. A box also paints
 fill — but both tones are drawn from the same accent family as the wash, so the
 selection moves the fill toward the text instead of away from it. Measured, the
 wash costs contrast in every one of the 80 placements on those two tones and
-leaves 26 of them under the floor the unwashed pair already met, the tightest
-being Windows XP (Luna) dark's secondary line on a selected row at 3.78:1 (its
-body text on the same fill: 5.54:1). One translucent role cannot be strong
+leaves 39 of them under the floor the unwashed pair already met — the selected
+row's title, now at the body floor on the same role, accounts for the increase.
+The tightest is Windows XP (Luna) dark's secondary line on a selected row at
+3.78:1; the tightest body placement is the base dark theme's selected row title
+at 5.33:1. One translucent role cannot be strong
 enough for the page and weak enough for a saturated fill, so a selectable run
 belongs on a content tone and a state row that needs selectable text paints it
 on one. The exclusion is measured: `selection.test.ts` reads the tones the box

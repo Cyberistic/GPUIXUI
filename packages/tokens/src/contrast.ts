@@ -297,11 +297,6 @@ export const contrastPairs: readonly ContrastPair[] = [
     background: "accent",
     floor: "secondary",
   },
-  {
-    foreground: "selectedForeground",
-    background: "selected",
-    floor: "secondary",
-  },
   // A state wash is painted under a control's existing text, which keeps its
   // resting role: hovering a ghost button or a menu row tints the surface and
   // leaves the label `foreground`, and secondary text keeps `mutedForeground`.
@@ -327,30 +322,26 @@ export const contrastPairs: readonly ContrastPair[] = [
     background: "active",
     floor: "secondary",
   },
-  // A selected row is the fourth wash, and the one a row's *title* is painted
-  // on: the components' `ListItemTitle` recipe is `text-foreground` and the row
-  // fills `selected` behind it, while the primitives compose the same pair from
-  // `surface="selected"` and a default `Text`. Only the row's secondary line was
-  // measured, so a selection that drifted toward the body role could erase the
-  // label it selects. The row also keeps a text role of its own — it sets
-  // `color: selectedForeground` and then tints a wash under it as the pointer
-  // moves — so that role is measured on every wash a row can be tinted with.
+  // A selected row is the fourth wash, and it carries a row's **title**, which
+  // is body text. The components' `ListItemTitle` overrides its recipe's colour
+  // with the row's own role (`theme.colors.selectedForeground`) and paints it on
+  // the `selected` fill the row sets behind it — or on the wash the same row
+  // tints while the pointer moves — so that role is held to the **body** floor
+  // on all four surfaces, not to the secondary floor a label on a filled action
+  // gets. It measured 7.31:1 or better in every shipped, high-contrast, platform
+  // and authored theme, so the floor moved without a palette.
+  //
+  // `foreground` on `selected` is the primitives' painter for the same slot: a
+  // `Box surface="selected"` keeps the default `Text`'s page role.
   { foreground: "foreground", background: "selected", floor: "body" },
   {
     foreground: "selectedForeground",
-    background: "hover",
-    floor: "secondary",
+    background: "selected",
+    floor: "body",
   },
-  {
-    foreground: "selectedForeground",
-    background: "active",
-    floor: "secondary",
-  },
-  {
-    foreground: "selectedForeground",
-    background: "accent",
-    floor: "secondary",
-  },
+  { foreground: "selectedForeground", background: "hover", floor: "body" },
+  { foreground: "selectedForeground", background: "active", floor: "body" },
+  { foreground: "selectedForeground", background: "accent", floor: "body" },
   // A row floating on a popover keeps the *surface's* text role, not the page's:
   // a menu or combobox row is `popoverForeground`, and a destructive row is the
   // tone's readable role. So a wash painted under either is a surface those

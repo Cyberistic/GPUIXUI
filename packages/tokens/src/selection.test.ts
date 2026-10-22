@@ -354,7 +354,9 @@ describe("the documents describe the contract they are held to", () => {
  * `selected`), and the reason is structural rather than a gap: the wash is a
  * share of the accent family, so on a fill drawn from the same family it moves
  * the fill toward the text. Measured, that costs contrast in every placement and
- * 26 of the 80 fall under the floor the unwashed pair already met. The suite
+ * 39 of the 80 fall under the floor the unwashed pair already met — the selected
+ * row's title, now held to the body floor on the same role, accounts for the
+ * increase. The suite
  * below holds that reasoning in both directions — a new tone fails until it is
  * measured, and a palette that made the wash help on a saturated tone fails
  * until the decision is re-read.
@@ -383,13 +385,18 @@ describe("the tones the wash is painted on", () => {
   /** The saturated state tones, where the wash is a tint of the fill's own family. */
   const saturatedTones = ["accent", "selected"] as const;
 
-  /** A placement the wash is not measured on: the role the tone hands its text. */
+  /**
+   * A placement the wash is not measured on: the role the tone hands its text.
+   * Each is held to the floor `contrastPairs` gives the resting pair — the
+   * selected row's title is body text (`selectedForeground` on `selected`), so
+   * its washed placement is measured at the body floor too.
+   */
   const excludedPairs = [
     { foreground: "foreground", over: "accent", floor: "body" },
     { foreground: "foreground", over: "selected", floor: "body" },
     { foreground: "mutedForeground", over: "accent", floor: "secondary" },
     { foreground: "mutedForeground", over: "selected", floor: "secondary" },
-    { foreground: "selectedForeground", over: "selected", floor: "secondary" },
+    { foreground: "selectedForeground", over: "selected", floor: "body" },
   ] as const;
 
   const tones = (all: ReadonlyArray<string>, measured: ReadonlyArray<string>) =>
@@ -452,22 +459,27 @@ describe("the tones the wash is painted on", () => {
     expect(improved).toEqual([]);
   });
 
-  it("leaves a quarter of those placements under their own floor", () => {
+  it("leaves most of them under the floor they were already promised", () => {
     const under = placements.filter(({ washed, floor }) => washed < floor);
-    const tightest = placements.reduce((a, b) => (a.washed < b.washed ? a : b));
+    // Keep the first placement on a tie: the `default` platform style is the
+    // library identity, so it measures exactly like the base theme and must not
+    // rename the tightest row.
+    const tightest = placements.reduce((a, b) => (b.washed < a.washed ? b : a));
     const tightestBody = placements
       .filter(({ floor }) => floor === 7)
-      .reduce((a, b) => (a.washed < b.washed ? a : b));
+      .reduce((a, b) => (b.washed < a.washed ? b : a));
 
     // The measured reason the two tones stay out of `selectionPairs`: a single
     // translucent role cannot be strong enough for the page and weak enough for
-    // a saturated fill.
-    expect(under.length).toBe(26);
+    // a saturated fill. The selected row's title is the largest group: the body
+    // floor it now carries is what the wash costs it on its own fill.
+    expect(under.length).toBe(39);
     expect(tightest.pair).toBe("mutedForeground on selected");
     expect(tightest.theme).toBe("Dark · Windows XP (Luna)");
     expect(tightest.washed).toBeCloseTo(3.78, 2);
-    expect(tightestBody.theme).toBe("Dark · Windows XP (Luna)");
-    expect(tightestBody.washed).toBeCloseTo(5.54, 2);
+    expect(tightestBody.pair).toBe("selectedForeground on selected");
+    expect(tightestBody.theme).toBe("Dark");
+    expect(tightestBody.washed).toBeCloseTo(5.33, 2);
   });
 
   it("states the scope and the numbers on every surface", () => {
@@ -481,7 +493,7 @@ describe("the tones the wash is painted on", () => {
 
     expect(catalogue).toContain(printed);
     expect(catalogue).toContain("3.78");
-    expect(catalogue).toContain("5.54");
+    expect(catalogue).toContain("5.33");
     expect(catalogue).toContain("saturated");
     expect(design).toContain("saturated");
     expect(design).toContain("content tone");

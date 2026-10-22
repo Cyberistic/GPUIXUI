@@ -41,9 +41,11 @@
  * the fill *toward* the text instead of away from it. Measured over the sixteen
  * shipped, high-contrast, platform and authored styles, that costs contrast in
  * **every one of the eighty placements** — the wash never helps — and leaves
- * **26 under the floor the unwashed pair already met**, the tightest being
- * Windows XP (Luna) dark's secondary line on a selected row at 3.78:1 and its
- * body text on the same fill at 5.54:1. No share can serve both jobs: one strong
+ * **39 under the floor the unwashed pair already met**. The tightest is Windows
+ * XP (Luna) dark's secondary line on a selected row at 3.78:1; the tightest
+ * **body** placement is the base dark theme's selected row title at 5.33:1
+ * against 7, because that role is body text (`selectedForeground` on
+ * `selected`). No share can serve both jobs: one strong
  * enough to be seen on the page is exactly what erases text on a saturated fill,
  * and one weak enough to keep that text readable is invisible on the page. So a
  * selectable run belongs on a content tone, a state row that needs selectable
