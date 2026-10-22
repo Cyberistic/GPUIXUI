@@ -57,6 +57,8 @@ open the tip or announce the description.
 | `side` | `FloatingSide` | `"top"` | preferred placement |
 | `align` | `FloatingAlign` | GPUix's default | alignment against the trigger |
 | `delay` | `number` | provider default | hover delay in milliseconds |
+| `style` | `StyleDesc` | — | extra style on the tip's surface, merged last |
+| `className` | `string` | — | a Tailwind string joined after the recipe, so it wins conflicts |
 | `testId` | `string` | — | locator on the **tip** |
 
 ## Keyboard
@@ -96,8 +98,28 @@ Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
 
 ## Theming
 
-`tooltipStyle` uses the `popover` surface, `radius.sm`, `elevation.overlay`, the
-`caption` type and one spacing step of inset; content is `whiteSpace: nowrap`.
+`tooltipStyle` resolves the tip's surface: the `popover` fill with
+`popoverForeground` text — the pair `contrastPairs` measures at the body floor —
+`radius.sm`, a `border` rule, the `caption` type and one spacing step of inset.
+Content is `whiteSpace: nowrap`.
+
+The tip paints **no shadow**: the recipe asks the resolver for the `overlay`
+elevation level, which is deliberately reserved and resolves to no shadow (a
+level that lifts something would be `md`/`lg`). A tip is separated from the page
+by its border and its own fill.
+
+A caller can restyle it in the package's merge order — the recipe, then
+`className`, then `style`:
+
+```tsx
+<Tooltip content="Booked revenue, net of refunds." className="bg-card" style={{ maxWidth: 240 }}>
+  <IconButton label="Revenue definition" icon={<Icon name="info" color={theme.colors.foreground} />} />
+</Tooltip>;
+```
+
+Without a caller the text is `popoverForeground` rather than whatever colour the
+anchored layer happened to inherit: an inherited colour is one the wrapper
+cannot see and no contrast pair measures.
 
 ## Dependencies
 
@@ -125,8 +147,11 @@ Evidence: `apps/playground/README.md` §`tooltip-lifecycle`.
 - `src/components/Tooltip.test.tsx` — a string tip and an explicit `description`
   reach the host trigger and a control trigger that forwards them, a non-text
   tip without one invents nothing, and a component that forwards nothing is not
-  pretended to carry the description. `src/components/Button.test.tsx` /
-  `IconButton.test.tsx` hold the forwarded pair.
+  pretended to carry the description; the tip paints `popoverForeground` on its
+  own `popover` fill and that pair clears the body floor in both shipped
+  palettes; a caller's `className` beats the recipe and their `style` beats
+  both. `src/components/Button.test.tsx` / `IconButton.test.tsx` hold the
+  forwarded pair.
 - `src/docs.test.ts` — every snippet's `@gpuixui/primitives` import resolves to a
   real export of the package, which is how this page's `Icon` (an
   `@gpuixui/icons` glyph) stopped being taught as a primitive.

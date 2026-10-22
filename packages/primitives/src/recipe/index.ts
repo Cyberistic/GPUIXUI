@@ -408,7 +408,7 @@ export const ratingGroupClass = "flex flex-row items-center gap-2xs";
 
 /** The class string a tooltip's content surface resolves to. */
 export const tooltipClass =
-  "flex flex-col bg-popover rounded-sm border border-border pl-sm pr-sm pt-xs pb-xs type-size-caption whitespace-nowrap";
+  "flex flex-col bg-popover text-popover-foreground rounded-sm border border-border pl-sm pr-sm pt-xs pb-xs type-size-caption whitespace-nowrap";
 
 // ── Select ───────────────────────────────────────────────────────────
 

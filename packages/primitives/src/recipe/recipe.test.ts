@@ -647,6 +647,9 @@ describe("Tooltip recipe", () => {
         { tone: "popover", radius: "sm", border: true, elevation: "overlay" },
         testTheme,
       ),
+      // The tip's text is the role its own surface carries, not whatever the
+      // anchored layer happened to inherit.
+      color: testTheme.colors.popoverForeground,
       paddingLeft: testTheme.spacing.sm,
       paddingRight: testTheme.spacing.sm,
       paddingTop: testTheme.spacing.xs,

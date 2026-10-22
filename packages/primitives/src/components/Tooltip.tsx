@@ -32,6 +32,7 @@ import {
 } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
+import { cn } from "@gpuixui/tw";
 import {
   Tooltip as GpuixTooltip,
   TooltipContent,
@@ -41,6 +42,7 @@ import { accessibleName } from "../core/a11y.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { tooltipClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
+import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface TooltipProps {
@@ -61,12 +63,36 @@ export interface TooltipProps {
   readonly align?: FloatingAlign;
   /** Milliseconds before the tip opens on hover. Defaults to the provider's. */
   readonly delay?: number;
+  /**
+   * Extra style on the tip's surface, merged after the recipe and after
+   * `className`, so a caller's value is the last word.
+   */
+  readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
-/** The tip: the popover surface, the caption type, no wrapping. */
-export const tooltipStyle = (theme: PrimitiveTheme): StyleDesc =>
-  recipeTw.classesToStyle(tooltipClass, theme).style;
+/**
+ * The tip's surface: the popover role, the caption type and one spacing inset.
+ *
+ * The text is painted in `popoverForeground`, the role that surface carries —
+ * `popoverForeground` on `popover` is one of the measured pairs — rather than
+ * inherited from whatever element the anchored layer sits under, which is a
+ * colour the wrapper cannot see and nothing checks.
+ *
+ * A caller's `className` is joined after the recipe and their `style` is merged
+ * last, the same order every other primitive uses.
+ */
+export const tooltipStyle = (
+  theme: PrimitiveTheme,
+  className?: string,
+  caller?: StyleDesc,
+): StyleDesc =>
+  mergeStyle(
+    recipeTw.classesToStyle(cn(tooltipClass, className), theme).style,
+    caller,
+  );
 
 /** The trigger with its description attached. */
 const describedTrigger = (
@@ -83,7 +109,17 @@ const describedTrigger = (
 
 /** The element tree `Tooltip` renders. Pure in its arguments. */
 export const renderTooltip = (
-  { content, description, children, side, align, delay, testId }: TooltipProps,
+  {
+    content,
+    description,
+    children,
+    side,
+    align,
+    delay,
+    style,
+    className,
+    testId,
+  }: TooltipProps,
   theme: PrimitiveTheme,
 ): ReactElement => (
   <GpuixTooltip delayDuration={delay}>
@@ -96,7 +132,7 @@ export const renderTooltip = (
     <TooltipContent
       side={side}
       align={align}
-      style={tooltipStyle(theme)}
+      style={tooltipStyle(theme, className, style)}
       testId={testId}
     >
       {content}

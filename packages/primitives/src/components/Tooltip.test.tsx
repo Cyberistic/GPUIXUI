@@ -12,7 +12,15 @@
 
 import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+import {
+  contrastFloors,
+  contrastRatio,
+  darkTheme,
+  lightTheme,
+} from "@gpuixui/tokens";
 import { Box, renderBox } from "./Box.js";
 import { IconButton } from "./IconButton.js";
 import { renderTooltip, type TooltipProps } from "./Tooltip.js";
@@ -132,5 +140,67 @@ describe("Tooltip accessibility", () => {
     expect(hostProp(blankDescription, "aria-description")).toStrictEqual(
       Option.none(),
     );
+  });
+});
+
+/** The tip's own element: the second child of the runtime's `Tooltip`. */
+const contentOf = (element: ReactElement): ReactElement =>
+  elementChildren(element)[1] ??
+  expect.fail("the tooltip rendered no content element");
+
+/** The style the content element was given, decoded. */
+const contentStyle = (props: TooltipProps): Record<string, unknown> =>
+  expectSome(
+    Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(
+      expectSome(elementProp(contentOf(render(props)), "style")),
+    ),
+  );
+
+describe("Tooltip theming", () => {
+  it("paints the tip's text in the role its surface is measured with", () => {
+    // The bug guarded: the tip carried the popover fill and no text colour, so
+    // its copy inherited whatever the anchored layer sat under. That is a
+    // colour the wrapper cannot see and no pair measures. The surface owns its
+    // role instead — `popoverForeground` on `popover` is a `contrastPairs`
+    // entry — and this case holds the painted pair to the body floor.
+    const style = contentStyle({
+      content: "Revenue definition",
+      children: <div tabIndex={0} />,
+    });
+    expect(style["color"]).toBe(testTheme.colors.popoverForeground);
+    expect(style["backgroundColor"]).toBe(testTheme.colors.popover);
+    // The fixture's colours are deliberately meaningless, so the ratio is read
+    // from the shipped palettes — the ones `contrastPairs` measures.
+    Arr.forEach([lightTheme, darkTheme], (theme) => {
+      const ratio = contrastRatio(
+        theme.colors.popoverForeground,
+        theme.colors.popover,
+      );
+      expect(expectSome(Option.fromNullishOr(ratio))).toBeGreaterThanOrEqual(
+        contrastFloors.body,
+      );
+    });
+  });
+
+  it("lets a caller's className and style restyle the tip", () => {
+    // The gap guarded: every other primitive takes `className` and `style`,
+    // and the tip took neither, so a caller could not change its width or fill.
+    // The merge order is the package's: className beats the recipe, style beats
+    // both.
+    const restyled = contentStyle({
+      content: "Revenue definition",
+      className: "bg-card",
+      style: { maxWidth: 240 },
+      children: <div tabIndex={0} />,
+    });
+    expect(restyled["backgroundColor"]).toBe(testTheme.colors.card);
+    expect(restyled["maxWidth"]).toBe(240);
+    const overridden = contentStyle({
+      content: "Revenue definition",
+      className: "bg-card",
+      style: { backgroundColor: testTheme.colors.muted },
+      children: <div tabIndex={0} />,
+    });
+    expect(overridden["backgroundColor"]).toBe(testTheme.colors.muted);
   });
 });
