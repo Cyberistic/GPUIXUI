@@ -244,8 +244,8 @@ describe("the motion the records deny", () => {
     expect(reaching().length).toBeGreaterThan(30);
 
     // The tree is static for a run, so a second walk re-reads nothing. Uncached,
-    // this case read 17 980 files — 39 records times the graph plus one graph
-    // walk per page — and outran the suite's 5 s default timeout.
+    // this case read the tree 17 980 times — 39 records times the graph plus one
+    // graph walk per page — and outran the suite's 5 s default timeout.
     const walk = () => {
       reaching();
       Arr.forEach(docPages(), (page) =>
@@ -256,6 +256,7 @@ describe("the motion the records deny", () => {
     const walked = reads;
     walk();
     expect(reads).toBe(walked);
+    // ~118 files today: every record module, the graph it imports and every page.
     expect(walked).toBeLessThan(400);
     expect(walked).toBeGreaterThan(100);
   });

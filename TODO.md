@@ -4806,6 +4806,21 @@ green (43 files / 2 434 tests), `check-types` clean.
       and both behaviour cases fail with `HEAD`'s logic + component and pass
       with the fix; `check-types`, `check:tests` and `oxfmt` clean.
 
+`[x]` `packages/components`: **a `Breadcrumb` budget that arrived as `NaN` hid
+      the current page** — `maxItems` is often `Math.floor(width / 96)`, and
+      `collapse`'s `Math.max(3, Math.trunc(NaN))` is `NaN`: the trail then passed
+      every length comparison, `Arr.takeRight(items, NaN)` returned nothing, and
+      the control painted the first crumb, an ellipsis and **no current page** —
+      the one thing its own page promises ("always keeping the first entry and
+      the last"). `collapse` reads a `NaN` budget as the minimum (3); an infinite
+      budget still means no limit. Proof: `breadcrumb/logic.test.ts` gains `reads
+      a budget it cannot read as the minimum` (measured failing on `HEAD` as
+      `[ { kind: 'item', item: 'a' }, { kind: 'ellipsis' } ]`) and holds the
+      infinite case. Docs: `docs/breadcrumb.mdx` §Collapse rule/§API/§Verification
+      and the `COMPONENTS.md` Breadcrumb row. Directions measured: the new case
+      fails on the old reducer and passes with the guard; the package's unit
+      suite is green and `check-types`/`oxfmt` are clean.
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21
@@ -5491,6 +5506,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[ ]` Performance and packaging
   - [x] The **components test suite's `motion-claims` case read the tree
     17 980 times** — the record resolver re-read `src/inventory.ts`, every
+    record module and its import graph per record, and each page walk re-read
     the graph again, so the case spent ~2.7 s in isolation and exceeded the
     suite's 5 s default under load (the full `packages/components` run failed
     there on 2026-10-23 while every case passed alone). `readText`, `importsOf`
