@@ -361,6 +361,7 @@ the honest parts.
 | Stars | `Stars` (one part) | — | plan 600 |
 | Code block | `CodeBlock` (one part) | — | plan 600 |
 | Copy button | `CopyButton` (one part) | — | plan 600 |
+| Page transition | `PageTransition` (one part) | — | plan 600 |
 | Theme toggler | `ThemeToggler` (one part) | — | plan 600 |
 
 **Planned Tier 2 additions** — none. The last reserved family, Chat and
