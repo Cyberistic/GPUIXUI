@@ -209,6 +209,18 @@ import {
   voidRow,
   type PageDirection,
 } from "./loading-row.js";
+import {
+  FILLER_ROWS,
+  FILLER_ROW_HEIGHT,
+  INNER_MAX,
+  INNER_ROW_HEIGHT,
+  INNER_ROWS,
+  INNER_STEP,
+  INNER_VIEWPORT,
+  OUTER_ONLY_ROW,
+  OUTER_MAX,
+  OUTER_VIEWPORT,
+} from "./nested-scroll.js";
 import { REVIEWERS } from "./combobox.js";
 import { listAnchorOf } from "./host.js";
 import { LIST_ROWS, TYPEAHEAD_LETTER, type ListRow } from "./list.js";
@@ -6380,6 +6392,242 @@ const scrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("scroll-end");
   });
 
+/**
+ * A scroller inside a scroller: the page a pane's list sits in.
+ *
+ * A dock pane, a dialog body and a settings form all put a scroller inside
+ * another one, so the wheel has a routing decision to make: does the inner
+ * scroller keep it while it can move, does the outer one take it when the inner
+ * reaches its end, and does the inner's event reach an ancestor's `onScroll`
+ * handler? The fixture's geometry (`nested-scroll.ts`) makes the two wheels aim
+ * at places that can only hit one scroller each.
+ */
+const NestedScrollProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [inner, setInner] = useState<Smoke.Offset>({ x: 0, y: 0 });
+  const [outer, setOuter] = useState<Smoke.Offset>({ x: 0, y: 0 });
+  const [innerEvents, setInnerEvents] = useState(0);
+  const [outerEvents, setOuterEvents] = useState(0);
+
+  return (
+    <div
+      testId="nested-probe"
+      style={{
+        width: 720,
+        height: 460,
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+      }}
+    >
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        Wheel over the inner list: it moves first. At its end, does the page
+        behind it move too?
+      </text>
+      <div
+        testId="nested-outer"
+        style={{
+          ...OUTER_VIEWPORT,
+          overflow: "scroll",
+          backgroundColor: theme.colors.card,
+        }}
+        onScroll={() => setOuterEvents((current) => current + 1)}
+        onScrollChange={(event) =>
+          setOuter({ x: event.scrollX ?? 0, y: event.scrollY ?? 0 })
+        }
+      >
+        <div
+          testId="nested-inner"
+          style={{
+            ...INNER_VIEWPORT,
+            overflow: "scroll",
+            backgroundColor: theme.colors.muted,
+          }}
+          onScroll={() => setInnerEvents((current) => current + 1)}
+          onScrollChange={(event) =>
+            setInner({ x: event.scrollX ?? 0, y: event.scrollY ?? 0 })
+          }
+        >
+          {Array.from({ length: INNER_ROWS }, (_, index) => (
+            <div
+              key={index}
+              testId={`nested-inner-row-${index}`}
+              style={{ height: INNER_ROW_HEIGHT }}
+            >
+              <text
+                style={{
+                  ...textStyle(theme, "body"),
+                  color: theme.colors.foreground,
+                }}
+              >
+                {`inner ${index}`}
+              </text>
+            </div>
+          ))}
+        </div>
+        {Array.from({ length: FILLER_ROWS }, (_, index) => (
+          <div
+            key={index}
+            testId={`nested-filler-${index}`}
+            style={{ height: FILLER_ROW_HEIGHT }}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "body"),
+                color: theme.colors.foreground,
+              }}
+            >
+              {`page ${index}`}
+            </text>
+          </div>
+        ))}
+      </div>
+      <text
+        testId="nested-inner-offset"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`inner=x${inner.x} y${inner.y} events=${innerEvents}`}
+      </text>
+      <text
+        testId="nested-outer-offset"
+        style={{
+          ...textStyle(theme, "code"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        {`outer=x${outer.x} y${outer.y} events=${outerEvents}`}
+      </text>
+    </div>
+  );
+};
+
+const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor("nested-inner-row-0");
+    yield* Effect.sleep(SETTLE);
+
+    const offsetOf = (
+      testId: string,
+    ): Effect.Effect<
+      Smoke.Offset,
+      Smoke.SmokeAssertionError | Smoke.SmokeHostError
+    > =>
+      Effect.gen(function* () {
+        return yield* ctx.expectSome(
+          `the ${testId} scroller reports an offset`,
+          Option.fromNullishOr(yield* ctx.host.scrollOffset(testId)),
+        );
+      });
+
+    const innerOffset = yield* offsetOf("nested-inner");
+    const outerOffset = yield* offsetOf("nested-outer");
+    yield* ctx.expectEqual(
+      "the inner list starts at the top",
+      innerOffset.y,
+      0,
+    );
+    yield* ctx.expectEqual("the page starts at the top", outerOffset.y, 0);
+
+    // The geometry the two wheels rest on: the inner is wholly inside the
+    // outer's viewport, and the filler row the page-only wheel aims at starts
+    // below the inner, so that wheel cannot land on the list.
+    const outerBox = yield* paintedBox(ctx, "nested-outer");
+    const innerBox = yield* paintedBox(ctx, "nested-inner");
+    const fillerBox = yield* paintedBox(ctx, `nested-filler-${OUTER_ONLY_ROW}`);
+    yield* ctx.expectEqual(
+      "the inner scroller is painted inside the page scroller",
+      innerBox.y >= outerBox.y &&
+        innerBox.y + innerBox.height <= outerBox.y + outerBox.height &&
+        innerBox.x >= outerBox.x &&
+        innerBox.x + innerBox.width <= outerBox.x + outerBox.width,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the page-only wheel aims at a row below the inner list",
+      fillerBox.y >= innerBox.y + innerBox.height,
+      true,
+    );
+
+    // One wheel over the inner list: the measured routing question.
+    yield* ctx.host.wheel("nested-inner", 0, INNER_STEP);
+    yield* Effect.sleep(SETTLE);
+    const innerMoved = yield* offsetOf("nested-inner");
+    yield* ctx.expectNear(
+      "the inner list takes the wheel's own delta",
+      innerMoved.y,
+      INNER_STEP,
+      1,
+    );
+    const pageAlong = yield* offsetOf("nested-outer");
+    yield* ctx.expectNear(
+      "the page scrolls by the same wheel, though the inner list had 240px left",
+      pageAlong.y,
+      INNER_STEP,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "the page's handler heard the wheel aimed inside the list",
+      yield* ctx.host.text("nested-outer-offset"),
+      `outer=x0 y${INNER_STEP} events=1`,
+    );
+
+    // The one wheel that moves a single scroller: aimed below the list.
+    yield* ctx.host.wheel(`nested-filler-${OUTER_ONLY_ROW}`, 0, -INNER_STEP);
+    yield* Effect.sleep(SETTLE);
+    const pageBack = yield* offsetOf("nested-outer");
+    yield* ctx.expectNear(
+      "a wheel outside the list takes the page back on its own",
+      pageBack.y,
+      0,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the page's wheel leaves the list untouched",
+      (yield* offsetOf("nested-inner")).y,
+      INNER_STEP,
+      1,
+    );
+
+    // At the inner's end the page still takes the whole delta: each scroller
+    // clamps against its own content, not the other's.
+    yield* ctx.host.wheel("nested-inner", 0, -100000);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.expectNear(
+      "the inner list clamps at its content's end",
+      (yield* offsetOf("nested-inner")).y,
+      INNER_MAX,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the page clamps against its own content, not the list's end",
+      (yield* offsetOf("nested-outer")).y,
+      OUTER_MAX,
+      1,
+    );
+
+    yield* ctx.host.capture("nested-scroll");
+    yield* ctx.expectEqual(
+      "the inner readout carries the end and every wheel it heard",
+      yield* ctx.host.text("nested-inner-offset"),
+      `inner=x0 y${INNER_MAX} events=2`,
+    );
+    yield* ctx.expectEqual(
+      "the page readout counts the wheels aimed inside the list too",
+      yield* ctx.host.text("nested-outer-offset"),
+      `outer=x0 y${OUTER_MAX} events=3`,
+    );
+  });
+
 /** The split probe's container width, inside the window. */
 const SPLIT_CONTAINER = 500;
 
@@ -11439,6 +11687,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "scroll-lifecycle",
     view: () => <ScrollProbe />,
     steps: scrollSteps,
+  },
+  "nested-scroll-lifecycle": {
+    id: "nested-scroll-lifecycle",
+    view: () => <NestedScrollProbe />,
+    steps: nestedScrollSteps,
   },
   "message-scroller-lifecycle": {
     id: "message-scroller-lifecycle",

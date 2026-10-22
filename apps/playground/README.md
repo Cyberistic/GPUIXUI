@@ -37,7 +37,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-45 probes a real window can prove, of which twelve mount shipped
+46 probes a real window can prove, of which twelve mount shipped
 `@gpuixui/components` (the dialog and its fade, the menu, the context menu, the toast system,
 the command palette, the tabs, the list, the popover, the message scroller, the
 combobox and the modal focus rule), five mount
@@ -1568,6 +1568,37 @@ reports `-100000`, not the distance actually travelled), while
 renderer holds — which is what `ScrollArea`'s `onScrollChange` forwards.
 Evidence: `.artifacts/live/scroll-end.png`.
 
+### `nested-scroll-lifecycle` — measured on 0.11.0 here
+
+A scroller inside a scroller: a dock pane's list inside the page's scroll root,
+a dialog body's list inside the panel behind it. The window measured the wheel's
+routing rule, and it is not "the innermost scroller takes it":
+
+| Step | Check |
+| ---- | ----- |
+| at rest | both offsets are `(0, 0)`; the inner list is painted wholly inside the page's viewport, and the filler row a page-only wheel aims at starts below the list |
+| wheel `-100` over the **inner list** | the list moves to `-100` **and the page moves to `-100` too**, though the list had 240px of its own travel left; the page's `onScroll` hears the wheel (`events=1`) |
+| wheel `+100` over a **filler row below the list** | the page returns to `0` and the list stays at `-100` — the one wheel that moves a single scroller is the one that never reaches the other |
+| wheel `-100000` over the inner list | the list clamps at `-340` (its content's end) and the page clamps at `-360` (its own): each scroller takes the **whole** delta and clamps against its own content, not against the other's end |
+| readouts | the list heard both wheels aimed at it (`events=2`); the page counted all three, including the two aimed inside the list (`events=3`) |
+
+One wheel scrolls **every scrollable ancestor** on the hit path by the same
+delta. There is no wheel handler and no `preventDefault` in the host props, so a
+pane cannot keep a wheel from its page: a dock's outer layout must not be a
+scroller around pane scrollers (size the workspace to the window and let each
+pane scroll), and a page that does scroll will move together with a list inside
+it. `onScroll` fires on the ancestor for a wheel aimed inside the descendant, so
+a page listener cannot tell which scroller the reader rolled from the event
+alone — read each scroller's own `onScrollChange` offset instead.
+
+24 checks, `--only nested-scroll-lifecycle`, green on 0.11.0. Two negative
+controls measured, each exit `1`: removing the page's `overflow: "scroll"` fails
+`the nested-outer scroller reports an offset` (`expected a value, got none`),
+and aiming the first wheel at the filler row instead of the list fails
+`the inner list takes the wheel's own delta` (`expected -100 ± 1, got 0`) — the
+rules are about these two scrollers, not about one shared offset.
+Evidence: `.artifacts/live/nested-scroll.png`.
+
 ### `message-scroller-lifecycle` — measured on 0.11.0 here
 
 The shipped `MessageScroller` in a real window: the first proof that its pin
@@ -2678,7 +2709,7 @@ narrower. Each deviation is deliberate and measured:
 - The eleven core capabilities (including the token gallery, the modal contract,
   floating placement and text selection), the Tier 3/4 probes, the window's own
   backdrop and the app-level shortcut probe pass in real GPUix 0.11.0 on this host
-  (45/45), with a written report and screenshots.
+  (46/46), with a written report and screenshots.
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (39 screens, 158 checks) and fails when
   a page paints nothing or two ids show one screen. Its two negative controls

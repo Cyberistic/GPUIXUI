@@ -181,6 +181,12 @@ export const liveRegistry = [
     capability: "scroll",
   },
   {
+    id: "nested-scroll-lifecycle",
+    title:
+      "Scroll: a wheel inside a nested scroller moves every scrollable ancestor by its delta, so the page and the list scroll together",
+    capability: "scroll",
+  },
+  {
     id: "message-scroller-lifecycle",
     title:
       "Scroll: the shipped MessageScroller follows a page while pinned, leaves an unpinned reader's offset alone, counts arrivals and returns on jump",
