@@ -43,8 +43,7 @@ const regexStart = (src, at) => {
   while (i >= 0 && /\s/.test(src[i])) i -= 1;
   if (i < 0) return true;
   return (
-    REGEX_PRECEDERS.test(src[i]) ||
-    REGEX_KEYWORDS.test(src.slice(0, i + 1))
+    REGEX_PRECEDERS.test(src[i]) || REGEX_KEYWORDS.test(src.slice(0, i + 1))
   );
 };
 /** Index of the `/` that closes the regex starting at `at`, or `at` if this is
