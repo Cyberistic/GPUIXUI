@@ -745,6 +745,24 @@ import, so `--list` costs no binding), `scenarios.tsx` owns the view and steps,
 `host.ts` adapts the window to `Smoke.AsyncSmokeHost`, and `run.ts` is the CLI.
 Artifacts: `.artifacts/live-report.json` and `.artifacts/live/<state>.png`.
 
+### The critical interactions, each measured in a window
+
+MISSION's representative list, mapped to the probes that drive it. Every row is
+a real window measurement, the probes pass in the same run, and
+`registry.test.ts` fails when a row loses its probes or names an id the registry
+does not declare — so a rename cannot quietly retire an interaction.
+
+| Critical interaction | Probes | What a window measures |
+| -------------------- | ------ | ---------------------- |
+| dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter |
+| menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
+| input update/validation | `text-input`, `validation-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both |
+| tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
+| theme switching | `theme-switch-lifecycle` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density |
+| table sort/selection | `table-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort |
+| panel resizing | `split-pane-lifecycle` | a divider drag resizes the pane and clamps at the caller's bounds |
+| workspace restore | `workspace-restore` | a saved arrangement paints again after a re-mount, a corrupt string opens the default, and an out-of-bounds width is clamped |
+
 ### A probe waits for a settled paint
 
 A window paints a sequence of frames, so a check that reads one frame after a key

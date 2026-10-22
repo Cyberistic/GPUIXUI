@@ -13,6 +13,8 @@
  */
 
 import { readFileSync } from "node:fs";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { liveRegistry } from "./registry.js";
 
@@ -30,9 +32,83 @@ const documented = readme
     return match === null ? [] : [match[1]];
   });
 
+/**
+ * The critical-interaction rows: the interaction's name and every probe id its
+ * cells name, in the table's own order.
+ */
+const interactionRows = (): ReadonlyArray<{
+  readonly interaction: string;
+  readonly probes: ReadonlyArray<string>;
+}> => {
+  const start = readme.indexOf("### The critical interactions");
+  const after = start === -1 ? "" : readme.slice(start);
+  const rows = Arr.takeWhile(
+    Arr.dropWhile(after.split("\n"), (line) => !line.startsWith("|")),
+    (line) => line.startsWith("|"),
+  );
+  return Arr.getSomes(Arr.map(rows, parseInteractionRow));
+};
+
+/** One table line as a row, or `None` for the header and the separator. */
+const parseInteractionRow = (
+  line: string,
+): Option.Option<{
+  readonly interaction: string;
+  readonly probes: ReadonlyArray<string>;
+}> => {
+  const cells = line.split("|");
+  const interaction = cells[1]?.trim() ?? "";
+  if (
+    interaction === "" ||
+    interaction === "Critical interaction" ||
+    interaction.startsWith("---")
+  ) {
+    return Option.none();
+  }
+  const probes = Arr.filter(
+    Arr.map(
+      [...(cells[2] ?? "").matchAll(/`([^`]+)`/g)],
+      (match) => match[1] ?? "",
+    ),
+    (id) => id.length > 0,
+  );
+  return Option.some({ interaction, probes });
+};
+
 describe("live probe documentation", () => {
   it("documents every registered probe under the version it was measured on", () => {
     expect(documented).toEqual(liveRegistry.map((probe) => probe.id));
+  });
+
+  it("measures every critical interaction the mission names, with registered probes", () => {
+    // The mission's representative list is what "tested in the real runtime"
+    // means; a row that loses its probes, or an id a rename retired, would leave
+    // the claim unreadable rather than red.
+    const rows = interactionRows();
+    expect(rows.map((row) => row.interaction)).toEqual([
+      "dialog open/close/confirm",
+      "menu selection/dismissal",
+      "input update/validation",
+      "tabs and panel switching",
+      "theme switching",
+      "table sort/selection",
+      "panel resizing",
+      "workspace restore",
+    ]);
+    const registered = new Set<string>(
+      Arr.map(liveRegistry, (probe) => probe.id),
+    );
+    // Both directions: a row may not lose its probes, and no row may name an
+    // id the registry no longer declares.
+    expect(Arr.filter(rows, (row) => row.probes.length === 0)).toEqual([]);
+    expect(
+      Arr.filter(
+        Arr.flatMap(rows, (row) =>
+          Arr.map(row.probes, (id) => ({ interaction: row.interaction, id })),
+        ),
+        (entry) => !registered.has(entry.id),
+      ),
+    ).toEqual([]);
   });
 
   it("prints the live probe total it actually runs", () => {

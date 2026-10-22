@@ -550,7 +550,22 @@ a workaround for two live sessions sharing one worktree; see
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 76/76
+`[x]` `[██████████]` 77/77
+
+`[x]` Map the **critical interactions MISSION names to the probes that drive
+      them** — the eight representative interactions ("dialog
+      open/close/confirm", "menu selection/dismissal", "input
+      update/validation", "tabs and panel switching", "theme switching", "table
+      sort/selection", "panel resizing", "workspace restore") were each proven
+      by a live probe but nothing joined the two lists, so a release report had
+      to reconstruct the mapping by hand and a renamed probe could quietly retire
+      an interaction. The README's live section now carries one row per
+      interaction with its probes and what the window measures, and
+      `registry.test.ts` derives the eight labels and every cited id from that
+      table and fails when a row is dropped or names an id the registry does not
+      declare. Directions measured: renaming `table-lifecycle` fails with the
+      unknown id, and deleting the "panel resizing" row fails the label list
+      (`7` vs `8`); restored, 32 files / 186 tests green.
 
 `[x]` Live-probe the **validation** half of "input update/validation" — the
       critical-interaction list names it and only `text-input` (onChange +
@@ -3893,7 +3908,7 @@ numbers).
   - `[ ]` gradient-text — needs a gradient the runtime's text host does not paint (`background` gradients exist; a text fill does not), so it waits on a text-fill capability
 `[~]` Reveal and scroll: blur, fade, zoom, slide, highlight, auto-height, scroll-fade, scroll-progress
   - `[x]` `auto-height` — `AutoHeight` measures its content through `onLayout` and tweens the clipping box to it (mount window, re-measure, reduced motion), `src/behaviour/auto-height.test.tsx` (4), `docs/auto-height.mdx`, the example and the inventory row; `CollapsibleContent` now uses it, so the recorded "mounts instantly" limitation is closed
-  - `[x]` `reveal` — `Reveal` is the house entrance as a component: fade plus a relative `top`/`left` offset, on mount or on an `open` change (the subtree unmounts after its exit), `from` names the edge, `distance`/`delayMs`/`level` shape the arrival, and the reduced preference paints at rest at once; `src/reveal/frames.ts` + its unit suite, `src/behaviour/reveal.test.tsx` (6), `docs/reveal.mdx`, the example and the row. Covers the catalogue's **fade** and **slide**, which are the same primitive with a different edge. Measured: a wrong edge sign fails the direction case, a "none" that moves fails the fade-only case, and an entry that paints at rest fails the arrival case
+  - `[x]` `reveal` — `Reveal` is the house entrance as a component: fade plus a relative `top`/`left` offset, on mount or on an `open` change (the subtree unmounts after its exit), `from` names the edge, `distance`/`delayMs`/`level` shape the arrival, and the reduced preference paints at rest at once; `src/reveal/frames.ts` + its unit suite, `src/behaviour/reveal.test.tsx` (7), `docs/reveal.mdx`, the example and the row. Covers the catalogue's **fade** and **slide**, which are the same primitive with a different edge. Measured: a wrong edge sign fails the direction case, a "none" that moves fails the fade-only case, and an entry that paints at rest fails the arrival case
   - `[-]` `zoom`, `blur` — cancelled with evidence: a zoom is a `transform: scale` and a blur is a `filter`, and `@gpuix/native@0.11.0`'s `StyleDesc` has neither (upstream issue #102), so `Reveal` offers the edges it can paint instead of imitating them
   - `[ ]` scroll-fade, scroll-progress — **unblocked, the earlier note was stale**: `onScrollChange` is a runtime host prop in 0.11.0 (it publishes `scrollX`/`scrollY` for an `overflow: "scroll"` element; `ScrollArea`'s viewport already reads it), so a progress bar and a gradient edge fade are both paintable — a two-stop `linear-gradient` background exists. Next in this group
 `[ ]` Interaction effects: magnetic, tilt, click, ripple-button, icon-button, flip-button, liquid-button, shine
