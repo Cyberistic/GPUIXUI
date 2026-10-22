@@ -9540,9 +9540,10 @@ const windowSelectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       SELECTION_EVENT_TAIL,
     );
     const afterDrag = yield* ctx.host.text(SELECTION_EVENT_READOUT);
+    const dragCount = yield* fires("the drag's count parses", afterDrag);
     yield* ctx.expectEqual(
       "a pointer drag publishes a window selection change",
-      (yield* fires("the drag's count parses", afterDrag)) > baseline,
+      dragCount > baseline,
       true,
     );
     yield* ctx.expectContains(
@@ -9553,16 +9554,13 @@ const windowSelectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     // Clearing is the other half of the contract: an app that only hears the
     // first change keeps showing a toolbar for a selection that is gone.
-    const beforeClear = yield* fires(
-      "the drag's final count parses",
-      afterDrag,
-    );
     yield* ctx.host.clearSelection();
     yield* Effect.sleep(SETTLE);
     const cleared = yield* ctx.host.text(SELECTION_EVENT_READOUT);
+    const clearedCount = yield* fires("the cleared count parses", cleared);
     yield* ctx.expectEqual(
       "clearing the selection publishes the empty change",
-      (yield* fires("the cleared count parses", cleared)) > beforeClear,
+      clearedCount > dragCount,
       true,
     );
     yield* ctx.expectContains(
@@ -9573,10 +9571,6 @@ const windowSelectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     // The opt-out: a drag over chrome is not a selection change, so the app must
     // not be told one happened.
-    const beforeChrome = yield* fires(
-      "the cleared final count parses",
-      cleared,
-    );
     yield* ctx.host.drag("window-selection-chrome", 240, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -9585,7 +9579,7 @@ const windowSelectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         "the chrome count parses",
         yield* ctx.host.text(SELECTION_EVENT_READOUT),
       ),
-      beforeChrome,
+      clearedCount,
     );
   });
 

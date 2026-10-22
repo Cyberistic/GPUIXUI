@@ -562,7 +562,7 @@ a workaround for two live sessions sharing one worktree; see
       in a window on 0.11.0: a pointer drag over the selectable line raises the
       count and the last run equals `getSelectedText()`; `clearSelection()` raises
       it again with **no** run (`last=none`); the same drag over the non-selectable
-      line raises nothing. 13 checks green, three consecutive runs. Negative control
+      line raises nothing. 11 checks green, three consecutive runs. Negative control
       measured: dropping `onSelectionChange` from the runner's `render` fails `a
       pointer drag publishes a window selection change` (`expected true, got
       false`). The seam is now shared: `src/window-handlers.tsx` carries the key and

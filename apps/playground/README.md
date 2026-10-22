@@ -1927,7 +1927,7 @@ last run it received.
 | `clearSelection()` after that drag | the counter rises again and the change carries **no** run (`last=none`), so a toolbar can hide itself |
 | the same drag over the non-selectable line | the counter does **not** move — a node that opted out publishes no change |
 
-Thirteen checks. Negative control measured: dropping `onSelectionChange` from
+Eleven checks. Negative control measured: dropping `onSelectionChange` from
 the runner's `render` call fails `a pointer drag publishes a window selection
 change` (`expected true, got false`); restored, `--only
 window-selection-lifecycle` is green three runs in a row.
