@@ -312,7 +312,7 @@ describe("List", () => {
           <ListItemTitle>Alpha</ListItemTitle>
         </ListItem>
         <ListItem testId="row-b" value="b" disabled>
-          <ListItemTitle>Beta</ListItemTitle>
+          <ListItemTitle testId="title-b">Beta</ListItemTitle>
         </ListItem>
       </List>,
     );
@@ -320,7 +320,73 @@ describe("List", () => {
     clickCentreOf(list, "row-b");
 
     expect(onValueChange).not.toHaveBeenCalled();
-    expect(list.renderer.findByTestId("row-b")?.style.opacity).toBe(0.5);
+    // Unavailable is carried by the label's role, not by fading the row: an
+    // `opacity` on the row dims every fill the row paints with it.
+    expect(list.renderer.findByTestId("row-b")?.style.opacity).toBeUndefined();
+    expect(list.renderer.findByTestId("title-b")?.style.color).toBe(
+      darkTheme.colors.disabledForeground,
+    );
+    expect(
+      contrastRatio(
+        darkTheme.colors.disabledForeground,
+        darkTheme.colors.background,
+      ) ?? 0,
+    ).toBeGreaterThanOrEqual(contrastFloors.disabled);
+
+    list.unmount();
+  });
+
+  it("keeps a disabled row's selection wash and mutes only its text", () => {
+    // The bug this guards: the row faded itself with `opacity: 0.5`, which
+    // composited the `selected` fill it had just painted into the strip behind
+    // it — 1.03:1 on several shipped styles, under the 1.05:1 the un-faded wash
+    // clears everywhere — so a chosen row that became unavailable lost the wash
+    // that says it is chosen. The state now rides on the text roles the contract
+    // measures on that fill.
+    const list = renderComponent(
+      <List testId="list" selectionMode="single" defaultValue="a">
+        <ListItem testId="row-a" value="a" disabled>
+          <ListItemTitle testId="title-a">Alpha</ListItemTitle>
+          <ListItemDescription testId="description-a">
+            first
+          </ListItemDescription>
+        </ListItem>
+        <ListItem testId="row-b" value="b" disabled>
+          <ListItemTitle testId="title-b">Beta</ListItemTitle>
+          <ListItemDescription testId="description-b">
+            second
+          </ListItemDescription>
+        </ListItem>
+      </List>,
+    );
+
+    const style = (testId: string) => list.renderer.findByTestId(testId)?.style;
+
+    // The wash is the role itself, not the role at 50% over the strip.
+    expect(style("row-a")?.backgroundColor).toBe(darkTheme.colors.selected);
+    expect(style("row-a")?.opacity).toBeUndefined();
+    expect(style("row-b")?.backgroundColor).toBeUndefined();
+
+    // On the wash the title keeps the secondary role the contract measures
+    // there; off it, the disabled pair.
+    expect(style("title-a")?.color).toBe(darkTheme.colors.mutedForeground);
+    expect(
+      contrastRatio(
+        darkTheme.colors.mutedForeground,
+        darkTheme.colors.selected,
+      ) ?? 0,
+    ).toBeGreaterThanOrEqual(contrastFloors.secondary);
+    expect(style("title-b")?.color).toBe(darkTheme.colors.disabledForeground);
+    expect(style("description-a")?.color).toBe(
+      darkTheme.colors.mutedForeground,
+    );
+    expect(style("description-b")?.color).toBe(
+      darkTheme.colors.disabledForeground,
+    );
+
+    // A row that cannot be pressed does not advertise a press either.
+    expect(style("row-a")?.cursor).toBe("not-allowed");
+    expect(style("row-a")?.hover).toBeUndefined();
 
     list.unmount();
   });

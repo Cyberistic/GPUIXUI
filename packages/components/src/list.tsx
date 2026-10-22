@@ -114,7 +114,16 @@ const ListContext = createContext<ListContextValue | undefined>(undefined);
  * the title has to know the selection to keep the role the row declares. It is a
  * boolean rather than the row's whole state because a title only reads this.
  */
-const RowSelectedContext = createContext(false);
+/** What a row's text parts need to know about the row they sit in. */
+interface RowState {
+  readonly selected: boolean;
+  readonly disabled: boolean;
+}
+
+const RowStateContext = createContext<RowState>({
+  selected: false,
+  disabled: false,
+});
 
 /** The list a {@link ListItem} belongs to. Throws when there is none. */
 const useListContext = (): ListContextValue => {
@@ -749,12 +758,21 @@ export const ListItem = ({
           height: dense
             ? theme.density.rowHeight
             : theme.density.rowHeight + theme.spacing.md,
-          opacity: disabled ? 0.5 : 1,
+          // No `opacity` on a disabled row: it composites the `selected` fill
+          // this same style paints into the strip behind it, so the wash a
+          // reader uses to find the current row drops under the perceptibility
+          // floor. The state is carried by the text roles instead
+          // (`ListItemTitle`/`ListItemDescription`), and the pointer gets a
+          // cursor that says the row will not take the press.
           ...(selectable
             ? {
-                cursor: "pointer",
-                hover: { backgroundColor: theme.colors.accent },
-                active: { backgroundColor: theme.colors.active },
+                cursor: disabled ? "not-allowed" : "pointer",
+                ...(disabled
+                  ? {}
+                  : {
+                      hover: { backgroundColor: theme.colors.accent },
+                      active: { backgroundColor: theme.colors.active },
+                    }),
               }
             : {}),
           ...(isSelected
@@ -790,9 +808,9 @@ export const ListItem = ({
           minWidth: 0,
         }}
       >
-        <RowSelectedContext.Provider value={isSelected}>
+        <RowStateContext.Provider value={{ selected: isSelected, disabled }}>
           {children}
-        </RowSelectedContext.Provider>
+        </RowStateContext.Provider>
       </div>
       {trailing === undefined ? null : (
         <div
@@ -819,9 +837,13 @@ export interface ListItemTitleProps extends Props {
  * The row's one-line label. The row's height is fixed, so the title is clipped
  * rather than wrapped.
  *
- * A selected row is a saturated fill, so its title takes the row's on-colour
- * (`selectedForeground`) instead of the recipe's page role; the description
- * keeps its muted role, which the token contract measures on that fill.
+ * The title takes the role the row's own fill was measured with: a selected row
+ * is a saturated fill, so the title keeps the row's on-colour
+ * (`selectedForeground`) — or the secondary `mutedForeground` that the contract
+ * measures on that same wash once the row is also unavailable. An unavailable
+ * row on its strip carries `disabledForeground`, the pair the disabled floor
+ * measures there. The row never fades itself by opacity, because that
+ * composites the selection wash it just painted into the strip behind it.
  */
 export const ListItemTitle = ({
   className,
@@ -829,7 +851,14 @@ export const ListItemTitle = ({
   ...rest
 }: ListItemTitleProps) => {
   const theme = useTheme();
-  const selected = useContext(RowSelectedContext);
+  const row = useContext(RowStateContext);
+  const color = row.selected
+    ? row.disabled
+      ? theme.colors.mutedForeground
+      : theme.colors.selectedForeground
+    : row.disabled
+      ? theme.colors.disabledForeground
+      : theme.colors.foreground;
   return (
     <text
       {...rest}
@@ -837,7 +866,7 @@ export const ListItemTitle = ({
         mergeStyles(recipeStyle(cn(LIST_ITEM_TITLE, className), theme), {
           whiteSpace: "nowrap",
           textOverflow: "ellipsis",
-          ...(selected ? { color: theme.colors.selectedForeground } : {}),
+          color,
         }),
         style,
       )}
@@ -850,18 +879,31 @@ export interface ListItemDescriptionProps extends Props {
   readonly className?: string;
 }
 
-/** The row's second line: metadata, a path, a subtitle. */
+/**
+ * The row's second line: metadata, a path, a subtitle.
+ *
+ * It keeps the recipe's muted role on a selected row — the token contract
+ * measures `mutedForeground` on the `selected` fill — and takes
+ * `disabledForeground` when the row is unavailable on its strip, so the two
+ * lines agree about the state.
+ */
 export const ListItemDescription = ({
   className,
   style,
   ...rest
 }: ListItemDescriptionProps) => {
   const theme = useTheme();
+  const row = useContext(RowStateContext);
   return (
     <text
       {...rest}
       style={mergeStyles(
-        recipeStyle(cn(LIST_ITEM_DESCRIPTION, className), theme),
+        mergeStyles(
+          recipeStyle(cn(LIST_ITEM_DESCRIPTION, className), theme),
+          row.disabled && !row.selected
+            ? { color: theme.colors.disabledForeground }
+            : {},
+        ),
         style,
       )}
     />
