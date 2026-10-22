@@ -318,11 +318,12 @@ describe("the primitives docs page contract", () => {
     ).toEqual([]);
   });
 
-  it("records the tooltip's measured keyboard limit", () => {
-    // Measured in a real window by the playground's `tooltip-lifecycle` probe: a
-    // Tab traversal focuses the trigger but never runs React's `onFocus`, so the
-    // GPUix tooltip stays closed. The page claimed the opposite, so it is held to
-    // the measurement instead of to the `TestRenderer`'s behaviour.
+  it("records the tooltip's measured keyboard path", () => {
+    // Bug guarded: the first `tooltip-lifecycle` run read the frame before
+    // React's `onFocus` arrived, so the page taught that a `Tab` traversal never
+    // opens the tip and that hover was the only open path. Re-run on 2026-10-22
+    // the shipped wrapper opens on a traversal (14 checks), so the page has to
+    // claim that path and must not reintroduce the retracted limit.
     const source = read("tooltip.mdx");
     const keyboard = Option.getOrElse(bodyOf(source, "Keyboard"), () => "");
     const limitations = Option.getOrElse(
@@ -331,12 +332,16 @@ describe("the primitives docs page contract", () => {
     );
 
     expect({
-      keyboard: keyboard.includes("does not open it in a real window"),
-      limitation: limitations.includes(
-        "only open path the runtime's wiring leaves",
-      ),
+      opens: keyboard.includes("A `Tab` traversal opens the tip"),
       evidence: keyboard.includes("tooltip-lifecycle"),
-    }).toEqual({ keyboard: true, limitation: true, evidence: true });
+      retracted: source.includes("does not open it in a real window"),
+      hoverOnly: limitations.includes("only open path"),
+    }).toEqual({
+      opens: true,
+      evidence: true,
+      retracted: false,
+      hoverOnly: false,
+    });
   });
 
   it("is indexed by the package's own page table", () => {

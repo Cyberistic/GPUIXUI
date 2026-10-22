@@ -142,6 +142,45 @@ const announceProblems = ({
     },
   );
 
+/**
+ * Problems with the tooltip record and row after the keyboard path was
+ * re-measured in a window.
+ *
+ * The regression: the first `tooltip-lifecycle` run read the frame before
+ * React's `onFocus` arrived, so both the record and the row taught that a `Tab`
+ * traversal never opens the tip and hover was the only open path. The re-run
+ * measured the activation, so neither document may carry the old limit.
+ */
+const tooltipProblems = (): ReadonlyArray<string> =>
+  Option.match(
+    Arr.findFirst(inventory, (meta) => meta.name === "Tooltips"),
+    {
+      onNone: () => ["Tooltips: no record"],
+      onSome: (meta) => [
+        ...Arr.filter(meta.limitations, (line) =>
+          line.includes("does not open"),
+        ).map(
+          (line) =>
+            `Tooltips: the record still teaches the retracted "${line}"`,
+        ),
+        ...Option.match(rowFor(meta), {
+          onNone: () => ["Tooltips: no COMPONENTS.md row"],
+          onSome: (row) => [
+            ...(row.notes.includes("tooltip-lifecycle")
+              ? []
+              : ["Tooltips: the row cites no measured probe"]),
+            ...(row.notes.includes("traversal opens")
+              ? []
+              : ["Tooltips: the row does not record the keyboard open path"]),
+            ...(row.notes.includes("does not open")
+              ? ["Tooltips: the row still teaches the retracted limit"]
+              : []),
+          ],
+        }),
+      ],
+    },
+  );
+
 describe("Tier 1 inventory", () => {
   it("names files that exist", () => {
     const problems = Arr.flatMap(inventory, (meta) =>
@@ -172,6 +211,13 @@ describe("Tier 1 inventory", () => {
     const problems = Arr.flatMap(ANNOUNCED_VALUES, announceProblems);
 
     expect(problems).toEqual([]);
+  });
+
+  it("records the tooltip's measured keyboard path", () => {
+    // Measured in a real window by the playground's `tooltip-lifecycle` probe,
+    // re-run on 2026-10-22: the shipped wrapper opens on a `Tab` traversal
+    // (14 checks), because the traversal runs React's `onFocus`.
+    expect(tooltipProblems()).toEqual([]);
   });
 
   it("agrees with its COMPONENTS.md row", () => {
