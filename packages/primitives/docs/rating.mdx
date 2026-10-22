@@ -45,6 +45,10 @@ const [score, setScore] = useState(0);
 
 ## Limitations
 
+- A stored `value` is placed on the painted scale: without `allowHalf`, the
+  stars a score has fully earned paint (`4.9` is four stars — rounding up would
+  show five the score never reached); with `allowHalf`, the score rounds to the
+  nearer half (`4.4` is `4.5`).
 - Halves are the finest score; a quarter star is not expressible.
 - The pointer preview is paint-only: a reader hears the value, not the preview.
 - Clearing is explicit (`Delete`/`Backspace`); an arrow clamps at the lowest

@@ -43,6 +43,13 @@ describe("clampRating", () => {
     expect(clampRating(2.7, 5)).toBe(2);
   });
 
+  it("paints the stars a whole-star score has fully earned", () => {
+    // Whole stars do not round: 4.9 is not five filled stars, because the
+    // caller's score never reached five. Halves take the finer rule below.
+    expect(clampRating(4.9, 5)).toBe(4);
+    expect(clampRating(4.9, 5, true)).toBe(5);
+  });
+
   it("snaps a half score to the nearest half place", () => {
     // The bug guarded: a stored 4.4 rendered as four stars while the caller's
     // own readout said 4.4, so a half score read as the star below it.

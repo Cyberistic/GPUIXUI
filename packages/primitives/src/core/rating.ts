@@ -37,9 +37,11 @@ export const starCount = (max: number): number =>
 /**
  * Where a score lands: on a whole star, or on a half when halves are allowed.
  *
- * A value between two places belongs to the nearer one, so a stored `4.4` reads
- * as `4` while `4.4` with halves reads as `4.5` — the score a reader wrote is
- * the score the stars paint.
+ * The two precisions answer differently to a score between places. Halves are a
+ * finer scale, so the score rounds to the nearer half — a stored `4.4` reads as
+ * `4.5`. Whole stars are the stars a reader has **fully earned**, so `4.4` and
+ * `4.9` both read as `4`: rounding `4.9` up would paint five filled stars for a
+ * score the caller never reached.
  */
 const snapRating = (value: number, half: boolean): number =>
   half ? Math.round(value * 2) / 2 : Math.trunc(value);
