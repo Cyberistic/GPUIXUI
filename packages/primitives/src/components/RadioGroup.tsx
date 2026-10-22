@@ -168,7 +168,7 @@ export const initialActiveIndex = (
 };
 
 const itemState = (option: RadioOption, value: string): SelectionState =>
-  option.value === value && value !== "" ? "checked" : "unchecked";
+  option.value === value ? "checked" : "unchecked";
 
 export const renderRadioGroup = (
   props: RadioGroupProps,

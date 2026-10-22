@@ -374,6 +374,29 @@ describe("RadioGroupItem", () => {
     expect(states).toEqual(["unchecked", "unchecked", "checked"]);
   });
 
+  it("paints an option whose value is the empty string as the chosen one", () => {
+    // Bug guarded: `""` is the group's default (no choice) value, and the state
+    // reader also refused it as a choice — so an option whose value was `""`
+    // could hold the tab stop, accept a press that reported `""`, and still paint
+    // unchecked. The value is the value, whatever its length.
+    const element = renderRadioGroup(
+      {
+        options: [
+          { value: "", label: "Any" },
+          { value: "eu", label: "EU" },
+        ],
+      },
+      testTheme,
+      text(""),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    expect(
+      rows(element).map((row) => expectSome(hostProp(row, "aria-valuetext"))),
+    ).toStrictEqual(["checked", "unchecked"]);
+  });
+
   it("draws the item's rich content in the row", () => {
     const element = renderRadioGroup(
       { children: itemChildren },
