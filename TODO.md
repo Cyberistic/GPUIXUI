@@ -10404,7 +10404,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 358/359
+`[x]` `[██████████]` 359/360
 
 `[x]` Publish the **keyboard contract** every component page promised — the index
       said "every component … with its keyboard contract" and `/docs/components`
@@ -10438,11 +10438,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
       keyboard contract is generated, not written and the template's `keyboard`
       row, the components index's "How to read a page" row (the case that teaches
       the row fails without it), the site ledger's two module rows. Green: the
-      docs suite **163 files / 1 712 tests**, `check-types` and `build` clean. The
+      docs suite **163 files / 1 713 tests**, `check-types` and `build` clean. The
       one gap the policy names (the primitives' `Select`, whose keys are the
       runtime's headless list) is the row below. No native scenario applies — the
       model reads source files and the strip prints them; no claim about a native
       frame is made.
+
+`[x]` Read the **activation payload** the button page typed away — the primitives'
+      `ButtonProps.onActivate` was widened to carry the event that caused the press
+      (the runtime's click point, or the key that activated), and
+      `/docs/components/button` still printed `() => void`, so a consumer could not
+      learn the payload exists before binding a handler that needed it. The row
+      prints `(event: EventPayload) => void` and says the event travels with it;
+      `component-page.test.ts` gains `documents the payload every onActivate hands
+      over`, which reads every curated page's `onActivate` row and refuses a
+      nullary cell (every shipped one takes an argument: the event on an action,
+      the row's value on a list), with a three-row floor so a scan that stopped
+      matching cannot pass on nothing. Direction measured: restoring `() => void`
+      fails the case naming `button.mdx`. Green: 17/17 in the file. No native
+      scenario applies — a page and a source contract.
 
 `[ ]` Give the **primitives' Select** keyboard notes — its arrows, Enter and Escape
       belong to the runtime's headless list (`@gpuix/react`), so the derivation

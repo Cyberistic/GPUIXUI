@@ -651,6 +651,26 @@ describe("the curated component pages", () => {
     expect(unresolved).toEqual([]);
   });
 
+  it("documents the payload every onActivate hands over", () => {
+    // Bug guarded: `ButtonProps.onActivate` was widened to carry the event that
+    // caused the press — the runtime's click point, or the key that activated —
+    // and `/docs/components/button` still typed it `() => void`, so a consumer
+    // reading the table could not know a payload existed before binding a
+    // handler that needed it. Every shipped `onActivate` takes one argument (the
+    // event on an action, the row's value on a list), so a nullary cell is a
+    // contract read backwards.
+    const rows = pages.flatMap((name) =>
+      source(name)
+        .split("\n")
+        .filter((line) => /^\|\s*`onActivate`\s*\|/.test(line))
+        .map((line) => `${name}: ${line}`),
+    );
+
+    // Floors, so a scan that stopped matching cannot pass on no rows.
+    expect(rows.length).toBeGreaterThanOrEqual(3);
+    expect(rows.filter((row) => row.includes("() => void"))).toEqual([]);
+  });
+
   it("maps every API table to the props type it documents", () => {
     // The map is the completeness contract's premise, so it is held both ways:
     // a page the table forgets, a table the map invents, and a type name that

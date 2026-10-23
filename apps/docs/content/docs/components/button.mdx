@@ -40,7 +40,7 @@ import { Button } from "@gpuixui/primitives";
 | `reducedMotion` | `boolean` | the provider's preference (`false` when none) | lands the busy spinner at rest instead of animating it; the prop wins |
 | `leading` / `trailing` | `ReactNode` | none | icon or element beside the label |
 | `label` | `string` | none | accessible name; required for an icon-only button |
-| `onActivate` | `() => void` | none | click or activating key; not called while busy |
+| `onActivate` | `(event: EventPayload) => void` | none | click or activating key, with the event that caused it; not called while busy |
 | `onClick` | `(event) => void` | none | raw click, called before `onActivate` |
 | `onKeyDown` / `onKeyUp` | `(event: KeyEvent) => void` | none | composed **after** the activation, so an activating key runs first |
 | `onFocus` / `onBlur` | `(event) => void` | none | composed before the button's own |
