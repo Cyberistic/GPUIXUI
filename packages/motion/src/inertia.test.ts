@@ -119,6 +119,44 @@ describe("an inertia built by hand", () => {
   });
 });
 
+describe("a release whose rest the runtime cannot represent", () => {
+  it("settles on the nearest destination the runtime can paint", () => {
+    // A rest that overflows is still a readable input, so no repair above
+    // caught it: `position + speed * tau` was `Infinity`, and the release
+    // frame's zero travel multiplied it into `Infinity * 0`, which is `NaN` —
+    // a frame the runtime paints as nothing, that never settles.
+    const huge = inertia(1e308);
+    expect(project(huge, 1e308, 1e308)).toBe(1e308);
+    expect(sampleInertia(huge, 1e308, 1e308, 0)).toEqual({
+      value: 1e308,
+      velocity: 0,
+      settled: true,
+    });
+    expect(sampleInertia(huge, 1e308, -1e308, 0)).toEqual({
+      value: 1e308,
+      velocity: 0,
+      settled: true,
+    });
+
+    // A wall in the direction it was thrown is the destination: it is finite,
+    // so the coast travels to it rather than inventing a rest.
+    const walled = inertia(1e308, { max: 100 });
+    expect(project(walled, 1e308, 1e308)).toBe(100);
+    expect(sampleInertia(walled, 1e308, 1e308, 0)).toEqual({
+      value: 100,
+      velocity: 0,
+      settled: true,
+    });
+
+    // Every field stays a number the runtime can paint, at every clock.
+    [0, 1, 50, 1000, Number.POSITIVE_INFINITY].forEach((ms) => {
+      const sample = sampleInertia(huge, 1e308, 1e308, ms);
+      expect(Number.isFinite(sample.value)).toBe(true);
+      expect(Number.isFinite(sample.velocity)).toBe(true);
+    });
+  });
+});
+
 describe("a coast released on a wall", () => {
   // The sampler read "the value is at a bound" as "the coast is over", without
   // asking which way it was moving. A surface dragged to the edge of its range

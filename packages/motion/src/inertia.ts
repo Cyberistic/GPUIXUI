@@ -14,7 +14,11 @@
  * takes the house 350 ms, a bound that cannot be read is dropped and an inverted
  * pair is swapped, and a non-finite position or velocity reads as a standstill.
  * Without that, `tau: NaN` answered `NaN` from {@link project} and a coast never
- * settled, painting `NaN` into every frame.
+ * settled, painting `NaN` into every frame. A rest the arithmetic cannot
+ * represent is no journey either: the coast settles on the nearest finite
+ * destination (a wall in the direction it was thrown, or the release frame) in
+ * the frame it is released, because an overflowed travel times a zero decay is
+ * `NaN`, and `Infinity` is painted as nothing.
  */
 
 import {
@@ -47,6 +51,26 @@ const clampTo = (value: number, { min, max }: Bounds): number => {
 };
 
 /**
+ * The destination a release settles on — always a number the runtime can paint.
+ *
+ * A projection that overflows still knows which way it went, so a wall in that
+ * direction is a destination the coast can travel to (it is finite). Without one
+ * there is no representable rest at all, and `Infinity` is not a frame: the
+ * runtime paints a non-finite inset as nothing, so the coast has nowhere to go
+ * but where it was released.
+ */
+const destinationOf = (
+  start: number,
+  speed: number,
+  tau: number,
+  limits: Bounds,
+): number => {
+  const rest = start + speed * tau;
+  if (Number.isFinite(rest)) return clampTo(rest, limits);
+  return (rest > 0 ? limits.max : limits.min) ?? clampTo(start, limits);
+};
+
+/**
  * Builds inertia from a time constant (ms) and optional bounds. Non-finite or
  * non-positive `tauMs` falls back to 350 ms; inverted bounds are swapped.
  */
@@ -68,8 +92,10 @@ export const project = (
   position: number,
   velocity: number,
 ): number =>
-  clampTo(
-    finiteOr(position, 0) + finiteOr(velocity, 0) * tauOf(inertia.tau),
+  destinationOf(
+    finiteOr(position, 0),
+    finiteOr(velocity, 0),
+    tauOf(inertia.tau),
     boundsOf(inertia.min, inertia.max),
   );
 
@@ -96,8 +122,20 @@ export const sampleInertia = (
   const speed = finiteOr(velocity, 0);
   const tau = tauOf(inertia.tau);
   const limits = boundsOf(inertia.min, inertia.max);
-  const decay = Math.exp(-t / tau);
   const rest = position + speed * tau;
+  if (!Number.isFinite(rest)) {
+    // The rest this release is heading for is not a number the runtime can
+    // paint, so the journey is not one it can run: the coast lands on the
+    // nearest representable destination in the release frame, the way a
+    // standstill does, instead of taking an overflowed travel times a zero
+    // decay into a `NaN` frame that never settles.
+    return {
+      value: destinationOf(position, speed, tau, limits),
+      velocity: 0,
+      settled: true,
+    };
+  }
+  const decay = Math.exp(-t / tau);
   const value = clampTo(position + (rest - position) * (1 - decay), limits);
   const outVelocity = speed * decay;
   const intoWall =

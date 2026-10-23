@@ -89,6 +89,25 @@ describe("MotionValue", () => {
     expect(done.complete).toBe(true);
   });
 
+  it("settles a coast whose projected rest overflows", () => {
+    // The release is readable, only its rest is not: the sampler's
+    // `Infinity * 0` at the release frame answered `NaN`, so the value painted
+    // a frame the runtime draws as nothing and churned a frame every 16 ms for
+    // the life of the tree.
+    const value = new MotionValue(1e308);
+    value.coast(inertia(1e308, { max: 100 }), 1e308);
+
+    const release = value.sample(0);
+    expect(release.value).toBe(100);
+    expect(release.active).toBe(false);
+    expect(release.complete).toBe(true);
+
+    // The next sample is the same resting frame, not another journey.
+    const later = value.sample(1_000);
+    expect(later.value).toBe(100);
+    expect(later.complete).toBe(false);
+  });
+
   it("keeps a coast released on a wall travelling back into its range", () => {
     // A drag released at the edge of its bounds with the velocity pointing back
     // inside: the sampler used to read "the value is at a bound" as "settled",

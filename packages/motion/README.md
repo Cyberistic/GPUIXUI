@@ -158,7 +158,12 @@ time constant that cannot run takes the house 350 ms, a bound that cannot be rea
 is dropped while the readable one beside it still clamps, an inverted pair is
 swapped, and a non-finite position or velocity reads as a standstill. A coast
 therefore always projects a finite rest and settles, instead of painting `NaN` and
-sampling forever. A bound is a wall the coast stops at only while it moves into
+sampling forever. A rest the arithmetic cannot represent is no journey either: an
+overflowed projection still knows which way it went, so a wall in that direction
+is the destination it lands on, and without one it lands where it was released —
+the release frame is a number the runtime paints, where an overflowed travel
+times a zero decay is `NaN` and an `Infinity` is painted as nothing. A bound is a
+wall the coast stops at only while it moves into
 it: a surface released *on* a bound with its velocity pointing back into its
 range travels inward rather than being read as already settled — which used to
 finish the run at the release frame and jump to the rest at the far end.
