@@ -86,6 +86,32 @@ body {
   font-family: var(--font-sans);
 }
 
+/*
+ * The site's first tab stop, off-screen until it is focused. It sits above the
+ * fixed docs chrome so the reader sees it on the page they are leaving, and it
+ * is a plain `a` so Enter follows it to the content.
+ */
+.gx-skip-link {
+  position: fixed;
+  top: -100px;
+  left: 12px;
+  z-index: 100;
+  padding: 8px 12px;
+  border: 1px solid var(--ring);
+  border-radius: 8px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.gx-skip-link:focus {
+  top: 12px;
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 /* The landing's mark, reused as the docs brand. */
 .gx-mark {
   display: inline-block;

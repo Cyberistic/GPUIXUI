@@ -112,6 +112,7 @@ src/components/landing/terminal.tsx The "run it in your terminal" section
 src/components/landing/lineage.tsx  References and attribution on the landing page
 src/components/landing/data.ts      The landing page's content, as data
 src/components/not-found.tsx        The 404 inside the docs chrome
+src/components/skip-link.tsx        The site's first tab stop and the content id it targets
 
 src/components/docs/component-preview.tsx The Preview/Code component preview
 src/components/docs/preview-surface.tsx   A preview carrying the resolved theme's variables

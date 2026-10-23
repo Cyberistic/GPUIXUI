@@ -16,6 +16,7 @@ import { DependencyStrip } from "@/components/docs/dependency-strip";
 import { NativeRunNote } from "@/components/docs/native-run-note";
 import { PackageSource } from "@/components/docs/package-source";
 import { PageExample } from "@/components/docs/page-example";
+import { mainContentId } from "@/components/skip-link";
 import { RelatedStrip } from "@/components/docs/related-strip";
 import {
   PlatformProvider,
@@ -119,7 +120,7 @@ function PageFrame({
   readonly children: ReactNode;
 }) {
   return (
-    <DocsPage id={`page-${path}`} toc={toc}>
+    <DocsPage id={mainContentId} tabIndex={-1} toc={toc}>
       <div className="flex items-start justify-between gap-4">
         <DocsTitle>{title}</DocsTitle>
         <CopyPage origin={origin} path={path} />

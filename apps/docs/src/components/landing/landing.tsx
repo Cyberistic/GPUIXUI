@@ -1,5 +1,6 @@
 import { useTheme } from "fumadocs-ui/provider/base";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { mainContentId } from "../skip-link";
 import { Hero } from "./deck";
 import { Lineage } from "./lineage";
 import { Terminal } from "./terminal";
@@ -12,13 +13,15 @@ export function Landing() {
     <div className="landing">
       <div className="landing-wrap">
         <Nav />
-        <Hero />
-        <Dashboard />
-        <Terminal />
-        <Lineage />
-        <Defaults />
-        <CodeAndComponent />
-        <Footer />
+        <main id={mainContentId} tabIndex={-1}>
+          <Hero />
+          <Dashboard />
+          <Terminal />
+          <Lineage />
+          <Defaults />
+          <CodeAndComponent />
+          <Footer />
+        </main>
       </div>
     </div>
   );

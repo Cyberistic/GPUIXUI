@@ -9570,7 +9570,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 249/249
+`[x]` `[██████████]` 250/250
+
+`[x]` Give the site its **own bypass link** — the docs chrome put the whole
+      sidebar before every page, so a keyboard reader traversed dozens of
+      navigation links again on each navigation; WCAG 2.4.1 is a bypass
+      mechanism, and the site that documents keyboard contracts had none.
+      `src/components/skip-link.tsx` renders the shell's first focusable
+      element (before `RootProvider`, so it precedes the sidebar) and targets
+      `#gx-main`, which the docs article, the landing's `<main>`, the live
+      route and the 404 now carry; the docs article also takes `tabIndex={-1}`
+      so fragment navigation moves focus rather than only scrolling.
+      `.gx-skip-link` is off-screen at rest and shown on focus from the site's
+      own `--background`/`--ring` roles. `skip-link.test.tsx` (5 cases) holds
+      the anchor markup, the shell order, every target surface (the docs frame
+      additionally focusable), both CSS rules and the policy section; the
+      surfaces case and the shell case were each measured failing by name with
+      their half reverted. Measured on the built preview in headless Chrome:
+      `skip=true|12|true|true|ARTICLE` — the link takes focus 12px from the top
+      and the fragment leaves focus on the article, in view. Docs:
+      `docs/preview-strategy.md` §The site's own keyboard path and the site
+      README ledger; the docs app is 121 files / 1 312 tests green with
+      `check-types` and the build clean. No native scenario applies — site
+      chrome, not a GPUix component.
 
 `[x]` Follow the **navigation menu's delay seam** — the package moved its two
       hover clocks onto `OPEN_DELAY_MS`/`CLOSE_DELAY_MS` with a `closeDelay` prop

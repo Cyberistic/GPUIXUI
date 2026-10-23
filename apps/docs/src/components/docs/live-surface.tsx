@@ -17,6 +17,7 @@ import {
   browserChoiceStorage,
   readRememberedChoice,
 } from "@/lib/platform-storage";
+import { mainContentId } from "@/components/skip-link";
 
 /**
  * The live GPUix surface.
@@ -274,7 +275,7 @@ export function LiveSurface() {
   }, []);
 
   return (
-    <div className="live-surface">
+    <main className="live-surface" id={mainContentId} tabIndex={-1}>
       <header className="live-surface-bar">
         <a href="/docs">Back to the docs</a>
         <span>{liveSurfaceLabel}</span>
@@ -291,6 +292,6 @@ export function LiveSurface() {
       <pre id="out" hidden>
         status=starting
       </pre>
-    </div>
+    </main>
   );
 }

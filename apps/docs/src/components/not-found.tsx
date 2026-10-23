@@ -1,4 +1,5 @@
 import { appName, componentDocsRoute, docsRoute } from "../lib/shared";
+import { mainContentId } from "./skip-link";
 
 /**
  * The site's 404.
@@ -53,7 +54,11 @@ const destinations: ReadonlyArray<Destination> = [
 /** The page a missing address renders. */
 export function NotFound() {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-6 px-6 py-24">
+    <main
+      className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-6 px-6 py-24"
+      id={mainContentId}
+      tabIndex={-1}
+    >
       <p className="m-0 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-fd-muted-foreground">
         <span aria-hidden="true" className="gx-mark" />
         {appName} Docs · 404

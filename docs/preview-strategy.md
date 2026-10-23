@@ -649,6 +649,24 @@ ten, and every report has a case in `theme-editor-logic.test.ts` — the cases f
 the reports no contrast pair covers also prove the colour reports stay silent on
 that brand, so only the new line can fail the gate.
 
+## The site's own keyboard path
+
+The site documents keyboard contracts, so its own chrome carries one. A docs page
+puts the whole sidebar before the page it documents, and without a bypass a
+keyboard reader traverses every navigation link again on every navigation. The
+root shell renders a **skip link** (`src/components/skip-link.tsx`) as its first
+focusable element — before `RootProvider`, so it precedes the sidebar in tree
+order — and the link targets `#gx-main`, the id every content surface carries:
+the docs article, the landing's `<main>`, the live route and the 404. The docs
+article also takes `tabIndex={-1}`, because a fragment navigation scrolls
+without moving the keyboard's position unless the target can hold focus.
+
+The link is off-screen at rest and shown on `:focus` by `.gx-skip-link` in
+`src/styles/app.css`, painted from the site's own `--background`/`--ring` roles so
+it reads in both docs schemes. `skip-link.test.tsx` holds both halves of the
+contract — the shell order and every target surface — plus the two CSS rules and
+this section, so a route added later cannot silently drop the target.
+
 ## The component page template
 
 Every page in `content/docs/components/` follows this order. Sections that do not

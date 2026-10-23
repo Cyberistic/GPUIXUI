@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import { NotFound } from "@/components/not-found";
+import { SkipLink } from "@/components/skip-link";
 import { searchLinks } from "@/lib/search-links";
 import appCss from "@/styles/app.css?url";
 
@@ -45,6 +46,7 @@ function RootComponent() {
         <HeadContent />
       </head>
       <body className="flex min-h-screen flex-col antialiased">
+        <SkipLink />
         <RootProvider search={{ links: searchLinks }}>
           <Outlet />
         </RootProvider>
