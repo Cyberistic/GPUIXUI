@@ -44,7 +44,12 @@ const text = (root: Root): string => root.renderer.getAllText().join("\n");
 const boundsOf = (
   root: Root,
   testId: string,
-): { readonly x: number; readonly y: number; readonly width: number; readonly height: number } => {
+): {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+} => {
   const element = root.renderer.findByTestId(testId);
   const bounds = root.renderer.getElementBounds(element?.id ?? -1);
   if (element == null || bounds == null) {

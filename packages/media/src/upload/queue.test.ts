@@ -99,9 +99,9 @@ describe("upload queue", () => {
 
     expect(tokenOf(readded, "a")).toStrictEqual(Option.some(2));
     expect(complete(readded, "a", 1)).toStrictEqual(readded);
-    expect(
-      progressOf(reportProgress(readded, "a", 1, 0.9), "a"),
-    ).toStrictEqual(Option.some(0));
+    expect(progressOf(reportProgress(readded, "a", 1, 0.9), "a")).toStrictEqual(
+      Option.some(0),
+    );
     expect(statusOf(readded, "a")).toStrictEqual(Option.some("uploading"));
   });
 });

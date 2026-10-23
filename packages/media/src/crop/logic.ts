@@ -415,8 +415,9 @@ export interface CropModifiers {
 }
 
 /** The step an arrow takes: 1 point, or 8 while Shift is held. */
-export const cropKeyStep = (modifiers: CropModifiers | null | undefined): number =>
-  modifiers?.shift === true ? 8 : 1;
+export const cropKeyStep = (
+  modifiers: CropModifiers | null | undefined,
+): number => (modifiers?.shift === true ? 8 : 1);
 
 /**
  * The crop a focused handle's key asks for.

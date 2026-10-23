@@ -273,9 +273,9 @@ describe("aspect ratio", () => {
   });
 
   it("keeps the corner opposite the drag", () => {
-    expect(
-      boxes(resizeCrop(square, "nw", -50, 0, frame, 24, 1)),
-    ).toStrictEqual({ x: 50, y: 50, width: 150, height: 150 });
+    expect(boxes(resizeCrop(square, "nw", -50, 0, frame, 24, 1))).toStrictEqual(
+      { x: 50, y: 50, width: 150, height: 150 },
+    );
   });
 
   it("keeps the ratio through a live gesture", () => {
@@ -294,13 +294,8 @@ describe("aspect ratio", () => {
 
   it("keeps the ratio on the keyboard path", () => {
     expect(
-      Option.map(
-        keyboardCrop(square, "se", "down", 10, frame, 24, 1),
-        boxes,
-      ),
-    ).toStrictEqual(
-      Option.some({ x: 100, y: 100, width: 110, height: 110 }),
-    );
+      Option.map(keyboardCrop(square, "se", "down", 10, frame, 24, 1), boxes),
+    ).toStrictEqual(Option.some({ x: 100, y: 100, width: 110, height: 110 }));
   });
 
   it("leaves the hole free when the frame cannot hold the minimum at the ratio", () => {

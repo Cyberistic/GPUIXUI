@@ -45,15 +45,15 @@ describe("findRanges", () => {
   });
 
   it("matches whole words only when asked", () => {
-    expect(findRanges("cat concatenate cat", "cat", { wholeWord: true })).toEqual(
-      [
-        { start: 0, end: 3 },
-        { start: 16, end: 19 },
-      ],
-    );
     expect(
-      findRanges("cat_x cat2 cat", "cat", { wholeWord: true }),
-    ).toEqual([{ start: 11, end: 14 }]);
+      findRanges("cat concatenate cat", "cat", { wholeWord: true }),
+    ).toEqual([
+      { start: 0, end: 3 },
+      { start: 16, end: 19 },
+    ]);
+    expect(findRanges("cat_x cat2 cat", "cat", { wholeWord: true })).toEqual([
+      { start: 11, end: 14 },
+    ]);
   });
 
   it("treats a regex character as a literal", () => {
@@ -90,9 +90,9 @@ describe("replaceAll", () => {
   });
 
   it("replaces with the options the count used", () => {
-    expect(
-      replaceAll("Cat cat", "cat", "dog", { caseSensitive: false }),
-    ).toBe("dog dog");
+    expect(replaceAll("Cat cat", "cat", "dog", { caseSensitive: false })).toBe(
+      "dog dog",
+    );
     expect(
       replaceAll("cat concatenate", "cat", "fox", { wholeWord: true }),
     ).toBe("fox concatenate");

@@ -33,8 +33,7 @@ const isWordCharacter = (character: string | undefined): boolean =>
 
 /** A whole-word range sits between non-word characters, or the text's ends. */
 const isWholeWord = (text: string, range: MatchRange): boolean =>
-  !isWordCharacter(text[range.start - 1]) &&
-  !isWordCharacter(text[range.end]);
+  !isWordCharacter(text[range.start - 1]) && !isWordCharacter(text[range.end]);
 
 /** Escape a literal query so a case-insensitive scan can use it as a pattern. */
 const escapePattern = (query: string): string =>
@@ -124,8 +123,6 @@ export const replaceAll = (
         Arr.reverse(ranges),
         text,
         (result, range) =>
-          result.slice(0, range.start) +
-          replacement +
-          result.slice(range.end),
+          result.slice(0, range.start) + replacement + result.slice(range.end),
       );
 };

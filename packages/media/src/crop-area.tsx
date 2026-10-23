@@ -267,12 +267,7 @@ export const CropArea = (props: CropAreaProps): ReactElement => {
   const gesture = useRef<Option.Option<CropGesture>>(Option.none());
 
   const bounds = cropBounds(props.width, props.height);
-  const crop = clampCrop(
-    props.value,
-    bounds,
-    props.minSize,
-    props.aspectRatio,
-  );
+  const crop = clampCrop(props.value, bounds, props.minSize, props.aspectRatio);
   const min = props.minSize ?? CROP_MIN_SIZE;
   const point = (event: CropPointer): { x: number; y: number } => ({
     x: event.x ?? 0,
