@@ -17,9 +17,16 @@
 import type { StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Button, ScrollArea } from "@gpuixui/primitives";
+import {
+  fieldHelp,
+  fieldHint,
+  hintHost,
+  renderFieldHint,
+} from "@gpuixui/primitives/hint";
 import { nativeTextTheme, textStyle } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import { cn } from "@gpuixui/tw";
+import * as Option from "effect/Option";
 import { useControllableState } from "../internal/controllable.js";
 import { recipeStyle } from "../internal/recipe.js";
 import {
@@ -144,6 +151,15 @@ export const MarkdownEditor = ({
   const stats = markdownStats(source);
   const showsSource = view !== "preview";
   const showsPreview = view !== "source";
+  // 0.11.0 shapes a host placeholder in a fixed grey no token reaches, so the
+  // source field paints the hint itself in the measured `placeholder` role.
+  const sourceChrome = sourceStyle(theme, paneWidth, body);
+  const hint = fieldHint({ placeholder, disabled }, theme, source, {
+    origin: "host",
+    align: "top",
+    style: sourceChrome,
+  });
+  const help = fieldHelp({ placeholder }, source);
 
   return (
     <div
@@ -183,9 +199,10 @@ export const MarkdownEditor = ({
       <div style={recipeStyle(BODY, theme)}>
         {showsSource ? (
           <div
-            style={mergeStyles(recipeStyle(SOURCE_VIEW, theme), {
-              width: paneWidth,
-            })}
+            style={mergeStyles(
+              recipeStyle(SOURCE_VIEW, theme),
+              hintHost({ width: paneWidth }),
+            )}
           >
             <textarea
               value={source}
@@ -193,12 +210,15 @@ export const MarkdownEditor = ({
                 if (!readOnly && !disabled) setSource(event.value ?? "");
               }}
               aria-label={`${label} source`}
-              aria-description="Markdown source"
-              placeholder={placeholder}
+              aria-description={help ?? "Markdown source"}
               readOnly={readOnly || disabled}
               testId="markdown-source"
-              style={sourceStyle(theme, paneWidth, body)}
+              style={sourceChrome}
             />
+            {Option.match(hint, {
+              onNone: () => null,
+              onSome: (painted) => renderFieldHint(painted, "markdown-source"),
+            })}
           </div>
         ) : null}
         {showsSource && showsPreview ? (

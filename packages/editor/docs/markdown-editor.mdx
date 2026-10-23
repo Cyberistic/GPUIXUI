@@ -74,6 +74,11 @@ runtime has no caret or selection API to build one against.
 | `className` | `string` | — |
 | `style` | `StyleDesc` | — |
 
+A `placeholder` is painted by the editor in the theme's `placeholder` role and
+announced as the source field's description, because 0.11.0 shapes a host
+placeholder in a fixed grey (`#8F8F8F`, 2.84:1 on a white field) and a host
+handed no placeholder loses its `aria-placeholder` with it.
+
 ## Accessibility
 
 The source is a real text field named `<label> source` and is the editor's tab
@@ -114,4 +119,6 @@ and it is what `CodeEditor` does one tier down.
 `src/behaviour/markdown-editor.test.tsx` (9 native behaviour tests) types into the
 real field, follows the edit into the preview, switches all three views, and
 holds the read-only and disabled refusals; `src/markdown/logic.test.ts` (12
-cases) holds the fence, the counts and the stored mode.
+cases) holds the fence, the counts and the stored mode;
+`src/behaviour/hints.test.tsx` holds the painted hint in both themes, the help
+sentence the host loses, and the hint's return when the field clears.

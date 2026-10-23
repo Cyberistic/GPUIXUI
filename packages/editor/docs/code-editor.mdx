@@ -48,7 +48,7 @@ editor holds its own draft.
 | `lineNumbers` | `boolean` | `true` | Number the rows in a gutter. |
 | `tabMode` | `"insert" \| "focus"` | `"insert"` | What Tab does. |
 | `indent` | `string` | `"  "` | The string Tab inserts. |
-| `placeholder` | `string` | — | The editor's hint. |
+| `placeholder` | `string` | — | The editor's hint, painted in the theme's `placeholder` role and announced as the field's description; the host is handed none. |
 | `readOnly` | `boolean` | `false` | View-only. |
 | `disabled` | `boolean` | `false` | Not editable, out of the tab order. |
 | `minRows` / `maxRows` | `number` | — | The runtime's row controls. |
@@ -83,6 +83,10 @@ split across a trailing newline. `src/code-editor/logic.test.ts` holds the Tab
 decision and the indentation helpers. `src/behaviour/code-editor.test.tsx`
 holds the wiring in the real renderer: Tab inserts the indent, Enter keeps the
 previous line's indentation, and a read-only or disabled editor refuses both.
+`src/behaviour/hints.test.tsx` holds the painted hint: the host is handed no
+placeholder, the hint paints the theme's `placeholder` role (faded when
+disabled), its words reach the help channel, and it returns when the field
+clears.
 
 ## Related
 

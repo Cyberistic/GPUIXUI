@@ -27,9 +27,15 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  fieldHelp,
+  fieldHint,
+  renderFieldHint,
+} from "@gpuixui/primitives/hint";
 import { cn } from "@gpuixui/tw";
 import { nativeTextTheme, syntaxColors, textStyle } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
+import * as Option from "effect/Option";
 import { useState } from "react";
 import { useControllableState } from "../internal/controllable.js";
 import { recipeStyle } from "../internal/recipe.js";
@@ -164,6 +170,14 @@ export const CodeEditor = ({
     fontFamily: metrics.fontFamily,
     fontWeight: metrics.fontWeight,
   };
+  // The host shapes its own placeholder in a fixed grey no token reaches, so
+  // the editor paints the hint in the measured `placeholder` role.
+  const hint = fieldHint({ placeholder, disabled }, theme, value, {
+    origin: "host",
+    align: "top",
+    style: fieldStyle,
+  });
+  const help = fieldHelp({ placeholder }, value);
 
   return (
     <div
@@ -232,8 +246,8 @@ export const CodeEditor = ({
           testId={testId}
           theme={nativeTextTheme(theme)}
           aria-label={label}
+          {...(help === undefined ? {} : { "aria-description": help })}
           value={value}
-          placeholder={placeholder}
           readOnly={readOnly || disabled}
           tabIndex={disabled ? -1 : 0}
           minRows={minRows}
@@ -244,6 +258,10 @@ export const CodeEditor = ({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
         />
+        {Option.match(hint, {
+          onNone: () => null,
+          onSome: (painted) => renderFieldHint(painted, testId),
+        })}
       </div>
     </div>
   );
