@@ -147,6 +147,29 @@ describe("NumberField", () => {
     expect(onValue).toHaveBeenCalledWith(51);
   });
 
+  it("starts an empty field at its range's floor, so the first step moves one step from there", () => {
+    // The rule `docs/number-field.mdx` §Absence teaches: a field that has never
+    // held a value paints empty, while its value channel starts at the range's
+    // floor — so the first press moves floor → floor + step rather than from an
+    // invented zero. With `min: 72` and `step: 12` that is 84, not 12 and not a
+    // second press at 72.
+    const part = numberFieldPart(
+      { min: 72, step: 12 },
+      testTheme,
+      initValueState(Option.none<number>(), 0),
+      "",
+      idle,
+      handlers(),
+    );
+    expect(part.current).toBe(72);
+    const onValue = vi.fn();
+    const { up } = partsOf(
+      render({ min: 72, step: 12 }, 72, "", idle, { onValue }),
+    );
+    expectSome(hostHandler(up, "onClick"))(clickEvent);
+    expect(onValue).toHaveBeenCalledWith(84);
+  });
+
   it("moves one step with the arrow keys and a page at a time", () => {
     const onValue = vi.fn();
     const onCommit = vi.fn();

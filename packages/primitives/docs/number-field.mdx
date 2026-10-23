@@ -42,6 +42,7 @@ const [copies, setCopies] = useState(1);
 | `value` | `number` | — | controlled value |
 | `defaultValue` | `number` | none | start value; the field shows empty without one |
 | `onValueChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
+| `onValueCommit` | `(value: number) => void` | — | the value a gesture ended on: once per stepper press, once per scrub release, once per arrow or page key that moved it, and once when a typed edit ends on a readable value |
 | `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange` |
 | `min` / `max` | `number` | none | bound the value; absent means unbounded, and an inverted pair is the range it means |
 | `step` | `number` | `1` | arrow step |
@@ -68,6 +69,17 @@ counterpart and is consulted before the decimal grammar, so a grouped field stay
 editable, and a controlled owner's echo is read through the same path rather than
 reformatting under the caret.
 
+`onValueChange` is every frame the value moved; `onValueCommit` is the end of the
+gesture. A scrub across the spin column reports a value per four pixels and one
+commit on release, with the value the whole drag finished on; a stepper press, an
+arrow and a PageUp/PageDown each commit as they land, because there is no release
+after them to wait for. A typed edit commits when it ends — blur or Enter — if it
+holds a readable number, including text that parses to the value the field already
+held, because the edit happened. Text that is not a number produces no value, and
+an arrow that cannot move the value at its bound is not a gesture that ended on a
+new one, so neither commits. Persist or fetch here instead of debouncing
+`onValueChange`.
+
 ## Absence
 
 A field's value channel is a number, so **an empty box is a cancelled edit, not a
@@ -78,8 +90,11 @@ not a number (`abc`) is the same case as no text, and neither reports
 `onValueChange`. A field with `defaultValue={0}` or `value={0}` does hold zero,
 and paints it, because that zero is a value the caller chose.
 
-Starting empty and stepping works: the first step lands on the range's floor
-(`min`, else `max`, else 0) and is reported like any other step.
+Starting empty and stepping works: the field's value channel starts at the
+range's floor (`min`, else 0, clamped by `max`), while the box paints empty until
+a gesture produces a number — so the first step moves one `step` from that floor
+(with `min={72}` and `step={12}`, the first increment reports `84`) and is
+reported like any other step.
 
 ## Keyboard
 
@@ -88,7 +103,7 @@ Starting empty and stepping works: the first step lands on the range's floor
 | `↑` / `↓` | one `step` up or down, clamped |
 | `PageUp` / `PageDown` | ten steps |
 | `Home` / `End` | the core's bounds jump — **not delivered to a field in a window** |
-| `Enter` | the draft commits, then `onSubmit` |
+| `Enter` | the draft commits — a readable edit reports `onValueCommit`, then `onSubmit` |
 | any other key | left to the form |
 
 A native `<input>` consumes `Home` and `End` for its own caret before React sees

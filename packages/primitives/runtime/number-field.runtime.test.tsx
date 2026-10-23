@@ -555,3 +555,123 @@ it("mounts a value it cannot paint, and steps from the bound it paints", async (
   runtime.renderer.nativeSimulateKeyDown(input.id, "up");
   expect(lastValue(field.values)).toBe(1);
 });
+
+it("commits a scrub once, with the value the whole drag ended on", async () => {
+  // The bug guarded: a scrub reports a value every four pixels of travel, so a
+  // caller that saves on `onValueChange` writes dozens of times per drag. The
+  // commit channel is the end of the gesture: one value, on release.
+  const changes: Array<number> = [];
+  const commits: Array<number> = [];
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Quantity"
+      defaultValue={50}
+      onValueChange={(value) => changes.push(value)}
+      onValueCommit={(value) => commits.push(value)}
+    />,
+  );
+  const box = boundsOf(runtime, "nf");
+  const x = box.x + box.width - 8;
+  const y = box.y + box.height * 0.25;
+
+  runtime.mouseDownAt(x, y);
+  runtime.mouseMoveAt(x, y - 20, 0);
+  runtime.mouseMoveAt(x, y - 40, 0);
+  runtime.flush();
+  expect(changes.length).toBeGreaterThan(1);
+  expect(commits).toStrictEqual([]);
+
+  runtime.mouseUpAt(x, y - 40);
+  runtime.flush();
+  expect(commits).toStrictEqual([60]);
+  // The click the release leaves behind is the same gesture: it must not step
+  // the value or report a second commit.
+  expect(changes.at(-1)).toBe(60);
+});
+
+it("commits each step that moved the value, and no step that could not", async () => {
+  const commits: Array<number> = [];
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Quantity"
+      defaultValue={50}
+      min={0}
+      max={52}
+      onValueCommit={(value) => commits.push(value)}
+    />,
+  );
+  const box = boundsOf(runtime, "nf");
+  runtime.clickAt(box.x + box.width - 8, box.y + box.height * 0.25);
+  expect(commits).toStrictEqual([51]);
+
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "up");
+  expect(commits).toStrictEqual([51, 52]);
+  // At the ceiling the arrow decides the value the field already holds, so it
+  // is not a gesture that ended on a new one.
+  runtime.renderer.nativeSimulateKeyDown(input.id, "up");
+  expect(commits).toStrictEqual([51, 52]);
+});
+
+it("commits a typed edit on Enter, and not again when the field blurs", async () => {
+  const commits: Array<number> = [];
+  const runtime = await mount(
+    <Stack direction="column">
+      <NumberField
+        testId="nf"
+        label="Amount"
+        autoFocus
+        onValueCommit={(value) => commits.push(value)}
+      />
+      <Button testId="after">After</Button>
+    </Stack>,
+  );
+  runtime.type("7");
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "enter");
+  runtime.flush();
+  expect(commits).toStrictEqual([7]);
+
+  runtime.focusNext();
+  expect(commits).toStrictEqual([7]);
+});
+
+it("commits a blur only when the edit produced a number", async () => {
+  // A field that was merely focused and left reports nothing, and text the
+  // field cannot read leaves the last number standing rather than inventing a
+  // value — neither is a gesture that ended on one.
+  const commits: Array<number> = [];
+  const runtime = await mount(
+    <Stack direction="column">
+      <NumberField
+        testId="nf"
+        label="Amount"
+        autoFocus
+        onValueCommit={(value) => commits.push(value)}
+      />
+      <Button testId="after">After</Button>
+    </Stack>,
+  );
+  runtime.focusNext();
+  expect(commits).toStrictEqual([]);
+
+  // `runtime.focus` names the field's chrome; typing has to reach the input the
+  // runtime tracks, so focus it by the host instance the field resolved.
+  const input = inputOf(runtime, "nf");
+  const focusInput = (): void => {
+    runtime.renderer.focusElement(input.id);
+    runtime.renderer.dispatchNativeEvents();
+    runtime.renderer.flush();
+  };
+  focusInput();
+  runtime.type("4 2");
+  runtime.focusNext();
+  expect(commits).toStrictEqual([42]);
+
+  focusInput();
+  runtime.type("a b c");
+  runtime.focusNext();
+  expect(commits).toStrictEqual([42]);
+});

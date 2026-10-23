@@ -123,6 +123,19 @@ export interface NumberFieldProps
    */
   readonly onSubmit?: (event: EventPayload) => void;
   /**
+   * The value a gesture ended on.
+   *
+   * `onValueChange` reports every edit frame — a scrub reports one value per
+   * four pixels — while this reports the value a whole gesture finished with:
+   * once per stepper press, once per scrub release, once per arrow or page key
+   * that moved the value, and once when a typed edit ends on a readable value
+   * (blur or Enter). A typed edit that ends with no readable number produced no
+   * value and commits nothing, and a key that could not move the value (an arrow
+   * at a bound) is not a gesture that ended in a new one. A caller that saves or
+   * fetches does that work here instead of debouncing `onValueChange`.
+   */
+  readonly onValueCommit?: (value: number) => void;
+  /**
    * Overrides the display text. Display-only: when the format its decimal
    * grammar cannot read (grouped, locale), pair it with `parseValue`.
    */
@@ -186,8 +199,8 @@ interface ScrubOptions {
   readonly range: NumberRange;
   readonly disabled: boolean;
   readonly onValue: (next: number) => void;
-  /** A gesture that moved the value is over: put the keyboard back on the input. */
-  readonly onEnd: () => void;
+  /** A gesture that moved the value is over: report the value it ended on. */
+  readonly onEnd: (value: number) => void;
 }
 
 /**
@@ -211,6 +224,8 @@ const useNumberScrub = ({
     Option.Option<{ readonly y: number; readonly value: number }>
   >(Option.none());
   const scrubbed = useRef(false);
+  /** The value the gesture in flight has reached, so its end can report it. */
+  const last = useRef<Option.Option<number>>(Option.none());
   return {
     onMouseDown: (event) => {
       // A secondary or middle press is not a step gesture.
@@ -218,6 +233,7 @@ const useNumberScrub = ({
       // A new gesture starts clean: the previous drag's click may never have
       // arrived (the pointer was released outside the column).
       scrubbed.current = false;
+      last.current = Option.some(current);
       press.current = Option.map(Option.fromNullishOr(event.y), (y) => ({
         y,
         value: current,
@@ -239,6 +255,7 @@ const useNumberScrub = ({
             const next = scrubNumber(origin.value, origin.y - y, range);
             if (next === current) return;
             scrubbed.current = true;
+            last.current = Option.some(next);
             onValue(next);
           },
         },
@@ -246,8 +263,16 @@ const useNumberScrub = ({
     },
     onMouseUp: () => {
       const moved = scrubbed.current;
+      const ended = last.current;
       press.current = Option.none();
-      if (moved) onEnd();
+      last.current = Option.none();
+      if (!moved) return;
+      // A carry on a scrub is one gesture, so it reports one value — the one the
+      // pointer released on — after every frame `onValue` reported.
+      Option.match(ended, {
+        onNone: () => {},
+        onSome: onEnd,
+      });
     },
     consumedClick: () => {
       const moved = scrubbed.current;
@@ -628,19 +653,45 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
       onNone: () => {},
       onSome: (id) => renderer?.focusElement?.(id),
     });
+  /**
+   * Whether the draft holds text the reader typed since the last gesture ended.
+   *
+   * A blur or Enter commits the draft, but a field that was merely focused and
+   * left — or whose owner pushed a value in — holds nothing the reader produced,
+   * and a commit channel must not report work nobody did.
+   */
+  const dirty = useRef(false);
+  /**
+   * Write one value and clear the typed draft.
+   *
+   * A step (a key, a click, a scrub frame) is a value the field produced, so the
+   * draft no longer describes an edit. The clamped value is returned because the
+   * caller compares it with the one that was showing to decide whether the step
+   * actually moved anything.
+   */
+  const apply = (next: number): number => {
+    const clamped = clampNumeric(next, range);
+    state.set(clamped);
+    setDraft((current) => withNumberDraftValue(commitNumberDraft(current)));
+    dirty.current = false;
+    return clamped;
+  };
   // A scrub is a step gesture, so it commits the draft like a stepper click —
   // but it does not pull the focus to the input mid-drag, which would interrupt
   // the pointer gesture the runtime is capturing. The release does, so the next
-  // arrow key works exactly as it does after a click.
+  // arrow key works exactly as it does after a click, and it reports the value
+  // the whole gesture ended on.
   const scrub = useNumberScrub({
     current: clampNumeric(state.value.current, range),
     range,
     disabled: props.disabled === true,
     onValue: (next) => {
-      state.set(clampNumeric(next, range));
-      setDraft((current) => withNumberDraftValue(commitNumberDraft(current)));
+      apply(next);
     },
-    onEnd: focusInput,
+    onEnd: (value) => {
+      focusInput();
+      props.onValueCommit?.(value);
+    },
   });
   return renderNumberField(
     props,
@@ -654,6 +705,9 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
       },
       onTextChange: (next) => {
         const parsed = read(next);
+        // Only readable text is an edit that produced a value; `abc` leaves the
+        // field holding the number it already had, so it commits nothing.
+        dirty.current = Option.isSome(parsed);
         setDraft((current) => {
           const typed = withNumberDraftText(current, next);
           return Option.isSome(parsed) ? withNumberDraftValue(typed) : typed;
@@ -663,20 +717,30 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
           onSome: (parsed) => state.set(clampNumeric(parsed, range)),
         });
       },
-      onCommit: () =>
-        Option.match(read(text), {
+      onCommit: () => {
+        const parsed = read(text);
+        const edited = dirty.current;
+        dirty.current = false;
+        Option.match(parsed, {
           onNone: () => setDraft((current) => commitNumberDraft(current)),
           onSome: (parsed) => {
-            state.set(clampNumeric(parsed, range));
+            const next = clampNumeric(parsed, range);
+            state.set(next);
             setDraft((current) =>
               withNumberDraftValue(commitNumberDraft(current)),
             );
+            if (edited) props.onValueCommit?.(next);
           },
-        }),
+        });
+      },
       onValue: (next) => {
-        state.set(clampNumeric(next, range));
-        setDraft((current) => withNumberDraftValue(commitNumberDraft(current)));
+        // A step is one gesture: the value moves once and, when it moved, the
+        // gesture ends on it. A key at a bound still formats the draft but is
+        // not a new value a caller should save.
+        const before = clampNumeric(state.value.current, range);
+        const value = apply(next);
         focusInput();
+        if (value !== before) props.onValueCommit?.(value);
       },
     },
     scrub,

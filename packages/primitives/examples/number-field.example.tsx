@@ -43,6 +43,7 @@ const Row = ({
 export const NumberFieldExample = (): ReactElement => {
   const [copies, setCopies] = useState(2);
   const [dpi, setDpi] = useState(144);
+  const [saved, setSaved] = useState("nothing saved yet");
 
   return (
     <Box
@@ -63,6 +64,7 @@ export const NumberFieldExample = (): ReactElement => {
               label="Copies"
               value={copies}
               onChange={setCopies}
+              onValueCommit={(next) => setSaved(`${next} copies`)}
               min={1}
               max={99}
             />
@@ -82,6 +84,7 @@ export const NumberFieldExample = (): ReactElement => {
               label="Resolution"
               value={dpi}
               onChange={setDpi}
+              onValueCommit={(next) => setSaved(`${next} DPI`)}
               min={72}
               max={600}
               step={12}
@@ -93,6 +96,9 @@ export const NumberFieldExample = (): ReactElement => {
 
         <Text role="caption" tone="muted">
           {`${copies} ${copies === 1 ? "print" : "prints"} at ${dpi} DPI. Type a value, step with ↑ ↓ and PageUp/PageDown, or drag a stepper to scrub.`}
+        </Text>
+        <Text role="caption" tone="muted">
+          {`Last committed gesture: ${saved}.`}
         </Text>
       </Stack>
     </Box>
