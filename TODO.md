@@ -10408,7 +10408,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 366/366
+`[x]` `[██████████]` 367/367
+
+`[x]` Generate the **theme editor's passing readout** from the gate — the
+      editor told a reader what a theme had cleared in a hand-written paragraph,
+      so `highlight`, `syntax`, `keyboardDim` and `switch` each had to be added
+      to it by hand when they joined `auditTheme`, and the next report would
+      silently leave it short. `auditSummary` in `theme-editor-logic.ts` is typed
+      `Record<Exclude<keyof ThemeAudit, "passed">, string>`, so a report added to
+      `ThemeAudit` without a sentence fails `check-types`; the editor renders one
+      `<li data-report>` per entry instead of the paragraph. Tests:
+      `theme-editor-logic.test.ts` holds the map's keys to `auditTheme`'s own
+      keys, refuses a duplicated sentence and an empty one;
+      `theme-editor.test.tsx` renders the surface and requires one `data-report`
+      per gate key, so a paragraph cannot return. Directions measured: removing
+      `switch` from the map fails `check-types` (`TS2741: Property 'switch' is
+      missing`), dropping `data-report` fails the render case (13 of 14), and
+      duplicating a sentence fails both the distinctness and the existing
+      report-list case. Green: 165 files / 1 734 tests, `check-types` clean. No
+      native scenario applies — a readout over a pure audit.
 
 `[x]` Say **what the overlay pages actually paint** — `overlaySurfaceStyle`
       composes the theme's `elevation.lg` beside the recipe's 1px `foreground`

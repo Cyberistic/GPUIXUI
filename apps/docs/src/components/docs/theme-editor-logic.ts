@@ -447,6 +447,36 @@ export const formatHighlightFailure = ({
       ? `foreground on the find ${state} wash over ${surface} — ${composited(wash, ratio, floor)}`
       : `find active and match on ${surface} — ${ratio === undefined ? "unmeasurable" : `${ratio.toFixed(2)}:1 apart`} (needs ${floor}:1)`;
 
+/**
+ * One sentence per report, for the readout's empty state.
+ *
+ * The editor says what a passing theme has cleared, and a hand-written paragraph
+ * fell behind the gate: `syntax`, `keyboardDim`, `switch` and `highlight` each
+ * joined `auditTheme` while the sentence still named the reports of the release
+ * before. The type is the gate's own keys, so a report added to `ThemeAudit`
+ * without a sentence fails `check-types` instead of leaving the readout
+ * claiming a check that is not run.
+ */
+export const auditSummary: Readonly<
+  Record<Exclude<keyof ThemeAudit, "passed">, string>
+> = {
+  invalidRoles: "every role paints",
+  invalidShadows: "every shadow level paints its colour",
+  invalidNumbers: "every number lays out",
+  contrast: "every text pair clears its floor",
+  decorative: "every decorative surface stays visible",
+  series:
+    "every data-series colour separates from its plot and from its neighbours under every colour-vision deficiency",
+  syntax: "every token in a code block is readable on the fill it is read on",
+  selection: "every selection wash stays visible with readable text inside it",
+  indicators: "every indicator mark is findable on the strip it is drawn on",
+  highlight: "every find wash stands out",
+  disabledFade: "every disabled control keeps its faded label",
+  keyboardDim: "every control the keyboard dim touches keeps a visible one",
+  scales: "every ladder stays in order",
+  switch: "the declared switch is findable",
+};
+
 /** Every finding the audit reports, in the one list the readout prints. */
 export const auditFindings = (
   report: ThemeAudit,

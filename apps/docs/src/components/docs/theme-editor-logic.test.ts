@@ -16,6 +16,7 @@ import { platformThemes } from "../../lib/platform";
 import {
   auditFindings,
   auditReport,
+  auditSummary,
   decodeState,
   defaultState,
   editableRoles,
@@ -707,6 +708,24 @@ describe("theme-editor audit readout", () => {
     expect(reports.filter((key) => !source.includes(`report.${key}`))).toEqual(
       [],
     );
+  });
+
+  it("keeps one distinct sentence per report the gate returns", () => {
+    // The empty state is the one place a reader is told what a passing theme
+    // cleared, and its paragraph was hand-written: `highlight`, `syntax`,
+    // `keyboardDim` and `switch` each joined the gate after the sentence was
+    // written and had to be added to it by hand. The map's type is the gate's
+    // keys, so a report added without a sentence fails `check-types`; this case
+    // holds the runtime list and refuses two reports sharing one sentence.
+    const reports = Object.keys(auditTheme(themes.light))
+      .filter((key) => key !== "passed")
+      .toSorted();
+
+    expect(Object.keys(auditSummary).toSorted()).toEqual(reports);
+    expect(new Set(Object.values(auditSummary)).size).toBe(reports.length);
+    expect(
+      Object.values(auditSummary).filter((sentence) => sentence.trim() === ""),
+    ).toEqual([]);
   });
 });
 

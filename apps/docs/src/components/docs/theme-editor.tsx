@@ -4,6 +4,7 @@ import { platformThemes } from "../../lib/platform";
 import { toCssVars } from "../../lib/theme-css";
 import { usePlatformOptional } from "./platform-toggle";
 import {
+  auditSummary,
   decodeState,
   defaultState,
   editableRoles,
@@ -240,19 +241,16 @@ export function ThemeEditorSurface({
         role="status"
       >
         {findings.length === 0 ? (
-          <p>
-            Passes the library audit: every role paints, every shadow level
-            paints its colour, every number lays out, every text pair clears its
-            floor, every decorative surface stays visible, every data-series
-            colour separates from its plot and from its neighbours under every
-            colour-vision deficiency, every token in a code block is readable on
-            the fill it is read on, every selection wash stays visible with
-            readable text inside it, every indicator mark is findable on the
-            strip it is drawn on, every find wash stands out, every disabled
-            control keeps its faded label, every control the keyboard dim
-            touches keeps a visible one, every ladder stays in order, and the
-            declared switch is findable.
-          </p>
+          <>
+            <p>Passes the library audit:</p>
+            <ul>
+              {Object.entries(auditSummary).map(([report, sentence]) => (
+                <li data-report={report} key={report}>
+                  {sentence}
+                </li>
+              ))}
+            </ul>
+          </>
         ) : (
           <>
             <p>

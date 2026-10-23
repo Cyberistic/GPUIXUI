@@ -1,4 +1,4 @@
-import { themes } from "@gpuixui/tokens";
+import { auditTheme, themes } from "@gpuixui/tokens";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { platformThemes } from "../../lib/platform";
@@ -57,6 +57,21 @@ describe("the theme editor", () => {
     expect(builtIn).toContain("the declared switch is findable");
     expect(builtIn).toContain("every find wash stands out");
     expect(builtIn).not.toContain("beside the gate");
+  });
+
+  it("renders one line per report the gate returns, and no other", () => {
+    // The sentence was written by hand; a report added to `auditTheme` left the
+    // passing readout short. The editor maps the report list its logic module
+    // exports, so the rendered lines and the gate's own keys are one set.
+    const reports = Object.keys(auditTheme(themes.light))
+      .filter((key) => key !== "passed")
+      .toSorted();
+    const rendered = [...builtIn.matchAll(/data-report="([^"]+)"/g)].flatMap(
+      (match) => (match[1] === undefined ? [] : [match[1]]),
+    );
+
+    expect(rendered.toSorted()).toEqual(reports);
+    expect(new Set(rendered).size).toBe(reports.length);
   });
 
   it("renders one control per editable role", () => {
