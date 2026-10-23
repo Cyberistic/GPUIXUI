@@ -861,11 +861,14 @@ describe("a control inside a leaving surface", () => {
    * a press. Measured: a dismissed `Dialog` still painted for its tween ran its
    * confirm action once.
    *
-   * The seated surfaces take the seam's `PresenceShield`. The anchored family is
-   * **not** in that list, because its host already drops out of the hit test the
-   * moment the surface stops being present (`occlude`/`FloatingLayer`), so a
-   * press inside the fading box belongs to the control underneath — measured by
-   * the context menu's and the menu's cases above.
+   * Every surface that keeps its controls mounted for an exit paints the seam's
+   * `PresenceShield`: the modal pair, the anchored family (popover, dropdown and
+   * context menu, the submenu, the navigation menu, the preview card) and the
+   * toast card. The shield is a handler-less layer over the surface's own
+   * positioned box, so a press inside a fading box stops there instead of
+   * running a control the reader can no longer see — and instead of falling
+   * through to whatever the box covers, which is what the press would otherwise
+   * reach once the surface's own hitbox is gone.
    */
   it("does not answer a press in a dismissed dialog", async () => {
     const confirm = vi.fn();
@@ -928,10 +931,10 @@ describe("a control inside a leaving surface", () => {
   });
 
   it("paints the seam's shield over a dismissed notice", async () => {
-    // A card's dismiss is idempotent, so a press on the ghost is invisible; the
-    // card still keeps a control mounted for its exit, so the shield is what
-    // stops it being a target. The other cases in this suite measure the
-    // shield's effect on a press.
+    // A dismiss is idempotent, so a press on the dismiss ghost is invisible; the
+    // card still keeps its controls mounted for its exit, so the shield is what
+    // stops them being targets. Its action is the non-idempotent one — the case
+    // below measures that press — and this one measures the layer itself.
     const NoticePage = () => {
       const toast = useToast();
       return (
@@ -973,6 +976,77 @@ describe("a control inside a leaving surface", () => {
         expect(painted(page.renderer, "toast-1")).toBe(false),
       );
       expect(page.renderer.findByTestId("presence-shield")).toBeUndefined();
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("keeps the action a dismissed notice was thrown with", async () => {
+    // The bug this guards: the provider prunes a toast's action handler when the
+    // toast leaves the queue, and the viewport keeps the card painted for its
+    // exit — so in the frame the card was dismissed its action vanished, the
+    // description reflowed into the freed width, and the ghost stopped being the
+    // box the reader dismissed. A leaving card keeps the content it was thrown
+    // with, in the box it had, and the shield makes that content inert.
+    const onAction = vi.fn();
+    const NoticePage = () => {
+      const toast = useToast();
+      return (
+        <Page>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <Button
+              testId="push"
+              onClick={() =>
+                toast.push(
+                  {
+                    title: "Saved",
+                    description: "The file is on disk",
+                    action: { label: "Undo" },
+                  },
+                  { onAction },
+                )
+              }
+            >
+              Push
+            </Button>
+            <ToastViewport />
+          </div>
+        </Page>
+      );
+    };
+    const page = renderComponent(
+      <ToastProvider>
+        <NoticePage />
+      </ToastProvider>,
+    );
+    try {
+      clickCentreOf(page, "push");
+      await waitFor(() =>
+        expect(painted(page.renderer, "toast-action")).toBe(true),
+      );
+      settleMotion(page);
+      const resting = Option.getOrElse(boundsOf(page, "toast-action"), () => {
+        throw new Error("behaviour: the action painted no box");
+      });
+
+      clickCentreOf(page, "toast-dismiss");
+      await delay();
+      expect(painted(page.renderer, "toast-1")).toBe(true);
+      const leaving = Option.getOrElse(boundsOf(page, "toast-action"), () => {
+        throw new Error("behaviour: the ghost lost its action");
+      });
+      expect([leaving.width, leaving.height]).toEqual([
+        resting.width,
+        resting.height,
+      ]);
+
+      // A ghost answers nothing: the shield, not the action, takes the press.
+      clickCentreOf(page, "toast-action");
+      expect(onAction).not.toHaveBeenCalled();
+
+      await waitFor(() =>
+        expect(painted(page.renderer, "toast-1")).toBe(false),
+      );
     } finally {
       page.unmount();
     }

@@ -190,6 +190,11 @@ const ToastCard = ({
       onSelect,
     })),
   );
+  // The provider prunes a toast's handler when it leaves the queue, while this
+  // card is still painted for its exit: a ghost keeps the content it was
+  // dismissed with, so the action it showed does not vanish under the fade.
+  const lastAction = useRef(action);
+  if (Option.isSome(action)) lastAction.current = action;
 
   return (
     <div
@@ -252,7 +257,7 @@ const ToastCard = ({
             ),
           })}
         </div>
-        {Option.match(action, {
+        {Option.match(lastAction.current, {
           onNone: () => null,
           onSome: ({ candidate, onSelect }) => (
             <Button

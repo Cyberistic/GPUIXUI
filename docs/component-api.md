@@ -459,7 +459,12 @@ inherit in `0.11.0`, so without it a child kept its own hitbox (measured: a
 dismissed dialog's confirm action ran a press during its exit). Every overlay and
 both wrappers adopt it, and `PageTransition`'s leaving view does too; the two
 places a press behaves differently are the dismissal press itself and the press
-after the window, which land where the reader aimed them. A
+after the window, which land where the reader aimed them. **A leaving shell
+keeps the content it was dismissed with**: the box fades in the shape it was
+dismissed in, so a control it held stays painted and the reader does not see the
+card reflow under the fade — a toast's action keeps the handler it was thrown
+with even though the store drops it from the queue in that frame, and the
+shield is what makes the painted action inert. A
 **wrapper** — a
 `Reveal` or an `AutoHeight` box — is not an overlay, so while open it paints no
 pointer rule at all: it must never put a hitbox over the content it holds. The
@@ -537,7 +542,9 @@ next trigger's box. A press through a leaving
 box is measured on the context menu and on a dismissed modal's veil, and a press
 on a control inside a leaving page view is measured in
 `page-transition.test.tsx`'s `stops a leaving view taking presses while it
-fades` — the shield's own case.
+fades` — the shield's own case. A dismissed notice keeps the action it was
+thrown with in the box it had, and that painted action answers nothing
+(`keeps the action a dismissed notice was thrown with`).
 `src/presence-contract.test.ts` holds every
 floating host in the package to the two rules that make it possible — a host
 that composes the presence seam paints `pointerEvents` from it, and a deferred

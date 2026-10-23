@@ -53,3 +53,6 @@ ToastProvider
 - No progress indicator for the remaining time.
 - A traversal does not hold the clock; use `duration: 0` for an actionable toast.
 - Not portalled; put the viewport at the app root.
+- A dismissed card stays painted for its exit and keeps the content it was
+  dismissed with — its action stays visible but inert, because the seam's
+  `PresenceShield` takes the press rather than the action running after close.
