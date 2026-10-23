@@ -10390,7 +10390,48 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 352/354
+`[ ]` `[██████████]` 353/355
+
+`[x]` Give the **panel group page a preview that runs its reducers** — the dock
+      lane shipped three package pages and none of them drew anything, while the
+      lane's own `/docs/workspace` page had a split preview and
+      `docs/preview-strategy.md` said the dock lane ships no demo: a reader of
+      `/docs/dock/panel-group` got the props and three limitations with no way
+      to see the shape they describe. `apps/docs/src/components/docs/
+      panel-group-demo.tsx` draws the group's parts — one pane per panel, one
+      divider per adjacent pair, the collapsible rail's header, the body that
+      leaves the tree when it collapses — and calls the package's own reducers:
+      `normalizePanels` for the shares, `resizePanels` for a drag,
+      `resizePanelsByKey` for the arrows and Home/End,
+      `togglePanelCollapsed` for the collapse, and `DIVIDER_WIDTH`/
+      `DIVIDER_STEP` from `@gpuixui/dock/logic` (now a docs dependency). The
+      frame is a fixed **620px**, because the shipped group converts a pixel
+      delta against the pane space it measures in `onLayout` and a static
+      drawing has no layout pass; the page prints that difference.
+      `panel-group-demo.test.tsx` (9 cases) mounts the frame, holds each pane's
+      `flex-grow` and the 20/50/30 readout to `normalizePanels` (a layout whose
+      halves sum to two), holds the right/HOME/END layouts to the numbers
+      `resizePanelsByKey` produces at `DIVIDER_STEP / available` and a
+      quarter-frame drag to `resizePanels`, proves the collapsed pane's body
+      leaves the tree and a non-collapsible or unknown id is a no-op, maps the
+      browser's six key names onto the package's `DividerKey` union, reads the
+      demo for a restated step or a local clamp, and holds the style sheet to
+      the theme (`--background`, `--accent`, `--control-height-sm`,
+      `--row-height`, `--ring`). The registry, policy, site ledger and page
+      guards moved with it: `preview-strategy.test.ts` names the new page,
+      `native-run-note.test.tsx` counts one dock demo (files and shell stay at
+      none) and reads the new policy sentence, and `docs/preview-strategy.md`
+      says the dock lane draws its panel group and lists the reducers it runs.
+      Directions measured: dividing the step by two fails `steps a divider by
+      the package's step…` (`expected 0.2331… to be close to 0.2463…`), and
+      deleting the page's mount fails the mount case and
+      `component-preview.test.ts`'s `expected [ 'panel-group-demo' ] to deeply
+      equal []`; restored, the file is 9/9 and the docs suite **159 files /
+      1 680 tests** green with `check-types` and `build` clean. Verified on a
+      served build (`vite preview`): `/docs/dock/panel-group` renders the three
+      panes, the `22%`/`50%` dividers and the `sidebar 22% · editor 50% ·
+      inspector 28%` readout. No native scenario applies — generated paint over
+      the package's pure reducers, which its own suite already holds.
 
 `[x]` Give the **MediaPlayer its related line, and hold every page to one** —
       the player landed after `src/lib/related.ts`'s families were written, so

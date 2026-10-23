@@ -458,18 +458,24 @@ A page that ships a demo mounts it exactly as a curated page does, so
 that page's preview is **strategy 3**: a browser approximation, labelled, with
 the real API tables and limitations beside it. A page that ships none has only
 its source and limitations: **strategy 4**. A component page ships none when the
-interaction has no honest browser reproduction to draw; today the dock, files
-and shell lanes still ship none, while the media lane draws all six of its
-surfaces (`crop-area`, `qr-code`, `image-preview`, `file-upload`, `drop-zone`,
+interaction has no honest browser reproduction to draw; today the files and
+shell lanes still ship none, the dock lane draws its panel group
+(`panel-group`), while the media lane draws all six of its surfaces
+(`crop-area`, `qr-code`, `image-preview`, `file-upload`, `drop-zone`,
 `media-player`)
 and the editor lane draws all four of its own (`code-editor`, `diff-viewer`,
 `markdown-editor`, `search-replace`). Those drawings run the packages' own
-**logic** — `@gpuixui/media`'s `crop/logic`, `qr/encode` and `upload/queue`, and
-`@gpuixui/editor`'s `diff/logic`, `markdown/logic` and `search/logic` — so the
-crop's masks and handlers, the symbol's modules, the queue's lifecycle, the
-diff's edit script, the fence a preview must close and the matches a replace-all
-removes are the components', and only the paint is the browser's. The
-data lane's Property panels page was the first drawer outside the component and
+**logic** — `@gpuixui/dock`'s `logic` (`normalizePanels`, `resizePanels`,
+`resizePanelsByKey`, `togglePanelCollapsed`), `@gpuixui/media`'s `crop/logic`,
+`qr/encode` and `upload/queue`, and `@gpuixui/editor`'s `diff/logic`,
+`markdown/logic` and `search/logic` — so a group's fractions and its resize,
+collapse and step reducers, the crop's masks and handlers, the symbol's modules,
+the queue's lifecycle, the diff's edit script, the fence a preview must close
+and the matches a replace-all removes are the components', and only the paint is
+the browser's. The dock's preview is a fixed 620px frame where the shipped group
+measures its own pane space in `onLayout`, so the two convert a pixel gesture
+against the same rule and different numbers; the page prints that difference.
+The data lane's Property panels page was the first drawer outside the component and
 primitive lanes — one object read by a preview, a field, a table and a metric
 card, every one of which the browser can draw honestly. Either way
 the page opens with a note saying the drawing is not the shipped frame and

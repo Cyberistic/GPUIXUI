@@ -285,6 +285,7 @@ src/components/docs/file-upload-demo.tsx   The upload queue's states and simulat
 src/components/docs/image-preview-demo.tsx The image surface's loaded, loading and error states
 src/components/docs/markdown-editor-demo.tsx The source/preview split with the package's status line
 src/components/docs/media-player-demo.tsx  The transport's clock, seek keys, track and waveform over illustrated frames
+src/components/docs/panel-group-demo.tsx   The group's fractions, dividers and collapse, on the package's own reducers
 src/components/docs/markdown-preview.ts    The preview's block reader, closing fences with the package's rule
 src/components/docs/qr-code-demo.tsx       A scannable symbol from the package's own encoder
 src/components/docs/search-replace-demo.tsx The find scan, the toggles and the replace actions

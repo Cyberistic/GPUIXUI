@@ -1618,6 +1618,165 @@
   box-shadow: 0 0 0 2px var(--ring);
 }
 
+/* ---- panel group: fractions, one divider per pair, a collapsible rail; the
+   preview runs the package's own resize and collapse reducers ---- */
+.gx-group-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 640px;
+}
+
+.gx-group {
+  display: flex;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: var(--background);
+  text-align: left;
+}
+
+.gx-group-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.gx-group-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  height: var(--control-height-sm);
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gx-group-head:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-group-head:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-group-mark {
+  font-size: 9px;
+}
+
+.gx-group-share {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+
+.gx-group-body {
+  flex: 1;
+  min-height: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.gx-group-files {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-group-file {
+  display: flex;
+  align-items: center;
+  height: var(--row-height);
+  padding: 0 6px;
+  border-radius: calc(var(--radius) - 1px);
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-group-file[aria-current="page"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: 600;
+}
+
+.gx-group-code {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--foreground);
+}
+
+.gx-group-code span {
+  color: var(--muted-foreground);
+}
+
+.gx-group-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-group-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-group-row code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--foreground);
+}
+
+.gx-group-handle {
+  flex: none;
+  cursor: col-resize;
+  background: var(--border);
+  outline: none;
+  touch-action: none;
+}
+
+.gx-group-handle:hover {
+  background: var(--muted-foreground);
+}
+
+.gx-group-handle:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.gx-group-readout,
+.gx-group-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-group-readout {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
 /* ---- property inspector: one object read by a preview, a field, a table and
    a metric card, the composition `inspector-lifecycle` measured ---- */
 .gx-inspector {

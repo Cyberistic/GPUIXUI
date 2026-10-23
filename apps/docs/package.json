@@ -13,6 +13,7 @@
   "dependencies": {
     "@gpuix/native": "catalog:",
     "@gpuix/react": "catalog:",
+    "@gpuixui/dock": "workspace:*",
     "@gpuixui/editor": "workspace:*",
     "@gpuixui/icons": "workspace:*",
     "@gpuixui/media": "workspace:*",
