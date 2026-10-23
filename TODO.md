@@ -7644,7 +7644,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 207/207
+`[x]` `[██████████]` 208/208
+
+`[x]` Keep the **Table page's printed native count** with its suite — the data
+      workstream landed `a8df4d0e` (`keep a hidden column out of the search, not
+      its sort`), which added the suite's twenty-fifth case, while the curated
+      page's Status still printed **24**; the generic case was red on `master`
+      with `table.mdx: says 24, suite runs 25`. The page prints 25 and its
+      enumeration now names the hidden column whose cells leave the search with
+      it, so a reader sees the new behaviour among the measured ones. Direction
+      measured: the case fails with that exact message at 24 and is 46/46 at 25.
+      No native scenario applies — a printed count and its guard have no runtime
+      path.
 
 `[x]` Stop the **package-page note denying the preview the same page draws** —
       every component and primitive page mounts a `<ComponentPreview>` (75/75 and
