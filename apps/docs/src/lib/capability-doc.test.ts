@@ -3172,6 +3172,11 @@ describe("docs/gpuix-capabilities.md", () => {
       ["blur-field-a", "the first field the blur-delivery probe focused"],
       ["blur-field-b", "the sibling field the blur-delivery probe focused"],
       ["blur-target", "the button the blur-delivery probe's traversal reached"],
+      [
+        "focus-reveal-form-8",
+        "the form row a focus-reveal traversal reached below the fold",
+      ],
+      ["focus-reveal-roving-3", "the roving row the reveal landed on"],
     ]);
 
     const evidenceTokens = rows.flatMap((row) =>
@@ -4390,6 +4395,107 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[1]).toContain(`-${verticalEnd}`);
     expect(page?.[1]).toContain(`-${horizontalEnd}`);
     expect(page?.[2]).toContain("density.rowHeight");
+  });
+
+  it("records the reveal a traversal does not give a scroller's row, from its fixture", () => {
+    // `tab-overflow` measured a *selection* staying clipped until the app
+    // scrolls it, and `keyboard-scroll-lifecycle` a focused region answering
+    // keys; neither asked what a `Tab` traversal does to the row it focuses past
+    // a pane's edge. A form of ordinary tab stops has no reveal route in this
+    // runtime, so a reader planning a long form in a bounded pane was reading a
+    // page that never said so. The geometry, the height below the fold and the
+    // check count are derived from the probe's fixture, so a record printing a
+    // box or a count the window no longer measures fails by name.
+    const fixture = read("apps/playground/src/live/focus-reveal.ts");
+    const literal = (name: string): number => {
+      const found = new RegExp(`export const ${name} = (\\d+);`).exec(
+        fixture,
+      )?.[1];
+      expect(
+        found,
+        `the fixture's ${name} is no longer a literal`,
+      ).toBeDefined();
+      return Number(found ?? NaN);
+    };
+    const pane =
+      /export const FOCUS_REVEAL_PANE = \{ width: (\d+), height: (\d+) \} as const;/.exec(
+        fixture,
+      );
+    expect(pane, "the fixture's pane is no longer a literal").not.toBeNull();
+    const paneWidth = Number(pane?.[1] ?? NaN);
+    const paneHeight = Number(pane?.[2] ?? NaN);
+
+    const rows = literal("FOCUS_REVEAL_ROWS");
+    const row = literal("FOCUS_REVEAL_ROW");
+    const below = literal("FOCUS_REVEAL_BELOW");
+    const last = rows - 1;
+    // The ninth row's top against the pane's bottom edge, and the content's end.
+    const hidden = last * row - paneHeight;
+    // Three arrows put row `below`'s bottom on the fold — the minimal reveal.
+    const firstReveal = below * row + row - paneHeight;
+    const end = paneHeight - rows * row;
+
+    const sumStart = fixture.indexOf("export const FOCUS_REVEAL_CHECKS");
+    expect(sumStart, "the fixture no longer sums its checks").toBeGreaterThan(
+      -1,
+    );
+    const nextExport = fixture.indexOf("\nexport ", sumStart + 1);
+    const summed = fixture
+      .slice(sumStart, nextExport === -1 ? undefined : nextExport)
+      .replace(/\/\/[^\n]*/g, "");
+    const checks = [...summed.matchAll(/\d+/g)].reduce(
+      (total, [digits]) => total + Number(digits),
+      0,
+    );
+
+    // The premises: the ninth row is wholly past the fold, the minimal reveal is
+    // a shorter move than the content's end, and the count is not an empty sum.
+    expect(hidden).toBeGreaterThan(paneHeight);
+    expect(firstReveal).toBeGreaterThan(0);
+    expect(-end).toBeGreaterThan(firstReveal);
+    expect(checks).toBeGreaterThan(40);
+
+    const reveal = rowFor("Focus reveal in a scroller");
+    expect(reveal, "the record has no focus-reveal row").toBeDefined();
+    expect(reveal?.verdict).toBe("supported, with limits");
+    expect(reveal?.evidence).toContain("`focus-reveal-lifecycle`");
+    expect(reveal?.evidence).toContain(`(${checks} checks on 0.11.0)`);
+    expect(reveal?.evidence).toContain(
+      `two ${paneWidth}×${paneHeight} panes of ${rows} rows at ${row}px`,
+    );
+    expect(reveal?.evidence).toContain("`focus-reveal-form-8`");
+    expect(reveal?.evidence).toContain("offset still **`0`**");
+    expect(reveal?.evidence).toContain(
+      `**${hidden}** points below the pane's bottom edge`,
+    );
+    expect(reveal?.evidence).toContain("`focus-reveal-roving-3`");
+    expect(reveal?.evidence).toContain(`**\`-${firstReveal}\`**`);
+    expect(reveal?.evidence).toContain(`**\`${end}\`**`);
+    expect(reveal?.evidence).toContain("arrow past the end");
+    expect(reveal?.workaround).toContain("roving");
+    expect(reveal?.workaround).toContain("scrollIntoView");
+
+    const page = measuredRow("Focus reveal in a scroller");
+    expect(
+      page,
+      "the page's measured table has no focus-reveal row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("focus-reveal-lifecycle");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(
+      `${paneWidth}×${paneHeight} pane of ${rows} rows at ${row}px`,
+    );
+    expect(page?.[1]).toContain(`**${hidden}** points below`);
+    expect(page?.[1]).toContain(`-${firstReveal}`);
+    expect(page?.[1]).toContain(`${end}`);
+    expect(page?.[2]).toContain("roving");
+    expect(page?.[2]).toContain("scrollIntoView");
+
+    const record = read("docs/gpuix-capabilities.md");
+    const keeping = record.slice(
+      record.indexOf("## 5. Keeping this document true"),
+    );
+    expect(keeping).toContain("`focus-reveal-lifecycle`");
   });
 
   it("publishes the same matrix the code narrows on", () => {
