@@ -82,6 +82,9 @@ and Space and leaves the tab order while disabled.
 - **No pointer scrub.** The track paints the played share but is not a drag
   control; a seek is the pad's keys. A caller that wants a click-to-seek track
   composes one over the same playhead.
+- **The pad announces through `aria-valuetext`**: `@gpuix/native@0.11.0` has no
+  `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so the clock is the value a
+  reader hears (the same rule the shipped sliders follow).
 - **The waveform is decorative.** `peaks` draws one tinted `<svg>` silhouette
   (the runtime's single-mask route); it is not a second seek surface.
 - **The clock is the player's.** `defaultPlayhead` and `defaultPlaying` are
