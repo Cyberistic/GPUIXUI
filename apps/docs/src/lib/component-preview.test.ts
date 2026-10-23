@@ -38,7 +38,6 @@ const sitePages = (): ReadonlyArray<readonly [string, string]> =>
         ] as const,
     );
 
-
 /** Every `.mdx` a package writes under `packages/<pkg>/docs`. */
 const packagePages = (): ReadonlyArray<readonly [string, string]> =>
   readdirSync(new URL("packages/", root), { withFileTypes: true }).flatMap(
@@ -196,6 +195,12 @@ describe("the component previews", () => {
     expect(strategy).toContain("36px");
     expect(strategy).toContain("var(--control-height-sm)");
     expect(strategy).toContain("var(--spacing-md)");
+    // The rule and the header are not approximations: the drawn header is the
+    // card (the native one paints no strip) and each row's line is the derived
+    // rule the shipped row paints.
+    expect(strategy).toContain("The rule and the header are **not**");
+    expect(strategy).toContain("dividerOn");
+    expect(strategy).toContain("--divider-accent");
   });
 
   it("says where a probe frame lands, and whether the repository ignores it", () => {

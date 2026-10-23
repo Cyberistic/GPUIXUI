@@ -1,4 +1,5 @@
 import {
+  dividerOn,
   filledHover,
   filledPressed,
   seriesColors,
@@ -32,9 +33,13 @@ const toKebab = (name: string): string =>
  * rows change size in a browser preview the way they do in the runtime, the
  * spacing steps a list row and a timeline's event add between their parts, the
  * icon steps a drawn control takes its side from, the pressable-target floor a
- * control reserves around that drawing, and the five categorical series colours
+ * control reserves around that drawing, the five categorical series colours
  * as `--series-1` through `--series-5` so a chart or a legend paints the
- * theme's scale instead of a palette of its own.
+ * theme's scale instead of a palette of its own, and the rule a row crosses
+ * each fill it can wear (`--divider-card`, `--divider-selected`,
+ * `--divider-hover`, `--divider-accent`), because a row paints its rule
+ * *inside* its own box and the raw `border` role is under the perceptibility
+ * floor on a wash.
  *
  * @example
  * ```tsx
@@ -71,6 +76,17 @@ export const toCssVars = (theme: Theme): CssVars => ({
   "--secondary-pressed": filledPressed(theme, "secondary"),
   "--destructive-hover": filledHover(theme, "destructive"),
   "--destructive-pressed": filledPressed(theme, "destructive"),
+  // A row paints its rule inside its own box, so the line crosses the fill the
+  // row wears. The token package derives the colour per surface; a preview
+  // drawing the raw `border` role on a wash would show a line the row does not
+  // paint (`packages/data/src/table/table.tsx` → `rule`).
+  "--divider-card": dividerOn(theme, theme.colors.card) ?? theme.colors.border,
+  "--divider-selected":
+    dividerOn(theme, theme.colors.selected) ?? theme.colors.border,
+  "--divider-hover":
+    dividerOn(theme, theme.colors.hover) ?? theme.colors.border,
+  "--divider-accent":
+    dividerOn(theme, theme.colors.accent) ?? theme.colors.border,
   ...Object.fromEntries(
     seriesColors(theme).map((value, index) => [`--series-${index + 1}`, value]),
   ),

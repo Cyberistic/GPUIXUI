@@ -1,6 +1,9 @@
 import {
   applyStyle,
+  contrastRatio,
   darkSeries,
+  decorativeFloor,
+  dividerOn,
   filledHover,
   filledPressed,
   highContrastLightSeries,
@@ -179,6 +182,49 @@ describe("theme bridge", () => {
     expect(cssFontStack("Inter")).toBe("Inter");
   });
 
+  it("derives the rule each table row state crosses from the fill it wears", () => {
+    // A table row paints its rule *inside* its own box, so the line lands on the
+    // fill the row is wearing. The data package derives it per state
+    // (`packages/data/src/table/table.tsx` → `rule`), while the preview drew the
+    // raw `border` role on every row — a line under the 1.05:1 floor on the
+    // `accent` a chosen row takes under the pointer.
+    const vars = toCssVars(themes.dark);
+    const rule = (surface: string): string =>
+      dividerOn(themes.dark, surface) ?? themes.dark.colors.border;
+
+    expect(vars["--divider-card"]).toBe(rule(themes.dark.colors.card));
+    expect(vars["--divider-selected"]).toBe(rule(themes.dark.colors.selected));
+    expect(vars["--divider-hover"]).toBe(rule(themes.dark.colors.hover));
+    expect(vars["--divider-accent"]).toBe(rule(themes.dark.colors.accent));
+
+    // The premise: the raw role cannot clear the wash, so the derivation is
+    // observable rather than an identity.
+    const raw =
+      contrastRatio(themes.dark.colors.border, themes.dark.colors.accent) ?? 1;
+    expect(raw, "the dark accent no longer needs a derived rule").toBeLessThan(
+      decorativeFloor,
+    );
+    expect(vars["--divider-accent"]).not.toBe(themes.dark.colors.border);
+
+    // The sheet reads each derived rule for the state it belongs to, and the
+    // header paints the card rather than a muted strip of its own.
+    const css = read("../styles/demos.css");
+    expect(block(css, ".gx-table-head")).toContain("var(--divider-card)");
+    expect(block(css, ".gx-table-head")).not.toContain("var(--muted)");
+    // The base cell rule is the last of the three selectors that end in
+    // `.gx-table-cell`, so it is read from its own line rather than by prefix.
+    const cell = css.slice(css.indexOf("\n.gx-table-cell {"));
+    expect(cell.slice(0, cell.indexOf("}"))).toContain("var(--divider-card)");
+    expect(block(css, ".gx-table-row:hover .gx-table-cell")).toContain(
+      "var(--divider-hover)",
+    );
+    expect(
+      block(css, '.gx-table-row[data-selected="true"] .gx-table-cell'),
+    ).toContain("var(--divider-selected)");
+    expect(
+      block(css, '.gx-table-row[data-selected="true"]:hover .gx-table-cell'),
+    ).toContain("var(--divider-accent)");
+  });
   it("carries both families, so a preview's monospace follows the platform", () => {
     const vars = toCssVars(themes.dark);
 

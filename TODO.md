@@ -7046,7 +7046,43 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 201/201
+`[x]` `[██████████]` 202/202
+
+`[x]` Follow the **table row's derived rule** the data package landed into the
+curated page and its drawing — commit `7aa1c2a0` moved `TableRow` and
+`TableHeader` off the raw `border` role: a row paints its rule *inside* its own
+box, so the line crosses the fill the row is wearing (`card`, `selected`,
+`hover`, the `accent` a chosen row takes under the pointer), and
+`dividerOn(theme, fill)` steps `border` toward `borderStrong` until it clears the
+1.05:1 floor. The curated Table page still documented no row rule at all and
+still called the raw role the line, while the preview drew
+`border-bottom: 1px solid var(--border)` on every cell and a `--muted` header
+strip the shipped header does not paint (the native header cell is layout and
+type only; the root's card is the fill behind it). The page's Theming table now
+carries the **row rule** and the header's no-strip recipe, its prose prints the
+derivation and the two measured cells (**1.001:1** on the light `accent`,
+**1.004:1** on the dark one, under the 1.05:1 floor), and `toCssVars` publishes
+`--divider-card`/`--divider-selected`/`--divider-hover`/`--divider-accent` from
+`dividerOn`, so the preview's header, resting cell, hovered row, chosen row and
+chosen row under the pointer paint the line each native state paints — the
+hovered row also takes `--hover` (was `--muted`) and a chosen row under the
+pointer `--accent` (was `--selected`), matching the source. `docs/preview-strategy.md`
+records that the row **height** is the approximation while the rule and header
+are not. `theme-css.test.ts` gains `derives the rule each table row state crosses
+from the fill it wears` (the four vars against `dividerOn`, the raw accent under
+the floor and the derived value moved, the five selectors); `component-page-truth.test.ts`
+gains `holds the table's derived row rule and the drawn header to the source`
+(the two `dividerOn` call sites, the three fills, the layout-only header recipe,
+both printed ratios derived with `contrastRatio`, and the four backticked vars);
+`component-preview.test.ts`'s table case requires the strategy sentence.
+Directions measured: a hover rule painted with `var(--border)` fails the bridge
+case naming the selector, a page whose `--divider-accent` token is renamed fails
+the truth case with `[ '--divider-accent' ]`, and both pass restored.
+`nub run --filter @gpuixui/docs test` is **1 113 passed** with only the two
+foreign failures recorded in Interlocks (the editor pages' six cross-links and
+the two dock pages with no limitations section); `check-types` and `build` are
+clean. No native scenario applies — a docs page and its CSS bridge have no
+runtime path.
 
 `[x]` Keep the **Table page's printed count** true — `packages/data`'s
 `table.test.tsx` now runs **23** native behaviour cases (the row press landed)

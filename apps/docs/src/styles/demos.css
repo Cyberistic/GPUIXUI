@@ -5118,14 +5118,13 @@
 
 .gx-table-head {
   padding: 12px;
-  background: var(--muted);
   color: var(--muted-foreground);
   font: inherit;
   font-size: 12px;
   font-weight: 500;
   text-align: left;
   vertical-align: middle;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--divider-card);
 }
 
 .gx-table-sort {
@@ -5165,17 +5164,20 @@
 }
 
 .gx-table-row:hover .gx-table-cell {
-  background: var(--muted);
+  background: var(--hover);
+  border-bottom-color: var(--divider-hover);
 }
 
 .gx-table-row[data-selected="true"] .gx-table-cell {
   background: var(--selected);
   color: var(--selected-foreground);
+  border-bottom-color: var(--divider-selected);
 }
 
 .gx-table-row[data-selected="true"]:hover .gx-table-cell {
-  background: var(--selected);
+  background: var(--accent);
   color: var(--selected-foreground);
+  border-bottom-color: var(--divider-accent);
 }
 
 .gx-table-cell {
@@ -5183,7 +5185,7 @@
   font-size: 12px;
   text-align: left;
   vertical-align: middle;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--divider-card);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

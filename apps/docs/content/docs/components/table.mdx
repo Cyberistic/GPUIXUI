@@ -195,13 +195,30 @@ reducers are documented where each lives on
 | ------- | ------ |
 | surface | `bg-card` with a `border-input` edge, clipped to `rounded-lg` |
 | viewport | `flex flex-col flex-1 min-h-0` — the one horizontal scroller |
-| header cell | `px-3 py-2 text-sm font-medium text-muted-foreground` |
+| header cell | `px-3 py-2 text-sm font-medium text-muted-foreground` — no fill of its own |
 | body cell | `px-3 py-2 text-sm` — the inset, no colour |
+| row rule | `dividerOn(theme, fill)` — `border` stepped toward `borderStrong` until it clears the fill the row crosses |
 | chosen row | `bg-selected` and `text-selected-foreground` |
-| interactive row | `hover:bg-hover` while the pointer is on it |
+| interactive row | `hover:bg-hover` while the pointer is on it; a chosen row under the pointer takes `accent` |
 | resize strip | `absolute inset-y-0 right-0 w-1.5 bg-border hover:bg-primary` |
 | caption | `px-3 py-2 text-xs text-muted-foreground` |
 | placeholder | `h-2 rounded-sm bg-skeleton` |
+
+A row paints its rule **inside its own box**, so the line crosses the fill the
+row is wearing. The raw `border` role is under the perceptibility floor on the
+`accent` wash — **1.001:1** in the light theme and **1.004:1** in the dark one,
+against the 1.05:1 a decorative rule needs — so `TableRow` and `TableHeader`
+ask the token package's `dividerOn` for it: `border` stepped toward
+`borderStrong` by the smallest 2% that clears the fill, and the authored role
+where it already does. The line is derived per state — the card a resting row
+sits on, the `selected` fill a chosen row wears, the `hover` wash an unchosen
+row takes and the `accent` a chosen row takes under the pointer — because a wash
+a row moves onto is a surface the line has to clear too. The header has no
+strip: it sits on the table's card, and its rule is the card's. The page's
+previews draw the same four rules through `--divider-card`,
+`--divider-selected`, `--divider-hover` and `--divider-accent` and paint the
+header on the card, so a hovered or chosen row in the drawing carries the line
+the native row paints, not a second one.
 
 The recipes compile through `@gpuixui/tw`'s default registry — shadcn's fixed
 metrics (12px cell inset, 14/20 type) — so a platform switch repaints the roles

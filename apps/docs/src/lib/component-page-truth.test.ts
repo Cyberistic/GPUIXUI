@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import {
   contrastRatio,
+  darkTheme,
   disabledOpacity,
   elevationShadow,
   highContrastLightColors,
@@ -2617,6 +2618,79 @@ describe("the curated component pages", () => {
     expect(text).toContain("`FrozenTable`");
     expect(text).toContain("](/docs/data-display/frozen-columns)");
     expect(text).toContain("mirrored in both directions");
+  });
+
+  it("holds the table's derived row rule and the drawn header to the source", () => {
+    // The data package moved every row's rule off the raw `border` role
+    // (`packages/data/src/table/table.tsx` → `rule`): a chosen row fills
+    // `selected`, the pointer tints `hover`, a chosen row under the pointer takes
+    // `accent`, and the rule is painted *inside* the row's own box — so the line
+    // crosses the fill. The curated page still printed the raw role and the
+    // preview still drew `--border`, which is a line under the token package's
+    // 1.05:1 perceptibility floor on the base themes' `accent` wash (1.001:1
+    // light, 1.004:1 dark).
+    const page = pages.find((candidate) => candidate.file === "table.mdx");
+    expect(page, "the table page is not in the curated set").toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    // The header rule is the card's, and a row's is the fill it is wearing.
+    expect(source).toContain(
+      "dividerOn(theme, theme.colors.card) ?? theme.colors.border",
+    );
+    expect(source).toContain("const rule = (surface: string): string =>");
+    expect(source).toContain(
+      "dividerOn(theme, surface) ?? theme.colors.border",
+    );
+    expect(source).toContain(
+      "selected === true ? theme.colors.selected : theme.colors.card",
+    );
+    expect(source).toContain(
+      "selected === true ? theme.colors.accent : theme.colors.hover",
+    );
+
+    // The header cell paints no fill of its own: its recipe is layout and type,
+    // so the fill behind it is the root's `card`, not a muted strip.
+    const recipe = read("packages/data/src/table/recipe.ts");
+    expect(
+      recipe,
+      "the table header grew a fill the page says it has not got",
+    ).toContain('export const TABLE_HEADER = "flex flex-col shrink-0";');
+    expect(recipe).toContain(
+      'export const TABLE_HEADER_CELL =\n  "relative flex flex-row items-center px-3 py-2 text-sm font-medium text-muted-foreground";',
+    );
+    expect(recipe).toContain("border border-input bg-card");
+
+    // The two measurements the page prints, derived here rather than trusted.
+    const wash = (theme: typeof lightTheme): number =>
+      contrastRatio(theme.colors.border, theme.colors.accent) ?? 0;
+    const floor = 1.05;
+    expect(
+      wash(lightTheme),
+      "the base light accent no longer needs a derived rule",
+    ).toBeLessThan(floor);
+    expect(
+      wash(darkTheme),
+      "the base dark accent no longer needs a derived rule",
+    ).toBeLessThan(floor);
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("1.05:1");
+    expect(text).toContain("`dividerOn`");
+    expect(text).toContain(`${wash(lightTheme).toFixed(3)}:1`);
+    expect(text).toContain(`${wash(darkTheme).toFixed(3)}:1`);
+    // The rules the preview bridge supplies, and the states they cross.
+    expect(
+      [
+        "--divider-card",
+        "--divider-selected",
+        "--divider-hover",
+        "--divider-accent",
+      ].filter((variable) => !text.includes(`\`${variable}\``)),
+    ).toEqual([]);
+    expect(text).toContain("header has no strip");
+    // The retracted claim: one raw role for every state.
+    expect(text).not.toContain("border-bottom: 1px solid var(--border)");
   });
 
   it("refuse a disabled time field's edits, not only its tab stop", () => {

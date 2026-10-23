@@ -59,6 +59,11 @@ platform. The preview's `.gx-table-row` is
 resizes it (40px at macOS compact, 48px at Linux spacious) and the native table
 does not move. The page says its previews are approximations; this is one of the
 ways, and it is the reason a reader comparing the two heights sees a difference.
+The rule and the header are **not** approximations: the native header paints no
+strip of its own (it sits on the table's card) and every row's line is
+`dividerOn` on the fill the row crosses, so the drawing's header is the card and
+its four derived rules (`--divider-card`, `--divider-selected`,
+`--divider-hover`, `--divider-accent`) are the lines the shipped rows paint.
 
 A **collapsible's body** is drawn with the browser's own mount, not the native
 measured reveal. The native body reports its painted height and tweens the
