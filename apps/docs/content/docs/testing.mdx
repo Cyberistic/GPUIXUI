@@ -40,10 +40,22 @@ process.exitCode = Report.exitCode(report);
 
 ## Running a suite
 
+`--only` is repeatable and scoped; `--list` prints the ids and runs nothing.
+
 ```sh
+# One scenario while iterating, in the offscreen renderer.
+nub apps/playground/dist/smoke/run.js --only <id>
+
+# The whole headless suite: the end-of-task check for a cross-cutting change.
 nub run --filter playground smoke
+
+# A live scenario in a real window (repeat --only for more).
 nub run --filter playground build && nub apps/playground/dist/live/run.js --only <id>
 ```
+
+The live suite opens a real window and takes minutes. Scope it to the scenarios
+a change touches while iterating; the full live run is a release gate, not an
+iteration step.
 
 ## Limitations
 

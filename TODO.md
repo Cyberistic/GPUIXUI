@@ -10308,7 +10308,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 301/301
+`[x]` `[██████████]` 302/302
+
+`[x]` Teach **both runner lanes the scoped flags they parse** — `/docs/testing`
+      showed the whole headless script and one live scenario as if they were the
+      same loop: the headless runner's `--only`/`--list` were absent, so an
+      iteration that touched one scenario ran every one, and nothing said the
+      full live run opens a window and takes minutes. The page now names `--list`,
+      the built headless runner with `--only <id>`, the whole headless suite as
+      the end-of-task check, and the full live run as a release gate rather than
+      an iteration step. `src/lib/testing-page.test.ts` (2 cases) reads the
+      shared CLI in `apps/playground/src/smoke/run.ts` (the live runner imports
+      its parser and usage) and requires both commands and the gate sentence;
+      directions measured: replacing the headless `--only` line fails by path,
+      and rewording "release gate" fails by name. No native scenario applies —
+      a page and the runners it documents.
 
 `[x]` Hold the **component-page contract to its policy in both directions** —
       the guard that "requires the sections its policy declares" only checked
