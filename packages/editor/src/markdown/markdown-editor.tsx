@@ -271,6 +271,10 @@ export const MarkdownEditor = ({
             size="sm"
             label={MODE_LABELS[candidate]}
             testId={`markdown-mode-${candidate}`}
+            // The paint says which view is showing in colour alone; 0.11.0 has
+            // no `aria-current`, so `aria-selected` carries it — the
+            // substitution Pagination, Stepper and Timeline use.
+            aria-selected={view === candidate}
             disabled={disabled}
             onActivate={() => setMode(candidate)}
           >

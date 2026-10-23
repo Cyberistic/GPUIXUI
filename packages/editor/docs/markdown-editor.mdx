@@ -46,6 +46,16 @@ import { MarkdownEditor } from "@gpuixui/editor";
 
 `label` names the editor and every part of it: the source field is `"<label> source"`, the preview `"<label> preview"` and the split's divider `"<label> split"`. A label that arrives blank — from an i18n table or a saved record — is an absence, so each part falls back to `Markdown editor` rather than publishing `" source"`.
 
+## Views
+
+The three view buttons are a choice, not three separate actions: the painted
+view is the one with `secondary` paint, and it also carries **`aria-selected`** —
+0.11.0 has no `aria-current`, and `aria-selected` is the substitution the
+Pagination, Stepper and Timeline controls publish for the same job. Every button
+states its own value, so the colour of the paint is not the only channel that
+says which view is showing; a reader on a screen reader gets the same fact from
+the control it is on.
+
 ## Limitations
 
 - **A stored draft that is not text reads as an empty document**: a saved

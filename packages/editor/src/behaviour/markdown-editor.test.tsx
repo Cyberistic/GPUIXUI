@@ -169,6 +169,23 @@ describe("MarkdownEditor", () => {
     editor.unmount();
   });
 
+  it("publishes which view is showing", () => {
+    // The bug guarded: the three view buttons differed only by colour, so a
+    // reader could not tell which view was painted. 0.11.0 has no
+    // `aria-current`, and `aria-selected` is the substitution Pagination,
+    // Stepper and Timeline use for the same job.
+    const editor = render(<Controlled />);
+    const selected = (root: Root, testId: string): unknown =>
+      root.renderer.findByTestId(testId)?.customProps?.["aria-selected"];
+    expect(selected(editor, "markdown-mode-split")).toBe(true);
+    expect(selected(editor, "markdown-mode-preview")).toBe(false);
+    click(editor, "markdown-mode-preview");
+    expect(selected(editor, "markdown-mode-preview")).toBe(true);
+    expect(selected(editor, "markdown-mode-split")).toBe(false);
+    expect(selected(editor, "markdown-mode-source")).toBe(false);
+    editor.unmount();
+  });
+
   it("says why an empty preview is empty", () => {
     const editor = render(<Controlled initial="" />);
     expect(visible(editor, "markdown-empty")).toBe(true);
