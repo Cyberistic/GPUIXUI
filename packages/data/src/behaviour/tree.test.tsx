@@ -15,7 +15,7 @@
  */
 
 import { afterEach, describe, expect, it } from "vitest";
-import { darkTheme } from "@gpuixui/tokens";
+import { darkTheme, pointerWash } from "@gpuixui/tokens";
 import * as Option from "effect/Option";
 import { TreeExample } from "../../examples/tree.example.js";
 import {
@@ -123,6 +123,37 @@ describe("the file tree", () => {
     expect(requireStyle(root, "tree-row-src").backgroundColor).not.toBe(
       darkTheme.colors.selected,
     );
+  });
+
+  it("answers the pointer's press one step past the wash it replaces", () => {
+    const root = mount();
+
+    // A row that painted its press like its hover answers only half the
+    // pointer. The cursor starts on `src`, so the two rows show both states:
+    // chosen (`accent` under the pointer) and unchosen (`hover`).
+    expect(requireStyle(root, "tree-row-src").hover).toMatchObject({
+      backgroundColor: darkTheme.colors.accent,
+    });
+    expect(requireStyle(root, "tree-row-src").active).toMatchObject({
+      backgroundColor:
+        pointerWash(darkTheme, "active", "accent") ?? darkTheme.colors.active,
+    });
+
+    expect(requireStyle(root, "tree-row-docs").hover).toMatchObject({
+      backgroundColor: darkTheme.colors.hover,
+    });
+    expect(requireStyle(root, "tree-row-docs").active).toMatchObject({
+      backgroundColor:
+        pointerWash(darkTheme, "active", "hover") ?? darkTheme.colors.active,
+    });
+
+    // A press chooses the row, and its pointer states follow the selection.
+    clickCentreOf(root, "tree-row-docs");
+    root.renderer.flush();
+
+    expect(requireStyle(root, "tree-row-docs").hover).toMatchObject({
+      backgroundColor: darkTheme.colors.accent,
+    });
   });
 
   it("moves the cursor to the row a typed prefix names", () => {

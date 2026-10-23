@@ -68,6 +68,26 @@ later root. Enter and Space toggle the branch under the cursor or activate a
 leaf; a printable character jumps to the first row after the cursor whose label
 starts with the typed prefix.
 
+## Measured rules
+
+A tree row is a press target, so it inherits the runtime's pointer model
+(`press-routing-lifecycle`, `hover-routing-lifecycle`):
+
+- A press stops at the **first child that paints a fill**, not at the innermost
+  handler. The chevron's `<svg>` declares `pointerEvents: "none"`, so a press on
+  it reaches the row; a control in `renderRow` that must not take the press
+  declares the same.
+- The hover refinement takes that same hit test: an unfilled label leaves the
+  row its wash and its enter event, while a filled child takes both and still
+  hears its own listener.
+- The row answers the pointer in three states. Under the pointer an unchosen row
+  tints `hover` and the cursor's row tints `accent` over its `selected` fill;
+  while the button is down the press is the **derived** wash one step past the
+  hover it replaces (`pointerWash(theme, "active", …)`), because a palette's raw
+  `active` role can sit under the 1.05:1 floor beside that wash. A row that
+  painted its press like its hover would answer only half the pointer —
+  `tree.test.tsx` reads both rows' state records out of a window.
+
 ## A reveal lands the focus, not only the cursor
 
 `reveal(key)` opens the path to a node and moves the cursor to it, which is the
@@ -87,6 +107,7 @@ and requires the revealed row to hold native focus after the tick.
 ## Limitations
 
 - One active row; a multi-select tree is not shipped.
-- The tree does not virtualize itself; compose `VirtualList` in children mode.
+- `TreeView` paints every row it is given; `VirtualTree` is the windowed form for
+  thousands of rows.
 - A row that changes height while painted re-measures on the next frame.
 - The docs site cannot render this component live.

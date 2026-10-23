@@ -9,7 +9,13 @@
  *   paints, so the glyph declares `pointerEvents: "none"` and the press reaches
  *   the row (`press-routing-lifecycle`);
  * - the active row paints the `selected` fill and the `selectedForeground`
- *   label, and the pointer's hover is the runtime's native refinement.
+ *   label, and the pointer's hover is the runtime's native refinement;
+ * - a press is a **derived** wash one step past the hover it replaces, the
+ *   tokens contract's third pointer transition (`active` over `hover` for an
+ *   unchosen row, over `accent` for the chosen one), because a palette's raw
+ *   `active` role can sit under the perceptibility floor beside the wash it
+ *   lands on. A row that painted its press like its hover answered half the
+ *   pointer — the defect the table's own row closed.
  *
  * A row is presentational: the cursor, the tab stop and the key contract belong
  * to the tree that composes it (`tree/tree-view` for the flat tree,
@@ -21,7 +27,7 @@ import { Icon } from "@gpuixui/icons";
 import { cn } from "@gpuixui/tw";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
-import { textStyle, useTheme } from "../theme.js";
+import { pointerWash, textStyle, useTheme } from "../theme.js";
 import { TREE_INDENT, type TreeRow } from "./logic.js";
 import { TREE_CHEVRON, TREE_ROW, TREE_ROW_ACTIVE } from "./recipe.js";
 
@@ -79,6 +85,11 @@ export const TreeRowView = <T,>({
   attach,
 }: TreeRowViewProps<T>) => {
   const theme = useTheme();
+  const hoverFill = active ? theme.colors.accent : theme.colors.hover;
+  const pressFill =
+    (active
+      ? pointerWash(theme, "active", "accent")
+      : pointerWash(theme, "active", "hover")) ?? theme.colors.active;
   return (
     <div
       ref={attach}
@@ -95,6 +106,10 @@ export const TreeRowView = <T,>({
         ...recipeStyle(cn(active ? TREE_ROW_ACTIVE : TREE_ROW), theme),
         height: height ?? theme.density.rowHeight,
         paddingLeft: TREE_INSET + row.depth * TREE_INDENT,
+        // The recipe's own `hover` record is replaced by a style's, so the wash
+        // is restated here beside the press it derives.
+        hover: { backgroundColor: hoverFill },
+        active: { backgroundColor: pressFill },
       }}
     >
       <div
