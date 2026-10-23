@@ -1,6 +1,6 @@
 import { loader } from "fumadocs-core/source";
 import { defineDocs } from "fumadocs-mdx/macro";
-import type { PackageOrigin } from "./collection-routes";
+import { packageCollections, type PackageOrigin } from "./collection-routes";
 import {
   componentDocsRoute,
   dataDocsRoute,
@@ -172,17 +172,9 @@ export const sourceByOrigin = {
 } satisfies Record<PackageOrigin, typeof primitiveSource>;
 
 /** Every mounted package source, in sidebar order. */
-export const packageSources = [
-  primitiveSource,
-  iconSource,
-  componentSource,
-  dataSource,
-  editorSource,
-  filesSource,
-  shellSource,
-  dockSource,
-  mediaSource,
-];
+export const packageSources = packageCollections.map(
+  (collection) => sourceByOrigin[collection.origin],
+);
 
 /** The pages a sidebar section lists, ready for `completeSection`. */
 export const sectionPages = (origins: ReadonlyArray<PackageOrigin>) =>

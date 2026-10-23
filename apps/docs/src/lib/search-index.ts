@@ -1,7 +1,7 @@
 /**
  * The search index's page list.
  *
- * The site renders four Fumadocs collections and indexes all of them, but a
+ * The site mounts each package's own Fumadocs collection and indexes every one, but a
  * curated site page keeps the URL of the package page it shadows: indexing both
  * would give the index two documents with one id, so a query returns the same
  * result twice and the reader cannot tell which page is current.
