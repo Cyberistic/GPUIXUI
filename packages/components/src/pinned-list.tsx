@@ -14,13 +14,12 @@
  * layer takes `pointerEvents: "none"`, so a press on the first row under a held
  * header still reaches the row.
  *
- * Like the scroll readings, the box is the package's own viewport rather than
- * `ScrollArea`: a pinned header must measure the very element that scrolls. The
- * price is the same recorded one — a wheel and the scrollbar move it, arrow keys
- * do not (`docs/pinned-list.mdx` §Limitations).
+ * Like the scroll readings, the box is `@gpuixui/primitives`' `ScrollArea`
+ * viewport: a pinned header must measure the very element that scrolls, and that
+ * element is also the keyboard region (`docs/pinned-list.mdx` §Keyboard).
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -41,9 +40,19 @@ export interface PinnedListSection {
 }
 
 /** {@link PinnedList} props. */
-export interface PinnedListProps extends Omit<Props, "children"> {
+export interface PinnedListProps {
   /** The sections, in scroll order. */
   readonly sections: ReadonlyArray<PinnedListSection>;
+  /** The scroller's locator, for a probe or an automation host. */
+  readonly testId?: string;
+  /** The scroll region's accessible name. Default: the primitives' "Scroll region". */
+  readonly "aria-label"?: string;
+  /** A style for the component's box. Give it a bounded height. */
+  readonly style?: StyleDesc;
+  /** The absolute offset after any move. */
+  readonly onScrollChange?: (event: EventPayload) => void;
+  /** The viewport's painted box. */
+  readonly onLayout?: (event: EventPayload) => void;
   /**
    * The height reserved for every header, in pixels. Default `32`; a header is
    * one line, so a wrapped title needs a taller row.
@@ -71,7 +80,11 @@ export const PinnedList = ({
   headerHeight,
   surfaceColor,
   className,
-  ...rest
+  testId,
+  "aria-label": label,
+  style,
+  onScrollChange,
+  onLayout,
 }: PinnedListProps) => {
   const theme = useTheme();
   const header = headerHeightOf(Option.fromNullishOr(headerHeight));
@@ -148,7 +161,11 @@ export const PinnedList = ({
 
   return (
     <ScrollSurface
-      {...rest}
+      testId={testId}
+      label={label}
+      style={style}
+      onScrollChange={onScrollChange}
+      onLayout={onLayout}
       className={cn("relative", className)}
       chrome={(metrics) =>
         headerLayer(pinnedHeaders(heights, metrics.offsetY, header))
@@ -187,7 +204,7 @@ export const pinnedListMeta = {
   gpuixSupport: "partial",
   limitations: [
     "the runtime paints no position: sticky, so a header is a layer repositioned from the measured offset rather than a sticky child",
-    "the box is the package's own viewport, so it scrolls by wheel and scrollbar but is not a keyboard scroll region (ScrollArea is)",
+    "the region is vertical only, and an arrow key moves it by the primitives' row height",
     "a header is one line and reserves headerHeight: a wrapped title is clipped rather than made taller",
     "sections are keyed by title, and a section inserted mid-list keeps stale heights until its own layout reports",
   ],

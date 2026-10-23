@@ -12,7 +12,7 @@
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { nodesWithRole } from "../internal/a11y.js";
-import { requireBounds, settle } from "../internal/interaction.js";
+import { pressKey, requireBounds, settle } from "../internal/interaction.js";
 import { darkTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 import { PinnedList } from "../pinned-list.js";
@@ -170,6 +170,21 @@ describe("PinnedList", () => {
     }
   });
 
+  it("scrolls from the keyboard and keeps a header pinned", () => {
+    const page = mount();
+    try {
+      page.renderer.focusElement(elementId(page, "list"));
+      pressKey(page, "End");
+      settle(page);
+
+      // The last section's header is the one holding at the end of the travel.
+      expect(has(page, "pinned-header-1")).toBe(true);
+      expect(has(page, "pinned-header-0")).toBe(false);
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("names every section and publishes no second title", () => {
     const page = mount();
     try {
@@ -177,7 +192,13 @@ describe("PinnedList", () => {
         (node) => node.name,
       );
 
-      expect(groups).toEqual(["Today", "Yesterday"]);
+      // The scroller is a named group of its own now: it is the keyboard
+      // region the reading measures. Each section is still named once.
+      expect(groups.filter((name) => name !== "Scroll region")).toEqual([
+        "Today",
+        "Yesterday",
+      ]);
+      expect(groups.filter((name) => name === "Scroll region")).toHaveLength(1);
       expect(nodesWithRole(page.renderer, "heading")).toEqual([]);
     } finally {
       page.unmount();

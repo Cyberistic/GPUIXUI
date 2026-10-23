@@ -37,12 +37,21 @@ import { PinnedList } from "@gpuixui/components/pinned-list";
 | `surfaceColor` | `string` | theme `background` |
 | `className` | `string` | — |
 | `style` | `StyleDesc` | — |
-| `aria-label` | `string` | — |
+| `testId` | `string` | — |
+| `aria-label` | `string` | the runtime's "Scroll region" |
 | `onScrollChange` | `(event) => void` | — |
+| `onLayout` | `(event) => void` | — |
+
+## Keyboard
+
+The viewport is a tab stop that names itself a scroll region (or takes your
+`aria-label`). Arrows scroll a row, PageUp/PageDown a page and Home/End the ends,
+and the pinned headers follow the same measured offset, so a keyboard reader sees
+the same section title the pointer does.
 
 ## Limitations
 
 - No `position: sticky`; the header is a repositioned layer.
-- Wheel and scrollbar move it; arrow keys do not.
+- Vertical only; the scrollbar's thumb takes no pointer input.
 - One line per header.
 - A header holds at the viewport top only.
