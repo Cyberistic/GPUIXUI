@@ -10390,7 +10390,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 333/334
+`[ ]` `[██████████]` 351/353
 
 `[x]` Answer the **route of every mounted collection** — `/docs/icons`,
       `/docs/editor`, `/docs/files`, `/docs/shell`, `/docs/dock` and
@@ -15908,6 +15908,42 @@ fails the case by name; restored, the file is 44/44 and
       no titlebar'`; restored, the four files are 87/87 and the app is green
       apart from the motion workstream's in-flight page. No native scenario
       applies — the probe's 0.11.0 run stands; this pass publishes it.
+
+`[x]` Teach the **six grammar helpers `/docs/keyboard` re-exports but never
+      named** — the page listed the package's modules (`decode`, `match`,
+      `keymap`, `sequence`, `registry`, `display`, `platform`, React) and said
+      "the grammar is `@tanstack/hotkeys`", while the root entry point
+      re-exports `parseHotkey`, `validateHotkey`, `normalizeHotkey`,
+      `areHotkeysEqual`, `hasNonModifierKey` and `formatForDisplay` from it and
+      **none of the six appeared anywhere on the site** — so a caller
+      validating a stored binding, normalising a recorded chord, rejecting a
+      modifier-only press or painting keycaps had to find and install the
+      dependency themselves, and the platform argument's two types (this
+      package's `Platform` versus the grammar's `mac`/`windows`/`linux`, joined
+      by `toTanstackPlatform`) were taught nowhere. The page gains **Chords as
+      text**: one row per helper, the `Mod`-restoring and ordering rule
+      `normalizeHotkey` keeps, the `{ valid, warnings, errors }` answer
+      `validateHotkey` returns, the two platform types with `default`'s fold
+      into Linux, the shipped `HotkeyRecorder`'s path (decode → drop a
+      modifier-only chord → normalise → paint) as a snippet, and the part rule
+      `formatSymbols` inherits from `formatForDisplay` (`["⇧", "⌘", "S"]` on
+      macOS, `["Ctrl", "Shift", "S"]` elsewhere). `keyboard-page.test.ts` gains
+      four cases: the export block's helper list must appear on the page (read
+      from `index.ts`, so a seventh re-export fails until it is taught), the two
+      platform types and `toTanstackPlatform` must be stated beside the
+      signatures in `decode.ts`/`display.ts`/`platform.ts`, `parts: true` and
+      the two shared renderers (`KeyboardShortcuts`, the app menu's
+      `formatSymbols` mapping) must back the "one entry per keycap" claim, and
+      the recorder case reads its import list and its
+      `if (hasNonModifierKey(…))`/`normalizeHotkey(…)` branches. Directions
+      measured: adding `formatHotkey` to the export block fails `names every
+      grammar helper the root re-exports` with `[ 'formatHotkey' ]`, changing
+      `display.ts` to `parts: false` fails the keycap case, and deleting the
+      section fails the platform, keycap and recorder cases by name; restored,
+      the file is 7/7 and the snippet walk resolves the new fence. `nub run
+      --filter @gpuixui/docs test` is **157 files / 1 664 tests** green with
+      `check-types` clean. No native scenario applies — a page and the source
+      seams it documents.
 
 ## Swarm-owned blockers (fix these)
 

@@ -12,7 +12,8 @@ description: The chord grammar, scope-stacked keymaps, sequences and command reg
 | keymap | `Keymap`, `resolve` — a scope stack as data, first match wins |
 | sequence | `makeSequenceMatcher` — multi-step matches with an injected clock |
 | registry | `Command`, the `CommandRegistry` Effect service and its layer |
-| display | `formatSymbols` — keycap parts in platform order |
+| display | `formatSymbols` — a binding as keycap parts, in platform order (an alias over `formatForDisplay`) |
+| helpers | `parseHotkey`, `validateHotkey`, `normalizeHotkey`, `areHotkeysEqual`, `hasNonModifierKey`, `formatForDisplay` — the grammar's own, re-exported |
 | platform | `Platform`, `toTanstackPlatform` |
 | React | `@gpuixui/keyboard/react` — `CommandRegistryProvider`, `useCommandRegistry` |
 
@@ -35,6 +36,55 @@ export const chordOf = (event: EventPayload) => decodeGpuixEvent(event, platform
 ```
 
 `match` is exact: `Mod+K` does not match `Mod+Shift+K`, and `cmd` stays distinct from `ctrl`.
+
+## Chords as text
+
+Six grammar helpers are re-exported, so a caller that validates, normalises or
+paints a binding does not install `@tanstack/hotkeys` itself.
+
+| Helper | Answers |
+| ------ | ------- |
+| `parseHotkey` | the parsed chord a binding string stands for — the shape `decodeGpuixEvent` returns |
+| `validateHotkey` | `{ valid, warnings, errors }` for a binding from storage or a form |
+| `normalizeHotkey` | the canonical string: `Meta+S` reads `Mod+S` where the platform allows it, with the modifiers in order |
+| `areHotkeysEqual` | whether two bindings press the same keys with the same modifiers |
+| `hasNonModifierKey` | whether a press is more than a modifier — the test a recorder waits for |
+| `formatForDisplay` | the words a reader sees, or with `parts: true` the keycaps |
+
+**The platform argument is not the same type twice.** `decodeGpuixEvent` and
+`formatSymbols` take this package's `Platform` (`darwin`, `linux`, `win32`,
+`default`); the bare helpers take the grammar's (`mac`, `windows`, `linux`),
+which `toTanstackPlatform` produces — `default` folds into `linux`, where `Mod`
+is Control.
+
+The shipped `HotkeyRecorder` is the worked path: decode the press, drop a
+modifier-only chord, store the normalised string, paint the parts.
+
+```ts
+import {
+  decodeGpuixEvent,
+  hasNonModifierKey,
+  normalizeHotkey,
+  toTanstackPlatform,
+  type Platform,
+} from "@gpuixui/keyboard";
+import type { EventPayload } from "@gpuix/react";
+
+export const record = (
+  event: EventPayload,
+  platform: Platform,
+): string | undefined => {
+  const grammar = toTanstackPlatform(platform);
+  const chord = decodeGpuixEvent(event, platform);
+  return hasNonModifierKey(chord, grammar)
+    ? normalizeHotkey(chord, grammar)
+    : undefined;
+};
+```
+
+`formatSymbols` returns one entry per keycap — `["⇧", "⌘", "S"]` on macOS,
+`["Ctrl", "Shift", "S"]` elsewhere — so `KeyboardShortcuts` and the app menu
+render parts rather than a string.
 
 ## One command list
 
