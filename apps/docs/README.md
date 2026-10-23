@@ -251,7 +251,7 @@ src/components/docs/notification-centre.tsx The notification centre's rows, filt
 src/components/docs/command-centre.tsx    The command centre's matcher, highlight and run line
 src/components/docs/file-manager-block.tsx The file browser's reducer, panes and recipe
 src/components/docs/email-inbox-block.tsx The mail client's reducer, panes and recipe
-src/components/docs/live-surface.tsx      Boots the wasm renderer on /live and reports what it painted
+src/components/docs/live-surface.tsx      Boots the wasm renderer on /live, mounts the reconciler and reports what it painted
 src/components/docs/theme-editor.tsx      The live token editor on /docs/themes
 src/components/docs/theme-editor-logic.ts Its pure core: edits, audit, copy output
 src/components/docs/scatter.ts              The decorative fields' deterministic point scatter
@@ -343,7 +343,8 @@ src/lib/platform.ts                 The platform and look switch: parse, label, 
 src/lib/platform-storage.ts         The remembered platform/look choice, per axis
 src/lib/system-palette.ts           The desktop palette /docs/theming decodes and maps, from the shipped functions
 src/lib/theme-css.ts                Theme → CSS variables, shared with every preview
-src/lib/live-batch.ts               /live's mutation batch, styled by the primitives' resolver
+src/lib/live-scene.tsx              /live's React screen, styled by the primitives' resolver
+src/lib/gpuix-native.ts             The browser entry `@gpuix/native` resolves to on /live
 src/lib/block-source.test.ts        A block's copyable source, resolved against the workspace
 src/lib/gpuix-web.test.ts           The GPUix web build: browser entry, shared memory and the policy's status
 src/lib/live-frame.test.ts          The live probe's judge and its PNG pixel reader
@@ -506,21 +507,25 @@ export fails instead of teaching a broken import.
 
 `/live` is the one page that is not an approximation: `@gpuix/native`'s wasm
 browser build is a real GPUix surface (one document-owned canvas, cross-origin
-isolation), and the route paints a `@gpuixui/primitives` filled action on it.
-`src/lib/live-batch.ts` is the screen, with every `StyleDesc` resolved by
+isolation), and the route mounts the library's own React tree on it through
+`@gpuix/react`'s reconciler. `src/lib/live-scene.tsx` is the screen, written with
+the reconciler's JSX runtime and every `StyleDesc` resolved by
 `@gpuixui/primitives/core`; `src/components/docs/live-surface.tsx` boots the
 renderer inside an effect, mounts once, and reports the element bounds it laid
-out. `vite.config.ts` resolves the wasm glue past the package's `exports` (its
-`browser.mjs` uses a bundler-only `with { type: "file" }` import) and asks Vite
-for the wasm as an asset; `/live` alone is cross-origin isolated, in dev
-(`vite.config.ts`) and in production (`src/start.ts`). Every component page's
-preview note links here.
+out. It uses `createRoot(renderer).render(<App />)` rather than `render()`: the
+latter installs Node error handlers, and Vite's browser `process` shim (`{ env }`)
+has no `.on`, so it throws before the first frame. `vite.config.ts` resolves
+`@gpuix/native` to `src/lib/gpuix-native.ts` — the package's own `browser.mjs`
+keeps a bundler-only `with { type: "file" }` import inside a pre-bundled
+dependency — and the `/wasm/*` rule reads the glue; `/live` alone is
+cross-origin isolated, in dev (`vite.config.ts`) and in production
+(`src/start.ts`). Every component page's preview note links here.
 
 Both probes live outside `src/`: they are host tools, and the browser driver they
 share is `scripts/chrome-session.ts`. `scripts/live-surface-probe.ts` proves the
 renderer paints at all; `scripts/live-route-probe.ts` holds the page a reader
 opens to the same rule — it samples the button's fill, the banner's resting fill,
-presses through `renderer.simulateClick`, and samples the banner again.
+presses through the automation locator, and samples the banner again.
 `scripts/live-frame.ts` is the frame contract both judge against.
 
 Measured 2026-10-22, macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
@@ -529,10 +534,12 @@ the banner `#1e222a` (`muted`), and after a press `#0e5135` (`successSoft`) with
 the status line reading "Pressed 1 time". Frames:
 `.artifacts/live/docs-live-route-{before,after}.png` (verification-only).
 
-Owed: the React reconciler mount. `render(<App/>, { renderer })` takes an
-injected renderer, but `@gpuix/react` imports `@gpuix/native/runtime` and
-`@gpuix/native/automation` at module scope and nothing has measured that graph in
-a browser, so the route drives the batch protocol by hand.
+The reconciler mount was measured on 2026-10-23 on the same host and browser: the
+page reported `status=painting`, the retained text read
+`A real GPUix frame,Painted by the wasm renderer through the React reconciler.,
+Press me,Waiting for a press`, the button sampled `#a7a9ff` at `41,113`, the
+banner `#1e222a` at `500,149`, and one press through the automation locator
+sampled `#0e5135` with "Pressed 1 time" — a React tree, a real press.
 
 ## The platform switch and the look parameter
 

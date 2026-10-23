@@ -10262,7 +10262,41 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 278/278
+`[x]` `[██████████]` 279/279
+
+`[x]` Mount the live surface through the **React reconciler** — `/live` was the
+      one real GPUix surface in the docs and it fed the renderer a hand-written
+      mutation batch, which plan `440` recorded as the last owed piece: a batch
+      paints like a React tree in a screenshot, so nothing but the source could
+      tell them apart, and a library component added to the page would not have
+      been what the renderer showed. The route now mounts
+      `createRoot(renderer).render(<LiveScene />)` and routes each renderer event
+      through `handleGpuixEvent`, so a press reaches the React `onClick`.
+      `src/lib/live-scene.tsx` is the screen in `@gpuix/react`'s JSX runtime,
+      with every `StyleDesc` from `@gpuixui/primitives/core`; `live-batch.ts` is
+      deleted. Two browser-build gaps were measured and worked around rather
+      than guessed: `browser.mjs` keeps `import … with { type: "file" }` inside
+      a pre-bundled dependency, so Vite serves an absolute filesystem path and
+      the dynamic import fails — `src/lib/gpuix-native.ts` re-exports the class
+      through the existing `/wasm/*` rule and `vite.config.ts` aliases
+      `@gpuix/native` to it for the client graph; and `render()` installs Node
+      error handlers whose `process.on` guard meets Vite's `{ env }` `process`
+      shim and throws, so the route uses `createRoot` (which is the same mount
+      without that side effect) and the automation App for locators. Guards:
+      `live-surface.test.ts` (11 cases — the action's fill is `controlStyle`'s,
+      the handler fires, the banner moves resting → pressed, the status counts,
+      the route contains the reconciler mount and no `applyBatch`, one renderer
+      and one `init` inside the effect) and `gpuix-web.test.ts` (the dependency,
+      the single boot, the policy and the runtime page in both directions).
+      Directions measured: on the previous route two cases fail by name
+      (`… to contain 'react.createRoot(host)'` and `… 'await import("@gpuix/react")'`);
+      with the mount restored, 11/11. `nub apps/docs/scripts/live-route-probe.ts`
+      against the dev server: `PASS /live painted a real GPUix frame and took a
+      press` — `status=painting`, text carries all four runs, button `#a7a9ff`
+      at `41,113`, banner `#1e222a` at `500,149`, and `#0e5135` with "Pressed 1
+      time" after one automation press. `docs/preview-strategy.md` §The live
+      surface, plan `440` §6, the plan index and the site README record it. No
+      playground scenario applies — the verification is the docs browser probe.
 
 `[x]` Put the **component index's filter on the page URL** — the index narrows
       146 rows by name, part, prop, limit or verdict, and the page taught the

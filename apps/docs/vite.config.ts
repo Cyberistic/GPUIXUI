@@ -68,8 +68,21 @@ export default defineConfig({
     liveIsolation(),
   ],
   // `@/` mirrors the tsconfig path; Start's dependency scanner does not read it.
+  // `@gpuix/native` resolves to the shim because its own browser entry loads the
+  // wasm with an import attribute Vite leaves behind in a pre-bundled dependency
+  // (`src/lib/gpuix-native.ts`); the subpaths stay on the package.
   resolve: {
-    alias: [{ find: /^@\//, replacement: `${path.resolve(root, "src")}/` }],
+    alias: [
+      { find: /^@\//, replacement: `${path.resolve(root, "src")}/` },
+      {
+        find: /^@gpuix\/native$/,
+        replacement: path.resolve(root, "src/lib/gpuix-native.ts"),
+      },
+      {
+        find: /^@gpuix\/native\/wasm\/(.+)$/,
+        replacement: `${nativeDir}/wasm/$1`,
+      },
+    ],
   },
   // The wasm is 20 MiB: keep it out of the server graph, where it is unused.
   ssr: {

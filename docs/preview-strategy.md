@@ -132,24 +132,20 @@ measured constraints:
   canvas.
 
 **The site mounts it, on one route.** `/live` boots the browser build and paints
-a real card with a `@gpuixui/primitives` filled action on it; every other page
-keeps the labelled DOM reproduction above, because the platform hosts one
-surface per document and a component page needs room for its prose.
-`src/lib/gpuix-web.test.ts` holds this status to the tree in both directions: the
-policy cannot claim the surface is mounted while no route imports the build, and
-it cannot claim a route that is not there. The guard also reads the installed
-package, so the size, the memory requirement and the browser entry it quotes
-cannot drift silently. Plan `440-live-gpuix-web-surface` is the record of how the
-route was reached; this section is its outcome. `/docs/runtime` publishes the
-same three constraints, the build's size and the reconciler gap to a reader, and
-the guard holds that page to this policy.
+a real card with a `@gpuixui/primitives` filled action on it, through
+`@gpuix/react`'s reconciler; every other page keeps the labelled DOM reproduction
+above, because the platform hosts one surface per document and a component page
+needs room for its prose. `src/lib/gpuix-web.test.ts` holds this status to the
+tree in both directions: the policy cannot claim the surface is mounted while no
+route boots the build, and it cannot claim a route that is not there. The guard
+also reads the installed package, so the size, the memory requirement and the
+browser entry it quotes cannot drift silently. Plan `440-live-gpuix-web-surface`
+is the record of how the route was reached; this section is its outcome.
+`/docs/runtime` publishes the same three constraints, the build's size and the
+reconciler mount to a reader, and the guard holds that page to this policy.
 
-Two things `/live` is **not**, and its label says both:
-
-- it is not the native macOS runtime — it is the same renderer compiled to wasm;
-- it is not the React reconciler. The reconciler's own mount is still owed; the
-  page feeds the renderer the mutation protocol the reconciler emits, with every
-  `StyleDesc` resolved by `@gpuixui/primitives/core` (see §The live surface).
+`/live` is **not** the native macOS runtime — it is the same renderer compiled to
+wasm — and its label says so.
 
 ### The paint is measured
 
@@ -201,17 +197,28 @@ platform is a document-level singleton.
 - `src/routes/live.tsx` is the route; `src/components/docs/live-surface.tsx`
   boots the renderer inside an effect (never at module scope, so the server build
   never evaluates the wasm) and reports what it painted.
-- `src/lib/live-batch.ts` is the screen: a card, a heading, a sentence, a filled
-  action and a status line. Every `StyleDesc` comes from
-  `@gpuixui/primitives/core` — `controlStyle` for the button, `textStyle` for the
-  type, `surfaceStyle` for the card — so the paint is the recipe the package
-  ships, not a copy written for the docs.
+- `src/lib/live-scene.tsx` is the screen, written with `@gpuix/react`'s JSX
+  runtime: a card, a heading, a sentence, a filled action and a status line.
+  Every `StyleDesc` comes from `@gpuixui/primitives/core` — `controlStyle` for
+  the button, `textStyle` for the type, `surfaceStyle` for the card — so the
+  paint is the recipe the package ships, not a copy written for the docs.
+- The mount is `createRoot(renderer).render(<App />)`, not
+  `render(<App />, { renderer })`: `render()` also installs Node error handlers,
+  and the browser bundle's `process` shim has no `.on`, so it throws before the
+  first frame. The renderer's own callback routes each event through
+  `handleGpuixEvent`, which is what makes the React `onClick` fire.
+- `src/lib/gpuix-native.ts` is the browser entry: `browser.mjs` loads the wasm
+  with `import … with { type: "file" }`, which Vite leaves as an absolute
+  filesystem path inside a pre-bundled dependency. The shim re-exports the same
+  class through the `gpuix-web-wasm` rule, and `vite.config.ts` resolves
+  `@gpuix/native` to it for the client graph.
 - The theme is the platform switch's: `resolvePlatformTheme(platform, "dark",
   look)` from `?platform=` and `?look=`, falling back to the remembered choice,
   so the surface changes with the rest of the site's previews.
-- A press goes through `renderer.simulateClick` — the renderer's own input path —
-  and the listener repaints the banner's fill and counts the press. Nothing in
-  the page calls the handler directly.
+- A press goes through the automation locator, which calls
+  `renderer.simulateClick` — the renderer's own input path — and the React
+  handler repaints the banner's fill and counts the press. Nothing in the page
+  calls the handler directly.
 - The bar above the surface is DOM and says what the surface is; the page falls
   back to a sentence when there is no WebGPU or WebGL2, and says "reload to
   mount it again" when the platform reports `GPUIX web is already running`.
@@ -236,11 +243,13 @@ headless Google Chrome 155.0.8059.80 over SwiftShader: the button sampled
 `#a7a9ff` (`controlStyle`'s dark primary), the banner `#1e222a` (`muted`), and
 after a press `#0e5135` (`successSoft`) with the status reading "Pressed 1 time".
 
-**Owed:** the React reconciler mount. `render(<App />, { renderer })` takes an
-injected renderer, but `@gpuix/react` pulls `@gpuix/native/runtime` and
-`@gpuix/native/automation` at module scope, and nothing has measured whether
-that graph bundles for a browser. Until it does, `/live` drives the batch
-protocol by hand — the same operations, resolved by the same library styles.
+The reconciler mount was measured on 2026-10-23 against the same host and
+browser: the page reported `status=painting`, the retained text read
+`A real GPUix frame,Painted by the wasm renderer through the React reconciler.,
+Press me,Waiting for a press`, the button sampled `#a7a9ff` at `41,113`, the
+banner `#1e222a` at `500,149`, and after one press through the automation locator
+the banner sampled `#0e5135` with the status reading "Pressed 1 time" — the same
+four claims, now painted by a React tree instead of a hand-fed batch.
 
 ### The press path is measured
 

@@ -42,12 +42,16 @@ panel inside one:
 | Cross-origin isolation | the renderer asks for shared memory, so the document needs `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`; without them `SharedArrayBuffer` is absent and it never starts |
 | WebGPU or WebGL2, or nothing | a browser with neither backend gets no surface, so the route owes a plain-text fallback rather than an empty canvas |
 
-`/live` is not the React reconciler. It feeds the renderer the mutation protocol
-the reconciler emits, with every style resolved by `@gpuixui/primitives/core`, so
-it proves the runtime paints in a browser — not that `render(<App />, { renderer })`
-is measured there. Every other page keeps its browser approximation and says so,
-and the companion playground remains the way to run the shipped components
-natively.
+`/live` mounts the library's own React tree through `@gpuix/react`: the card, its
+type and the filled action are elements the reconciler emits, with every
+`StyleDesc` resolved by `@gpuixui/primitives/core`, and a press reaches the
+React handler. It uses `createRoot(renderer).render(<App />)` rather than
+`render(<App />, { renderer })`: the latter also installs Node error handlers,
+and a browser bundle carries a `process` shim without `.on`, which throws before
+the first frame. Two measured limits stay: the platform hosts one surface per
+document, and the browser build is the wasm renderer, not the native macOS
+runtime. Every other page keeps its browser approximation and says so, and the
+companion playground remains the way to run the shipped components natively.
 
 ## Measured in a window
 

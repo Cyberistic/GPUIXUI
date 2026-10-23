@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
+import type { EventPayload } from "@gpuix/native";
 import {
   liveBanner,
   liveButtonFill,
   liveIds,
-  livePressBatch,
   livePressedFill,
   liveRestingFill,
-  liveScene,
-} from "@/lib/live-batch";
+  LiveScene,
+} from "@/lib/live-scene";
 import {
   lookFromSearch,
   platformFromSearch,
@@ -24,18 +24,16 @@ import { mainContentId } from "@/components/skip-link";
  *
  * The only page on the site that paints through the renderer rather than a DOM
  * reproduction: `@gpuix/native` ships a wasm build of the same renderer the
- * library runs on, so `/live` boots it, applies a mutation batch built from the
- * library's own `StyleDesc` resolver, and lets a real press reach JavaScript.
+ * library runs on, so `/live` mounts `@gpuix/react`'s reconciler against it and
+ * the screen is a real React tree compiled to the runtime's retained elements.
  *
- * It is **not** the native macOS runtime, and it is not the React reconciler:
- * the batch protocol is the one the reconciler emits, fed by hand here. The
- * label above the surface says both things; `docs/preview-strategy.md` records
- * why the reconciler mount is still owed.
+ * It is **not** the native macOS runtime. The label above the surface says so;
+ * `docs/preview-strategy.md` records what the browser build does and does not
+ * carry.
  *
- * The module is loaded inside the effect, never at module scope, so the server
- * build never evaluates the wasm. The renderer's `applyBatch` takes a JSON
- * string — the wasm boundary, not a domain value — so `JSON.stringify` is the
- * wire encoder here.
+ * Both packages are loaded inside the effect, never at module scope, so the
+ * server build never evaluates the wasm. `render()` takes the renderer we
+ * initialised, so the page owns the one surface the platform allows.
  */
 
 /** One mount per page load: the platform owns the canvas and refuses a second. */
@@ -79,6 +77,7 @@ const hasBackend = async (): Promise<boolean> => {
   return probe.getContext("webgl2") !== null;
 };
 
+/** One painted element's bounds, in window coordinates. */
 interface Box {
   readonly x: number;
   readonly y: number;
@@ -94,9 +93,14 @@ const boxOf = (value: unknown): Box | undefined => {
   };
   const x = read("x");
   const y = read("y");
-  return x === undefined || y === undefined
+  const width = read("width");
+  const height = read("height");
+  return x === undefined ||
+    y === undefined ||
+    width === undefined ||
+    height === undefined
     ? undefined
-    : { x, y, width: read("width") ?? 0, height: read("height") ?? 0 };
+    : { x, y, width, height };
 };
 
 const sizeOf = (value: unknown): { width: number; height: number } => {
@@ -110,11 +114,12 @@ const sizeOf = (value: unknown): { width: number; height: number } => {
   return { width: 900, height: 560 };
 };
 
-/** The centre of a laid-out element, in page pixels. */
-const centre = (origin: DOMRect, box: Box): { x: number; y: number } => ({
-  x: Math.round(origin.left + box.x + box.width / 2),
-  y: Math.round(origin.top + box.y + box.height / 2),
-});
+/** The payload the renderer hands its callback, whichever argument carries it. */
+const isEventPayload = (value: unknown): value is EventPayload =>
+  typeof value === "object" &&
+  value !== null &&
+  typeof Reflect.get(value, "eventType") === "string" &&
+  typeof Reflect.get(value, "elementId") === "number";
 
 /** Write the report the probe reads. */
 const report = (lines: ReadonlyArray<string>): void => {
@@ -160,31 +165,25 @@ export function LiveSurface() {
         return;
       }
 
+      // The glue is initialised before the reconciler is imported: its class is
+      // a binding into this module, and the shim `vite.config.ts` resolves
+      // `@gpuix/native` to reads the same instance.
       const glue = await import("@gpuix/native/wasm/gpuix-web.js");
       const wasm = await import("@gpuix/native/wasm/gpuix-web_bg.wasm?url");
       await glue.default({ module_or_path: wasm.default });
 
-      let presses = 0;
-      const renderer = new glue.GpuixRenderer(
-        (...args: ReadonlyArray<unknown>) => {
-          const event = args.length > 1 ? args[1] : args[0];
-          const field = (key: string): unknown =>
-            typeof event === "object" && event !== null
-              ? Reflect.get(event, key)
-              : undefined;
-          // The payload names the event `eventType` and the target `elementId`.
-          if (
-            field("eventType") !== "click" ||
-            field("elementId") !== liveIds.button
-          ) {
-            return;
-          }
-          presses += 1;
-          renderer.applyBatch(JSON.stringify(livePressBatch(theme, presses)));
-        },
-      );
+      const react = await import("@gpuix/react");
 
-      renderer.init({});
+      let presses = 0;
+      let renderer: InstanceType<typeof glue.GpuixRenderer> | undefined;
+      renderer = new glue.GpuixRenderer((...args: ReadonlyArray<unknown>) => {
+        const event = args.length > 1 ? args[1] : args[0];
+        if (renderer !== undefined && isEventPayload(event)) {
+          react.handleGpuixEvent(event, renderer);
+        }
+      });
+      const host = renderer;
+      host.init({});
 
       const canvas = await awaitCanvas();
       if (canvas === undefined) {
@@ -201,15 +200,34 @@ export function LiveSurface() {
       canvas.style.height = "100%";
       canvas.style.zIndex = "0";
 
-      renderer.applyBatch(
-        JSON.stringify(liveScene(theme, sizeOf(renderer.getWindowSize()))),
+      // `render()` also installs the runtime's error handlers, which read a
+      // Node `process` that the browser bundle does not carry. `createRoot` is
+      // the same mount without that side effect, and the automation App gives
+      // the probe the same locators the reconciler's tree carries.
+      react.createRoot(host).render(
+        <LiveScene
+          box={sizeOf(host.getWindowSize())}
+          theme={theme}
+          onPress={(count) => {
+            presses = count;
+          }}
+        />,
       );
+      const runtime = await import("@gpuix/native/runtime");
+      const automation = runtime.installBrowserAutomation(host);
 
-      const origin = canvas.getBoundingClientRect();
+      const buttonLocator = automation.getByTestId(liveIds.button);
+      const bannerLocator = automation.getByTestId(liveIds.banner);
       const laidOut = async (): Promise<{ button?: Box; banner?: Box }> => {
         for (let attempt = 0; attempt < 100; attempt += 1) {
-          const button = boxOf(renderer.getElementBounds(liveIds.button));
-          const banner = boxOf(renderer.getElementBounds(liveIds.banner));
+          // A node in the tree is not laid out until the next paint, and the
+          // locator reports that as a refusal rather than no bounds.
+          const button = boxOf(
+            await buttonLocator.bounds().catch(() => undefined),
+          );
+          const banner = boxOf(
+            await bannerLocator.bounds().catch(() => undefined),
+          );
           if (button !== undefined && banner !== undefined)
             return { button, banner };
           await new Promise((wait) => requestAnimationFrame(wait));
@@ -229,20 +247,22 @@ export function LiveSurface() {
       // Sample the button's own fill, off the label: a centre pixel lands on a
       // glyph and reads the text's antialiasing, not the control's paint.
       const at = {
-        x: Math.round(origin.left + button.x + 4),
-        y: Math.round(origin.top + button.y + button.height / 2),
+        x: Math.round(button.x + 4),
+        y: Math.round(button.y + button.height / 2),
       };
-      const stripe = centre(origin, {
-        ...banner,
-        y: banner.y + (banner.height - liveBanner.height) / 2,
-        height: liveBanner.height,
-      });
+      const stripe = {
+        x: Math.round(banner.x + banner.width / 2),
+        y: Math.round(
+          banner.y +
+            (banner.height - liveBanner.height) / 2 +
+            liveBanner.height / 2,
+        ),
+      };
 
-      // The probe presses through the renderer's own input path, exactly as a
-      // pointer would: the listener above is the only thing that repaints.
+      // The probe presses through the reconciler's own automation path, exactly
+      // as a pointer would: the React handler is the only thing that repaints.
       Reflect.set(window, "__gpuixLive", {
-        press: () =>
-          renderer.simulateClick(at.x - origin.left, at.y - origin.top),
+        press: () => buttonLocator.click(),
         sample: { button: at, banner: stripe },
         fills: {
           button: liveButtonFill(theme),
@@ -255,7 +275,7 @@ export function LiveSurface() {
       report([
         "status=painting",
         "canvas=yes",
-        `text=${renderer.getAllText().join(",")}`,
+        `text=${host.getAllText().join(",")}`,
         `button=${at.x},${at.y}`,
         `banner=${stripe.x},${stripe.y}`,
         `fill=${liveButtonFill(theme)}`,

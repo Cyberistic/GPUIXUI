@@ -1,26 +1,26 @@
 import { readFileSync } from "node:fs";
+import { buttonVariants, controlStyle } from "@gpuixui/primitives/core";
 import { themes } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import {
   liveBanner,
   liveButtonFill,
   liveIds,
-  livePressBatch,
   livePressedFill,
   liveRestingFill,
-  liveScene,
-  type LiveOp,
-} from "./live-batch";
+  LiveScreen,
+  liveStatus,
+} from "./live-scene";
 
 /**
  * `/live`'s screen, and the route that mounts it.
  *
  * The page is the one surface on the site whose pixels come from GPUix, so the
- * batch it feeds the renderer is what the reader actually sees. Two things can
- * go wrong silently: a style that drifts from the library's recipe (the batch is
- * hand-written, so nothing would fail), and a listener that stops being
- * registered (the button still paints). The probe measures both in a browser;
- * these cases hold the same claims in Node, where the failure names the op.
+ * React tree it mounts is what the reader actually sees. Two things can go
+ * wrong silently: a style that drifts from the library's recipe, and a handler
+ * that stops being wired (the action still paints). The probe measures both in
+ * a browser; these cases hold the same claims in Node against the element tree,
+ * where the failure names the element.
  */
 
 const root = new URL("../../", import.meta.url);
@@ -30,111 +30,132 @@ const read = (path: string): string =>
 const theme = themes.dark;
 const box = { width: 1_000, height: 700 } as const;
 
-/** The closed mutation set `applyBatch` documents. */
-const operations = new Set([
-  "createElement",
-  "destroyElement",
-  "appendChild",
-  "insertBefore",
-  "setStyle",
-  "setText",
-  "setEventListener",
-  "setRoot",
-  "setKeyboardFocusDim",
-  "setCustomProp",
-]);
+/** One element in the tree, read without asserting a React type. */
+interface Element {
+  readonly type: unknown;
+  readonly prop: (key: string) => unknown;
+}
 
-const ops = liveScene(theme, box);
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-/** The style the batch sets on an element, if it sets one. */
-const styleOf = (
-  batch: ReadonlyArray<LiveOp>,
-  id: number,
-): Record<string, unknown> | undefined => {
-  const style = batch.find(
-    (entry) => entry[0] === "setStyle" && entry[1] === id,
-  )?.[2];
-  return isRecord(style) ? style : undefined;
+const elementOf = (value: unknown): Element | undefined => {
+  if (typeof value !== "object" || value === null) return undefined;
+  const props: unknown = Reflect.get(value, "props");
+  const type: unknown = Reflect.get(value, "type");
+  if (typeof props !== "object" || props === null) return undefined;
+  return {
+    type,
+    prop: (key) => Reflect.get(props, key),
+  };
 };
 
-describe("the live surface's batch", () => {
-  it("uses only the protocol's own operations", () => {
-    const unknown = [...liveScene(theme, box), ...livePressBatch(theme, 1)]
-      .map((op) => op[0])
-      .filter((name) => !operations.has(String(name)));
+/** The element a `testId` names, anywhere under `tree`. */
+const find = (tree: unknown, testId: string): Element | undefined => {
+  const element = elementOf(tree);
+  if (element === undefined) return undefined;
+  if (element.prop("testId") === testId) return element;
+  const children: unknown = element.prop("children");
+  const list = Array.isArray(children) ? children : [children];
+  for (const child of list) {
+    const found = find(child, testId);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+};
 
-    // An operation the renderer does not parse is dropped without a word, so a
-    // typo paints less than the page promises.
-    expect(unknown).toEqual([]);
-  });
+const styleOf = (element: Element | undefined): object | undefined => {
+  const style = element?.prop("style");
+  return typeof style === "object" && style !== null ? style : undefined;
+};
 
-  it("paints the button in the role controlStyle resolves", () => {
-    // Not a re-read of `liveButtonFill`: the check is that the batch's own op
-    // carries the theme's primary, which is the fill the recipe resolves.
-    expect(styleOf(ops, liveIds.button)?.backgroundColor).toBe(
-      theme.colors.primary,
+const fillOf = (element: Element | undefined): unknown => {
+  const style = styleOf(element);
+  return style === undefined
+    ? undefined
+    : Reflect.get(style, "backgroundColor");
+};
+
+const screen = (presses: number) =>
+  LiveScreen({ theme, box, presses, onPress: () => undefined });
+
+describe("the live surface's screen", () => {
+  it("paints the action in the fill controlStyle resolves", () => {
+    const button = find(screen(0), liveIds.button);
+
+    expect(fillOf(button)).toBe(
+      controlStyle({ variant: buttonVariants.primary, size: "md" }, theme)
+        .backgroundColor,
     );
     expect(liveButtonFill(theme)).toBe(theme.colors.primary);
   });
 
-  it("registers the press listener on the button, and only there", () => {
-    const listeners = ops.filter((op) => op[0] === "setEventListener");
-    const clickOnButton = listeners.filter(
-      (op) => op[1] === liveIds.button && op[2] === "click",
+  it("registers the press handler on the action", () => {
+    let pressed = 0;
+    const button = find(
+      LiveScreen({
+        theme,
+        box,
+        presses: 0,
+        onPress: () => {
+          pressed += 1;
+        },
+      }),
+      liveIds.button,
     );
+    const handler = button?.prop("onClick");
 
-    // The probe presses through the renderer's input path; without this op the
-    // press reaches nothing and the page looks exactly the same.
-    expect(listeners).toHaveLength(1);
-    expect(clickOnButton).toHaveLength(1);
-    expect(read("src/components/docs/live-surface.tsx")).toContain(
-      'field("eventType") !== "click"',
-    );
+    expect(typeof handler).toBe("function");
+    if (typeof handler === "function") Reflect.apply(handler, undefined, []);
+    expect(pressed).toBe(1);
   });
 
-  it("sets the root once, after the tree it holds", () => {
-    const rootOp = ops.findIndex((op) => op[0] === "setRoot");
-    const lastAppend = ops.reduce(
-      (last, op, index) => (op[0] === "appendChild" ? index : last),
-      -1,
-    );
-
-    expect(rootOp).toBe(ops.length - 1);
-    expect(lastAppend).toBeLessThan(rootOp);
-  });
-
-  it("changes the banner to a fill the probe can tell from the resting one", () => {
-    const pressed = styleOf(livePressBatch(theme, 1), liveIds.banner);
-
-    expect(pressed?.backgroundColor).toBe(livePressedFill(theme));
-    expect(styleOf(ops, liveIds.banner)?.backgroundColor).toBe(
+  it("keeps the banner resting until a press, then paints the pressed fill", () => {
+    expect(fillOf(find(screen(0), liveIds.banner))).toBe(
       liveRestingFill(theme),
     );
-    expect(livePressedFill(theme)).not.toBe(liveRestingFill(theme));
-    expect(pressed?.height).toBe(liveBanner.height);
+    expect(fillOf(find(screen(1), liveIds.banner))).toBe(
+      livePressedFill(theme),
+    );
+    expect(fillOf(find(screen(1), liveIds.banner))).not.toBe(
+      liveRestingFill(theme),
+    );
+    expect(liveBanner.height).toBeGreaterThan(0);
   });
 
   it("counts the press in the sentence a reader sees", () => {
-    const status = (presses: number): unknown =>
-      livePressBatch(theme, presses).find(
-        (op) => op[0] === "setText" && op[1] === liveIds.status,
-      )?.[2];
+    expect(liveStatus(0)).toBe("Waiting for a press");
+    expect(liveStatus(1)).toBe("Pressed 1 time");
+    expect(liveStatus(2)).toBe("Pressed 2 times");
+  });
 
-    expect(status(1)).toBe("Pressed 1 time");
-    expect(status(2)).toBe("Pressed 2 times");
+  it("carries the card's heading, so the painted text proves the tree", () => {
+    const tree = screen(0);
+    const title = find(tree, liveIds.title);
+
+    expect(title?.prop("children")).toBe("A real GPUix frame");
   });
 });
 
 describe("the live surface's route", () => {
+  it("mounts the screen through the reconciler, not a hand-fed batch", () => {
+    const surface = read("src/components/docs/live-surface.tsx");
+    const scene = read("src/lib/live-scene.tsx");
+
+    // The owed piece plan 440 recorded: `@gpuix/react` decides the tree and the
+    // renderer paints it. A batch fed by hand looks identical in a screenshot,
+    // so the source is the only thing that can tell the two apart.
+    expect(surface).toContain("react.createRoot(host)");
+    expect(surface).toContain("<LiveScene");
+    expect(surface).toContain("handleGpuixEvent(event, renderer)");
+    expect(surface).not.toContain("applyBatch");
+    expect(scene).toContain("/** @jsxImportSource @gpuix/react */");
+    expect(scene).toContain("controlStyle(");
+  });
+
   it("boots the renderer once, inside the effect", () => {
     const surface = read("src/components/docs/live-surface.tsx");
     const sources = [
       surface,
       read("src/routes/live.tsx"),
-      read("src/lib/live-batch.ts"),
+      read("src/lib/live-scene.tsx"),
     ].join("\n");
 
     // The platform refuses a second surface, and a module-scope import would
@@ -144,12 +165,13 @@ describe("the live surface's route", () => {
     expect(surface).toContain(
       'await import("@gpuix/native/wasm/gpuix-web.js")',
     );
+    expect(surface).toContain('await import("@gpuix/react")');
     expect(surface.indexOf("useEffect")).toBeLessThan(
       surface.indexOf("await import("),
     );
   });
 
-  it("says what the surface is, and what a browser without a backend reads", () => {
+  it("labels what the surface is, and what a browser without a backend reads", () => {
     const surface = read("src/components/docs/live-surface.tsx");
 
     expect(surface).toContain("not the native macOS runtime");

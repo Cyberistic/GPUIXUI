@@ -61,7 +61,11 @@ const runtimePage = read("apps/docs/content/docs/runtime.mdx");
 
 /** The wasm build's size, as every surface that prints it writes it. */
 const webSize = (): string =>
-  (statSync(new URL("wasm/gpuix-web_bg.wasm", native)).size / 1024 / 1024).toFixed(1);
+  (
+    statSync(new URL("wasm/gpuix-web_bg.wasm", native)).size /
+    1024 /
+    1024
+  ).toFixed(1);
 
 /** Every non-test module the docs app ships. */
 const appSources = (): ReadonlyArray<string> =>
@@ -73,17 +77,15 @@ const appSources = (): ReadonlyArray<string> =>
     .map((name) => `apps/docs/src/${name}`);
 
 /**
- * The modules that import the browser build.
+ * The modules that boot the browser build.
  *
- * Importing `@gpuix/native` from a page is what mounts a live surface, so the
- * policy's status cannot outlive this list in either direction.
+ * Constructing the renderer is what mounts a live surface (the shim and the
+ * route both read `@gpuix/native/wasm/*`, but only one of them owns the
+ * singleton), so the policy's status cannot outlive this list in either
+ * direction.
  */
 const liveImports = (): ReadonlyArray<string> =>
-  appSources().filter((path) =>
-    /(?:from\s+|import\()\s*["']@gpuix\/native(?:\/[^"']*)?["']/.test(
-      read(path),
-    ),
-  );
+  appSources().filter((path) => read(path).includes("new glue.GpuixRenderer("));
 
 const saysMounted = (): boolean =>
   policy.includes("**The site mounts it, on one route.**");
@@ -147,15 +149,19 @@ describe("the GPUix web build", () => {
     expect(runtimePage).toContain("WebGL2");
     expect(runtimePage).toContain("browser approximation");
 
-    // Both directions: the surface drives the batch protocol, so the page owes
-    // the reconciler gap; the moment the route imports the reconciler, the page
-    // must stop calling it unmeasured. The policy points a reader at the page.
-    const usesReconciler = /^\s*import[^;]*["']@gpuix\/react["']/m.test(
+    // Both directions: the route mounts through the reconciler, so the page
+    // teaches that mount and the one API it does not use; the moment the route
+    // stops importing it, the page must go back to calling the reconciler
+    // unmeasured. The policy points a reader at the page.
+    const usesReconciler = /import\(\s*["']@gpuix\/react["']\s*\)/.test(
       read("apps/docs/src/components/docs/live-surface.tsx"),
     );
+    expect(usesReconciler).toBe(true);
     expect(runtimePage.includes("not the React reconciler")).toBe(
       !usesReconciler,
     );
+    expect(runtimePage).toContain("mounts the library's own React tree");
+    expect(runtimePage).toContain("createRoot(renderer).render(<App />)");
     expect(runtimePage).toContain("render(<App />, { renderer })");
     expect(policy).toContain("/docs/runtime");
   });
@@ -179,10 +185,13 @@ describe("the GPUix web build", () => {
   it("declares the package the route imports", () => {
     const dependencies = manifest("apps/docs/package.json").dependencies;
 
-    // A route that resolves the wasm through an undeclared package builds on
-    // this machine and nowhere else.
+    // A route that resolves the wasm or the reconciler through an undeclared
+    // package builds on this machine and nowhere else.
     expect(
       isRecord(dependencies) ? dependencies["@gpuix/native"] : undefined,
+    ).toBe("catalog:");
+    expect(
+      isRecord(dependencies) ? dependencies["@gpuix/react"] : undefined,
     ).toBe("catalog:");
   });
 
@@ -194,13 +203,15 @@ describe("the GPUix web build", () => {
   it("keeps the plan's status and the route in agreement", () => {
     // Plan 440 is the swarm's record of this work, and it said the route was
     // "not built" after `/live` shipped: a later executor reading the plan would
-    // rebuild a surface that already paints. The remaining gap is real — `/live`
-    // drives the batch protocol, not `render()` — so the plan owes that sentence
-    // only while the surface imports no reconciler.
+    // rebuild a surface that already paints. The reconciler mount is the last
+    // piece, so the plan owes its "still owed" paragraph only while the surface
+    // imports no reconciler.
     const plan = read(".agents/slop/plans/440-live-gpuix-web-surface.md");
     const index = read(".agents/slop/plans/README.md");
     const surface = read("apps/docs/src/components/docs/live-surface.tsx");
-    const usesReconciler = /from\s+["']@gpuix\/react["']/.test(surface);
+    const usesReconciler = /import\(\s*["']@gpuix\/react["']\s*\)/.test(
+      surface,
+    );
 
     expect(read("apps/docs/src/routes/live.tsx")).toContain(
       'createFileRoute("/live")',

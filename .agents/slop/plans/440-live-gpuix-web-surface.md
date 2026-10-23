@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | **implemented** — `/live` mounts the wasm browser build and paints a real frame; measured by two probes (below). One piece is owed: the React reconciler mount, so the route drives the batch protocol by hand |
+| Status | **implemented** — `/live` mounts the wasm browser build and paints a real frame through `@gpuix/react`'s reconciler; measured by two probes (below) |
 | Phase | F (docs polish) → feeds the preview policy in `docs/preview-strategy.md` |
 | Owner | `docs-site` |
 | Depends on | the 0.11.0 browser build (`@gpuix/native`'s `browser` export), the docs site's deploy middleware, plan `203` (capability record) |
@@ -245,7 +245,7 @@ line, the mount and the policy together, and the two probes are the evidence.
 | ---- | ------------ | ----- |
 | 1 | the docs app declares `@gpuix/native`/`@gpuix/react` from the catalogue | `apps/docs/package.json`, guarded by `gpuix-web.test.ts` |
 | 2 | `COOP: same-origin` + `COEP: require-corp` for `/live` only, dev and production | `apps/docs/vite.config.ts`, `apps/docs/src/start.ts` |
-| 3/3a | the route boots `GpuixRenderer` inside an effect and drives the batch protocol (the reconciler is §3's recorded `render()` gap) | `apps/docs/src/routes/live.tsx`, `apps/docs/src/components/docs/live-surface.tsx`, `apps/docs/src/lib/live-batch.ts` |
+| 3/3a | the route boots `GpuixRenderer` inside an effect and mounts the screen through `@gpuix/react`'s reconciler (`createRoot(renderer).render`) | `apps/docs/src/routes/live.tsx`, `apps/docs/src/components/docs/live-surface.tsx`, `apps/docs/src/lib/live-scene.tsx`, `apps/docs/src/lib/gpuix-native.ts` |
 | 4 | the label, the no-backend sentence and the "reload to mount it again" path | `live-surface.tsx` |
 | 5 | both probes, run against real frames | `scripts/live-surface-probe.ts`, `scripts/live-route-probe.ts`, `scripts/live-frame.ts` |
 | 6 | the guard (dependency, one importer, isolation, fallback, policy status) | `src/lib/gpuix-web.test.ts` |
@@ -258,8 +258,17 @@ SwiftShader: the batch sample painted `#7c5cff`; the route's button sampled
 surface carry the same numbers, and `gpuix-web.test.ts` derives the three colours
 from `themes.dark` so a palette move updates the claim.
 
-**Still owed:** `render(<App />, { renderer })`. `@gpuix/react` pulls
-`@gpuix/native/runtime` and `@gpuix/native/automation` at module scope and nothing
-has measured whether that graph bundles for the browser, so the route uses the
-same operations resolved by the same library styles rather than the reconciler.
-That is the next step, not a missing route.
+**Landed 2026-10-23: the reconciler mount.** `@gpuix/react` bundles for the
+browser once `@gpuix/native` resolves to `src/lib/gpuix-native.ts` (the package's
+own `browser.mjs` keeps `import … with { type: "file" }` inside a pre-bundled
+dependency, which the page cannot fetch). The route mounts
+`createRoot(renderer).render(<App />)` rather than `render(<App />, { renderer })`:
+`render()` also calls `installRuntimeErrorHandlers`, whose `process.on` guard sees
+Vite's `process` shim (`{ env }`) and throws before the first frame. Events reach
+React through `handleGpuixEvent`, and the probe presses through the automation
+locator. Measured 2026-10-23 on the same host and browser: `status=painting`, the
+retained text carried all four runs, the button sampled `#a7a9ff` at `41,113`,
+the banner `#1e222a` at `500,149`, and after one press `#0e5135` with "Pressed 1
+time". `src/lib/live-surface.test.ts` holds the screen's fills, its handler and
+the route's mount; `src/lib/gpuix-web.test.ts` holds the dependency, the single
+boot and the policy.
