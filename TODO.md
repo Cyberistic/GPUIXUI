@@ -327,7 +327,31 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 210/210
+`[x]` `[██████████]` 211/211
+
+`[x]` Keep **two role sweeps inside the suite's own budget** — the two broad guards a
+role added to the colour group must pass without a new case (`incomplete.test.ts`'s
+"fails the gate by name, for every role of every shipped style" and
+`native-text.test.ts`'s "never throws for a role any shipped style lost") ran a whole
+`auditTheme` **per role** — 752 and 846 audits, eleven reports each — and asked for a
+twenty-second timeout to do it: **29.7 s** on a full-suite run against the package's
+deliberate two-second budget, so master's tokens gate was red on a loaded box
+(`Test timed out in 20000ms`, measured twice on 2026-10-23). Neither claim needs the
+other nine reports: the per-role sweep now reads the two that answer it —
+`invalidColorRoles` names the role once, and `contrastFailures` proves no pair the
+role sits on is reported readable — while `passed`, the no-throw rule and the
+whole-group superset stay where they already live (`audit.test.ts`'s conjunction case
+and `incomplete.test.ts`'s absent-group cases). The seam sweep reads
+`nativeTextTheme` for both fills over the 47 roles on the base theme (the seam's
+answer to an absent role is the same code in every palette; the palette dimension is
+the complete-theme sweep beside it and `nativeAccent`'s own shipped-style case).
+Both twenty-second exemptions are gone, so the suite's two seconds is the guard: the
+package is 49 files / **2 933 tests in 10.8 s** (was 35.6 s with two failures).
+Directions measured: `themeColors` filling an absent role from `lightColors` fails
+both sweeps by name (846 rows in the per-role case), and a seam that throws on an
+absent `primary` fails the native sweep with the throw. No native scenario applies —
+two pure-data guards.
+
 
 `[x]` Name the **row heights the token actually reaches**, and hold the presets to the alignment they promise — `Density.rowHeight`'s JSDoc (and the `DensityOverrides` copy) said "Table, list, menu and tree row height", and neither a table row nor a menu row reads the step: a menu row is built at `controlHeight.sm` (`packages/components/src/menu/item.tsx`) and a data-table row is laid out by its cells, while the step is read by a dense list row (`packages/components/src/list.tsx`), a tree row and its virtual twin (`packages/data/src/tree/row.tsx`, `packages/data/src/virtual/tree.tsx`), a log viewer's row (`packages/files/src/log/log-viewer.tsx`), a scroller's keyboard line (`packages/primitives/src/components/ScrollArea.tsx`) and `@gpuixui/tw`'s `row-height` utility (`packages/tw/src/calc.ts`). The JSDoc names those six now, states the two boxes that are not rows, and records the one relationship the presets keep: every preset's `rowHeight` **is** its `controlHeight.md`, so a row and the default control beside it share a height. `density-adoption.test.ts` gains four cases — the reader set is **derived** from the six packages (`sourcesIn` walks `src/` with the path below it, because the two tree readers share a basename), every derived path must be named in the step's JSDoc, a menu row must still read `controlHeight(theme, "sm")` and no row height, a table row must read no row height, and the retracted phrase must not return in `scale.ts`/`theme.ts` — plus three page cases that name the readers, the alignment and the two non-rows on `docs/tokens.md` §Density (which names every source path) and `docs/design-system.md` §6, and require the per-size `density` example to move `rowHeight` with `md` — it raised the control alone while the page said the two share a height. `scale.test.ts` gains `lines every preset's rows up with its default control`. Directions measured: setting the comfortable preset's `rowHeight` to 30 fails the preset case (`comfortable: a row and the md control beside it: expected 30 to be 32`), restoring the old JSDoc fails the naming case (`packages/components/src/list.tsx reads the row height but is not named`) and the retraction case, dropping a path from the derived expectation fails the set case, dropping `packages/tw/src/calc.ts` from the catalogue fails its page case, and restoring the lone `md` override fails the example case. Green: 49 files / 2 932 tests, `check-types`, `check:tests` and `lint` clean. No native scenario applies — a token's reader list, its documents and a preset invariant.
 
