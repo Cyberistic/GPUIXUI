@@ -14,7 +14,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { lightTheme } from "@gpuixui/tokens";
 import { renderFileUpload } from "./file-upload.js";
-import type { UploadItem } from "./upload/queue.js";
+import { emptyQueue, enqueue, type UploadItem } from "./upload/queue.js";
 import {
   elementChildren,
   elementHandler,
@@ -78,6 +78,24 @@ describe("FileUpload", () => {
     const remove = expectSome(findByTestId(root, "upload-remove-a"));
     expectSome(elementHandler(remove, "onActivate"))({});
     expect(removed).toStrictEqual(["a"]);
+  });
+
+  it("names a row by its id when the stored file name is blank", () => {
+    // The bug guarded: a file record restored without a name reached the row
+    // and its remove action as `null`, so the action published "Remove null"
+    // and the row painted no name. The queue names such a file by its id.
+    const named = enqueue(emptyQueue, [
+      { id: "notes.txt", name: null as unknown as string },
+    ]).items;
+    const root = render(named, { onRetry: noop, onRemove: noop });
+    expect(
+      expectSome(
+        elementProp(
+          expectSome(findByTestId(root, "upload-remove-notes.txt")),
+          "label",
+        ),
+      ),
+    ).toBe("Remove notes.txt");
   });
 
   it("reads a blank name as the documented default, never an unnamed row", () => {

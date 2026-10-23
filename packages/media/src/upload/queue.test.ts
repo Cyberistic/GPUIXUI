@@ -43,6 +43,22 @@ const uploading = (id: string): UploadQueue =>
   start(enqueue(emptyQueue, [file(id)]), id);
 
 describe("upload queue", () => {
+  it("names a file by its id when the stored name is blank", () => {
+    // The bug guarded: a file record restored with no name reached the row and
+    // its remove action, which published "Remove null" and painted a nameless
+    // row, while every other label is read through the absence rule.
+    const named = enqueue(emptyQueue, [
+      { id: "notes.txt", name: null as unknown as string },
+      { id: "b", name: "   " },
+      { id: "c.txt", name: "  c.txt  " },
+    ]);
+    const nameOf = (id: string) =>
+      Option.map(findItem(named, id), (item) => item.name);
+    expect(nameOf("notes.txt")).toStrictEqual(Option.some("notes.txt"));
+    expect(nameOf("b")).toStrictEqual(Option.some("b"));
+    expect(nameOf("c.txt")).toStrictEqual(Option.some("c.txt"));
+  });
+
   it("retries an errored file under a fresh token", () => {
     const errored = fail(uploading("a"), "a", 1);
     const retried = start(errored, "a");

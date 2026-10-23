@@ -16,6 +16,7 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { accessibleName } from "../name.js";
 
 /** A file's lifecycle within the queue. */
 export type UploadStatus = "idle" | "uploading" | "done" | "error";
@@ -69,7 +70,10 @@ export const enqueue = (
           queue,
           Arr.append(queue.items, {
             id: file.id,
-            name: file.name,
+            // A file name is copy from a record as well as a path: a stored
+            // empty one reads as the file's id, so a row and its remove action
+            // are named instead of saying "Remove null".
+            name: accessibleName(file.name, file.id),
             status: "idle",
             progress: 0,
             token: 0,
