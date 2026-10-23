@@ -5022,7 +5022,34 @@ applies — printed figures a suite derives.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 20/20
+`[x]` `[██████████]` 21/21
+
+`[x]` `packages/primitives`: **a text area dropped a row count the runtime could
+      not parse** — `minRows`/`maxRows` are caller arithmetic (a measured height
+      divided by a line) and reached 0.11.0's `<textarea>` verbatim, while the
+      runtime reads both as **whole** rows and discards a fractional count
+      instead of flooring it: measured in a window, `minRows={2.5}` painted
+      **38px — one row — fewer than `minRows={2}`'s 56px**, and `maxRows={2.5}`
+      over six lines painted the whole 128px field instead of the 56px
+      `maxRows={2}` caps at. `core/layout.ts`'s `fieldRows` now hands the
+      runtime whole rows through `trackCount` (a fraction floors, a count below
+      one or a non-number is one row) and raises a cap that sits below its
+      floor, because the runtime paints the floor anyway (measured: `min 4 /
+      max 2` painted 92px, four rows); an absent count stays absent. Proof:
+      `runtime/fields.runtime.test.tsx`'s `sizes a TextArea by whole rows when a
+      count is fractional` compares the fractional floor and cap with their
+      whole numbers and with the uncapped six-line height; `core/layout.test.ts`
+      gains `fieldRows` (4 cases: the floor, the unusable counts, the absent
+      pair and the raised cap). Directions measured: with `TextArea` handing the
+      raw props through, the window case fails `expected 38 to be 56`; with
+      `fieldRows` returning the counts untouched, the unit cases fail
+      `expected { minRows: 2.5, maxRows: undefined } to deeply equal { minRows:
+      2, maxRows: undefined }` and `expected { minRows: +0, maxRows: +0 }`.
+      Restored: the package is 56 files / 1 080 unit tests, `fields.runtime`
+      52/52, and `check-types`, `oxlint` and `oxfmt` are clean (the only
+      `check:tests` finding is the tokens workstream's untracked
+      `__bench.test.ts`). Docs: `docs/textarea.mdx` §API/§Limitations and the
+      `COMPONENTS.md` Text areas row.
 
 `[x]` `packages/components`: **a control disabled mid-edit stayed a tab
       stop** — every disabled host in this package leaves the tab order
@@ -13948,6 +13975,24 @@ which the behaviour suite runs in the real renderer.
   - `[-]` `swapping-text` — covered, not duplicated: `RollingText` is the vertical swap of a controlled value and `SlidingText` the horizontal one, both on the shared two-half swap state machine in `internal/text-swap.ts`; a third component would be the copy the boundaries forbid
   - `[-]` `scrolling-number` — covered, not duplicated: `SlidingNumber` is the odometer (digit columns scrolling inside one-line clips) and `CountingNumber` the tweened reading, so the catalogue's "scrolling/sliding/counting number" triple is those two components
   - `[x]` **Carousel indicator** — the one Tier 2 surface the wiring left still: `CarouselIndicators` swapped the active dot between an 18px pill and a 6px circle in a style value, so a reader had to compare a dot with the one it replaced, and both the record and the page denied any movement ("no slide animation") while blaming `motion`'s absent `transform` — which was the wrong reason: the runtime interpolates `width`. The dot's width is a motion target now (`initial: false`, so a rail that mounts on a selection paints at rest; a step retargets both dots from the widths on screen) at `"fast"`, the level the motion package names for an indicator, and the seam's reduced preference is the zero-duration assignment. Proof: `src/behaviour/carousel.test.tsx` gains `grows the active dot over its level instead of jumping` (paused clock: both dots hold the start widths one frame in, then land at 6/18 after 400 ms) and `paints the dot at its new width in the frame a reduced reader changes slide` (the clock frozen, so a journey could never arrive); 15 → 17 native cases. Directions measured: with the style value restored the first case fails `expected 6 to be 18`, and a timing that ignores the preference makes the reduced case fail `expected 18, got 6`. The record, `docs/carousel.mdx` (§Motion, §Limitations), the header comment and `docs/component-api.md` §11 now say what moves and state the limit that remains honestly — the **track** does not travel between slides, because the frame is sized by the slide on screen and a travel would lay every slide out in one absolutely positioned box and take its height from the tallest (`carousel-page.test.ts`, `motion-claims.test.ts` and `inventory.test.ts` hold the page, the record's denial list and the printed count).
+`[x]` **Toast fan**: a card dismissed while the stack was fanned fell back into
+      its slot instead of sliding away from where it sat — the fan ranked (and
+      tested the hover over) only the cards still in the queue, so the frame a
+      card became a ghost took its 8px lift away, and the exit frame written at
+      `-fanLift` (a leaving card slides right at the lift it rests at) became a
+      fall. The fan now reads the **painted** stack, ghosts included: the rank
+      keeps a leaving card's lift through its exit and stays continuous when the
+      ghost unmounts (the size shrinks by the same one as every later rank), and
+      a pointer resting on a ghost keeps the fan open instead of closing it in
+      the frame the exit starts. Proof: `src/behaviour/presence.test.tsx`'s
+      `keeps the fan lift a dismissed card held while it leaves` (paused clock:
+      hover the newest card, dismiss the older one, read 160 ms into its 180 ms
+      exit) measured at `HEAD` as `expected 394.5 to be 388` — the ghost 6.5px
+      down its 8px lift while it slid right; both halves are load-bearing (a rank
+      from the queue or a hover test over the queue alone each fails it). Green:
+      the presence suite 32/32, toast 17/17, the package 101 files / 947 tests,
+      `check-types` clean. Docs: `packages/components/docs/toast.mdx` §Motion and
+      the `Toasts / notifications` inventory row.
 `[x]` Reveal and scroll: blur, fade, zoom, slide, highlight, auto-height, scroll-fade, scroll-progress
   - `[x]` `auto-height` — `AutoHeight` measures its content through `onLayout` and tweens the clipping box to it (mount window, re-measure, reduced motion), `src/behaviour/auto-height.test.tsx` (4), `docs/auto-height.mdx`, the example and the inventory row; `CollapsibleContent` now uses it, so the recorded "mounts instantly" limitation is closed
   - `[x]` `reveal` — `Reveal` is the house entrance as a component: fade plus a relative `top`/`left` offset, on mount or on an `open` change (the subtree unmounts after its exit), `from` names the edge, `distance`/`delayMs`/`level` shape the arrival, and the reduced preference paints at rest at once; `src/reveal/frames.ts` + its unit suite, `src/behaviour/reveal.test.tsx` (7), `docs/reveal.mdx`, the example and the row. Covers the catalogue's **fade** and **slide**, which are the same primitive with a different edge. Measured: a wrong edge sign fails the direction case, a "none" that moves fails the fade-only case, and an entry that paints at rest fails the arrival case
