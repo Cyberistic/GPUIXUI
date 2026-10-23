@@ -33,6 +33,8 @@ import {
   settle,
   type DataTestRoot,
 } from "../internal/test-root.js";
+import { TableCell, TableHeaderCell, TableRow } from "../table/table.js";
+import { VirtualTable } from "../virtual/table.js";
 
 /** The absolute row indices that actually reached the frame. */
 const paintedRows = (root: DataTestRoot): ReadonlyArray<number> =>
@@ -222,5 +224,59 @@ describe("the virtualized table", () => {
     // is a record the unsorted top of the list never painted.
     expect(paintedRows(root)[0]).toBe(VIRTUAL_TABLE_ROWS - 1);
     expect(Str.includes("file-1000.ts")(allText(root))).toBe(true);
+  });
+});
+
+describe("the row count", () => {
+  /** A windowed table over a count the caller computed. */
+  const counted = (count: number) => (
+    <VirtualTable
+      height={240}
+      aria-label="Rows"
+      count={count}
+      rowHeight={30}
+      header={
+        <TableRow>
+          <TableHeaderCell width={120} testId="count-header">
+            Name
+          </TableHeaderCell>
+        </TableRow>
+      }
+      row={(index) => (
+        <TableRow>
+          <TableCell width={120} testId={`count-row-${index}`}>
+            {`row-${index}`}
+          </TableCell>
+        </TableRow>
+      )}
+    />
+  );
+
+  it("paints the empty set for a count it cannot read", () => {
+    // `count` is often computed — a page's length, a filtered total, a row
+    // count a response has not answered — and `count === 0` read a `NaN` or a
+    // negative as false, so the table mounted a windowed body over no rows: a
+    // header above a blank body, with neither the empty message nor the
+    // loading skeleton. A count that cannot be read is no rows, the state
+    // `count={0}` already paints.
+    const mounted = renderData(counted(Number.NaN));
+    root = mounted;
+    settle(mounted);
+    expect(allText(mounted)).toContain("No rows");
+
+    mounted.rerender(counted(-3));
+    settle(mounted);
+    expect(allText(mounted)).toContain("No rows");
+  });
+
+  it("mounts whole rows for a fractional count", () => {
+    // A window cannot hold a fraction of a row: the runtime's item count and
+    // the window's own arithmetic are given the same floored number, so two
+    // and a half rows paint two and the list cannot run past the window.
+    const mounted = renderData(counted(2.5));
+    root = mounted;
+    settle(mounted);
+    expect(allText(mounted)).toContain("row-1");
+    expect(allText(mounted)).not.toContain("row-2");
   });
 });

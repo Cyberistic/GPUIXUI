@@ -64,7 +64,7 @@ import {
   type VirtualReveal,
   type VirtualRowsController,
 } from "./use-virtual-rows.js";
-import { anchorOffset } from "./window.js";
+import { anchorOffset, rowCount } from "./window.js";
 
 /** {@link VirtualTableBody} props. */
 export interface VirtualTableBodyProps extends Omit<
@@ -110,8 +110,11 @@ export const VirtualTableBody = ({
   const renderer = useGpuix().renderer;
   const measured = useMeasuredBodyHeight();
   const definite = height ?? Option.getOrUndefined(measured);
+  // The count the window can hold, so the runtime list, the window and the
+  // reveal arithmetic are given one number (`rowCount`).
+  const total = rowCount(count);
   const rows = useVirtualRows({
-    count,
+    count: total,
     rowHeight,
     viewportHeight: definite ?? 0,
     overdraw,
@@ -166,7 +169,7 @@ export const VirtualTableBody = ({
       ref={attach}
       testId={testId}
       height={definite}
-      itemCount={count}
+      itemCount={total}
       estimatedItemHeight={rowHeight}
       windowStart={rows.windowStart}
       onVisibleRange={handleRange}
@@ -244,7 +247,7 @@ export const VirtualTable = ({
   <Table {...rest} height={height} className={className} style={style}>
     <TableViewport>
       <TableHeader>{header}</TableHeader>
-      {count === 0 ? (
+      {rowCount(count) === 0 ? (
         <TableBody>
           <TableEmpty>{empty ?? DEFAULT_EMPTY_MESSAGE}</TableEmpty>
         </TableBody>

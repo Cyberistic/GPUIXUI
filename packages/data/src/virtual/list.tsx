@@ -45,6 +45,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
+import { rowCount } from "./window.js";
 
 /** The window the runtime built, in absolute logical-row indices. */
 export interface VisibleRange {
@@ -152,7 +153,7 @@ export const VirtualList = (props: VirtualListProps) => {
     props.itemCount === undefined
       ? undefined
       : {
-          itemCount: props.itemCount,
+          itemCount: rowCount(props.itemCount),
           estimatedItemHeight: props.estimatedItemHeight,
           windowStart: props.windowStart,
         };

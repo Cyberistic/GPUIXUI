@@ -80,9 +80,18 @@ const viewportOf = (spec: WindowSpec): number =>
     ? spec.viewportHeight
     : rowHeightOf(spec);
 
-/** The row count as a whole number. */
-const countOf = (spec: WindowSpec): number =>
-  Number.isFinite(spec.count) ? Math.max(0, Math.floor(spec.count)) : 0;
+/**
+ * The row count the window can hold.
+ *
+ * `count` is often computed — a page's length, a filtered total, a row count a
+ * response has not answered yet — and a window cannot position a fraction of a
+ * row or a row past the end: a `NaN`/an infinity reads as **no rows**, and a
+ * finite count is floored and never negative. The same number drives the
+ * runtime list's `itemCount`, the table's empty state and every offset here, so
+ * a list and its window cannot disagree about how many rows exist.
+ */
+export const rowCount = (count: number): number =>
+  Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0;
 
 /**
  * The farthest a window may scroll over the rows it is given.
@@ -95,7 +104,7 @@ const countOf = (spec: WindowSpec): number =>
  * still reported its box until the next gesture moved the window).
  */
 export const maxScrollOffset = (spec: WindowSpec): number =>
-  Math.max(0, countOf(spec) * rowHeightOf(spec) - viewportOf(spec));
+  Math.max(0, rowCount(spec.count) * rowHeightOf(spec) - viewportOf(spec));
 
 /** An offset clamped into the rows a spec holds. */
 export const clampScrollOffset = (
@@ -115,7 +124,7 @@ export const clampScrollOffset = (
 export const createWindowCalculator = (spec: WindowSpec): WindowCalculator => {
   const rowHeight = rowHeightOf(spec);
   const virtualizer = new Virtualizer<never, never>({
-    count: countOf(spec),
+    count: rowCount(spec.count),
     estimateSize: () => rowHeight,
     getScrollElement: () => null,
     observeElementRect: () => undefined,
@@ -129,7 +138,7 @@ export const createWindowCalculator = (spec: WindowSpec): WindowCalculator => {
     virtualizer.scrollOffset = clampScrollOffset(spec, scrollOffset);
     return Arr.filter(
       virtualizer.getVirtualIndexes(),
-      (index) => index >= 0 && index < countOf(spec),
+      (index) => index >= 0 && index < rowCount(spec.count),
     );
   };
 

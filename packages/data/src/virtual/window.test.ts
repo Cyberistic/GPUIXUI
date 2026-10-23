@@ -23,6 +23,7 @@ import {
   clampScrollOffset,
   createWindowCalculator,
   maxScrollOffset,
+  rowCount,
   type WindowSpec,
 } from "./window.js";
 
@@ -169,5 +170,21 @@ describe("degenerate sizes", () => {
     });
     // The nine rows in view and nothing around them.
     expect(calculator.at(0).end).toBe(9);
+  });
+});
+
+describe("the count a window can hold", () => {
+  it("reads a computed count as the whole, non-negative rows it holds", () => {
+    // The one number the runtime list's `itemCount`, the table's empty state
+    // and the window all read: a fraction of a row does not exist, a negative
+    // is none, and a count nothing could be read from (`NaN`, an infinity) is
+    // no rows rather than a window over a count that is not a number.
+    expect(rowCount(2.5)).toBe(2);
+    expect(rowCount(0)).toBe(0);
+    expect(rowCount(-3)).toBe(0);
+    expect(rowCount(Number.NaN)).toBe(0);
+    expect(rowCount(Number.POSITIVE_INFINITY)).toBe(0);
+    expect(rowCount(Number.NEGATIVE_INFINITY)).toBe(0);
+    expect(rowCount(1_000)).toBe(1_000);
   });
 });
