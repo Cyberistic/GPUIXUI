@@ -112,6 +112,18 @@ export const settleSwap = (state: SwapState): SwapState =>
     }),
   });
 
+/**
+ * Land the swap once the entry has run.
+ *
+ * A swap is over when its incoming value finishes its journey, so the phase
+ * returns to `"rest"` rather than holding `"entering"` for the life of the
+ * component. Without it the state a caller's `style` reads keeps reporting a
+ * value still arriving, and the host keeps the entry's `initial` frame in its
+ * motion description long after the run completed.
+ */
+export const restSwap = (state: SwapState): SwapState =>
+  state.phase === "entering" ? { ...state, phase: "rest" } : state;
+
 /** The inset a swap travels on. */
 export type SwapAxis = "left" | "top";
 

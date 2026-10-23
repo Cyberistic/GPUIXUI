@@ -28,6 +28,7 @@ import { useMotionPreference } from "./internal/presence.js";
 import {
   initialSwap,
   requestSwap,
+  restSwap,
   settleSwap,
   swapHalves,
   type SwapPhase,
@@ -39,7 +40,10 @@ import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
 export interface RollingTextState {
   /** The value painted now, which is also the accessible name. */
   readonly text: string;
-  /** `"leaving"` while the old value travels out, `"entering"` for the new one. */
+  /**
+   * `"leaving"` while the old value travels out, `"entering"` while the new
+   * one arrives, and `"rest"` once that arrival's tween has completed.
+   */
   readonly phase: SwapPhase;
   readonly direction: RollDirection;
   readonly reducedMotion: boolean;
@@ -149,6 +153,10 @@ export const RollingText = ({
       <text
         key={roll.run}
         motion={motion}
+        // The entry's own completion is what ends the swap: the runtime's
+        // motion clock is the one the journey runs on, so the phase cannot
+        // settle on a wall-clock window the software paint might outrun.
+        onMotionComplete={() => setRoll(restSwap)}
         style={{
           position: "relative",
           ...metrics,

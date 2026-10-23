@@ -33,6 +33,7 @@ import { recipeStyle } from "./internal/recipe.js";
 import {
   initialSwap,
   requestSwap,
+  restSwap,
   settleSwap,
   swapHalves,
   type SwapPhase,
@@ -44,7 +45,10 @@ import { slideFrames, type SlideDirection } from "./sliding-text/logic.js";
 export interface SlidingTextState {
   /** The value painted now, which is also the accessible name. */
   readonly text: string;
-  /** `"leaving"` while the old value travels out, `"entering"` for the new one. */
+  /**
+   * `"leaving"` while the old value travels out, `"entering"` while the new
+   * one arrives, and `"rest"` once that arrival's tween has completed.
+   */
   readonly phase: SwapPhase;
   readonly direction: SlideDirection;
   /** The measured clip width the value travels, `0` before the first layout. */
@@ -171,6 +175,9 @@ export const SlidingText = ({
       <text
         key={swap.run}
         motion={motion}
+        // The entry's completion ends the swap on the clock that paints it, so
+        // the phase does not stay `"entering"` after the value has arrived.
+        onMotionComplete={() => setSwap(restSwap)}
         style={{
           position: "relative",
           flexShrink: 0,

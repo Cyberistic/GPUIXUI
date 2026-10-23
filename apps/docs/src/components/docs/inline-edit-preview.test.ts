@@ -136,10 +136,26 @@ describe("the inline edit preview", () => {
     expect(source).toContain("if (commit && draft !== value) onCommit(draft);");
     expect(source).toContain("const commit = (): void => finish(true, true);");
     expect(source).toContain("const cancel = (): void => finish(false, true);");
-    expect(source).toContain("onBlur={() => finish(true, false)}");
-    expect(source).toContain("onSubmit={() => commit()}");
     expect(source).toContain("setDraft(value);");
     expect(source).toContain("renderer?.focusElement?.(inputId);");
+  });
+
+  it("keeps the caller's handlers after its own on the editor", () => {
+    // `getInputProps` extends the host input's props, so the editor must run
+    // its own decision first and hand the caller the same event after it — a
+    // handler written over the spread ran only on the display, never while
+    // editing. Read whitespace-collapsed, so formatting cannot hide the order.
+    const compact = source.replace(/\s+/g, " ");
+
+    expect(compact).toContain(
+      'onChange={(event) => { setDraft(event.value ?? ""); onChange?.(event); }}',
+    );
+    expect(compact).toContain(
+      "onSubmit={(event) => { commit(); onSubmitProp?.(event); }}",
+    );
+    expect(compact).toContain(
+      "onBlur={(event) => { finish(true, false); onBlur?.(event); }}",
+    );
   });
 
   it("keeps the display and the editor the page prints", () => {
