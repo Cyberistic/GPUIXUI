@@ -2,8 +2,12 @@ import { readFileSync } from "node:fs";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { filterEntries, verdictMark } from "../../lib/component-index";
-import { componentPages } from "../../lib/component-index-data";
+import {
+  filterEntries,
+  otherLaneMatches,
+  verdictMark,
+} from "../../lib/component-index";
+import { componentIndex, componentPages } from "../../lib/component-index-data";
 import { ComponentIndexView } from "./component-index";
 
 /**
@@ -177,6 +181,73 @@ describe("the component index", () => {
         (entry) => !matches.includes(entry) && linked.includes(entry.url),
       ),
     ).toEqual([]);
+  });
+
+  it("points a query the composed lane cannot answer at the lane that can", () => {
+    // A reader who types a primitive's name on the composed lane has not made a
+    // mistake, and "no component matches" is a dead end that hides the page one
+    // section down the sidebar.
+    const query = "range slider";
+
+    expect(filterEntries(componentPages, query)).toEqual([]);
+    const elsewhere = otherLaneMatches(componentIndex, query);
+    const linked = renderToStaticMarkup(
+      <ComponentIndexView onQueryChange={noop} query={query} />,
+    );
+
+    expect(elsewhere.length).toBeGreaterThan(0);
+    expect(linked).toContain('data-other-lane="true"');
+    expect(linked).toContain(elsewhere[0]?.lane ?? "");
+    expect(
+      elsewhere
+        .flatMap((group) => group.entries)
+        .filter((entry) => !linked.includes(`href="${entry.url}"`)),
+    ).toEqual([]);
+    expect(linked).not.toContain(
+      "No composed component matches “range slider”. Try a shorter word",
+    );
+
+    // The page teaches the behaviour a reader has to expect; the sentence and
+    // the empty state land in one commit.
+    const page = readFileSync(
+      new URL("../../../content/docs/components/index.mdx", import.meta.url),
+      "utf8",
+    );
+    expect(page).toContain("names the lower lane");
+
+    const policy = readFileSync(
+      new URL("../../../../../docs/preview-strategy.md", import.meta.url),
+      "utf8",
+    );
+    expect(policy).toContain("query is not a dead end");
+  });
+
+  it("keeps the dead-end sentence when no lane holds the query", () => {
+    const query = "zzzzzz";
+
+    expect(otherLaneMatches(componentIndex, query)).toEqual([]);
+    const linked = renderToStaticMarkup(
+      <ComponentIndexView onQueryChange={noop} query={query} />,
+    );
+
+    expect(linked).toContain('data-other-lane="false"');
+    expect(linked).toContain("Try a shorter word");
+  });
+
+  it("stays silent about the other lanes while this one has a match", () => {
+    // The suggestion belongs to the empty state only; a matching query keeps
+    // the grid and its count, which is what a reader typing here expects.
+    const query = "button";
+
+    expect(filterEntries(componentPages, query).length).toBeGreaterThan(0);
+    const elsewhere = otherLaneMatches(componentIndex, query);
+    expect(elsewhere.length).toBeGreaterThan(0);
+    expect(elsewhere.every((group) => group.lane !== "Components")).toBe(true);
+    const linked = renderToStaticMarkup(
+      <ComponentIndexView onQueryChange={noop} query={query} />,
+    );
+
+    expect(linked).not.toContain("data-other-lane");
   });
 
   it("reads the filter off the URL instead of state the page cannot share", () => {

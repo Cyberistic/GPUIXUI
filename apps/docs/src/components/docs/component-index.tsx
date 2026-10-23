@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import {
   filterEntries,
+  otherLaneMatches,
   verdictMark,
   type ComponentEntry,
 } from "../../lib/component-index";
-import { componentPages } from "../../lib/component-index-data";
+import { componentIndex, componentPages } from "../../lib/component-index-data";
 import { demos } from "./demos";
 import { PreviewSurface } from "./preview-surface";
 import { useIndexQuery } from "./use-index-query";
@@ -58,6 +59,7 @@ export function ComponentIndexView({
   readonly previews?: boolean;
 }) {
   const matches = filterEntries(componentPages, query);
+  const elsewhere = otherLaneMatches(componentIndex, query);
 
   return (
     <div className="not-prose my-6">
@@ -81,10 +83,41 @@ export function ComponentIndexView({
         {`${matches.length} of ${componentPages.length} components`}
       </p>
       {matches.length === 0 ? (
-        <p className="rounded-xl border border-border px-3 py-6 text-center text-sm text-muted-foreground">
-          No component matches “{query.trim()}”. Try a shorter word, or the
-          search box at the top of the page.
-        </p>
+        <div
+          className="rounded-xl border border-border px-3 py-6 text-center text-sm text-muted-foreground"
+          data-other-lane={elsewhere.length === 0 ? "false" : "true"}
+        >
+          <p className="m-0">No composed component matches “{query.trim()}”.</p>
+          {elsewhere.length === 0 ? (
+            <p className="m-0 mt-2">
+              Try a shorter word, or the search box at the top of the page.
+            </p>
+          ) : (
+            <>
+              <p className="m-0 mt-2">
+                {elsewhere.length === 1
+                  ? "One lower lane holds it:"
+                  : "The lower lanes hold it:"}
+              </p>
+              <ul className="m-0 mt-2 list-none space-y-1 p-0">
+                {elsewhere.map((group) => (
+                  <li key={group.lane}>
+                    <span className="text-foreground">{group.lane}</span>
+                    {" · "}
+                    {group.entries.map((entry, position) => (
+                      <span key={entry.url}>
+                        {position > 0 ? ", " : ""}
+                        <a className="underline" href={entry.url}>
+                          {entry.title}
+                        </a>
+                      </span>
+                    ))}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
       ) : (
         <ul className="grid list-none grid-cols-1 gap-px border border-border bg-border p-0 md:grid-cols-2 lg:grid-cols-3">
           {matches.map((entry) => (
