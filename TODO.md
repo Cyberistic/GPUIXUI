@@ -6405,6 +6405,31 @@ and clause).
       @gpuixui/primitives test`: 54 files / 1 001 tests; `test:runtime`: 21 files /
       297 tests; `check-types`, `lint` and the repo formatter clean on these files.
 
+`[x]` `packages/primitives`: **a `Label` was inert, so pressing the words beside
+      a field did nothing** — the runtime publishes neither `for`/`htmlFor` nor
+      `aria-labelledby`, which the page, the record and the `COMPONENTS.md` row
+      recorded as "no click-to-focus", but it does expose `focusElement`, and
+      that is the whole behaviour a label needs. `Label` takes the control's
+      `target` ref and moves native focus to it on a press, through a frame the
+      press reaches; a measured guard says the label's `<text>` leaves need no
+      `pointerEvents: "none"` (the frame's handler ran with the guard removed, so
+      the property the Switch's thumb needs was not shipped here). `disabled`
+      drops that press: a label holds the control's element, not its state, and
+      a press on a disabled field's label focused the field (measured before the
+      prop existed) — the pair stays inert now. Proof, both directions measured:
+      dropping the press frame fails the unit case `makes the words that name a
+      control its pointer target` and the window case `focuses the field a label
+      names when its words are pressed`; ignoring `disabled` fails `stays inert
+      while the control it names is disabled` and `leaves a disabled control's
+      focus alone when its label is pressed`, while the no-target negative cases
+      stay green both ways. `nub run --filter @gpuixui/primitives test`: 54 files
+      / 1 004 tests; `test:runtime`: 21 files / 300 tests; `check-types`, `lint`,
+      `check:tests` and the repo formatter clean on these files. Docs:
+      `docs/label.mdx` §Usage/§API/§Limitations, the package README's
+      `aria-labelledby` row, the Label record and the `COMPONENTS.md` row; the
+      form example hands its first two fields' refs to both the label and the
+      control, and the examples runtime suite mounts it.
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21
@@ -10972,6 +10997,7 @@ which the behaviour suite runs in the real renderer.
 `[x]` `packages/components`: **a dismissed notice's ghost lost its action** — the toast provider prunes a toast's action handler in the frame the toast leaves the queue (`toast/provider.tsx`'s `[toasts]` effect), while `toast/viewport.tsx`'s `useToastStack` keeps the card painted for its `notice` (500 ms) exit. So in the frame a card was dismissed its `Undo` button vanished: the description reflowed into the freed width, and the box the reader dismissed was not the box that faded. **A leaving shell keeps the content it was dismissed with** — `ToastCard` holds the last resolved action while it is painted and draws the ghost from it, the same rule every other surface already follows by keeping its controls mounted for its exit (the shield is what makes them inert). Proof: `src/behaviour/presence.test.tsx`'s `keeps the action a dismissed notice was thrown with` reads the action's box at rest and while leaving (the same width and height), then presses it and requires the handler not to run — measured at `HEAD` with `behaviour: the ghost lost its action` (the button is not painted at all). The same suite's header no longer says the anchored family is exempt from the shield, which the last pass gave it; it states the rule the sources keep. **The rule is held across the family, not one surface at a time**: `src/presence-contract.test.ts`'s `the leaving shell` (2 cases) fails a source that keeps content mounted for an exit without a shield — measured by deleting `popover.tsx`'s (`[ 'src/popover.tsx' ]`) — and fails a shield handed a constant instead of the presence that owns it — measured by pinning the toast's to `present={true}` (`[ 'src/toast/viewport.tsx' ]`); the two menu roots satisfy it through their shared `MenuSurface`. Restored: `presence.test.tsx` 29/29. Docs: `docs/component-api.md` §11 (**A leaving shell keeps the content it was dismissed with**) and its Verification, `packages/components/docs/toast.mdx` §Limitations, and the Toasts inventory row.
 
 `[x]` `packages/components`: **three records promised a package that had already shipped** — the `Alerts`, `Inline validation` and `Command menus` limitations each justified a control with "until `@gpuixui/primitives` lands". The package has shipped, and two of the three controls had already moved onto it: `AlertDismiss` is the shared `IconButton` (this package's names over the primitive's action), so the Alerts record's **only** limitation was false and its real gap — no live region — was unstated. The two host fields stay host fields for a reason that outlives the package: this package compiles shadcn's fixed metrics while the primitives' fields are density-scaled (ADR 0006), so adopting them would reshape the field. The records and the `FieldInput`/`CommandMenuInput` headers now say that, the Alerts record names the `aria-live` gap, the README calls `internal/button.tsx` an adapter rather than a stand-in, and `COMPONENTS.md`'s Alerts row names the adapter. `src/inventory.test.ts` gains `the records' limitations` (4 cases): no record may say "until `@gpuixui/primitives` lands", both host fields must name the fixed recipe and ADR 0006, the Alerts record must name `aria-live`, and the README may not call the shared action a stand-in. Directions measured at `HEAD`: all three stale sentences, the missing `aria-live`, the missing ADR 0006 reason and the README stand-in each fail their case; restored, 21/21, with `alert`/`field`/`command-menu`/`selection` behaviour at 48/48 and `check-types` clean. Docs: `docs/alert.mdx` §Limitations and `docs/field.mdx` §Limitations already stated the real gaps.
+`[x]` `packages/components`: **a text swap never left its entry phase** — `RollingText` and `SlidingText` share `internal/text-swap.ts`'s three phases, and `settleSwap` moved a swap into `"entering"` while nothing ever moved it out: the entry is a tween, not a state, so after the incoming value landed the machine reported `"entering"` for the life of the component and the host kept the entry's `initial` frame in its motion description, ready to be the run's start again on any later sync. The phase now settles on the entry tween's own completion (`onMotionComplete`, the runtime's motion clock rather than a wall-clock window a blocked software paint can outrun): `restSwap` returns `"entering"` to `"rest"` and leaves every other phase alone. Proof: `behaviour/rolling-text.test.tsx` and `behaviour/sliding-text.test.tsx`'s `settles to rest once the incoming value has landed` read the state a caller's `style` sees and the host's motion description after the entry completes; both measured failing at `HEAD` with `expected 'entering' to be 'rest'`, and `internal/text-swap.test.ts`'s two `restSwap` cases hold the transition and its two no-ops. Restored: 17/17 across the two files and 17/17 in the shared suite. Docs: `docs/rolling-text.mdx` and `docs/sliding-text.mdx` §State, both state JSDocs and the two `COMPONENTS.md` rows (counts 7→8, 8→9).
 
 
 ## TanStack cores
