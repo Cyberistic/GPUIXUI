@@ -944,9 +944,9 @@ describe("an unnamed font family", () => {
     // A family is a name, so the face a machine lacks is still a name — and the
     // refusal is the list `missingTokens` reads, so that is the claim.
     expect(
-      shipped.filter((theme) => missingTokens(theme).length > 0).map(
-        (theme) => theme.name,
-      ),
+      shipped
+        .filter((theme) => missingTokens(theme).length > 0)
+        .map((theme) => theme.name),
     ).toEqual([]);
   });
 
