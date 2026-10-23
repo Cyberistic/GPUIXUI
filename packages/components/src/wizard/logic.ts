@@ -9,7 +9,7 @@
  * component; this module is pure.
  */
 
-import { accessibleName } from "@gpuixui/primitives/core";
+import { accessibleName, spokenSentence } from "@gpuixui/primitives/core";
 import * as Option from "effect/Option";
 
 /** What a step may refuse a move with. */
@@ -53,6 +53,20 @@ export const gateMessage = (
   step: StepGate | undefined,
 ): Option.Option<string> =>
   step?.gate === undefined ? Option.none() : step.gate();
+
+/** The sentence a refusal paints when the gate's own message says nothing. */
+export const REFUSAL_FALLBACK = "This step is not complete yet.";
+
+/**
+ * The sentence a refusal paints.
+ *
+ * A gate's message is interface copy like a name: a table with a missing row
+ * answers `""`, and an empty alert under the step explains nothing while the
+ * workflow still refuses to move. A blank message reads as the shipped
+ * sentence; a real one is trimmed and used.
+ */
+export const refusalText = (message: string): string =>
+  spokenSentence(message, REFUSAL_FALLBACK);
 
 /** The content group's announcement: its title and its place in the workflow. */
 export const stepAnnouncement = (

@@ -5,8 +5,9 @@
  * before; a wizard that paints another step's content under the current one; a
  * submit reachable before the last step; a refusal that survives the step it
  * belongs to (including through a caller's reorder of `steps`); a pending
- * wizard that advances or submits again; and a controlled `step` that does not
- * drive the paint.
+ * wizard that advances or submits again; a controlled `step` that does not
+ * drive the paint; and a gate whose message arrived blank, which left the reader
+ * on the step with an empty alert and no reason for the refusal.
  */
 
 import { useState } from "react";
@@ -20,6 +21,7 @@ import {
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 import { MultiStepForm } from "../multi-step-form.js";
+import { REFUSAL_FALLBACK } from "../wizard/logic.js";
 
 interface HarnessProps {
   readonly onSubmit?: () => void;
@@ -88,6 +90,27 @@ const Harness = ({
     />
   );
 };
+
+/** A wizard whose only gate answers with a blank message. */
+const BlankRefusal = () => (
+  <MultiStepForm
+    testId="wizard"
+    onSubmit={() => undefined}
+    steps={[
+      {
+        id: "name",
+        title: "Name",
+        gate: () => Option.some("   "),
+        content: <text testId="step-one">Name step</text>,
+      },
+      {
+        id: "review",
+        title: "Review",
+        content: <text testId="step-two">Review step</text>,
+      },
+    ]}
+  />
+);
 
 /** Two named steps the caller can reorder without changing the current index. */
 const Ordered = ({ reordered }: { readonly reordered: boolean }) => {
@@ -161,6 +184,17 @@ describe("MultiStepForm", () => {
     expect(stepOne(wizard)).toBe(true);
     expect(selectedSteps(wizard)).toStrictEqual([true, false]);
     wizard.unmount();
+  });
+
+  it("paints the shipped sentence when a gate's message says nothing", () => {
+    const wizard = renderComponent(<BlankRefusal />);
+    clickCentreOf(wizard, "multi-step-next");
+    const stillOnTheStep = stepOne(wizard);
+    const lines = text(wizard);
+    wizard.unmount();
+    expect(stillOnTheStep).toBe(true);
+    expect(lines).toContain(REFUSAL_FALLBACK);
+    expect(lines).not.toContain("   ");
   });
 
   it("advances when the gate allows, and moves the selected marker", () => {

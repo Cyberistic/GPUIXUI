@@ -29,6 +29,7 @@ import {
   isLastStep,
   nextStep,
   previousStep,
+  refusalText,
   stepAnnouncement,
   stepName,
   stepOf,
@@ -144,7 +145,8 @@ export const MultiStepForm = ({
         setRefusal(Option.none());
         setStep(nextStep(current, count));
       },
-      onSome: (next) => setRefusal(Option.some({ id: step.id, message: next })),
+      onSome: (next) =>
+        setRefusal(Option.some({ id: step.id, message: refusalText(next) })),
     });
   };
 
@@ -159,7 +161,8 @@ export const MultiStepForm = ({
         setRefusal(Option.none());
         onSubmit();
       },
-      onSome: (next) => setRefusal(Option.some({ id: step.id, message: next })),
+      onSome: (next) =>
+        setRefusal(Option.some({ id: step.id, message: refusalText(next) })),
     });
   };
 

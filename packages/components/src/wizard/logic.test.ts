@@ -14,6 +14,8 @@ import {
   isLastStep,
   nextStep,
   previousStep,
+  refusalText,
+  REFUSAL_FALLBACK,
   stepAnnouncement,
   stepName,
   stepOf,
@@ -61,6 +63,23 @@ describe("gateMessage", () => {
     expect(Option.isNone(gateMessage({}))).toBe(true);
     expect(Option.isNone(gateMessage({ gate: () => Option.none() }))).toBe(
       true,
+    );
+  });
+});
+
+describe("refusalText", () => {
+  it("reads a refusal that says nothing as the shipped sentence", () => {
+    // The bug guarded: a gate answering Some("") — an i18n row missing its key —
+    // kept the reader put and painted an empty alert, so a press did nothing and
+    // nothing said why.
+    expect(refusalText("")).toBe(REFUSAL_FALLBACK);
+    expect(refusalText("   ")).toBe(REFUSAL_FALLBACK);
+    expect(refusalText("\t\n")).toBe(REFUSAL_FALLBACK);
+  });
+
+  it("keeps the caller's sentence without its padding", () => {
+    expect(refusalText("  Accept the checklist  ")).toBe(
+      "Accept the checklist",
     );
   });
 });
