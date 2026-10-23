@@ -67,7 +67,9 @@ row keeps the shipped name, and `focusable={false}` is what adds neither.
 
 That is **not** the same as a busy action's `loadingLabel`, where a blank word is
 a deliberate silence: the action's own text still says what is happening, so
-`Button`, `Toggle` and `IconButton` publish no busy description. A bar has no
+`Button`, `Toggle` and `IconButton` publish no busy description, and the spinner
+beside the action is decoration in that state too — a blank `label` paints
+`role="presentation"` rather than a `status` node with no name. A bar has no
 other channel — its value text is its only report — so it has no such opt-out.
 
 A group named whole replaces the inherited one; a group left out — or written

@@ -723,6 +723,25 @@ describe("loading", () => {
     const element = renderSpinner({ label: "Saving" }, testTheme, 0);
     expect(expectSome(hostProp(element, "role"))).toBe("status");
     expect(expectSome(hostProp(element, "aria-label"))).toBe("Saving");
+    // The provider's word names an unnamed indicator rather than leaving it an
+    // unnamed status.
+    const shipped = renderSpinner({}, testTheme, 0);
+    expect(expectSome(hostProp(shipped, "role"))).toBe("status");
+    expect(expectSome(hostProp(shipped, "aria-label"))).toBe("Loading");
+  });
+
+  it("paints a blank spinner label as decoration, not an unnamed status", () => {
+    // Bug guarded: a blank label — deliberately (`Button`'s blank
+    // `loadingLabel`) or through a translation table that answered nothing —
+    // reached `aria-label={undefined}` while the node still declared
+    // `role="status"`, so the window's accessibility tree carried a Status node
+    // with no name: a reader walked into a status with nothing to announce.
+    // Silence is decoration, the rule `Icon` follows for a blank label.
+    Arr.forEach(["", "   "], (label) => {
+      const element = renderSpinner({ label }, testTheme, 0);
+      expect(expectSome(hostProp(element, "role"))).toBe("presentation");
+      expect(Option.isNone(hostProp(element, "aria-label"))).toBe(true);
+    });
   });
 
   it("sizes a spinner's dots from the icon scale, or from pixels", () => {

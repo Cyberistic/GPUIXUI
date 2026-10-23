@@ -86,14 +86,18 @@ export const renderSpinner = (
       height: dot,
       opacity,
     });
+  // The caller's own word wins; the provider's `loading.busy` is what a
+  // localised tree otherwise has to spell out on every indicator, and a blank
+  // row there is a missing translation rather than a silence, so the shipped
+  // word stands (`busyWord`). A **blank prop** is the deliberate silence
+  // `Button`'s blank `loadingLabel` composes, and silence is decoration: a
+  // `status` node with no name is still a node an assistive technology walks
+  // into, so it paints `presentation` instead (`Icon`'s blank-label rule).
+  const name = accessibleName(label ?? busyWord(messages.loading));
   return (
     <div
-      role="status"
-      // The caller's own word wins; the provider's `loading.busy` is what a
-      // localised tree otherwise has to spell out on every indicator, and a
-      // blank row there is a missing translation rather than a silence, so the
-      // shipped word stands (`busyWord`).
-      aria-label={accessibleName(label ?? busyWord(messages.loading))}
+      role={name === undefined ? "presentation" : "status"}
+      aria-label={name}
       testId={testId}
       style={group}
     >

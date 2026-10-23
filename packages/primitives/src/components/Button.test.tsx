@@ -408,18 +408,14 @@ describe("Button", () => {
         ),
       ),
     ).toBe("Chargement");
-    // A blank word is no word: the caller says the state somewhere else, and
-    // `Spinner` publishes no name for a blank label (its own suite holds that).
+    // A blank word is no word: the caller says the state somewhere else, so the
+    // action publishes no description and the spinner beside it is decoration
+    // rather than an unnamed status (`presentational.test.tsx` holds the rule).
     const silent = resting({ loading: true, loadingLabel: "" });
     expect(Option.isNone(hostProp(silent, "aria-description"))).toBe(true);
-    expect(
-      expectSome(
-        elementProp(
-          elementChildren(silent)[0] ?? expect.fail("no busy spinner"),
-          "label",
-        ),
-      ),
-    ).toBe("");
+    const silentSpinner =
+      elementChildren(silent)[0] ?? expect.fail("no busy spinner");
+    expect(expectSome(elementProp(silentSpinner, "label"))).toBe("");
   });
 
   it("gives a busy button a spinner that reads on its fill", () => {

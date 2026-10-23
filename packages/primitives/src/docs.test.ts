@@ -802,6 +802,36 @@ describe("the primitives docs page contract", () => {
     expect(words).toContain("a deliberate silence");
   });
 
+  it("paints a silent spinner as decoration, not an unnamed status", () => {
+    // The bug guarded: a blank `label` — a deliberate silence, or a translation
+    // table that answered nothing — still declared `role="status"` with no
+    // `aria-label`, so a window's accessibility tree carried a Status node with
+    // nothing to announce. Silence is decoration (`Icon`'s blank-label rule);
+    // the painter must take its role from the name it resolved, and both pages
+    // must teach the difference between the shipped word and an explicit blank.
+    const spinnerSource = readFileSync(
+      fileURLToPath(new URL("../src/components/Spinner.tsx", import.meta.url)),
+      "utf8",
+    );
+    expect(spinnerSource).toContain("const name = accessibleName(");
+    expect(spinnerSource).toMatch(
+      /role=\{name === undefined \? "presentation" : "status"\}/,
+    );
+    expect(read("spinner.mdx")).toContain("paints the dots as decoration");
+    expect(read("spinner.mdx")).toContain("no node to walk into");
+    const limitations = Option.getOrElse(
+      bodyOf(read("spinner.mdx"), "Limitations"),
+      () => "",
+    );
+    expect(limitations).toContain('role="presentation"');
+    expect(limitations).toContain("unnamed");
+    const words = Option.getOrElse(
+      bodyOf(read("theme-provider.mdx"), "Words"),
+      () => "",
+    );
+    expect(words).toContain('role="presentation"');
+  });
+
   it("keeps a slider's own words when its formatter says nothing", () => {
     // The bug guarded: `Slider`/`RangeSlider`'s `formatValue` is a caller's
     // localised copy and its answer was published as it arrived, so a formatter

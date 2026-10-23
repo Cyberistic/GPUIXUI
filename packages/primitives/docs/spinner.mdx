@@ -24,7 +24,7 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 | ---- | ---- | ------- | ----------- |
 | `size` | `IconSize \| number` | `"md"` | the dot side: a theme step, or raw pixels |
 | `accent` | `primary \| destructive \| muted \| on-primary \| on-secondary \| on-destructive \| on-accent \| on-disabled` | `"primary"` | the role every dot paints |
-| `label` | `string` | `loading.busy` (`"Loading"`) | accessible name announced as a status |
+| `label` | `string` | `loading.busy` (`"Loading"`) | accessible name announced as a status; a blank one paints the dots as decoration (no node to walk into) |
 | `reducedMotion` | `boolean` | `false` | holds the lit dot and schedules no interval |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
@@ -44,3 +44,8 @@ spinner with it. A full turn is the row's own length, and an indeterminate
 - No smooth animation, and the three dots share one size.
 - No inline placement inside a text run; put it in a `Stack`.
 - The reduced-motion preference is the caller's to supply.
+- A blank `label` is silence, and silence is **decoration**: the dots paint
+  `role="presentation"` rather than a `status` node with no name — an unnamed
+  status is still a node an assistive technology walks into. The shipped word is
+  what names a spinner nobody named; only an explicit blank opts out, which is
+  the word `Button`'s blank `loadingLabel` composes.

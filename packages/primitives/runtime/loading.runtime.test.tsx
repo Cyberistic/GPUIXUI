@@ -29,7 +29,13 @@ import { Spinner } from "../src/components/Spinner.js";
 import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import { useStep } from "../src/components/internal.js";
-import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
+import {
+  a11yDescriptionOf,
+  a11yNode,
+  a11yNodes,
+  a11yValueOf,
+  type Runtime,
+} from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 /** The child elements of `testId`, in order. */
@@ -425,6 +431,55 @@ it("pulses a Skeleton's opacity between both of its states", async () => {
   expect(
     Arr.every(opacities, (value) => value === "1" || value === "0.6"),
   ).toBe(true);
+});
+
+it("leaves no unnamed status node for a silent spinner", async () => {
+  // The bug guarded: a blank label — a deliberate silence (`Button`'s blank
+  // `loadingLabel`) or a translation table that answered nothing — still
+  // declared `role="status"` with no `aria-label`, so the window's accessibility
+  // tree carried a Status node with nothing to announce. A named indicator is
+  // still a status; a silent one is decoration, the rule `Icon` follows.
+  const runtime = await openWindow();
+  const statusLabels = (): ReadonlyArray<string | undefined> =>
+    Arr.map(
+      Arr.filter(
+        a11yNodes(runtime.a11y()),
+        (node) => node.aria?.role === "Status",
+      ),
+      (node) => node.aria?.label,
+    );
+  runtime.render(
+    <Surface>
+      <Spinner testId="named" label="Working" />
+    </Surface>,
+  );
+  expect(statusLabels()).toEqual(["Working"]);
+  runtime.render(
+    <Surface>
+      <Spinner testId="silent" label="" />
+    </Surface>,
+  );
+  expect(statusLabels()).toEqual([]);
+  runtime.render(
+    <Surface>
+      <Button testId="silent-busy" loading loadingLabel="">
+        Save
+      </Button>
+    </Surface>,
+  );
+  expect(statusLabels()).toEqual([]);
+  expect(
+    a11yDescriptionOf(runtime.a11y(), { role: "Button", label: "Save" }),
+  ).toEqual(Option.none());
+  // The shipped word still names an action that did not opt out.
+  runtime.render(
+    <Surface>
+      <Button testId="named-busy" loading>
+        Save
+      </Button>
+    </Surface>,
+  );
+  expect(statusLabels()).toEqual(["Loading"]);
 });
 
 it("paints a Skeleton box when a measured side cannot be laid out", async () => {

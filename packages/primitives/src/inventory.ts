@@ -456,6 +456,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "No smooth animation, and the three dots share one size",
       "No inline placement inside a text run",
       "reducedMotion holds the lit dot; the preference is the caller's",
+      "A blank label paints the dots as decoration rather than an unnamed status node",
     ],
     source: ["src/components/Spinner.tsx", "src/core/loading.ts"],
     docs: "docs/spinner.mdx",
