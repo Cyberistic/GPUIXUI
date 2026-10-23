@@ -651,6 +651,55 @@ describe("the motion page", () => {
     );
   });
 
+  it("places the motion preference in the package that owns it", () => {
+    // The page called `@gpuixui/components` the provider's home, and the context
+    // had moved to `@gpuixui/motion/react`. A reader building a tree without the
+    // components — the primitives, an app's own surfaces — could not learn that
+    // the flag is one context for the whole library, or that the components only
+    // re-publish it. The home is read from the module that creates the context
+    // and from the entries that hand it out, so the page cannot outlive them.
+    const provider = readRepo("packages/motion/src/provider.ts");
+    const components = readRepo("packages/components/src/motion.tsx");
+    const presence = readRepo("packages/components/src/internal/presence.tsx");
+
+    expect(provider).toContain('createContext<MotionPreference>("animated")');
+    expect(provider).toContain("export const MotionProvider = (");
+    expect(provider).toContain(
+      "export const useMotionPreference = (): MotionPreference =>",
+    );
+    expect(react, "the React entry stopped publishing the provider").toContain(
+      '} from "./provider.js";',
+    );
+    expect(presence).toContain('} from "@gpuixui/motion/react";');
+    expect(components).toContain('} from "./internal/presence.js";');
+
+    const preference = section(
+      "Reduced motion is a policy, not a capability",
+    );
+    expect(preference).toContain("### Where the preference lives");
+    expect(pageText).toContain(
+      "`MotionProvider` and `useMotionPreference` are `@gpuixui/motion/react`'s",
+    );
+    expect(pageText).toContain("**one** provider");
+    expect(pageText).toContain(
+      "`@gpuixui/components` re-publishes the same provider",
+    );
+    expect(pageText).toContain(
+      'import { MotionProvider } from "@gpuixui/motion/react";',
+    );
+    expect(pageText).toContain(
+      'With no provider the library reads `"animated"`',
+    );
+    expect(pageText).toContain(
+      "`useMotionPreference()` reads the nearest value",
+    );
+    expect(pageText).toContain("`reducedMotion` prop still wins on a control");
+    // The components package re-publishes the provider; it does not own it.
+    expect(pageText).not.toContain(
+      "`MotionProvider` from `@gpuixui/components`",
+    );
+  });
+
   it("quotes the runtime's measured tween and its clip", () => {
     // These are runtime facts, so the page is held to the record's row rather
     // than to the sentence it prints, and the probe it cites has to be the one

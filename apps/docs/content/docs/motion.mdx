@@ -31,7 +31,8 @@ inset offset. The physics a surface does not need (a spring retargeted
 mid-flight, a stagger, a momentum coast) stay here for the components that
 scrub, count or follow a gesture. The reduced-motion preference is the
 application's, since the runtime exposes none: `MotionProvider` from
-`@gpuixui/components` carries it and a reduced run is a zero-duration
+`@gpuixui/motion/react` carries it (see [Where the preference
+lives](#where-the-preference-lives)) and a reduced run is a zero-duration
 assignment. Per-surface table: `/docs/components` pages and
 `docs/component-api.md` §11.
 
@@ -348,6 +349,33 @@ appears in the primitives, where `Button` and `IconButton` take a
 `reducedMotion` prop for the busy spinner and `Switch` slides its thumb for
 150 ms by default, landing in place of travelling only when the caller passes
 `reducedMotion`.
+
+### Where the preference lives
+
+`MotionProvider` and `useMotionPreference` are `@gpuixui/motion/react`'s — the
+package that owns the timing, the levels and the policy — so **one** provider
+supplies the flag to every surface below it, whichever package painted it. A
+tree that composes the primitives, or its own motion surfaces, states the flag
+without the components package, and a package that moves does not depend on the
+components library to read it. `@gpuixui/components` re-publishes the same
+provider and hook, so a tree written against that package keeps compiling and
+reads the one context rather than a second copy of it.
+
+```tsx
+import { MotionProvider } from "@gpuixui/motion/react";
+
+export const App = ({ reduceMotion }: { readonly reduceMotion: boolean }) => (
+  <MotionProvider preference={reduceMotion ? "reduced" : "animated"}>
+    <Root />
+  </MotionProvider>
+);
+```
+
+With no provider the library reads `"animated"`, so a tree that never states a
+preference keeps its motion; `useMotionPreference()` reads the nearest value for
+a surface of your own. The primitives' own `reducedMotion` prop still wins on a
+control — `Button`, `IconButton`, `Tooltip`, `Switch` and `Progress` take one —
+so a tree that composes a primitive directly passes it beside the provider.
 
 ### When the preference changes
 
