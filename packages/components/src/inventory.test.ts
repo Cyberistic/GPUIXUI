@@ -420,6 +420,7 @@ const CITATIONS: ReadonlyArray<readonly [string, string]> = [
   ["Filtering controls", "table-filter-lifecycle"],
   ["Multi-pane editing layouts", "multi-pane-editor"],
   ["Code editor integration", "editor-overlay"],
+  ["Crop area", "crop-overlay"],
 ];
 
 /** The `column-resize` fixture's direct numbers, read as source. */
@@ -443,6 +444,52 @@ const columnDrag = (): Readonly<Record<string, number>> => {
     control: number("control"),
     dragSteps: number("DRAG_STEPS"),
     controlMoves: number("CONTROL_MOVES"),
+  };
+};
+
+/**
+ * The `crop-overlay` fixture's own numbers, read as source.
+ *
+ * The row teaches the mask, the press it must not take and the drag's two
+ * bounds, so each figure is the fixture's rather than a retyped copy: a bar
+ * re-measured at another size, a handle a pixel wider or a minimum that moved
+ * fails the row that prints it.
+ */
+interface CropFixture {
+  readonly checks: number;
+  readonly min: number;
+  readonly handle: number;
+  readonly width: number;
+  readonly height: number;
+  readonly moves: number;
+  readonly x: number;
+  readonly y: number;
+  readonly boxWidth: number;
+  readonly boxHeight: number;
+}
+
+const cropFixture = (): CropFixture => {
+  const read = (path: string): string =>
+    readFileSync(fileURLToPath(new URL(path, repoRoot)), "utf8");
+  const fixture = read("apps/playground/src/live/crop-overlay.ts");
+  const probe = read("apps/playground/src/live/crop-overlay-probe.tsx");
+  const number = (source: string, pattern: RegExp): number =>
+    Number(pattern.exec(source)?.[1] ?? Number.NaN);
+  const opening =
+    /CROP_OPENING: CropRect = \{ x: (\d+), y: (\d+), width: (\d+), height: (\d+) \}/.exec(
+      fixture,
+    );
+  return {
+    checks: number(fixture, /\bCROP_CHECKS = (\d+);/),
+    min: number(fixture, /\bCROP_MIN = (\d+);/),
+    handle: number(fixture, /\bCROP_HANDLE = (\d+);/),
+    width: number(fixture, /\bCROP_IMAGE_WIDTH = (\d+);/),
+    height: number(fixture, /\bCROP_IMAGE_HEIGHT = (\d+);/),
+    moves: number(probe, /\bDRAG_MOVES = (\d+);/),
+    x: Number(opening?.[1] ?? Number.NaN),
+    y: Number(opening?.[2] ?? Number.NaN),
+    boxWidth: Number(opening?.[3] ?? Number.NaN),
+    boxHeight: Number(opening?.[4] ?? Number.NaN),
   };
 };
 
@@ -541,6 +588,50 @@ describe("the measured target rows", () => {
       expect(notes, name).toContain("`none`");
       expect(notes, name).toContain("`contain`");
     });
+  });
+
+  it("states the mask and the drag the crop fixture holds", () => {
+    const crop = cropFixture();
+    expect(
+      [
+        crop.checks,
+        crop.min,
+        crop.handle,
+        crop.width,
+        crop.height,
+        crop.moves,
+        crop.x,
+        crop.y,
+        crop.boxWidth,
+        crop.boxHeight,
+      ].every(Number.isFinite),
+    ).toBe(true);
+
+    expect(
+      readmeSection("### `crop-overlay` — measured on 0.11.0 here"),
+    ).toContain(`${crop.checks} checks, \`--only crop-overlay\``);
+
+    const notes = Option.getOrElse(
+      Option.map(
+        Arr.findFirst(targetRows(), (row) => row.name === "Crop area"),
+        (row) => row.notes,
+      ),
+      () => "",
+    );
+    expect(notes).not.toContain("unverified");
+    expect(notes).toContain("`crop-overlay`");
+    expect(notes).toContain(`${crop.checks} checks`);
+    expect(notes).toContain("four positioned veil bars");
+    expect(notes).toContain('`pointerEvents: "none"`');
+    expect(notes).toContain(`${crop.handle}×${crop.handle}`);
+    expect(notes).toContain(`${crop.moves} of ${crop.moves}`);
+    expect(notes).toContain(`**${crop.min}**-point minimum`);
+    expect(notes).toContain(
+      `${crop.x},${crop.y},${crop.boxWidth},${crop.boxHeight}`,
+    );
+    expect(notes).toContain(
+      `${crop.x},${crop.y},${crop.width - crop.x},${crop.height - crop.y}`,
+    );
   });
 
   it("states the anchored menu measured in a scrolled header", () => {
