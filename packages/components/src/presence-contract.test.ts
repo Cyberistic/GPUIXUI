@@ -286,12 +286,26 @@ const readsTimingDuration = (body: string): boolean =>
   Str.includes("timing.enter.duration")(body) ||
   Str.includes("timing.exit.duration")(body);
 
-/** A source that keeps a box painted for a timing it reads itself. */
-const holdsForTiming = (body: string): boolean =>
-  readsTimingDuration(body) && Str.includes("setTimeout")(body);
-
 /** The seam's one conversion from a timing's seconds to a hold window. */
 const windowConversion = /(?:transitionWindowMs|exitWindowMs)\(/;
+
+/** A source that keeps a box painted for a timing, through the seam or by hand. */
+const holdsForTiming = (body: string): boolean =>
+  Str.includes("setTimeout")(body) &&
+  (windowConversion.test(body) || readsTimingDuration(body));
+
+/**
+ * A source that computes its own millisecond window out of a raw duration.
+ *
+ * `readsTimingDuration` alone only proves a source *uses* the seam somewhere;
+ * a file that keeps one window through the helper and divides the second by
+ * hand still holds a box for a span the seam does not own. This is the shape a
+ * reintroduced copy has.
+ */
+const handBuiltWindow = (body: string): boolean =>
+  Str.includes("setTimeout")(body) &&
+  Str.includes(".duration")(body) &&
+  (Str.includes("Math.round(")(body) || Str.includes("* 1000")(body));
 
 describe("the hold window", () => {
   it("is the seam's conversion, so a delayed run keeps its box", () => {
@@ -301,9 +315,11 @@ describe("the hold window", () => {
     // delayed run's first frame for `delay`, so a hand-built window counted only
     // the duration and unmounted a view before its journey began — and a delay
     // change did not re-run the timer at all. The seam's conversion is one home
-    // for the duration *and* the wait. `gradient-text` and `splitting-text`
-    // read the duration only to report the reduced preference, so they are not
-    // hold windows.
+    // for the duration *and* the wait, and a hold window counts whether it
+    // reaches the rule through the helper or still reads the raw duration — the
+    // second is exactly what this case has to see in order to fail it.
+    // `gradient-text` and `splitting-text` read the duration only to report the
+    // reduced preference, so they are not hold windows.
     const holding = Arr.filter(sources, ({ body }) => holdsForTiming(body));
     // A scan that reads no hold window cannot pass vacuously.
     expect(Arr.length(holding)).toBeGreaterThan(0);
@@ -311,5 +327,13 @@ describe("the hold window", () => {
       windowConversion.test(body) ? Result.failVoid : Result.succeed(path),
     );
     expect(offenders).toEqual([]);
+    // The seam is the one home for the conversion; a source that divides a
+    // window out of a duration beside a seamed one holds a span it does not own.
+    const handBuilt = Arr.filterMap(sources, ({ path, body }) =>
+      path !== timingSeam && handBuiltWindow(body)
+        ? Result.succeed(path)
+        : Result.failVoid,
+    );
+    expect(handBuilt).toEqual([]);
   });
 });
