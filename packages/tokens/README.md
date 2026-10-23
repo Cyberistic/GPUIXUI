@@ -1000,7 +1000,13 @@ exported as `nativeDiffWash`), a hunk header sits on the `muted` `diffHunkBg` an
 its file path is `textDim`. A `<markdown>` host takes a document's body, heading
 and code type from `typography` (a diff's rows follow `codeBlock` too), inline
 code as the page ink on a `muted` chip (`codeText`/`codeWash`) rather than the
-runtime's violet, and its table rules from `border`. A native field's placeholder is **not** themeable at
+runtime's violet, and its table rules from `border`. The document's **insets and
+gaps are the spacing scale's** — a fence's padding, a table cell's, the gap
+between two blocks — so a brand's spacing reaches prose the way it reaches a
+card. What stays the runtime's is the row model: the columns a line number,
+marker and accent bar are laid in, the fixed heights a diff's virtualizer
+measures without laying a row out, and the minimum widths a table column may
+shrink to. A native field's placeholder is **not** themeable at
 0.11.0 — the runtime shapes an empty field's hint with a fixed `#8F8F8F` — so a
 component that needs a themed hint paints it itself. The muted role is
 measured on that fill too: the same pair covers the separator and clear glyph a
@@ -1012,8 +1018,10 @@ the runtime sizes a code block from the theme's own `metrics` when an element's
 `style` does not set the size, so the seam hands over `typography.codeBlock`'s
 size and leading (`host.metrics.codeTextSize` / `codeLineHeight`). The runtime's
 own code block is 12.5/18, which is not this library's scale, so without the
-seam a brand's `codeBlock` role would stop at the code host. The gutter widths
-stay the runtime's: the package has no tokens for them. The **syntax palette** is
+seam a brand's `codeBlock` role would stop at the code host. The gutter column
+stays the runtime's — a column width is a row model rather than a spacing step —
+while the document's insets and gaps are the spacing scale's (above). The
+**syntax palette** is
 the package's — `host.syntax` is `syntaxColors(theme)`, see §Syntax palette.
 
 ## Syntax palette

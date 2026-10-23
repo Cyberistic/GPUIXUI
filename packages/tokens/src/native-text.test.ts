@@ -133,6 +133,14 @@ describe("nativeTextTheme", () => {
         mdCodeRadius: lightTheme.radius.lg,
         mdCodeHeaderTextSize: lightTheme.typography.caption.fontSize,
         mdInlineCodeRadius: lightTheme.radius.sm,
+        codeGutterPaddingRight: lightTheme.spacing.lg,
+        diffRowPaddingX: lightTheme.spacing.xl,
+        diffBodyBottomPad: lightTheme.spacing.md,
+        mdBlockGap: lightTheme.spacing.lg,
+        mdTableCellPadding: lightTheme.spacing.lg,
+        mdCodePaddingX: lightTheme.spacing.lg,
+        mdCodePaddingY: lightTheme.spacing.md,
+        mdCodeHeaderPaddingY: lightTheme.spacing.xs,
       },
       diffAdd: lightTheme.colors.successSoftForeground,
       diffDel: lightTheme.colors.destructiveSoftForeground,
@@ -249,6 +257,14 @@ describe("nativeTextTheme", () => {
       mdCodeRadius: lightTheme.radius.lg,
       mdCodeHeaderTextSize: typography.caption.fontSize,
       mdInlineCodeRadius: lightTheme.radius.sm,
+      codeGutterPaddingRight: lightTheme.spacing.lg,
+      diffRowPaddingX: lightTheme.spacing.xl,
+      diffBodyBottomPad: lightTheme.spacing.md,
+      mdBlockGap: lightTheme.spacing.lg,
+      mdTableCellPadding: lightTheme.spacing.lg,
+      mdCodePaddingX: lightTheme.spacing.lg,
+      mdCodePaddingY: lightTheme.spacing.md,
+      mdCodeHeaderPaddingY: lightTheme.spacing.xs,
     });
 
     const brand = extendTheme(lightTheme, {
@@ -315,6 +331,22 @@ describe("nativeTextTheme", () => {
           typography.caption.fontSize,
         ],
         ["mdInlineCodeRadius", metrics.mdInlineCodeRadius, theme.radius.sm],
+        [
+          "codeGutterPaddingRight",
+          metrics.codeGutterPaddingRight,
+          theme.spacing.lg,
+        ],
+        ["diffRowPaddingX", metrics.diffRowPaddingX, theme.spacing.xl],
+        ["diffBodyBottomPad", metrics.diffBodyBottomPad, theme.spacing.md],
+        ["mdBlockGap", metrics.mdBlockGap, theme.spacing.lg],
+        ["mdTableCellPadding", metrics.mdTableCellPadding, theme.spacing.lg],
+        ["mdCodePaddingX", metrics.mdCodePaddingX, theme.spacing.lg],
+        ["mdCodePaddingY", metrics.mdCodePaddingY, theme.spacing.md],
+        [
+          "mdCodeHeaderPaddingY",
+          metrics.mdCodeHeaderPaddingY,
+          theme.spacing.xs,
+        ],
       ];
       return wanted
         .filter(([, actual, expected]) => actual !== expected)
@@ -457,6 +489,119 @@ describe("nativeTextTheme", () => {
       }),
     ).metrics;
     expect(rescaled.mdCodeHeaderTextSize).toBe(15);
+  });
+
+  it("gives a document host's insets the spacing scale", () => {
+    // A host's insets are padding, so they are the spacing scale's — the
+    // runtime's own are Comet's numbers (`theme.rs`'s `Metrics`), and two of
+    // them are not steps here at all, so a brand that retunes `spacing` grew the
+    // component tree and left a rendered document at another rhythm. Every
+    // inset is read against the theme's own steps rather than a literal.
+    const insets = (theme: Theme) => {
+      const { metrics } = nativeTextTheme(theme);
+      return {
+        codeGutterPaddingRight: metrics.codeGutterPaddingRight,
+        diffRowPaddingX: metrics.diffRowPaddingX,
+        diffBodyBottomPad: metrics.diffBodyBottomPad,
+        mdBlockGap: metrics.mdBlockGap,
+        mdTableCellPadding: metrics.mdTableCellPadding,
+        mdCodePaddingX: metrics.mdCodePaddingX,
+        mdCodePaddingY: metrics.mdCodePaddingY,
+        mdCodeHeaderPaddingY: metrics.mdCodeHeaderPaddingY,
+      };
+    };
+
+    const offScale = shipped.flatMap(({ label, theme }) => {
+      const steps = Object.values(theme.spacing);
+      return Object.entries(insets(theme))
+        .filter(([, value]) => !steps.includes(value))
+        .map(([name, value]) => `${label} ${name}: ${value} is not a step`);
+    });
+
+    expect(offScale).toEqual([]);
+
+    // The inset is chosen, not one number for every surface: a language strip is
+    // tighter than a code card's own padding, which is tighter than a diff row's.
+    const base = insets(lightTheme);
+    expect(base.mdCodeHeaderPaddingY).toBeLessThan(base.mdCodePaddingY);
+    expect(base.mdCodePaddingY).toBeLessThan(base.mdCodePaddingX);
+    expect(base.mdCodePaddingX).toBeLessThan(base.diffRowPaddingX);
+  });
+
+  it("moves a document's insets with the brand's spacing", () => {
+    const insets = (theme: Theme) => {
+      const { metrics } = nativeTextTheme(theme);
+      return {
+        codeGutterPaddingRight: metrics.codeGutterPaddingRight,
+        diffRowPaddingX: metrics.diffRowPaddingX,
+        diffBodyBottomPad: metrics.diffBodyBottomPad,
+        mdBlockGap: metrics.mdBlockGap,
+        mdTableCellPadding: metrics.mdTableCellPadding,
+        mdCodePaddingX: metrics.mdCodePaddingX,
+        mdCodePaddingY: metrics.mdCodePaddingY,
+        mdCodeHeaderPaddingY: metrics.mdCodeHeaderPaddingY,
+      };
+    };
+
+    // A brand that doubles every step moves every inset with it.
+    const doubled = extendTheme(lightTheme, {
+      spacing: {
+        "2xs": lightTheme.spacing["2xs"] * 2,
+        xs: lightTheme.spacing.xs * 2,
+        sm: lightTheme.spacing.sm * 2,
+        md: lightTheme.spacing.md * 2,
+        lg: lightTheme.spacing.lg * 2,
+        xl: lightTheme.spacing.xl * 2,
+        "2xl": lightTheme.spacing["2xl"] * 2,
+        "3xl": lightTheme.spacing["3xl"] * 2,
+        "4xl": lightTheme.spacing["4xl"] * 2,
+        "5xl": lightTheme.spacing["5xl"] * 2,
+      },
+    });
+    const before = insets(lightTheme);
+    const after = insets(doubled);
+    expect(after).toEqual(
+      Object.fromEntries(
+        Object.entries(before).map(([name, value]) => [name, value * 2]),
+      ),
+    );
+
+    // A brand that raises one step moves only the insets that read it, so the
+    // mapping is a choice per surface rather than one shared number.
+    const wider = insets(extendTheme(lightTheme, { spacing: { lg: 20 } }));
+    expect(wider.mdCodePaddingX).toBe(20);
+    expect(wider.mdTableCellPadding).toBe(20);
+    expect(wider.mdBlockGap).toBe(20);
+    expect(wider.codeGutterPaddingRight).toBe(20);
+    expect(wider.mdCodePaddingY).toBe(before.mdCodePaddingY);
+    expect(wider.mdCodeHeaderPaddingY).toBe(before.mdCodeHeaderPaddingY);
+    expect(wider.diffRowPaddingX).toBe(before.diffRowPaddingX);
+    expect(wider.diffBodyBottomPad).toBe(before.diffBodyBottomPad);
+  });
+
+  it("teaches the document host's insets, and retracts the padding it left out", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const catalogue = read("../../../docs/tokens.md");
+    const readme = read("../README.md");
+    const inventory = read("../../../COMPONENTS.md");
+
+    [
+      "| `metrics.mdBlockGap` / `mdTableCellPadding` | `spacing.lg` — a document's block gap / a cell's inset |",
+      "| `metrics.mdCodePaddingX` / `mdCodePaddingY` | `spacing.lg` / `spacing.md` — a fence's own inset |",
+      "| `metrics.mdCodeHeaderPaddingY` | `spacing.xs` — a fence's language strip |",
+      "| `metrics.diffRowPaddingX` / `diffBodyBottomPad` | `spacing.xl` / `spacing.md` |",
+      "| `metrics.codeGutterPaddingRight` | `spacing.lg` — the gutter's gap |",
+    ].forEach((row) => expect(catalogue).toContain(row));
+
+    // The retracted claim, on each surface that carried it: the paddings are a
+    // spacing step, and only the row model is left to the runtime.
+    expect(catalogue).not.toContain("a diff's paddings and accent bar");
+    expect(catalogue).toContain("the block gap are not a row model");
+    expect(readme).toContain("insets and gaps are the spacing scale's");
+    expect(readme).not.toContain("gutter widths stay the runtime's");
+    expect(inventory).toContain("insets and gaps are the spacing scale's");
+    expect(inventory).not.toContain("diff paddings and table column minima");
   });
 
   it("teaches the code host's type, not only its palette", () => {

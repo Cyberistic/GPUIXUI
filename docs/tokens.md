@@ -2770,6 +2770,11 @@ property beside the object (§What a field's value actually paints):
 | `metrics.mdHeadingSizes` / `mdHeadingLineHeights` | `h1`/`h2`/`h3` then `body` |
 | `metrics.mdCodeRadius` / `mdInlineCodeRadius` | `radius.lg` / `radius.sm` |
 | `metrics.mdCodeHeaderTextSize` | `typography.caption`'s size — a fence's language strip |
+| `metrics.mdBlockGap` / `mdTableCellPadding` | `spacing.lg` — a document's block gap / a cell's inset |
+| `metrics.mdCodePaddingX` / `mdCodePaddingY` | `spacing.lg` / `spacing.md` — a fence's own inset |
+| `metrics.mdCodeHeaderPaddingY` | `spacing.xs` — a fence's language strip |
+| `metrics.diffRowPaddingX` / `diffBodyBottomPad` | `spacing.xl` / `spacing.md` |
+| `metrics.codeGutterPaddingRight` | `spacing.lg` — the gutter's gap |
 
 A `<code>` host is the one host whose **type** also comes from the theme object:
 the runtime sizes a code block from the theme's own metrics — an element's
@@ -2777,8 +2782,12 @@ the runtime sizes a code block from the theme's own metrics — an element's
 (`packages/native/src/theme.rs`'s `Metrics` at the pinned `@gpuix/native@0.11.0`)
 — not this library's scale. The seam hands over `typography.codeBlock`'s size and
 leading, so a brand's block role reaches the host instead of stopping at it; the
-gutter widths stay the runtime's, because this package has no tokens for them
-(§Limitations). The fence's **language strip** is the second size the host owns:
+gutter *columns* stay the runtime's, because a column width is a row model rather
+than a spacing step (§Limitations). The **spacing** scale reaches the same host:
+every inset and gap a document paints — a fence's padding, a table cell's, a diff
+row's, the gutter's gap and the gap between two blocks — is a `spacing` step, so
+a brand that retunes the scale moves a rendered document with the components
+around it instead of leaving it at the runtime's own numbers. The fence's **language strip** is the second size the host owns:
 the runtime paints it at its own `11`, a size no role carries, so the seam hands
 `typography.caption`'s — a quiet label over the block, which moves with a brand's
 scale. The **syntax palette is this package's**: `host.syntax` carries
@@ -2869,9 +2878,14 @@ own violet ink over a 10% violet wash is a style no token owns, so `codeText` is
 the page's `foreground` and `codeWash` is `muted` — the pair the contrast table
 already holds at the body floor, with the chip itself visible against the page at
 the 1.05:1 decorative floor. A table rule takes `border`, the role a divider is
-measured by. The numbers with no token of their own stay the runtime's: a code
-block's gutter, a diff's paddings and accent bar, and a document's table column
-minima (§Limitations).
+measured by. The numbers with no token of their own stay the runtime's row model: the columns
+a code block's line number, a diff's marker and its accent bar are laid in, the
+fixed heights its virtualizer measures without laying a row out, and a document's
+table column minima (§Limitations). The **insets and the block gap are not a row
+model** — they are padding — so they take the spacing scale: a fence's padding, a
+table cell's, a diff row's, the gutter's gap and the gap between two blocks are
+`spacing` steps, and a brand that retunes the scale moves a rendered document
+with it.
 
 ### What a field's value actually paints
 
@@ -4165,14 +4179,17 @@ cannot go untested. Evidence:
   "create the renderer, register, then render" because that first frame is the
   one the reader sees — the fallback is not permanent.
 - The native text host's **syntax palette is this package's** — `syntaxColors`
-  fills the host theme's `syntax` field with one colour per token type — but the
-  **numbers** around the code stay the runtime's: a code block's gutter width and
-  padding, a diff's paddings and accent bar, and a document's table column minima
-  have no token, so tuning them is still a runtime change. A `<markdown>` host's
-  inline code is prose in a chip rather than a second palette (`codeText` on
-  `codeWash`), and the tokenization is the consumer's — `@tanstack/highlight` in
-  the components' code block — while this package chooses the colours, not which
-  run is a keyword.
+  fills the host theme's `syntax` field with one colour per token type — and the
+  **row model** around the code stays the runtime's: a code block's gutter
+  column, a diff's marker and accent-bar columns, the fixed heights its
+  virtualizer measures and a document's table column minima have no token, so
+  tuning those is still a runtime change. The **paddings and the block gap are
+  not part of that model**: they are `spacing` steps (§Native text hosts), so a
+  brand's scale reaches a rendered document. A `<markdown>` host's inline code is
+  prose in a chip rather than a second palette (`codeText` on `codeWash`), and
+  the tokenization is the consumer's — `@tanstack/highlight` in the components'
+  code block — while this package chooses the colours, not which run is a
+  keyword.
 - `@gpuix/native@0.11.0`'s `focusVisible` outline is measured for Tab input and
   for a programmatic focus **after** a Tab, but not for a programmatic focus
   before any key. A mouse-opened dialog or menu therefore keeps `focusRing`'s

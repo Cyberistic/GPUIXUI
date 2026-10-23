@@ -32,7 +32,10 @@
  * host sizes its block from the runtime theme's `metrics`, so the type scale's
  * block role (`typography.codeBlock`) reaches it the same way. The runtime's
  * own code metrics are 12.5/18 (`packages/native/src/theme.rs`'s `Metrics`),
- * which is not this library's scale.
+ * which is not this library's scale. The same object carries the **spacing**
+ * scale: every inset and gap a document host paints is a step, so a fence's
+ * padding, a table cell's, a diff row's and the gap between two blocks move with
+ * a brand's `spacing` instead of staying at the runtime's own Comet numbers.
  *
  * A `<markdown>` host is the document host: its body and headings take the
  * scale's own roles, its inline code is the page ink on a `muted` chip
@@ -86,9 +89,18 @@ export const nativeDiffWash = 0.055;
  *
  * A host lays its rows out from the runtime theme's metrics rather than from
  * `StyleDesc`, so the type scale reaches it through here — the code block, a
- * diff's rows and a rendered document's body and headings. The numbers this
- * package has no token for (paddings, gutter widths, table column minima) stay
- * the runtime's.
+ * diff's rows and a rendered document's body and headings — and so does the
+ * spacing scale, through every inset and gap a document host paints: a fence's
+ * padding, a table cell's, a diff row's, the gutter's gap and the gap between
+ * two blocks. The runtime's own numbers are Comet's (`theme.rs`'s `Metrics`),
+ * and one of them is not a step in this scale at all, so without the seam a
+ * brand that retunes `spacing` grew the component tree and left a rendered
+ * document at another design system's rhythm.
+ *
+ * What stays the runtime's is what a spacing step cannot describe: the columns
+ * a line number, marker and accent bar are laid in, the minimum widths a table
+ * column may shrink to, and the fixed row heights a diff's virtualizer measures
+ * without laying the row out. Those are a row model, not padding.
  */
 export interface NativeTextMetrics {
   /** Code type size in pixels, from `typography.codeBlock`. */
@@ -118,6 +130,22 @@ export interface NativeTextMetrics {
   readonly mdCodeHeaderTextSize: number;
   /** An inline code chip's corner, from `radius.sm`. */
   readonly mdInlineCodeRadius: number;
+  /** The gutter's right inset, from `spacing.lg`. */
+  readonly codeGutterPaddingRight: number;
+  /** A diff row's horizontal inset, from `spacing.xl`. */
+  readonly diffRowPaddingX: number;
+  /** The pad under a diff's last row, from `spacing.md`. */
+  readonly diffBodyBottomPad: number;
+  /** The gap between two document blocks, from `spacing.lg`. */
+  readonly mdBlockGap: number;
+  /** A document table cell's inset on every side, from `spacing.lg`. */
+  readonly mdTableCellPadding: number;
+  /** A fenced code card's horizontal inset, from `spacing.lg`. */
+  readonly mdCodePaddingX: number;
+  /** A fenced code card's vertical inset, from `spacing.md`. */
+  readonly mdCodePaddingY: number;
+  /** The language strip's vertical inset, from `spacing.xs`. */
+  readonly mdCodeHeaderPaddingY: number;
 }
 
 /**
@@ -253,6 +281,19 @@ export function nativeTextTheme(
       // and would stay put while the rest of a brand's type moved.
       mdCodeHeaderTextSize: theme.typography.caption.fontSize,
       mdInlineCodeRadius: theme.radius.sm,
+      // The document host's insets and gaps are padding, so they are the
+      // spacing scale's: the runtime's own are Comet's (10 and 5 are not steps
+      // here), and a brand that retunes spacing expects a document to follow.
+      codeGutterPaddingRight: theme.spacing.lg,
+      diffRowPaddingX: theme.spacing.xl,
+      diffBodyBottomPad: theme.spacing.md,
+      mdBlockGap: theme.spacing.lg,
+      mdTableCellPadding: theme.spacing.lg,
+      mdCodePaddingX: theme.spacing.lg,
+      mdCodePaddingY: theme.spacing.md,
+      // A language strip is a tight label strip, so it takes the hairline-
+      // adjacent step rather than a card's inset.
+      mdCodeHeaderPaddingY: theme.spacing.xs,
     },
     // The tone's readable role, not its solid fill: the ink is painted as text
     // (a file's `+12`, a line's marker and number) and the same value is the

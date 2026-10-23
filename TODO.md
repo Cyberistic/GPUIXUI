@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 168/168
+`[x]` `[██████████]` 169/169
 
 `[x]` Decode **Omarchy's `colors.toml`** into the palette this package maps — the
 follow had a poll and a semantic shape but no reader: `docs/tokens.md` §System
@@ -1254,6 +1254,42 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       surfaces` row; the data row's count moved with it. Directions measured:
       with `dividerWashes` back to four and the press fold removed, 7 cases fail
       by name; with the fix, 45 files / 2 527 tests, `check-types` clean.
+
+`[x]` Give a **document host's insets the spacing scale** — the seam translates a
+      `Theme` into the object a `<code>`/`<diff>`/`<markdown>` host paints from,
+      and it carried the **type** scale (the code role, the body and headings, the
+      caption for a fence's language strip) while every **inset and gap** stayed
+      the runtime's own numbers, which are Comet's (`theme.rs`'s `Metrics`): a
+      fence's padding at 10/12, a table cell's 12, the block gap 12, a diff row's
+      16 and the gutter's 12. So a brand that retuned `spacing` — the one token
+      this package owns for padding — grew the component tree and left a rendered
+      document at another design system's rhythm, and **two of the runtime's own
+      numbers are not steps in this scale at all** (`md_code_padding_y` 10,
+      `md_code_header_padding_y` 5). All eight insets now read a step
+      (`mdBlockGap`/`mdTableCellPadding`/`mdCodePaddingX`/`codeGutterPaddingRight`
+      → `spacing.lg`, `mdCodePaddingY`/`diffBodyBottomPad` → `spacing.md`,
+      `diffRowPaddingX` → `spacing.xl`, `mdCodeHeaderPaddingY` → `spacing.xs`), so
+      two shipped numbers move onto the scale (a code card's vertical inset
+      10 → 8, a language strip's 5 → 4) and the other six keep the value they had;
+      the row model may not follow a pad — a gutter/marker/accent-bar column, a
+      diff's fixed virtualizer heights and a table's column minima stay the
+      runtime's, and both pages say which is which. `native-text.test.ts` gains
+      three cases: every inset of all 16 shipped, high-contrast, platform and
+      authored styles is one of its own spacing steps (and the insets are chosen,
+      not one number: a strip is tighter than a card, which is tighter than a diff
+      row), a brand that doubles `spacing` moves all eight while one that raises
+      `lg` alone moves exactly the four that read it, and the catalogue table, the
+      README and the inventory row state the split and drop the retracted
+      "paddings … have no token" claim. Directions measured: restoring the
+      runtime's 10 and 5 fails the first two cases by name (`mdCodePaddingY: 10 is
+      not a step`, and the doubled map differs in two keys); with the fix the
+      tokens suite is 45 files / 2 530 tests, `check-types` clean. Docs in
+      `docs/tokens.md` §Native text hosts/§The document host/§Limitations, the
+      package README and the `Native text hosts` row. The live `document-type`
+      probe re-run is the playground's: it reads glyph ink bands and a strip wash
+      sample, neither of which a 1–2px pad moves, but `apps/playground`'s build is
+      red on the motion workstream's `src/react.ts` unused imports, so it could
+      not be rebuilt here (TODO → Interlocks).
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
