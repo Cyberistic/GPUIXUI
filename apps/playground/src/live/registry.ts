@@ -726,6 +726,12 @@ export const liveRegistry = [
       "Workspace: the shipped menu bar opens and navigates, the toolbar roves the native focus and overflows, and the status bar paints its tone roles",
     capability: "workspace",
   },
+  {
+    id: "second-window-lifecycle",
+    title:
+      "Workspace: a second window is refused while one is open, so a detached tab needs a second process",
+    capability: "workspace",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

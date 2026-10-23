@@ -1867,7 +1867,7 @@ the report built on it.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 155/155
+`[x]` `[██████████]` 156/156
 
 `[x]` Follow the **tooltip's presence seam** after the primitives moved it —
       `tooltip-fade.test.ts` held the tip's entry level by reading
@@ -5190,6 +5190,41 @@ the report built on it.
       §`sidebar-clip-lifecycle`,
       `.artifacts/live/sidebar-{open,mid,closed,again}.png`. Publishing it in the
       capability record and the Tier 4 row is the Interlocks row below.
+
+`[x]` Measure **whether a running window can open a second one** — Tier 4's
+      *detachable / movable tabs*, *workspace layouts* and *drag and drop* rows,
+      the capability record's *Portals*, *Movable tabs* and *Drag reorder* rows
+      and three README sections all state "the binding opens one window per
+      process", and none of them cited a measurement: the sentence was inferred
+      from there being no window verb in the typings. Two Tier 4 interactions
+      rest on the answer — a tab detached into its own window, and a tab dragged
+      between windows — so the `second-window-lifecycle` live probe makes the
+      attempt an application would: a second `GpuixRenderer` and `init()`, the
+      published binding's only window-opening verb, called while the probe's own
+      window runs. Measured on 0.11.0: the attempt is refused with `A GPUI
+      application already exists on this thread`, the refused renderer reports
+      `isInitialized() === false` (no hidden window left behind), a second
+      attempt is refused the same way (`attempts=2 refused=2 opened=0
+      started=false`), and the running window is unharmed — it still reports a
+      paintable size, still paints its `#FF3B30` marker and still hears a press
+      (`after=1`). The typings half is held too: `GpuixRenderer` publishes no
+      other window verb and `WindowOptions` names no parent or child window, so
+      an application cannot side-step the refusal. **8 checks**,
+      `--only second-window-lifecycle`, green on 0.11.0 here (~0.7–0.8 s, two
+      captures). Fixture `src/live/second-window.ts` (the locators, attempted
+      size and title, the measured refusal, the tally and the readout) +
+      `second-window-probe.tsx` + `second-window.test.ts` (17 cases: the
+      classification in both directions, a throw with no message, the tally, the
+      readout, the count, the registry entry and wiring, the installed typings'
+      window-verb set, the marker literal and this section). Two negative
+      controls measured, exit `1` each, restored green: an attempt that reports
+      itself opened fails `the second window is refused before it opens`
+      (`got "attempts=1 refused=0 opened=1 started=true after=0 last=opened"`),
+      and dropping the marker's fill fails `the running window still paints its
+      own content` (`expected true, got false`). Evidence:
+      `apps/playground/README.md` §`second-window-lifecycle`,
+      `.artifacts/live/second-window{,-pressed}.png`. Citing it in the rows that
+      assume it is the Interlocks row below.
 
 ## Phase C — Tier 1–2 components
 
@@ -8660,6 +8695,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Print the **tint share the sweep measures** in the two source JSDocs that still carry it — `packages/components/src/internal/theme.ts` and `alert.tsx` both say the shared brand is under the floor "on 29 of the 64 tint placements the message is filled with", figures from before the two authored Omarchy looks landed: `packages/tokens/src/brand-text.test.ts` walks **18 styles × 4 tints = 72** placements and derives **28 of the 72**, which is what the tokens catalogue, the design system, the package README and the seam's JSDoc print. The curated Alert page carried the same pair and now derives it (`component-page-truth.test.ts`), so these two JSDocs are the last surfaces teaching a set that no longer exists | components (`packages/components/src/internal/theme.ts`, `alert.tsx`) | open — found 2026-10-23 while deriving the curated page's share; the fix is the one sentence in each file, and `packages/tokens/src/brand-text.test.ts`'s print case can hold them once they name the seam |
 | The **anchored layer's placement still trusts a stored side** — `packages/components/src/internal/placement.ts`'s `oppositeSide`/`roomOn`/`extentOn`/`alignOffsetOn` and `resolvePlacement` branch on `FloatingSide`/`FloatingAlign` with `Match.exhaustive`, so a `side` or `align` an application reads back from persisted state and passes to `PopoverContent`/`DropdownMenuContent`/a picker throws `effect/match/Match/exhaustive: absurd` out of the render when the surface overlaps its trigger, instead of opening on the house side. `@gpuixui/motion`'s `fadeFromSide` already reads an unnamed side as `bottom`, so the placement is the one half of an anchored overlay that still trusts the union. Repair each reader the way the frame builders now do (`Schema.is` → the house `bottom`/`start`) and add one unit case per reader to `internal/placement.test.ts` | components (overlay placement) | **resolved 2026-10-23** — `PlacementInput.side`/`align` are now `unknown`, and every reader (`oppositeSide`, `roomOn`, `extentOn`, `alignOffsetOn`, `resolveSide`, `resolvePlacement`) normalises through `sideOf`/`alignOf` (`Schema.Literals` → the house `bottom`/`start`), so an unknown name cannot reach a `Match.exhaustive`. The unmeasured path is repaired too: `requestedPlacement(side, align)` is the placement a surface asks for before its boxes exist, and `usePlacement` returns it instead of the raw pair, so a stored name never reaches the anchored host for the first render. Proof: `internal/placement.test.ts` gains `a stored placement the unions do not name` (5 cases — the house side, the mirrored house side when the surface covers its trigger, the roomier-side branch, host-`start` with no offset, and the pre-measurement pair); measured against the pre-fix readers all five fail (two asserting the raw `'over'`, three with `effect/match/Match/exhaustive: absurd`), and with the guards the file is 14/14. Docs: `docs/popover.mdx`, `docs/dropdown-menu.mdx` and `docs/combobox.mdx` §Limitations state the house fallback, and the README's module table row names the guard. No native scenario applies — a pure rule; the painters that read it stay the behaviour suites'. |
 | Teach the **transition repair** on `/docs/motion` — `@gpuixui/motion` now reads a declaration decoded from storage that carries no run at all (a `null` a config field never carried) or a kind a release no longer ships as the house `tween()`, because `MotionValue.animate` stored it and the frame loop read `.kind` off nothing; the page's repairs list (`motion-page.test.ts` holds each sentence to the sampler) teaches the spring, inertia, timeline, curve and first-frame repairs but not this one | docs-site (`apps/docs/content/docs/motion.mdx`; `motion-page.test.ts` should hold the sentence to `motion.ts`'s `transitionOf`/`isTransition` the way it holds the printed defaults) | open — the package half landed 2026-10-23 (see the Animated primitives row); a reader who stores a transition cannot learn the rule from the site |
+| Take the **brand example's dark fill to the find wash's separation** — `packages/tokens/src/brand-theme.example.ts`'s dark brand is `primary: "#B49CFF"`, and folding `highlightFailures` into `auditTheme` makes that file's own audit fail: `findHighlight` derives a resting 30% and an active 31% share from it, one share apart and under the 1.05:1 separation, so the gate reports `distinct` on all four content strips. The smallest step that clears is `#A78BFA` (30% / 36%), which keeps the indicator mark and the `#1C1547` label where they were; `/docs/theming`'s dark snippet and its brand paragraph already print `#A78BFA` with the measured reason, and `theming-page.test.ts` audits the snippet it reads | tokens-theme (`brand-theme.example.ts`, `theme.test.ts`'s brand audit) | open — the docs page changed with the gate's new report; the package file and its audit are the tokens workstream's, and the two must carry one value |
+
+| Cite the **second-window measurement** in the rows that assume it — the Tier 4 *Detachable / movable tabs*, *Workspace layouts* and *Drag and drop* rows, the capability record's *Portals*, *Movable tabs* and *Drag reorder* rows, and the README's `portal-layer`/`movable-tabs-lifecycle`/`drag-reorder` limits all state "the binding opens one window per process" without a citation. The playground's `second-window-lifecycle` (8 checks, 0.11.0) now measures it: a second `GpuixRenderer.init()` is refused with `A GPUI application already exists on this thread`, the refused renderer reports `isInitialized() === false`, a second attempt is refused the same way, and the running window still reports a size, paints its marker and hears a press; the installed typings publish no other window verb and `WindowOptions` names no parent or child window, so an application cannot side-step it. The rows should cite the probe and keep the honest verdict (`partial` for detachable tabs and drag-and-drop; a second process is the only route for a detached tab) | components (`COMPONENTS.md` Tier 4 rows, `@gpuixui/dock`) and docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) | open — measured 2026-10-23 by the playground workstream; evidence `apps/playground/README.md` §`second-window-lifecycle`, `.artifacts/live/second-window{,-pressed}.png` |
 
 ## Phase D — data and workspace components
 
@@ -10010,7 +10048,67 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 262/262
+`[x]` `[██████████]` 265/265
+
+`[x]` Print the **find wash as the gate's twelfth report** — the tokens
+      workstream folded `highlightFailures` into `auditTheme` while the readout
+      still printed it beside the gate: `auditFindings` flattened eleven reports,
+      `besideGateFindings` carried three contracts, `/docs/themes` promised
+      eleven and `/docs/theming` said the wash "sits **beside** `auditTheme`",
+      so the docs suite was red on the gate's own key list. The readout now
+      maps `report.highlight` into the gate's list (`formatHighlightFailure`'s
+      three jobs unchanged), `besideGateFindings` is the scale order and a
+      declared switch, and both pages say **twelve** gate reports and **two**
+      beside — the copy-theme note lists `highlightFailures` with the folded
+      reports and the find section says the editor prints it with the rest.
+      `themes.mdx` gains the find-wash bullet in the gate's list and loses it
+      from the beside list; `docs/preview-strategy.md` prints twelve.
+      `theme-editor-logic.test.ts` reads the wash from `gate` (and proves
+      `beside` is silent for it) and lists two beside functions;
+      `theming-page.test.ts` holds the two-contract page and the twelve.
+      Directions measured: restoring `docs/preview-strategy.md`'s "eleven" fails
+      `prints the number of reports the gate returns` by name, and the find case
+      failed as `dark: highlight distinct background, …` before the dark brand
+      changed. The dark brand's fill is part of the same change: `#B49CFF` gave
+      a 30%/31% find-wash pair, one share apart, so `/docs/theming`'s dark
+      snippet and its brand paragraph take `#A78BFA` (30%/36%, the smallest step
+      that clears 1.05:1) with the measured reason; the package example is the
+      interlock row below. `theme-editor-logic.test.ts`/`theming-page.test.ts`
+      are 98/98 green and the docs suite is 121 files / 1 317 tests.
+
+`[x]` Follow the **testing verdict's id rule** — `1ea8b0bf` made a capability's
+      verdict compare **probe ids** (`HashSet.size(idsOf(ran)) === count`), so a
+      repeated registry entry declares one probe and cannot stand in for another,
+      while `/docs/testing` still said "every **scenario** the registry declares
+      for that capability" and `testing-page.test.ts` asserted the retired
+      `Arr.length(ran) === count ? "verified" : "unverified"` expression — the
+      docs suite was red on the runner's own rule. The page's two bullets now say
+      every **probe** (by id), and the guard reads
+      `HashSet.fromIterable(Arr.map(entries, (e) => e.id))`,
+      `HashSet.size(idsOf(ran)) === count` and the page's id sentence.
+      Directions measured: rewriting the bullet back to "every **scenario**"
+      fails `states the capability rule the runner applies, not the one it
+      replaced` by name.
+
+`[x]` Follow the **motion seam two commits moved** — `e77e4b8c` widened
+      `tauOf` to `number | undefined`, added `inertiaOf`/`sameInertia` so a
+      stored `null`/`undefined` declaration is the house coast, and the timeline
+      rewrite replaced `durationMs: finiteOr(…)`/a direct stagger product with
+      `endOf(start, durationMs)` and `placedAt(start, staggerDelay(…))`, while
+      `motion-page.test.ts` held every old literal and `/docs/motion` never
+      taught the absent-declaration rule — the docs suite was red on the
+      package's own source. The page gains **A declaration that is not there is
+      the house coast.** (a stored `null` reaching `project`, `sampleInertia`,
+      `sameInertia` or a coast; the `TypeError` a `useInertia` threw by
+      projecting its resting frame first; the `{}` read as the house 350 ms with
+      no bounds; `sameInertia` comparing through the repaired values), and the
+      guard gains `reads an absent inertia declaration as the house coast` (both
+      `inertiaOf` field repairs, both samplers reading `inertiaOf(inertia)`,
+      `MotionValue`'s `sameInertia(this.mode.inertia, inertia)`, the page
+      phrases) plus the new sampler/stagger literals. Directions measured: the
+      old signature failed `expected … to contain 'export const tauOf = (tau:
+      number): number =>'`, and restoring the old heading failed the absent case
+      by name. `motion-page.test.ts` 24/24.
 
 `[x]` Print the **tint share the tokens sweep measures**, not the pre-Omarchy
       pair — the curated Alert page taught the `AlertLink` rule with "under the

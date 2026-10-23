@@ -1071,6 +1071,7 @@ import { SidebarClipProbe, sidebarClipSteps } from "./sidebar-clip-probe.js";
 import { MediaFrameProbe, mediaFrameSteps } from "./media-frame-probe.js";
 import { MenuRadioProbe, menuRadioSteps } from "./menu-radio-probe.js";
 import { AppChromeProbe, appChromeSteps } from "./app-chrome-probe.js";
+import { SecondWindowProbe, secondWindowSteps } from "./second-window-probe.js";
 import {
   NotificationCentreProbe,
   notificationCentreSteps,
@@ -29447,5 +29448,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "app-chrome-lifecycle",
     view: () => <AppChromeProbe />,
     steps: appChromeSteps,
+  },
+  "second-window-lifecycle": {
+    id: "second-window-lifecycle",
+    view: () => <SecondWindowProbe />,
+    steps: secondWindowSteps,
   },
 };

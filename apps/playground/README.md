@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-115 probes a real window can prove, of which twenty-three mount shipped
+116 probes a real window can prove, of which twenty-three mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -6480,6 +6480,57 @@ destructive tone` with `expected true, got false`, and `Copy` disabled fails
 `expected "toolbar-action-copy", got "toolbar-overflow"`. Evidence:
 `.artifacts/live/app-chrome.png`, `.artifacts/live/app-chrome-menu.png`.
 
+### `second-window-lifecycle` — measured on 0.11.0 here
+
+**Several surfaces state "the binding opens one window per process", and none of
+them measured it.** The Tier 4 rows for *detachable / movable tabs*, *workspace
+layouts* and *drag and drop*, the capability record's *Portals*, *Movable tabs*
+and *Drag reorder* rows, and the `portal-layer`, `movable-tabs-lifecycle` and
+`drag-reorder` sections above all rest on the sentence, which was inferred from
+there being no window verb in the typings. Two Tier 4 interactions depend on the
+answer: a tab detached into its own window, and a tab dragged from one window
+into another.
+
+This probe asks the binding where an application could: it constructs a second
+`GpuixRenderer` and calls `init()` — the one published verb that opens a window
+— while its own window is running, then proves the first window still paints and
+still takes a press.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | `attempts=0 refused=0 opened=0 started=false after=0 last=none` |
+| press "Open a second window" | `attempts=1 refused=1 opened=0 started=false`, and the answer is `A GPUI application already exists on this thread` |
+| press it again | `attempts=2 refused=2 opened=0 started=false` — the refusal is the rule, not a first-call artefact |
+| the window afterwards | still reports a paintable size, still paints its marker `#FF3B30`, and a press on that marker reads `after=1` |
+
+Two facts make the refusal a rule rather than an accident:
+
+1. **The application is one per thread, and the refusal happens before anything
+   opens.** The message is the platform's own, and the renderer that was refused
+   reports `isInitialized() === false`, so a failed attempt leaves no hidden
+   window behind. The running window keeps its own paint and its own input path,
+   which is why a consumer can try and recover rather than lose the app.
+2. **`init` is the only window verb the published binding has.** `GpuixRenderer`
+   publishes `init`, `getWindowSize`, `getWindowInsets`, `activateWindow`,
+   `minimizeWindow`, `zoomWindow`, `setWindowTitle`, `setWindowKeyEvents` and
+   `setWindowSelectionChange` — every one of them acts on the window the
+   renderer was opened with, and `WindowOptions` names no parent or child
+   window. An application therefore cannot side-step the refusal, and the answer
+   for a detached tab is a **second process**, or the same-window move the
+   `movable-tabs-lifecycle` and `portal-layer` probes measured.
+
+So Tier 4's *detached* tab stays out of reach, and drag-and-drop across windows
+has no counterpart: a workspace that wants two of them running side by side
+launches two processes.
+
+8 checks, `--only second-window-lifecycle`, green on 0.11.0 here (~1 s, two
+captures). Fixture `src/live/second-window.ts` (the locators, the attempted size
+and title, the measured refusal, the tally and the readout) +
+`second-window.test.ts` (the classification in both directions, the tally, the
+readout, the check count, the registry entry and wiring, the installed typings'
+window-verb set, and this section). Evidence:
+`.artifacts/live/second-window.png`, `.artifacts/live/second-window-pressed.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -6719,7 +6770,7 @@ narrower. Each deviation is deliberate and measured:
   and `z-index-lifecycle` and `floating-reflow-lifecycle` and
   `notification-centre-lifecycle` and `sidebar-clip-lifecycle` and
   `media-frame-lifecycle` and `menu-radio-lifecycle` and `app-chrome-lifecycle`
-  (fifty-seven probes, each run alone).
+  and `second-window-lifecycle` (fifty-eight probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples
   (four checks per page plus two for the run, the shape `examples.test.ts`
@@ -6791,5 +6842,7 @@ narrower. Each deviation is deliberate and measured:
   coercing it (`smoke.test.ts`).
 
 Not proven here: the verdicts use a **locally-built** binding (ADR 0003), not the
-published binary; and detaching a tab into a new window is impossible (no
-multiple windows).
+published binary; and a detached tab in its own window is impossible, which
+`second-window-lifecycle` now measures rather than assumes — a second
+`GpuixRenderer.init()` is refused on the running thread, so a detached tab needs
+a second process.
