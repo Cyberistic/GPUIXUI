@@ -6386,6 +6386,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
     Direction measured: with the swap restored the case fails with `expected [
     'size', 'status', 'name' ] to deeply equal [ 'status', 'size', 'name' ]`;
     with the insert it is 133/133. Owner: data.
+  - [x] Stop the filter builder offering a **Remove that cannot remove** — a
+    clause's Remove control painted in every position, but `removeAt` leaves a
+    `not` alone (it holds one child and cannot be left empty) and the root
+    clause has no parent to drop it, so pressing those controls changed nothing
+    while the button claimed it would. A clause now carries Remove only where
+    removal changes the tree: the builder passes the position's removability
+    through, a clause inside a `not` has none, and the group is removed whole
+    where it sits in a group; a root clause or a root `not` is cleared with
+    Clear. `behaviour/surfaces.test.tsx` gains `offers no Remove where removing
+    the clause would leave the tree alone` (a `not` in an `all` keeps its group
+    Remove and its clause has none, a sibling clause keeps its own, and a root
+    `not` has no Remove but keeps Clear). Direction measured: with the always-on
+    button restored the case fails on the button's element where `undefined` was
+    expected; with it, behaviour 72/72. `docs/advanced-filter.mdx` §Limitations
+    states the rule. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid

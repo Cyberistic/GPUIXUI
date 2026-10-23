@@ -58,4 +58,8 @@ The tree's own API, exported beside the builder:
 - The builder adds clauses to the root group. It never writes an `any` or a
   `not` and never changes a group's combinator: a group the caller's tree holds
   is painted and edited, and a negated group is removed whole.
+- A clause carries a Remove control only where removing it changes the tree: a
+  `not` holds one child and cannot be left empty, so a clause inside one has no
+  Remove of its own — remove the group whole when it sits in a group. A root
+  clause, or a root `not`, is cleared with **Clear**.
 - No pattern comparison: a value is compared literally.

@@ -246,6 +246,12 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   back into their slots, so hidden columns keep their places and a step past an
   end clamps at the end. `columns/logic.test.ts` gains the two-place and clamp
   cases (133 unit cases green; the hidden-column case asserts the slot).
+- **A clause's Remove paints only where removal changes the tree**: the builder
+  offered it in every position while `removeAt` leaves a `not` (one child, never
+  empty) and the root alone. `ClauseRow` now takes its position's removability,
+  so a clause inside a `not` has no Remove and the group is removed whole; a root
+  clause or root `not` is cleared with Clear. `surfaces.test.tsx` gains the case
+  (`not` in an `all`, a sibling clause, a root `not`), 72 behaviour cases green.
 - Evidence: `nub run --filter @gpuixui/data test` (126) and `test:behaviour` (67)
   green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
   and `--only data-tree-core` and `--only data-expandable-rows-core` (1/1 each).

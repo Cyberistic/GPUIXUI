@@ -163,6 +163,69 @@ describe("the data surfaces", () => {
     );
   });
 
+  it("offers no Remove where removing the clause would leave the tree alone", () => {
+    const negated: FilterTree = {
+      kind: "not",
+      child: {
+        kind: "predicate",
+        field: "status",
+        comparison: "equals",
+        value: "tracked",
+      },
+    };
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        negated,
+        {
+          kind: "predicate",
+          field: "name",
+          comparison: "contains",
+          value: "alpha",
+        },
+      ],
+    };
+    root = renderData(
+      <AdvancedFilter
+        fields={[
+          { field: "status", label: "Status" },
+          { field: "name", label: "Name" },
+        ]}
+        tree={tree}
+        onChange={() => {}}
+        testId="negated"
+      />,
+    );
+    settle(root);
+
+    // A `not` holds one child and cannot be left empty, so the clause inside it
+    // carries no Remove control: a button whose press leaves the tree unchanged
+    // is a control claiming an action it cannot take. The group is removed
+    // whole instead.
+    expect(root.renderer.findByTestId("negated-0-0-remove")).toBeUndefined();
+    expect(root.renderer.findByTestId("negated-0-group-remove")).toBeDefined();
+    // A clause in a normal group still removes itself.
+    expect(root.renderer.findByTestId("negated-1-remove")).toBeDefined();
+
+    // The root names no parent group to drop it, so a root `not` keeps its
+    // clause and the builder's Clear is the way out.
+    root.unmount();
+    root = renderData(
+      <AdvancedFilter
+        fields={[{ field: "status", label: "Status" }]}
+        tree={negated}
+        onChange={() => {}}
+        testId="rootnot"
+      />,
+    );
+    settle(root);
+    expect(root.renderer.findByTestId("rootnot-0-remove")).toBeUndefined();
+    expect(
+      root.renderer.findByTestId("rootnot-0-group-remove"),
+    ).toBeUndefined();
+    expect(root.renderer.findByTestId("rootnot-clear")).toBeDefined();
+  });
+
   it("reports a toolbar search only after the debounce", async () => {
     const root = mount();
 

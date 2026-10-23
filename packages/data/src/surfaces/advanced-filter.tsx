@@ -128,6 +128,7 @@ const ClauseRow = ({
   path,
   slot,
   fields,
+  removable,
   onChange,
   testId,
 }: {
@@ -138,6 +139,15 @@ const ClauseRow = ({
   /** The clause's path as a locator segment, unique across nested groups. */
   readonly slot: string;
   readonly fields: ReadonlyArray<AdvancedFilterField>;
+  /**
+   * Whether removing this clause changes the tree.
+   *
+   * A root clause and a clause inside a `not` do not: the root has no parent to
+   * drop it, and a `not` holds one child it cannot be left without. Neither
+   * paints a Remove control, because a press that leaves the tree unchanged is
+   * a control claiming an action it cannot take.
+   */
+  readonly removable: boolean;
   readonly onChange: (next: FilterTree) => void;
   readonly testId: string | undefined;
 }) => {
@@ -199,15 +209,17 @@ const ClauseRow = ({
         size="sm"
         testId={id === undefined ? undefined : `${id}-value`}
       />
-      <Button
-        variant="ghost"
-        size="sm"
-        label="Remove clause"
-        onActivate={() => onChange(removeAt(root, path))}
-        testId={id === undefined ? undefined : `${id}-remove`}
-      >
-        Remove
-      </Button>
+      {removable ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          label="Remove clause"
+          onActivate={() => onChange(removeAt(root, path))}
+          testId={id === undefined ? undefined : `${id}-remove`}
+        >
+          Remove
+        </Button>
+      ) : undefined}
     </div>
   );
 };
@@ -288,6 +300,7 @@ const Tree = ({
         path={path}
         slot={slotOf(path)}
         fields={fields}
+        removable={removable}
         onChange={onChange}
         testId={testId}
       />
@@ -343,6 +356,10 @@ const Tree = ({
  * builder read one shape; the component paints the tree and reports every
  * edit — a clause's field, comparison or value, a clause removed, a clause
  * added and the whole tree cleared.
+ *
+ * A clause's Remove control paints only where removal changes the tree: a
+ * `not` holds one child and is removed whole (when it sits in a group), and a
+ * root clause is cleared with Clear.
  */
 export const AdvancedFilter = ({
   fields,
