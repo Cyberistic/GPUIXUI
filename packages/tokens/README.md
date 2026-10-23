@@ -705,7 +705,7 @@ audit.invalidRoles; // [] — every role is paint-ready
 audit.invalidShadows; // [] — every elevation shadow a brand supplied is paint-ready
 audit.invalidNumbers; // [] — every size, length and shadow is layable, every weight and leading is usable, every control height and row height is pressable, and the strong body role shares the body's size and leading and outweighs it
 audit.contrast; // [] — every measured pair meets its floor
-audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face, disabled face and shadow is visible, and every pointer state answers the wash it replaces
+audit.decorative; // [] — every divider, skeleton, veil, status tint and edge, thumb, state wash, control face, disabled face and shadow is visible, every row keeps its rule on the wash it wears and on the press it derives, and every pointer state answers the wash it replaces
 audit.series; // [] — every chart swatch is perceivable and distinct
 audit.syntax; // [] — every code token is readable on the fill a code host paints
 audit.selection; // [] — every selection wash is visible and keeps its text readable
@@ -907,7 +907,16 @@ and the `secondary` fill on the four strips a control can sit on, and every
 raised elevation level (`sm`, `md`, `lg`) composited over those four, the
 `primary`/`destructive` faces a filled action wears, and the washes a row can be
 wearing when a context menu opens over it (`selected`, `hover`, `accent`,
-`active`). A shadow failure names the level. Nothing escapes the
+`active`). A shadow failure names the level.
+A **row's rule** is a placement of its own: a table row paints its thin `border`
+inside the row, over the fill the row wears — the three states it tints or fills
+(`dividerWashes`: `hover`, `accent`, `selected`) and the press it **derives**
+(`dividerPresses`, because a press is `pointerWash(theme, "active", replaced)`,
+not the `active` role). The raw role misses 20 of the 80 shipped placements, so
+`dividerOn(theme, surface)` steps `border` toward `borderStrong` by the smallest
+2% that clears the floor, and `dividerFailures` reports a palette whose strongest
+line cannot answer one — as `derivedDivider` or `pressedDivider`, inside the
+`decorative` report. Nothing escapes the
 contract either:
 `coverage.test.ts` holds every role in `colorRoles` to at least one measurement,
 and names the one a dedicated contract measures instead — `selection`, by

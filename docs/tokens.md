@@ -2467,9 +2467,10 @@ press it **derives** (`dividerPresses`). A press is not the `active` role: both
 packages derive it with `pointerWash(theme, "active", replaced)` over the wash the
 row was wearing, so seven of the thirty-two press placements paint a colour the
 role does not name — macOS light's press over `accent` is `#D6D6DE` against a
-`#DEDEE6` role, macOS dark's `#3E3E44` against `#3A3A40`, and Luna light's, Aero
-light's and Linux dark's move theirs too — and measuring the role measured a fill
-those rows do not paint while leaving the painted one unnamed.
+`#DEDEE6` role, macOS dark's `#3E3E44` against `#3A3A40`, and Windows dark's,
+Linux dark's, Luna light's and Aero light's move theirs too — and measuring the
+role measured a fill those rows do not paint while leaving the painted one
+unnamed.
 
 Measured over the sixteen shipped, high-contrast, platform and authored styles,
 the raw `border` is under the 1.05:1 floor on **20 of the 80** placements: the
