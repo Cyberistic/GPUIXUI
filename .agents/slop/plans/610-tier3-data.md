@@ -517,6 +517,22 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   column stays 160px in both rows. Directions measured: with the bare write
   restored the first case fails `expected 204 to be 62`; with the reading it is
   29/29. The README's cell-width paragraph and the Tables row teach the rule.
+- **A row count is read once, as whole rows**: `VirtualTable` compared the raw
+  `count` to `0` and handed it to the runtime list and `@tanstack/virtual-core`,
+  so a computed count that was not a non-negative number — `NaN` from a total
+  that had not arrived, a negative from a subtraction — was not `0`, mounted a
+  windowed body over no rows and painted a header above a **blank** body: no
+  empty message and no skeleton, the one state a reader cannot diagnose. The
+  window's own normaliser is public as `virtual/window.ts`'s `rowCount` (finite →
+  floored, never negative; anything else → `0`), and `VirtualTable`,
+  `VirtualTableBody` and `VirtualList`'s `itemCount` all read it, so the list,
+  the window and the empty state cannot disagree about how many rows exist.
+  `virtual/window.test.ts` gains the normaliser's own case, and
+  `behaviour/virtual-table.test.tsx` gains two: `NaN`/`-3` paint `No rows`, and
+  `2.5` paints two rows. Directions measured: with the raw comparison restored
+  the empty-state case fails `expected 'Name' to contain 'No rows'`; with the
+  normaliser it is 9/9 in the file. The virtualization page, the README
+  paragraph and the Virtualized tables row teach the rule.
 
 
 ## 5. Acceptance

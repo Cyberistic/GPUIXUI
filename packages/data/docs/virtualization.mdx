@@ -39,7 +39,7 @@ import { VirtualList } from "@gpuixui/data";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `count` | `number` | — | the logical row count |
+| `count` | `number` | — | the logical row count; a fraction, a negative or an unreadable count is the whole, non-negative rows the table holds (`0` paints `empty`) |
 | `rowHeight` | `number` | — | every row must paint exactly this height |
 | `row` / `renderRow` | `(index: number) => ReactNode` | — | paints one absolute row index |
 | `height` | `number` | measured body | a definite table (or body) height |
@@ -63,6 +63,15 @@ used to fall through to the body's no-children branch and paint the **loading
 skeleton** — three rows of placeholder bars — so a caller who said there were no
 records was told the first page was still arriving. It paints
 `DEFAULT_EMPTY_MESSAGE` (`No rows`) instead; pass `empty` to choose the words.
+
+`count` is read **once**, as the whole non-negative number of rows the table
+holds: a fraction of a row cannot exist, and a count the table cannot read
+(`NaN`, an infinity, a negative) is `0`, so it paints the empty state rather
+than a header above a blank body. That one number drives the runtime list's
+`itemCount`, the window arithmetic and the empty state, so the list and its
+window cannot disagree about how many rows exist. A caller waiting on a total
+passes `0` and its own `empty` (a `Spinner`, a message) until the response
+arrives, rather than an unresolved arithmetic result.
 
 ## Limitations
 

@@ -326,6 +326,15 @@ The row must paint exactly `rowHeight`: the window's positions come from the
 runtime's estimate, so a taller row would push the rows below it out of place.
 A row of a different height uses `VirtualList` in children mode instead.
 
+`count` is read **once**, as the whole non-negative number of rows the table
+holds — a fraction of a row cannot exist, and a count the table cannot read
+(`NaN`, an infinity, a negative) is `0`. That one number drives the runtime
+list's `itemCount`, the window arithmetic and the empty state, so a list and its
+window cannot disagree about how many rows exist; before it, `count={NaN}`
+painted a header above a blank body with neither the empty message nor the
+skeleton. A caller waiting on a total passes `0` and its own `empty` until the
+response arrives.
+
 A set of **no rows is empty, not loading**: `count={0}` paints the `empty` message
 inside a `TableEmpty` row, and `DEFAULT_EMPTY_MESSAGE` (`No rows`) when the
 caller names none — the body's no-children branch is the loading skeleton, and a
