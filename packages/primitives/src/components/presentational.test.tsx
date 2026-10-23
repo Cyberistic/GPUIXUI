@@ -279,6 +279,26 @@ describe("layout containers", () => {
     expect(expectSome(numberIn(viewport, "scrollbarWidth"))).toBe(9);
   });
 
+  it("lets a scroll reading measure the scroller, and a composed viewport override it", () => {
+    // The bug guarded: the area published no layout event for the element that
+    // scrolls, so `ScrollProgress`/`ScrollFade` had to duplicate the viewport —
+    // and lose its keyboard contract — to measure the box they read.
+    const areaLayout = () => {};
+    const part = scrollPart(
+      { axis: "vertical", onLayout: areaLayout },
+      testTheme,
+    );
+    const implicit = renderScrollAreaViewport({}, part);
+    expect(hostProp(implicit, "onLayout")).toStrictEqual(
+      Option.some(areaLayout),
+    );
+    const ownLayout = () => {};
+    const composed = renderScrollAreaViewport({ onLayout: ownLayout }, part);
+    expect(hostProp(composed, "onLayout")).toStrictEqual(
+      Option.some(ownLayout),
+    );
+  });
+
   it("makes the viewport a keyboard scroll region", () => {
     const part = scrollPart(
       { axis: "vertical", label: "Properties" },

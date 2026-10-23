@@ -19,7 +19,9 @@
  *
  * The root is the frame: its padding, radius and border stay outside the
  * scroller. `ScrollAreaViewport` carries the overflow axes, `onScroll` (wheel
- * deltas) and `onScrollChange` (the absolute offset, whatever moved it).
+ * deltas), `onScrollChange` (the absolute offset, whatever moved it) and
+ * `onLayout` (the scroller's own box, which is what a scroll reading measures —
+ * the frame is a different size wherever it has padding).
  *
  * The scroller is also the caller's element: `viewportRef` on the area (or
  * `ref` on a composed viewport) hands over the instance the renderer scrolls,
@@ -72,6 +74,7 @@ interface ScrollPart {
   readonly axis: ScrollSpec["axis"];
   readonly onScroll: ((event: EventPayload) => void) | undefined;
   readonly onScrollChange: ((event: EventPayload) => void) | undefined;
+  readonly onLayout: ((event: EventPayload) => void) | undefined;
   readonly scrollbarColor: string;
   readonly scrollbarWidth: number | undefined;
   /** Whether the viewport is a tab stop and answers the scroll keys. */
@@ -108,6 +111,7 @@ export const scrollPart = (
     axis = "vertical",
     onScroll,
     onScrollChange,
+    onLayout,
     scrollbarColor,
     scrollbarWidth,
     focusable,
@@ -117,6 +121,7 @@ export const scrollPart = (
     | "axis"
     | "onScroll"
     | "onScrollChange"
+    | "onLayout"
     | "scrollbarColor"
     | "scrollbarWidth"
     | "focusable"
@@ -129,6 +134,7 @@ export const scrollPart = (
   axis,
   onScroll,
   onScrollChange,
+  onLayout,
   scrollbarColor: scrollbarColor ?? theme.colors.scrollbar,
   scrollbarWidth,
   focusable: focusable ?? true,
@@ -147,6 +153,16 @@ export interface ScrollAreaProps extends ScrollSpec {
    * `scrollX`/`scrollY` (0 at the start, negative after).
    */
   readonly onScrollChange?: (event: EventPayload) => void;
+  /**
+   * The scroller's painted box, reported on mount and whenever its size
+   * changes — the height a scroll reading needs (a fade, a progress bar, a
+   * "more below" cue).
+   *
+   * It is the **viewport's** box, the element that scrolls, so frame padding is
+   * already excluded. A composed `ScrollAreaViewport` defaults to this handler;
+   * its own `onLayout` wins.
+   */
+  readonly onLayout?: (event: EventPayload) => void;
   /** Frame padding, on the theme's spacing scale. It does not scroll. */
   readonly padding?: SpaceStep;
   /** Frame radius. Defaults to no rounding. */
@@ -196,6 +212,8 @@ export interface ScrollAreaViewportProps {
   readonly onScroll?: (event: EventPayload) => void;
   /** Defaults to the scroll area's `onScrollChange`. */
   readonly onScrollChange?: (event: EventPayload) => void;
+  /** The scroller's painted box. Defaults to the scroll area's. */
+  readonly onLayout?: (event: EventPayload) => void;
   /** Defaults to the scroll area's thumb colour. */
   readonly scrollbarColor?: string;
   /** Defaults to the scroll area's thickness. */
@@ -226,6 +244,7 @@ export const renderScrollAreaViewport = (
     axis,
     onScroll,
     onScrollChange,
+    onLayout,
     scrollbarColor,
     scrollbarWidth,
     focusable,
@@ -273,6 +292,7 @@ export const renderScrollAreaViewport = (
       testId={testId}
       onScroll={onScroll ?? part.onScroll}
       onScrollChange={onScrollChange ?? part.onScrollChange}
+      onLayout={onLayout ?? part.onLayout}
       onKeyDown={part.onScrollKey}
       style={mergeStyle(
         mergeStyle(

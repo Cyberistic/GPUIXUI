@@ -387,6 +387,35 @@ it("pages a two-axis ScrollArea down without moving its sideways offset", async 
   );
 });
 
+it("reports the scroll box's own height, not the frame's", async () => {
+  // The bug guarded: the area published no layout event for the element that
+  // scrolls, so a scroll reading (a fade, a progress bar) had to duplicate the
+  // viewport — and lose its keyboard contract — to measure the box it reads.
+  // The event is the viewport's, so the frame's padding is already excluded.
+  const runtime = await openWindow();
+  const heights: number[] = [];
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        padding="md"
+        style={{ height: 120 }}
+        viewportTestId="measured"
+        label="Sheet"
+        onLayout={(event) => heights.push(event.height ?? 0)}
+      >
+        {card("sheet", 600, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  const viewport = boundsOf(runtime, "measured");
+  expect(heights.length).toBeGreaterThan(0);
+  expect(heights[heights.length - 1]).toBe(viewport.height);
+  expect(viewport.height).toBe(120 - testTheme.spacing.md * 2);
+});
+
 it("declares the keyboard ring on the scroll region that takes the stop", async () => {
   // The bug guarded: the viewport is a tab stop with a keyboard contract
   // (arrows, PageUp/PageDown, Home/End) and was the one focusable primitive in

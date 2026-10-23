@@ -34,6 +34,7 @@ import { ScrollArea, Stack, Text } from "@gpuixui/primitives";
 | `axis` | `"vertical" \| "horizontal" \| "both"` | `"vertical"` | which overflow axes are `scroll` |
 | `onScroll` | `(event: EventPayload) => void` | none | wheel/trackpad deltas |
 | `onScrollChange` | `(event: EventPayload) => void` | none | the absolute offset after any move |
+| `onLayout` | `(event: EventPayload) => void` | none | the scroller's painted box (`width`/`height`), reported on mount and on a size change; a composed `ScrollAreaViewport` defaults to it |
 | `padding` | spacing step | none | frame padding; it does not scroll |
 | `radius` | radius step | none | frame radius; the scroller is clipped by it |
 | `border` | `boolean` | `false` | the frame's `border` role |
@@ -47,6 +48,14 @@ import { ScrollArea, Stack, Text } from "@gpuixui/primitives";
 | `testId` | `string` | — | the frame's locator |
 | `viewportTestId` | `string` | — | the implicit viewport's locator |
 | `viewportRef` | `Ref<PublicInstance>` | — | the implicit viewport's element |
+
+`onLayout` is the **scroller's** box, not the frame's: a scroll reading — an edge
+fade, a position bar, a "more below" cue — needs the viewport's own height, and
+the frame is smaller wherever it has padding. It reports on mount and whenever
+the size changes, so a reading re-measures a pane that opened or a window that
+resized. `onScrollChange` names the offset on the same element, which is why the
+two belong together: one says how tall the window is, the other where the
+content sits in it.
 
 ## Limitations
 
