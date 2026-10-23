@@ -43,11 +43,11 @@ RECOVERY_INTERVAL="${GPUIXUI_RECOVERY_INTERVAL:-3600}"
 PROBE_TIMEOUT="${GPUIXUI_PROBE_TIMEOUT:-180}"
 
 RUNG1="${GPUIXUI_MODEL_RUNG1:-opencode/deepseek-v4.1-flash-free}"
-RUNG2="${GPUIXUI_MODEL_RUNG2:-minimax/MiniMax-M3.1-Flash}"
-RUNG3="${GPUIXUI_MODEL_RUNG3:-minimax/MiniMax-M3.1-Flash}"
-RUNG4="${GPUIXUI_MODEL_RUNG4:-minimax/MiniMax-M3.1-Flash}"
-RUNG5="${GPUIXUI_MODEL_RUNG5:-minimax/MiniMax-M3.1-Flash}"
-RUNG6="${GPUIXUI_MODEL_RUNG6:-minimax/MiniMax-M3.1-Flash}"
+RUNG2="${GPUIXUI_MODEL_RUNG2:-deepseek/deepseek-flash}"
+RUNG3="${GPUIXUI_MODEL_RUNG3:-deepseek/deepseek-flash}"
+RUNG4="${GPUIXUI_MODEL_RUNG4:-deepseek/deepseek-flash}"
+RUNG5="${GPUIXUI_MODEL_RUNG5:-deepseek/deepseek-flash}"
+RUNG6="${GPUIXUI_MODEL_RUNG6:-deepseek/deepseek-flash}"
 
 export PATH="$HOME/.opencode/bin:$HOME/.nub/bin:$HOME/.nub/node-shim:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 

@@ -27,7 +27,7 @@ set -uo pipefail
 REPO="${GPUIXUI_REPO:-$HOME/GPUIXUI}"
 OPENCODE="${OPENCODE_BIN:-$HOME/.opencode/bin/opencode}"
 MODELS="$REPO/scripts/swarm-model.sh"
-MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-7}"
+MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-2}"
 
 export PATH="$HOME/.opencode/bin:$HOME/.nub/bin:$HOME/.nub/node-shim:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
@@ -39,7 +39,7 @@ LOCK="$STATE/supervisor.lock"
 
 # One workstream per agent, each with its own tree so two writers never share a
 # checkout. The descriptions keep the five from colliding.
-WORKSTREAMS="tokens-theme primitives components docs-site playground motion data"
+WORKSTREAMS="components docs-site"
 
 workstream_scope() {
   case "$1" in
@@ -50,7 +50,7 @@ workstream_scope() {
       echo "foundational render primitives and Tier 1 components (layout, text, boxes, scroll, buttons, inputs, selection controls, progress, tooltips, loading). You own packages/primitives and packages/icons."
       ;;
     components)
-      echo "Tier 2 composition and feedback components (cards, lists, menus, dialogs, popovers, tabs, toasts, validation, breadcrumbs, comboboxes). You own packages/components."
+      echo "the four components still to build: rich-text editing (`packages/editor`), multi-step forms (`packages/components`), crop area and QR code (`packages/media`). You own those packages for this wave. After each lands, also verify and mark the seven shipped-but-unchecked rows: Collapsible sidebars, Command palette, Breadcrumb navigation, Terminal surfaces, Multi-pane editing layouts, Syntax highlighting, Keyboard navigation."
       ;;
     docs-site)
       echo "the Fumadocs documentation site and showcase: information architecture, component pages, API metadata, light/dark docs themes, search. You own apps/docs, docs/preview-strategy.md and the component-page template."
