@@ -635,6 +635,60 @@ describe("the measured target rows", () => {
     );
   });
 
+  it("cites the clip a collapsing sidebar really paints", () => {
+    const read = (path: string): string =>
+      readFileSync(fileURLToPath(new URL(path, repoRoot)), "utf8");
+    const fixture = read("apps/playground/src/live/sidebar-clip.ts");
+    const probe = read("apps/playground/src/live/sidebar-clip-probe.tsx");
+    const number = (source: string, pattern: RegExp): number =>
+      Number(pattern.exec(source)?.[1] ?? Number.NaN);
+    const checks = number(fixture, /\bSIDEBAR_CHECKS = (\d+);/);
+    const open = number(fixture, /SIDEBAR_WIDTHS = \{ open: (\d+)/);
+    const content = number(fixture, /\bSIDEBAR_CONTENT_WIDTH = (\d+);/);
+    const markerX = number(fixture, /\bSIDEBAR_MARKER_X = (\d+);/);
+    const margin = number(fixture, /\bSIDEBAR_TRAVEL_MARGIN = (\d+);/);
+    const midMax = markerX - margin;
+    expect(
+      [checks, open, content, markerX, margin].every(Number.isFinite),
+    ).toBe(true);
+    // The clip is the box's own style, not a layout bound a layout read could see.
+    expect(probe).toContain('overflow: "hidden"');
+
+    const section = readmeSection(
+      "### `sidebar-clip-lifecycle` — measured on 0.11.0 here",
+    );
+    expect(section).toContain(
+      `${checks} checks, \`--only sidebar-clip-lifecycle\``,
+    );
+
+    const notes = Option.getOrElse(
+      Option.map(
+        Arr.findFirst(
+          targetRows(),
+          (row) => row.name === "Collapsible sidebars",
+        ),
+        (row) => row.notes,
+      ),
+      () => "",
+    );
+    Arr.forEach(
+      [
+        "`sidebar-clip-lifecycle`",
+        `${checks} checks`,
+        `${open}pt content`,
+        `${content}`,
+        `${midMax}`,
+        'overflow: "hidden"',
+        "`tabIndex={-1}`",
+        "`marker=1`",
+        "`main=1`",
+        "`main=2`",
+        "never reflows",
+      ],
+      (claim) => expect(notes, claim).toContain(claim),
+    );
+  });
+
   it("states the anchored menu measured in a scrolled header", () => {
     const readme = readFileSync(
       fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
