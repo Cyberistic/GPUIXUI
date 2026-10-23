@@ -10390,7 +10390,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 351/353
+`[ ]` `[██████████]` 352/354
+
+`[x]` Give the **MediaPlayer its related line, and hold every page to one** —
+      the player landed after `src/lib/related.ts`'s families were written, so
+      `/docs/media/media-player` was the one served page `relatedFor` answered
+      `undefined` for: it ended with no sibling links while every other media
+      page linked back to it, and the suite only checked the curated component
+      pages. The player joins **Media surfaces**, the stale solo for the retired
+      `/docs/primitives/tooltip` (a 301 to the curated page, which is in
+      **Overlays**) is gone, and `src/lib/related.test.ts` holds the model to
+      the mounted collections in both directions: every package page the site
+      serves and every curated component page is in a family or an argued solo,
+      every family has a name and two or more distinct pages, every family link
+      resolves to an address the site answers (a retired primitive through its
+      redirect), and a solo names a served page, a reason, and no family.
+      `related-strip.test.tsx` gains `prints the media player's siblings, not an
+      empty line`, and the policy and the ledger name the new guard. Directions
+      measured: dropping the player's family entry fails the coverage case with
+      `[ '/docs/media/media-player' ]` and the render case, and putting the
+      retired tooltip back in `soloPages` fails the solo case by URL. Green:
+      both files 13/13, the docs suite **158 files / 1 669 tests**,
+      `check-types` clean. No native scenario applies — generated links.
 
 `[x]` Answer the **route of every mounted collection** — `/docs/icons`,
       `/docs/editor`, `/docs/files`, `/docs/shell`, `/docs/dock` and

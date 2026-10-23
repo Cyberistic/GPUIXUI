@@ -109,6 +109,16 @@ describe("the related strip", () => {
     expect(view).toContain("url={url}");
   });
 
+  it("prints the media player's siblings, not an empty line", () => {
+    // The player landed after the families were written, so its page ended with
+    // no related line while every other media page linked back to it.
+    const markup = render("/docs/media/media-player");
+
+    expect(markup).toContain("Related · Media surfaces");
+    expect(markup).toContain('href="/docs/media/crop-area"');
+    expect(markup).not.toContain('href="/docs/media/media-player"');
+  });
+
   it("renders nothing for an argued solo or a page outside the component lanes", () => {
     expect(render("/docs/primitives/tooltip")).toBe("");
     expect(render("/docs/components/not-a-page")).toBe("");

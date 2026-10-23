@@ -492,7 +492,10 @@ than required: neither frame can resolve its siblings, so `src/lib/related.ts`
 names each page's family and `src/components/docs/related-strip.tsx` prints it at
 the end of every page the site serves — curated and package alike.
 `related-strip.test.tsx` holds the rendered line, the curated frame's mount and
-the pages argued as solos.
+the pages argued as solos; `related.test.ts` holds the model to the pages the
+site serves in both directions — every page has a family or an argued solo,
+every family has two or more distinct pages, and every link resolves to an
+address the site answers.
 `## Verification`/`## Testing` stays the page author's and is optional: it names
 the suite that proves the component where the package keeps one, and the site
 cannot invent a suite, so a page without the heading is not a defect the site

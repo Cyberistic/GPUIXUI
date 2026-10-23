@@ -600,15 +600,21 @@ page a reader lands on carries the same siblings as the package page it shadows.
   leaves the page itself out of the list. The
   sections are the table of contents Fumadocs already built, so a page that
   writes `## Related` keeps its section and the strip stays silent. It renders
-  nothing for the pages argued as solos in `soloPages`: the provider, the one
-  overlay primitive whose curated page is the same component, and the one-page
-  icon set.
+  nothing for the pages argued as solos in `soloPages`: the theme provider and
+  the one-page icon set.
 - Both frames mount the strip with the page's table of contents, so a page that
   writes `## Related` keeps its section and no page prints the links twice.
 
 `related-strip.test.tsx` holds the rendered line (a sibling's href and label,
-the page's own href absent), the curated frame's mount, the silence for a page
-that writes the section, and the argued solos.
+the page's own href absent), the curated frame's mount, the media player's
+siblings, and the silence for a page that writes the section.
+
+`related.test.ts` holds the model to the pages the site serves, in both
+directions: every mounted package page and curated component page is in a family
+or an argued solo (the MediaPlayer shipped with neither and no page noticed),
+every family has at least two distinct pages, every link resolves to an address
+the site answers — a retired primitive through its 301 — and every solo is a
+page the site serves with a reason and no family.
 
 ### The source block is generated, not written
 

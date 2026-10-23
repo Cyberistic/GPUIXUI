@@ -9,7 +9,7 @@
  * A family is one layer's working set, not a taxonomy of the whole library —
  * a reader on the Ripple button page is choosing between the other actions,
  * and a reader on the Table sorting page is choosing between the other table
- * surfaces. Every mounted package page is either in a family or argued as a
+ * surfaces. Every page the site serves is either in a family or argued as a
  * solo in {@link soloPages}, which `related.test.ts` holds in both directions:
  * a page that moves to another family is a link that changes, and a new page
  * that lands nowhere fails the suite instead of shipping without siblings.
@@ -322,6 +322,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
   {
     name: "Media surfaces",
     pages: [
+      media("media-player", "MediaPlayer"),
       media("drop-zone", "DropZone"),
       media("file-upload", "FileUpload"),
       media("image-preview", "ImagePreview"),
@@ -334,20 +335,13 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
 /**
  * The pages with no sibling to offer, and the reason.
  *
- * Two primitives and the icon set are one-offs in their own layer: a provider is
- * not a component, the primitive Tooltip is the same component as the curated
- * Tooltip page (listing both would link one overlay twice), and the icon set is
- * a single page.
+ * The theme provider and the icon set are one-offs in their own layer: a
+ * provider is not a component, and the icon set is a single page.
  */
 export const soloPages: ReadonlyArray<SoloPage> = [
   {
     href: "/docs/primitives/theme-provider",
     reason: "a provider, not a component — no sibling to choose between",
-  },
-  {
-    href: "/docs/primitives/tooltip",
-    reason:
-      "the only overlay primitive; the curated Tooltip page is the same component",
   },
   {
     href: "/docs/icons/icon",
