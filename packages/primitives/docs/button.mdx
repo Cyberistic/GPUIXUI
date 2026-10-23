@@ -68,6 +68,28 @@ invisible. `button-entry.test.ts` holds the export and its role map, and
 `Button.test.tsx` holds the published role to the label the painter draws for
 every variant in both shipped themes.
 
+## Keyboard
+
+`Enter` activates on the **press** and `Space` on the **release**, the platform's
+rule; a held key is ignored, so a key repeat cannot fire the action twice, and a
+pointer press activates once. A window measured all of it
+(`button-activation-lifecycle`, 18 checks on 0.11.0): the automation's
+`keystrokes` sends a key down with no release, so Space's release is the half a
+probe has to send, and Enter's release adds nothing.
+
+The two routes hand over different events. A pointer press runs the caller's
+host `onClick` **and** `onActivate` with the runtime's click payload — its
+`x`/`y` is the press point a ripple is born at — while a key reaches
+`onActivate` alone with the key payload the button decided on. Wire anything a
+keyboard must reach through `onActivate`.
+
+A `disabled` button refuses all four routes and paints `tabIndex: -1`: the
+traversal skips it, yet `focusElement` still reaches it (a trigger's focus
+target, or a control the app focuses after an error). A `loading` button refuses
+the same four and keeps its stop, so a reader is not dropped mid-action. The
+decision is `core/keyboard.test.ts`'s; the delivery is
+`runtime/controls.runtime.test.tsx`'s.
+
 ## API
 
 | Prop | Type | Default | Consequence |

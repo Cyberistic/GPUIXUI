@@ -71,6 +71,22 @@ const bodyOf = (source: string, heading: string): Option.Option<string> =>
   );
 
 /**
+ * One `###` heading's body, up to the next `###`.
+ *
+ * The playground's README records each probe under its own heading; a page that
+ * cites a probe has to print what that record measured, so the record's body is
+ * read rather than the whole document.
+ */
+const probeRecord = (source: string, heading: string): string => {
+  const marker = `### ${heading}`;
+  const start = source.indexOf(marker);
+  if (start < 0) return "";
+  const rest = source.slice(start + marker.length);
+  const end = rest.indexOf("\n### ");
+  return end < 0 ? rest : rest.slice(0, end);
+};
+
+/**
  * The backticked names in a section's first table column, header excluded.
  *
  * A page's role and tone tables are the sets a reader copies into code, so a
@@ -1537,15 +1553,7 @@ describe("the primitives docs page contract", () => {
         () => Number.NaN,
       );
     /** The probe's own record, up to the next probe section. */
-    const probeRecord = (source: string): string => {
-      const heading = "### `keyboard-scroll-lifecycle`";
-      const start = source.indexOf(heading);
-      if (start < 0) return "";
-      const rest = source.slice(start + heading.length);
-      const end = rest.indexOf("\n### ");
-      return end < 0 ? rest : rest.slice(0, end);
-    };
-    const measured = probeRecord(record);
+    const measured = probeRecord(record, "`keyboard-scroll-lifecycle`");
     const checks = /(\d+) checks/.exec(measured)?.[1] ?? "";
     const keyboard = Option.getOrElse(
       bodyOf(read("scroll-area.mdx"), "Keyboard"),
@@ -1756,6 +1764,85 @@ describe("the primitives docs page contract", () => {
       pointer: true,
       editor: true,
       action: true,
+    });
+  });
+
+  it("states the activation a window measured, both halves of it", () => {
+    // Bug guarded: the shadcn-brief rewrite dropped the Button page's §Keyboard
+    // — and the guard that held it — so the page no longer said which half of a
+    // key activates (Enter's press, Space's release), that a held key is
+    // ignored, or which tab stop a disabled/busy action keeps; a reader could
+    // only learn the route split from §Limitations. Every control in the
+    // library composes this action, so the contract it omits is MISSION's first
+    // critical interaction. The probe's own record and the deciding source are
+    // read, so the page cannot print a rule the runtime does not hold.
+    const keyboard = Option.getOrElse(
+      bodyOf(read("button.mdx"), "Keyboard"),
+      () => "",
+    );
+    const decision = readFileSync(
+      fileURLToPath(new URL("../src/core/keyboard.ts", import.meta.url)),
+      "utf8",
+    );
+    const painter = readFileSync(
+      fileURLToPath(new URL("../src/components/Button.tsx", import.meta.url)),
+      "utf8",
+    );
+    const registry = readFileSync(
+      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
+      "utf8",
+    );
+    const record = readFileSync(
+      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
+      "utf8",
+    );
+    const measured = probeRecord(record, "`button-activation-lifecycle`");
+    const checks = /(\d+) checks/.exec(measured)?.[1] ?? "";
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      "utf8",
+    );
+    const row = Option.getOrElse(
+      Arr.findFirst(catalogue.split("\n"), (line) =>
+        Str.startsWith("| Buttons | done |")(line),
+      ),
+      () => "",
+    );
+
+    expect({
+      registered: registry.includes('id: "button-activation-lifecycle"'),
+      recorded:
+        Str.isNonEmpty(checks) &&
+        measured.includes("last=click") &&
+        measured.includes("keyDown:enter") &&
+        measured.includes("keyUp:space") &&
+        measured.includes("tabIndex: -1") &&
+        measured.includes("focusElement"),
+      decision:
+        decision.includes('ENTER_KEY = "enter"') &&
+        decision.includes('SPACE_KEY = "space"') &&
+        decision.includes("if (held) return false;") &&
+        decision.includes('return phase === "down";') &&
+        decision.includes('return phase === "up";'),
+      stops: painter.includes("disabled === true ? -1 : 0"),
+      page:
+        keyboard.includes("`button-activation-lifecycle`") &&
+        keyboard.includes(`${checks} checks`) &&
+        keyboard.includes("on the **press**") &&
+        keyboard.includes("on the **release**") &&
+        keyboard.includes("held key is ignored") &&
+        keyboard.includes("`tabIndex: -1`") &&
+        keyboard.includes("`loading` button") &&
+        keyboard.includes("press point") &&
+        keyboard.includes("`runtime/controls.runtime.test.tsx`"),
+      row: row.includes("`button-activation-lifecycle`"),
+    }).toEqual({
+      registered: true,
+      recorded: true,
+      decision: true,
+      stops: true,
+      page: true,
+      row: true,
     });
   });
 
