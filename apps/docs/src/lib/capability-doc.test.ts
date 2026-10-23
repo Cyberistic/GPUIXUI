@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import {
+  alphaOf,
+  blend,
   contrastRatio,
   getTheme,
   nativeFenceFill,
@@ -2718,6 +2720,156 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(pageEvidence).toContain(`x=${cropStart}–${cropEnd}`);
     expect(pageEvidence).toContain("top-left corner");
     expect(page?.[2]).toContain("crops");
+  });
+
+  it("records the crop a mask, a handle and a clamp compose, from its fixture", () => {
+    // Tier 5's Crop area row said the paint *under* a crop was measured and the
+    // crop itself was not: a plan had no measured statement that a mask paints
+    // over a bitmap, that the mask does not swallow the press meant for the
+    // picture, or that a corner handle can drag the hole inside the bitmap's
+    // bounds. The runtime publishes no clip, mask or radial-gradient key, so
+    // the mask is four bars and the arithmetic is the fixture's. Every box,
+    // clamp and pixel below is derived, so neither document can teach a mask
+    // the window no longer paints.
+    const fixture = read("apps/playground/src/live/crop-overlay.ts");
+    const scalar = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = (\\d+);`).exec(fixture)?.[1] ??
+          Number.NaN,
+      );
+    const opening =
+      /export const CROP_OPENING: CropRect = \{([^}]*)\};/.exec(fixture)?.[1] ??
+      "";
+    const field = (key: string): number =>
+      Number(new RegExp(`${key}: (\\d+)`).exec(opening)?.[1] ?? Number.NaN);
+    const channel = (key: string): number => {
+      const hex = new RegExp(`${key}: 0x([0-9a-f]{2})`).exec(fixture)?.[1];
+      return hex === undefined ? Number.NaN : Number.parseInt(hex, 16);
+    };
+
+    const width = scalar("CROP_IMAGE_WIDTH");
+    const height = scalar("CROP_IMAGE_HEIGHT");
+    const minimum = scalar("CROP_MIN");
+    const handleSide = scalar("CROP_HANDLE");
+    const checks = scalar("CROP_CHECKS");
+    const hole = {
+      x: field("x"),
+      y: field("y"),
+      width: field("width"),
+      height: field("height"),
+    };
+
+    const at = (rect: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }): string => `${rect.x},${rect.y},${rect.width},${rect.height}`;
+    const bars = [
+      at({ x: 0, y: 0, width, height: hole.y }),
+      at({
+        x: hole.x + hole.width,
+        y: hole.y,
+        width: width - (hole.x + hole.width),
+        height: hole.height,
+      }),
+      at({
+        x: 0,
+        y: hole.y + hole.height,
+        width,
+        height: height - (hole.y + hole.height),
+      }),
+      at({ x: 0, y: hole.y, width: hole.x, height: hole.height }),
+    ];
+    const handle = {
+      x: hole.x + hole.width - handleSide / 2,
+      y: hole.y + hole.height - handleSide / 2,
+    };
+    const smallest = at({
+      x: hole.x,
+      y: hole.y,
+      width: minimum,
+      height: minimum,
+    });
+    const largest = at({
+      x: hole.x,
+      y: hole.y,
+      width: width - hole.x,
+      height: height - hole.y,
+    });
+
+    // The bitmap's one colour and the veil over it, both derived: the fixture
+    // prints the four channels it paints and the theme owns the veil, so a
+    // palette move or a repainted bitmap fails here rather than in a reader's
+    // capture.
+    const bitmap = `#${[channel("r"), channel("g"), channel("b")]
+      .map((value) => value.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase()}`;
+    const veil = themes.dark.colors.overlay;
+    const maskPaint = blend(bitmap, veil, alphaOf(veil));
+
+    // The premises: the hole leaves four non-empty bars, the clamps actually
+    // clamp, and the veil leaves a pixel neither colour's own.
+    expect(width).toBeGreaterThan(hole.x + hole.width);
+    expect(height).toBeGreaterThan(hole.y + hole.height);
+    expect(minimum).toBeLessThan(hole.width);
+    expect(minimum).toBeLessThan(hole.height);
+    expect(new Set([...bars, smallest, largest]).size).toBe(6);
+    expect(maskPaint).not.toBe(bitmap);
+    expect(maskPaint).not.toBe(veil);
+
+    const row = rowFor("Crop area");
+    expect(row?.verdict).toBe("supported, with limits");
+    const evidence = row?.evidence ?? "";
+    expect(evidence).toContain("crop-overlay");
+    expect(evidence).toContain(`${checks} checks`);
+    expect(
+      bars.filter((bar) => !evidence.includes(bar)),
+      "the record drops a bar box the fixture paints",
+    ).toEqual([]);
+    expect(evidence).toContain(`**${handleSide}×${handleSide}**`);
+    expect(evidence).toContain(`${handle.x},${handle.y}`);
+    expect(evidence).toContain(maskPaint);
+    expect(evidence).toContain(bitmap);
+    expect(evidence).toContain(`crop=${smallest}`);
+    expect(evidence).toContain(`crop=${largest}`);
+    expect(evidence).toContain(`**${minimum}**-point minimum`);
+    expect(evidence).toContain("frame=1 image=0");
+    expect(evidence).toContain("frame=2 image=0");
+    expect(evidence).toContain("negative controls");
+    expect(row?.workaround).toContain('pointerEvents: "none"');
+    expect(row?.workaround).toContain("ref");
+    expect(row?.workaround).toContain("frame");
+
+    const page = measuredRow("Crop area");
+    expect(
+      page,
+      "the page's measured table has no crop-overlay row",
+    ).toBeDefined();
+    const pageEvidence = page?.[1] ?? "";
+    expect(pageEvidence).toContain("crop-overlay");
+    expect(pageEvidence).toContain(`${checks} checks`);
+    expect(
+      bars.filter((bar) => !pageEvidence.includes(bar)),
+      "the page drops a bar box the fixture paints",
+    ).toEqual([]);
+    expect(pageEvidence).toContain(`**${handleSide}×${handleSide}**`);
+    expect(pageEvidence).toContain(`${handle.x},${handle.y}`);
+    expect(pageEvidence).toContain(maskPaint);
+    expect(pageEvidence).toContain(bitmap);
+    expect(pageEvidence).toContain(`crop=${smallest}`);
+    expect(pageEvidence).toContain(`crop=${largest}`);
+    expect(pageEvidence).toContain("moves=8");
+    expect(pageEvidence).toContain("frame=1 image=0");
+    expect(pageEvidence).toContain("frame=2 image=0");
+    expect(page?.[2]).toContain('pointerEvents: "none"');
+
+    // §5 owes the probe — the section itself, not the row's own citation.
+    const keeping = doc.slice(
+      doc.indexOf("## 5. Keeping this document true"),
+    );
+    expect(keeping).toContain("`crop-overlay`");
   });
 
   it("publishes the order a negative tab index gives, not a skip", () => {
