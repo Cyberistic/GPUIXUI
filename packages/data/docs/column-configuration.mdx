@@ -1,0 +1,207 @@
+---
+title: Column configuration
+description: Show, hide, reorder and resize a table's columns.
+---
+
+A column set is **one ordered list** that the header and every row read.
+`useColumns` holds that list's visibility, order and widths; `ColumnMenu` drives
+the first two and `TableColumnDivider` drives the third. Nothing paints from a
+second copy of the layout, so a hidden or moved column cannot leave the header
+and the cells disagreeing.
+
+## Usage
+
+```tsx
+import {
+  ColumnMenu,
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+  TableSortHeader,
+  TableViewport,
+  useColumns,
+  useTable,
+} from "@gpuixui/data";
+
+const columns = useColumns({ columns: FILE_COLUMNS });
+const table = useTable({
+  rows,
+  keyOf: (row) => row.id,
+  columns: FILE_COLUMNS,
+  hiddenColumns: columns.hidden,
+});
+
+<ColumnMenu
+  state={columns.state}
+  onChange={columns.apply}
+  onReset={columns.reset}
+  testId="file-columns"
+/>;
+
+<Table height={320} aria-label="Files">
+  <TableViewport>
+    <TableHeader>
+      <TableRow>
+        {columns.visible.map((column) => (
+          <TableSortHeader
+            key={column.id}
+            field={column.id}
+            label={column.label}
+            width={column.width}
+            sort={table.sort}
+            onSortPress={table.pressSort}
+            resize={{
+              minWidth: column.minWidth,
+              maxWidth: column.maxWidth,
+              label: `Resize the ${column.label.toLowerCase()} column`,
+              onResize: (width) => columns.resize(column.id, width),
+            }}
+          />
+        ))}
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {table.rows.map((row) => (
+        <TableRow key={row.id}>
+          {columns.visible.map((column) => (
+            <TableCell key={column.id} width={column.width}>
+              {column.valueOf(row)}
+            </TableCell>
+          ))}
+        </TableRow>
+      ))}
+    </TableBody>
+  </TableViewport>
+</Table>;
+```
+
+`useTable` takes the same column list the header paints, and the controller's
+memoised `hidden` list so a hidden column leaves the **search** while keeping its
+**sort** — see [Table sorting](/docs/data-display/table-sorting). A list a grid both
+configures and sorts is typed `ColumnDef & GridColumn<Row>`, because the row
+model reads each column's `valueOf`.
+
+## What a change does to the grid
+
+The consequences are the ones `table-columns-lifecycle` measured in a window:
+
+- **Hiding** a column takes its width out of the content and shifts every later
+  column left by exactly that width (690 → 610 for an 80px column). Its header
+  and cells paint nothing, the header and the remaining cells keep one `x`, and
+  the vertical offset and the selection survive.
+- **Moving** a column changes the order and not a width. A move steps over the
+  columns it crosses rather than trading places with its destination, and hidden
+  columns keep the slots they occupied, so restoring one returns it to the
+  reader's order.
+- **Resizing** changes one track. A second gesture starts from the width the
+  first ended at, not the width at mount.
+- The renderer **clamps its own horizontal offset** when a hide shrinks panned
+  content (−250 → −90) and reports it through `onScrollChange`; a grid does not
+  need a `scrollTo` after a column change.
+
+The last visible column cannot be hidden: the reducer returns the state
+unchanged and the menu disables that row, rather than painting a control that
+claims a change which did not happen.
+
+## The divider
+
+`TableColumnDivider` sits inside the header cell it ends, so the body needs no
+spacer track. Its rules are measured:
+
+- It listens to `onMouseDown` **and** `onMouseMove` — `@gpuix/native@0.11.0`
+  arms pointer capture only for an element that declares both.
+- The press lives in a **ref**: a window delivers the press and every move
+  before React commits the press's render, so the starting width cannot be
+  state.
+- Only the **primary** button arms the drag. The runtime delivers `mouseDown`
+  for all three, so a right press (the context-menu gesture) starts nothing.
+- The arrows step 16px, Home and End name the column's bounds, and every route
+  clamps. The width is announced through `aria-valuetext` because 0.11.0 has no
+  `aria-valuenow`.
+
+Bounds and steps the grid cannot read are its defaults (80/640/16), and a width
+that is `NaN` — a computed declaration that produced no number — is read as the
+column's own minimum: `resizeColumn` leaves the column alone rather than
+collapsing the track to its floor, and an arrow steps from that floor.
+
+## API
+
+### `ColumnMenu`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `state` | `ColumnState` | — | the configured columns, in paint order |
+| `onChange` | `(next: ColumnState) => void` | — | receives every complete next state |
+| `onReset` | `() => void` | — | restores the definitions; omit to hide the row |
+| `label` | `string` | `"Columns"` | the trigger's label |
+| `contentLabel` | `string` | the trigger's label | the menu surface's accessible name |
+| `disabled` | `boolean` | — | refuses the trigger |
+| `testId` | `string` | — | derives `-toggle-<id>`, `-move-<id>`, `-move-<id>-left`/`-right` and `-reset` |
+
+### `TableColumnDivider`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `width` | `number` | — | the column's current width |
+| `minWidth` | `number` | `80` | the narrowest a drag may reach |
+| `maxWidth` | `number` | `640` | the widest a drag may reach |
+| `onResize` | `(width: number) => void` | — | receives every clamped width |
+| `label` | `string` | — | the divider's accessible name |
+| `step` | `number` | `16` | pixels one arrow press moves it |
+| `className` | `string` | — | joined after the recipe |
+| `testId` | `string` | — | the divider's locator |
+
+`TableSortHeader`'s `resize` prop is this component's props minus `width`: the
+header already knows its track.
+
+### `useColumns`
+
+| Field | Type | Consequence |
+| ----- | ---- | ----------- |
+| `state` | `ColumnState` | the configured columns |
+| `visible` | `ReadonlyArray<Column>` | the one list the header and rows paint |
+| `hidden` | `ReadonlyArray<string>` | the hidden ids, for `useTable`'s filter |
+| `contentWidth` | `number` | the sum of the visible tracks |
+| `widthOf` / `offsetOf` / `isVisible` | `(id) => …` | per-column reads |
+| `apply` | `(next: ColumnState) => void` | stores a state a menu produced |
+| `setVisible` / `toggle` / `move` / `resize` / `reset` | functions | the reducers, applied |
+
+A `ColumnDef` is `{ id, label, width, minWidth?, maxWidth? }`. The definition is
+read once at mount; a grid whose columns are a function of live data keeps its
+own `ColumnState` and passes it to the parts.
+
+## Accessibility
+
+- The menu is the components package's `DropdownMenu`, so it keeps the measured
+  keyboard contract: the trigger opens on the activation key, focus lands on a
+  row, arrows move, Escape dismisses and returns focus.
+- Each visibility row is a checkbox item that announces its state; the last
+  visible column's row is disabled rather than absent.
+- The divider is a tab stop with `role="separator"` and an accessible name, and
+  it announces its width as `aria-valuetext`.
+- A table holds one row tab stop, not one per cell; a column change does not
+  move it.
+
+## Limitations
+
+- **No pinned column here.** The runtime paints no `position: "sticky"`, so a
+  frozen column is the two-pane composition `FrozenTable` ships — see
+  [Frozen columns](/docs/data-display/frozen-columns). The menu deliberately offers no
+  pin row.
+- A column needs a fixed `width` to be resizable; a header without one renders
+  no divider.
+- The divider is a pointer and keyboard control only; there is no double-click
+  to autofit, because the runtime exposes no measured content width per column.
+- Column state is the app's. `useColumns` is the convenient uncontrolled path;
+  persisting an arrangement is the consumer's own schema.
+- The docs site cannot render this component live.
+
+## Related
+
+- [Table sorting](/docs/data-display/table-sorting) — the header control beside it.
+- [Table selection](/docs/data-display/table-selection) — the checkbox column and the
+  row's press rules.
+- [Frozen columns](/docs/data-display/frozen-columns) — the pinned composition.
+- [Virtualization](/docs/data-display/virtualization) — the windowed table.

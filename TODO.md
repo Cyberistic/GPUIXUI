@@ -8602,6 +8602,24 @@ Work that this workstream needs but does not own. Another agent owns each row.
     { columns: […] }` (the track rewritten to 120), and without the step's read
     it fails `expected 120 to be 136`; restored, 180/180. The README's
     runtime-rules row and §Columns paragraph state it. Owner: data.
+  - [x] Give the **column controls their page** — `ColumnMenu`,
+    `TableColumnDivider` and `useColumns` shipped with two Tier 3 rows reading
+    `done`, while the only prose was the README's §Columns paragraph: a consumer
+    looking for the divider's props, the menu's locators or the controller's
+    reads had no page, and `MISSION.md` makes a page part of a component's
+    definition. `packages/data/docs/column-configuration.mdx` documents the one
+    ordered list, a usage composition, the measured consequences
+    (`table-columns-lifecycle`, `column-resize-lifecycle`), the last-column rule,
+    the divider's press/ref/primary-button/key edges, the three API tables and
+    the runtime's limits. `src/columns/docs.test.ts` (3 cases) holds those tables
+    to the interfaces (`ColumnMenuProps`, `TableColumnDividerProps`,
+    `ColumnController`): every declared prop has a row and no row names a prop
+    the type does not declare, so a prop cannot be added or dropped without the
+    page. Directions measured: dropping the `contentLabel` row fails
+    `expected [ 'contentLabel' ] to deeply equal []`, and inventing a `pinFirst`
+    row fails with `[ 'pinFirst' ]`; green, 183/183 unit and the docs package's
+    1 266 cases. The README §Columns names the page and the two Tier 3 rows cite
+    it. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven

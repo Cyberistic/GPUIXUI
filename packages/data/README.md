@@ -219,7 +219,7 @@ is not a finite number is read as the default (80/640/16) rather than a NaN
 track, and a width the grid cannot read is the column's own minimum: a width is
 often computed, and `NaN` orders below every number, so clamping it would
 collapse the track — `resizeColumn` leaves such a column alone while a key press
-steps from its floor.
+steps from its floor. The page is `docs/column-configuration.mdx`.
 
 A hidden column **leaves the search but keeps its sort**. `useTable` takes the
 controller's memoised `hidden` list (`useColumns().hidden`) and the core marks
