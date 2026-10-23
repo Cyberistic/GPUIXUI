@@ -2129,6 +2129,106 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(keeping).toContain("`scrollbar-thumb-both`");
   });
 
+  it("records that the painted thumb takes no drag, from its fixture", () => {
+    // The record called the bar "an affordance" only in the two-axis note, and
+    // a workspace plan read the painted thumb as a control a reader can grab.
+    // The pinned binding paints it in a `canvas` overlay with no hitbox, so a
+    // press on the thumb and a press on its track both move nothing — the
+    // difference between a scroll pane that may leave scrolling to the runtime
+    // and one that must compose a bar. Every number is derived from the probe's
+    // own constants, so neither file can teach a length the window no longer
+    // paints.
+    const fixture = read("apps/playground/src/live/scrollbar-drag.ts");
+    const scalar = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = (-?[\\d_]+);`)
+          .exec(fixture)?.[1]
+          ?.replaceAll("_", "") ?? Number.NaN,
+      );
+    const viewport = /export const DRAG_VIEWPORT = \{([^}]*)\}/.exec(
+      fixture,
+    )?.[1];
+    const dimension = (key: string): number =>
+      Number(
+        new RegExp(`${key}: ([\\d_]+)`)
+          .exec(viewport ?? "")?.[1]
+          ?.replaceAll("_", "") ?? Number.NaN,
+      );
+
+    const track = dimension("height");
+    const content = scalar("DRAG_CONTENT");
+    const thickness = scalar("DRAG_THICKNESS");
+    const by = scalar("DRAG_BY");
+    const wheel = scalar("DRAG_WHEEL");
+    const checks = (
+      /export const DRAG_CHECKS = ([^;]+);/.exec(fixture)?.[1] ?? ""
+    )
+      .split("+")
+      .reduce((sum, term) => sum + Number(term.trim()), 0);
+
+    // The premises: the probe's own arithmetic is the thumb rule the one-axis
+    // probe measured, and the drag travels far enough that a working bar would
+    // show a new offset rather than a rounding step.
+    expect(track).toBeGreaterThan(0);
+    expect(content).toBeGreaterThan(track);
+    expect(thickness).toBeGreaterThan(0);
+    expect(by).toBeGreaterThan(1);
+    expect(wheel).toBeLessThan(0);
+    expect(checks).toBeGreaterThan(15);
+
+    const max = content - track;
+    const length = Math.round(Math.min((track * track) / (track + max), track));
+    const startAt = (offset: number): number =>
+      Math.round(
+        Math.min(Math.max(-offset / max, 0), 1) * (track - length),
+      );
+    const wheeled = startAt(wheel);
+
+    expect(length).toBeLessThan(track);
+    expect(wheeled).toBeGreaterThan(0);
+    expect(wheeled).toBeLessThan(track - length);
+
+    const row = rowFor("Scrollbar thumb");
+    expect(row?.evidence).toContain("scrollbar-drag");
+    expect(row?.evidence).toContain(`${checks} checks`);
+    expect(row?.evidence).toContain(`**${track}**`);
+    expect(row?.evidence).toContain(`${content} px`);
+    expect(row?.evidence).toContain("200×160");
+    expect(row?.evidence).toContain(`${thickness} px`);
+    expect(row?.evidence).toContain(`**${length}**`);
+    expect(row?.evidence).toContain(`**${by}**`);
+    expect(row?.evidence).toContain(`**${wheeled}**`);
+    expect(row?.evidence).toContain("no hitbox");
+    expect(row?.evidence).toContain("x=0 y=0");
+    expect(row?.evidence).toContain("moves=8");
+    expect(row?.evidence).toContain(`y=${wheel}`);
+    expect(row?.workaround).toContain("onScrollChange");
+    expect(row?.workaround).toContain("scrollTo");
+
+    const page = measuredRow("Scrollbar thumb");
+    expect(page, "the page's measured table has no scrollbar-drag row").toBeDefined();
+    expect(page?.[1]).toContain("scrollbar-drag");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(`**${track}**`);
+    expect(page?.[1]).toContain(`${content} px`);
+    expect(page?.[1]).toContain("200×160");
+    expect(page?.[1]).toContain(`${thickness} px`);
+    expect(page?.[1]).toContain(`**${by}**`);
+    expect(page?.[1]).toContain(`**${wheeled}**`);
+    expect(page?.[1]).toContain("no hitbox");
+    expect(page?.[1]).toContain("x=0 y=0");
+    expect(page?.[1]).toContain("moves=8");
+    expect(page?.[1]).toContain(`y=${wheel}`);
+    expect(page?.[2]).toContain("onScrollChange");
+
+    // §5 owes the probe — the section itself, not the row's own citation.
+    const record = read("docs/gpuix-capabilities.md");
+    const keeping = record.slice(
+      record.indexOf("## 5. Keeping this document true"),
+    );
+    expect(keeping).toContain("`scrollbar-drag`");
+  });
+
   it("records the height a clipped parent reports, from its fixture", () => {
     // A disclosure's whole basis is that the body's content box is reported
     // while its parent was zero high a frame earlier. The record said `onLayout`
