@@ -1225,7 +1225,10 @@ throw when it is missing or unreadable. A throw is a defect in that boundary, an
 this seam does not hide it. `baseFor` is optional; when it is absent the palette
 is mapped onto `base` whatever mode it declares, which is right for a desktop
 that only recolours and wrong across a mode switch, because a light page on the
-dark base's surfaces is exactly the mix `auditTheme` reports.
+dark base's surfaces is exactly the mix `auditTheme` reports. A change is
+recorded once `onChange` returns, so a callback that throws is a defect the caller
+sees and the palette is offered again on the next tick instead of the watch
+believing it delivered a theme the window never painted.
 
 `every` is a plain millisecond count because this package carries no runtime
 dependency; swap `timer` for a `SystemThemeTimer` if the application schedules

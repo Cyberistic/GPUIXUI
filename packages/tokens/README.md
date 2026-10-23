@@ -706,7 +706,8 @@ red cannot serve both a fill and a mark is reported, not repaired — measured o
 the example night palette at 4.39:1 to its chosen ink and 2.93:1 as a mark.
 `baseFor` is how a desktop that switches between its light and dark themes moves
 the base with the palette; without it every palette keeps the one base the watch
-started with.
+started with. A change is recorded once `onChange` has returned, so a callback
+that throws is retried next tick rather than leaving the window on its old theme.
 
 **Omarchy's `colors.toml` ships decoded.** `decodeOmarchyPalette(source)` reads
 the file `omarchy-theme-set` stages at

@@ -329,6 +329,11 @@ const paletteKey = (palette: SystemPalette | undefined): string =>
  * hands `baseFor` so each palette is mapped onto the matching base; without it
  * every palette keeps the one `base` it was started with.
  *
+ * A change is recorded once `onChange` has returned, so a callback that throws
+ * does not leave the window on the previous theme with the change marked as
+ * delivered: the defect reaches the caller and the palette is offered again on
+ * the next tick.
+ *
  * @example
  * ```tsx
  * import { darkTheme, watchSystemTheme } from "@gpuixui/tokens";
@@ -357,12 +362,14 @@ export function watchSystemTheme(options: WatchSystemThemeOptions): () => void {
     if (key === applied) {
       return;
     }
-    applied = key;
     onChange(
       palette === undefined
         ? base
         : paletteToTokens(palette, baseFor?.(palette) ?? base),
     );
+    // Recorded after delivery: a callback that throws is retried next tick
+    // rather than leaving the window on the theme it already had.
+    applied = key;
   };
   tick();
   return timer.poll(every, tick);

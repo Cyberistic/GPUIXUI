@@ -418,6 +418,39 @@ describe("following a palette", () => {
     ]);
   });
 
+  it("offers a palette again when the change that delivered it threw", () => {
+    // The poll records a palette only once `onChange` has returned. A callback
+    // that throws is the caller's defect and is not swallowed — but it must not
+    // mark the change delivered, or the window keeps the previous theme until
+    // the desktop moves again.
+    const manual = manualTimer();
+    const applied: Array<Theme> = [];
+    let palette: SystemPalette = nightPalette;
+    let fail = false;
+    watchSystemTheme({
+      read: () => palette,
+      base: lightTheme,
+      onChange: (theme) => {
+        if (fail) {
+          fail = false;
+          throw new Error("the surface could not render");
+        }
+        applied.push(theme);
+      },
+      every: 2000,
+      timer: manual.timer,
+    });
+
+    palette = { ...nightPalette, accent: "#7CC7B0" };
+    fail = true;
+    expect(() => manual.tick()).toThrow("the surface could not render");
+    expect(applied).toHaveLength(1);
+
+    manual.tick();
+    expect(applied).toHaveLength(2);
+    expect(applied[1]?.colors.primary).toBe("#7CC7B0");
+  });
+
   it("stops polling when the caller stops", () => {
     const { stopped, stop } = clock(nightPalette);
     expect(stopped()).toBe(false);
@@ -460,6 +493,15 @@ describe("following a palette", () => {
     const catalogue = read("../../../docs/tokens.md");
     expect(catalogue).toContain("4.39:1");
     expect(catalogue).toContain("2.93:1");
+  });
+
+  it("teaches that a change is recorded only once it was delivered", () => {
+    // A reader planning a follow has to know what a failed callback costs; the
+    // seam's doc, both pages and §11 state the same rule.
+    const catalogue = read("../../../docs/tokens.md");
+    const readme = read("../README.md");
+    expect(catalogue).toContain("recorded once `onChange` returns");
+    expect(readme).toContain("recorded once `onChange` has returned");
   });
 
   it("ships an interval timer that can be cancelled", () => {
