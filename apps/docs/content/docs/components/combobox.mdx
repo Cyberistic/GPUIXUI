@@ -117,6 +117,46 @@ trimmed, and a blank query shows everything. A disabled option stays **visible**
 — it is unselectable, not hidden — and cannot be chosen by click, arrow or
 `Enter`.
 
+## Remote options
+
+The component never fetches. A list that lives behind a search belongs to the
+caller, and three props hand it over:
+
+- `onQueryChange` reports each search the popup runs — every typed query, and the
+  empty one it opens with, because each open is a new search. A closed popup
+  reports nothing, and neither does one the caller disables: the close path
+  clears the query in the same commit, and that cleared string is not a search.
+- `shouldFilter={false}` paints `options` in the order they are given instead of
+  ranking them locally. Use it whenever the remote search chose the rows: a
+  result that matched on a synonym or a description the query never appears in
+  would be hidden by the local ranking.
+- `loading` says the caller's fetch is in flight. While the list is empty the
+  empty slot paints `Searching…` instead of `No matches`; a `ComboboxEmpty` with
+  children paints the caller's words instead.
+
+```tsx
+const [results, setResults] = useState<ReadonlyArray<ComboboxOption>>([]);
+const [pending, setPending] = useState(false);
+
+<Combobox
+  options={results}
+  shouldFilter={false}
+  loading={pending}
+  onQueryChange={(query) => void search(query)}
+  onValueChange={setReviewer}
+>
+  <ComboboxTrigger label="Assign reviewer" />
+  <ComboboxContent>
+    <ComboboxInput label="Search reviewers" />
+    <ComboboxList label="Reviewers" />
+    <ComboboxEmpty />
+  </ComboboxContent>
+</Combobox>;
+```
+
+Debouncing, cancelling and the loading flag are the caller's, the same division
+`SearchInput` keeps.
+
 ## Multiple mode
 
 <ComponentPreview name="combobox-multiple" />
@@ -178,6 +218,9 @@ and the next closes the dialog.
 | `onValueChange` | `(value: string \| null \| ReadonlyArray<string>) => void` | — |
 | `multiple` | `boolean` | `false` |
 | `disabled` | `boolean` | `false` |
+| `onQueryChange` | `(query: string) => void` — every search the popup runs, including the empty one it opens with | — |
+| `shouldFilter` | `boolean` — rank `options` locally; `false` keeps the caller's order | `true` |
+| `loading` | `boolean` — the caller's fetch is in flight; an empty list says `Searching…` | `false` |
 | `onCreate` | `(query: string) => void` — single mode only; the caller adds the option | — |
 | `createLabel` | `(query: string) => string` | `Create "…"` |
 
@@ -273,8 +316,9 @@ card; and the search field keeps `input`, because it is where a reader types.
   would cover the trigger. `align="center"` is measured from the trigger rather
   than the runtime's containing-block centre, and it is clamped by the 8px snap
   margin near a window edge.
-- **No async option loading and no grouping headers.** A grouped list is a
-  select's shape, not a combobox's.
+- **No grouping headers, and no fetch of its own.** A grouped list is a select's
+  shape, not a combobox's; a remote list is the caller's, handed over through
+  `onQueryChange`, `shouldFilter` and `loading` (§Remote options).
 - Create-new is single-select and match-nothing only. It reports the query and
   leaves the selection alone; a controlled combobox sets its value from
   `onCreate`.
@@ -317,7 +361,12 @@ pointer path, the create row's five rules, a popup the caller disables closing
 with the control, the 4-point travel it enters on from either side and the
 resting frame it paints first under reduced motion — and the
 ranking, toggle and create round trip by
-`packages/components/src/combobox/logic.test.ts`. Three
+`packages/components/src/combobox/logic.test.ts`. **A second suite** in
+`packages/components/src/behaviour/combobox-remote.test.tsx` holds the remote
+search: the empty query each open reports, one report per typed query, nothing
+while the popup is closed or disabled, the caller's order under
+`shouldFilter={false}`, the empty slot's `Searching…` and the caller's words in a
+`ComboboxEmpty` with children. Two
 limits are recorded above rather than hidden: there is no
-`aria-activedescendant`, no async options and no grouping, and the create row is
-single-select only.
+`aria-activedescendant` and no grouping headers; the async list is the caller's
+(§Remote options), and the create row is single-select only.

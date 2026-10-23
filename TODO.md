@@ -9560,6 +9560,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
     first case fails `expected 204 to be 62`; with it the behaviour suite is
     29/29 in the table file. The README's cell-width paragraph, the Tables row
     (whose count walks to 29) and plan 610 teach the rule. Owner: data.
+  - [x] Take the **documented wait** when a toolbar cannot read its debounce —
+    `DataToolbar` handed `search.debounceMs` straight to `@tanstack/pacer`,
+    whose `wait` reaches `setTimeout`; Node reads `NaN` and an infinity as an
+    immediate timer (measured: `TimeoutNaNWarning`, duration set to `1`). A
+    `debounceMs` computed from a setting therefore reported the query in the
+    next tick and the debounce existed only on paper — the regression the field
+    is there to prevent. A finite non-negative wait is the caller's, `0` still
+    reports every edit at once, and a non-finite or negative one takes the
+    documented `150` ms. `behaviour/surfaces.test.tsx` gains `takes the
+    documented wait when the delay cannot be read` (`debounceMs={NaN}`, still
+    unreported 40 ms in, reported afterwards) and `reports every edit at once
+    when the wait is zero`. Direction measured: with the raw wait restored the
+    first case fails `expected 'logo' to be 'none'`; with the guard the file is
+    13/13. `docs/data-toolbar.mdx` §API, the README's toolbar paragraph, the
+    Data toolbars row and plan 610 teach the rule. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
@@ -9799,7 +9814,31 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 257/257
+`[x]` `[██████████]` 258/258
+
+`[x]` Follow the **combobox's remote half and the table's grown skeleton suite** —
+      `@gpuixui/components` gained `onQueryChange`, `shouldFilter` and `loading`
+      (a fetched list handed to the caller, in `combobox-remote.test.tsx`), and
+      the data workstream grew `packages/data/src/behaviour/table.test.tsx` to
+      **29** cases, so the docs suite was red twice on `master`: the curated
+      Combobox page documented none of the three props and still listed "No
+      async option loading" as a limitation (sending a reader to build a second
+      control), and the Table page's Status still printed **27** native cases.
+      The Combobox page gains §Remote options (the three props, the empty
+      query each open reports and the closed/disabled silence, `Searching…` and
+      the caller's `ComboboxEmpty`), the three API rows, a limitations bullet
+      that records the division instead of the gap, and a Status that names the
+      remote suite; the Table page prints 29. `component-page-truth.test.ts`
+      gains `hold the combobox's remote list to the props and suite that carry
+      it`, which reads the props, both defaults (`shouldFilter = true`,
+      `loading = false`), the report call and the `if (!open || disabled)` guard
+      out of the source, the empty copy out of the suite, and requires the page's
+      section, its props and the retracted limitation. Directions measured:
+      deleting the page's §Remote options fails on `## Remote options` by name,
+      and the Table status failed as `table.mdx: says 27, suite runs 29` before
+      the edit. Restored, the docs app is 121 files / 1 313 tests green with
+      `check-types` and `oxfmt` clean. No native scenario applies — two curated
+      pages and the suites their sections are read from.
 
 `[x]` Declare the **ink the theme editor's destructive action paints** — the
       editor's sample card draws a "Delete" button

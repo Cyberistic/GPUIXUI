@@ -1234,9 +1234,9 @@ describe("the curated component pages", () => {
     const gaps = packageProps.filter((prop) => !named(prop));
     expect(gaps).toEqual([]);
     expect(named("aria-id")).toBe(true);
-    expect(
-      read("packages/primitives/src/components/Select.tsx"),
-    ).toContain('aria-description={accessibleName(description)}');
+    expect(read("packages/primitives/src/components/Select.tsx")).toContain(
+      "aria-description={accessibleName(description)}",
+    );
 
     const text = body(select).replace(/\s+/g, " ");
     expect(text).toContain("`aria-description`");
@@ -1345,6 +1345,49 @@ describe("the curated component pages", () => {
     expect(text).not.toContain("the runtime ranks");
     expect(text).not.toContain("faded disabled");
     expect(text).not.toContain("loads options asynchronously");
+  });
+
+  it("hold the combobox's remote list to the props and suite that carry it", () => {
+    // The package gained a remote half: `onQueryChange`, `shouldFilter` and
+    // `loading` hand a fetched list to the caller, and a separate behaviour
+    // suite measures it. The curated page still called async loading a
+    // limitation and documented none of the three props, so a reader was told
+    // to build a second control. The props, their defaults and the empty copy
+    // are read from the source, and the suite is named rather than counted.
+    const combobox = pages.find((page) => page.file === "combobox.mdx");
+    expect(
+      combobox,
+      "the combobox page is not in the curated set",
+    ).toBeDefined();
+    if (combobox === undefined) return;
+
+    const source = read(combobox.source);
+    const remote = read(
+      "packages/components/src/behaviour/combobox-remote.test.tsx",
+    );
+    const text = body(combobox).replace(/\s+/g, " ");
+
+    expect(source).toContain("onQueryChange?: (query: string) => void;");
+    expect(source).toContain("shouldFilter?: boolean;");
+    expect(source).toContain("loading?: boolean;");
+    expect(source).toContain("shouldFilter = true");
+    expect(source).toContain("loading = false");
+    // Each open is a search, and a closed or disabled popup is not.
+    expect(source).toContain("onQueryChangeRef.current?.(query)");
+    expect(source).toContain("if (!open || disabled) return;");
+    // The empty slot's copy is the component's, not the page's.
+    expect(source).toContain("Searching…");
+    expect(remote).toContain("Searching…");
+
+    expect(text).toContain("## Remote options");
+    expect(text).toContain("onQueryChange");
+    expect(text).toContain("shouldFilter={false}");
+    expect(text).toContain("`loading`");
+    expect(text).toContain("Searching…");
+    // The retracted limit: the async list is the caller's, not a missing
+    // feature, and the page says where the division is taught.
+    expect(text).not.toContain("No async option loading");
+    expect(text).toContain("no fetch of its own");
   });
 
   it("hold the list's roving stop, its range and its disabled paint to the source", () => {
