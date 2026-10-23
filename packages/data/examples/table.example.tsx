@@ -19,6 +19,9 @@
  *   by the first painted row when nothing is chosen, so Tab reaches them before
  *   any press and a filter that releases a chosen record does not remove the
  *   stop the reader was standing on;
+ * - Enter or Space chooses the row that holds the stop, because a focusable
+ *   `div` has no activation of its own: the arrows walk, and a row the reader
+ *   Tabs into must be the one they can choose;
  * - the filter field narrows the set, and the controller releases a chosen
  *   record the narrower set hides;
  * - the header and every row read **one** column list (`columns.visible`) and
@@ -217,8 +220,14 @@ export const TableExample = () => {
   };
 
   const onRowKeyDown = (key: string) => (event: EventPayload) => {
-    if (event.key === "down") walk(key, 1);
-    if (event.key === "up") walk(key, -1);
+    // The grid's one tab stop is a row, so the keys a stop implies act on the
+    // row the reader is standing on. A focusable `div` has no activation of its
+    // own — only the pointer path runs `onClick` — so without this the row a
+    // reader Tabs into is the one record the keyboard cannot choose.
+    if (event.key === "enter" || event.key === "space")
+      table.press(key, event.modifiers);
+    else if (event.key === "down") walk(key, 1);
+    else if (event.key === "up") walk(key, -1);
   };
 
   // Focus follows the committed tab stop. `renderer.focusElement` refuses an

@@ -125,6 +125,12 @@ and reached no row — and a filter that released the chosen record then removed
 the stop the reader was standing on. The arrow walk moves the selection, which
 moves the stop with it.
 
+A focused row answers **Enter and Space**, which choose the record the reader is
+standing on (with the press's modifier flags, so Shift+Enter still extends a
+range). A focusable `div` has no activation of its own — only the pointer path
+runs `onClick` — so a walk that handled only the arrows left the row a reader
+Tabbed into as the one record the keyboard could not choose.
+
 A **checkbox column** is a fixed track at the head of the header and every row.
 The controller supplies the tri-state over the painted set, so the header cannot
 claim a record a filter hides:
