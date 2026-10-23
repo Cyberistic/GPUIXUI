@@ -506,6 +506,12 @@ describe("the tones the wash is painted on", () => {
     expect(design).toContain(`leaves ${under.length} of them under the floor`);
     expect(inventory).toContain(`all ${placements.length} placements`);
     expect(inventory).toContain(`leaves ${under.length} under the floor`);
+    expect(readme.replace(/\s+/g, " ")).toContain(
+      `all ${placements.length} placements`,
+    );
+    expect(readme.replace(/\s+/g, " ")).toContain(
+      `leaves ${under.length} under the floor`,
+    );
     expect(catalogue).toContain(
       `**${under.length} of the ${placements.length} under the floor`,
     );
