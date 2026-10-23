@@ -125,9 +125,11 @@ exit, below.
 A tip is the smallest floating surface, so it moves the smallest distance: a
 fade plus **2 px** along the side it is anchored to — a tip above its trigger
 starts 2 px lower and rises — over the house **fast** level (**160 ms**),
-entering with `easeOut` and leaving with `easeIn`. Both timings come from
-`@gpuixui/motion/timing` through the package's `core/presence.ts` seam, so a
-change to the house timing reaches the tip with no component change.
+entering with `easeOut` and leaving with `easeIn`. The frames, the hold window
+and the pointer rule are the published presence table
+(`@gpuixui/motion/presence`), and the package's `core/presence.ts` composes it
+for a tip; the timing reads the house levels from `@gpuixui/motion/timing`, so a
+change to either reaches the tip with no component change and no copy to update.
 
 **A dismissed tip is still painted while it leaves.** GPUix publishes no exit
 lifecycle — the runtime's content paints nothing once it closes — so the wrapper
@@ -215,7 +217,7 @@ surface that adds no shadow, which is why the preview draws none either.
 | `@gpuix/react/tooltip` | the anchored layer, the delay, Escape dismissal and the provider defaults |
 | `@gpuix/react` | the host style type |
 | `@gpuix/react/floating` | the `FloatingSide` / `FloatingAlign` types the placement props take |
-| `@gpuixui/motion` | the house timing the tip moves with, read through `core/presence.ts` |
+| `@gpuixui/motion` | the house presence table (frames, hold window, pointer rule) and the timing levels; `core/presence.ts` composes them for a tip |
 | `@gpuixui/motion/react` | the reduced-motion preference the wrapper reads; the `reducedMotion` prop still wins on a tip |
 | `@gpuixui/tw` | the `tooltipClass` recipe, compiled through `recipeTw` |
 | `@gpuixui/icons` | the trigger's glyph in the example, not the tip |

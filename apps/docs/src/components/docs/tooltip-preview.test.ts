@@ -26,6 +26,13 @@ import {
  * its tween and takes no presses while it leaves. That window and the travel it
  * fades from are read from the component and the presence seam the same way, so
  * a motion change upstream fails the page instead of leaving a stale paragraph.
+ *
+ * The rule itself is the motion package's: `packages/motion/src/presence.ts`
+ * owns the frames, the hold window and the pointer a leaving surface refuses,
+ * and the primitives module re-exports them rather than restating them. The
+ * case therefore reads the house table for the rule and the primitives seam for
+ * the re-export, so a move between the two packages fails here once instead of
+ * leaving a copy to drift.
  */
 
 const runtime = new URL(
@@ -47,6 +54,12 @@ const component = new URL(
 
 const presence = new URL(
   "../../../../../packages/primitives/src/core/presence.ts",
+  import.meta.url,
+);
+
+/** The house presence table the primitives seam re-exports its rule from. */
+const housePresence = new URL(
+  "../../../../../packages/motion/src/presence.ts",
   import.meta.url,
 );
 
@@ -284,6 +297,7 @@ describe("the tooltip preview", () => {
   it("reads the exit window and travel off the wrapper that paints them", () => {
     const source = read(component);
     const seam = read(presence);
+    const house = read(housePresence);
 
     // The travel is the tip's own, the timing and the window are the seam's.
     // The preference is the provider's; the prop is the per-tip answer, so the
@@ -297,12 +311,14 @@ describe("the tooltip preview", () => {
     expect(source).toContain(
       "fadeFromAnchor(side, TOOLTIP_OFFSET), wanted, timing",
     );
-    expect(seam).toContain('pointerEvents: present ? "auto" : "none"');
-    expect(seam).toContain(
-      'motionTiming("fast", { phase: "exit", preference })',
+    // The rule lives in the motion package; the primitives seam publishes it.
+    expect(house).toContain('pointerEvents: present ? "auto" : "none"');
+    expect(house).toContain(
+      'motionTiming(level, { phase: "exit", preference })',
     );
-    expect(seam).toContain("timing.exit.duration");
-    expect(seam).toContain("timing.exit.delay");
+    expect(house).toContain("transitionWindowMs(timing.exit)");
+    expect(seam).toContain("presenceStyle");
+    expect(seam).toContain("surfaceTiming");
     expect(read(motionTiming)).toContain("fast: 160");
 
     // The preview's own numbers are the seam's.
