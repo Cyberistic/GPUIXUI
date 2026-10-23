@@ -3543,6 +3543,105 @@ describe("docs/gpuix-capabilities.md", () => {
     );
   });
 
+  it("records the advances a registered face paints, derived from its fixture", () => {
+    // A font is only provable from its **metrics**: an unknown family falls back
+    // silently, so a consumer's own typeface either paints its own advances or
+    // the application ships the system face. The probe's fixture declares the
+    // face's ems, and the README prints the widths the window read; holding the
+    // two together means the record cannot quote a measurement the file no
+    // longer produces.
+    const fixture = read("apps/playground/src/live/fonts.ts");
+    const readme = read("apps/playground/README.md");
+    const section = (heading: string): string => {
+      const start = readme.indexOf(heading);
+      const end = readme.indexOf("\n### ", start + 1);
+      return start === -1
+        ? ""
+        : readme.slice(start, end === -1 ? undefined : end);
+    };
+    const rowCells = (source: string, sample: string): ReadonlyArray<string> =>
+      (new RegExp(`\\| \`${sample}\`[^\\n]*`).exec(source)?.[0] ?? "")
+        .replace(/^\|/, "")
+        .replace(/\|$/, "")
+        .split("|")
+        .map((cell) => cell.trim());
+    const firstWidth = (cell: string): number =>
+      Number(/\*{0,2}(\d+)px/.exec(cell)?.[1] ?? Number.NaN);
+
+    const ems = [...fixture.matchAll(/\{ char: "[A-Za-z]", em: (\d+) \}/g)].map(
+      (match) => Number(match[1] ?? Number.NaN),
+    );
+    const size = Number(
+      /export const SQUARE_SIZE = (\d+);/.exec(fixture)?.[1] ?? Number.NaN,
+    );
+    const installed = ems.reduce((total, em) => total + em, 0) * size;
+
+    const registered = section("### `register-font` — measured");
+    const late = section("### `font-registration-late` — measured");
+    const themeFace = firstWidth(rowCells(registered, "face-default")[2] ?? "");
+    const missingFace = firstWidth(
+      rowCells(registered, "face-missing")[2] ?? "",
+    );
+    const installedFace = firstWidth(
+      rowCells(registered, "face-registered")[2] ?? "",
+    );
+    const lateFace = [
+      firstWidth(rowCells(late, "late-face")[1] ?? ""),
+      firstWidth(rowCells(late, "late-face")[2] ?? ""),
+    ];
+    const lateControl = [
+      firstWidth(rowCells(late, "late-control")[1] ?? ""),
+      firstWidth(rowCells(late, "late-control")[2] ?? ""),
+    ];
+
+    // The premise: the README's installed width is the fixture's own arithmetic,
+    // and the fallback faces are not it.
+    expect(size).toBe(20);
+    expect(ems).toEqual([1, 2, 1]);
+    expect(installed).toBe(80);
+    expect(installedFace).toBe(installed);
+    expect(missingFace).not.toBe(installed);
+    expect(lateFace).toEqual([44, installed + 1]);
+    expect(lateControl).toEqual([44, 44]);
+
+    const row = rowFor("Custom fonts");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("register-font");
+    expect(row?.evidence).toContain("font-registration-late");
+    [themeFace, missingFace, installed, lateFace[0], lateFace[1]].forEach(
+      (value) => expect(row?.evidence).toContain(`**${value}**`),
+    );
+    expect(row?.evidence).toContain("silent fallback");
+    expect(row?.workaround).toContain("fallback frame");
+
+    const page = measuredRow("Custom fonts");
+    expect(
+      page,
+      "the page's measured table has no custom-fonts row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("register-font");
+    expect(page?.[1]).toContain("font-registration-late");
+    [themeFace, missingFace, installed, lateFace[0], lateFace[1]].forEach(
+      (value) => expect(page?.[1]).toContain(`**${value}**`),
+    );
+
+    const known = registeredProbes();
+    expect([...known], "the register probe is not registered").toContain(
+      "register-font",
+    );
+    expect([...known], "the late probe is not registered").toContain(
+      "font-registration-late",
+    );
+    const owing = doc.slice(doc.indexOf("## 5. Keeping this document true"));
+    expect(
+      owing,
+      "the record's §5 owes no line for the register probe",
+    ).toContain("register-font");
+    expect(owing, "the record's §5 owes no line for the late probe").toContain(
+      "font-registration-late",
+    );
+  });
+
   it("records the geometry `motion` animates and the content it clips", () => {
     // Two inventory rows rest on this — Tier 3's expandable rows and Tier 4's
     // collapsible sidebars — and neither had a window measurement, because a
