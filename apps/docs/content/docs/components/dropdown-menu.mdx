@@ -164,6 +164,7 @@ action row's `disabled`, `tone`, `leading`, `trailing`, `textValue` and `style`.
 | ---- | ---- | ------- |
 | `value` | `string` (required, group) | none — the choice the group marks |
 | `onValueChange` | `(value: string) => void` (required, group) | none — reports the chosen row's value |
+| `label` | `string` | none — the choice's accessible name |
 | `className` | `string` | none — compiled through `@gpuixui/tw` |
 | `value` | `string` (required, row) | none — this row's value in the group |
 
@@ -173,13 +174,19 @@ a checkbox row, which stays open so several settings are visited in one visit. A
 radio row takes the action row's `disabled`, `leading`, `trailing`, `textValue`
 and `style`, whose function sees `{ checked, disabled, highlighted }`.
 
+`label` is what a reader hears on entering the group, and the visible
+`DropdownMenuLabel` above the rows is not a substitute: `@gpuix/native@0.11.0`
+has no `aria-labelledby`, so a painted caption names nothing. A group without
+`label` is announced as an unnamed group.
+
 ### The rest of the family
 
 `DropdownMenuSub`, `DropdownMenuSubTrigger` and `DropdownMenuSubContent` make one
 secondary level; the sub-content takes the root surface's placement props
 (`side`, `align`, `sideOffset`, `collisionPadding`, `alignOffset`).
-`DropdownMenuGroup`, `DropdownMenuLabel` and `DropdownMenuSeparator` structure
-the rows and take only `children`.
+`DropdownMenuLabel` and `DropdownMenuSeparator` take only `children`, and
+`DropdownMenuGroup` takes `label` — the group's accessible name, for the same
+reason a radio group does: the painted label beside its rows does not name it.
 
 ## Theming
 
@@ -233,7 +240,7 @@ dialog** when the action cannot be undone.
 
 ## Status
 
-`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 41 native
+`done`, with the runtime support marked `partial` in `COMPONENTS.md`: 42 native
 behaviour tests, both themes. The runtime publishes no `aria-haspopup`,
 `aria-checked` or `aria-activedescendant`, so the component reports the checked
 row state through `aria-selected` and links trigger to surface positionally. A

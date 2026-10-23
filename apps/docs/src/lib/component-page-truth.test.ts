@@ -2922,6 +2922,60 @@ const apiSection = (text: string): string => {
   return end === -1 ? rest : rest.slice(0, end);
 };
 
+describe("the menu group's name", () => {
+  it("is the prop both curated menu pages document, read from the group source", () => {
+    // `MenuGroup` and `MenuRadioGroup` each take `label` — the group's
+    // accessible name — because 0.11.0 has no `aria-labelledby`: a painted
+    // `MenuLabel` above the rows names nothing, so a group without it is
+    // announced unnamed. Both curated menu pages reproduced the group tables
+    // and stopped at `className`, while the package pages the curated pages
+    // displace teach the prop — so on this site the one prop that names a
+    // choice was documented nowhere a reader could reach. The prop is read
+    // from the menu source, and each page is held by the block that documents
+    // the part, so a `label` written for the surface cannot satisfy the group.
+    const item = read("packages/components/src/menu/item.tsx");
+    const propsBlock = (name: string): string => {
+      const start = item.indexOf(`export interface ${name}`);
+      return start === -1 ? "" : item.slice(start, item.indexOf("\n}", start));
+    };
+
+    expect(propsBlock("MenuRadioGroupProps")).toContain(
+      "readonly label?: string;",
+    );
+    expect(propsBlock("MenuGroupProps")).toContain("readonly label?: string;");
+    expect(item).toContain('role="group"');
+    expect(item).toContain("aria-label={label}");
+
+    const gaps = ["dropdown-menu.mdx", "context-menu.mdx"].flatMap((file) => {
+      const page = pages.find((candidate) => candidate.file === file);
+      expect(page, `the ${file} page is not in the curated set`).toBeDefined();
+      if (page === undefined) return [];
+      const api = apiSection(body(page));
+      const blocks = api.split(/\n\s*\n/);
+      // The radio group's own table, and the block that names a group without
+      // naming a radio group.
+      // The heading is its own block, so the table that follows it is read
+      // beside it.
+      const at = blocks.findIndex((block) => block.includes("RadioGroup"));
+      const radioBlock =
+        at === -1 ? undefined : blocks.slice(at, at + 3).join("\n");
+      const groupBlocks = blocks.filter(
+        (block) => block.includes("Group") && !block.includes("RadioGroup"),
+      );
+      return [
+        ...(radioBlock !== undefined && radioBlock.includes("`label`")
+          ? []
+          : [`${file}: the radio group's table does not document \`label\``]),
+        ...(groupBlocks.some((block) => block.includes("`label`"))
+          ? []
+          : [`${file}: the group part does not document \`label\``]),
+      ];
+    });
+
+    expect(gaps).toEqual([]);
+  });
+});
+
 describe("the page a curated page displaces", () => {
   it("names exactly the package pages whose URL the curated folder takes", () => {
     // The site serves one page per URL, so a curated page whose name matches a

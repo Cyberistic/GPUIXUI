@@ -221,6 +221,7 @@ can switch more than one.
 | ---- | ---- | ------- | ----------- |
 | `value` | `string` | none | the chosen row's value (required on the group) |
 | `onValueChange` | `(value: string) => void` | none | reported with a row's value when it is chosen, never the current one (required) |
+| `label` | `string` | none | the choice's accessible name; a painted `ContextMenuLabel` does not name the group |
 | `className` | `string` | none | compiled through `@gpuixui/tw`, joined after the recipe |
 | `value` | `string` | none | this row's value inside the group (required on `ContextMenuRadioItem`) |
 | `disabled` / `leading` / `trailing` / `textValue` | as the action row | — | the row's own slots and type-ahead key |
@@ -229,10 +230,25 @@ The group is controlled and owns the value — the menu unmounts on close — an
 choosing a row reports its value and closes the menu. A radio row's `style` sees
 `{ checked, disabled, highlighted }`.
 
+```tsx
+<ContextMenuRadioGroup value={groupBy} onValueChange={setGroupBy} label="Group by">
+  <ContextMenuLabel>Group by</ContextMenuLabel>
+  <ContextMenuRadioItem value="none">None</ContextMenuRadioItem>
+  <ContextMenuRadioItem value="type">Type</ContextMenuRadioItem>
+</ContextMenuRadioGroup>;
+```
+
+The visible `ContextMenuLabel` is painted text; `label` on the group is what a
+reader hears on entering it, because `@gpuix/native@0.11.0` has no
+`aria-labelledby`.
+
 ### `ContextMenuSeparator`, `ContextMenuLabel`, `ContextMenuGroup`
 
 The structure parts take `children` and `className` and no required prop. The
-separator is a hairline, the label a muted caption, the group a labelled stack.
+separator is a hairline, the label a muted caption, and the group a labelled
+stack: `ContextMenuGroup` takes `label`, the name a reader hears on entering it,
+because `@gpuix/native@0.11.0` has no `aria-labelledby` for the caption it paints
+beside its rows.
 
 ### `ContextMenuSub`, `ContextMenuSubTrigger`, `ContextMenuSubContent`
 
