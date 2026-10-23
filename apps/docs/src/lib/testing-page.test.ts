@@ -424,9 +424,12 @@ describe("the testing page", () => {
     // scoped run cannot claim a total it never measured. The three source
     // claims are the ones the page's bullets paraphrase.
     expect(smoke).toContain("export const capabilityStatuses = (");
+    // A probe is compared by its **id**: repeating one entry in the registry
+    // cannot stand in for a probe that did not run.
     expect(smoke).toContain(
-      'Arr.length(ran) === count ? "verified" : "unverified"',
+      "HashSet.fromIterable(Arr.map(entries, (e) => e.id))",
     );
+    expect(smoke).toContain("HashSet.size(idsOf(ran)) === count");
     expect(smoke).toContain(
       "if (Arr.length(ran) === 0) return Option.none<CapabilityResult>();",
     );
@@ -434,8 +437,10 @@ describe("the testing page", () => {
     const section = reportSection();
     expect(section, "the page has no report section").not.toBe("");
     expect(section).toContain(
-      "every scenario the registry declares for that capability",
+      "every **probe** the registry declares for that capability",
     );
+    expect(section).toContain("A probe is its **id**");
+    expect(section).toContain("repeating one cannot stand in for another");
     expect(section).toContain("**sampled**");
     expect(section).toContain("no line at all");
     expect(section).toContain("never touched the capability");

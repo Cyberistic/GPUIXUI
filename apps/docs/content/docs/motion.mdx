@@ -303,6 +303,15 @@ standstill. `project({ tau: NaN, min: null, max: 10 }, 0, 100)` is `10`, and
 answered `NaN` from both, so a `MotionValue` coasting on one painted `NaN` into
 its target and never reported `complete`.
 
+**A declaration that is not there is the house coast.** Because the interface is
+structural, a config decoded from storage can reach `project`, `sampleInertia`,
+`sameInertia` or a `MotionValue`'s coast as `null` or `undefined`. Reading a
+field off nothing threw a `TypeError` out of a render — a `useInertia` projects
+its resting frame before it samples — instead of coasting. An absent declaration
+is therefore read as `{}`: the house 350 ms with no bounds, the answer every
+unreadable field already gets. `sameInertia` compares two declarations by those
+repaired values, so a stored `null` is the same coast as `inertia(350)`.
+
 **An unrepresentable rest is no journey either.** `position + velocity × tau`
 can overflow — the largest finite numbers are still numbers the arithmetic will
 multiply past — and `Infinity` is not a frame: the runtime paints a non-finite

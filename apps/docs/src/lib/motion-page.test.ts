@@ -205,7 +205,7 @@ describe("the motion page", () => {
     // two declarations by the physics a sample reads; the samplers in
     // `inertia.ts` call them, which the loop below proves.
     expect(inertiaRead).toContain(
-      "export const tauOf = (tau: number): number =>",
+      "export const tauOf = (tau: number | undefined): number =>",
     );
     expect(inertiaRead).toContain(
       "export const boundsOf = (min: number | null, max: number | null): Bounds =>",
@@ -215,15 +215,14 @@ describe("the motion page", () => {
     );
 
     // Both samplers repair the value they are handed, so neither can rely on
-    // `inertia()` having done it.
+    // `inertia()` having done it. The repair itself is `inertiaOf`'s — the
+    // absent-declaration case below holds its fields.
     ["project", "sampleInertia"].forEach((name) => {
       const body = declaration(inertia, name);
-      expect(body, `${name} no longer reads its own time constant`).toContain(
-        "tauOf(inertia.tau)",
-      );
-      expect(body, `${name} no longer reads its own bounds`).toContain(
-        "boundsOf(inertia.min, inertia.max)",
-      );
+      expect(
+        body,
+        `${name} no longer reads the repaired declaration`,
+      ).toContain("inertiaOf(inertia)");
     });
 
     expect(timeline).toContain(
@@ -235,11 +234,11 @@ describe("the motion page", () => {
     // The drop happens in the sample, so a list built without `keyframe()` is
     // repaired the same way, and a `Sequence` step is repaired on insertion.
     expect(timeline).toContain("const stops = stopsOf(frames);");
-    expect(timeline).toContain("startMs: finiteOr(startMs, 0)");
+    expect(timeline).toContain("const start = finiteOr(startMs, 0);");
     // The duration repair's helper is the package's choice — a step whose
     // duration it cannot read is repaired either way — so the guard reads the
     // rule rather than the helper's name.
-    expect(timeline).toMatch(/durationMs: \w+\(durationMs/);
+    expect(timeline).toContain("durationMs: endOf(start, durationMs),");
     expect(timeline).toContain(
       "Number.isFinite(stepMs) && stepMs > 0 ? stepMs : 0",
     );
@@ -305,6 +304,63 @@ describe("the motion page", () => {
     );
     expect(pageText).toContain(
       "`project(inertia(1_000), 1e308, 1e308)` stays `1e308`",
+    );
+  });
+
+  it("reads an absent inertia declaration as the house coast", () => {
+    // `Inertia` is structural, so a config decoded from storage can reach a
+    // sampler as `null`/`undefined`. Reading the fields off nothing threw a
+    // `TypeError` out of a render — a `useInertia` projects its resting frame
+    // before it samples — instead of coasting, so the repair sits beside the
+    // per-field ones: `inertiaOf` reads an absent declaration as `{}`, and both
+    // samplers and the retained value read through it.
+    const declarationOf = (source: string, name: string): string => {
+      const start = source.indexOf(`export const ${name} = (`);
+      const end = source.indexOf("\nexport ", start + 1);
+      return start === -1
+        ? ""
+        : source.slice(start, end === -1 ? undefined : end);
+    };
+
+    expect(inertiaRead).toContain(
+      "export const inertiaOf = (fields: Inertia | null | undefined): Inertia =>",
+    );
+    expect(declarationOf(inertiaRead, "inertiaOf")).toContain(
+      "tauOf(fields?.tau)",
+    );
+    expect(declarationOf(inertiaRead, "inertiaOf")).toContain(
+      "boundsOf(fields?.min ?? null, fields?.max ?? null)",
+    );
+    expect(inertiaRead).toContain(
+      "export const sameInertia = (left: Inertia, right: Inertia): boolean =>",
+    );
+    expect(declarationOf(inertiaRead, "sameInertia")).toContain(
+      "inertiaOf(left)",
+    );
+    expect(declarationOf(inertiaRead, "sameInertia")).toContain(
+      "inertiaOf(right)",
+    );
+
+    // Both samplers read the repaired declaration, so an absent one cannot
+    // reach a formula as `null`.
+    ["project", "sampleInertia"].forEach((name) => {
+      expect(
+        declarationOf(inertia, name),
+        `${name} no longer reads the repaired declaration`,
+      ).toContain("inertiaOf(inertia)");
+    });
+    // The retained value compares a new declaration with the one it holds
+    // through the same repair, so a stored `null` is the house coast.
+    expect(motion).toContain("sameInertia(this.mode.inertia, inertia)");
+
+    expect(pageText).toContain(
+      "**A declaration that is not there is the house coast.**",
+    );
+    expect(pageText).toContain(
+      "`sameInertia` compares two declarations by those repaired values",
+    );
+    expect(pageText).toContain(
+      "a stored `null` is the same coast as `inertia(350)`",
     );
   });
 
@@ -454,20 +510,22 @@ describe("the motion page", () => {
     expect(timeline).toContain(
       "Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0",
     );
-    expect(timeline).toContain("durationMs: durationOf(durationMs),");
+    expect(timeline).toContain("durationMs: endOf(start, durationMs),");
     expect(timeline).toContain("Math.max(max, step.startMs + step.durationMs)");
 
     expect(timeline).toContain("const staggerDelay = (");
     expect(timeline).toContain(
-      "(Number.isFinite(stepMs) && stepMs > 0 ? stepMs : 0) * distance;",
+      "const step = Number.isFinite(stepMs) && stepMs > 0 ? stepMs : 0;",
     );
+    expect(timeline).toContain("const delay = step * distance;");
+    expect(timeline).toContain("return Number.isFinite(delay) ? delay : 0;");
     expect(timeline).toContain(
       "): number => staggerDelay(stepMs, index, count, from);",
     );
     // The sequence's own group answers the same way, so a member cannot start
     // before the sequence does.
     expect(timeline).toContain(
-      'startMs + staggerDelay(stepMs, index, count, "start"),',
+      'placedAt(start, staggerDelay(stepMs, index, count, "start")),',
     );
 
     expect(pageText).toContain(

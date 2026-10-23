@@ -259,8 +259,9 @@ one `ScenarioResult` per scenario and one `CapabilityResult` per capability. The
 verdict comes from the registry the run selected out of, not from the scenarios
 it happened to be handed:
 
-- `verified` — every scenario the registry declares for that capability **ran**
-  and passed.
+- `verified` — every **probe** the registry declares for that capability **ran**
+  and passed. A probe is its **id**, so two entries naming one id declare one
+  probe and repeating one cannot stand in for another.
 - `failed` — one of them ran and did not pass.
 - `unverified` — the run only **sampled** the capability. A `--only` run is the
   normal case: one probe passing says nothing about the probes it did not run.
@@ -407,8 +408,9 @@ computed halfway through the fold.
   `keyDown`, `keyUp`, `registerFont` and `pixels` are window facts. A probe that
   needs both is two probes.
 - **A check is evidence of what ran.** `verified` never means "should work": it
-  means every scenario the registry declares for that capability ran and passed
-  on the host in this run, so a scoped `--only` run reports the capability it
+  means every probe the registry declares for that capability ran and passed
+  on the host in this run — a probe is its **id**, so a repeated entry declares
+  one probe — and a scoped `--only` run reports the capability it
   sampled as `unverified`. The verdicts behind this site are on
   [Runtime](/docs/runtime), and the probes themselves are listed in
   `apps/playground/README.md`.
