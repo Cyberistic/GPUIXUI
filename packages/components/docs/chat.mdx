@@ -51,6 +51,13 @@ ChatRoot
 | `ChatMessages` | the transcript viewport and empty panel | `empty?`, `emptyTitle?`, `emptyDescription?` |
 | `ChatComposer` | a field and its Send/Stop control | `value?`, `defaultValue?`, `onValueChange?`, `label?`, `placeholder?`, `hint?`, `disabled?` |
 
+## While a reply is open
+
+Send becomes Stop, and `Enter` is refused by the same machine rule that hides
+Send — `chatMove(status, "submit")` emits nothing while `submitting` or
+`streaming`. A refused send keeps the draft in the field, so the words nobody
+received are not cleared and the reader can send them when the reply ends.
+
 ## Limitations
 
 - The transport is yours; the component never calls a model.

@@ -6844,6 +6844,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
     pair they are 25/25. `docs/advanced-filter.mdx` §How a comparison reads a
     value, the README's §The data surfaces, the builder's header and the
     Advanced filtering row state the rule. Owner: data.
+  - [x] Announce the **information surfaces' own words** — `KeyValue`, `StatCard`,
+    `PropertyPanel`'s title and the advanced filter's title, sentence and
+    combinator painted `div`s holding strings, and GPUix reaches its tree only
+    through an element that carries a role: measured in a window, a tree holding
+    a key-value list and a statistic card reported **one** node, the `Window`,
+    so an inspector's labels, every value and a metric's reading were silent
+    beside the controls that were announced. A primitive value now paints as a
+    `<text>` run (`internal/readable.tsx`), the key-value list is a named
+    `List` of `ListItem`s, the statistic card is a `Group` named by the caller's
+    `aria-label`, and both titles are level-3 headings. `behaviour/surface-a11y.test.tsx`
+    (4 cases) renders each surface in the real renderer and requires the roles,
+    names and `Label` values. Directions measured: before the fix all four fail
+    by name (`the tree has no List node`, `no Group node`, `no Heading node` ×2);
+    with it behaviour 12 files / 86 tests and unit 17 files / 139 tests green.
+    `docs/{key-value,stat-card,property-panel,advanced-filter}.mdx` gain
+    §Accessibility and the four inventory rows state the shape. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid

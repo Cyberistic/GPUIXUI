@@ -341,7 +341,9 @@ export interface ChatComposerProps extends Omit<
 
 /**
  * The message field: Enter sends, Shift+Enter opens a new line, and the stop
- * control replaces Send while a reply is open.
+ * control replaces Send while a reply is open. A send the machine refuses — a
+ * reply already open — leaves the draft where it is, so words nobody received
+ * are never cleared.
  */
 export const ChatComposer = ({
   value: valueProp,
@@ -370,8 +372,9 @@ export const ChatComposer = ({
   const empty = draft.trim() === "";
   const state: ChatComposerState = { status, busy, empty, disabled };
   // The machine is the one authority on whether a send is allowed: while a
-  // reply is open it refuses the submit, and the control is Stop instead.
-  const canSend = !empty && !disabled;
+  // reply is open it refuses the submit, and the control is Stop instead. A
+  // refused send leaves the draft alone — nobody received those words.
+  const canSend = !empty && !disabled && Machine.canChatSubmit(status);
 
   const send = (): void => {
     if (!canSend) return;

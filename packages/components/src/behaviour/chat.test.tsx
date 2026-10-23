@@ -200,7 +200,7 @@ describe("Chat", () => {
     root.unmount();
   });
 
-  it("refuses a send while a reply is open", () => {
+  it("refuses a send while a reply is open, and keeps the draft it refused", () => {
     const onSubmit = vi.fn();
     const root = renderComponent(
       <Conversation
@@ -215,6 +215,18 @@ describe("Chat", () => {
     root.renderer.simulateKeystrokes("enter");
 
     expect(onSubmit).not.toHaveBeenCalled();
+    // The machine refuses the submit, so the reader's words must survive it:
+    // clearing a draft nobody received is how a message disappears.
+    expect(root.renderer.findByTestId("chat-field")?.customProps?.value).toBe(
+      "queued",
+    );
+
+    // The same draft is what the next accepted send carries.
+    root.rerender(
+      <Conversation rows={1} onSubmit={onSubmit} onStop={() => undefined} />,
+    );
+    root.renderer.simulateKeystrokes("enter");
+    expect(onSubmit).toHaveBeenCalledWith("queued");
 
     root.unmount();
   });
