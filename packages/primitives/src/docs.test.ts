@@ -1002,6 +1002,104 @@ describe("the primitives docs page contract", () => {
     expect(painter).toContain("Arr.reverse(flattenParts(children))");
   });
 
+  it("cites the window that painted the vertical slider", () => {
+    // Bug guarded: the shadcn-brief rewrite dropped the pages' probe citation —
+    // and this guard with it — so the vertical axis read as the headless
+    // renderer's claim alone even though `slider-vertical-lifecycle` had painted
+    // it in a real window. A plan could reimplement what is already proved, and
+    // `TODO.md` still recorded the citation as landed. The citation must name
+    // the probe and the headless suite, print the geometry the probe measured,
+    // and resolve: the id is read out of the playground's registry and the
+    // track's length out of the fixture, so a renamed or deleted probe cannot
+    // read as evidence.
+    const registry = readFileSync(
+      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
+      "utf8",
+    );
+    const fixture = readFileSync(
+      fileURLToPath(
+        new URL("apps/playground/src/live/vertical-slider.ts", repoRoot),
+      ),
+      "utf8",
+    );
+    const record = readFileSync(
+      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
+      "utf8",
+    );
+    const height = Option.getOrElse(
+      Option.map(
+        Option.fromNullishOr(
+          /VERTICAL_SLIDER_HEIGHT = (\d+);/.exec(fixture)?.[1],
+        ),
+        Number.parseFloat,
+      ),
+      () => Number.NaN,
+    );
+    // The probe's geometry is the theme's arithmetic: the caller's length, the
+    // control's own height as the width, and half a thumb reserved at each end.
+    const track = `${lightTheme.density.controlHeight.md} × ${height}`;
+    const rail = `${lightTheme.spacing.xs} × ${
+      height - lightTheme.iconSize.md
+    }`;
+    /** The probe's own record, up to the next probe section. */
+    const probeRecord = (source: string): string => {
+      const heading = "### `slider-vertical-lifecycle`";
+      const start = source.indexOf(heading);
+      if (start < 0) return "";
+      const rest = source.slice(start + heading.length);
+      const end = rest.indexOf("\n### ");
+      return end < 0 ? rest : rest.slice(0, end);
+    };
+    const measured = probeRecord(record);
+    const api = (page: string): string =>
+      Option.getOrElse(bodyOf(read(page), "API"), () => "");
+    const cites = (page: string): boolean =>
+      api(page).includes("`slider-vertical-lifecycle`") &&
+      api(page).includes("`runtime/value.runtime.test.tsx`") &&
+      api(page).includes("holds the arithmetic") &&
+      api(page).includes("holds the paint");
+    const prints = (page: string, values: ReadonlyArray<string>): boolean =>
+      Arr.every(values, (value) => api(page).includes(value));
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      "utf8",
+    );
+    const row = (label: string): string =>
+      Option.getOrElse(
+        Arr.findFirst(catalogue.split("\n"), (line) =>
+          Str.startsWith(`| ${label} |`)(line),
+        ),
+        () => "",
+      );
+
+    expect({
+      registered: registry.includes('id: "slider-vertical-lifecycle"'),
+      fixture:
+        fixture.includes("thumbCentreAt") && fixture.includes("inkBounds"),
+      length: Number.isFinite(height) && height > 0,
+      recorded: measured.includes(track) && measured.includes(rail),
+      slider: {
+        cites: cites("slider.mdx"),
+        prints: prints("slider.mdx", [track, rail, "240", "148", "194", "56"]),
+      },
+      range: {
+        cites: cites("range-slider.mdx"),
+        prints: prints("range-slider.mdx", ["50-90", "25-90", "194", "74.5"]),
+      },
+      sliderRow: row("Slider").includes("`slider-vertical-lifecycle`"),
+      rangeRow: row("Range slider").includes("`slider-vertical-lifecycle`"),
+    }).toEqual({
+      registered: true,
+      fixture: true,
+      length: true,
+      recorded: true,
+      slider: { cites: true, prints: true },
+      range: { cites: true, prints: true },
+      sliderRow: true,
+      rangeRow: true,
+    });
+  });
+
   it("names only package paths that exist", () => {
     // Bug guarded: ScrollArea's limitations handed the virtual-list work to a
     // `data-grid` package "when it lands" — a directory this workspace has

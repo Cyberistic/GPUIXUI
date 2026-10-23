@@ -58,6 +58,12 @@ const [quality, setQuality] = useState(62);
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the slider's own; the press and keys reach the track |
 | `testId` | `string` | — | stable locator for the track |
 
+The vertical axis is measured in a real window: `slider-vertical-lifecycle`
+paints a **32 × 200** track (its width is `density.controlHeight.md`) with a
+**4 × 184** rail, and the thumb's ink sits at **240**, **148**, **194** and
+**56** for 0, 50, 25 and 100. The headless `runtime/value.runtime.test.tsx`
+holds the arithmetic; the probe holds the paint and the runtime's pointer path.
+
 ## Limitations
 
 - No `aria-valuenow`/`min`/`max`: the value is announced as `aria-valuetext`.

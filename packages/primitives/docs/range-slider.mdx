@@ -68,6 +68,12 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the range's own; keys land on a thumb |
 | `testId` | `string` | — | stable locator for the track |
 
+The vertical range is measured in the same window: `slider-vertical-lifecycle`
+moves the nearer end of a `10-90` pair to `50-90` by a press at the centre and
+to `25-90` by a drag to the quarter, the other end staying and the two thumbs'
+ink at **194** and **74.5**. The headless `runtime/value.runtime.test.tsx`
+holds the arithmetic; the probe holds the paint and the runtime's pointer path.
+
 ## Limitations
 
 - No `aria-valuenow`/`min`/`max`: each thumb announces its value as
