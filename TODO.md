@@ -8964,7 +8964,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
     probe can read it. `src/behaviour/chart.test.tsx`'s `lays out the default
     plot when a computed size cannot paint` adds the axis column's style and
     measured height beside the plot's: with the raw prop it fails
-    `expected undefined to be 160`, and with the box it is 111 behaviour cases
+    `expected undefined to be 160`, and with the box the behaviour suite is
     green. `docs/charts.mdx` §Sizing/§API, the README's chart paragraph and the
     Tier 3 Charts row state the axis height and the id. Owner: data.
   - [x] Hold a **key-value list's two columns when a computed width cannot

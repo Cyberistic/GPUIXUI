@@ -33,6 +33,7 @@ import {
   type DataTestRoot,
 } from "../internal/test-root.js";
 import { AdvancedFilter } from "../surfaces/advanced-filter.js";
+import { DEFAULT_LABEL_WIDTH, KeyValue } from "../surfaces/key-value.js";
 import type { FilterTree } from "../surfaces/logic.js";
 
 let root: DataTestRoot | undefined;
@@ -82,6 +83,36 @@ describe("the data surfaces", () => {
     // the list scans down two columns instead of drifting row by row.
     expect(heightValue.x).toBe(widthValue.x);
     expect(widthValue.x).toBeGreaterThan(widthLabel.x + widthLabel.width);
+  });
+
+  it("holds the label column when a computed width cannot paint", () => {
+    // The width is a measurement of the words the column holds, and a
+    // measurement taken before the first layout is often `NaN`. A `width: NaN`
+    // is dropped by the runtime, so the label track fell back to each label's
+    // own text width and every value began somewhere else — the one rule the
+    // list exists for, broken by the size a caller computed.
+    root = renderData(
+      <KeyValue
+        testId="measured"
+        labelWidth={Number.NaN}
+        valueWidth={Number.POSITIVE_INFINITY}
+        entries={[
+          { key: "short", label: "A", value: "one" },
+          { key: "long", label: "A longer label", value: "two" },
+        ]}
+      />,
+    );
+    settle(root);
+
+    const shortLabel = requireBounds(root, "measured-label-short");
+    const longLabel = requireBounds(root, "measured-label-long");
+    const shortValue = requireBounds(root, "measured-value-short");
+    const longValue = requireBounds(root, "measured-value-long");
+
+    expect(longLabel.x).toBe(shortLabel.x);
+    expect(longLabel.width).toBe(DEFAULT_LABEL_WIDTH);
+    expect(shortValue.x).toBeGreaterThan(shortLabel.x + DEFAULT_LABEL_WIDTH);
+    expect(longValue.x).toBe(shortValue.x);
   });
 
   it("reads the statistic card from the object, so a width action moves it", () => {

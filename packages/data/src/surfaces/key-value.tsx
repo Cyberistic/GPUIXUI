@@ -62,6 +62,13 @@ export const DEFAULT_LABEL_WIDTH = 120;
  *
  * The label column is fixed, so every value begins at the same `x` — the
  * measured rule that lets a reader scan the column instead of the rows.
+ *
+ * A width is often computed — the widest label, a share of a pane, a measurement
+ * taken before the first layout — and a track the layout cannot paint reads as
+ * the default: `NaN` is dropped by the runtime, so the label column fell back to
+ * each label's own text width and every value started somewhere else. A label
+ * width that cannot paint is {@link DEFAULT_LABEL_WIDTH}; a `valueWidth` that
+ * cannot paint fills the row like an omitted one. A fractional width is kept.
  */
 export const KeyValue = ({
   entries,
@@ -73,6 +80,14 @@ export const KeyValue = ({
   ...rest
 }: KeyValueProps) => {
   const theme = useTheme();
+  const labelTrack =
+    Number.isFinite(labelWidth) && labelWidth > 0
+      ? labelWidth
+      : DEFAULT_LABEL_WIDTH;
+  const valueTrack =
+    valueWidth !== undefined && Number.isFinite(valueWidth) && valueWidth > 0
+      ? valueWidth
+      : undefined;
   return (
     <div
       {...rest}
@@ -97,10 +112,10 @@ export const KeyValue = ({
             }
             style={{
               ...recipeStyle(KEY_VALUE_LABEL, theme),
-              width: labelWidth,
+              width: labelTrack,
               flexGrow: 0,
               flexShrink: 0,
-              flexBasis: labelWidth,
+              flexBasis: labelTrack,
             }}
           >
             {entry.label}
@@ -110,13 +125,13 @@ export const KeyValue = ({
               testId === undefined ? undefined : `${testId}-value-${entry.key}`,
             style: {
               ...recipeStyle(KEY_VALUE_VALUE, theme),
-              ...(valueWidth === undefined
+              ...(valueTrack === undefined
                 ? { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 }
                 : {
-                    width: valueWidth,
+                    width: valueTrack,
                     flexGrow: 0,
                     flexShrink: 0,
-                    flexBasis: valueWidth,
+                    flexBasis: valueTrack,
                   }),
             },
           })}

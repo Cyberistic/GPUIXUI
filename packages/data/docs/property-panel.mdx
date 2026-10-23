@@ -26,7 +26,7 @@ import { PropertyPanel } from "@gpuixui/data";
 | ---- | ---- | ------- | ----------- |
 | `title` | `string` | — | the panel's header |
 | `rows` | `PropertyRow[]` | — | the rows, in the order they paint |
-| `labelWidth` | `number` | `120` | the label column's width, in pixels |
+| `labelWidth` | `number` | `120` | the label column's width; one the layout cannot paint reads as `120` (the key-value list's rule) |
 
 A read-only row is `{ kind: "readonly", key, label, value }`; an editable row is
 `{ kind: "editable", key, label, value, onChange }`.

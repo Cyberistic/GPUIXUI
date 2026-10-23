@@ -24,8 +24,8 @@ import { KeyValue } from "@gpuixui/data";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `entries` | `KeyValueEntry[]` | — | the rows, in the order they paint |
-| `labelWidth` | `number` | `120` | the label column's width, in pixels |
-| `valueWidth` | `number` | — | the value column's width; omit it and the value fills the row |
+| `labelWidth` | `number` | `120` | the label column's width; one the layout cannot paint reads as `120` |
+| `valueWidth` | `number` | — | the value column's width; omitted — or one that cannot paint — and the value fills the row |
 | `testId` | `string` | — | every cell derives from it |
 
 ## Accessibility
@@ -42,5 +42,10 @@ badge, not two words.
 ## Limitations
 
 - The label column is fixed, not measured: a long label wraps.
+- A width is a **measurement**: one the layout cannot use (`NaN`, an infinity,
+  zero or a negative) reads as the default rather than reaching a track, because
+  the runtime drops a malformed width and the column would silently become
+  content-sized. `src/behaviour/surfaces.test.tsx` holds the two-column scan for
+  a computed width.
 - The list does not scroll; a panel that owns overflow scrolls it.
 - The docs site cannot render this component live.

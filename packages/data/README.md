@@ -455,6 +455,13 @@ One object, read four ways: a toolbar that acts on it, a statistic card that
 shows a derived reading, a key-value list that scans down two columns, and a
 property panel that edits it. None of them keeps a copy of the object.
 
+A key-value column width is a **measurement** — the widest label, a share of a
+pane — so one the layout cannot paint (`NaN`, an infinity, zero or a negative)
+reads as the default instead of reaching a track: `NaN` is dropped by the
+runtime, and the label column would fall back to each label's own text width so
+every value started somewhere else. An unreadable `valueWidth` fills the row,
+like an omitted one (`src/behaviour/surfaces.test.tsx`).
+
 ```tsx
 import { AdvancedFilter, DataToolbar, KeyValue, PropertyPanel, StatCard } from "@gpuixui/data";
 
