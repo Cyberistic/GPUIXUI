@@ -274,22 +274,25 @@ and the traversal across them is the app's, measured in a window by
 
 ## Gaps, with the evidence
 
+Every panel row is shipped (`@gpuixui/dock`); what remains is the runtime's own
+limits, and none of them is a component the lane still owes.
+
 | Gap | Evidence | Strongest honest alternative |
 | --- | -------- | ---------------------------- |
-| Resizable panes | No split-pane component and no per-child basis; capture is available, but only to an element that listens to both `onMouseDown` and `onMouseMove` | A keyboard-and-pointer divider that writes a number to app state, subscribing to both listeners |
-| Detachable / movable tabs | The portal exists and a window measured it (`portal-layer`): a portalled surface paints in another layer, outside an ancestor's clip, with context and input intact. A **new OS window** is the gap — the binding opens one window per process and has no drag host feature | Move a tab to another layer or pane in the same window through `createPortal`; detaching it into its own window stays unavailable |
-| Docking layouts | Composition over split panes, which do not exist yet | A fixed, hand-built layout |
-| Persistent panel state | No renderer storage | `Schema`-encoded app state, decoded at the entrypoint |
-| Application menus | The macOS menu bar is a renderer API; cross-platform menus are ours | `DropdownMenu` in the window |
+| A pane detached into its own window | The binding opens **one window per process** and has no drag host feature; a portalled surface paints in another layer of the same window (`portal-layer`) | Move a tab to another layer or pane through `createPortal`; a second OS window stays unavailable |
+| Renderer storage | No storage API in the binding; the package ships `PanelLayout` and `DockNode`, which round-trip through a JSON string | `Schema`-encoded app state, decoded at the entrypoint, as §State and persistence shows |
+| Application menus | The macOS menu bar is a renderer API; cross-platform menus are the app's | `DropdownMenu` in the window, or a caller-drawn in-window menu |
 | Terminal surfaces | Rendering the app **into** a terminal is supported and measured: `render(<App />, { terminal: true })` with `isTerminal()`, a 100×40 pty receiving an 800×640 frame, a key repainting it and ctrl-c restoring the terminal ([Runtime capabilities](/docs/runtime#measured-in-a-window)). A pane that hosts a PTY **inside** a window has no PTY host element, so it is not supported | Ship the app as a terminal UI, or put a log viewer in the window: `ScrollArea` + `Text` |
 
 The capability matrix and its evidence are on [Runtime](/docs/runtime).
 
 ## Where a workspace change goes
 
-- **A panel model** (sizes, nesting, collapse) → a pure module with a unit
-  suite, then a component in `@gpuixui/components` with a native behaviour
-  suite and a page under `packages/components/docs`.
+- **A panel model** (sizes, nesting, collapse) → `@gpuixui/dock`, whose
+  `SplitPane`, `PanelGroup` and `DockLayout` own it, with a native behaviour
+  suite and a page under `packages/dock/docs`. A change to the divider's rule
+  also moves §A split you can resize here, because the browser preview restates
+  the arithmetic and `dock-preview.test.ts` holds it to `packages/dock/src`.
 - **A window composition** → a Block while it is one page's recipe; it becomes
   a component only when a second consumer needs the identical behaviour.
 - **Persistence** → the application. The library ships schemas, not storage.
