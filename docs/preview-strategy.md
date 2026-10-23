@@ -489,7 +489,7 @@ browser rather than failing the build).
 ### The dependency line is generated, not written
 
 `MISSION.md` asks every component page for the packages it needs, and the
-package pages are Markdown the site mounts. Asking seventy-odd authors to keep a
+package pages are Markdown the site mounts. Asking every page author to keep a
 list beside their imports would drift the first time an import moved, so the
 site reads the component's own module instead:
 
@@ -519,8 +519,8 @@ frame case; emptying the index fails five cases across the two guards.
 
 `MISSION.md` asks every component page for its related components, and that row
 was the one the package pages could not satisfy: a page is Markdown the site
-mounts, so it cannot resolve the URL of its siblings, and most of the mounted
-pages shipped without a `## Related` section while this file claimed the
+mounts, so it cannot resolve the URL of its siblings, and when the strip landed
+most of the mounted pages had no `## Related` section while this file claimed the
 template guard enforced one. The curated pages write the section themselves; the
 generated line answers the package pages.
 
@@ -532,10 +532,10 @@ generated line answers the package pages.
 - `<RelatedStrip url sections>` prints the family at the end of a package page,
   after the source block, and leaves the page itself out of the list. The
   sections are the table of contents Fumadocs already built, so a page that
-  writes `## Related` keeps its section and the strip stays silent — 31 of the
-  104 mounted package pages do. It renders nothing for the pages argued as solos
-  in `soloPages`: the provider, the one overlay primitive whose curated page is
-  the same component, and the one-page icon set.
+  writes `## Related` keeps its section and the strip stays silent. It renders
+  nothing for the pages argued as solos in `soloPages`: the provider, the one
+  overlay primitive whose curated page is the same component, and the one-page
+  icon set.
 - The strip is mounted by the package frame only, so a curated page keeps the
   `## Related` section it writes and no page prints the links twice.
 
@@ -547,9 +547,9 @@ the argued solos.
 
 `MISSION.md` asks every component page for copyable source, and a package page
 is Markdown: it can describe the component but cannot embed it. Before this
-block, only the nine curated pages carried a source accordion — a reader of the
-other sixty could read behaviour, theming and API and still not see the file
-they would own if they copied the component.
+block, only the curated pages carried a source accordion — a reader of a package
+page could read behaviour, theming and API and still not see the file they would
+own if they copied the component.
 
 The site resolves the module a page documents at build time, reusing the
 decision the dependency line already makes (`page-dependencies-source.ts`'s

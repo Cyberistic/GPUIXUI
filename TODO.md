@@ -10305,7 +10305,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 293/293
+`[x]` `[██████████]` 294/294
+
+`[x]` Retract the **three counts the prune outgrew** in the policy, and hold its
+      curated list to the pages — `docs/preview-strategy.md` still said "31 of
+      the 104 mounted package pages" write `## Related`, while the prune removed
+      thirty of those sections and the collections grew to **140 pages, one** of
+      which writes one; the same paragraph said "the other sixty" package pages
+      had no source accordion and that "seventy-odd authors" kept dependency
+      lists, and `related-strip.test.tsx` carried the 31 in two comments. The
+      rule is count-free now (a page that writes `## Related` keeps its section
+      and the strip stays silent), and "when the strip landed" marks the
+      historical sentence as history. `src/lib/preview-strategy.test.ts` gains
+      two cases: the policy's "Curated today" list must name every curated page
+      and no page it lacks, and the Related rule must state the silence without a
+      `N of the` count, refusing the three retired figures. Directions measured:
+      emptying the list fails `{ missing: [ 'Accordion' ], extra: [] }`, and
+      restoring "31 of the 104" fails the count case by name; restored, the app
+      is 123 files / 1 089 tests green with `check-types` clean. No native
+      scenario applies — prose and the pages it lists.
 
 `[x]` Resolve the **committed merge conflict** in the policy document, and hold
       the policy files to it — `a19b51a3` merged `agent/docs-prune` and committed

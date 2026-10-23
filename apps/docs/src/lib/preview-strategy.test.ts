@@ -39,6 +39,16 @@ const policyDocs = readdirSync(new URL("docs", root))
 
 const sitePages = markdownUnder("apps/docs/content/docs");
 
+const curatedPages = readdirSync(
+  new URL("apps/docs/content/docs/components", root),
+)
+  .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
+  .map((name) => `apps/docs/content/docs/components/${name}`);
+
+const curatedTitles = curatedPages
+  .map((path) => /^title:\s*(.+)$/m.exec(read(path))?.[1]?.trim() ?? path)
+  .toSorted();
+
 const packagePages = readdirSync(new URL("packages", root), {
   withFileTypes: true,
 })
@@ -102,5 +112,47 @@ describe("the preview strategy document", () => {
     expect(paragraphs).toHaveLength(1);
     expect(policy).not.toContain("No mounted page writes `## Related`");
     expect(policy).toContain("the silence for a page that writes the section");
+  });
+
+  it("names every curated page in the policy's list, and no page it lacks", () => {
+    // Bug guarded: the list is prose beside generated navigation, so a page
+    // added to `content/docs/components` — or one whose title moved — left the
+    // bullet behind while the sidebar grew, and an advertised name with no page
+    // was equally silent.
+    const policy = read("docs/preview-strategy.md");
+    const block =
+      policy
+        .split("Curated today:")[1]
+        ?.split("`src/lib/component-preview.test.ts`")[0] ?? "";
+    const listed = block
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\.$/, "")
+      .split(",")
+      .map((name) => name.trim())
+      .toSorted();
+
+    const missing = curatedTitles.filter((title) => !listed.includes(title));
+    const extra = listed.filter((title) => !curatedTitles.includes(title));
+
+    expect(curatedTitles.length).toBeGreaterThanOrEqual(30);
+    expect({ missing, extra }).toEqual({ missing: [], extra: [] });
+  });
+
+  it("states the Related rule without a count the pages can outgrow", () => {
+    // Bug guarded: the policy said "31 of the 104 mounted package pages" write
+    // `## Related`. The prune then removed thirty of those sections and the
+    // collections grew to 140 pages, so both numbers were wrong and the strip's
+    // silence read as dead code. The rule is count-free now; the retired
+    // figures and the count-shaped sentence must not return.
+    const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
+    const rule =
+      /a page that writes `## Related`[^.]*\./.exec(policy)?.[0] ?? "";
+
+    expect(rule).toContain("stays silent");
+    expect(rule).not.toMatch(/\d+ of the/);
+    expect(policy).not.toContain("31 of the");
+    expect(policy).not.toContain("other sixty");
+    expect(policy).not.toContain("seventy-odd");
   });
 });

@@ -33,8 +33,8 @@ describe("the related strip", () => {
   });
 
   it("stays silent where the page writes its own Related section", () => {
-    // Thirty-one mounted package pages write the section themselves; printing
-    // the generated family under theirs would offer two lists of siblings.
+    // A mounted package page may write the section itself; printing the
+    // generated family under its own would offer two lists of siblings.
     expect(
       render("/docs/data-display/column-configuration", [
         "#usage",
@@ -50,7 +50,7 @@ describe("the related strip", () => {
   it("is mounted with the page's own heading anchors, so a written section is not repeated", () => {
     // The strip cannot see the Markdown; the frame hands it the table of
     // contents Fumadocs already built. Dropping the prop would print a second
-    // Related list under the 31 pages that write one.
+    // Related list under a page that writes one.
     const view = readFileSync(
       new URL("../../lib/docs-view.tsx", import.meta.url),
       "utf8",
