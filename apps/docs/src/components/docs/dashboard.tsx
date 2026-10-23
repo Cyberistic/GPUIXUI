@@ -214,7 +214,7 @@ function WeekBars() {
         return (
           <g key={i}>
             <rect
-              className="gx-dash-bar"
+              className="gx-dash-column"
               height={height}
               rx="3"
               width={barW}
@@ -414,11 +414,11 @@ function HourlyStack() {
 }
 
 /** A green ▲ delta badge and its “vs. previous day” caption. */
-function Delta({ pct }: { pct: number }) {
+function Delta({ pct, period = "previous day" }: { pct: number; period?: string }) {
   return (
     <span className="gx-dash-delta">
       <span className="gx-dash-delta-pct">▲ {pct}%</span>
-      <span className="gx-dash-delta-sub">vs. previous day</span>
+      <span className="gx-dash-delta-sub">vs. {period}</span>
     </span>
   );
 }
@@ -627,8 +627,8 @@ export function DashboardRender() {
                 title={activeLabel}
               >
                 <div className="gx-dash-stat-row">
-                  <span className="gx-dash-stat">7h 42m</span>
-                  <Delta pct={12} />
+                  <span className="gx-dash-stat">48h 42m</span>
+                  <Delta pct={12} period="previous week" />
                 </div>
                 <WeekBars />
               </Card>

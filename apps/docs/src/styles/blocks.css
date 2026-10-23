@@ -820,14 +820,14 @@
   font-family: var(--font-mono);
 }
 
-.gx-dash-bar {
+.gx-dash-column {
   fill: var(--dash-accent);
 }
 
 /* Charts grow in on mount: a bar scales up from the baseline, a donut segment
    draws its arc from zero, and the stacked columns grow bottom-up. The 30 ms
    stagger is inline (`animation-delay`) so it reads per column. */
-.gx-dash-bar,
+.gx-dash-column,
 .gx-dash-segment {
   transform-box: fill-box;
   transform-origin: bottom;

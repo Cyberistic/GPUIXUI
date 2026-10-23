@@ -15,6 +15,15 @@
  * scoped classes, so nothing leaks into the docs chrome.
  */
 
+/* The landing mounts a demo outside any `PreviewSurface`; `<div class="gx-base
+   gx-demo">` supplies the dark roles, so it must paint the dark canvas too —
+   a transparent demo left the preview's text white on the landing's page. */
+.gx-base.gx-demo {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+}
+
 .gx-base {
   --background: #11141a;
   --foreground: #eef1f5;
