@@ -861,7 +861,7 @@ A **find highlight** is the other wash a reader meets behind text, and the one
 surface a host paints from a palette this package does not own: a search's
 matches get the runtime theme's accent at 30%, the active one at 65%, and a 2px
 corner. Measured, the active share leaves body text under the 7:1 floor in every
-shipped, high-contrast, platform and authored style and the resting share in four
+shipped, high-contrast, platform and authored style and the resting share in five
 dark ones. `findHighlight(theme)` derives both from the theme's `primary` — the
 resting 30% where it holds, stepped down where it does not, and the strongest
 active wash the ink can survive — so a mark painted behind a word answers the
@@ -869,9 +869,15 @@ same floors a mark painted beside it does, and `highlightFailures` reports an
 accent or a body pair that cannot. The active match is the one place this system
 asks the secondary floor (4.5:1; 7:1 in high contrast) of body text, because a
 stronger wash is the only difference a text host can paint between the match the
-reader is on and the ones around it; the pair is then held 1.05:1 apart.
-`HighlightText`'s sweep still takes the `selection` role, which is a different
-job (§9 records the split and the adoption row lives in `TODO.md`).
+reader is on and the ones around it; the pair is then held 1.05:1 apart. The
+shipped `HighlightText` takes that pair as its default wash and the playground's
+`search-highlights` and `search-virtual-document` scenarios spread it into every
+host spec, so a search inside the library paints the theme's marks; the
+`find-highlight` probe (19 checks, 0.11.0) reads all three states off the frame —
+the derived wash, the stronger active one, and the runtime's own accent on a
+host handed no colour. The `selection` role keeps its own job, the wash behind a
+reader's own text selection, so a match and a selection are two marks that can
+sit on one line.
 
 The **second field fill** was the last surface a field's text had no pair on:
 a composite field paints the page role, so its value and placeholder sit on

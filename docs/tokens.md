@@ -3904,10 +3904,10 @@ built-in violet: the one text surface still painted from a palette this package
 does not own.
 
 Those shares are also too strong for the text they mark. Measured over the
-sixteen shipped, high-contrast, platform and authored styles, the 65% active
+eighteen shipped, high-contrast, platform and authored styles, the 65% active
 wash leaves `foreground` under the **7:1** body floor in every one of them — the
 worst is Windows dark's popover at **3.05:1** — and the resting 30% wash is under
-it in four dark styles, the worst being Dark · Linux at **6.14:1** on its
+it in five dark styles, the worst being Dark · Linux at **6.14:1** on its
 popover. A reader who pressed Enter on their own query could be shown a result
 under the reading floor.
 
@@ -3928,9 +3928,9 @@ export const searchHighlight = (theme: Theme) => {
 
 - The resting match keeps the runtime's **30%** where it holds, and steps down to
   the largest share whose composite is both visible on the strip (1.05:1) and
-  keeps body text at the theme's own floor. Four dark styles step: Linux to
+  keeps body text at the theme's own floor. Five dark styles step: Linux to
   **22%**, Windows XP (Luna) to **23%**, Windows to **27%**, Windows 7 (Aero) to
-  **26%**.
+  **26%**, and Omarchy to **13%**.
 - The active match takes the strongest wash that still keeps body text readable,
   and falls back to the theme's **secondary** floor only when the accent has no
   stronger safe wash — a dark palette whose text is already near the floor. Both
@@ -3961,11 +3961,18 @@ gate's own keys, so folding a twelfth report in is one coordinated change with
 that page (`TODO.md` → Interlocks); until then a brand runs `highlightFailures`
 beside `auditTheme`, as it does `invalidScales`.
 
-**Adoption.** `HighlightText` paints its marker with the theme's `selection` role
-by default — a sweep across a phrase rather than a search result's two states —
-and the playground's search probes hand the host no colour at all, so they paint
-the runtime's built-in accent. Passing `findHighlight(theme)` from a search
-surface is the interlock row in `TODO.md`.
+**Adoption.** The shipped `HighlightText` takes the derived pair as its default
+wash — the resting and active shares and the `radius.sm` corner — and a caller
+names `color`/`activeColor` only to replace them, so a search inside the library
+no longer falls back to the runtime's accent. The playground's
+`search-highlights` and `search-virtual-document` scenarios spread
+`findHighlight(theme)` into every host spec for the same reason, and the
+`find-highlight` live probe (**19 checks**, 0.11.0) reads the paint back off the
+frame: the resting match carries the theme's wash, the active match the stronger
+one, and a control handed only `{ query }` paints the runtime's own accent — the
+fallback this selector exists to replace. The `selection` role keeps its own job:
+it washes a reader's own text selection (`selectionColor`), which is a different
+mark from a match, so the two can sit on one line.
 
 ## Theme API
 

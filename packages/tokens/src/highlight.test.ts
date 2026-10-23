@@ -7,10 +7,10 @@
  * (`packages/native/src/text/search.rs` at the pinned `@gpuix/native@0.11.0`).
  * A library application passes no window theme, so that accent is the runtime's
  * built-in violet — the one text surface still painted from a palette this
- * package does not own. Measured over the sixteen shipped, high-contrast,
+ * package does not own. Measured over the eighteen shipped, high-contrast,
  * platform and authored styles, the 65% active wash left body text under the
- * 7:1 floor in **all fourteen** (3.05:1 on Windows dark's popover) and the
- * resting 30% wash was under it in four dark ones (Dark · Linux 6.14:1 on its
+ * 7:1 floor in **all of them** (3.05:1 on Windows dark's popover) and the
+ * resting 30% wash was under it in five dark ones (Dark · Linux 6.14:1 on its
  * popover), so a reader's own query could hide the result they searched for.
  * `findHighlight` derives the pair the theme can carry and
  * `highlightFailures` reports an accent that cannot.
@@ -393,5 +393,78 @@ describe("what the pages teach", () => {
     expect(page).toContain("3.05");
     expect(page).toContain("6.14");
     expect(page).toContain("1.150");
+  });
+
+  it("names every style whose resting share the derivation steps", () => {
+    // The pages printed four steps — Linux, Luna, Windows, Aero — after the
+    // authored Omarchy look joined the sweep and stepped to 13%, so a reader
+    // counting the exceptions read one fewer than the derivation makes. The
+    // list is derived here from the same `findHighlight` the suite measures, so
+    // a style that starts stepping cannot leave the pages behind.
+    const stepped = everyStyle
+      .map(([name, theme]) => ({
+        name: name.split(" · ").at(-1) ?? name,
+        share: Math.round(shareOf(findHighlight(theme).color) * 100),
+      }))
+      .filter(({ share }) => share !== Math.round(highlightShares.match * 100));
+
+    expect(stepped.map(({ share }) => share)).toEqual([22, 27, 23, 26, 13]);
+    expect(page).toContain("Five dark styles step");
+    expect(readme).toContain("five dark styles");
+    const unprinted = stepped.flatMap(({ name, share }) =>
+      [
+        page.includes(name) ? [] : [`docs/tokens.md: ${name}`],
+        page.includes(`**${share}%**`) ? [] : [`docs/tokens.md: ${share}%`],
+        readme.includes(name) ? [] : [`README: ${name}`],
+        readme.includes(`${share}%`) ? [] : [`README: ${share}%`],
+      ].flat(),
+    );
+    expect(unprinted).toEqual([]);
+  });
+
+  it("tracks the adoption the component and the playground carry", () => {
+    // Both token pages said `HighlightText`'s default wash was the `selection`
+    // role and sent a reader to an interlock row to pass `findHighlight(theme)`
+    // from a search surface, while the shipped component had already taken the
+    // derived pair (`src/highlight-text/wash.ts`) and both playground search
+    // scenarios spread it. A reader following the page wired a colour the
+    // component supplies and waited on an adoption that had landed.
+    const wash = read("../../components/src/highlight-text/wash.ts");
+    const search = [
+      "../../../apps/playground/src/scenarios/search-highlights.tsx",
+      "../../../apps/playground/src/scenarios/search-virtual-document.tsx",
+    ].map(read);
+    const probe = read("../../../apps/playground/src/live/find-highlight.ts");
+    const checks = Number(
+      /export const FIND_CHECKS = (\d+)/.exec(probe)?.[1] ?? Number.NaN,
+    );
+
+    // The painters: the component defaults to the derived pair and only a
+    // caller's own colour replaces it.
+    expect(wash).toContain("findHighlight(theme)");
+    expect(wash).toContain("input.color ?? derived.color");
+    expect(wash).toContain("input.activeColor ?? derived.activeColor");
+    expect(
+      search
+        .map((scenario) => scenario.includes("findHighlight(theme)"))
+        .filter((spread) => !spread),
+    ).toEqual([]);
+
+    // The pages carry the adoption and the measurement, and neither retracted
+    // claim may return: the component is not on the `selection` role, and the
+    // passing of `findHighlight` is not an open interlock.
+    expect(page).toContain(
+      "The shipped `HighlightText` takes the derived pair",
+    );
+    expect(page).toContain("`selection` role");
+    expect(page).toContain(`${checks} checks`);
+    expect(page).not.toContain("interlock row");
+    expect(designSystem).toContain("`HighlightText` takes that pair");
+    expect(designSystem).toContain(`${checks} checks`);
+    expect(designSystem).not.toContain("still takes the `selection` role");
+    expect(readme).toContain("`HighlightText` takes this pair as its default");
+    expect(inventory).toContain(
+      "the shipped `HighlightText` defaults to the pair",
+    );
   });
 });

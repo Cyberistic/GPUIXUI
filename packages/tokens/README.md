@@ -516,23 +516,26 @@ colour paints the runtime's own: `accent` at **30%** for every match and **65%**
 for the active one, with a **2px** corner (`packages/native/src/text/search.rs`
 at the pinned `@gpuix/native@0.11.0`). The library's application passes no window
 theme, so that accent is the runtime's built-in violet. Measured over the
-sixteen shipped, high-contrast, platform and authored styles, the 65% active
+eighteen shipped, high-contrast, platform and authored styles, the 65% active
 wash leaves body text under the 7:1 floor in all of them (Windows dark's popover
-at 3.05:1) and the 30% resting wash is under it in four dark styles (Dark ·
+at 3.05:1) and the 30% resting wash is under it in five dark styles (Dark ·
 Linux 6.14:1 on its popover).
 
 `findHighlight(theme)` derives the pair a theme can carry from its `primary`:
 the resting match is the runtime's 30% where it holds and steps down to the
 largest share whose composite is visible (1.05:1) and keeps body text at the
-theme's body floor — Linux 22%, Luna 23%, Windows 27%, Aero 26% — while the
-active match is the strongest wash that keeps body text readable, falling back
-to the secondary floor only when the accent has no stronger safe wash. Its
-`radius` is `radius.sm`, the tightest step the scale carries; the runtime's 2px
-is a literal. Spread the result into a host's `highlight` spec:
+theme's body floor — Linux 22%, Luna 23%, Windows 27%, Aero 26%, Omarchy 13% —
+while the active match is the strongest wash that keeps body text readable,
+falling back to the secondary floor only when the accent has no stronger safe
+wash. Its `radius` is `radius.sm`, the tightest step the scale carries; the
+runtime's 2px is a literal. Spread the result into a host's `highlight` spec:
 
 ```tsx
 <text highlight={{ query, ...findHighlight(theme) }}>{line}</text>
 ```
+
+The shipped `HighlightText` takes this pair as its default wash; a search surface
+that renders its own `<text>` host spreads it the same way.
 
 The washes are measured on `background`, `card`, `popover` and `muted`, the
 strips a search runs over. `highlightFailures(theme, floors?)` reports a
