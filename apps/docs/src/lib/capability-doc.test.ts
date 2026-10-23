@@ -1744,6 +1744,183 @@ describe("docs/gpuix-capabilities.md", () => {
     ).toContain("`menu-radio-lifecycle`");
   });
 
+  it("records the player a runtime with no media element allows, from its fixture", () => {
+    // Tier 5's *Video / audio player* row said playback was "unverified" and the
+    // capability record said nothing at all, so a media plan could read the
+    // silence as support. `media-frame-lifecycle` settled both halves: the JSX
+    // runtime's element list has no `video`/`audio`, and what a card can still
+    // be is an `<img>` re-pushed per frame on the app's clock. The element set,
+    // the geometry and the readouts are derived from the installed typings, the
+    // probe's fixture and its README section, so the record cannot teach a
+    // player the window no longer paints.
+    const typings = read(
+      "apps/playground/node_modules/@gpuix/react/jsx-runtime.d.ts",
+    );
+    const block =
+      /interface IntrinsicElements \{([\s\S]*?)\n  \}/.exec(typings)?.[1] ?? "";
+    const names = [...block.matchAll(/^\s{4}"?([a-z-]+)"?:\s/gm)].map(
+      (match) => match[1] ?? "",
+    );
+    expect(names.length).toBe(12);
+    expect(names).not.toContain("video");
+    expect(names).not.toContain("audio");
+
+    const fixture = read("apps/playground/src/live/media-frame.ts");
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = (\\d+);`).exec(fixture)?.[1] ??
+          Number.NaN,
+      );
+    const box = (
+      name: string,
+    ): { readonly width: number; readonly height: number } => {
+      const found = new RegExp(
+        `export const ${name} = \\{ width: (\\d+), height: (\\d+) \\} as const;`,
+      ).exec(fixture);
+      return {
+        width: Number(found?.[1] ?? Number.NaN),
+        height: Number(found?.[2] ?? Number.NaN),
+      };
+    };
+    const checks = constant("MEDIA_CHECKS");
+    const clip = constant("MEDIA_CLIP_MS");
+    const tick = constant("MEDIA_TICK_MS");
+    const seekStep = constant("MEDIA_SEEK_STEP_MS");
+    const poster = box("MEDIA_POSTER");
+    const track = box("MEDIA_TRACK");
+    expect(checks).toBeGreaterThan(20);
+    expect(clip).toBeGreaterThan(tick);
+    expect(poster.width).toBeGreaterThan(0);
+    expect(track.width).toBeGreaterThan(poster.width / 4);
+
+    const frames =
+      /export const MEDIA_FRAMES: ReadonlyArray<Rgb> = \[([\s\S]*?)\n\];/.exec(
+        fixture,
+      )?.[1] ?? "";
+    const hex = (value: {
+      readonly r: string;
+      readonly g: string;
+      readonly b: string;
+    }): string => `#${value.r}${value.g}${value.b}`;
+    const named = (name: string): string => {
+      const found = new RegExp(
+        `const ${name}: Rgb = \\{ r: 0x([0-9a-f]{2}), g: 0x([0-9a-f]{2}), b: 0x([0-9a-f]{2}) \\}`,
+        "i",
+      ).exec(fixture);
+      expect(
+        found,
+        `the fixture's ${name} is no longer a literal`,
+      ).not.toBeNull();
+      return hex({
+        r: found?.[1] ?? "",
+        g: found?.[2] ?? "",
+        b: found?.[3] ?? "",
+      });
+    };
+    const colours = [
+      named("FIRST"),
+      ...[
+        ...frames.matchAll(
+          /\{ r: 0x([0-9a-f]{2}), g: 0x([0-9a-f]{2}), b: 0x([0-9a-f]{2}) \}/gi,
+        ),
+      ].map((match) =>
+        hex({
+          r: match[1] ?? "",
+          g: match[2] ?? "",
+          b: match[3] ?? "",
+        }),
+      ),
+    ];
+    expect(colours.length).toBe(4);
+
+    // The probe prints its transport through the fixture's own spelling.
+    expect(fixture).toContain(
+      "`playing=${state.playing} playhead=${state.playhead}`",
+    );
+    const readout = (playing: boolean, playhead: number): string =>
+      `playing=${playing} playhead=${playhead}`;
+    const rest = readout(false, 0);
+    const firstTick = readout(true, tick);
+    const end = readout(false, clip);
+
+    const readme = read("apps/playground/README.md");
+    const section =
+      /### `media-frame-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ??
+      "";
+    expect(section, "the probe's README has no media section").not.toBe("");
+    expect(section).toContain(`${checks} checks`);
+    // The paused share the section prints, and the playhead it was measured at,
+    // are the arithmetic the record repeats rather than a copied pair.
+    const paused = Number(
+      /fill paints exactly the paused share \((\d+) of (\d+)\)/.exec(
+        section,
+      )?.[1] ?? Number.NaN,
+    );
+    const pausedAt =
+      [...section.matchAll(/`playing=false playhead=(\d+)`/g)]
+        .map((match) => Number(match[1] ?? Number.NaN))
+        .find((playhead) => playhead > 0 && playhead < clip) ?? Number.NaN;
+    expect(Number.isFinite(paused)).toBe(true);
+    expect(Number.isFinite(pausedAt)).toBe(true);
+    expect(paused).toBe(Math.round((track.width * pausedAt) / clip));
+    expect(paused).toBeLessThan(track.width);
+    expect(section).toContain(colours[0] ?? "");
+    expect(section).toContain(colours[3] ?? "");
+
+    const minutes = Math.floor(clip / 60_000);
+    const seconds = Math.floor((clip % 60_000) / 1000);
+    const zero = `${minutes}:${String(seconds).padStart(2, "0")}`;
+    const restClock = `0:00 / ${zero}`;
+    const endClock = `${zero} / ${zero}`;
+
+    const row = rowFor("Video and audio playback");
+    expect(row?.verdict).toBe("not supported");
+    expect(row?.evidence).toContain("media-frame-lifecycle");
+    expect(row?.evidence).toContain(`${checks} checks`);
+    expect(
+      names.filter(
+        (name) =>
+          row?.evidence.includes(`\`${name}\``) ||
+          row?.evidence.includes(`"${name}"`),
+      ).length,
+    ).toBe(names.length);
+    expect(row?.evidence).toContain("no `video` or `audio`");
+    expect(row?.evidence).toContain(`${poster.width}×${poster.height}`);
+    expect(row?.evidence).toContain(`\`${tick}\`ms`);
+    expect(row?.evidence).toContain(`\`${seekStep}\`ms`);
+    expect(row?.evidence).toContain(`**${paused}** of`);
+    expect(row?.evidence).toContain(`${track.width}`);
+    expect(row?.evidence).toContain(rest);
+    expect(row?.evidence).toContain(firstTick);
+    expect(row?.evidence).toContain(end);
+    expect(row?.evidence).toContain(colours[0] ?? "");
+    expect(row?.evidence).toContain(colours[3] ?? "");
+    expect(row?.evidence).toContain(restClock);
+    expect(row?.workaround).toContain("layout effect");
+    expect(row?.workaround).toContain("Audio has no route");
+
+    const page = measuredRow("Video and audio playback");
+    expect(
+      page,
+      "the page's measured table has no video/audio row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("media-frame-lifecycle");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(`${poster.width}×${poster.height}`);
+    expect(page?.[1]).toContain(`${paused}`);
+    expect(page?.[1]).toContain(rest);
+    expect(page?.[1]).toContain(end);
+    expect(page?.[1]).toContain(`\`${seekStep}\`ms`);
+    expect(page?.[1]).toContain(colours[0] ?? "");
+    expect(page?.[1]).toContain(colours[3] ?? "");
+    expect(page?.[1]).toContain(endClock);
+    expect(page?.[2]).toContain("layout effect");
+
+    expect(
+      doc.slice(doc.indexOf("## 5. Keeping this document true")),
+    ).toContain("`media-frame-lifecycle`");
+  });
+
   it("records the floating placement a window measured, including the centre quirk", () => {
     // The headless `floating-placement` scenario drove the engine against a
     // `TestRenderer`; a window measured the horizontal sides and found that
