@@ -8732,16 +8732,24 @@ Work that this workstream needs but does not own. Another agent owns each row.
       repeat (an arrow walking a tree, `PageDown` in a log) ignores the flag. The
       optional-verb sentence now names six (`keyDown` joined `activateWindow`,
       `blur` and the three clock verbs) and the limitations list the window-only
-      verbs. `testing-page.test.ts` gains `states the repeat flag a held key
-      carries` (the seam's `if (held) return false;`, the row's `isHeld` and
-      `repeat`, and the page's citation) and its optional case now requires six.
-      Directions measured: deleting the row fails three cases by name
-      (`expected [ 'keyDown' ] to deeply equal []` twice, and
-      `the window table has no keyDown row`), and retracting the prose sentence
-      fails the new case with `to contain 'ignores the flag'`; restored,
+      verbs. The page also cites the probe that measured it — `key-hold-lifecycle`
+      (17 checks): an unguarded control logged `down=j:false,j:true`, the
+      app-level handler read `window=j:false,j:true`, the shipped `Button` stayed
+      at `activations=1` through two repeats before `Space` made it `2`, and a
+      pointer press ran `activations=3 presses=1`. `testing-page.test.ts` gains
+      `states the repeat flag a held key carries` (the seam's
+      `if (held) return false;`, the row's `isHeld` and `repeat`, the page's
+      citation and the probe's own assertion labels) and its optional case now
+      requires six. Directions measured: deleting the row fails three cases by
+      name (`expected [ 'keyDown' ] to deeply equal []` twice, and
+      `the window table has no keyDown row`); retracting the prose sentence fails
+      the new case with `to contain 'ignores the flag'`; and shortening the cited
+      readout to `` `activations=3` `` fails it with
+      `to contain '`activations=3 presses=1`'`. Restored,
       `nub run --filter @gpuixui/docs test` is 118 files / 1 266 tests green and
       `check-types` and `check:tests` are clean. No native scenario applies — the
-      page and its guard read the seam that every control shares.
+      page and its guard read the seam every control shares and the probe's
+      published measurement.
 
 `[x]` Publish the **undo a field's own chord delivers** — the capability record's
       input rows stopped at keystrokes, clipboard and selection, so the site said
