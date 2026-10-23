@@ -10382,7 +10382,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 321/322
+`[ ]` `[█████████░]` 322/323
 
 `[x]` Give the **data and workspace lane entries their shipped pages** — both
       pages answered "what does this lane ship" with a hand-written list, and
@@ -10723,6 +10723,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
       and `The nine type roles` fails the count case; restored, the file is
       6/6. No native scenario applies — a site page and the source it
       documents.
+
+`[x]` Stop the **Introduction's first snippets teaching props the components do not
+      take** — the page a reader copies from passed `tone="success"` to `Badge`,
+      which is `Alert`'s prop (`Badge` takes `variant`), so the first snippet on
+      the site did not compile; and its placement paragraph promised that a
+      `DialogTitle` "outside a `DialogHeader` fails", while `DialogContent`
+      accepts a title directly and `Dialog`'s contract is the parent that
+      rejects a part it does not host. The snippet takes `variant` and the
+      paragraph now teaches the rule the dialog enforces (`DialogTitle` inside
+      `Dialog` but outside `DialogContent` throws, naming the parent), without
+      claiming a header is required. `src/lib/intro-page.test.ts` (3 cases)
+      reads both `tsx` fences through `component-props.ts`, holds every JSX
+      attribute to the props its type declares, ties the badge line to
+      `BadgeProps` in both directions (`tone` refused), and parses
+      `dialogRoot`/`dialogContent`'s `accepts` lists beside the paragraph.
+      Directions measured: restoring `tone` fails the prop case
+      (`Badge.tone is not a BadgeProps prop`) and the badge case, `title` on
+      `DialogContent` fails with `DialogContent.title is not a
+      DialogContentProps prop`, and the old placement sentence fails by name;
+      restored, the file is 3/3. No native scenario applies — a site page and
+      the declarations it shows.
 
 `[x]` Hold **`/docs/contributing`'s commands and checklist to the repository** — the
       page prints six `nub run` commands, the clone and the staging script, and

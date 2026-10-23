@@ -13,11 +13,13 @@ import { lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 
 <ThemeProvider theme={lightTheme}>
-  <Badge tone="success">Connected</Badge>
+  <Badge variant="success">Connected</Badge>
 </ThemeProvider>;
 ```
 
-Compound parts validate their placement, so a `DialogTitle` outside a `DialogHeader` fails with a message naming the family.
+Compound parts validate their placement: a `DialogTitle` inside `Dialog` but
+outside `DialogContent` throws, and the message names the parent and what to do
+instead.
 
 ```tsx
 <Dialog>
