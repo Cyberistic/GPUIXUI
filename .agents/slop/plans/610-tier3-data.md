@@ -433,6 +433,23 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   the branch at the first assertion. README's key-routing row,
   `docs/tree-view.mdx` §Keyboard and the Tree views row state the rule. 178 unit
   / 107 behaviour green; live `--only data-tree-lifecycle` (1/1) unchanged.
+- **A chart's axis is labelled by its step**: every tick was printed with two
+  fixed decimals, so a chart of rates or seconds over a `0.005` scale read
+  `0, 0, 0, 0, 0.01` — three of the four steps rounded away and the bars had no
+  number to read against. `tickLabel(tick, step)` keeps one guard digit past
+  the step's magnitude (`0, 0.0013, 0.0025, 0.0037, 0.005`), drops trailing
+  zeros for the whole scale (`0, 25, 50, 75, 100`) and falls back to
+  exponential notation below the last finite decimal; `ChartFrame` hands it
+  `scale / steps`. `axisTicks` now reads a non-finite `ticks` as four (it
+  mounted `[ NaN ]`) and caps a finite count at `AXIS_STEP_LIMIT` (20).
+  `src/chart/logic.test.ts` (26 cases) holds the formatter and the count;
+  `src/behaviour/chart.test.tsx` (14 cases) mounts a three-label `0.005` chart
+  and reads the axis out of the renderer. Directions measured: restoring the
+  two-decimal label fails the window case by name, and the old `axisTicks`
+  fails the unit case with `[ NaN ]`. Docs `docs/charts.mdx` §The numbers, the
+  README's chart paragraph and the Tier 3 Charts row; headless
+  `--only data-charts-core` (1/1) and live `--only chart-surface-lifecycle`
+  (1/1) on 0.11.0.
 - **The charts' paint is window-verified**: the status row said
   *shipped, window-verified* while the five charts had only the offscreen
   behaviour suite and the headless `data-charts-core` scenario. The live
