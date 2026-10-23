@@ -148,6 +148,12 @@ that repair a `NaN` damping made every formula answer `NaN` and the spring
 jumped to its target in a single frame, while a `NaN` rest threshold meant the
 run never settled at all — a driver waiting for rest sampled it forever.
 
+**The declaration itself may be absent.** `Transition` is structural too, so a
+spring decoded from storage or built by hand can carry no physics at all;
+`physicsOf` reads that as `{}` — the house spring — rather than reading `.mass`
+off nothing and throwing out of a frame loop, which is the same answer every
+unreadable field already gets.
+
 ## One retained value
 
 `MotionValue` holds a scalar across samples, which is what a gesture needs

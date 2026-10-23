@@ -9551,6 +9551,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
       files / 1302 tests green with `check-types` clean. No native scenario
       applies — three source seams and the pages that cite them.
 
+`[x]` Follow the **spring declaration a Transition may not carry** — the motion
+      package made `physicsOf` accept a nullable declaration (`SpringPhysicsParams
+      | null | undefined`) and read every field through `fields?.`, because a
+      structural `Transition` decoded from storage can carry no physics at all
+      and reading `.mass` off nothing threw out of a frame loop. `motion-page.test.ts`
+      required the old single-line signature and `fields.mass`, so the docs suite
+      was red on `master`. The test now holds the nullable signature and every
+      `fields?.` read, and `/docs/motion` gains **The declaration itself may be
+      absent.** — the house spring is the answer for an absent declaration and
+      for an unreadable field alike. Directions measured: with the old page
+      paragraph removed, `places the spring's repair in the samplers a hand-built
+      physics reaches` fails on `**The declaration itself may be absent.**`;
+      restored, the docs app is 120 files / 1306 tests green. No native scenario
+      applies — a source seam and the page that cites it.
+
 `[x]` Print the **three contracts the theme readout never measured** — `/docs/themes`
       called its readout "the whole audit" while it printed `auditTheme`'s eleven
       reports and nothing beside them, and an edit the editor exposes can break

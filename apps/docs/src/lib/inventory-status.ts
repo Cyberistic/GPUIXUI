@@ -38,7 +38,7 @@ export const pageRows: Readonly<Record<string, ReadonlyArray<string>>> = {
   Switch: ["Switches"],
   "Tag input": ["Tag / token input"],
   Text: ["Text / typography"],
-  Toast: ["Toasts / notifications"],
+  Toast: ["Toasts / notifications", "Notification centre"],
 
   // The table the site curates documents the three Tier 3 rows composed on it.
   Table: [

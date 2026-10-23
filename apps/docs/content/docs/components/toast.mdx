@@ -118,6 +118,40 @@ hold begins on the pointer, or on a press that moves focus into a control; a toa
 a keyboard reader must be able to reach carries `duration: 0` (persistent, closed
 by its action) or a long enough duration to read.
 
+## Notification centre
+
+The store is the transient half of a notification centre, not its storage. It
+keeps `max` cards (3 by default), and the fourth push expires the oldest — so a
+history panel records every title it pushes itself, while the viewport paints
+only what is still live. The playground's `notification-centre-lifecycle`
+measured the composition in a window (30 checks, `@gpuix/native@0.11.0`): three
+cards in one column (356 wide, one right edge, 12px apart, in push order), the
+fourth push leaving `queued=3 ids=2,3,4` while the app's panel still lists the
+expired title, a card action reporting once with the survivors reflowing, the
+app's clear emptying the queue, and a 700ms transient dismissing itself with no
+press.
+
+```tsx
+const toast = useToast();
+const [history, setHistory] = useState<ReadonlyArray<string>>([]);
+
+const notify = (title: string) => {
+  setHistory((kept) => [title, ...kept]);
+  toast.push({ title });
+};
+
+<ToastProvider>
+  <App />
+  <NotificationPanel titles={history} />
+  <ToastViewport />
+</ToastProvider>;
+```
+
+The binding publishes no notification API — no OS centre, badge or persistence —
+so the history is the app's to own and this stack is what alerts. That limit is
+why the inventory records the centre as `done (composed)` rather than a shipped
+component.
+
 ## API reference
 
 | Part | Prop | Type | Default |

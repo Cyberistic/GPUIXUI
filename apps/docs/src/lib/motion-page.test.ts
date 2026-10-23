@@ -300,29 +300,32 @@ describe("the motion page", () => {
 
   it("places the spring's repair in the samplers a hand-built physics reaches", () => {
     // `SpringPhysics` is structural, so a caller may build one without
-    // `springPhysics()` — and a `NaN` damping made every formula answer `NaN`
-    // (the spring jumped to its target in one frame) while a `NaN` rest
+    // `springPhysics()` — or carry none at all, which read `.mass` off nothing
+    // and threw out of a frame loop. A `NaN` damping made every formula answer
+    // `NaN` (the spring jumped to its target in one frame) while a `NaN` rest
     // threshold meant the run never settled. The samplers read the *repaired*
     // physics, so the page has to teach the repair where a reader builds one
     // by hand rather than leaving it in the constructor's paragraph.
+    expect(spring).toContain("const physicsOf = (");
     expect(spring).toContain(
-      "const physicsOf = (fields: SpringPhysicsParams): SpringPhysics =>",
+      "fields: SpringPhysicsParams | null | undefined,",
     );
+    expect(spring).toContain("): SpringPhysics => ({");
     expect(spring).toContain("const rest = physicsOf(physics);");
     expect(spring).toContain(
       "withinRest(physicsOf(physics), value, target, velocity)",
     );
     expect(spring).toContain(
-      "mass: sanitizePositive(fields.mass, DEFAULT_MASS),",
+      "mass: sanitizePositive(fields?.mass, DEFAULT_MASS),",
     );
     expect(spring).toContain(
-      "damping: sanitizeNonNegative(fields.damping, DEFAULT_DAMPING),",
+      "damping: sanitizeNonNegative(fields?.damping, DEFAULT_DAMPING),",
     );
     expect(spring).toContain(
-      "restDelta: sanitizePositive(fields.restDelta, DEFAULT_REST_DELTA),",
+      "restDelta: sanitizePositive(fields?.restDelta, DEFAULT_REST_DELTA),",
     );
     expect(spring).toContain(
-      "restSpeed: sanitizePositive(fields.restSpeed, DEFAULT_REST_SPEED),",
+      "restSpeed: sanitizePositive(fields?.restSpeed, DEFAULT_REST_SPEED),",
     );
 
     expect(pageText).toContain(
@@ -343,6 +346,13 @@ describe("the motion page", () => {
     expect(pageText).toContain(
       "a `NaN` rest threshold meant the run never settled at all",
     );
+    // The declaration may be absent: `Transition` is structural, and a stored
+    // spring with no physics used to throw out of a frame loop.
+    expect(spring).toContain("fields?.mass");
+    expect(pageText).toContain("**The declaration itself may be absent.**");
+    expect(pageText).toContain("`Transition` is structural too");
+    expect(pageText).toContain("reads that as `{}`");
+    expect(pageText).toContain("the house spring");
   });
 
   it("places the curve's repair where a caller's own easing reaches", () => {

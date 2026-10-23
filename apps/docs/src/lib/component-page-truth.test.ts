@@ -14,6 +14,7 @@ import { pageUrl, propsOf } from "./component-index";
 import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
 import { inventory } from "./inventory-data";
+import { pageRows } from "./inventory-status";
 
 /**
  * The curated component pages make claims the code owns: which runtime version
@@ -1176,6 +1177,30 @@ describe("the curated component pages", () => {
     // The retracted shape: the keyboard gap the reveal closed.
     expect(text).not.toContain("cannot reach the tail");
     expect(text).not.toContain("does not scroll the highlight");
+  });
+
+  it("publishes the notification centre the Toast page composes", () => {
+    // The inventory's `Notification centre` row is `done (composed)`: the Toast
+    // store plus a history panel the app owns. The curated page had no section
+    // for it, so the row's evidence pointed at the package page a reader of this
+    // site cannot reach, and `inventory-status.test.ts` could not publish the
+    // row on any page. The composition and its bounded store now live here too.
+    const toast = pages.find((page) => page.file === "toast.mdx");
+    expect(toast, "the toast page is not in the curated set").toBeDefined();
+    if (toast === undefined) return;
+
+    const text = body(toast).replace(/\s+/g, " ");
+    expect(text).toContain("## Notification centre");
+    expect(text).toContain("notification-centre-lifecycle");
+    expect(text).toContain("30 checks");
+    expect(text).toContain("queued=3 ids=2,3,4");
+    expect(text).toContain("no OS centre");
+    expect(text).toContain("done (composed)");
+    // The page's alias is what the inventory guard publishes the row through.
+    expect(pageRows.Toast).toContain("Notification centre");
+    expect(read("packages/components/docs/toast.mdx")).toContain(
+      "## Queue and history",
+    );
   });
 
   it("documents the help and address the select's trigger carries", () => {
