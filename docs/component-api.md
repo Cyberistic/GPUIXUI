@@ -490,7 +490,7 @@ the tree a level's window later.
 | Combobox popup | fade + 4px out from the requested side (entry only; a flipped popup keeps its first frame) | `normal` |
 | Mention suggestions | fade + 4px out from its field's bottom (entry only) | `normal` |
 | Preview card | fade + 4px from the trigger's side | `fast` (160 ms) |
-| Toast | fade + 16px from the right edge | `notice` (500 ms) |
+| Toast | fade + a 16px rise in, then a fade + 16px slide to the right out | its own timing: 220 ms in, 180 ms out (`motionTimingOf`) |
 | Accordion panel | height from 0 to the body's measured height, plus a fade | `normal` |
 | Tabs pill | `left`/`top`/`width`/`height` between measured trigger boxes | `normal` |
 | Carousel indicator | `width` between the 6px dot and the 18px pill (both dots retarget from the widths on screen) | `fast` (160 ms) |

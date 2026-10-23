@@ -241,6 +241,22 @@ states. `preference` is the application's — the runtime exposes no
 reduced-motion query — and the reduced branch keeps the frames, so a component
 still paints its resting state.
 
+A surface with its own feel names its duration instead of borrowing a level:
+`motionTimingOf(durationMs, options)` builds the same timing from a millisecond
+value, so `@gpuixui/components`' toast arrives over 220 ms and leaves over 180 ms
+without dragging another surface along (or the reverse). It is the one place a
+duration becomes a timing, so the reduced rule cannot be re-implemented beside
+it, and a duration that is not positive and finite reads as the house surface
+arrival (`normal`) rather than reaching the runtime as `NaN`:
+
+```ts
+import { motionTimingOf } from "@gpuixui/motion/timing";
+
+motionTimingOf(220, { phase: "enter" }); // { duration: 0.22, ease: "easeOut" }
+motionTimingOf(180, { phase: "exit", preference: "reduced" }); // { duration: 0 }
+motionTimingOf(Number.NaN); // the house 200 ms, `easeInOut`
+```
+
 The tables are read by their **own** keys, so a level or phase an application
 reads back from storage and a release no longer carries — including a name that
 belongs to `Object.prototype` rather than to the table — takes the house

@@ -703,9 +703,12 @@ describe("a notice", () => {
       clickCentreOf(page, "toast-dismiss");
       await delay();
       expect(painted(page.renderer, "toast-1")).toBe(true);
-      page.renderer.clockFastForward(90);
+      // Start the exit under the paused clock, then advance half of its 180 ms:
+      // the ghost has begun to move right, and has not covered the whole 16 px.
+      page.renderer.clockFastForward(1);
       await delay();
-      // Half of the exit: the ghost has moved right, and not yet the whole 16 px.
+      page.renderer.clockFastForward(80);
+      await delay();
       const leavingX = where(page.renderer, "toast-1", "x");
       expect(leavingX).toBeGreaterThan(restX);
       expect(leavingX).toBeLessThan(restX + 16);

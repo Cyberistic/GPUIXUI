@@ -15,7 +15,7 @@
 
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { motionLevels } from "./timing.js";
+import { motionLevels, motionTiming, motionTimingOf } from "./timing.js";
 
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
@@ -140,6 +140,27 @@ describe("the level table the timing seam describes", () => {
       (level) => !readme.includes(`\`${level}\``),
     );
     expect(missing).toEqual([]);
+  });
+
+  it("teaches the duration entry point with the numbers it returns", () => {
+    // The bug this guards: `motionTimingOf` shipped as the timing a surface
+    // outside the level table builds (`@gpuixui/components`' toast moves on
+    // 220 ms in and 180 ms out) and the package README never named it, so the
+    // one entry point a consumer with its own feel needs was documented only on
+    // the site. The printed calls are evaluated rather than trusted, so a
+    // duration or a reduced branch that changes fails this page by name.
+    expect(readme).toContain("motionTimingOf");
+    expect(readme).toContain(
+      'motionTimingOf(220, { phase: "enter" }); // { duration: 0.22, ease: "easeOut" }',
+    );
+    expect(motionTimingOf(220, { phase: "enter" })).toEqual({
+      duration: 0.22,
+      ease: "easeOut",
+    });
+    expect(
+      motionTimingOf(180, { phase: "exit", preference: "reduced" }),
+    ).toEqual({ duration: 0 });
+    expect(motionTimingOf(Number.NaN)).toEqual(motionTiming("normal"));
   });
 });
 

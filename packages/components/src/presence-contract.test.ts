@@ -405,3 +405,230 @@ describe("the reveal's page", () => {
     expect(Str.includes("takes no presses")(body)).toBe(true);
   });
 });
+
+/** The per-surface motion table `docs/component-api.md` §11 publishes. */
+const apiDoc = readEntry("../../docs/component-api.md");
+
+/** The whole document, or `""` when it could not be read. */
+const apiBody = Option.getOrElse(
+  Option.map(Arr.head(apiDoc.sources), (source) => source.body),
+  () => "",
+);
+
+/**
+ * The table under §11's `**Per surface:**` marker.
+ *
+ * The document carries other tables (the component inventory among them, with a
+ * `Drawer` row of its own), so the rows are read from the marked section alone —
+ * a scan of every `|` line matched the inventory's `Drawer` first and read a
+ * component row as a motion claim.
+ */
+const apiLines = Str.split("\n")(apiBody);
+const motionTable: ReadonlyArray<string> = Arr.takeWhile(
+  Arr.dropWhile(
+    Arr.drop(
+      apiLines,
+      Option.getOrElse(
+        Option.map(
+          Arr.findFirstIndex(apiLines, (line) =>
+            Str.includes("**Per surface:**")(line),
+          ),
+          (index) => index + 1,
+        ),
+        () => Arr.length(apiLines),
+      ),
+    ),
+    (line) => !Str.startsWith("|")(line),
+  ),
+  (line) => Str.startsWith("|")(line),
+);
+
+/** The cells of one table line, trimmed. */
+const cellsOf = (line: string): ReadonlyArray<string> =>
+  Arr.map(Arr.filter(Str.split("|")(line), Str.isNonEmpty), (cell) =>
+    Str.trim(cell),
+  );
+
+/** The row whose first cell names `surface`, as all of its cells. */
+const rowOf = (surface: string): ReadonlyArray<string> =>
+  Option.getOrElse(
+    Option.map(
+      Arr.findFirst(motionTable, (line) => {
+        const cells = cellsOf(line);
+        return cells.length >= 3 && Option.contains(Arr.head(cells), surface);
+      }),
+      cellsOf,
+    ),
+    () => [],
+  );
+
+/**
+ * One surface the table names: what it must print and the source that paints it.
+ *
+ * The bug this guards: the table taught the toast as "fade + 16px from the right
+ * edge" on the `notice` level after the card was rewritten to rise 16px on its
+ * own 220 ms entry and slide 16px right on a 180 ms exit, and nothing read the
+ * table against the painters — so the one document a consumer learns the
+ * movement from described a surface the library no longer shipped. Each entry
+ * below is a claim the table makes, held to the literal its painter writes.
+ */
+interface SurfaceMotion {
+  readonly surface: string;
+  readonly prints: ReadonlyArray<string>;
+  readonly paints: ReadonlyArray<{
+    readonly file: string;
+    readonly marker: string;
+  }>;
+}
+
+const surfaces: ReadonlyArray<SurfaceMotion> = [
+  {
+    surface: "Dialog, Command menu",
+    prints: ["fade", "8px", "slow"],
+    paints: [
+      { file: "src/dialog.tsx", marker: 'fadeFrom("top", 8)' },
+      { file: "src/dialog.tsx", marker: 'useSurfaceTiming("slow")' },
+    ],
+  },
+  {
+    surface: "Drawer",
+    prints: ["fade", "12px", "slow"],
+    paints: [
+      { file: "src/drawer.tsx", marker: "fadeFromSide(side, 12)" },
+      { file: "src/drawer.tsx", marker: 'useSurfaceTiming("slow")' },
+    ],
+  },
+  {
+    surface: "Popover, Dropdown menu, Context menu, submenu",
+    prints: ["fade", "8px", "4px", "normal"],
+    paints: [
+      { file: "src/popover.tsx", marker: "fadeFromAnchor(placement.side, 8)" },
+      {
+        file: "src/dropdown-menu.tsx",
+        marker: "fadeFromAnchor(placement.side, 4)",
+      },
+      { file: "src/context-menu.tsx", marker: 'fadeFromAnchor("bottom", 4)' },
+      { file: "src/menu/sub.tsx", marker: 'fadeFromAnchor("right", 4)' },
+    ],
+  },
+  {
+    surface: "Navigation menu",
+    prints: ["4px", "normal"],
+    paints: [
+      {
+        file: "src/navigation-menu.tsx",
+        marker: 'fadeFromAnchor("bottom", 4)',
+      },
+    ],
+  },
+  {
+    surface: "Combobox popup",
+    prints: ["4px", "normal"],
+    paints: [{ file: "src/combobox.tsx", marker: "fadeFromAnchor(side, 4)" }],
+  },
+  {
+    surface: "Mention suggestions",
+    prints: ["4px", "normal"],
+    paints: [
+      { file: "src/mention-input.tsx", marker: 'fadeFromAnchor("bottom", 4)' },
+    ],
+  },
+  {
+    surface: "Preview card",
+    prints: ["4px", "fast"],
+    paints: [
+      { file: "src/preview-card.tsx", marker: "fadeFromAnchor(side, 4)" },
+      { file: "src/preview-card.tsx", marker: 'useSurfaceTiming("fast")' },
+    ],
+  },
+  {
+    surface: "Toast",
+    prints: ["16px", "rise", "slide", "220 ms", "180 ms"],
+    paints: [
+      { file: "src/toast/viewport.tsx", marker: "top: 16" },
+      { file: "src/toast/viewport.tsx", marker: "left: 16" },
+      { file: "src/toast/viewport.tsx", marker: "motionTimingOf(220" },
+      { file: "src/toast/viewport.tsx", marker: "motionTimingOf(180" },
+    ],
+  },
+  {
+    surface: "Accordion panel",
+    prints: ["height", "normal"],
+    paints: [
+      { file: "src/auto-height.tsx", marker: 'level = "normal"' },
+      { file: "src/accordion.tsx", marker: "<AutoHeight" },
+    ],
+  },
+  {
+    surface: "Tabs pill",
+    prints: ["width", "normal"],
+    paints: [{ file: "src/tabs.tsx", marker: 'useSurfaceTiming("normal")' }],
+  },
+  {
+    surface: "Carousel indicator",
+    prints: ["width", "fast"],
+    paints: [{ file: "src/carousel.tsx", marker: 'useSurfaceTiming("fast")' }],
+  },
+  {
+    surface: "Page transition",
+    prints: ["16px", "normal"],
+    paints: [
+      { file: "src/page-transition.tsx", marker: "PAGE_TRAVEL" },
+      { file: "src/page-transition/logic.ts", marker: "PAGE_TRAVEL = 16" },
+    ],
+  },
+];
+
+/** The cells of a row as one lowercase sentence, for a printed claim. */
+const rowText = (surface: string): string =>
+  Str.toLowerCase(Arr.join(Arr.drop(rowOf(surface), 1), " "));
+
+describe("the per-surface table", () => {
+  it("prints the movement and level its painter writes", () => {
+    expect(apiDoc.failures).toEqual([]);
+    // A parse that read no table cannot satisfy the claims below.
+    expect(Arr.length(motionTable)).toBeGreaterThan(8);
+    const missingRows = Arr.filterMap(surfaces, (entry) =>
+      Arr.length(rowOf(entry.surface)) > 0
+        ? Result.failVoid
+        : Result.succeed(entry.surface),
+    );
+    expect(missingRows).toEqual([]);
+
+    const wrong = Arr.flatMap(surfaces, (entry) => {
+      const text = rowText(entry.surface);
+      const unprinted = Arr.filterMap(entry.prints, (claim) =>
+        Str.includes(Str.toLowerCase(claim))(text)
+          ? Result.failVoid
+          : Result.succeed(`${entry.surface}: does not print "${claim}"`),
+      );
+      const unpainted = Arr.filterMap(entry.paints, (painter) => {
+        const source = readEntry(painter.file);
+        const body = Option.getOrElse(
+          Option.map(Arr.head(source.sources), (read) => read.body),
+          () => "",
+        );
+        return Str.includes(painter.marker)(body)
+          ? Result.failVoid
+          : Result.succeed(
+              `${entry.surface}: ${painter.file} does not paint "${painter.marker}"`,
+            );
+      });
+      return [...unprinted, ...unpainted];
+    });
+    expect(wrong).toEqual([]);
+  });
+
+  it("teaches the toast's own timing, not the level it left behind", () => {
+    // The retracted reading: the card used to come in from the right edge on the
+    // shared `notice` level. A row that names either again sends a consumer to a
+    // motion the library does not paint.
+    const text = rowText("Toast");
+    expect(Str.includes("from the right edge")(text)).toBe(false);
+    expect(Str.includes("notice")(text)).toBe(false);
+    expect(Str.includes("motiontimingof")(text)).toBe(true);
+    // Both halves are stated: the rise it arrives on and the slide it leaves on.
+    expect(Str.includes("rise")(text)).toBe(true);
+    expect(Str.includes("slide")(text)).toBe(true);
+  });
+});
