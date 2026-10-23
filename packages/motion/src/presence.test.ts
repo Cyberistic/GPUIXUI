@@ -58,6 +58,23 @@ describe("the presence frames", () => {
     });
     expect(fadeFromAnchor("left", 4).initial).toEqual({ opacity: 0, left: 4 });
   });
+
+  it("takes the house placement for a side it does not name", () => {
+    // A side also arrives from persisted state and from a measured placement,
+    // so the union the props declare is not a runtime guarantee. The branching
+    // used to end in an `else`, which meant a name the package does not carry
+    // travelled as `right`: a drawer meant for the top arrived from the side.
+    // @ts-expect-error — a side a store wrote, not the union the props declare.
+    expect(fadeFromSide("top-start", 12).initial).toEqual({
+      opacity: 0,
+      top: 12,
+    });
+    // @ts-expect-error — the same stored side reaching the anchored frames.
+    expect(fadeFromAnchor("top-start", 4).initial).toEqual({
+      opacity: 0,
+      top: -4,
+    });
+  });
 });
 
 describe("the presence timing", () => {

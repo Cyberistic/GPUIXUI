@@ -122,7 +122,10 @@ A surface that enters and leaves reads one table, exported from
 
 - `fadeFrom`, `fadeFromAnchor`, `fadeFromSide` and `fadeOnly` build the three
   frames (first paint, rest, exit) — a fade plus an inset offset on `top` or
-  `left`, never a `transform`, because the runtime has no such style key;
+  `left`, never a `transform`, because the runtime has no such style key. A side
+  the package does not name takes the house `bottom`, so a placement restored
+  from storage cannot send a surface in from an edge it was never measured
+  against;
 - `presenceTiming(level, preference)` gives the enter and exit tween at one
   level: `easeOut` in, `easeIn` out, both zero-duration under `"reduced"`;
 - `transitionWindowMs` / `exitWindowMs` convert a tween to the whole milliseconds

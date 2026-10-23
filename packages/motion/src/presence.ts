@@ -88,6 +88,19 @@ export const fadeOnly: PresenceFrames = {
 };
 
 /**
+ * The side a frame travels from, read from a value a caller may have stored.
+ *
+ * `PresenceSide` is a union, but a side also arrives from persisted state and
+ * from a measured placement the library did not type-check. The branching below
+ * ends in an `else`, so a name the package does not carry used to travel as
+ * `right` — a drawer meant for the top arrived from the side. A side the table
+ * does not name takes the house `bottom`, the placement a surface that asked
+ * for nothing opens at.
+ */
+const sideOf = (side: PresenceSide): PresenceSide =>
+  side === "top" || side === "right" || side === "left" ? side : "bottom";
+
+/**
  * A fade that travels in from a window edge.
  *
  * A panel anchored to the right starts further right and moves in, so the
@@ -97,14 +110,16 @@ export const fadeOnly: PresenceFrames = {
 export const fadeFromSide = (
   side: PresenceSide,
   offset: number,
-): PresenceFrames =>
-  side === "top"
+): PresenceFrames => {
+  const named = sideOf(side);
+  return named === "top"
     ? fadeFrom("top", -offset)
-    : side === "bottom"
+    : named === "bottom"
       ? fadeFrom("top", offset)
-      : side === "left"
+      : named === "left"
         ? fadeFrom("left", -offset)
         : fadeFrom("left", offset);
+};
 
 /**
  * A fade that travels out from the control a surface is anchored to.
@@ -115,14 +130,16 @@ export const fadeFromSide = (
 export const fadeFromAnchor = (
   side: PresenceSide,
   offset: number,
-): PresenceFrames =>
-  side === "top"
+): PresenceFrames => {
+  const named = sideOf(side);
+  return named === "top"
     ? fadeFrom("top", offset)
-    : side === "bottom"
+    : named === "bottom"
       ? fadeFrom("top", -offset)
-      : side === "left"
+      : named === "left"
         ? fadeFrom("left", offset)
         : fadeFrom("left", -offset);
+};
 
 /**
  * The timings a surface at `level` moves with, under a preference.
