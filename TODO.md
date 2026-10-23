@@ -10388,7 +10388,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 331/332
+`[ ]` `[██████████]` 332/333
+
+`[x]` Name the **keys the command palette reads** — the site's one ⌘K surface
+      documented its parts, props and three ARIA facts and no key at all, while
+      `command-menu.tsx`'s handler reads Down/Up (and `Ctrl+N`/`Ctrl+P`), Home,
+      End, Escape (offered to the topmost dismiss layer) and Enter (`onSubmit`
+      on the field), and the field keeps the focus while the highlight moves.
+      The curated page's Usage gains that contract, and
+      `src/lib/command-menu-page.test.ts` (2 cases) derives the bindings from
+      the handler and fails when the page stops naming one — the first case is
+      the premise, so a handler that loses a helper fails before the page is
+      asked about it. Direction measured: with the paragraph removed the case
+      fails `expected [ 'isDown', 'isUp', 'isFirst', …(2) ] to deeply equal []`;
+      restored, 2/2 and `apps/docs` is **153 files / 1 608 tests** green with
+      `check-types`, `oxlint` and the changed files' format clean. No native
+      scenario applies — a page and a source read.
 
 `[x]` Mount every **preview demo**, not only its name — the registry was held
       from both sides (`component-preview.test.ts`: every page names a demo,
