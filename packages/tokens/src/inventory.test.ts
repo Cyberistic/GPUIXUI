@@ -23,6 +23,7 @@ import { existsSync, readdirSync, readFileSync, type Dirent } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { brandText } from "./brand-text.js";
 import { contrastFloorsFor, contrastRatio } from "./contrast.js";
+import { highlightSurfaces } from "./highlight.js";
 import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
 import { statusTone, statusTones } from "./styles.js";
@@ -255,6 +256,10 @@ describe("the style count the rows print", () => {
       `holds all ${all} shipped, high-contrast, platform and authored themes`,
     ],
     ["Brand text", `over the ${all} × ${statusTones.length} placements`],
+    [
+      "Find highlights",
+      `the ${all * highlightSurfaces.length}-placement sweep`,
+    ],
     [
       "Native text hosts",
       `holds all ${all} shipped, high-contrast, platform and authored themes`,

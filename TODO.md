@@ -327,9 +327,11 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 196/196
+`[x]` `[██████████]` 197/197
 
 `[x]` The **design-system table's own rows still count sixteen** — the pass above corrected the sixteen places the four documents' prose printed, and left the table cells, which read as present-tense test descriptions: `Scale order` ("holds all 16 shipped, high-contrast, platform and authored themes to an empty report"), `Token numbers`, `Brand text` (twice: the surface sweep and the `16 × 4` tint placements, whose suite now measures `18 × 4`), `Native text hosts` and `Colour grammar` all name a suite that walks `retroNames` and therefore holds **18** (§`scales.test.ts`, `numbers.test.ts`, `brand-text.test.ts`, `native-text.test.ts` and `incomplete.test.ts` each import it). The components' tier rows (`Carousel`, `Buttons`) carry the same number for their own suites and are that workstream's paths. Do it with one guard that derives the count from the package and enumerates the rows from `COMPONENTS.md` (the pattern `docs.test.ts`'s `the styles a sweep walks` now uses), so the table cannot drift a third time. Found 2026-10-23 while fixing the prose. **Landed:** every cell that claims the swept set prints **18** — `Scale order`, `Token numbers`, `Native text hosts`, `Colour grammar`, `Contrast contract`'s `disabled.test.ts` clause, and `Brand text`'s four figures. The sweep found two more drifts than the row listed, in the same cells: `Syntax palette` printed "800 placements over the sixteen styles" (the fence suite has measured 18 × 2 × 25 since the look landed, so it now says "in each of the 18 styles" rather than a product nobody derives), and `Brand text` printed `27 of the 64`/`29/64`/`clears all 64` while its own suite derives **28 of the 72** — the package README carried the same `28 of the 64`, so it prints the sweep's pair now and `brand-text.test.ts`'s print case holds it beside the two pages. `inventory.test.ts` gains `the style count the rows print` (2 cases): the first builds the list the way `docs.test.ts` does and ties it to the named groups — `4 + platforms × 2 + looks × 2`, one name per style, and `all × statusTones` tint placements; the second enumerates the six rows and eleven phrases from the parsed `COMPONENTS.md` table, failing by row and phrase when a count, a failure share or a `×` pair drifts or a row is renamed away. Directions measured: restoring `Scale order`'s 16, `**27 of the 64**`/`sixteen styles` and `16 × 4` fails the guard with all three lines by name (`Scale order: holds all 18 …`, `Brand text: **28 of the 72** …`, `Brand text: over the 18 × 4 placements`), and restoring the README's 64 fails `brand-text.test.ts` at the count. Green: 49 files / 2 897 tests, `check-types` and `check:tests` clean. Two past-tense defect findings in the table (`thirteen of the sixteen styles missed…`, `Eleven of the sixteen shipped styles painted…`) stay sixteen on purpose — each records the pre-fix set in its own frozen table. No native scenario applies — a count a suite derives and the prose that prints it.
+
+`[x]` Hold the **brand seam's JSDoc and the find sweep to the counts their suites derive** — the row pass above fixed the design-system cells and the three pages, and left two surfaces printing the pre-Omarchy set: `brand-text.ts`'s `brandText`/`brandTextOn` documentation said "the sixteen shipped styles" and "**29 of the 64** tint placements across the sixteen styles" while its own suite derives **28 of the 72** across eighteen, and the `Find highlights` row said "the 64-placement sweep" while `highlight.test.ts` walks `everyStyle × highlightSurfaces` — **18 × 4 = 72**. Both print the derived pair now. `brand-text.test.ts` gains `prints the derived count in the seam's own documentation` (the JSDoc is the fourth surface a reader meets the figures on), and `inventory.test.ts`'s `the style count the rows print` enumerates `Find highlights` beside the other six rows, deriving the sweep as `all × highlightSurfaces.length`. Directions measured: restoring `29 of the 64` fails the seam case by name; restoring `64-placement` fails the row case with `Find highlights: the 72-placement sweep`. The two changed files are 35/35 green and `check-types` is clean; the full package run is 2 897/2 898, the one red case being `docs.test.ts`'s motion claim against another workstream's uncommitted `packages/components/src/internal/presence.tsx` rewrite. No native scenario applies — printed counts a suite derives.
 
 `[x]` The **row's-wash paragraph printed sixteen beside a seventy-two-cell sweep** — `docs/tokens.md` §Action fills opened the wash claim with "measured over the sixteen styles" and closes it with "36 of the 72 wash placements", numbers from two different style sets: the wash sweep walks the eighteen (four built-ins, eight platform editions, six authored looks), which is why the cell count is 72, and `decorative.ts`'s own doc comment already said "over the eighteen shipped styles". The page says eighteen now. `divider.test.ts` — the suite that already derives `washCells` and holds the source doc to them — gains the page assertion from the same list, so the paragraph cannot outlive the sweep again. Directions measured: restoring `sixteen` fails `measured over the eighteen styles` by name. Green: 49 files / 2 898 tests, `check-types` and `check:tests` clean. No native scenario applies — a printed count and the prose that prints it.
 
@@ -9100,7 +9102,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 246/246
+`[x]` `[██████████]` 247/247
 
 `[x]` Follow the **preference the primitives now read from the provider** — the
       primitives' `Button`, `Switch` and `Tooltip` gained `useMotionPreference`
@@ -9332,6 +9334,32 @@ Work that this workstream needs but does not own. Another agent owns each row.
       measured: the record at `activations=4 presses=0` fails by name
       (`the record no longer prints activations=2 presses=0`); restored, the
       file is 119/119 with `check-types` green.
+
+`[x]` Publish the **type a document host paints** in the capability record — the
+      catalogue now derives the document hosts' insets and the playground's
+      `document-type` measured what `nativeTextTheme` actually paints, but the
+      record named only a host's **ink** and its **family**, so a component plan
+      reading it could not tell that the seam's metrics are the paint: every
+      claim about the hand-off was still a read of the pinned `MetricsOverride`
+      source. §3 gains **Document host type** (`supported, with limits`) with the
+      probe's derived figures — a `20/24` `codeBlock` against the runtime's
+      `12.5`/`18` and a caption `18` against `11`, a themed `<code>` block
+      **48** tall against an unthemed **36**, the same four-row patch **12**
+      taller (`4 × (24 − 21)`), and a fenced card's language strip painting the
+      caption role within one antialias row of a caption-sized control on a
+      macOS host at device scale 2 — plus the three negative controls and the
+      rule a brand needs (hand the host the seam; a host with no theme keeps
+      `12.5/18`, `21` and `11`). `/docs/runtime#measured-in-a-window` publishes
+      the same row and §5 owes `document-type`. `capability-doc.test.ts` gains
+      `records the type a document host paints, derived from its fixture`: it
+      parses the fixture's six roles, the row count and the check count,
+      recomputes both block heights and the diff gain, reads the probe's own
+      arithmetic (`2 * CODE_LEADING`, `2 * RUNTIME_CODE_LEADING`,
+      `DIFF_LEADING_GAIN`, the caption `near(…, 1)` comparison) so a figure
+      cannot outlive it, and holds both documents to every number. Directions
+      measured: the record at `**49** tall` fails by name
+      (`expected … to contain '**48** tall'`); restored, the file is 120/120
+      with `check-types` green.
 
 `[x]` Publish the **undo a field's own chord delivers** — the capability record's
       input rows stopped at keystrokes, clipboard and selection, so the site said

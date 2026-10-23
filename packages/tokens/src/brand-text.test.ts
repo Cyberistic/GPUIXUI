@@ -532,4 +532,19 @@ describe("brand text on a message's own tint", () => {
       `in ${under.length} of the ${placements.length} tint placements`,
     );
   });
+
+  it("prints the derived count in the seam's own documentation", () => {
+    // The JSDoc a consumer reads in their editor is a fourth surface, and it
+    // kept the pre-Omarchy figures after the table and the three pages moved.
+    const seam = source("./brand-text.ts").replace(/\s+/g, " ");
+    const under = placements.filter(({ ratio, floor }) => ratio < floor);
+
+    expect(seam).toContain(
+      `**${under.length} of the ${placements.length}** tint placements across the ${everyTheme.length} styles`,
+    );
+    expect(seam).toContain(
+      `under the text floor on ${under.length} of the ${placements.length} tint`,
+    );
+    expect(seam).toContain(`the ${everyTheme.length} shipped styles`);
+  });
 });

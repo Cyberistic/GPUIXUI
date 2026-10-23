@@ -20,7 +20,7 @@
  * `accent` or `selected` behind that run, and the components package's list row
  * tints `accent` under the pointer and fills `selected` once chosen while its
  * documented `trailing` slot holds an explicit action. Nothing measured brand
- * text there: the sixteen shipped styles mostly cleared the row through the
+ * text there: the 18 shipped styles mostly cleared the row through the
  * derivation already, but the Luna look's dark brand landed at **4.50:1** on the
  * row it selects — under the 4.5:1 floor — so it steps once now. The two washes
  * are in the set, so the class cannot recur in a brand.
@@ -29,7 +29,7 @@
  * `Alert`'s description is a container — its documentation says so — and the
  * fill behind it is the tone's `xSoft` role, so a link placed inside a message
  * sits on a tint. Measured, the shared link colour is under the text floor in
- * **29 of the 64** tint placements across the sixteen styles (the worst is macOS
+ * **28 of the 72** tint placements across the 18 styles (the worst is macOS
  * dark's brand on `warningSoft` at **3.43:1**; the raw fill role there is
  * 2.32:1), and no single colour can fix that without dragging every link on the
  * page away from the brand: a tint is one tone lighter or darker than the page it
@@ -168,7 +168,7 @@ export function brandText(
  * `xSoft` tint — is held to the surface it actually paints on, so it keeps as
  * much of the brand as that surface allows. It matters because the tints are not
  * in {@link brandTextSurfaces}' set by design: a tint is one tone away from the
- * page, and the shared colour is under the text floor on 29 of the 64 tint
+ * page, and the shared colour is under the text floor on 28 of the 72 tint
  * placements in the shipped styles.
  *
  * The floor and the derivation are the same as {@link brandText}'s: the theme's
