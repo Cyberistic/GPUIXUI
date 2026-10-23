@@ -4072,8 +4072,8 @@ export const searchHighlight = (theme: Theme) => {
   stronger safe wash — a dark palette whose text is already near the floor. Both
   washes stay translucent, so the strip shows through the way the runtime's own
   do. Across the shipped styles the active share lands at 34–53%, and the pair is
-  always distinguishable: the tightest separation is **1.077:1**, macOS dark's
-  active and resting washes on its own popover.
+  always distinguishable: the tightest separation is **1.077:1**, Dark · macOS's
+  active and resting washes on its own `popover`.
 - The corner is `radius.sm`, the tightest step the scale carries. The runtime's
   own 2px is a literal, not a step — a look whose radii are authored (Luna's are
   1–4px) otherwise keeps a corner from another design system.

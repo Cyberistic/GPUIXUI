@@ -56,6 +56,12 @@ const designSystem = read("../../../docs/design-system.md");
 const readme = read("../README.md");
 const inventory = read("../../../COMPONENTS.md");
 
+/** One row of the inventory table, whitespace flattened. */
+const inventoryRow = (title: string): string =>
+  (
+    inventory.split("\n").find((line) => line.startsWith(`| ${title} |`)) ?? ""
+  ).replace(/\s+/g, " ");
+
 /** One `## ` section of the catalogue, whitespace flattened. */
 const section = (heading: string): string => {
   const start = catalogue.indexOf(heading);
@@ -303,6 +309,22 @@ describe("the pair a theme can carry", () => {
     expect(tightest.name).toBe("Dark · macOS");
     expect(tightest.surface).toBe("popover");
     expect(tightest.ratio.toFixed(3)).toBe("1.077");
+
+    // The catalogue and the inventory both print the pair the suite measures.
+    // The inventory carried the previous palette's 1.150 (high-contrast dark on
+    // `muted`) after macOS dark moved the tightest cell, so both surfaces are
+    // held to the derivation rather than one of them to a retyped figure.
+    const printed = `${tightest.ratio.toFixed(3)}:1`;
+    const surfaces: ReadonlyArray<readonly [string, string]> = [
+      ["docs/tokens.md", section("## Find highlights")],
+      ["COMPONENTS.md", inventoryRow("Find highlights")],
+    ];
+    surfaces.forEach(([name, page]) => {
+      expect(page, name).toContain(printed);
+      expect(page, name).toContain(tightest.name);
+      expect(page, name).toContain(`\`${tightest.surface}\``);
+      expect(page, name).not.toContain("1.150");
+    });
   });
 
   it("returns the tightest corner the radius scale carries", () => {
@@ -463,6 +485,18 @@ describe("what the pages teach", () => {
     expect(page).toContain(worst.ratio.toFixed(2));
     expect(page).toContain("6.14");
     expect(page).toContain("1.077");
+  });
+
+  it("prints the case count this file runs", () => {
+    // A row is the fourth surface a reader meets the contract on, and it named
+    // sixteen cases after the suite had grown: the list of what a file holds is
+    // read from the file, not remembered.
+    const cases = read("./highlight.test.ts").match(/\bit\(/g)?.length ?? 0;
+
+    expect(cases).toBeGreaterThan(10);
+    expect(inventoryRow("Find highlights")).toContain(
+      `\`highlight.test.ts\` (${cases} cases)`,
+    );
   });
 
   it("names every style whose resting share the derivation steps", () => {
