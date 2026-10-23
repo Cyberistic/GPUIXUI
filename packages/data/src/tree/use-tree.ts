@@ -14,6 +14,11 @@
  *
  * The typed prefix is `@gpuixui/components/typeahead`'s rule; the tree supplies
  * the rows' labels and maps the position the seam answers back onto the row key.
+ *
+ * A key is dispatched along the **focus path**, so a key typed in a field inside
+ * a row reaches the row's handler too (`press-routing-lifecycle`'s `field-cell`
+ * route). The tree answers only while one of its **rows** holds native focus,
+ * so a descendant control keeps its space, its Enter and its characters.
  */
 
 import { useGpuix, type EventPayload, type PublicInstance } from "@gpuix/react";
@@ -190,8 +195,22 @@ export const useTree = <T>({
     [commit, onActivate, resolved, rows],
   );
 
+  const holdsFocus = useCallback((): boolean => {
+    const id = renderer?.getFocusedElementId?.();
+    if (id === undefined || id === null) return false;
+    return Arr.some(
+      Arr.fromIterable(elements.current.values()),
+      (value) => value === id,
+    );
+  }, [renderer]);
+
   const handleKey = useCallback(
     (event: EventPayload) => {
+      // A key is dispatched along the focus path, so a key typed in a field
+      // inside a row reaches the row's handler too (`press-routing-lifecycle`'s
+      // `field-cell` route). Only a key the row itself holds is the tree's: a
+      // descendant control keeps its space, its Enter and its characters.
+      if (!holdsFocus()) return;
       if (isTreeKey(event.key)) {
         const next = treeCursorMove(rows, resolved, event.key);
         commit(next);
@@ -215,7 +234,7 @@ export const useTree = <T>({
         onSome: typeahead,
       });
     },
-    [commit, onActivate, resolved, rows, typeahead],
+    [commit, onActivate, resolved, rows, typeahead, holdsFocus],
   );
 
   const attach = useCallback(
@@ -225,15 +244,6 @@ export const useTree = <T>({
     },
     [],
   );
-
-  const holdsFocus = useCallback((): boolean => {
-    const id = renderer?.getFocusedElementId?.();
-    if (id === undefined || id === null) return false;
-    return Arr.some(
-      Arr.fromIterable(elements.current.values()),
-      (value) => value === id,
-    );
-  }, [renderer]);
 
   const tabKey = Option.match(cursorRow(rows, resolved), {
     onNone: () => Option.none<string>(),

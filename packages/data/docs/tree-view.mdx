@@ -68,6 +68,13 @@ later root. Enter and Space toggle the branch under the cursor or activate a
 leaf; a printable character jumps to the first row after the cursor whose label
 starts with the typed prefix.
 
+A key is dispatched along the **focus path**, so a key typed in a control inside
+`renderRow` reaches the row's handler too. The tree answers only while one of
+its **rows** holds native focus: a field keeps its space, its Enter and its
+characters, and the row itself still answers Enter and Space.
+`tree.test.tsx`'s `keeps a key typed in a row's field to that field` holds both
+halves.
+
 ## Measured rules
 
 A tree row is a press target, so it inherits the runtime's pointer model

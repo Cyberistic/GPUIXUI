@@ -14,14 +14,17 @@
  *   it names is not painted.
  */
 
-import { afterEach, describe, expect, it } from "vitest";
+import { Input } from "@gpuixui/primitives";
 import { darkTheme, pointerWash } from "@gpuixui/tokens";
 import * as Option from "effect/Option";
+import { useState } from "react";
+import { afterEach, describe, expect, it } from "vitest";
 import { TreeExample } from "../../examples/tree.example.js";
 import {
   after,
   clickCentreOf,
   focusedTestId,
+  paintedText,
   pressKey,
   requireBounds,
   requireStyle,
@@ -32,6 +35,7 @@ import {
   type DataTestRoot,
 } from "../internal/test-root.js";
 import { TREE_INDENT } from "../tree/logic.js";
+import { TreeView, useExpandedRows } from "../index.js";
 
 let root: DataTestRoot | undefined;
 
@@ -49,6 +53,68 @@ afterEach(() => {
   root?.unmount();
   root = undefined;
 });
+
+interface TreeNode {
+  readonly name: string;
+  readonly children?: ReadonlyArray<TreeNode>;
+}
+
+const fieldTree: ReadonlyArray<TreeNode> = [
+  { name: "src", children: [{ name: "child.ts" }] },
+  { name: "readme.md" },
+];
+
+const fieldKeyOf = (node: TreeNode): string => node.name;
+const fieldChildrenOf = (node: TreeNode): ReadonlyArray<TreeNode> =>
+  node.children ?? [];
+
+/**
+ * A tree whose active branch holds a field.
+ *
+ * A key is dispatched along the **focus path** (`press-routing-lifecycle`'s
+ * `field-cell` route), so a key typed in a field inside a tree row still reaches
+ * the row's `onKeyDown`: an unguarded tree toggles the branch on a space and
+ * moves the cursor on a typed character while the reader edits the field.
+ */
+const TreeFieldFixture = () => {
+  const [note, setNote] = useState("");
+  const tree = useExpandedRows({
+    roots: fieldTree,
+    keyOf: fieldKeyOf,
+    childrenOf: fieldChildrenOf,
+    labelOf: fieldKeyOf,
+    initialActive: "src",
+  });
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <text testId="field-tree-readout">
+        {`active=${Option.getOrElse(tree.active, () => "-")} note=${note}`}
+      </text>
+      <TreeView
+        testId="field-tree"
+        aria-label="Files with a field"
+        height={200}
+        rows={tree.rows}
+        cursor={tree.cursor}
+        onCursorChange={tree.setCursor}
+        labelOf={fieldKeyOf}
+        renderRow={(row) =>
+          row.key === "src" ? (
+            <Input
+              label="Rename"
+              value={note}
+              onValueChange={setNote}
+              size="sm"
+              testId="field-note"
+            />
+          ) : (
+            <text>{row.key}</text>
+          )
+        }
+      />
+    </div>
+  );
+};
 
 describe("the file tree", () => {
   it("opens the folder a press lands on, and reports the row", () => {
@@ -224,5 +290,36 @@ describe("the file tree", () => {
     await after(5);
     root.renderer.flush();
     expect(focusedTestId(root)).toEqual(Option.some("tree-row-row.tsx"));
+  });
+
+  it("keeps a key typed in a row's field to that field", () => {
+    root = renderData(<TreeFieldFixture />);
+    settle(root);
+
+    // `src` starts closed, so its child is the branch state's witness.
+    expect(
+      root.renderer.findByTestId("field-tree-row-child.ts"),
+    ).toBeUndefined();
+
+    // Space is the field's value: it must not toggle the branch the field sits
+    // in (`press-routing-lifecycle` measured the key reaching the row handler).
+    pressKey(root, "field-note", "space");
+    root.renderer.flush();
+    expect(
+      root.renderer.findByTestId("field-tree-row-child.ts"),
+    ).toBeUndefined();
+
+    // A printable character is the field's text, not the tree's type-ahead: an
+    // unguarded buffer would move the cursor to `readme.md` while the reader
+    // types a name.
+    pressKey(root, "field-note", "r");
+    root.renderer.flush();
+    expect(paintedText(root)).toContain("active=src");
+
+    // The row itself still owns Enter, so the guard refuses only a descendant's
+    // keys — not the row's own.
+    pressKey(root, "field-tree-row-src", "enter");
+    root.renderer.flush();
+    expect(root.renderer.findByTestId("field-tree-row-child.ts")).toBeDefined();
   });
 });

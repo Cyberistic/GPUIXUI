@@ -8095,6 +8095,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
     the README's key-routing row and status row, and the Tier 3 Expandable rows
     row. `nub run --filter @gpuixui/data test` 149/149, `test:behaviour` 97/97,
     `check-types` clean. Owner: data.
+  - [x] Keep a **key typed in a tree row's field to that field** — a key is
+    dispatched along the focus path, so a space typed in a field inside a
+    `renderRow` reached the tree's `onKeyDown` and toggled the branch the field
+    sat in, while a printable character moved the cursor through type-ahead;
+    `TableExpandableRow` already read the renderer's focused element, and
+    `useTree` did not. The controller now answers a key only while one of its
+    **rows** holds native focus, so a descendant control keeps its keys and the
+    row still owns Enter/Space. `src/behaviour/tree.test.tsx` gains
+    `keeps a key typed in a row's field to that field` (space in the field
+    paints no child, `r` leaves the cursor on `src`, Enter on the row opens the
+    branch); direction measured: without the guard the space opens the branch
+    at the first assertion. README's key-routing row, `docs/tree-view.mdx`
+    §Keyboard and the Tree views row state the rule. Owner: data.
   - [x] Arm the **column drag on the primary button only** — the runtime
     delivers `mouseDown` for all three buttons while `onClick` is the primary
     one's (the rule the primitives' sliders already follow through
