@@ -63,5 +63,7 @@ NavigationMenu
 - Hover is a timer policy; touch opens by press. A delay that is not a finite
   number takes the documented default (`150` ms), and `0` opens or closes at
   once, so a computed delay cannot open a panel in the pointer's frame.
+- Disabling a trigger while its hover open is still waiting cancels the open; the
+  trigger has to be entered again after it is re-enabled.
 - `ArrowDown` focuses the panel surface.
 - No `aria-haspopup`.

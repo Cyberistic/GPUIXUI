@@ -64,6 +64,13 @@ interface PreviewCardContextValue {
   readonly scheduleOpen: () => void;
   readonly scheduleClose: () => void;
   readonly cancelTimers: () => void;
+  /**
+   * Drop an armed hover open, keeping any scheduled close.
+   *
+   * A trigger the caller disables mid-wait must not open when its timer fires,
+   * and a card that is already open still owns its close.
+   */
+  readonly cancelOpening: () => void;
   readonly setInside: (surface: "trigger" | "content", inside: boolean) => void;
   /** Set by a dismissing outside press, consumed by the click that follows it. */
   readonly dismissedByOutsidePress: RefObject<boolean>;
@@ -137,6 +144,17 @@ export const PreviewCard = ({
     }
   }, []);
 
+  /**
+   * The open timer alone. A disabled trigger cancels the hover open it armed and
+   * leaves a close that is already scheduled to run, so an open card still ends.
+   */
+  const cancelOpening = useCallback(() => {
+    if (openTimer.current !== undefined) {
+      clearTimeout(openTimer.current);
+      openTimer.current = undefined;
+    }
+  }, []);
+
   useLayoutEffect(() => cancelTimers, [cancelTimers]);
 
   const openMs = hoverDelay(openDelay, OPEN_DELAY_MS);
@@ -177,10 +195,19 @@ export const PreviewCard = ({
       scheduleOpen,
       scheduleClose,
       cancelTimers,
+      cancelOpening,
       setInside,
       dismissedByOutsidePress,
     }),
-    [cancelTimers, open, scheduleClose, scheduleOpen, setInside, setOpen],
+    [
+      cancelOpening,
+      cancelTimers,
+      open,
+      scheduleClose,
+      scheduleOpen,
+      setInside,
+      setOpen,
+    ],
   );
 
   assertParts(previewCardRoot, children);
@@ -206,10 +233,18 @@ export const PreviewCardTrigger = ({
     scheduleOpen,
     scheduleClose,
     cancelTimers,
+    cancelOpening,
     setInside,
     dismissedByOutsidePress,
   } = usePreviewCard();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
+
+  // A trigger disabled while a hover open is waiting must not open when the
+  // timer fires: the delay is the reader's pointer on an action that can no
+  // longer take one. A card already open keeps the close it scheduled.
+  useLayoutEffect(() => {
+    if (disabled) cancelOpening();
+  }, [cancelOpening, disabled]);
 
   return (
     <Button

@@ -52,12 +52,16 @@ const Workspace = ({
   onSelect,
   onActivate,
   onClick,
+  disabled = false,
+  openDelay = 20,
 }: {
   readonly value?: string | null;
   readonly onValueChange?: (value: string | null) => void;
   readonly onSelect?: (value: string) => void;
   readonly onActivate?: () => void;
   readonly onClick?: () => void;
+  readonly disabled?: boolean;
+  readonly openDelay?: number;
 }) => (
   <div
     style={{
@@ -72,12 +76,12 @@ const Workspace = ({
       label="Product"
       value={value}
       onValueChange={onValueChange}
-      openDelay={20}
+      openDelay={openDelay}
       closeDelay={20}
     >
       <NavigationMenuList>
         <NavigationMenuItem value="platform">
-          <NavigationMenuTrigger testId="trigger-platform">
+          <NavigationMenuTrigger testId="trigger-platform" disabled={disabled}>
             Platform
           </NavigationMenuTrigger>
           <NavigationMenuContent testId="panel-platform">
@@ -151,6 +155,26 @@ describe("NavigationMenu", () => {
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
 
     nav.unmount();
+  });
+
+  it("cancels a hover open when the trigger is disabled before the delay", async () => {
+    // The trigger can be disabled between the pointer's entry and the delay's
+    // end; the armed timer used to open anyway, mounting the panel over a
+    // control that refuses every route.
+    const nav = renderComponent(<Workspace openDelay={120} />);
+
+    try {
+      hoverCentreOf(nav, "trigger-platform");
+      await after(30);
+      expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+      nav.rerender(<Workspace openDelay={120} disabled />);
+      await after(150);
+
+      expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+    } finally {
+      nav.unmount();
+    }
   });
 
   it("renders the triggers in order and no panel until one opens", () => {

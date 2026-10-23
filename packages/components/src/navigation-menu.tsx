@@ -106,6 +106,12 @@ interface NavigationMenuContextValue {
   readonly hoverClose: (value: string) => void;
   /** The pointer entered or left the open panel. */
   readonly hoverPanel: (inside: boolean) => void;
+  /**
+   * Drop an armed hover open without touching a scheduled close.
+   *
+   * A trigger the caller disables mid-wait must not open when its timer fires.
+   */
+  readonly cancelOpening: () => void;
   /** An explicit press or key wins: drop pending hover timers and forget the pointer. */
   readonly stopHover: () => void;
   /** Whether a window point falls on one of this nav's triggers. */
@@ -228,6 +234,16 @@ export const NavigationMenu = ({
     panelHovered.current = false;
     suspended.current = true;
   }, [clearCloseTimer, clearOpenTimer]);
+
+  /**
+   * The open timer alone, for a trigger that became inert mid-wait: the pointer
+   * that armed it is forgotten so a scheduled close still runs, but an open
+   * panel is not closed by a later disable.
+   */
+  const cancelOpening = useCallback(() => {
+    clearOpenTimer();
+    hovered.current = null;
+  }, [clearOpenTimer]);
 
   useLayoutEffect(() => stopHover, [stopHover]);
 
@@ -394,10 +410,12 @@ export const NavigationMenu = ({
       hoverOpen,
       hoverClose,
       hoverPanel,
+      cancelOpening,
       stopHover,
       isTriggerPoint,
     }),
     [
+      cancelOpening,
       focusTrigger,
       hoverClose,
       hoverOpen,
@@ -519,6 +537,7 @@ export const NavigationMenuTrigger = ({
     requestPanelFocus,
     hoverOpen,
     hoverClose,
+    cancelOpening,
     stopHover,
   } = useNavigationMenu();
   const { value } = useNavItem();
@@ -528,6 +547,12 @@ export const NavigationMenuTrigger = ({
     [registerTrigger, value],
   );
   const setTrigger = useMergedRef<PublicInstance | null>(register, ref);
+
+  // A trigger disabled while a hover open is waiting must not open when the
+  // timer fires; an open panel keeps its own close paths.
+  useLayoutEffect(() => {
+    if (disabled) cancelOpening();
+  }, [cancelOpening, disabled]);
 
   return (
     <Button

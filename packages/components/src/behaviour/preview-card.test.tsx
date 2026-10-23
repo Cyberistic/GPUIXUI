@@ -181,6 +181,26 @@ describe("PreviewCard", () => {
     card.unmount();
   });
 
+  it("cancels a hover open when the trigger is disabled before the delay", async () => {
+    // The trigger can be disabled between the pointer's entry and the delay's
+    // end; the armed timer used to open anyway, mounting the card over a
+    // control that refuses every route.
+    const card = renderComponent(<Workspace openDelay={120} />);
+
+    try {
+      hoverCentreOf(card, "trigger");
+      await after(30);
+      expect(card.renderer.findByTestId("preview")).toBeUndefined();
+
+      card.rerender(<Workspace openDelay={120} disabled />);
+      await after(150);
+
+      expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    } finally {
+      card.unmount();
+    }
+  });
+
   it("stays open while the pointer is inside the card", async () => {
     const card = renderComponent(<Workspace />);
 
