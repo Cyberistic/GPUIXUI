@@ -409,6 +409,28 @@ describe("the theme page", () => {
     expect(audit).toContain("localStorage");
   });
 
+  it("prints the three contracts the gate does not carry, beside it", () => {
+    // `invalidScales`, `switchFailures` and `highlightFailures` ship as public
+    // functions beside `auditTheme`, and an edit the editor exposes can break
+    // all three — raising `radius.md` past `radius.lg` inverts the radius
+    // ladder, recolouring a surface loses a declared switch, and a `primary`
+    // equal to the card hides every find match. The readout printed eleven
+    // gate reports as the whole audit, so the page has to say where the other
+    // three come from.
+    const audit = section(page("themes.mdx"), "The theme audit");
+
+    const reports = ["invalidScales", "switchFailures", "highlightFailures"];
+    expect(reports.filter((report) => !audit.includes(report))).toEqual([]);
+    expect(audit).toContain("radius.md");
+    expect(audit).toContain("radius.lg");
+    expect(audit).toContain("beside");
+    // The copy block promises the same set, so a consumer can run it on the
+    // theme they copied.
+    expect(page("themes.mdx")).toContain(
+      "as are the three the readout prints beside it",
+    );
+  });
+
   it("derives the floors the fade and the dim are held to", () => {
     // Both bullets printed the number the package owns: the disabled fade's
     // 1.5:1 and the keyboard dim's 1.05:1 floor, plus the 4.5:1 the fade example

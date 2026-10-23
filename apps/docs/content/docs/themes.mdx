@@ -195,12 +195,43 @@ call reports eleven independent failures:
   actions do. The editor does not edit the dim, but every filled action is one of
   these pairs, so an action-fill edit can erase one.
 
+### The three contracts beside the gate
+
+Three contracts the library measures are not `auditTheme` keys yet, and every
+one of them can be broken by an edit this editor exposes, so the readout prints
+them under a heading of their own rather than passing a theme they measure:
+
+- **The scale order** — `invalidScales` reads every named ladder a component
+  selects from (spacing, radii, border widths, icon sizes, the type hierarchy,
+  control and row heights, and the elevation levels by the reach of the shadow
+  each paints). The editor edits `radius.md`, and raising it past `radius.lg`
+  makes the *larger* name paint the smaller corner, which no contrast, number or
+  shadow report sees. Two adjacent radii may share a corner — Fluent 2's control
+  and surface corners are aliases — so only a smaller step is reported.
+- **A declared switch** — `switchFailures` measures the three colours a platform
+  style gives its toggle (`on`, `off`, `knob`), which enter a theme through no
+  role: the knob on each track and each track on every surface a switch can
+  stand on (the page, a card, a popover and a muted strip). Recolouring one of
+  those can leave a switch nobody can find, while the role reports stay clean
+  because the three colours are not roles.
+- **A find wash** — `highlightFailures` composites the theme's `primary` behind
+  every match and behind the active one, and holds three jobs: the wash is
+  visible on the strip it covers, the marked text is readable inside it, and the
+  active match stands apart from the resting ones. Set `primary` to the page's
+  own colour and a search result disappears.
+
+Those lines are printed separately because `auditTheme` does not return them:
+the readout names which call reported each finding instead of presenting a
+beside-the-gate report as one of the eleven. Folding one into the gate is a
+coordinated change with this readout; the token catalogue records where each
+report stands today.
+
 The same role check guards the URL and `localStorage`: a persisted state that
 carries a value the renderer cannot paint is rejected, and the editor falls back
 to the selected style instead of restoring an edit that would paint black in
-silence. A theme that merely misses a contrast, decorative, series, syntax, selection,
-disabled-fade or keyboard-dim floor is a design choice the readout reports, not
-a malformed state.
+silence. A theme that merely misses a contrast, decorative, series, syntax,
+selection, disabled-fade or keyboard-dim floor is a design choice the readout
+reports, not a malformed state.
 
 ## Copy theme
 
@@ -210,4 +241,6 @@ one-line usage note. Running the same audit on the result is up to the consumer;
 `auditTheme` and the reports it folds — `invalidColorRoles`, `invalidShadowColors`,
 `invalidNumbers`, `contrastFailures`, `decorativeFailures`, `seriesFailures`,
 `syntaxFailures`, `selectionFailures`, `indicatorFailures`,
-`disabledFadeFailures` and `keyboardDimFailures` — are public for exactly that.
+`disabledFadeFailures` and `keyboardDimFailures` — are public for exactly that,
+as are the three the readout prints beside it: `invalidScales`, `switchFailures`
+and `highlightFailures`.

@@ -4,12 +4,11 @@ import { platformThemes } from "../../lib/platform";
 import { toCssVars } from "../../lib/theme-css";
 import { usePlatformOptional } from "./platform-toggle";
 import {
-  auditFindings,
-  auditReport,
   decodeState,
   defaultState,
   editableRoles,
   resolveTheme,
+  themeFindings,
   themeSource,
   type EditableRole,
   type EditorState,
@@ -136,7 +135,8 @@ export function ThemeEditorSurface({
   };
 
   const resolved = resolveTheme(mode, pins, base);
-  const findings = auditFindings(auditReport(mode, pins, base));
+  const { gate, beside } = themeFindings(mode, pins, base);
+  const findings = [...gate, ...beside];
 
   return (
     <div className="gx-theme-editor not-prose">
@@ -250,24 +250,48 @@ export function ThemeEditorSurface({
             the fill it is read on, every selection wash stays visible with
             readable text inside it, every indicator mark is findable on the
             strip it is drawn on, every disabled control keeps its faded label,
-            and every control the keyboard dim touches keeps a visible one.
+            and every control the keyboard dim touches keeps a visible one. The
+            three contracts beside the gate pass too: the scales stay in order,
+            the declared switch is findable, and every find wash stands out.
           </p>
         ) : (
           <>
-            <p>
-              {findings.length} {findings.length === 1 ? "finding" : "findings"}{" "}
-              from the library&apos;s <code>auditTheme</code>:
-            </p>
-            <ul>
-              {findings.map((finding) => (
-                <li
-                  data-kind={finding.kind}
-                  key={`${finding.kind}-${finding.text}`}
-                >
-                  {finding.text}
-                </li>
-              ))}
-            </ul>
+            {gate.length === 0 ? null : (
+              <>
+                <p>
+                  {gate.length} from the library&apos;s <code>auditTheme</code>:
+                </p>
+                <ul>
+                  {gate.map((finding) => (
+                    <li
+                      data-kind={finding.kind}
+                      key={`${finding.kind}-${finding.text}`}
+                    >
+                      {finding.text}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {beside.length === 0 ? null : (
+              <>
+                <p>
+                  {beside.length} from the three contracts the audit does not
+                  carry yet — the scale order, a declared switch and a find
+                  wash:
+                </p>
+                <ul>
+                  {beside.map((finding) => (
+                    <li
+                      data-kind={finding.kind}
+                      key={`${finding.kind}-${finding.text}`}
+                    >
+                      {finding.text}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </>
         )}
       </div>

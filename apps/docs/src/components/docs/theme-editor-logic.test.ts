@@ -4,6 +4,7 @@ import {
   extendTheme,
   invalidColorRoles,
   lightSyntax,
+  platformNames,
   selectionFailures,
   syntaxSurfaces,
   targetSize,
@@ -15,16 +16,20 @@ import { platformThemes } from "../../lib/platform";
 import {
   auditFindings,
   auditReport,
+  besideGateFindings,
   decodeState,
   defaultState,
   editableRoles,
+  formatHighlightFailure,
   formatInvalidRole,
+  formatInvalidSwitch,
   formatSelectionFailure,
   noPins,
   paintsEveryRole,
   parseState,
   resolveTheme,
   themeConfig,
+  themeFindings,
   themeSource,
   type EditorState,
   type ThemePins,
@@ -701,5 +706,143 @@ describe("theme-editor audit readout", () => {
     expect(reports.filter((key) => !source.includes(`report.${key}`))).toEqual(
       [],
     );
+  });
+});
+
+describe("the contracts beside the gate", () => {
+  it("passes the shipped themes in both modes, and over every platform style", () => {
+    // The readout prints their findings before a reader touches anything, so a
+    // false positive here would put a permanent red line on a shipped theme.
+    for (const mode of ["light", "dark"] as const) {
+      expect(besideGateFindings(themes[mode])).toEqual([]);
+      for (const platform of platformNames) {
+        expect(besideGateFindings(platformThemes(platform)[mode])).toEqual([]);
+      }
+    }
+  });
+
+  it("reports a radius an edit raises out of the scale, which the gate passes", () => {
+    // The editor exposes `radius.md`, so this is an edit a reader can make: 12
+    // makes `md` larger than the `lg` above it, and a dialog asking for `lg`
+    // then paints a smaller corner than a card asking for `md`. `auditTheme`
+    // has no scale report, so this line has to come from beside it.
+    const { gate, beside } = themeFindings("light", {
+      colors: {},
+      radiusMd: 12,
+    });
+
+    expect(gate).toEqual([]);
+    expect(beside.map((finding) => finding.text)).toEqual([
+      "radius lg — 8 does not exceed md at 12",
+    ]);
+    expect(beside[0]?.kind).toBe("scale");
+  });
+
+  it("reports a find wash an edit paints invisible, which no contrast pair sees", () => {
+    const { beside } = themeFindings("light", {
+      colors: { primary: themes.light.colors.card },
+    });
+    const highlight = beside.filter((finding) => finding.kind === "highlight");
+
+    expect(highlight.map((finding) => finding.text)).toContain(
+      "find match on card — 1.00:1 (needs 1.05:1)",
+    );
+    expect(highlight.length).toBeGreaterThan(0);
+  });
+
+  it("reports a declared switch an edit hides on the strip it stands on", () => {
+    // A platform style's three switch colours enter the theme through no role,
+    // so only `switchFailures` sees them. The macOS light track is Apple's
+    // green; painting the card that same green leaves a switch nobody can find.
+    const { beside } = themeFindings(
+      "light",
+      { colors: { card: "#34C759" } },
+      platformThemes("darwin").light,
+    );
+    const toggle = beside.filter((finding) => finding.kind === "switch");
+
+    expect(toggle.map((finding) => finding.text)).toContain(
+      "switch on on card — 1.00:1 (needs 1.05:1)",
+    );
+  });
+
+  it("words a switch value by slot, and an absent slot as missing", () => {
+    expect(formatInvalidSwitch({ slot: "off", value: "#E9E9E" })).toBe(
+      'switch off — "#E9E9E" is not a colour GPUix can paint',
+    );
+    expect(formatInvalidSwitch({ slot: "off", value: undefined })).toBe(
+      "switch off — missing from this theme",
+    );
+  });
+
+  it("words the three jobs a find wash has to do", () => {
+    const wash = "#A7A9FF4D";
+
+    expect(
+      formatHighlightFailure({
+        kind: "visibility",
+        state: "match",
+        surface: "card",
+        wash,
+        ratio: 1.01,
+        floor: 1.05,
+      }),
+    ).toBe("find match on card — 1.01:1 (needs 1.05:1)");
+    expect(
+      formatHighlightFailure({
+        kind: "legibility",
+        state: "active",
+        surface: "muted",
+        wash,
+        ratio: 2.72,
+        floor: 7,
+      }),
+    ).toBe(
+      "foreground on the find active wash over muted — 2.72:1 (needs 7:1)",
+    );
+    expect(
+      formatHighlightFailure({
+        kind: "distinct",
+        state: "active",
+        surface: "card",
+        wash,
+        ratio: 1.02,
+        floor: 1.05,
+      }),
+    ).toBe("find active and match on card — 1.02:1 apart (needs 1.05:1)");
+    expect(
+      formatHighlightFailure({
+        kind: "visibility",
+        state: "match",
+        surface: "popover",
+        wash: undefined,
+        ratio: undefined,
+        floor: 1.05,
+      }),
+    ).toBe("find match on popover — could not be composited (needs 1.05:1)");
+  });
+
+  it("names every report the gate does not carry, so one cannot be read silently", () => {
+    // Three public contracts ship beside `auditTheme`; this readout is the only
+    // place an editor prints them, so a fourth must fail here rather than be
+    // forgotten. The list is derived from the package's exports that no audit
+    // key covers, not written by hand.
+    const source = readFileSync(
+      new URL("./theme-editor-logic.ts", import.meta.url),
+      "utf8",
+    );
+    const besideFunctions = [
+      "invalidScales",
+      "switchFailures",
+      "highlightFailures",
+    ];
+
+    expect(
+      besideFunctions.filter((name) => !source.includes(`${name}(theme)`)),
+    ).toEqual([]);
+    // The switch report has two halves, and a readout that printed only the
+    // paint would pass a track nobody can find.
+    expect(source).toContain("toggle.paint");
+    expect(source).toContain("toggle.placements");
   });
 });

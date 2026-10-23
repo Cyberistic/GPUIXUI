@@ -1,21 +1,28 @@
 import {
   auditTheme,
   extendTheme,
+  highlightFailures,
+  invalidScales,
+  switchFailures,
   targetSize,
   themes,
   type ContrastFailure,
   type DecorativeFailure,
   type DisabledFadeFailure,
+  type HighlightFailure,
   type IndicatorFailure,
   type InvalidColorRole,
   type InvalidNumber,
+  type InvalidScale,
   type InvalidShadowColor,
+  type InvalidSwitchColor,
   type KeyboardDimFailure,
   type NumberRule,
   type SelectionFailure,
   type SeriesDistinctnessFailure,
   type SeriesSurfaceFailure,
   type SeriesVisionFailure,
+  type SwitchPlacementFailure,
   type SyntaxFailure,
   type Theme,
   type ThemeAudit,
@@ -139,6 +146,13 @@ export const themeConfig = (
  * `auditTheme` reads all eleven in one call, so the editor cannot show some
  * reports and leave the others silent. The base is the platform style the
  * preview is painted over, so the audit measures what the reader sees.
+ *
+ * Three contracts the library measures *beside* the gate are read separately by
+ * {@link besideGateFindings}, because a reader can break all three with an edit
+ * this editor exposes: the scale order (raising `radius.md` past `radius.lg`
+ * makes the larger name paint the smaller corner), a declared switch's paint
+ * (recolouring a surface Apple's track stands on can lose the track), and a
+ * find wash (a `primary` equal to `card` makes every match vanish).
  */
 export const auditReport = (
   mode: ThemeMode,
@@ -146,7 +160,10 @@ export const auditReport = (
   base: Theme = themes[mode],
 ): ThemeAudit => auditTheme(resolveTheme(mode, pins, base));
 
-/** Which of the audit's eleven reports a finding came from. */
+/**
+ * Which of the audit's eleven reports — or which of the three contracts beside
+ * it — a finding came from.
+ */
 export type AuditKind =
   | "role"
   | "shadow"
@@ -159,7 +176,10 @@ export type AuditKind =
   | "selection"
   | "indicator"
   | "disabled"
-  | "dim";
+  | "dim"
+  | "scale"
+  | "switch"
+  | "highlight";
 
 /** One audit finding, already worded for the readout. */
 export interface AuditFinding {
@@ -374,6 +394,69 @@ export const formatKeyboardDim = ({
 }: KeyboardDimFailure): string =>
   `${fill} dimmed on ${over} — ${measured(ratio, floor)}`;
 
+/**
+ * Two named steps out of order, e.g. `radius lg — 12 does not exceed md at 20`.
+ * A component selects a rung by name, so the name lies even though both numbers
+ * are finite and paint; an `elevation` step prints the reach its shadow gains
+ * below the box, which is the depth the ladder compares.
+ */
+export const formatInvalidScale = ({
+  group,
+  path,
+  value,
+  previous,
+}: InvalidScale): string =>
+  `${group} ${path} — ${value} does not exceed ${previous.path} at ${previous.value}`;
+
+/**
+ * A declared switch value the renderer cannot paint, e.g. `switch off —
+ * "#E9E9E" is not a colour GPUix can paint`. An absent slot is the value a
+ * stored theme older than the slot carries, so it is called missing instead of
+ * quoting `undefined`.
+ */
+export const formatInvalidSwitch = ({
+  slot,
+  value,
+}: InvalidSwitchColor): string =>
+  value === undefined
+    ? `switch ${slot} — missing from this theme`
+    : `switch ${slot} — ${JSON.stringify(value)} is not a colour GPUix can paint`;
+
+/**
+ * A switch the reader cannot find where it is painted, e.g. `switch on on card —
+ * 1.02:1 (needs 1.05:1)`. The switch's three colours enter a theme through no
+ * role, so no contrast pair measures them; the knob is measured on each track
+ * and each track on the four strips a switch stands on.
+ */
+export const formatSwitchPlacement = ({
+  slot,
+  over,
+  ratio,
+  floor,
+}: SwitchPlacementFailure): string =>
+  `switch ${slot} on ${over} — ${measured(ratio, floor)}`;
+
+/**
+ * A find wash that fails one of its three jobs, e.g. `find match on card —
+ * 2.72:1 (needs 7:1)`. A wash is composited behind the text rather than read as
+ * a role, so `contrastRatio` never sees it: `visibility` is the wash against its
+ * surface, `legibility` is the marked text inside it, and `distinct` is the
+ * active match failing to stand apart from the resting ones.
+ */
+export const formatHighlightFailure = ({
+  kind,
+  state,
+  surface,
+  wash,
+  ratio,
+  floor,
+}: HighlightFailure): string =>
+  kind === "visibility"
+    ? `find ${state} on ${surface} — ${composited(wash, ratio, floor)}`
+    : kind === "legibility"
+      ? `foreground on the find ${state} wash over ${surface} — ${composited(wash, ratio, floor)}`
+      : `find active and match on ${surface} — ${ratio === undefined ? "unmeasurable" : `${ratio.toFixed(2)}:1 apart`} (needs ${floor}:1)`;
+
 /** Every finding the audit reports, in the one list the readout prints. */
 export const auditFindings = (
   report: ThemeAudit,
@@ -431,6 +514,64 @@ export const auditFindings = (
     text: formatKeyboardDim(failure),
   })),
 ];
+
+/**
+ * The three contracts the library measures beside the gate, worded for the same
+ * readout: the scale order, a switch a platform style declares, and every find
+ * wash. Each runs beside `auditTheme` rather than inside it — folding one in is
+ * a change to the audit's own key list and this readout together — but an edit
+ * can break all three, so the readout reports them instead of passing a theme
+ * whose `lg` corner is smaller than its `md` or whose matches lie invisible.
+ */
+export const besideGateFindings = (
+  theme: Theme,
+): ReadonlyArray<AuditFinding> => {
+  const toggle = switchFailures(theme);
+  return [
+    ...invalidScales(theme).map((failure) => ({
+      kind: "scale" as const,
+      text: formatInvalidScale(failure),
+    })),
+    ...toggle.paint.map((failure) => ({
+      kind: "switch" as const,
+      text: formatInvalidSwitch(failure),
+    })),
+    ...toggle.placements.map((failure) => ({
+      kind: "switch" as const,
+      text: formatSwitchPlacement(failure),
+    })),
+    ...highlightFailures(theme).map((failure) => ({
+      kind: "highlight" as const,
+      text: formatHighlightFailure(failure),
+    })),
+  ];
+};
+
+/** Every finding the editor prints, split by the contract that reported it. */
+export interface ThemeFindings {
+  /** The eleven reports `auditTheme` returns, already worded. */
+  readonly gate: ReadonlyArray<AuditFinding>;
+  /** The three contracts that run beside the gate, already worded. */
+  readonly beside: ReadonlyArray<AuditFinding>;
+}
+
+/**
+ * The readout's whole list for an edit: the gate's findings and the three
+ * contracts beside it, both measured on the theme the preview paints. Split
+ * rather than concatenated so the readout can say which call reported a line —
+ * a bespoke report presented as an `auditTheme` one would overstate the gate.
+ */
+export const themeFindings = (
+  mode: ThemeMode,
+  pins: ThemePins,
+  base: Theme = themes[mode],
+): ThemeFindings => {
+  const theme = resolveTheme(mode, pins, base);
+  return {
+    gate: auditFindings(auditTheme(theme)),
+    beside: besideGateFindings(theme),
+  };
+};
 
 /**
  * True when the resolved theme paints every role — the audit's own role check,
