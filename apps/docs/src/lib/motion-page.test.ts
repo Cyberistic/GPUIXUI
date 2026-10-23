@@ -380,6 +380,20 @@ describe("the motion page", () => {
       "instead of painting nothing for its whole journey",
     );
     expect(pageText).toContain("`tween(300, myEasing)`");
+
+    // A value that is not a function is no curve either: `Transition` and
+    // `Keyframe` are structural, so a hand-built one can carry an easing a
+    // config never decoded — and calling it threw out of the frame loop rather
+    // than painting the run.
+    expect(progress).toContain(
+      "const isCurve = (value: unknown): value is (progress: number) => number =>",
+    );
+    expect(progress).toContain('typeof value === "function";');
+    expect(progress).toContain("if (!isCurve(curve)) return unit;");
+    expect(pageText).toContain(
+      "A value that is not a function is no curve either",
+    );
+    expect(pageText).toContain("`TypeError: curve is not a function`");
   });
 
   it("places the frame's interpolation in the convex mix, not a difference", () => {
@@ -457,6 +471,17 @@ describe("the motion page", () => {
     expect(pageText).toContain(
       "the group's members all sit at the group's start",
     );
+
+    // A `from` the package does not name is the house `start`, not the centre:
+    // the distance arithmetic would otherwise fall through to the centre — the
+    // longest wait — for a config that never decoded its `from`.
+    expect(timeline).toContain(
+      'from === "start" || from === "end" || from === "center" ? from : "start"',
+    );
+    expect(pageText).toContain(
+      "A `from` the package does not name is the house `start`, not the centre",
+    );
+    expect(pageText).toContain("the longest wait");
   });
 
   it("documents the initial option the hooks read once at mount", () => {
