@@ -31,6 +31,10 @@ const section = (source: string, heading: string): string => {
 };
 
 const checklist = section(page, "What a component ships with");
+const writing = section(page, "Write the page");
+
+/** The files this repository keeps under `apps/docs`. */
+const appFile = (path: string): string => readRepo(`apps/docs/${path}`);
 
 describe("the contributing page", () => {
   it("pins the toolchain the repository pins", () => {
@@ -96,5 +100,89 @@ describe("the contributing page", () => {
     expect(required.filter((word) => !gate.includes(word))).toEqual([]);
     expect(required.filter((word) => !checklist.includes(word))).toEqual([]);
     expect(checklist).toContain("inventory row");
+  });
+
+  it("teaches the page contract both guards enforce", () => {
+    // A contributor following the page writes its Markdown from the sections it
+    // names; the package guard requires `## API` and an accessibility or
+    // limitations section, and the curated template requires four sections in
+    // order. The page said nothing about either, so the only copy of the rule
+    // was the policy file a contributor was never sent to.
+    expect(writing.length).toBeGreaterThan(200);
+
+    const packageGuard = appFile("src/lib/package-page-template.test.ts");
+    const curatedGuard = appFile("src/lib/component-page.test.ts");
+
+    expect(
+      ["## api", "## limitations", "## accessibility"].flatMap((heading) =>
+        writing.includes(heading) ? [] : [heading],
+      ),
+    ).toEqual([]);
+    expect(packageGuard).toContain('heading === "API"');
+    expect(packageGuard).toContain("Accessibility");
+
+    expect(
+      ["installation", "usage", "api reference", "limitations"].flatMap(
+        (name) =>
+          writing.includes(name) && curatedGuard.toLowerCase().includes(name)
+            ? []
+            : [name],
+      ),
+    ).toEqual([]);
+  });
+
+  it("names the preview registry and the guard that holds both directions", () => {
+    // A preview is registered in one file and mounted by name from the page.
+    // The page now teaches the two steps, so the paths have to be the ones the
+    // site actually has.
+    expect(writing).toContain(
+      "apps/docs/src/components/docs/demos.tsx".toLowerCase(),
+    );
+    expect(writing).toContain("<componentpreview");
+    expect(appFile("src/components/docs/demos.tsx")).toContain(
+      "export const demos",
+    );
+    expect(appFile("src/components/docs/component-preview.tsx")).toContain(
+      "ComponentPreview",
+    );
+
+    const registryGuard = appFile("src/lib/component-preview.test.ts");
+    expect(registryGuard).toContain("are mounted by a page");
+    expect(registryGuard).toContain("name a registered demo on every page");
+  });
+
+  it("names the blocks a page must not write by hand", () => {
+    // Each strip is generated, so a page that restates one drifts. The page
+    // lists them; the files behind them have to exist, and the mount has to be
+    // on the frame rather than on the author.
+    const strips = [
+      ["status", "src/components/docs/status-strip.tsx"],
+      ["built on", "src/components/docs/dependency-strip.tsx"],
+      ["keyboard", "src/components/docs/keyboard-strip.tsx"],
+      ["related", "src/components/docs/related-strip.tsx"],
+      ["source accordion", "src/components/docs/package-source.tsx"],
+    ] as const;
+
+    expect(
+      strips.flatMap(([label, path]) =>
+        writing.includes(label) && existsSync(join(repoRoot, "apps/docs", path))
+          ? []
+          : [`${label}: ${path}`],
+      ),
+    ).toEqual([]);
+
+    expect(appFile("src/lib/docs-view.tsx")).toContain("<StatusStrip");
+    expect(appFile("src/lib/docs-view.tsx")).toContain("<KeyboardStrip");
+    expect(appFile("src/lib/docs-view.tsx")).toContain("<RelatedStrip");
+  });
+
+  it("sends the reader to the policy the template lives in", () => {
+    // The policy is the long form; a contributor who needs the reasoning has to
+    // be able to reach it from the page, and the file has to still carry the
+    // template table.
+    expect(writing).toContain("preview-strategy.md");
+    const policy = readRepo("docs/preview-strategy.md");
+    expect(policy).toContain("## The component page template");
+    expect(policy).toContain("labelled browser approximation (strategy 3)");
   });
 });

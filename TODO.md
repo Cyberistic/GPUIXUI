@@ -10408,7 +10408,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 363/363
+`[x]` `[██████████]` 364/364
+
+`[x]` Teach **how to write the page** the checklist asks for — `/docs/contributing`
+      told a contributor that a component ships a page and which checks to run,
+      and never said what a page contains: the template lived only in
+      `docs/preview-strategy.md`, the preview registry's both-directions rule and
+      the two page guards were invisible from the site. The page gains **Write the
+      page** (where the Markdown lives and when a curated page wins the URL; the
+      `## API` and `## Limitations`/`## Accessibility` contract; the four curated
+      sections in order; the two-step preview registry; the five generated blocks;
+      the MDX rules; the docs command) and points at the policy for the reasoning.
+      `contributing-page.test.ts` gains 4 cases (9 total): the section must name
+      both guards' sections, the registry path and mount component, the five strips
+      whose files must exist, and the policy's template section — so a renamed
+      guard, registry or strip fails by name instead of teaching a dead path.
+      Directions measured: with the section removed four cases fail by name
+      (`expected 0 to be greater than 200`, the registry path, the five strips,
+      `preview-strategy.md`); restored, the file is 9/9. No native scenario
+      applies — a page and the guards it cites have no runtime path.
 
 `[x]` Publish the **keyboard contract** every component page promised — the index
       said "every component … with its keyboard contract" and `/docs/components`

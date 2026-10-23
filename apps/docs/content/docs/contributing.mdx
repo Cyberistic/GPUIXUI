@@ -45,3 +45,62 @@ nub run --filter playground build && nub apps/playground/dist/live/run.js --only
 - A page in `packages/<package>/docs/<component>.mdx`.
 - An inventory row in `COMPONENTS.md`.
 - A verified interaction in the real GPUix runtime — or a recorded, evidenced limitation.
+
+## Write the page
+
+The page is part of the component, and the package writes it:
+`packages/<package>/docs/<component>.mdx`. The site mounts that file as-is, so
+there is no second copy to keep in step. A component that deserves previews, the
+install command and copyable source gets a curated page at
+`apps/docs/content/docs/components/<component>.mdx` instead; its URL wins and
+the package page is not served.
+
+Two sections a package page may never hide are enforced by
+`package-page-template.test.ts`:
+
+- `## API` — the props a caller passes;
+- `## Limitations` or `## Accessibility` — the runtime's budget for this
+  component.
+
+A curated page carries `Installation`, `Usage`, `API reference` and
+`Limitations`, in that order, and opens with a `<ComponentPreview name={key} />`.
+The template and the reasoning are in `preview-strategy.md`; the site's own
+guard reads the same table.
+
+### A preview is a registered drawing
+
+1. Register the drawing under a stable key in
+   `apps/docs/src/components/docs/demos.tsx`.
+2. Mount it on the page at the top: `<ComponentPreview name={theKey} />`.
+
+Both directions are checked: a key no page mounts is dead code, and a name no
+registry declares throws in the browser. The drawing is a browser
+approximation labelled as one, and its Code tab shows the shipped source. Prefer
+the package's own pure logic for the interaction — a reducer, a matcher, a
+clamp — and keep only the paint in the browser.
+
+### Some blocks are generated
+
+Do not write these by hand; each reads the component, the page or the
+inventory:
+
+| Block | Read from |
+| ----- | --------- |
+| status and support | the page's `COMPONENTS.md` row |
+| Built on | the component module's workspace imports |
+| Keyboard | the keys the component's own modules handle |
+| Related | the page's family in `related.ts` |
+| source accordion | the component's module at build time |
+
+### The Markdown is compiled as MDX
+
+Quote the YAML frontmatter, keep raw `<tag>` out of prose (a fenced block is
+fine), and let every `ts`/`tsx` fence resolve its `@gpuixui/*` imports. A link
+must resolve to a page or a heading the site serves. `package-docs.test.ts`,
+`page-snippets.test.ts` and `link-integrity.test.ts` read all three.
+
+Run the site's guards before calling the page done:
+
+```sh
+nub run --filter @gpuixui/docs test
+```

@@ -92,7 +92,7 @@ components/toast.mdx         Curated: the bounded queue, one action, the hold
 components/tooltip.mdx       Curated: the tip's clock, its entry and held exit, the traversal that never opens it
 primitives/index.mdx         The Tier 1 section index (its pages come from the packages)
 testing.mdx                  The two test lanes, the check model and the report
-contributing.mdx             The checks, the worktree rules, the component checklist
+contributing.mdx             The checks, the worktree rules, the component checklist and how to write its page
 license.mdx                  Licenses and attribution, read from LICENSES/*.md
 ```
 
