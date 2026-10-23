@@ -174,27 +174,15 @@ const linksOf = (page: Page): ReadonlyArray<Link> => {
  *
  * Empty: the three cross-links between the keyboard-shortcut and hotkey-recorder
  * pages omitted the `/docs/components` prefix; the components workstream
- * corrected them.
+ * corrected them. The six editor cross-links pointed at `/docs/components` while
+ * the editor collection mounts at `/docs/editor`; the editor workstream
+ * repointed them and dropped its six rows.
  */
 const knownDeadLinks: ReadonlyArray<{
   readonly from: string;
   readonly target: string;
   readonly reason: string;
-}> = (
-  [
-    ["code-editor", "diff-viewer"],
-    ["code-editor", "search-replace"],
-    ["diff-viewer", "code-editor"],
-    ["diff-viewer", "search-replace"],
-    ["search-replace", "code-editor"],
-    ["search-replace", "diff-viewer"],
-  ] as const
-).map(([from, to]) => ({
-  from: `packages/editor/docs/${from}.mdx`,
-  target: `/docs/components/${to}`,
-  reason:
-    "the editor collection mounts at /docs/editor, so the cross-link is dead — owner: editor workstream",
-}));
+}> = [];
 
 /** Resolve a link, or say why it cannot resolve. */
 const deadReason = (link: Link): string | undefined => {
