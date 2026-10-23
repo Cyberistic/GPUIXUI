@@ -22,6 +22,7 @@ import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import { validate } from "@gpuixui/components/validation/logic";
 import {
@@ -47,6 +48,31 @@ const read = (path: string): string =>
 
 const view = read("./scenarios.tsx");
 const readme = read("../../README.md");
+const todo = read("../../../../TODO.md");
+
+/**
+ * The checks `multiStepSteps` asserts.
+ *
+ * Read out of the probe rather than typed here, so the README and the interlock
+ * row cannot print a count the scenario no longer has.
+ */
+const assertedChecks = ((): number => {
+  const steps = view.slice(view.indexOf("const multiStepSteps"));
+  const body = steps.slice(0, steps.indexOf("const checkboxSteps"));
+  return Arr.length(
+    Arr.filter(
+      Arr.fromIterable(body.matchAll(/ctx\.expect\w+\(/g)),
+      () => true,
+    ),
+  );
+})();
+
+/** The `|` table row that names `needle`, or `""` when no row carries it. */
+const rowOf = (source: string, needle: string): string =>
+  Option.getOrElse(
+    Arr.findFirst(Str.split(source, "\n"), Str.includes(needle)),
+    () => "",
+  );
 
 /** The step's refusal, read as a string for a readable assertion. */
 const refusal = (step: 1 | 2 | 3, value: string): string =>
@@ -176,14 +202,17 @@ describe("the README", () => {
   });
 
   it("prints the checks the probe actually asserts", () => {
-    const steps = view.slice(view.indexOf("const multiStepSteps"));
-    const body = steps.slice(0, steps.indexOf("const checkboxSteps"));
-    const asserted = Arr.length(
-      Arr.filter(
-        Arr.fromIterable(body.matchAll(/ctx\.expect\w+\(/g)),
-        () => true,
-      ),
-    );
-    expect(readme).toContain(`${asserted} checks`);
+    expect(readme).toContain(`${assertedChecks} checks`);
+  });
+
+  it("records the playground half as landed, with this probe's own run", () => {
+    // The row told a reader the probe still asserted the limit after the
+    // components fix landed and this wizard re-measured it.
+    const row = rowOf(todo, "Form` whose second submit is swallowed");
+    expect(row).not.toBe("");
+    expect(row).not.toContain("playground half is open");
+    expect(row).toContain("Playground half landed");
+    expect(row).toContain("--only multi-step-form-lifecycle");
+    expect(row).toContain(`${assertedChecks} checks`);
   });
 });

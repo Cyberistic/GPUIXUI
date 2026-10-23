@@ -19,6 +19,7 @@
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import { Pixels } from "@gpuixui/testing";
 import { liveRegistry } from "./registry.js";
@@ -32,6 +33,11 @@ import {
 
 const readme = readFileSync(
   new URL("../../README.md", import.meta.url),
+  "utf8",
+);
+
+const todo = readFileSync(
+  new URL("../../../../TODO.md", import.meta.url),
   "utf8",
 );
 
@@ -93,6 +99,9 @@ const frameAt = (scale: number): Pixels.Pixels => {
 };
 
 const BOX = { x: 0, y: 0, width: FRAME.width, height: FRAME.height } as const;
+
+/** The checks `truncationSteps` asserts, read out of the probe itself. */
+const asserted = steps.match(/ctx\.expect[A-Za-z]+\(/g)?.length ?? 0;
 
 /** The reader's answer, or a failure no test can pass through. */
 const readOf = (
@@ -168,12 +177,26 @@ describe("the truncation probe's record", () => {
   });
 
   it("prints the check count the steps assert", () => {
-    const asserted = steps.match(/ctx\.expect[A-Za-z]+\(/g)?.length ?? 0;
     expect(asserted).toBeGreaterThan(10);
     const printed = Number(
       /(\d+) checks, `--only text-truncation`/.exec(readme)?.[1] ?? Number.NaN,
     );
     expect(printed).toBe(asserted);
+  });
+
+  it("records the playground half as landed, with this probe's own run", () => {
+    // The interlock row told a reader the assertion still described the pre-fix
+    // source after the probe had been flipped to the shipped component's cut.
+    const row = Option.getOrElse(
+      Arr.findFirst(Str.split(todo, "\n"), Str.includes("Text-truncation row")),
+      () => "",
+    );
+    expect(row).not.toBe("");
+    expect(row).not.toContain("describes the pre-fix source");
+    expect(row).not.toContain("the playground half stays with its owner");
+    expect(row).toContain("Playground half landed");
+    expect(row).toContain("--only text-truncation");
+    expect(row).toContain(`${asserted} checks`);
   });
 
   it("mounts the raw clamp and the shipped prop it measures", () => {
