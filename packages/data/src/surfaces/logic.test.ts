@@ -13,13 +13,16 @@
  * - a removal that removed the wrong sibling;
  * - an empty builder that matched nothing instead of everything;
  * - an order that read a blank side as zero, so an unfilled clause kept every
- *   positive row.
+ *   positive row;
+ * - an append that could only reach the root, so a nested `any` could never
+ *   gain a clause from the builder.
  */
 
 import { Match } from "effect";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
+  appendAt,
   appendClause,
   clauseAt,
   clauseCount,
@@ -389,6 +392,69 @@ describe("editing a tree", () => {
 
     expect(isAll(next)).toBe(true);
     expect(clauseCount(next)).toBe(2);
+  });
+
+  it("adds a clause to the nested group a path names, not to the root", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        {
+          kind: "any",
+          children: [clause("name", "contains", "readme")],
+        },
+      ],
+    };
+
+    const next = appendAt(tree, [1], clause("size", "greaterThan", "1024"));
+
+    // The root still holds its two children; the clause joined the `any`.
+    expect(isAll(next)).toBe(true);
+    expect(clauseCount(next)).toBe(3);
+    expect(clauseOf(next, [0])).toMatchObject({ field: "status" });
+    expect(clauseOf(next, [1, 1])).toMatchObject({
+      field: "size",
+      comparison: "greaterThan",
+    });
+    expect(Option.isNone(clauseAt(next, [2]))).toBe(true);
+  });
+
+  it("adds to the root when the path is empty, the rule the root Add follows", () => {
+    const tree: FilterTree = {
+      kind: "all",
+      children: [clause("status", "equals", "tracked")],
+    };
+
+    const next = appendAt(tree, [], clause("size", "lessThan", "1024"));
+
+    expect(clauseCount(next)).toBe(2);
+    expect(clauseOf(next, [1])).toMatchObject({ field: "size" });
+  });
+
+  it("leaves the tree alone when the path names no group a clause can join", () => {
+    const nested: FilterTree = {
+      kind: "all",
+      children: [
+        clause("status", "equals", "tracked"),
+        {
+          kind: "any",
+          children: [clause("name", "contains", "readme")],
+        },
+        { kind: "not", child: clause("size", "greaterThan", "0") },
+      ],
+    };
+
+    // A clause is not a group, a `not` holds one child, and an index past the
+    // children names nothing: Add is only painted where the append lands.
+    expect(appendAt(nested, [0], clause("size", "lessThan", "1"))).toEqual(
+      nested,
+    );
+    expect(appendAt(nested, [2], clause("size", "lessThan", "1"))).toEqual(
+      nested,
+    );
+    expect(appendAt(nested, [9], clause("size", "lessThan", "1"))).toEqual(
+      nested,
+    );
   });
 
   it("changes a predicate's field, comparison or value in place", () => {

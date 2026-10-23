@@ -43,7 +43,7 @@ import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
 import {
-  appendClause,
+  appendAt,
   comparisons,
   describeTree,
   emptyTree,
@@ -89,7 +89,8 @@ export interface AdvancedFilterProps extends Omit<
    * is `0`), and the row's parts are `${testId}-${slot}-field`,
    * `${testId}-${slot}-comparison`, `${testId}-${slot}-value` and
    * `${testId}-${slot}-remove`. A nested group's clause therefore keeps its own
-   * id instead of repeating a sibling's.
+   * id instead of repeating a sibling's. The root's Add control is
+   * `${testId}-add`, and a nested group's own is `${testId}-${slot}-add`.
    */
   readonly testId?: string;
 }
@@ -123,6 +124,19 @@ const labelOf = (
 /** A clause's or group's path as a locator segment: a root node is `0`. */
 const slotOf = (path: FilterPath): string =>
   path.length === 0 ? "0" : Arr.join(Arr.map(path, String), "-");
+
+/** The clause an Add control appends: the first field, no comparison made yet. */
+const clauseFor = (
+  fields: ReadonlyArray<AdvancedFilterField>,
+): FieldPredicate => ({
+  kind: "predicate",
+  field: Arr.head(fields).pipe(
+    Option.map((field) => field.field),
+    Option.getOrElse(() => ""),
+  ),
+  comparison: "equals",
+  value: "",
+});
 
 /** One clause: a field, a comparison, a value and a way out. */
 const ClauseRow = ({
@@ -281,6 +295,7 @@ const Tree = ({
   path,
   fields,
   onChange,
+  onAdd,
   testId,
   removable,
 }: {
@@ -291,6 +306,8 @@ const Tree = ({
   readonly path: FilterPath;
   readonly fields: ReadonlyArray<AdvancedFilterField>;
   readonly onChange: (next: FilterTree) => void;
+  /** Append a clause to the group at a path. */
+  readonly onAdd: (path: FilterPath) => void;
   readonly testId: string | undefined;
   /** Whether the node sits in a group that can drop it. */
   readonly removable: boolean;
@@ -323,6 +340,7 @@ const Tree = ({
           path={[...path, 0]}
           fields={fields}
           onChange={onChange}
+          onAdd={onAdd}
           testId={testId}
           removable={false}
         />
@@ -344,10 +362,24 @@ const Tree = ({
           path={[...path, at]}
           fields={fields}
           onChange={onChange}
+          onAdd={onAdd}
           testId={testId}
           removable
         />
       ))}
+      {path.length === 0 || !removable ? undefined : (
+        <Button
+          variant="ghost"
+          size="sm"
+          label={`Add a clause to the ${groupLabels[node.kind]} group`}
+          onActivate={() => onAdd(path)}
+          testId={
+            testId === undefined ? undefined : `${testId}-${slotOf(path)}-add`
+          }
+        >
+          Add clause
+        </Button>
+      )}
     </Group>
   );
 };
@@ -362,7 +394,10 @@ const Tree = ({
  *
  * A clause's Remove control paints only where removal changes the tree: a
  * `not` holds one child and is removed whole (when it sits in a group), and a
- * root clause is cleared with Clear.
+ * root clause is cleared with Clear. Add is the same rule: every `all`/`any`
+ * group that sits in a group paints its own Add control, so a nested `any` can
+ * be extended in place — the root's Add sits below the tree. A `not` paints
+ * none, because {@link removeAt} cannot take a clause back out of one.
  */
 export const AdvancedFilter = ({
   fields,
@@ -375,17 +410,8 @@ export const AdvancedFilter = ({
   ...rest
 }: AdvancedFilterProps) => {
   const theme = useTheme();
-  const addClause = (): void => {
-    const clause: FieldPredicate = {
-      kind: "predicate",
-      field: Arr.head(fields).pipe(
-        Option.map((field) => field.field),
-        Option.getOrElse(() => ""),
-      ),
-      comparison: "equals",
-      value: "",
-    };
-    onChange(appendClause(tree, clause));
+  const addClause = (path: FilterPath): void => {
+    onChange(appendAt(tree, path, clauseFor(fields)));
   };
   return (
     <div
@@ -411,6 +437,7 @@ export const AdvancedFilter = ({
         path={[]}
         fields={fields}
         onChange={onChange}
+        onAdd={addClause}
         testId={testId}
         removable={false}
       />
@@ -418,7 +445,7 @@ export const AdvancedFilter = ({
         <Button
           variant="secondary"
           size="sm"
-          onActivate={addClause}
+          onActivate={() => addClause([])}
           testId={testId === undefined ? undefined : `${testId}-add`}
         >
           Add clause

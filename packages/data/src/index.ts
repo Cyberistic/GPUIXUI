@@ -262,6 +262,7 @@ export type {
 } from "./surfaces/advanced-filter.js";
 
 export {
+  appendAt,
   appendClause,
   clauseAt,
   clauseCount,

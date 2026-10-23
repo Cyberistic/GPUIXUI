@@ -443,7 +443,11 @@ both sides as numbers, so a field stored as a number and a clause typed as text
 still compare. A side that does not read as a number satisfies no order, the
 blank value a new clause starts with included, so an unfilled clause keeps no
 row rather than reading the blank as `0`. An empty `all` matches everything,
-which is what an empty builder means. The toolbar's search is the one
+which is what an empty builder means. The builder adds wherever a reader presses:
+`appendAt(tree, path, clause)` grows the `all`/`any` at a path, so a nested `any`
+gains a clause in place, while a path naming a clause, a `not` or nothing leaves
+the tree alone (a `not` paints no Add, because its clause cannot be removed
+again). The toolbar's search is the one
 **debounced** field (the core's `@tanstack/pacer` debouncer owns the wait); the
 table's own filter field is deliberately not, because `table-filter-lifecycle`
 measured the set narrowing as the reader types.

@@ -7251,6 +7251,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
     README's `VirtualTable` rule and the Tier 3 **Tables**/**Virtualized tables**
     rows. Verified: `--filter @gpuixui/data test` 146/146, `test:behaviour` 95/95
     and the headless `--only data-table-core` (1/1). Owner: data.
+  - [x] Add a clause to the **group the reader pressed**, not only the root —
+    the builder painted `Add clause` below the tree and `appendClause` wrote to
+    the root, so a nested `any` (or one inside a `not`) could be read and its
+    clauses edited, but never extended: building "A or B" needed a caller-built
+    tree. `surfaces/logic.ts` gains `appendAt(tree, path, clause)` — the root
+    keeps `appendClause`'s rule that a lone clause becomes an `all`, a path that
+    names an `all`/`any` appends inside it, and a path naming a clause, a `not`,
+    or nothing leaves the tree alone (the rule `removeAt` follows for Remove). A
+    group inside a group paints its own Add (`${testId}-${slot}-add`), and a
+    `not` paints none because its clause cannot be removed again.
+    `surfaces/logic.test.ts` gains three cases (`28 cases`): the nested append,
+    the root path, and the three paths that change nothing;
+    `surfaces.test.tsx` mounts a stateful builder, presses `nested-1-add`, and
+    reads the new clause at `nested-1-1-value` with the root still two children
+    (directions measured: with the root-only add the press finds no
+    `nested-1-add`, and an append that wraps a clause path fails the
+    "leaves the tree alone" case). Docs: `docs/advanced-filter.mdx` (the
+    root-only limitation is retracted, the group Add and its locator
+    documented), the README's advanced-filter paragraph and the **Advanced
+    filtering / query builders** row. Verified: `--filter @gpuixui/data test`
+    149/149, `test:behaviour` 96/96, `check-types` clean. Owner: data.
   - [x] Keep a **hidden column's text out of the search** — the field above the
     rows is the core's global filter over every column accessor, so hiding
     `status` and typing `modified` kept 20 records whose painted cells showed

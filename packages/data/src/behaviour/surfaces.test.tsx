@@ -16,6 +16,7 @@
  *   exists to prevent.
  */
 
+import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { SurfacesExample } from "../../examples/surfaces.example.js";
 import {
@@ -35,6 +36,23 @@ import { AdvancedFilter } from "../surfaces/advanced-filter.js";
 import type { FilterTree } from "../surfaces/logic.js";
 
 let root: DataTestRoot | undefined;
+
+/** A builder over a tree its caller holds, so an Add control repaints it. */
+const NestedBuilder = ({ tree: initial }: { readonly tree: FilterTree }) => {
+  const [tree, setTree] = useState<FilterTree>(initial);
+  return (
+    <AdvancedFilter
+      fields={[
+        { field: "status", label: "Status" },
+        { field: "name", label: "Name" },
+        { field: "size", label: "Size" },
+      ]}
+      tree={tree}
+      onChange={setTree}
+      testId="nested"
+    />
+  );
+};
 
 /** Mount the example; `afterEach` tears it down even when an assertion fails. */
 const mount = (): DataTestRoot => {
@@ -160,6 +178,48 @@ describe("the data surfaces", () => {
     );
     expect(requireBounds(root, "nested-0-value").y).toBeLessThan(
       requireBounds(root, "nested-1-0-value").y,
+    );
+  });
+
+  it("adds a clause to the nested group the reader asked", () => {
+    // The root add could never reach an `any` group: a caller could read a
+    // nested group but not extend it, so a query that needed "A or B" had to be
+    // built outside the builder. Every group in a group paints its own Add.
+    const tree: FilterTree = {
+      kind: "all",
+      children: [
+        {
+          kind: "predicate",
+          field: "status",
+          comparison: "equals",
+          value: "tracked",
+        },
+        {
+          kind: "any",
+          children: [
+            {
+              kind: "predicate",
+              field: "name",
+              comparison: "contains",
+              value: "alpha",
+            },
+          ],
+        },
+      ],
+    };
+    root = renderData(<NestedBuilder tree={tree} />);
+    settle(root);
+
+    clickCentreOf(root, "nested-1-add");
+    root.renderer.flush();
+
+    // The clause joined the `any` (slot `1-1`), and the root kept its two
+    // children: the add landed where the reader pressed, not at the root.
+    expect(root.renderer.findByTestId("nested-1-1-value")).toBeDefined();
+    expect(root.renderer.findByTestId("nested-2-value")).toBeUndefined();
+    // The new clause starts on the first field, so the group reads that way.
+    expect(paintedText(root)).toContain(
+      "any of (name contains alpha, status equals",
     );
   });
 

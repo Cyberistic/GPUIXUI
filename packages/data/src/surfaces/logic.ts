@@ -413,3 +413,56 @@ export const appendClause = (
     })),
     Match.exhaustive,
   );
+
+/**
+ * Add a clause to the group at `path` — the root at `[]`.
+ *
+ * A builder paints an Add control on every group it can extend, so a clause can
+ * join a nested `any` without rebuilding the tree around it. Appending to the
+ * root is {@link appendClause}, including its rule that a lone clause becomes an
+ * `all` holding both.
+ *
+ * A path that names no group leaves the tree alone: a missing child, a clause, a
+ * `not` (which holds one child and is not a group a clause may join here), or an
+ * index past a group's children. The builder only paints Add where the append
+ * lands, so an unchanged tree is a caller error rather than a state the UI
+ * offers — the same rule `removeAt` follows for a control that cannot remove.
+ */
+export const appendAt = (
+  tree: FilterTree,
+  path: FilterPath,
+  clause: FieldPredicate,
+): FilterTree => {
+  // The root keeps `appendClause`'s rule: a lone clause becomes an `all`
+  // holding both, which is what the builder's own Add means.
+  if (path.length === 0) return appendClause(tree, clause);
+  const appendInto = (node: FilterTree, rest: FilterPath): FilterTree => {
+    // Only a group takes a clause. A clause or a `not` at the path is left
+    // alone rather than wrapped, so an append never changes the tree's shape
+    // at a node that does not paint an Add control.
+    if (rest.length === 0) {
+      return isAll(node) || isAny(node) ? appendClause(node, clause) : node;
+    }
+    const [head, ...tail] = rest;
+    const intoChildren = (
+      children: ReadonlyArray<FilterTree>,
+    ): ReadonlyArray<FilterTree> =>
+      Arr.map(children, (child, at) =>
+        at === head ? appendInto(child, tail) : child,
+      );
+    return Match.value(node).pipe(
+      Match.when(isPredicate, () => node),
+      Match.when(isNot, () => node),
+      Match.when(isAll, (group) => ({
+        ...group,
+        children: intoChildren(group.children),
+      })),
+      Match.when(isAny, (group) => ({
+        ...group,
+        children: intoChildren(group.children),
+      })),
+      Match.exhaustive,
+    );
+  };
+  return appendInto(tree, path);
+};
