@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 /**
- * Auth blocks — browser reproductions and `@gpuixui/*` recipes for sign-in,
- * sign-up, password reset and one-time-code pages.
+ * The auth examples — browser reproductions and `@gpuixui/*` recipes for
+ * sign-in, sign-up, password reset and one-time-code cards — and the full
+ * sign-in page the Blocks lane ships.
  *
  * Each reproduction owns only the state a reader can watch: a submission walks
  * idle → loading → success or error, the code cells take focus and typing, and
@@ -169,7 +170,10 @@ export const LoginRender = () => {
           type="password"
         />
         <div className="gx-auth-between">
-          <a className="gx-auth-link" href="/docs/blocks/forgot-password">
+          <a
+            className="gx-auth-link"
+            href="/docs/components/auth#forgot-password"
+          >
             Forgot password?
           </a>
         </div>
@@ -192,7 +196,7 @@ export const LoginRender = () => {
         <AuthStatus message={message} phase={phase} />
         <p className="gx-auth-footer">
           Don't have an account?{" "}
-          <a className="gx-auth-link" href="/docs/blocks/signup">
+          <a className="gx-auth-link" href="/docs/components/auth#sign-up">
             Sign up
           </a>
         </p>
@@ -314,7 +318,7 @@ export const SignupRender = () => {
         <AuthStatus message={message} phase={phase} />
         <p className="gx-auth-footer">
           Already have an account?{" "}
-          <a className="gx-auth-link" href="/docs/blocks/login">
+          <a className="gx-auth-link" href="/docs/components/auth#sign-in">
             Sign in
           </a>
         </p>
@@ -374,7 +378,7 @@ export const ForgotPasswordRender = () => {
         </button>
         <AuthStatus message={message} phase={phase} />
         <p className="gx-auth-footer">
-          <a className="gx-auth-link" href="/docs/blocks/login">
+          <a className="gx-auth-link" href="/docs/components/auth#sign-in">
             Back to sign in
           </a>
         </p>
@@ -481,6 +485,185 @@ export const OtpRender = () => {
             {seconds > 0 ? `Resend in ${seconds}s` : "Resend code"}
           </button>
         </p>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The demo credentials the sign-in page accepts, printed in its status row at
+ * rest so a reader can reach the error and success states.
+ */
+const PAGE_EMAIL = "ada@example.com";
+const PAGE_PASSWORD = "analytical";
+
+interface PagePayload {
+  readonly email: string;
+  readonly password: string;
+}
+
+export const signInPageFeedback = ({
+  email,
+  password,
+}: PagePayload): Feedback => {
+  if (email === "" || password === "") {
+    return { phase: "error", message: "Enter your email and password." };
+  }
+  if (!isEmail(email)) {
+    return { phase: "error", message: "Enter a valid email address." };
+  }
+  if (email !== PAGE_EMAIL || password !== PAGE_PASSWORD) {
+    return {
+      phase: "error",
+      message: "Those credentials do not match an account.",
+    };
+  }
+  return {
+    phase: "success",
+    message: "Signed in. Opening your workspace…",
+  };
+};
+
+export const SignInPageRender = () => {
+  const { phase, message, submit } = useSubmission(signInPageFeedback);
+  const [revealed, setRevealed] = useState(false);
+  const emailId = useId();
+  const passwordId = useId();
+
+  return (
+    <div className="gx-auth-page">
+      <header className="gx-auth-page-nav">
+        <a className="gx-auth-page-brand" href="/">
+          <span aria-hidden="true" className="gx-mark gx-auth-page-mark" />
+          <span>GPUIxUI</span>
+        </a>
+        <nav aria-label="Primary" className="gx-auth-page-links">
+          <a href="/#features">Features</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/docs">Docs</a>
+        </nav>
+        <button className="gx-btn gx-btn-ghost" type="button">
+          Sign in
+        </button>
+      </header>
+      <div className="gx-auth-page-body">
+        <div className="gx-auth-page-form">
+          <form
+            className="gx-auth-page-card"
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault();
+              const data = new FormData(event.currentTarget);
+              submit({
+                email: readField(data, "email"),
+                password: readField(data, "password"),
+              });
+            }}
+          >
+            <div className="gx-auth-page-head">
+              <h3 className="gx-auth-page-title">Welcome back</h3>
+              <p className="gx-auth-page-desc">
+                Sign in to your workspace and pick up where you left off.
+              </p>
+            </div>
+            <div className="gx-auth-field">
+              <label className="gx-block-label" htmlFor={emailId}>
+                Email
+              </label>
+              <input
+                autoComplete="email"
+                className="gx-field gx-auth-input"
+                id={emailId}
+                name="email"
+                placeholder="you@example.com"
+                type="email"
+              />
+            </div>
+            <div className="gx-auth-field">
+              <label className="gx-block-label" htmlFor={passwordId}>
+                Password
+              </label>
+              <div className="gx-auth-page-password">
+                <input
+                  autoComplete="current-password"
+                  className="gx-field gx-auth-input"
+                  id={passwordId}
+                  name="password"
+                  placeholder="••••••••"
+                  type={revealed ? "text" : "password"}
+                />
+                <button
+                  aria-label={revealed ? "Hide password" : "Show password"}
+                  aria-pressed={revealed}
+                  className="gx-auth-page-toggle"
+                  onClick={() => setRevealed((shown) => !shown)}
+                  type="button"
+                >
+                  {revealed ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+            <div className="gx-auth-page-meta">
+              <label className="gx-auth-page-remember">
+                <input
+                  className="sr-only gx-auth-check-input"
+                  name="remember"
+                  type="checkbox"
+                  value="yes"
+                />
+                <span aria-hidden="true" className="gx-auth-check" />
+                <span>Remember me</span>
+              </label>
+              <a
+                className="gx-auth-link"
+                href="/docs/components/auth#forgot-password"
+              >
+                Forgot password?
+              </a>
+            </div>
+            <button
+              className="gx-btn gx-btn-primary gx-auth-submit"
+              disabled={phase === "loading"}
+              type="submit"
+            >
+              {phase === "loading" ? "Signing in…" : "Sign in"}
+            </button>
+            <div className="gx-block-divider">or</div>
+            <div className="gx-auth-page-oauth">
+              <button className="gx-btn gx-btn-outline" type="button">
+                GitHub
+              </button>
+              <button className="gx-btn gx-btn-outline" type="button">
+                Google
+              </button>
+            </div>
+            <AuthStatus
+              message={
+                message === ""
+                  ? `Preview: use ${PAGE_EMAIL} and ${PAGE_PASSWORD}.`
+                  : message
+              }
+              phase={phase}
+            />
+            <p className="gx-auth-footer">
+              New here?{" "}
+              <a className="gx-auth-link" href="/docs/components/auth#sign-up">
+                Create an account
+              </a>
+            </p>
+          </form>
+        </div>
+        <aside aria-label="About GPUIxUI" className="gx-auth-page-aside">
+          <figure className="gx-auth-page-quote">
+            <blockquote className="gx-auth-page-quote-text">
+              One page, every platform — the controls, the palette and the type
+              all arrive from the theme.
+            </blockquote>
+            <figcaption className="gx-auth-page-quote-by">
+              The same components, one theme away.
+            </figcaption>
+          </figure>
+        </aside>
       </div>
     </div>
   );
@@ -657,4 +840,87 @@ export function OtpPage() {
   );
 }`;
 
-export { forgotPasswordSource, loginSource, otpSource, signupSource };
+const signInPageSource = `import { Button, Checkbox, Input, Label, Separator, Stack, Text } from "@gpuixui/primitives";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@gpuixui/components/card";
+import { useState } from "react";
+
+export function SignInPage() {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const signIn = () => {
+    setBusy(true);
+    setError("");
+    authenticate({ email, password })
+      .catch((failure) => setError(failure.message))
+      .finally(() => setBusy(false));
+  };
+
+  return (
+    <Stack direction="column" fullHeight>
+      <Stack direction="row" align="center" justify="between" style={{ padding: 20 }}>
+        <Stack direction="row" align="center" gap="sm">
+          <div className="size-5 bg-primary" />
+          <Text role="label">GPUIxUI</Text>
+        </Stack>
+        <Stack direction="row" align="center" gap="lg">
+          <Button variant="ghost" onActivate={openFeatures}>Features</Button>
+          <Button variant="ghost" onActivate={openPricing}>Pricing</Button>
+          <Button variant="ghost" onActivate={openDocs}>Docs</Button>
+          <Button variant="ghost" onActivate={close}>Sign in</Button>
+        </Stack>
+      </Stack>
+      <Stack direction="row" grow>
+        <Stack direction="column" align="center" justify="center" grow>
+          <Card variant="outline" style={{ width: 360 }}>
+            <CardHeader>
+              <CardTitle>Welcome back</CardTitle>
+              <CardDescription>
+                Sign in to your workspace and pick up where you left off.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Stack direction="column" gap="md">
+                <Label>Email</Label>
+                <Input label="Email" placeholder="you@example.com" fullWidth />
+                <Label>Password</Label>
+                <Input label="Password" placeholder="••••••••" fullWidth />
+                <Stack direction="row" justify="between" align="center">
+                  <Checkbox label="Remember me" />
+                  <Button variant="link" onActivate={openReset}>Forgot password?</Button>
+                </Stack>
+                <Button variant="primary" fullWidth loading={busy} onActivate={signIn}>
+                  Sign in
+                </Button>
+                {error ? (
+                  <Text role="caption" tone="destructive">{error}</Text>
+                ) : null}
+                <Separator label="or" />
+                <Stack direction="row" gap="sm">
+                  <Button variant="outline" onActivate={signInWithGitHub}>GitHub</Button>
+                  <Button variant="outline" onActivate={signInWithGoogle}>Google</Button>
+                </Stack>
+              </Stack>
+            </CardContent>
+            <CardFooter>
+              <Text role="caption" tone="muted">New here?</Text>
+              <Button variant="link" onActivate={openSignUp}>Create an account</Button>
+            </CardFooter>
+          </Card>
+        </Stack>
+        <Stack direction="column" justify="end" grow style={{ padding: 40 }}>
+          <Text role="label">One page, every platform.</Text>
+          <Text role="caption" tone="muted">The same components, one theme away.</Text>
+        </Stack>
+      </Stack>
+    </Stack>
+  );
+}`;
+
+export {
+  forgotPasswordSource,
+  loginSource,
+  otpSource,
+  signInPageSource,
+  signupSource,
+};

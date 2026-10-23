@@ -4,12 +4,15 @@ import {
   ForgotPasswordRender,
   LoginRender,
   OtpRender,
+  SignInPageRender,
   SignupRender,
   loginFeedback,
   otpFeedback,
   resetFeedback,
+  signInPageFeedback,
   signupFeedback,
 } from "./auth-blocks";
+import { blockList } from "./blocks";
 
 /**
  * The auth blocks.
@@ -33,8 +36,8 @@ describe("login block", () => {
   it("prints the fields, the reset link, both providers and the sign-up footer", () => {
     expect(markup).toContain('name="email"');
     expect(markup).toContain('name="password"');
-    expect(markup).toContain('href="/docs/blocks/forgot-password"');
-    expect(markup).toContain('href="/docs/blocks/signup"');
+    expect(markup).toContain('href="/docs/components/auth#forgot-password"');
+    expect(markup).toContain('href="/docs/components/auth#sign-up"');
     expect(markup).toContain("GitHub");
     expect(markup).toContain("Google");
     expect(text(markup)).toContain("Don't have an account?");
@@ -68,7 +71,7 @@ describe("signup block", () => {
     expect(markup).toContain('name="confirm"');
     expect(markup).toContain('name="terms"');
     expect(markup).toContain('value="accepted"');
-    expect(markup).toContain('href="/docs/blocks/login"');
+    expect(markup).toContain('href="/docs/components/auth#sign-in"');
     expect(text(markup)).toContain("Already have an account?");
   });
 
@@ -104,7 +107,7 @@ describe("forgot-password block", () => {
     expect(markup).toContain('name="email"');
     expect(markup).toContain("Send reset link");
     expect(text(markup)).toContain("Back to sign in");
-    expect(markup).toContain('href="/docs/blocks/login"');
+    expect(markup).toContain('href="/docs/components/auth#sign-in"');
   });
 
   it("names the address the note was sent to", () => {
@@ -134,5 +137,74 @@ describe("one-time code block", () => {
       message: "The code does not match.",
     });
     expect(otpFeedback("123456").phase).toBe("success");
+  });
+});
+
+describe("the sign-in page", () => {
+  const markup = renderToStaticMarkup(<SignInPageRender />);
+
+  it("lays out a navbar over a form column and the quote panel", () => {
+    expect(markup).toContain("gx-auth-page-nav");
+    expect(markup).toContain("gx-auth-page-body");
+    expect(markup).toContain("gx-auth-page-aside");
+    expect(markup).toContain('href="/#features"');
+    expect(markup).toContain('href="/#pricing"');
+    expect(markup).toContain('href="/docs"');
+    expect(text(markup)).toContain("The same components, one theme away.");
+  });
+
+  it("prints the whole form, the providers and the account footer", () => {
+    expect(text(markup)).toContain("Welcome back");
+    expect(markup).toContain('name="email"');
+    expect(markup).toContain('name="password"');
+    expect(markup).toContain('name="remember"');
+    expect(markup).toContain('type="password"');
+    expect(markup).toContain('aria-label="Show password"');
+    expect(markup).toContain('aria-pressed="false"');
+    expect(markup).toContain('href="/docs/components/auth#forgot-password"');
+    expect(markup).toContain('href="/docs/components/auth#sign-up"');
+    expect(text(markup)).toContain("GitHub");
+    expect(text(markup)).toContain("Google");
+    expect(text(markup)).toContain("New here?");
+  });
+
+  it("reserves the status row and names the demo credentials at rest", () => {
+    expect(markup).toContain('aria-live="polite"');
+    expect(text(markup)).toContain(
+      "Preview: use ada@example.com and analytical.",
+    );
+  });
+
+  it("refuses an empty, malformed or wrong submission and accepts the demo one", () => {
+    expect(signInPageFeedback({ email: "", password: "" })).toEqual({
+      phase: "error",
+      message: "Enter your email and password.",
+    });
+    expect(
+      signInPageFeedback({ email: "nope", password: "analytical" }).phase,
+    ).toBe("error");
+    expect(
+      signInPageFeedback({ email: "ada@example.com", password: "wrong" }),
+    ).toEqual({
+      phase: "error",
+      message: "Those credentials do not match an account.",
+    });
+    expect(
+      signInPageFeedback({ email: "ada@example.com", password: "analytical" })
+        .phase,
+    ).toBe("success");
+  });
+});
+
+describe("the auth surface's placement", () => {
+  it("keeps one auth entry in Blocks, and it is the full page", () => {
+    const auth = blockList.filter((block) =>
+      ["login", "signup", "forgot-password", "otp", "sign-in"].includes(
+        block.slug,
+      ),
+    );
+
+    expect(auth.map((block) => block.slug)).toEqual(["sign-in"]);
+    expect(auth[0]?.fullBleed).toBe(true);
   });
 });

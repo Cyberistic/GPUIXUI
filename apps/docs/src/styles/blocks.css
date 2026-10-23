@@ -8,6 +8,22 @@
   min-height: 420px;
 }
 
+/* A page-level recipe fills the surface it is mounted in: the preview is a
+   window, so the recipe starts at its edges rather than floating in the
+   demo's padding. Its panel is tall enough for the whole page, still one fixed
+   height so neither a state nor the platform switch moves the page under the
+   reader. */
+.gx-block-page {
+  min-height: 100%;
+  padding: 0;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.gx-component-panel.gx-component-panel-page {
+  height: 700px;
+}
+
 .gx-block-card-thumb {
   min-height: 0;
   height: 210px;
@@ -217,7 +233,7 @@
   width: 16px;
   height: 16px;
   margin-top: 1px;
-  border-radius: calc(var(--radius) - 2px);
+  border-radius: calc(var(--radius) - 6px);
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--border-strong);
 }
@@ -276,6 +292,285 @@
 .gx-auth-resend .gx-auth-link {
   min-width: 92px;
   text-align: left;
+}
+
+/* ---- the sign-in page ----
+   A full page, not a card in a frame: a slim navbar over a two-column body.
+   The form column is centred on the page's own canvas; the right column is an
+   illustrated panel built from the theme's roles — the brand mark repeated as a
+   watermark, one gradient and two rings — with the page's quote on it. The
+   panel folds away under 900px so a narrow window keeps the form centred.
+   States live in reserved rows: a submit moves colour, outline and shadow,
+   never a border width, padding or height, so nothing shifts. */
+
+.gx-auth-page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  text-align: left;
+}
+
+.gx-auth-page-nav {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-auth-page-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.gx-auth-page-mark {
+  width: 20px;
+  height: 20px;
+}
+
+.gx-auth-page-links {
+  display: flex;
+  gap: 18px;
+  margin-left: auto;
+  font-size: 13px;
+}
+
+.gx-auth-page-links a {
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+
+.gx-auth-page-links a:hover {
+  color: var(--foreground);
+}
+
+.gx-auth-page-nav .gx-btn {
+  margin-left: 4px;
+}
+
+.gx-auth-page-body {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 0;
+}
+
+.gx-auth-page-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 36px 24px;
+}
+
+.gx-auth-page-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(360px, 100%);
+  max-width: 100%;
+  margin: 0;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: var(--card);
+  box-shadow: 0 18px 40px -28px var(--shadow);
+}
+
+.gx-auth-page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 2px;
+}
+
+.gx-auth-page-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--foreground);
+}
+
+.gx-auth-page-desc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.gx-auth-page-password {
+  position: relative;
+  display: flex;
+}
+
+.gx-auth-page-password .gx-auth-input {
+  padding-right: 58px;
+}
+
+.gx-auth-page-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  min-width: var(--target-size);
+  padding: 0 10px;
+  border: 0;
+  border-radius: calc(var(--radius) + 1px);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.gx-auth-page-toggle:hover {
+  color: var(--foreground);
+}
+
+.gx-auth-page-toggle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-auth-page-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gx-auth-page-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.gx-auth-page-remember .gx-auth-check {
+  margin-top: 0;
+}
+
+.gx-auth-page-oauth {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.gx-auth-page-aside {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+  overflow: hidden;
+  padding: 36px 32px;
+  border-left: 1px solid var(--border);
+  background:
+    radial-gradient(
+      120% 90% at 78% 0%,
+      color-mix(in srgb, var(--primary) 22%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--primary) 12%, var(--background)),
+      var(--background) 72%
+    );
+}
+
+/* The illustration: the site's mark, large and quiet, over two rings. Both are
+   drawn from the accent role, so the panel follows the platform and palette
+   switch instead of carrying a picture of one theme. */
+.gx-auth-page-aside::before {
+  content: "";
+  position: absolute;
+  top: -18%;
+  right: -28%;
+  width: 420px;
+  height: 420px;
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 48px color-mix(in srgb, var(--primary) 5%, transparent),
+    0 0 0 96px color-mix(in srgb, var(--primary) 3%, transparent);
+  pointer-events: none;
+}
+
+.gx-auth-page-aside::after {
+  content: "";
+  position: absolute;
+  top: 34px;
+  left: 32px;
+  width: 88px;
+  height: 88px;
+  background: color-mix(in srgb, var(--primary) 28%, transparent);
+  -webkit-mask: url("/logo-solid.svg") center / contain no-repeat;
+  mask: url("/logo-solid.svg") center / contain no-repeat;
+  pointer-events: none;
+}
+
+.gx-auth-page-quote {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+.gx-auth-page-quote-text {
+  max-width: 30ch;
+  margin: 0;
+  color: var(--foreground);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.gx-auth-page-quote-by {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .gx-auth-page-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gx-auth-page-aside {
+    display: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .gx-auth-page-links {
+    display: none;
+  }
+
+  .gx-auth-page-nav .gx-btn {
+    margin-left: auto;
+  }
 }
 
 /* ---- settings ---- */

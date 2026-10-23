@@ -1,0 +1,51 @@
+---
+title: Sign in
+description: A full sign-in page — a product navbar over a centred form card and an illustrated quote panel.
+---
+
+A full page, not a card in a frame: a slim product navbar, a two-column body
+with the form card centred in the left column, and an illustrated panel on the
+right. The reproduction fills the preview the way the page fills a window;
+copy the recipe and it fills your window too.
+
+<BlockPreview name="sign-in-01" />
+
+The preview is interactive. Submit empty fields for the validation error,
+submit the credentials named in the status row for the success state, and press
+**Show** to reveal the password. A submission walks idle → loading → error or
+success in a reserved row, so no state moves the card.
+
+## What the page is made of
+
+| Region | Contents |
+| ------ | -------- |
+| Navbar | the `logo-solid.svg` mask in the brand role, the product name, Features, Pricing and Docs, and a ghost **Sign in** action |
+| Form card | "Welcome back", a description, email, a password field with a show/hide toggle, remember me, "Forgot password?", the primary action, an "or" divider, GitHub and Google, and the account footer |
+| Right panel | a full-bleed surface drawn from the theme's roles — two rings and a quiet brand mark — carrying the page's quote and its attribution. It folds away under 900px, so a narrow window keeps the form centred |
+
+The panel is a *drawing*, not a photograph: every colour is a theme role, so
+the platform and palette switches repaint it with the rest of the page. The
+copy is the page's own, so a product can change it without touching an image.
+
+## The states
+
+`signInPageFeedback` is the rule behind the preview: an empty or malformed
+submission is refused, credentials that do not match the demo account are an
+error, and the demo credentials resolve to success. The real page replaces it
+with its own authentication call; the shape — a phase and one message — is the
+same.
+
+## Composition
+
+The page composes:
+
+- `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent` and
+  `CardFooter` from `@gpuixui/components/card`
+- `Button`, `Checkbox`, `Input`, `Label`, `Separator`, `Stack` and `Text` from
+  `@gpuixui/primitives`
+
+The page adds no new dependency. The navbar is a `Stack` pair; the form is the
+same `Card` the [auth examples](/docs/components/auth) use; the panel is a
+`Stack` whose background the application paints. Wire `signIn`,
+`signInWithGitHub`, `signInWithGoogle`, `forgotPassword` and `openSignUp` to
+your own handlers.

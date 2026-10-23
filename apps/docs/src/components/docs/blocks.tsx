@@ -1,14 +1,5 @@
 import type { ReactNode } from "react";
-import {
-  ForgotPasswordRender,
-  LoginRender,
-  OtpRender,
-  SignupRender,
-  forgotPasswordSource,
-  loginSource,
-  otpSource,
-  signupSource,
-} from "./auth-blocks";
+import { SignInPageRender, signInPageSource } from "./auth-blocks";
 import {
   DashboardRender,
   dashboardPackages,
@@ -40,6 +31,11 @@ export interface Block {
   readonly packages: ReadonlyArray<string>;
   readonly render: () => ReactNode;
   readonly source: string;
+  /**
+   * A page-level recipe: the rendering fills the preview surface instead of
+   * sitting in its padding, the way the page fills a window.
+   */
+  readonly fullBleed?: boolean;
 }
 
 const SettingsRender = () => (
@@ -187,45 +183,16 @@ export const blocks: Readonly<Record<string, Block>> = {
     render: DashboardRender,
     source: dashboardSource,
   },
-  "login-01": {
-    name: "login-01",
-    slug: "login",
-    title: "Login",
+  "sign-in-01": {
+    name: "sign-in-01",
+    slug: "sign-in",
+    title: "Sign in",
     description:
-      "A centered sign-in card: email and password, a forgot-password link, two OAuth buttons and a sign-up footer.",
+      "A full sign-in page: a product navbar, a centred form card with a password reveal and two providers, and an illustrated quote panel that folds away under 900px.",
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
-    render: LoginRender,
-    source: loginSource,
-  },
-  "signup-01": {
-    name: "signup-01",
-    slug: "signup",
-    title: "Sign up",
-    description:
-      "A centered registration card: name, email, password and confirmation, a terms checkbox and an account footer.",
-    packages: ["@gpuixui/primitives", "@gpuixui/components"],
-    render: SignupRender,
-    source: signupSource,
-  },
-  "forgot-password-01": {
-    name: "forgot-password-01",
-    slug: "forgot-password",
-    title: "Forgot password",
-    description:
-      "A centered reset card: one email field, a send-reset-link action, an inline success note and a way back to sign in.",
-    packages: ["@gpuixui/primitives", "@gpuixui/components"],
-    render: ForgotPasswordRender,
-    source: forgotPasswordSource,
-  },
-  "otp-01": {
-    name: "otp-01",
-    slug: "otp",
-    title: "One-time code",
-    description:
-      "A centered verification card: six code cells, a verify action, a resend countdown and an inline error state.",
-    packages: ["@gpuixui/primitives", "@gpuixui/components"],
-    render: OtpRender,
-    source: otpSource,
+    render: SignInPageRender,
+    source: signInPageSource,
+    fullBleed: true,
   },
   "settings-01": {
     name: "settings-01",
