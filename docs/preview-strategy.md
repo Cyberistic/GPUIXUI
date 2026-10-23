@@ -1013,9 +1013,13 @@ therefore appears without a docs change, and a step removed fails the suite.
    the demo key; a wrong key throws at render instead of drawing nothing.
 3. If the demo's state changes (open, selected, loading), give it a real
    interaction path in the demo rather than a static picture of the end state.
-4. Run `nub run --filter @gpuixui/docs test` — the style-sheet guards fail on a
+4. If the component publishes a pure logic subpath (`@gpuixui/media/crop/logic`,
+   `@gpuixui/editor/search/logic`, …), run **that** logic in the demo rather
+   than copying it: the paint is the browser's approximation, the arithmetic is
+   the package's. The media and editor demos are the worked examples.
+5. Run `nub run --filter @gpuixui/docs test` — the style-sheet guards fail on a
    hardcoded colour or an unknown variable.
-5. Run `nub run --filter @gpuixui/docs build` before pushing: an SSR-only error
+6. Run `nub run --filter @gpuixui/docs build` before pushing: an SSR-only error
    in a preview (a missing provider) shows up here, not in `vitest`.
 
 ## Block pages
