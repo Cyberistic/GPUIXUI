@@ -813,8 +813,9 @@ carry — or for every level when the scale is gone).
 A store hands back `null` where the theme had no value — JSON has no
 `undefined` — and the suite reads that as the absence it is: a numeric token kept
 as a key without a value is refused by its path exactly like a missing step,
-because a token is never nullable and `invalidNumbers` skips a value that is not a
-number; the measuring seam
+because a token is never nullable. A value that **is** there and is not a number —
+a design tool's `"8"` or `"8px"` — is the number report's instead, reported under
+`finite` with the value the store wrote, so neither shape can pass; the measuring seam
 `measuredColour`/`opaqueRgb`/`alphaOf` takes `unknown` and resolves any non-string
 to unmeasurable, so a `null` role is a report line rather than
 `TypeError: Cannot read properties of null (reading 'trim')`. The two **nested
@@ -865,7 +866,12 @@ Each report is also a function of its own:
   or a pointer cannot press. A style batch is JSON, so `NaN` and `Infinity`
   reach native as `null` and the property is dropped — the element paints as if
   the value were never set — while a negative size is accepted and paints
-  nothing usable. Each failure names its group, path, value and the rule it
+  nothing usable. A value that is not a number at all is the same drop: a theme
+  restored from storage, or pasted from a design tool that writes `"8"` or
+  `"8px"`, is reported under `finite` with the value the store wrote, because
+  every other rule describes a number and the kind is the finding; an absent step
+  is `missingTokens`' refusal instead. Each failure names its group, path, value
+  and the rule it
   missed; a shadow offset may be negative, but a type size must be positive, a
   type role's leading must reach its own size (a shorter one starts the next
   line inside this line's glyphs),

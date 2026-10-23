@@ -1096,7 +1096,11 @@ A value it cannot **lay out** is the third: a style batch is JSON, so `NaN` and
 if the value were never set. Measured in the runtime's test renderer, a `NaN`
 radius beside a valid border, type size and fill left those three on the element
 and dropped only the radius; a negative size is accepted instead and paints
-nothing usable (`fontSize: -4` laid text out at height 0). `invalidNumbers(theme)`
+nothing usable (`fontSize: -4` laid text out at height 0). A value that is not a
+**number at all** — a design tool's `"8"` or `"8px"` in a theme restored from
+storage — is dropped the same way, so it is reported under `finite` with the value
+the store wrote while an absent step stays the gate's `missingTokens` refusal.
+`invalidNumbers(theme)`
 names the group, path, value and rule for every numeric token that cannot be
 laid out — a shadow offset may be negative, a type size must be positive, a
 control height and a row height must reach the pressable-target floor,
@@ -1238,6 +1242,7 @@ design system cannot compensate for a missing role.
 | shadows are structured objects | elevation tokens are objects, not CSS strings |
 | invalid colour strings are ignored per property | a typo paints the previous/black value; `invalidColorRoles` reports it, and the shipped themes are held to the hex grammar by test |
 | a style batch is JSON, so a non-finite number is dropped | the property is never set and the element paints its default; `invalidNumbers` reports the token, its group, path, value and rule |
+| a stored length can be a string | a design tool exports `"8"`/`"8px"` and the renderer drops the value, so the gap or glyph paints as nothing; `invalidNumbers` reports it under `finite` with the value as written, while an absent or `null` step is `missingTokens`' refusal |
 | a leading shorter than its type is accepted | the renderer advances the baseline less than the glyphs are tall, so consecutive lines collide; `invalidNumbers` reports the role's `lineHeight` as `leading` |
 | a non-finite font weight is dropped before it reaches native | the role paints at the runtime's default weight, so a heading loses its emphasis; `invalidNumbers` reports the role's `fontWeight` as `finite` |
 | a strong role at the body's weight is accepted | the two roles share a size and a leading, so the emphasis paints as plain text; `invalidNumbers` reports `bodyStrong.fontWeight` as `emphasis` |

@@ -94,7 +94,10 @@ export type NumberGroup =
  *
  * - `finite` — any real number, including a negative shadow offset, and a font
  *   weight, which the runtime clamps into its 1–1000 range: only a value the
- *   serialised batch drops (`NaN`, `Infinity`) is unusable there;
+ *   serialised batch drops (`NaN`, `Infinity`) is unusable there. A value that is
+ *   not a number at all — a stored `"8"`, a design tool's `"8px"`, a `null` — is
+ *   reported under this rule, because every other rule describes a number and the
+ *   kind is the finding;
  * - `nonNegative` — a length that cannot go below zero but may be zero
  *   (`radius.none`, a hairline divider, a shadow with no blur);
  * - `positive` — a size a reader has to see (a type size, an icon, the strong
@@ -146,8 +149,14 @@ export interface InvalidNumber {
    * `controlHeight.md`, `body.fontSize`, `lg[0].blurRadius`.
    */
   readonly path: string;
-  /** The value the theme carries, which may be `NaN` or `Infinity`. */
-  readonly value: number;
+  /**
+   * The value the theme carries: a number the renderer cannot lay out, or the
+   * value a store wrote where a number belongs — `"8"`, `"8px"`, `true`, `null`.
+   * It is `unknown` for that reason: a report that says a value is unusable has
+   * to show the value, and narrowing it here would be the assumption the report
+   * exists to refuse.
+   */
+  readonly value: unknown;
   /** The rule it missed. */
   readonly rule: NumberRule;
 }
@@ -190,9 +199,15 @@ export type NumberSource = Pick<
   readonly elevation?: Partial<Elevation>;
 };
 
-/** Whether `value` meets `rule`. */
-const layable = (value: number, rule: SingleRule): boolean => {
-  if (!Number.isFinite(value)) {
+/**
+ * Whether `value` is a number that meets `rule`.
+ *
+ * The value is `unknown` because a theme restored from storage, or pasted from a
+ * design-tool export, can carry `"8"` where the type promises `8`; a value that
+ * is not a number at all cannot meet any rule about numbers.
+ */
+const layable = (value: unknown, rule: SingleRule): boolean => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
     return false;
   }
   if (rule === "positive") {
@@ -204,17 +219,36 @@ const layable = (value: number, rule: SingleRule): boolean => {
   return rule === "finite" || value >= 0;
 };
 
+/**
+ * One value held to `rule`. A value that is not a number is reported under
+ * `finite` rather than the group's rule: "a length of zero or more" describes a
+ * number the reader has, and the finding here is that it is not one.
+ */
 const inspect = (
   group: NumberGroup,
   path: string,
-  value: number,
+  value: unknown,
   rule: SingleRule,
 ): readonly InvalidNumber[] =>
-  layable(value, rule) ? [] : [{ group, path, value, rule }];
+  layable(value, rule)
+    ? []
+    : [
+        {
+          group,
+          path,
+          value,
+          rule: typeof value === "number" ? rule : "finite",
+        },
+      ];
 
 /**
- * Inspect every number in a record of lengths. A value that is not a number is
- * skipped, because the type scale carries the two family names beside its roles.
+ * Inspect every value in a record of lengths — spacing, radii, icon sizes and a
+ * control's horizontal padding. A stored scale is only shaped like the record the
+ * type declares, so every entry that is there is inspected: skipping one that is
+ * not a number let a theme whose gaps and glyphs painted nothing pass the gate in
+ * silence. An entry a store wrote as `null` is a **missing step**, which the gate
+ * refuses by path (`missingTokens`) before any report runs, so it is not a value
+ * this walk inspects twice.
  */
 const inspectLengths = <Scale extends object>(
   group: NumberGroup,
@@ -223,9 +257,9 @@ const inspectLengths = <Scale extends object>(
   prefix = "",
 ): readonly InvalidNumber[] =>
   Object.entries(scale).flatMap(([key, value]) =>
-    typeof value === "number"
-      ? inspect(group, `${prefix}${key}`, value, rule)
-      : [],
+    value === undefined || value === null
+      ? []
+      : inspect(group, `${prefix}${key}`, value, rule),
   );
 
 /**
@@ -457,6 +491,15 @@ const inspectShadow = (
  * the runtime's default weight — all
  * reported by path instead of shipping as a default.
  *
+ * A **value that is not a number at all** is the same silent drop: a theme
+ * restored from storage, or pasted from a design tool that writes `"8"` or
+ * `"8px"` where a length belongs, carries a value that is there and is not one
+ * the renderer can lay out. It is reported under `finite` with the value the
+ * store wrote, because every other rule describes a number and the kind is the
+ * finding. An absent step — a key a store dropped or wrote as `null` — is not
+ * this report's: it is a `missingTokens` refusal, because a component reads the
+ * step by name and cannot paint around it.
+ *
  * @example
  * ```ts
  * import { extendTheme, invalidNumbers, lightTheme } from "@gpuixui/tokens";
@@ -464,6 +507,9 @@ const inspectShadow = (
  * invalidNumbers(extendTheme(lightTheme, { radius: { md: 0 } })); // []
  * invalidNumbers(extendTheme(lightTheme, { radius: { md: Number.NaN } }));
  * // [{ group: "radius", path: "md", value: NaN, rule: "nonNegative" }]
+ * invalidNumbers(JSON.parse(fromStorage));
+ * // a design tool wrote the length as a string; the runtime drops it
+ * // [{ group: "spacing", path: "md", value: "8", rule: "finite" }]
  * invalidNumbers(extendTheme(lightTheme, { density: { controlHeight: { sm: 20 } } }));
  * // [{ group: "density", path: "controlHeight.sm", value: 20, rule: "pressable" }]
  * invalidNumbers(extendTheme(lightTheme, { density: { rowHeight: 20 } }));

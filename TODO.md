@@ -327,7 +327,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 187/187
+`[x]` `[██████████]` 188/188
 
 `[x]` Retract the **Windows `xl: 10` fix Fluent 2 undid**, and the equal-radius example that promised a finding — the scale-order report's first shipped catch was Windows' `lg: 8`/`xl: 8`, and three surfaces kept teaching the `xl: 10` step it landed as: `docs/tokens.md` §Scale order printed "`xl`: 10 now ... `2/4/8/10`", `docs/design-system.md` §6 printed the real `4/4/8/8` at the top of the section and "`xl` is 10 now" 50 lines later, and the `COMPONENTS.md` row printed the same fix. The style was reshaped to Fluent 2 afterwards, where a control corners at 4 and a surface at 8 — `sm`/`md` and `lg`/`xl` are **aliases on purpose**, and radius is the one ladder that permits an equal adjacent pair (`scales.test.ts` already held that in its `lets the Windows platform's control and surface corners alias` case). The catalogue also printed `invalidScales(extendTheme(lightTheme, { radius: { xl: 8 } }))` with a failure report beside it, which the report returns `[]` for — a reader who copied it saw the opposite of the promise. `equalRadiusBrand`/`equalRadiusReport` is the executed copy of that call in `scales.example.ts`, the example now shows the accepted equal pair **and** the `xl: 6` rung the report still flags, and §6's ladder sentence permits the alias instead of demanding a strictly rounder step. `scales.test.ts` gains `the equal radius the Fluent 2 style aliases` (4 cases): every surface prints the ladder derived from `platformStyles.win32.radius` and refuses `2/4/8/10`/``xl` is 10`, the page's equal-pair call is executed and must be `[]`, the shrunk rung must still report `xl: 6` under `lg: 8` with the page printing it, and the row must print the file's own case count (the stale count was 13 against 16). Directions measured: on the committed pages all four cases fail by name; with the radius rule's `allowEqual` removed, `prints the equal pair as the accepted example, not a finding` fails (`expected [ { group: 'radius', … } ] to deeply equal []`) alongside the shipped sweep and the alias case. Green: `scales.test.ts` 20/20, package 49 files / 2 869 tests, `check-types` and `check:tests` clean. No native scenario applies — a pure report and the documents that teach it.
 
@@ -1626,6 +1626,8 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 `[x]` Retract the **pre-fix find-highlight adoption** and the counts beside it — `docs/tokens.md` §Find highlights, `docs/design-system.md` §9 and the inventory row all still taught that `HighlightText`'s default wash was the `selection` role and that "passing `findHighlight(theme)` from a search surface is the interlock row in `TODO.md`", while the shipped component had taken the derived pair as its default (`packages/components/src/highlight-text/wash.ts`: `input.color ?? derived.color`) and both playground search scenarios spread it into every host spec. A reader following the page wired a colour the component already supplies and waited on an adoption that had landed. The same section undercounted twice: its step sentence named **four** dark styles while the derivation steps **five** — the authored Omarchy look takes **13%**, and the inventory row's "(Linux 22%, Luna 23%, Windows and Aero 26%)" had Windows at 26 where it is **27%** — and both the section and the test header called the sweep sixteen/fourteen styles where it measures **eighteen** (2 base + 2 high-contrast + 4 platforms × 2 + 3 authored looks × 2). The Adoption paragraph now states the default pair, the two scenarios and the `find-highlight` probe's three measured states, and keeps the split (`selection` is a reader's own run, not a match). `highlight.test.ts` gains 2 cases: `names every style whose resting share the derivation steps` derives the stepped list from `everyStyle` and `findHighlight`, requires each name and share on both pages and the `Five dark styles step` count, and `tracks the adoption the component and the playground carry` reads the painter, both scenarios and the probe's `FIND_CHECKS`, refuses the retracted sentences on three pages and requires the adoption on all four. Directions measured: with HEAD's pages restored both cases fail by name (`expected '## Find highlights …' to contain 'Five dark styles step'` and `… 'The shipped \`HighlightText\` takes the derived…'`), 16/16 green with them, and the package is 49 files / 2 854 tests. Docs in `docs/tokens.md` §Find highlights, `docs/design-system.md` §9, the package README §Find highlights and the `Find highlights` inventory row. No native scenario applies — a docs truth pass over a paint the `find-highlight` probe already measured (19 checks, 0.11.0); this workstream's guards read that record rather than re-running it.
 
 `[x]` Measure a **mark on a message's own tint**, and paint macOS dark's face there — `indicatorSurfaces` named the page, a card, a popover, a muted strip, the four washes a row wears and a field's fill, and **none** of the four soft status tints a message is painted on: an `Alert` fills its tone's `xSoft` role and its description is a container, so a filled `primary` action a consumer places there paints its face on that tint — the composition the contrast table already measures for the action's edge. Measured, macOS dark's system blue `#0A84FF` sat at **2.88/2.56/2.32/2.76** on the four tints, under the 3:1 a face a reader has to find needs, while every other shipped style cleared them. The tints joined the strip list (8 roles on 13 strips) and the style takes the smallest step toward white that clears all four (`#3B9DFF`, **3.009** on the warning tint, the tightest placement in the set; its `#11141A` label keeps 6.54:1 on the fill). `indicator.test.ts` gains `a mark on a message's own tint` (4 cases: the coverage, the painters — the alert's tones, the container sentence and the primary variant — the pre-fix system blue by value and ratio, and the 72-placement sweep) and its tightest case follows the moved margin. The palette move carried four other suites' pinned measurements with it and each was re-derived rather than retyped: the brand's premise in macOS dark (4.01 on the pressed wash, 4.94 on its popover, 3.96 on the accent a row tints, 3.01 on the warning tint; 28 of 72 tint placements under the floor), the find wash's tightest separation (**1.077:1**, macOS dark's popover), the marker share's stepped fills (darwin dark 3.97), and the flush ring's primary range (**1.00–1.15:1**; the destructive range and both feasibility counts stay 1.00–1.38 and ten of eighteen). Directions measured: with HEAD's palette and the tints in place, `Dark · macOS` fails the sweep; with the tints removed, six cases fail by name (the coverage, the pre-fix blue, the tightest, the brand floor, the row-wash page case and the count sentence); green with both, 49 files / 2 858 tests, `check-types`, `oxfmt` and `check:tests` clean. Docs in `docs/tokens.md` §Indicator marks/§Contrast/§Verification, `docs/design-system.md` §3/§9, the package README and the `Indicator marks`/`Brand text`/`Buttons` inventory rows. Verified headless on the moved palette: `theme-platform`, `theme-color-roles`, `theme-type-and-shadow` and `theme-look` run green (4/4), and `theme-platform` is the one that paints each platform style's `primary` from the theme, so the value reaches the renderer without a new probe.
+
+`[x]` Report a **stored length that is not a number** instead of passing the gate — `inspectLengths` skipped every entry whose value was not a number, a guard written for the family names beside a type role, which never reach it, so a theme restored from storage or pasted from a design tool that exports `"8"`/`"8px"` where a length belongs passed `auditTheme` with `passed: true` while the runtime dropped the value: the gap, the glyph, the padding or the corner painted as nothing. Measured: `extendTheme` cannot produce it (its type is `number`), which is why every shipped style and every `numbers.example.ts` brand stayed green, and the gate's other paths already caught the same class — a border width, a control height, a row height, a type size and a shadow number are read directly and were reported. The length walk now inspects every entry that is **there**, reports a value that is not a number under `finite` (every other rule describes a number, so the kind is the finding) with the value the store wrote, and keeps the documented split: an entry a store dropped or wrote as `null` is a `missingTokens` refusal, not a second report. `InvalidNumber.value` is `unknown` for that reason, and the docs-site formatter already reads it with `String(value)`. `numbers.test.ts` gains `a length a store wrote as something else` (6 cases): all four length groups reported by path and value, the gate failing with every colour report empty, `true` and `"8px"` reported as readily as a string, the absent step left to the refusal that names it, a numeric scale untouched, and the three documents held to the rule (and to the retracted "skips a value that is not a number"). Directions measured: with the skip restored three cases fail by name (`expected [ { group: 'spacing', … } ] to deeply equal []`), and with it the suite is 49 files / 2 875 tests, `check-types` green, `@gpuixui/docs` `check-types` green. Docs in `docs/tokens.md` §Numbers/§Paint-ready values, `docs/design-system.md` §9/§10, the package README §Incomplete themes and the `Token numbers` inventory row. No native scenario applies — a stored-data contract with no paint path of its own. The inventory hunk was carried into `67281cdc` by another workstream's commit (the shared-index hazard in Interlocks — the content is on `master` under a message that does not name it).
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
@@ -7152,41 +7154,6 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       the repo formatter clean on these files. The live offset/fade read stays
       with the playground (the interlock row above).
 
-## Blockers (project-level, with evidence)
-
-`[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21
-23:23.** This turn's files (`apps/docs/src/lib/component-index.ts` and its test,
-written in `2e557066`) were modified one second before they were measured by a
-session that added `partsOf`/`limitationsOf` (search by a documented part name),
-and that session had just landed `/docs/examples` and the public symbol index
-plus the docs IA ticks. This turn stopped writing under `apps/docs` at the
-measurement and left the tree clean of its own edits (its work is pushed at
-`53977a27`). Evidence, the rule crossed and the resume condition:
-`.agents/slop/blockers/2026-10-21-concurrent-docs-writers.md`; permanent fix is
-plan `022-swarm-single-writer.md` (coordinator, `scripts/`). **The half-landed
-change it left behind is finished** — the five files were the generated
-built-in-theme specimen, landed in `3078b3c7` and `c10e081a` with its guards
-green, and `apps/docs` was clean between that turn's commits. The overlap itself
-stays open: the supervisor still starts a fresh session per tick.
-
-**Measured again 2026-10-23 02:23–02:26, on the Avatar page.** This session
-began curating `/docs/components/avatar` (the next page on its own list) and
-wrote `avatar-preview.ts`, `avatar-demo.tsx` and `avatar.mdx`; within two
-minutes the other docs session added `avatar-preview.test.ts` and the
-`demos.tsx`/`sources.ts` registrations for the *same* page, and its test named a
-model API (`initialMembers`, `presenceCounts`, `describeRoster`, `invite`, …)
-that the writes had just replaced. This session stopped writing that unit,
-rebuilt the model to the surviving test's contract, fixed two assertions the
-test had wrong about the source (`avatarSize` sliced out of a file with four
-`xs` steps; `recipeStyle(cn(AVATAR_ROOT, className), theme)`), and left the tree
-consistent — `avatar-preview.test.ts` + `avatar-demo.test.tsx` are **25/25** —
-then the session that wrote the test finished it (the dependency row, the
-strategy's wrapped title, the README ledger) and landed the page. Everything this
-session committed (`/docs/motion`, the capability rows, the presence-seam truth
-pass, the docs palette) is untouched. The blocker stands:
-two docs sessions must not be scheduled onto `apps/docs`.
-
-`[x]` **The GPUix native runtime now loads on this machine, so the Tier 2 behaviour
 `[x]` `packages/components`: **a `Toast` stack's exit snapped where it claimed to
       slide** — the sonner toast leaves by fading while it travels 16px right, but
       its resting frames declared no `left`, so the runtime had no value to
@@ -7234,6 +7201,41 @@ two docs sessions must not be scheduled onto `apps/docs`.
       Package gates after the four fixes: unit 97 files / 906 tests, behaviour
       96 files / 980 tests, both green.
 
+## Blockers (project-level, with evidence)
+
+`[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21
+23:23.** This turn's files (`apps/docs/src/lib/component-index.ts` and its test,
+written in `2e557066`) were modified one second before they were measured by a
+session that added `partsOf`/`limitationsOf` (search by a documented part name),
+and that session had just landed `/docs/examples` and the public symbol index
+plus the docs IA ticks. This turn stopped writing under `apps/docs` at the
+measurement and left the tree clean of its own edits (its work is pushed at
+`53977a27`). Evidence, the rule crossed and the resume condition:
+`.agents/slop/blockers/2026-10-21-concurrent-docs-writers.md`; permanent fix is
+plan `022-swarm-single-writer.md` (coordinator, `scripts/`). **The half-landed
+change it left behind is finished** — the five files were the generated
+built-in-theme specimen, landed in `3078b3c7` and `c10e081a` with its guards
+green, and `apps/docs` was clean between that turn's commits. The overlap itself
+stays open: the supervisor still starts a fresh session per tick.
+
+**Measured again 2026-10-23 02:23–02:26, on the Avatar page.** This session
+began curating `/docs/components/avatar` (the next page on its own list) and
+wrote `avatar-preview.ts`, `avatar-demo.tsx` and `avatar.mdx`; within two
+minutes the other docs session added `avatar-preview.test.ts` and the
+`demos.tsx`/`sources.ts` registrations for the *same* page, and its test named a
+model API (`initialMembers`, `presenceCounts`, `describeRoster`, `invite`, …)
+that the writes had just replaced. This session stopped writing that unit,
+rebuilt the model to the surviving test's contract, fixed two assertions the
+test had wrong about the source (`avatarSize` sliced out of a file with four
+`xs` steps; `recipeStyle(cn(AVATAR_ROOT, className), theme)`), and left the tree
+consistent — `avatar-preview.test.ts` + `avatar-demo.test.tsx` are **25/25** —
+then the session that wrote the test finished it (the dependency row, the
+strategy's wrapped title, the README ledger) and landed the page. Everything this
+session committed (`/docs/motion`, the capability rows, the presence-seam truth
+pass, the docs palette) is untouched. The blocker stands:
+two docs sessions must not be scheduled onto `apps/docs`.
+
+`[x]` **The GPUix native runtime now loads on this machine, so the Tier 2 behaviour
 suites run here.** Resolved 2026-10-17 08:57 by plan `140` (playground workstream):
 `@gpuix/native@0.10.0` publishes no `darwin-x64` binary, so the pinned source was
 built locally with `gpui_macos/runtime_shaders` (which removes the build-time
@@ -8578,6 +8580,24 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `{ x: 40, width: 120, height: 100 }` and `stackedScale(…, 0)` read `5`;
     restored, the file is 21/21. Docs: `docs/charts.mdx` §API, the README chart
     paragraph and the Tier 3 Charts row's count. Owner: data.
+  - [x] Do not **collapse a column for a width the drag could not compute** —
+    `clampWidth` is total, but not a measurement: `Number.Order` places `NaN`
+    below every number, so an unreadable width clamps to the column's **minimum**
+    and `resizeColumn` wrote that floor over a legal track. A pointer gesture
+    that reported no `x` therefore shrank a 260px column to 80 (the next press
+    then measured from a width no gesture produced), and `resizeWidthByKey` on
+    the same width returned the floor, so `right` did not step at all. A width
+    the grid cannot read is now the narrowest legal track: `resizeColumn`
+    returns the state unchanged (the rule an unknown id follows) and
+    `resizeWidthByKey` steps **from** the floor (`right` 120 → 136, `left`
+    clamps at 120). `src/columns/logic.test.ts` gains `reads a width it cannot
+    use as a track that paints`, which also pins the clamp itself (`NaN` and
+    `-Infinity` → the minimum, `Infinity` → the maximum) and an initialised
+    declaration's content width and later offset. Directions measured: without
+    the reducer guard the case fails `expected { columns: […] } to be
+    { columns: […] }` (the track rewritten to 120), and without the step's read
+    it fails `expected 120 to be 136`; restored, 180/180. The README's
+    runtime-rules row and §Columns paragraph state it. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven

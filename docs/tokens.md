@@ -1465,10 +1465,11 @@ theme that lost `spacing.md` — the runtime drops the length, so the gap paints
 nothing — and the gate refuses it by that path instead of reading the key as
 present. A whole group nulled is one missing group, a type role's field nulled is
 that field's step, and a family nulled is the step rule's rather than a blank
-name, because a name that is not there cannot be blank. Only this walk can see
-it: `invalidNumbers` reads the entries a scale carries and skips a value that is
-not a number, so without the rule the gate passed a theme whose gaps and glyphs
-painted nothing.
+name, because a name that is not there cannot be blank. Only this walk refuses
+it: `invalidNumbers` lets an absent entry go — a token is never nullable, so the
+absence is this refusal's — while a value that **is** there and is not a number (a
+stored `"8"`) is that report's (§Numbers), so either way the gate cannot pass a
+theme whose gaps and glyphs paint nothing.
 
 **The three refusals are readable before they are thrown.** A caller holding a
 theme a store handed back — deciding whether to restore it, or which release it
@@ -1660,6 +1661,25 @@ that has to change, whichever of the pair moved. One step of weight is enough
 flattened emphasis, not a subpixel rounding. A number already reported by its own
 rule is not reported again: an unusable size is a `positive` report, and a
 leading inside its own glyph box is a `leading` report.
+
+A **value that is not a number** is the same class of silent drop, and the one a
+stored theme carries. A theme restored from storage — or pasted from a design tool
+that exports `"8"` or `"8px"` where a length belongs — is only shaped like the
+type it declares: the renderer drops the value exactly as it drops `NaN`, so the
+gap or the glyph paints as nothing. `invalidNumbers` reports it under `finite`
+with the value the store wrote, because every other rule describes a number and
+the kind is the finding:
+
+```ts
+// A theme a store handed back: this length was written as a string.
+invalidNumbers(JSON.parse(fromStorage));
+// [{ group: "spacing", path: "md", value: "8", rule: "finite" }]
+```
+
+An **absent** step is a different report: a key a store dropped or wrote as
+`null` is a step that is not there, and the gate refuses it by path before any
+report runs (§Paint-ready values), because a component reads the step by name and
+cannot paint around one.
 
 ```ts
 import { extendTheme, invalidNumbers, lightTheme } from "@gpuixui/tokens";

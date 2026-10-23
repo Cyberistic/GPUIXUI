@@ -41,7 +41,9 @@ import {
   retroTheme,
   targetSize,
   themes,
+  missingTokens,
   type TextRole,
+  type Theme,
   type ThemeOverrides,
   typography,
 } from "./index.js";
@@ -1153,6 +1155,114 @@ describe("a theme that lost a type role", () => {
     ).replace(/\s+/g, " ");
 
     expect(page).toContain("including the two pairs it compares");
+  });
+});
+
+describe("a length a store wrote as something else", () => {
+  // The bug this guards: `inspectLengths` skipped every entry that was not a
+  // number — a guard written for the family names beside a type role, which
+  // never reach it — so a theme restored from storage, or pasted from a design
+  // tool that exports `"8"` rather than `8`, passed `auditTheme` with every gap
+  // and glyph the runtime drops, and `passed` read true. The length groups are
+  // the only ones the skip covered: a border width, a control height, a type
+  // size and a shadow number are read directly and were reported already.
+  /** A theme as storage hands it back: the type says complete, the value is not. */
+  const stored = (overrides: Partial<Record<keyof Theme, unknown>>): Theme =>
+    ({ ...lightTheme, ...overrides }) as Theme;
+
+  const written = stored({
+    spacing: { ...lightTheme.spacing, md: "8" },
+    radius: { ...lightTheme.radius, md: "6" },
+    iconSize: { ...lightTheme.iconSize, md: "16" },
+    density: {
+      ...lightTheme.density,
+      controlPaddingX: { ...lightTheme.density.controlPaddingX, md: "10" },
+    },
+  });
+
+  it("reports every length group's value by path, as the store wrote it", () => {
+    expect(invalidNumbers(written)).toEqual([
+      { group: "spacing", path: "md", value: "8", rule: "finite" },
+      { group: "radius", path: "md", value: "6", rule: "finite" },
+      { group: "iconSize", path: "md", value: "16", rule: "finite" },
+      {
+        group: "density",
+        path: "controlPaddingX.md",
+        value: "10",
+        rule: "finite",
+      },
+    ]);
+  });
+
+  it("fails the gate on the numbers alone", () => {
+    const audit = auditTheme(written);
+
+    // No colour, shadow or contract can see a length's kind, so `passed` must.
+    expect(audit.invalidRoles).toEqual([]);
+    expect(audit.invalidShadows).toEqual([]);
+    expect(audit.contrast).toEqual([]);
+    expect(audit.decorative).toEqual([]);
+    expect(audit.passed).toBe(false);
+  });
+
+  it("reports a stored value of any shape, not only a string", () => {
+    const holed = stored({
+      spacing: { ...lightTheme.spacing, sm: true, lg: "8px" },
+    });
+
+    expect(invalidNumbers(holed)).toEqual([
+      { group: "spacing", path: "sm", value: true, rule: "finite" },
+      { group: "spacing", path: "lg", value: "8px", rule: "finite" },
+    ]);
+  });
+
+  it("leaves an absent step to the refusal that names it", () => {
+    // A token a store dropped or nulled is missing, which the gate refuses by
+    // path before any report runs; the walk does not report the same absence a
+    // second time.
+    const dropped = stored({
+      spacing: { ...lightTheme.spacing, sm: undefined, lg: null },
+    });
+
+    expect(invalidNumbers(dropped)).toEqual([]);
+    expect(() => auditTheme(dropped)).toThrow(
+      "`spacing.sm`, `spacing.lg` are missing",
+    );
+    expect(missingTokens(dropped).map(({ path }) => path)).toEqual([
+      "sm",
+      "lg",
+    ]);
+  });
+
+  it("leaves a scale a brand wrote with numbers alone", () => {
+    // The counterweight: a zero radius and an alias are decisions, not defects.
+    expect(invalidNumbers(brand({ radius: { md: 0 } }))).toEqual([]);
+    expect(invalidNumbers(lightTheme)).toEqual([]);
+  });
+
+  it("is what the pages and the inventory promise", () => {
+    const read = (path: string) =>
+      readFileSync(
+        new URL(`../../../${path}`, import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " ");
+
+    const page = read("docs/tokens.md");
+    const system = read("docs/design-system.md");
+    const inventory = read("COMPONENTS.md");
+
+    // Each surface states the rule the report now keeps, in its own terms.
+    expect(page).toContain("A **value that is not a number**");
+    expect(page).toContain('value: "8", rule: "finite"');
+    expect(page).toContain("the value the store wrote");
+    expect(system).toContain(
+      "reported under `finite` with the value the store wrote",
+    );
+    expect(inventory).toContain("the value as written");
+    // And none of them returns to the retracted skip.
+    [page, system, inventory].forEach((document) => {
+      expect(document).not.toContain("skips a value that is not a number");
+    });
   });
 });
 
