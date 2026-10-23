@@ -127,7 +127,11 @@ drag release never flashes the value it was supposed to arrive from. A target or
 release changed **while the preference is on** paints the same way in the render
 that names it, with the completion edge, and retires the retained run in that
 commit: the previous frame never survives the change for a reader who asked for
-no journey, and a preference that turns back on starts where the reader is.
+no journey, and a preference that turns back on starts where the reader is. A
+value the render cannot read is no destination — a measurement that failed for
+one commit is not a new resting place — so it holds the frame on screen and
+reports no journey, instead of collapsing the surface to the first frame and
+retiring the retained value there.
 
 The hooks own one clock, so they **sample once before retargeting**: a run that
 has come to rest is not advanced while nothing moves, and handing the retained

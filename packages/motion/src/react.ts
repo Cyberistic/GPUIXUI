@@ -71,9 +71,11 @@ export interface MotionOptions {
    * target, or a coast's projected rest — and ignores `initial`, because that
    * value is the start of a journey the preference removed. A later target or
    * release changed while the preference is on paints (and completes) the same
-   * way, rather than showing the previous frame for one commit. A mount that
-   * skipped such a run reports it as complete; a mount that asked for no journey
-   * does not.
+   * way, rather than showing the previous frame for one commit. A later target or
+   * release the render cannot read names no destination: the hook holds the
+   * frame on screen, because a failed measurement is not a resting place. A
+   * mount that skipped such a run reports it as complete; a mount that asked for
+   * no journey does not.
    */
   readonly reducedMotion?: boolean;
   /**
@@ -170,7 +172,8 @@ const firstValue = (
  * Whether a reduced mount skips a journey the caller named.
  *
  * The skipped run still completes — the preference removes the journey, not its
- * outcome — so the first frame carries the completion edge a run would.
+ * outcome — so the first frame carries the completion edge a run would. A target
+ * the render cannot read names no destination, so there is no run to skip.
  */
 const skipsJourney = (
   target: number,
@@ -178,9 +181,21 @@ const skipsJourney = (
   reducedMotion: boolean,
 ): boolean =>
   reducedMotion &&
+  Number.isFinite(target) &&
   initial !== undefined &&
   Number.isFinite(initial) &&
   initial !== startValue(target, undefined);
+
+/**
+ * The frame a reduced render lands on when the caller names a value.
+ *
+ * A value this render cannot read is no destination: the surface holds the frame
+ * it shows rather than collapsing to the first one, because a measurement that
+ * failed for a commit is not a new resting place. The retained value follows the
+ * same rule, so the mount (whose frame is the start it paints) reads it too.
+ */
+const restingValue = (named: number, current: number): number =>
+  Number.isFinite(named) ? named : current;
 
 /**
  * The retained-motion hook: animates `target` with `transition` on a monotonic
@@ -219,8 +234,8 @@ export const useMotion = (
   const declared = useRef(transition);
   declared.current = retainTransition(declared.current, transition);
   const running = declared.current;
-  /** The frame a reduced render paints: the target, repaired once. */
-  const resting = startValue(target, undefined);
+  /** The frame a reduced render paints: the target, or the one on screen. */
+  const resting = restingValue(target, motion.current);
 
   useEffect(() => {
     if (skipped.current) {
@@ -375,7 +390,15 @@ export const useInertia = (
     };
   }, [motion, running, start, offset, options.reducedMotion]);
 
-  const resting = project(running.inertia, offset, running.velocity);
+  /**
+   * The frame a reduced render paints: the projection the release names, or —
+   * when the release cannot be read — the frame on screen, which is the
+   * standstill. Projecting `NaN` as `0` would flash the offset the gesture
+   * already left.
+   */
+  const resting = Number.isFinite(running.velocity)
+    ? project(running.inertia, offset, running.velocity)
+    : motion.current;
   return reducedMotion
     ? restingFrame(
         resting,

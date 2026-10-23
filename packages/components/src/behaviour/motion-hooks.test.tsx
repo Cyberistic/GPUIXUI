@@ -19,6 +19,13 @@
  * against the run that was leaving. A reduced render now paints the destination
  * it names, with the completion edge, and retires the retained run in the same
  * commit.
+ *
+ * The third guard: that branch repaired a value it could not read to `0`, so a
+ * measured height or a release velocity that failed for one render collapsed the
+ * surface to the first frame (or to the offset a reduced coast had already left)
+ * and retired the retained value there — the next readable value then reported a
+ * journey the reader never saw. A value the render cannot read is no destination
+ * now: the hook holds the frame on screen.
  */
 
 import { describe, expect, it } from "vitest";
@@ -173,6 +180,50 @@ describe("the reduced preference's later frames", () => {
     const page = renderComponent(<ReducedTarget target={100} reduced />);
     try {
       expect(painted(page)).toBe("100:0:false");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("holds the frame on screen when a reduced target cannot be read", () => {
+    // The defect: an unreadable target was repaired to `0` in the reduced
+    // branch, so a measurement that failed for one render collapsed a surface
+    // to the first frame and retired the retained value there — the next
+    // readable target then reported a journey the reader never saw.
+    const page = renderComponent(<ReducedTarget target={100} reduced />);
+    try {
+      expect(painted(page)).toBe("100:0:false");
+      page.rerender(<ReducedTarget target={Number.NaN} reduced />);
+      expect(painted(page)).toBe("100:0:false");
+      page.rerender(<ReducedTarget target={100} reduced />);
+      expect(painted(page)).toBe("100:0:false");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("reports no journey for a reduced mount with no readable target", () => {
+    // The over-correction beside the hold: `initial` names the start of a run,
+    // but an unreadable target names no destination, so nothing was skipped.
+    const page = renderComponent(
+      <ReducedTarget target={Number.NaN} initial={8} reduced />,
+    );
+    try {
+      expect(painted(page)).toBe("0:0:false");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("holds the frame a reduced coast reached when the release cannot be read", () => {
+    // The defect: the projection read an unreadable release as a standstill at
+    // the *offset*, so a reduced coast whose velocity failed for a render
+    // flashed the release frame it had already left.
+    const page = renderComponent(<ReducedCoast release={400} reduced />);
+    try {
+      expect(painted(page)).toBe("140:0:true");
+      page.rerender(<ReducedCoast release={Number.NaN} reduced />);
+      expect(painted(page)).toBe("140:0:true");
     } finally {
       page.unmount();
     }
