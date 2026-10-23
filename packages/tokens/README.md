@@ -1027,7 +1027,17 @@ plain field, the page role for a composite one (search, tag and mention fields,
 the chat composer, the inline edit) — because the value, the placeholder and the
 caret are measured against it (`nativeTextFills` is the two-value list). A host
 is handed the theme's mode, families, `inputForeground`/`mutedForeground`, the
-`placeholder` role and `primary` as its caret and accent. A `<diff>` host takes
+`placeholder` role and `primary` as its caret. Its **accent** is derived:
+a `<markdown>` host paints an ordered list's number and a bullet at **85%** of
+it, a block quote's rail at **60%** and a wash at **5%**
+(`packages/native/src/markdown/render.rs` at the pinned release), and the fill
+role at the marker share lands under the 4.5:1 label floor in ten of the sixteen
+styles — every light one, plus Dark · macOS and Dark · Linux — the tightest being
+Windows XP (Luna) light's `muted` strip at **3.09:1**. So
+`accent` is `nativeAccent(theme)` — `primary` moved toward `foreground` by the
+smallest 2% step whose 85% composite clears that floor on the four fills a
+document sits on, with the shares exported as `nativeAccentShares`; the caret
+stays the fill role, because it is a solid mark on the field. A `<diff>` host takes
 three more: `diffAdd`/`diffDel` are the `success`/`destructive` tone's readable
 role (the runtime tints the row under a changed line at 5.5% of the same value,
 exported as `nativeDiffWash`), a hunk header sits on the `muted` `diffHunkBg` and

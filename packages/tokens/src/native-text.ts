@@ -40,7 +40,10 @@
  * A `<markdown>` host is the document host: its body and headings take the
  * scale's own roles, its inline code is the page ink on a `muted` chip
  * (`codeText`/`codeWash` — the runtime's violet is a second syntax palette this
- * package does not own), and its table rules take `border`.
+ * package does not own), its table rules take `border`, and its ordered list
+ * numbers, bullet discs and block-quote rail are the accent at fixed shares of
+ * it — so the seam derives that accent for the composite rather than handing
+ * over the fill role ({@link nativeAccent}).
  *
  * A `<diff>` host paints three more roles, and the runtime derives a row's wash
  * from one of them: an added line's ink is `diffAdd` with the row tinted
@@ -59,6 +62,13 @@
  * instead of handing the host one.
  */
 
+import { blend } from "./color.js";
+import {
+  contrastFloorsFor,
+  contrastRatio,
+  type ContrastFloors,
+} from "./contrast.js";
+import { decorativeFloor } from "./decorative.js";
 import { statusTone } from "./styles.js";
 import { syntaxColors, type SyntaxColors } from "./syntax.js";
 import type { Theme, ThemeMode } from "./theme.js";
@@ -171,7 +181,10 @@ export interface NativeTextTheme {
    * the runtime and does not read it (see the module comment).
    */
   readonly textFaint: string;
-  /** Accent the host paints for its own marks, from `primary`. */
+  /**
+   * The accent a document host paints its own marks in, from `primary` and
+   * derived for the 85% composite a list number is drawn at ({@link nativeAccent}).
+   */
   readonly accent: string;
   /** Caret colour, the `primary` mark on {@link bg}. */
   readonly caret: string;
@@ -204,6 +217,96 @@ export interface NativeTextTheme {
    * own dark-default palette when it is absent.
    */
   readonly syntax: SyntaxColors;
+}
+
+/**
+ * The shares a document host paints its accent at, measured from the runtime's
+ * markdown renderer (`packages/native/src/markdown/render.rs` at the pinned
+ * `@gpuix/native@0.11.0`): an ordered list's number and an unordered list's disc
+ * are `opacity(accent, 0.85)`, a block quote's rail is `0.6`, and the wash behind
+ * its copy is `0.05`. The numbers are labels a reader reads, so the marker share
+ * is the one the accent has to carry.
+ */
+export const nativeAccentShares = {
+  marker: 0.85,
+  rail: 0.6,
+  wash: 0.05,
+} as const;
+
+/**
+ * The fills a rendered document sits on — the page, a card, a floating surface
+ * and a `muted` strip — the same content tones the selection and find washes are
+ * measured on.
+ */
+export const nativeAccentSurfaces = [
+  "background",
+  "card",
+  "popover",
+  "muted",
+] as const;
+
+/** One fill a rendered document sits on. */
+export type NativeAccentSurface = (typeof nativeAccentSurfaces)[number];
+
+/**
+ * The granularity of the accent's derivation: 2% of the way from the brand to
+ * the theme's foreground per step, so a document keeps as much of the brand as
+ * the surface allows.
+ */
+const ACCENT_STEPS = 50;
+
+/**
+ * The accent a document host paints its own marks in.
+ *
+ * The host never paints the accent solid: a list number and a bullet are 85% of
+ * it over the document's fill, so the role is read through that composite — and
+ * the fill role is not readable there. Measured over the sixteen shipped,
+ * high-contrast, platform and authored styles, `primary` at the marker share
+ * lands under the 4.5:1 label floor in **ten of them** — every light style, plus
+ * Dark · macOS (3.14:1) and Dark · Linux (4.10:1) — the tightest being Windows XP
+ * (Luna) light's `muted` strip at **3.09:1** (the base theme's page reads
+ * 4.00:1), while the same colour as a solid mark clears the 3:1 floor — which is
+ * why no existing contract saw it.
+ *
+ * The answer is the theme's own `primary`, moved toward its `foreground` by the
+ * smallest 2% step whose marker composite clears the floor on every fill a
+ * document can sit on, and whose rail composite stays visible (1.05:1). A theme
+ * whose brand already reads returns it unchanged; one the renderer cannot
+ * measure is returned unchanged rather than guessed at, the rule the other
+ * derived text colours follow.
+ *
+ * @example
+ * ```ts
+ * import { nativeAccent, nativeAccentShares, alpha, type Theme } from "@gpuixui/tokens";
+ *
+ * const marker = alpha(nativeAccent(theme), nativeAccentShares.marker);
+ * ```
+ */
+export function nativeAccent(
+  theme: Theme,
+  floors: ContrastFloors = contrastFloorsFor(theme),
+): string {
+  const carries = (colour: string): boolean =>
+    nativeAccentSurfaces.every((surface) => {
+      const fill = theme.colors[surface];
+      const label = contrastRatio(
+        blend(fill, colour, nativeAccentShares.marker),
+        fill,
+      );
+      const rail = contrastRatio(
+        blend(fill, colour, nativeAccentShares.rail),
+        fill,
+      );
+      return (
+        (label === undefined || label >= floors.secondary) &&
+        (rail === undefined || rail >= decorativeFloor)
+      );
+    });
+  return (
+    Array.from({ length: ACCENT_STEPS + 1 }, (_, step) =>
+      blend(theme.colors.primary, theme.colors.foreground, step / ACCENT_STEPS),
+    ).find(carries) ?? theme.colors.foreground
+  );
 }
 
 /**
@@ -244,7 +347,9 @@ export function nativeTextTheme(
     text: theme.colors.inputForeground,
     textMuted: theme.colors.mutedForeground,
     textFaint: theme.colors.placeholder,
-    accent: theme.colors.primary,
+    // A document host paints this at 85% behind its list numbers and bullets, so
+    // the role is derived for that composite rather than handed over raw.
+    accent: nativeAccent(theme),
     caret: theme.colors.primary,
     fontSans: theme.typography.sans,
     fontMono: theme.typography.mono,

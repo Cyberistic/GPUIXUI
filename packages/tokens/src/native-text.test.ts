@@ -27,6 +27,9 @@ import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import { diffHostTheme } from "./native-diff.example.js";
 import {
+  nativeAccent,
+  nativeAccentShares,
+  nativeAccentSurfaces,
   nativeDiffWash,
   nativeTextFills,
   nativeTextTheme,
@@ -107,7 +110,7 @@ describe("nativeTextTheme", () => {
       text: lightTheme.colors.inputForeground,
       textMuted: lightTheme.colors.mutedForeground,
       textFaint: lightTheme.colors.placeholder,
-      accent: lightTheme.colors.primary,
+      accent: nativeAccent(lightTheme),
       caret: lightTheme.colors.primary,
       fontSans: lightTheme.typography.sans,
       fontMono: lightTheme.typography.mono,
@@ -1064,5 +1067,132 @@ describe("the adoption both packages carry", () => {
     ).toEqual([]);
     expect(catalogue).toContain("`InlineEdit`");
     expect(catalogue).toContain("`ColorPicker`'s hex field is never empty");
+  });
+});
+
+/**
+ * Guards the accent a **document** host paints its own marks in. The runtime
+ * draws an ordered list's number and a bullet as `opacity(accent, 0.85)`, a
+ * block quote's rail as `0.6` and the wash behind its copy as `0.05`
+ * (`packages/native/src/markdown/render.rs` at the pinned release), so the role
+ * is read through the composite rather than as a solid mark — and the fill role
+ * is not readable there. Measured over the sixteen shipped styles, `primary` at
+ * the marker share lands under the 4.5:1 label floor in every light style (the
+ * tightest, Windows XP (Luna) light on `muted`, is 3.09:1) while the same role
+ * as a solid mark clears the 3:1 floor that the mark contract measures.
+ */
+describe("the accent a document host paints", () => {
+  it("holds a list number and a bullet to the label floor on every fill", () => {
+    const under = shipped.flatMap(({ label, theme }) => {
+      const floors = contrastFloorsFor(theme);
+      // Read the seam, not the helper: the host is handed `accent`.
+      const accent = nativeTextTheme(theme).accent;
+      return nativeAccentSurfaces.flatMap((surface) => {
+        const fill = theme.colors[surface];
+        const marker = blend(fill, accent, nativeAccentShares.marker);
+        const rail = blend(fill, accent, nativeAccentShares.rail);
+        const checks: ReadonlyArray<
+          readonly [string, number | undefined, number]
+        > = [
+          [
+            `${label} marker on ${surface}`,
+            contrastRatio(marker, fill),
+            floors.secondary,
+          ],
+          [
+            `${label} rail on ${surface}`,
+            contrastRatio(rail, fill),
+            decorativeFloor,
+          ],
+        ];
+        return checks
+          .filter(([, ratio, floor]) => ratio === undefined || ratio < floor)
+          .map(([name, ratio, floor]) => `${name}: ${ratio} (needs ${floor})`);
+      });
+    });
+
+    expect(under).toEqual([]);
+    // Every style resolves, and the derivation returns an opaque colour.
+    expect(
+      shipped.every(
+        ({ theme }) => !nativeAccent(theme).includes("#") === false,
+      ),
+    ).toBe(true);
+    expect(
+      shipped.filter(
+        ({ theme }) => nativeAccent(theme) === theme.colors.primary,
+      ).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("steps only the fills the marker share leaves under the floor", () => {
+    const measured = shipped.map(({ label, theme }) => {
+      const floors = contrastFloorsFor(theme);
+      // The derivation answers the least readable strip, so the premise is the
+      // worst of them rather than the page alone.
+      const worst = nativeAccentSurfaces.reduce((low, surface) => {
+        const fill = theme.colors[surface];
+        const ratio = contrastRatio(
+          blend(fill, theme.colors.primary, nativeAccentShares.marker),
+          fill,
+        );
+        return ratio === undefined ? low : Math.min(low, ratio);
+      }, Number.POSITIVE_INFINITY);
+      return {
+        label,
+        stepped: nativeTextTheme(theme).accent !== theme.colors.primary,
+        worst: worst.toFixed(2),
+        floor: floors.secondary,
+      };
+    });
+    const under = measured.filter(({ worst, floor }) => Number(worst) < floor);
+    const over = measured.filter(({ worst, floor }) => Number(worst) >= floor);
+
+    // The derivation is the exception, not a repaint: every style the fill role
+    // cannot carry steps, and every style it can carry keeps the brand.
+    expect(
+      under.filter(({ stepped }) => !stepped).map(({ label }) => label),
+    ).toEqual([]);
+    expect(
+      over
+        .filter(({ stepped }) => stepped)
+        .map(({ label, worst }) => `${label} ${worst}`),
+    ).toEqual([]);
+    // Ten of the sixteen styles cannot carry it — every light one, and the two
+    // dark platform rows whose accent is a light blue on a near-black page.
+    expect(under.map(({ label, worst }) => `${label} ${worst}`)).toEqual([
+      "light 4.00",
+      "high-contrast light 6.54",
+      "darwin light 3.37",
+      "darwin dark 3.14",
+      "linux light 3.23",
+      "linux dark 4.10",
+      "win32 light 3.73",
+      "default light 4.00",
+      "luna light 3.09",
+      "aero light 3.34",
+    ]);
+  });
+
+  it("keeps the caret a mark on the field, not the document's label", () => {
+    // A caret is drawn solid on the field's own fill and held to the 3:1 mark
+    // floor, so it stays the fill role: stepping it would dull the one colour a
+    // reader tracks while typing.
+    expect(nativeTextTheme(lightTheme).caret).toBe(lightTheme.colors.primary);
+    expect(nativeTextTheme(lightTheme).accent).not.toBe(
+      lightTheme.colors.primary,
+    );
+  });
+
+  it("states the shares it derives against on the catalogue", () => {
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(catalogue).toContain("nativeAccent");
+    expect(catalogue).toContain(`${nativeAccentShares.marker * 100}%`);
+    expect(catalogue).toContain(`${nativeAccentShares.rail * 100}%`);
+    expect(catalogue).toContain("3.09");
   });
 });

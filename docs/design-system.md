@@ -351,7 +351,14 @@ both under the 4.5:1 floor, so both palettes moved. The native text engine draws
 those fields, and a host given no theme falls back to the runtime's **built-in
 dark** palette, so its caret would be chosen for a dark surface in a light theme:
 `nativeTextTheme(theme, fill)` hands the host the theme for the fill the field
-paints (`docs/tokens.md` §Native text hosts). **The runtime does not let the
+paints (`docs/tokens.md` §Native text hosts). The same object serves a rendered
+document, which paints its own marks in the accent at fixed shares of it — a
+list number and a bullet at 85%, a block quote's rail at 60% — so the seam hands
+an accent derived for that composite (`nativeAccent`) rather than the fill role:
+measured, the fill role leaves a numbered list's digits under the 4.5:1 label
+floor in ten of the sixteen styles — every light one, plus the two dark platform
+rows — the tightest Windows XP (Luna) light at 3.09:1.
+**The runtime does not let the
 theme colour an empty field's placeholder** — at the pinned release it shapes the
 hint with a fixed `#8F8F8F` (`custom_elements/input.rs`), so no token can move it
 and a component that needs a themed hint paints the text itself.

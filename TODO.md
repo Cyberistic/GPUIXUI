@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 170/170
+`[x]` `[██████████]` 171/171
 
 `[x]` Decode **Omarchy's `colors.toml`** into the palette this package maps — the
 follow had a poll and a semantic shape but no reader: `docs/tokens.md` §System
@@ -1328,6 +1328,36 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       (`TODO.md` → Interlocks), the rule `invalidScales` already follows. Docs in
       `docs/tokens.md` §Find highlights, `docs/design-system.md` §9/§11, the
       package README and the `Find highlights` inventory row.
+
+`[x]` Give a **document's own marks** an accent their composite can carry — a
+      `<markdown>` host paints an ordered list's number and a bullet at **85%**
+      of the theme's accent, a block quote's rail at **60%** and the wash behind
+      its copy at **5%** (`packages/native/src/markdown/render.rs` at the pinned
+      `@gpuix/native@0.11.0`), so the role a reader sees is the composite — and
+      the seam handed over the fill role raw. Measured over the sixteen shipped,
+      high-contrast, platform and authored styles, `primary` at the marker share
+      lands under the **4.5:1** label floor in **ten of them** — every light
+      style, plus Dark · macOS (3.14:1) and Dark · Linux (4.10:1) — the tightest
+      being Windows XP (Luna) light's `muted` strip at **3.09:1** (the base
+      theme's page reads 4.00:1), while the same role drawn solid clears the 3:1
+      floor the mark contract measures — which is why no contract saw it.
+      `nativeAccent(theme)` is the colour the seam now hands over: `primary`
+      moved toward `foreground` by the smallest 2% step whose 85% composite
+      clears the floor on the four fills a document sits on
+      (`nativeAccentSurfaces` — page, card, popover, `muted`), with the rail
+      held visible at 1.05:1; the shares are exported as `nativeAccentShares`
+      and a colour the renderer cannot measure is returned unchanged. The
+      **caret** stays the fill role: it is drawn solid on a field and held to
+      the 3:1 mark floor. `native-text.test.ts` gains `the accent a document host
+      paints` (4 cases): the marker and rail sweep over every style and fill, the
+      step only where the worst fill needs it (with the 3.09 tightest named), the
+      caret/accent split, and the catalogue's shares and number. Directions
+      measured: with `accent: theme.colors.primary` restored, the sweep fails
+      naming the light styles under the floor and the step case reports thirteen
+      styles needing a step; with the fix, 35 cases green. Docs in
+      `docs/tokens.md` §The document's own marks/§Native text hosts,
+      `docs/design-system.md` §8, the package README and the `Native text hosts`
+      inventory row.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 

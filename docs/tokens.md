@@ -2757,7 +2757,8 @@ property beside the object (§What a field's value actually paints):
 | `text` / `textMuted` | `inputForeground` / `mutedForeground` — the ink a `<code>`, `<diff>` or `<markdown>` host paints |
 | a field's value | not this object: `<input>`/`<textarea>` paint the element's `color`, so pass `inputForeground` (above) |
 | `textFaint` | `placeholder` |
-| `accent` / `caret` | `primary` |
+| `accent` | `nativeAccent(theme)` — `primary`, stepped to the 85% composite a document's list number is painted at (below) |
+| `caret` | `primary` |
 | `fontSans` / `fontMono` | `typography.sans` / `typography.mono` |
 | `metrics.codeTextSize` / `codeLineHeight` | `typography.codeBlock`'s size / leading |
 | `diffAdd` / `diffDel` | the `success` / `destructive` tone's readable role |
@@ -2775,6 +2776,39 @@ property beside the object (§What a field's value actually paints):
 | `metrics.mdCodeHeaderPaddingY` | `spacing.xs` — a fence's language strip |
 | `metrics.diffRowPaddingX` / `diffBodyBottomPad` | `spacing.xl` / `spacing.md` |
 | `metrics.codeGutterPaddingRight` | `spacing.lg` — the gutter's gap |
+
+### The document's own marks
+
+A `<markdown>` host paints three things in the theme's accent, never solid
+(`packages/native/src/markdown/render.rs` at the pinned release): an ordered
+list's number and an unordered list's disc are **85%** of it, a block quote's
+rail is **60%**, and the wash behind its copy is **5%**. So the role a reader
+actually sees is the composite, and the fill role is not readable there — at the
+85% marker share `primary` lands under the **4.5:1** label floor in **ten of the
+sixteen** styles — every light one, plus Dark · macOS (3.14:1) and Dark · Linux
+(4.10:1) — the tightest being Windows XP (Luna) light's `muted` strip at
+**3.09:1** (the base theme's page reads 4.00:1), while the same role drawn as a
+solid mark clears the 3:1 floor the mark contract measures. No existing contract
+saw it.
+
+`nativeAccent(theme)` is the accent the seam hands over: the theme's own
+`primary`, moved toward its `foreground` by the smallest 2% step whose **85%**
+composite clears that floor on all four fills a document sits on —
+`nativeAccentSurfaces`, the page, a card, a popover and a `muted` strip — and
+whose **60%** rail stays visible (1.05:1). The shares are exported as
+`nativeAccentShares`. A theme whose brand already reads returns it unchanged, so
+the derivation is only visible where the fill role genuinely cannot be the label;
+one the renderer cannot measure is returned unchanged rather than guessed at.
+The caret stays the fill role: it is drawn solid on a field and held to the
+3:1 mark floor, and stepping it would dull the one colour a reader tracks while
+typing.
+
+```ts
+import { nativeAccent, nativeAccentShares, alpha, type Theme } from "@gpuixui/tokens";
+
+// What the host paints for a numbered list, and what the seam already hands it:
+export const listNumber = (theme: Theme) => alpha(nativeAccent(theme), nativeAccentShares.marker);
+```
 
 A `<code>` host is the one host whose **type** also comes from the theme object:
 the runtime sizes a code block from the theme's own metrics — an element's
