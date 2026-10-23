@@ -1057,11 +1057,12 @@ and an unpaintable shadow colour paints no shadow, so
 `invalidShadowColors(theme)` names the level and position (§7).
 
 A theme restored from storage can be **incomplete**: it may predate a role, an
-elevation level or the whole elevation scale the library has added since — or have
-lost the whole `colors` group — and JSON has no `undefined`, so a
+elevation level or the whole elevation scale the library has added since, or have
+lost the whole `colors` group, and JSON has no `undefined`, so a
 value that was absent when the theme was saved comes back as `null`. The reports
 carry the absence rather than throwing — `invalidColorRoles` returns the role with
-`value: undefined` (`themeColors` reads a group the store lost as none), `invalidShadowColors` returns the level once at position `0`
+`value: undefined` (`themeColors` reads a group the store lost as none),
+`invalidShadowColors` returns the level once at position `0`
 with no colour (every level, when the scale itself is gone), the measuring seam
 reads any non-colour value as unmeasurable
 (`ratio: undefined`, an opaque share for a composite), and every contract that
