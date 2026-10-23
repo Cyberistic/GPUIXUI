@@ -30,6 +30,11 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
+The dot side goes through `@gpuixui/icons`' `iconPixels`, so a raw count the
+runtime cannot paint — `NaN`, an infinity, zero or a negative — and a name the
+scale no longer carries, such as a size read back from a stored preference, both
+take the `md` step. The three dots always share one size.
+
 ## Motion
 
 The lit dot advances one place per tick at `motionLevels.step` (120 ms in the

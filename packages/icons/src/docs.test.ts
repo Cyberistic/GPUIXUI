@@ -22,7 +22,7 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Tokens from "@gpuixui/tokens";
 import { ICON_NAMES } from "./names.js";
-import { ICON_SIZES } from "./sizes.js";
+import { ICON_SIZES, iconPixels } from "./sizes.js";
 
 const page = readFileSync(new URL("../docs/icon.mdx", import.meta.url), "utf8");
 const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
@@ -67,6 +67,33 @@ describe("the icon page", () => {
         `\\|\\s*\`${step}\`[^|]*\\|\\s*(\\d+)\\s*\\|`,
       ).exec(page);
       expect(row?.[1]).toBe(String(pixels));
+    });
+  });
+
+  it("teaches the answer a stored size name gets", () => {
+    // This test guards a page claim, not a behaviour: `iconPixels` is proven by
+    // `sizes.test.ts` and the painted box by `runtime/icons.runtime.test.tsx`.
+    // But a reader who stores a size (a density preference, a saved layout) is
+    // the one caller the type does not protect, and the page said nothing about
+    // what such a name resolves to while the resolver answered `undefined`. The
+    // words are held to the behaviour so they cannot drift apart.
+    const sizes = section("Sizes");
+    expect({
+      resolvesToDefault: sizes.includes("resolve to `md`"),
+      namesStoredPreference: sizes.includes("stored preference"),
+      namesTheBrokenCount: sizes.includes(
+        "`NaN`, an infinity, zero or a negative",
+      ),
+      readmeTeaches: /name the scale\s+does not carry/.test(readme),
+      unknownName: iconPixels("huge"),
+      defaultStep: ICON_SIZES.md,
+    }).toEqual({
+      resolvesToDefault: true,
+      namesStoredPreference: true,
+      namesTheBrokenCount: true,
+      readmeTeaches: true,
+      unknownName: ICON_SIZES.md,
+      defaultStep: ICON_SIZES.md,
     });
   });
 

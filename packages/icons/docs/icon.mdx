@@ -65,6 +65,13 @@ const theme = useTheme();
 | `lg` | 20 |
 | `xl` | 24 |
 
+A raw pixel count is for a mark that is not lining up with text. A count the
+runtime cannot paint — `NaN`, an infinity, zero or a negative — and a **name the
+scale does not carry**, such as a size read back from a stored preference, both
+resolve to `md`: a stored value paints the default box rather than a full-width,
+zero-height icon. `iconPixels(size)` is the resolver, and it takes the decoded
+value as `unknown` for exactly that reason.
+
 ## Limitations
 
 - Monochrome only: no two-tone, duotone or brand marks.

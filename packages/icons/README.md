@@ -50,7 +50,9 @@ control cannot swallow the press meant for the control.
 `xs` 12 · `sm` 14 · `md` 16 (default) · `lg` 20 · `xl` 24, or a raw pixel count.
 The scale is `iconSize` from `@gpuixui/tokens`, not a second copy, so
 a theme change moves the icons with it. Named sizes are how an icon lines up
-with the text beside it.
+with the text beside it. A count the runtime cannot paint and a **name the scale
+does not carry** — a stored preference from another release — both resolve to
+`md` through `iconPixels`, which takes the decoded value as `unknown`.
 
 ## Conventions for the markup
 

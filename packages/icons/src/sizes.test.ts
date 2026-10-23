@@ -43,6 +43,21 @@ describe("icon sizes", () => {
     expect(iconPixels(-8)).toBe(ICON_SIZES.md);
   });
 
+  it("reads a name the scale does not carry as the default step", () => {
+    // The bug this guards: `size` is a stored preference as often as a literal,
+    // so a name from a release that renamed or dropped a step reaches the
+    // resolver as a string the scale no longer carries. The lookup answered
+    // `undefined` and `Icon` wrote it to `style.width`/`style.height` — and the
+    // runtime paints a sized SVG with no side as a full-width, zero-height box
+    // (measured 1256 × 0 in `runtime/icons.runtime.test.tsx`), so a toolbar row
+    // around a vanished icon stretched across the window. An unknown name takes
+    // the same answer an unpaintable count does.
+    expect(iconPixels("huge")).toBe(ICON_SIZES.md);
+    expect(iconPixels("")).toBe(ICON_SIZES.md);
+    expect(iconPixels(undefined)).toBe(ICON_SIZES.md);
+    expect(iconPixels("2xs")).toBe(ICON_SIZES.md);
+  });
+
   it("resolves a name to its declared pixels, not to a neighbour", () => {
     expect(iconPixels("xl")).toBe(ICON_SIZES.xl);
     expect(iconPixels("xs")).toBe(ICON_SIZES.xs);

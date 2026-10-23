@@ -84,6 +84,25 @@ it("paints an icon whose raw size cannot be measured at the default step", async
   expect(widthAt(21)).toBe(21);
 });
 
+it("paints an icon whose stored size name the scale no longer carries", async () => {
+  // The bug this guards: `size` is a stored preference as often as a literal, so
+  // a name the scale does not carry reaches `iconPixels`. It used to answer
+  // `undefined`, which `Icon` wrote to `style.width`/`style.height` — and the
+  // runtime paints an SVG with no side as a full-width, zero-height box
+  // (measured here: 1256 × 0 inside a 1280px window), so a toolbar row around a
+  // vanished icon stretched across the frame. An unknown name takes the `md`
+  // step, the size an icon that names none paints.
+  const runtime = await openWindow();
+  const stored = "huge" as IconSize;
+  mount(
+    runtime,
+    <Icon name="check" color="#123456" size={stored} testId={ICON} />,
+  );
+  const bounds = boundsOfIcon(runtime);
+  expect(bounds.width).toBe(ICON_SIZES.md);
+  expect(bounds.height).toBe(ICON_SIZES.md);
+});
+
 it("takes a decorative icon out of the accessibility tree and keeps a named one", async () => {
   const runtime = await openWindow();
   mount(runtime, <Icon name="check" color="#123456" testId={ICON} />);
