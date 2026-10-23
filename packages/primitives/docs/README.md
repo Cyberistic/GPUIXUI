@@ -79,6 +79,16 @@ section names both. `Select` is the one exception, because its root paints only 
 width: the page says so and teaches `triggerStyle`/`itemStyle` instead.
 `src/docs.test.ts` fails when a page's API section never names `className`.
 
+A page's `## API` is the component's whole public prop surface, not the props a
+page remembered to list: every field the props type declares — its own, the ones
+its `extends` list carries, and the members of an alias's intersection — has a
+row. `src/docs.test.ts` reads `src/`'s declarations against each page's prop
+tables, so a new prop or a page no type is mapped to fails the suite. One surface
+is easy to leave out: the **address** props (`ref`, `aria-id`, `onLayout`), which
+must say which element a form focuses, an automation host locates and a layout
+measures — the input, the track, the first code cell, or the row holding a
+group's tab stop.
+
 A keyboard rule, a supported `aria-*` and the roles a component paints belong in
 the section they inform — the API table's consequence, a limitation, or a role
 row — rather than a heading of their own, so no page promises a section its

@@ -66,6 +66,7 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `children` | `ReactNode` | — | the parts to draw; omit for the default composition |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the range's own; keys land on a thumb |
+| `ref` / `aria-id` / `onLayout` | host props | none | land on the track (`role="group"`); each thumb is a `slider` of its own |
 | `testId` | `string` | — | stable locator for the track |
 
 The vertical range is measured in the same window: `slider-vertical-lifecycle`

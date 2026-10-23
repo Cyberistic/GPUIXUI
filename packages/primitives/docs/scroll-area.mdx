@@ -49,6 +49,13 @@ import { ScrollArea, Stack, Text } from "@gpuixui/primitives";
 | `viewportTestId` | `string` | — | the implicit viewport's locator |
 | `viewportRef` | `Ref<PublicInstance>` | — | the implicit viewport's element |
 
+A composed `ScrollAreaViewport` takes every scroll prop above, each defaulting
+to the area's, and adds one name of its own:
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `ref` | `Ref<PublicInstance>` | — | the scroller itself; `scrollTo` and `scrollIntoView` address this element |
+
 `onLayout` is the **scroller's** box, not the frame's: a scroll reading — an edge
 fade, a position bar, a "more below" cue — needs the viewport's own height, and
 the frame is smaller wherever it has padding. It reports on mount and whenever

@@ -35,6 +35,11 @@ const [quality, setQuality] = useState(62);
 | `SliderIndicator` | the fill that leads to the thumb |
 | `SliderThumb` | a thumb, with an optional glyph inside it |
 
+A composed part takes the index it draws — `SliderIndicator index` and
+`SliderThumb index`, `0` or `1` (default `0`) — plus `style` and `className`; a
+thumb's `children` are the glyph inside it. The track, the thumb and the
+indicator take no handlers of their own, because the track owns the press.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -56,6 +61,7 @@ const [quality, setQuality] = useState(62);
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `children` | `ReactNode` | — | the parts to draw; omit for the default composition |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the slider's own; the press and keys reach the track |
+| `ref` / `aria-id` / `onLayout` | host props | none | land on the track, the element that carries the pointer and the value |
 | `testId` | `string` | — | stable locator for the track |
 
 The vertical axis is measured in a real window: `slider-vertical-lifecycle`

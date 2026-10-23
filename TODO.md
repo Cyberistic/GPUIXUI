@@ -107,6 +107,26 @@ is unmounted, when a collection shadows a page outside the curated overrides, or
 when a package page breaks the MDX rules. Verified in the dev server:
 `/docs/primitives/button`, `/docs/icons/icon`, `/docs/primitives`, and the search
 index returns `/docs/primitives/slider`
+`[x]` Hold each primitive page's **`## API` to the props its type declares** — a
+page listed the props it remembered, so the address surface a form focuses, an
+automation host locates and a layout measures (`ref`, `aria-id`, `onLayout`) was
+missing from `textarea`, `number-field`, `otp-field`, `rating`, `slider` and
+`range-slider`; `textarea` also omitted `size`, `fullWidth`, `autoFocus`,
+`tabIndex` and the five composed host handlers, `scroll-area`'s composed viewport
+never documented its own `ref`, `icon-button` omitted the tooltip-trigger pair,
+and `checkbox-group` its `onChange` alias. `src/docs.test.ts` gains `the
+primitives API tables` (2 cases): a page-to-props-type map (31 pages, 33 types)
+must cover every page and name a type the package declares; a reader resolves an
+interface's own fields through its `extends` parents, an alias's intersection and
+`Omit`, and treats the runtime's own `Props` surface as opaque; every declared
+prop must then have a row in a `## API` prop table. The second case measures the
+reader against real declarations (own, parent, alias, omitted), so a reader that
+resolves nothing cannot pass. Directions measured: deleting `number-field`'s
+address row fails with its three props by name, and adding `readonly probe?:
+string` to `SpacerProps` fails `spacer.mdx: SpacerProps.probe has no API row`;
+green, the package is 55 files / 1 021 tests, `check-types` and `lint` clean,
+and `nub run check:tests` accepts the two cases. Docs: `docs/README.md` §Page
+contract states the rule and what the address row must say.
 `[x]` Land the docs platform switch (macOS · Linux · Windows · Default) — the
 sidebar switch resolves `platformTheme` from `@gpuixui/tokens`, writes
 `?platform=` and remembers the choice; every preview renders on a `PreviewSurface`

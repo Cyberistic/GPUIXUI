@@ -56,6 +56,7 @@ const [code, setCode] = useState("");
 | `style` | `StateStyle<FieldState>` | — | on the group; resolved against the live state, merged last |
 | `children` | `ReactNode` | `length` cells | the cell parts to draw |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with each cell's own, on every cell |
+| `ref` / `aria-id` / `onLayout` | host props | none | land on the first cell; the code belongs to the group |
 | `testId` | `string` | — | the group's locator; cells are `<testId>-cell-N` |
 
 ## Limitations

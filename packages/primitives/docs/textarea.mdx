@@ -41,8 +41,14 @@ const help = "Markdown is not interpreted.";
 | `readOnly` | `boolean` | `false` | accepts focus, refuses edits |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order |
 | `invalid` | `boolean` | `false` | border and focus ring take the destructive role |
+| `autoFocus` | `boolean` | `false` | takes focus on mount |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | row padding from density (a textarea's height is its rows) |
+| `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `label` | `string` | none | accessible name |
 | `description` | `string` | none | announced help (`aria-description`) |
+| `tabIndex` | `number` | none | the field's place in the tab order; a disabled field sits at `-1` |
+| `ref` / `aria-id` / `onLayout` | host props | none | the native `<textarea>` is the addressed element |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the field's own; yours runs first |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<FieldState>` | — | resolved against the live state, merged last |
 | `testId` | `string` | — | stable locator |

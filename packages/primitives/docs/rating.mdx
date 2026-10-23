@@ -42,6 +42,7 @@ const [score, setScore] = useState(0);
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<RatingState>` | — | resolved against the live state, merged last |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the rating's own |
+| `ref` / `aria-id` / `onLayout` | host props | none | land on the star that holds the tab stop, so they follow the score; measure a wrapper for the whole control |
 | `testId` | `string` | — | stable locator on the group |
 
 ## Limitations

@@ -44,6 +44,7 @@ const theme = useTheme();
 | `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot |
 | `onActivate` | `(event: EventPayload) => void` | none | click or activating key; not called while busy |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; a click is observed first, an activating key acts first |
+| `onMouseEnter` / `onMouseLeave` / `aria-description` | `TooltipTriggerProps` | none | forwarded to the press target, so the control can be a `Tooltip` trigger |
 | `ref` | `Ref<PublicInstance>` | — | the element itself |
 | `aria-expanded` / `aria-selected` | `boolean` | — | announced state, forwarded through `ActionHostProps` |
 | `className` | `string` | — | a Tailwind string joined after the recipe |
