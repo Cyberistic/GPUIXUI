@@ -17,6 +17,7 @@ import datePicker from "../../../../../packages/components/src/date-picker.tsx?r
 import dialog from "../../../../../packages/components/src/dialog.tsx?raw";
 import dropdownMenu from "../../../../../packages/components/src/dropdown-menu.tsx?raw";
 import drawer from "../../../../../packages/components/src/drawer.tsx?raw";
+import emptyState from "../../../../../packages/components/src/empty-state.tsx?raw";
 import field from "../../../../../packages/components/src/field.tsx?raw";
 import form from "../../../../../packages/components/src/form.tsx?raw";
 import inlineEdit from "../../../../../packages/components/src/inline-edit.tsx?raw";
@@ -61,6 +62,7 @@ export const componentSources = {
   dialog,
   dropdownMenu,
   drawer,
+  emptyState,
   field,
   form,
   inlineEdit,

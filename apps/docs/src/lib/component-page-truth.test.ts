@@ -206,6 +206,13 @@ const pages: ReadonlyArray<CuratedPage> = [
     source: "packages/components/src/dropdown-menu.tsx",
   },
   {
+    file: "empty-state.mdx",
+    row: "Empty states",
+    suite: "packages/components/src/behaviour/empty-state.test.tsx",
+    shadowed: "packages/components/docs/empty-state.mdx",
+    source: "packages/components/src/empty-state.tsx",
+  },
+  {
     file: "field.mdx",
     row: "Inline validation",
     suite: "packages/components/src/behaviour/field.test.tsx",
@@ -2023,6 +2030,51 @@ describe("the curated component pages", () => {
     expect(text).toContain("7 native behaviour tests");
     // The retracted shape: a component that counts from a value of its own.
     expect(text).not.toContain("derives each event's status from a value");
+  });
+
+  it("holds the empty panel's slot order, its measure and its missing role to the source", () => {
+    // An empty-state page can drift in three silent ways: it can promise a role
+    // or a live region the runtime does not publish, hide the fixed measure a
+    // description wraps at, or teach a slot order the panel does not paint.
+    // Each is read from the painter rather than trusted.
+    const page = pages.find(
+      (candidate) => candidate.file === "empty-state.mdx",
+    );
+    expect(
+      page,
+      "the empty-state page is not in the curated set",
+    ).toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    expect(source).toContain("const MEASURE = 360;");
+    expect(source).toContain("maxWidth: MEASURE");
+    expect(source).toContain("mergeStyles(");
+
+    // The panel paints its slots in one order: icon, title, description, action.
+    const painted = source.slice(source.indexOf("return ("));
+    const order = [
+      "EMPTY_STATE_ICON",
+      "EMPTY_STATE_TITLE",
+      "EMPTY_STATE_DESCRIPTION",
+      "EMPTY_STATE_ACTION",
+    ].map((slot) => painted.indexOf(slot));
+    expect(order).toEqual(order.toSorted((left, right) => left - right));
+    expect(order[0]).toBeGreaterThan(-1);
+
+    // A panel, not a control: no role, no tab stop and no live region.
+    expect(source).not.toContain("role=");
+    expect(source).not.toContain("tabIndex");
+    expect(source).not.toContain("aria-");
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("wrapped at 360px");
+    expect(text).toContain("The panel is a plain `div` with **no role**");
+    expect(text).toContain("publishes no live region");
+    expect(text).toContain("The title is **not a heading**");
+    expect(text).toContain("6 native behaviour tests");
+    // The retracted shape: a panel that announces itself or takes a tab stop.
+    expect(text).not.toContain("announces itself when it appears");
   });
 
   it("holds the stepper's derived status and its raw value to the source", () => {

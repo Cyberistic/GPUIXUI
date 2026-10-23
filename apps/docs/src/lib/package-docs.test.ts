@@ -167,6 +167,7 @@ describe("the package docs collections", () => {
     "/docs/components/dialog",
     "/docs/components/drawer",
     "/docs/components/dropdown-menu",
+    "/docs/components/empty-state",
     "/docs/components/field",
     "/docs/components/form",
     "/docs/components/inline-edit",

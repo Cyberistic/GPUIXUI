@@ -60,6 +60,7 @@ components/date-picker.mdx   Curated: the six-row grid, inclusive bounds, the cl
 components/dialog.mdx        Curated: a real confirmation workflow
 components/drawer.mdx        Curated: the edge box, the dismiss stack, the exit frame
 components/dropdown-menu.mdx Curated: highlighted row is the focused row
+components/empty-state.mdx   Curated: the four slots, the fixed measure, the role it does not publish
 components/field.mdx        Curated: one message slot, submit-time validation, no fade
 components/form.mdx         Curated: the submit lifecycle, the core's field meta, the flat summary
 components/inline-edit.mdx  Curated: one finish per edit, blur commits, the caller's value

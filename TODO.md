@@ -6715,7 +6715,39 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 192/192
+`[x]` `[██████████]` 193/193
+
+`[x]` Curate the **Empty state** page and hold its missing role, its fixed
+measure and its slot order to the source — `/docs/components/empty-state` served
+only the package page, so the panel every empty list, table and panel carries had
+a preview but no keyboard contract, no theming table and no honest accessibility
+budget. The curated page shadows `packages/components/docs/empty-state.mdx` and
+teaches what the drawing cannot: the panel is a **plain `div` with no role**, and
+GPUix only publishes a node that has one, so the panel itself is not announced;
+the title is a `Label`, **not a heading**; `@gpuix/native@0.11.0` publishes no
+live region, so a panel that replaces a loaded list has to be announced by the
+app; there is no tab stop and the action is the only focusable part; the icon is
+decorative by contract but the runtime has no `aria-hidden`; and the description
+wraps at the component's fixed 360px while the padding and gap are the recipe's
+`spacing["3xl"]` and `spacing.lg`. `component-page-truth.test.ts` gains `holds
+the empty panel's slot order, its measure and its missing role to the source`,
+which reads `MEASURE`, `maxWidth: MEASURE`, `mergeStyles`, the four slots in
+paint order and the absent `role=`/`tabIndex`/`aria-`, then holds the page to
+`360px`, the no-role sentence, the absent live region, the non-heading title and
+its **6 native behaviour tests**; the curated entry joins the set in
+`component-page-truth.test.ts` and `package-docs.test.ts`, `sources.ts` carries
+the `emptyState` `?raw` block, and `meta.json`, the Components index,
+`/docs/theming`'s switch list, the strategy's curated line and the app ledger
+name the page. Also corrected the **Table** page's printed count: the suite now
+runs 22 native cases and the page still said 21. Directions measured: deleting
+the page fails the curated-set case by name and the new case (`the empty-state
+page is not in the curated set`), and restoring the package page as the served
+one fails `package-docs.test.ts`'s shadow set. `nub run --filter @gpuixui/docs
+check-types` and `check:tests` green; the docs suite is 1081 passed with the two
+foreign failures recorded in Interlocks (the editor pages' six cross-links and
+two dock pages with no limitations section), and the six touched guard files are
+131/131. No native scenario applies — a docs page and its guards have no runtime
+path.
 
 `[x]` Mount the **workspace lane** — five packages shipped their own docs
 (`editor`, `files`, `shell`, `dock`, `media`) and the site mounted none of them,

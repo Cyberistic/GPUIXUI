@@ -1,0 +1,164 @@
+---
+title: Empty state
+description: The "nothing here yet" panel a collection shows when it has no rows, painted on the surface its caller supplies.
+---
+
+`EmptyState` is the panel a list, table or panel shows when it has no rows: one
+title, an optional line of support copy, an optional decorative glyph and an
+optional way out. It is a **panel, not a surface** — it paints no background and
+no border, because the `Card`, panel or table body behind it already supplies
+one — and it is unfocusable, so the only thing a reader can reach inside it is
+the action the caller passes.
+
+<ComponentPreview name="empty-state-demo" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="EmptyState" />
+
+<ComponentSource
+  name="emptyState"
+  file="packages/components/src/empty-state.tsx"
+/>
+
+## Usage
+
+A panel is only empty until the action runs, so the state belongs to the screen
+that owns the collection. The snippet below swaps the panel for the form the
+action opens, which is the shape `examples/empty-state.example.tsx` ships:
+
+```tsx
+import { useState } from "react";
+import { Card } from "@gpuixui/components";
+import { EmptyState } from "@gpuixui/components/empty-state";
+import { Button } from "@gpuixui/primitives";
+
+export const ProjectsPanel = () => {
+  const [creating, setCreating] = useState(false);
+
+  if (creating) return <text>Create a project…</text>;
+
+  return (
+    <Card>
+      <EmptyState
+        title="No projects yet"
+        description="A project holds your files, runs and settings."
+        action={
+          <Button variant="primary" onClick={() => setCreating(true)}>
+            New project
+          </Button>
+        }
+      />
+    </Card>
+  );
+};
+```
+
+The filtered case is the same component with different words: the title says
+what was filtered out and the action clears the filter. The panel never decides
+which case it is in — the caller does.
+
+## Composition
+
+| Slot | Responsibility |
+| ---- | -------------- |
+| `title` | what is missing, in a few words; always rendered |
+| `description` | why it is missing, or what to do about it; one line that wraps at a fixed measure |
+| `icon` | a decorative glyph above the title, painted in the muted role |
+| `action` | the way out — usually a `Button`, and the only focusable thing in the panel |
+
+There are no separate parts: `EmptyState` is one component with four slots, and
+a slot that is not given renders nothing rather than a placeholder. Pass the
+action directly; wrapping it in another interactive element adds a second name a
+reader has to get past.
+
+## Keyboard
+
+`EmptyState` installs no key handler and no tab stop. It is not a control: a
+reader reaches the action with `Tab` and activates it with `Enter` or `Space`
+through whatever component the caller passed, and the panel itself answers
+nothing. A press on the panel outside the action does nothing — the panel paints
+no fill, so there is no hitbox to swallow the press.
+
+## API reference
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `title` | `string` | required | the line a reader scans first; painted in `foreground` |
+| `description` | `string` | none | support copy under the title, wrapped at 360px |
+| `action` | `ReactNode` | none | the way out, usually a `Button`; the only focusable part |
+| `icon` | `ReactNode` | none | a decorative glyph above the title, painted in `mutedForeground` |
+| `className` | `string` | none | compiled through `@gpuixui/tw`, joined after the recipe |
+| `style` | `StyleDesc` | none | merged last, so a caller overrides any recipe property |
+| `testId` | `string` | none | stable locator |
+
+## Theming
+
+| Element | Role |
+| ------- | ---- |
+| panel | none: it paints no background and no border |
+| title | `foreground`, `text-sm` (14/20) at semibold |
+| description | `mutedForeground`, `text-sm`, wrapped at a fixed 360px |
+| icon wrapper | `mutedForeground` |
+| gap between the slots | `spacing.lg` (12px) |
+| padding | `spacing["3xl"]` (32px) |
+
+The metrics are the recipe's fixed ones, so a platform switch repaints the roles
+and leaves the panel's size alone. A custom theme changes the ink with no code
+change — see [Theming](/docs/theming).
+
+## Accessibility and limitations
+
+- The panel is a plain `div` with **no role**, and GPUix only publishes a node
+  that has one, so the panel itself is not announced; its title and description
+  are `Label` nodes in reading order.
+- The title is **not a heading**: `<text>` paints a label, not a heading node.
+  A screen that needs a document outline puts a `CardTitle` above the panel.
+- `@gpuix/native@0.11.0` publishes no live region, so a panel that replaces a
+  list after it loads is **not announced**. Say it somewhere the app already
+  updates — a status bar or the screen's own status line.
+- No tab stop and no key handling: the action is the only focusable thing, and
+  the rest of the panel is not a selection target.
+- The icon is decorative by contract, but the runtime has no `aria-hidden`;
+  pass an `Icon` (which publishes no role) or another silent node. Text passed
+  as the icon is read aloud.
+- No loading, disabled or error state of its own. The caller swaps the panel for
+  a busy view, or hands the action a disabled control, so the reason stays
+  visible.
+- The action's press reaches it because the panel is unfilled; an ancestor that
+  paints a fill is the boundary a press stops at, which is why the panel belongs
+  directly inside the surface it describes.
+
+## Dependencies
+
+| Package | Used for |
+| ------- | -------- |
+| `this package` | the panel, its four slots and the slot order |
+| `@gpuix/react` | the host props (`Props`) |
+| `@gpuix/react/floating` | `mergeStyles`, so a caller's `style` wins over the recipe |
+| `@gpuixui/tw` | the `EMPTY_STATE_*` recipes and `cn` |
+
+## Related
+
+- **Card** — the surface an empty state usually sits in.
+- **List** — the collection that is empty, and the rows that replace the panel.
+- **Alert** — a message about a state that is not empty.
+- **Table** — a data body whose empty case takes the same panel.
+
+## Status
+
+`done` in `COMPONENTS.md` with a `yes` runtime verdict: the panel, its slots, the
+centred geometry and the caller's style merge are all measured, and the gaps are
+the runtime's (`@gpuix/native@0.11.0` has no `aria-hidden`, no live region and no
+heading role for a `<text>` title).
+
+`src/behaviour/empty-state.test.tsx` runs in the real GPUix renderer — 6 native
+behaviour tests: the title, description and action in order; nothing rendered
+for the slots not given; the centred column and the theme's 32px padding; the
+title in `foreground` and the description in `mutedForeground` at the 360px
+measure; a click reaching the action through the panel; and a caller's `style`
+winning over the recipe.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
