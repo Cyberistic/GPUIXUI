@@ -218,6 +218,12 @@ platform, which is where `Mod` is Control.
   arrow after it must move off the tab the traversal reached rather than the
   selection; the handler reads the key event's own `elementId` (the `Tabs` origin
   does).
+- **A focus past a pane's fold is not shown.** A `Tab` traversal moves focus
+  without moving a scroller, so a control it reaches past the edge stays out of
+  sight (`focus-reveal-lifecycle`: the pane's offset stays `0` with its ninth row
+  focused, the row 200 points below the fold). Only a roving control reveals what
+  its own key moved onto; a form of plain tab stops must keep its controls
+  visible. See [Workspace](/docs/workspace).
 - **Physical bindings cannot match.** There is no `code` in a GPUix event, so
   `Mod+[KeyS]` parses and never resolves.
 - **`@tanstack/hotkeys` is `0.x`.** Its surface can change in a minor release;

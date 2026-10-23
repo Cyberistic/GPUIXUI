@@ -76,6 +76,19 @@ describe("the keyboard page", () => {
     expect(page).toContain("/docs/runtime#measured-in-a-window");
   });
 
+  it("says a focus past a pane's fold is not revealed, as the window measured it", () => {
+    // A shortcut author reads these limits before assuming Tab shows the reader
+    // where it went. `focus-reveal-lifecycle` measured the pane's offset staying
+    // at `0` with its ninth row focused, so the page owes both the gap and the
+    // roving alternative, and the lane page it hands off to.
+    expect(record).toContain("Focus reveal in a scroller");
+    expect(record).toContain("focus-reveal-lifecycle");
+    expect(page).toContain("A focus past a pane's fold is not shown");
+    expect(page).toContain("focus-reveal-lifecycle");
+    expect(page).toContain("200 points below the fold");
+    expect(page).toContain("/docs/workspace");
+  });
+
   it("explains the physical-binding limit from the adapter, not from taste", () => {
     // The claim is true because the decode reads `key` and never `keyChar`, and
     // there is no `code` in a GPUix event. If the adapter changed, the page
