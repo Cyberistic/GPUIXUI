@@ -35,6 +35,8 @@ import { LiquidButton } from "@gpuixui/components/liquid-button";
 - Edges come from moves; a teleported pointer paints nothing until it moves.
 - The flood crosses the label at 16% ink.
 - Reduced motion and keyboard readers get no flood.
+- A disabled action drops a flood it is already wearing; re-enabling waits for
+  the next pointer move rather than restoring the old wash.
 
 ## Related
 

@@ -98,10 +98,12 @@ export const LiquidButton = ({
   const windowMs = transitionWindowMs(timing);
 
   // A flood is pure journey, so a reader who turns the preference on mid-hover
-  // keeps no wash: the layer goes with the travel the setting removed.
+  // keeps no wash: the layer goes with the travel the setting removed. A control
+  // the caller disables is the same rule — the wash marks a pointer on an action
+  // that can no longer answer one, and nothing else would ever drain it.
   useEffect(() => {
-    if (preference === "reduced") setFlood(Option.none());
-  }, [preference]);
+    if (preference === "reduced" || disabled) setFlood(Option.none());
+  }, [disabled, preference]);
 
   useEffect(() => {
     if (!draining || preference === "reduced") return;

@@ -61,6 +61,18 @@ const Hoverable = ({ reduced }: { readonly reduced: boolean }) => (
   </MotionProvider>
 );
 
+/**
+ * One mounted action whose `disabled` prop the case can change.
+ *
+ * The button keeps its identity across the rerender, so the flood it is wearing
+ * is the one this case has to test — a fresh tree would have no wash to drop.
+ */
+const Disableable = ({ disabled }: { readonly disabled: boolean }) => (
+  <LiquidButton testId="action" style={{ width }} disabled={disabled}>
+    Save
+  </LiquidButton>
+);
+
 /** The painted flood layer, or undefined before one is mounted. */
 const flood = (page: ReturnType<typeof renderComponent>) =>
   page.renderer
@@ -242,6 +254,28 @@ describe("LiquidButton", () => {
       settle(page);
 
       // Well inside the 200 ms window the animated drain would still be running.
+      await waitFor(() => expect(flood(page)).toBeUndefined(), 80);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("drops a flood already crossing when the action is disabled", async () => {
+    // A disabled action paints none, and the wash marks a pointer on a control
+    // that refuses one. The flood here is already at its final frame and has no
+    // drain timer, so only a reader of `disabled` can remove it.
+    const page = renderComponent(<Disableable disabled={false} />);
+    try {
+      page.renderer.clockPause();
+      hoverCentreOf(page, "action");
+      settle(page);
+      page.renderer.clockFastForward(400);
+      settle(page);
+      expect(flood(page)).toBeDefined();
+
+      page.rerender(<Disableable disabled />);
+      settle(page);
+
       await waitFor(() => expect(flood(page)).toBeUndefined(), 80);
     } finally {
       page.unmount();
