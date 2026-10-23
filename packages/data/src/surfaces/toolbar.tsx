@@ -65,6 +65,24 @@ export interface DataToolbarProps extends Omit<Props, "children"> {
 export const DEFAULT_SEARCH_DEBOUNCE_MS = 150;
 
 /**
+ * The wait the debouncer can schedule.
+ *
+ * `debounceMs` is often computed — a setting read from storage, a per-surface
+ * policy — and the pacer hands its `wait` to `setTimeout`, which reads `NaN` and
+ * the infinities as an **immediate** timer: the query was reported in the next
+ * tick and the debounce existed only on paper, which is the one regression the
+ * field is here to prevent. A wait that is not a finite, non-negative number is
+ * the documented default; **zero** is the caller's immediate reporting, the one
+ * value that means it.
+ */
+const searchWait = (milliseconds: number | undefined): number =>
+  milliseconds === undefined ||
+  !Number.isFinite(milliseconds) ||
+  milliseconds < 0
+    ? DEFAULT_SEARCH_DEBOUNCE_MS
+    : milliseconds;
+
+/**
  * A row of controls above a data surface.
  *
  * The search field reports a **debounced** query: the wait is the core's, and
@@ -79,7 +97,7 @@ export const DataToolbar = ({
   ...rest
 }: DataToolbarProps) => {
   const theme = useTheme();
-  const wait = search?.debounceMs ?? DEFAULT_SEARCH_DEBOUNCE_MS;
+  const wait = searchWait(search?.debounceMs);
   // The debouncer holds the callback it was built with, so the latest one is
   // read through a ref: a new `onValueChange` must not rebuild the debouncer
   // and lose a pending query.

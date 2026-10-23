@@ -35,6 +35,7 @@ import {
 import { AdvancedFilter } from "../surfaces/advanced-filter.js";
 import { DEFAULT_LABEL_WIDTH, KeyValue } from "../surfaces/key-value.js";
 import type { FilterTree } from "../surfaces/logic.js";
+import { DataToolbar } from "../surfaces/toolbar.js";
 
 let root: DataTestRoot | undefined;
 
@@ -447,5 +448,69 @@ describe("the data surfaces", () => {
       root.renderer.flush();
       expect(paintedText(root)).toContain("1 of 4 shapes");
     });
+  });
+});
+
+describe("the toolbar's wait", () => {
+  /** A toolbar whose field keeps no value, and a readout of the reported query. */
+  const Harness = ({ debounceMs }: { readonly debounceMs: number }) => {
+    const [reported, setReported] = useState("none");
+    return (
+      <div>
+        <DataToolbar
+          testId="wait"
+          search={{ value: "", debounceMs, onValueChange: setReported }}
+        />
+        <text testId="wait-readout">{`reported:${reported}`}</text>
+      </div>
+    );
+  };
+
+  /**
+   * The query the toolbar reported.
+   *
+   * The window's painted text holds the field's own run too, so the readout
+   * carries a marker: a typed `logo` is not a report of `logo`.
+   */
+  const reported = (root: DataTestRoot): string =>
+    paintedText(root)
+      .replace(/[\s\S]*?reported:/, "")
+      .split(" ")[0] ?? "";
+
+  it("takes the documented wait when the delay cannot be read", async () => {
+    // `debounceMs` is often computed — a setting read from storage, a
+    // per-surface policy — and `@tanstack/pacer` hands its wait to `setTimeout`,
+    // which reads `NaN` and an infinity as an immediate timer. A computed `NaN`
+    // therefore reported the query in the next tick and the debounce existed
+    // only on paper: the regression the field is here to prevent. The documented
+    // 150 ms is the wait when the delay is not a finite, non-negative number.
+    const mounted = renderData(<Harness debounceMs={Number.NaN} />);
+    root = mounted;
+    settle(mounted);
+    typeInto(mounted, "wait-search", "logo");
+    mounted.renderer.flush();
+    expect(reported(mounted)).toBe("none");
+
+    await after(40);
+    mounted.renderer.flush();
+    // Still waiting: a `NaN` wait fired within the first tick.
+    expect(reported(mounted)).toBe("none");
+
+    await waitFor(() => {
+      mounted.renderer.flush();
+      expect(reported(mounted)).toBe("logo");
+    });
+  });
+
+  it("reports every edit at once when the wait is zero", () => {
+    // Zero is the one value that means "no wait", so the guard must not
+    // replace it with the default: a caller asking for an un-debounced field
+    // gets one.
+    const mounted = renderData(<Harness debounceMs={0} />);
+    root = mounted;
+    settle(mounted);
+    typeInto(mounted, "wait-search", "logo");
+    mounted.renderer.flush();
+    expect(reported(mounted)).toBe("logo");
   });
 });
