@@ -9,6 +9,7 @@
  * component; this module is pure.
  */
 
+import { accessibleName } from "@gpuixui/primitives/core";
 import * as Option from "effect/Option";
 
 /** What a step may refuse a move with. */
@@ -23,6 +24,17 @@ export const stepOf = (value: number, count: number): number => {
   const named = Number.isFinite(value) ? Math.floor(value) : 1;
   return Math.min(Math.max(named, 1), count);
 };
+
+/**
+ * A step's name in the indicator and in its content's announcement.
+ *
+ * A title is copy from a data table or an i18n file as often as it is a literal,
+ * so a blank one is an absence: an unnamed list item and an announcement
+ * opening with a comma are both worse than the step's own position.
+ */
+export const stepName = (title: string, position: number): string =>
+  accessibleName(title) ??
+  `Step ${Number.isFinite(position) ? Math.max(1, Math.floor(position)) : 1}`;
 
 /** The next step; the last step stays put. */
 export const nextStep = (step: number, count: number): number =>

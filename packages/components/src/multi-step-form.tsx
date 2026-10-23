@@ -15,6 +15,7 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { accessibleName, visibleCopy } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useState, type ReactNode } from "react";
@@ -29,6 +30,7 @@ import {
   nextStep,
   previousStep,
   stepAnnouncement,
+  stepName,
   stepOf,
   type StepGate,
 } from "./wizard/logic.js";
@@ -37,9 +39,9 @@ import {
 export interface MultiStep extends StepGate {
   /** A stable key for the step and its indicator row. */
   readonly id: string;
-  /** The step's name in the indicator. */
+  /** The step's name in the indicator. A blank title reads as its position. */
   readonly title: string;
-  /** One line of supporting copy in the indicator. */
+  /** One line of supporting copy in the indicator. A blank line paints nothing. */
   readonly description?: string;
   /** The step's content, mounted only while the step is current. */
   readonly content: ReactNode;
@@ -68,7 +70,7 @@ export interface MultiStepFormProps extends Omit<
   readonly nextLabel?: string;
   /** The backward action. Default `"Back"`. */
   readonly backLabel?: string;
-  /** The wizard's accessible name. */
+  /** The wizard's accessible name. A blank name is an absence, not an empty group. */
   readonly label?: string;
   readonly className?: string;
 }
@@ -106,6 +108,7 @@ export const MultiStepForm = ({
   ...rest
 }: MultiStepFormProps) => {
   const theme = useTheme();
+  const name = accessibleName(label);
   const count = steps.length;
   const [value, setStep] = useControllableState({
     value: stepProp,
@@ -119,6 +122,7 @@ export const MultiStepForm = ({
 
   const step = steps[current - 1];
   if (step === undefined) return null;
+  const title = stepName(step.title, current);
   const last = isLastStep(current, count);
   const message = Option.flatMap(refusal, (held) =>
     held.id === step.id ? Option.some(held.message) : Option.none(),
@@ -174,7 +178,7 @@ export const MultiStepForm = ({
 
   return (
     <div
-      {...(label === undefined ? {} : { role: "group", "aria-label": label })}
+      {...(name === undefined ? {} : { role: "group", "aria-label": name })}
       {...rest}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(className), theme), {
@@ -187,22 +191,22 @@ export const MultiStepForm = ({
     >
       <Stepper
         value={current}
-        label={label ?? "Steps"}
+        label={name ?? "Steps"}
         testId="multi-step-steps"
       >
         {steps.map((entry, at) => (
           <StepperStep
             key={entry.id}
             value={at + 1}
-            label={entry.title}
-            description={entry.description}
+            label={stepName(entry.title, at + 1)}
+            description={visibleCopy(entry.description)}
           />
         ))}
       </Stepper>
       <div
         testId="multi-step-content"
         role="group"
-        aria-label={stepAnnouncement(step?.title ?? "", current, count)}
+        aria-label={stepAnnouncement(title, current, count)}
         style={{
           display: "flex",
           flexDirection: "column",

@@ -250,4 +250,45 @@ describe("MultiStepForm", () => {
     expect(selectedSteps(wizard)).toStrictEqual([false, true]);
     wizard.unmount();
   });
+
+  it("names the wizard, its list and its steps when every name arrived blank", () => {
+    // The bug guarded: `label`, a step's `title` and its `description` are copy
+    // from a data table or an i18n file as often as literals, and a blank one
+    // published an empty group name, an unnamed list item and an announcement
+    // opening with a comma (", step 1 of 2").
+    const wizard = renderComponent(
+      <MultiStepForm
+        testId="wizard"
+        label="   "
+        onSubmit={() => undefined}
+        steps={[
+          {
+            id: "one",
+            title: "",
+            description: "   ",
+            content: <text testId="step-one">Name step</text>,
+          },
+          {
+            id: "two",
+            title: "  Review  ",
+            content: <text testId="step-two">Review step</text>,
+          },
+        ]}
+      />,
+    );
+    expect(
+      nodesWithRole(wizard.renderer, "list").map((node) => node.name),
+    ).toStrictEqual(["Steps"]);
+    expect(
+      nodesWithRole(wizard.renderer, "listitem").map((node) => node.name),
+    ).toStrictEqual(["Step 1", "Review"]);
+    expect(
+      nodesWithRole(wizard.renderer, "group").map((node) => node.name),
+    ).toContain("Step 1, step 1 of 2");
+    expect(
+      wizard.renderer.findByTestId("wizard")?.customProps?.["aria-label"],
+    ).toBeUndefined();
+    expect(text(wizard)).not.toContain("   ");
+    wizard.unmount();
+  });
 });

@@ -15,6 +15,7 @@ import {
   nextStep,
   previousStep,
   stepAnnouncement,
+  stepName,
   stepOf,
 } from "./logic.js";
 
@@ -69,5 +70,20 @@ describe("stepAnnouncement", () => {
     expect(stepAnnouncement("Review", 2, 3)).toBe("Review, step 2 of 3");
     expect(stepAnnouncement("Review", 9, 3)).toBe("Review, step 3 of 3");
     expect(stepAnnouncement("Review", 1, 0)).toBe("Review, step 1 of 1");
+  });
+});
+
+describe("stepName", () => {
+  it("names a titleless step by its position", () => {
+    // The bug guarded: a title that arrived blank published an unnamed list
+    // item and an announcement opening with a comma (`", step 1 of 3"`).
+    expect(stepName("", 2)).toBe("Step 2");
+    expect(stepName("   ", 3)).toBe("Step 3");
+    expect(stepName("", Number.NaN)).toBe("Step 1");
+  });
+
+  it("keeps a readable title without its padding", () => {
+    expect(stepName(" Review ", 2)).toBe("Review");
+    expect(stepName("Step 2", 2)).toBe("Step 2");
   });
 });

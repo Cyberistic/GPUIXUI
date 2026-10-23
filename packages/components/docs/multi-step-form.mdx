@@ -49,8 +49,8 @@ Each entry of `steps` is a `MultiStep`:
 | Field | Type | Default | Notes |
 | ----- | ---- | ------- | ----- |
 | `id` | `string` | required | The step's stable key, shared with its indicator row. |
-| `title` | `string` | required | The step's name in the indicator and in the content's announcement. |
-| `description` | `string` | — | One line of supporting copy in the indicator. |
+| `title` | `string` | required | The step's name in the indicator and in the content's announcement; a blank title reads as its position (`Step 2`). |
+| `description` | `string` | — | One line of supporting copy in the indicator; a blank line paints nothing. |
 | `content` | `ReactNode` | required | Mounted only while the step is current. |
 | `gate` | `() => Option.Option<string>` | — | Runs before the step moves and before the last step submits; the message it returns keeps the reader put. |
 
@@ -70,6 +70,10 @@ Each entry of `steps` is a `MultiStep`:
 | `label` | `string` | — |
 | `className` | `string` | — |
 | `style` | `StyleDesc` | — |
+
+## Names
+
+`label` names the wizard group; a blank name is an **absence**, so the root is not published with an empty name. The indicator is always named (`Steps` when the wizard is not), a step whose `title` arrived blank is named by its position (`Step 2`) so no list item is unnamed and no announcement opens with a comma, and a title is published trimmed. A blank `description` paints no line — an empty string lays out a zero-height run, but a run of spaces would lay out a full line.
 
 ## Limitations
 
