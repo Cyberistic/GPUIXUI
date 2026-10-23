@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { collectionIndexUrls } from "@/lib/collection-index";
 import { packageSources } from "@/lib/package-docs";
 import { sitemapContentType, sitemapPaths, sitemapXml } from "@/lib/sitemap";
 import { source } from "@/lib/source";
@@ -6,12 +7,14 @@ import { source } from "@/lib/source";
 /**
  * `/sitemap.xml`, generated on request from the collections that serve the
  * pages. A curated page shadows the package page with the same URL, and
- * `sitemapPaths` keeps one entry per URL.
+ * `sitemapPaths` keeps one entry per URL. A collection whose route answers with
+ * a generated index lists that route too, so a crawler reaches the section
+ * entries a reader can open.
  */
 const sitemap = (): string =>
   sitemapXml(
     sitemapPaths(
-      source.getPages().map((page) => page.url),
+      [...source.getPages().map((page) => page.url), ...collectionIndexUrls()],
       packageSources.flatMap((packaged) =>
         packaged.getPages().map((page) => page.url),
       ),

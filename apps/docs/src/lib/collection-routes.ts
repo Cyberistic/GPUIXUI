@@ -40,6 +40,20 @@ export type PackageOrigin =
  */
 export type PageOrigin = "site" | PackageOrigin;
 
+/**
+ * The index a collection serves at its own route when the package writes none.
+ *
+ * `packages/components/docs` and the other collections that have a site-written
+ * index page leave this out: the site page owns the route, so describing a
+ * second one here would describe a page nobody serves.
+ */
+export interface CollectionIndex {
+  /** The page's frontmatter title, e.g. `Media surfaces`. */
+  readonly title: string;
+  /** One sentence, like every other page's description. */
+  readonly description: string;
+}
+
 /** One mounted package docs directory. */
 export interface PackageCollection {
   readonly origin: PackageOrigin;
@@ -53,6 +67,8 @@ export interface PackageCollection {
   readonly section: string;
   /** What the note above a page calls the package. */
   readonly kind: string;
+  /** The generated index at {@link route}, for a package with no index page. */
+  readonly index?: CollectionIndex;
 }
 
 const primitives: PackageCollection = {
@@ -71,6 +87,11 @@ const icons: PackageCollection = {
   route: iconDocsRoute,
   section: "Icons",
   kind: "icon set",
+  index: {
+    title: "Icon set",
+    description:
+      "Every glyph the set ships, with the geometry it paints and its naming rule.",
+  },
 };
 
 const components: PackageCollection = {
@@ -98,6 +119,11 @@ const editor: PackageCollection = {
   route: editorDocsRoute,
   section: "Workspace",
   kind: "code surface",
+  index: {
+    title: "Code surfaces",
+    description:
+      "A code editor, a diff, a Markdown editor and search-and-replace.",
+  },
 };
 
 const files: PackageCollection = {
@@ -107,6 +133,10 @@ const files: PackageCollection = {
   route: filesDocsRoute,
   section: "Workspace",
   kind: "file surface",
+  index: {
+    title: "File surfaces",
+    description: "A file tree, a log viewer and an inspector panel.",
+  },
 };
 
 const shell: PackageCollection = {
@@ -116,6 +146,11 @@ const shell: PackageCollection = {
   route: shellDocsRoute,
   section: "Workspace",
   kind: "shell surface",
+  index: {
+    title: "Shell surfaces",
+    description:
+      "The app menu, the status bar and the toolbar that frame a window.",
+  },
 };
 
 const dock: PackageCollection = {
@@ -125,6 +160,10 @@ const dock: PackageCollection = {
   route: dockDocsRoute,
   section: "Workspace",
   kind: "panel surface",
+  index: {
+    title: "Panel surfaces",
+    description: "Split panes, panel groups and a dock layout for a workspace.",
+  },
 };
 
 const media: PackageCollection = {
@@ -134,6 +173,11 @@ const media: PackageCollection = {
   route: mediaDocsRoute,
   section: "Workspace",
   kind: "media surface",
+  index: {
+    title: "Media surfaces",
+    description:
+      "Image preview, upload, crop and QR surfaces for a file workflow.",
+  },
 };
 
 export const packageCollections = [

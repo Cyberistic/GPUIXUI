@@ -10388,7 +10388,42 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 332/333
+`[ ]` `[██████████]` 333/334
+
+`[x]` Answer the **route of every mounted collection** — `/docs/icons`,
+      `/docs/editor`, `/docs/files`, `/docs/shell`, `/docs/dock` and
+      `/docs/media` answered **404** while every page under them answered,
+      because only components, primitives and data ship an `index.mdx` and the
+      site writes those three routes itself: a reader who trimmed an address, or
+      followed a breadcrumb, reached a dead end in a section the sidebar lists.
+      `src/lib/collection-index.ts` generates the page from the collection the
+      route already mounts — a title and one sentence on the collection's
+      registry entry (`index` in `collection-routes.ts`) and one row per mounted
+      page with its own frontmatter sentence and URL — and `loadDocsPage` serves
+      it before the 404, so a new package page reaches the list in the same
+      commit. The sidebar deliberately does not carry the entry (the lane index
+      is the reader's map); `sitemap.xml` and `/llms.txt` do, from the same
+      registry. Guards: `src/lib/collection-index.test.ts` (5 cases) measures
+      every collection against the directories on disk in both directions — a
+      collection with neither a landing page nor a registry entry fails by route,
+      an entry for a route a site page owns fails too, the printed rows must
+      equal the frontmatter on disk, and the docs route, the sitemap and
+      `/llms.txt` must read the registry — and
+      `src/components/docs/collection-index.test.tsx` (2 cases) renders the list
+      (a header row plus one row per page, each link and sentence, and the
+      singular count). Directions measured: dropping media's entry fails
+      `covers every mounted collection…` with `[ '/docs/media' ]`; replacing the
+      index branch with a package page fails the wiring case by name
+      (`<CollectionIndexPage`); dropping one row fails the render case
+      (`expected … to have a length of 3 but got 2`). Verified on a built and
+      served site (`vite preview`): all six routes answer **200** with their
+      title, description, canonical and generated rows (`/docs/media` prints
+      `5 pages in @gpuixui/media` and its five links), `/docs/media/file-upload`,
+      `/docs/components`, `/docs/primitives` and `/docs/data-display` still 200,
+      the sitemap lists the six and `/llms.txt` prints each with its sentence.
+      `nub run --filter @gpuixui/docs test` is **155 files / 1 615 tests** green,
+      `check-types` and `build` clean. No native scenario applies — site routes
+      and generated lists.
 
 `[x]` Name the **keys the command palette reads** — the site's one ⌘K surface
       documented its parts, props and three ARIA facts and no key at all, while

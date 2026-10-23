@@ -250,11 +250,12 @@ describe("the /llms.txt index", () => {
       "utf8",
     );
 
-    // The order is the precedence: the site's curated page comes first, so it
-    // wins the URL a package page shares. A route that passed only one
-    // collection would print half the site.
+    // The order is the precedence: the site's own pages come first, so a
+    // curated page wins the URL a package page shares; the indexes a collection
+    // route generates follow them. A route that passed only one collection
+    // would print half the site.
     expect(route).toMatch(
-      /llmsTxt\(\s*source\.getPages\(\)\.map\(toPage\),\s*packageSources\.flatMap\(/,
+      /llmsTxt\(\s*\[\.\.\.source\.getPages\(\)\.map\(toPage\),\s*\.\.\.collectionIndexPages\(\)\],\s*packageSources\.flatMap\(/,
     );
     expect(route).toContain("llmsContentType");
     expect(llmsContentType).toBe("text/plain; charset=utf-8");

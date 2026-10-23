@@ -236,6 +236,7 @@ src/components/docs/playground-scenarios.tsx The probe catalogue on /docs/playgr
 src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
 src/components/docs/lane-pages.tsx        The generated page list on the data and workspace lanes
+src/components/docs/collection-index.tsx The list a collection route serves when the package writes no landing page
 src/components/docs/component-index.tsx   The 3-column tile grid on /docs/components and its URL filter
 src/components/docs/icon-gallery.tsx      Every icon the set publishes, from its own markup
 src/components/docs/use-index-query.ts    A list filter carried in `?q=`, shared by both indexes
@@ -329,6 +330,7 @@ src/lib/search-links.ts             The search dialog's pre-query entry points
 src/lib/package-docs.ts             The loaders for the three package collections
 src/lib/collection-routes.ts        The registry: every mounted package directory, route, section
 src/lib/collection-pages.ts         The pages a mounted collection serves, including one that ships none yet
+src/lib/collection-index.ts         The index a collection route generates when the package writes no landing page
 src/lib/page-tree.ts                Fills and alphabetically sorts each sidebar section
 src/lib/page-meta.ts                Title, description, canonical and social metadata
 src/lib/page-markdown.ts            Server function behind "Copy page"
@@ -430,6 +432,26 @@ package page for that URL. A primitive curated in the Components section retires
 its package page instead (`src/lib/curated-twins.ts`): the old address answers a
 301 and no generated list carries it. Components is open by default; the other
 lanes stay collapsed.
+
+### The section entry
+
+A collection's root answers too. Three packages write a landing page
+(`components`, `primitives` and `data`), and the site writes those routes
+itself; the other six write none, so `/docs/icons`, `/docs/editor`,
+`/docs/files`, `/docs/shell`, `/docs/dock` and `/docs/media` answered **404**
+while every page under them answered — a dead end for a reader who trimmed an
+address or followed a breadcrumb.
+
+`src/lib/collection-index.ts` generates the page from the collection the route
+already mounts: a title and one sentence on the collection's registry entry
+(`index` in `collection-routes.ts`), then one row per page with its own
+frontmatter sentence and its URL. `docs-view.tsx` serves it before the 404, so a
+new package page reaches the list in the same commit and a package cannot ship a
+page the index omits. The sidebar does not carry the entry — the lane index is a
+reader's map — but `sitemap.xml` and `/llms.txt` do, from the same registry.
+`collection-index.test.ts` holds both directions against the directories on
+disk: a collection with neither a landing page nor a registry entry fails by
+route, and an entry for a route a site page owns fails too.
 
 ### Search
 

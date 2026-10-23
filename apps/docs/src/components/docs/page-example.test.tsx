@@ -70,10 +70,9 @@ describe("the worked-example strip", () => {
     // One mount in the shared frame renders both collections' pages, and both
     // branches hand it the loader's canonical URL rather than the file path.
     expect(view).toContain("<PageExample url={url} />");
-    expect(view).toContain("url } = useFumadocsLoader(data)");
-    expect(view).toContain("<SiteContent path={path} url={url} />");
-    expect(view).toContain(
-      "<PackageContent origin={data.origin} path={path} url={url} />",
-    );
+    expect(view).toContain("pageTree: tree } = useFumadocsLoader(data)");
+    expect(view).toContain("<SiteContent path={data.path} url={data.url} />");
+    expect(view).toContain("path={data.path}");
+    expect(view).toContain("url={data.url}");
   });
 });

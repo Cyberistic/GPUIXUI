@@ -11,6 +11,7 @@ import {
 import type { ComponentProps, ReactNode } from "react";
 import { Suspense, use } from "react";
 import { mdxComponents } from "@/components/mdx";
+import { CollectionIndexPage } from "@/components/docs/collection-index";
 import { CopyPage } from "@/components/docs/copy-page";
 import { DependencyStrip } from "@/components/docs/dependency-strip";
 import { EditPage } from "@/components/docs/edit-page";
@@ -24,6 +25,7 @@ import {
   PlatformToggle,
 } from "@/components/docs/platform-toggle";
 import { StatusStrip } from "@/components/docs/status-strip";
+import { collectionIndexOf } from "./collection-index";
 import {
   collectionByOrigin,
   packageCollections,
@@ -37,13 +39,15 @@ import { docsRoute } from "./shared";
 import { docs, source } from "./source";
 
 /**
- * Which collection a page comes from.
+ * Which collection a page's Markdown lives in.
  *
  * `site` is this app's own page; the others are the page the package ships with
  * in `packages/<pkg>/docs`. A curated site page wins its URL, so the site can go
- * deeper on the components it documents first.
+ * deeper on the components it documents first. A collection route with neither
+ * a site page nor a package index answers with the page `collection-index.ts`
+ * generates, which carries no Markdown and so never reaches this frame.
  */
-type Origin = "site" | PackageOrigin;
+type PageOrigin = "site" | PackageOrigin;
 
 /** The sidebar tree, with each package's pages filling its section. */
 const pageTree = async () =>
@@ -83,16 +87,41 @@ export const loadDocsPage = createServerFn({ method: "GET" })
     if (!collection) throw notFound();
 
     const packaged = sourceByOrigin[collection.origin].getPage(rest);
-    if (!packaged) throw notFound();
+    if (packaged) {
+      return {
+        origin: collection.origin,
+        path: packaged.path,
+        url: packaged.url,
+        title: packaged.data.title,
+        description: packaged.data.description,
+        pageTree: await pageTree(),
+      };
+    }
 
-    return {
-      origin: collection.origin,
-      path: packaged.path,
-      url: packaged.url,
-      title: packaged.data.title,
-      description: packaged.data.description,
-      pageTree: await pageTree(),
-    };
+    // The collection's own route: the package may write no landing page, so the
+    // site generates one from the pages it mounts rather than answering 404.
+    if (rest.length === 0) {
+      const index = collectionIndexOf(
+        collection,
+        sourceByOrigin[collection.origin].getPages().map((page) => ({
+          title: page.data.title,
+          description: page.data.description,
+          url: page.url,
+        })),
+      );
+      if (index !== undefined) {
+        return {
+          origin: "index" as const,
+          url: index.url,
+          title: index.title,
+          description: index.description,
+          index,
+          pageTree: await pageTree(),
+        };
+      }
+    }
+
+    throw notFound();
   });
 
 type DocsPageData = Awaited<ReturnType<typeof loadDocsPage>>;
@@ -112,7 +141,7 @@ function PageFrame({
   readonly toc: ComponentProps<typeof DocsPage>["toc"];
   readonly path: string;
   readonly url: string;
-  readonly origin: Origin;
+  readonly origin: PageOrigin;
   readonly children: ReactNode;
 }) {
   return (
@@ -202,7 +231,7 @@ function PackageContent({
 
 /** Renders one page of either collection inside the shared docs layout. */
 export function DocsView({ data }: { data: DocsPageData }) {
-  const { path, pageTree: tree, url } = useFumadocsLoader(data);
+  const { pageTree: tree } = useFumadocsLoader(data);
 
   return (
     <PlatformProvider>
@@ -212,10 +241,16 @@ export function DocsView({ data }: { data: DocsPageData }) {
         tree={tree}
       >
         <Suspense>
-          {data.origin === "site" ? (
-            <SiteContent path={path} url={url} />
+          {data.origin === "index" ? (
+            <CollectionIndexPage index={data.index} />
+          ) : data.origin === "site" ? (
+            <SiteContent path={data.path} url={data.url} />
           ) : (
-            <PackageContent origin={data.origin} path={path} url={url} />
+            <PackageContent
+              origin={data.origin}
+              path={data.path}
+              url={data.url}
+            />
           )}
         </Suspense>
       </DocsLayout>
