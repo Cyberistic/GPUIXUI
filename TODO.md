@@ -10377,7 +10377,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 313/314
+`[ ]` `[█████████░]` 314/315
 
 `[x]` Stop the **component index teaching sections the pages do not have** — its
       "How to read a page" table was written from memory and read as a promise:
@@ -10554,6 +10554,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
       landing and `/live`. `nub run --filter @gpuixui/docs test` is **138 files /
       1 183 tests** green, `check-types` and `build` clean. No native scenario
       applies — a generated text document.
+
+`[x]` Name each **module once** in the site's own ledger — `apps/docs/README.md`
+      is the map a contributor opens to find the file behind a page, and two
+      merge resolutions had appended their own copy of lines it already carried:
+      `blocks.tsx`, `block-preview.tsx`, `auth-blocks.tsx` and `dashboard.tsx`
+      each appeared twice, with two different descriptions of `blocks.tsx`, so a
+      reader saw four modules where the tree has four pages and the second
+      description is the one that goes stale. The duplicate block is gone and
+      `readme-ledger.test.ts` gains `names each row once, not once per pass that
+      touched it`: it counts the ledger lines that begin with every module and
+      page path and fails on any count but one. Direction measured: re-adding
+      `dashboard.tsx` fails it by name (`expected [ 'src/components/docs/
+      dashboard.tsx' ] to deeply equal []`); restored, the file is 7/7. No
+      native scenario applies — a repository document.
 
 `[x]` Give the **data lane its first honest preview** — the policy said every
       lane but Components and Primitives was strategy 4, so `/docs/data-display`

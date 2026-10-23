@@ -258,10 +258,6 @@ src/components/docs/auth-blocks.tsx       The auth blocks' browser reproductions
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
 src/components/docs/kanban-board.tsx      The kanban board's reproduction, columns and card moves
 src/components/docs/settings-dialog.tsx   The settings dialog's reproduction, theme state and controls
-src/components/docs/blocks.tsx            The block registry: login, settings, dashboard and the new recipes
-src/components/docs/block-preview.tsx     A block's browser rendering
-src/components/docs/auth-blocks.tsx       The auth blocks' browser reproductions and recipes
-src/components/docs/dashboard.tsx         The dashboard's charts and stats
 src/components/docs/notification-centre.tsx The notification centre's rows, filters and mark-read state
 src/components/docs/command-centre.tsx    The command centre's matcher, highlight and run line
 src/components/docs/file-manager-block.tsx The file browser's reducer, panes and recipe

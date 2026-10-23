@@ -65,6 +65,25 @@ describe("the apps/docs ledger", () => {
     expect(modules.filter((module) => !listed(module))).toEqual([]);
   });
 
+  it("names each row once, not once per pass that touched it", () => {
+    // Two merge resolutions appended their own copy of a line the ledger
+    // already carried — `blocks.tsx`, `block-preview.tsx`, `auth-blocks.tsx`
+    // and `dashboard.tsx` each appeared twice, one pair with two descriptions
+    // of one file. A reader scanning the ledger sees two modules where the
+    // tree has one, and the second description is the one that goes stale.
+    const rows = (path: string): number =>
+      ledger.filter((line) => {
+        const entry = line.trimStart();
+        return (
+          entry.startsWith(path) && /^(?:$|\s)/.test(entry.slice(path.length))
+        );
+      }).length;
+
+    expect([...modules, ...pages].filter((path) => rows(path) !== 1)).toEqual(
+      [],
+    );
+  });
+
   it("points at the preview policy it tells a contributor to read", () => {
     expect(ledger.join("\n")).toContain("docs/preview-strategy.md");
     const policy = readFileSync(
