@@ -2970,6 +2970,101 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(keeping).toContain("`key-hold-lifecycle`");
   });
 
+  it("records the type a document host paints, derived from its fixture", () => {
+    // `nativeTextTheme` hands a `<code>`, `<diff>` and `<markdown>` host the
+    // scale's metrics, and every claim about it was a read of the pinned Rust
+    // source until `document-type` painted one. The record named the host's ink
+    // and its family but not its type, so a brand that rescales `codeBlock` was
+    // promised a paint no document could cite. The heights are derived from the
+    // fixture's own constants and the probe's own arithmetic, so a row that
+    // teaches a size the window no longer lays out fails by name.
+    const fixture = read("apps/playground/src/live/document-type.ts");
+    const probe = read("apps/playground/src/live/scenarios.tsx");
+    const number = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d.]+);`).exec(fixture)?.[1] ??
+          Number.NaN,
+      );
+
+    const codeSize = number("CODE_SIZE");
+    const codeLeading = number("CODE_LEADING");
+    const captionSize = number("CAPTION_SIZE");
+    const runtimeCodeSize = number("RUNTIME_CODE_SIZE");
+    const runtimeCodeLeading = number("RUNTIME_CODE_LEADING");
+    const runtimeDiffLeading = number("RUNTIME_DIFF_LEADING");
+    const runtimeHeaderSize = number("RUNTIME_HEADER_SIZE");
+    const diffRows = number("DIFF_ROWS");
+    const checks = number("DOCUMENT_TYPE_CHECKS");
+
+    const themedBlock = 2 * codeLeading;
+    const plainBlock = 2 * runtimeCodeLeading;
+    const diffGain = diffRows * (codeLeading - runtimeDiffLeading);
+
+    // The premise: every role is distinguishable from the runtime's default, so
+    // a host that ignored the seam could not read the same number.
+    expect(codeSize).toBeGreaterThan(runtimeCodeSize);
+    expect(codeLeading).toBeGreaterThan(runtimeCodeLeading);
+    expect(codeLeading).toBeGreaterThan(runtimeDiffLeading);
+    expect(captionSize).toBeGreaterThan(runtimeHeaderSize);
+    expect(themedBlock).toBeGreaterThan(plainBlock);
+    expect(diffGain).toBeGreaterThan(0);
+
+    // The gains the fixture states, so the document's figures cannot outlive
+    // the arithmetic the probe asserts.
+    expect(fixture).toContain(
+      "DIFF_ROWS * (CODE_LEADING - RUNTIME_DIFF_LEADING)",
+    );
+    expect(fixture).toContain("CODE_LEADING_GAIN = 2 * (CODE_LEADING - RUNTIME_CODE_LEADING)");
+    expect(probe).toContain("2 * CODE_LEADING");
+    expect(probe).toContain("2 * RUNTIME_CODE_LEADING");
+    expect(probe).toContain("DIFF_LEADING_GAIN");
+    // The strip is held to a caption-sized control within one antialias row,
+    // which is why the row prints no single strip figure.
+    expect(probe).toContain("near(themedStrip, inkHeight(caption, page), 1)");
+
+    const row = rowFor("Document host type");
+    expect(row?.verdict).toBe("supported, with limits");
+    const evidence = row?.evidence ?? "";
+    expect(evidence).toContain("document-type");
+    expect(evidence).toContain(`${checks} checks`);
+    expect(evidence).toContain(
+      `\`${codeSize}/${codeLeading}\` against the runtime's \`${runtimeCodeSize}\`/\`${runtimeCodeLeading}\``,
+    );
+    expect(evidence).toContain(`\`${captionSize}\` against \`${runtimeHeaderSize}\``);
+    expect(evidence).toContain(`**${themedBlock}** tall`);
+    expect(evidence).toContain(`**${plainBlock}**`);
+    expect(evidence).toContain(
+      `**${diffGain}** taller with the theme (\`${diffRows} × (${codeLeading} − ${runtimeDiffLeading})\`)`,
+    );
+    expect(evidence).toContain("caption");
+    expect(evidence).toContain("negative controls");
+    expect(row?.workaround).toContain("nativeTextTheme(theme)");
+    expect(row?.workaround).toContain("caption");
+
+    const page = measuredRow("Document host type");
+    expect(
+      page,
+      "the page's measured table has no document-type row",
+    ).toBeDefined();
+    const pageEvidence = page?.[1] ?? "";
+    expect(pageEvidence).toContain("document-type");
+    expect(pageEvidence).toContain(`${checks} checks`);
+    expect(pageEvidence).toContain(
+      `\`${codeSize}/${codeLeading}\` against the runtime's \`${runtimeCodeSize}\`/\`${runtimeCodeLeading}\``,
+    );
+    expect(pageEvidence).toContain(`\`${captionSize}\` against \`${runtimeHeaderSize}\``);
+    expect(pageEvidence).toContain(`**${themedBlock}**`);
+    expect(pageEvidence).toContain(`**${plainBlock}**`);
+    expect(pageEvidence).toContain(`**${diffGain}**`);
+    expect(page?.[2]).toContain("nativeTextTheme(theme)");
+
+    // §5 owes the probe — the section itself, not the row's own citation.
+    const keeping = doc.slice(
+      doc.indexOf("## 5. Keeping this document true"),
+    );
+    expect(keeping).toContain("`document-type`");
+  });
+
   it("publishes the order a negative tab index gives, not a skip", () => {
     // The dock's keyboard row said a `tabIndex={-1}` control was "skipped by
     // the same traversal", which is only true forwards. `grid-focus-lifecycle`
