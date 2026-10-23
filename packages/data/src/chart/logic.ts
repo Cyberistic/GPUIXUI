@@ -391,6 +391,34 @@ export const donutMarks = (
   box: ChartBox,
 ): ReadonlyArray<ChartMark> => Arr.flatten(donutSegments(values, box));
 
+/**
+ * The words a series paints, category by category.
+ *
+ * A chart is a picture of numbers, and the accessibility tree has no way to
+ * read a picture: without this line a series image is named by its label alone
+ * and every value it draws — the thing the chart exists for — is silent. A
+ * category is read as `label value` (`Q1 32`), a value with no label as the
+ * number alone, and a value that is not a number as `no value` rather than the
+ * zero the geometry substitutes — a reader should not be told a datum is zero
+ * when the caller never supplied one.
+ */
+export const seriesDescription = (
+  values: ReadonlyArray<number>,
+  labels: ReadonlyArray<string> = [],
+): string => {
+  const count = labels.length === 0 ? values.length : labels.length;
+  return Arr.join(
+    Arr.map(Arr.take(values, count), (value, index) => {
+      const readout = Number.isFinite(value)
+        ? `${Math.round(value * 100) / 100}`
+        : "no value";
+      const label = labels[index];
+      return label === undefined ? readout : `${label} ${readout}`;
+    }),
+    ", ",
+  );
+};
+
 /** The SVG document one series paints, tinted by the element's `color`. */
 export const chartMarkup = (
   marks: ReadonlyArray<ChartMark>,

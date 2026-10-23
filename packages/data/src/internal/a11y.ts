@@ -18,6 +18,7 @@ export class A11yNode extends Schema.Class<A11yNode>("A11yNode")({
     role: Schema.optionalKey(Schema.String),
     label: Schema.optionalKey(Schema.String),
     value: Schema.optionalKey(Schema.String),
+    description: Schema.optionalKey(Schema.String),
   }),
   children: Schema.optionalKey(Schema.Array(Schema.String)),
 }) {}

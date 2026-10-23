@@ -30,6 +30,7 @@ import {
   linePath,
   niceCeiling,
   seriesColour,
+  seriesDescription,
   stackedBarMarks,
   stackedScale,
   type ChartBox,
@@ -252,5 +253,29 @@ describe("the chart markup", () => {
     expect(seriesColour(palette, 2)).toBe("#111111");
     expect(seriesColour(palette, -1)).toBe("#222222");
     expect(seriesColour([], 0)).toBe("#000000");
+  });
+});
+
+describe("the words a series announces", () => {
+  it("reads a value under the label it stands on", () => {
+    expect(seriesDescription([3, 6], ["Q1", "Q2"])).toBe("Q1 3, Q2 6");
+  });
+
+  it("announces no category the plot leaves unpainted", () => {
+    // Three values against two labels: the third draws nowhere, so naming it
+    // would describe a datum the picture does not show.
+    expect(seriesDescription([3, 6, 9], ["Q1", "Q2"])).toBe("Q1 3, Q2 6");
+    expect(seriesDescription([3], ["Q1", "Q2"])).toBe("Q1 3");
+  });
+
+  it("reads an unreadable value as no value, not the geometry's zero", () => {
+    expect(seriesDescription([3, Number.NaN], ["Q1", "Q2"])).toBe(
+      "Q1 3, Q2 no value",
+    );
+  });
+
+  it("reads a word-sized series with no labels as its values", () => {
+    expect(seriesDescription([3, 6, 2])).toBe("3, 6, 2");
+    expect(seriesDescription([])).toBe("");
   });
 });

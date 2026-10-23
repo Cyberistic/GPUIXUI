@@ -360,6 +360,13 @@ beside it. Every mark sits at the centre of its category slot — a bar, a line'
 point and the label under it share one `x` — so a series with fewer values than
 labels stays in the columns it names.
 
+The picture announces its numbers: the chart is a group named by `aria-label`,
+each series is an image named by its label, and the values travel in
+`aria-description` (`Q1 32, Q2 48`) — a value past the last label is not
+described and one the caller never supplied reads `no value` rather than the
+`0` the geometry substitutes. A `Sparkline` is one image, not a group of them:
+the caller's `aria-label` names it and its values are its description.
+
 The full screens — the files table with filter, sort headers, column menu and
 keyboard walk, the 2 000-row list, the 1 000-row virtualized table, the
 workspace **tree**, the 4 000-row **windowed tree**, the **expandable-rows**

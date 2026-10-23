@@ -42,7 +42,7 @@ The series charts (`BarChart`, `StackedBar`, `LineChart`) share one contract:
 | `axis` | `boolean` | `true` | paints the y-axis tick column |
 | `ticks` | `number` | `4` | how many steps the y axis divides into |
 | `testId` | `string` | — | the chart's locator |
-| `aria-label` | `string` | — | the group's name |
+| `aria-label` | `string` | — | the group's name; a sparkline's own image name |
 
 `DonutChart` takes `data: ChartDatum[]`, `size` (`160`) and `legend`. `Sparkline`
 takes `values: number[]`, `width` (`120`), `height` (`32`) and `color`.
@@ -59,6 +59,27 @@ the labelled slots, and the extra values draw nowhere. A line's points sit at
 the centre of their slot, like a bar and the label under it, so a series with
 fewer values than labels stays in the columns it names instead of stretching
 across the plot.
+
+## Accessibility
+
+A chart is a **group** named by its `aria-label`, holding one **image** per
+series named by the series' `label`. The numbers travel in the image's
+description, because a picture of numbers is the one thing a role cannot carry:
+
+- a series reads `Q1 32, Q2 48, Q3 41` — the label it stands under and the value
+  it paints, in category order;
+- a value past the last label draws nowhere and is not described, and one the
+  caller never supplied reads `no value` rather than the `0` the geometry
+  substitutes;
+- a ring slice reads its own value (`Direct 40`);
+- a `Sparkline` is **one image**, not a group of them: the caller's `aria-label`
+  names it (`Trend` when absent) and its values are its description.
+
+The axis ticks and the category labels are ordinary `Label`s beside the plot.
+0.11.0 has no figure or table role, so the series' description is the strongest
+channel the tree has; a reader who needs to compare values across many series
+should also be given the same data as a `Table` (or a `KeyValue` list) next to
+the picture.
 
 ## Limitations
 

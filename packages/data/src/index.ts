@@ -96,6 +96,7 @@ export {
   linePath,
   niceCeiling,
   seriesColour,
+  seriesDescription,
   seriesMax,
   stackedBarMarks,
   stackedScale,

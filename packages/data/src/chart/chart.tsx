@@ -39,6 +39,7 @@ import {
   groupedBarMarks,
   linePath,
   seriesColour,
+  seriesDescription,
   stackedBarMarks,
   stackedScale,
   type ChartBox,
@@ -159,6 +160,7 @@ const ChartLayer = ({
   chartTestId,
   seriesKey,
   label,
+  description,
   colour,
   marks,
   box,
@@ -166,6 +168,14 @@ const ChartLayer = ({
   readonly chartTestId: string | undefined;
   readonly seriesKey: string;
   readonly label: string;
+  /**
+   * The series' values, as words.
+   *
+   * A chart is a picture of numbers, so the series' name alone leaves the data
+   * silent. 0.11.0 carries no figure or table role, so the readout travels in
+   * the one extra channel the tree has: `aria-description` beside the name.
+   */
+  readonly description: string;
   readonly colour: string;
   readonly marks: ReadonlyArray<ChartMark>;
   readonly box: ChartBox;
@@ -174,6 +184,7 @@ const ChartLayer = ({
     source={chartMarkup(marks, box)}
     role="img"
     aria-label={label}
+    aria-description={description}
     testId={
       chartTestId === undefined
         ? undefined
@@ -283,6 +294,7 @@ const ChartFrame = ({
                   chartTestId={testId}
                   seriesKey={one.key}
                   label={one.label}
+                  description={seriesDescription(one.values, labels)}
                   colour={seriesColour(palette, index)}
                   marks={marks}
                   box={box}
@@ -456,6 +468,7 @@ export const DonutChart = ({
                 chartTestId={testId}
                 seriesKey={one.key}
                 label={one.label}
+                description={seriesDescription([one.value])}
                 colour={seriesColour(palette, index)}
                 marks={marks}
                 box={box}
@@ -497,6 +510,12 @@ export interface SparklineProps extends Omit<Props, "children"> {
  *
  * It is one `<svg>` in the first categorical colour, so a stat card's trend and
  * a chart's first series agree without the caller naming a colour twice.
+ *
+ * Unlike the series charts it is **one image, not a group of them**: there is
+ * no series list, so the caller's `aria-label` names the single layer and the
+ * values travel in its description. A wrapper that also claimed `role="img"`
+ * made a reader hear the sparkline twice — measured, the tree held two `Image`
+ * nodes with the same name.
  */
 export const Sparkline = ({
   values,
@@ -516,8 +535,6 @@ export const Sparkline = ({
   return (
     <div
       {...rest}
-      role="img"
-      aria-label={ariaLabel}
       testId={testId}
       style={mergeStyles(recipeStyle(cn(CHART_ROOT, className), theme), style)}
     >
@@ -532,6 +549,7 @@ export const Sparkline = ({
           chartTestId={testId}
           seriesKey="sparkline"
           label={ariaLabel ?? "Trend"}
+          description={seriesDescription(values)}
           colour={color ?? seriesColour(seriesColors(theme), 0)}
           marks={Option.match(d, {
             onNone: () => [],
