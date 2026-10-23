@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boxStyle, gridStyle, stackStyle } from "./layout.js";
+import { boxStyle, fieldRows, gridStyle, stackStyle } from "./layout.js";
 import { testTheme } from "./testing/theme.fixture.js";
 
 /**
@@ -90,6 +90,50 @@ describe("gridStyle", () => {
       gridStyle({ columns: 2, rows: Number.NEGATIVE_INFINITY }, testTheme)
         .gridTemplateRows,
     ).toBe(1);
+  });
+});
+
+describe("fieldRows", () => {
+  it("floors a fractional row count the runtime would drop", () => {
+    // The bug guarded: the runtime reads `minRows`/`maxRows` as whole rows and
+    // discards a fractional count rather than flooring it, so a floor computed
+    // from a measured height (2.5 rows) painted ONE row — fewer than
+    // `minRows={2}` — and a fractional cap painted the whole field.
+    expect(fieldRows(2.5, undefined)).toEqual({
+      minRows: 2,
+      maxRows: undefined,
+    });
+    expect(fieldRows(undefined, 2.5)).toEqual({
+      minRows: undefined,
+      maxRows: 2,
+    });
+    expect(fieldRows(3.9, 4.9)).toEqual({ minRows: 3, maxRows: 4 });
+  });
+
+  it("reads a row count it cannot lay out as one row", () => {
+    expect(fieldRows(0, 0)).toEqual({ minRows: 1, maxRows: 1 });
+    expect(fieldRows(-3, Number.NaN)).toEqual({ minRows: 1, maxRows: 1 });
+    expect(fieldRows(Number.POSITIVE_INFINITY, -2)).toEqual({
+      minRows: 1,
+      maxRows: 1,
+    });
+  });
+
+  it("leaves an absent count to the runtime's own height control", () => {
+    expect(fieldRows(undefined, undefined)).toEqual({
+      minRows: undefined,
+      maxRows: undefined,
+    });
+    expect(fieldRows(3, undefined)).toEqual({
+      minRows: 3,
+      maxRows: undefined,
+    });
+  });
+
+  it("never caps a field below the floor it paints", () => {
+    // The runtime paints the floor when the pair is inverted, so a passed-through
+    // cap of 2 described a box the field never drew (it painted four rows).
+    expect(fieldRows(4, 2)).toEqual({ minRows: 4, maxRows: 4 });
   });
 });
 

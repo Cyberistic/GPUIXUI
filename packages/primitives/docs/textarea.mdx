@@ -31,8 +31,8 @@ const help = "Markdown is not interpreted.";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `minRows` | `number` | runtime default | minimum visible rows |
-| `maxRows` | `number` | runtime default | rows after which the field scrolls |
+| `minRows` | `number` | runtime default | visible floor, in whole rows: a fraction floors, an unusable count reads as one |
+| `maxRows` | `number` | runtime default | rows after which the field scrolls, in whole rows: a fraction floors, an unusable count reads as one, and a cap below `minRows` is raised to it |
 | `value` | `string` | — | controlled text |
 | `defaultValue` | `string` | `""` | initial text when uncontrolled |
 | `onValueChange` | `(value: string) => void` | none | called after each edit |
@@ -55,6 +55,10 @@ const help = "Markdown is not interpreted.";
 
 ## Limitations
 
+- Rows are whole numbers. The runtime drops a fractional `minRows`/`maxRows`
+  rather than flooring it, so the field hands it the whole part: a `2.5` row
+  floor otherwise painted **one** row and a `2.5` row cap did not cap at all
+  (measured on 0.11.0 by `runtime/fields.runtime.test.tsx`).
 - No `onSubmit`: Enter inserts a newline, never submits.
 - No `maxLength`, filter or mask: the same measured limit as `Input`.
 - No rich text, markdown preview or character counter.

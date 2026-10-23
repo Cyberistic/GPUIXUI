@@ -103,6 +103,38 @@ export interface GridSpec {
 export const trackCount = (count: number): number =>
   Number.isFinite(count) ? Math.max(1, Math.floor(count)) : 1;
 
+/** The rows a text area paints: a floor it shows and a cap it scrolls at. */
+export interface FieldRows {
+  readonly minRows?: number;
+  readonly maxRows?: number;
+}
+
+/**
+ * The row floor and cap a text area hands the runtime.
+ *
+ * `minRows`/`maxRows` are caller arithmetic — a measured height divided by a
+ * line — and the runtime reads them as **whole** rows: a fractional count is
+ * dropped entirely rather than floored, so a `2.5` row floor painted one row
+ * (fewer than `minRows={2}`) and a `2.5` row cap painted the whole six-line
+ * field. Both go through {@link trackCount}, the package's whole-count rule, so
+ * a fraction floors, a count below one is one, and a count that is not a number
+ * is one. An absent count stays absent: the field's own height control is the
+ * answer there. A cap never sits below its floor, because the runtime paints
+ * the floor anyway — raising it states the box the field actually draws.
+ */
+export const fieldRows = (
+  minRows: number | undefined,
+  maxRows: number | undefined,
+): FieldRows => {
+  const floor = minRows === undefined ? undefined : trackCount(minRows);
+  const cap = maxRows === undefined ? undefined : trackCount(maxRows);
+  return {
+    minRows: floor,
+    maxRows:
+      cap === undefined || floor === undefined ? cap : Math.max(cap, floor),
+  };
+};
+
 /**
  * A fixed-size grid.
  *

@@ -415,6 +415,34 @@ it("sizes a TextArea by rows, as the runtime's own height control", async () => 
   expect(four).toBeGreaterThan(two);
 });
 
+it("sizes a TextArea by whole rows when a count is fractional", async () => {
+  // The bug this guards: 0.11.0's textarea reads `minRows`/`maxRows` as whole
+  // rows and drops a fractional count **entirely** rather than flooring it. A
+  // floor computed from a measured height (`minRows={2.5}`) therefore painted
+  // one row — *fewer* than `minRows={2}` — and a fractional `maxRows` removed
+  // the cap, so a six-line field painted all six rows instead of scrolling.
+  const heightOf = async (props: {
+    readonly minRows?: number;
+    readonly maxRows?: number;
+    readonly defaultValue?: string;
+  }): Promise<number> => {
+    const runtime = await openWindow();
+    runtime.render(
+      <Surface>
+        <TextArea testId="area" {...props} />
+      </Surface>,
+    );
+    return boundsOf(runtime, "area").height;
+  };
+  const six = "a\nb\nc\nd\ne\nf";
+  const floor = await heightOf({ minRows: 2 });
+  const capped = await heightOf({ maxRows: 2, defaultValue: six });
+  const whole = await heightOf({ defaultValue: six });
+  expect(await heightOf({ minRows: 2.5 })).toBe(floor);
+  expect(await heightOf({ maxRows: 2.5, defaultValue: six })).toBe(capped);
+  expect(capped).toBeLessThan(whole);
+});
+
 it("edits a TextArea across lines", async () => {
   const runtime = await openWindow();
   const field = recorder();

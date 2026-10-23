@@ -4,12 +4,15 @@
  * The same field contract as `Input`, on the runtime's `textarea` element.
  * `minRows`/`maxRows` are the runtime's own height controls; a textarea does
  * not scroll until its content exceeds `maxRows`, so a set `maxRows` is also
- * the point at which it becomes a scroll container.
+ * the point at which it becomes a scroll container. Both counts are handed over
+ * as whole rows (`core/layout.ts`'s `fieldRows`), because the runtime drops a
+ * fractional count instead of flooring it.
  */
 
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
+import { fieldRows } from "../core/layout.js";
 import type { ValueState } from "../core/state.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { fieldFrame, fieldHostProps, type FieldProps } from "./Input.js";
@@ -31,9 +34,16 @@ import { useTheme } from "./ThemeProvider.js";
  */
 export type TextAreaProps = Omit<FieldProps, "onSubmit"> &
   ValueChangeProps<string> & {
-    /** Minimum visible rows. The runtime grows the field to fit. */
+    /**
+     * Minimum visible rows; the field grows to fit. A fractional or unusable
+     * count is read as a whole row, never dropped (`fieldRows`).
+     */
     readonly minRows?: number;
-    /** Rows after which the field scrolls instead of growing. */
+    /**
+     * Rows after which the field scrolls instead of growing. A fractional or
+     * unusable count is read as a whole row, and the cap is never below
+     * `minRows`.
+     */
     readonly maxRows?: number;
   };
 
@@ -53,12 +63,13 @@ export const renderTextArea = (
     paddingTop: vertical,
     paddingBottom: vertical,
   };
+  const rows = fieldRows(props.minRows, props.maxRows);
   return (
     <textarea
       {...host}
       style={style}
-      minRows={props.minRows}
-      maxRows={props.maxRows}
+      minRows={rows.minRows}
+      maxRows={rows.maxRows}
     />
   );
 };
