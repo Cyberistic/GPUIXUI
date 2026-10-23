@@ -202,11 +202,9 @@ const RovingRow = ({
 const RovingList = ({
   cursor,
   onMove,
-  onElement,
 }: {
   readonly cursor: number;
   readonly onMove: (next: number) => void;
-  readonly onElement: (index: number, element: PublicInstance | null) => void;
 }): ReactNode => {
   const renderer = useGpuix().renderer;
   const rows = useRef<Array<PublicInstance | null>>([]);
@@ -240,7 +238,6 @@ const RovingList = ({
           cursor={cursor}
           instance={(element) => {
             rows.current[index] = element;
-            onElement(index, element);
           }}
           onKey={onKey}
         />
@@ -254,7 +251,6 @@ export const FocusRevealProbe = (): ReactNode => {
   const window = useWindowSize();
   const [cursor, setCursor] = useState(0);
   const [keys, setKeys] = useState(0);
-  const rows = useRef<Array<PublicInstance | null>>([]);
 
   return (
     <div
@@ -333,9 +329,6 @@ export const FocusRevealProbe = (): ReactNode => {
               onMove={(next) => {
                 setCursor(Math.max(0, Math.min(FOCUS_REVEAL_LAST, next)));
                 setKeys((count) => count + 1);
-              }}
-              onElement={(index, element) => {
-                rows.current[index] = element;
               }}
             />
           </div>
