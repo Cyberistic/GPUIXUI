@@ -70,18 +70,22 @@ content sits in it.
 ## Keyboard
 
 The viewport is one tab stop, and a key only moves the region that already holds
-the focus — the traversal into it is part of the contract.
+the focus — the traversal into it is part of the contract. Measured in a window
+by `keyboard-scroll-lifecycle` (62 checks on 0.11.0), the handler stands down
+unless `getFocusedElementId()` is its own id, so the traversal has to reach the
+stop before any key moves anything.
 
 | Key | Move |
 | --- | ---- |
-| `Up` / `Down` | one `density.rowHeight` (32px) |
-| `PageUp` / `PageDown` | one painted viewport (160px: `-32` → `-192`) |
+| `Up` / `Down` | one line, `density.rowHeight` (32px) |
+| `PageUp` / `PageDown` | one painted viewport (160px: `-32` → `-192`); a sideways region pages by the width it shows (320px, `-32` → `-352`) |
 | `Home` / `End` | one end of the content |
-| `Left` / `Right` | one column in a sideways region; its page is the width it shows (`-352`) |
+| `Left` / `Right` | one line (32px) on either axis, not one column: the runtime has no column metric, so the probe's 80px columns are not the step |
 
 A `Cmd`/`Ctrl` chord belongs to the platform (`Cmd+Home` moves nothing), a field
-inside keeps its arrows and the region still, and `focusable={false}` takes the
-region out of the traversal.
+inside keeps its arrows and the region still, an arrow for an axis the region
+does not scroll is left alone, and `focusable={false}` takes the region out of
+the traversal.
 
 **A traversal does not reveal the control it focuses.** A window measured
 (`focus-reveal-lifecycle`, 44 checks on 0.11.0): tabbing into a 200×120 pane of

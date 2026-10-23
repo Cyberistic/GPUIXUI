@@ -1493,6 +1493,148 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("cites the window that drove a scroll region from the keyboard", () => {
+    // Bug guarded: the shadcn-brief rewrite dropped the scroll page's probe
+    // citation — and the guard that held it — so the keyboard contract read as
+    // the offscreen renderer's claim alone while `keyboard-scroll-lifecycle` had
+    // driven it in a window. The same page taught that a sideways arrow moves
+    // "one column", but `core/scroll.ts` steps one `density.rowHeight` on both
+    // axes and the runtime has no column metric: the probe's columns are 80px
+    // wide while the step it measured is 32, so a reader planning a sideways
+    // region was told the wrong distance. The citation, the step and the
+    // geometry are derived from the probe's own fixture and record.
+    const registry = readFileSync(
+      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
+      "utf8",
+    );
+    const fixture = readFileSync(
+      fileURLToPath(
+        new URL("apps/playground/src/live/keyboard-scroll.ts", repoRoot),
+      ),
+      "utf8",
+    );
+    const record = readFileSync(
+      fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
+      "utf8",
+    );
+    const scene = readFileSync(
+      fileURLToPath(new URL("../src/core/scroll.ts", import.meta.url)),
+      "utf8",
+    );
+    const painter = readFileSync(
+      fileURLToPath(
+        new URL("../src/components/ScrollArea.tsx", import.meta.url),
+      ),
+      "utf8",
+    );
+    /** One number the probe fixture declares, or `NaN` when the line moved. */
+    const declared = (pattern: string): number =>
+      Option.getOrElse(
+        Option.map(
+          Option.fromNullishOr(new RegExp(pattern).exec(fixture)?.[1]),
+          Number.parseFloat,
+        ),
+        () => Number.NaN,
+      );
+    /** The probe's own record, up to the next probe section. */
+    const probeRecord = (source: string): string => {
+      const heading = "### `keyboard-scroll-lifecycle`";
+      const start = source.indexOf(heading);
+      if (start < 0) return "";
+      const rest = source.slice(start + heading.length);
+      const end = rest.indexOf("\n### ");
+      return end < 0 ? rest : rest.slice(0, end);
+    };
+    const measured = probeRecord(record);
+    const checks = /(\d+) checks/.exec(measured)?.[1] ?? "";
+    const keyboard = Option.getOrElse(
+      bodyOf(read("scroll-area.mdx"), "Keyboard"),
+      () => "",
+    );
+    // One line is the theme's own row; a page is the viewport's own side, and
+    // the content's end is the side less the content, which is what makes the
+    // printed offsets derive rather than a second implementation.
+    const line = lightTheme.density.rowHeight;
+    const vertical = declared(
+      "VERTICAL_VIEWPORT = \\{ width: \\d+, height: (\\d+) \\}",
+    );
+    const rows = declared("VERTICAL_ROWS = (\\d+)");
+    const rowHeight = declared("VERTICAL_ROW_HEIGHT = (\\d+)");
+    const field = declared("FIELD_SLOT = (\\d+)");
+    const side = declared(
+      "HORIZONTAL_VIEWPORT = \\{ width: (\\d+), height: \\d+ \\}",
+    );
+    const columns = declared("HORIZONTAL_COLUMNS = (\\d+)");
+    const column = declared("HORIZONTAL_COLUMN_WIDTH = (\\d+)");
+    const fixtureNumbers = [
+      vertical,
+      rows,
+      rowHeight,
+      field,
+      side,
+      columns,
+      column,
+    ];
+    const firstPage = -(line + vertical);
+    const sidePage = -(line + side);
+    const verticalEnd = vertical - (rows * rowHeight + field);
+    const sideEnd = side - columns * column;
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      "utf8",
+    );
+    const row = Option.getOrElse(
+      Arr.findFirst(catalogue.split("\n"), (line) =>
+        Str.startsWith("| Scrollable containers | done |")(line),
+      ),
+      () => "",
+    );
+
+    expect({
+      registered: registry.includes('id: "keyboard-scroll-lifecycle"'),
+      geometry:
+        Arr.every(fixtureNumbers, Number.isFinite) && line > 0 && column > line,
+      arithmetic:
+        firstPage === -192 &&
+        sidePage === -352 &&
+        verticalEnd === -320 &&
+        sideEnd === -1120,
+      recorded:
+        Str.isNonEmpty(checks) &&
+        measured.includes("density.rowHeight") &&
+        measured.includes(`${firstPage}`) &&
+        measured.includes(`${sidePage}`) &&
+        measured.includes(`${verticalEnd}`) &&
+        measured.includes(`${sideEnd}`),
+      source:
+        scene.includes("One line of content — the theme's `rowHeight`") &&
+        scene.includes("current + direction * metrics.line") &&
+        painter.includes("line: theme.density.rowHeight"),
+      page:
+        keyboard.includes("`keyboard-scroll-lifecycle`") &&
+        keyboard.includes(`${checks} checks`) &&
+        keyboard.includes(`${line}px`) &&
+        keyboard.includes(`\`-${line}\` → \`${firstPage}\``) &&
+        keyboard.includes(`${sidePage}`) &&
+        keyboard.includes("on either axis") &&
+        keyboard.includes("not one column") &&
+        keyboard.includes("getFocusedElementId"),
+      retracted: !keyboard.includes("one column in a sideways region"),
+      row:
+        row.includes("`keyboard-scroll-lifecycle`") &&
+        row.includes("one theme row per arrow"),
+    }).toEqual({
+      registered: true,
+      geometry: true,
+      arithmetic: true,
+      recorded: true,
+      source: true,
+      page: true,
+      retracted: true,
+      row: true,
+    });
+  });
+
   it("names only package paths that exist", () => {
     // Bug guarded: ScrollArea's limitations handed the virtual-list work to a
     // `data-grid` package "when it lands" — a directory this workspace has
