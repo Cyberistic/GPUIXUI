@@ -191,6 +191,7 @@ describe("the preview strategy document", () => {
     expect(withDemo).toEqual([
       "packages/data/docs/property-panel.mdx",
       "packages/dock/docs/panel-group.mdx",
+      "packages/dock/docs/split-pane.mdx",
       "packages/editor/docs/code-editor.mdx",
       "packages/editor/docs/diff-viewer.mdx",
       "packages/editor/docs/markdown-editor.mdx",

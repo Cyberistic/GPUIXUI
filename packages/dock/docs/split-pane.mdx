@@ -3,6 +3,8 @@ title: Split pane
 description: Two panes and a draggable, keyboard-operable divider between them
 ---
 
+<ComponentPreview name="panel-preview" />
+
 ## Usage
 
 ```tsx
@@ -39,3 +41,4 @@ const [size, setSize] = useState(240);
 
 - The divider carries a `label`; an unnamed divider is anonymous in the tree.
 - The value reaches assistive technology through `aria-valuetext` only, because 0.11.0 has no `aria-valuenow`.
+- The preview's divider is a 6px box bounded 220–380 px, so its arrows, Home and End meet those bounds; the shipped control clamps to the caller's.

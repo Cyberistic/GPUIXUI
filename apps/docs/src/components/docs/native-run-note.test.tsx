@@ -75,10 +75,10 @@ describe("the native playground note", () => {
 
     expect(previewPages("packages/components/docs")).toBeGreaterThanOrEqual(70);
     expect(previewPages("packages/primitives/docs")).toBeGreaterThanOrEqual(25);
-    // The dock lane draws its panel group; the files and shell lanes have no
-    // honest browser reproduction yet, so the note's wording has to stay true
-    // for them.
-    expect(previewPages("packages/dock/docs")).toBe(1);
+    // The dock lane draws its split and its panel group; the files and shell
+    // lanes have no honest browser reproduction yet, so the note's wording has
+    // to stay true for them.
+    expect(previewPages("packages/dock/docs")).toBe(2);
     expect(previewPages("packages/files/docs")).toBe(0);
     expect(previewPages("packages/shell/docs")).toBe(0);
     // The data lane draws one composition, so the policy names that page
@@ -101,7 +101,9 @@ describe("the native playground note", () => {
     const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
     expect(policy).toContain("that page's preview is **strategy 3**");
     expect(policy).toContain("the files and shell lanes still ship none");
-    expect(policy).toContain("the dock lane draws its panel group");
+    expect(policy).toContain(
+      "the dock lane draws its split and its panel group",
+    );
     expect(policy).toContain("the media lane draws all six of its surfaces");
     expect(policy).toContain("the editor lane draws all four of its own");
     expect(policy).toContain("Property panels");

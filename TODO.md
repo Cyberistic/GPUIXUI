@@ -10390,7 +10390,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 353/355
+`[ ]` `[██████████]` 354/356
+
+`[x]` Let the **split pane page draw the split it documents** — `/docs/dock/split-pane`
+      opened with its props and two limitations and no drawing, although the
+      `panel-preview` demo was already registered for `/docs/workspace` and its
+      code tab is a `SplitPane` usage: a reader of the control's own page could
+      not drag the divider the page's first paragraph describes. The page now
+      mounts the same preview (one demo, two pages — the lane teaches the
+      composition, the component page the control), and prints the bound its
+      drawing owns (`220–380 px`) beside the example's caller-owned numbers, so
+      the two figures a reader meets cannot be confused.
+      `dock-preview.test.ts` holds both mounts and the printed bound,
+      `preview-strategy.test.ts` names the second dock page, and
+      `native-run-note.test.tsx` counts two dock demos while the files and shell
+      lanes stay at none. `docs/preview-strategy.md` says the dock lane draws
+      its split and its panel group, and the panel-group sentence now names that
+      preview explicitly. Directions measured: deleting the page's mount fails
+      `is registered as a composition and mounted on both pages that draw it`
+      and the policy's demo list (`expected [ …(12) ] to deeply equal [ …(13) ]`);
+      restored, the five touched files are 35/35. Verified on a served build
+      (`vite preview`): `/docs/dock/split-pane` renders `.gx-dock`, the
+      `Resize the editor` separator at `312 px` and the `220–380` note.
+      No native scenario applies — a page mounting a preview whose own guard
+      holds its arithmetic to the package.
 
 `[x]` Give the **panel group page a preview that runs its reducers** — the dock
       lane shipped three package pages and none of them drew anything, while the

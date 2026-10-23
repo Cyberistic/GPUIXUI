@@ -99,6 +99,7 @@ describe("the dock preview's paint", () => {
   const css = read("apps/docs/src/styles/demos.css");
   const demos = read("apps/docs/src/components/docs/demos.tsx");
   const page = read("apps/docs/content/docs/workspace/index.mdx");
+  const splitPage = read("packages/dock/docs/split-pane.mdx");
 
   it("draws the library's divider, focus ring and surfaces from the theme", () => {
     const demo = read("apps/docs/src/components/docs/dock-demo.tsx");
@@ -119,15 +120,21 @@ describe("the dock preview's paint", () => {
     );
   });
 
-  it("is registered as a composition and mounted on the workspace lane", () => {
+  it("is registered as a composition and mounted on both pages that draw it", () => {
     expect(demos).toContain('"panel-preview": {');
     expect(demos).toContain("render: DockPreview");
     expect(demos).toContain("composition: true");
 
+    // The workspace lane teaches the composition; the split pane's own page is
+    // where a reader meets the control, and it drew nothing until this mount.
     expect(page).toContain('<ComponentPreview name="panel-preview" />');
+    expect(splitPage).toContain('<ComponentPreview name="panel-preview" />');
     expect(page).toContain("16px");
     expect(page).toContain("aria-valuetext");
     expect(page).toContain("`SplitPane`");
     expect(page).toContain("](/docs/dock/split-pane)");
+    // The page prints the preview's own bounds rather than borrowing the
+    // example's, so the two numbers a reader meets cannot be confused.
+    expect(splitPage).toContain("220–380");
   });
 });
