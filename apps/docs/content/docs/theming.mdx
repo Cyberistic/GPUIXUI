@@ -3,7 +3,7 @@ title: Theming
 description: Semantic colour roles, typography, spacing, radius and density — one theme shape for light, dark and high contrast.
 ---
 
-import { colorRoles, contrastFloors, contrastRatio, indicatorSurfaces, keyboardFocusRing, seriesColors, seriesSurfaces, themes } from "@gpuixui/tokens";
+import { colorRoles, contrastFloors, contrastRatio, highlightShares, highlightSurfaces, indicatorSurfaces, keyboardFocusRing, seriesColors, seriesSurfaces, themes } from "@gpuixui/tokens";
 import { TokenList } from "@/components/docs/token-list";
 import { previewMode } from "@/lib/platform";
 import { omarchyAudit, omarchyFile, omarchySample, omarchyTheme } from "@/lib/system-palette";
@@ -133,6 +133,62 @@ measures 1.78:1 on the page — so a dot or bar painted in it would be the one m
 nobody can find. A status mark paints the tone's readable role instead,
 `statusTone(theme, tone).foreground`, which is the role a soft status surface and
 a field error already paint.
+
+## Find highlights
+
+A search that marks what it found paints a **wash behind the glyphs**, not a
+foreground colour: any GPUix text host takes `highlight`, and the text keeps the
+colour it already had. A host handed no colour paints the runtime's own accent —
+every match at {Math.round(highlightShares.match * 100)}%, the active one at
+{Math.round(highlightShares.active * 100)}% with a 2px corner — which is the one
+text surface still painted from a palette this package does not own. It is also
+too strong for the text it marks: at those shares the active wash leaves
+`foreground` under the 7:1 body floor in every shipped style, so a reader who
+pressed Enter on their own query could be shown a result under the reading floor.
+
+`findHighlight(theme)` answers the pair a theme can carry, derived from
+`primary` so a brand's accent family reaches a find bar the way it reaches every
+other mark. It starts from the runtime's two strengths and steps each down to
+the largest share that does its job:
+
+- The **resting** match keeps the theme's {contrastFloors.body}:1 body floor,
+  because it is the text the reader asked for, and stays visible on each of the
+  {highlightSurfaces.length} content tones a search runs over
+  (<TokenList names={highlightSurfaces} />) at the
+  {contrastFloors.boundary}:1 perceptibility floor.
+- The **active** match takes the strongest wash that still keeps body text
+  readable, falling back to the theme's {contrastFloors.secondary}:1 secondary
+  floor only when the accent has no stronger body-safe share — and the two
+  states must still be told apart at 1.05:1.
+- The **corner** is `radius.sm`, the tightest step the scale carries, rather than
+  the runtime's 2px literal, which no authored scale owns.
+
+```tsx
+import { findHighlight, type Theme } from "@gpuixui/tokens";
+
+export const highlightOf = (theme: Theme) => {
+  const { color, activeColor, radius } = findHighlight(theme);
+  return { color, activeColor, radius };
+};
+
+// <text highlight={{ query, ...highlightOf(theme) }}>{line}</text>
+```
+
+Both washes stay translucent, so the strip shows through the way the runtime's
+own do, and the colour a reader sees is the composite. `highlightFailures(theme)`
+measures it and names each of the three jobs a wash can miss — `visibility` (the
+wash against the strip), `legibility` (the text inside it) and `distinct` (an
+active match the surface cannot tell from the resting ones) — with the state, the
+strip and the ratio; a theme restored from storage is read as the absence it is.
+The report sits **beside** `auditTheme` rather than inside it, like
+`invalidScales`: the theme editor on this site derives its printed count from the
+gate's own keys, so folding a report in is one coordinated change.
+
+A window measured what the host paints (`find-highlight`, 19 checks, 0.11.0):
+three blocks holding the same line, where the active wash covers the same area as
+the resting one and is the stronger colour — which is the only difference a host
+can paint between the match a reader is on and the ones around it — while a block
+handed no colour paints the runtime's accent instead.
 
 ## Built-in themes
 

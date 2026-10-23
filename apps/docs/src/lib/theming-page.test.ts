@@ -722,6 +722,70 @@ describe("the theming page's data series", () => {
   });
 });
 
+describe("the theming pages' find highlights", () => {
+  // The find wash is the one text surface a host paints from a palette this
+  // package does not own: a `<text>` handed no colour marks a match with the
+  // runtime's accent, and at its shares the active match leaves body text under
+  // the reading floor. `findHighlight` answers a theme's pair and
+  // `highlightFailures` measures it, and neither was on the site — the page a
+  // reader looks up a token on could not tell them what a find bar paints.
+  const find = (): string => section(page("theming.mdx"), "Find highlights");
+
+  it("states the runtime's baseline from the package, not from a literal", () => {
+    const marks = find();
+    const tokensImport = page("theming.mdx")
+      .split("\n")
+      .find(
+        (line) =>
+          line.startsWith("import ") && line.includes("@gpuixui/tokens"),
+      );
+
+    expect(marks, "the page has no Find highlights section").not.toBe("");
+    expect(tokensImport).toContain("highlightShares");
+    expect(tokensImport).toContain("highlightSurfaces");
+    // Both shares are interpolated, so a baseline edit reaches the page.
+    expect(marks).toContain("Math.round(highlightShares.match * 100)");
+    expect(marks).toContain("Math.round(highlightShares.active * 100)");
+    expect(marks).toContain("{highlightSurfaces.length}");
+    expect(marks).toContain("<TokenList names={highlightSurfaces} />");
+    // A literal baseline is the drift this section replaced.
+    expect(marks).not.toContain("30%");
+    expect(marks).not.toContain("65%");
+  });
+
+  it("names the three jobs the report measures and the call a reader runs", () => {
+    const marks = find();
+
+    ["visibility", "legibility", "distinct"].forEach((job) => {
+      expect(marks, `the section does not name ${job}`).toContain(job);
+    });
+    expect(marks).toContain("findHighlight(theme)");
+    expect(marks).toContain("highlightFailures(theme)");
+    // The corner is a scale step, not the runtime's literal.
+    expect(marks).toContain("`radius.sm`");
+    // The gate boundary is stated, because folding the report in is a docs change.
+    expect(marks).toContain("beside");
+    expect(marks).toContain("`auditTheme`");
+  });
+
+  it("prints the probe's own check count and the window it measured in", () => {
+    const checks = /export const FIND_CHECKS = (\d+)/.exec(
+      readFileSync(
+        new URL(
+          "../../../../apps/playground/src/live/find-highlight.ts",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    )?.[1];
+
+    expect(checks).toBeDefined();
+    expect(find()).toContain("`find-highlight`");
+    expect(find()).toContain(`${checks} checks`);
+    expect(find()).toContain("0.11.0");
+  });
+});
+
 describe("the theming pages' series surfaces", () => {
   // Both bullets printed a literal `(`background`, `card`, `popover`)` while
   // `seriesSurfaces` was the authority, so the `muted` toolbar — added once a

@@ -8277,7 +8277,33 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 225/225
+`[x]` `[██████████]` 226/226
+
+`[x]` Publish the **find wash** on `/docs/theming` — the runtime marks what a
+      search found with a wash behind the glyphs, and a host handed no colour
+      paints its **own** accent (every match at 30%, the active one at 65% with
+      a 2px corner). At those shares the active match leaves body text under the
+      7:1 floor in every shipped style, and `findHighlight(theme)` answers the
+      pair a theme can carry, while `highlightFailures` measures the three jobs
+      a wash can miss. The tokens package owns both and neither was on the site:
+      a reader looking up a token could not learn what a find bar paints, and the
+      measured probe `find-highlight` (19 checks, 0.11.0) was named nowhere.
+      §Find highlights now states the runtime baseline from the package
+      (`highlightShares`, `highlightSurfaces` rendered by `TokenList`), the
+      resting and active rules with both floors, the corner as `radius.sm`
+      rather than the runtime's literal, the copyable `findHighlight(theme)`
+      snippet, the three report jobs, why the report sits **beside** `auditTheme`
+      (the theme editor derives its count from the gate's keys), and what the
+      window measured (the active wash covers the same area and is the stronger
+      colour, so colour is the only difference a host can paint).
+      `theming-page.test.ts` gains `the theming pages' find highlights` (3
+      cases): the imports and both interpolated shares with no literal 30/65 to
+      fall behind, the three jobs and both calls, and the probe's count read from
+      `FIND_CHECKS` in `apps/playground/src/live/find-highlight.ts`. Directions
+      measured: a literal `30%` on the page fails the baseline case by name, and
+      a renamed section fails all three; restored, the file is 46/46 and the docs
+      suite 117 files / 1 235 tests, `check-types`, `build` and the formatter
+      clean on both files.
 
 `[x]` Publish the **paint a fade leaves** on `/docs/motion` — the page taught
       the presence seam as a sentence ("`presence.tsx` composes them into a fade
