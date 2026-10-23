@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import {
+  alphaOf,
   auditTheme,
   colorRoles,
   colorVisionDeficiencies,
@@ -8,6 +9,7 @@ import {
   createTheme,
   decorativeSurfaces,
   extendTheme,
+  findHighlight,
   indicatorFailures,
   isThemeMode,
   keyboardFocusDimOpacity,
@@ -692,6 +694,29 @@ describe("the theming page's brand snippets", () => {
     expect(override).toContain("indicatorFailures");
     expect(override).toContain("spinner");
     expect(override).toContain("brand-theme.example.ts");
+  });
+
+  it("prints the wash pair the brand's own fill derives", () => {
+    // The paragraph taught a pair the package no longer derived: it said
+    // `#B49CFF` gave 30%/31% and named a replacement fill, while `findHighlight`
+    // now spends the secondary floor's headroom when the body-safe share is one
+    // step from the resting one. The shares are read from the snippet's own
+    // theme, so a fill or derivation edit moves what the page must print.
+    const brand = snippets.find((snippet) => snippet.mode === "dark");
+    expect(brand).toBeDefined();
+    if (brand === undefined) return;
+
+    const pair = findHighlight(brand.theme);
+    const share = (colour: string): number =>
+      Math.round((alphaOf(colour) ?? 0) * 100);
+    const override = section(page("theming.mdx"), "Override a theme");
+
+    expect(override).toContain(`**${share(pair.color)}%**`);
+    expect(override).toContain(`**${share(pair.activeColor)}%**`);
+    expect(override).toContain(`\`${brand.fill}\``);
+    // The retired sentence named a replacement fill and a one-share pair.
+    expect(override).not.toContain("one share apart");
+    expect(override).not.toContain("#A78BFA");
   });
 });
 

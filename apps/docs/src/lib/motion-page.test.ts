@@ -419,6 +419,44 @@ describe("the motion page", () => {
     expect(pageText).toContain("the house spring");
   });
 
+  it("reads a transition with no run as the house tween", () => {
+    // `Transition` is structural and also a *stored* value: JSON has no
+    // `undefined`, so a field a config never carried arrives as `null`, and a
+    // record from an older release can name a kind the package dropped.
+    // `MotionValue.animate` stored it and the frame loop read `.kind` off
+    // nothing, which threw out of the loop instead of painting the run a
+    // caller who names none gets. The page has to teach the repair beside the
+    // declaration it applies to.
+    expect(motion).toContain("const isTransition = (");
+    expect(motion).toContain(
+      "const transitionOf = (declaration: Transition | null | undefined): Transition =>",
+    );
+    expect(motion).toContain(
+      "isTransition(declaration) ? declaration : houseTransition",
+    );
+    expect(motion).toContain("const declared = transitionOf(transition);");
+    expect(motion).toContain(
+      "transitionEquals(this.mode.transition, declared)",
+    );
+    expect(motion).toContain(
+      'this.mode = { kind: "transition", transition: declared };',
+    );
+
+    expect(pageText).toContain(
+      "**A declaration with no run is the house tween.**",
+    );
+    expect(pageText).toContain(
+      "JSON has no `undefined`, so a field a config never carried comes back as `null`",
+    );
+    expect(pageText).toContain(
+      "`TypeError: Cannot read properties of null (reading 'kind')`",
+    );
+    expect(pageText).toContain("`animate` stores the repaired run");
+    expect(pageText).toContain(
+      "`transitionEquals` compares the runs the sampler reads",
+    );
+  });
+
   it("places the curve's repair where a caller's own easing reaches", () => {
     // An `Easing` is a caller's function, so the package cannot trust it: a
     // curve that answers `NaN` would put that value into the interpolated

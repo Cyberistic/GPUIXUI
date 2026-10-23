@@ -193,6 +193,18 @@ export const [moving, settled] = [first.active, last.complete];
   with `easeOut` — or `springTransition(physics)`, and `transitionEquals`
   compares two declarations structurally rather than by identity.
 
+**A declaration with no run is the house tween.** `Transition` is a stored value
+as often as a literal: JSON has no `undefined`, so a field a config never carried
+comes back as `null`, and a record from an older release can name a kind the
+package no longer ships. `MotionValue.animate` stores the declaration and the
+frame loop reads `.kind` off it, so that value used to throw
+`TypeError: Cannot read properties of null (reading 'kind')` out of the loop
+instead of painting. `transitionOf` reads a declaration whose `kind` is not
+`instant`, `tween` or `spring` as the house `tween()` (300 ms, `easeOut`),
+`animate` stores the repaired run, and `transitionEquals` compares the runs the
+sampler reads — so a re-render that carries the same unreadable value is a no-op
+rather than a restart every frame.
+
 ## Keyframes, stagger and sequences
 
 A keyframe list is normalised progress, not milliseconds, so the same timeline

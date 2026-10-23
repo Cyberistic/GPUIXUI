@@ -100,6 +100,11 @@ const knownGaps: ReadonlyArray<KnownGap> = [
     section: "accessibility or limitations",
     owner: "media workstream",
   },
+  {
+    page: "packages/media/docs/crop-area.mdx",
+    section: "accessibility or limitations",
+    owner: "media workstream",
+  },
 ];
 
 const missing = pages.flatMap((page) =>

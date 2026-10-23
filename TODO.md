@@ -10209,17 +10209,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `transitionEquals` and every page sentence. Directions measured: deleting
       the paragraph fails it by name; green (25/25).
 
-`[x]` Place the **QrCode page** the media workstream mounted — `related.test.ts`
+`[x]` Place the **two media pages** the workstream mounted — `related.test.ts`
       requires every package page to sit in a family or be argued solo, and
       `package-page-template.test.ts` requires an accessibility or limitations
-      section: the page is now `media("qr-code", "QrCode")` in **Media
-      surfaces**, and its `## Limits` is the honest gap the template records
+      section: `qr-code` and `crop-area` are now `media(...)` entries in **Media
+      surfaces**, and each `## Limits` is the honest gap the template records
       (`knownGaps`, owner `media workstream`) rather than a heading invented from
-      the site side. The staleness case deletes the entry the moment the page
-      gains the section. Both guards were red on the mounted page
-      (`expected [ '/docs/media/qr-code' ] to deeply equal []` and
-      `packages/media/docs/qr-code.mdx: no accessibility or limitations
-      section`); green after.
+      the site side. The staleness case deletes an entry the moment its page
+      gains the section. Both guards were red on the mounted pages
+      (`expected [ '/docs/media/qr-code' ] …`, then `crop-area` the same way, and
+      `…: no accessibility or limitations section`); green after (13/13).
 
 `[x]` Prove the **docs theme switch is a press**, and that it leaves every
       preview alone — the chrome (sidebar, page, prose) has its own `.dark`
