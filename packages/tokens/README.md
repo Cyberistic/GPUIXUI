@@ -242,7 +242,8 @@ const pressed = filledPressed(theme, "accent");
 Ghost and subtle surfaces keep the `hover` / `active` washes — but a **filled**
 action must never take them, because the wash is often the fill it replaces. The
 components package's `secondary` variant did: **15 of its 32 pointer placements**
-sat under the 1.05:1 perceptibility floor over the 16 styles (hovered 1.000:1 in
+sat under the 1.05:1 perceptibility floor over the 16 styles that shipped at the
+time (hovered 1.000:1 in
 High contrast light, High contrast dark and Light · macOS, pressed 1.000:1 in
 Dark · Windows; base light 1.036:1), and it derives both states from its own fill
 now. The derivation's step is

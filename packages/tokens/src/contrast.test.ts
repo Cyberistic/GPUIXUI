@@ -2038,7 +2038,7 @@ describe("a control boundary on the strip it sits on", () => {
 
     // A neutral edge on a floating surface is a strong pair now that the edge
     // that also has to answer on a message's tint and on a derived pointer fill
-    // moved up; the tightest of the sixteen is Windows light's popover.
+    // moved up; the tightest of the eighteen is Windows light's popover.
     const tightest = measured.reduce((low, placement) =>
       (placement.ratio ?? 0) < (low.ratio ?? 0) ? placement : low,
     );
@@ -2065,9 +2065,10 @@ describe("a control boundary on the strip it sits on", () => {
  * painted on. An `Alert` fills its tone's `xSoft` role and its description is a
  * container, so a filled action a consumer places there (the default `Button`,
  * which paints the strong edge) draws it on that tint. The package's own
- * documented action is the text `AlertLink`, which paints no boundary. Measured, thirteen of
- * the sixteen styles missed the 3:1 floor there — the worst being the base dark
- * theme's edge on `warningSoft` at 2.23:1 — so a palette could ship a button
+ * documented action is the text `AlertLink`, which paints no boundary. Measured,
+ * thirteen of the sixteen styles that shipped at the time missed the 3:1 floor
+ * there — the worst being the base dark theme's edge on `warningSoft` at
+ * 2.23:1 — so a palette could ship a button
  * with no outline inside the one component built to be noticed, while every
  * strip the button rested on passed. The middle of the range is where the
  * gradient meets the label, so a boundary is what identifies the control: the
@@ -2230,6 +2231,40 @@ describe("a control's edge on a message's own tint", () => {
         "utf8",
       ).replace(/\s+/g, " "),
     ).toContain(`warning tint at ${printedRatio(tightest.ratio)}`);
+  });
+
+  it("prints the pre-fix count as the set it was measured on", () => {
+    // The authored Omarchy look grew the sweep to eighteen, and today every
+    // style clears the four tints (the case above), so "thirteen of the
+    // sixteen" is history. Left bare, it reads as today's set and the repaired
+    // palette as still broken.
+    const source = readFileSync(
+      new URL("./contrast.ts", import.meta.url),
+      "utf8",
+    )
+      .replace(/\/\/\s*/g, " ")
+      .replace(/\s+/g, " ");
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const design = readFileSync(
+      new URL("../../../docs/design-system.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(source).toContain(
+      "thirteen of the sixteen styles that shipped at the time missed it",
+    );
+    expect(catalogue).toContain(
+      "Thirteen of the sixteen styles that shipped at the time missed the floor",
+    );
+    expect(design).toContain(
+      "thirteen of the sixteen styles that shipped at the time missed it",
+    );
+    [source, catalogue, design].forEach((text) => {
+      expect(text).not.toContain("Thirteen of the sixteen styles missed");
+    });
   });
 });
 
@@ -2592,7 +2627,7 @@ describe("the edge of a control inside a row's wash", () => {
     );
 
     expect(hidden).toEqual([]);
-    // A neutral edge on a row wash is the hardest of the sixteen now that the
+    // A neutral edge on a row wash is the hardest of the eighteen now that the
     // popover, tint and derived-fill placements moved the edge up: Linux
     // light's selected row, at 3.96:1 against the 3:1 floor.
     expect(tightest.name).toBe(

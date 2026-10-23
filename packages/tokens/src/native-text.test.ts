@@ -80,6 +80,38 @@ const shipped = [
   ),
 ];
 
+const ones = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen",
+] as const;
+const tens = ["", "", "twenty", "thirty", "forty"] as const;
+
+/** The spelled count the catalogue prints, or the numeral past the list. */
+const spelled = (count: number): string =>
+  count < 20
+    ? (ones[count] ?? String(count))
+    : count % 10 === 0
+      ? (tens[Math.floor(count / 10)] ?? String(count))
+      : `${tens[Math.floor(count / 10)] ?? ""}-${ones[count % 10] ?? ""}`;
+
 /**
  * The three surfaces a rendered document paints from the theme: inline code's
  * ink on its chip, the chip on the page, and a table rule. Each is measured on
@@ -1287,6 +1319,26 @@ describe("the fence a document host paints", () => {
       ];
     });
 
+  /**
+   * The strip's fill against the block it sits on, and the block against the
+   * page: the two washes, and the surface the fence itself is.
+   */
+  const stripPlacements = () =>
+    shipped.flatMap(({ label, theme }) =>
+      nativeTextFills.map((fill) => ({
+        label,
+        fill,
+        ratio: contrastRatio(
+          nativeFenceHeaderFill(theme.colors[fill]),
+          nativeFenceFill(theme.colors[fill]),
+        ),
+        overPage: contrastRatio(
+          nativeFenceFill(theme.colors[fill]),
+          theme.colors[fill],
+        ),
+      })),
+    );
+
   it("holds the runtime's own shares and composites them over the fill", () => {
     expect(nativeFenceInk).toBe(0.035);
     expect(nativeFenceHeaderInk).toBe(0.02);
@@ -1417,20 +1469,7 @@ describe("the fence a document host paints", () => {
   });
 
   it("measures the strip as a wash the rule carries, not a boundary", () => {
-    const strips = shipped.flatMap(({ label, theme }) =>
-      nativeTextFills.map((fill) => ({
-        label,
-        fill,
-        ratio: contrastRatio(
-          nativeFenceHeaderFill(theme.colors[fill]),
-          nativeFenceFill(theme.colors[fill]),
-        ),
-        overPage: contrastRatio(
-          nativeFenceFill(theme.colors[fill]),
-          theme.colors[fill],
-        ),
-      })),
-    );
+    const strips = stripPlacements();
     const low = strips.reduce((worst, cell) =>
       (cell.ratio ?? 1) < (worst.ratio ?? 1) ? cell : worst,
     );
@@ -1450,6 +1489,31 @@ describe("the fence a document host paints", () => {
     expect(
       strips.filter(({ overPage }) => (overPage ?? 0) < decorativeFloor),
     ).toEqual([]);
+  });
+
+  it("prints the strip's washed placements from the sweep it walks", () => {
+    const strips = stripPlacements();
+    const hidden = strips.filter(({ ratio }) => (ratio ?? 0) < decorativeFloor);
+    const washedStyles = new Set(hidden.map(({ label }) => label));
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    // The figure is "the set the sweep walks": a style counts once when either
+    // of its two fills is under the floor, and every fill is a placement, so the
+    // pair is styles-then-placements rather than a product nobody derives.
+    expect(washedStyles.size).toBeGreaterThan(0);
+    expect(washedStyles.size).toBeLessThan(shipped.length);
+    expect(catalogue).toContain(
+      `under the ${decorativeFloor}:1 perceptibility floor in ${spelled(washedStyles.size)} of the ${spelled(shipped.length)} styles (${spelled(hidden.length)} of the ${spelled(strips.length)} fill placements`,
+    );
+    expect(catalogue).toContain(
+      `The tightest placement over the ${spelled(shipped.length)} styles`,
+    );
+    // The pre-Omarchy pair stays retired: a look added to the sweep moved it.
+    expect(catalogue).not.toContain("nine of the sixteen");
+    expect(catalogue).not.toContain("thirty-two fill placements");
   });
 
   it("states the fence on the catalogue, the design system and the inventory", () => {

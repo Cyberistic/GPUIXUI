@@ -363,8 +363,9 @@ describe("action state example", () => {
  * `filledHover`/`filledPressed` — not the `hover`/`active` role washes the
  * boundary pairs name. The edge was measured on every strip except the two it is
  * actually drawn on, and at the palette before this contract it was under the
- * 3:1 boundary floor in twelve of the sixteen styles hovered and fifteen pressed
- * (Luna dark 2.16:1), with every report empty because a derived fill is not a
+ * 3:1 boundary floor in twelve of the sixteen styles that shipped at the time
+ * hovered and fifteen pressed (Luna dark 2.16:1), with every report empty
+ * because a derived fill is not a
  * role a pair can name.
  */
 describe("the edge a filled action keeps", () => {
@@ -447,6 +448,56 @@ describe("the edge a filled action keeps", () => {
     // The shipped value is the smallest step that clears both; the sweep above
     // is what fails when a palette edit forgets the pointer state.
     expect(lightTheme.colors.borderStrong).toBe("#616A79");
+  });
+
+  it("prints the sixteen-style figures as the set they were measured on", () => {
+    // A third authored look grew the sweep to eighteen, and today the contracts
+    // above clear it in every one — so the pre-fix counts are history. A reader
+    // who meets the bare denominator takes it as today's set, and the palette
+    // that is already repaired reads as still broken.
+    const source = readFileSync(
+      new URL("./contrast.ts", import.meta.url),
+      "utf8",
+    )
+      .replace(/\/\/\s*/g, " ")
+      .replace(/\s+/g, " ");
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const design = readFileSync(
+      new URL("../../../docs/design-system.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const readme = readFileSync(
+      new URL("../README.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(shippedStyles.length, "the sweep this history sits beside").toBe(18);
+    expect(source).toContain(
+      "thirteen of the sixteen styles that shipped at the time missed it",
+    );
+    expect(catalogue).toContain(
+      "**twelve** of the sixteen styles that shipped at the time hovered",
+    );
+    expect(design).toContain(
+      "fifteen of the sixteen styles that shipped at the time on the pressed fill",
+    );
+    expect(design).toContain(
+      "fifteen of the sixteen styles that shipped at the time under the floor",
+    );
+    expect(readme).toContain("over the 16 styles that shipped at the time");
+
+    // The unqualified forms are the drift this case exists for.
+    const retired = [
+      "of the sixteen shipped styles",
+      "twelve of the sixteen shipped",
+      "over the 16 styles (",
+    ];
+    [source, catalogue, design, readme].forEach((text) => {
+      retired.forEach((phrase) => expect(text).not.toContain(phrase));
+    });
   });
 });
 

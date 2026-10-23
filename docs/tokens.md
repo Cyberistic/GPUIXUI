@@ -356,9 +356,10 @@ The one action that also paints an **edge** is `secondary`, in both packages:
 `packages/primitives`' recipe and the components package's `Button` both add
 `border border-strong`, so the edge is drawn on each derived fill — and no role
 pair can name a derived fill, so nothing
-measured it. It was under the boundary floor in **twelve** of the sixteen shipped
-styles hovered and **fifteen** pressed (high-contrast light was the only style
-that cleared both), the worst being the authored Luna dark at **2.16:1**: an
+measured it. It was under the boundary floor in **twelve** of the sixteen styles
+that shipped at the time hovered and **fifteen** pressed (high-contrast light
+was the only style that cleared both), the worst being the authored Luna dark at
+**2.16:1**: an
 outlined button whose outline vanished the moment it was pressed. `borderStrong`
 took the smallest step that clears every derived fill as well as every role it
 already carried — `#6A7483` → `#616A79` in the light theme and `#949EAB` →
@@ -2121,9 +2122,10 @@ tints, and on none of the four tints a message paints. The edge is what carries
 the control there for the same reason it does on a field — the neutral fill band
 is one lightness and the pale green and amber tints share it (a `secondary`
 action reads 1.01–1.04:1 on them in the light styles), so only the boundary can
-be seen. Thirteen of the sixteen styles missed the floor, the worst being the
-base dark theme's edge on `warningSoft` at 2.23:1; the values moved by the
-smallest step that clears all four tints, and the tightest shipped placement is
+be seen. Thirteen of the sixteen styles that shipped at the time missed the
+floor, the worst being the base dark theme's edge on `warningSoft` at 2.23:1;
+the values moved by the smallest step that clears all four tints, and the
+tightest shipped placement is
 the base dark theme's warning tint at 3.29:1. `contrast.test.ts`'s `a control's edge
 on a message's own tint` suite reads the alert's tones, its description and the
 default action's edge, reports an edge painted in the tint it sits on at
@@ -3191,12 +3193,12 @@ that repaints the page owns the table for it, so `darwin`, `linux` and `win32`
 declare `syntax.dark` with the smallest 2% step toward white — `#B0B2FF`, which
 puts the worst of those at **7.09:1** — while the identity and every authored
 look keep `#A7A9FF`, because their pages already carried it. The tightest
-placement over the sixteen styles is Linux dark's `macroName` on its fence at
+placement over the eighteen styles is Linux dark's `macroName` on its fence at
 **7.07:1**.
 
 **The strip is a wash, not a boundary.** The two washes are three points apart,
 so the strip's fill sits at 1.031–1.058:1 against the fence — under the 1.05:1
-perceptibility floor in nine of the sixteen styles (eighteen of the thirty-two
+perceptibility floor in ten of the eighteen styles (twenty of the thirty-six
 fill placements; the tightest is High contrast dark's **1.031:1**). The runtime
 does not ask the fill to divide anything: it draws a `border` under the strip and
 around the block, and that rule is what carries the boundary, the way a field's

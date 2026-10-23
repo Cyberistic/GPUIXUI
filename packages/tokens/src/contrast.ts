@@ -485,8 +485,9 @@ export const contrastPairs: readonly ContrastPair[] = [
   // one lightness and the pale tints share it (a `secondary` action reads
   // 1.01–1.04:1 on the green and amber tints of the light styles), so only the
   // boundary can carry the control. Measured, thirteen of the sixteen styles
-  // missed it, the worst being the base dark theme's edge on `warningSoft` at
-  // 2.23:1; the values moved by the smallest step that clears all four.
+  // that shipped at the time missed it, the worst being the base dark theme's
+  // edge on `warningSoft` at 2.23:1; the values moved by the smallest step that
+  // clears all four.
   { foreground: "borderStrong", background: "infoSoft", floor: "boundary" },
   { foreground: "borderStrong", background: "successSoft", floor: "boundary" },
   { foreground: "borderStrong", background: "warningSoft", floor: "boundary" },

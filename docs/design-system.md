@@ -304,7 +304,8 @@ Two border roles:
   light), and the pointer half found one more: the secondary action's fill is
   **derived** (`filledHover`/`filledPressed`), so those two washes are not the
   fill it paints and the pair table cannot name it — the edge was under the floor
-  in fifteen of the sixteen styles on the pressed fill (Luna dark **2.16:1**) and
+  in fifteen of the sixteen styles that shipped at the time on the pressed fill
+  (Luna dark **2.16:1**) and
   twelve hovered, so every `borderStrong` moved the smallest step that clears
   its derived fills as well as its role strips. The edge is perceivable in every
   state without relying on fill alone. It is also what carries an action inside a
@@ -312,7 +313,8 @@ Two border roles:
   its tone's soft tint and its description holds the action, and the neutral
   fill band shares the pale tints' lightness (a `secondary` action reads
   1.01–1.04:1 on the green and amber tints), so the four tints joined the same
-  contract — thirteen of the sixteen styles missed it, the worst at 2.23:1.
+  contract — thirteen of the sixteen styles that shipped at the time missed it,
+  the worst at 2.23:1.
 
 A **rule drawn on a row** is not a state, and it is measured against the state
 the row is in. A table row paints its own rule inside the row — the thin
@@ -1009,8 +1011,9 @@ while its fill moves, and both base themes, high-contrast dark and
 Linux light were under the floor on the role washes — the four values moved
 stronger, and the message-tint pairs moved the neutral edge again. The pointer
 fills are derived, so a role pair cannot name them; `styles.test.ts` measures the
-edge there instead, and it found fifteen of the sixteen styles under the floor on
-the pressed fill (Luna dark **2.16:1**), so every style's `borderStrong` took the
+edge there instead, and it found fifteen of the sixteen styles that shipped at
+the time under the floor on the pressed fill (Luna dark **2.16:1**), so every
+style's `borderStrong` took the
 smallest step that clears its derived fills too.
 
 The elevation tint is measured on the same floor, as a **ceiling**: every level a

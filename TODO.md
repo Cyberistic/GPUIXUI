@@ -327,7 +327,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 204/204
+`[x]` `[██████████]` 205/205
 
 `[x]` The **design-system table's own rows still count sixteen** — the pass above corrected the sixteen places the four documents' prose printed, and left the table cells, which read as present-tense test descriptions: `Scale order` ("holds all 16 shipped, high-contrast, platform and authored themes to an empty report"), `Token numbers`, `Brand text` (twice: the surface sweep and the `16 × 4` tint placements, whose suite now measures `18 × 4`), `Native text hosts` and `Colour grammar` all name a suite that walks `retroNames` and therefore holds **18** (§`scales.test.ts`, `numbers.test.ts`, `brand-text.test.ts`, `native-text.test.ts` and `incomplete.test.ts` each import it). The components' tier rows (`Carousel`, `Buttons`) carry the same number for their own suites and are that workstream's paths. Do it with one guard that derives the count from the package and enumerates the rows from `COMPONENTS.md` (the pattern `docs.test.ts`'s `the styles a sweep walks` now uses), so the table cannot drift a third time. Found 2026-10-23 while fixing the prose. **Landed:** every cell that claims the swept set prints **18** — `Scale order`, `Token numbers`, `Native text hosts`, `Colour grammar`, `Contrast contract`'s `disabled.test.ts` clause, and `Brand text`'s four figures. The sweep found two more drifts than the row listed, in the same cells: `Syntax palette` printed "800 placements over the sixteen styles" (the fence suite has measured 18 × 2 × 25 since the look landed, so it now says "in each of the 18 styles" rather than a product nobody derives), and `Brand text` printed `27 of the 64`/`29/64`/`clears all 64` while its own suite derives **28 of the 72** — the package README carried the same `28 of the 64`, so it prints the sweep's pair now and `brand-text.test.ts`'s print case holds it beside the two pages. `inventory.test.ts` gains `the style count the rows print` (2 cases): the first builds the list the way `docs.test.ts` does and ties it to the named groups — `4 + platforms × 2 + looks × 2`, one name per style, and `all × statusTones` tint placements; the second enumerates the six rows and eleven phrases from the parsed `COMPONENTS.md` table, failing by row and phrase when a count, a failure share or a `×` pair drifts or a row is renamed away. Directions measured: restoring `Scale order`'s 16, `**27 of the 64**`/`sixteen styles` and `16 × 4` fails the guard with all three lines by name (`Scale order: holds all 18 …`, `Brand text: **28 of the 72** …`, `Brand text: over the 18 × 4 placements`), and restoring the README's 64 fails `brand-text.test.ts` at the count. Green: 49 files / 2 897 tests, `check-types` and `check:tests` clean. Two past-tense defect findings in the table (`thirteen of the sixteen styles missed…`, `Eleven of the sixteen shipped styles painted…`) stay sixteen on purpose — each records the pre-fix set in its own frozen table. No native scenario applies — printed counts a suite derives.
 
@@ -1692,7 +1692,7 @@ package 49 files / 2 915 tests, `check-types` and `check:tests` clean. No native
 scenario applies — a printed denominator and the suite that derives it; the
 paint itself is the components' and data's own suites'.
 
-`[ ]` Mark the **rest of the pre-Omarchy figures as the set they were measured
+`[x]` Mark the **rest of the pre-Omarchy figures as the set they were measured
 on** — the sweep grew from sixteen to eighteen styles and the pointer-wash family
 is fixed (the entry above), while the border, tint and fence paragraphs still
 read as if sixteen were today's set: `packages/tokens/src/contrast.ts`'s control
@@ -1711,6 +1711,25 @@ catalogue must print the derived figure. `native-text.test.ts`'s fence suite
 already derives the 900-cell sweep and the 7.07:1 tightest, so its page case is
 the natural home for the fence half; `contrast.test.ts` and `styles.test.ts` own
 the edge halves. No native scenario applies.
+**Landed:** every pre-fix edge claim now names its set — "the sixteen styles that
+shipped at the time" in `contrast.ts`, `docs/tokens.md` §Action fills/§Contrast,
+`docs/design-system.md` §7/§9 and the README; the two stale test headers say the
+same, and the two comments that read "tightest of the sixteen" now say eighteen
+because those suites walk today's sweep. The fence is re-measured: the strip's
+fill sits under the 1.05:1 floor in **ten of the eighteen styles (twenty of the
+thirty-six fill placements)**, and the catalogue prints that pair with the
+tightest "over the eighteen styles" (Linux dark's `macroName`, 7.07:1).
+`native-text.test.ts` gains `prints the strip's washed placements from the sweep
+it walks`, deriving the styles, placements and denominator from
+`stripPlacements()` (hoisted from the strip case) and refusing the retired
+`nine of the sixteen`/`thirty-two` pair; `styles.test.ts` gains `prints the
+sixteen-style figures as the set they were measured on` (the source comment, both
+pages and the README) and `contrast.test.ts` the tint half. Directions measured:
+restoring the stale fence sentence fails the new fence case by name, an
+unqualified README denominator fails the styles case, and the bare catalogue
+"Thirteen of the sixteen" fails the contrast case. Green: 49 files / 2 918
+tests, `check-types`, `check:tests` and `oxfmt` clean. No native scenario
+applies — printed figures a suite derives.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
