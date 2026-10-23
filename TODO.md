@@ -7241,9 +7241,11 @@ the scene-chrome case; removing the light `color-scheme` rule fails
 `follows the palette a surface carries`; a page that stops naming `?mode=light`
 fails the page case (`expected [ 'light' ] to deeply equal []`); a literal hex in
 the probe fails `carries no colour of its own`. `nub run --filter @gpuixui/docs
-test` is 1121 passed with only the two foreign failures recorded in Interlocks
+test` is 1131 passed with only the two foreign failures recorded in Interlocks
 (the editor pages' six cross-links and the two dock pages with no limitations
-section); `check-types` and `build` are clean. No native scenario applies — the
+section); `check-types` and `build` are clean. The same pass keeps the curated
+Table page's printed count true (23 → 24 native cases, naming the column move the
+suite added, `component-page-truth.test.ts` 45/45). No native scenario applies — the
 docs site is a browser app, so the probe above is its runtime check.
 
 `[x]` Keep the **Color picker page's printed count** with its suite — the

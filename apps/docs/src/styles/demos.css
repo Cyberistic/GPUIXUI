@@ -89,6 +89,12 @@
   font-family: var(--font-sans);
 }
 
+/* The scene's scrollbars and native widgets follow the palette it was handed,
+   so a light preview is not framed by a dark chrome. */
+.gx-demo[data-mode="light"] {
+  color-scheme: light;
+}
+
 .gx-demo-column {
   flex-direction: column;
   align-items: flex-start;

@@ -10,12 +10,18 @@ import {
   lookLabel,
   lookOrder,
   lookSearch,
+  modeFromSearch,
+  modeLabel,
+  modeOrder,
+  modeSearch,
   parseLook,
+  parseMode,
   parsePlatform,
   platformFromSearch,
   platformLabel,
   platformOrder,
   platformSearch,
+  previewMode,
   resolvePlatformTheme,
 } from "./platform";
 
@@ -52,6 +58,43 @@ describe("the platform query parameter", () => {
     expect(platformSearch("darwin")).toBe("?platform=darwin");
     // A value written into a URL must survive the round trip.
     expect(platformFromSearch(platformSearch("linux"))).toBe("linux");
+  });
+});
+
+describe("the palette query parameter", () => {
+  it("accepts every mode the library ships and rejects anything else", () => {
+    expect(modeOrder.map((mode) => parseMode(mode))).toEqual([...modeOrder]);
+    // A mistyped URL must not resolve to a palette the library does not have.
+    expect(parseMode("sepia")).toBeUndefined();
+    expect(parseMode("Dark")).toBeUndefined();
+    expect(parseMode("")).toBeUndefined();
+    expect(parseMode(null)).toBeUndefined();
+    expect(parseMode(undefined)).toBeUndefined();
+  });
+
+  it("offers exactly the modes the library ships, identity first", () => {
+    // A mode added to `@gpuixui/tokens` without a switch entry would be a
+    // palette a reader cannot see, and a stale entry would offer nothing.
+    expect([...modeOrder].toSorted()).toEqual(Object.keys(themes).toSorted());
+    expect(modeOrder[0]).toBe(previewMode);
+  });
+
+  it("reads the mode out of a query string", () => {
+    expect(modeFromSearch("?mode=light")).toBe("light");
+    expect(modeFromSearch("?platform=win32&mode=dark")).toBe("dark");
+    expect(modeFromSearch("?mode=sepia")).toBeUndefined();
+    expect(modeFromSearch("")).toBeUndefined();
+  });
+
+  it("writes the mode back as a query parameter", () => {
+    expect(modeSearch("light")).toBe("?mode=light");
+    // A value written into a URL must survive the round trip.
+    expect(modeFromSearch(modeSearch("dark"))).toBe("dark");
+  });
+
+  it("labels both palettes the way the switch shows them", () => {
+    expect(modeLabel("dark")).toBe("Dark");
+    expect(modeLabel("light")).toBe("Light");
   });
 });
 

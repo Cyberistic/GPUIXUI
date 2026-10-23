@@ -88,15 +88,46 @@ export const lookFromSearch = (search: string): LookName | undefined =>
 /** The query value a look writes (`luna`), or nothing for the platform style. */
 export const lookSearch = (look: LookName): string => look;
 
+/** The query parameter that carries the palette a preview paints. */
+export const modeParam = "mode";
+
 /**
- * The mode every browser preview resolves.
+ * The palettes a preview offers, in switch order: the library's identity first,
+ * because that is what a first visit shows.
+ */
+export const modeOrder = [
+  "dark",
+  "light",
+] as const satisfies readonly ThemeMode[];
+
+/** The label a palette shows in the switch. */
+export const modeLabel = (mode: ThemeMode): string =>
+  mode === "dark" ? "Dark" : "Light";
+
+/**
+ * Parse a raw mode. A value the library does not name is rejected rather than
+ * guessed, so a mistyped URL falls back to the remembered or opening palette.
+ */
+export const parseMode = (
+  raw: string | null | undefined,
+): ThemeMode | undefined => modeOrder.find((mode) => mode === raw);
+
+/** Read the mode out of a query string (`?mode=light`). */
+export const modeFromSearch = (search: string): ThemeMode | undefined =>
+  parseMode(new URLSearchParams(search).get(modeParam));
+
+/** The query string a mode produces (`?mode=light`). */
+export const modeSearch = (mode: ThemeMode): string => `?${modeParam}=${mode}`;
+
+/**
+ * The palette a preview opens in.
  *
  * The docs site has its own light/dark switch (Fumadocs' theme provider), and a
  * preview deliberately does not follow it: a preview is a picture of the
- * library's identity, which is its dark theme, and the platform switch is the
- * axis a reader came to compare. The site therefore resolves one mode everywhere
- * and says which — `/docs/theming` prints this value rather than typing "dark",
- * so a page and the provider cannot disagree.
+ * library, and its identity is the dark theme. The palette a reader compares is
+ * the switch's own `?mode=` axis, so the site resolves one opening mode and
+ * says which — `/docs/theming` prints this value rather than typing "dark", so a
+ * page and the provider cannot disagree.
  */
 export const previewMode: ThemeMode = "dark";
 

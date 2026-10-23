@@ -296,9 +296,10 @@ change is a reflow.
 
 ### The switch on this site
 
-The **Platform** switch at the foot of the sidebar picks the theme every preview
-on this site renders through: macOS, Linux, Windows or Default. The choice lives
-in the page URL, so a link carries it:
+The switch at the foot of the sidebar has a **Platform** group and a **Palette**
+group. The platform picks the theme every preview on this site renders through:
+macOS, Linux, Windows or Default. The choice lives in the page URL, so a link
+carries it:
 
 ```text
 https://gpuixui.sudokw.com/docs/components/button?platform=win32
@@ -342,12 +343,33 @@ shapes rather than only a colour swatch: the
 render one, and the menu's open/closed states come from the same rules the
 component ships.
 
-A preview renders the selected style's **{previewMode}** palette, whatever the
-site's own light/dark switch says. A preview is a picture of the library's
-identity, and that identity is its dark theme; the switch a reader came here to
-compare is the platform. Both palettes are on this page — [Built-in
-themes](#built-in-themes) prints every one — and [Theme](/docs/themes) edits
-them side by side.
+A preview renders the palette the **Palette** switch selected — the library's
+own theme, not a docs style sheet. It opens in **{previewMode}**, the library's
+identity, and `?mode=light` paints the same component in the light theme, so a
+reader can check a control in both. The site's own light/dark switch is the docs
+chrome (Fumadocs' theme provider), and a preview does not follow it: the palette
+a preview shows is the explicit, shareable axis above. Both palettes are on this
+page — [Built-in themes](#built-in-themes) prints every one — and
+[Theme](/docs/themes) edits them side by side.
+
+### The palette parameter
+
+The switch's palette axis is a query parameter of its own, so a link can carry
+one component page's light preview:
+
+```text
+https://gpuixui.sudokw.com/docs/components/button?platform=win32&mode=light
+```
+
+`?mode=light` or `?mode=dark` names one of the two modes `@gpuixui/tokens`
+ships; a value neither the library nor the switch names is rejected rather than
+guessed, and the switch falls back to the remembered palette and then to
+**{previewMode}**. The choice is remembered beside the platform and the look, so
+moving between component pages keeps showing the palette you picked. The surface
+a preview renders on carries the resolved theme's roles through the same bridge
+the theme editor uses, so a light preview is the light theme and not an
+inverted copy of the dark one; the scene's `color-scheme` follows it too, so a
+scrolling preview is framed in the palette it paints.
 
 [Theme](/docs/themes) follows it too: the editor starts from the selected
 style's roles, radii and family, and switching re-bases its preview without

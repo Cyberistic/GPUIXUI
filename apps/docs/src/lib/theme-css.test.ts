@@ -307,6 +307,25 @@ describe("preview style sheets", () => {
     expect(hosts).toEqual([]);
   });
 
+  it("follows the palette a surface carries in the scene's own chrome", () => {
+    // A preview's scrollbars and native widgets are the browser's, not the
+    // theme's, and the scene used to declare `color-scheme: dark` once: a
+    // light preview was framed by dark scrollbars. The surface stamps the
+    // palette it resolved, so the sheet has to answer both modes — and the
+    // dark default alone is not an answer.
+    const css = read("../styles/demos.css");
+
+    expect(block(css, ".gx-demo")).toContain("color-scheme: dark");
+    const light = block(css, '.gx-demo[data-mode="light"]');
+    expect(light).toContain("color-scheme: light");
+    expect(light).not.toContain("color-scheme: dark");
+
+    const surface = read("../components/docs/preview-surface.tsx");
+    // The attribute the rule matches is the theme's own mode, not a prop a
+    // caller could pass while resolving another palette.
+    expect(surface).toContain("data-mode={theme.mode}");
+  });
+
   it("read a control's geometry from the theme, not a fixed height", () => {
     const css = read("../styles/demos.css");
     const fixed = [

@@ -8,10 +8,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { PlatformName, Theme } from "@gpuixui/tokens";
+import type { PlatformName, Theme, ThemeMode } from "@gpuixui/tokens";
 import {
   lookFromSearch,
   lookParam,
+  modeFromSearch,
+  modeLabel,
+  modeOrder,
+  modeParam,
   platformFromSearch,
   platformLabel,
   platformOrder,
@@ -27,15 +31,16 @@ import {
 } from "../../lib/platform-storage";
 
 /**
- * The platform switch and the look picker.
+ * The preview switch: platform, palette and look.
  *
  * The platform is a library token decision, not a docs style: the switch
  * resolves `platformTheme` from `@gpuixui/tokens`, and every preview reads the
- * families that theme names. The look is the second axis — the authored Luna
- * and Aero styles `retroStyles` ships — applied over the platform's theme, so
- * the picker shows a real library style rather than a docs-only skin. Both
- * choices live in the URL, so a link carries them, and in local storage, so a
- * navigation does not reset them.
+ * families that theme names. The palette is the library's other axis — its
+ * light and dark themes, so a component can be seen in both — and the look is
+ * the third: the authored Luna and Aero styles `retroStyles` ships, applied over
+ * the platform's theme, so the picker shows a real library style rather than a
+ * docs-only skin. Every choice lives in the URL, so a link carries it, and in
+ * local storage, so a navigation does not reset it.
  */
 
 interface PlatformState {
@@ -43,26 +48,35 @@ interface PlatformState {
   readonly platform: PlatformName;
   /** The look painted over that platform. */
   readonly look: LookName;
-  /** The library theme the two resolve to. */
+  /** The palette every preview paints: the library's light or dark theme. */
+  readonly mode: ThemeMode;
+  /** The library theme the three resolve to. */
   readonly theme: Theme;
   /** Choose a platform. */
   readonly setPlatform: (platform: PlatformName) => void;
   /** Choose a look; `native` keeps the platform's own style. */
   readonly setLook: (look: LookName) => void;
+  /** Choose a palette. */
+  readonly setMode: (mode: ThemeMode) => void;
 }
 
 const PlatformContext = createContext<PlatformState | null>(null);
 
-/** Put both choices in the address bar without navigating. */
-const writeUrl = (platform: PlatformName, look: LookName): void => {
+/** Put every choice in the address bar without navigating. */
+const writeUrl = (
+  platform: PlatformName,
+  mode: ThemeMode,
+  look: LookName,
+): void => {
   const url = new URL(window.location.href);
   url.searchParams.set(platformParam, platform);
+  url.searchParams.set(modeParam, mode);
   if (look === "native") url.searchParams.delete(lookParam);
   else url.searchParams.set(lookParam, look);
   window.history.replaceState(null, "", url.toString());
 };
 
-/** Provides the platform and look every preview on the page renders. */
+/** Provides the platform, palette and look every preview on the page renders. */
 export function PlatformProvider({ children }: { children: ReactNode }) {
   const search = useRouterState({
     select: (state) => state.location.searchStr,
@@ -73,26 +87,37 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   const [look, setLook] = useState<LookName>(
     () => lookFromSearch(search) ?? "native",
   );
+  const [mode, setMode] = useState<ThemeMode>(
+    () => modeFromSearch(search) ?? previewMode,
+  );
 
-  // The URL is the source of truth: a shared link carries both choices, and a
+  // The URL is the source of truth: a shared link carries every choice, and a
   // navigation that drops a parameter restores the remembered one and puts it
   // back, so the address bar always says what is showing.
   useEffect(() => {
     const platformInUrl = platformFromSearch(search);
     const lookInUrl = lookFromSearch(search);
+    const modeInUrl = modeFromSearch(search);
     const storage = browserChoiceStorage();
     const remembered = readRememberedChoice(storage);
     const nextPlatform = platformInUrl ?? remembered.platform;
     const nextLook = lookInUrl ?? remembered.look;
+    const nextMode = modeInUrl ?? remembered.mode;
 
     setPlatform(nextPlatform);
     setLook(nextLook);
+    setMode(nextMode);
     writeRememberedChoice(storage, {
       platform: nextPlatform,
       look: nextLook,
+      mode: nextMode,
     });
-    if (platformInUrl === undefined || lookInUrl === undefined)
-      writeUrl(nextPlatform, nextLook);
+    if (
+      platformInUrl === undefined ||
+      lookInUrl === undefined ||
+      modeInUrl === undefined
+    )
+      writeUrl(nextPlatform, nextMode, nextLook);
   }, [search]);
 
   const choosePlatform = useCallback(
@@ -101,10 +126,11 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       writeRememberedChoice(browserChoiceStorage(), {
         platform: next,
         look,
+        mode,
       });
-      writeUrl(next, look);
+      writeUrl(next, mode, look);
     },
-    [look],
+    [look, mode],
   );
 
   const chooseLook = useCallback(
@@ -113,25 +139,41 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       writeRememberedChoice(browserChoiceStorage(), {
         platform,
         look: next,
+        mode,
       });
-      writeUrl(platform, next);
+      writeUrl(platform, mode, next);
     },
-    [platform],
+    [platform, mode],
+  );
+
+  const chooseMode = useCallback(
+    (next: ThemeMode) => {
+      setMode(next);
+      writeRememberedChoice(browserChoiceStorage(), {
+        platform,
+        look,
+        mode: next,
+      });
+      writeUrl(platform, next, look);
+    },
+    [platform, look],
   );
 
   const theme = useMemo(
-    () => resolvePlatformTheme(platform, previewMode, look),
-    [platform, look],
+    () => resolvePlatformTheme(platform, mode, look),
+    [platform, mode, look],
   );
   const value = useMemo<PlatformState>(
     () => ({
       platform,
       look,
+      mode,
       theme,
       setPlatform: choosePlatform,
       setLook: chooseLook,
+      setMode: chooseMode,
     }),
-    [platform, look, theme, choosePlatform, chooseLook],
+    [platform, look, mode, theme, choosePlatform, chooseLook, chooseMode],
   );
 
   return (
@@ -192,11 +234,11 @@ function ChoiceGroup<T extends string>({
 }
 
 /**
- * The switch itself: the platforms the library names, the authored looks, and
- * the theme the two resolve to.
+ * The switch itself: the platforms the library names, the palette the previews
+ * paint, and the theme they resolve to.
  */
 export function PlatformToggle() {
-  const { platform, theme, setPlatform } = usePlatform();
+  const { mode, platform, theme, setMode, setPlatform } = usePlatform();
 
   return (
     <div className="gx-platform not-prose">
@@ -209,6 +251,16 @@ export function PlatformToggle() {
         label="Platform style"
         onSelect={setPlatform}
         selected={platform}
+      />
+      <p className="gx-platform-title">Palette</p>
+      <ChoiceGroup
+        choices={modeOrder.map((option) => ({
+          value: option,
+          label: modeLabel(option),
+        }))}
+        label="Preview palette"
+        onSelect={setMode}
+        selected={mode}
       />
       <p className="gx-platform-meta">
         {theme.name} · {theme.typography.mono}

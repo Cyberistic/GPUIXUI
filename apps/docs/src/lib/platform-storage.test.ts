@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { readRepo } from "./doc-snippets.test-util";
+import { previewMode } from "./platform";
 import {
   browserChoiceStorage,
   lookStorageKey,
+  modeStorageKey,
   platformStorageKey,
   readRememberedChoice,
   writeRememberedChoice,
@@ -40,11 +42,13 @@ describe("the remembered platform choice", () => {
     const storage = fakeStorage([
       [platformStorageKey, "win32"],
       [lookStorageKey, "luna"],
+      [modeStorageKey, "light"],
     ]);
 
     expect(readRememberedChoice(storage)).toEqual({
       platform: "win32",
       look: "luna",
+      mode: "light",
     });
   });
 
@@ -54,29 +58,56 @@ describe("the remembered platform choice", () => {
     const storage = fakeStorage([
       [platformStorageKey, "windows"],
       [lookStorageKey, "aero"],
+      [modeStorageKey, "sepia"],
     ]);
 
     expect(readRememberedChoice(storage)).toEqual({
       platform: "default",
       look: "aero",
+      mode: "dark",
     });
     expect(readRememberedChoice(fakeStorage([]))).toEqual({
       platform: "default",
       look: "native",
+      mode: "dark",
     });
   });
 
-  it("writes both axes, including a return to the platform's own style", () => {
+  it("opens an older store on the palette the site opens in", () => {
+    // A reader who chose a platform and a look before the palette axis existed
+    // has no mode key at all: the switch must open on `previewMode`, not on
+    // whatever the first render guessed, and must keep the two axes it does
+    // have.
+    const storage = fakeStorage([
+      [platformStorageKey, "linux"],
+      [lookStorageKey, "aero"],
+    ]);
+
+    expect(readRememberedChoice(storage)).toEqual({
+      platform: "linux",
+      look: "aero",
+      mode: previewMode,
+    });
+    expect(previewMode).toBe("dark");
+  });
+
+  it("writes every axis, including a return to the platform's own style", () => {
     const storage = fakeStorage([[lookStorageKey, "luna"]]);
 
-    writeRememberedChoice(storage, { platform: "darwin", look: "native" });
+    writeRememberedChoice(storage, {
+      platform: "darwin",
+      look: "native",
+      mode: "light",
+    });
 
     expect(storage.values.get(platformStorageKey)).toBe("darwin");
     // The old Luna choice must not survive a deliberate `native`.
     expect(storage.values.get(lookStorageKey)).toBe("native");
+    expect(storage.values.get(modeStorageKey)).toBe("light");
     expect(readRememberedChoice(storage)).toEqual({
       platform: "darwin",
       look: "native",
+      mode: "light",
     });
   });
 
@@ -94,6 +125,7 @@ describe("the remembered platform choice", () => {
     // A key written inline would bypass the parse and the both-axes rule.
     expect(switchSource).not.toContain('"gpuixui-platform"');
     expect(switchSource).not.toContain('"gpuixui-look"');
+    expect(switchSource).not.toContain('"gpuixui-mode"');
   });
 
   it("turns a store that refuses every call into the defaults", () => {
@@ -109,18 +141,28 @@ describe("the remembered platform choice", () => {
     expect(readRememberedChoice(refused)).toEqual({
       platform: "default",
       look: "native",
+      mode: "dark",
     });
     expect(() =>
-      writeRememberedChoice(refused, { platform: "win32", look: "aero" }),
+      writeRememberedChoice(refused, {
+        platform: "win32",
+        look: "aero",
+        mode: "light",
+      }),
     ).not.toThrow();
     // No store at all is the same refusal, and is also how the adapter answers
     // outside a browser (the node environment this suite runs in).
     expect(readRememberedChoice(undefined)).toEqual({
       platform: "default",
       look: "native",
+      mode: "dark",
     });
     expect(() =>
-      writeRememberedChoice(undefined, { platform: "linux", look: "native" }),
+      writeRememberedChoice(undefined, {
+        platform: "linux",
+        look: "native",
+        mode: "light",
+      }),
     ).not.toThrow();
   });
 
@@ -141,13 +183,19 @@ describe("the remembered platform choice", () => {
     expect(readRememberedChoice(partial)).toEqual({
       platform: "default",
       look: "aero",
+      mode: "dark",
     });
 
-    writeRememberedChoice(partial, { platform: "win32", look: "luna" });
+    writeRememberedChoice(partial, {
+      platform: "win32",
+      look: "luna",
+      mode: "light",
+    });
 
-    // One refused key must not stop the other from being remembered.
+    // One refused key must not stop the others from being remembered.
     expect(values.get(platformStorageKey)).toBeUndefined();
     expect(values.get(lookStorageKey)).toBe("luna");
+    expect(values.get(modeStorageKey)).toBe("light");
   });
 
   it("reaches the browser store only through a guarded read", () => {

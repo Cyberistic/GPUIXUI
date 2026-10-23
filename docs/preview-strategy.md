@@ -272,6 +272,41 @@ browser probes this is a run against a dev server, not part of `nub run test`;
 `src/lib/preview-press.test.ts` holds this policy to the probe (the ready-check,
 both directions and the commands) and the readout parser to its contract.
 
+### The palette switch is a measured click
+
+The palette axis (`?mode=`, the sidebar's **Palette** group) is the one control
+that lets a reader see a component in both of the library's themes, and it is
+React state: `?mode=light` in the address bar proves the surface resolved a
+palette on the server, not that pressing *Light* changes one. `String` state
+crosses three places — the query parameter, the remembered choice and the
+provider — so the click is measured rather than assumed.
+
+`apps/docs/scripts/palette-switch-probe.ts` presses the group on the served
+Button page. It waits for the **Light** button to carry `__reactProps.onClick`
+(the same hydration precondition as the press probe), reads every preview
+surface's `data-mode`, `data-platform` and the `--background` variable the bridge
+wrote, and holds each against `platformTheme(themes[mode], platform)` — so the
+expected fill is the library's own value, and a palette edit moves the probe with
+it. It presses **Light**, requires every surface to follow (`3 of 3` on the Button
+page), the group's `aria-pressed` to move, and the address bar to carry
+`mode=light`; then it presses **Dark** and requires the URL back. Run it with a
+dev or preview server up:
+
+```sh
+nub run --filter @gpuixui/docs dev
+nub apps/docs/scripts/palette-switch-probe.ts
+```
+
+Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
+against `vite preview`: `light: 3 of 3 surfaces painted #F6F8FA`, exit `0` — the
+Default platform's light page fill, with the dark page `#11141A` before the
+press. The negative control is a link that opens on the other palette:
+`--url '…/docs/components/button?mode=light'` prints
+`FAIL a preview opened in light, not dark`, the fill it read beside the dark one
+it expected, and the group's pressed position, then exits `1`.
+`src/lib/palette-switch.test.ts` holds the policy, the command, both measurements
+and the parser the assertions read.
+
 ### Pages the package writes
 
 Each package writes the page a component ships with. The site mounts those
@@ -455,20 +490,23 @@ when it is crossed.
 
 The site has its own identity (a neutral shadcn palette on `/docs` and the
 landing's own vocabulary); the components have the library's tokens (iris). A
-preview must show the latter, and it must follow the platform switch and the
-look parameter. Both are library values: the platform names come from
-`platformStyles`, and the looks are the authored `retroStyles` — Luna and Aero —
-which are styles of the same shape, not a fifth platform (the mission's toggle
-stays macOS · Linux · Windows · Default, and the sidebar offers platforms only).
-Each is written to the URL (`?platform=…&look=…`) so a link carries what the
+preview must show the latter, and it must follow the platform switch, the palette
+switch and the look parameter. All three are library values: the platform names
+come from `platformStyles`, the palettes are the library's own light and dark
+themes, and the looks are the authored `retroStyles` — Luna and Aero — which are
+styles of the same shape, not a fifth platform (the mission's toggle stays
+macOS · Linux · Windows · Default, and the sidebar offers platforms only). Each
+is written to the URL (`?platform=…&mode=…&look=…`) so a link carries what the
 reader saw.
 
-One axis is deliberately fixed: a preview paints the library's own dark identity
-(`previewMode` in `src/lib/platform.ts`), not the docs site's light/dark mode.
-The site's mode is a reading preference and the preview's subject is the platform
-style, so the switch keeps one axis — and `/docs/theming` prints the mode it
-paints rather than leaving a reader in light mode to wonder why the previews did
-not change.
+The palette is the one axis a reader chooses to see a component in both themes:
+the switch opens on the library's dark identity (`previewMode` in
+`src/lib/platform.ts`) and `?mode=light` paints the light theme. What stays fixed
+is the site's own light/dark mode — a preview does not follow the docs chrome's
+theme, because a preview is a picture of the library and not of the site; the
+palette axis is explicit, shareable and remembered, and `/docs/theming` prints
+the mode a preview opens in rather than leaving a reader in light mode to wonder
+why the previews did not change.
 
 The site's own palette is the one thing that is not a library theme, so it is
 held to the library's contract instead: `src/styles/app.css` declares the

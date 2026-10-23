@@ -26,6 +26,7 @@ export function PreviewSurface({
     <div
       className={className === undefined ? "gx-demo" : `gx-demo ${className}`}
       data-look={look}
+      data-mode={theme.mode}
       data-platform={platform}
       style={toCssVars(theme)}
     >
