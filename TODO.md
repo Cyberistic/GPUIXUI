@@ -8624,7 +8624,33 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 234/234
+`[x]` `[██████████]` 235/235
+
+`[x]` Measure the **landing page's own palette** — `src/styles/app.css` had been
+      held to the library's floors since the docs palette landed, and
+      `src/styles/landing.css` declares a second palette nothing measured: its
+      `--dim` painted every caption, label, graph role and the hero window's
+      chat-input hint at **2.48–2.58:1** in the light scheme and
+      **3.98–4.18:1** in dark, under the 4.5 floor a secondary text role is
+      allowed; the fixed dark terminal illustration painted its session and
+      status text at **2.99:1** (`#5b6673`) and its line-number gutter at
+      **2.20:1** (`#414c59`) on the frame behind them. The landing's secondary
+      role is now `#5f5f5f` light / `#a1a1a1` dark and its dim role `#6f6f6f`
+      light / `#8a8a8a` dark — the hierarchy kept, both clearing 4.5:1 on every
+      surface they are painted on — and the terminal's ten colours are named
+      `--term-*` on the frame and repainted from roles (`--term-status` the
+      session and status lines, `--term-label` the rail and the gutter), so no
+      text colour on the page is a literal outside those two palettes.
+      `src/lib/landing-theme.test.ts` (6 cases) parses both schemes and the
+      terminal block and holds every text pair to `contrastFloors`, refuses a
+      role declared in one scheme only, refuses a raw colour on a `color`
+      declaration, and reads the site ledger so its own citation cannot rot.
+      Directions measured: restoring `--dim: #a1a1a1` fails the light case on
+      five surfaces (`2.58:1 … 2.48:1`), restoring `--term-status: #5b6673`
+      fails the terminal case at `2.99:1`, and the restored tree is 118 files /
+      1 262 tests with `check-types` and `check:tests` clean. `apps/docs/README.md`
+      gains §The site's own two palettes. No native scenario applies — a static
+      palette and its guard have no runtime path.
 
 `[x]` Name the **soft status tints** in the indicator-marks prose — the tokens
       change `ed6e9091` added each tone's `xSoft` to `indicatorSurfaces` (a

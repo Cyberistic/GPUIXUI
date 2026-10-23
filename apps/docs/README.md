@@ -434,6 +434,20 @@ from a `Theme` to CSS variables, and the previews take their values from the
 resolved platform theme, so a preview cannot carry a colour literal the library
 does not ship. `docs/preview-strategy.md` is the full policy.
 
+### The site's own two palettes
+
+The library's tokens paint every preview; the site's chrome is the one thing they
+do not, so its colours are declared once and measured. `src/styles/app.css` holds
+the docs palette (Fumadocs' surfaces in both schemes) and
+`src/lib/docs-theme.test.ts` holds every text pair and the focus ring to
+`@gpuixui/tokens`' floors. `src/styles/landing.css` holds the landing's own
+palette and the fixed dark palette of its terminal illustration — a terminal has
+no theme — and `src/lib/landing-theme.test.ts` holds both to the same floors, so
+a landing caption, a chat-input hint and a terminal status line cannot be dimmer
+than the least a component is allowed. Both schemes of a palette must declare
+the same roles: a role added to one and forgotten in the other leaves that half
+on the other's value.
+
 A block page mounts its reproduction by registry key (`<BlockPreview
 name="dashboard-01" />`); `src/lib/block-page.test.ts` holds every page to a
 registered key and every registered block to a page, and checks both are in the

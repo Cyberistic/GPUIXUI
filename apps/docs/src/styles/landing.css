@@ -12,8 +12,8 @@
   --bg-soft: #fafafa;
   --card: #ffffff;
   --fg: #0a0a0a;
-  --muted: #737373;
-  --dim: #a1a1a1;
+  --muted: #5f5f5f;
+  --dim: #6f6f6f;
   --line: #e5e5e5;
   --line-strong: #d4d4d4;
   --accent: #171717;
@@ -56,7 +56,7 @@
   --card: #111111;
   --fg: #fafafa;
   --muted: #a1a1a1;
-  --dim: #737373;
+  --dim: #8a8a8a;
   --line: #262626;
   --line-strong: #333333;
   --accent-ink: #171717;
@@ -1047,14 +1047,26 @@
   max-height: 340px;
 }
 
-/* The kitty/Ghostty frame is always dark — a terminal has no theme. */
+/* The kitty/Ghostty frame is always dark — a terminal has no theme. Its palette
+   is declared here and measured in that one place by `landing-theme.test.ts`. */
 .landing-terminal-window {
+  --term-bg: #0d1014;
+  --term-bar: #151a20;
+  --term-side: #11151b;
+  --term-edge: #1e242b;
+  --term-ink: #d6dbe2;
+  --term-line: #c6ccd4;
+  --term-bright: #e6ebf0;
+  --term-label: #7d8794;
+  --term-status: #8e97a3;
+  --term-active: #c6ff3d;
+
   display: flex;
   flex-direction: column;
   min-height: 340px;
   border-right: 1px solid var(--line-strong);
-  background: #0d1014;
-  color: #d6dbe2;
+  background: var(--term-bg);
+  color: var(--term-ink);
   font-family: var(--mono);
   font-size: 11.5px;
   line-height: 1.6;
@@ -1068,18 +1080,18 @@
   height: 34px;
   flex: none;
   padding: 0 12px;
-  border-bottom: 1px solid #1e242b;
-  background: #151a20;
+  border-bottom: 1px solid var(--term-edge);
+  background: var(--term-bar);
 }
 
 .landing-term-tab {
   font-size: 11px;
-  color: #e6ebf0;
+  color: var(--term-bright);
 }
 
 .landing-term-session {
   font-size: 10px;
-  color: #5b6673;
+  color: var(--term-status);
 }
 
 .landing-term-body {
@@ -1095,18 +1107,18 @@
   width: 132px;
   flex: none;
   padding: 8px 0;
-  border-right: 1px solid #1e242b;
-  background: #11151b;
+  border-right: 1px solid var(--term-edge);
+  background: var(--term-side);
 }
 
 .landing-term-nav {
   padding: 3px 14px;
   font-size: 11px;
-  color: #7d8794;
+  color: var(--term-label);
 }
 
 .landing-term-nav[data-active="true"] {
-  color: #c6ff3d;
+  color: var(--term-active);
   background: rgba(198, 255, 61, 0.08);
 }
 
@@ -1116,20 +1128,20 @@
   margin: 0;
   padding: 10px 14px;
   overflow: hidden;
-  background: #0d1014;
+  background: var(--term-bg);
 }
 
 .landing-term-line {
   display: block;
   white-space: pre;
-  color: #c6ccd4;
+  color: var(--term-line);
 }
 
 .landing-term-num {
   display: inline-block;
   width: 22px;
   margin-right: 12px;
-  color: #414c59;
+  color: var(--term-label);
   user-select: none;
 }
 
@@ -1139,10 +1151,10 @@
   gap: 12px;
   flex: none;
   padding: 6px 12px;
-  border-top: 1px solid #1e242b;
-  background: #151a20;
+  border-top: 1px solid var(--term-edge);
+  background: var(--term-bar);
   font-size: 10px;
-  color: #5b6673;
+  color: var(--term-status);
 }
 
 .landing-terminal-caption {
