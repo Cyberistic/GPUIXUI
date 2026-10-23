@@ -11,7 +11,7 @@
 import { easeOut, type Easing } from "./easing.js";
 import { sameInertia } from "./inertia-read.js";
 import { sampleInertia, type Inertia, project } from "./inertia.js";
-import { eased } from "./progress.js";
+import { eased, mix } from "./progress.js";
 import { sampleSpring, springPhysics, type SpringPhysics } from "./spring.js";
 
 /** A duration/easing tween, spring, or immediate assignment. */
@@ -294,8 +294,8 @@ export class MotionValue {
         return;
       }
       const progress = eased(transition.easing, t / durationSec);
-      this.value = this.from + (this.target - this.from) * progress;
-      this.velocity = (this.target - this.from) / durationSec;
+      this.value = mix(this.from, this.target, progress);
+      this.velocity = finite((this.target - this.from) / durationSec, 0);
       return;
     }
 

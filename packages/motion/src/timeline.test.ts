@@ -49,6 +49,16 @@ describe("sampleKeyframes", () => {
     expect(sampleKeyframes(frames, 0.5)).toBe(50);
   });
 
+  it("interpolates between two finite frames whose difference overflows", () => {
+    // Each stop is a number the runtime paints; the segment between them used to
+    // overflow twice: `NaN` at the first stop (`Infinity * 0`) and `Infinity`
+    // once the segment moved.
+    const frames = [keyframe(0, -1e308), keyframe(1, 1e308)];
+    expect(sampleKeyframes(frames, 0)).toBe(-1e308);
+    expect(sampleKeyframes(frames, 0.5)).toBe(0);
+    expect(sampleKeyframes(frames, 1)).toBe(1e308);
+  });
+
   it("reads a NaN progress as the first frame, an infinity as the last", () => {
     // The clamp only maps a comparable number: `NaN` used to pass straight into
     // the easing and paint a `NaN` value.

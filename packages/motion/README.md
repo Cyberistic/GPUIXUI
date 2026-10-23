@@ -197,6 +197,16 @@ and `Sequence.sample` — fall back to the linear progress when the curve answer
 value that cannot be painted, because a frame a curve cannot read is not a curve.
 The run keeps its start, its end and its completion edge either way.
 
+A frame between two values is read the same way. The tween in `MotionValue` and
+`sampleKeyframes` interpolate by weighting **both** endpoints rather than adding
+a difference, because the difference of two finite endpoints can overflow where
+neither endpoint can: a tween from `-1e308` to `1e308` used to paint `NaN` at its
+first frame (`Infinity * 0`) and `Infinity` for the rest of the journey — a
+surface that draws as nothing until it snaps to its target. The weighted sum
+stays inside the endpoints' own range, and an overshooting curve that pushes it
+out of range falls back to the endpoint it is heading for, so the frame is always
+a number.
+
 The hooks' first frame is a value the runtime paints, so it gets the same rule:
 `options.initial` and the target are numbers the caller computed, and one that
 cannot be read is replaced before the frame is published — an unreadable

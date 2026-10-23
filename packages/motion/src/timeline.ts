@@ -18,7 +18,7 @@
  */
 
 import { linear, type Easing } from "./easing.js";
-import { clamp01, eased } from "./progress.js";
+import { clamp01, eased, mix } from "./progress.js";
 
 /** A number a formula can read, or the fallback it stands for. */
 const finiteOr = (value: number, fallback: number): number =>
@@ -86,7 +86,7 @@ export const sampleKeyframes = (
   }
   const local = (t - lo.at) / (hi.at - lo.at);
   const easing = hi.easing ?? linear;
-  return lo.value + (hi.value - lo.value) * eased(easing, local);
+  return mix(lo.value, hi.value, eased(easing, local));
 };
 
 /** Where a stagger group starts. */

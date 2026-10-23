@@ -35,3 +35,24 @@ export const eased = (
   const value = curve(unit);
   return Number.isFinite(value) ? value : unit;
 };
+
+/**
+ * The frame between two readable values at `progress`.
+ *
+ * The interpolation is a convex combination rather than
+ * `from + (to - from) * progress`: the **difference** of two finite endpoints
+ * can overflow even though each endpoint is a number the runtime can paint, so
+ * a tween from `-1e308` to `1e308` used to answer `NaN` at its first frame and
+ * `Infinity` for the rest of the journey — a surface that paints nothing until
+ * it snaps to its target. The weighted sum stays inside the endpoints' own range
+ * for every progress in `[0, 1]`.
+ *
+ * A curve may overshoot that range (`backOut`, `anticipate`), and an overshoot
+ * the arithmetic cannot represent falls back to the endpoint the progress is
+ * heading for, so the frame is always a number.
+ */
+export const mix = (from: number, to: number, progress: number): number => {
+  const value = from * (1 - progress) + to * progress;
+  if (Number.isFinite(value)) return value;
+  return progress < 0.5 ? from : to;
+};

@@ -66,6 +66,26 @@ describe("MotionValue", () => {
     expect(done.complete).toBe(true);
   });
 
+  it("tweens between two finite endpoints the difference cannot represent", () => {
+    // Both endpoints are numbers the runtime can paint, but their difference is
+    // not: the subtraction overflowed, so the first frame was `NaN`
+    // (`Infinity * 0`) and every later one `Infinity` — a tween that painted
+    // nothing for its whole journey and only appeared at the target.
+    const value = new MotionValue(-1e308);
+    value.animate(1e308, tween(100, linear));
+
+    const first = value.sample(0);
+    expect(first.value).toBe(-1e308);
+    const half = value.sample(50);
+    expect(Number.isFinite(half.value)).toBe(true);
+    expect(half.value).toBe(0);
+    expect(Number.isFinite(half.velocity)).toBe(true);
+
+    const done = value.sample(100);
+    expect(done.value).toBe(1e308);
+    expect(done.complete).toBe(true);
+  });
+
   it("coasts under inertia toward the projected rest position", () => {
     const value = new MotionValue(0);
     value.coast(inertia(350), 100);
