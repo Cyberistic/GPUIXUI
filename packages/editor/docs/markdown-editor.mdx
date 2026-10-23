@@ -40,6 +40,10 @@ import { MarkdownEditor } from "@gpuixui/editor";
 | `style` | `StyleDesc` | — |
 | `testId` | `string` | — |
 
+## Names
+
+`label` names the editor and every part of it: the source field is `"<label> source"`, the preview `"<label> preview"` and the split's divider `"<label> split"`. A label that arrives blank — from an i18n table or a saved record — is an absence, so each part falls back to `Markdown editor` rather than publishing `" source"`.
+
 ## Limitations
 
 - **No formatting toolbar.** It needs a selection API the runtime does not have.

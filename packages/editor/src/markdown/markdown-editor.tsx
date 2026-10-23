@@ -18,7 +18,7 @@ import type { StyleDesc } from "@gpuix/react";
 import type { ReactElement } from "react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { DIVIDER_WIDTH, SplitPane } from "@gpuixui/dock";
-import { Button, ScrollArea } from "@gpuixui/primitives";
+import { accessibleName, Button, ScrollArea } from "@gpuixui/primitives";
 import {
   fieldHelp,
   fieldHint,
@@ -70,7 +70,7 @@ export interface MarkdownEditorProps {
   readonly defaultMode?: MarkdownMode;
   /** Reports every accepted view change, in both modes. */
   readonly onModeChange?: (mode: MarkdownMode) => void;
-  /** The editor's accessible name. Default `"Markdown editor"`. */
+  /** The editor's accessible name. Default `"Markdown editor"`; a blank name reads as the default. */
   readonly label?: string;
   /** Shown while the source is empty. */
   readonly placeholder?: string;
@@ -96,6 +96,7 @@ export interface MarkdownEditorProps {
 
 const DEFAULT_HEIGHT = 280;
 const DEFAULT_WIDTH = 640;
+const DEFAULT_LABEL = "Markdown editor";
 
 const bodyHeight = (height: number): number =>
   Number.isFinite(height) && height > 0 ? height : DEFAULT_HEIGHT;
@@ -122,7 +123,7 @@ export const MarkdownEditor = ({
   mode: modeProp,
   defaultMode,
   onModeChange,
-  label = "Markdown editor",
+  label,
   placeholder,
   height = DEFAULT_HEIGHT,
   width = DEFAULT_WIDTH,
@@ -136,6 +137,10 @@ export const MarkdownEditor = ({
   testId,
 }: MarkdownEditorProps) => {
   const theme = useTheme();
+  // A label arrives from an i18n table or a saved record as often as it is a
+  // literal, so a blank one is an absence: every part derives its name from it,
+  // and a blank prefix would publish " source", " preview" and " split".
+  const name = accessibleName(label) ?? DEFAULT_LABEL;
   const [source, setSource] = useControllableState({
     value,
     defaultValue,
@@ -188,7 +193,7 @@ export const MarkdownEditor = ({
           // so the source pane's caret and selection wash follow the active
           // theme only when the host is handed the seam.
           theme={nativeTextTheme(theme, "background")}
-          aria-label={`${label} source`}
+          aria-label={`${name} source`}
           aria-description={help ?? "Markdown source"}
           readOnly={readOnly || disabled}
           tabIndex={disabled ? -1 : 0}
@@ -213,7 +218,7 @@ export const MarkdownEditor = ({
       <ScrollArea
         axis="vertical"
         focusable={!disabled}
-        label={`${label} preview`}
+        label={`${name} preview`}
         testId="markdown-preview"
         viewportTestId="markdown-preview-viewport"
         padding="sm"
@@ -287,7 +292,7 @@ export const MarkdownEditor = ({
             max={split.max}
             onResize={setSplitAt}
             disabled={disabled}
-            dividerLabel={`${label} split`}
+            dividerLabel={`${name} split`}
             testId={testId === undefined ? undefined : `${testId}-split`}
             first={sourcePane(splitWidth)}
             second={previewPane()}

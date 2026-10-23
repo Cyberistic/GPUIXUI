@@ -349,4 +349,32 @@ describe("MarkdownEditor", () => {
     expect(text(editor)).toContain("Title");
     editor.unmount();
   });
+
+  it("names every part from one name, and reads a blank name as the default", () => {
+    // The bug guarded: a label from an i18n table or a saved record may arrive
+    // empty, and the parts derive their names from it — a blank label published
+    // " source", " preview" and " split", names that identify nothing.
+    const nameOf = (root: Root, testId: string): unknown =>
+      root.renderer.findByTestId(testId)?.customProps?.["aria-label"];
+    const blank = render(
+      <MarkdownEditor defaultValue="# Title" label="" testId="editor" />,
+    );
+    expect(nameOf(blank, "markdown-source")).toBe("Markdown editor source");
+    expect(nameOf(blank, "markdown-preview-viewport")).toBe(
+      "Markdown editor preview",
+    );
+    expect(nameOf(blank, "editor-split-divider")).toBe("Markdown editor split");
+    blank.unmount();
+
+    const padded = render(
+      <MarkdownEditor
+        defaultValue="# Title"
+        label="  Notes  "
+        testId="editor"
+      />,
+    );
+    expect(nameOf(padded, "markdown-source")).toBe("Notes source");
+    expect(nameOf(padded, "markdown-preview-viewport")).toBe("Notes preview");
+    padded.unmount();
+  });
 });
