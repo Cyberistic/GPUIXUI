@@ -14,6 +14,7 @@ import {
   type PlatformName,
 } from "@gpuixui/tokens";
 import { toCssVars } from "../../lib/theme-css";
+import { BlockIcon } from "../docs/block-icons";
 import { ConversationWindow } from "../docs/conversations-block";
 import { platforms, repo } from "./data";
 import type { Platform } from "./data";
@@ -104,7 +105,25 @@ export function Hero() {
   );
 }
 
-/** One platform window, showing the conversations block in that theme. */
+/**
+ * The desktop's app tiles. Decorative only: the dock and taskbar are
+ * illustration, not controls.
+ */
+const DOCK_TONES = [
+  "sky",
+  "teal",
+  "amber",
+  "rose",
+  "violet",
+  "green",
+  "graphite",
+  "orange",
+  "blue",
+] as const;
+
+const WINDOW_TONES = ["blue", "green", "amber", "sky"] as const;
+
+/** One platform desktop, with the conversations block floating on it. */
 function PlatformMini({
   platform,
   position,
@@ -118,12 +137,174 @@ function PlatformMini({
 
   return (
     <div
-      className={`landing-window landing-window-${platform.chrome}`}
+      className={`landing-window landing-desktop landing-desktop-${platform.chrome}`}
+      data-desktop={platform.id}
       data-pos={position}
       style={style}
     >
-      <ConversationWindow platform={platform.id} />
+      <span
+        aria-hidden="true"
+        className={`landing-wall landing-wall-${platform.chrome}`}
+      />
+      {platform.id === "macos" ? <MacMenuBar /> : null}
+      {platform.id === "linux" ? <LinuxPanel /> : null}
+
+      <div className="landing-desktop-stage">
+        <ConversationWindow platform={platform.id} />
+      </div>
+
+      {platform.id === "windows" ? <WindowsTaskbar /> : null}
+      {platform.id === "linux" ? <LinuxDock /> : null}
+      {platform.id === "macos" ? <MacDock /> : null}
     </div>
+  );
+}
+
+/** macOS: the thin menu bar and the translucent dock. */
+function MacMenuBar() {
+  return (
+    <div aria-hidden="true" className="landing-menubar">
+      <span className="landing-menubar-left">
+        <AppleGlyph />
+        <b>Finder</b>
+        <span className="landing-menubar-menu">File</span>
+        <span className="landing-menubar-menu">Edit</span>
+        <span className="landing-menubar-menu">View</span>
+      </span>
+      <span className="landing-menubar-right">
+        <WifiGlyph />
+        <BatteryGlyph />
+        <span>Mon 9:41 AM</span>
+      </span>
+    </div>
+  );
+}
+
+function MacDock() {
+  return (
+    <div aria-hidden="true" className="landing-dock landing-dock-mac">
+      {DOCK_TONES.map((tone) => (
+        <i className="landing-dock-tile" data-tone={tone} key={tone} />
+      ))}
+      <span className="landing-dock-sep" />
+      <i className="landing-dock-tile" data-tone="trash" />
+    </div>
+  );
+}
+
+/** Windows 11: the centred acrylic taskbar. */
+function WindowsTaskbar() {
+  return (
+    <div aria-hidden="true" className="landing-taskbar">
+      <span className="landing-taskbar-start">
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+      <span className="landing-taskbar-search">
+        <BlockIcon name="search" size={11} />
+        <span>Search</span>
+      </span>
+      <span className="landing-taskbar-apps">
+        {WINDOW_TONES.map((tone) => (
+          <i className="landing-dock-tile" data-tone={tone} key={tone} />
+        ))}
+      </span>
+      <span className="landing-taskbar-clock">
+        <b>10:32 AM</b>
+        <span>10/26/2026</span>
+      </span>
+    </div>
+  );
+}
+
+/** Linux: the top panel and the floating dock. */
+function LinuxPanel() {
+  return (
+    <div aria-hidden="true" className="landing-lnx-panel">
+      <span className="landing-lnx-panel-left">
+        <b>Applications</b>
+        <span>Tour</span>
+      </span>
+      <span className="landing-lnx-panel-clock">Sat, Nov 6 · 10:46 AM</span>
+      <span className="landing-lnx-panel-tray">
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+    </div>
+  );
+}
+
+function LinuxDock() {
+  return (
+    <div aria-hidden="true" className="landing-dock landing-dock-lnx">
+      {DOCK_TONES.slice(0, 8).map((tone) => (
+        <i className="landing-dock-tile" data-tone={tone} key={tone} />
+      ))}
+      <span className="landing-dock-sep" />
+      <i className="landing-dock-tile" data-tone="trash" />
+    </div>
+  );
+}
+
+/** The menu bar's marks; the desktop is decoration, not iconography. */
+function AppleGlyph() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-menubar-glyph"
+      viewBox="0 0 24 24"
+    >
+      <path
+        d="M15.5 8.5c-1 0-2 .6-2.7.6-.8 0-1.7-.6-2.8-.6-1.4 0-2.7.8-3.4 2.1-1.5 2.5-.4 6.3 1 8.3.7 1 1.6 2.1 2.8 2.1 1.1 0 1.5-.7 2.9-.7 1.3 0 1.7.7 2.9.7 1.2 0 2-1.1 2.7-2.1.5-.8.9-1.6 1.1-2.5-2.3-.9-2.7-4.2-.4-5.5-.8-1.4-2.2-2.4-3.6-2.4ZM14.6 6.8c.6-.8 1-1.8.9-2.8-1 .1-2.1.6-2.8 1.4-.6.7-1 1.7-.9 2.7 1 0 2.1-.5 2.8-1.3Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function WifiGlyph() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-menubar-glyph"
+      viewBox="0 0 24 24"
+    >
+      <path
+        d="M4 9a12 12 0 0 1 16 0M7 12.5a8 8 0 0 1 10 0M10 16a3.5 3.5 0 0 1 4 0"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function BatteryGlyph() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-menubar-glyph"
+      viewBox="0 0 26 24"
+    >
+      <rect
+        fill="none"
+        height="10"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        width="18"
+        x="2"
+        y="7"
+      />
+      <rect fill="currentColor" height="6" rx="1" width="12" x="4" y="9" />
+      <rect fill="currentColor" height="4" rx="1" width="2" x="21" y="10" />
+    </svg>
   );
 }
 

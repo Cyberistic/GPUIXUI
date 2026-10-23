@@ -1685,21 +1685,34 @@
   position: relative;
   width: 100%;
   max-width: 900px;
-  min-height: 420px;
+  min-height: 460px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 8px);
-  background: var(--background);
+  background: #141c2c;
   text-align: left;
 }
 
+.gx-cmd-wall {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(75% 55% at 24% 12%, #4c6f9f 0%, transparent 60%),
+    linear-gradient(150deg, #24324d 0%, #35507a 45%, #141c2c 100%);
+}
+
 .gx-cmd-page {
+  position: absolute;
+  inset: 30px 52px 100px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-height: 420px;
+  overflow: hidden;
   padding: 20px 22px;
-  background: var(--background);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.35);
   filter: blur(0.6px);
 }
 
@@ -1751,9 +1764,72 @@
   background: var(--card);
 }
 
+.gx-cmd-dock {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  gap: 5px;
+  align-items: flex-end;
+  padding: 5px 7px;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 12px;
+  background: rgb(20 28 44 / 0.55);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.3);
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+
+.gx-cmd-dock-tile {
+  display: block;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+}
+
+.gx-cmd-dock-sep {
+  flex: none;
+  align-self: stretch;
+  width: 1px;
+  margin: 2px 3px;
+  background: rgb(255 255 255 / 0.28);
+}
+
+.gx-cmd-dock-tile[data-tone="sky"] {
+  background: linear-gradient(160deg, #56a8f5, #2f6de0);
+}
+
+.gx-cmd-dock-tile[data-tone="teal"] {
+  background: linear-gradient(160deg, #2fc6b6, #11877f);
+}
+
+.gx-cmd-dock-tile[data-tone="amber"] {
+  background: linear-gradient(160deg, #ffcc57, #f2912f);
+}
+
+.gx-cmd-dock-tile[data-tone="rose"] {
+  background: linear-gradient(160deg, #ff8aa5, #d63d64);
+}
+
+.gx-cmd-dock-tile[data-tone="violet"] {
+  background: linear-gradient(160deg, #a78bfa, #6d3ad6);
+}
+
+.gx-cmd-dock-tile[data-tone="green"] {
+  background: linear-gradient(160deg, #7ddc75, #2f9e44);
+}
+
+.gx-cmd-dock-tile[data-tone="trash"] {
+  background: linear-gradient(160deg, #e2e8f0, #94a3b8);
+}
+
 .gx-cmd-backdrop {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4660,6 +4736,7 @@
   .gx-conv-side {
     flex: 1;
     width: auto;
+    min-width: 0;
     border-right: 0;
   }
 }

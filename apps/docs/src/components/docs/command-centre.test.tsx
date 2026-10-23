@@ -28,14 +28,23 @@ const count = (source: string, pattern: RegExp): number =>
   (source.match(pattern) ?? []).length;
 
 describe("the command centre", () => {
-  it("prints the dimmed scene, the chip and the search field", () => {
+  it("prints the dimmed desktop, the chip and the search field", () => {
     expect(markup).toContain("gx-cmd-scene");
+    expect(markup).toContain("gx-cmd-wall");
     expect(markup).toContain("gx-cmd-backdrop");
     expect(markup).toContain("Issue - LIN-1615 Changelog");
     expect(markup).toContain('aria-label="Type a command or search"');
     expect(markup).toContain("gx-cmd-caret");
     expect(markup).toContain('data-visible="true"');
     expect(markup).toContain("Type a command or search...");
+  });
+
+  it("frames the palette as an OS-level scene with a decorative dock", () => {
+    expect(markup).toContain('aria-hidden="true" class="gx-cmd-dock"');
+    expect(count(markup, /class="gx-cmd-dock-tile"/g)).toBe(7);
+    expect(markup).toContain('class="gx-cmd-dock-sep"');
+    // The app outline behind the palette is decoration too.
+    expect(markup).toContain('aria-hidden="true" class="gx-cmd-page"');
   });
 
   it("prints every action, its icon and its keycaps", () => {

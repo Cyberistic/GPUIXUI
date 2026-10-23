@@ -129,9 +129,47 @@ Cantarell / Ubuntu / Noto Sans. Grey timestamps and "Read".
 The double tick is drawn in `--info` in every variant: blue reads as
 "delivered" on macOS and Windows, and the Linux reference keeps the same blue.
 
-## Landing
+## Landing — each card is a desktop
 
 `deck.tsx` renders one `ConversationWindow` per platform card, with the macOS
 and Windows cards on the light palette and the Linux card on the dark one. The
 macOS card is the default block preview; the Windows and Linux cards are the
 other two dresses.
+
+The card is not a bare window. It is a **desktop scene** — wallpaper, system
+chrome, and the conversation window floating in a centred stage with a soft
+shadow — because a window alone read as a dialog. All three cards share one
+height: 840 × 560, scale-stacked, with the same shuffle and hover pause.
+
+| Layer | macOS | Windows 11 | Linux |
+| --- | --- | --- | --- |
+| Wallpaper | Sonoma teal/blue | Bloom blue ribbon | mountain lake, dark blue |
+| Top | 27px menu bar: Apple, Finder, File/Edit/View, Wi-Fi, battery, clock | — | 28px panel: Applications, Tour, clock, tray |
+| Bottom | translucent dock: 9 tiles, separator, trash | 40px acrylic taskbar: Start grid, search pill, 4 tiles, clock | floating dock: 8 tiles, separator, trash |
+| Stage | inset 34/40/70 | inset 18/36/64 | inset 40/36/68 |
+
+The window keeps its platform skin and the one control set; the shells are
+`aria-hidden` and take no pointer. Under 1000px only the top card is laid out,
+and under 760px the conversation drops its thread (list only). At 360px the page
+must not scroll horizontally: the stage shrinks to 14px sides, the dock tiles to
+20px, the menu labels and the taskbar date are dropped.
+
+### Wallpaper stops (CSS gradients only, no image assets)
+
+- **macOS Sonoma** — `radial(110% 80% at 18% 0%, #8fe0ea, transparent 55%)`,
+  `radial(95% 95% at 88% 16%, #4d8ee8, transparent 62%)`, over
+  `linear-gradient(158deg, #1c4e8a 0%, #176b8f 48%, #0f3b63 100%)`.
+- **Windows Bloom** — `radial(58% 76% at 78% 6%, #d9ecff, transparent 52%)`,
+  two elliptical ribbon rings (`#4f97ee`; `#0a3d9a` and `#6cb0ff`), over
+  `linear-gradient(150deg, #0b3f9e, #1e5fc4 60%, #0b3f9e)`.
+- **Linux mountain lake** — `radial(70% 45% at 68% 20%, #3f6f8c, transparent
+  62%)`, over `linear-gradient(180deg, #0b1a2e 0%, #14314d 42%, #0a1626 100%)`;
+  a clipped ridge `linear-gradient(180deg, #2c6284, #0d2238)` and a lake band
+  `linear-gradient(180deg, #1e4159, #0a1626)`.
+- **Command centre desktop** — a dimmed wallpaper
+  `radial(75% 55% at 24% 12%, #4c6f9f, transparent 60%)` over
+  `linear-gradient(150deg, #24324d 0%, #35507a 45%, #141c2c 100%)`, with a
+  blurred app window and a 7-tile dock behind the palette.
+
+The desktop shell is illustration, not componentry: its text colours ride the
+card's palette roles, and the wallpapers are the only literals.
