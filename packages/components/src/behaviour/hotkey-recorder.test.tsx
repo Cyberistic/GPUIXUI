@@ -155,6 +155,28 @@ describe("HotkeyRecorder", () => {
     recorder.unmount();
   });
 
+  it("stops listening when the caller disables it mid-recording", () => {
+    // The bug this guards: disabling the recorder while it was listening left
+    // the "Press keys…" paint in place — a control showing it waits for a chord
+    // its own guard now refuses, with no key able to leave the state.
+    const onChange = vi.fn();
+    const recorder = renderComponent(<Harness onChange={onChange} />);
+
+    clickCentreOf(recorder, "recorder");
+    expect(recorder.renderer.getAllText()).toContain("Press keys…");
+
+    recorder.rerender(<Harness disabled onChange={onChange} />);
+    expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
+
+    // The focused element still receives a key, and the disabled recorder
+    // neither records it nor leaves a listening paint behind.
+    recorder.renderer.simulateKeystrokes("ctrl-k");
+    expect(onChange).not.toHaveBeenCalled();
+    expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
+
+    recorder.unmount();
+  });
+
   it("is out of the tab order and inert when disabled", () => {
     const recorder = renderComponent(<Harness initial="ctrl+k" disabled />);
 

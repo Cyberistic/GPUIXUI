@@ -34,6 +34,8 @@ import { HotkeyRecorder } from "@gpuixui/components";
 - Clearing is a control, not `Backspace`.
 - No conflict detection against already-bound chords.
 - Registering the chord with the runtime is the application's job.
+- A recorder the caller disables stops listening rather than waiting for a chord
+  it would refuse.
 
 ## Related
 

@@ -31,7 +31,7 @@ import {
   normalizeHotkey,
   toTanstackPlatform,
 } from "@gpuixui/keyboard";
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   activationHandlers,
   isActivation,
@@ -103,6 +103,13 @@ export const HotkeyRecorder = ({
     if (disabled) return;
     setRecording(true);
   };
+
+  // A control the caller disables stops listening: every key is refused, so a
+  // painted "Press keys…" would wait for a chord that can never be accepted.
+  // A layout effect drops it before the frame paints.
+  useLayoutEffect(() => {
+    if (disabled) setRecording(false);
+  }, [disabled]);
 
   const clear = (): void => {
     skipStart.current = true;
