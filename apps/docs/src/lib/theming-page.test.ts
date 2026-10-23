@@ -103,7 +103,9 @@ describe("the theming page's look picker", () => {
     expect(read("apps/docs/src/components/mdx.tsx")).toContain("LookPicker");
     // The sidebar stays the mission's four platform names; the picker is the
     // page's own control, and the page has to say which is which.
-    expect(page).toContain("The sidebar itself offers the four platform names only");
+    expect(page).toContain(
+      "The sidebar itself offers the four platform names only",
+    );
   });
 
   it("prints every authored look's own values", () => {
@@ -115,9 +117,9 @@ describe("the theming page's look picker", () => {
         `| ${style.radius.md} |`,
         `\`${style.density}\``,
       ];
-      return cells.filter((cell) => !page.includes(cell)).map(
-        (cell) => `${name}: missing ${cell}`,
-      );
+      return cells
+        .filter((cell) => !page.includes(cell))
+        .map((cell) => `${name}: missing ${cell}`);
     });
 
     expect(retroNames.length).toBeGreaterThanOrEqual(3);
@@ -131,11 +133,16 @@ describe("the theming page's look picker", () => {
       ["`backdropFilter` / per-element blur", "not supported"],
       ["Multi-stop, radial, conic, repeating gradients", "not supported"],
       ["CSS `filter`, `clip-path`, blend modes, text shadow", "not supported"],
-      ["Per-element `transform` / `rotate` / `scale` / `translate` / `skew`", "not supported"],
+      [
+        "Per-element `transform` / `rotate` / `scale` / `translate` / `skew`",
+        "not supported",
+      ],
     ];
 
     expect(
-      rows.filter(([row, verdict]) => !capabilities.includes(`${row} | ${verdict}`)),
+      rows.filter(
+        ([row, verdict]) => !capabilities.includes(`${row} | ${verdict}`),
+      ),
     ).toEqual([]);
     expect(
       [

@@ -85,9 +85,7 @@ describe("the platform switch's readout", () => {
 describe("the look picker's readout", () => {
   it("reads the fields the probe asserts on", () => {
     expect(
-      parseLookSurface(
-        "luna|darwin|dark|#101E33|?platform=darwin&look=luna",
-      ),
+      parseLookSurface("luna|darwin|dark|#101E33|?platform=darwin&look=luna"),
     ).toEqual({
       look: "luna",
       platform: "darwin",
