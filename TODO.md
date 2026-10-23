@@ -1637,7 +1637,33 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 146/146
+`[x]` `[██████████]` 147/147
+
+`[x]` Measure **the local `zIndex` extension end to end** — the repository builds
+      its own darwin-x64 binding with `apps/playground/patches/gpuix-zindex.patch`
+      applied, because the published `@gpuix/native@0.11.0` has no stacking
+      field. The patch had Rust tests over the retained tree, but no app code had
+      ever set a level: a rebuild that dropped the patch would leave every
+      existing probe green, because every shipped surface already renders last in
+      its parent. The `z-index-lifecycle` live probe mounts three arrangements of
+      one 160×90 box — red/green/blue at levels 3/1/2 (tree order disagrees with
+      the level), the same boxes with no level (the gate's control), and an
+      in-flow child at level 9 under a positioned cover at level 1 — and reads the
+      renderer's own `getElementsAt`, the capture's colour and the box whose
+      `onClick` ran. Measured on 0.11.0: `stack=high,mid,low`,
+      `plain=plain-mid,plain-low,plain-high`, `flow=flow-cover,flow-base`; the
+      painted tops are `#FF3B30`, `#0A84FF` and `#AF52DE`; a press reaches `high`
+      then `plain-mid`. 16 checks, `--only z-index-lifecycle`, green (~0.5 s).
+      Fixture `src/live/z-index.ts` + `z-index.test.ts` (14 cases: the orders
+      disagreeing with tree order, the unique fills and ids, the shared centre,
+      the in-flow level, the readout, the count, the probe's three channels, the
+      local type and the README section). Two negative controls measured, exit
+      `1`, restored green: a level of `0` reads `stack=mid,low,high` and expecting
+      the in-flow base's fill fails `the positioned cover paints over the in-flow
+      child`. The type lives in `src/gpuix-zindex.d.ts` (scoped to this app; the
+      library must not depend on it); publishing the measurement in the
+      capability record is the Interlocks row below. Evidence:
+      `apps/playground/README.md` §`z-index-lifecycle`, `.artifacts/live/z-index.png`.
 
 `[x]` Measure **whether a scroller shows the control a traversal just focused**
       — the runtime moves focus without moving the glass (`focus_next` calls
@@ -7898,8 +7924,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Teach the **stagger direction and the uncallable curve** on `/docs/motion` — the package now reads a `from` it does not name as the house `start` (it used to fall through the distance arithmetic to the **centre**) and treats a value that is not a function as no curve (`Transition`/`Keyframe` are structural, so a hand-built one threw `TypeError: curve is not a function` out of a frame loop), while the page's §Keyframes, stagger and sequences says only that "a stagger step that cannot be read … is no wait" and its §Keyframes curve paragraph covers only a curve that answers `NaN`. A reader of the site cannot learn either repair | docs-site (`apps/docs/content/docs/motion.mdx`; `motion-page.test.ts` should hold the sentences to `timeline.ts`'s `staggerFromOf` and `progress.ts`'s `isCurve`, the way it holds the other repairs) | **resolved 2026-10-23** — §Keyframes, stagger and sequences carries both repairs: a `from` the package does not name is the house `start`, not the centre (an unreadable value fell through the distance arithmetic to the centre, the longest wait, so a hand-built config began later than a caller who wrote nothing meant), and a value that is not a function is no curve either — `Transition`/`Keyframe` are structural, so a hand-built one threw `TypeError: curve is not a function` out of the frame loop instead of painting the run. `motion-page.test.ts` holds `timeline.ts`'s `staggerFromOf` and its `staggerDelay` call, `progress.ts`'s `isCurve` and the `if (!isCurve(curve)) return unit;` body, and each page sentence, in the cases that already own the frame's and the sequence's repairs. Directions measured: deleting either sentence fails its own case by name (2 of 22 failed); restored, 22/22 |
 | Read the **stored switch as absence in the primitive's paint** — the tokens reports now answer a theme whose `switch` is `null` as "no declaration" (the accent toggle), but `packages/primitives/src/core/selection.ts` compares `theme.switch !== undefined` in four places (`switchBox`, `switchFill`, `switchThumbPaint`), so a theme restored from storage with `switch: null` throws `TypeError: Cannot read properties of null (reading 'on')` at the first `Switch` paint — the value the report calls the accent switch. The fix is the same nullish read (`theme.switch ?? undefined`), or a tokens seam that resolves the accent family and cannot be null | primitives (`src/core/selection.ts`) | open — measured 2026-10-23 while closing the tokens-side absence rule (`incomplete.test.ts`'s `an optional table a store nulled`); the paint path is the primitives' to move, and a `Switch` suite in a window would prove it |
 
-| Make the **inventory parser read escaped pipes** — `apps/docs/src/lib/inventory.ts`'s `cells` splits a row on every bar, so a COMPONENTS.md caption whose code span holds a union bar silently becomes five cells and the tier table is rejected (`line 306: expected 4 cells under a tier, found 5`), while the row it belongs to vanishes for `inventory-status` and its package page reports "no row for this page". A shared-index commit carried that row to `master` and the docs suite went red for every workstream until the caption was rewritten without the pipe. The fix is to split on unescaped bars and unescape the escaped form inside a cell, so a code span can carry one | docs-site (`apps/docs/src/lib/inventory.ts`) | open — measured 2026-10-23 while repairing `COMPONENTS.md` line 306; the row now writes `"all" / "any"`, which reads as the union it means, so no content is blocked |
+| Make the **inventory parser read escaped pipes** — `apps/docs/src/lib/inventory.ts`'s `cells` splits a row on every bar, so a COMPONENTS.md caption whose code span holds a union bar silently becomes five cells and the tier table is rejected (`line 306: expected 4 cells under a tier, found 5`), while the row it belongs to vanishes for `inventory-status` and its package page reports "no row for this page". A shared-index commit carried that row to `master` and the docs suite went red for every workstream until the caption was rewritten without the pipe. The fix is to split on unescaped bars and unescape the escaped form inside a cell, so a code span can carry one | docs-site (`apps/docs/src/lib/inventory.ts`) | **resolved 2026-10-23** — `cells` splits on `/(?<!\\)\|/` and unescapes `\|` back to `|` inside each cell, so a note can write a union in a code span. `inventory.test.ts` gains `keeps an escaped pipe in the cell it was written in`: a tier table whose note is `` The controller reads `"all" \| "any"`. `` must parse with no malformed row and its note must reach `spans` as one code run carrying the bar. Directions measured: with the old split restored, the case fails `line 5: expected 4 cells under a tier, found 5`; with the fix, the file is 18/18 and `inventory-status.test.ts` stays green. `COMPONENTS.md` line 306 keeps its readable `"all" / "any"` wording, so no content moved |
 
+
+| Publish the **local `zIndex` measurement** in the capability record — the playground's `z-index-lifecycle` (16 checks, 0.11.0) now proves the repository's source-built binding orders `absolute`/`fixed` siblings by `zIndex` for paint and hit testing (`stack=high,mid,low`), keeps tree order when no level is declared (`plain=plain-mid,plain-low,plain-high`) and ignores a level on an in-flow child (`flow=flow-cover,flow-base`), while a press at each centre reaches the box the capture put on top. `docs/gpuix-capabilities.md`'s **`zIndex` / stacking order** row says only that the repo's binding "carries a local `zIndex` patch", and `/docs/runtime` has no measured row for it, so a plan cannot tell the extension works from the patch merely existing. The row should keep the published-API verdict (`not supported`) and cite the probe as the local extension's evidence, with the limits the probe states (only `absolute`/`fixed` siblings, no stacking contexts, a level of `0` is indistinguishable from none). | docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) | open — measured 2026-10-23 by the playground's probe; the record and the page are the docs side of the row |
 
 ## Phase D — data and workspace components
 

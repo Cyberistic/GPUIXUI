@@ -20,6 +20,10 @@ import {
  * guards below check the parts that would fail silently: a row lost to a
  * malformed cell, a lane naming a row that was renamed, a status the page does
  * not know how to group, and the inline Markdown a note carries.
+ *
+ * The escaped-pipe case guards a measured regression: a note that writes a
+ * union in a code span (`` `"all" \| "any"` ``) used to split on the escaped
+ * bar, read as five cells and drop the row from every lane page.
  */
 
 const inventory = parseInventory(
@@ -76,6 +80,32 @@ describe("parseInventory", () => {
     expect(parsed.rows).toEqual([]);
     expect(parsed.malformed).toHaveLength(1);
     expect(parsed.malformed[0]).toContain("expected 4 cells");
+  });
+
+  it("keeps an escaped pipe in the cell it was written in", () => {
+    // A union written in a code span (`` `"all" \| "any"` ``) is valid table
+    // Markdown, but a split on every bar reads it as five cells, drops the row
+    // from every lane page and leaves the table looking valid.
+    const parsed = parseInventory(
+      [
+        "## Tier 1 — foundational",
+        "",
+        "| Component | Status | GPUix support | Notes / limitations |",
+        "| --------- | ------ | ------------- | ------------------- |",
+        '| Selection | done | yes | The controller reads `"all" \\| "any"`. |',
+      ].join("\n"),
+    );
+
+    expect(parsed.malformed).toEqual([]);
+    expect(parsed.rows).toHaveLength(1);
+    expect(parsed.rows[0]?.notes).toBe(
+      'The controller reads `"all" | "any"`.',
+    );
+    expect(spans(parsed.rows[0]?.notes ?? "")).toContainEqual({
+      text: '"all" | "any"',
+      code: true,
+      strong: false,
+    });
   });
 
   it("stops at the next section, so another table is not counted", () => {

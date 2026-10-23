@@ -28,13 +28,22 @@ const tierHeading = /^## Tier (\d+)/;
 const columnHeading = /^\|\s*Component\s*\|\s*Status\s*\|/;
 const rule = /^\|[\s:|-]+\|$/;
 
+/**
+ * A cell separator: a bar the row does not escape.
+ *
+ * A note can carry a union in a code span (`"all" \| "any"`), and Markdown's
+ * table syntax makes the escaped form the only way to write it — the code span
+ * does not protect a raw bar.
+ */
+const cellSeparator = /(?<!\\)\|/;
+
 /** The cells of a markdown row, without the outer pipes. */
 const cells = (line: string): ReadonlyArray<string> =>
   line
     .replace(/^\|/, "")
     .replace(/\|$/, "")
-    .split("|")
-    .map((cell) => cell.trim());
+    .split(cellSeparator)
+    .map((cell) => cell.trim().replace(/\\\|/g, "|"));
 
 /** Parse every tier table in the inventory. */
 export const parseInventory = (markdown: string): Inventory => {
