@@ -21,6 +21,7 @@ import type { ReactElement } from "react";
 import { recipeStyle, useTheme, type Theme } from "./internal.js";
 import {
   encodeQr,
+  levelOf,
   QrEncoding,
   QrSymbol,
   qrPlacement,
@@ -82,7 +83,7 @@ export const renderQrCode = (
 ): ReactElement => {
   const {
     value,
-    level = "M",
+    level: levelProp = "M",
     size = DEFAULT_SIZE,
     quietZone = QR_QUIET_ZONE,
     ink = QR_INK,
@@ -92,6 +93,9 @@ export const renderQrCode = (
     style,
     ...rest
   } = props;
+  // A level restored from storage arrives untyped; read it at this boundary so
+  // the encoder is never handed a name its block table does not carry.
+  const level = levelOf(levelProp);
   const encoding = encodeQr(value, { level });
 
   return QrEncoding.match(encoding, {

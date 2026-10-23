@@ -22,6 +22,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   encodeQr,
+  levelOf,
   qrByteCapacity,
   qrFormatBits,
   qrModules,
@@ -252,6 +253,21 @@ describe("encodeQr", () => {
     if (low instanceof QrSymbol && high instanceof QrSymbol) {
       expect(high.version).toBeGreaterThan(low.version);
     }
+  });
+
+  it("reads a stored level the union does not name as the default", () => {
+    // The bug guarded: a level restored from storage indexed the block table
+    // with `undefined`, so the render threw instead of painting a symbol.
+    const stored = levelOf("Q");
+    expect(stored).toBe("Q");
+    expect(levelOf("X")).toBe("M");
+    expect(levelOf(undefined)).toBe("M");
+    const refused = encodeQr("stored", { level: "X" as QrLevel });
+    if (!(refused instanceof QrSymbol)) return expect.fail("no symbol");
+    expect(refused.level).toBe("M");
+    const plain = encodeQr("stored", { level: "M" });
+    if (!(plain instanceof QrSymbol)) return expect.fail("no symbol");
+    expect(refused.matrix).toStrictEqual(plain.matrix);
   });
 
   it("picks the mask with the lowest penalty of the eight", () => {

@@ -30,6 +30,18 @@ export const QrLevel = Schema.Literals(QR_LEVELS);
 /** A QR error correction level. */
 export type QrLevel = typeof QrLevel.Type;
 
+const isQrLevel = Schema.is(QrLevel);
+
+/**
+ * The level a stored preference names, or the default.
+ *
+ * A level an application reads back from persisted state arrives as an unknown
+ * string; every reader of the level would otherwise index the block table with
+ * `undefined` and throw out of the render.
+ */
+export const levelOf = (value: unknown): QrLevel =>
+  isQrLevel(value) ? value : "M";
+
 /** The highest version this encoder prints. */
 export const QR_MAX_VERSION = 10;
 
@@ -748,7 +760,7 @@ export const encodeQr = (
   value: string,
   options: QrEncodeOptions = {},
 ): QrEncoding => {
-  const level = options.level ?? "M";
+  const level = levelOf(options.level);
   const bytes = utf8(value);
   const capacity = qrByteCapacity(QR_MAX_VERSION, level);
   const versionOf = qrVersionFor(bytes.length, level);

@@ -14,6 +14,7 @@ import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { lightTheme } from "@gpuixui/tokens";
 import { encodeQr, qrByteCapacity, QrSymbol } from "./qr/encode.js";
+import type { QrLevel } from "./qr/encode.js";
 import {
   QR_INK,
   QR_PAPER,
@@ -94,6 +95,13 @@ describe("QrCode", () => {
       width: 20,
       height: 20,
     });
+  });
+
+  it("reads a stored level the union does not name as the default", () => {
+    // The bug guarded: a stored level reached the encoder's block table as an
+    // unknown name and threw out of the render; the boundary reads it as `M`.
+    const stored = "X" as QrLevel;
+    expect(sourceOf(render({ level: stored }))).toBe(sourceOf(render()));
   });
 
   it("paints the level's own symbol, not the smallest one", () => {

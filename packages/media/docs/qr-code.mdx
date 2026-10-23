@@ -57,8 +57,11 @@ depends on it.
 | `H` | ~30% | 119 |
 
 The value is UTF-8 in byte mode at the smallest version (1–10) that holds it, so
-a stronger level spends a bigger symbol for the same text. A value past version
-10's capacity paints the overflow state instead of a truncated symbol:
+a stronger level spends a bigger symbol for the same text. A `level` that cannot
+be read — a preference restored from storage whose name the union no longer
+carries — reads as the default `M`, so a stored value cannot throw out of the
+render. A value past version 10's capacity paints the overflow state instead of
+a truncated symbol:
 
 ```tsx
 <QrCode value={veryLongText} level="H" label="The address" />
