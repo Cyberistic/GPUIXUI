@@ -6355,8 +6355,8 @@ Three rules a media plan needs:
    wall time, about half a second per tick — so a smooth frame sequence is bounded
    by the window's paint rate, not by the timer.
 
-48 checks, `--only media-frame-lifecycle`, green on 0.11.0 here (~7–8 s, four
-captures). Fixture `src/live/media-frame.ts` (the ids, the clip, the four frame
+48 checks, `--only media-frame-lifecycle`, green on 0.11.0 here (~7–11 s
+across three runs, four captures). Fixture `src/live/media-frame.ts` (the ids, the clip, the four frame
 colours, the buffer bytes, the clock and fill arithmetic and the readout) +
 `media-frame.test.ts` (the installed runtime's element list with no media host,
 the clip's arithmetic and clamping, the frame schedule, the RGBA buffer, the
