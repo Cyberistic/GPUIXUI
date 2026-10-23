@@ -1934,6 +1934,37 @@ describe("the curated component pages", () => {
     expect(text).toContain("`Enter` and `Space` stay the grid's");
   });
 
+  it("holds a picker disabled mid-open to the surface it retires", () => {
+    // A calendar open when the caller disables the picker was the one surface
+    // still taking an edit: the popover stayed mounted, so a press on a day or
+    // `Clear` wrote the value while the trigger refused every route. The page
+    // has to teach the close and the dropped request, and the source has to
+    // carry both halves — a guard that only read the page could pass while the
+    // surface accepted the press again.
+    const page = pages.find(
+      (candidate) => candidate.file === "date-picker.mdx",
+    );
+    expect(
+      page,
+      "the date-picker page is not in the curated set",
+    ).toBeDefined();
+    if (page === undefined) return;
+
+    const source = read(page.source);
+    expect(source).toContain(
+      "if (disabled || !isAvailable(day, bounds)) return;",
+    );
+    expect(source).toContain("if (disabled) return;");
+    expect(source).toContain(
+      "useLayoutEffect(() => {\n    if (disabled) setOpen(false);",
+    );
+
+    const text = body(page).replace(/\s+/g, " ");
+    expect(text).toContain("A picker the caller disables mid-open closes");
+    expect(text).toContain("re-enabling the control does not resurrect");
+    expect(text).toContain("neither a day nor `Clear` writes the value");
+  });
+
   it("state the runtime support verdict the inventory records", () => {
     // The status word was held to the inventory; the support verdict beside it
     // was not, so a page could drop `partial` and read as a component the

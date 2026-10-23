@@ -75,10 +75,18 @@ than painting a field with no state.
 | chosen | the trigger paints the day's long label; the chosen cell is `primary` on `primaryForeground` |
 | bounded | days outside `min`/`max` are muted, leave the tab order and cannot be chosen; the month controls stop at the bound's month |
 | clearable | one `Clear` row while a day is set; it reports `null` and closes like a choice |
-| disabled | the trigger leaves the tab order and paints the neutral `disabled` pair; a press does not open the surface |
+| disabled | the trigger leaves the tab order and paints the neutral `disabled` pair; a press does not open the surface, and a picker disabled **while its calendar is open** closes with it |
 
 Browsing months changes the **view**, not the value. Only `Enter`, `Space` or a
 click chooses, and a choice closes the surface and returns focus to the trigger.
+
+**A picker the caller disables mid-open closes.** Setting `disabled` while the
+calendar is up retires the surface in the same frame, and neither a day nor
+`Clear` writes the value: a calendar no day can be chosen from is not an
+affordance. The stored open request is dropped with it, so re-enabling the
+control does not resurrect the surface the reader never asked for again. This is
+the same rule the time picker, tag input and colour picker follow for a draft a
+caller disables mid-edit.
 
 ## Bounds
 
@@ -234,6 +242,8 @@ density scale.
   halves; folding them together would force a timestamp on every consumer that
   only needs one.
 - A `min` after `max` makes the grid inert rather than throwing from render.
+- A picker disabled while its calendar is open closes with it, and no day or
+  `Clear` writes the value; re-enabling does not reopen it.
 - The grid shows one month, so choosing a day three years away is three dozen
   `PageDown` presses; there is no month or year jump control.
 - The only clock read is the default `today`. Pass the prop when a test or a
@@ -267,11 +277,12 @@ whole, while `@gpuix/native@0.11.0` publishes no `aria-current` for today, no
 `aria-disabled` for an unavailable day and no `aria-haspopup` on the trigger. The
 package's own `docs/date-picker.mdx` records the same limits.
 
-`src/behaviour/date-picker.test.tsx` runs **20 native behaviour tests** in the
+`src/behaviour/date-picker.test.tsx` runs **21 native behaviour tests** in the
 real GPUix renderer on the pinned runtime: opening and focusing a day, a choice
 as an ISO value with focus return, the controlled contract, arrow/Home/End focus,
 `PageDown` browsing without changing the value, `Escape` focus-return, the
-next-month control, both themes, a disabled trigger, an unavailable day, arrow
+next-month control, both themes, a disabled trigger, a picker disabled while its
+calendar is open, an unavailable day, arrow
 clamping, the month-control bound, the clear action and its visibility rule, the
 trigger's own placeholder and name, and an empty surface when the calendar part
 is not composed. `src/date-picker/calendar.test.ts` (18 tests) proves the model

@@ -8096,7 +8096,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 222/222
+`[x]` `[██████████]` 224/224
 
 `[x]` Teach the **draft a caller disables mid-edit** on the curated Inline edit
       page — `dc05bb4c` made the component refuse a half-finished rename
@@ -10788,7 +10788,49 @@ fails the case by name; restored, the file is 44/44 and
       are unchanged and this change only repoints the example citing them.
 
 
-## Phase G — release readiness
+`[x]` Teach the **tip's entry and exit** the wrapper gained — `6ece3ba5` moved
+      the floating `Tooltip` onto the house timing (`core/presence.ts`: a fade
+      plus **2 px** along the anchored side over `motionLevels.fast`, an exit
+      window the wrapper holds because the runtime publishes no exit lifecycle,
+      `pointerEvents: "none"` while it leaves, and a `reducedMotion` prop), while
+      the curated page taught the runtime's five clock moments and stopped
+      there: no motion, no held exit, no `reducedMotion` row, and a Dependencies
+      table without `@gpuixui/motion`. The page gains §Motion (the travel, both
+      easings, the held exit and the reduced preference), the API row, the
+      composition row, an accessibility bullet for the press a leaving tip must
+      not take, and the dependency row; the Status now names the entry the live
+      probe measures instead of printing a check count that a probe extension
+      moves. The preview models the exit: a closed tip stays painted for its
+      window (`leaving`), `reducedMotion` unmounts at once, a press while
+      leaving is not the tip's, and a re-open retargets the same box; the demo
+      gains a motion switch and a fade/rise the CSS mirrors. `tooltip-preview.test.ts`
+      reads `TOOLTIP_OFFSET`, `surfaceTiming(props.reducedMotion === true)`,
+      `exitWindowMs`, the seam's pointer rule and `motionLevels.fast` out of
+      their sources, pins the five new transitions, and holds the page's API
+      table to every prop `TooltipProps` declares. Directions measured: dropping
+      the model's hold fails five cases by name, and deleting the `reducedMotion`
+      row fails with `expected [ 'reducedMotion' ] to deeply equal []`.
+      `nub run --filter @gpuixui/docs test` 116 files / 1 223 tests green,
+      `check-types` clean. No native scenario re-run — the measurement is the
+      primitives' own `Tooltip.test.tsx` motion-clock suite; the page publishes
+      it.
+
+`[x]` Repair the **date picker count and its mid-open disable** — `2d61451c`
+      closed a picker the caller disables while its calendar is open and landed
+      the twenty-first native case, updating the package page and the inventory
+      row; the curated page still printed **20**, so `component-page-truth.test.ts`
+      was red with `date-picker.mdx: says 20, suite runs 21`, and it taught a
+      `disabled` state that only covered the trigger (a day or `Clear` still
+      wrote the value). The page prints 21, enumerates the new case, states the
+      close and the dropped open request in §States and §Limitations, and a new
+      case holds both halves of the source (`if (disabled || !isAvailable(day,
+      bounds)) return;`, `if (disabled) return;`, the `useLayoutEffect` that
+      retires `open`) plus the three page sentences. Directions measured:
+      restoring `20` fails the count case and restoring the old sentence fails
+      the new case by name; restored, the docs suite is green (116 files /
+      1 223 tests) and `check-types` is clean. No native scenario applies — the
+      behaviour is held by the package's own behaviour suite.
+
 
 `[ ]` `[███████░░░]` 2/3
 
