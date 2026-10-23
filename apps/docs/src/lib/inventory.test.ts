@@ -98,9 +98,7 @@ describe("parseInventory", () => {
 
     expect(parsed.malformed).toEqual([]);
     expect(parsed.rows).toHaveLength(1);
-    expect(parsed.rows[0]?.notes).toBe(
-      'The controller reads `"all" | "any"`.',
-    );
+    expect(parsed.rows[0]?.notes).toBe('The controller reads `"all" | "any"`.');
     expect(spans(parsed.rows[0]?.notes ?? "")).toContainEqual({
       text: '"all" | "any"',
       code: true,

@@ -4590,4 +4590,97 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(read("packages/tw/src/utilities.ts")).not.toContain("dashed");
     expect(read("packages/tw/src/registry.ts")).not.toContain("dashed");
   });
+
+  it("publishes the local stacking extension the binding builds, from its probe", () => {
+    // The row said the source-built binding "carries a local `zIndex` patch"
+    // and stopped there, so a plan could not tell a working extension from a
+    // patch that merely exists in the tree — and a rebuild that dropped it
+    // would leave every overlay probe green, because every shipped surface
+    // already renders last in its parent. The verdict stays the published
+    // API's; the measurement is the local binding's, and the probe's own
+    // readouts, levels and check count are derived here so the record and the
+    // page cannot print a reading the window no longer takes.
+    const fixture = read("apps/playground/src/live/z-index.ts");
+    const probe = read("apps/playground/src/live/z-index-probe.tsx");
+
+    const checks = Number(
+      /export const Z_INDEX_CHECKS = (\d+);/.exec(fixture)?.[1] ?? Number.NaN,
+    );
+    const levels =
+      /export const Z_INDEX_LEVELS = \{ high: (\d+), low: (\d+), mid: (\d+) \} as const;/.exec(
+        fixture,
+      );
+    expect(
+      levels,
+      "the fixture's levels are no longer a literal",
+    ).not.toBeNull();
+    const high = Number(levels?.[1] ?? Number.NaN);
+    const low = Number(levels?.[2] ?? Number.NaN);
+    const mid = Number(levels?.[3] ?? Number.NaN);
+    const flowLevel = Number(
+      /export const Z_INDEX_FLOW_LEVEL = (\d+);/.exec(fixture)?.[1] ??
+        Number.NaN,
+    );
+    const topFill = /high: "(#[0-9A-F]+)"/.exec(fixture)?.[1] ?? "";
+
+    const readout = (prefix: string): string => {
+      const found = new RegExp(`"(${prefix}=[^"]+)"`).exec(probe)?.[1];
+      expect(found, `the probe asserts no ${prefix} readout`).toBeDefined();
+      return found ?? "";
+    };
+    const stack = readout("stack");
+    const plain = readout("plain");
+    const flow = readout("flow");
+
+    // The premises: the level order disagrees with the mount order, the flow
+    // level is above every positioned one, and the probe asserts a real count.
+    expect(high).toBeGreaterThan(mid ?? Number.NaN);
+    expect(mid).toBeGreaterThan(low ?? Number.NaN);
+    expect(stack).toBe("stack=high,mid,low");
+    expect(flowLevel).toBeGreaterThan(high ?? Number.NaN);
+    expect(topFill).toMatch(/^#[0-9A-F]{6}$/);
+    expect(checks, "parsed count").toBeGreaterThan(0);
+
+    const row = rowFor("zIndex` / stacking order");
+    expect(row, "the record has no zIndex row").toBeDefined();
+    expect(row?.verdict).toBe("not supported");
+    expect(row?.evidence).toContain("`z-index-lifecycle`");
+    expect(row?.evidence).toContain(`${checks} checks on 0.11.0`);
+    expect(row?.evidence).toContain(`levels ${high}/${low}/${mid}`);
+    expect(row?.evidence).toContain(`\`${stack}\``);
+    expect(row?.evidence).toContain(`\`${plain}\``);
+    expect(row?.evidence).toContain(`\`${flow}\``);
+    expect(row?.evidence).toContain(`\`${topFill}\``);
+    expect(row?.evidence).toContain("no stacking contexts");
+    expect(row?.evidence).toContain("a level of `0` reads like no level");
+    expect(row?.workaround).toContain("render the surface last in the tree");
+    expect(row?.workaround).toContain("not** a library API");
+    expect(row?.workaround).toContain("do not write a level");
+
+    const page = measuredRow("Stacking order");
+    expect(
+      page,
+      "the page's measured table has no stacking-order row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("z-index-lifecycle");
+    expect(page?.[1]).toContain(`${checks} checks on 0.11.0`);
+    expect(page?.[1]).toContain(`levels ${high}/${low}/${mid}`);
+    expect(page?.[1]).toContain(stack);
+    expect(page?.[1]).toContain(plain);
+    expect(page?.[1]).toContain(flow);
+    expect(page?.[1]).toContain(topFill);
+    expect(page?.[1]).toContain("no stacking contexts");
+    expect(page?.[1]).toContain("a level of `0` reads like no level");
+    expect(page?.[2]).toContain("render the surface last in the tree");
+    expect(page?.[2]).toContain("not a library API");
+
+    expect(
+      [...registeredProbes()],
+      "the cited probe is not one the playground registers",
+    ).toContain("z-index-lifecycle");
+    expect(
+      doc.slice(doc.indexOf("## 5. Keeping this document true")),
+      "the record's §5 owes no line for the local stacking probe",
+    ).toContain("z-index-lifecycle");
+  });
 });
