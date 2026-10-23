@@ -10296,7 +10296,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 285/285
+`[x]` `[██████████]` 286/286
+
+`[x]` Stop the **section index spending a row on the same section twice** — its
+      "How to read a page" map is the reader's summary of the page template, and
+      one cell had been copied into itself (`Composition / Composition`). The
+      coverage case split the cell on `/` and only asked that every required
+      section was *present*, so the duplicate satisfied it while one row said
+      nothing. `component-page.test.ts` gains `offers each section once`: the
+      split labels must be unique. Direction measured: the committed page fails
+      it with `expected [ 'Composition' ] to deeply equal []`; with the cell
+      fixed, the file is 13/13. No native scenario applies — a docs table.
 
 `[x]` Give every **search result the section it lives in** — the dialog's
       breadcrumbs come from a page tree, and the search index walked only the

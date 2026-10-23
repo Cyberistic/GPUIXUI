@@ -315,6 +315,20 @@ describe("the component section index", () => {
     );
   });
 
+  it("offers each section once", () => {
+    // The map's rows are split on "/" because one row can name three sections
+    // ("Variants / Sizes / States"). A cell copied into itself
+    // (`Composition / Composition`) still satisfies the coverage case above,
+    // because it names a section every page has — it just spends a row saying
+    // nothing new.
+    const offered = offeredSections();
+    const repeated = offered.filter(
+      (section, index) => offered.indexOf(section) !== index,
+    );
+
+    expect(repeated).toEqual([]);
+  });
+
   it("only offers a section some page actually uses", () => {
     // "How to read a page" is guidance, and a row naming a heading no page
     // carries sends a reader looking for something that does not exist.
