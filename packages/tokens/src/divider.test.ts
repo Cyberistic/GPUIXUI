@@ -439,6 +439,12 @@ describe("a rule on the row it crosses", () => {
     expect(source).not.toContain("20 of the 80");
     expect(source).not.toContain("all 80 placements");
     expect(source).not.toContain("thirty-two");
+    // The inventory row names the same premise the guard holds, so the count a
+    // reader checks there cannot stay on the previous style set.
+    expect(inventory).toContain(
+      `the ${missed.length}/${placements.length} premise`,
+    );
+    expect(inventory).not.toContain("20/80");
   });
 
   it("holds the premise to the painter and the pages", () => {
