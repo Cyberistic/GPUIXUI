@@ -42,6 +42,18 @@ import * as Option from "effect/Option";
 />;
 ```
 
+## Steps
+
+Each entry of `steps` is a `MultiStep`:
+
+| Field | Type | Default | Notes |
+| ----- | ---- | ------- | ----- |
+| `id` | `string` | required | The step's stable key, shared with its indicator row. |
+| `title` | `string` | required | The step's name in the indicator and in the content's announcement. |
+| `description` | `string` | — | One line of supporting copy in the indicator. |
+| `content` | `ReactNode` | required | Mounted only while the step is current. |
+| `gate` | `() => Option.Option<string>` | — | Runs before the step moves and before the last step submits; the message it returns keeps the reader put. |
+
 ## API
 
 | Prop | Type | Default |
