@@ -6791,7 +6791,7 @@ states (`#1B1B1F`/`#B49CFF`, `#F4F1EA`/`#6A45F0`, `mounts=1`,
 credits Omarchy's format (MIT) as written from the on-disk file. `/docs/dark-mode`
 gains the one paragraph that keeps "the app owns the mode" true — the follow is
 the host's call through the same seam — and links the section.
-`System-palette.ts` holds the sample, the mapped theme and the gate result;
+`src/lib/system-palette.ts` holds the sample, the mapped theme and the gate result;
 `system-theme-page.test.ts` (9 cases) holds the page's fence to the decoded
 sample, the mapped roles and the base fallback, the wash share, every rendered
 role expression, the audit's three counts and its two named causes (it must not
