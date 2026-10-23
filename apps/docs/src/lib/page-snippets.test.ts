@@ -50,6 +50,12 @@ const pages = [join(repoRoot, "apps/docs/content/docs"), ...packageDocs]
   .flatMap(mdxPages)
   .map((path) => path.slice(repoRoot.length + 1));
 
+/** The site's own page directory, and the package directories, repo-relative. */
+const siteDir = "apps/docs/content/docs";
+const packageDirs = packageDocs.map((dir) =>
+  dir.slice(repoRoot.length + 1).replaceAll("\\", "/"),
+);
+
 interface PageImports {
   readonly page: string;
   readonly imports: ReturnType<typeof namedImports>;
@@ -70,13 +76,29 @@ describe("the site's snippets", () => {
   // under a full parallel suite it needs more than the default five seconds.
   it("import only names the packages publish", { timeout: 20_000 }, () => {
     // A silent zero would pass an empty problem list without reading anything:
-    // the site's pages plus the 71 the packages ship, and the fences that
-    // actually import a workspace package.
+    // the site's pages plus each package's, and the fences that actually import
+    // a workspace package.
     expect(pages.length).toBeGreaterThanOrEqual(90);
     const withImports = perPage.filter(({ imports }) => imports.length > 0);
     expect(withImports.length).toBeGreaterThanOrEqual(60);
 
     expect(findings).toEqual([]);
+  });
+
+  it("reads the site's own pages and every package collection", () => {
+    // The walk is the only coverage the guard has, so a directory that stops
+    // being read must fail here rather than shrinking the set silently. The
+    // counts are derived, which is why the ledger names the halves instead of
+    // printing a number every new page would make stale.
+    expect(
+      pages.filter((page) => page.startsWith(`${siteDir}/`)).length,
+    ).toBeGreaterThanOrEqual(40);
+    expect(packageDirs.length).toBeGreaterThanOrEqual(8);
+    expect(
+      packageDirs.filter(
+        (dir) => !pages.some((page) => page.startsWith(`${dir}/`)),
+      ),
+    ).toEqual([]);
   });
 });
 

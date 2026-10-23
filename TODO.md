@@ -9775,7 +9775,24 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 255/255
+`[x]` `[██████████]` 256/256
+
+`[x]` Retract the **page count the snippet walk outgrew** — the site ledger
+      still said the `@gpuixui/*` import guard read "132 pages, the site's own 40
+      plus the 92 the packages ship", a pair from before the data and the five
+      workspace collections were mounted; the walk reads **205** (69 of the
+      site's own and 136 from the packages), so a reader was told the guard
+      covered two thirds of what it covers and no suite could see it. The ledger
+      names the two halves instead of a count, and the guard proves the coverage
+      it claims: a new case derives the site half and asserts a floor of 40, then
+      requires every `packages/*/docs` directory the app mounts to contribute at
+      least one page to the walk — the shape a directory silently dropped from
+      the scan would take. Directions measured: excluding one package directory
+      from the walk fails with `expected [ 'packages/components/docs' ] to deeply
+      equal []`; the file is 4/4 green restored, and the docs app is 121 files /
+      1 311 tests green with `oxlint` and `oxfmt` clean. No native scenario
+      applies — a printed count, its retraction and the walk that proves the
+      halves.
 
 `[x]` Name **every mounted collection in the site ledger** — `apps/docs/README.md`
       still headed its collection table *Four collections* and listed four rows
