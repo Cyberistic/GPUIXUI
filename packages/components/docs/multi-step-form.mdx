@@ -73,7 +73,7 @@ Each entry of `steps` is a `MultiStep`:
 
 ## Names
 
-`label` names the wizard group; a blank name is an **absence**, so the root is not published with an empty name. The indicator is always named (`Steps` when the wizard is not), a step whose `title` arrived blank is named by its position (`Step 2`) so no list item is unnamed and no announcement opens with a comma, and a title is published trimmed. A blank `description` paints no line — an empty string lays out a zero-height run, but a run of spaces would lay out a full line.
+`label` names the wizard group; a blank name is an **absence**, so the root is not published with an empty name. The indicator is always named (`Steps` when the wizard is not), a step whose `title` arrived blank is named by its position (`Step 2`) so no list item is unnamed and no announcement opens with a comma, and a title is published trimmed. A blank `description` paints no line — an empty string lays out a zero-height run, but a run of spaces would lay out a full line. The three action labels are copy too: a blank `nextLabel`, `backLabel` or `submitLabel` reads as its documented default, because a missing i18n row must not paint a blank box as the wizard's only way forward.
 
 ## Limitations
 

@@ -251,6 +251,41 @@ describe("MultiStepForm", () => {
     wizard.unmount();
   });
 
+  it("reads a blank action label as the default, never an unnamed action", () => {
+    // The bug guarded: a default applies only to an absent prop, so an i18n
+    // table that handed over "" (a missing key) painted the wizard's only
+    // forward actions with no words and no accessible name — a blank box the
+    // reader had to press to make progress.
+    const wizard = renderComponent(
+      <MultiStepForm
+        testId="wizard"
+        label="Workspace setup"
+        onSubmit={() => undefined}
+        nextLabel="   "
+        backLabel="   "
+        submitLabel="   "
+        steps={[
+          {
+            id: "one",
+            title: "Name",
+            content: <text testId="step-one">Name step</text>,
+          },
+          {
+            id: "two",
+            title: "Review",
+            content: <text testId="step-two">Review step</text>,
+          },
+        ]}
+      />,
+    );
+    const actions = (): ReadonlyArray<string> =>
+      nodesWithRole(wizard.renderer, "button").map((node) => node.name);
+    expect(actions()).toStrictEqual(["Back", "Next"]);
+    clickCentreOf(wizard, "multi-step-next");
+    expect(actions()).toStrictEqual(["Back", "Submit"]);
+    wizard.unmount();
+  });
+
   it("names the wizard, its list and its steps when every name arrived blank", () => {
     // The bug guarded: `label`, a step's `title` and its `description` are copy
     // from a data table or an i18n file as often as literals, and a blank one

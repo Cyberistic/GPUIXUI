@@ -64,16 +64,20 @@ export interface MultiStepFormProps extends Omit<
   readonly onSubmit: () => void;
   /** A submit the caller is waiting on; the actions refuse a second press. */
   readonly pending?: boolean;
-  /** The last step's action. Default `"Submit"`. */
+  /** The last step's action. Default `"Submit"`; a blank label reads as the default. */
   readonly submitLabel?: string;
-  /** A middle step's action. Default `"Next"`. */
+  /** A middle step's action. Default `"Next"`; a blank label reads as the default. */
   readonly nextLabel?: string;
-  /** The backward action. Default `"Back"`. */
+  /** The backward action. Default `"Back"`; a blank label reads as the default. */
   readonly backLabel?: string;
   /** The wizard's accessible name. A blank name is an absence, not an empty group. */
   readonly label?: string;
   readonly className?: string;
 }
+
+const DEFAULT_SUBMIT_LABEL = "Submit";
+const DEFAULT_NEXT_LABEL = "Next";
+const DEFAULT_BACK_LABEL = "Back";
 
 /** A refusal, remembered with the step that raised it. */
 interface Refusal {
@@ -99,9 +103,9 @@ export const MultiStepForm = ({
   onStepChange,
   onSubmit,
   pending = false,
-  submitLabel = "Submit",
-  nextLabel = "Next",
-  backLabel = "Back",
+  submitLabel = DEFAULT_SUBMIT_LABEL,
+  nextLabel = DEFAULT_NEXT_LABEL,
+  backLabel = DEFAULT_BACK_LABEL,
   label,
   className,
   style,
@@ -109,6 +113,12 @@ export const MultiStepForm = ({
 }: MultiStepFormProps) => {
   const theme = useTheme();
   const name = accessibleName(label);
+  // A default covers only an absent prop, so an action label that arrived blank
+  // (an i18n table's missing key) would paint an unnamed button — the only
+  // route forward. Read the three through the same absence rule as every name.
+  const submitWord = accessibleName(submitLabel) ?? DEFAULT_SUBMIT_LABEL;
+  const nextWord = accessibleName(nextLabel) ?? DEFAULT_NEXT_LABEL;
+  const backWord = accessibleName(backLabel) ?? DEFAULT_BACK_LABEL;
   const count = steps.length;
   const [value, setStep] = useControllableState({
     value: stepProp,
@@ -162,7 +172,7 @@ export const MultiStepForm = ({
         disabled={pending}
         onClick={submit}
       >
-        {submitLabel}
+        {submitWord}
       </Button>
     ) : (
       <Button
@@ -172,7 +182,7 @@ export const MultiStepForm = ({
         disabled={pending}
         onClick={advance}
       >
-        {nextLabel}
+        {nextWord}
       </Button>
     );
 
@@ -245,7 +255,7 @@ export const MultiStepForm = ({
           disabled={pending || current === 1}
           onClick={back}
         >
-          {backLabel}
+          {backWord}
         </Button>
         {action()}
       </div>
