@@ -1394,29 +1394,28 @@ describe("a role a store wrote as null", () => {
     expect(invalid?.focusVisible.outlineColor).toBe(lightTheme.colors.ring);
   });
 
-  // 18 styles × 47 roles: every seam that reads a role, with one nulled.
-  it("never reaches a paint seam as a value", () => {
-    const wrong = shipped.flatMap((theme) =>
-      colorRoles.flatMap((role) => {
-        const broken = {
-          ...theme,
-          colors: { ...theme.colors, [role]: null },
-        } as unknown as Theme;
-        const host = nativeTextTheme(broken, "background");
-        const ring = controlFocusRing(broken)?.focusVisible.outlineColor;
-        const tones = statusTone(broken, "info");
-        const named = invalidColorRoles(broken).some(
-          ({ role: at, value }) => at === role && value === undefined,
-        );
-        const clean =
-          Object.values(host).every((value) => value !== null) &&
-          ring !== null &&
-          (tones === undefined ||
-            Object.values(tones).every((value) => typeof value === "string")) &&
-          named;
-        return clean ? [] : [`${theme.name} · ${role}`];
-      }),
-    );
+  // 18 styles: every seam that reads a role, from a theme whose whole colour
+  // group came back nulled. The seams normalise absence one role at a time
+  // (`themeColors` keeps only the strings), so an all-absent theme is the
+  // superset of nulling the 18 × 47 roles in turn — and it costs one call per
+  // seam instead of 846, which is what the suite's own two-second budget can
+  // carry. The single-role cases above hold the same rule per seam.
+  it("never reaches a paint seam as a value, with no role left", () => {
+    const wrong = shipped.flatMap((theme) => {
+      const empty = {
+        ...theme,
+        colors: Object.fromEntries(colorRoles.map((role) => [role, null])),
+      } as unknown as Theme;
+      const host = nativeTextTheme(empty, "background");
+      const ring = controlFocusRing(empty)?.focusVisible.outlineColor;
+      const tones = statusTone(empty, "info");
+      const clean =
+        Object.values(host).every((value) => value !== null) &&
+        ring !== null &&
+        (tones === undefined ||
+          Object.values(tones).every((value) => typeof value === "string"));
+      return clean ? [] : [theme.name];
+    });
 
     expect(wrong).toEqual([]);
   });

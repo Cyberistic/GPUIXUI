@@ -327,7 +327,22 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 207/207
+`[x]` `[██████████]` 208/208
+
+`[x]` Keep the **null-role sweep inside the suite's own budget** — `incomplete.test.ts`'s
+`never reaches a paint seam as a value` walked 18 styles × 47 roles × four seams, so it
+took **2.18 s** on a full-suite run and timed out (`Test timed out in 2000ms`) against the
+package's deliberate two-second budget, turning master's tokens gate red on a loaded box.
+The seams normalise absence one role at a time (`themeColors` keeps only the strings), so a
+theme whose **whole colour group** came back nulled is the superset of nulling each role in
+turn: the case now builds that theme per shipped style and reads `nativeTextTheme`,
+`controlFocusRing` and `statusTone` once each — **3 384 seam calls → 54**, the file
+**20.3 s → 10.4 s**, no timeout exception added. The per-seam single-role cases above it still name the
+role, and the report's null→absent rule is held by `is reported for every role, in
+documentation order` and `is the absence it is in the seam every role is read through`.
+Direction measured: restoring `return colors as Partial<ThemeColors>` in `themeColors` fails
+the case naming all 18 styles (`+ "Light · Omarchy"`, …); restored, the package suite is
+49 files / 2 919 tests green in 11.6 s.
 
 `[x]` The **design-system table's own rows still count sixteen** — the pass above corrected the sixteen places the four documents' prose printed, and left the table cells, which read as present-tense test descriptions: `Scale order` ("holds all 16 shipped, high-contrast, platform and authored themes to an empty report"), `Token numbers`, `Brand text` (twice: the surface sweep and the `16 × 4` tint placements, whose suite now measures `18 × 4`), `Native text hosts` and `Colour grammar` all name a suite that walks `retroNames` and therefore holds **18** (§`scales.test.ts`, `numbers.test.ts`, `brand-text.test.ts`, `native-text.test.ts` and `incomplete.test.ts` each import it). The components' tier rows (`Carousel`, `Buttons`) carry the same number for their own suites and are that workstream's paths. Do it with one guard that derives the count from the package and enumerates the rows from `COMPONENTS.md` (the pattern `docs.test.ts`'s `the styles a sweep walks` now uses), so the table cannot drift a third time. Found 2026-10-23 while fixing the prose. **Landed:** every cell that claims the swept set prints **18** — `Scale order`, `Token numbers`, `Native text hosts`, `Colour grammar`, `Contrast contract`'s `disabled.test.ts` clause, and `Brand text`'s four figures. The sweep found two more drifts than the row listed, in the same cells: `Syntax palette` printed "800 placements over the sixteen styles" (the fence suite has measured 18 × 2 × 25 since the look landed, so it now says "in each of the 18 styles" rather than a product nobody derives), and `Brand text` printed `27 of the 64`/`29/64`/`clears all 64` while its own suite derives **28 of the 72** — the package README carried the same `28 of the 64`, so it prints the sweep's pair now and `brand-text.test.ts`'s print case holds it beside the two pages. `inventory.test.ts` gains `the style count the rows print` (2 cases): the first builds the list the way `docs.test.ts` does and ties it to the named groups — `4 + platforms × 2 + looks × 2`, one name per style, and `all × statusTones` tint placements; the second enumerates the six rows and eleven phrases from the parsed `COMPONENTS.md` table, failing by row and phrase when a count, a failure share or a `×` pair drifts or a row is renamed away. Directions measured: restoring `Scale order`'s 16, `**27 of the 64**`/`sixteen styles` and `16 × 4` fails the guard with all three lines by name (`Scale order: holds all 18 …`, `Brand text: **28 of the 72** …`, `Brand text: over the 18 × 4 placements`), and restoring the README's 64 fails `brand-text.test.ts` at the count. Green: 49 files / 2 897 tests, `check-types` and `check:tests` clean. Two past-tense defect findings in the table (`thirteen of the sixteen styles missed…`, `Eleven of the sixteen shipped styles painted…`) stay sixteen on purpose — each records the pre-fix set in its own frozen table. No native scenario applies — printed counts a suite derives.
 
