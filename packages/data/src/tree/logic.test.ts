@@ -205,7 +205,9 @@ describe("the tree cursor", () => {
       expanded: open("components"),
       active: Option.some("src"),
     };
-    expect(treeCursorMove(rows, onClosedBranch, "left")).toEqual(onClosedBranch);
+    expect(treeCursorMove(rows, onClosedBranch, "left")).toEqual(
+      onClosedBranch,
+    );
   });
 
   it("toggles the branch under Enter or Space and leaves a leaf alone", () => {
