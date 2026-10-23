@@ -9032,7 +9032,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 243/243
+`[x]` `[██████████]` 244/244
+
+`[x]` Follow the **seams two workstreams moved** — the docs site reads the
+      component sources, so a refactor there can leave a curated page and its
+      guard teaching the previous shape. Three drifts, all caught by the site's
+      own guards: the switch's thumb offset now reads the theme the paint
+      **normalized** (`switchThumbOffset(spec, source)`, after
+      `const theme = switchTheme(source)`), the stepper's status derivation moved
+      from `stepper.tsx` into `stepper/logic.ts` (`statusOf(current, value)` over
+      `currentStep`), and the stepper's behaviour suite gained a case (8 → 9,
+      printed on the page). The curated Switch page gains the stored-theme rule
+      (JSON has no `undefined`, so a `null` table is no declaration and the
+      accent family paints; a table that lost a slot is no paint either and
+      `switchFailures` names it), and the preview guards read the logic seam
+      instead of the old inline ternary. `component-page-truth.test.ts`,
+      `stepper-preview.test.ts` and `timeline-preview.test.ts` hold all of it.
+      Directions measured: the three guards failed by name before the pass
+      (`left: switchThumbOffset(spec, theme)`, `says 8, suite runs 9`, and the
+      two `step < current` reads); restored, the docs suite is 120 files /
+      1 284 tests with `check-types` clean.
 
 `[x]` Document the **props the displaced package pages carry** — a curated page
       takes the URL a package page would render at, so `packages/components/docs`

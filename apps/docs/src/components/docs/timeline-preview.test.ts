@@ -32,6 +32,7 @@ const read = (path: string): string =>
 
 const timeline = read("timeline.tsx");
 const stepper = read("stepper.tsx");
+const stepperLogic = read("stepper/logic.ts");
 
 /** The expected mark, derived independently of the preview's copy. */
 const expected = (index: number, cursor: number): string =>
@@ -56,7 +57,12 @@ describe("the status the app passes", () => {
       stepper.indexOf("export interface StepperStepProps"),
     );
     expect(stepperProps).toContain("readonly value: number");
-    expect(stepper).toContain('step === current ? "current" : "upcoming"');
+    // The comparison lives in the logic seam both the root and every marker
+    // read, so the contrast is held to the code that derives it.
+    expect(stepper).toContain("statusOf(current, value)");
+    expect(stepperLogic).toContain(
+      'step < at ? "complete" : step === at ? "current" : "upcoming"',
+    );
   });
 
   it("marks the preview's run the way a consumer would", () => {

@@ -2082,9 +2082,11 @@ describe("the curated component pages", () => {
 
     // The contrast: a stepper derives its statuses from one value.
     const stepper = read("packages/components/src/stepper.tsx");
+    const stepperLogic = read("packages/components/src/stepper/logic.ts");
     expect(stepper).toContain("readonly value: number");
-    expect(stepper).toContain(
-      'step < current ? "complete" : step === current ? "current" : "upcoming"',
+    expect(stepperLogic).toContain("export const statusOf");
+    expect(stepperLogic).toContain(
+      'step < at ? "complete" : step === at ? "current" : "upcoming"',
     );
 
     const text = body(page).replace(/\s+/g, " ");
@@ -2155,11 +2157,16 @@ describe("the curated component pages", () => {
 
     const source = read(page.source);
     // One rule, one place: the raw comparison, with no clamp and no callback.
-    expect(source).toContain(
-      'step < current ? "complete" : step === current ? "current" : "upcoming"',
+    // It lives in the logic seam the root and every marker read.
+    const logic = read("packages/components/src/stepper/logic.ts");
+    expect(logic).toContain("export const statusOf");
+    expect(logic).toContain("export const currentStep");
+    expect(logic).toContain(
+      'step < at ? "complete" : step === at ? "current" : "upcoming"',
     );
-    expect(source).not.toContain("Math.min");
-    expect(source).not.toContain("Math.max");
+    expect(logic).not.toContain("Math.min");
+    expect(logic).not.toContain("Math.max");
+    expect(source).toContain("statusOf(current, value)");
     expect(source).toContain('role="list"');
     expect(source).toContain('role="listitem"');
     expect(source).toContain('aria-selected={status === "current"}');
@@ -2181,7 +2188,7 @@ describe("the curated component pages", () => {
     expect(text).toContain("`aria-selected`");
     expect(text).toContain("installs no key handler and no tab stop");
     expect(text).toContain('controlHeight(theme, "md")');
-    expect(text).toContain("8 native behaviour tests");
+    expect(text).toContain("9 native behaviour tests");
     // The retracted shape: a status prop a caller could contradict.
     expect(text).not.toContain("`status` prop to set");
   });
@@ -2230,7 +2237,12 @@ describe("the curated component pages", () => {
     expect(source).toContain("stillTransition(THUMB_SLIDE, reducedMotion)");
     expect(source).toContain("initial={false}");
     expect(source).toContain("animate={{ left }}");
-    expect(selection).toContain("left: switchThumbOffset(spec, theme)");
+    // The slide reads the theme the *paint* normalized: a stored theme's
+    // `switch` table is decoded once at the seam, so a `null` is no
+    // declaration and the offset is computed from the accent switch rather
+    // than throwing at the stored table's first slot.
+    expect(selection).toContain("left: switchThumbOffset(spec, source)");
+    expect(selection).toContain("const theme = switchTheme(source);");
 
     // The off pill's fill and edge, and a checked pill's derived opaque fills.
     expect(selection).toContain("theme.colors.muted");
@@ -2294,6 +2306,11 @@ describe("the curated component pages", () => {
     expect(text).toContain("`filledPressed`");
     expect(text).toContain("`iconSize`");
     expect(text).toContain('`pointerEvents: "none"`');
+    // The paint of a theme a store handed back: JSON has no `undefined`, so a
+    // stored table's `null` is no declaration and the accent switch paints.
+    expect(text).toContain("restored from storage");
+    expect(text).toContain("accent family");
+    expect(text).toContain("`switchFailures`");
   });
 
   it("holds the carousel's clamp, its dot pill and its control edge to the source", () => {

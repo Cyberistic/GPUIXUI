@@ -185,6 +185,12 @@ icon steps resize the pill and knob together; the band never drops below 24px.
   request is in flight.
 - The slide is the caller's preference, not the runtime's: there is no
   `transform`, and `reducedMotion` is a prop rather than an OS query.
+- A theme **restored from storage** writes `null` where it carried no switch
+  paint (JSON has no `undefined`): that is no declaration, so the switch paints
+  the accent family in the derived box rather than throwing at the stored
+  table's first slot. A table that lost one of its three slots is no paint
+  either — `switchFailures` from `@gpuixui/tokens` names the slot to repair
+  before the platform's own paint returns.
 - A glyph on the knob is decoration, not a state label; it is painted inside
   the knob's pointer guard and takes no press.
 

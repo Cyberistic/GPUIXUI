@@ -29,7 +29,7 @@ import {
 
 const component = readFileSync(
   new URL(
-    "../../../../../packages/components/src/stepper.tsx",
+    "../../../../../packages/components/src/stepper/logic.ts",
     import.meta.url,
   ),
   "utf8",
@@ -44,7 +44,7 @@ describe("the preview's derived status", () => {
     // The rule itself is read from the painter, so a component that clamped or
     // reordered its comparison cannot leave the preview teaching the old one.
     expect(component).toContain(
-      'step < current ? "complete" : step === current ? "current" : "upcoming"',
+      'step < at ? "complete" : step === at ? "current" : "upcoming"',
     );
 
     const values = [-1, 0, 1, 2, 3, 4, 5];
