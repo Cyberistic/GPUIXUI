@@ -17,10 +17,11 @@
  * surfaces at 8, so both pairs are aliases on purpose and radius is the one
  * scale that permits an equal adjacent pair.
  *
- * `invalidScales` is not one of `auditTheme`'s ten reports yet — the docs site's
- * readout words every report it prints, so folding it in is one coordinated
- * change with that page (recorded in `TODO.md` → Interlocks). The suite proves
- * the gap rather than hiding it: the audit passes a brand whose scales lie.
+ * `invalidScales` is one of `auditTheme`'s reports: it shipped as a public
+ * function *beside* the gate while the docs site's readout worded every report
+ * the gate returned, so a brand whose `sm` control was taller than its `lg`
+ * passed every colour report the gate ran. The suite now proves the gate holds
+ * the ladder, not only that a report exists.
  */
 
 import { readFileSync } from "node:fs";
@@ -592,12 +593,13 @@ describe("the shipped example", () => {
     ]);
   });
 
-  it("is invisible to every contract the gate runs today", () => {
-    // The premise for folding this report into `auditTheme`: every number is
-    // layable and pressable, so the other reports are empty and `passed` is
-    // true while the theme's `sm` control is taller than its `lg`.
+  it("fails the gate, whose other reports cannot see it", () => {
+    // Every number is layable and pressable, so the other reports are empty —
+    // and the gate still refuses the theme, because the ladder is the one
+    // contract that can say the `sm` control is taller than its `lg`.
     expect(invalidNumbers(computedBrand)).toEqual([]);
-    expect(auditTheme(computedBrand).passed).toBe(true);
+    expect(auditTheme(computedBrand).passed).toBe(false);
+    expect(auditTheme(computedBrand).scales).toEqual(brandScaleReport);
     expect(brandScaleReport.length).toBeGreaterThan(0);
   });
 
@@ -610,7 +612,10 @@ describe("the shipped example", () => {
         previous: { path: "md", value: 68 },
       },
     ]);
-    expect(auditTheme(unevenElevationBrand).passed).toBe(true);
+    expect(auditTheme(unevenElevationBrand).passed).toBe(false);
+    expect(auditTheme(unevenElevationBrand).scales).toEqual(
+      elevationScaleReport,
+    );
   });
 });
 
@@ -656,5 +661,37 @@ describe("a type role the theme does not carry", () => {
     expect(page).toContain(
       "A type role a restored theme does not carry is skipped",
     );
+  });
+});
+
+describe("a level a store wrote as something else", () => {
+  // The bug this holds: the scale report read a level's shadow directly and
+  // destructured it, so a stored theme whose entry a store dropped (`null` —
+  // JSON has no `undefined`) threw `TypeError: Cannot destructure property
+  // 'offsetY' of 'object null'` at the first rung. The report sat *beside* the
+  // gate, so the gate read a theme the shadow report had already explained and
+  // threw instead of naming it.
+  //
+  // The cast is the package's own idiom for a stored value (`incomplete.test.ts`
+  // has the same helper): the type says complete, the value is not, and the
+  // report is the thing that has to read it.
+  const holed = {
+    ...lightTheme,
+    elevation: { ...lightTheme.elevation, lg: [null] },
+  } as unknown as Theme;
+
+  it("does not read a level that paints nothing as a rung", () => {
+    expect(invalidScales(holed)).toEqual([]);
+  });
+
+  it("leaves the gate a report rather than an exception", () => {
+    expect(() => auditTheme(holed)).not.toThrow();
+    // The shadow report is the one that names the hole; the scale report has
+    // nothing to say about a level that paints nothing.
+    expect(auditTheme(holed).invalidShadows).toEqual([
+      { level: "lg", index: 0, color: undefined },
+    ]);
+    expect(auditTheme(holed).scales).toEqual([]);
+    expect(auditTheme(holed).passed).toBe(false);
   });
 });

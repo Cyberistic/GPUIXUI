@@ -33,16 +33,18 @@
  * A value that is not finite is skipped rather than reported twice: it cannot be
  * laid out at all, and `invalidNumbers` already names it.
  *
- * `invalidScales` is not one of `auditTheme`'s reports yet. The audit's report
- * list is printed by the docs site's theme readout, which words every report, so
- * folding this in is one coordinated change with that page — recorded in
- * `TODO.md` → Interlocks. Run it beside `auditTheme` until then.
+ * `invalidScales` is one of `auditTheme`'s reports: a theme whose ladder lies
+ * fails the gate, so a brand cannot ship one by running the other reports. It
+ * was a public function *beside* the gate while the docs site's theme readout
+ * worded every report the gate returned — a gate that shipped a theme with an
+ * inverted radius ladder was a gate with a hole in it.
  */
 
 import {
   type BoxShadow,
   type Elevation,
   elevationLevels,
+  elevationShadow,
 } from "./elevation.js";
 import {
   controlSizes,
@@ -229,17 +231,21 @@ const reach = ({ offsetY, blurRadius, spreadRadius }: BoxShadow): number =>
  * surface is raised through them.
  *
  * A level the theme omits and the reserved empty `overlay` both paint nothing, so
- * neither is a rung and neither is compared. A geometry that cannot be laid out
- * is skipped for the same reason `ordered` skips one: `invalidNumbers` owns it,
- * and dropping it here keeps the rungs above it compared against the last level
- * that paints. A level carrying more than one shadow is read at the entry
- * `elevationShadow` paints, which is the only one the level renders.
+ * neither is a rung and neither is compared. The level is read through
+ * {@link elevationShadow} — the one seam that says what a level paints — so a
+ * level a store wrote as something other than a list, or one whose entry it
+ * dropped (`null`), is not a rung either: it paints nothing, so it has no depth
+ * to compare. A geometry that cannot be laid out is skipped for the same reason
+ * `ordered` skips one: `invalidNumbers` owns it, and dropping it here keeps the
+ * rungs above it compared against the last level that paints. A level carrying
+ * more than one shadow is read at the entry `elevationShadow` paints, which is
+ * the only one the level renders.
  */
 const elevationSteps = (
   elevation: Partial<Elevation> | undefined,
 ): readonly Step[] =>
   elevationLevels.flatMap((level) => {
-    const shadow = elevation?.[level]?.[0];
+    const shadow = elevationShadow({ elevation }, level);
     if (shadow === undefined) {
       return [];
     }

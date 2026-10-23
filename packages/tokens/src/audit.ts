@@ -3,7 +3,9 @@
  *
  * A theme fails silently in independent ways: a role the renderer cannot parse
  * paints black, a shadow colour it cannot parse paints no shadow at all, a
- * number it cannot lay out is dropped, a text pair below its floor is
+ * number it cannot lay out is dropped, a ladder whose steps no longer describe
+ * two sizes makes a name lie, a declared switch track that vanishes into its own
+ * surface draws a control the reader cannot find, a text pair below its floor is
  * unreadable, a decorative surface close to its background is invisible, a data
  * series is lost on its plot, a code block's syntax token vanishes into the page
  * it is read on, the selection wash hides the text it selects, an indicator mark
@@ -49,6 +51,7 @@ import {
   radius,
   spacing,
 } from "./scale.js";
+import { invalidScales, type InvalidScale, type ScaleSource } from "./scales.js";
 import { selectionFailures, type SelectionFailure } from "./selection.js";
 import {
   seriesFailures,
@@ -60,6 +63,11 @@ import {
   type SyntaxColors,
   type SyntaxFailure,
 } from "./syntax.js";
+import {
+  switchFailures,
+  type SwitchAuditSource,
+  type SwitchReport,
+} from "./switch.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 import { typography as shippedTypography } from "./typography.js";
 
@@ -324,6 +332,10 @@ export interface ThemeAudit {
   readonly invalidShadows: readonly InvalidShadowColor[];
   /** Numeric tokens the renderer cannot lay out — a dropped or invisible size. */
   readonly invalidNumbers: readonly InvalidNumber[];
+  /** Steps that no longer describe two sizes — an inverted or repeated rung. */
+  readonly scales: readonly InvalidScale[];
+  /** A declared switch paint the renderer cannot paint, or cannot find. */
+  readonly switch: SwitchReport;
   /** Text, icon and boundary pairs that miss their floor, or cannot be measured. */
   readonly contrast: readonly ContrastFailure[];
   /** Dividers, skeleton fills, veils and status edges too close to their surface. */
@@ -342,22 +354,33 @@ export interface ThemeAudit {
   readonly disabledFade: readonly DisabledFadeFailure[];
   /** Controls whose label the keyboard dim erases while another control has focus. */
   readonly keyboardDim: readonly KeyboardDimFailure[];
-  /** True only when all twelve reports are empty. */
+  /** True only when all fourteen reports are empty. */
   readonly passed: boolean;
 }
 
 /**
- * Audit a theme against the twelve contracts the library holds itself to.
+ * Audit a theme against the fourteen contracts the library holds itself to.
  *
  * The contrast floors come from the theme's own `contrast` variant, so a
  * high-contrast brand is measured at AAA without the caller naming a floor set;
- * pass `floors` to hold a theme to a different contract. Two reports do not
+ * pass `floors` to hold a theme to a different contract. Three reports do not
  * take them: `disabledFadeFailures` measures a mechanism rather than a
  * readability claim, and holds every variant to the same
  * `contrastFloors.disabled` — the fade cannot reach a high-contrast variant's
- * 3:1, which is why that variant paints the role pair instead; and
+ * 3:1, which is why that variant paints the role pair instead;
  * `keyboardDimFailures` holds every variant to `decorativeFloor` (1.05:1),
- * because the dim is a where-can-Tab-go cue rather than a reading mode.
+ * because the dim is a where-can-Tab-go cue rather than a reading mode; and
+ * `switchFailures` holds a declared switch to that same perceptibility floor,
+ * because a platform's own toggle is a *look* reproduced rather than one of the
+ * library's roles.
+ *
+ * The two reports that measure the theme's own structure sit beside the colour
+ * ones because they are the two ways a theme can be structurally wrong rather
+ * than unreadable: `scales` names the rung that no longer exceeds the one
+ * before it (a `size` prop that lies, a dialog as square as a card), and
+ * `switch` names a declared switch value the renderer ignores or a track that
+ * vanishes into the surface it stands on. Both were public functions *beside*
+ * the gate, so a consumer running the gate alone shipped a theme they failed.
  *
  * An incomplete theme does not crash the gate. A theme restored from storage can
  * predate a colour role, an elevation level or the whole elevation scale the
@@ -394,13 +417,17 @@ export function auditTheme(
     SeriesSource &
     SyntaxSource &
     ShadowSource &
-    NumberSource,
+    NumberSource &
+    ScaleSource &
+    SwitchAuditSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): ThemeAudit {
   requireTokens(theme);
   const invalidRoles = invalidColorRoles(theme);
   const invalidShadows = invalidShadowColors(theme);
   const numbers = invalidNumbers(theme);
+  const scales = invalidScales(theme);
+  const toggle = switchFailures(theme);
   const contrast = contrastFailures(theme, floors);
   const decorative = decorativeFailures(theme);
   const series = seriesFailures(theme);
@@ -414,6 +441,8 @@ export function auditTheme(
     invalidRoles,
     invalidShadows,
     invalidNumbers: numbers,
+    scales,
+    switch: toggle,
     contrast,
     decorative,
     series,
@@ -427,6 +456,9 @@ export function auditTheme(
       invalidRoles.length === 0 &&
       invalidShadows.length === 0 &&
       numbers.length === 0 &&
+      scales.length === 0 &&
+      toggle.paint.length === 0 &&
+      toggle.placements.length === 0 &&
       contrast.length === 0 &&
       decorative.length === 0 &&
       series.surfaces.length === 0 &&

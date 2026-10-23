@@ -26,6 +26,7 @@ import {
   highContrastThemes,
   highlightFailures,
   indicatorFailures,
+  invalidScales,
   keyboardDimFailures,
   lightTheme,
   platformNames,
@@ -33,6 +34,7 @@ import {
   retroNames,
   retroTheme,
   selectionPairs,
+  switchFailures,
   themes,
   type Theme,
   type ThemeColors,
@@ -106,6 +108,8 @@ describe("the floors follow the theme's contrast variant", () => {
       invalidRoles: [],
       invalidShadows: [],
       invalidNumbers: [],
+      scales: [],
+      switch: { paint: [], placements: [] },
       contrast: [],
       decorative: [],
       series: { surfaces: [], distinctness: [], deficiencies: [] },
@@ -230,6 +234,8 @@ describe("every report is part of the gate", () => {
       invalidRoles: [],
       invalidShadows: [],
       invalidNumbers: [],
+      scales: [],
+      switch: { paint: [], placements: [] },
       contrast: [],
       decorative: [],
       series: { surfaces: [], distinctness: [], deficiencies: [] },
@@ -361,6 +367,9 @@ describe("every report is part of the gate", () => {
         audit.invalidRoles,
         audit.invalidShadows,
         audit.invalidNumbers,
+        audit.scales,
+        audit.switch.paint,
+        audit.switch.placements,
         audit.contrast,
         audit.decorative,
         audit.series.surfaces,
@@ -474,5 +483,64 @@ describe("the gate and its reports agree on a high-contrast brand", () => {
     expect(audit.passed).toBe(false);
     expect(audit.contrast.length).toBeGreaterThan(0);
     expect(audit.indicators.length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * The two contracts that measure a theme's own **structure** — the ladder it
+ * declares and the switch paint it carries — shipped as public functions
+ * *beside* the gate, so a consumer who ran `auditTheme` shipped a theme whose
+ * `size` prop lied and a switch that vanished into the surface it stood on.
+ *
+ * The bug this holds: `invalidScales` and `switchFailures` were the two
+ * contracts the gate did not read, so a brand whose `sm` control was taller than
+ * its `lg`, or whose declared off track was the muted strip it stands in, passed
+ * every colour report and every pair the gate ran.
+ */
+describe("the gate holds the theme's own structure", () => {
+  it("reports a scale whose steps no longer describe two sizes", () => {
+    // Every number is finite, positive and layable: the radius ladder simply
+    // stops increasing, so `radius="xl"` paints a smaller corner than
+    // `radius="lg"` and no report of a colour or a pair can see it.
+    const inverted = extendTheme(lightTheme, { radius: { xl: 6 } });
+
+    expect(invalidScales(inverted)).toEqual([
+      {
+        group: "radius",
+        path: "xl",
+        value: 6,
+        previous: { path: "lg", value: 8 },
+      },
+    ]);
+    expect(auditTheme(inverted).scales).toEqual(invalidScales(inverted));
+    expect(auditTheme(inverted).passed).toBe(false);
+  });
+
+  it("reports a declared switch the reader cannot find", () => {
+    // The off track is the muted strip it stands in, and a declared switch draws
+    // no edge (`switchBox` gives it `borderWidth: 0`), so the track *is* the
+    // control's silhouette — and it is the page it disappears into.
+    const hidden = extendTheme(lightTheme, {
+      switch: { on: "#30D158", off: lightTheme.colors.muted, knob: "#FFFFFF" },
+    });
+
+    expect(auditTheme(hidden).switch).toEqual(switchFailures(hidden));
+    expect(
+      auditTheme(hidden).switch.placements.filter(
+        ({ slot, over, ratio }) => slot === "off" && over === "muted",
+      ),
+    ).toEqual([{ slot: "off", over: "muted", ratio: 1, floor: 1.05 }]);
+    expect(auditTheme(hidden).passed).toBe(false);
+  });
+
+  it("keeps a theme that declares no switch out of the report", () => {
+    // A theme without a declared paint draws its toggle from the accent family,
+    // and the roles that switch uses are measured by the mark, contrast and
+    // decorative tables — so the report is empty and the gate is unaffected.
+    expect(auditTheme(lightTheme).switch).toEqual({
+      paint: [],
+      placements: [],
+    });
+    expect(auditTheme(lightTheme).passed).toBe(true);
   });
 });

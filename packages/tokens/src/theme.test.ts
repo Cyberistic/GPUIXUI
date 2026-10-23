@@ -396,6 +396,8 @@ describe("theme audit example", () => {
         invalidRoles: [],
         invalidShadows: [],
         invalidNumbers: [],
+        scales: [],
+        switch: { paint: [], placements: [] },
         contrast: [],
         decorative: [],
         series: { surfaces: [], distinctness: [], deficiencies: [] },
