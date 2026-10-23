@@ -10,6 +10,9 @@
  * - a series longer than the labelled slots painting past the last label, where
  *   no category exists and the grid has no column — or raising the axis, so the
  *   labelled bars shrink under a value that draws nowhere;
+ * - a chart that names **no** category painting one unnamed slot, because the
+ *   array helper floors a count to one: the axis then names a value no label can
+ *   reach and the stack measures a total the plot cannot show;
  * - a single-point line painting a zero-length path the rasteriser drops;
  * - a ring of one value painting nothing, because an arc from an angle to
  *   itself is empty;
@@ -151,6 +154,30 @@ describe("the bar marks", () => {
     const bar = rectOf(grouped[0]?.[0]);
     expect(bar).toMatchObject({ x: 20, width: 160, height: 5 });
     expect(bar.x + bar.width).toBeLessThanOrEqual(box.width);
+  });
+
+  it("paints no mark for a chart that names no category", () => {
+    // The bug: `Arr.makeBy(0, …)` yields one element, so `stackedScale` and
+    // every mark builder treated "no labels" as "one unnamed column" — an empty
+    // chart whose axis named the ceiling of a value it never painted. Zero is
+    // zero; only a count the geometry cannot read is no count.
+    const one = [series("a", [5])];
+    expect(barMarks([5], box, 5, 0)).toEqual([]);
+    expect(groupedBarMarks(one, box, 5, 0)).toEqual([[]]);
+    expect(stackedBarMarks(one, box, 5, 0)).toEqual([[]]);
+    expect(linePath([5], box, 5, 0)).toEqual(Option.none());
+    expect(chartScale(one, 0)).toBe(1);
+    expect(stackedScale(one, 0)).toBe(1);
+    // A negative count names no slot either.
+    expect(barMarks([5], box, 5, -1)).toEqual([]);
+
+    // An unreadable count is not zero: it measures the whole series, so a
+    // caller that computed `NaN` still paints the values it holds.
+    expect(barMarks([5], box, 5, Number.NaN)).toHaveLength(1);
+    expect(Option.getOrElse(linePath([5], box, 5, Number.NaN), () => "")).toBe(
+      "M100 0h1",
+    );
+    expect(stackedScale(one, Number.NaN)).toBe(5);
   });
 
   it("groups several series inside one category slot", () => {

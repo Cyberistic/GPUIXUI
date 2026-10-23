@@ -48,6 +48,25 @@ export const drawableValue = (value: number): number =>
   Number.isFinite(value) && value > 0 ? value : 0;
 
 /**
+ * The number of slots a chart paints, when it names one.
+ *
+ * A count the chart cannot read is no count, so the caller's whole series is
+ * measured. A finite count is the labelled slots, floored to a whole number and
+ * never negative — and **zero stays zero**: a chart with no label paints no
+ * slot. `Arr.makeBy` normalises a count to at least one, so the geometry has to
+ * read the zero before it lays out any marks.
+ */
+const paintedSlots = (categories?: number): Option.Option<number> =>
+  Option.map(
+    Option.filter(Option.fromNullishOr(categories), Number.isFinite),
+    (count) => Math.max(0, Math.floor(count)),
+  );
+
+/** `count` slot indexes, and none at all for a chart that paints no category. */
+const slotIndexes = (count: number): ReadonlyArray<number> =>
+  count <= 0 ? [] : Arr.makeBy(count, (index) => index);
+
+/**
  * The values a series paints: only the labelled slots exist.
  *
  * A category the chart does not name draws nowhere, so it cannot raise the axis
@@ -59,13 +78,10 @@ const paintedValues = (
   values: ReadonlyArray<number>,
   categories?: number,
 ): ReadonlyArray<number> =>
-  Option.match(
-    Option.filter(Option.fromNullishOr(categories), Number.isFinite),
-    {
-      onNone: () => values,
-      onSome: (count) => Arr.take(values, Math.max(0, Math.floor(count))),
-    },
-  );
+  Option.match(paintedSlots(categories), {
+    onNone: () => values,
+    onSome: (count) => Arr.take(values, count),
+  });
 
 /** The largest drawable value in a series, over the slots it paints. */
 export const seriesMax = (series: ChartSeries, categories?: number): number =>
@@ -115,8 +131,9 @@ const categoryCount = (
   series: ReadonlyArray<ChartSeries>,
   categories?: number,
 ): number =>
-  categories ??
-  Arr.reduce(series, 0, (most, one) => Math.max(most, one.values.length));
+  Option.getOrElse(paintedSlots(categories), () =>
+    Arr.reduce(series, 0, (most, one) => Math.max(most, one.values.length)),
+  );
 
 /**
  * The scale a **stacked** chart draws against: the rounded ceiling of the
@@ -126,7 +143,8 @@ const categoryCount = (
  * taken from the widest single series would label a 120 total `100`, and every
  * bar in the plot would claim a value the axis does not name. `categories` is
  * the number of slots the chart paints: a value past the last label is drawn
- * nowhere, so it cannot raise the axis.
+ * nowhere, so it cannot raise the axis, and a chart that names no category
+ * paints no slot at all — its ceiling is the empty chart's `1`.
  */
 export const stackedScale = (
   series: ReadonlyArray<ChartSeries>,
@@ -134,7 +152,7 @@ export const stackedScale = (
 ): number =>
   niceCeiling(
     Arr.reduce(
-      Arr.makeBy(categoryCount(series, categories), (index) =>
+      Arr.map(slotIndexes(categoryCount(series, categories)), (index) =>
         Arr.reduce(
           series,
           0,
@@ -190,7 +208,7 @@ export const barMarks = (
   const { slot, barWidth } = barSlot(categories, box.width);
   return Arr.map(
     Arr.filter(
-      Arr.map(Arr.take(values, slotCount(categories)), (value, index) => ({
+      Arr.map(paintedValues(values, categories), (value, index) => ({
         index,
         height: barHeight(value, box, scale),
       })),
@@ -220,13 +238,12 @@ export const groupedBarMarks = (
   categories?: number,
 ): ReadonlyArray<ReadonlyArray<ChartMark>> => {
   const count = categoryCount(series, categories);
-  const slots = slotCount(count);
   const { slot } = barSlot(count, box.width);
   const width = series.length === 0 ? 0 : (slot * 0.8) / series.length;
   return Arr.map(series, (one, seriesIndex) =>
     Arr.map(
       Arr.filter(
-        Arr.map(Arr.take(one.values, slots), (value, index) => ({
+        Arr.map(paintedValues(one.values, count), (value, index) => ({
           index,
           height: barHeight(value, box, scale),
         })),
@@ -259,7 +276,7 @@ export const stackedBarMarks = (
   categories?: number,
 ): ReadonlyArray<ReadonlyArray<ChartMark>> => {
   const count = categoryCount(series, categories);
-  const totals = Arr.makeBy(count, (index) =>
+  const totals = Arr.map(slotIndexes(count), (index) =>
     Arr.reduce(
       series,
       0,
@@ -321,10 +338,12 @@ export const linePath = (
   scale: number,
   categories: number = values.length,
 ): Option.Option<string> => {
-  const slots = slotCount(categories);
-  const painted = Arr.take(values, slots);
+  const painted = paintedValues(values, categories);
   if (painted.length === 0) return Option.none();
-  const { slot } = barSlot(slots, box.width);
+  const { slot } = barSlot(
+    Option.getOrElse(paintedSlots(categories), () => values.length),
+    box.width,
+  );
   const points = Arr.map(painted, (value, index) => ({
     x: index * slot + slot / 2,
     y: box.height - barHeight(value, box, scale),

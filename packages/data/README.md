@@ -416,7 +416,9 @@ palette every chart paints from. A **stacked** bar is one bar of its categories'
 totals, so its axis reads `stackedScale` — the ceiling of the tallest total, the
 same number the marks divide by (`chartScale`, the widest single value among the
 slots the chart paints, is the grouped bar's and the line's). A value past the
-last label draws nowhere, so it cannot raise the axis either. The axis column
+last label draws nowhere, so it cannot raise the axis either, and a chart with no
+label paints no column (no mark, a `1` ceiling) rather than one unnamed slot. The
+axis column
 paints its ceiling at the plot's top and its floor on the plot's floor, so a
 bar's top reads against the value beside it. Every mark sits at the centre of
 its category slot — a bar, a line's point and the label under it share one `x`
