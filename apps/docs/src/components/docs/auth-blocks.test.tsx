@@ -125,6 +125,7 @@ describe("one-time code block", () => {
 
   it("prints six cells, the verify action and the resend countdown", () => {
     expect(markup.match(/class="gx-otp-cell"/g) ?? []).toHaveLength(6);
+    expect(markup.match(/name="code-[1-6]"/g) ?? []).toHaveLength(6);
     expect(markup).toContain("Verify");
     expect(markup).toContain("Resend in 30s");
     expect(markup).toContain("Use 123456 in the preview.");

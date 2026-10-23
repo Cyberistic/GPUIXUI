@@ -450,6 +450,7 @@ export const OtpRender = () => {
               inputMode="numeric"
               key={index}
               maxLength={1}
+              name={`code-${index + 1}`}
               onChange={(event) => setDigit(index, event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Backspace" && digit === "" && index > 0) {
