@@ -64,6 +64,7 @@ reads this table and every page together.
 | `## API` | yes | prop, type, default, consequence; the variants, sizes and states are the `Type` column |
 | `## Limitations` | yes | measured gaps and the honest alternative |
 | `## Composition` | no | the parts and what each one is responsible for |
+| `## Keyboard` | no | the keys a component answers, and the ones a window cannot deliver |
 | `## Variants` | no | a variant set whose paint needs a sentence of its own |
 | `## Roles` | no | the semantic roles a page enumerates from the theme |
 | `## Tones` | no | the semantic tone set a page enumerates from the theme |

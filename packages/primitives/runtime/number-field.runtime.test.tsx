@@ -147,6 +147,60 @@ it("keeps a trailing dot as a draft instead of rewriting it mid-edit", async () 
   expect(inputOf(runtime, "nf").type).toBe("input");
 });
 
+it("paints the number it holds, including the decimals its step needs", async () => {
+  const field = recorder();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Score"
+      autoFocus
+      defaultValue={1.5}
+      step={0.5}
+      max={2.5}
+      onChange={field.onChange}
+    />,
+  );
+  // The bug guarded: the display defaulted to zero decimals, so a field holding
+  // 1.5 painted "2" and the first press looked like it did nothing — and the
+  // 2.5 maximum painted "3", a number past the bound the field declares.
+  expect(textOf(runtime, "Score")).toBe("1.5");
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "up");
+  expect(lastValue(field.values)).toBe(2);
+  expect(textOf(runtime, "Score")).toBe("2");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "up");
+  expect(lastValue(field.values)).toBe(2.5);
+  expect(textOf(runtime, "Score")).toBe("2.5");
+});
+
+it("hears no Home or End in a window, because the text host owns them", async () => {
+  // The defect guarded: the page promised the bounds jump on Home/End, but a
+  // native `<input>` consumes both as caret keys before React — measured on
+  // 0.11.0 through the raw dispatch and through a wrapper's `onKeyDown` (a key
+  // the host swallows reaches neither), while PageDown arrives. The keys the
+  // field can answer in a window are the arrows and the page pair, so a
+  // document may not teach a bounds jump a window cannot deliver.
+  const field = recorder();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Quantity"
+      autoFocus
+      defaultValue={5}
+      min={0}
+      max={100}
+      onChange={field.onChange}
+    />,
+  );
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "end");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "home");
+  expect(field.values).toStrictEqual([]);
+  runtime.renderer.nativeSimulateKeyDown(input.id, "pagedown");
+  expect(lastValue(field.values)).toBe(0);
+  expect(textOf(runtime, "Quantity")).toBe("0");
+});
+
 it("clamps a typed value to the field's maximum", async () => {
   const field = recorder();
   const runtime = await mount(

@@ -14,6 +14,7 @@ import {
   clampNumeric,
   commitNumberDraft,
   decideNumberKey,
+  displayNumber,
   formatNumber,
   initNumberDraft,
   normalizeNumberRange,
@@ -204,6 +205,43 @@ describe("formatNumber", () => {
     expect(formatNumber(1.5e21, 2)).toBe("1500000000000000000000.00");
     expect(formatNumber(-1e21)).toBe("-1000000000000000000000");
     expect(formatNumber(1e-7, 8)).toBe("0.00000010");
+  });
+});
+
+describe("displayNumber", () => {
+  it("paints the value's own decimals when no precision is asked for", () => {
+    // The defect guarded: the field's display defaulted to zero decimals, so it
+    // painted a number it did not hold — a stored `1.5` read as `2`, and a press
+    // on a `0.5` step looked like it did nothing because the paint had already
+    // rounded the answer away.
+    expect(displayNumber(1.5)).toBe("1.5");
+    expect(displayNumber(2.5)).toBe("2.5");
+    expect(displayNumber(-0.25)).toBe("-0.25");
+    expect(displayNumber(2)).toBe("2");
+    expect(displayNumber(0)).toBe("0");
+  });
+
+  it("paints the double it holds, tail and all, unless a precision says otherwise", () => {
+    // A step is cleaned by `stepNumber`; a value the caller computes is painted
+    // as the caller's number, and `precision` is the way to round the text.
+    expect(displayNumber(0.1 + 0.2)).toBe("0.30000000000000004");
+    expect(displayNumber(0.1 + 0.2, 3)).toBe("0.300");
+  });
+
+  it("keeps a fixed precision the caller asked for", () => {
+    // The caller's own rounding: `1.50` is the column a money field wants, and
+    // the value channel keeps `1.5` regardless of the paint.
+    expect(displayNumber(1.5, 2)).toBe("1.50");
+    expect(displayNumber(1.5, 0)).toBe("2");
+    expect(displayNumber(-1.5, 2)).toBe("-1.50");
+  });
+
+  it("expands the exponent a shortest text uses", () => {
+    // A field paints digits: the parser accepts `1e21`, so the number it means
+    // must be legible in the box, and a small number must not read as `5e-324`.
+    expect(displayNumber(1e21)).toBe("1000000000000000000000");
+    expect(displayNumber(-2.5e-7)).toBe("-0.00000025");
+    expect(displayNumber(1.5e-9)).toBe("0.0000000015");
   });
 });
 

@@ -42,7 +42,7 @@ import {
   clampNumeric,
   commitNumberDraft,
   decideNumberKey,
-  formatNumber,
+  displayNumber,
   initNumberDraft,
   normalizeNumberRange,
   numberDraftText,
@@ -100,7 +100,12 @@ export interface NumberFieldProps
   readonly max?: number;
   /** Defaults to 1. */
   readonly step?: number;
-  /** Decimals shown on commit. Defaults to 0. */
+  /**
+   * A fixed number of decimals to paint on commit. Omit to paint the value's
+   * own decimals — a field must never show a number it does not hold, so a
+   * `step` of `0.5` is visible without this. A given precision rounds and pads
+   * the **painted** text; the value reported keeps the number it was given.
+   */
   readonly precision?: number;
   /** Defaults to `md`. */
   readonly size?: ControlSize;
@@ -600,7 +605,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
     valueChange(props),
   );
   const display = (value: number): string =>
-    props.formatValue?.(value) ?? formatNumber(value, props.precision ?? 0);
+    props.formatValue?.(value) ?? displayNumber(value, props.precision);
   // One reading for typing and for committing: a caller's format is theirs to
   // read back, and text it declines still reads as decimal.
   const read = (text: string): Option.Option<number> =>

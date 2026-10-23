@@ -54,6 +54,8 @@ export type { ScrollMetrics, ScrollOffset } from "./scroll.js";
 export {
   clampNumeric,
   decideNumberKey,
+  displayNumber,
+  expandedNumber,
   formatNumber,
   normalizeNumberRange,
   parseNumberText,

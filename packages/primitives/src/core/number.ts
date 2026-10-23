@@ -148,18 +148,71 @@ export const formatNumber = (value: number, precision = 0): string => {
 };
 
 /**
+ * The decimals a number's shortest text carries.
+ *
+ * `String` prints the fewest digits that round-trip, so this is how many
+ * decimals the value actually has: `1.5` has one, and an exponent shifts the
+ * point rather than adding a digit.
+ */
+const writtenDecimals = (value: number): number => {
+  const [mantissa = "", exponentText] = Str.split(/e/i)(String(value));
+  const exponent = exponentText === undefined ? 0 : Number(exponentText);
+  const [, fraction = ""] = Str.split(".")(mantissa);
+  return Math.max(0, Str.length(fraction) - exponent);
+};
+
+/**
  * The decimal places a number's shortest representation carries.
  *
  * Capped at 15: a double has no meaningful digits past that, and the cap keeps
  * the scale finite for an exponential literal.
  */
-const decimalsOf = (value: number): number => {
+const decimalsOf = (value: number): number =>
+  Math.min(15, writtenDecimals(value));
+
+/**
+ * A number's shortest text, in decimal notation.
+ *
+ * `String` prints the fewest digits that round-trip, which is the number a field
+ * holds — but it switches to an exponent below `1e-7` and at `1e21`, and a field
+ * paints digits in the box a reader edits. So an exponent is expanded to the
+ * decimal it means (`1e21` is twenty-two digits, `1.5e-9` is nine decimal
+ * places), and every other value is painted exactly as its shortest text.
+ */
+export const expandedNumber = (value: number): string => {
   const text = String(value);
-  const [mantissa = text, exponentText] = text.split(/e/i);
-  const exponent = exponentText === undefined ? 0 : Number(exponentText);
-  const fraction = mantissa.split(".")[1]?.length ?? 0;
-  return Math.min(15, Math.max(0, fraction - exponent));
+  if (!Str.includes("e")(text)) return text;
+  const [mantissa = "0", exponentText = "0"] = Str.split(/e/i)(text);
+  const negative = Str.startsWith("-")(mantissa);
+  const unsigned = negative ? Str.slice(1)(mantissa) : mantissa;
+  const [whole = "0", fraction = ""] = Str.split(".")(unsigned);
+  const digits = `${whole}${fraction}`;
+  const point = Str.length(whole) + Number(exponentText);
+  const body =
+    point <= 0
+      ? `0.${Str.repeat(-point)("0")}${digits}`
+      : point >= Str.length(digits)
+        ? `${digits}${Str.repeat(point - Str.length(digits))("0")}`
+        : `${Str.slice(0, point)(digits)}.${Str.slice(point)(digits)}`;
+  return `${negative ? "-" : ""}${body}`;
 };
+
+/**
+ * The text a number field paints for the value it holds.
+ *
+ * A field must paint the number it holds: with no `precision` that is the
+ * value's own shortest decimal, so a stored `1.5` reads `1.5` and a press on a
+ * step is never swallowed by the paint having rounded the answer away. The old
+ * default of zero decimals did exactly that — a `step` of `0.5` showed `1.5` as
+ * `2`, and a field bounded at `2.5` painted `3`, past its own maximum, on End.
+ *
+ * `precision` is the caller's fixed display width: it rounds and pads the
+ * painted text, and the value channel keeps the number it was given.
+ */
+export const displayNumber = (value: number, precision?: number): string =>
+  precision === undefined
+    ? expandedNumber(value)
+    : formatNumber(value, precision);
 
 /**
  * Move by `steps` steps and clamp. A step of 0 is treated as 1.
@@ -239,6 +292,12 @@ const ARROW_STEPS: Readonly<Record<string, number>> = {
  * field, and a numeric field that changed its value when the caret moved
  * would be a field a user cannot edit: the caret could never cross a digit
  * without the number changing under it.
+ *
+ * **Home and End are the host's too, in a window.** The native `<input>`
+ * consumes both for its caret before React hears them (measured on 0.11.0: the
+ * input's and a wrapper's `onKeyDown` both miss them, while `PageDown` arrives),
+ * so this decision is reachable where a host delivers the key — the offscreen
+ * renderer does — and the field's own window path never sees it.
  */
 export const decideNumberKey = (
   value: number,

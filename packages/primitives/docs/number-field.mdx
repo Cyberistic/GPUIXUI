@@ -7,6 +7,12 @@ description: A number in a text field, with steps and optional bounds.
 `NumberField` is a numeric text field: parsing, clamping and stepping are this
 package's.
 
+A field paints the number it holds: with no `precision` the box shows the value's
+own decimals, so `step={0.5}` reads `1.5` rather than a rounded `2` and no key can
+paint a number past the bound. `precision` fixes the painted width when a column
+needs one (`precision={2}` paints `1.50`); it rounds and pads the **text**, and
+the value channel keeps the number it was given.
+
 ## Usage
 
 ```tsx
@@ -39,7 +45,7 @@ const [copies, setCopies] = useState(1);
 | `onChange` | `(value: number) => void` | — | deprecated alias for `onValueChange` |
 | `min` / `max` | `number` | none | bound the value; absent means unbounded, and an inverted pair is the range it means |
 | `step` | `number` | `1` | arrow step |
-| `precision` | `number` | `0` | decimals shown on commit |
+| `precision` | `number` | the value's own decimals | decimals painted on commit; it rounds and pads the text, and the value keeps its own |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | field height and padding |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border |
@@ -74,11 +80,30 @@ and paints it, because that zero is a value the caller chose.
 Starting empty and stepping works: the first step lands on the range's floor
 (`min`, else `max`, else 0) and is reported like any other step.
 
+## Keyboard
+
+| Key | What it does |
+| --- | ------------ |
+| `↑` / `↓` | one `step` up or down, clamped |
+| `PageUp` / `PageDown` | ten steps |
+| `Home` / `End` | the core's bounds jump — **not delivered to a field in a window** |
+| `Enter` | the draft commits, then `onSubmit` |
+| any other key | left to the form |
+
+A native `<input>` consumes `Home` and `End` for its own caret before React sees
+them: measured on 0.11.0, neither the input's `onKeyDown` nor a wrapper's receives
+them, while `PageDown` arrives. So the bounds jump is the pure contract's
+(`core/number.ts`'s `decideNumberKey`) and the offscreen renderer's, and the keys
+a window delivers are the arrows and the page pair. Bind `Home`/`End` at the
+window level (`@gpuixui/keyboard`) when a form needs them;
+`runtime/number-field.runtime.test.tsx` holds the measurement.
+
 ## Limitations
 
 - Decimal text by default: a grouped or locale display is read through the
   `formatValue`/`parseValue` pair, never guessed.
-- An inverted pair is the range it means: `min` above `max` is swapped, and
-  `Home`/`End` jump to the ends of that swapped range.
+- An inverted pair is the range it means: `min` above `max` is swapped, and the
+  core's `Home`/`End` jump reads the ends of that swapped range — though a
+  window never delivers those two keys to a text field (see Keyboard above).
 - No `type="number"`, `inputMode` or `maxLength`: the runtime applies a value only when it changes, so a refused character stays in the box.
 - `autoFocus` paints no ring; Enter is the runtime's Submit action, not a keydown.

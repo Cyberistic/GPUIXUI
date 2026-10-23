@@ -6284,6 +6284,39 @@ and clause).
       53 files / 976 tests with `check-types` clean. Docs: the `COMPONENTS.md`
       Rating row.
 
+`[x]` `packages/primitives`: **`NumberField` painted a number it did not hold** —
+      the display defaulted to zero decimals (`formatNumber(value, precision ?? 0)`),
+      so `defaultValue={1.5}` with `step={0.5}` painted `2` while the value channel
+      held `1.5` (the first press moved it to `2` and the box did not change), and a
+      field bounded at `2.5` painted `3` — a number past its own maximum — on the
+      core's End jump. `core/number.ts` now owns `displayNumber(value, precision?)`:
+      with no precision it paints the value's own shortest decimal (`expandedNumber`,
+      which expands `String`'s exponent so the box always shows digits), and a given
+      `precision` keeps the fixed, rounding, padding display the caller asked for
+      (the value channel keeps its own decimals either way). The page's intro, its
+      `precision` API row and its limitation say the rule. **The same pass measured a
+      second promise a window cannot keep**: `docs/number-field.mdx` said `Home`/`End`
+      jump to the bounds, while a native `<input>` consumes both for its caret before
+      React — measured on 0.11.0 through the raw dispatch and through a wrapper's
+      `onKeyDown`, neither hears them, while `PageDown` arrives — so the page gains a
+      `## Keyboard` table naming the keys a window delivers, the bounds jump is
+      stated as the pure contract's and the offscreen renderer's, and the field's
+      JSDoc, the inventory record and the Tier 1 row carry it. Proof:
+      `core/number.test.ts`'s `displayNumber` suite (4 cases: the value's own
+      decimals, the double's tail, a fixed precision, the exponent expansion),
+      `runtime/number-field.runtime.test.tsx`'s `paints the number it holds,
+      including the decimals its step needs` (`1.5` → `2` → `2.5` through the real
+      input) and `hears no Home or End in a window, because the text host owns them`
+      (End and Home report nothing, PageDown still steps), and `src/docs.test.ts`'s
+      `paints the number it holds, and says which keys a window delivers`.
+      Directions measured: the old absent-precision branch fails three core cases
+      (`expected '2' to be '1.5'`, `expected '0' to be '0.30000000000000004'`,
+      `expected '0' to be '-0.00000025'`), the old component wiring fails the window
+      case with `expected '2' to be '1.5'`, and restoring the page's Home/End
+      sentence fails the docs case on `retracted`. `nub run --filter
+      @gpuixui/primitives test`: 54 files / 1 001 tests; `test:runtime`: 21 files /
+      297 tests; `check-types`, `lint` and the repo formatter clean on these files.
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21

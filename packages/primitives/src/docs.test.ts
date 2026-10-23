@@ -854,6 +854,54 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("paints the number it holds, and says which keys a window delivers", () => {
+    // Bug guarded: the display defaulted to zero decimals, so the field painted
+    // a number it did not hold — a stored `1.5` read `2` and a `2.5` maximum
+    // painted `3` — and the page promised a Home/End bounds jump a native
+    // `<input>` never delivers, because the host consumes both for its caret.
+    // The runtime suite measures both, so the page cannot promise either again.
+    const page = read("number-field.mdx");
+    const keyboard = Option.getOrElse(bodyOf(page, "Keyboard"), () => "");
+    const limitations = Option.getOrElse(bodyOf(page, "Limitations"), () => "");
+    const api = Option.getOrElse(bodyOf(page, "API"), () => "");
+    const evidence = readFileSync(
+      fileURLToPath(
+        new URL("../runtime/number-field.runtime.test.tsx", import.meta.url),
+      ),
+      "utf8",
+    );
+
+    expect({
+      display: page.includes("paints the number it holds"),
+      precision: api.includes("rounds and pads the text"),
+      notDelivered: keyboard.includes(
+        "**not delivered to a field in a window**",
+      ),
+      measured: keyboard.includes(
+        "neither the input's `onKeyDown` nor a wrapper's",
+      ),
+      alternative: keyboard.includes("@gpuixui/keyboard"),
+      retracted: `${keyboard}${limitations}`.includes(
+        "`Home`/`End` jump to the ends",
+      ),
+      paintCase: evidence.includes(
+        "paints the number it holds, including the decimals its step needs",
+      ),
+      keyCase: evidence.includes(
+        "hears no Home or End in a window, because the text host owns them",
+      ),
+    }).toEqual({
+      display: true,
+      precision: true,
+      notDelivered: true,
+      measured: true,
+      alternative: true,
+      retracted: false,
+      paintCase: true,
+      keyCase: true,
+    });
+  });
+
   it("is indexed by the package's own page table", () => {
     const index = read("README.md");
     const linked = Arr.filterMap(

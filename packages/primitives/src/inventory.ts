@@ -522,6 +522,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "Decimal text by default: a grouped or locale display is read through the formatValue/parseValue pair, never guessed",
       "No type=number or inputMode",
+      "Home and End are the text host's caret keys, so a window never delivers them: the arrows and PageUp/PageDown are its keys",
       "An empty box is a cancelled edit, not a value: the field keeps its last number, and a field that never had one stays empty (the value channel is a number)",
       "autoFocus paints no ring on mount",
       "Enter is the runtime's Submit action, not a keydown; onSubmit is the channel",
