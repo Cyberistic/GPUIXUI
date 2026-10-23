@@ -52,6 +52,15 @@ describe("clampCrop", () => {
     ).toStrictEqual({ x: 0, y: 136, width: 240, height: 24 });
   });
 
+  it("reads an absent rectangle as the origin and the floor", () => {
+    // The bug guarded: a record restored from storage that carried no crop read
+    // the rectangle's fields off `undefined` and threw out of the render,
+    // leaving the frame, its mask and its handles unpainted.
+    const expected = { x: 0, y: 0, width: 24, height: 24 };
+    expect(boxes(clampCrop(undefined, bounds))).toStrictEqual(expected);
+    expect(boxes(clampCrop(null, bounds))).toStrictEqual(expected);
+  });
+
   it("reads a field it cannot lay out as the origin and the floor", () => {
     expect(
       boxes(

@@ -170,27 +170,34 @@ const fitRatio = (
  *
  * A crop restored from storage may name a rectangle the frame it is shown in
  * cannot hold, so a component clamps before it paints rather than drawing a
- * hole outside the picture. A ratio that cannot be read leaves the rectangle
- * free, the same rule the other stored values follow.
+ * hole outside the picture. A rectangle that is **absent** (a save that carried
+ * no crop) has no fields to read: it reads as the frame's origin at the smallest
+ * side, the rectangle an unreadable field reads as, so the frame still paints.
+ * A ratio that cannot be read leaves the rectangle free, the same rule the other
+ * stored values follow.
  */
 export const clampCrop = (
-  crop: CropRect,
+  crop: CropRect | null | undefined,
   bounds: CropBounds,
   min: number = CROP_MIN_SIZE,
   aspectRatio?: number,
 ): CropRect => {
   const floor = floorOf(bounds, min);
+  const held = Option.getOrElse(
+    Option.fromNullishOr(crop),
+    () => new CropRect({ x: 0, y: 0, width: 0, height: 0 }),
+  );
   // A restored rectangle may carry a field that cannot be laid out (a ratio
   // over a frame that never arrived). A coordinate reads from the origin and a
   // side from the floor, so the hole is still painted and still grabbable.
   const side = (value: number): number =>
     Number.isFinite(value) ? value : floor;
   const point = (value: number): number => (Number.isFinite(value) ? value : 0);
-  const width = clamp(side(crop.width), floor, Math.max(0, bounds.width));
-  const height = clamp(side(crop.height), floor, Math.max(0, bounds.height));
+  const width = clamp(side(held.width), floor, Math.max(0, bounds.width));
+  const height = clamp(side(held.height), floor, Math.max(0, bounds.height));
   const free = new CropRect({
-    x: clamp(point(crop.x), 0, Math.max(0, bounds.width - width)),
-    y: clamp(point(crop.y), 0, Math.max(0, bounds.height - height)),
+    x: clamp(point(held.x), 0, Math.max(0, bounds.width - width)),
+    y: clamp(point(held.y), 0, Math.max(0, bounds.height - height)),
     width,
     height,
   });

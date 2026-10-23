@@ -223,6 +223,23 @@ describe("CropArea gestures", () => {
     root.unmount();
   });
 
+  it("paints the default hole when the stored crop is absent", () => {
+    // The bug guarded: a saved record that carried no crop threw while the
+    // wrapper read its sides, so the whole surface failed to paint. An absent
+    // rectangle reads as the origin at the smallest side, and a drag from it
+    // still reports the rectangle the reader moves to.
+    const { root, reports } = mount(null as unknown as CropRect);
+    const at = centreOf(root, "crop");
+    root.renderer.nativeSimulateMouseDown(at.x, at.y);
+    root.renderer.nativeSimulateMouseMove(at.x + 10, at.y + 10);
+    root.renderer.nativeSimulateMouseUp(at.x + 10, at.y + 10);
+
+    expect(reports.map(boxes)).toStrictEqual([
+      { x: 10, y: 10, width: 24, height: 24 },
+    ]);
+    root.unmount();
+  });
+
   it("moves a hole below the default minimum without growing it", () => {
     // `minSize` may be smaller than the 24-point default; the move path used
     // to clamp with the default, so Alt+Right grew a 10-point hole to 24.

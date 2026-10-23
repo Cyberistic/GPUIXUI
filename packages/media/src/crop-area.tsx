@@ -81,7 +81,10 @@ export interface CropAreaProps extends Omit<Props, "children" | "onChange"> {
   readonly width: number;
   /** The frame's height in points; the crop's coordinate space. */
   readonly height: number;
-  /** The hole, in the frame's points. */
+  /**
+   * The hole, in the frame's points. A value restored from storage that is
+   * absent reads as the frame's origin at the smallest side.
+   */
   readonly value: CropRect;
   /** Reports the hole a gesture leaves. */
   readonly onChange: (crop: CropRect) => void;

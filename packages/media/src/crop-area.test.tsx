@@ -254,6 +254,31 @@ describe("renderCropArea", () => {
     });
   });
 
+  it("reads an absent rectangle as the origin and the floor", () => {
+    // The bug guarded: a saved record that carried no crop threw
+    // `Cannot read properties of undefined (reading 'width')` out of the
+    // render, so the frame, the mask and all four handles painted nothing.
+    const root = renderCropArea(
+      props({ value: undefined as unknown as CropRect }),
+      lightTheme,
+      surfaceOf(),
+    );
+    expect(expectSome(hostProp(root, "style"))).toMatchObject({
+      width: 240,
+      height: 160,
+    });
+    const se = handleOf(root, "se");
+    expect(expectSome(elementProp(se, "aria-valuetext"))).toBe("0, 0, 24 × 24");
+    expect(expectSome(hostProp(se, "style"))).toMatchObject({
+      left: 19,
+      top: 19,
+      width: 10,
+      height: 10,
+    });
+    expect(Option.isSome(findByTestId(root, "crop-bar-bottom"))).toBe(true);
+    expect(Option.isSome(findByTestId(root, "crop-bar-right"))).toBe(true);
+  });
+
   it("paints and announces a hole on the caller's ratio", () => {
     const root = renderCropArea(
       props({
