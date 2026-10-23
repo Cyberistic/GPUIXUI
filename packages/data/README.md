@@ -35,7 +35,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | A sort is an order | `grid-core.test.ts`, `table.test.tsx` | A plain header press replaces the order; a Shift press appends the field as the next tie-break or flips it where it already sits. The core's sorted model walks every entry in turn, so records the primary sort ties are ordered by the second. |
 | Column changes are app state | `table-columns-lifecycle` | Hiding a column takes its width out of the content and shifts every later column by exactly that width; a move changes the order and not the width. The header and the cells read one `columns.visible` list. |
 | A resize divider arms the capture | `column-resize-lifecycle` | `TableColumnDivider` listens to `onMouseDown` **and** `onMouseMove`, holds the press in a ref, and reads the width at each press. Its width is clamped to the column's own bounds, and only a **primary** press arms it: the runtime delivers `mouseDown` for all three buttons, so a right press — the context-menu gesture — and a middle one would otherwise start a resize. |
-| A bound or a step the grid cannot read is its default | `columns/logic.test.ts` | A column's width is often computed (a stored size, a measurement, a fraction of the table), and a non-finite bound used to clamp every width to NaN, taking `contentWidth` and every later offset with it. `widthBounds` reads a non-finite minimum/maximum as 80/640 and `resizeWidthByKey` reads a non-finite step as 16, so a computed declaration still paints a finite track. |
+| A bound, a step or a width the grid cannot read is legal | `columns/logic.test.ts` | A column's width is often computed (a stored size, a measurement, a fraction of the table), and a non-finite bound used to clamp every width to NaN, taking `contentWidth` and every later offset with it. `widthBounds` reads a non-finite minimum/maximum as 80/640 and `resizeWidthByKey` reads a non-finite step as 16. A width that is NaN is not clamped: it reads as the column's own minimum, so an arrow steps **from** it rather than snapping to it, and `resizeColumn` leaves the column alone instead of collapsing a 260px track to its floor because a drag computed no width. |
 | A press stops at the first painted child | `press-routing-lifecycle` | A cell control that must hand a press to its row declares `pointerEvents: "none"`; a filled child is the hit-test boundary, not the innermost handler. A tree's chevron is an `<svg>` that takes no press, so the row answers; a checkbox in a row paints, so it takes its own. |
 | A fill takes the row's hover too | `hover-routing-lifecycle` | The native `hover` refinement's hovered set is the **same hit test** the press takes. A filled `<text>` or `<div>` in a row takes the row's hover wash and hears its own enter; an unfilled label leaves both to the row; `pointerEvents: "none"` removes the fill's hitbox while the child still runs its own listener. A decorative pill in a cell opts out so the row keeps its feedback. |
 | A row's press is derived over its hover | `pointer-wash.test.ts`, `table.test.tsx`, `tree.test.tsx` | An unchosen row tints `hover` and a chosen one `accent`; the button-down paint is `pointerWash(theme, "active", …)` over the wash it replaces, because a palette's raw `active` role can sit under the 1.05:1 floor beside it. The table's row and the tree's row paint the same three states. |
@@ -216,8 +216,10 @@ const columns = useColumns({ columns: FILE_COLUMNS });
 A resizable column needs a fixed `width`; the divider sits inside its header
 cell therefore, so a body row needs no spacer track. A bound or a key step that
 is not a finite number is read as the default (80/640/16) rather than a NaN
-track: a width is often computed, and one unreadable bound would take the
-column, the content width and every later offset with it.
+track, and a width the grid cannot read is the column's own minimum: a width is
+often computed, and `NaN` orders below every number, so clamping it would
+collapse the track — `resizeColumn` leaves such a column alone while a key press
+steps from its floor.
 
 A hidden column **leaves the search but keeps its sort**. `useTable` takes the
 controller's memoised `hidden` list (`useColumns().hidden`) and the core marks

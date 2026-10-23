@@ -242,6 +242,36 @@ describe("column configuration", () => {
     ).toBe(260 + COLUMN_KEY_STEP);
   });
 
+  it("reads a width it cannot use as a track that paints", () => {
+    // A width is computed too — a stored size, a measurement, a fraction of the
+    // table — and `NaN` survived `clampWidth`, so one unreadable declaration
+    // took `contentWidth` and every later offset with it and the grid painted
+    // no track at all. Only `NaN` is unreadable: an infinite width is a legal
+    // declaration that clamps to the column's own maximum.
+    const bounds = widthBounds(120, 420);
+    expect(clampWidth(Number.NaN, bounds)).toBe(120);
+    expect(clampWidth(Number.POSITIVE_INFINITY, bounds)).toBe(420);
+    expect(clampWidth(Number.NEGATIVE_INFINITY, bounds)).toBe(120);
+
+    const computed = initialColumns([
+      { id: "measured", label: "Measured", width: Number.NaN, minWidth: 120 },
+      { id: "after", label: "After", width: 90 },
+    ]);
+    expect(widthOf(computed, "measured")).toBe(120);
+    expect(contentWidth(computed)).toBe(210);
+    expect(offsetOf(computed, "after")).toBe(120);
+
+    // The reducer leaves a legal track alone: a broken measurement must not
+    // shrink the column a later one reads.
+    const state = opened();
+    expect(resizeColumn(state, "name", Number.NaN)).toBe(state);
+
+    // A key press repairs the track and steps from the narrowest legal width.
+    expect(resizeWidthByKey(Number.NaN, "right", bounds)).toBe(136);
+    expect(resizeWidthByKey(Number.NaN, "left", bounds)).toBe(120);
+    expect(resizeWidthByKey(Number.NaN, "end", bounds)).toBe(420);
+  });
+
   it("steps a focused divider and names the bounds", () => {
     const bounds = widthBounds(120, 420);
     expect(COLUMN_KEY_STEP).toBe(16);

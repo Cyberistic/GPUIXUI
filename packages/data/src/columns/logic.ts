@@ -107,9 +107,29 @@ export const widthBounds = (
 export const columnBounds = (column: ColumnDef): ColumnWidthBounds =>
   widthBounds(column.minWidth, column.maxWidth);
 
-/** `width` clamped to `bounds`, inclusively. */
+/**
+ * `width` clamped to `bounds`, inclusively.
+ *
+ * `Number.Order` places `NaN` below every number, so an unreadable width clamps
+ * to the minimum: total, but not a measurement. A reducer that reads a width it
+ * cannot use treats it as the narrowest legal track rather than clamping it
+ * (`resizeColumn`, `resizeWidthByKey`).
+ */
 export const clampWidth = (width: number, bounds: ColumnWidthBounds): number =>
   Number.clamp({ minimum: bounds.minWidth, maximum: bounds.maxWidth })(width);
+
+/**
+ * A width a track can be measured from: `NaN` is the narrowest legal track.
+ *
+ * A width is often computed — a stored size, a measurement, a fraction of the
+ * table — and clamping an unreadable one is not reading it: `NaN` orders below
+ * the minimum, so a clamp would silently **shrink** the track to its floor and
+ * a key step would land on the floor instead of stepping. Reading it as the
+ * floor keeps both operations honest: a resize leaves the column alone, and an
+ * arrow walks from a legal width.
+ */
+const measuredWidth = (width: number, bounds: ColumnWidthBounds): number =>
+  globalThis.Number.isNaN(width) ? bounds.minWidth : width;
 
 /** `width` clamped to the column's own bounds. */
 export const clampColumnWidth = (width: number, column: ColumnDef): number =>
@@ -157,10 +177,13 @@ export const resizeWidthByKey = (
   step: number = COLUMN_KEY_STEP,
 ): number => {
   const by = readable(step, COLUMN_KEY_STEP);
+  // A width the divider cannot read is the narrowest legal track, so an arrow
+  // steps from it rather than snapping back to it.
+  const from = measuredWidth(width, bounds);
   return pipe(
     Match.value(key),
-    Match.when("left", () => clampWidth(width - by, bounds)),
-    Match.when("right", () => clampWidth(width + by, bounds)),
+    Match.when("left", () => clampWidth(from - by, bounds)),
+    Match.when("right", () => clampWidth(from + by, bounds)),
     Match.when("home", () => bounds.minWidth),
     Match.when("end", () => bounds.maxWidth),
     Match.exhaustive,
@@ -323,12 +346,19 @@ export const moveColumn = (
  *
  * The clamp is the column's, not a table-wide constant: a `width` column and a
  * `status` column need different floors, and a definition supplies both.
+ *
+ * A width the reducer cannot read (`NaN`) leaves the column alone, the rule an
+ * unknown id follows: `NaN` orders below every number, so clamping it would
+ * silently **shrink** a 260px track to its floor — and the next press would
+ * then measure from a width no gesture produced. A caller whose drag computed
+ * no width gets no resize, not a collapsed column.
  */
 export const resizeColumn = (
   state: ColumnState,
   id: string,
   width: number,
 ): ColumnState => {
+  if (globalThis.Number.isNaN(width)) return state;
   const target = findColumn(state, id);
   if (Option.isNone(target)) return state;
   const next = clampColumnWidth(width, target.value);

@@ -49,12 +49,15 @@ const dataRows = inventory
 /** One data row by its first cell, failing the case by name when it is gone. */
 const row = (name: string): string => {
   const found = dataRows.find((line) => line.startsWith(`| ${name} |`));
-  if (found === undefined) throw new Error(`no ${name} row under the data lane`);
+  if (found === undefined)
+    throw new Error(`no ${name} row under the data lane`);
   return found;
 };
 
 /** A path-qualified count a row prints: `` `src/x.test.ts` (12 cases) ``. */
-const pathClaims = (line: string): ReadonlyArray<{
+const pathClaims = (
+  line: string,
+): ReadonlyArray<{
   readonly path: string;
   readonly cases: number;
 }> =>
@@ -82,9 +85,9 @@ describe("the data lane's printed case counts", () => {
     const stale = claims.filter(
       ({ path, cases }) => countCases(path) !== cases,
     );
-    expect(
-      stale.map(({ path, cases }) => `${path}: ${cases} printed`),
-    ).toEqual([]);
+    expect(stale.map(({ path, cases }) => `${path}: ${cases} printed`)).toEqual(
+      [],
+    );
   });
 
   it("prints the virtual tree's suite count on its page", () => {
@@ -99,7 +102,9 @@ describe("the data lane's printed case counts", () => {
     // is still correct for the expandable rows, so a whole-lane search would
     // forbid a true claim.
     expect(row("Tables")).not.toContain("7 native behaviour cases");
-    expect(row("Tree views")).not.toContain("`src/tree/logic.test.ts` (13 cases)");
+    expect(row("Tree views")).not.toContain(
+      "`src/tree/logic.test.ts` (13 cases)",
+    );
     expect(row("Tables")).not.toContain("frozen-table.test.tsx` (6 cases)");
   });
 });
