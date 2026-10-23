@@ -1,13 +1,21 @@
 /**
- * The hero deck: three platform windows, each running the same **hunter
- * licensing chat agent** in that platform's own theme (families, roles,
- * radius, density), so macOS, Windows 11 and Linux look like themselves.
+ * The hero deck: three platform windows, each running the **conversations
+ * block** in its own dress — macOS Messages, Windows 11 Fluent and Linux
+ * Breeze — so each card is recognisably its platform.
  *
- * The shuffle pauses on hover; the stack is a clean fan with no rotation.
+ * macOS and Windows show on the light palette, Linux on the dark one. The
+ * shuffle pauses on hover; the stack is a clean fan with no rotation.
  */
 import { useEffect, useState, type CSSProperties } from "react";
-import { darkTheme, platformTheme, type PlatformName } from "@gpuixui/tokens";
+import {
+  darkTheme,
+  lightTheme,
+  platformTheme,
+  type PlatformName,
+} from "@gpuixui/tokens";
 import { toCssVars } from "../../lib/theme-css";
+import { BlockIcon } from "../docs/block-icons";
+import { ConversationWindow } from "../docs/conversations-block";
 import { platforms, repo } from "./data";
 import type { Platform } from "./data";
 
@@ -16,13 +24,6 @@ const SHUFFLE_MS = 1600;
 /** The library's platform name for a landing card. */
 const platformName = (id: Platform["id"]): PlatformName =>
   id === "macos" ? "darwin" : id === "windows" ? "win32" : "linux";
-
-/** The UI family each system is recognised by, on any host. */
-const FAMILY: Readonly<Record<Platform["chrome"], string>> = {
-  mac: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif',
-  win: '"Segoe UI Variable", "Segoe UI", system-ui, sans-serif',
-  lnx: 'Cantarell, "Ubuntu", "Noto Sans", system-ui, sans-serif',
-};
 
 export function Hero() {
   const [top, setTop] = useState(0);
@@ -104,7 +105,25 @@ export function Hero() {
   );
 }
 
-/** The licensing agent: a conversation that issues one general licence. */
+/**
+ * The desktop's app tiles. Decorative only: the dock and taskbar are
+ * illustration, not controls.
+ */
+const DOCK_TONES = [
+  "sky",
+  "teal",
+  "amber",
+  "rose",
+  "violet",
+  "green",
+  "graphite",
+  "orange",
+  "blue",
+] as const;
+
+const WINDOW_TONES = ["blue", "green", "amber", "sky"] as const;
+
+/** One platform desktop, with the conversations block floating on it. */
 function PlatformMini({
   platform,
   position,
@@ -112,99 +131,180 @@ function PlatformMini({
   platform: Platform;
   position: number;
 }) {
-  const theme = platformTheme(darkTheme, platformName(platform.id));
-  const style = {
-    ...toCssVars(theme),
-    "--font-sans": FAMILY[platform.chrome],
-    "--radius-window": `${theme.radius.lg}px`,
-  } as CSSProperties;
+  const palette = platform.id === "linux" ? darkTheme : lightTheme;
+  const theme = platformTheme(palette, platformName(platform.id));
+  const style = { ...toCssVars(theme) } as CSSProperties;
 
   return (
     <div
-      className={`landing-window landing-window-${platform.chrome}`}
+      className={`landing-window landing-desktop landing-desktop-${platform.chrome}`}
+      data-desktop={platform.id}
       data-pos={position}
       style={style}
     >
-      <Bar platform={platform} />
-      <div className="landing-chat">
-        <div className="landing-chat-log">
-          <div className="landing-chat-row">
-            <span className="landing-chat-avatar">HA</span>
-            <p className="landing-chat-bubble">
-              I can issue a General Hunter License. Which class?
-            </p>
-          </div>
+      <span
+        aria-hidden="true"
+        className={`landing-wall landing-wall-${platform.chrome}`}
+      />
+      {platform.id === "macos" ? <MacMenuBar /> : null}
+      {platform.id === "linux" ? <LinuxPanel /> : null}
 
-          <div className="landing-chat-chips">
-            <span data-active="true">Single</span>
-            <span>Group</span>
-            <span>Pro</span>
-          </div>
-
-          <div className="landing-chat-row landing-chat-row-user">
-            <p className="landing-chat-bubble landing-chat-bubble-user">
-              Group — three seats.
-            </p>
-          </div>
-
-          <div className="landing-chat-row">
-            <span className="landing-chat-avatar">HA</span>
-            <p className="landing-chat-bubble">
-              Approved. Here is your licence.
-            </p>
-          </div>
-
-          <div className="landing-chat-licence">
-            <span className="landing-chat-licence-title">
-              General Hunter License
-            </span>
-            <span className="landing-chat-licence-meta">HG-0042 · 3 seats</span>
-          </div>
-        </div>
-
-        <div className="landing-chat-composer">
-          <span>Message the licensing agent</span>
-          <span className="landing-chat-send">Send</span>
-        </div>
+      <div className="landing-desktop-stage">
+        <ConversationWindow platform={platform.id} />
       </div>
-      <span className="landing-badge">{platform.label} · default</span>
+
+      {platform.id === "windows" ? <WindowsTaskbar /> : null}
+      {platform.id === "linux" ? <LinuxDock /> : null}
+      {platform.id === "macos" ? <MacDock /> : null}
     </div>
   );
 }
 
-function Bar({ platform }: { platform: Platform }) {
-  const title = <span className="landing-bar-title">Hunter Licensing</span>;
-  const chrome = <Chrome kind={platform.chrome} />;
-
-  return platform.chrome === "mac" ? (
-    <div className="landing-bar landing-bar-mac">
-      {chrome}
-      {title}
-    </div>
-  ) : (
-    <div className="landing-bar landing-bar-glyphs">
-      {title}
-      {chrome}
+/** macOS: the thin menu bar and the translucent dock. */
+function MacMenuBar() {
+  return (
+    <div aria-hidden="true" className="landing-menubar">
+      <span className="landing-menubar-left">
+        <AppleGlyph />
+        <b>Finder</b>
+        <span className="landing-menubar-menu">File</span>
+        <span className="landing-menubar-menu">Edit</span>
+        <span className="landing-menubar-menu">View</span>
+      </span>
+      <span className="landing-menubar-right">
+        <WifiGlyph />
+        <BatteryGlyph />
+        <span>Mon 9:41 AM</span>
+      </span>
     </div>
   );
 }
 
-function Chrome({ kind }: { kind: Platform["chrome"] }) {
-  if (kind === "mac") {
-    return (
-      <span aria-hidden="true" className="landing-chrome landing-chrome-mac">
+function MacDock() {
+  return (
+    <div aria-hidden="true" className="landing-dock landing-dock-mac">
+      {DOCK_TONES.map((tone) => (
+        <i className="landing-dock-tile" data-tone={tone} key={tone} />
+      ))}
+      <span className="landing-dock-sep" />
+      <i className="landing-dock-tile" data-tone="trash" />
+    </div>
+  );
+}
+
+/** Windows 11: the centred acrylic taskbar. */
+function WindowsTaskbar() {
+  return (
+    <div aria-hidden="true" className="landing-taskbar">
+      <span className="landing-taskbar-start">
+        <i />
         <i />
         <i />
         <i />
       </span>
-    );
-  }
+      <span className="landing-taskbar-search">
+        <BlockIcon name="search" size={11} />
+        <span>Search</span>
+      </span>
+      <span className="landing-taskbar-apps">
+        {WINDOW_TONES.map((tone) => (
+          <i className="landing-dock-tile" data-tone={tone} key={tone} />
+        ))}
+      </span>
+      <span className="landing-taskbar-clock">
+        <b>10:32 AM</b>
+        <span>10/26/2026</span>
+      </span>
+    </div>
+  );
+}
+
+/** Linux: the top panel and the floating dock. */
+function LinuxPanel() {
   return (
-    <span aria-hidden="true" className="landing-chrome landing-chrome-glyphs">
-      <i>–</i>
-      <i>□</i>
-      <i>×</i>
-    </span>
+    <div aria-hidden="true" className="landing-lnx-panel">
+      <span className="landing-lnx-panel-left">
+        <b>Applications</b>
+        <span>Tour</span>
+      </span>
+      <span className="landing-lnx-panel-clock">Sat, Nov 6 · 10:46 AM</span>
+      <span className="landing-lnx-panel-tray">
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+    </div>
+  );
+}
+
+function LinuxDock() {
+  return (
+    <div aria-hidden="true" className="landing-dock landing-dock-lnx">
+      {DOCK_TONES.slice(0, 8).map((tone) => (
+        <i className="landing-dock-tile" data-tone={tone} key={tone} />
+      ))}
+      <span className="landing-dock-sep" />
+      <i className="landing-dock-tile" data-tone="trash" />
+    </div>
+  );
+}
+
+/** The menu bar's marks; the desktop is decoration, not iconography. */
+function AppleGlyph() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-menubar-glyph"
+      viewBox="0 0 24 24"
+    >
+      <path
+        d="M15.5 8.5c-1 0-2 .6-2.7.6-.8 0-1.7-.6-2.8-.6-1.4 0-2.7.8-3.4 2.1-1.5 2.5-.4 6.3 1 8.3.7 1 1.6 2.1 2.8 2.1 1.1 0 1.5-.7 2.9-.7 1.3 0 1.7.7 2.9.7 1.2 0 2-1.1 2.7-2.1.5-.8.9-1.6 1.1-2.5-2.3-.9-2.7-4.2-.4-5.5-.8-1.4-2.2-2.4-3.6-2.4ZM14.6 6.8c.6-.8 1-1.8.9-2.8-1 .1-2.1.6-2.8 1.4-.6.7-1 1.7-.9 2.7 1 0 2.1-.5 2.8-1.3Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function WifiGlyph() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-menubar-glyph"
+      viewBox="0 0 24 24"
+    >
+      <path
+        d="M4 9a12 12 0 0 1 16 0M7 12.5a8 8 0 0 1 10 0M10 16a3.5 3.5 0 0 1 4 0"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function BatteryGlyph() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-menubar-glyph"
+      viewBox="0 0 26 24"
+    >
+      <rect
+        fill="none"
+        height="10"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        width="18"
+        x="2"
+        y="7"
+      />
+      <rect fill="currentColor" height="6" rx="1" width="12" x="4" y="9" />
+      <rect fill="currentColor" height="4" rx="1" width="2" x="21" y="10" />
+    </svg>
   );
 }
 

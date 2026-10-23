@@ -50,6 +50,7 @@ blocks/notification-centre.mdx A notification centre: filters, four row bodies, 
 blocks/command-centre.mdx    A command palette over a dimmed page: filter, highlight, run line
 blocks/file-manager.mdx      A three-pane browser: folders, image tiles and file facts
 blocks/email-inbox.mdx       A four-pane mail client with a filterable list
+blocks/conversations.mdx     A macOS Messages window: threads, search and a composer
 components/index.mdx         The component grid: one preview tile per page, filter in the URL
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
@@ -264,6 +265,7 @@ src/components/docs/notification-centre.tsx The notification centre's rows, filt
 src/components/docs/command-centre.tsx    The command centre's matcher, highlight and run line
 src/components/docs/file-manager-block.tsx The file browser's reducer, panes and recipe
 src/components/docs/email-inbox-block.tsx The mail client's reducer, panes and recipe
+src/components/docs/conversations-block.tsx The messages window's reducer, list, thread and recipe
 src/components/docs/live-surface.tsx      Boots the wasm renderer on /live, mounts the reconciler and reports what it painted
 src/components/docs/theme-editor.tsx      The live token editor on /docs/themes
 src/components/docs/theme-editor-logic.ts Its pure core: edits, audit, copy output

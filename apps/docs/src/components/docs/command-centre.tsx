@@ -155,6 +155,9 @@ const CommandGlyph = ({ name }: { readonly name: CommandIcon }) => (
   </svg>
 );
 
+/** The dock's tiles: decoration under the dimmed desktop. */
+const DOCK_TONES = ["sky", "teal", "amber", "rose", "violet", "green"] as const;
+
 /** The page behind the palette: an app outline, dimmed and out of focus. */
 const PageBehind = () => (
   <div aria-hidden="true" className="gx-cmd-page">
@@ -193,7 +196,15 @@ export const CommandCentreRender = () => {
 
   return (
     <div className="gx-cmd-scene">
+      <span aria-hidden="true" className="gx-cmd-wall" />
       <PageBehind />
+      <div aria-hidden="true" className="gx-cmd-dock">
+        {DOCK_TONES.map((tone) => (
+          <i className="gx-cmd-dock-tile" data-tone={tone} key={tone} />
+        ))}
+        <span className="gx-cmd-dock-sep" />
+        <i className="gx-cmd-dock-tile" data-tone="trash" />
+      </div>
       <div className="gx-cmd-backdrop">
         <section aria-label="Command centre" className="gx-cmd-panel">
           <div className="gx-cmd-crumbs">

@@ -1685,21 +1685,34 @@
   position: relative;
   width: 100%;
   max-width: 900px;
-  min-height: 420px;
+  min-height: 460px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 8px);
-  background: var(--background);
+  background: #141c2c;
   text-align: left;
 }
 
+.gx-cmd-wall {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(75% 55% at 24% 12%, #4c6f9f 0%, transparent 60%),
+    linear-gradient(150deg, #24324d 0%, #35507a 45%, #141c2c 100%);
+}
+
 .gx-cmd-page {
+  position: absolute;
+  inset: 30px 52px 100px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-height: 420px;
+  overflow: hidden;
   padding: 20px 22px;
-  background: var(--background);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.35);
   filter: blur(0.6px);
 }
 
@@ -1751,9 +1764,72 @@
   background: var(--card);
 }
 
+.gx-cmd-dock {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  gap: 5px;
+  align-items: flex-end;
+  padding: 5px 7px;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 12px;
+  background: rgb(20 28 44 / 0.55);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.3);
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+
+.gx-cmd-dock-tile {
+  display: block;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+}
+
+.gx-cmd-dock-sep {
+  flex: none;
+  align-self: stretch;
+  width: 1px;
+  margin: 2px 3px;
+  background: rgb(255 255 255 / 0.28);
+}
+
+.gx-cmd-dock-tile[data-tone="sky"] {
+  background: linear-gradient(160deg, #56a8f5, #2f6de0);
+}
+
+.gx-cmd-dock-tile[data-tone="teal"] {
+  background: linear-gradient(160deg, #2fc6b6, #11877f);
+}
+
+.gx-cmd-dock-tile[data-tone="amber"] {
+  background: linear-gradient(160deg, #ffcc57, #f2912f);
+}
+
+.gx-cmd-dock-tile[data-tone="rose"] {
+  background: linear-gradient(160deg, #ff8aa5, #d63d64);
+}
+
+.gx-cmd-dock-tile[data-tone="violet"] {
+  background: linear-gradient(160deg, #a78bfa, #6d3ad6);
+}
+
+.gx-cmd-dock-tile[data-tone="green"] {
+  background: linear-gradient(160deg, #7ddc75, #2f9e44);
+}
+
+.gx-cmd-dock-tile[data-tone="trash"] {
+  background: linear-gradient(160deg, #e2e8f0, #94a3b8);
+}
+
 .gx-cmd-backdrop {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3965,6 +4041,703 @@
 
   .gx-mail-read {
     display: none;
+  }
+}
+
+/* ---- conversations: one window, three platform dresses ---- */
+
+.gx-conv {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  height: 540px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: 0 18px 40px -24px var(--shadow);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  text-align: left;
+}
+
+.gx-conv[data-platform="windows"] {
+  border-radius: 8px;
+  background: var(--muted);
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+}
+
+.gx-conv[data-platform="linux"] {
+  border-radius: 8px;
+  background: var(--card);
+  font-family: Cantarell, "Ubuntu", "Noto Sans", system-ui, sans-serif;
+}
+
+.gx-conv-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.gx-conv-lights {
+  display: flex;
+  gap: 8px;
+}
+
+.gx-conv-lights i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.gx-conv-lights i:nth-child(1) {
+  background: #ff5f57;
+}
+
+.gx-conv-lights i:nth-child(2) {
+  background: #febc2e;
+}
+
+.gx-conv-lights i:nth-child(3) {
+  background: #28c840;
+}
+
+.gx-conv-wincontrols {
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1;
+  color: var(--muted-foreground);
+}
+
+.gx-conv-wincontrols i {
+  font-style: normal;
+}
+
+.gx-conv-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.gx-conv-rail {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  width: 72px;
+  padding: 12px 0;
+  border-right: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.gx-conv-rail-item {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-conv-rail-item:hover {
+  background: var(--hover);
+}
+
+.gx-conv-rail-item[data-active="true"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-conv[data-platform="linux"] .gx-conv-rail-item[data-active="true"] {
+  background: var(--success-soft);
+  color: var(--success-soft-foreground);
+}
+
+.gx-conv-rail-item svg {
+  width: 17px;
+  height: 17px;
+}
+
+.gx-conv-side {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 330px;
+  min-height: 0;
+  border-right: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.gx-conv[data-platform="windows"] .gx-conv-side {
+  background: var(--card);
+}
+
+.gx-conv-side-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.gx-conv-search {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--muted-foreground);
+}
+
+.gx-conv[data-platform="windows"] .gx-conv-search {
+  border-radius: 4px;
+  background: var(--muted);
+}
+
+.gx-conv[data-platform="linux"] .gx-conv-search {
+  border-radius: 6px;
+  background: var(--background);
+}
+
+.gx-conv-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.gx-conv-search input::placeholder {
+  color: var(--placeholder);
+}
+
+.gx-conv-search input:focus-visible {
+  border-radius: 6px;
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-conv-list {
+  flex: 1;
+  min-height: 0;
+  padding: 0 8px 8px;
+  overflow-y: auto;
+}
+
+.gx-conv-row {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-conv-row:hover {
+  background: var(--hover);
+}
+
+.gx-conv-row[data-selected="true"],
+.gx-conv-row[data-selected="true"]:hover {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-conv[data-platform="windows"] .gx-conv-row[data-selected="true"],
+.gx-conv[data-platform="windows"] .gx-conv-row[data-selected="true"]:hover {
+  background: var(--selected);
+  color: var(--foreground);
+}
+
+.gx-conv[data-platform="linux"] .gx-conv-row[data-selected="true"],
+.gx-conv[data-platform="linux"] .gx-conv-row[data-selected="true"]:hover {
+  background: var(--success-soft);
+  color: var(--success-soft-foreground);
+}
+
+.gx-conv-row::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 0;
+  left: 60px;
+  height: 1px;
+  background: var(--border);
+}
+
+.gx-conv-row:hover::after,
+.gx-conv-row[data-selected="true"]::after {
+  display: none;
+}
+
+.gx-conv-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-conv-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gx-conv-row[data-selected="true"] .gx-conv-avatar {
+  background: var(--primary-foreground);
+  color: var(--primary);
+}
+
+.gx-conv[data-platform="windows"]
+  .gx-conv-row[data-selected="true"]
+  .gx-conv-avatar,
+.gx-conv[data-platform="linux"]
+  .gx-conv-row[data-selected="true"]
+  .gx-conv-avatar {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.gx-conv-avatar-sm {
+  width: 22px;
+  height: 22px;
+  font-size: 9px;
+}
+
+.gx-conv-row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.gx-conv-row-top {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.gx-conv-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-conv-when {
+  flex: none;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-conv-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--muted-foreground);
+}
+
+.gx-conv[data-platform="macos"]
+  .gx-conv-row[data-selected="true"]
+  .gx-conv-when,
+.gx-conv[data-platform="macos"]
+  .gx-conv-row[data-selected="true"]
+  .gx-conv-preview {
+  color: var(--primary-foreground);
+  opacity: 0.82;
+}
+
+.gx-conv[data-platform="linux"]
+  .gx-conv-row[data-selected="true"]
+  .gx-conv-when,
+.gx-conv[data-platform="linux"]
+  .gx-conv-row[data-selected="true"]
+  .gx-conv-preview {
+  color: var(--success-soft-foreground);
+  opacity: 0.82;
+}
+
+.gx-conv-none {
+  margin: 0;
+  padding: 14px 10px;
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-conv-thread {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--card);
+}
+
+.gx-conv[data-platform="windows"] .gx-conv-thread {
+  background: var(--muted);
+}
+
+.gx-conv[data-platform="linux"] .gx-conv-thread {
+  background: var(--background);
+}
+
+.gx-conv-head {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  height: 46px;
+  padding: 0 10px;
+}
+
+.gx-conv[data-platform="macos"] .gx-conv-head {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+}
+
+.gx-conv[data-platform="macos"] .gx-conv-contact {
+  justify-self: center;
+}
+
+.gx-conv-head-actions {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.gx-conv-contact {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
+  padding: 3px 10px 3px 3px;
+  border-radius: 999px;
+  background: var(--secondary);
+}
+
+.gx-conv[data-platform="windows"] .gx-conv-contact,
+.gx-conv[data-platform="linux"] .gx-conv-contact {
+  padding-left: 0;
+  background: transparent;
+}
+
+.gx-conv-contact-name {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-conv-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.gx-conv-status {
+  flex: none;
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-conv-glyph {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-conv-glyph:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-conv-glyph:focus-visible,
+.gx-conv-round:focus-visible,
+.gx-conv-send:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-conv-glyph svg,
+.gx-conv-round svg,
+.gx-conv-send svg {
+  width: 15px;
+  height: 15px;
+}
+
+.gx-conv-log {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+  padding: 4px 16px 10px;
+  overflow-y: auto;
+}
+
+.gx-conv-bubble {
+  max-width: 68%;
+  margin: 0;
+  padding: 6px 11px;
+  border-radius: 18px;
+  font-size: 13.5px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.gx-conv[data-platform="windows"] .gx-conv-bubble {
+  border-radius: 8px;
+}
+
+.gx-conv[data-platform="linux"] .gx-conv-bubble {
+  border-radius: 12px;
+}
+
+.gx-conv-bubble[data-mine="false"] {
+  align-self: flex-start;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.gx-conv-bubble[data-tone="success"] {
+  align-self: flex-end;
+  background: var(--success);
+  color: var(--success-foreground);
+}
+
+.gx-conv-bubble[data-tone="primary"] {
+  align-self: flex-end;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-conv-bubble[data-tone="info"] {
+  align-self: flex-end;
+  background: var(--info);
+  color: var(--info-foreground);
+}
+
+.gx-conv-meta {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--placeholder);
+}
+
+.gx-conv-meta[data-mine="true"] {
+  align-self: flex-end;
+  padding-right: 4px;
+}
+
+.gx-conv-meta[data-mine="false"] {
+  align-self: flex-start;
+  padding-left: 4px;
+}
+
+.gx-conv-ticks {
+  display: inline-flex;
+  color: var(--info);
+}
+
+.gx-conv-ticks svg {
+  width: 13px;
+  height: 13px;
+}
+
+.gx-conv-attach {
+  position: relative;
+  flex: none;
+  align-self: flex-end;
+  width: min(220px, 60%);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 12px;
+  background-image:
+    radial-gradient(
+      circle at 72% 24%,
+      color-mix(in srgb, var(--series-1) 55%, var(--background)) 0 14%,
+      transparent 55%
+    ),
+    linear-gradient(160deg, var(--series-2), var(--series-4));
+}
+
+.gx-conv-attach::before,
+.gx-conv-attach::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  transform: rotate(-7deg);
+}
+
+.gx-conv-attach::before {
+  right: -24%;
+  bottom: -16%;
+  left: -14%;
+  height: 68%;
+  background: color-mix(in srgb, var(--series-5) 55%, var(--background));
+}
+
+.gx-conv-attach::after {
+  right: -18%;
+  bottom: -30%;
+  left: 26%;
+  height: 62%;
+  transform: rotate(5deg);
+  background: color-mix(in srgb, var(--series-3) 48%, var(--background));
+}
+
+.gx-conv-empty {
+  margin: auto;
+  padding: 24px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+.gx-conv-composer {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 12px 12px;
+}
+
+.gx-conv-round {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  cursor: pointer;
+}
+
+.gx-conv-round:hover {
+  background: var(--secondary-hover);
+}
+
+.gx-conv-field {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 13.5px;
+}
+
+.gx-conv[data-platform="windows"] .gx-conv-field {
+  border-radius: 4px;
+}
+
+.gx-conv[data-platform="linux"] .gx-conv-field {
+  border-radius: 6px;
+  background: var(--muted);
+}
+
+.gx-conv-field::placeholder {
+  color: var(--placeholder);
+}
+
+.gx-conv-field:focus-visible {
+  border-color: var(--ring);
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-conv-send {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  cursor: pointer;
+}
+
+.gx-conv[data-platform="linux"] .gx-conv-send {
+  background: var(--info);
+  color: var(--info-foreground);
+}
+
+/* The list is the whole window on a narrow viewport: Messages hides the
+   thread, and the block hides it with the same breakpoint. */
+@media (max-width: 760px) {
+  .gx-conv-thread {
+    display: none;
+  }
+
+  .gx-conv-side {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    border-right: 0;
   }
 }
 

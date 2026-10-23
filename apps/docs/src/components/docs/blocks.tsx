@@ -11,6 +11,11 @@ import {
 } from "./auth-blocks";
 import { CommandCentreRender, commandCentreSource } from "./command-centre";
 import {
+  ConversationsRender,
+  conversationsPackages,
+  conversationsSource,
+} from "./conversations-block";
+import {
   DashboardRender,
   dashboardPackages,
   dashboardSource,
@@ -311,6 +316,16 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...emailInboxPackages],
     render: EmailInboxRender,
     source: emailInboxSource,
+  },
+  "conversations-01": {
+    name: "conversations-01",
+    slug: "conversations",
+    title: "Conversations",
+    description:
+      "A macOS Messages window: a searchable conversation list, the open thread's bubbles and a composer that sends.",
+    packages: [...conversationsPackages],
+    render: ConversationsRender,
+    source: conversationsSource,
   },
 };
 
