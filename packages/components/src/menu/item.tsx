@@ -20,8 +20,11 @@ import { MENU_GROUP, MENU_ITEM, MENU_LABEL, MENU_SEPARATOR } from "@gpuixui/tw";
 import { Match } from "effect";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import {
+  createContext,
   useCallback,
+  useContext,
   useLayoutEffect,
   useRef,
   useState,
@@ -211,6 +214,10 @@ export const MenuItem = ({
   return (
     <div
       role="menuitem"
+      // A row's name is its label. The accessible tree does not derive a name
+      // from a container's children, so a focusable row without this reads as
+      // an unnamed menu item; a composed label says its name with `textValue`.
+      aria-label={Str.isEmpty(searchable) ? undefined : searchable}
       {...rest}
       ref={setRow}
       tabIndex={disabled ? -1 : 0}
@@ -238,6 +245,38 @@ export const MenuItem = ({
       <Row leading={leading} trailing={trailing}>
         {children}
       </Row>
+    </div>
+  );
+};
+
+/**
+ * The leading slot of a row that carries a state: a fixed icon column so a
+ * checked and an unchecked row's labels start on the same x.
+ *
+ * The mark is the row's whole visible state, so it paints `colors.primary`, a
+ * role `indicatorRoles` measures at the 3:1 mark floor on the popover and on the
+ * `hover` wash a highlighted row tints — the `accent` wash it used to paint read
+ * 1.26:1 on the light popover and 1.14:1 on the dark one.
+ */
+const MenuCheckMark = ({ checked }: { readonly checked: boolean }) => {
+  const theme = useTheme();
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        width: theme.iconSize.md,
+      }}
+    >
+      {checked ? (
+        <Icon
+          name="check"
+          size="sm"
+          color={theme.colors.primary}
+          label="Checked"
+        />
+      ) : null}
     </div>
   );
 };
@@ -270,7 +309,6 @@ export const MenuCheckboxItem = ({
   ref,
   ...rest
 }: MenuCheckboxItemProps) => {
-  const theme = useTheme();
   const { activeId } = useMenuContext();
   const instance = useRef<PublicInstance | null>(null);
   const attach = useCallback((next: PublicInstance | null) => {
@@ -294,27 +332,134 @@ export const MenuCheckboxItem = ({
         onSelect?.();
         onCheckedChange(!checked);
       }}
-      leading={
-        leading ?? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              width: theme.iconSize.md,
-            }}
-          >
-            {checked ? (
-              <Icon
-                name="check"
-                size="sm"
-                color={theme.colors.primary}
-                label="Checked"
-              />
-            ) : null}
-          </div>
-        )
-      }
+      leading={leading ?? <MenuCheckMark checked={checked} />}
+      trailing={trailing}
+    >
+      {children}
+    </MenuItem>
+  );
+};
+
+/** {@link MenuRadioGroup} props: the exclusive choice its rows belong to. */
+export interface MenuRadioGroupProps extends Omit<Props, "children"> {
+  /** The chosen row's value. The group is controlled: the menu unmounts on close. */
+  readonly value: string;
+  /** Called with a row's value when it is chosen; never for the current one. */
+  readonly onValueChange: (value: string) => void;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+  readonly children?: PartChildren;
+}
+
+/** The chosen value and its setter, for the rows inside one group. */
+interface MenuRadioGroupValue {
+  readonly value: string;
+  readonly choose: (value: string) => void;
+}
+
+const MenuRadioGroupContext = createContext<MenuRadioGroupValue | undefined>(
+  undefined,
+);
+
+/** The radio group a row belongs to. Throws when there is none. */
+const useMenuRadioGroup = (): MenuRadioGroupValue => {
+  const value = useContext(MenuRadioGroupContext);
+  if (value === undefined) {
+    throw new Error(
+      "MenuRadioItem must be used inside a MenuRadioGroup: the group owns the choice.",
+    );
+  }
+  return value;
+};
+
+/**
+ * A run of mutually exclusive rows. One value is chosen at a time, so a menu
+ * that picks a setting (an appearance, a sort order) states the choice once
+ * instead of leaving the consumer to enforce it over checkbox rows.
+ *
+ * Controlled, like the menu itself: the popup unmounts when it closes, so a
+ * group that stored its own choice would forget it on the next open.
+ */
+export const MenuRadioGroup = ({
+  value,
+  onValueChange,
+  className,
+  children,
+  style,
+  ...rest
+}: MenuRadioGroupProps) => {
+  assertParts(menuRadioGroup, children);
+
+  const group: MenuRadioGroupValue = { value, choose: onValueChange };
+
+  return (
+    <MenuRadioGroupContext.Provider value={group}>
+      <MenuGroupSurface className={className} style={style} {...rest}>
+        {children}
+      </MenuGroupSurface>
+    </MenuRadioGroupContext.Provider>
+  );
+};
+
+/** {@link MenuRadioItem} props: one value in a {@link MenuRadioGroup}. */
+export interface MenuRadioItemProps extends Omit<
+  MenuItemProps,
+  "style" | "onSelect"
+> {
+  /** The value this row chooses. */
+  readonly value: string;
+  /** A style, or a function of the radio row's state. */
+  readonly style?: StateStyle<MenuRadioItemState>;
+}
+
+/** What a radio row draws. */
+export interface MenuRadioItemState {
+  readonly checked: boolean;
+  readonly disabled: boolean;
+  readonly highlighted: boolean;
+}
+
+/**
+ * One choice in a radio group. Choosing it closes the menu — unlike a checkbox
+ * row, which stays open so several settings can be visited in one visit.
+ *
+ * 0.11.0 has no `aria-checked`, so the row names its state with `aria-selected`
+ * and a check mark, the substitution the checkbox row uses.
+ */
+export const MenuRadioItem = ({
+  value,
+  disabled = false,
+  leading,
+  trailing,
+  children,
+  style,
+  ref,
+  ...rest
+}: MenuRadioItemProps) => {
+  const { value: chosen, choose } = useMenuRadioGroup();
+  const { activeId } = useMenuContext();
+  const instance = useRef<PublicInstance | null>(null);
+  const attach = useCallback((next: PublicInstance | null) => {
+    instance.current = next;
+  }, []);
+  const setRow = useMergedRef<PublicInstance | null>(attach, ref);
+  const checked = chosen === value;
+  const highlighted =
+    instance.current !== null && Option.contains(activeId, instance.current.id);
+  const state: MenuRadioItemState = { checked, disabled, highlighted };
+
+  return (
+    <MenuItem
+      role="menuitemradio"
+      aria-selected={checked}
+      {...rest}
+      ref={setRow}
+      disabled={disabled}
+      style={resolveStyle(style, state)}
+      onSelect={() => {
+        if (!checked) choose(value);
+      }}
+      leading={leading ?? <MenuCheckMark checked={checked} />}
       trailing={trailing}
     >
       {children}
@@ -374,15 +519,14 @@ export interface MenuGroupProps extends Omit<Props, "children"> {
   readonly children?: PartChildren;
 }
 
-/** A labelled group of rows. */
-export const MenuGroup = ({
+/** The group's own surface, shared by a labelled group and a radio group. */
+const MenuGroupSurface = ({
   className,
   children,
   style,
   ...rest
 }: MenuGroupProps) => {
   const theme = useTheme();
-  assertParts(menuGroup, children);
   return (
     <div
       role="group"
@@ -397,10 +541,27 @@ export const MenuGroup = ({
   );
 };
 
+/** A labelled group of rows. */
+export const MenuGroup = ({
+  className,
+  children,
+  style,
+  ...rest
+}: MenuGroupProps) => {
+  assertParts(menuGroup, children);
+  return (
+    <MenuGroupSurface className={className} style={style} {...rest}>
+      {children}
+    </MenuGroupSurface>
+  );
+};
+
 /** Every row part, so a misplaced sibling is named. */
 const menuRowParts: ReadonlyArray<PartComponent> = [
   MenuItem,
   MenuCheckboxItem,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuGroup,
   MenuLabel,
   MenuSeparator,
@@ -409,6 +570,19 @@ const menuRowParts: ReadonlyArray<PartComponent> = [
 const menuGroup: PartsContract = {
   parent: "menu group",
   family: menuRowParts,
-  accepts: [MenuItem, MenuCheckboxItem, MenuLabel, MenuSeparator],
+  accepts: [
+    MenuItem,
+    MenuCheckboxItem,
+    MenuRadioGroup,
+    MenuLabel,
+    MenuSeparator,
+  ],
   hint: "Put rows, labels and separators directly inside the group.",
+};
+
+const menuRadioGroup: PartsContract = {
+  parent: "MenuRadioGroup",
+  family: menuRowParts,
+  accepts: [MenuRadioItem, MenuLabel, MenuSeparator],
+  hint: "Put MenuRadioItem rows directly inside the radio group.",
 };

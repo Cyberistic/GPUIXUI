@@ -54,6 +54,8 @@ import {
   MenuGroup,
   MenuItem,
   MenuLabel,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuSeparator,
 } from "./menu/item.js";
 import {
@@ -367,12 +369,16 @@ export {
   MenuGroup as DropdownMenuGroup,
   MenuItem as DropdownMenuItem,
   MenuLabel as DropdownMenuLabel,
+  MenuRadioGroup as DropdownMenuRadioGroup,
+  MenuRadioItem as DropdownMenuRadioItem,
   MenuSeparator as DropdownMenuSeparator,
 };
 
 export type {
   MenuCheckboxItemProps as DropdownMenuCheckboxItemProps,
   MenuItemProps as DropdownMenuItemProps,
+  MenuRadioGroupProps as DropdownMenuRadioGroupProps,
+  MenuRadioItemProps as DropdownMenuRadioItemProps,
 } from "./menu/item.js";
 
 /** Every part of the dropdown menu, so a misplaced sibling is named. */
@@ -382,6 +388,8 @@ const dropdownParts: ReadonlyArray<PartComponent> = [
   DropdownMenuContent,
   MenuItem,
   MenuCheckboxItem,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuGroup,
   MenuLabel,
   MenuSeparator,
@@ -403,6 +411,7 @@ const dropdownContent: PartsContract = {
   accepts: [
     MenuItem,
     MenuCheckboxItem,
+    MenuRadioGroup,
     MenuGroup,
     MenuLabel,
     MenuSeparator,
@@ -423,7 +432,8 @@ export const dropdownMenuMeta = {
     'submenus open to the right and are clamped by fit="snap"; there is no left-side flip',
     "no aria-haspopup in 0.11.0; a submenu trigger announces aria-expanded only",
     "type-ahead is a case-insensitive 500 ms prefix search with no fuzzy scoring; a composed label needs textValue",
-    "the checkbox row uses aria-selected and a check icon because 0.11.0 has no aria-checked",
+    "the checkbox and radio rows use aria-selected and a check icon because 0.11.0 has no aria-checked",
+    "a radio group is controlled: the popup unmounts when it closes, so the caller owns the choice",
   ],
   docs: "docs/dropdown-menu.mdx",
   example: "examples/dropdown-menu.example.tsx",

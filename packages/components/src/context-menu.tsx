@@ -54,6 +54,8 @@ import {
   MenuGroup,
   MenuItem,
   MenuLabel,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuSeparator,
 } from "./menu/item.js";
 import {
@@ -352,12 +354,16 @@ export {
   MenuGroup as ContextMenuGroup,
   MenuItem as ContextMenuItem,
   MenuLabel as ContextMenuLabel,
+  MenuRadioGroup as ContextMenuRadioGroup,
+  MenuRadioItem as ContextMenuRadioItem,
   MenuSeparator as ContextMenuSeparator,
 };
 
 export type {
   MenuCheckboxItemProps as ContextMenuCheckboxItemProps,
   MenuItemProps as ContextMenuItemProps,
+  MenuRadioGroupProps as ContextMenuRadioGroupProps,
+  MenuRadioItemProps as ContextMenuRadioItemProps,
 } from "./menu/item.js";
 
 export {
@@ -379,6 +385,8 @@ const contextMenuParts: ReadonlyArray<PartComponent> = [
   ContextMenuContent,
   MenuItem,
   MenuCheckboxItem,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuGroup,
   MenuLabel,
   MenuSeparator,
@@ -400,6 +408,7 @@ const contextMenuContent: PartsContract = {
   accepts: [
     MenuItem,
     MenuCheckboxItem,
+    MenuRadioGroup,
     MenuGroup,
     MenuLabel,
     MenuSeparator,
@@ -419,6 +428,7 @@ export const contextMenuMeta = {
     "the menu is scoped to its trigger: a right click outside the trigger closes it but does not open another",
     "one level of submenus is tested; deeper nesting follows the same rule but is untested",
     "no aria-haspopup in 0.11.0; a submenu trigger announces aria-expanded only",
+    "the radio rows use aria-selected and a check icon because 0.11.0 has no aria-checked",
   ],
   docs: "docs/context-menu.mdx",
   example: "examples/context-menu.example.tsx",

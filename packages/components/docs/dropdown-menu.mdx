@@ -37,6 +37,8 @@ DropdownMenu
 └── DropdownMenuContent
     ├── DropdownMenuItem
     ├── DropdownMenuCheckboxItem
+    ├── DropdownMenuRadioGroup
+    │   └── DropdownMenuRadioItem
     ├── DropdownMenuSeparator
     ├── DropdownMenuLabel
     ├── DropdownMenuGroup
@@ -54,8 +56,36 @@ DropdownMenu
 | `DropdownMenuContent` | floating `role="menu"` surface | `label?`, `side?` (default `"bottom"`), `align?` (default `"start"`), `sideOffset?` (default `4`), `collisionPadding?` (default `8`) |
 | `DropdownMenuItem` | one action row | `onSelect?`, `disabled?`, `tone?`, `leading?`, `trailing?`, `textValue?`, `closeOnSelect?` (default `true`) |
 | `DropdownMenuCheckboxItem` | an on/off row that stays open | `checked` (required), `onCheckedChange` (required) |
+| `DropdownMenuRadioGroup` | the exclusive choice its rows belong to | `value` (required), `onValueChange` (required), `className?` |
+| `DropdownMenuRadioItem` | one choice; choosing it closes the menu | `value` (required), `disabled?`, `leading?`, `trailing?`, `textValue?` |
 | `DropdownMenuSub` / `DropdownMenuSubTrigger` / `DropdownMenuSubContent` | one secondary level | `DropdownMenuSubContent` takes the root surface's placement props |
 | `DropdownMenuSeparator` / `DropdownMenuLabel` / `DropdownMenuGroup` | the structure between rows | — |
+
+## Choice rows
+
+Two kinds of row carry state:
+
+- **`DropdownMenuCheckboxItem`** is an on/off setting. It stays open, so a
+  visit can toggle several settings.
+- **`DropdownMenuRadioGroup` + `DropdownMenuRadioItem`** is one exclusive
+  choice. The group is the single truth — `value` decides which row is marked —
+  and choosing a row reports its value and closes the menu. A press on the row
+  that is already chosen reports nothing.
+
+The group is controlled, because the popup unmounts when it closes: a group
+that stored its own choice would forget it on the next open. A track order or
+an appearance menu is app state:
+
+```tsx
+<DropdownMenuRadioGroup value={sort} onValueChange={setSort}>
+  <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
+  <DropdownMenuRadioItem value="date">Date modified</DropdownMenuRadioItem>
+</DropdownMenuRadioGroup>
+```
+
+Both rows mark their state with a check and `aria-selected`, because 0.11.0 has
+no `aria-checked`. A row's accessible name is its label, so a composed label
+passes `textValue`.
 
 ## Limitations
 

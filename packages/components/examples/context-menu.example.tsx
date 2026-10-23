@@ -2,7 +2,8 @@
  * Context menu example: a project row whose right click offers actions.
  *
  * The menu owns only the open state and the pointer point; what "Delete" means
- * is the app's, reported through `onSelect`.
+ * is the app's, reported through `onSelect`. Grouping is an exclusive choice, so
+ * it is a radio group the app owns; choosing a row closes the menu.
  */
 
 import { useState } from "react";
@@ -12,6 +13,8 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuLabel,
+  ContextMenuRadioGroup,
+  ContextMenuRadioItem,
   ContextMenuSeparator,
   ContextMenuSub,
   ContextMenuSubContent,
@@ -23,6 +26,7 @@ import { textStyle, useTheme } from "../src/internal/theme.js";
 /** A project row with a right-click menu. */
 export const ContextMenuExample = () => {
   const theme = useTheme();
+  const [groupBy, setGroupBy] = useState("folder");
   const [lastAction, setLastAction] = useState("none");
 
   return (
@@ -30,7 +34,7 @@ export const ContextMenuExample = () => {
       <CardHeader>
         <CardTitle>Projects</CardTitle>
         <CardDescription>
-          Right-click the row · last action: {lastAction}
+          Right-click the row · grouped by {groupBy} · last action: {lastAction}
         </CardDescription>
       </CardHeader>
       <div style={{ padding: theme.spacing.lg, paddingTop: 0 }}>
@@ -79,6 +83,12 @@ export const ContextMenuExample = () => {
                 </ContextMenuItem>
               </ContextMenuSubContent>
             </ContextMenuSub>
+            <ContextMenuSeparator />
+            <ContextMenuLabel>Group by</ContextMenuLabel>
+            <ContextMenuRadioGroup value={groupBy} onValueChange={setGroupBy}>
+              <ContextMenuRadioItem value="folder">Folder</ContextMenuRadioItem>
+              <ContextMenuRadioItem value="owner">Owner</ContextMenuRadioItem>
+            </ContextMenuRadioGroup>
             <ContextMenuSeparator />
             <ContextMenuItem
               tone="destructive"
