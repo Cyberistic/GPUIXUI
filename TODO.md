@@ -10382,7 +10382,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 318/320
+`[ ]` `[█████████░]` 320/321
 
 `[x]` Give the **data and workspace lane entries their shipped pages** — both
       pages answered "what does this lane ship" with a hand-written list, and
@@ -10700,6 +10700,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `?q=zzzzzz` renders `"false"`. `nub run --filter @gpuixui/docs test` is
       **140 files / 1 220 tests** green, `check-types` and `build` clean. No
       native scenario applies — a site page's own filter.
+
+`[x]` Stop `/docs/typography` **denying the heading semantics the runtime
+      publishes** — its Limitations said "**No heading semantics**:
+      `role="h2"` paints the style, not a heading node", while `Text`'s
+      `semanticsOf` publishes `role="heading"` with the role's own level for
+      `h1`/`h2`/`h3` and `code` for `code` and `codeBlock`, which
+      `packages/primitives/docs/text.mdx` teaches and its `docs.test.ts` holds
+      to `renderText`: the site told a reader the opposite of what a screen
+      reader hears. The page also hand-typed the mono roles, the platform mono
+      faces and the tone list. It gains **Semantics** (the five roles that
+      publish something, the absent paragraph/list/landmark roles), a
+      **Families** table of each platform's mono face, and the honest
+      limitation. `src/lib/typography-page.test.ts` (6 cases) reads `Text`'s
+      `semanticsOf` table, the two `MONO_ROLES` declarations (the resolver and
+      the class recipe must agree), `platformStyles`, `typography`,
+      `TEXT_TONES` and `densityPresets`, and holds the page to the role count,
+      the mono roles, every platform row, the published role set, the tone
+      list and the density claim. Directions measured: restoring the false
+      limitation fails the semantics case by name, dropping Linux's mono row
+      fails with the missing row, adding a `success` tone fails with it named,
+      and `The nine type roles` fails the count case; restored, the file is
+      6/6. No native scenario applies — a site page and the source it
+      documents.
 
 `[x]` Stop the **docs build leaving its route tree untracked** — `vite build`
       writes the generated route-tree cache to `apps/docs/.tanstack/`, and the

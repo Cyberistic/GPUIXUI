@@ -21,7 +21,26 @@ Roles merge field by field.
 
 ## Families
 
-`sans` covers everything except `mono`, which `code` and `codeBlock` use. The default is GPUix's `.SystemUIFont` sentinel; the platform presets name their own mono faces. Density never changes type sizes.
+`sans` covers every role except `code` and `codeBlock`, which paint `mono`.
+Every platform's UI face is GPUix's `.SystemUIFont` sentinel — the runtime
+resolves the host's own — while each preset names the mono face it expects:
+
+| Platform | Mono face |
+| -------- | --------- |
+| macOS | `Menlo` |
+| Linux | `DejaVu Sans Mono` |
+| Windows | `Consolas` |
+| Default | `Menlo` |
+
+Density never changes type sizes: a preset moves a control's height, padding and
+row height, not its type.
+
+## Semantics
+
+A role is also what the runtime tells assistive technology. `h1`, `h2` and `h3`
+publish `heading` with their own level, `code` and `codeBlock` publish the code
+role, and every other role is a plain text run. There is no paragraph, list or
+landmark role — compose those from the component that owns them.
 
 ## Tones
 
@@ -30,5 +49,5 @@ Roles merge field by field.
 ## Limitations
 
 - **One run, one role**: no rich text; a bold word is a second `Text`.
-- **No heading semantics**: `role="h2"` paints the style, not a heading node.
+- **No paragraph or list semantics**: only the heading and code roles are published.
 - **No responsive sizes**: one size per theme, not per window width.
