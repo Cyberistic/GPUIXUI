@@ -137,9 +137,12 @@ page and the reader renames it in place.
 
 `InlineEditState` is `{ editing, disabled }`, handed to the `style` callback
 after the recipe, so a caller can paint an editing row the recipe does not. The
-input also accepts the runtime's `InputProps` minus `value` — `onKeyDown`,
-`onFocus` and `onBlur` compose with the component's own handlers rather than
-replacing them.
+input also accepts the runtime's `InputProps` minus `value` — `onChange`,
+`onSubmit`, `onKeyDown`, `onFocus` and `onBlur` compose with the component's own
+handlers rather than replacing them, and the component decides **first**: the
+draft is written before the caller's `onChange`, the commit is latched before
+the caller's `onSubmit` or `onBlur`, so a second `Enter` finds the edit already
+finished and the caller still sees every event it passed.
 
 ## Theming
 
@@ -206,11 +209,12 @@ the whole control with no code change — see
 whole, but 0.11.0 has no `contenteditable` (the swap is explicit) and no
 `aria-invalid`/`aria-describedby` (a refused commit is the app's feedback).
 
-`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer — 8 native
+`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer — 9 native
 behaviour tests: the display with no input, the click swap with focus, the
 keyboard swap, an `Enter` commit that returns the focus, the `Escape` discard, a
-blur commit, the unchanged draft (and the disabled control), and a controlled
-edit state.
+blur commit, the unchanged draft (and the disabled control), the caller's
+`onChange`/`onSubmit`/`onBlur` firing beside the component's own, and a
+controlled edit state.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
