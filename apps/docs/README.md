@@ -102,7 +102,7 @@ src/routes/index.tsx                The landing page at /
 src/routes/live.tsx                 /live, the real GPUix surface (whole page)
 src/routes/docs/index.tsx           /docs, the Introduction
 src/routes/docs/$.tsx               Every other docs page, from either collection
-src/routes/api/search.ts            Fumadocs search endpoint over all four collections
+src/routes/api/search.ts            Fumadocs search endpoint over every mounted collection
 src/routes/sitemap[.]xml.ts         /sitemap.xml, generated from every collection
 
 src/components/mdx.tsx              The MDX component registry

@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
  * pointing at a page that was renamed or never mounted would 404 from the only
  * page a first-time reader sees, and the build would stay green.
  *
- * The mounted set is read from the same four collections the site serves.
+ * The mounted set is read from the collections the site serves.
  */
 
 const appDir = fileURLToPath(new URL("../../", import.meta.url));

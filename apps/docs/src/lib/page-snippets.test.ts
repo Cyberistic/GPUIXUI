@@ -16,7 +16,7 @@ import { repoRoot } from "./public-symbols-source";
  *
  * The introduction, getting-started and installation pages had their own guards
  * while the rest of the site's snippets went unchecked, and the pages the
- * packages ship — the other three collections the site mounts — were not read at
+ * packages ship — the other collections the site mounts — were not read at
  * all. This walks every mounted page and resolves every `@gpuixui/*` import
  * against the package source, so the page tests can focus on what makes their
  * page unique.

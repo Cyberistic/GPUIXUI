@@ -4594,7 +4594,41 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 13/13
+`[x]` `[██████████]` 14/14
+
+`[x]` `packages/primitives`: **a blank sentence answer named a control with
+      nothing** — `PrimitiveMessages`' three *sentences* (`starName`,
+      `codeDigit`, `rangeEnd`) are functions a component calls with the caller's
+      own data, so their answers are interface copy exactly like a formatter's,
+      and every answer was published as it arrived: a localised table with a
+      missing row answers `""`, so a `Rating` star became a `radio` with an empty
+      `aria-label`, every `OTPField` cell became an unnamed input a reader could
+      only count by pressing Tab, and both `RangeSlider` thumbs lost their names
+      — with every report and gate empty. `core/a11y.ts`'s `spokenSentence` is
+      `spokenText` for a value that arrives through a function (a blank answer is
+      absence, a real one is trimmed), and the shipped sentence now stands:
+      `Rating` names a star from `defaultMessages.starName`, `otpCellLabel` from
+      `defaultMessages.codeDigit` (the caller's field name still leads it), and
+      `rangeThumbNames` from `defaultMessages.rangeEnd` — whose own promise, "a
+      blank group name names nothing", was false too: it tested `=== undefined`
+      while the rule is `accessibleName`, so a whitespace label announced
+      `" minimum"` / `" maximum"`. Proof: `messages.test.tsx`'s
+      `a sentence a caller's table says nothing for` (3 cases: the helper and
+      both painted thumbs, a whitespace group name, each star, each cell) and
+      `runtime/messages.runtime.test.tsx`'s `keeps the shipped sentence when a
+      caller's says nothing`, which finds each node in the window's
+      accessibility tree by the shipped name. Directions measured: with the
+      three painters reverted the unit cases fail with `expected [ '', '' ] to
+      deeply equal [ 'Prix minimum', 'Prix maximum' ]`,
+      `expected [ '', '', '' ] to deeply equal [ '1 of 3', … ]` and
+      `expected [ '', '' ] to deeply equal [ 'Vérification digit 1', … ]`, and
+      the window case fails `no accessibility node announced 1 of 2`; restored,
+      the package is green. Docs: `docs/rating.mdx`/`docs/otp-field.mdx` gain
+      §Words, `docs/range-slider.mdx` the name rule beside its formatter rule,
+      `docs/theme-provider.mdx` §Words the three sentences, `src/docs.test.ts`'s
+      `keeps a control's own sentence when the table's says nothing` holds all
+      four pages and the three painters, and `inventory.ts` plus the three Tier 1
+      rows carry the limit.
 
 `[x]` `packages/primitives`: **a blank formatter answer left a slider announcing
       nothing** — `Slider`'s and `RangeSlider`'s `formatValue` are interface copy
@@ -8468,7 +8502,40 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 230/230
+`[x]` `[██████████]` 232/232
+
+`[x]` Print the **mark surfaces from the array** on both theming pages —
+      `themes.mdx` and `theming.mdx` retyped `indicatorSurfaces` as a nine-name
+      list beside an interpolated count, so when the tokens package grew the set
+      (its soft-status-tint placements took it to thirteen) the count moved and
+      the list did not, and the docs suite went red naming the four missing
+      tints. Both pages now print `{indicatorSurfaces.join(", ")}` and say the
+      list is derived, so a strip the package adds is named without an edit.
+      `theming-page.test.ts` requires the derived expression, refuses a list
+      retyped as backticked names, and refuses a stale count word
+      (three/four/seven/nine). Directions measured: restoring a literal list
+      fails `theming.mdx` on both "does not print the package's own strip list"
+      and "retypes the strip list"; green the file is 117 files / 1 248 tests
+      and `build` renders the page. The prose that names the nine kinds by hand
+      still needs the four message tints once the tokens commit lands — the
+      printed list is already correct for it. No native scenario applies — page
+      prose and its guard have no runtime path.
+
+`[x]` Describe the **search index without a count the collections outgrew** —
+      `apps/docs/README.md` called `/api/search` the endpoint "over all four
+      collections" while the site mounts **nine** package collections under it
+      (data, editor, files, shell, dock and media joined primitives, icons and
+      components), so a contributor reading the site's ledger believed a
+      workspace, media or data page was not searchable; three guards' own
+      headers repeated "the four collections". The ledger line now says "every
+      mounted collection" and the three headers count nothing.
+      `readme-ledger.test.ts` gains `describes the search index without a count
+      the collections outgrew`: it reads `packageCollections.length` (and
+      requires it above four, so the retracted number is provably wrong),
+      requires the ledger's search line to say "every mounted collection" and
+      refuses a number word in it. Direction measured: restoring "all four
+      collections" fails the case by name; green the file is 6/6. No native
+      scenario applies — a ledger line and its guard have no runtime path.
 
 `[x]` Teach the **hint a composited field announces** on the curated pages —
       `cdc3ff43` made the seven composited text hosts publish the hint they

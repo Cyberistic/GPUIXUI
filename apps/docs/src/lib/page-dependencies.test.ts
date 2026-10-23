@@ -32,7 +32,7 @@ const root = fileURLToPath(new URL("../../../../", import.meta.url)).replace(
 );
 const index = readPageDependencies(root);
 
-/** Every URL the four collections serve, so a dependency link is not a 404. */
+/** Every URL the collections serve, so a dependency link is not a 404. */
 const mountedPages = (): ReadonlySet<string> => {
   const site = (directory: string, prefix: string): string[] =>
     readdirSync(join(root, directory), { withFileTypes: true }).flatMap(

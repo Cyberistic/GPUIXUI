@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { packageCollections } from "./collection-routes";
 
 /**
  * `apps/docs/README.md` is the site's ledger: which pages exist and which
@@ -114,5 +115,19 @@ describe("the apps/docs ledger", () => {
     expect(curated.filter((line) => line.includes("package page"))).toEqual([]);
     expect(page).toContain("## API reference");
     expect(button).toContain("API");
+  });
+
+  it("describes the search index without a count the collections outgrew", () => {
+    // The ledger said search ran "over all four collections" long after the
+    // site mounted nine package collections under it: a contributor reading
+    // the line believed a workspace, media or data page was not searchable.
+    // The wording is count-free now, and the registry is the thing that knows
+    // how many floors the index has.
+    const search =
+      ledger.find((line) => line.includes("src/routes/api/search.ts")) ?? "";
+
+    expect(packageCollections.length).toBeGreaterThan(4);
+    expect(search).toContain("every mounted collection");
+    expect(search).not.toMatch(/\b(four|three|nine)\b/);
   });
 });

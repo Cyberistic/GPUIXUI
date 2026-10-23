@@ -121,11 +121,12 @@ report. `indicatorRoles` is the closed set a mark may use, and
 `indicatorFailures(theme)` holds every one of them to the 3:1 non-text floor
 (`4.5:1` in a high-contrast theme) on the {indicatorSurfaces.length} strips
 `indicatorSurfaces` names
-(`background`, `card`, `popover`, `muted`, `hover`, `active`, `accent`, `selected`, `input`):
+({indicatorSurfaces.join(", ")}):
 the page, a card, a popover, a muted toolbar, the two
 washes a row tints under the pointer, the `accent` and `selected` fills a menu or
 a combobox row wears with its tick, and a field's own fill, which carries its
-caret.
+caret. The list is printed from the array rather than retyped, so a strip the
+package adds is named here without an edit.
 
 A **status** mark does not paint the tone's solid fill. That role is a surface
 designed to carry text — light `warning` is a pale amber with near-black text and

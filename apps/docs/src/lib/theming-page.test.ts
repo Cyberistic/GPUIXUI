@@ -491,9 +491,9 @@ describe("the theming pages' indicator strips", () => {
   // `indicatorSurfaces` had grown to seven: the `hover` and `active` washes a
   // row tints under the pointer, and a field's `input` fill, which carries its
   // caret. A reader editing an action fill was told a mark is measured on a set
-  // the package no longer uses. The count is interpolated and the printed list
-  // is the package's own array, so an eighth strip fails here by page name.
-  const printed = `(${indicatorSurfaces.map(backticked).join(", ")})`;
+  // the package no longer uses. The count **and the list** are printed from the
+  // array now, so a strip the package adds is named without an edit and a page
+  // cannot keep a list that has fallen behind.
   const pages = [
     { name: "themes.mdx", heading: "The theme audit" },
     { name: "theming.mdx", heading: "Indicator marks" },
@@ -517,10 +517,13 @@ describe("the theming pages' indicator strips", () => {
         ...(marks.includes("{indicatorSurfaces.length}")
           ? []
           : [`${name}: prints a literal strip count`]),
-        ...(marks.includes(printed)
+        ...(marks.includes("{indicatorSurfaces.join(\", \")}")
           ? []
-          : [`${name}: does not print ${printed}`]),
-        ...(/\b(four|seven) strips\b/.test(marks)
+          : [`${name}: does not print the package's own strip list`]),
+        ...(marks.includes("(`background`")
+          ? [`${name}: retypes the strip list`]
+          : []),
+        ...(/\b(four|seven|nine) strips\b/.test(marks)
           ? [`${name}: keeps a stale strip count`]
           : []),
       ];
