@@ -8973,7 +8973,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
     one `x` and one width and every value begins at one `x`. A measurement taken
     before the first layout is `NaN`, and the runtime drops a `width: NaN` (the
     chart box found the same), so the label track fell back to each label's own
-    text width: with a three-row list the long label measured **78px**, not the
+    text width: with a two-row list the long label measured **78px**, not the
     default 120, and every row's value began somewhere else while the suite stayed
     green on its fixed-width fixture. A label width the layout cannot paint is
     `DEFAULT_LABEL_WIDTH` and a `valueWidth` it cannot paint fills the row like
