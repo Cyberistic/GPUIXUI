@@ -25,7 +25,7 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon, ICON_SIZES } from "@gpuixui/icons";
-import type { IconName } from "@gpuixui/icons";
+import type { IconName, IconSize } from "@gpuixui/icons";
 import { a11yNode, type Runtime } from "./harness.js";
 import { Surface, openWindow } from "./fixture.js";
 
