@@ -35,10 +35,18 @@ import { otpFieldPart, renderOtpFieldInput } from "./OTPField.js";
 import { renderRadioGroup } from "./RadioGroup.js";
 import { renderRating } from "./Rating.js";
 import { renderScrollAreaViewport, scrollPart } from "./ScrollArea.js";
+import { renderProgress } from "./Progress.js";
+import { renderButton } from "./Button.js";
+import { renderSpinner } from "./Spinner.js";
 import { renderSwitch } from "./Switch.js";
 import { renderToggle } from "./Toggle.js";
 import { renderToggleGroup } from "./ToggleGroup.js";
-import { expectSome, elementChildren, hostProp } from "./testing/element.js";
+import {
+  expectSome,
+  elementChildren,
+  elementProp,
+  hostProp,
+} from "./testing/element.js";
 
 /** A caller's table: the words a French interface announces. */
 const french: PrimitiveMessages = {
@@ -48,6 +56,7 @@ const french: PrimitiveMessages = {
   starName: (index, max) => `étoile ${index} sur ${max}`,
   scrollRegion: "Zone de défilement",
   codeDigit: (index, label) => `${label ?? "Code"} chiffre ${index + 1}`,
+  loading: { busy: "Chargement", indeterminate: "chargement" },
 };
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
@@ -84,6 +93,7 @@ describe("resolveMessages", () => {
     expect(resolved.press).toEqual(french.press);
     expect(resolved.selection).toEqual(defaultMessages.selection);
     expect(resolved.scrollRegion).toBe("Scroll region");
+    expect(resolved.loading).toEqual(defaultMessages.loading);
   });
 
   it("extends the table above it, which is what a nested provider does", () => {
@@ -113,12 +123,14 @@ describe("resolveMessages", () => {
         starName: undefined,
         scrollRegion: undefined,
         codeDigit: undefined,
+        loading: undefined,
       },
       french,
     );
     expect(resolved).toEqual(french);
     expect(resolved.starName(1, 2)).toBe("étoile 1 sur 2");
     expect(resolved.codeDigit(0, undefined)).toBe("Code chiffre 1");
+    expect(resolved.loading).toEqual(french.loading);
   });
 });
 
@@ -288,6 +300,65 @@ describe("every control announces the table it is handed", () => {
       "Vérification chiffre 2",
     );
   });
+
+  it("announces a busy action and an indeterminate bar in the caller's words", () => {
+    // The bug this guards: the busy word and the indeterminate word were the
+    // only announced copy outside the table, so a French tree that named every
+    // state word still heard "Loading" from each action and "loading" from each
+    // bar until it repeated a prop on every instance.
+    const button = renderButton(
+      { loading: true },
+      testTheme,
+      idle,
+      false,
+      french,
+    );
+    expect(expectSome(hostProp(button, "aria-description"))).toBe("Chargement");
+    // The busy spinner is handed the same word; its own case below proves the
+    // word becomes the status name.
+    const [spinner] = elementChildren(button);
+    expect(
+      expectSome(elementProp(spinner ?? expect.fail("no spinner"), "label")),
+    ).toBe("Chargement");
+    expect(
+      expectSome(
+        hostProp(renderSpinner({}, testTheme, 0, french), "aria-label"),
+      ),
+    ).toBe("Chargement");
+    expect(
+      announced(renderProgress({ label: "Import" }, testTheme, 0, french)),
+    ).toBe("chargement");
+    // A determined bar reports a share, so the loading word cannot reach it.
+    expect(announced(renderProgress({ value: 42 }, testTheme, 0, french))).toBe(
+      "42%",
+    );
+  });
+
+  it("lets a caller's own loading word win over the table", () => {
+    const button = renderButton(
+      { loading: true, loadingLabel: "Enregistrement" },
+      testTheme,
+      idle,
+      false,
+      french,
+    );
+    expect(expectSome(hostProp(button, "aria-description"))).toBe(
+      "Enregistrement",
+    );
+    expect(
+      expectSome(
+        hostProp(
+          renderSpinner({ label: "Récupération" }, testTheme, 0, french),
+          "aria-label",
+        ),
+      ),
+    ).toBe("Récupération");
+    expect(
+      announced(
+        renderProgress({ loadingText: "en cours" }, testTheme, 0, french),
+      ),
+    ).toBe("en cours");
+  });
 });
 
 describe("a caller who names no words", () => {
@@ -326,5 +397,9 @@ describe("a caller who names no words", () => {
       Arr.map(stars, (star) => expectSome(hostProp(star, "aria-label"))),
     ).toEqual(["1 of 2", "2 of 2"]);
     expect(Arr.map(stars, announced)).toEqual(["half", "unchecked"]);
+    // The loading words ship as the library's own English too.
+    const button = renderButton({ loading: true }, testTheme, idle);
+    expect(expectSome(hostProp(button, "aria-description"))).toBe("Loading");
+    expect(announced(renderProgress({}, testTheme, 0))).toBe("loading");
   });
 });

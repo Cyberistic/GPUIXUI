@@ -25,7 +25,14 @@ import { darkTheme } from "@gpuixui/tokens";
 A control's state is announced in words, because this runtime has no
 `aria-checked`, `aria-pressed` or `aria-busy`. The provider carries them as
 `messages`, one complete group per state set: `selection` and `press`, `star` and
-`starName`, `scrollRegion` and `codeDigit`.
+`starName`, `scrollRegion` and `codeDigit`, and `loading`.
+
+`loading` is the busy vocabulary: `busy` is what a busy action says instead of
+`aria-busy` (it is the action's description and the busy spinner's name) and
+`indeterminate` is what a `Progress` bar says when it has no percentage to
+report. Those two words are the defaults for `loadingLabel`, a `Spinner`'s `label`
+and `Progress`'s `loadingText`; a prop on one instance still wins, so a tree can
+translate once and still give one action its own wording.
 
 A group named whole replaces the inherited one; a group left out — or written
 `undefined` — keeps it, so a provider forwarding an optional group it never

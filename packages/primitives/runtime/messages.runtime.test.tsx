@@ -17,8 +17,10 @@ import * as Option from "effect/Option";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import type { PrimitiveMessages } from "../src/core/messages.js";
+import { Button } from "../src/components/Button.js";
 import { MessagesProvider } from "../src/components/MessagesProvider.js";
 import { OTPField } from "../src/components/OTPField.js";
+import { Progress } from "../src/components/Progress.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Rating } from "../src/components/Rating.js";
 import { ScrollArea } from "../src/components/ScrollArea.js";
@@ -38,6 +40,7 @@ const french: PrimitiveMessages = {
   starName: (index, max) => `étoile ${index} sur ${max}`,
   scrollRegion: "Zone de défilement",
   codeDigit: (index, label) => `${label ?? "Code"} chiffre ${index + 1}`,
+  loading: { busy: "Chargement", indeterminate: "chargement" },
 };
 
 /** The word the accessibility node named `label` announces. */
@@ -49,6 +52,12 @@ const announced = (runtime: Runtime, label: string): string =>
 /** Whether a node with this role and name is in the painted tree. */
 const named = (runtime: Runtime, role: string, label: string): boolean =>
   Option.isSome(a11yNode(runtime.a11y(), { role, label }));
+
+/** The description the accessibility node named `label` carries. */
+const described = (runtime: Runtime, label: string): Option.Option<string> =>
+  Option.flatMap(a11yNode(runtime.a11y(), { label }), (node) =>
+    Option.fromNullishOr(node.aria?.description),
+  );
 
 it("announces every control's state in the caller's words", async () => {
   // The bug: `checked`, `mixed`, `pressed`, `Scroll region` and `Code digit N`
@@ -152,6 +161,32 @@ it("keeps the words a nested provider leaves undefined", async () => {
   expect(announced(runtime, "Preview")).toBe("coché");
   expect(announced(runtime, "étoile 1 sur 2")).toBe("plein");
   expect(announced(runtime, "étoile 2 sur 2")).toBe("vide");
+});
+
+it("announces a busy action and an indeterminate bar in the caller's words", async () => {
+  // The bug: the busy word and the indeterminate word were the only announced
+  // copy outside the table, so a French tree heard "Loading" from every action
+  // and "loading" from every bar unless it repeated a prop on each instance.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface messages={french}>
+      <Stack direction="column" gap="sm">
+        <Button testId="save" loading>
+          Save
+        </Button>
+        <Progress testId="bar" label="Import" />
+      </Stack>
+    </Surface>,
+  );
+
+  expect(
+    Option.getOrElse(described(runtime, "Save"), () =>
+      expect.fail("the busy action carries no description"),
+    ),
+  ).toBe("Chargement");
+  // The busy spinner is named too, so the indicator is not a silent status.
+  expect(named(runtime, "Status", "Chargement")).toBe(true);
+  expect(announced(runtime, "Import")).toBe("chargement");
 });
 
 it("keeps the shipped words when a caller names none", async () => {

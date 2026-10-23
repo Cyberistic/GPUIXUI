@@ -392,7 +392,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     gpuixSupport: "partial",
     limitations: [
       "No aria-valuenow: the value is announced as aria-valuetext",
-      "The default words are a bare percentage and the English loading; formatValue/loadingText say the caller's",
+      "The default words are a bare percentage and the provider's loading.indeterminate; formatValue/loadingText say the caller's",
       "The indeterminate segment is a discrete step, not a smooth sweep",
       "One buffer, no stacked segments and no in-track label",
       "reducedMotion holds the indeterminate segment; the preference is the caller's",

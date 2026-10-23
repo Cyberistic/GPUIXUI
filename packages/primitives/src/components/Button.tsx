@@ -45,6 +45,7 @@ import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
+import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import {
   decideActivation,
   isPlainKey,
@@ -71,6 +72,7 @@ import {
 } from "./internal.js";
 import { controlRing, keepContent } from "../core/focus.js";
 import { Spinner } from "./Spinner.js";
+import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface ButtonProps
@@ -89,9 +91,10 @@ export interface ButtonProps
   readonly loading?: boolean;
   /**
    * The words a busy button announces — its `aria-description` and the
-   * spinner's name. Defaults to `Loading`; a blank label announces nothing, for
-   * an interface that says the state somewhere else. This runtime has no
-   * `aria-busy`, so this description is the busy channel.
+   * spinner's name. Defaults to the provider's `loading.busy` (`Loading`); a
+   * blank label announces nothing, for an interface that says the state
+   * somewhere else. This runtime has no `aria-busy`, so this description is the
+   * busy channel.
    */
   readonly loadingLabel?: string;
   /**
@@ -152,6 +155,7 @@ export const renderButton = (
   theme: PrimitiveTheme,
   focus: ButtonFocus,
   attached = false,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const {
     variant = "primary",
@@ -185,7 +189,7 @@ export const renderButton = (
   const busy = isBusy({ disabled, loading });
   // The busy words are the caller's: a localised interface must not announce an
   // English state word. A blank label silences the announcement.
-  const loadingWord = loadingLabel ?? "Loading";
+  const loadingWord = loadingLabel ?? messages.loading.busy;
   const activate = (event: EventPayload): void => {
     if (busy) return;
     onActivate?.(event);
@@ -291,5 +295,6 @@ export const Button = (props: ButtonProps): ReactElement => {
       onBlur: () => setFocused(false),
     },
     useContext(AttachedGroup),
+    useMessages(),
   );
 };

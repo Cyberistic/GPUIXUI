@@ -19,6 +19,7 @@ export {
   starWord,
 } from "./messages.js";
 export type {
+  LoadingWords,
   PressWords,
   PrimitiveMessages,
   SelectionWords,

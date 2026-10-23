@@ -23,11 +23,13 @@ import {
   type SpinnerAccent,
 } from "../core/loading.js";
 import { accessibleName } from "../core/a11y.js";
+import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { stillFrame } from "../core/motion.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { spinnerDotClass, spinnerGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle, useStep } from "./internal.js";
+import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface SpinnerProps {
@@ -38,7 +40,7 @@ export interface SpinnerProps {
   readonly size?: keyof PrimitiveTheme["iconSize"] | number;
   /** Defaults to `primary`. */
   readonly accent?: SpinnerAccent;
-  /** Accessible name. Defaults to "Loading". */
+  /** Accessible name. Defaults to the provider's `loading.busy` ("Loading"). */
   readonly label?: string;
   /**
    * Hold the lit dot and schedule no interval. The runtime exposes no
@@ -55,7 +57,7 @@ export const renderSpinner = (
   {
     size,
     accent = "primary",
-    label = "Loading",
+    label,
     reducedMotion,
     style,
     className,
@@ -63,6 +65,7 @@ export const renderSpinner = (
   }: SpinnerProps,
   theme: PrimitiveTheme,
   step: number,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   // A named step and a raw count both go through the icon scale's own resolver:
   // a measurement that never arrived (or zero, or negative) must not reach
@@ -81,7 +84,9 @@ export const renderSpinner = (
   return (
     <div
       role="status"
-      aria-label={accessibleName(label)}
+      // The caller's own word wins; the provider's `loading.busy` is what a
+      // localised tree otherwise has to spell out on every indicator.
+      aria-label={accessibleName(label ?? messages.loading.busy)}
       testId={testId}
       style={group}
     >
@@ -101,4 +106,5 @@ export const Spinner = (props: SpinnerProps): ReactElement =>
     // turn lights 0, 1, 2 and repeats — never 0, 1, 2, 0, 1, 2, 0, 1, which
     // stepped the lit dot backwards when the eight-segment bar period wrapped.
     useStep(SPINNER_DOTS, 120, props.reducedMotion !== true),
+    useMessages(),
   );

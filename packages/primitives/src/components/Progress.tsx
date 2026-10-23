@@ -14,7 +14,8 @@
  * The share is said in the caller's words: `formatValue` receives the clamped
  * percentage and `loadingText` names the indeterminate state, so a localised
  * interface — or a download that wants its buffered share in the sentence — is
- * not stuck with the fixed `"42%"`/`"loading"` phrase.
+ * not stuck with the fixed `"42%"`/`"loading"` phrase. Both default from the
+ * provider's `messages` table, and a prop still wins per bar.
  */
 
 import {
@@ -27,6 +28,7 @@ import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
+import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import {
   indeterminateOffset,
   progressAnimates,
@@ -46,6 +48,7 @@ import {
 } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle, useStep } from "./internal.js";
+import { useMessages } from "./MessagesProvider.js";
 import { Text } from "./Text.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -72,8 +75,9 @@ export interface ProgressProps {
    */
   readonly formatValue?: (percent: number) => string;
   /**
-   * What an indeterminate bar says instead of a percentage. Defaults to
-   * `loading`, so a localised interface can hand over its own word.
+   * What an indeterminate bar says instead of a percentage. Defaults to the
+   * provider's `loading.indeterminate` (`loading`), so a localised tree names
+   * the state once rather than on every bar.
    */
   readonly loadingText?: string;
   /**
@@ -121,6 +125,7 @@ export const progressPart = (
   }: ProgressProps,
   theme: PrimitiveTheme,
   step: number,
+  messages: PrimitiveMessages = defaultMessages,
 ): ProgressPart => {
   const determinate = value !== undefined;
   const percent = determinate ? progressPercent(value) : 0;
@@ -143,7 +148,7 @@ export const progressPart = (
     // percentage, so it cannot announce a number the track never paints.
     valueText: determinate
       ? (formatValue?.(percent) ?? `${percent}%`)
-      : (loadingText ?? "loading"),
+      : (loadingText ?? messages.loading.indeterminate),
   };
 };
 
@@ -314,12 +319,14 @@ export const renderProgress = (
   props: ProgressProps,
   theme: PrimitiveTheme,
   step: number,
+  messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const { label, style, className, children, testId } = props;
   const part = progressPart(
     props,
     theme,
     stillFrame(step, props.reducedMotion),
+    messages,
   );
   return (
     <div
@@ -364,4 +371,5 @@ export const Progress = (props: ProgressProps): ReactElement =>
       progressAnimates(Option.fromNullishOr(props.value)) &&
         props.reducedMotion !== true,
     ),
+    useMessages(),
   );

@@ -26,6 +26,7 @@ import type { EventPayload } from "@gpuix/react";
 import type { StateStyle } from "@gpuix/react/floating";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ButtonVariant } from "../core/variants.js";
+import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import {
   renderButton,
   type ButtonFocus,
@@ -39,6 +40,7 @@ import {
   type InteractionProps,
   type TooltipTriggerProps,
 } from "./internal.js";
+import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface IconButtonProps
@@ -56,7 +58,8 @@ export interface IconButtonProps
   readonly loading?: boolean;
   /**
    * The words a busy icon button announces — its `aria-description` and the
-   * spinner's name. Defaults to `Loading`; a blank label announces nothing.
+   * spinner's name. Defaults to the provider's `loading.busy` (`Loading`); a
+   * blank label announces nothing.
    */
   readonly loadingLabel?: string;
   /** Holds the busy spinner's lit dot, for a reader who asked for no motion. */
@@ -137,11 +140,19 @@ export const renderIconButton = (
   theme: PrimitiveTheme,
   focus: ButtonFocus,
   attached = false,
-): ReactElement => renderButton(iconButtonProps(props), theme, focus, attached);
+  messages: PrimitiveMessages = defaultMessages,
+): ReactElement =>
+  renderButton(iconButtonProps(props), theme, focus, attached, messages);
 
 /** A square, icon-only action that carries its name. */
 export const IconButton = (props: IconButtonProps): ReactElement => {
   const theme = useTheme();
   const focus = useFocus();
-  return renderIconButton(props, theme, focus, useContext(AttachedGroup));
+  return renderIconButton(
+    props,
+    theme,
+    focus,
+    useContext(AttachedGroup),
+    useMessages(),
+  );
 };

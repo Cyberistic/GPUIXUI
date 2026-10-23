@@ -84,7 +84,8 @@ export interface ToggleProps
   readonly loading?: boolean;
   /**
    * The words a busy toggle announces — its `aria-description` and the
-   * spinner's name. Defaults to `Loading`; a blank label announces nothing.
+   * spinner's name. Defaults to the provider's `loading.busy` (`Loading`); a
+   * blank label announces nothing.
    */
   readonly loadingLabel?: string;
   /**
@@ -128,7 +129,7 @@ export const renderToggle = (
 ): ReactElement => {
   const { size = "md", variant = "default" } = props;
   const busy = props.disabled === true || props.loading === true;
-  const loadingWord = props.loadingLabel ?? "Loading";
+  const loadingWord = props.loadingLabel ?? messages.loading.busy;
   const toggle = (): void => {
     if (busy) return;
     onPressedChange(!state.current);

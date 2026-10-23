@@ -19,6 +19,12 @@
  * `unchecked` (how much of the glyph is filled, not what the rating says), and
  * its name is a template over its position and the star count. Both are
  * sentences, so they are their own group rather than selection words.
+ *
+ * The loading words are their own group: a busy action has no `aria-busy`
+ * channel here, so the word is its description and the busy spinner's name, and
+ * an indeterminate bar has no percentage to report. A per-instance prop still
+ * wins (`loadingLabel`, `label`, `loadingText`), but the table is what stops a
+ * localised tree from repeating the word on every action.
  */
 
 import type { StarState } from "./rating.js";
@@ -45,6 +51,20 @@ export interface StarWords {
 }
 
 /**
+ * The words a loading state announces.
+ *
+ * A busy action has no `aria-busy` in this runtime, so `busy` is both its
+ * `aria-description` and the busy spinner's name; `indeterminate` is what a
+ * progress bar says when it has no percentage to report. A localised interface
+ * that names them here does not have to repeat one word on every action, which
+ * is the same reason the state words above live in this table.
+ */
+export interface LoadingWords {
+  readonly busy: string;
+  readonly indeterminate: string;
+}
+
+/**
  * The interface copy the primitives announce.
  *
  * `codeDigit` receives the caller's own `label` (already blank-filtered) or
@@ -63,6 +83,8 @@ export interface PrimitiveMessages {
   readonly scrollRegion: string;
   /** One cell of a code field. `index` is zero-based. */
   readonly codeDigit: (index: number, label: string | undefined) => string;
+  /** The words a busy action and an indeterminate bar announce. */
+  readonly loading: LoadingWords;
 }
 
 /** The English words the library ships. */
@@ -73,6 +95,7 @@ export const defaultMessages: PrimitiveMessages = {
   starName: (index, max) => `${index} of ${max}`,
   scrollRegion: "Scroll region",
   codeDigit: (index, label) => `${label ?? "Code"} digit ${index + 1}`,
+  loading: { busy: "Loading", indeterminate: "loading" },
 };
 
 /**
@@ -103,6 +126,7 @@ export const resolveMessages = (
         starName: messages.starName ?? inherited.starName,
         scrollRegion: messages.scrollRegion ?? inherited.scrollRegion,
         codeDigit: messages.codeDigit ?? inherited.codeDigit,
+        loading: messages.loading ?? inherited.loading,
       };
 
 /**

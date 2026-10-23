@@ -38,7 +38,7 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm` |
 | `label` | `string` | none | accessible name, and `ProgressLabel`'s default text |
 | `formatValue` | `(percent: number) => string` | `` `${percent}%` `` | the announced and painted share |
-| `loadingText` | `string` | `"loading"` | what an indeterminate bar says instead of a percentage |
+| `loadingText` | `string` | `loading.indeterminate` (`"loading"`) | what an indeterminate bar says instead of a percentage |
 | `reducedMotion` | `boolean` | `false` | holds the indeterminate segment; no effect with `value` |
 | `children` | `ReactNode` | the track | the parts to draw |
 | `style` | `StyleDesc` | — | merged last, on the root frame |
@@ -48,7 +48,7 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 ## Limitations
 
 - No `aria-valuenow`: the value is announced as `aria-valuetext`.
-- The indeterminate word defaults to English; pass `loadingText` for another
-  locale.
+- The indeterminate word is the provider's `messages.loading.indeterminate`
+  (`"loading"`); pass `loadingText` to word one bar differently.
 - The indeterminate segment is a discrete step, not a smooth sweep.
 - One buffer, no stacked segments and no in-track label.
