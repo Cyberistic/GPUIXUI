@@ -77,6 +77,7 @@ Starting empty and stepping works: the first step lands on the range's floor
 
 - Decimal text by default: a grouped or locale display is read through the
   `formatValue`/`parseValue` pair, never guessed.
-- An inverted pair is the range it means: `min` above `max` is swapped.
+- An inverted pair is the range it means: `min` above `max` is swapped, and
+  `Home`/`End` jump to the ends of that swapped range.
 - No `type="number"`, `inputMode` or `maxLength`: the runtime applies a value only when it changes, so a refused character stays in the box.
 - `autoFocus` paints no ring; Enter is the runtime's Submit action, not a keydown.

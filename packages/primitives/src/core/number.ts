@@ -230,7 +230,10 @@ const ARROW_STEPS: Readonly<Record<string, number>> = {
  * The keyboard contract.
  *
  * Home/End only answer when the field has the bound they would jump to: a
- * field with no maximum must not jump to a number the component invented.
+ * field with no maximum must not jump to a number the component invented. The
+ * bounds are the **normalized** range's — an inverted pair is the range it
+ * means, and a bound that cannot be laid out is not a bound — so the key lands
+ * where `clampNumeric` would put the value.
  *
  * **Left and right are not ours.** They move the caret in the host's text
  * field, and a numeric field that changed its value when the caret moved
@@ -243,14 +246,11 @@ export const decideNumberKey = (
   key: string,
   pageSteps = 10,
 ): Option.Option<number> => {
+  const { min, max } = normalizeNumberRange(range);
   if (key === "home")
-    return range.min === undefined
-      ? Option.none()
-      : Option.some(clampNumeric(range.min, range));
+    return min === undefined ? Option.none() : Option.some(min);
   if (key === "end")
-    return range.max === undefined
-      ? Option.none()
-      : Option.some(clampNumeric(range.max, range));
+    return max === undefined ? Option.none() : Option.some(max);
   const steps =
     key === "pageup"
       ? pageSteps

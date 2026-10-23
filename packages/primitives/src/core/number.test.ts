@@ -323,6 +323,32 @@ describe("decideNumberKey", () => {
     );
   });
 
+  it("reads the bounds the range actually has, not the raw pair", () => {
+    // The bug guarded: `clampNumeric` swaps an inverted pair and drops a bound
+    // that cannot be measured, but Home/End read the raw props — so
+    // `min: 100, max: 0` sent Home to the top of the range and End to the
+    // bottom, and a `min: NaN` answered a floor the field does not have. A key
+    // jumps to the bound the arithmetic uses, or nowhere.
+    const inverted: NumberRange = { min: 100, max: 0, step: 1 };
+    expect(decideNumberKey(50, inverted, "home")).toStrictEqual(Option.some(0));
+    expect(decideNumberKey(50, inverted, "end")).toStrictEqual(
+      Option.some(100),
+    );
+    expect(
+      decideNumberKey(50, { min: Number.NaN, step: 1 }, "home"),
+    ).toStrictEqual(Option.none());
+    expect(
+      decideNumberKey(50, { max: Number.NaN, step: 1 }, "end"),
+    ).toStrictEqual(Option.none());
+    expect(
+      decideNumberKey(
+        50,
+        { min: Number.POSITIVE_INFINITY, max: 10, step: 1 },
+        "end",
+      ),
+    ).toStrictEqual(Option.some(10));
+  });
+
   it("leaves an unrelated key alone", () => {
     expect(decideNumberKey(50, RANGE, "a")).toStrictEqual(Option.none());
     expect(decideNumberKey(50, RANGE, "enter")).toStrictEqual(Option.none());

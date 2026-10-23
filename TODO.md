@@ -3676,6 +3676,18 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       the option was its own neighbour (`core/keyboard.test.ts`). Docs:
       `docs/number-field.mdx` §API/§Limitations/§Verification and the Number
       Field row.
+`[x]` `packages/primitives`: **`Home`/`End` jumped to the wrong end of a swapped
+      `NumberRange`** — `clampNumeric`, `stepNumber` and `numberRange` all read
+      the normalized range (an inverted pair swapped, a bound that cannot be
+      laid out dropped), while `decideNumberKey` read the raw props: `min: 100,
+      max: 0` sent Home to 100 and End to 0, and `min: NaN` answered 0 — a floor
+      the field does not have. The key contract reads the same normalized
+      bounds, so a key lands where the clamp would put the value, or answers
+      `None` when the bound is not there. `core/number.test.ts`'s `reads the
+      bounds the range actually has, not the raw pair` holds the inverted pair
+      and three unusable bounds, and fails on the old comparison (`Home` read
+      `Some(100)`). Docs: `docs/number-field.mdx` §Limitations and
+      `core/number.ts`'s JSDoc.
 `[x]` `packages/primitives`: **`CheckboxGroup`'s page said an option caption sat
       *under* the name** while the shared `optionBody` paints one row (name, then
       caption) and the radio and toggle pages said "beside" — three pages teaching
