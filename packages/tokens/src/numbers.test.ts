@@ -1290,11 +1290,33 @@ describe("the audit gates on the numbers", () => {
 
   it("passes a brand that paints square corners on purpose", () => {
     // Zero is a design decision, not a broken number: only a value the renderer
-    // cannot lay out is a failure.
-    const square = brand({ radius: { md: 0 } });
+    // cannot lay out is a failure. Every radius takes the same corner, so the
+    // ladder still holds its order — equal adjacent radii are a named alias, and
+    // radius is the one ladder that permits one.
+    const square = brand({ radius: { sm: 0, md: 0, lg: 0, xl: 0 } });
 
     expect(auditTheme(square).invalidNumbers).toEqual([]);
+    expect(auditTheme(square).scales).toEqual([]);
     expect(auditTheme(square).passed).toBe(true);
+  });
+
+  it("reports a radius that inverts the ladder, where the number is fine", () => {
+    // Zero is layable, so the number report says nothing — and the step before
+    // it is sharper than the step after it, so `radius="md"` paints a sharper
+    // corner than `radius="sm"`. The gate reads the ladder as well as the
+    // numbers now, so the name that lies is named.
+    const inverted = brand({ radius: { md: 0 } });
+
+    expect(auditTheme(inverted).invalidNumbers).toEqual([]);
+    expect(auditTheme(inverted).scales).toEqual([
+      {
+        group: "radius",
+        path: "md",
+        value: 0,
+        previous: { path: "sm", value: 4 },
+      },
+    ]);
+    expect(auditTheme(inverted).passed).toBe(false);
   });
 
   it("executes the documented short-density example", () => {

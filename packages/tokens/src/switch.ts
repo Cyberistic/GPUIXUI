@@ -28,6 +28,9 @@
  * the primitive paints — carrying the knob. A consumer who needs the stronger
  * cue paints the library's accent switch instead of declaring one. What the
  * contract refuses is the switch that is not there at all.
+ *
+ * The report is one of `auditTheme`'s, so a declared switch a brand edits is
+ * held by the gate rather than by a contract a consumer has to remember to run.
  */
 
 import {

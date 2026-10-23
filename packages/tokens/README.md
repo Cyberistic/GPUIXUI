@@ -581,6 +581,8 @@ that declares none keeps the library's accent toggle. Those three colours are
 holds the knob on each track and each track on the four strips a switch stands on
 (the page, a card, a popover and a muted toolbar) to the perceptibility floor, and
 `invalidSwitchColors(theme)` names a value the renderer cannot paint. The report
+is one of the gate's (`audit.switch`), so a declared track a brand edits fails
+`auditTheme` rather than waiting for a separate check. The report
 found Apple's `#E9E9EA` off track at **1.003:1** on its own `muted` sidebar — a
 declared switch draws no edge — so it ships the smallest step that clears
 (`#E3E3E8`, 1.058:1). The floor is the perceptibility one, not the 3:1 a state
@@ -742,7 +744,7 @@ in [`src/system-theme.example.ts`](./src/system-theme.example.ts).
 ## Checking a theme
 
 `auditTheme(theme)` is the gate: it runs every check a browser build gets from
-CSS validation and lint, and `passed` is true only when all twelve reports are
+CSS validation and lint, and `passed` is true only when all fourteen reports are
 empty. The floors follow the theme's own `contrast` variant, so a brand built
 from a high-contrast theme is measured at AAA without the caller naming a floor
 set — `contrastFloorsFor(theme)` is that rule on its own, every report that takes
@@ -933,9 +935,9 @@ Each report is also a function of its own:
   still lies: a `sm` control taller than its `lg`, a dialog as square as a card,
   or a dialog casting a tighter shadow than a menu. A type role or elevation
   level the theme does not carry is not a rung, so the steps either side of it
-  are compared with each other rather than read through it. It is not one of the
-  audit's twelve reports yet (the docs readout words each report it prints), so
-  run it beside `auditTheme`; it found the Windows style's `xl` radius equal to
+  are compared with each other rather than read through it. It is one of the
+  audit's fourteen reports (`audit.scales`), so a theme whose ladder lies fails
+  `auditTheme`; it found the Windows style's `xl` radius equal to
   its `lg`, and that pair is a deliberate **alias** — Fluent 2 rounds a control
   at 4 and a surface at 8, so `sm`/`md` and `lg`/`xl` share a corner and radius
   is the one ladder that permits an equal step — while a smaller rung is still
