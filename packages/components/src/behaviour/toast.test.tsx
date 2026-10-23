@@ -300,6 +300,34 @@ describe("Toast", () => {
     page.unmount();
   });
 
+  it("does not hold the next card with a hover that outlived its own card", async () => {
+    // The bug this guards: a card dismissed while the pointer rests on it
+    // unmounts without ever hearing a leave, so a hover count kept in the
+    // viewport stays above zero and every card pushed afterwards is born held.
+    const page = renderComponent(<Harness duration={Duration.millis(600)} />);
+
+    clickCentreOf(page, "push");
+    await settle();
+    hoverCentreOf(page, "toast-1");
+    // The press is inside the card it dismisses; the ghost then unmounts under
+    // a pointer that never moved away from it.
+    clickCentreOf(page, "toast-dismiss");
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-1")).toBeUndefined(),
+    );
+
+    clickCentreOf(page, "push-warning");
+    await settle();
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await settle();
+
+    await waitFor(() =>
+      expect(page.renderer.findByTestId("toast-2")).toBeUndefined(),
+    );
+
+    page.unmount();
+  });
+
   it("keeps the hold when the pointer leaves while a control still holds focus", async () => {
     const page = renderComponent(<Harness duration={Duration.millis(600)} />);
 

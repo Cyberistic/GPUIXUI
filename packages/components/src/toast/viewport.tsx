@@ -18,7 +18,7 @@ import {
   TOAST_TITLE,
   TOAST_VIEWPORT,
 } from "@gpuixui/tw";
-import { HashMap, Match } from "effect";
+import { HashMap, HashSet, Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -358,19 +358,34 @@ export const ToastViewport = ({
   const { toasts } = useToast();
   const timing = useToastTiming();
   const stack = useToastStack(toasts, timing);
-  // The stack fans when the pointer rests on any card; a count survives moving
-  // between two cards, whose leave precedes the next card's enter.
-  const hoverCount = useRef(0);
-  const [stackHovered, setStackHovered] = useState(false);
-  const onHoverChange = (hovered: boolean): void => {
-    hoverCount.current = Math.max(0, hoverCount.current + (hovered ? 1 : -1));
-    setStackHovered(hoverCount.current > 0);
-  };
+  // Which card the pointer rests on, so a leave that never arrives — one
+  // dismissed under the pointer unmounts without hearing it — cannot hold the
+  // next stack. The ids are read against the cards on screen, so a hover that
+  // outlives its card stops counting when the card leaves.
+  const [hovered, setHovered] = useState<HashSet.HashSet<string>>(
+    HashSet.empty,
+  );
+  const onHoverChange = (id: string, value: boolean): void =>
+    setHovered((current) =>
+      value ? HashSet.add(current, id) : HashSet.remove(current, id),
+    );
+  useEffect(() => {
+    const live = HashSet.fromIterable(
+      Arr.map(stack, (entry) => entry.toast.id),
+    );
+    setHovered((current) => {
+      const next = HashSet.filter(current, (id) => HashSet.has(live, id));
+      return HashSet.size(next) === HashSet.size(current) ? current : next;
+    });
+  }, [stack]);
   // The fan lifts the older cards: the newest rests still and each older card
   // sits one step higher, so hovering widens the gap between neighbours.
   const present = Arr.filter(stack, (entry) => entry.present);
   const rankById = HashMap.fromIterable(
     Arr.map(present, (entry, index) => [entry.toast.id, index] as const),
+  );
+  const stackHovered = Arr.some(present, (entry) =>
+    HashSet.has(hovered, entry.toast.id),
   );
 
   return (
@@ -403,7 +418,7 @@ export const ToastViewport = ({
             timing={timing}
             fanLift={fanLift}
             stackHovered={stackHovered}
-            onHoverChange={onHoverChange}
+            onHoverChange={(value) => onHoverChange(entry.toast.id, value)}
           />
         );
       })}
