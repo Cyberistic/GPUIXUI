@@ -355,6 +355,38 @@ describe("the example table", () => {
     expect(readout(root)).toContain("1 selected");
   });
 
+  it("chooses the row a keyboard reader is standing on with Space or Enter", () => {
+    const root = mount();
+    const row = findId(root, "files-row-file-2");
+
+    // The grid's stop is a row, so the keys a stop implies act on that row. A
+    // focusable `div` has no activation of its own: without a key handler the
+    // arrow walk would move the selection off the row the reader entered on and
+    // leave that row the one record the keyboard cannot choose.
+    root.renderer.focusElement(row);
+    root.renderer.flush();
+    root.renderer.nativeSimulateKeyDown(row, "space");
+    root.renderer.flush();
+
+    expect(readout(root)).toContain("1 selected");
+    expect(requireStyle(root, "files-row-file-2").backgroundColor).toBe(
+      darkTheme.colors.selected,
+    );
+
+    click(root, "files-clear");
+    root.renderer.flush();
+    expect(readout(root)).toContain("0 selected");
+
+    root.renderer.focusElement(row);
+    root.renderer.flush();
+    root.renderer.nativeSimulateKeyDown(row, "enter");
+    root.renderer.flush();
+    expect(readout(root)).toContain("1 selected");
+    expect(requireStyle(root, "files-row-file-2").backgroundColor).toBe(
+      darkTheme.colors.selected,
+    );
+  });
+
   it("keeps one row in the Tab order, before a press and after a filter releases the chosen one", () => {
     const root = mount();
 
