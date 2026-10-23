@@ -57,6 +57,7 @@ import {
   normalizeRange,
   normalizeSpan,
   pointerValue,
+  spanFrom,
   valueFraction,
   verticalPointerValue,
   type ValueRange,
@@ -743,6 +744,15 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
   const trackId = useRef<number | null>(null);
   const thumbIds = useRef<Map<0 | 1, number>>(new Map());
   const activeEnd = useRef<"start" | "end">("start");
+  /**
+   * Where a press landed on a coincident pair, so the drag spans around it.
+   *
+   * Both ends on one value is one point, and a press there cannot say which
+   * thumb it grabbed; `spanFrom` reads the gesture as a span around that point
+   * instead, so the pair can be pulled either way. A press on two separate
+   * ends leaves this empty and the ordinary "move the end I grabbed" applies.
+   */
+  const grabPoint = useRef<Option.Option<number>>(Option.none());
   const dragging = useRef(false);
   const [focusedIndex, setFocusedIndex] = useState<Option.Option<0 | 1>>(
     Option.none(),
@@ -766,13 +776,18 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     end: "start" | "end",
     value: number,
   ): void => {
-    const next = moveSpanEnd(span, end, value, range);
     // A tuple is rebuilt on every interaction, so `Object.is` cannot see an
     // unchanged span: an arrow at a bound or a press on a thumb reported the
     // value the control already held. Report only a real move.
-    if (next.start !== span.start || next.end !== span.end) {
+    const next = moveSpanEnd(span, end, value, range);
+    if (next.start !== span.start || next.end !== span.end)
       state.set(spanTuple(next));
-    }
+  };
+  /** Report a span the pointer drew, when it differs from the one painted. */
+  const commitSpan = (next: ValueSpan): void => {
+    const span = spanOf(state.value.current, range);
+    if (next.start !== span.start || next.end !== span.end)
+      state.set(spanTuple(next));
   };
   return renderRangeSlider(
     props,
@@ -812,6 +827,10 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
             onSome: (value) => {
               const end = nearestEnd(value, span);
               activeEnd.current = end;
+              grabPoint.current =
+                span.start === span.end
+                  ? Option.some(span.start)
+                  : Option.none();
               dragging.current = true;
               change(span, end, value);
               focusThumb(end === "start" ? 0 : 1);
@@ -823,6 +842,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
         if (props.disabled === true || !dragging.current) return;
         if (event.pressedButton !== 0) {
           dragging.current = false;
+          grabPoint.current = Option.none();
           return;
         }
         Option.match(
@@ -837,16 +857,34 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
           {
             onNone: () => {},
             onSome: (value) =>
-              change(
-                spanOf(state.value.current, range),
-                activeEnd.current,
-                value,
-              ),
+              Option.match(grabPoint.current, {
+                // The gesture began on one point: span around it, so the pair
+                // can be pulled apart in either direction. The end it draws is
+                // the one that holds focus afterwards, so a reader who switches
+                // to the keyboard continues from the thumb they just moved.
+                onSome: (point) => {
+                  const target = clampValue(value, range);
+                  const end =
+                    target > point ? "end" : target < point ? "start" : null;
+                  commitSpan(spanFrom(point, target, range));
+                  if (end !== null && end !== activeEnd.current) {
+                    activeEnd.current = end;
+                    focusThumb(end === "start" ? 0 : 1);
+                  }
+                },
+                onNone: () =>
+                  change(
+                    spanOf(state.value.current, range),
+                    activeEnd.current,
+                    value,
+                  ),
+              }),
           },
         );
       },
       onPointerUp: () => {
         dragging.current = false;
+        grabPoint.current = Option.none();
       },
     },
   );

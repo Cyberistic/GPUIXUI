@@ -615,6 +615,50 @@ it("moves the nearer end of a range when its track is pressed", async () => {
   expect(announced(runtime, "Price maximum")).toBe("90");
 });
 
+it("pulls a coincident pair apart in either direction", async () => {
+  // The bug guarded: a filter opened with both ends on one value is **one
+  // point**, so the press picked the nearer end — the start — and the start's
+  // travel towards the end is the one move `moveSpanEnd` refuses. Dragging the
+  // visible thumb rightwards reported nothing at all (measured: the pair stayed
+  // `50,50`), and only a press landing off the thumb could separate it. The
+  // gesture is read as a span around the point it pressed, so the pair follows
+  // the pointer on either side and never collapses.
+  const runtime = await mount(
+    <RangeSlider testId="r" label="Price" defaultValue={[50, 50] as const} />,
+  );
+  const box = boundsOf(runtime, "r");
+  const start = pointAt(runtime, "r", 0.5);
+  runtime.mouseDownAt(start.x, start.y);
+  runtime.mouseMoveAt(pointAt(runtime, "r", 0.8).x, start.y, 0);
+  runtime.flush();
+  expect(announced(runtime, "Price minimum")).toBe("50");
+  expect(announced(runtime, "Price maximum")).toBe("80");
+  runtime.mouseMoveAt(pointAt(runtime, "r", 0.2).x, start.y, 0);
+  runtime.flush();
+  expect(announced(runtime, "Price minimum")).toBe("20");
+  expect(announced(runtime, "Price maximum")).toBe("50");
+  runtime.mouseUpAt(box.x + box.width, start.y);
+});
+
+it("gives the end a coincident drag draws the focus, so the keyboard continues there", async () => {
+  const runtime = await mount(
+    <RangeSlider testId="r" label="Price" defaultValue={[50, 50] as const} />,
+  );
+  const start = pointAt(runtime, "r", 0.5);
+  runtime.mouseDownAt(start.x, start.y);
+  runtime.mouseMoveAt(pointAt(runtime, "r", 0.8).x, start.y, 0);
+  runtime.flush();
+  const focused = Option.getOrElse(runtime.focusedElement(), () =>
+    expect.fail("no thumb holds focus after the drag"),
+  );
+  expect(String(focused.customProps?.["aria-label"] ?? "")).toBe(
+    "Price maximum",
+  );
+  runtime.renderer.nativeSimulateKeyDown(focused.id, "right");
+  expect(announced(runtime, "Price maximum")).toBe("81");
+  expect(announced(runtime, "Price minimum")).toBe("50");
+});
+
 it("focuses the thumb it moved, and an arrow moves only that end", async () => {
   const runtime = await mount(
     <RangeSlider testId="r" label="Price" defaultValue={[20, 60] as const} />,

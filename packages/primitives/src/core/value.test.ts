@@ -19,6 +19,7 @@ import {
   normalizeRange,
   normalizeSpan,
   pointerValue,
+  spanFrom,
   stepValue,
   valueFraction,
   valueStep,
@@ -270,5 +271,30 @@ describe("range spans", () => {
       start: 20,
       end: 70,
     });
+  });
+});
+
+describe("spanFrom", () => {
+  it("draws a span on either side of the point a drag was pressed on", () => {
+    // The bug guarded: both ends on one value is one point, so the press picked
+    // the start and a drag to the right was the one move the start may not make
+    // — the pair could only ever be pulled leftwards.
+    expect(spanFrom(50, 80, RANGE)).toStrictEqual({ start: 50, end: 80 });
+    expect(spanFrom(50, 20, RANGE)).toStrictEqual({ start: 20, end: 50 });
+  });
+
+  it("holds the point while the pointer returns to it", () => {
+    expect(spanFrom(50, 50, RANGE)).toStrictEqual({ start: 50, end: 50 });
+  });
+
+  it("clamps both the point and the pointer into the range", () => {
+    expect(spanFrom(50, 500, RANGE)).toStrictEqual({ start: 50, end: 100 });
+    expect(spanFrom(50, -500, RANGE)).toStrictEqual({ start: 0, end: 50 });
+    expect(spanFrom(500, 40, RANGE)).toStrictEqual({ start: 40, end: 100 });
+  });
+
+  it("lands on the grid the pointer's own value snapped to", () => {
+    const range = { min: 0, max: 100, step: 5 } as const;
+    expect(spanFrom(50, 83, range)).toStrictEqual({ start: 50, end: 85 });
   });
 });

@@ -90,6 +90,7 @@ export {
   normalizeRange,
   normalizeSpan,
   pointerValue,
+  spanFrom,
   stepValue,
   valueFraction,
   valueStep,

@@ -3764,6 +3764,26 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       `COMPONENTS.md` rows to the code, so that table cannot drift again;
       their pages now render on the site at `/docs/primitives/<name>` (and the
       icon page at `/docs/icons/icon`), linked from the Primitives section index
+`[x]` `packages/primitives`: a **coincident range pair could only be pulled one
+      way** — both ends on one value is a legitimate range (a filter opened at
+      "any price") and it is **one point**, so `nearestEnd` answered the tie with
+      the start, whose travel towards the end is exactly the move `moveSpanEnd`
+      refuses. Measured in the renderer: pressing the visible thumb of a `50,50`
+      pair and dragging right reported nothing at all (`50,50` stayed), so a
+      reader had to aim beside the thumb to separate it, and only leftwards
+      worked. A press on a coincident pair is now read as a span **around** that
+      point (`core/value.ts`'s `spanFrom`): the end the pointer travels towards
+      follows it, the other stays pinned, in either direction — `50,50` dragged
+      right draws `50,80`, back left `20,50`, and the end it draws takes the
+      focus so the arrows continue from the moved thumb. Once the ends differ a
+      drag keeps the ordinary "move the end I grabbed, stop on the other" rule
+      (the existing window case still holds). `value.test.ts` holds the
+      arithmetic (both directions, the return to the point, clamped point and
+      pointer, a stepped grid); `runtime/value.runtime.test.tsx` holds the
+      gesture and the focus (`50-80` → `20-50`, then `right` on the focused end
+      reports `81`). Directions measured: forcing the grab point to `none` fails
+      both window cases by name and passes restored (27/27). Docs:
+      `docs/range-slider.mdx` and the Range slider inventory row.
 `[x]` `packages/primitives`: an **`OTPField` that shrank under a focused cell lost
       its only tab stop** — `length` is a prop and the focused index outlived
       the cell it named, so a field going from six cells to four still wrote the

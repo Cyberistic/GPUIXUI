@@ -244,6 +244,33 @@ export const nearestEnd = (value: number, span: ValueSpan): "start" | "end" => {
 };
 
 /**
+ * The span a drag from one point draws, with that point held.
+ *
+ * Two coincident ends are a legitimate range — a price filter opens with both
+ * thumbs on the same number — and they are **one point**, so a press landing on
+ * them cannot say which thumb it grabbed: every direction is a tie, and
+ * {@link nearestEnd} answers "start", whose travel towards the end is exactly
+ * the move it may not make (see {@link moveSpanEnd}). A pair that can only be
+ * pulled one way is a range a reader cannot set, so a press on a coincident pair
+ * is read as "a span around this point": the end the pointer travels towards
+ * follows it and the other stays pinned, in either direction.
+ *
+ * Once the ends differ the usual grab applies, so this is only the ambiguous
+ * gesture and never a second way to drag an ordinary thumb.
+ */
+export const spanFrom = (
+  point: number,
+  value: number,
+  range: ValueRange,
+): ValueSpan => {
+  const pinned = clampValue(point, range);
+  const moved = clampValue(value, range);
+  return moved >= pinned
+    ? { start: pinned, end: moved }
+    : { start: moved, end: pinned };
+};
+
+/**
  * Move one end of a range slider without letting the ends cross.
  *
  * Crossing is the defect a two-thumb slider guards against: the thumbs would

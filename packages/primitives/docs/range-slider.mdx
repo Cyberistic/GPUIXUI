@@ -7,6 +7,15 @@ description: Two values — the ends of one interval — on a single track.
 `RangeSlider` is a minimum and a maximum on one track; a second component, not a
 mode of `Slider`.
 
+The two ends may sit on the same value — a filter opened at "any price" starts
+that way — and a coincident pair is one point, so a press on it cannot say which
+thumb it grabbed. Such a press is read as a span **around** that point: the end
+the pointer travels towards follows it and the other stays pinned, in either
+direction, so the pair can be pulled apart without aiming beside the thumb. Once
+the ends differ, a drag moves the end it grabbed and stops on the other. The end
+a coincident drag draws takes the focus, so switching to the arrow keys continues
+from the thumb that just moved.
+
 ## Usage
 
 ```tsx
