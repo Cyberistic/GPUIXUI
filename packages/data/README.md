@@ -536,7 +536,7 @@ in the primitives' registry and a column width is data.
 | Expandable rows (`TableExpandableRow`, `TableDetailRow`) | shipped, window-verified (the row is a Tab stop and answers Enter/Space only while it holds focus; a disabled row answers neither pointer nor key) |
 | Data surfaces (`KeyValue`, `StatCard`, `PropertyPanel`, `DataToolbar`, `AdvancedFilter`) | shipped, window-verified |
 | Pinned / frozen columns (`FrozenTable`) | shipped, window-verified (`data-grid-frozen-column`, `frozen-column-lifecycle`) |
-| Charts (`BarChart`, `StackedBar`, `LineChart`, `DonutChart`, `Sparkline`) | shipped, window-verified |
+| Charts (`BarChart`, `StackedBar`, `LineChart`, `DonutChart`, `Sparkline`) | shipped, window-verified (`chart-surface-lifecycle`: each series' own tint counted in a real plot, the stack, ring and spark painted, and a changed value repainting its bar) |
 
 ## Commands
 

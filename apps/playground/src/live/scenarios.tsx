@@ -31,6 +31,7 @@ import {
   findHighlight,
   keyboardFocusRing,
   nativeTextTheme,
+  seriesColors,
   statusTone,
   textStyle,
   watchSystemTheme,
@@ -39,6 +40,13 @@ import {
   type PlatformName,
   type Theme,
 } from "@gpuixui/tokens";
+import {
+  BarChart,
+  DonutChart,
+  LineChart,
+  Sparkline,
+  StackedBar,
+} from "@gpuixui/data";
 import { examples as dataExamples } from "@gpuixui/data/examples";
 import {
   Badge,
@@ -305,6 +313,29 @@ import {
   pointIn,
   type Box,
 } from "./chart.js";
+import {
+  CHART_SURFACE_BARS,
+  CHART_SURFACE_CHURN,
+  CHART_SURFACE_COST,
+  CHART_SURFACE_DONUT,
+  CHART_SURFACE_FRAME,
+  CHART_SURFACE_FRAME2_REVENUE,
+  CHART_SURFACE_GROUND,
+  CHART_SURFACE_LABELS,
+  CHART_SURFACE_LINE,
+  CHART_SURFACE_NEXT,
+  CHART_SURFACE_PALETTE,
+  CHART_SURFACE_POINTS,
+  CHART_SURFACE_PROBE,
+  CHART_SURFACE_REVENUE,
+  CHART_SURFACE_SIZES,
+  CHART_SURFACE_SOURCES,
+  CHART_SURFACE_SPARK,
+  CHART_SURFACE_SPARKLINE,
+  CHART_SURFACE_STACKED,
+  CHART_SURFACE_TICKS,
+  chartSurfacePart,
+} from "./chart-surface.js";
 import {
   BUFFER_COLOUR,
   CANVAS_PARENT,
@@ -15966,6 +15997,390 @@ const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * The shipped charts, in a window: one plot, more than one tint.
+ *
+ * The package draws a chart as one `<svg>` per series, because a single
+ * `<svg source>` is one tinted mask (`chart-raster`). The behaviour suite reads
+ * the markup; this view is the paint — two series' colours counted in one
+ * plot's crop, a stack read from its floor, a ring's slices, a sparkline in the
+ * colour the caller named, and a changed value repainting the bar it grew.
+ *
+ * It composes the **shipped** chart parts, not a copy of them; the example the
+ * docs quote is `chart.example.tsx`, and its fixed 560-wide column is taller
+ * than this window.
+ */
+const ChartSurfaceProbe = (): ReactNode => {
+  const theme = useTheme();
+  const [frame, setFrame] = useState(1);
+  const revenue =
+    frame === 1
+      ? CHART_SURFACE_REVENUE
+      : { ...CHART_SURFACE_REVENUE, values: CHART_SURFACE_FRAME2_REVENUE };
+  const palette = seriesColors(theme);
+  const sizes = CHART_SURFACE_SIZES;
+  const readout = (testId: string, text: string): ReactNode => (
+    <Readout testId={testId}>{text}</Readout>
+  );
+  return (
+    <div
+      testId={CHART_SURFACE_PROBE}
+      style={{
+        width: 860,
+        height: 500,
+        padding: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: theme.spacing.md,
+        }}
+      >
+        <BarChart
+          aria-label="Revenue against cost by quarter"
+          labels={[...CHART_SURFACE_LABELS]}
+          series={[revenue, CHART_SURFACE_COST]}
+          width={sizes.bars.width}
+          height={sizes.bars.height}
+          testId={CHART_SURFACE_BARS}
+        />
+        <LineChart
+          aria-label="Churn by quarter"
+          labels={[...CHART_SURFACE_LABELS]}
+          series={[CHART_SURFACE_CHURN]}
+          width={sizes.line.width}
+          height={sizes.line.height}
+          testId={CHART_SURFACE_LINE}
+        />
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: theme.spacing.md,
+          alignItems: "flex-start",
+        }}
+      >
+        <StackedBar
+          aria-label="Revenue and cost stacked by quarter"
+          labels={[...CHART_SURFACE_LABELS]}
+          series={[revenue, CHART_SURFACE_COST]}
+          width={sizes.stacked.width}
+          height={sizes.stacked.height}
+          testId={CHART_SURFACE_STACKED}
+        />
+        <DonutChart
+          aria-label="Traffic by source"
+          data={[...CHART_SURFACE_SOURCES]}
+          size={sizes.donut.size}
+          testId={CHART_SURFACE_DONUT}
+        />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.xs,
+          }}
+        >
+          <text style={{ ...textStyle(theme, "caption") }}>Revenue trend</text>
+          <Sparkline
+            aria-label="Revenue trend"
+            values={revenue.values}
+            width={sizes.sparkline.width}
+            height={sizes.sparkline.height}
+            color={theme.colors.primary}
+            testId={CHART_SURFACE_SPARKLINE}
+          />
+          {readout(CHART_SURFACE_SPARK, `spark=${theme.colors.primary}`)}
+        </div>
+      </div>
+      <Toolbar>
+        <Pressable
+          testId={CHART_SURFACE_NEXT}
+          onClick={() => setFrame((current) => current + 1)}
+        >
+          <text style={{ ...textStyle(theme, "label") }}>Widen</text>
+        </Pressable>
+        {readout(CHART_SURFACE_PALETTE, `palette=${palette.join(",")}`)}
+        {readout(CHART_SURFACE_GROUND, `ground=${theme.colors.background}`)}
+        {readout(CHART_SURFACE_FRAME, `frame=${frame}`)}
+      </Toolbar>
+    </div>
+  );
+};
+
+/**
+ * What the shipped charts paint in a window.
+ *
+ * A mark is read out of the plot's own crop, so a tint that leaks into the
+ * legend or the page cannot stand in for the series. The first check is the
+ * route itself: **two colours inside one plot** is what a single-mask chart
+ * cannot do, and every later check assumes it.
+ */
+const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(chartSurfacePart(CHART_SURFACE_BARS, "plot"));
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("chart-surface");
+    const frame = yield* ctx.host.pixels("chart-surface");
+    const size = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, size),
+    );
+    const box = (testId: string) =>
+      Effect.flatMap(
+        Effect.map(ctx.host.bounds(testId), Option.fromNullishOr),
+        (bounds) => ctx.expectSome(`the runtime paints ${testId}`, bounds),
+      );
+    const colourOf = (hex: string, index: number | string) =>
+      ctx.expectSome(
+        `colour ${index} resolves`,
+        Option.fromNullishOr(Pixels.hexToRgba(hex)),
+      );
+    const solid = (colour: Pixels.Rgba): Pixels.Rgba =>
+      new Pixels.Rgba({ r: colour.r, g: colour.g, b: colour.b, a: 0xff });
+    const crop = (
+      captured: Pixels.Pixels,
+      bounds: {
+        readonly x: number;
+        readonly y: number;
+        readonly width: number;
+        readonly height: number;
+      },
+    ) =>
+      Pixels.crop(
+        captured,
+        new Pixels.PixelRegion({
+          x: Math.round(bounds.x * scale),
+          y: Math.round(bounds.y * scale),
+          width: Math.round(bounds.width * scale),
+          height: Math.round(bounds.height * scale),
+        }),
+      );
+    const countIn = (
+      captured: Pixels.Pixels,
+      bounds: {
+        readonly x: number;
+        readonly y: number;
+        readonly width: number;
+        readonly height: number;
+      },
+      colour: Pixels.Rgba,
+    ): number =>
+      Option.match(Option.fromNullishOr(crop(captured, bounds)), {
+        onNone: () => 0,
+        onSome: (plot) => Pixels.countColour(plot, colour),
+      });
+    const sample = (
+      captured: Pixels.Pixels,
+      bounds: {
+        readonly x: number;
+        readonly y: number;
+        readonly width: number;
+        readonly height: number;
+      },
+      point: { readonly x: number; readonly y: number },
+    ): string =>
+      Option.match(
+        Option.fromNullishOr(
+          Pixels.pixelAt(
+            captured,
+            Math.round((bounds.x + point.x) * scale),
+            Math.round((bounds.y + point.y) * scale),
+          ),
+        ),
+        { onNone: () => "outside the capture", onSome: describeColour },
+      );
+
+    // The palette is the theme's own, read from the probe rather than restated,
+    // so a brand's categorical scale is measured too.
+    const paletteText = yield* ctx.host.text(CHART_SURFACE_PALETTE);
+    const palette = yield* Effect.forEach(
+      paletteText.slice("palette=".length).split(","),
+      (hex, index) => colourOf(hex, index + 1),
+      { concurrency: 1 },
+    );
+    const [first, second, third] = palette;
+    const paintFirst = yield* ctx.expectSome(
+      "the first series has a colour",
+      Option.fromNullishOr(first),
+    );
+    const paintSecond = yield* ctx.expectSome(
+      "the second series has a colour",
+      Option.fromNullishOr(second),
+    );
+    const paintThird = yield* ctx.expectSome(
+      "the third series has a colour",
+      Option.fromNullishOr(third),
+    );
+    const ground = yield* colourOf(
+      (yield* ctx.host.text(CHART_SURFACE_GROUND)).slice("ground=".length),
+      "background",
+    );
+
+    // 1. The route: one plot, two series, two tints.
+    const bars = yield* box(chartSurfacePart(CHART_SURFACE_BARS, "plot"));
+    yield* ctx.expectEqual(
+      "the bars plot paints the first series' tint",
+      countIn(frame, bars, solid(paintFirst)) > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the bars plot paints the second series' tint",
+      countIn(frame, bars, solid(paintSecond)) > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the first bar reads its own series colour",
+      sample(frame, bars, CHART_SURFACE_POINTS.barsFirst),
+      describeColour(solid(paintFirst)),
+    );
+    yield* ctx.expectEqual(
+      "the second bar beside it reads the other series colour",
+      sample(frame, bars, CHART_SURFACE_POINTS.barsSecond),
+      describeColour(solid(paintSecond)),
+    );
+
+    // 2. The marks sit inside the labelled plot: the axis and category labels
+    //    are text beside it, so a bar past the last slot would be outside them.
+    yield* ctx.expectEqual(
+      "the axis prints its ceiling",
+      yield* ctx.host.text(
+        chartSurfacePart(CHART_SURFACE_BARS, "tick", CHART_SURFACE_TICKS[0]),
+      ),
+      CHART_SURFACE_TICKS[0],
+    );
+    yield* ctx.expectEqual(
+      "the axis prints its floor",
+      yield* ctx.host.text(
+        chartSurfacePart(CHART_SURFACE_BARS, "tick", CHART_SURFACE_TICKS[1]),
+      ),
+      CHART_SURFACE_TICKS[1],
+    );
+    yield* ctx.expectEqual(
+      "the first category label is painted under its slot",
+      yield* ctx.host.text(chartSurfacePart(CHART_SURFACE_BARS, "label", "0")),
+      CHART_SURFACE_LABELS[0],
+    );
+    const swatch = yield* box(
+      chartSurfacePart(CHART_SURFACE_BARS, "legend-swatch", "revenue"),
+    );
+    yield* ctx.expectEqual(
+      "the legend's swatch is the series' paint",
+      sample(frame, swatch, { x: 6, y: 6 }),
+      describeColour(solid(paintFirst)),
+    );
+
+    // 3. A stacked bar is two paints in one slot: the floor series and the one
+    //    above it, read where each really is.
+    const stacked = yield* box(chartSurfacePart(CHART_SURFACE_STACKED, "plot"));
+    yield* ctx.expectEqual(
+      "the stack's floor series reads its colour",
+      sample(frame, stacked, CHART_SURFACE_POINTS.stackedLower),
+      describeColour(solid(paintFirst)),
+    );
+    yield* ctx.expectEqual(
+      "the series above it reads the other colour",
+      sample(frame, stacked, CHART_SURFACE_POINTS.stackedUpper),
+      describeColour(solid(paintSecond)),
+    );
+
+    // 4. A ring paints one segment per non-empty datum; the zero source is not
+    //    a slice, and its layer is not in the tree at all.
+    const donut = yield* box(chartSurfacePart(CHART_SURFACE_DONUT, "plot"));
+    yield* ctx.expectEqual(
+      "the ring paints its first slice",
+      countIn(frame, donut, solid(paintFirst)) > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the ring paints its second slice in another colour",
+      countIn(frame, donut, solid(paintSecond)) > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the ring paints its third slice in a third colour",
+      countIn(frame, donut, solid(paintThird)) > 0,
+      true,
+    );
+    yield* Effect.forEach(
+      Arr.map(Arr.fromIterable(CHART_SURFACE_POINTS.donut), (entry, index) => ({
+        ...entry,
+        index,
+      })),
+      (entry) =>
+        ctx.expectEqual(
+          `the ${entry.key} slice is painted where its share lands`,
+          sample(frame, donut, entry.point),
+          describeColour(
+            solid(
+              Arr.get(palette, entry.index).pipe(
+                Option.getOrElse(() => paintFirst),
+              ),
+            ),
+          ),
+        ),
+      { concurrency: 1 },
+    );
+    yield* ctx.expectEqual(
+      "the zero source paints no layer",
+      (yield* ctx.host.bounds(
+        chartSurfacePart(CHART_SURFACE_DONUT, "layer", "referral"),
+      )) === null,
+      true,
+    );
+
+    // 5. A sparkline is one image in the colour the caller named.
+    const spark = yield* colourOf(
+      (yield* ctx.host.text(CHART_SURFACE_SPARK)).slice("spark=".length),
+      "sparkline",
+    );
+    // A sparkline has no separate plot part: it is one image in one box.
+    const sparkPlot = yield* box(CHART_SURFACE_SPARKLINE);
+    yield* ctx.expectEqual(
+      "the sparkline paints its own colour",
+      countIn(frame, sparkPlot, solid(spark)) > 0,
+      true,
+    );
+
+    // 6. A changed value repaints the mark: the first bar grows into a point it
+    //    did not reach, and the surface behind the bar shows through before.
+    yield* ctx.expectEqual(
+      "before the press the growth point is the surface behind the plot",
+      sample(frame, bars, CHART_SURFACE_POINTS.barsGrowth),
+      describeColour(solid(ground)),
+    );
+    yield* ctx.host.click(CHART_SURFACE_NEXT);
+    yield* ctx.expectEqual(
+      "the press is on the frame it produced",
+      yield* settleUntil(
+        ctx.host.text(CHART_SURFACE_FRAME),
+        (value) => value === "frame=2",
+      ),
+      "frame=2",
+    );
+    yield* ctx.host.capture("chart-surface-2");
+    const updated = yield* ctx.host.pixels("chart-surface-2");
+    const grown = yield* box(chartSurfacePart(CHART_SURFACE_BARS, "plot"));
+    yield* ctx.expectEqual(
+      "the widened bar paints the point it did not reach before",
+      sample(updated, grown, CHART_SURFACE_POINTS.barsGrowth),
+      describeColour(solid(paintFirst)),
+    );
+    yield* ctx.expectEqual(
+      "the second series still paints beside the widened bar",
+      sample(updated, grown, CHART_SURFACE_POINTS.barsSecond),
+      describeColour(solid(paintSecond)),
+    );
+  });
+
+/**
  * The window-chrome probe: where the app's own layout starts, and what the
  * window reports as its safe area.
  */
@@ -28287,6 +28702,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "chart-raster",
     view: () => <ChartProbe />,
     steps: chartSteps,
+  },
+  "chart-surface-lifecycle": {
+    id: "chart-surface-lifecycle",
+    view: () => <ChartSurfaceProbe />,
+    steps: chartSurfaceSteps,
   },
   "window-chrome": {
     id: "window-chrome",

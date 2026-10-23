@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-104 probes a real window can prove, of which twenty mount shipped
+105 probes a real window can prove, of which twenty mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -52,7 +52,7 @@ combobox, the date picker, the shipped data tables, the nested overlay stack,
 the modal focus rule and the breadcrumb trail), eight mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
 ScrollArea and the Button), three mount `@gpuixui/data`'s examples (the table, the virtualized
-table and the tree), one more
+table and the tree), one mounts the package's shipped charts, one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
 own wheel, a scroll region's keyboard contract and size, a split pane, a virtual
@@ -3039,6 +3039,48 @@ A chart drawn at its layout size is the safe shape on both counts: a resize
 re-scales the buffer with the box, and a translucent mark composites over the
 layer below because the buffer's alpha is straight. Nothing about a raster plot
 is left unmeasured by this probe.
+
+### `chart-surface-lifecycle` — measured on 0.11.0 here
+
+**Do the shipped `@gpuixui/data` charts paint one tint per series in a window,
+or only in the `TestRenderer` their behaviour suite mounts them in?** The
+package draws a chart as one `<svg>` per series because `<svg source>` is a
+single tinted mask — the route `chart-raster` measured — but the shipped charts
+had only ever been read through the offscreen renderer. This probe mounts the
+**shipped** `BarChart`, `LineChart`, `StackedBar`, `DonutChart` and `Sparkline`
+in a real window and counts paint out of each plot's own crop, so a tint in the
+legend or on the page cannot stand in for a series. The palette is read from the
+probe's own `seriesColors(theme)` readout rather than restated, so a brand's
+categorical scale is measured too.
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/live/run.js --only chart-surface-lifecycle
+```
+
+40 checks, green on 0.11.0 (~1.8 s). Fixture: `src/live/chart-surface.ts` (the
+four categories, the series and ring data, the two frame values, the plot sizes
+and the sample points) + `chart-surface.test.ts` (5 cases: the bar and stack
+samples are inside marks `groupedBarMarks`/`stackedBarMarks` draw, each ring
+sample sits inside its datum's sweep between the radii its own path names, the
+view mounts the shipped parts through the fixture's ids, the README's section
+prints the check count the fixture declares, and the package's Charts row,
+README row and charts page cite this probe). Evidence:
+`.artifacts/live/chart-surface.png` and `.artifacts/live/chart-surface-2.png`.
+
+| Question | Measurement |
+| -------- | ----------- |
+| Does one plot carry more than one tint? | The bars plot paints **both** series colours, sampled at the first category's two marks (`rgba(…, 255)` each), and the count of each tint inside the plot crop is non-zero — the thing a single `<svg source>` mask cannot do |
+| Do the axis and labels stay text beside the plot? | The axis prints `100` at its ceiling and `0` at its floor, the first category prints `Q1`, and the legend's `revenue` swatch reads the first series' own colour |
+| Is a stack read from its floor? | The lower sample reads the first series and the point above it the second, so the two fills are stacked in one slot rather than drawn over each other |
+| Does a ring paint a slice per non-empty datum? | Three source colours paint inside the ring's crop at the points their shares land on, and `referral` (value `0`) paints no layer at all |
+| Does a sparkline keep the caller's colour? | The colour read from the probe's `spark=` readout is counted inside the sparkline's box |
+| Does a changed value repaint the mark? | Before the press the point above the first bar is the surface behind the plot; after it, the same point reads the series' colour, and the second series still paints beside it |
+
+One negative control measured, exit `1`, restored green: tinting every layer
+with the first palette slot (the single-mask regression the probe exists to
+catch) fails
+`the bars plot paints the second series' tint: expected true, got false`.
 
 ### `window-chrome` — measured on 0.11.0 here
 
@@ -6076,7 +6118,8 @@ narrower. Each deviation is deliberate and measured:
   `hidden-subtree-lifecycle` and `find-highlight` and `crop-overlay` and
   `faded-hitbox-lifecycle` and `markdown-fence` and
   `empty-error-states-lifecycle` and `blur-delivery-lifecycle` and
-  `breadcrumb-navigation-lifecycle` (forty-six probes, each run alone).
+  `breadcrumb-navigation-lifecycle` and `chart-surface-lifecycle` (forty-seven
+  probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

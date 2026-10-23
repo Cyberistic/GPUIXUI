@@ -8358,6 +8358,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
     surfaces and `docs/advanced-filter.mdx` §Narrowing a table state the
     composition. `nub run --filter @gpuixui/data test` 176/176,
     `test:behaviour` 106/106, `check-types` clean. Owner: data.
+  - [x] Mount the **shipped charts in a real window** — the package's Charts
+    status row claimed *shipped, window-verified* while the five charts had only
+    the offscreen behaviour suite and the headless `data-charts-core` scenario;
+    neither measured the `<svg source>` paint in a window.
+    `chart-surface-lifecycle` mounts the shipped `BarChart`, `LineChart`,
+    `StackedBar`, `DonutChart` and `Sparkline` and counts paint out of each
+    **plot's own crop**, so a legend swatch or the page behind cannot stand in
+    for a mark: two series tints in one plot (the route the one-tint mask
+    forbids), a stack read from its floor, three ring slices with no layer for
+    the zero datum, the sparkline in the caller's colour, and a widened bar
+    repainting a point it did not reach before — 40 checks on 0.11.0 (~1.9 s).
+    `src/live/chart-surface.ts` owns the data, sizes and sample points;
+    `chart-surface.test.ts` (5 cases) holds them to `groupedBarMarks`,
+    `stackedBarMarks` and `donutSegments`, the view to the shipped parts, and
+    the package status row, Charts row and page to the probe. Direction
+    measured: tinting every layer from the first palette slot fails `the bars
+    plot paints the second series' tint`; restored, 1/1. Docs:
+    `packages/data/docs/charts.mdx` §Verification, the README status row and
+    the Tier 3 Charts row. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
