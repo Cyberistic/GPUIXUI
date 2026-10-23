@@ -5,25 +5,44 @@ description: A control's visible name, with a required marker and a description.
 <ComponentPreview name="label-demo" />
 
 `Label` renders the **visible** name of a field. It is not associated with the
-control by reference, so the control carries its own `aria-label` through its
-`label` prop; `labelledBy(name)` builds that prop.
+control by reference — the runtime has no `aria-labelledby` — so the control
+carries its own `aria-label` through its `label` prop, and `labelledBy(name)`
+builds that prop. Given the control's `target` ref, a press on the label moves
+native focus to it: the `htmlFor` behaviour, through the renderer's
+`focusElement`.
 
 ## Usage
 
 ```tsx
+import { useRef } from "react";
+import type { PublicInstance } from "@gpuix/react";
 import { Input, Label, labelledBy } from "@gpuixui/primitives";
 
 const name = "Workspace name";
 const help = "Shown on invitations and in the app switcher.";
 
-<Label description={help}>{name}</Label>
-<Input {...labelledBy(name)} description={help} fullWidth />;
+export const NameField = () => {
+  const ref = useRef<PublicInstance>(null);
+  return (
+    <>
+      <Label target={ref} description={help}>
+        {name}
+      </Label>
+      <Input ref={ref} {...labelledBy(name)} description={help} fullWidth />
+    </>
+  );
+};
 ```
+
+A label with no `target` is text only: that is the right form when there is no
+single control to focus, or when the words sit in a legend above a group.
 
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
+| `target` | `RefObject<PublicInstance \| null>` | none | a press on the label focuses this control |
+| `disabled` | `boolean` | `false` | drops that press, for a control that is disabled |
 | `required` | `boolean` | `false` | appends a destructive `*`; visual only |
 | `invalid` | `boolean` | `false` | paints the name in the destructive role |
 | `description` | `string` | none | a caption line under the name |
@@ -34,10 +53,13 @@ const help = "Shown on invitations and in the app switcher.";
 
 ## Limitations
 
-- No click-to-focus: the runtime has no `for`/`htmlFor`.
-- No association by reference — the name is written in two places when both the
-  visible label and the control's name are needed; `labelledBy(name)` writes the
-  control's copy.
+- No association by reference: the runtime has no `aria-labelledby` and no
+  `for`/`htmlFor`, so the name is written in two places when both the visible
+  label and the control's name are needed. `target` moves the focus; it does not
+  name the control — keep spreading `labelledBy(name)`.
+- A label holds the control's element, not its state. Pass `disabled` with the
+  control's own boolean, or a press focuses a control that refuses every key
+  (measured: without it the disabled field took the focus).
 - The visible description is a second copy: the control announces only its own
   `description`.
 - `required` does not validate; validate with `Schema` at the boundary.

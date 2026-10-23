@@ -230,7 +230,8 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     status: "done",
     gpuixSupport: "partial",
     limitations: [
-      "No aria-labelledby and no for/htmlFor: no click-to-focus",
+      "No aria-labelledby: the control carries its own name (labelledBy)",
+      "A press focuses the control only when target is given, and not while disabled: a label cannot read the control's state",
       "The name is written in two places when the label is separate",
       "The visible description is not associated: a control announces its own",
       "required is presentational; validate with Schema at the boundary",

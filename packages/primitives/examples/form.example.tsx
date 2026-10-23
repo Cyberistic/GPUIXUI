@@ -6,10 +6,12 @@
  * appear only while the request is in flight — one reporting work buffered
  * ahead of the value. Each field's copy is written once and spread into both the
  * visible `Label` and the control, because the runtime has neither
- * `aria-labelledby` nor `aria-describedby` (see `docs/label.mdx`).
+ * `aria-labelledby` nor `aria-describedby` (see `docs/label.mdx`). The two text
+ * fields hand their ref to both, so pressing a label focuses the field it names.
  */
 
-import { useState, type ReactElement } from "react";
+import { useRef, useState, type ReactElement } from "react";
+import type { PublicInstance } from "@gpuix/react";
 import {
   Box,
   Button,
@@ -60,6 +62,8 @@ export const FormExample = (): ReactElement => {
   const [notes, setNotes] = useState("");
   const [region, setRegion] = useState("eu-west");
   const [saving, setSaving] = useState(false);
+  const nameRef = useRef<PublicInstance>(null);
+  const ownerRef = useRef<PublicInstance>(null);
 
   return (
     <Box
@@ -79,8 +83,11 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         <Stack direction="column" gap="2xs">
-          <Label description={NAME.description}>{NAME.label}</Label>
+          <Label target={nameRef} description={NAME.description}>
+            {NAME.label}
+          </Label>
           <Input
+            ref={nameRef}
             value={name}
             onChange={setName}
             {...NAME}
@@ -103,8 +110,11 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         <Stack direction="column" gap="2xs">
-          <Label description={OWNER.description}>{OWNER.label}</Label>
+          <Label target={ownerRef} description={OWNER.description}>
+            {OWNER.label}
+          </Label>
           <Input
+            ref={ownerRef}
             value={owner}
             onChange={setOwner}
             {...OWNER}

@@ -88,6 +88,75 @@ it("announces a field's own name beside its visible Label", async () => {
   ).toBe(true);
 });
 
+it("focuses the field a label names when its words are pressed", async () => {
+  // The bug guarded: a label was inert, so pressing the words beside a field
+  // did nothing. A browser gets click-to-focus from `for`/`htmlFor`; the
+  // runtime has neither, but it exposes `focusElement`, so a label given its
+  // control's ref is that control's pointer target. The press is aimed inside
+  // the painted words — a text leaf owns the hit test, so the leaves being
+  // inert is what lets the frame take it.
+  const runtime = await openWindow();
+  const ref = createRef<PublicInstance>();
+  const focused: string[] = [];
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Label target={ref} testId="label">
+          Project name
+        </Label>
+        <Input
+          testId="field"
+          label="Project name"
+          ref={ref}
+          onFocus={() => focused.push("field")}
+        />
+      </Stack>
+    </Surface>,
+  );
+  const label = boundsOf(runtime, "label");
+  runtime.clickAt(label.x + 6, label.y + 4);
+  expect(runtime.focused()).toStrictEqual(Option.some("field"));
+  expect(focused).toEqual(["field"]);
+});
+
+it("leaves the focus alone when a label names no control", async () => {
+  // The other direction: without a target the words are only words, and the
+  // same press must not move the focus.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Label testId="label">Project name</Label>
+        <Input testId="field" label="Project name" />
+      </Stack>
+    </Surface>,
+  );
+  const label = boundsOf(runtime, "label");
+  runtime.clickAt(label.x + 6, label.y + 4);
+  expect(runtime.focused()).toStrictEqual(Option.none());
+});
+
+it("leaves a disabled control's focus alone when its label is pressed", async () => {
+  // A label holds the control's element, not its state: without `disabled` the
+  // press would focus a field that refuses every key (measured — the field took
+  // the focus), so the same boolean the control takes drops the press.
+  const runtime = await openWindow();
+  const ref = createRef<PublicInstance>();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Label target={ref} disabled testId="label">
+          Project name
+        </Label>
+        <Input testId="field" label="Project name" ref={ref} disabled />
+      </Stack>
+    </Surface>,
+  );
+  const label = boundsOf(runtime, "label");
+  runtime.clickAt(label.x + 6, label.y + 4);
+  expect(runtime.focused()).toStrictEqual(Option.none());
+});
+
 it("announces the help a field carries, and the id an automation host uses", async () => {
   // The help a visible `Label description` paints used to reach nobody: there is
   // no `aria-describedby`, so the control has to carry the words itself. This is

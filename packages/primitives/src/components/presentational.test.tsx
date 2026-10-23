@@ -8,7 +8,7 @@
  */
 
 import type { ReactElement } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -42,9 +42,11 @@ import {
   elementChildren,
   elementProp,
   expectSome,
+  hostHandler,
   hostProp,
   hostTag,
 } from "./testing/element.js";
+import { clickEvent } from "./testing/event.js";
 
 /** One property of the resolved `style` prop, still unknown. */
 const styleProp = (
@@ -590,6 +592,46 @@ describe("type", () => {
     expect(expectSome(elementProp(renderLabel({}), "direction"))).toBe(
       "column",
     );
+  });
+
+  it("makes the words that name a control its pointer target", () => {
+    // The bug guarded: a label was inert, so pressing the words beside a field
+    // did nothing. A browser gets click-to-focus from `for`/`htmlFor`; the
+    // runtime has neither, but it exposes `focusElement`, so a label given its
+    // control's ref is that control's pointer target. The frame is the element
+    // that holds the press; the runtime case proves the words reach it.
+    const pressed = vi.fn();
+    const element = renderLabel({ description: "We never share it." }, pressed);
+    expect(expectSome(hostTag(element))).toBe("div");
+    expect(expectSome(stringIn(element, "cursor"))).toBe("pointer");
+    expectSome(hostHandler(element, "onClick"))(clickEvent);
+    expect(pressed).toHaveBeenCalledOnce();
+    // The column the caller styled is still the label's own layout.
+    const stack = elementChildren(element)[0] ?? expect.fail("no label column");
+    expect(expectSome(elementProp(stack, "direction"))).toBe("column");
+  });
+
+  it("leaves a label with no target inert", () => {
+    // The other direction: a label that names nothing must not become a press
+    // target or a pointer cursor — reading the words is all it does, and the
+    // runtime has no focus to move. No frame is added, so the tree is the
+    // column the caller composes.
+    const element = renderLabel({ description: "We never share it." });
+    expect(hostTag(element)).toStrictEqual(Option.none());
+    expect(expectSome(elementProp(element, "direction"))).toBe("column");
+    expect(elementProp(element, "onClick")).toStrictEqual(Option.none());
+  });
+
+  it("stays inert while the control it names is disabled", () => {
+    // A label holds the control's element, not its state, so a press would
+    // otherwise move focus to a control that refuses every key. `disabled`
+    // is the caller's own boolean, and it drops the press the same way a
+    // disabled control installs no handler.
+    const pressed = vi.fn();
+    const element = renderLabel({ disabled: true }, pressed);
+    expect(hostTag(element)).toStrictEqual(Option.none());
+    expect(elementProp(element, "onClick")).toStrictEqual(Option.none());
+    expect(pressed).not.toHaveBeenCalled();
   });
 
   it("hands back the description the label paints, when there is one", () => {
