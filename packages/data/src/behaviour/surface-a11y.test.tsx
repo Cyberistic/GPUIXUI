@@ -148,11 +148,15 @@ describe("the data surfaces announce what they paint", () => {
     expect(labels).toContain("any of (status equals tracked)");
 
     // The combinator is the group's own control, not a word beside the tree:
-    // a reader changes it in place, so it has to be a named button.
+    // a reader changes it in place, so it has to be a named button, described
+    // with what a press does to the group.
     const combinator = Arr.filter(
       nodes,
       (node) => node.aria.label === "any of",
     );
     expect(Arr.map(combinator, (node) => node.aria.role)).toEqual(["Button"]);
+    expect(Arr.map(combinator, (node) => node.aria.description)).toEqual([
+      "Change how this group combines its clauses",
+    ]);
   });
 });

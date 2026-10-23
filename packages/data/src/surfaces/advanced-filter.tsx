@@ -300,11 +300,12 @@ const Group = ({
           <DropdownMenuTrigger
             variant="ghost"
             size="sm"
+            aria-description="Change how this group combines its clauses"
             testId={base === undefined ? undefined : `${base}-kind`}
           >
             {groupLabels[kind]}
           </DropdownMenuTrigger>
-          <DropdownMenuContent label="Group">
+          <DropdownMenuContent label="Combine the group">
             <DropdownMenuItem
               onSelect={() => onChange(setGroupKind(root, path, "all"))}
               testId={base === undefined ? undefined : `${base}-kind-all`}
