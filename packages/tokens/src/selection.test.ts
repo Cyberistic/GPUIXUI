@@ -792,6 +792,13 @@ describe("the wash a status message can carry", () => {
       expect(prose).not.toContain("30 of the 32");
       expect(prose).not.toContain("All 64 tint");
     });
+    // The inventory's own clause names the suite's measurements, and it kept
+    // the pre-look pair after the paragraph above it moved: "30/5.21" and the
+    // "64-placement sweep" described a table the suite had already outgrown.
+    const row = flat(inventory);
+    expect(row).not.toContain("30/5.21");
+    expect(row).not.toContain("64-placement");
+    expect(row).toContain(`${derived.length}-placement sweep`);
     // The page prints the values the sweep measures, so a palette edit that
     // moves the tightest placement cannot leave the catalogue teaching an old one.
     expect(tightestBody.body.toFixed(2)).toBe("7.00");
