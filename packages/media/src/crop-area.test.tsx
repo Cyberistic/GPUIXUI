@@ -138,6 +138,24 @@ describe("renderCropArea", () => {
     expect(handleOf(root, "sw")).toBeDefined();
   });
 
+  it("reads an unreadable handle side and minimum as the defaults", () => {
+    const tiny = new CropRect({ x: 60, y: 40, width: 10, height: 10 });
+    const root = renderCropArea(
+      props({ value: tiny, handleSize: Number.NaN, minSize: Number.NaN }),
+      lightTheme,
+      surfaceOf(),
+    );
+    expect(expectSome(hostProp(handleOf(root, "se"), "style"))).toMatchObject({
+      left: 79,
+      top: 59,
+      width: 10,
+      height: 10,
+    });
+    expect(
+      expectSome(elementProp(handleOf(root, "se"), "aria-valuetext")),
+    ).toBe("60, 40, 24 × 24");
+  });
+
   it("paints no picture for a blank source", () => {
     const root = renderCropArea(props({ src: "  " }), lightTheme, surfaceOf());
     const images = elementChildren(root).filter(

@@ -27,6 +27,7 @@ import {
   cornerLabel,
   cropBars,
   cropLabel,
+  CROP_HANDLE_SIZE,
   CROP_MIN_SIZE,
   CropCorner,
   CropRect,
@@ -86,7 +87,6 @@ export interface CropAreaProps extends Omit<Props, "children" | "onChange"> {
   readonly className?: string;
 }
 
-const DEFAULT_HANDLE = 10;
 const CORNERS: ReadonlyArray<CropCorner> = ["nw", "ne", "sw", "se"];
 
 /** The frame's box, read from the caller's two sides. */
@@ -132,7 +132,7 @@ export const renderCropArea = (
     value,
     onChange: _onChange,
     minSize = CROP_MIN_SIZE,
-    handleSize = DEFAULT_HANDLE,
+    handleSize = CROP_HANDLE_SIZE,
     label = "Crop area",
     disabled = false,
     className,

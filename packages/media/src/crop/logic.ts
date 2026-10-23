@@ -21,6 +21,9 @@ export type CropCorner = typeof CropCorner.Type;
 /** The smallest side a crop may keep; a smaller hole cannot be grabbed. */
 export const CROP_MIN_SIZE = 24;
 
+/** A corner handle's default side in points. */
+export const CROP_HANDLE_SIZE = 10;
+
 /** A rectangle in the frame's points. */
 export class CropRect extends Schema.Class<CropRect>("CropRect")({
   x: Schema.Number,
@@ -62,11 +65,19 @@ const clamp = (value: number, low: number, high: number): number =>
 /** A coordinate a pointer or key can move by; a non-finite one moves nothing. */
 const delta = (value: number): number => (Number.isFinite(value) ? value : 0);
 
-/** The minimum side a frame can actually offer. */
+/**
+ * The minimum side a frame can actually offer. A minimum that cannot be read
+ * (a stored preference) reads as the default, so it cannot poison every side
+ * the clamp multiplies it into.
+ */
 const floorOf = (bounds: CropBounds, min: number): number =>
   Math.max(
     0,
-    Math.min(min, Math.max(0, bounds.width), Math.max(0, bounds.height)),
+    Math.min(
+      Number.isFinite(min) ? min : CROP_MIN_SIZE,
+      Math.max(0, bounds.width),
+      Math.max(0, bounds.height),
+    ),
   );
 
 /**
@@ -134,13 +145,16 @@ export const cropBars = (
   return bars.filter(({ box }) => box.width > 0 && box.height > 0);
 };
 
-/** A corner handle's box, centred on the crop's corner. */
+/**
+ * A corner handle's box, centred on the crop's corner. A side that cannot be
+ * read reads as {@link CROP_HANDLE_SIZE}, never a `NaN` box.
+ */
 export const handleBox = (
   crop: CropRect,
   corner: CropCorner,
   size: number,
 ): CropRect => {
-  const side = Math.max(1, size);
+  const side = Number.isFinite(size) ? Math.max(1, size) : CROP_HANDLE_SIZE;
   const point = Match.value(corner).pipe(
     Match.when("nw", () => ({ x: crop.x, y: crop.y })),
     Match.when("ne", () => ({ x: crop.right, y: crop.y })),

@@ -16,6 +16,7 @@ import {
   cropBars,
   cropLabel,
   gestureCrop,
+  CROP_HANDLE_SIZE,
   CropRect,
   handleBox,
   keyboardCrop,
@@ -108,6 +109,12 @@ describe("handleBox", () => {
       height: 10,
     });
   });
+
+  it("reads an unreadable handle side as the default box", () => {
+    expect(boxes(handleBox(opening, "se", Number.NaN))).toStrictEqual(
+      boxes(handleBox(opening, "se", CROP_HANDLE_SIZE)),
+    );
+  });
 });
 
 describe("resizeCrop", () => {
@@ -131,6 +138,17 @@ describe("resizeCrop", () => {
 
   it("stops at the minimum side", () => {
     expect(boxes(resizeCrop(opening, "se", -900, -900, bounds))).toStrictEqual({
+      x: 60,
+      y: 40,
+      width: 24,
+      height: 24,
+    });
+  });
+
+  it("reads an unreadable minimum as the default side", () => {
+    expect(
+      boxes(resizeCrop(opening, "se", -900, -900, bounds, Number.NaN)),
+    ).toStrictEqual({
       x: 60,
       y: 40,
       width: 24,

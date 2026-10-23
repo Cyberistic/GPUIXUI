@@ -43,7 +43,10 @@ Three rules keep the hole usable:
 - a side never shrinks below `minSize` (24 points by default);
 - a stored rectangle the current frame cannot hold is **clamped before it
   paints**, so a crop restored from a smaller picture does not leave the hole
-  outside the bitmap.
+  outside the bitmap;
+- a `minSize` or `handleSize` that cannot be read (`NaN`, infinity) reads as its
+  default, so a stored preference cannot collapse the hole to nothing or paint a
+  `NaN` handle box.
 
 `clampCrop`, `cropBars`, `handleBox`, `moveCrop`, `resizeCrop` and `keyboardCrop`
 are exported from `@gpuixui/media/crop/logic`, so a crop can be clamped or
