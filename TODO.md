@@ -7990,7 +7990,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 220/220
+`[x]` `[██████████]` 221/221
+
+`[x]` Teach the **draft a caller disables mid-edit** on the curated Inline edit
+      page — `dc05bb4c` made the component refuse a half-finished rename
+      (`if (commit && !disabled && draft !== value) onCommit(draft)`) and landed
+      two behaviour cases around it, while the page still printed **9** native
+      cases (the suite runs **11**), listed neither new case, and left the rule
+      to the source: a reader designing a save was told a blur commits, with no
+      statement that a control disabled in the meantime discards instead. The
+      page now prints 11 and enumerates both cases, §Keyboard gains the rule and
+      its reason (the entry guard alone cannot do it — a read-only host still
+      receives `Enter`, the host's submit and the blur), the §States `disabled`
+      row names the mid-edit discard, and the `onCommit` API row says it is
+      never called in that state. `inline-edit-preview.test.ts` now reads the
+      real guard and gains `discards a draft the caller disabled before any
+      finish arrives`, which holds the source, the three page sentences and the
+      printed count together. Directions measured: restoring the 9-case
+      sentence fails `inline-edit.mdx: says 9, suite runs 11`, and deleting the
+      §Keyboard rule fails the preview case by name; 59/59 green with both.
 
 `[x]` Send the **licence page to the notice the release actually carries** — the
       page said "A notice we must redistribute is carried in `LICENSES/NOTICE`",

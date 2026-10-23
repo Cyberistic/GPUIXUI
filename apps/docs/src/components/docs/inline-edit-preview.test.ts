@@ -129,15 +129,40 @@ describe("the inline edit preview", () => {
   });
 
   it("reads the contract the component actually implements", () => {
-    // The latch, the unchanged-draft guard and the two refocus reasons, read
-    // from the source so the model cannot outlive the paint.
+    // The latch, the unchanged-draft guard, the disabled-mid-edit discard and
+    // the two refocus reasons, read from the source so the model cannot outlive
+    // the paint.
     expect(source).toContain("const finished = useRef(false);");
     expect(source).toContain("if (finished.current) return;");
-    expect(source).toContain("if (commit && draft !== value) onCommit(draft);");
+    expect(source).toContain(
+      "if (commit && !disabled && draft !== value) onCommit(draft);",
+    );
     expect(source).toContain("const commit = (): void => finish(true, true);");
     expect(source).toContain("const cancel = (): void => finish(false, true);");
     expect(source).toContain("setDraft(value);");
     expect(source).toContain("renderer?.focusElement?.(inputId);");
+  });
+
+  it("discards a draft the caller disabled before any finish arrives", () => {
+    // A disabled control must not write a value: the entry guard refuses a new
+    // edit, so the half that could still reach `onCommit` is the finish, and the
+    // suite proves both (`Enter`/submit and the blur). The page teaches the rule
+    // where a reader designs a save; this holds the sentence to the source.
+    const page = read(
+      "../../../content/docs/components/inline-edit.mdx",
+    ).replace(/\s+/g, " ");
+
+    expect(source).toContain("if (commit && !disabled && draft !== value)");
+    expect(page).toContain(
+      "A caller that **disables the control mid-edit** refuses the edit",
+    );
+    expect(page).toContain(
+      "never when the caller disables the control mid-edit",
+    );
+    expect(page).toContain(
+      "a draft the caller disables before the `Enter` commit",
+    );
+    expect(page).toContain("11 native behaviour tests");
   });
 
   it("keeps the caller's handlers after its own on the editor", () => {

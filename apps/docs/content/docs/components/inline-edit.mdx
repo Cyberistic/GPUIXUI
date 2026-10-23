@@ -83,7 +83,7 @@ Two consequences a drawing cannot show:
 | rest | the committed value in `foreground`, on a `sm` row |
 | empty value | the placeholder in `mutedForeground` — a value, not a prompt |
 | editing | a real `<input>` at the `md` height, with the caret and the platform's editing keys |
-| disabled | half opacity, no tab stop, no ring; the display ignores activation |
+| disabled | half opacity, no tab stop, no ring; the display ignores activation, and a control disabled **mid-edit** discards the draft |
 | controlled | the app owns `editing`; the control reports `onEditingChange` and nothing else |
 
 There are no sizes or variants: one display row, one input, and the two heights
@@ -111,6 +111,10 @@ page and the reader renames it in place.
 - In the input, `Enter` commits and `Escape` discards. A blur also commits —
   the behaviour suite moves the focus to a sibling and reads the commit — and
   `Tab` leaves the field, so it saves by the same rule.
+- A caller that **disables the control mid-edit** refuses the edit: the draft
+  leaves the way `Escape`'s does and `onCommit` is not called, whichever finish
+  arrives (`Enter`, the host's submit or the blur). The entry guard alone would
+  not do it — a read-only host still receives all three.
 - A disabled control leaves the tab order and refuses activation, so a `Tab`
   traversal skips it.
 - The component installs no other shortcut. There is no key to jump to the
@@ -124,7 +128,7 @@ page and the reader renames it in place.
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `value` | `string` | — | the committed text; required, and the caller owns it |
-| `onCommit` | `(value: string) => void` | — | called on a **changed** `Enter` or blur commit, never twice per edit |
+| `onCommit` | `(value: string) => void` | — | called on a **changed** `Enter` or blur commit, never twice per edit, and never when the caller disables the control mid-edit |
 | `label` | `string` | — | the accessible name of both the display and the input |
 | `placeholder` | `string` | `"—"` | painted in `mutedForeground` while the value is empty |
 | `disabled` | `boolean` | `false` | leaves the tab order, ignores activation and fades to 0.5 |
@@ -209,12 +213,13 @@ the whole control with no code change — see
 whole, but 0.11.0 has no `contenteditable` (the swap is explicit) and no
 `aria-invalid`/`aria-describedby` (a refused commit is the app's feedback).
 
-`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer — 9 native
+`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer — 11 native
 behaviour tests: the display with no input, the click swap with focus, the
 keyboard swap, an `Enter` commit that returns the focus, the `Escape` discard, a
-blur commit, the unchanged draft (and the disabled control), the caller's
-`onChange`/`onSubmit`/`onBlur` firing beside the component's own, and a
-controlled edit state.
+blur commit, the unchanged draft, a draft the caller disables before the `Enter`
+commit and one it disables before the blur commits (both discarded, with nothing
+reported), the caller's `onChange`/`onSubmit`/`onBlur` firing beside the
+component's own, and a controlled edit state.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
