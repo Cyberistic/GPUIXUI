@@ -45,6 +45,8 @@ blocks/settings.mdx          A settings page with tabbed sections
 blocks/dashboard.mdx         An activity dashboard composed from the library
 blocks/kanban.mdx            A project task board: sidebar, four counted columns, cards that move
 blocks/settings-dialog.mdx   A modal settings window: section nav, switch, font-size slider, layouts
+blocks/notification-centre.mdx A notification centre: filters, four row bodies, unread dots
+blocks/command-centre.mdx    A command palette over a dimmed page: filter, highlight, run line
 components/index.mdx         The filterable component index
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
@@ -238,6 +240,12 @@ src/components/docs/auth-blocks.tsx       The auth blocks' browser reproductions
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
 src/components/docs/kanban-board.tsx      The kanban board's reproduction, columns and card moves
 src/components/docs/settings-dialog.tsx   The settings dialog's reproduction, theme state and controls
+src/components/docs/blocks.tsx            The block registry: login, settings, dashboard and the new recipes
+src/components/docs/block-preview.tsx     A block's browser rendering
+src/components/docs/auth-blocks.tsx       The auth blocks' browser reproductions and recipes
+src/components/docs/dashboard.tsx         The dashboard's charts and stats
+src/components/docs/notification-centre.tsx The notification centre's rows, filters and mark-read state
+src/components/docs/command-centre.tsx    The command centre's matcher, highlight and run line
 src/components/docs/live-surface.tsx      Boots the wasm renderer on /live and reports what it painted
 src/components/docs/theme-editor.tsx      The live token editor on /docs/themes
 src/components/docs/theme-editor-logic.ts Its pure core: edits, audit, copy output

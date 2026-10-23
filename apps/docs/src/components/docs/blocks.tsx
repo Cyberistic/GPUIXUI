@@ -9,6 +9,7 @@ import {
   otpSource,
   signupSource,
 } from "./auth-blocks";
+import { CommandCentreRender, commandCentreSource } from "./command-centre";
 import {
   DashboardRender,
   dashboardPackages,
@@ -20,6 +21,10 @@ import {
   settingsDialogPackages,
   settingsDialogSource,
 } from "./settings-dialog";
+import {
+  NotificationCentreRender,
+  notificationCentreSource,
+} from "./notification-centre";
 
 /**
  * Block recipes for the docs. A block is a page-level composition of real
@@ -256,6 +261,25 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...settingsDialogPackages],
     render: SettingsDialogRender,
     source: settingsDialogSource,
+  "notification-centre-01": {
+    name: "notification-centre-01",
+    slug: "notification-centre",
+    title: "Notifications",
+    description:
+      "A notification centre: three filter tabs, four row bodies, unread dots and an invite you can accept.",
+    packages: ["@gpuixui/primitives", "@gpuixui/components", "@gpuixui/icons"],
+    render: NotificationCentreRender,
+    source: notificationCentreSource,
+  },
+  "command-centre-01": {
+    name: "command-centre-01",
+    slug: "command-centre",
+    title: "Command centre",
+    description:
+      "A command palette over a dimmed page: a filter field, six keyed actions, an arrow-key highlight and a run line.",
+    packages: ["@gpuixui/primitives", "@gpuixui/components"],
+    render: CommandCentreRender,
+    source: commandCentreSource,
   },
 };
 
