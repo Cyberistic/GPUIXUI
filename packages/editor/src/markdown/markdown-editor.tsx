@@ -1,0 +1,253 @@
+/**
+ * `MarkdownEditor`: markdown **source** on the left and its rendered preview on
+ * the right, with a source-only and a preview-only view.
+ *
+ * The runtime has no editable rich-text host. `<textarea>` is the only editable
+ * element, it paints plain text, and it reports neither a caret position nor a
+ * selection (measured by `editor-overlay`: an overlay field is pixel-identical
+ * to the code alone, and no caret is painted), so a toolbar cannot wrap a
+ * selection and a WYSIWYG surface cannot be composed. This editor is the
+ * strongest honest alternative: the reader writes markdown, and the same value
+ * renders through the runtime's `<markdown>` host beside it.
+ *
+ * An unclosed fence is closed in the **preview only** — the source keeps every
+ * character the reader typed (`markdown/logic.ts`).
+ */
+
+import type { StyleDesc } from "@gpuix/react";
+import { mergeStyles } from "@gpuix/react/floating";
+import { Button, ScrollArea } from "@gpuixui/primitives";
+import { nativeTextTheme, textStyle } from "@gpuixui/tokens";
+import { useTheme } from "@gpuixui/tokens/react";
+import { cn } from "@gpuixui/tw";
+import { useControllableState } from "../internal/controllable.js";
+import { recipeStyle } from "../internal/recipe.js";
+import {
+  closeFences,
+  MARKDOWN_MODES,
+  markdownStats,
+  modeOf,
+  statsLabel,
+  type MarkdownMode,
+} from "./logic.js";
+
+const EDITOR_ROOT =
+  "flex flex-col overflow-hidden rounded-lg border border-input bg-background";
+const TOOLBAR = "flex flex-row items-center gap-2 border-b border-border px-3";
+const BODY = "flex flex-row min-h-0";
+const SOURCE_VIEW = "flex flex-col flex-grow min-w-0";
+const PREVIEW_VIEW = "flex flex-col flex-grow min-w-0";
+
+/** The view a mode button asks for. */
+const MODE_LABELS: Readonly<Record<MarkdownMode, string>> = {
+  split: "Split",
+  source: "Source",
+  preview: "Preview",
+};
+
+/** {@link MarkdownEditor} props. */
+export interface MarkdownEditorProps {
+  /** The controlled markdown. Omit it to let the editor hold its own draft. */
+  readonly value?: string;
+  /** The initial markdown when uncontrolled. */
+  readonly defaultValue?: string;
+  /** Every edit. */
+  readonly onValueChange?: (value: string) => void;
+  /** The controlled view; `undefined` means uncontrolled. */
+  readonly mode?: MarkdownMode;
+  /** The uncontrolled starting view. Default `"split"`. */
+  readonly defaultMode?: MarkdownMode;
+  /** Reports every accepted view change, in both modes. */
+  readonly onModeChange?: (mode: MarkdownMode) => void;
+  /** The editor's accessible name. Default `"Markdown editor"`. */
+  readonly label?: string;
+  /** Shown while the source is empty. */
+  readonly placeholder?: string;
+  /** The body's height in points. Default `280`. */
+  readonly height?: number;
+  /** The editor's width in points. Default `640`. */
+  readonly width?: number;
+  /** Editable or read-only. A read-only editor keeps its tab stop. */
+  readonly readOnly?: boolean;
+  /** Not editable, out of the tab order, painted with the disabled chrome. */
+  readonly disabled?: boolean;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
+  readonly style?: StyleDesc;
+  readonly testId?: string;
+}
+
+const DEFAULT_HEIGHT = 280;
+const DEFAULT_WIDTH = 640;
+
+const bodyHeight = (height: number): number =>
+  Number.isFinite(height) && height > 0 ? height : DEFAULT_HEIGHT;
+
+/** The width of each pane once the divider and the visible views are known. */
+const paneWidthOf = (
+  view: MarkdownMode,
+  divider: number,
+  total: number,
+): number => {
+  const panes = view === "split" ? 2 : 1;
+  return Math.floor((total - (panes === 2 ? divider : 0)) / panes);
+};
+
+/** A source pane: a code-styled `<textarea>` the runtime edits directly. */
+const sourceStyle = (
+  theme: ReturnType<typeof useTheme>,
+  width: number,
+  height: number,
+): StyleDesc => ({
+  ...nativeTextTheme(theme),
+  width,
+  height,
+  padding: theme.spacing.md,
+  backgroundColor: theme.colors.background,
+  color: theme.colors.foreground,
+  borderWidth: 0,
+});
+
+/** A markdown source editor with its rendered preview beside it. */
+export const MarkdownEditor = ({
+  value,
+  defaultValue = "",
+  onValueChange,
+  mode: modeProp,
+  defaultMode,
+  onModeChange,
+  label = "Markdown editor",
+  placeholder,
+  height = DEFAULT_HEIGHT,
+  width = DEFAULT_WIDTH,
+  readOnly = false,
+  disabled = false,
+  className,
+  style,
+  testId,
+}: MarkdownEditorProps) => {
+  const theme = useTheme();
+  const [source, setSource] = useControllableState({
+    value,
+    defaultValue,
+    onChange: onValueChange,
+  });
+  const [mode, setMode] = useControllableState({
+    value: modeProp,
+    defaultValue: modeOf(defaultMode),
+    onChange: onModeChange,
+  });
+  const view = modeOf(mode);
+  const body = bodyHeight(height);
+  const total = Number.isFinite(width) && width > 0 ? width : DEFAULT_WIDTH;
+  const paneWidth = paneWidthOf(view, theme.borderWidth.thin, total);
+  const stats = markdownStats(source);
+  const showsSource = view !== "preview";
+  const showsPreview = view !== "source";
+
+  return (
+    <div
+      testId={testId}
+      style={mergeStyles(
+        mergeStyles(recipeStyle(cn(EDITOR_ROOT, className), theme), {
+          width: total,
+        }),
+        style,
+      )}
+    >
+      <div style={recipeStyle(TOOLBAR, theme)}>
+        {MARKDOWN_MODES.map((candidate) => (
+          <Button
+            key={candidate}
+            variant={view === candidate ? "secondary" : "ghost"}
+            size="sm"
+            label={MODE_LABELS[candidate]}
+            testId={`markdown-mode-${candidate}`}
+            disabled={disabled}
+            onActivate={() => setMode(candidate)}
+          >
+            {MODE_LABELS[candidate]}
+          </Button>
+        ))}
+        <div style={{ flexGrow: 1 }} />
+        <text
+          testId="markdown-stats"
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          {statsLabel(stats)}
+        </text>
+      </div>
+      <div style={recipeStyle(BODY, theme)}>
+        {showsSource ? (
+          <div
+            style={mergeStyles(recipeStyle(SOURCE_VIEW, theme), {
+              width: paneWidth,
+            })}
+          >
+            <textarea
+              value={source}
+              onChange={(event) => {
+                if (!readOnly && !disabled) setSource(event.value ?? "");
+              }}
+              aria-label={`${label} source`}
+              aria-description="Markdown source"
+              placeholder={placeholder}
+              readOnly={readOnly || disabled}
+              testId="markdown-source"
+              style={sourceStyle(theme, paneWidth, body)}
+            />
+          </div>
+        ) : null}
+        {showsSource && showsPreview ? (
+          <div
+            style={{
+              width: theme.borderWidth.thin,
+              backgroundColor: theme.colors.border,
+            }}
+          />
+        ) : null}
+        {showsPreview ? (
+          <div
+            style={mergeStyles(recipeStyle(PREVIEW_VIEW, theme), {
+              width: paneWidth,
+            })}
+          >
+            <ScrollArea
+              axis="vertical"
+              focusable
+              label={`${label} preview`}
+              testId="markdown-preview"
+              padding="sm"
+              style={{ height: body }}
+            >
+              {source.trim() === "" ? (
+                <text
+                  testId="markdown-empty"
+                  style={{
+                    ...textStyle(theme, "body"),
+                    color: theme.colors.mutedForeground,
+                  }}
+                >
+                  Nothing to preview yet.
+                </text>
+              ) : (
+                <markdown
+                  testId="markdown-rendered"
+                  source={closeFences(source)}
+                  theme={nativeTextTheme(theme, "background")}
+                  style={{ color: theme.colors.foreground }}
+                />
+              )}
+            </ScrollArea>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
+/** The view ids, for a consumer that persists the reader's choice. */
+export { MARKDOWN_MODES };

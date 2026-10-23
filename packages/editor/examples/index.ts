@@ -9,11 +9,13 @@
 import type { ComponentType } from "react";
 import { CodeEditorExample } from "./code-editor.example.js";
 import { DiffViewerExample } from "./diff-viewer.example.js";
+import { MarkdownEditorExample } from "./markdown-editor.example.js";
 import { SearchReplaceExample } from "./search-replace.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
 export const examples: Readonly<Record<string, ComponentType>> = {
   "code-editor": CodeEditorExample,
   "diff-viewer": DiffViewerExample,
+  "markdown-editor": MarkdownEditorExample,
   "search-replace": SearchReplaceExample,
 };
