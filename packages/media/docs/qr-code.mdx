@@ -25,8 +25,8 @@ import { QrCode } from "@gpuixui/media";
 | `level` | `"L" \| "M" \| "Q" \| "H"` | `"M"` |
 | `size` | `number` | `160` |
 | `quietZone` | `number` | `4` |
-| `ink` | `string` | `#111111` |
-| `paper` | `string` | `#FFFFFF` |
+| `ink` | `string` | `#111111` (a blank or non-text value reads as the default) |
+| `paper` | `string` | `#FFFFFF` (a blank or non-text value reads as the default) |
 | `label` | `string` | `"QR code"` |
 | `className` | `string` | — |
 | `style` | `StyleDesc` | — |
@@ -34,6 +34,7 @@ import { QrCode } from "@gpuixui/media";
 ## Limitations
 
 - **Versions 1–10.** The largest symbol holds 271 bytes at `L`.
+- **A stored `ink` or `paper` that is blank or not text reads as the scanner pair**, so a saved record cannot hand the runtime a colour it cannot paint — a quiet zone left on the page is unscannable in a dark theme.
 - **A value that is not text carries nothing**: a record restored from storage
   writes `null` where it carried no value, and the encoder reads that as the
   empty string — `TextEncoder` would otherwise stringify it to the four bytes of

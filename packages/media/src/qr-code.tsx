@@ -115,6 +115,12 @@ export const renderQrCode = (
   // A level restored from storage arrives untyped; read it at this boundary so
   // the encoder is never handed a name its block table does not carry.
   const level = levelOf(levelProp);
+  // A paint is read the way every other caller string is: a stored blank or
+  // non-text colour is an absence, so the symbol keeps the scanner pair rather
+  // than handing the runtime a colour it cannot paint (a quiet zone on the page
+  // is unscannable in a dark theme).
+  const inkPaint = accessibleName(ink, QR_INK);
+  const paperPaint = accessibleName(paper, QR_PAPER);
   const encoding = encodeQr(value, { level });
 
   return QrEncoding.match(encoding, {
@@ -153,7 +159,7 @@ export const renderQrCode = (
               justifyContent: "center",
               width: placement.side,
               height: placement.side,
-              backgroundColor: paper,
+              backgroundColor: paperPaint,
             }),
             style,
           )}
@@ -164,7 +170,7 @@ export const renderQrCode = (
             style={{
               width: placement.side,
               height: placement.side,
-              color: ink,
+              color: inkPaint,
             }}
           />
         </div>

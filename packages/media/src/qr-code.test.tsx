@@ -89,6 +89,16 @@ describe("QrCode", () => {
     expect(sourceOf(stored)).not.toBe(sourceOf(render({ value: "null" })));
   });
 
+  it("reads a stored ink or paper it cannot paint as the scanner pair", () => {
+    // The bug guarded: a record restored with a blank or non-text ink/paper
+    // handed the runtime a colour it cannot paint, so the quiet zone fell back
+    // to the page (dark in a dark theme) or the modules inherited a text role —
+    // the one job the symbol has, being scannable, silently lost.
+    const root = render({ ink: null as unknown as string, paper: "   " });
+    expect(expectSome(hostStyleString(root, "backgroundColor"))).toBe(QR_PAPER);
+    expect(expectSome(hostStyleString(svgOf(root), "color"))).toBe(QR_INK);
+  });
+
   it("carries every dark module and the four-module quiet zone", () => {
     const source = sourceOf(render());
     expect(source).toContain('viewBox="0 0 29 29"');
