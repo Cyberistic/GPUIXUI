@@ -8151,6 +8151,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Hoist the **props reader the two page contracts share** — `packages/components/src/api.test.ts`'s `declaredTypes`/`propsOf` (a props type through `extends`, a parenthesised alias union, a local `Omit`) is the same reader `packages/primitives/src/docs.test.ts` carries: both hold a page's `## API` tables to what its source declares, so the type resolution and the brace scans now exist twice and can drift one fix at a time | testing (a test-time helper beside `createTestHost`) | open — the second copy landed with the components guard; no runtime code reads either |
 
+| Add the **address and help** `Select` now carries to the curated page — the primitive's `Select` takes `description`, `ref`, `aria-id` and `onLayout` on its trigger, so a form can focus the select it failed on, an automation host can address it, a layout can measure it and a `Label`'s help line reaches a reader (`packages/primitives/docs/select.mdx` and `runtime/address.runtime.test.tsx` hold it), while `apps/docs/content/docs/components/select.mdx`'s API table lists neither and §Accessibility says only that the name comes from `label` | docs-site (`apps/docs/content/docs/components/select.mdx`) | open — the package page and the primitive's window suite are the source until the curated table catches up |
+
 ## Phase D — data and workspace components
 
 `[x]` `[███░░░░░░░]` 1/3
