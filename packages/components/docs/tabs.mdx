@@ -57,5 +57,10 @@ Tabs
 ## Limitations
 
 - No `aria-orientation`, `aria-controls` or `aria-labelledby`.
-- `focused` misses a `Tab` traversal — focus without running its `onFocus`.
+- `focused` misses a `Tab` traversal: the traversal focuses the trigger
+  **without running its `onFocus`**, because the automation window the probe
+  runs in never becomes active and so delivers no focus pair
+  (`blur-delivery-lifecycle`). The event is not a channel to depend on — the
+  ring declared at rest is the cue, and an arrow move anchors on the key's own
+  element rather than a `focused` flag.
 - The selected surface is measured, not styled per trigger.

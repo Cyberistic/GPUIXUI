@@ -82,7 +82,9 @@ clears the history, and an unrelated re-render keeps it. Fixture
 ## Limitations
 
 - The error replaces the description rather than stacking under it.
-- A `Tab` traversal focuses the input without running its `onFocus`.
+- A `Tab` traversal focuses the input **without running its `onFocus`**, because the
+  automation window the probe runs in never becomes active and so delivers no
+  focus pair (`blur-delivery-lifecycle`); the ring declared at rest is the cue.
 - No `aria-describedby`, `aria-invalid` or `aria-required`.
 - Not a form library; no value, submit or cross-field rules.
 

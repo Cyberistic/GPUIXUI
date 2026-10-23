@@ -104,9 +104,36 @@ describe("the focus a traversal delivers", () => {
   });
 
   it("is repeated on every page that documents a focused state", () => {
+    const silent = Arr.filter(focusedPages, (page) => {
+      const text = read(`docs/${page}.mdx`);
+      return (
+        !Str.includes(measured)(text) ||
+        !Str.includes("blur-delivery-lifecycle")(text)
+      );
+    });
+
+    expect(silent).toEqual([]);
+  });
+
+  it("states the cause the window measured, not the runtime as a whole", () => {
+    // `focuses=0` is true in the automation window, but not because the
+    // runtime refuses to run `onFocus`: the probe's window never becomes
+    // active, so no route delivers the pair, and the offscreen host fakes
+    // activation and does. A page that blames the runtime teaches a limit
+    // that does not exist in a real app, so the cause is stated beside the
+    // rule on every surface that carries it.
+    const surfaces = [
+      "docs/tabs.mdx",
+      "../../COMPONENTS.md",
+      "../../docs/component-api.md",
+      "src/api.test.ts",
+    ] as const;
+
     const silent = Arr.filter(
-      focusedPages,
-      (page) => !Str.includes(measured)(read(`docs/${page}.mdx`)),
+      surfaces,
+      (surface) =>
+        !Str.includes("blur-delivery-lifecycle")(read(surface)) ||
+        !Str.includes("never becomes active")(read(surface)),
     );
 
     expect(silent).toEqual([]);

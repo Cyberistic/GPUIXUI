@@ -178,16 +178,20 @@ describe("component API contract", () => {
   });
 
   it("states the focus a traversal does not deliver, and keeps the cue on the ring", () => {
-    // A `Tab` traversal focuses an element **without running its `onFocus`** on
-    // 0.11.0 at HEAD: `tabs-lifecycle` reads `focuses=0` while `focusedId` names
-    // the trigger, and `tooltip-lifecycle`'s tip does not open. An earlier run
-    // read one, so the handler is not a channel to depend on. The ring, declared
-    // at rest, is the cue. This holds the spec's sentence and every part that
-    // carries the `focused` flag to that rule, so a new part cannot ship
-    // `focused` as its only feedback.
+    // A `Tab` traversal focuses an element **without running its `onFocus`**:
+    // `tabs-lifecycle` reads `focuses=0` while `focusedId` names the trigger,
+    // and `tooltip-lifecycle`'s tip does not open. `blur-delivery-lifecycle`
+    // measured the cause — the automation window never becomes active, so no
+    // route delivers the pair, while the offscreen host fakes activation and
+    // does — and an earlier run read one, so the handler is not a channel to
+    // depend on. The ring, declared at rest, is the cue. This holds the spec's
+    // sentence and every part that carries the `focused` flag to that rule, so
+    // a new part cannot ship `focused` as its only feedback.
     const vocabulary = section("## 3. State-aware styling");
 
     expect(vocabulary).toContain("without running its `onFocus`");
+    expect(vocabulary).toContain("blur-delivery-lifecycle");
+    expect(vocabulary).toContain("never becomes active");
     expect(vocabulary).toContain("keyboardRing");
 
     const flagged = Arr.filter(partFiles, (file) =>

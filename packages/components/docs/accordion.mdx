@@ -69,7 +69,9 @@ Accordion
 ## Limitations
 
 - No `aria-controls`; the trigger–body relationship is positional.
-- A `Tab` traversal focuses the trigger without running its `onFocus`.
+- A `Tab` traversal focuses the trigger **without running its `onFocus`**, because the
+  automation window the probe runs in never becomes active and so delivers no
+  focus pair (`blur-delivery-lifecycle`); the ring declared at rest is the cue.
 - The body grows and collapses through its measured height.
 - The indicator chevron swaps, it does not rotate.
 

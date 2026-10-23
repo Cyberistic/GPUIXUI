@@ -60,4 +60,6 @@ TimePicker
 - No `aria-valuenow` / spinbutton role.
 - Fixed 24-hour display; no AM/PM or locale.
 - `minuteStep` is arrow keys only.
-- `focused` misses a `Tab` traversal — focus without running its `onFocus`.
+- A `Tab` traversal focuses the field **without running its `onFocus`**, because the
+  automation window the probe runs in never becomes active and so delivers no
+  focus pair (`blur-delivery-lifecycle`); the ring declared at rest is the cue.

@@ -41,7 +41,9 @@ Collapsible
 ## Limitations
 
 - The first open grows from zero; the body's height is its own measurement.
-- A `Tab` traversal focuses the trigger without running its `onFocus`.
+- A `Tab` traversal focuses the trigger **without running its `onFocus`**, because the
+  automation window the probe runs in never becomes active and so delivers no
+  focus pair (`blur-delivery-lifecycle`); the ring declared at rest is the cue.
 - No `aria-controls`; the trigger–body relationship is positional.
 - The collapse unmounts the body, so state inside does not survive.
 
