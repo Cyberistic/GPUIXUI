@@ -98,6 +98,30 @@ const layered = (fill: string, level: number): StyleDesc => ({
 /** How a stack reports its frame so the probe can aim a hit test at its centre. */
 type Remember = (payload: LayoutPayload) => void;
 
+/** One layer of a stack: its id, the name the readout prints and its paint. */
+const Layer = ({
+  id,
+  name,
+  fill,
+  level,
+  register,
+  press,
+}: {
+  readonly id: string;
+  readonly name: string;
+  readonly fill: string;
+  readonly level?: number;
+  readonly register: (name: string) => (element: PublicInstance | null) => void;
+  readonly press: (name: string) => () => void;
+}): ReactNode => (
+  <div
+    testId={id}
+    ref={register(name)}
+    onClick={press(name)}
+    style={level === undefined ? positioned(fill) : layered(fill, level)}
+  />
+);
+
 /** The centre of a painted box, the point every layer shares. */
 const centreOf = (
   box: LayoutBox,
@@ -209,23 +233,29 @@ export const ZIndexProbe = (): ReactNode => {
         onLayout={remember(Z_INDEX_IDS.stack)}
         style={stackStyle}
       >
-        <div
-          testId={Z_INDEX_IDS.high}
-          ref={register("high")}
-          onClick={press("high")}
-          style={layered(Z_INDEX_FILLS.high, Z_INDEX_LEVELS.high)}
+        <Layer
+          id={Z_INDEX_IDS.high}
+          name="high"
+          fill={Z_INDEX_FILLS.high}
+          level={Z_INDEX_LEVELS.high}
+          register={register}
+          press={press}
         />
-        <div
-          testId={Z_INDEX_IDS.low}
-          ref={register("low")}
-          onClick={press("low")}
-          style={layered(Z_INDEX_FILLS.low, Z_INDEX_LEVELS.low)}
+        <Layer
+          id={Z_INDEX_IDS.low}
+          name="low"
+          fill={Z_INDEX_FILLS.low}
+          level={Z_INDEX_LEVELS.low}
+          register={register}
+          press={press}
         />
-        <div
-          testId={Z_INDEX_IDS.mid}
-          ref={register("mid")}
-          onClick={press("mid")}
-          style={layered(Z_INDEX_FILLS.mid, Z_INDEX_LEVELS.mid)}
+        <Layer
+          id={Z_INDEX_IDS.mid}
+          name="mid"
+          fill={Z_INDEX_FILLS.mid}
+          level={Z_INDEX_LEVELS.mid}
+          register={register}
+          press={press}
         />
       </div>
 
@@ -235,23 +265,26 @@ export const ZIndexProbe = (): ReactNode => {
         onLayout={remember(Z_INDEX_IDS.plain)}
         style={stackStyle}
       >
-        <div
-          testId={`${Z_INDEX_IDS.plain}-high`}
-          ref={register("plain-high")}
-          onClick={press("plain-high")}
-          style={positioned(Z_INDEX_FILLS.high)}
+        <Layer
+          id={`${Z_INDEX_IDS.plain}-high`}
+          name="plain-high"
+          fill={Z_INDEX_FILLS.high}
+          register={register}
+          press={press}
         />
-        <div
-          testId={`${Z_INDEX_IDS.plain}-low`}
-          ref={register("plain-low")}
-          onClick={press("plain-low")}
-          style={positioned(Z_INDEX_FILLS.low)}
+        <Layer
+          id={`${Z_INDEX_IDS.plain}-low`}
+          name="plain-low"
+          fill={Z_INDEX_FILLS.low}
+          register={register}
+          press={press}
         />
-        <div
-          testId={`${Z_INDEX_IDS.plain}-mid`}
-          ref={register("plain-mid")}
-          onClick={press("plain-mid")}
-          style={positioned(Z_INDEX_FILLS.mid)}
+        <Layer
+          id={`${Z_INDEX_IDS.plain}-mid`}
+          name="plain-mid"
+          fill={Z_INDEX_FILLS.mid}
+          register={register}
+          press={press}
         />
       </div>
 

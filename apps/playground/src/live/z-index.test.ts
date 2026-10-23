@@ -137,12 +137,24 @@ describe("the probe", () => {
     // either of them would make the negative control meaningless.
     const positioned = probe.slice(
       probe.indexOf("const positioned"),
-      probe.indexOf("const unlevelled") === -1
-        ? probe.indexOf("type Remember")
-        : probe.indexOf("const unlevelled"),
+      probe.indexOf("const layered"),
     );
-    expect(positioned).toContain("zIndex: level");
-    expect(probe).toContain("style={positioned(Z_INDEX_FILLS.high)}");
+    const layered = probe.slice(
+      probe.indexOf("const layered"),
+      probe.indexOf("type Remember"),
+    );
+    expect(positioned).not.toContain("zIndex");
+    expect(layered).toContain("zIndex: level");
+    // The shared layer picks the paint from the level it was handed, so a
+    // control stack that drops every `level` prop is a stack with no level.
+    expect(probe).toContain(
+      "level === undefined ? positioned(fill) : layered(fill, level)",
+    );
+    const plain = probe.slice(
+      probe.indexOf("testId={Z_INDEX_IDS.plain}"),
+      probe.indexOf("In-flow first"),
+    );
+    expect(plain).not.toContain("level=");
     expect(probe).toContain("zIndex: Z_INDEX_FLOW_LEVEL");
   });
 
