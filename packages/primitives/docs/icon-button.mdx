@@ -40,7 +40,7 @@ const theme = useTheme();
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | square side from `density.controlHeight` |
 | `disabled` | `boolean` | `false` | blocks activation; out of the Tab order (`tabIndex: -1`) |
 | `loading` | `boolean` | `false` | spinner, busy description, blocks activation |
-| `loadingLabel` | `string` | `loading.busy` (`"Loading"`) | the busy word, announced as the description and the spinner's name |
+| `loadingLabel` | `string` | `loading.busy` (`"Loading"`) | the busy word, announced as the description and the spinner's name; a blank one silences both |
 | `reducedMotion` | `boolean` | `false` | holds the busy spinner's lit dot |
 | `onActivate` | `(event: EventPayload) => void` | none | click or activating key; not called while busy |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; a click is observed first, an activating key acts first |

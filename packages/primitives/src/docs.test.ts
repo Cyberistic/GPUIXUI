@@ -780,6 +780,28 @@ describe("the primitives docs page contract", () => {
     ).toEqual([]);
   });
 
+  it("names the one opt-out a busy word has, and how a bar's words differ", () => {
+    // The bug guarded: `Button`, `Toggle` and `IconButton` publish the busy word
+    // as the action's description and the spinner's name, and a blank
+    // `loadingLabel` silences both (the opt-out their source comments record) —
+    // while all three pages listed the default and stopped, so a caller could
+    // neither find the opt-out nor tell it apart from a bar's `formatValue`,
+    // whose blank answer keeps the component's own words because a progressbar
+    // has no second channel. Neither half may be documented alone.
+    const silent = Arr.filter(
+      ["button.mdx", "toggle.mdx", "icon-button.mdx"],
+      (page) => !read(page).includes("a blank one silences both"),
+    );
+    expect(silent).toEqual([]);
+    expect(read("progress.mdx")).toContain("a blank answer keeps the default");
+    expect(read("meter.mdx")).toContain("a blank answer keeps the number");
+    const words = Option.getOrElse(
+      bodyOf(read("theme-provider.mdx"), "Words"),
+      () => "",
+    );
+    expect(words).toContain("a deliberate silence");
+  });
+
   it("lists only props its module graph declares", () => {
     // The bug guarded: the Switches inventory row promised a `loading` prop
     // while `SwitchProps` declares none (see `inventory.test.ts`'s `keeps the
