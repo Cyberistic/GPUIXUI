@@ -175,13 +175,17 @@ describe("a spring built by hand", () => {
     // `SpringPhysicsParams` is all-optional and `Transition` is structural, so a
     // spring decoded from storage can arrive with no physics object at all.
     // Reading `.mass` off nothing threw a `TypeError` out of the frame loop.
-    expect(springPhysics(null as never)).toEqual(springPhysics());
-    expect(atRest(undefined as never, 1, 1, 0)).toBe(true);
+    // @ts-expect-error — a physics a store wrote as `null`.
+    expect(springPhysics(null)).toEqual(springPhysics());
+    // @ts-expect-error — the same absent physics reaching the rest rule.
+    expect(atRest(undefined, 1, 1, 0)).toBe(true);
 
-    const middle = sampleSpring(undefined as never, 0, 1, 0, 90);
+    // @ts-expect-error — the same absent physics reaching a sample.
+    const middle = sampleSpring(undefined, 0, 1, 0, 90);
     expect(middle.value).toBeGreaterThan(0);
     expect(middle.value).toBeLessThan(1);
-    expect(sampleSpring(undefined as never, 0, 1, 0, 2000).settled).toBe(true);
+    // @ts-expect-error — the same absent physics reaching a settled sample.
+    expect(sampleSpring(undefined, 0, 1, 0, 2000).settled).toBe(true);
   });
 
   it("samples as the constructor's own physics does", () => {

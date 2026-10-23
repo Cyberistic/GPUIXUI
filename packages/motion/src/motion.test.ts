@@ -347,7 +347,8 @@ describe("MotionValue", () => {
     // retargeted with that declaration never painted or settled. A missing
     // object is the house spring — the same answer an unreadable field gets.
     const value = new MotionValue(0);
-    value.animate(1, { kind: "spring" } as Transition);
+    // @ts-expect-error — a spring declaration a store wrote without its physics.
+    value.animate(1, { kind: "spring" });
 
     const middle = value.sample(90);
     expect(middle.value).toBeGreaterThan(0);
