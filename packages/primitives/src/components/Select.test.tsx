@@ -187,6 +187,50 @@ describe("Select", () => {
     expect(elementProp(select, "aria-label")).toStrictEqual(Option.none());
   });
 
+  it("gives the trigger the address and help a form owns", () => {
+    // The bug guarded: `Select` was the one focusable control that took no
+    // `ref`, `aria-id`, `onLayout` or `description`, so a form could not focus
+    // the select it failed on, an automation host could not address it, a
+    // layout could not measure it and a visible `Label`'s help line reached
+    // nobody. The trigger is the control, so that is where all four land.
+    const ref = { current: null };
+    const layout = (): void => {};
+    const triggerOf = (props: {
+      readonly description?: string;
+    }): ReactElement =>
+      expectSome(
+        Arr.head(
+          elementChildren(
+            renderSelect(
+              {
+                options: [{ value: "apple", label: "Apple" }],
+                label: "Fruit",
+                "aria-id": "fruit-trigger",
+                onLayout: layout,
+                ref,
+                ...props,
+              },
+              testTheme,
+            ),
+          ),
+        ),
+      );
+    const trigger = triggerOf({ description: "Pick a fruit to ship." });
+    expect(elementProp(trigger, "aria-id")).toStrictEqual(
+      Option.some("fruit-trigger"),
+    );
+    expect(elementProp(trigger, "aria-description")).toStrictEqual(
+      Option.some("Pick a fruit to ship."),
+    );
+    expect(elementProp(trigger, "onLayout")).toStrictEqual(Option.some(layout));
+    expect(elementProp(trigger, "ref")).toStrictEqual(Option.some(ref));
+    // A blank help is absence, the same rule every other control's name
+    // follows: the trigger publishes no empty description.
+    expect(
+      elementProp(triggerOf({ description: "  " }), "aria-description"),
+    ).toStrictEqual(Option.none());
+  });
+
   it("announces the choice the trigger shows, and nothing when there is none", () => {
     // The bug guarded: a closed Select published its name and its expanded
     // state only, so the one fact the trigger was showing — what is chosen —

@@ -76,6 +76,8 @@ import {
   mergeStyle,
   suppressFeedback,
   valueChange,
+  type FieldHostProps,
+  type HelpProps,
   type ValueChangeProps,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -149,7 +151,8 @@ export const selectValueLabel = (
     ),
   );
 
-export interface SelectProps extends ValueChangeProps<string> {
+export interface SelectProps
+  extends ValueChangeProps<string>, FieldHostProps, HelpProps {
   /**
    * The list: options, or named groups of them. A group's caption names the
    * `Group` its rows sit in, so keep the names short and unique.
@@ -405,6 +408,10 @@ export const renderSelect = (
     fullWidth,
     side,
     label,
+    description,
+    ref,
+    "aria-id": controlId,
+    onLayout,
     style,
     triggerStyle,
     itemStyle,
@@ -456,6 +463,7 @@ export const renderSelect = (
       )}
     >
       <SelectTrigger
+        ref={ref}
         disabled={disabled}
         testId={triggerTestId}
         // The trigger is the control, so it is what assistive technology must
@@ -467,6 +475,9 @@ export const renderSelect = (
         // (`renderSelectRow`).
         role="combobox"
         aria-label={accessibleName(label)}
+        aria-description={accessibleName(description)}
+        aria-id={controlId}
+        onLayout={onLayout}
         // A combobox must say whether its list is open, and GPUix publishes no
         // state of its own — the wrapper owns the open state (`Select`), so
         // this is the one it just rendered. A render without it (the pure

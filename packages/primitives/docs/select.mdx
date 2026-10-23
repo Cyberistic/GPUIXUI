@@ -49,12 +49,25 @@ import { Label, Select } from "@gpuixui/primitives";
 | `fullWidth` | `boolean` | `false` | trigger and list fill the parent |
 | `side` | `FloatingSide` | GPUix's choice | which side the list opens on |
 | `label` | `string` | none | accessible name for the select |
+| `description` | `string` | none | announced help after the name (`aria-description`); a blank one publishes nothing |
+| `ref` / `aria-id` / `onLayout` | host props | none | the trigger is the addressed element — the one a form focuses, an automation host names and a layout measures |
 | `style` | `StyleDesc` | — | merged last on the select root |
 | `triggerStyle` | `StateStyle<SelectTriggerState>` | — | resolved against the trigger's live state, merged last |
 | `itemStyle` | `StateStyle<SelectItemState>` | — | resolved per option, merged last |
 | `testId` | `string` | — | the root's locator |
 | `triggerTestId` | `string` | — | the trigger's locator |
 | `itemTestId` | `(value: string) => string` | — | per-option locator, derived from its value |
+
+The trigger is the control: it carries `role="combobox"`, the `label` as its
+name, the open state in `aria-expanded`, the chosen option's words in
+`aria-valuetext`, and the caller's `description` as `aria-description`. The same
+element takes the `ref`, the `aria-id` and the `onLayout`, so a form can focus
+the select it failed on, an automation host can address it and a layout can
+measure it; the wrapper around the trigger is not focusable and carries no name.
+`src/components/Select.test.tsx` holds those four props on the trigger (and a
+blank `description` publishing nothing), and
+`runtime/address.runtime.test.tsx` reads the help, author id and ref back off the
+runtime's own accessibility tree and element.
 
 ## Limitations
 

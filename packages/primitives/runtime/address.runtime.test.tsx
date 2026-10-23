@@ -7,9 +7,9 @@
  * `aria-description` because 0.11.0 has no `aria-describedby`. The same three
  * jobs apply to every other control a form owns — a checkbox, a switch, a
  * toggle, the radio, checkbox and toggle groups, a rating, a number field, a
- * code field and the two sliders — and the guarantee this suite holds is that
- * the words reach the runtime's accessibility tree and the ref receives the
- * runtime's own element, not a wrapper id.
+ * code field, the two sliders and a select — and the guarantee this suite holds
+ * is that the words reach the runtime's accessibility tree and the ref receives
+ * the runtime's own element, not a wrapper id.
  *
  * A composite names the element the address lands on, because only one element
  * can hold it: a number field's inner `<input>`, a code field's first cell, the
@@ -28,6 +28,7 @@ import { OTPField } from "../src/components/OTPField.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Rating } from "../src/components/Rating.js";
 import { RangeSlider, Slider } from "../src/components/Slider.js";
+import { Select } from "../src/components/Select.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
 import { Toggle } from "../src/components/Toggle.js";
@@ -151,6 +152,18 @@ const mount = async (): Promise<Runtime> => {
           defaultValue={[20, 60] as const}
           ref={rangeRef}
         />
+        <Select
+          testId="fruit"
+          triggerTestId="fruit-trigger"
+          label="Fruit"
+          description="Pick a fruit to ship."
+          aria-id="fruit-trigger-id"
+          ref={fruitRef}
+          options={[
+            { value: "apple", label: "Apple" },
+            { value: "pear", label: "Pear" },
+          ]}
+        />
       </Stack>
     </Surface>,
   );
@@ -167,6 +180,7 @@ const numberRef = createRef<PublicInstance>();
 const otpRef = createRef<PublicInstance>();
 const sliderRef = createRef<PublicInstance>();
 const rangeRef = createRef<PublicInstance>();
+const fruitRef = createRef<PublicInstance>();
 
 it("announces the help every control carries", async () => {
   // The help a visible `Label description` paints used to reach nobody on these
@@ -209,6 +223,9 @@ it("announces the help every control carries", async () => {
   );
   expect(node(runtime, "Group", "Alignment").aria?.description).toBe(
     "Applies to the selected text.",
+  );
+  expect(node(runtime, "ComboBox", "Fruit").aria?.description).toBe(
+    "Pick a fruit to ship.",
   );
 });
 
@@ -255,6 +272,9 @@ it("publishes the id an automation host addresses, on the element named", async 
   expect(node(runtime, "CheckBox", "Push").aria?.author_id).toBeUndefined();
   expect(node(runtime, "Button", "Left").aria?.author_id).toBe("alignment-row");
   expect(node(runtime, "Button", "Center").aria?.author_id).toBeUndefined();
+  expect(node(runtime, "ComboBox", "Fruit").aria?.author_id).toBe(
+    "fruit-trigger-id",
+  );
 });
 
 it("hands the caller's ref the element the form has to focus", async () => {
@@ -298,4 +318,6 @@ it("hands the caller's ref the element the form has to focus", async () => {
   expect(rangeRef.current?.id).toBe(addressed(runtime, "Price minimum").id);
   expect(channelGroupRef.current?.id).toBe(addressed(runtime, "Email").id);
   expect(alignGroupRef.current?.id).toBe(addressed(runtime, "Left").id);
+  // A select's address belongs to its trigger, the one focusable element.
+  expect(fruitRef.current?.id).toBe(addressed(runtime, "Fruit").id);
 });
