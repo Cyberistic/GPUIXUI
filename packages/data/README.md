@@ -394,6 +394,11 @@ import { AdvancedFilter, DataToolbar, KeyValue, PropertyPanel, StatCard } from "
 <AdvancedFilter fields={FIELDS} tree={tree} onChange={setTree} />
 ```
 
+They announce what they paint: the key-value list is a named `List` of
+`ListItem`s, the statistic card is a `Group` named by its `aria-label`, both
+titles are headings, and every primitive label or value is a `Label` node
+(`src/behaviour/surface-a11y.test.tsx`).
+
 The advanced filter's state is a **predicate tree**, not a string: a predicate
 (field, comparison, value), an `all`, an `any` and a `not`. The tree is the
 caller's, so a builder, a saved query and a table's own filter read one shape,

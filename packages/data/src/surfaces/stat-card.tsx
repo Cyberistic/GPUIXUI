@@ -16,6 +16,7 @@ import { mergeStyles } from "@gpuix/react/floating";
 import { statusTone } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import type { ReactNode } from "react";
+import { readable } from "../internal/readable.js";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
 import { STAT_CARD, STAT_HINT, STAT_LABEL, STAT_VALUE } from "./recipe.js";
@@ -76,9 +77,10 @@ export const StatCard = ({
   return (
     <div
       {...rest}
+      role="group"
       style={mergeStyles(recipeStyle(cn(STAT_CARD, className), theme), style)}
     >
-      <div style={recipeStyle(STAT_LABEL, theme)}>{label}</div>
+      <text style={recipeStyle(STAT_LABEL, theme)}>{label}</text>
       <div
         style={{
           display: "flex",
@@ -87,24 +89,24 @@ export const StatCard = ({
           gap: theme.spacing.xs,
         }}
       >
-        <div style={recipeStyle(STAT_VALUE, theme)}>{value}</div>
+        {readable(value, { style: recipeStyle(STAT_VALUE, theme) })}
         {unit === undefined ? undefined : (
-          <div style={recipeStyle(STAT_HINT, theme)}>{unit}</div>
+          <text style={recipeStyle(STAT_HINT, theme)}>{unit}</text>
         )}
         {trend === undefined ? undefined : (
-          <div
+          <text
             style={{
               ...recipeStyle(STAT_HINT, theme),
               color: trendTone(trend.direction, theme),
             }}
           >
             {trend.text}
-          </div>
+          </text>
         )}
       </div>
-      {hint === undefined ? undefined : (
-        <div style={recipeStyle(STAT_HINT, theme)}>{hint}</div>
-      )}
+      {hint === undefined
+        ? undefined
+        : readable(hint, { style: recipeStyle(STAT_HINT, theme) })}
     </div>
   );
 };

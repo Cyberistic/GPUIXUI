@@ -108,6 +108,7 @@ export const PropertyPanel = ({
   return (
     <div
       {...rest}
+      role="group"
       style={mergeStyles(
         recipeStyle(cn(SURFACE_PANEL, className), theme),
         style,
@@ -115,7 +116,13 @@ export const PropertyPanel = ({
     >
       {title === undefined ? undefined : (
         <div style={recipeStyle(SURFACE_HEADER, theme)}>
-          <div style={recipeStyle("text-xs font-medium", theme)}>{title}</div>
+          <text
+            role="heading"
+            aria-level={3}
+            style={recipeStyle("text-xs font-medium", theme)}
+          >
+            {title}
+          </text>
         </div>
       )}
       <div

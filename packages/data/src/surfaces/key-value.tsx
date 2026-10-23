@@ -23,6 +23,7 @@ import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import type { ReactNode } from "react";
+import { readable } from "../internal/readable.js";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
 import { KEY_VALUE_LABEL, KEY_VALUE_ROW, KEY_VALUE_VALUE } from "./recipe.js";
@@ -75,11 +76,13 @@ export const KeyValue = ({
   return (
     <div
       {...rest}
+      role="list"
       style={mergeStyles(recipeStyle(cn("", className), theme), style)}
     >
       {entries.map((entry) => (
         <div
           key={entry.key}
+          role="listitem"
           style={{
             display: "flex",
             flexDirection: "row",
@@ -88,7 +91,7 @@ export const KeyValue = ({
             ...recipeStyle(KEY_VALUE_ROW, theme),
           }}
         >
-          <div
+          <text
             testId={
               testId === undefined ? undefined : `${testId}-label-${entry.key}`
             }
@@ -101,12 +104,11 @@ export const KeyValue = ({
             }}
           >
             {entry.label}
-          </div>
-          <div
-            testId={
-              testId === undefined ? undefined : `${testId}-value-${entry.key}`
-            }
-            style={{
+          </text>
+          {readable(entry.value, {
+            testId:
+              testId === undefined ? undefined : `${testId}-value-${entry.key}`,
+            style: {
               ...recipeStyle(KEY_VALUE_VALUE, theme),
               ...(valueWidth === undefined
                 ? { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 }
@@ -116,10 +118,8 @@ export const KeyValue = ({
                     flexShrink: 0,
                     flexBasis: valueWidth,
                   }),
-            }}
-          >
-            {entry.value}
-          </div>
+            },
+          })}
         </div>
       ))}
     </div>

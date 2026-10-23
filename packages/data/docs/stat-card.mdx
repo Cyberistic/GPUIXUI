@@ -24,6 +24,17 @@ import { StatCard } from "@gpuixui/data";
 | `hint` | `ReactNode` | — | a line under the reading |
 | `trend` | `StatTrend` | — | `{ direction: "up" \| "down" \| "flat", text: string }` |
 
+## Accessibility
+
+The card is a `group`, and its label, reading, unit and trend are `<text>` runs —
+the runtime's `Label` nodes — so the reading is announced instead of painted
+silently (`surface-a11y.test.tsx`). Name the card with `aria-label` when the
+label alone does not say where the reading belongs, for example
+`aria-label="Area of the selected shape"`.
+
+The reading is not a live region: the runtime has no `aria-live`, so an
+announcement of a value that changes has no path.
+
 ## Limitations
 
 - The card does not size itself; it fills the box it is given.

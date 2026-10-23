@@ -28,6 +28,17 @@ import { KeyValue } from "@gpuixui/data";
 | `valueWidth` | `number` | — | the value column's width; omit it and the value fills the row |
 | `testId` | `string` | — | every cell derives from it |
 
+## Accessibility
+
+The list is a `list` of `listitem`s, and every label and every primitive value
+is a `<text>` run — the runtime's `Label` node — so a reader hears the two
+columns in order instead of a silent box (`surface-a11y.test.tsx`). Name the
+list with `aria-label` when its title is painted elsewhere; a role-less node
+never reaches the tree.
+
+A `value` that is a composed node keeps whatever role it paints: a badge is a
+badge, not two words.
+
 ## Limitations
 
 - The label column is fixed, not measured: a long label wraps.

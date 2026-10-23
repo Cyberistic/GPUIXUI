@@ -65,6 +65,14 @@ built from it keeps no row rather than treating the blank as `0`. A field the
 row does not carry reads as blank too, and text like `wide` never satisfies an
 order.
 
+## Accessibility
+
+The builder's title is a level-3 `heading`, and the sentence above the clauses,
+each group's combinator (`all of`, `any of`, `not`) and the clause controls are
+all announced (`surface-a11y.test.tsx`): a reader hears the tree's meaning, not a
+row of unlabelled menus. A clause's field and comparison triggers are named
+buttons, and its value is the primitives' `Input`, named by the field it edits.
+
 ## Limitations
 
 - The builder edits a tree; it does not run one — use `filterByTree`.

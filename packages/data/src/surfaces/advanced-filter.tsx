@@ -246,11 +246,11 @@ const Group = ({
   const theme = useTheme();
   return (
     <div style={recipeStyle(FILTER_GROUP, theme)}>
-      <div
+      <text
         style={recipeStyle("text-xs font-medium text-muted-foreground", theme)}
       >
         {groupLabels[kind]}
-      </div>
+      </text>
       {children}
       {Option.match(Option.fromNullishOr(onRemove), {
         onNone: () => null,
@@ -395,14 +395,16 @@ export const AdvancedFilter = ({
         style,
       )}
     >
-      <div
+      <text
+        role="heading"
+        aria-level={3}
         style={recipeStyle("text-xs font-medium text-muted-foreground", theme)}
       >
         {title}
-      </div>
-      <div style={recipeStyle(FILTER_SENTENCE, theme)}>
+      </text>
+      <text style={recipeStyle(FILTER_SENTENCE, theme)}>
         {describeTree(tree)}
-      </div>
+      </text>
       <Tree
         root={tree}
         node={tree}
