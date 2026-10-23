@@ -4,18 +4,19 @@ import { BlockIcon } from "./block-icons";
 /**
  * Conversations block — `/docs/blocks/conversations`.
  *
- * One Messages-style window in three platform dresses: macOS Messages, Windows
- * 11 (Fluent 2) and Linux (Breeze dark). `ConversationWindow` is the browser
- * reproduction the docs page and the landing deck mount; `conversationsSource`
- * is the recipe a consumer copies, and `.agents/slop/references/conversations.md`
- * is the reference the three skins are measured against.
+ * One Messages-style window in four platform dresses: macOS Messages, Windows
+ * 11 (Fluent 2), Linux (Breeze dark) and Omarchy (a Linux desktop in its own
+ * Tokyo Night look). `ConversationWindow` is the browser reproduction the docs
+ * page and the landing deck mount; `conversationsSource` is the recipe a
+ * consumer copies, and `.agents/slop/references/conversations.md` is the
+ * reference the four skins are measured against.
  *
  * `conversationsReducer` and `filterConversations` are pure, so the block's
  * three interactions — selecting a thread, sending a message and filtering the
  * list — are table-tested against the same code the surface dispatches to.
  */
 
-export type ConversationPlatform = "macos" | "windows" | "linux";
+export type ConversationPlatform = "macos" | "windows" | "linux" | "omarchy";
 
 /** The role an outgoing bubble wears, per platform. */
 const OUTGOING_TONE: Readonly<
@@ -24,6 +25,7 @@ const OUTGOING_TONE: Readonly<
   macos: "success",
   windows: "primary",
   linux: "info",
+  omarchy: "primary",
 };
 
 export interface ConversationMessage {

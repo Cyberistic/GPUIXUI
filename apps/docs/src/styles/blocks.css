@@ -4726,6 +4726,47 @@
   color: var(--info-foreground);
 }
 
+/* Omarchy: the look's near-square geometry, Tokyo Night surfaces and the
+   neutral selection ground its desktop stages. */
+.gx-conv[data-platform="omarchy"] {
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.gx-conv[data-platform="omarchy"] .gx-conv-thread {
+  background: var(--background);
+}
+
+.gx-conv[data-platform="omarchy"] .gx-conv-row[data-selected="true"],
+.gx-conv[data-platform="omarchy"] .gx-conv-row[data-selected="true"]:hover {
+  background: var(--selected);
+  color: var(--selected-foreground);
+}
+
+.gx-conv[data-platform="omarchy"]
+  .gx-conv-row[data-selected="true"]
+  .gx-conv-when,
+.gx-conv[data-platform="omarchy"]
+  .gx-conv-row[data-selected="true"]
+  .gx-conv-preview {
+  color: var(--selected-foreground);
+  opacity: 0.82;
+}
+
+.gx-conv[data-platform="omarchy"] .gx-conv-bubble {
+  border-radius: var(--radius-lg);
+}
+
+.gx-conv[data-platform="omarchy"] .gx-conv-field {
+  border-radius: var(--radius);
+  background: var(--input);
+}
+
+.gx-conv[data-platform="omarchy"] .gx-conv-send {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
 /* The list is the whole window on a narrow viewport: Messages hides the
    thread, and the block hides it with the same breakpoint. */
 @media (max-width: 760px) {

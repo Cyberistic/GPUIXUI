@@ -1,14 +1,38 @@
+import {
+  landingPlatformLabel,
+  landingPlatformOrder,
+  type LandingPlatform,
+} from "../../lib/platform";
+
 export interface Platform {
-  readonly id: "macos" | "windows" | "linux";
+  readonly id: LandingPlatform;
   readonly label: string;
   readonly chrome: "mac" | "win" | "lnx";
+  readonly wall: "mac" | "win" | "lnx" | "omarchy";
 }
 
-export const platforms = [
-  { id: "macos", label: "macOS", chrome: "mac" },
-  { id: "windows", label: "Windows 11", chrome: "win" },
-  { id: "linux", label: "Linux / Arch", chrome: "lnx" },
-] as const satisfies readonly Platform[];
+/** The chrome each desktop wears; Omarchy is a Linux desktop. */
+const chromeOf: Readonly<Record<LandingPlatform, Platform["chrome"]>> = {
+  macos: "mac",
+  windows: "win",
+  linux: "lnx",
+  omarchy: "lnx",
+};
+
+/** The wallpaper each desktop paints; Omarchy has its own Tokyo Night scene. */
+const wallOf: Readonly<Record<LandingPlatform, Platform["wall"]>> = {
+  macos: "mac",
+  windows: "win",
+  linux: "lnx",
+  omarchy: "omarchy",
+};
+
+export const platforms = landingPlatformOrder.map((id) => ({
+  id,
+  label: landingPlatformLabel(id),
+  chrome: chromeOf[id],
+  wall: wallOf[id],
+})) satisfies ReadonlyArray<Platform>;
 
 export const repo = "https://github.com/Cyberistic/GPUIXUI";
 
