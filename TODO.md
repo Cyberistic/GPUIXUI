@@ -10398,7 +10398,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `The **Accessibility and limitations** row` fails
       `expected '# Preview strategy …' not to contain 'Accessibility and limitations'`;
       restored, the file is 16/16 and `apps/docs` 148 files / 1 289 tests.
-      No native scenario applies — a policy sentence and its guard.
+      Verified on the same served build: `/docs/components/select` answers 200
+      with the group rule its limits teach. No native scenario applies — a policy
+      sentence and its guard.
 
 `[x]` Read the runtime's **closed `aria-*` set** instead of trusting the record —
       the pinned `@gpuix/native` publishes exactly seven attributes
@@ -10428,7 +10430,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
       in `apps/docs/README.md`. Green: `apps/docs` is 148 files / 1 288 tests
       with `check-types`, `fmt` and `oxlint` clean; `check:tests` is red only on
       the recorded foreign `packages/data/src/behaviour/scratch-probe.test.tsx`.
-      No native scenario applies — a typings read and the pages that print it.
+      Verified on a served build (`vite preview`): `/docs/accessibility` answers
+      200 and prints the budget (`aria-valuetext` beside the refused
+      `aria-activedescendant` and `aria-live`). No native scenario applies — a
+      typings read and the pages that print it.
 
 `[x]` Stop the **dashboard recipe denying the charts the library ships** — the
       block page said "the library has no chart component yet", so its copyable
