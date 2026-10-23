@@ -6766,7 +6766,43 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 193/193
+`[x]` `[██████████]` 194/194
+
+`[x]` Publish the **desktop palette follow** plan 433's acceptance left to the
+site — `/docs/theming` gains §Follow the desktop's palette, which decodes
+Omarchy's `colors.toml` with `decodeOmarchyPalette`, maps it with
+`paletteToTokens`, and prints the result from those functions rather than a
+transcription: the Tokyo Night sample's page, ink, accent, quiet colour, urgent
+red and selection, the rule that `muted` fills both the strip and the border,
+that a canonical key wins and an unreadable line is reported instead of becoming
+a colour, that a role the file does not name stays the base theme's, and that
+the desktop's opaque `selection` becomes a wash at the base theme's own share.
+The sample is printed **with its gate result, not called shippable**:
+`auditTheme` on the mapped theme reports twelve text pairs, six decorative
+placements and three selection placements, because the one quiet colour is also
+the divider drawn on it and the ink is measured on soft strips the file does not
+name. The page teaches the poll the runtime supports — `watchSystemTheme`,
+`every`, the replaceable timer, `baseFor` across a light/dark switch, and
+`undefined` returning the window to `base` — with the application snippet and the
+`readDesktopPalette` boundary the host owns. The measured half is the
+playground's `system-theme-follow` (12 checks): the page publishes the four
+states (`#1B1B1F`/`#B49CFF`, `#F4F1EA`/`#6A45F0`, `mounts=1`,
+`#11141A`/`#A7A9FF`), says a browser preview cannot show a desktop change, and
+credits Omarchy's format (MIT) as written from the on-disk file. `/docs/dark-mode`
+gains the one paragraph that keeps "the app owns the mode" true — the follow is
+the host's call through the same seam — and links the section.
+`System-palette.ts` holds the sample, the mapped theme and the gate result;
+`system-theme-page.test.ts` (9 cases) holds the page's fence to the decoded
+sample, the mapped roles and the base fallback, the wash share, every rendered
+role expression, the audit's three counts and its two named causes (it must not
+claim the sample passes), the poll vocabulary, the probe's four states read from
+`apps/playground/README.md`, the credit, the honesty sentence and the dark-mode
+link. Directions measured: editing the fence's `accent` fails `prints the
+palette it decodes` (`expected … '#123456' …`), and replacing the decorative
+count fails `prints the gate's verdict on the mix, not a promise`.
+`nub run --filter @gpuixui/docs check-types` green; the suite is 1099 passed with
+the two foreign failures recorded in Interlocks (the editor pages' six
+cross-links and two dock pages with no limitations section).
 
 `[x]` Curate the **Empty state** page and hold its missing role, its fixed
 measure and its slot order to the source — `/docs/components/empty-state` served

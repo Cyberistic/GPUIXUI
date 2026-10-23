@@ -22,7 +22,7 @@ installation.mdx             Requirements, nub, first component, terminal mode
 getting-started.mdx          A first screen: theme, card, state, run it natively
 architecture.mdx             The package graph, the recipe pipeline, where a change goes
 styling.mdx                  The class recipe layer: two registries, states, refusals, extension
-theming.mdx                  Semantic roles, themes, the platform switch, the look picker
+theming.mdx                  Semantic roles, themes, the platform switch, the look picker, the desktop palette
 dark-mode.mdx                App-owned mode switching — no hidden OS-mode listener
 typography.mdx               The ten type roles, the two families, the platform rule
 runtime.mdx                  What the pinned GPUix provides, what it does not, and the workaround
@@ -312,6 +312,7 @@ src/lib/licenses.ts                 The LICENSES/*.md parse
 src/lib/licenses-data.ts            The licence records, at build time
 src/lib/platform.ts                 The platform and look switch: parse, label, resolve, and the mode a preview paints
 src/lib/platform-storage.ts         The remembered platform/look choice, per axis
+src/lib/system-palette.ts           The desktop palette /docs/theming decodes and maps, from the shipped functions
 src/lib/theme-css.ts                Theme → CSS variables, shared with every preview
 src/lib/live-batch.ts               /live's mutation batch, styled by the primitives' resolver
 src/lib/block-source.test.ts        A block's copyable source, resolved against the workspace

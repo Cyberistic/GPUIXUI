@@ -6,6 +6,7 @@ description: Semantic colour roles, typography, spacing, radius and density — 
 import { colorRoles, contrastFloors, contrastRatio, indicatorSurfaces, keyboardFocusRing, seriesColors, seriesSurfaces, themes } from "@gpuixui/tokens";
 import { TokenList } from "@/components/docs/token-list";
 import { previewMode } from "@/lib/platform";
+import { omarchyAudit, omarchyFile, omarchySample, omarchyTheme } from "@/lib/system-palette";
 
 A GPUIxUI theme is plain data. Components never carry a colour literal; they read
 a semantic role such as `colors.primary`, `spacing.md` or `radius.md` from the
@@ -423,11 +424,128 @@ snippet (`resolveHouseTheme`), executed by the package's suite in both modes.
 `src/lib/platform-page.test.ts` executes this page's snippet against the same
 contract, so a copy from the page is a theme that passes.
 
+### Follow the desktop's palette
+
+A desktop already has a theme. `paletteToTokens` maps a small system palette onto
+the semantic roles, and `watchSystemTheme` re-applies it when the palette
+changes. The pinned runtime has no file watcher, so the follow is a poll the
+caller owns: `every` is its interval, and the timer can be replaced, which is
+what lets the package test a re-apply without a clock.
+
+Omarchy stages its active palette at
+`~/.local/state/omarchy/current/theme/colors.toml`, and `decodeOmarchyPalette`
+reads that file into the shape the mapper takes:
+
+- `background`/`bg`, `foreground`/`fg`, `accent`/`color4`, `muted`/`color8` and
+  `red`/`color1`, plus `selection` and the `mode` the file states. A canonical
+  key wins over its fallback whichever line comes first.
+- `muted` fills two roles — the quiet strip and the decorative border — because
+  it is the one quiet colour the desktop's own templates use for both.
+- A line the reader cannot use, such as an unquoted colour, a duplicate or an
+  unknown mode, is named in `problems` with its line and left out. A typo is
+  reported; it does not become a colour.
+
+Tokyo Night, as Omarchy themes ship it, trimmed to the keys this page maps:
+
+```toml
+mode = "dark"
+background = "#1a1b26"
+foreground = "#a9b1d6"
+accent = "#7aa2f7"
+muted = "#414868"
+red = "#f7768e"
+selection = "#292e42"
+```
+
+Those lines are decoded and mapped by the two functions above on the server, so
+the table is their output rather than a transcription. `problems` is empty for
+this file — `{omarchyFile.problems.length}` unusable lines:
+
+| In the file | Role | Painted |
+| ----------- | ---- | ------- |
+| `background` | `background` | {omarchyTheme.colors.background} |
+| `foreground` | `foreground` | {omarchyTheme.colors.foreground} |
+| `accent` | `primary` | {omarchyTheme.colors.primary} |
+| `muted` | `muted`, `border` | {omarchyTheme.colors.muted} |
+| `red` | `destructive` | {omarchyTheme.colors.destructive} |
+| `selection` | `selection` (wash) | {omarchyTheme.colors.selection} |
+
+The mapper names only what the file names. Every other role stays the base
+theme's, so a palette of two colours is a page and an ink rather than a
+half-built theme, and `mode` picks the base a role-less palette keeps its
+surfaces from. The one choice the mapper makes is the ink on a filled role, and
+it makes it by measurement against the palette's own inks — never by mixing a
+new colour. `selection` arrives from the desktop as an opaque highlight; the
+role is a wash behind text that keeps its own colour, so the mapper restates it
+at the base theme's own share.
+
+The sample is a palette, not a finished theme, and the gate says so. On this
+file `auditTheme` reports {omarchyAudit.contrast.length} text pairs,
+{omarchyAudit.decorative.length} decorative placements and
+{omarchyAudit.selection.length} selection placements: the desktop's one quiet
+colour is also the divider drawn on it, and its ink is measured on the base
+theme's soft strips the file does not name. The colours are the desktop's and
+the surfaces are yours, so run `auditTheme` on the result before shipping it.
+
+An application wires the two halves with one call:
+
+```tsx
+import {
+  decodeOmarchyPalette,
+  getTheme,
+  paletteMode,
+  watchSystemTheme,
+} from "@gpuixui/tokens";
+
+const stop = watchSystemTheme({
+  // Your platform's reader; a missing file, or one that names nothing, is undefined.
+  read: () => readDesktopPalette(),
+  base: getTheme("dark"),
+  // A desktop that switches light and dark moves the base with its palette.
+  baseFor: (palette) => getTheme(paletteMode(palette) ?? "dark"),
+  onChange: setTheme,
+  every: 2000,
+});
+```
+
+`readDesktopPalette` is the boundary the application owns. On Omarchy it is
+`decodeOmarchyPalette(readFileSync(path, "utf8")).palette`, with a missing file
+answering `undefined`; every platform produces the same `SystemPalette`, so the
+poll, the base rule and the provider do not change with it. `watchSystemTheme`
+applies the first read immediately, re-applies only when a watched field
+actually changed, and returns the stop function. `undefined` is not an error:
+it returns the window to `base`, which is how a deleted desktop theme stops
+being a stale one.
+
+The follow is measured in a window, not here. The playground's
+`system-theme-follow` probe paints a page and an accent box, changes the palette
+under a running window, deletes it, and reads every state out of the frame:
+
+| Step | Measured |
+| ---- | -------- |
+| the first read, before any press | the page is the desktop's `#1B1B1F`, the accent its `#B49CFF` |
+| the desktop switches to a paper theme | the poll re-applies without a restart: page `#F4F1EA`, accent `#6A45F0` |
+| the mount count across the change | `mounts=1` before and after — the follow re-renders, it does not remount |
+| the desktop theme is deleted | the application's own theme returns: page `#11141A`, accent `#A7A9FF` |
+
+<Callout type="warn" title="The follow is measured in the native window">
+  A browser preview here cannot show a desktop palette change. The probe runs
+  the same `paletteToTokens` and poll through GPUix in a window; this host is
+  macOS, so `omarchy-theme-set` was not run and the probe stands in for a
+  platform reader at the seam. What it proves is the follow's paint, interval
+  and lifetime; the Linux half is the reader above plus the same poll. Its
+  evidence lives in `apps/playground/README.md` §`system-theme-follow`.
+</Callout>
+
+The palette format is Omarchy's (MIT); `decodeOmarchyPalette` is written from
+the on-disk `colors.toml`, not copied from a theme.
+
 ## Read the theme
 
 `useTheme` returns the nearest theme, or the light theme when no provider
 exists. Components use it internally; an application can use it for its own
 layout without duplicating a colour.
+
 
 ```tsx
 import { useTheme } from "@gpuixui/tokens/react";

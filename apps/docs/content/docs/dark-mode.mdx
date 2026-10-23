@@ -40,6 +40,12 @@ contract is explicit: the host application decides, remembers and passes the
 theme. That also makes screenshots and tests deterministic — a test provides a
 theme instead of hoping the machine is in the right mode.
 
+A host that wants to wear the desktop's own colours uses the same seam:
+`watchSystemTheme` polls the platform's palette and hands the application a
+resolved theme, so the library still never queries the OS on its own.
+[Theming](/docs/theming#follow-the-desktops-palette) shows the Omarchy reader,
+the mapper and the poll.
+
 ## Persist the choice
 
 Store the mode wherever the application already stores preferences. The library
