@@ -10304,7 +10304,24 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 290/290
+`[x]` `[██████████]` 291/291
+
+`[x]` Read the **Components index's filter examples** where the page writes them —
+      two guards went red on the tiled index (`5cc3fa20`, reconciled by
+      `648e90e2`) although the page was right: `keeps every query … resolvable`
+      read every backticked term in the intro before `<ComponentIndex />`, so the
+      neighbouring sentence's package name (`@gpuixui/data` — "the `@gpuixui/data`
+      lane") was reported as a query that finds nothing, and the URL case required
+      the literal `<code>?q=partial</code>` tag while the page now writes the
+      parameter as a Markdown code span, which renders the same. The first reads
+      only the sentences that say what the filter finds ("`…` finds …"), which is
+      its own definition of an example and still has a floor of four; the second
+      accepts either the code span or the tag. Directions measured: planting
+      `previewx` fails `expected [ 'previewx' ] to deeply equal []`, and dropping
+      the span's backticks fails the URL match by name; restored, the pair is
+      62/62 and the app is 122 files / 1 080 tests green after the prune, with
+      `check-types` and `lint` clean. No native scenario applies — two source
+      reads over a Markdown page.
 
 `[x]` Publish the **hosts the native binding installs on, and the one it does
       not** — `/docs/installation` listed Node and nub and nothing about the

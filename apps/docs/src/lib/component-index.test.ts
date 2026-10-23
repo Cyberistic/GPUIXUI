@@ -764,14 +764,20 @@ describe("the real index", () => {
   });
 
   it("keeps every query the Components page shows resolvable", () => {
+    // The examples are the sentences that say what the filter finds —
+    // "`DialogFooter` finds the dialog … and `partial` finds …". Only those
+    // are read: the neighbouring sentence names a package (`@gpuixui/data`)
+    // and a link, neither of which is a query, and reading every code span in
+    // the intro called them broken examples.
     const page = readFileSync(
       new URL("../../content/docs/components/index.mdx", import.meta.url),
       "utf8",
     );
-    const intro = page.slice(0, page.indexOf("<ComponentIndex"));
-    const examples = [...intro.matchAll(/`([^`]+)`/g)].flatMap((match) =>
-      match[1] === undefined ? [] : [match[1]],
-    );
+    const examples = [
+      ...page
+        .slice(0, page.indexOf("<ComponentIndex"))
+        .matchAll(/`([^`]+)` finds /g),
+    ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
 
     expect(examples.length).toBeGreaterThanOrEqual(4);
     expect(
