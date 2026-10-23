@@ -426,11 +426,16 @@ export function nativeAccent(
         (rail === undefined || rail >= decorativeFloor)
       );
     });
-  return (
-    Array.from({ length: ACCENT_STEPS + 1 }, (_, step) =>
-      blend(primary, rest, step / ACCENT_STEPS),
-    ).find(carries) ?? rest
+  // The step search is **lazy**: `find` blends only until the first step that
+  // carries, so a brand that already reads costs one blend instead of the whole
+  // ladder. Building the ladder first meant every field and code host paid 51
+  // blends on the paint path, which is 51 × four surfaces × two ratios.
+  const step = Array.from({ length: ACCENT_STEPS + 1 }, (_, at) => at).find(
+    (at) => carries(blend(primary, rest, at / ACCENT_STEPS)),
   );
+  // No step carries is a theme whose brand and ink cannot separate the mark from
+  // its fill; the ink is the most readable colour the theme has.
+  return step === undefined ? rest : blend(primary, rest, step / ACCENT_STEPS);
 }
 
 /**

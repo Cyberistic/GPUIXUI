@@ -1262,6 +1262,52 @@ describe("the accent a document host paints", () => {
     });
   });
 
+  it("steps by the smallest share that clears, never past it", () => {
+    // The derivation promises the **smallest** 2% step (`nativeAccent`'s JSDoc):
+    // a search that started above the brand would dull a mark that already read,
+    // and one that over-shot would paint the ink. Nothing held that — only "the
+    // brand was not enough" and "the result clears" were measured.
+    const source = readFileSync(
+      new URL("./native-text.ts", import.meta.url),
+      "utf8",
+    );
+    expect(source).toContain("const ACCENT_STEPS = 50;");
+    const shares = Array.from({ length: 51 }, (_, at) => at / 50);
+
+    const wrong = shipped.flatMap(({ label, theme }) => {
+      const colors = theme.colors;
+      const floors = contrastFloorsFor(theme);
+      const primary = colors.primary;
+      const rest = colors.foreground ?? primary;
+      const carries = (colour: string): boolean =>
+        nativeAccentSurfaces.every((surface) => {
+          const fill = colors[surface];
+          if (fill === undefined) {
+            return true;
+          }
+          const marker = contrastRatio(
+            blend(fill, colour, nativeAccentShares.marker),
+            fill,
+          );
+          const rail = contrastRatio(
+            blend(fill, colour, nativeAccentShares.rail),
+            fill,
+          );
+          return (
+            (marker === undefined || marker >= floors.secondary) &&
+            (rail === undefined || rail >= decorativeFloor)
+          );
+        });
+      const first = shares.find((share) =>
+        carries(blend(primary, rest, share)),
+      );
+      const expected = first === undefined ? rest : blend(primary, rest, first);
+      return nativeAccent(theme) === expected ? [] : [label];
+    });
+
+    expect(wrong).toEqual([]);
+  });
+
   it("keeps the caret a mark on the field, not the document's label", () => {
     // A caret is drawn solid on the field's own fill and held to the 3:1 mark
     // floor, so it stays the fill role: stepping it would dull the one colour a
