@@ -9964,7 +9964,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
       README §What it is not teaches the id rule. No native scenario applies —
       a pure verdict over results.
 
-`[x]` Verify and mark the **seven shipped-but-unchecked Tier 4/5 rows** — Collapsible sidebars, Command palette, Breadcrumb navigation, Terminal surfaces, Multi-pane editing layouts, Syntax highlighting and Keyboard navigation were `todo` while their evidence existed. Re-ran the probes on this tree: `--only command-palette`, `--only grid-focus-lifecycle`, `--only breadcrumb-navigation-lifecycle`, `--only sidebar-clip-lifecycle` (4/4 green), `--only editor-surface` (headless, green) and the four terminal-mode scenarios in a pty (4/4 green). All seven rows are marked — six `done (composed)`/`done` and Terminal surfaces `unsupported (no host element)` with the measured terminal-runtime alternative. *Multi-pane editing layouts* closed last: `multi-pane-editor` is green (31 checks) once its stale session expectation was re-stated to the divider's newer `role="separator"` contract — a drag parks the session on the divider, a press returns it to the pane, and neither buffer changes. Evidence: `--only multi-pane-editor`, 1/1 green on this tree. Re-verified 2026-10-23 on `bc5316fc`, the tree this pass works from: `--only command-palette --only grid-focus-lifecycle --only breadcrumb-navigation-lifecycle --only sidebar-clip-lifecycle --only multi-pane-editor` 5/5 live green (8.9–15.6 s each), `editor-surface` 1/1 headless, and `dist/terminal/run.js` 4/4 in a pty, so all seven rows still hold.
+`[x]` Verify and mark the **seven shipped-but-unchecked Tier 4/5 rows** — Collapsible sidebars, Command palette, Breadcrumb navigation, Terminal surfaces, Multi-pane editing layouts, Syntax highlighting and Keyboard navigation were `todo` while their evidence existed. Re-ran the probes on this tree: `--only command-palette`, `--only grid-focus-lifecycle`, `--only breadcrumb-navigation-lifecycle`, `--only sidebar-clip-lifecycle` (4/4 green), `--only editor-surface` (headless, green) and the four terminal-mode scenarios in a pty (4/4 green). All seven rows are marked — six `done (composed)`/`done` and Terminal surfaces `unsupported (no host element)` with the measured terminal-runtime alternative. *Multi-pane editing layouts* closed last: `multi-pane-editor` is green (31 checks) once its stale session expectation was re-stated to the divider's newer `role="separator"` contract — a drag parks the session on the divider, a press returns it to the pane, and neither buffer changes. Evidence: `--only multi-pane-editor`, 1/1 green on this tree. Re-verified 2026-10-23 on `bc5316fc`, the tree this pass works from: `--only command-palette --only grid-focus-lifecycle --only breadcrumb-navigation-lifecycle --only sidebar-clip-lifecycle --only multi-pane-editor` 5/5 live green (8.9–15.6 s each), `editor-surface` 1/1 headless, and `dist/terminal/run.js` 4/4 in a pty, so all seven rows still hold. Re-verified again on `562a17ed`: `--only sidebar-clip-lifecycle --only command-palette --only breadcrumb-navigation-lifecycle --only multi-pane-editor --only syntax-palette --only grid-focus-lifecycle` 6/6 live green (3.4–13.2 s each), `--only editor-surface` 1/1 headless, and the terminal runner 4/4 in a pty; the four Tier 5 surfaces' own probes are green too (`--only multi-step-form-lifecycle --only qr-matrix --only crop-overlay --only markdown-fence`, 4/4).
 
 `[x]` Read a **stored QR quiet zone failsafe**, and keep the **caller's box in the overflow state** — `QrCode` passed `quietZone` straight through `Math.max(0, Math.floor(quiet))`, so a stored `NaN` reached the viewBox and every path offset (`viewBox="0 0 NaN NaN"`, a symbol that paints nothing) while `size` already read an unlayable value as its default; and the overflow branch merged the recipe and the error chrome but dropped the caller's `style`, so a page that reserved a 240×90 square for the symbol had it collapse to the message's own box exactly when the value outgrew the encoder. `qr/encode.ts` now normalises the quiet zone once (`quietZoneOf`, shared by `qrPlacement` and `qrSvgSource`) and `qr-code.tsx` merges `style` last in both states. `src/qr/encode.test.ts` gains `reads an unreadable quiet zone as the default, never a NaN field` and `reads an unreadable quiet zone as the default in the viewBox`; `src/qr-code.test.tsx` gains `keeps the box the caller reserved in the overflow state` and `reads a stored quiet zone it cannot lay out as the default`. Directions measured: all four fail at `HEAD` (the unit case with `module/quiet/cells/side: NaN`, the viewBox case with `MNaN NaN…`, the overflow case on the missing `240`), and the two files are 27/27 green after. Docs `packages/media/docs/qr-code.mdx` §Sizes/§Levels and capacity; the `QR code` row prints the rule and the new counts (19 + 8). No native scenario applies — pure placement and style arithmetic already measured by `qr-matrix`.
 
@@ -10037,8 +10037,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
     controlled and uncontrolled text/mode contract, a status line in code
     points, read-only and disabled states, and an unclosed fence closed in the
     preview only (the source is untouched) so a mid-block document does not
-    swallow the page. `src/markdown/logic.test.ts` (12 cases) and
-    `src/behaviour/markdown-editor.test.tsx` (9 native behaviour tests in the
+    swallow the page. `src/markdown/logic.test.ts` (17 cases) and
+    `src/behaviour/markdown-editor.test.tsx` (15 native behaviour tests in the
     real renderer, a new `test:behaviour` project for the package). Docs
     `packages/editor/docs/markdown-editor.mdx`; example
     `markdown-editor.example.tsx`; inventory row `done` with the limitation
@@ -10051,7 +10051,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
     content is mounted, `step`/`defaultStep`/`onStepChange` is the
     controlled/uncontrolled contract, and an out-of-range step clamps. The
     actions are the shipped `Button`s and the indicator is read-only.
-    `src/behaviour/multi-step-form.test.tsx` (8 native behaviour tests) presses
+    `src/behaviour/multi-step-form.test.tsx` (9 native behaviour tests) presses
     the real controls through the renderer — a refusing gate stays put, a
     passing gate advances, Back returns, Submit appears only last and fires once
     its gate passes, `pending` refuses, a controlled step drives the paint, and
@@ -10070,12 +10070,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
     minimum and the bitmap's edges — and the component adds a keyboard path the
     probe did not: each corner is a `role="slider"` Tab stop, arrows resize it
     (Shift 8 points) and the ring is declared at rest. `src/crop/logic.test.ts`
-    (18 cases) holds the clamp, the bars as the hole's complement, all four
-    resizes, both clamps, moves, the keyboard step and the gesture seam;
-    `src/crop-area.test.tsx` (7 cases) holds the frame, the bars' pointer
-    transparency, the handles, the repaint and the disabled state. Limits:
-    no rotation, no ratio lock, and the window measured the bottom-right drag
-    while the other corners are the same arithmetic mirrored. Docs
+    (37 cases) holds the clamp, the bars as the hole's complement, the guides,
+    the handle centres, all four resizes, both clamps, moves, the keyboard steps
+    and the `Alt` move, the gesture seam and the ratio lock;
+    `src/crop-area.test.tsx` (11 cases) holds the frame, the bars' pointer
+    transparency, the handles and their ring, the painted ratio, the guides,
+    the unreadable sizes and rectangle, the repaint and the disabled state, and
+    `src/behaviour/crop-area.test.tsx` (4 native cases) holds the one report per
+    rectangle. Limits: no rotation (the runtime has no `transform`), and the
+    window measured the bottom-right drag while the other corners are the same
+    arithmetic mirrored. Docs
     `packages/media/docs/crop-area.mdx`; example `crop-area.example.tsx`;
     inventory row `done`. Owner: components.
   - [x] **QR code** — `@gpuixui/media` ships `QrCode` over the package's own
@@ -10087,10 +10091,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
     viewBox — the route the playground's `qr-matrix` probe measured (33 checks,
     0.11.0) — at whole-module sizes (a version-1 symbol at `size={160}` paints
     145 points). Ink and paper are scanner-safe constants, not theme roles.
-    `src/qr/encode.test.ts` (17 cases) compares every module of a version-1,
+    `src/qr/encode.test.ts` (21 cases) compares every module of a version-1,
     version-6 and version-10 symbol against `python-qrcode` and holds the
     capacity boundary, the mask search, the format/version fields, the function
-    patterns and the penalty rules; `src/qr-code.test.tsx` (6 cases) holds the
+    patterns and the penalty rules; `src/qr-code.test.tsx` (10 cases) holds the
     mask, quiet zone, reserved box, the level's own symbol and the overflow
     message. Docs `packages/media/docs/qr-code.mdx`; example
     `qr-code.example.tsx`; inventory row `done`. Owner: components.
