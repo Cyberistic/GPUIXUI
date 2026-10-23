@@ -10347,7 +10347,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 310/310
+`[ ]` `[█████████░]` 310/311
 
 `[x]` Send the **curated component pages their related links back** — the page
       prune removed the hand-written `## Related` section from all 39 curated
@@ -10414,6 +10414,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
       states the completeness half beside the resolution half, and
       `apps/docs/README.md` gains the module's ledger line. No native scenario
       applies — a site page and a repository read.
+
+`[ ]` Hold the **package pages' API tables** to the props they declare too — the
+      curated pages are held now (`component-props.ts` + `component-page.test.ts`),
+      and the 137 mounted package pages are not: `packages/components/src/docs.test.ts`
+      checks an `## API` table's *shape* (a header, a row per part, the cell count)
+      and nothing resolves a prop, while `packages/primitives/src/docs.test.ts` and
+      `packages/icons/src/docs.test.ts` hold only their own two packages. Measured
+      with the new reader over the mounted collections, grouping each table's rows
+      by the part they name and reading a prop as a backticked name or an
+      `name:` in the cell (the components pages write `variant?: "outline"` in
+      prose): `packages/components/docs` is **333 props over 102 parts**, and it
+      is one gap repeated — the shared host surface (`className`, `children`,
+      `style`, the interaction handlers) is undocumented from Accordion to Field,
+      so `Card` documents one of its three props and `BreadcrumbLink` none of its
+      three. `packages/data/docs` has one (`TableSortHeader.testId`); primitives
+      and icons are already guarded by their own suites, and editor, files, shell,
+      dock and media name their parts in prose no table resolves. The fix is the
+      components workstream's page files: map each part to its type with the
+      reader the curated pages now use and add the missing rows, then land the
+      same completeness case in `packages/components/src/docs.test.ts` so its
+      shape check gains a resolution half. The docs app should not carry a
+      333-row known-gap list for another workstream's files.
 
 `[x]` Give the **data lane its first honest preview** — the policy said every
       lane but Components and Primitives was strategy 4, so `/docs/data-display`
