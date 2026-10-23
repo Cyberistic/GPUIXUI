@@ -7675,7 +7675,14 @@ Work that this workstream needs but does not own. Another agent owns each row.
     clean, headless `--only data-table-core` (1/1, 3 322 ms) and live
     `--only data-table-lifecycle` (1/1, 6 380 ms, a real window). Owner: data.
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
-`[ ]` Verify critical interactions in the real runtime
+`[x]` Verify critical interactions in the real runtime — MISSION's nine
+      representative interactions each map to live probes in
+      `apps/playground/README.md` §The critical interactions, and
+      `src/live/registry.test.ts` fails when a row loses its probes or names an
+      id the registry does not declare. Every cited probe has a `measured on
+      0.11.0` section: the last full pass was 58/58, the probes measured alone
+      since then are listed in the same README bullet, and `markdown-fence`
+      joined that list this turn. Owner: playground
 
 ## Phase E — specialised components
 
@@ -10437,7 +10444,7 @@ fails the case by name; restored, the file is 44/44 and
 
 `[x]` Clean-environment install and public-export checks — a fresh clone installs with default settings (no `--minimum-release-age`; only a `defaultTrust` build-script notice for esbuild/workerd), and `nub run check` + `nub run test` pass. Every `packages/*` exports target resolves (new `scripts/check-exports.ts`, wired into `check`), and the documented subpaths (`@gpuixui/components/…`, `@gpuixui/primitives/…`, `@gpuixui/keyboard/react`) all resolve against the real maps. The only clean-clone failure was an `oxfmt` wrap in `scripts/check-tests.ts`, fixed.
 `[x]` Licence inventory and attribution complete — every source in the README "Built on" table has a `LICENSES/*.md` record with its verified licence and commit/tag: shadcn/ui (MIT, full text), Base UI (MIT, reference-only), Tailwind (MIT, reference-only), React (MIT, dependency), GPUix (Apache-2.0, dependency), open-gpui (Apache-2.0, full text added), gpui-motion (MIT, full text added), TanStack (MIT, full text), PanelUI (documentation-only). `LICENSES/README.md` maps each record to its README row. The aggregate `inventory.md`/`provenance.md` tables are still unwritten and stay named by the `/docs/license` footer.
-`[ ]` All gates green (`nub run check`, `nub run lint`, `nub run test`) — the three failures this line carried are **green** as of 2026-10-23: `apps/docs` `architecture.test.ts` and `examples.test.ts` (20/20) and `apps/playground` `scenarios/registry.test.ts` (the whole playground suite is 82 files / 687 tests after `collapse.test.ts` and `scrollbar-drag.test.ts` joined it). The gate is still red, on in-flight files rather than on a missed pass: `nub run check:tests` now reports two assertionless cases in `packages/motion/src/scratch-fuzz.test.ts` (another workstream's file), `nub run fmt` reports four files another workstream is editing (`apps/docs/src/lib/component-page-truth.test.ts`, `packages/data/src/behaviour/surface-a11y.test.tsx`, `packages/tokens/src/{__scratch,divider}.test.ts`) and `nub run lint` three unused imports in `apps/docs/src/lib/theme-css.test.ts`. `nub run check-types` is green. Out of this workstream's paths.
+`[ ]` All gates green (`nub run check`, `nub run lint`, `nub run test`) — the three failures this line carried are **green** as of 2026-10-23: `apps/docs` `architecture.test.ts` and `examples.test.ts` (20/20) and `apps/playground` `scenarios/registry.test.ts` (the whole playground suite is 87 files / 762 tests after `markdown-fence.test.ts` joined it). The gate is still red, on in-flight files rather than on a missed pass: `nub run check:tests` now reports two assertionless cases in `packages/motion/src/scratch-fuzz.test.ts` (another workstream's file), `nub run fmt` reports four files another workstream is editing (`apps/docs/src/lib/component-page-truth.test.ts`, `packages/data/src/behaviour/surface-a11y.test.tsx`, `packages/tokens/src/{__scratch,divider}.test.ts`) and `nub run lint` three unused imports in `apps/docs/src/lib/theme-css.test.ts`. `nub run check-types` is green. Out of this workstream's paths.
 `[x]` `packages/primitives`: the **open `Select` list was silent to assistive
       technology** — the trigger shipped as a named `combobox`, but 0.11.0's
       `SelectItem`/`SelectGroup`/`SelectLabel` are plain `div`s with no role, so
