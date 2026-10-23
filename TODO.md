@@ -4689,7 +4689,7 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 15/15
+`[x]` `[██████████]` 19/19
 
 `[x]` `packages/primitives`: **the step indicators copied the house timing
       instead of reading it** — `@gpuixui/motion` publishes `motionLevels.step`
@@ -7152,6 +7152,53 @@ pass, the docs palette) is untouched. The blocker stands:
 two docs sessions must not be scheduled onto `apps/docs`.
 
 `[x]` **The GPUix native runtime now loads on this machine, so the Tier 2 behaviour
+`[x]` `packages/components`: **a `Toast` stack's exit snapped where it claimed to
+      slide** — the sonner toast leaves by fading while it travels 16px right, but
+      its resting frames declared no `left`, so the runtime had no value to
+      interpolate from and the ghost jumped: `presence.test.tsx` reads half the
+      travel at 90ms of the 180ms exit and failed with `expected -264 to be less
+      than -264` until the resting frame declared `left: 0` (restored, 30/30). The
+      same pass holds the stack fan — hovering a card lifts every card that is not
+      the newest by 8px and leaving puts it back, measured failing with the step
+      off (`expected 396 to be 388`) — and every paused-clock case now resumes the
+      clock and unmounts in a `finally`, so one failure no longer reports the rest
+      of the file as a leaked root (it did: 15 failures from one). Docs:
+      `docs/toast.mdx` §Motion and the `COMPONENTS.md` row.
+
+`[x]` `packages/components`: **a toast hover outlived the card it counted** — the
+      stack tracked hovered cards in a count that only a card's leave decremented,
+      and a card dismissed under the pointer unmounts without ever hearing that
+      leave: the count stayed above zero, so every card pushed afterwards was born
+      held and never auto-dismissed (a 600ms card still painted after 900ms).
+      The hover is the set of card ids the pointer rests on, read against the
+      cards on screen and pruned when the stack changes, so a hover that outlives
+      its card stops counting when the card leaves; `toast.test.tsx`'s `does not
+      hold the next card with a hover that outlived its own card` measured failing
+      before the fix, and the row's count moves 16 → 17.
+
+`[x]` `packages/components`: **a `Combobox` popup survived the control being
+      disabled** — the trigger refuses press, keys and the tab stop while
+      disabled, but an already-open popup stayed mounted, painting rows no press
+      could choose (the same class the date, time, tag and colour pickers had
+      closed). A layout effect retires `open` and drops the query, so re-enabling
+      does not resurrect the surface; `combobox.test.tsx`'s `closes a popup the
+      caller disables, and does not reopen it` measures the surface gone, the
+      re-enabled trigger opening nothing and no value reported (measured failing
+      before: the popup stayed painted). Docs: `docs/combobox.mdx` §Limitations
+      and the row's count 26 → 27.
+
+`[x]` `packages/components`: **a `HotkeyRecorder` disabled mid-recording kept
+      waiting** — its keys were refused while disabled, but the `Press keys…`
+      paint stayed, so the control showed it was waiting for a chord its own guard
+      could never accept, and because the element also leaves the tab order no key
+      could get out of the state. A layout effect drops the listening state;
+      `hotkey-recorder.test.tsx`'s `stops listening when the caller disables it
+      mid-recording` measured failing before (`expected [ 'Press keys…', … ] to
+      not include 'Press keys…'`), and the row's count moves 9 → 10. Docs:
+      `docs/hotkey-recorder.mdx` §Limitations and the `COMPONENTS.md` row.
+      Package gates after the four fixes: unit 97 files / 906 tests, behaviour
+      96 files / 980 tests, both green.
+
 suites run here.** Resolved 2026-10-17 08:57 by plan `140` (playground workstream):
 `@gpuix/native@0.10.0` publishes no `darwin-x64` binary, so the pinned source was
 built locally with `gpui_macos/runtime_shaders` (which removes the build-time
