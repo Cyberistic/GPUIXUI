@@ -113,13 +113,15 @@ missed is a dialog; a message that leaves on its own is a toast.
 
 ## API reference
 
-Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
-pointer and key handlers) and merges `style` last.
+Every part takes the GPUix host props (`className`, `style`, `testId`, `role`,
+`aria-*`, pointer and key handlers), joins `className` after its recipe, and
+merges `style` last.
 
 | Part | Prop | Type | Default | Consequence |
 | ---- | ---- | ---- | ------- | ----------- |
 | `Alert` | `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` | the surface, edge and readable colour every part inherits |
 | `Alert` | `children` | parts | — | the composition; a part outside the root throws |
+| any part | `className` | `string` | — | joined after that part's recipe; `style` still merges last |
 | `AlertLink` | `onSelect` | `() => void` | — | the text action's handler, on click, `Enter` or `Space` |
 | `AlertDismiss` | `onDismiss` | `() => void` (required) | — | runs on click, `Enter` or `Space`; there is no optional dismiss |
 | `AlertDismiss` | `label` | `string` | `"Dismiss"` | the control's accessible name |

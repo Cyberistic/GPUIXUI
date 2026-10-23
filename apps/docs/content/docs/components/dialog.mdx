@@ -140,9 +140,27 @@ one arrow reaches its first row.
 | `showClose` | `boolean` | `true` |
 | `initialFocus` | `() => number \| null` | none |
 
-`DialogTrigger`, `DialogClose` and `DialogTitle` take the GPUix host props where
-they render a host element plus, for the buttons, the button `variant` and
-`size`. Every part merges `style` last.
+### DialogTrigger and DialogClose
+
+Both are buttons: the dialog's open and close actions.
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `disabled` | `boolean` | `false` |
+| `onClick` | `(event: EventPayload) => void` | none |
+| `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `className` | `string` — joined after the button recipe | none |
+
+`DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription` and
+`DialogFooter` each take a `className` (joined after that part's recipe) beside
+the GPUix host props; `DialogTitle` also takes the host props where it renders a
+heading. Every part merges `style` last.
+
+`DialogTrigger` and `DialogClose` run the caller's `onClick` before the
+dialog's own change, so a consumer can keep its own bookkeeping; `disabled`
+leaves the button out of the tab order and drops its handlers, and a disabled
+trigger cannot open the surface.
 
 ## Theming
 

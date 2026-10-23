@@ -9032,7 +9032,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 242/242
+`[x]` `[██████████]` 243/243
+
+`[x]` Document the **props the displaced package pages carry** — a curated page
+      takes the URL a package page would render at, so `packages/components/docs`
+      is the only place a prop exists until the curated page names it, and five
+      had fallen behind: `className` on `Alert`'s parts and on `List`/`ListItem`,
+      and `DialogTrigger`/`DialogClose`'s `disabled`, `onClick` and
+      `className`. The curated Alert page now names `className` on every part
+      (joined after the part's recipe, `style` last), the List page documents it
+      on the root, the row and both text slots, and the Dialog page gains
+      `DialogTrigger and DialogClose` tables (the button's `disabled`,
+      `onClick`, `variant`, `size`, `className`), the five content parts'
+      `className` sentence, and the rule that a trigger or close runs the
+      caller's `onClick` before the dialog's own change. Directions measured:
+      `component-page-truth.test.ts`'s `documents every prop the displaced page
+      documents` reported all five gaps by page before the pass
+      (`alert.mdx: … \`className\`, this page does not` etc.) and is green after,
+      50/51 in the file (the remaining case is another workstream's in-flight
+      `switchThumbOffset` rename). No native scenario applies — page prose and
+      its guard have no runtime path.
 
 `[x]` Teach the **stagger direction and the uncallable curve** on `/docs/motion`
       — the package reads a `from` it does not name as the house `start` (an

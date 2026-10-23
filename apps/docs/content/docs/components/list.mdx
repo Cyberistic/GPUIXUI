@@ -143,7 +143,9 @@ the row's `trailing` slot holding a real control.
 
 ## API reference
 
-`List` and `ListItem` take the GPUix host props and merge `style` last.
+`List` and `ListItem` take the GPUix host props (`className`, `style`, `testId`,
+`role`, `aria-*`, pointer and key handlers), join `className` after their
+recipe, and merge `style` last.
 
 ### List
 
@@ -155,6 +157,7 @@ the row's `trailing` slot holding a real control.
 | `onValueChange` | `(value: string) => void` (single) · `(values: ReadonlyArray<string>) => void` (multiple) | — |
 | `onActivate` | `(value: string) => void` — single and `none` only; absent from the multiple variant | — |
 | `dense` | `boolean` — a row at `density.rowHeight` instead of `rowHeight + spacing.md` | `false` |
+| `className` | `string` — joined after the root recipe | — |
 
 ### ListItem
 
@@ -165,10 +168,11 @@ the row's `trailing` slot holding a real control.
 | `disabled` | `boolean` | `false` |
 | `leading` | `ReactNode` — an icon, avatar or marker | — |
 | `trailing` | `ReactNode` — metadata, a badge or an action | — |
+| `className` | `string` — joined after the row recipe | — |
 | `style` | `StyleDesc` or a function of `{ active, disabled, selected }` | — |
 
-`ListItemTitle` and `ListItemDescription` take the host props and `style`; both
-are clipped to one line and can never stretch the row.
+`ListItemTitle` and `ListItemDescription` take `className` and `style` (plus the
+host props); both are clipped to one line and can never stretch the row.
 
 ## Theming
 
