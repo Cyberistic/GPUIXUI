@@ -139,9 +139,22 @@ export const presenceTiming = (
   exit: motionTiming(level, { phase: "exit", preference }),
 });
 
-/** A timing field in milliseconds, with a value that cannot be read as none. */
-const milliseconds = (seconds: number | undefined): number =>
-  seconds !== undefined && Number.isFinite(seconds) ? seconds * 1000 : 0;
+/**
+ * A timing field in milliseconds.
+ *
+ * A duration or wait that cannot run is no time at all: a field that is not a
+ * number, not positive, or a seconds value the conversion overflows contributes
+ * nothing. A negative wait must never subtract from the journey it precedes — a
+ * window shorter than its tween opens a leaving box for shorter than it paints —
+ * and an overflowed conversion reaches a timer as `Infinity`, which fires at once.
+ */
+const milliseconds = (seconds: number | undefined): number => {
+  if (seconds === undefined || !Number.isFinite(seconds) || seconds <= 0) {
+    return 0;
+  }
+  const ms = seconds * 1000;
+  return Number.isFinite(ms) ? ms : 0;
+};
 
 /**
  * The window a run occupies, in whole milliseconds.
@@ -149,10 +162,14 @@ const milliseconds = (seconds: number | undefined): number =>
  * The wait a delayed run sits out first is part of its window — the runtime
  * holds the first frame for it — so a window that counted only the duration
  * would unmount a feedback layer before its journey began. A run with no
- * duration and no wait is no window at all.
+ * duration and no wait is no window at all, and so is one whose whole window
+ * the arithmetic cannot represent: the box unmounts rather than staying mounted
+ * for a number the scheduler cannot take.
  */
-export const transitionWindowMs = (timing: PresenceTransition): number =>
-  Math.round(milliseconds(timing.duration) + milliseconds(timing.delay));
+export const transitionWindowMs = (timing: PresenceTransition): number => {
+  const total = milliseconds(timing.duration) + milliseconds(timing.delay);
+  return Number.isFinite(total) ? Math.round(total) : 0;
+};
 
 /**
  * The mount window a leaving surface occupies, in whole milliseconds.

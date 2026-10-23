@@ -21,6 +21,11 @@ import {
   stagger,
   tween,
 } from "./index.js";
+import {
+  exitWindowMs,
+  presenceTiming,
+  transitionWindowMs,
+} from "./presence.js";
 
 /** A spring that reaches its target and retargets without losing velocity. */
 export const springExample = (): number => {
@@ -68,3 +73,14 @@ export const compositionExample = (): readonly number[] => {
     coast.sample(100).value,
   ];
 };
+
+/**
+ * The window a leaving surface stays mounted for, counted from the timing.
+ *
+ * A wait is part of the window, and a field that cannot be scheduled adds no
+ * time to it: a negative wait never shortens the exit it precedes.
+ */
+export const presenceWindowExample = (): readonly number[] => [
+  exitWindowMs(presenceTiming("normal")),
+  transitionWindowMs({ duration: 0.32, delay: -0.1 }),
+];

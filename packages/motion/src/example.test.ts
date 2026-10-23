@@ -20,6 +20,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   compositionExample,
+  presenceWindowExample,
   reducedMotionExample,
   springExample,
 } from "./api.example.js";
@@ -91,6 +92,14 @@ describe("the usage example", () => {
     // the projected rest.
     expect(coast).toBeGreaterThan(0);
     expect(coast).toBeLessThan(50);
+  });
+
+  it("counts a leaving surface's window from the timing, never shorter", () => {
+    // The bug this guards: a negative wait reached the arithmetic and shortened
+    // the window, so the documented example unmounted a box before the tween it
+    // paints ended. `presenceTiming("normal")` is 200 ms, and the 100 ms wait is
+    // no wait rather than 100 ms subtracted from it.
+    expect(presenceWindowExample()).toEqual([200, 320]);
   });
 
   it("is excluded from the build by the name it carries", () => {

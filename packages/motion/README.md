@@ -126,7 +126,9 @@ A surface that enters and leaves reads one table, exported from
 - `presenceTiming(level, preference)` gives the enter and exit tween at one
   level: `easeOut` in, `easeIn` out, both zero-duration under `"reduced"`;
 - `transitionWindowMs` / `exitWindowMs` convert a tween to the whole milliseconds
-  a box stays mounted for, including the wait a delayed run sits out first;
+  a box stays mounted for, including the wait a delayed run sits out first; a
+  field that cannot be scheduled adds no time (a negative wait never shortens the
+  journey) and a window the arithmetic cannot represent is no window at all;
 - `delayedTiming` adds a stagger and drops it with a reduced journey, since the
   runtime waits out a delay before an instant assignment too;
 - `presenceStyle` is the leaving pointer rule — a surface takes no presses while

@@ -95,6 +95,19 @@ describe("the hold window", () => {
       transitionWindowMs({ duration: 0.2, delay: Number.POSITIVE_INFINITY }),
     ).toBe(200);
   });
+
+  it("never subtracts a wait the run cannot sit out", () => {
+    // The bug this guards: a hand-built timing is structural, so a negative
+    // delay reached the sum and *shortened* the window — a 320 ms exit with a
+    // -100 ms wait kept its box mounted for 220 ms, so the last 100 ms of the
+    // tween painted outside a mounted surface. A negative duration did the same
+    // to the whole window, and an overflowed conversion handed the timer
+    // `Infinity`, which fires at once.
+    expect(transitionWindowMs({ duration: 0.32, delay: -0.1 })).toBe(320);
+    expect(transitionWindowMs({ duration: -0.32 })).toBe(0);
+    expect(transitionWindowMs({ duration: 1e308 })).toBe(0);
+    expect(transitionWindowMs({ duration: 1e305, delay: 1e305 })).toBe(0);
+  });
 });
 
 describe("a staggered arrival", () => {
