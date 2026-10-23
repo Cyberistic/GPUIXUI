@@ -23,6 +23,7 @@ import type { StyleDesc } from "@gpuix/react";
 import { disabledOpacity } from "@gpuixui/tokens";
 import { pipe } from "effect";
 import * as Option from "effect/Option";
+import { visibleCopy } from "../core/a11y.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle } from "./internal.js";
@@ -132,8 +133,10 @@ const hintType = (theme: PrimitiveTheme, spec: HintSpec): StyleDesc =>
 /**
  * A field's hint, or nothing when it has no placeholder or already has a value.
  *
- * A blank placeholder is no hint, and the hint fades with the field's own
- * disabled paint (`disabledOpacity`, the share the field chrome fades by).
+ * A blank placeholder is no hint — the same rule the words it announces keep
+ * (`fieldHelp`), so the paint and the announcement cannot disagree — and the
+ * hint fades with the field's own disabled paint (`disabledOpacity`, the share
+ * the field chrome fades by).
  */
 export const fieldHint = (
   props: HintField,
@@ -142,8 +145,8 @@ export const fieldHint = (
   spec: HintSpec,
 ): Option.Option<FieldHint> =>
   pipe(
-    Option.fromNullishOr(props.placeholder),
-    Option.filter((text) => text.length > 0 && value.length === 0),
+    Option.fromNullishOr(visibleCopy(props.placeholder)),
+    Option.filter(() => value.length === 0),
     Option.map((text) => ({
       text,
       frame: hintFrame(theme, spec),

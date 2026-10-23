@@ -7192,6 +7192,42 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       the repo formatter clean on these files. The live offset/fade read stays
       with the playground (the interlock row above).
 
+`[x]` `packages/primitives`: **help that arrived blank cost a line the control
+      never announced** — the package's rule is that a blank string is absence
+      (`accessibleName`), and it was applied at every **name** and **help
+      channel** but not at the three places help is **painted**: `Label`'s
+      `description`, a group option's `description` and `fieldHint`'s
+      placeholder each painted whenever the string was not `undefined`. A string
+      from data that came back blank is the normal case, not a typo, and painted
+      verbatim it was not free: measured in a window, a `<text>` of `""` is 0px
+      tall but still pays its column's gap (**a label grew 17 → 19px**) and a run
+      of spaces lays out a whole line (**17 → 35px**), while the description
+      channel announced nothing — the visible help and the spoken help
+      disagreeing. One seam now answers both sides: `visibleCopy` in
+      `core/a11y.ts` returns the caller's string **as written** when it has a
+      visible character and `undefined` when it does not, deciding absence by
+      the name rule itself (`accessibleName`), so the painter and the announcer
+      can only differ in spacing. The three paint sites read it; the hint's
+      filter now keys on copy before the empty-box test, and a placeholder with
+      its own padding still paints verbatim. Proof: `src/core/a11y.test.ts`'s
+      `visibleCopy` (3 cases — as-written, the space/tab/empty run as nothing,
+      and a sampled agreement with `accessibleName`), `field-hint.test.tsx`'s
+      `paints no hint for a placeholder that is only spaces` (and the paint/help
+      pair), `presentational.test.tsx`'s `paints no help line for a description
+      that says nothing` and `CheckboxGroup.test.tsx`'s `paints no caption for a
+      description that says nothing` (the row body the three groups share),
+      plus `runtime/labelling.runtime.test.tsx`'s
+      `paints no help line for a description that says nothing`, which measures
+      the boxes (empty and spaces equal the bare label, real help taller).
+      Directions measured: with `visibleCopy` returning its argument the unit
+      suite fails 6 cases by name and the window case fails `expected 19 to be
+      17`; restored, 55 files / 1 054 tests and the file 4/4 natively, with
+      `check-types`, lint, `check:tests` and the formatter clean. Docs:
+      `docs/label.mdx` §Usage/§API, `docs/input.mdx` §API, the three group pages'
+      option rows and the package README's words section. The components
+      package's hinted hosts call this seam, so they inherit the rule; no
+      `COMPONENTS.md` row changes — every row it touches is already `done`.
+
 `[x]` `packages/components`: **a `Toast` stack's exit snapped where it claimed to
       slide** — the sonner toast leaves by fading while it travels 16px right, but
       its resting frames declared no `left`, so the runtime had no value to
@@ -12895,6 +12931,8 @@ which the behaviour suite runs in the real renderer.
 `[x]` `packages/components`: **a side the runtime cannot paint reached the layers, and two readers decoded the payload on their own** — `internal/measure.ts` is documented as "the one place that turns that payload into numbers", but its decoder accepted any non-nullish number, so a `NaN`/infinity coordinate or size from a payload reached `ImageZoom`'s pan, `Magnetic`'s pull, the pattern fields' redraw and `SlidingText`'s travel as an inset the runtime draws as nothing; `tabs/indicator.ts` kept a second box decoder and `ripple-button/logic.ts` a second point decoder, so a repaired seam would still have left the pill and a press-born disc behind. The seam now decodes a field that is not finite as the absence it is (half a box is no box, half a point is no point), the tab pill re-exports the seam's decoder (`TabBox` is `MeasuredBox`), and the ripple composes `measuredPoint` so an unlocatable press starts at the centre like a keyboard activation. Proof: `internal/measure.test.ts` gains `refuses a side it cannot paint` and `refuses an axis it cannot paint`, `tabs/indicator.test.ts` gains `is the seam's decoder, not a copy` (identity) and `ripple-button/logic.test.ts` gains `starts a press it cannot locate at the centre`. Directions measured: at `HEAD` they fail `expected false to be true` (twice), `expected [Function measuredBox] to be [Function measuredBox]` and `expected { x: NaN, y: 12 } to deeply equal { x: 40, y: 16 }`; restored, the units are green (measure 5, indicator 5, ripple 8), `tabs` 22/22, `magnetic`+`image-zoom` 18/18 and `ripple-button` 8/8 native, with `check-types` clean. Docs: the seam's `measurable` JSDoc, both decoders' docs, `tabs/indicator.ts`'s header and `ripplePoint`'s JSDoc. No native scenario applies — a decoder has no paint of its own, and the surfaces it feeds are the behaviour suites'.
 
 `[x]` `@gpuixui/motion`: **a spring between two readable endpoints lost its journey** — every sampler was repaired for a value it cannot *read*, and the tween and keyframe interpolators were moved onto `mix` because the **difference** of two finite endpoints can overflow where neither endpoint can, but `sampleSpring` still added its own difference: `from - target` is `-Infinity` for `-1.7e308` → `1.7e308`, so every regime formula answered `NaN`, the sanitiser replaced the whole journey with the target, and the spring reached its target `settled` on the first sample — a surface that snapped instead of moving. A spring response is linear in its displacement and velocity, so the sampler reads the response on unit inputs and composes it with the endpoints through `mix` (the trajectory is exactly the one the same spring draws between the endpoints scaled down; measured to `5e-16` at 16–500 ms), while a runnable difference keeps the single regime call. Velocity is read in the same scaled space, so it stays a number the retained value can use. Proof: `spring.test.ts` gains `travels between two readable endpoints whose difference it cannot hold` (finite, strictly between the endpoints and not settled at 90 ms, the scaled-down run as its oracle, the reverse direction, and the settled target at 60 s — the absolute rest thresholds make a `1e308`-scale run take that long, which the test states by waiting rather than by loosening the threshold) and `motion.test.ts` its retained-value twin (`MotionValue.animate` into the overflowing pair is still active at 90 ms rather than complete on the target). Direction measured: with the fixed sampler reverted both cases fail `expected 1.7e+308 to be less than 1.7e+308`; restored, the package is 12 files / 137 tests with `check-types`, `fmt`, `lint` and `check:tests` clean. Docs: `packages/motion/README.md` §Inputs the runtime can paint and the module JSDoc. No native scenario applies — the frame is sampled in the pure package and no shipped surface passes endpoints this far apart.
+
+`[x]` `@gpuixui/motion`: **a stagger direction and a curve the library could not read reached the formulas** — the two caller values in the timeline that no guard read. `stagger()`'s distance arithmetic was a ternary ladder whose last arm was `center`, so a direction outside `start`/`end`/`center` — a persisted `"middle"`, a stored `"Start"` — silently staggered the group from its **middle** instead of the documented default, while `timing.ts` already reads a persisted level/phase by the table's own keys. And `eased` called whatever `curve` it was handed: `Transition` and `Keyframe` are exported and structural, so a hand-built tween carrying the easing a config never decoded threw `TypeError: curve is not a function` **out of a frame loop** instead of painting. `staggerFromOf` takes the house `start` for a name it does not carry and `eased` reads a value that is not a function as no curve — the same linear-progress fallback a curve answering `NaN` takes, so the run keeps its start, end and completion edge. Proof: `timeline.test.ts`'s `starts from the default for a direction it does not name` (index 0 and 3 of four, with the three real directions and the default as controls) and `progress.test.ts`'s `treats a value that is not a function as no curve` (`undefined`, `null`, a name string). Directions measured at `HEAD`: `expected 15 to be +0` and `TypeError: curve is not a function` at `progress.ts:35`; restored, the package is 12 files / 139 tests with `check-types` clean. Docs: `packages/motion/README.md` §Inputs the runtime can paint (both rules), the module JSDoc and `stagger`'s. The `/docs/motion` sentences are filed as an interlock row (docs-site). No native scenario applies — both are pure reads in the package and no shipped surface passes either value.
 
 ## TanStack cores
 

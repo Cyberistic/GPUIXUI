@@ -22,6 +22,7 @@
 import type { ReactElement, ReactNode, RefObject } from "react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
+import { visibleCopy } from "../core/a11y.js";
 import { Stack } from "./Stack.js";
 import { Text } from "./Text.js";
 
@@ -102,6 +103,11 @@ export const renderLabel = (
   onPress?: () => void,
 ): ReactElement => {
   const pressable = onPress !== undefined && disabled !== true;
+  // The help is painted only when it says something: an empty `<text>` measures
+  // zero but a run of spaces lays out a whole line, so a description that
+  // arrived from data blank used to add a blank line under the name while the
+  // control announced nothing (`visibleCopy`).
+  const help = visibleCopy(description);
   const label = (
     <Stack
       direction="column"
@@ -121,9 +127,9 @@ export const renderLabel = (
           </Text>
         ) : null}
       </Stack>
-      {description === undefined ? null : (
+      {help === undefined ? null : (
         <Text role="caption" tone="muted">
-          {description}
+          {help}
         </Text>
       )}
     </Stack>

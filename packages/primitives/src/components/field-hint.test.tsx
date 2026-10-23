@@ -135,6 +135,21 @@ describe("a field's hint", () => {
     expect(Option.isNone(hintOf({}))).toBe(true);
   });
 
+  it("paints no hint for a placeholder that is only spaces", () => {
+    // The bug guarded: the hint was painted for any non-empty string, while the
+    // words it announces went through the name rule — so `"   "` painted an
+    // empty frame over the field and announced nothing. A run of spaces is a
+    // full line on 0.11.0 where `""` is none, so the paint cost a line for copy
+    // the reader never saw.
+    expect(Option.isNone(hintOf({ placeholder: "   " }))).toBe(true);
+    expect(Option.isNone(hintOf({ placeholder: "\t\n" }))).toBe(true);
+    // Both sides of the one decision: what is not painted is not announced.
+    expect(fieldHelp({ placeholder: "   " }, "")).toBeUndefined();
+    // A hint with its own padding is still the caller's text, painted as written.
+    const padded = expectSome(hintOf({ placeholder: "  Search projects  " }));
+    expect(padded.text).toBe("  Search projects  ");
+  });
+
   it("fades with the field it sits in", () => {
     // The field chrome fades a disabled field by `disabledOpacity`; a hint left
     // at full opacity would be the brightest thing in a disabled box.

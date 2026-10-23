@@ -21,6 +21,21 @@ export const accessibleName = (label: string | undefined): string | undefined =>
   );
 
 /**
+ * The copy worth painting, or `undefined` when it says nothing.
+ *
+ * A paint site is not a name: `accessibleName` trims for the announcement,
+ * while a description or a hint is painted in the caller's own spacing. What
+ * the two have to agree on is **whether there is copy at all**. An empty string
+ * paints no box, but a run of spaces lays out a full line — measured on
+ * `@gpuix/native@0.11.0`, a caption of `""` is 0px tall and one of `"   "` is
+ * 16px — so a help string that arrived from data blank painted a blank line
+ * under the label while the control announced nothing. The string is returned
+ * **as written**; only the decision is the name rule's.
+ */
+export const visibleCopy = (text: string | undefined): string | undefined =>
+  accessibleName(text) === undefined ? undefined : text;
+
+/**
  * The words a caller's formatter supplies, or the component's own when it says nothing.
  *
  * A component that announces a measurement asks its caller for the sentence — a

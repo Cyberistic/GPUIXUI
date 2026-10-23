@@ -129,3 +129,34 @@ it("announces the hint a field paints, while the box is empty", async () => {
   // The hint is gone once the box holds a value, so the channel is free again.
   expect(help("TextInput", "Filled")).toStrictEqual(Option.none());
 });
+
+it("paints no help line for a description that says nothing", async () => {
+  // The bug guarded: `Label` painted its `description` whenever it was not
+  // `undefined`, and a run of spaces lays out a whole line where `""` lays out
+  // none — so help that arrived from data blank added a blank line under the
+  // name while the control announced nothing (the description channel drops a
+  // blank). Measured in the window: `""` and no description are the same box,
+  // a run of spaces is not, and real help is one line taller still.
+  const runtime = await mount(
+    <Stack direction="column">
+      <Label testId="bare">Notifications</Label>
+      <Label testId="empty" description="">
+        Notifications
+      </Label>
+      <Label testId="spaces" description="   ">
+        Notifications
+      </Label>
+      <Label testId="written" description="We never share it.">
+        Notifications
+      </Label>
+    </Stack>,
+  );
+  runtime.flush();
+  const height = (testId: string): number =>
+    Option.getOrElse(runtime.bounds(testId), () =>
+      expect.fail(`the label "${testId}" painted no box`),
+    ).height;
+  expect(height("empty")).toBe(height("bare"));
+  expect(height("spaces")).toBe(height("bare"));
+  expect(height("written")).toBeGreaterThan(height("bare"));
+});

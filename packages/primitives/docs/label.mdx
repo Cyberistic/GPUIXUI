@@ -37,6 +37,12 @@ export const NameField = () => {
 A label with no `target` is text only: that is the right form when there is no
 single control to focus, or when the words sit in a legend above a group.
 
+Help that comes from data is often blank rather than absent. A `description`
+with no visible character paints **no line at all** — the same rule the name
+keeps — because an empty `<text>` still pays its column's gap and a run of
+spaces lays out a whole line. The control announces nothing for it either, so
+the visible help and the spoken help cannot disagree.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -45,7 +51,7 @@ single control to focus, or when the words sit in a legend above a group.
 | `disabled` | `boolean` | `false` | drops that press, for a control that is disabled |
 | `required` | `boolean` | `false` | appends a destructive `*`; visual only |
 | `invalid` | `boolean` | `false` | paints the name in the destructive role |
-| `description` | `string` | none | a caption line under the name |
+| `description` | `string` | none | a caption line under the name; a blank one paints nothing, the rule a blank name keeps |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |

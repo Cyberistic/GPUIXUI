@@ -58,7 +58,7 @@ import { RadioGroup } from "@gpuixui/primitives";
 
 - No `aria-checked`: a row's state is announced through `aria-valuetext`.
 - An option's `description` is a caption beside the name, not an accessible
-  description.
+  description; a blank one paints nothing.
 - `""` is a value like any other: an option whose `value` is the empty string
   paints checked when the group's value is `""`.
 - Item content must stay presentational; rich content uses `RadioGroupItem`.

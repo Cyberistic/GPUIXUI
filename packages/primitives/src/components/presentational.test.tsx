@@ -645,6 +645,23 @@ describe("type", () => {
       description: "We never share it.",
     });
   });
+
+  it("paints no help line for a description that says nothing", () => {
+    // The bug guarded: the caption was painted for any string that was not
+    // `undefined`, and a run of spaces lays out a whole line where `""` lays out
+    // none (measured in a window) — so help that arrived from data blank added a
+    // blank line under every name while the control announced nothing.
+    expect(elementChildren(renderLabel({ description: "   " }))).toHaveLength(
+      1,
+    );
+    expect(elementChildren(renderLabel({ description: "" }))).toHaveLength(1);
+    const written = renderLabel({ description: "We never share it." });
+    expect(elementChildren(written)).toHaveLength(2);
+    const help = elementChildren(written)[1] ?? expect.fail("no help line");
+    expect(expectSome(elementProp(help, "children"))).toBe(
+      "We never share it.",
+    );
+  });
 });
 
 describe("loading", () => {

@@ -26,7 +26,7 @@ import {
   type CheckboxItemState,
   type CheckboxGroupOption,
 } from "./CheckboxGroup.js";
-import { type GroupFocus } from "./group.js";
+import { type GroupFocus, optionBody } from "./group.js";
 import { keyEvent } from "./testing/event.js";
 import {
   elementChildren,
@@ -518,5 +518,29 @@ describe("checkboxGroupItems", () => {
       expectSome(elementProp(node, "children")),
     );
     expect(labels).toEqual(["SMS", "Charges apply"]);
+  });
+
+  it("paints no caption for a description that says nothing", () => {
+    // The bug guarded: the row painted `description` whenever it was not
+    // `undefined`, and a run of spaces is a whole line where `""` is none — so
+    // a caption that arrived from data blank cost the row a line of empty text.
+    // The row's own body is the one the three groups share, so the rule is held
+    // here once.
+    const blank = optionBody(
+      { value: "sms", label: "SMS", description: "   " },
+      false,
+      testTheme,
+    );
+    expect(elementChildren(blank)).toHaveLength(1);
+    const written = optionBody(
+      { value: "sms", label: "SMS", description: "Charges apply" },
+      false,
+      testTheme,
+    );
+    expect(
+      elementChildren(written).map((node) =>
+        expectSome(elementProp(node, "children")),
+      ),
+    ).toEqual(["SMS", "Charges apply"]);
   });
 });

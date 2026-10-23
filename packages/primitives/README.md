@@ -67,6 +67,16 @@ scroller is never left unnamed.
 Reference:
 [`docs/theme-provider.mdx`](./docs/theme-provider.mdx) §Words.
 
+The same absence rule holds on the **paint** side: `visibleCopy` reports whether
+a string has a visible character, and the three help sites — `Label`'s
+`description`, a group option's `description` and `fieldHint`'s placeholder —
+paint nothing for a blank one. A string that came from data blank is common, and
+painted verbatim it was not free: an empty `<text>` still pays its column's gap
+and a run of spaces lays out a whole line (measured on 0.11.0: 0px for `""`,
+16px for `"   "`), so a label grew by a blank line while the control announced
+nothing. Real copy is painted **as written** — only the decision is the name
+rule's, not the spacing.
+
 No colour, space, radius or font literal may appear outside `src/core/` and its
 test fixture — the theme is the only source of those values.
 

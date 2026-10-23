@@ -25,7 +25,7 @@ import * as Option from "effect/Option";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import { targetSize } from "@gpuixui/tokens";
-import { accessibleName } from "../core/a11y.js";
+import { accessibleName, visibleCopy } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
 import {
   decideTypeAhead,
@@ -107,28 +107,36 @@ export const optionBody = (
   option: GroupOption,
   disabled: boolean,
   theme: PrimitiveTheme,
-): ReactElement => (
-  <div
-    style={
-      recipeTw.classesToStyle("flex flex-row items-center gap-sm", theme).style
-    }
-  >
-    {option.content === undefined ? (
-      <>
-        <Text role="label" tone={disabled ? "muted" : "default"}>
-          {option.label}
-        </Text>
-        {option.description === undefined ? null : (
-          <Text role="caption" tone="muted">
-            {option.description}
+): ReactElement => {
+  // The caption is painted only when it says something: an empty `<text>` is
+  // 0px tall but a run of spaces lays out a full line, so a description that
+  // arrived from data blank painted a blank caption beside every name
+  // (`visibleCopy`).
+  const caption = visibleCopy(option.description);
+  return (
+    <div
+      style={
+        recipeTw.classesToStyle("flex flex-row items-center gap-sm", theme)
+          .style
+      }
+    >
+      {option.content === undefined ? (
+        <>
+          <Text role="label" tone={disabled ? "muted" : "default"}>
+            {option.label}
           </Text>
-        )}
-      </>
-    ) : (
-      option.content
-    )}
-  </div>
-);
+          {caption === undefined ? null : (
+            <Text role="caption" tone="muted">
+              {caption}
+            </Text>
+          )}
+        </>
+      ) : (
+        option.content
+      )}
+    </div>
+  );
+};
 
 /** The row container a group paints: one line, and the press cursor it earns. */
 export const optionRowClass = (disabled: boolean): string =>

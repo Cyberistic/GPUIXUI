@@ -15,6 +15,7 @@ export {
   spokenSentence,
   spokenText,
   spokenWord,
+  visibleCopy,
 } from "./a11y.js";
 
 export {
