@@ -184,6 +184,24 @@ describe("ColorPicker", () => {
     picker.unmount();
   });
 
+  it("refuses a hex draft committed after the picker is disabled", () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(<Harness onValueChange={onValueChange} />);
+
+    typeHex(picker, "#123456");
+    // A form disables the picker while it saves, and a read-only host still
+    // receives Enter: the field's own submit listener must refuse with it.
+    picker.rerender(<Harness disabled onValueChange={onValueChange} />);
+    picker.renderer.simulateKeystrokes("enter");
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(
+      picker.renderer.findByTestId("picker-preview")?.style.backgroundColor,
+    ).toBe("#000000");
+
+    picker.unmount();
+  });
+
   it("hands validity to a style callback, in both themes", () => {
     const picker = renderComponent(<Harness />);
     expect(picker.renderer.findByTestId("picker")?.style.gap).toBe(8);

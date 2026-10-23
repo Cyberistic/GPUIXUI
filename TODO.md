@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 167/167
+`[x]` `[██████████]` 168/168
 
 `[x]` Decode **Omarchy's `colors.toml`** into the palette this package maps — the
 follow had a poll and a semantic shape but no reader: `docs/tokens.md` §System
@@ -1222,6 +1222,38 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       `decorative` fold removed, the report case fails. No theme value moved, so
       the docs style sheets needed no edit. Headless `theme-color-roles` stayed
       green (1/1) as the paint smoke; the data half is the interlock row below.
+
+`[x]` Measure the **rule a pressed row draws on the wash it derives** — the
+      divider contract named `hover`, `active`, `accent` and `selected`, and a
+      pressed row does not wear the `active` role: both packages derive its fill
+      with `pointerWash(theme, "active", replaced)` over the wash the row was
+      wearing, so **seven of the thirty-two** press placements in the sixteen
+      shipped, high-contrast, platform and authored styles paint a colour the
+      role does not name — macOS light's press over `accent` is `#D6D6DE`
+      against a `#DEDEE6` role, macOS dark's `#3E3E44` against `#3A3A40`, Linux
+      dark's, Luna light's, Aero light's and the hover press too — while the
+      contract measured the role and left the painted wash unnamed. `dividerWashes`
+      is now the three states a row wears (`hover`, `accent`, `selected`),
+      `dividerPresses` reads the two presses off `pointerWashTransitions` (so the
+      derivation and the contract cannot drift), and `dividerFailures` reports a
+      press it cannot answer as `pressedDivider` over the wash it replaced. The
+      raw role is under the 1.05:1 floor on **20 of the 80** placements (the base
+      themes' `accent` at 1.001:1 and 1.004:1, and six presses, macOS dark's over
+      `hover` at 1.000:1); `borderStrong` clears all 80 (tightest 3.73:1,
+      Windows light's press over `accent`), the moved lines land at 1.050–1.081:1,
+      and the tightest placement overall is now macOS light's press over `hover`
+      at **1.050:1** (the tightest rule the derivation does not touch is still
+      macOS dark's `selected` at 1.053:1). `divider.test.ts` (12 cases) holds the
+      two state lists, the 7/32 paint measurement by name, the 20/80 premise, the
+      sweep, the ceiling, a press the theme cannot derive (no `foreground`) and
+      the one the strongest line cannot answer, the executed example
+      (`pressRule`/`pressSeparation`) and the painter (`table.tsx` derives the
+      press fill and re-derives the rule over it). Docs in `docs/tokens.md`
+      §Decorative surfaces (the surface table gains `pressedDivider`),
+      `docs/design-system.md` §7, the package README and the `Decorative
+      surfaces` row; the data row's count moved with it. Directions measured:
+      with `dividerWashes` back to four and the press fold removed, 7 cases fail
+      by name; with the fix, 45 files / 2 527 tests, `check-types` clean.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
@@ -5259,6 +5291,8 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
   - [x] `Message` and `Chat` — plan 207 landed. `MessageRoot`/`MessageAvatar`/`MessageContent`/`MessageActions` with the reasoning, tool-call, source and streaming slots as data props (no boolean proliferation), and `ChatRoot`/`ChatMessages`/`ChatComposer` over the shipped `MessageScroller`; the status machine is `chat/logic.ts` (`ChatStatus` a schema, `chatMove` the one rule set, shared with the consumer). Enter/Shift+Enter/Escape were measured in a window before the composer was written: a textarea's Enter reaches `onSubmit` only when that listener exists (otherwise the runtime consumes it as a newline and no keydown arrives), Shift+Enter inserts a newline and reaches no handler at all, Escape arrives as a keydown. 12 logic + 12 Message + 11 Chat native tests, recipes in `@gpuixui/tw`, both docs pages and both examples registered. **Still outside this package:** `LICENSES/` owes shadcn/ui's AI Elements a provenance row for the behaviour port (plan 207's acceptance line) — recorded as the interlock row below, owner licensing, because `LICENSES/` is not this workstream's
 `[x]` `packages/components`: **a chat send the machine refused erased the draft** — `ChatComposer.send` cleared the field after calling `submit`, and `ChatRoot.submit` returns early while a reply is open, so an `Enter` typed during `submitting`/`streaming` lost the reader's words with nothing sent (the Send control is hidden then, but the `<textarea>`'s `onSubmit` still fires). The composer now derives `canSend` from the same authority the transport path uses — `canChatSubmit(status)` — so a refused send leaves the draft in the field and it is what the next accepted send carries. `src/behaviour/chat.test.tsx`'s `refuses a send while a reply is open, and keeps the draft it refused` reads the field's value after the refused `Enter` and then sends the same draft once the reply ends; measured failing at `HEAD` with `expected '' to be 'queued'`, green after (13/13 in the file). Docs: `packages/components/docs/chat.mdx` §While a reply is open and the `COMPONENTS.md` Chat row.
 
+`[x]` `packages/components`: **a disabled `ColorPicker` still committed its hex draft** — the swatches guarded their press and the field is `readOnly`, but a read-only GPUix host still receives keys: `onSubmit` and `onBlur` both called `commit`, so a draft typed before a form disabled the picker mid-save reached `onValueChange` on `Enter`. It is the same class the `SearchInput`/`TagInput`/`TimePicker` rows closed, and `ColorPicker` was the one text host left. `commit` now returns while `disabled`, so the value, the draft and the preview stay where the reader left them. `src/behaviour/color-picker.test.tsx`'s `refuses a hex draft committed after the picker is disabled` types `#123456`, disables the picker, presses `Enter` and reads the untouched preview; measured failing at `HEAD` with `expected "vi.fn()" to not be called at all, but actually been called 1 times`, green after (10/10 in the file). Docs: `packages/components/docs/color-picker.mdx` §Limitations and the `COMPONENTS.md` Color picker row.
+
 `[x]` Verify every component in both themes
 
 `[x]` `packages/components`: **thirteen copies of the disabled fade** — the parts that cannot act each painted `opacity: disabled ? 0.5 : 1`, and `TagInputChip` painted **0.6** inside a tag root that already faded, so one control composited its ink twice by a share no token names while the token package's own `disabledOpacity` (the share `disabledFadeFailures` measures) moved without them. `internal/theme.ts`'s `disabledFade(disabled)` is the one declaration (the measured share, or nothing while the part can act), the twelve parts spread it, and the chip declares none because the group owns the field's face. `src/disabled-fade.test.ts` (5) refuses a numeric fade in any source and holds the twelve parts, the seam and the page's rule; `src/behaviour/disabled-fade.test.tsx` (3) reads the share off an accordion trigger, a tag group and a time picker in both themes. Both directions measured: restoring the two literals fails the scan naming `accordion.tsx` and `tag-input.tsx`, and removing a spread fails the window cases. Docs: `docs/component-api.md` §3.
@@ -7062,7 +7096,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 202/202
+`[x]` `[██████████]` 203/203
+
+`[x]` Hold the **list row's hover label** to the role the row resolves — the
+curated List page's Theming table said a hovered row paints "`accent` fill,
+`accentForeground` text" and the drawing painted it, while `list.tsx`'s hover
+record carries only `backgroundColor: accent` and `ListItemTitle` resolves
+`selectedForeground` for a chosen row and `foreground` otherwise — so the page
+taught a role no row label takes, and a chosen row under the pointer stayed
+`selected` in the drawing while the native row answers with `accent`. The page
+now separates the three states (an unchosen hover keeps `foreground`; a chosen
+row at rest is `selected` + `selectedForeground`; a chosen row under the pointer
+is `accent` + `selectedForeground`), the preview's hover paints
+`color: var(--foreground)` and a chosen row's pointer state paints `accent` with
+`--selected-foreground`, and both pairs are ones `contrastPairs` measures
+(`foreground`/`accent` and `selectedForeground`/`accent`, body floor). The list
+case in `component-page-truth.test.ts` reads the hover record, the title's two
+roles and the three page rows (and refuses `accentForeground` on a label);
+`theme-css.test.ts` gains `keeps a hovered row's label in the role the row
+resolves`. Directions measured: restoring the `accentForeground` row fails the
+truth case naming `keeps its role`, recolouring the preview's hover with
+`--accent-foreground` fails the bridge case, and both pass restored.
 
 `[x]` Follow the **table row's derived rule** the data package landed into the
 curated page and its drawing — commit `7aa1c2a0` moved `TableRow` and

@@ -141,6 +141,10 @@ export const ColorPicker = ({
   }, [value]);
 
   const commit = (): void => {
+    // A read-only host still receives Enter, so `disabled` is the field's
+    // guard as well as its paint: a picker a form disabled mid-edit must not
+    // commit the draft the reader typed before.
+    if (disabled) return;
     Option.match(normalizeHex(draft), {
       onNone: () => setDraft(value),
       onSome: (hex) => {
@@ -257,6 +261,7 @@ export const colorPickerMeta = {
     "no saturation/value square: 0.11.0 supports two-stop linear gradients only and no radial gradient",
     "swatches plus HEX entry only; no alpha, HSL/RGB fields or eyedropper",
     "the HEX field is validated on commit; an invalid draft is marked destructive and reverted on blur",
+    "disabled refuses the swatches and both commit paths (Enter and blur), because a read-only host still receives keys",
   ],
   docs: "docs/color-picker.mdx",
   example: "examples/color-picker.example.tsx",

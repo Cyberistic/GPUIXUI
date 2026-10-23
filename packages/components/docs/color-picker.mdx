@@ -36,6 +36,9 @@ import { ColorPicker } from "@gpuixui/components";
 - No alpha, HSL/RGB fields or eyedropper.
 - HEX only; named colours are not parsed.
 - Validation runs on commit, not on each keystroke.
+- A `disabled` picker refuses both commit paths (Enter and blur) as well as its
+  swatches, because a read-only host still receives keys — a draft typed before
+  the field was disabled is never written to the caller's value.
 
 ## Related
 
