@@ -2,10 +2,13 @@
  * The pure find-and-replace half of the search bar.
  *
  * The bugs these guard: overlapping matches reported twice (the scan must
- * resume at a match's end, so `"aa"` in `"aaa"` is one match, not two); an
- * empty query matching at every position; a replace-all that disagrees
- * with the match count about what "one match" is; and a large file whose
- * matches exhausted the call stack (the scan was recursive per match).
+ * skip a candidate that starts inside the match before it, so `"aa"` in
+ * `"aaa"` is one match, not two); a **whole-word match lost to an occurrence
+ * the rule rejects** (the scan applied the word rule after the overlap rule,
+ * so it never looked at a match beginning inside a rejected one); an empty
+ * query matching at every position; a replace-all that disagrees with the
+ * match count about what "one match" is; and a large file whose matches
+ * exhausted the call stack (the scan was recursive per match).
  */
 
 import { describe, expect, it } from "vitest";
@@ -62,6 +65,25 @@ describe("findRanges", () => {
     ]);
   });
 
+  it("finds a whole-word match inside an occurrence the rule rejects", () => {
+    // The occurrence at 1 is preceded by a letter, so the word rule rejects
+    // it; the one at 3 is a whole word. Filtering after the overlap rule
+    // resumed past the rejected occurrence and reported no match at all.
+    expect(findRanges("xa.a.a ", "a.a", { wholeWord: true })).toEqual([
+      { start: 3, end: 6 },
+    ]);
+    expect(
+      findRanges("xA.A.A ", "a.a", { caseSensitive: false, wholeWord: true }),
+    ).toEqual([{ start: 3, end: 6 }]);
+  });
+
+  it("still skips a whole-word match that overlaps one it accepts", () => {
+    // Both occurrences are whole words; the overlap rule keeps the first.
+    expect(findRanges("a.a.a ", "a.a", { wholeWord: true })).toEqual([
+      { start: 0, end: 3 },
+    ]);
+  });
+
   it("finds every match in a document larger than the call stack", () => {
     // The scan used to recurse once per match, so a 20 000-match file threw
     // `RangeError: Maximum call stack size exceeded` instead of reporting them.
@@ -96,6 +118,14 @@ describe("replaceAll", () => {
     expect(
       replaceAll("cat concatenate", "cat", "fox", { wholeWord: true }),
     ).toBe("fox concatenate");
+  });
+
+  it("replaces a whole word that overlaps a rejected occurrence", () => {
+    // The count and the replace-all must agree: the matcher now finds the
+    // whole word at 3, so the replacement lands there.
+    expect(replaceAll("xa.a.a ", "a.a", "Z", { wholeWord: true })).toBe(
+      "xa.Z ",
+    );
   });
 
   it("replaces every match in a document larger than the call stack", () => {

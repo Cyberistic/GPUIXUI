@@ -210,7 +210,7 @@ export const searchReplaceMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "the matcher is a literal, case-sensitive scan — no regex, no whole-word, no case toggle",
+    "the matcher is a literal scan — no regex mode; `Aa` (match case, on by default) and `W` (whole word, off) toggle the query",
     "the active match cannot move the editor's caret or scroll to it: the runtime reports no caret or scroll offset",
     "the bar owns the find/replace fields, not the document text; the caller applies every replacement",
   ],

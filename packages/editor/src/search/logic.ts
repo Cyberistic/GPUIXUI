@@ -44,11 +44,16 @@ const escapePattern = (query: string): string =>
  *
  * An empty query matches nothing — the bar has nothing to find, and a zero-
  * length needle would otherwise match at every position. Overlapping matches
- * are skipped: the scan resumes at a match's `end`, so `"aa"` inside `"aaa"`
- * yields one range, not two. A case-insensitive scan is a literal escaped
- * pattern, not a lowered copy of the text: lowering can change a string's
- * length (and therefore its indices), while the regex engine reports the
- * offsets of the text it was given.
+ * are skipped: a candidate that starts before the previous match's `end` is
+ * dropped, so `"aa"` inside `"aaa"` yields one range, not two. A
+ * case-insensitive scan is a literal escaped pattern, not a lowered copy of
+ * the text: lowering can change a string's length (and therefore its indices),
+ * while the regex engine reports the offsets of the text it was given.
+ *
+ * The two rules run in that order: the **word boundary** first, then the
+ * overlap. An occurrence the whole-word rule rejects can overlap one it
+ * accepts (`"a.a"` at 1 and at 3 in `"xa.a.a "`), so filtering after the
+ * overlap rule dropped a real whole-word match without a trace.
  *
  * The scan is a fold rather than a recursion: a document can hold a match per
  * character, and one call frame per match exhausted the stack on a large file.
@@ -59,15 +64,21 @@ export const findRanges = (
   options: FindOptions = {},
 ): ReadonlyArray<MatchRange> => {
   if (query.length === 0) return [];
-  const wholeWord = options.wholeWord === true;
-  const ranges =
-    options.caseSensitive === false
-      ? findCaseInsensitive(text, query)
-      : findExact(text, query);
-  return wholeWord
-    ? Arr.filter(ranges, (range) => isWholeWord(text, range))
-    : ranges;
+  const candidates = occurrences(text, query, options.caseSensitive !== false);
+  const accepted =
+    options.wholeWord === true
+      ? Arr.filter(candidates, (range) => isWholeWord(text, range))
+      : candidates;
+  return nonOverlapping(accepted);
 };
+
+/** Every occurrence, overlaps included, left to right. */
+const occurrences = (
+  text: string,
+  query: string,
+  caseSensitive: boolean,
+): ReadonlyArray<MatchRange> =>
+  caseSensitive ? findExact(text, query) : findCaseInsensitive(text, query);
 
 const findExact = (text: string, query: string): ReadonlyArray<MatchRange> =>
   Arr.unfold(
@@ -78,7 +89,7 @@ const findExact = (text: string, query: string): ReadonlyArray<MatchRange> =>
         ? Option.none()
         : Option.some([
             { start: index, end: index + query.length },
-            index + query.length,
+            index + 1,
           ] as const);
     },
   );
@@ -97,10 +108,25 @@ const findCaseInsensitive = (
         ? Option.none()
         : Option.some([
             { start: found.index, end: found.index + found[0].length },
-            pattern.lastIndex,
+            found.index + 1,
           ] as const);
     },
   );
+};
+
+/** Drop a candidate that starts inside the match accepted before it. */
+const nonOverlapping = (
+  ranges: ReadonlyArray<MatchRange>,
+): ReadonlyArray<MatchRange> => {
+  const [, kept] = Arr.mapAccum(
+    ranges,
+    -1,
+    (end, range): readonly [number, Option.Option<MatchRange>] =>
+      range.start >= end
+        ? [range.end, Option.some(range)]
+        : [end, Option.none()],
+  );
+  return Arr.getSomes(kept);
 };
 
 /**

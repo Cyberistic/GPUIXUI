@@ -26,6 +26,23 @@ import { SearchReplace } from "@gpuixui/editor";
 | `disabled` | `boolean` | `false` | Disable the bar. |
 | `className` | `string` | — | A Tailwind class string, merged last. |
 
+## Matching
+
+The scan is literal: a regex character in the query matches itself, and there is
+no pattern mode. Two toggles narrow it:
+
+- **`Aa` — match case** (on by default). Off, the query runs as the escaped
+  literal in a case-insensitive pattern rather than a lowered copy of the text:
+  lowering can change a string's length, and therefore its offsets.
+- **`W` — match whole word** (off by default). A match must not touch a letter,
+  digit or underscore on either side.
+
+Both options feed the count, the single replace and replace-all, so the `n / m`
+readout is the number of replacements a replace-all would make. Matches never
+overlap — a candidate that starts inside the match before it is skipped — and
+the word rule is applied first, so a whole-word match that begins inside an
+occurrence the rule rejects is still found.
+
 ## Limitations
 
 - **Literal matching**: no regex mode.
