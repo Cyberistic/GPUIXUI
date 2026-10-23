@@ -10306,7 +10306,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 294/294
+`[x]` `[██████████]` 295/295
+
+`[x]` Publish the **presence entry point the motion page omitted**, and hold the
+      page to the package — `/docs/motion` claimed `@gpuixui/motion` while
+      listing five modules and showing two specifiers; `@gpuixui/motion/presence`
+      ships `fadeFrom`, `fadeFromSide`, `fadeFromAnchor`, `fadeOnly`,
+      `presenceTiming`, `presenceMotion`, `presenceStyle`, `transitionWindowMs`,
+      `exitWindowMs` and `delayedTiming`, and every overlay in the library takes
+      its frames, enter/exit timing and mount window from it, so a reader
+      writing their own surface could not find the journey. The page gains a
+      **Presence** section with a resolving snippet, the module row and the five
+      entry points named; the house-timing table stays the five declared levels.
+      `src/lib/motion-page.test.ts` (3 cases) derives the entry points from the
+      package's `exports` map, the presence values from its own `export const`
+      lines (a floor of 8), and the five durations from `motionLevels` in
+      `timing.ts`, requiring each on the page. Directions measured: printing
+      `normal` at 210 fails `prints the five durations motionLevels declares`,
+      and renaming `## Presence` fails the seam case by name; restored, the app
+      is 124 files / 1 092 tests green, `check-types` clean and
+      `page-snippets.test.ts` resolves the new subpath. No native scenario
+      applies — a site page and the manifest it documents.
 
 `[x]` Retract the **three counts the prune outgrew** in the policy, and hold its
       curated list to the pages — `docs/preview-strategy.md` still said "31 of
