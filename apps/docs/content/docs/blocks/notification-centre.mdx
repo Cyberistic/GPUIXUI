@@ -1,0 +1,39 @@
+---
+title: Notifications
+description: A notification centre — grouped rows, three filters, four row bodies and the action each one carries.
+---
+
+A notification centre is a panel rather than a page: a header with mark-all-read
+and settings actions, three filter tabs, and a list grouped by day. A dashed rule
+separates the groups, and an unread row paints a small success-coloured dot in a
+column it keeps when it is read.
+
+<BlockPreview name="notification-centre-01" />
+
+## Composition
+
+The block composes:
+
+- `Avatar` from `@gpuixui/components/avatar`, `Badge` from
+  `@gpuixui/components/badge`, `Card` and its parts from
+  `@gpuixui/components/card`, `Tabs` and its parts from
+  `@gpuixui/components/tabs`
+- `Button`, `IconButton`, `Stack` and `Text` from `@gpuixui/primitives`
+- `Icon` from `@gpuixui/icons` for the header, file and download marks
+
+## The four row bodies
+
+A row is one identity line — an avatar, a name in medium weight, the action in
+normal weight, the timestamp under the name and the age on the right — followed
+by at most one body:
+
+- **quote** — a muted rounded card with the two lines a comment left behind;
+- **follow** — no body, so the row stops at its identity line;
+- **invite** — `Decline` and `Accept`; accepting marks the row read and the
+  actions are replaced by an `Accepted` line of the same height;
+- **file** — a file glyph, the name, its `MP4 · 14 MB` meta line and a circular
+  download action.
+
+Clicking anywhere else on a row marks it read. Mark all read clears every dot,
+not only the rows the selected tab shows, and the three tabs filter on the flags
+the application already owns.

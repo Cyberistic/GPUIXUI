@@ -43,6 +43,8 @@ blocks/forgot-password.mdx   A centered reset card: one email field, the sent no
 blocks/otp.mdx               A one-time-code card: six cells, verify, the resend countdown
 blocks/settings.mdx          A settings page with tabbed sections
 blocks/dashboard.mdx         An activity dashboard composed from the library
+blocks/notification-centre.mdx A notification centre: filters, four row bodies, unread dots
+blocks/command-centre.mdx    A command palette over a dimmed page: filter, highlight, run line
 components/index.mdx         The filterable component index
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
@@ -230,10 +232,12 @@ src/components/docs/patterns.tsx          The pattern workflows and the chooser
 src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
 src/components/docs/token-list.tsx       A contract's roles or surfaces, rendered from the package's array
 src/components/docs/block-index.tsx       The Blocks index
-src/components/docs/blocks.tsx            The Login, Settings and Dashboard recipes
+src/components/docs/blocks.tsx            The block registry: login, settings, dashboard and the new recipes
 src/components/docs/block-preview.tsx     A block's browser rendering
 src/components/docs/auth-blocks.tsx       The auth blocks' browser reproductions and recipes
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
+src/components/docs/notification-centre.tsx The notification centre's rows, filters and mark-read state
+src/components/docs/command-centre.tsx    The command centre's matcher, highlight and run line
 src/components/docs/live-surface.tsx      Boots the wasm renderer on /live and reports what it painted
 src/components/docs/theme-editor.tsx      The live token editor on /docs/themes
 src/components/docs/theme-editor-logic.ts Its pure core: edits, audit, copy output

@@ -1048,6 +1048,576 @@
   }
 }
 
+/* ---- notification centre ----
+   A panel 420–480px wide: a header, three filter tabs and grouped rows. Every
+   state a reader can reach moves paint and no box: the unread dot reserves its
+   column and turns from transparent to the success role, an accepted invite
+   swaps its two actions for text of the same height, and a hover wash sits on
+   the row that already has its radius. */
+.gx-notif {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+}
+
+.gx-notif-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(460px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 8px);
+  background: var(--card);
+  text-align: left;
+}
+
+.gx-notif-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 14px 10px 18px;
+}
+
+.gx-notif-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+
+.gx-notif-head-actions {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.gx-notif-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-size);
+  height: var(--target-size);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-notif-icon:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-notif-icon:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-notif-tabs {
+  padding: 0 12px;
+}
+
+.gx-notif-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-notif-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  background: var(--secondary);
+  font-size: 10.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+.gx-notif-list {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px 10px;
+}
+
+.gx-notif-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.gx-notif-sep {
+  height: 0;
+  margin: 6px 10px;
+  border: 0;
+  border-top: 1px dashed var(--border);
+}
+
+.gx-notif-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto auto;
+  align-items: start;
+  gap: 3px 10px;
+  padding: 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.gx-notif-row:hover {
+  background: var(--hover);
+}
+
+.gx-notif-avatar {
+  display: grid;
+  grid-row: 1;
+  grid-column: 1;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--secondary);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--foreground);
+}
+
+.gx-notif-hit {
+  display: flex;
+  grid-row: 1;
+  grid-column: 2;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-notif-hit:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.gx-notif-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 4px;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.gx-notif-name {
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.gx-notif-action {
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+
+.gx-notif-time {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--placeholder);
+}
+
+.gx-notif-ago {
+  grid-row: 1;
+  grid-column: 3;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--placeholder);
+}
+
+.gx-notif-dot {
+  grid-row: 1;
+  grid-column: 4;
+  width: 7px;
+  height: 7px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.gx-notif-row[data-unread="true"] .gx-notif-dot {
+  background: var(--success);
+}
+
+.gx-notif-body {
+  grid-row: 2;
+  grid-column: 2 / -1;
+  min-width: 0;
+}
+
+.gx-notif-quote {
+  margin-top: 7px;
+  padding: 9px 11px;
+  border-radius: calc(var(--radius) + 1px);
+  background: var(--muted);
+}
+
+.gx-notif-quote p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.gx-notif-quote p + p {
+  margin-top: 2px;
+}
+
+.gx-notif-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 7px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 1px);
+  background: var(--muted);
+}
+
+.gx-notif-file-glyph {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: calc(var(--radius) + 1px);
+  background: var(--secondary);
+  color: var(--foreground);
+}
+
+.gx-notif-file-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.gx-notif-file-name {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--foreground);
+}
+
+.gx-notif-file-meta {
+  font-size: 10.5px;
+  color: var(--placeholder);
+}
+
+.gx-notif-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.gx-notif-download:hover {
+  background: var(--hover);
+  border-color: var(--border-strong);
+}
+
+.gx-notif-download:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* The actions row and the accepted line share one height, so accepting is a
+   paint swap and not a row that grows. */
+.gx-notif-invite {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--control-height-sm);
+  margin-top: 7px;
+}
+
+.gx-notif-accepted {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-height-sm);
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--success-soft-foreground);
+}
+
+/* ---- command centre ----
+   A modal over a dimmed page: a chip, a filter field with a caret line, six
+   keyed rows and a footer the run line appears in. The highlight is the accent
+   wash plus a 2px inset bar, so moving it never widens a row. The list keeps a
+   fixed height, so a query that matches one row does not resize the panel. */
+.gx-cmd-scene {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  min-height: 420px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 8px);
+  background: var(--background);
+  text-align: left;
+}
+
+.gx-cmd-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 420px;
+  padding: 20px 22px;
+  background: var(--background);
+  filter: blur(0.6px);
+}
+
+.gx-cmd-page-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 22px;
+}
+
+.gx-cmd-page-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+.gx-cmd-page-line {
+  display: block;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--border-strong);
+}
+
+.gx-cmd-page-line[data-span="tiny"] {
+  width: 12%;
+}
+
+.gx-cmd-page-line[data-span="short"] {
+  width: 26%;
+}
+
+.gx-cmd-page-line[data-span="medium"] {
+  width: 44%;
+}
+
+.gx-cmd-page-line[data-span="long"] {
+  width: 72%;
+}
+
+.gx-cmd-page-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-cmd-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--overlay);
+  backdrop-filter: blur(3px);
+}
+
+.gx-cmd-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 8px);
+  background: var(--popover);
+  box-shadow: 0 24px 60px var(--shadow);
+}
+
+.gx-cmd-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 0;
+}
+
+.gx-cmd-chip {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  background: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted-foreground);
+}
+
+.gx-cmd-field {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin: 10px 14px 0;
+  padding: 0 2px;
+  height: 34px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-cmd-caret {
+  flex: none;
+  width: 2px;
+  height: 17px;
+  border-radius: 1px;
+  background: var(--primary);
+}
+
+.gx-cmd-caret[data-visible="false"] {
+  visibility: hidden;
+}
+
+.gx-cmd-copy {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.gx-cmd-ghost {
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: var(--placeholder);
+  pointer-events: none;
+}
+
+.gx-cmd-input {
+  width: 100%;
+  height: 30px;
+  padding: 0 3px;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.gx-cmd-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 222px;
+  padding: 10px;
+}
+
+.gx-cmd-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-cmd-row:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-cmd-row[data-highlighted="true"] {
+  background: var(--accent);
+  box-shadow: inset 2px 0 0 var(--primary);
+  color: var(--accent-foreground);
+}
+
+.gx-cmd-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-cmd-icon {
+  display: inline-flex;
+  flex: none;
+  color: currentColor;
+}
+
+.gx-cmd-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-cmd-keys {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.gx-cmd-empty {
+  margin: 0;
+  padding: 8px;
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-cmd-foot {
+  min-height: 30px;
+  margin: 0;
+  padding: 6px 18px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
 /* ---- index cards ---- */
 
 .gx-block-index {
