@@ -6,7 +6,10 @@
  * The last suite guards the totality the package promises for a timeline a
  * caller **built by hand**: a frame or a step whose offset, value or duration
  * cannot be read must be repaired rather than reach the formulas, because a
- * `NaN` there painted nothing and left a driver sampling forever.
+ * `NaN` there painted nothing and left a driver sampling forever. It reads the
+ * sequence's own arithmetic too: an end its sum cannot represent made
+ * `complete()` false forever (and `append` land before the steps it follows),
+ * and an offset that overflows put a staggered member before its group.
  */
 import { describe, expect, it } from "vitest";
 import { anticipate, easeOut, type Easing } from "./easing.js";
@@ -267,6 +270,58 @@ describe("a timeline built by hand", () => {
     expect(sequence.complete(100)).toBe(true);
     expect(sequence.sample(99)[0]?.state).toBe("pending");
     expect(sequence.sample(100)[0]?.state).toBe("completed");
+  });
+
+  it("ends on a number the clock can reach", () => {
+    // The bug this guards: a step's end is its start plus its duration, and two
+    // readable numbers can add to an `Infinity` no clock reaches. `duration()`
+    // was infinite, so `complete()` never answered true — a driver sampled the
+    // sequence for the life of the tree — and the step's own sample said it was
+    // still running at a moment the end time denied. An end the arithmetic
+    // cannot represent is no duration at all.
+    const sequence = new Sequence<string>().at("a", 1e308, 1e308);
+    expect(sequence.duration()).toBe(1e308);
+    expect(sequence.complete(1e308)).toBe(true);
+    expect(sequence.sample(1e308)[0]?.state).toBe("completed");
+  });
+
+  it("appends after a step rather than before it when its end overflows", () => {
+    // `append` places the next step at `duration()`; an infinite end reached
+    // `at` as an unreadable start, which it repaired to `0`, so the appended
+    // step landed before every step it was meant to follow.
+    const sequence = new Sequence<string>()
+      .at("a", 1e308, 1e308)
+      .append("b", 10);
+
+    expect(sequence.duration()).toBe(1e308);
+    // `b` waits behind `a`; it used to be running from the first sample.
+    expect(sequence.sample(0).map((step) => step.state)).toEqual([
+      "pending",
+      "pending",
+    ]);
+    expect(sequence.sample(1e308).map((step) => step.state)).toEqual([
+      "completed",
+      "completed",
+    ]);
+  });
+
+  it("keeps a group at its own start when an offset overflows", () => {
+    // The group's delay is a step times a distance, and a member is placed at
+    // the group's start plus that wait. Both products and sums can be numbers the
+    // clock cannot show; an offset the arithmetic cannot represent put the member
+    // at `0` — before the group — instead of at the group's start, where every
+    // wait it cannot sit out already leaves it.
+    expect(stagger(1e308, 2, 3)).toBe(0);
+
+    const group = new Sequence<string>().stagger(["a", "b"], 1e308, 1e308, 5);
+    expect(group.sample(0).map((member) => member.state)).toEqual([
+      "pending",
+      "pending",
+    ]);
+    expect(group.sample(1e308).map((member) => member.state)).toEqual([
+      "completed",
+      "completed",
+    ]);
   });
 
   it("reads a group's end from the steps it still has to run", () => {

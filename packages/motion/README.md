@@ -271,15 +271,22 @@ offset are an instant jump, so the value declared last at it holds from that
 offset on, a `Sequence` step whose start cannot be read is placed at `0`, and a
 duration it cannot run is no duration at all — the step is completed on the
 first sample, and the sequence's own end never lands before a step it still has
-to run. A stagger step that is non-finite or negative is no wait, and both
-stagger entry points answer it the same way: the standalone `stagger()` and the
-`Sequence`'s own group, whose members then all sit at the group's start rather
-than one of them starting before the sequence does. An `index` or `count` the
-standalone helper cannot read is no wait as well, so a failed position or length
-never becomes a `NaN` or infinite delay. A direction the package does not name is
-the house `start`, not the centre: the distance arithmetic used to end in a
-`center` arm, so a persisted `"middle"` staggered a group from its middle instead
-of the documented default.
+to run. An end the arithmetic cannot represent is no duration either: two
+readable numbers can add to an `Infinity` no clock reaches, which made
+`duration()` infinite — so `complete()` never answered true — and `append` place
+the next step at `0`, before the steps it was meant to follow; a duration the
+start cannot move off (a huge start beside a small step) is read the same way,
+so the step's own sample and `complete` agree on one clock. A stagger step that
+is non-finite or negative is no wait — and so is a step times a distance the
+arithmetic cannot represent — and both stagger entry points answer it the same
+way: the standalone `stagger()` and the `Sequence`'s own group, whose members
+then all sit at the group's start rather than one of them starting before the
+sequence does — including a member whose start plus wait overflows. An `index`
+or `count` the standalone helper cannot read is no wait as well, so a failed
+position or length never becomes a `NaN` or infinite delay. A direction the
+package does not name is the house `start`, not the centre: the distance
+arithmetic used to end in a `center` arm, so a persisted `"middle"` staggered a
+group from its middle instead of the documented default.
 
 An easing curve is the caller's own function, so it gets the same rule. The
 shipped curves read a progress they cannot read as the start of the run (`NaN`

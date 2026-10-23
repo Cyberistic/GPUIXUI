@@ -15,7 +15,9 @@
  * `progress.ts`). A `NaN` anywhere used to paint a frame the runtime draws as
  * nothing and leave `Sequence.complete` false forever. The sequence's own end
  * follows the same rule: a step whose duration it cannot run ends at its start,
- * so the end is never before a step the sequence still has to run.
+ * and a step whose end the arithmetic cannot represent is no duration either, so
+ * the end is never before a step the sequence still has to run and is always a
+ * number a clock can reach.
  */
 
 import { linear, type Easing } from "./easing.js";
@@ -36,6 +38,41 @@ const finiteOr = (value: number, fallback: number): number =>
  */
 const durationOf = (durationMs: number): number =>
   Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0;
+
+/**
+ * The duration a step can run from `startMs`.
+ *
+ * The sequence's end is read from each step's start **plus** its duration, and
+ * two readable numbers can add to an `Infinity` no clock reaches: a step placed
+ * at `1e308` running for `1e308` answered `duration()` `Infinity`, so
+ * `complete()` never returned true — a driver sampled it for the life of the
+ * tree, the class the `NaN` clock and the negative duration above already close
+ * — and `append` placed the next step at that end, which `at` repaired from an
+ * infinity to `0`: the appended step landed before every step it was meant to
+ * follow. A duration the start cannot move off is the same failure in miniature:
+ * `1e308 + 5` rounds back to `1e308`, so the step's own sample was still active
+ * at the moment `complete` called the sequence ended. An end the arithmetic
+ * cannot represent is therefore no duration at all, so the step completes at its
+ * start and the two entry points agree on a number the clock can reach.
+ */
+const endOf = (startMs: number, durationMs: number): number => {
+  const duration = durationOf(durationMs);
+  const end = startMs + duration;
+  return Number.isFinite(end) && end > startMs ? duration : 0;
+};
+
+/**
+ * A step's place: the group's start plus a wait it can sit out.
+ *
+ * A wait the sum cannot represent is no wait, which is the rule
+ * {@link staggerDelay} applies to the product it computes: the member sits at
+ * the group's start, where a repaired-to-`0` start would put it before the
+ * sequence does.
+ */
+const placedAt = (startMs: number, waitMs: number): number => {
+  const placed = startMs + waitMs;
+  return Number.isFinite(placed) ? placed : startMs;
+};
 
 /** One timed target at a normalized offset in `[0, 1]`. */
 export interface Keyframe {
@@ -149,10 +186,11 @@ const staggerFromOf = (from: StaggerFrom): StaggerFrom =>
  * The delay (ms) the `index`-th of `count` children waits under `from`.
  *
  * A step that is not a wait is no wait: a non-finite one is unreadable and a
- * negative one is no delay at all. The same holds for the `index` and `count` a
- * caller passes — a position or a length it could not compute is no wait rather
- * than a `NaN`/infinite delay reached the runtime. This is the one rule both
- * stagger entry points share — the standalone {@link stagger} and the
+ * negative one is no delay at all, and a step times a distance the arithmetic
+ * cannot represent is no wait either. The same holds for the `index` and
+ * `count` a caller passes — a position or a length it could not compute is no
+ * wait rather than a `NaN`/infinite delay reached the runtime. This is the one
+ * rule both stagger entry points share — the standalone {@link stagger} and the
  * {@link Sequence}'s own group — so a caller cannot get two answers for the same
  * input.
  */
@@ -171,13 +209,16 @@ const staggerDelay = (
       : direction === "end"
         ? count - 1 - index
         : Math.abs(index - (count - 1) / 2);
-  return (Number.isFinite(stepMs) && stepMs > 0 ? stepMs : 0) * distance;
+  const step = Number.isFinite(stepMs) && stepMs > 0 ? stepMs : 0;
+  const delay = step * distance;
+  return Number.isFinite(delay) ? delay : 0;
 };
 
 /**
  * The delay (ms) for the `index`-th of `count` children under `from`. Returns
  * `0` for an out-of-range index or empty group, and for a step that is not a
- * wait: a non-finite one is unreadable and a negative one is no delay at all. An
+ * wait: a non-finite one is unreadable, a negative one is no delay at all, and
+ * a step times a distance the arithmetic cannot represent is no wait either. An
  * `index` or `count` that cannot be read is no wait too, so a caller's failed
  * measurement never reaches the runtime as a `NaN` or infinite delay. A `from`
  * the package does not name is the house default (`"start"`), not the centre.
@@ -233,8 +274,10 @@ export class Sequence<K> {
    * A start that cannot be read is repaired to `0`: a `NaN` start used to leave
    * the step permanently active at `NaN` and a `NaN` duration made
    * `duration()`/`complete()` `NaN`, so a driver loop never stopped. A duration
-   * the step cannot run is no duration at all, so the sequence's end is never
-   * before a step it still has to run.
+   * the step cannot run is no duration at all, and neither is one whose **end**
+   * the arithmetic cannot represent ({@link endOf}), so the sequence's end is
+   * never before a step it still has to run and is always a number a clock can
+   * reach.
    */
   at(
     key: K,
@@ -242,10 +285,11 @@ export class Sequence<K> {
     durationMs: number,
     easing: Easing = linear,
   ): this {
+    const start = finiteOr(startMs, 0);
     this.steps.push({
       key,
-      startMs: finiteOr(startMs, 0),
-      durationMs: durationOf(durationMs),
+      startMs: start,
+      durationMs: endOf(start, durationMs),
       easing,
     });
     return this;
@@ -265,6 +309,8 @@ export class Sequence<K> {
    * `startMs + stepMs * index` directly, which put a member *before* the
    * group for a negative step (already running when the sequence began) and
    * collapsed the whole group to the start of the clock for an unreadable one.
+   * An offset the sum cannot represent is no wait either ({@link placedAt}), so
+   * a member never lands at `0` before the group it belongs to.
    */
   stagger(
     keys: readonly K[],
@@ -273,11 +319,12 @@ export class Sequence<K> {
     durationMs: number,
     easing: Easing = linear,
   ): this {
+    const start = finiteOr(startMs, 0);
     const count = keys.length;
     keys.forEach((key, index) => {
       this.at(
         key,
-        startMs + staggerDelay(stepMs, index, count, "start"),
+        placedAt(start, staggerDelay(stepMs, index, count, "start")),
         durationMs,
         easing,
       );
@@ -285,7 +332,13 @@ export class Sequence<K> {
     return this;
   }
 
-  /** The sequence end time. */
+  /**
+   * The sequence end time — always a number a clock can reach.
+   *
+   * `at` repairs each step's duration so its end is representable
+   * ({@link endOf}), which is what keeps this sum finite: an end of `Infinity`
+   * made `complete` false forever and `append` land at the sequence's start.
+   */
   duration(): number {
     return this.steps.reduce(
       (max, step) => Math.max(max, step.startMs + step.durationMs),
