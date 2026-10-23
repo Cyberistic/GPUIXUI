@@ -1285,11 +1285,11 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       not a step`, and the doubled map differs in two keys); with the fix the
       tokens suite is 45 files / 2 530 tests, `check-types` clean. Docs in
       `docs/tokens.md` §Native text hosts/§The document host/§Limitations, the
-      package README and the `Native text hosts` row. The live `document-type`
-      probe re-run is the playground's: it reads glyph ink bands and a strip wash
-      sample, neither of which a 1–2px pad moves, but `apps/playground`'s build is
-      red on the motion workstream's `src/react.ts` unused imports, so it could
-      not be rebuilt here (TODO → Interlocks).
+      package README and the `Native text hosts` row. The window agrees: the
+      playground's `document-type` probe (which reads glyph ink bands and a strip
+      wash sample, neither moved by a 1–2px pad) is green with the change —
+      `--only document-type`, 1/1 in 2 385ms — and `packages/primitives`' 987
+      tests stay green.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
@@ -7212,7 +7212,39 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 204/204
+`[x]` `[██████████]` 205/205
+
+`[x]` Let a reader see a component in **both palettes** — the site's switch
+offered four platforms and no way to compare the library's light theme: every
+preview resolved `previewMode` (`"dark"`), so a reader checking the light palette
+of a Button, a Table or a Dialog had only the theme editor, and MISSION's "verify
+every component in both themes" had no reader-facing surface. The switch gains a
+**Palette** group beside **Platform** (Dark · Light, dark first because it is the
+library's identity): `mode` is a third axis of `platform.ts` (`?mode=`, parsed and
+written beside `?platform=` and `?look=`), remembered in `platform-storage.ts`
+(an older store with no mode key opens on `previewMode`), and resolved by the
+provider into `resolvePlatformTheme(platform, mode, look)`, so every preview
+repaints through the same CSS bridge and `PreviewSurface` stamps `data-mode` so
+the scene's `color-scheme` follows it (a light preview is not framed by dark
+scrollbars). `/docs/theming` gains **The palette parameter** (both values, the
+memory, the shared bridge) and `docs/preview-strategy.md` the rule. Verified on
+the served build: `?mode=light` paints every surface `data-mode="light"` with
+`--background:#F2F2F7` where the default paints `#1C1C1E`, and the click path is
+measured in a hydrated browser — `apps/docs/scripts/palette-switch-probe.ts`
+presses Light then Dark on the Button page and holds every surface's
+`data-mode`/`--background` to `platformTheme(themes[mode], platform)` (3 of 3
+surfaces, `#F6F8FA` light / `#11141A` dark on Default, exit `0`; negative control
+`?mode=light` fails `a preview opened in light, not dark`, exit `1`).
+Directions measured: resolving `previewMode` in the provider fails
+`reads the palette from the switch`; dropping `data-mode` fails the same case and
+the scene-chrome case; removing the light `color-scheme` rule fails
+`follows the palette a surface carries`; a page that stops naming `?mode=light`
+fails the page case (`expected [ 'light' ] to deeply equal []`); a literal hex in
+the probe fails `carries no colour of its own`. `nub run --filter @gpuixui/docs
+test` is 1121 passed with only the two foreign failures recorded in Interlocks
+(the editor pages' six cross-links and the two dock pages with no limitations
+section); `check-types` and `build` are clean. No native scenario applies — the
+docs site is a browser app, so the probe above is its runtime check.
 
 `[x]` Keep the **Color picker page's printed count** with its suite — the
 components workstream landed `fb45954b` (`refuse a disabled color picker's hex
