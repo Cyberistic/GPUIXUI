@@ -84,8 +84,8 @@ const useToastTiming = (): SurfaceTiming => {
  * runtime tweens `top` between the fanned and unfanned frames.
  */
 const toastFrames = (fanLift: number): SurfaceFrames => ({
-  initial: { opacity: 0, top: 16 },
-  animate: { opacity: 1, top: -fanLift },
+  initial: { opacity: 0, top: 16, left: 0 },
+  animate: { opacity: 1, top: -fanLift, left: 0 },
   exit: { opacity: 0, top: -fanLift, left: 16 },
 });
 

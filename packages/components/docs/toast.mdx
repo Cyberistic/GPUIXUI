@@ -52,6 +52,18 @@ calculation that never arrived, or an `Infinity` — reads as the default 3, and
 finite count below one keeps one card. An unbounded queue would retain a card
 and its auto-dismiss timer for every toast ever pushed.
 
+## Motion
+
+The stack moves on its own timing, not a shared level: a card rises 16px into
+place (220 ms) and leaves by fading while it slides 16px to the right (180 ms).
+A dismissed card stays painted for that exit, so the card keeps the content it
+was dismissed with.
+
+Hovering any card fans the stack — each card that is not the newest lifts 8px,
+widening the gap — and holds every auto-dismiss clock; leaving the stack resumes
+each with the time it had left. `MotionProvider preference="reduced"` removes
+the travel and paints the resting frame at once.
+
 ## Limitations
 
 - No `aria-live` or `aria-atomic`; a status region is the announcement.

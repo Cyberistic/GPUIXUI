@@ -59,6 +59,7 @@ import {
   boundsOf,
   clickCentreOf,
   focusedTestId,
+  hoverCentreOf,
   settle,
   settleMotion,
   waitFor,
@@ -628,6 +629,34 @@ describe("a tab pill", () => {
   });
 });
 
+/** Two cards from one press, so a hover can fan a real stack. */
+const FanPage = () => {
+  const toast = useToast();
+  return (
+    <Page>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: 600,
+          height: 500,
+        }}
+      >
+        <Button
+          testId="push-two"
+          onClick={() => {
+            toast.push({ title: "First" });
+            toast.push({ title: "Second" });
+          }}
+        >
+          Push two
+        </Button>
+        <ToastViewport />
+      </div>
+    </Page>
+  );
+};
+
 /** A page that pushes one stays-put toast, so a dismissal can be observed. */
 const ToastPage = () => {
   const toast = useToast();
@@ -644,27 +673,86 @@ const ToastPage = () => {
 };
 
 describe("a notice", () => {
-  it("slides in from the edge and stays painted while it leaves", async () => {
+  it("rises into the stack and slides away to its right edge", async () => {
+    // The toast moves on its own timing (`motionTimingOf`), not a shared level:
+    // it arrives from 16 px below its slot on a 220 ms `top` travel and leaves
+    // by fading while it slides 16 px to the right on a 180 ms `left` one. Both
+    // halves are measured on the painted box, because the fade itself is a paint
+    // value the native tree does not report (`surface-fade` proves it in a
+    // window). The bug this guards: a suite that asserts the direction the card
+    // no longer travels — the toast was rewritten to sonner's look and this case
+    // still read an `x` entry offset, so it failed at rest and then reported
+    // every later case in the file as a leaked root.
     const page = renderComponent(
       <ToastProvider>
         <ToastPage />
       </ToastProvider>,
     );
-    page.renderer.clockPause();
-    clickCentreOf(page, "push");
-    await delay();
-    const entering = where(page.renderer, "toast-1", "x");
-    page.renderer.clockFastForward(700);
-    await delay();
-    const resting = where(page.renderer, "toast-1", "x");
-    // The stack is anchored to the right edge, so the card starts right of it.
-    expect(entering - resting).toBe(16);
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "push");
+      await delay();
+      const entering = where(page.renderer, "toast-1", "y");
+      page.renderer.clockFastForward(700);
+      await delay();
+      const resting = where(page.renderer, "toast-1", "y");
+      // The card starts a rise below the slot it settles in.
+      expect(entering - resting).toBe(16);
+      const restX = where(page.renderer, "toast-1", "x");
 
-    clickCentreOf(page, "toast-dismiss");
-    await delay();
-    expect(painted(page.renderer, "toast-1")).toBe(true);
-    await waitFor(() => expect(painted(page.renderer, "toast-1")).toBe(false));
-    page.unmount();
+      clickCentreOf(page, "toast-dismiss");
+      await delay();
+      expect(painted(page.renderer, "toast-1")).toBe(true);
+      page.renderer.clockFastForward(90);
+      await delay();
+      // Half of the exit: the ghost has moved right, and not yet the whole 16 px.
+      const leavingX = where(page.renderer, "toast-1", "x");
+      expect(leavingX).toBeGreaterThan(restX);
+      expect(leavingX).toBeLessThan(restX + 16);
+
+      await waitFor(() =>
+        expect(painted(page.renderer, "toast-1")).toBe(false),
+      );
+    } finally {
+      page.renderer.clockResume();
+      page.unmount();
+    }
+  });
+
+  it("fans the older cards while the pointer rests on the stack", async () => {
+    // The bug this guards: every card painted at one spacing, so the reader
+    // could not see which stack a hover would hold. Hovering lifts each card
+    // that is not the newest by one step, and leaving puts the stack back.
+    const page = renderComponent(
+      <ToastProvider>
+        <FanPage />
+      </ToastProvider>,
+    );
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "push-two");
+      await waitFor(() => expect(painted(page.renderer, "toast-2")).toBe(true));
+      page.renderer.clockFastForward(700);
+      await delay();
+      const older = where(page.renderer, "toast-1", "y");
+      const newest = where(page.renderer, "toast-2", "y");
+
+      hoverCentreOf(page, "toast-2");
+      page.renderer.clockFastForward(400);
+      await delay();
+      // The older card rises one step; the newest stays where it arrived.
+      expect(where(page.renderer, "toast-1", "y")).toBe(older - 8);
+      expect(where(page.renderer, "toast-2", "y")).toBe(newest);
+
+      hoverCentreOf(page, "push-two");
+      page.renderer.clockFastForward(400);
+      await delay();
+      expect(where(page.renderer, "toast-1", "y")).toBe(older);
+      expect(where(page.renderer, "toast-2", "y")).toBe(newest);
+    } finally {
+      page.renderer.clockResume();
+      page.unmount();
+    }
   });
 });
 
@@ -690,14 +778,18 @@ const ControlledDialog = () => {
 describe("the command palette", () => {
   it("inherits the dialog's entry motion", async () => {
     const page = renderComponent(<ControlledDialog />);
-    page.renderer.clockPause();
-    clickCentreOf(page, "open");
-    await delay();
-    const entering = where(page.renderer, "palette", "y");
-    page.renderer.clockFastForward(400);
-    await delay();
-    expect(entering - where(page.renderer, "palette", "y")).toBe(8);
-    page.unmount();
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "open");
+      await delay();
+      const entering = where(page.renderer, "palette", "y");
+      page.renderer.clockFastForward(400);
+      await delay();
+      expect(entering - where(page.renderer, "palette", "y")).toBe(8);
+    } finally {
+      page.renderer.clockResume();
+      page.unmount();
+    }
   });
 });
 
@@ -756,21 +848,25 @@ describe("the preference", () => {
     // on every render, so the in-flight run's duration becomes zero and the
     // resting frame is what is left — the journey does not finish.
     const page = renderComponent(<PreferencePage reduced={false} />);
-    page.renderer.clockPause();
-    clickCentreOf(page, "open");
-    await delay();
-    const entering = where(page.renderer, "dialog", "y");
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "open");
+      await delay();
+      const entering = where(page.renderer, "dialog", "y");
 
-    page.rerender(<PreferencePage reduced />);
-    await delay();
-    const settled = where(page.renderer, "dialog", "y");
-    // Nothing is left to run: the frozen clock has not moved the surface since.
-    expect(entering - settled).toBe(8);
+      page.rerender(<PreferencePage reduced />);
+      await delay();
+      const settled = where(page.renderer, "dialog", "y");
+      // Nothing is left to run: the frozen clock has not moved the surface since.
+      expect(entering - settled).toBe(8);
 
-    page.renderer.clockFastForward(400);
-    await delay();
-    expect(where(page.renderer, "dialog", "y")).toBe(settled);
-    page.unmount();
+      page.renderer.clockFastForward(400);
+      await delay();
+      expect(where(page.renderer, "dialog", "y")).toBe(settled);
+    } finally {
+      page.renderer.clockResume();
+      page.unmount();
+    }
   });
 
   it("paints a section at its measured height on the first frame", async () => {
@@ -789,44 +885,52 @@ describe("the preference", () => {
         </Accordion>
       </Page>,
     );
-    page.renderer.clockPause();
-    clickCentreOf(page, "trigger");
-    settle(page);
-    await delay();
-    const first = heightOf(page.renderer, "body");
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "trigger");
+      settle(page);
+      await delay();
+      const first = heightOf(page.renderer, "body");
 
-    page.renderer.clockFastForward(400);
-    settle(page);
-    await delay();
-    expect(first).toBeGreaterThan(0);
-    expect(heightOf(page.renderer, "body")).toBe(first);
-    page.unmount();
+      page.renderer.clockFastForward(400);
+      settle(page);
+      await delay();
+      expect(first).toBeGreaterThan(0);
+      expect(heightOf(page.renderer, "body")).toBe(first);
+    } finally {
+      page.renderer.clockResume();
+      page.unmount();
+    }
   });
 
   it("removes a dismissed notice at once when the setting turns on", async () => {
-    // A dismissed card is kept painted for its `notice` window (500 ms) so its
-    // exit can run. A reader who turns Reduce Motion on while it leaves asked
-    // not to watch that journey: the stack rescales the window it already
-    // scheduled instead of finishing it.
+    // A dismissed card is kept painted for its exit window (180 ms, the toast's
+    // own `left` travel) so that leave can run. A reader who turns Reduce Motion
+    // on while it leaves asked not to watch that journey: the stack rescales the
+    // window it already scheduled instead of finishing it.
     const page = renderComponent(<PreferenceToast reduced={false} />);
-    page.renderer.clockPause();
-    clickCentreOf(page, "push-notice");
-    await waitFor(() => expect(painted(page.renderer, "toast-1")).toBe(true));
-    // Let the card land, so its dismiss control is where the pointer is.
-    page.renderer.clockFastForward(700);
-    settle(page);
-    await delay();
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "push-notice");
+      await waitFor(() => expect(painted(page.renderer, "toast-1")).toBe(true));
+      // Let the card land, so its dismiss control is where the pointer is.
+      page.renderer.clockFastForward(700);
+      settle(page);
+      await delay();
 
-    clickCentreOf(page, "toast-dismiss");
-    await delay();
-    expect(painted(page.renderer, "toast-1")).toBe(true);
+      clickCentreOf(page, "toast-dismiss");
+      await delay();
+      expect(painted(page.renderer, "toast-1")).toBe(true);
 
-    page.rerender(<PreferenceToast reduced />);
-    await delay();
-    await delay();
-    // Well inside the 500 ms the animated window would still be running.
-    expect(painted(page.renderer, "toast-1")).toBe(false);
-    page.unmount();
+      page.rerender(<PreferenceToast reduced />);
+      await delay();
+      await delay();
+      // Well inside the 180 ms the animated window would still be running.
+      expect(painted(page.renderer, "toast-1")).toBe(false);
+    } finally {
+      page.renderer.clockResume();
+      page.unmount();
+    }
   });
 
   it("removes a panel at once when the setting turns on while it leaves", async () => {
@@ -837,19 +941,22 @@ describe("the preference", () => {
     // one. The bug this guards: a window read once at the start of the leave,
     // which would keep the panel on screen for the journey the reader removed.
     const page = renderComponent(<PreferencePage reduced={false} />);
-    clickCentreOf(page, "open");
-    await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(true));
-    await delay();
-    page.renderer.simulateKeystrokes("escape");
-    await delay();
-    expect(painted(page.renderer, "dialog")).toBe(true);
+    try {
+      clickCentreOf(page, "open");
+      await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(true));
+      await delay();
+      page.renderer.simulateKeystrokes("escape");
+      await delay();
+      expect(painted(page.renderer, "dialog")).toBe(true);
 
-    page.rerender(<PreferencePage reduced />);
-    await delay();
-    await delay();
-    // Well inside the 320 ms the animated window would still be running.
-    expect(painted(page.renderer, "dialog")).toBe(false);
-    page.unmount();
+      page.rerender(<PreferencePage reduced />);
+      await delay();
+      await delay();
+      // Well inside the 320 ms the animated window would still be running.
+      expect(painted(page.renderer, "dialog")).toBe(false);
+    } finally {
+      page.unmount();
+    }
   });
 });
 
@@ -1162,30 +1269,33 @@ describe("a control inside a leaving surface", () => {
         </div>
       </Page>,
     );
-    clickCentreOf(page, "open");
-    await waitFor(() => expect(painted(page.renderer, "menu")).toBe(true));
-    const ghost = Option.getOrElse(boundsOf(page, "ghost"), () => {
-      throw new Error("behaviour: the row painted no box");
-    });
+    try {
+      clickCentreOf(page, "open");
+      await waitFor(() => expect(painted(page.renderer, "menu")).toBe(true));
+      const ghost = Option.getOrElse(boundsOf(page, "ghost"), () => {
+        throw new Error("behaviour: the row painted no box");
+      });
 
-    page.renderer.simulateKeystrokes("escape");
-    await delay();
-    expect(painted(page.renderer, "menu")).toBe(true);
-    expect(page.renderer.findByTestId("menu")?.style.pointerEvents).toBe(
-      "none",
-    );
+      page.renderer.simulateKeystrokes("escape");
+      await delay();
+      expect(painted(page.renderer, "menu")).toBe(true);
+      expect(page.renderer.findByTestId("menu")?.style.pointerEvents).toBe(
+        "none",
+      );
 
-    page.renderer.nativeSimulateClick(
-      ghost.x + ghost.width / 2,
-      ghost.y + ghost.height / 2,
-    );
-    // The row the reader can still see is a ghost: its host has left the hit
-    // test, so the press never reaches its action.
-    expect(ghostPress).not.toHaveBeenCalled();
-    expect(behindPress).not.toHaveBeenCalled();
+      page.renderer.nativeSimulateClick(
+        ghost.x + ghost.width / 2,
+        ghost.y + ghost.height / 2,
+      );
+      // The row the reader can still see is a ghost: its host has left the hit
+      // test, so the press never reaches its action.
+      expect(ghostPress).not.toHaveBeenCalled();
+      expect(behindPress).not.toHaveBeenCalled();
 
-    await waitFor(() => expect(painted(page.renderer, "menu")).toBe(false));
-    page.unmount();
+      await waitFor(() => expect(painted(page.renderer, "menu")).toBe(false));
+    } finally {
+      page.unmount();
+    }
   });
 });
 
@@ -1276,17 +1386,20 @@ describe("the seam's mount window", () => {
    */
   it("re-times a leave when the window changes, not only its duration", async () => {
     const page = renderComponent(<WindowProbe open waitMs={0} />);
-    await delay();
-    page.rerender(<WindowProbe open={false} waitMs={0} />);
-    await delay();
-    // Same 50 ms duration, a 200 ms longer window.
-    page.rerender(<WindowProbe open={false} waitMs={200} />);
-    await new Promise((resolve) => setTimeout(resolve, 120));
-    // The 50 ms window has passed; the re-timed one has not.
-    expect(painted(page.renderer, "seam-window")).toBe(true);
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    // The longer window still ends, so the timer was re-armed rather than lost.
-    expect(painted(page.renderer, "seam-window")).toBe(false);
-    page.unmount();
+    try {
+      await delay();
+      page.rerender(<WindowProbe open={false} waitMs={0} />);
+      await delay();
+      // Same 50 ms duration, a 200 ms longer window.
+      page.rerender(<WindowProbe open={false} waitMs={200} />);
+      await new Promise((resolve) => setTimeout(resolve, 120));
+      // The 50 ms window has passed; the re-timed one has not.
+      expect(painted(page.renderer, "seam-window")).toBe(true);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      // The longer window still ends, so the timer was re-armed rather than lost.
+      expect(painted(page.renderer, "seam-window")).toBe(false);
+    } finally {
+      page.unmount();
+    }
   });
 });
