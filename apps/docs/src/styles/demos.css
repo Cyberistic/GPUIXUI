@@ -10885,3 +10885,402 @@
   font-size: 12px;
   color: var(--muted-foreground);
 }
+
+/* ---- editor: the token layer under a textarea, a unified and split diff, the
+   markdown split and the find bar. The arithmetic is imported from
+   `@gpuixui/editor`'s logic subpaths; only the paint is the browser's. ---- */
+.gx-codeedit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(560px, 100%);
+}
+
+.gx-codeedit-frame {
+  display: flex;
+  position: relative;
+  height: 210px;
+  overflow: hidden;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-codeedit-frame:focus-within {
+  border-color: var(--ring);
+}
+
+.gx-codeedit-gutter {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 10px 8px;
+  border-right: 1px solid var(--border);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 20px;
+  text-align: right;
+  user-select: none;
+}
+
+.gx-codeedit-body {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.gx-codeedit-view,
+.gx-codeedit-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 10px 12px;
+  border: 0;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 20px;
+  tab-size: 2;
+  white-space: pre;
+}
+
+.gx-codeedit-view {
+  pointer-events: none;
+  color: var(--foreground);
+}
+
+.gx-codeedit-input {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--foreground);
+}
+
+.gx-tok-keyword {
+  color: var(--primary);
+}
+
+.gx-tok-string {
+  color: var(--success);
+}
+
+.gx-tok-number {
+  color: var(--warning);
+}
+
+.gx-tok-comment {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.gx-codeedit-foot,
+.gx-find-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gx-codeedit-meta,
+.gx-codeedit-hint,
+.gx-diff-meta,
+.gx-md-status,
+.gx-md-hint,
+.gx-find-status {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-codeedit-meta,
+.gx-diff-meta,
+.gx-md-status,
+.gx-find-count {
+  font-family: var(--font-mono);
+}
+
+.gx-diff-demo {
+  gap: 10px;
+}
+
+.gx-diff-bar,
+.gx-md-modes {
+  display: flex;
+  gap: 6px;
+}
+
+.gx-diff {
+  width: min(560px, 100%);
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 22px;
+}
+
+.gx-diff-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.gx-diff-row {
+  display: grid;
+  grid-template-columns: 34px 34px 1fr;
+  gap: 0 8px;
+  padding: 0 8px;
+  white-space: pre;
+}
+
+.gx-diff[data-mode="split"] .gx-diff-row {
+  grid-template-columns: 26px 1fr 26px 1fr;
+}
+
+.gx-diff-row[data-kind="added"],
+.gx-diff-text[data-kind="added"] {
+  background: var(--success-soft);
+  color: var(--success-soft-foreground);
+}
+
+.gx-diff-row[data-kind="removed"],
+.gx-diff-text[data-kind="removed"] {
+  background: var(--destructive-soft);
+  color: var(--destructive-soft-foreground);
+}
+
+.gx-diff-num {
+  color: var(--muted-foreground);
+  text-align: right;
+  user-select: none;
+}
+
+.gx-md {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(560px, 100%);
+}
+
+.gx-md-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gx-md-body {
+  display: flex;
+  min-height: 200px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-md-body[data-mode="split"] .gx-md-source,
+.gx-md-body[data-mode="split"] .gx-md-preview {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.gx-md-source {
+  flex: 1;
+  padding: 10px 12px;
+  border: 0;
+  resize: none;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.gx-md-divider {
+  width: 1px;
+  background: var(--border);
+}
+
+.gx-md-preview {
+  flex: 1;
+  padding: 10px 14px;
+  overflow: auto;
+  color: var(--foreground);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.gx-md-preview p,
+.gx-md-preview ul,
+.gx-md-preview pre {
+  margin: 0 0 8px;
+}
+
+.gx-md-preview ul {
+  padding-left: 18px;
+}
+
+.gx-md-preview pre {
+  padding: 8px;
+  overflow: auto;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.gx-md-heading {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.gx-md-preview code {
+  padding: 0 3px;
+  border-radius: calc(var(--radius) - 4px);
+  background: var(--muted);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.gx-md-preview pre code {
+  padding: 0;
+  background: transparent;
+}
+
+.gx-find {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(560px, 100%);
+}
+
+.gx-find-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.gx-find-input {
+  height: var(--control-height-sm);
+  min-width: 120px;
+  padding: 0 var(--control-padding-x-sm);
+  border: 1px solid var(--input);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+}
+
+.gx-find-count {
+  min-width: 44px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  text-align: center;
+}
+
+.gx-find-toggle[aria-pressed="true"] {
+  border-color: var(--ring);
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-find-doc {
+  min-height: 110px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  resize: vertical;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+/* ---- media player: the frame, the waveform, the track and the seek pad. ---- */
+.gx-player {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(400px, 100%);
+}
+
+.gx-player-frame {
+  width: 240px;
+  height: 135px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--muted);
+}
+
+.gx-player-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gx-player-wave {
+  width: 360px;
+  max-width: 100%;
+  height: 48px;
+  background: var(--primary);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+}
+
+.gx-player-track {
+  position: relative;
+  width: 360px;
+  max-width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--muted);
+}
+
+.gx-player-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--primary);
+}
+
+.gx-player-pad {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-player-pad:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.gx-player-clock {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.gx-player-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}

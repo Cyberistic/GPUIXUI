@@ -9,6 +9,7 @@ import {
   handleBox,
   CROP_HANDLE_SIZE,
 } from "@gpuixui/media/crop/logic";
+import { timeLabel } from "@gpuixui/media/player/logic";
 import { qrPlacement } from "@gpuixui/media/qr/encode";
 import { cropStart, CropAreaDemo, CROP_FRAME } from "./crop-area-demo";
 import { DropZoneDemo } from "./drop-zone-demo";
@@ -20,6 +21,7 @@ import {
   UPLOAD_STEP,
 } from "./file-upload-demo";
 import { ImagePreviewDemo, PreviewFrame } from "./image-preview-demo";
+import { frameAt, MediaPlayerDemo, PLAYER_DURATION } from "./media-player-demo";
 import {
   modulePath,
   previewSymbol,
@@ -196,6 +198,31 @@ describe("the FileUpload preview", () => {
     expect(html).toContain(`data-status="done"`);
     expect(html).toContain(">Retry<");
     expect(html).toContain("Remove report.pdf");
+  });
+});
+
+describe("the MediaPlayer preview", () => {
+  it("draws the transport the component owns", () => {
+    const html = markup(<MediaPlayerDemo />);
+
+    expect(html).toContain(timeLabel(0, PLAYER_DURATION));
+    expect(html).toContain(">Play<");
+    expect(html).toContain('aria-label="Seek back one second"');
+    expect(html).toContain('aria-label="Seek forward one second"');
+    expect(html).toContain('aria-label="Go to start"');
+    expect(html).toContain('aria-label="Go to end"');
+    // The waveform is the package's silhouette, used as the mask.
+    expect(html).toContain("gx-player-wave");
+    expect(html).toContain("data:image/svg+xml");
+  });
+
+  it("picks the caller's frame for the playhead, clamped at both ends", () => {
+    const first = frameAt(0);
+    const last = frameAt(PLAYER_DURATION);
+
+    expect(first).not.toBe(last);
+    expect(frameAt(-100)).toBe(first);
+    expect(frameAt(PLAYER_DURATION * 4)).toBe(last);
   });
 });
 

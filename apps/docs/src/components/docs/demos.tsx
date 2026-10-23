@@ -12,11 +12,22 @@ import {
   CountingNumberDemo,
   countingNumberDemoSource,
 } from "./counting-number-demo";
+import { CodeEditorDemo, codeEditorDemoSource } from "./code-editor-demo";
 import { CropAreaDemo, cropAreaDemoSource } from "./crop-area-demo";
+import { DiffViewerDemo, diffViewerDemoSource } from "./diff-viewer-demo";
 import { DropZoneDemo, dropZoneDemoSource } from "./drop-zone-demo";
 import { FileUploadDemo, fileUploadDemoSource } from "./file-upload-demo";
 import { ImagePreviewDemo, imagePreviewDemoSource } from "./image-preview-demo";
+import { MediaPlayerDemo, mediaPlayerDemoSource } from "./media-player-demo";
 import { QrCodeDemo, qrCodeDemoSource } from "./qr-code-demo";
+import {
+  MarkdownEditorDemo,
+  markdownEditorDemoSource,
+} from "./markdown-editor-demo";
+import {
+  SearchReplaceDemo,
+  searchReplaceDemoSource,
+} from "./search-replace-demo";
 import {
   AvatarStates,
   AvatarWorkflow,
@@ -3208,4 +3219,18 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: imagePreviewDemoSource,
   },
   "qr-code-demo": { render: QrCodeDemo, source: qrCodeDemoSource },
+  "media-player-demo": {
+    render: MediaPlayerDemo,
+    source: mediaPlayerDemoSource,
+  },
+  "code-editor-demo": { render: CodeEditorDemo, source: codeEditorDemoSource },
+  "diff-viewer-demo": { render: DiffViewerDemo, source: diffViewerDemoSource },
+  "markdown-editor-demo": {
+    render: MarkdownEditorDemo,
+    source: markdownEditorDemoSource,
+  },
+  "search-replace-demo": {
+    render: SearchReplaceDemo,
+    source: searchReplaceDemoSource,
+  },
 };

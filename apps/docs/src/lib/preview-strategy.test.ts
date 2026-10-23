@@ -190,15 +190,21 @@ describe("the preview strategy document", () => {
 
     expect(withDemo).toEqual([
       "packages/data/docs/property-panel.mdx",
+      "packages/editor/docs/code-editor.mdx",
+      "packages/editor/docs/diff-viewer.mdx",
+      "packages/editor/docs/markdown-editor.mdx",
+      "packages/editor/docs/search-replace.mdx",
       "packages/media/docs/crop-area.mdx",
       "packages/media/docs/drop-zone.mdx",
       "packages/media/docs/file-upload.mdx",
       "packages/media/docs/image-preview.mdx",
+      "packages/media/docs/media-player.mdx",
       "packages/media/docs/qr-code.mdx",
     ]);
     const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
     expect(policy).toContain("Property panels");
-    expect(policy).toContain("the media lane draws all five of its surfaces");
+    expect(policy).toContain("the media lane draws all six of its surfaces");
+    expect(policy).toContain("the editor lane draws all four of its own");
   });
 
   it("states the Related rule without a count the pages can outgrow", () => {

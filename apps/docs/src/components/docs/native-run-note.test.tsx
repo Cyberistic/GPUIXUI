@@ -97,9 +97,8 @@ describe("the native playground note", () => {
     const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
     expect(policy).toContain("that page's preview is **strategy 3**");
     expect(policy).toContain("the dock, files and shell lanes still ship none");
-    expect(policy).toContain(
-      "the media lane draws all five of its surfaces",
-    );
+    expect(policy).toContain("the media lane draws all six of its surfaces");
+    expect(policy).toContain("the editor lane draws all four of its own");
     expect(policy).toContain("Property panels");
     expect(policy).not.toContain("Those pages are **strategy 4**");
 

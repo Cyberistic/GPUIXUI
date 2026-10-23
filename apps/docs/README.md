@@ -275,12 +275,19 @@ src/components/docs/auto-height-demo.tsx   The auto height's expand/collapse pre
 src/components/docs/avatar-group-demo.tsx  The facepile's overlap, ring and overflow chip
 src/components/docs/bubbles-demo.tsx       The bubbles field's rising scatter
 src/components/docs/code-block-demo.tsx    The code block's title bar, gutter and source
+src/components/docs/code-editor-demo.tsx   The code editor's token layer, gutter, Tab rule and read-only state
+src/components/docs/code-editor-preview.ts The preview's tiny tokenizer for a tsx snippet
 src/components/docs/copy-button-demo.tsx   The copy button's acknowledge flip
 src/components/docs/crop-area-demo.tsx     The crop frame's mask, guides and drag, on the package's crop logic
+src/components/docs/diff-viewer-demo.tsx   The diff's unified and split paints of the package's edit script
 src/components/docs/drop-zone-demo.tsx     The drop target's pick action and received names
 src/components/docs/file-upload-demo.tsx   The upload queue's states and simulated transfer, on the package's queue
 src/components/docs/image-preview-demo.tsx The image surface's loaded, loading and error states
+src/components/docs/markdown-editor-demo.tsx The source/preview split with the package's status line
+src/components/docs/media-player-demo.tsx  The transport's clock, seek keys, track and waveform over illustrated frames
+src/components/docs/markdown-preview.ts    The preview's block reader, closing fences with the package's rule
 src/components/docs/qr-code-demo.tsx       A scannable symbol from the package's own encoder
+src/components/docs/search-replace-demo.tsx The find scan, the toggles and the replace actions
 src/components/docs/countdown-demo.tsx     The countdown's clock formats
 src/components/docs/counting-number-demo.tsx The counting number's easing ramp
 src/components/docs/fireworks-demo.tsx     The fireworks field's bursting sparks
