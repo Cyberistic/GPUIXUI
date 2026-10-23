@@ -13,7 +13,10 @@ import {
   platformFromSearch,
   resolvePlatformTheme,
 } from "@/lib/platform";
-import { readRememberedChoice } from "@/lib/platform-storage";
+import {
+  browserChoiceStorage,
+  readRememberedChoice,
+} from "@/lib/platform-storage";
 
 /**
  * The live GPUix surface.
@@ -120,7 +123,7 @@ const report = (lines: ReadonlyArray<string>): void => {
 
 const platformOf = () => {
   const search = window.location.search;
-  const remembered = readRememberedChoice(window.localStorage);
+  const remembered = readRememberedChoice(browserChoiceStorage());
   return {
     platform: platformFromSearch(search) ?? remembered.platform,
     look: lookFromSearch(search) ?? remembered.look,

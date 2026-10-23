@@ -1,10 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { readRepo } from "./doc-snippets.test-util";
 import {
+  browserChoiceStorage,
   lookStorageKey,
   platformStorageKey,
   readRememberedChoice,
   writeRememberedChoice,
+  type ChoiceStorage,
 } from "./platform-storage";
 
 /**
@@ -13,6 +15,12 @@ import {
  * they navigate from one component page to the next, and nothing held it. A
  * renamed key or a default written over a real choice would silently reset every
  * preview to the identity.
+ *
+ * The store itself can refuse: a browser with site data blocked throws from the
+ * `window.localStorage` getter, and a store with no room throws on write. The
+ * switch used to read `window.localStorage` inside its mount effect, so such a
+ * reader lost every preview page to a `SecurityError` rather than a forgotten
+ * preference; these cases hold the adapter that turns a refusal into absence.
  */
 
 /** A `Storage` stand-in, so the rule is testable without a browser. */
@@ -77,10 +85,102 @@ describe("the remembered platform choice", () => {
       "apps/docs/src/components/docs/platform-toggle.tsx",
     );
 
-    expect(switchSource).toContain("readRememberedChoice(window.localStorage)");
-    expect(switchSource).toContain("writeRememberedChoice(window.localStorage");
+    expect(switchSource).toContain("browserChoiceStorage()");
+    expect(switchSource).toContain("readRememberedChoice(storage)");
+    expect(switchSource).toContain("writeRememberedChoice(storage");
+    // The raw property is the call that throws when a browser blocks site
+    // data, so the switch must not go near it.
+    expect(switchSource).not.toContain("window.localStorage");
     // A key written inline would bypass the parse and the both-axes rule.
     expect(switchSource).not.toContain('"gpuixui-platform"');
     expect(switchSource).not.toContain('"gpuixui-look"');
+  });
+
+  it("turns a store that refuses every call into the defaults", () => {
+    const refused: ChoiceStorage = {
+      getItem: () => {
+        throw new Error("SecurityError: site data is blocked");
+      },
+      setItem: () => {
+        throw new Error("QuotaExceededError: the store is full");
+      },
+    };
+
+    expect(readRememberedChoice(refused)).toEqual({
+      platform: "default",
+      look: "native",
+    });
+    expect(() =>
+      writeRememberedChoice(refused, { platform: "win32", look: "aero" }),
+    ).not.toThrow();
+    // No store at all is the same refusal, and is also how the adapter answers
+    // outside a browser (the node environment this suite runs in).
+    expect(readRememberedChoice(undefined)).toEqual({
+      platform: "default",
+      look: "native",
+    });
+    expect(() =>
+      writeRememberedChoice(undefined, { platform: "linux", look: "native" }),
+    ).not.toThrow();
+  });
+
+  it("keeps the axis a store still answers when the other is refused", () => {
+    const values = new Map<string, string>();
+    const partial: ChoiceStorage = {
+      getItem: (key) => {
+        if (key === platformStorageKey) throw new Error("SecurityError");
+        return values.get(key) ?? null;
+      },
+      setItem: (key, value) => {
+        if (key === platformStorageKey) throw new Error("QuotaExceededError");
+        values.set(key, value);
+      },
+    };
+    values.set(lookStorageKey, "aero");
+
+    expect(readRememberedChoice(partial)).toEqual({
+      platform: "default",
+      look: "aero",
+    });
+
+    writeRememberedChoice(partial, { platform: "win32", look: "luna" });
+
+    // One refused key must not stop the other from being remembered.
+    expect(values.get(platformStorageKey)).toBeUndefined();
+    expect(values.get(lookStorageKey)).toBe("luna");
+  });
+
+  it("reaches the browser store only through a guarded read", () => {
+    // The node environment has no `window` at all.
+    expect(browserChoiceStorage()).toBeUndefined();
+
+    vi.stubGlobal(
+      "window",
+      Object.defineProperty({}, "localStorage", {
+        get: () => {
+          throw new Error("SecurityError: site data is blocked");
+        },
+      }),
+    );
+    expect(browserChoiceStorage()).toBeUndefined();
+
+    const storage = fakeStorage([]);
+    vi.stubGlobal("window", { localStorage: storage });
+    expect(browserChoiceStorage()).toBe(storage);
+    vi.unstubAllGlobals();
+  });
+
+  it("is the refusal the theming page promises", () => {
+    // The page a reader checks before trusting the switch: its sentence names
+    // the browser refusing the store and what still works, so the prose cannot
+    // outlive the adapter that makes it true.
+    const page = readRepo("apps/docs/content/docs/theming.mdx").replace(
+      /\s+/g,
+      " ",
+    );
+
+    expect(page).toContain("refuses site storage");
+    expect(page).toContain("keeps the URL's choice and the identity");
+    expect(page).toContain("does not remember the choice");
   });
 });

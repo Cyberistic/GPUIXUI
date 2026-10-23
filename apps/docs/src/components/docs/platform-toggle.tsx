@@ -21,6 +21,7 @@ import {
   type LookName,
 } from "../../lib/platform";
 import {
+  browserChoiceStorage,
   readRememberedChoice,
   writeRememberedChoice,
 } from "../../lib/platform-storage";
@@ -79,13 +80,14 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const platformInUrl = platformFromSearch(search);
     const lookInUrl = lookFromSearch(search);
-    const remembered = readRememberedChoice(window.localStorage);
+    const storage = browserChoiceStorage();
+    const remembered = readRememberedChoice(storage);
     const nextPlatform = platformInUrl ?? remembered.platform;
     const nextLook = lookInUrl ?? remembered.look;
 
     setPlatform(nextPlatform);
     setLook(nextLook);
-    writeRememberedChoice(window.localStorage, {
+    writeRememberedChoice(storage, {
       platform: nextPlatform,
       look: nextLook,
     });
@@ -96,7 +98,10 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   const choosePlatform = useCallback(
     (next: PlatformName) => {
       setPlatform(next);
-      writeRememberedChoice(window.localStorage, { platform: next, look });
+      writeRememberedChoice(browserChoiceStorage(), {
+        platform: next,
+        look,
+      });
       writeUrl(next, look);
     },
     [look],
@@ -105,7 +110,10 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   const chooseLook = useCallback(
     (next: LookName) => {
       setLook(next);
-      writeRememberedChoice(window.localStorage, { platform, look: next });
+      writeRememberedChoice(browserChoiceStorage(), {
+        platform,
+        look: next,
+      });
       writeUrl(platform, next);
     },
     [platform],

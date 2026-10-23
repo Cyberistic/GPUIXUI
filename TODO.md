@@ -6907,7 +6907,32 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 194/194
+`[x]` `[██████████]` 195/195
+
+`[x]` Keep the **platform switch working where the browser refuses its store**
+— the switch read `window.localStorage` directly inside the provider's mount
+effect (`platform-toggle.tsx`) and in the live surface's `platformOf`, and a
+browser that blocks site data throws `SecurityError` from that getter, so a
+reader with site data blocked lost **every** preview page to the throw rather
+than merely losing the remembered preference; a full store's
+`QuotaExceededError` on write was the second half. `platform-storage.ts` is the
+one adapter now: `browserChoiceStorage()` guards the property access (and answers
+`undefined` outside a browser), each axis is read and written on its own, and a
+refused call reads as absence, so the URL's choice and the identity still work
+while the choice is simply not remembered. `/docs/theming` §The switch on this
+site states that outcome, and the provider and live surface no longer touch the
+raw property. `platform-storage.test.ts` (4 new cases, 8 total) covers the
+all-refused store, one refused axis beside a usable one (read and write), the
+guarded accessor (no `window`, a throwing getter, a real store), and the page's
+sentence; its existing "not a copy beside it" case now refuses
+`window.localStorage` in the switch. **Directions measured:** with `attempt`
+reduced to `run()`, the three refusal cases fail with the exact
+`SecurityError`/`QuotaExceededError`; restoring the old provider line fails the
+switch case by name; deleting the page's sentence fails the prose case. Scoped:
+`nub run --filter @gpuixui/docs test src/lib/platform-storage.test.ts` 8/8,
+`check-types` clean, full docs suite 1104 passed with only the two foreign
+failures (editor cross-links, dock pages). No native scenario applies — a
+browser-storage adapter has no runtime path.
 
 `[x]` Publish the **desktop palette follow** plan 433's acceptance left to the
 site — `/docs/theming` gains §Follow the desktop's palette, which decodes
