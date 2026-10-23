@@ -868,7 +868,7 @@ Every page in `content/docs/components/` follows this order. Sections that do no
 | Usage | one snippet a reader copies |
 | Composition | a `text` tree of the parts, only for a compound component |
 | API reference | tables: part → prop → type → default |
-| keyboard | the generated block: every key the component handles and what it does, read from the component's own modules |
+| keyboard | the generated block: every key the component handles and what it does, read from the component's own modules — or the installed runtime module for a wrapper that handles none of them |
 | Limitations | at most three one-line runtime facts |
 
 The page is the sentence, the preview, the example, the API and the limits. A

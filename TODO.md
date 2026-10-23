@@ -10404,7 +10404,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 361/361
+`[x]` `[██████████]` 362/362
 
 `[x]` Publish the **keyboard contract** every component page promised — the index
       said "every component … with its keyboard contract" and `/docs/components`
@@ -10503,6 +10503,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
       removed fails `invented Ctrl+N, Ctrl+P`. Green: the two keyboard files
       14/14. Docs: the policy and the site ledger name both pages. No native
       scenario applies — the model reads the installed module.
+
+`[x]` Say **where a page's keys can come from** on the map that teaches the
+      template — the components index's "How to read a page" table said every key
+      is "generated", and `docs/preview-strategy.md`'s template table said "read
+      from the component's own modules", while 38 of the contracts read workspace
+      source and two now read the installed runtime; a reader (or the next
+      contributor) was told the wrapper owns keys that are the runtime's. Both
+      rows name the runtime case, and `keyboard-contracts.test.ts`'s
+      `is taught on the page that explains what a page carries` derives the
+      requirement: whenever any contract cites a runtime module, the index row
+      must say so. Direction measured: restoring "(generated)" fails
+      `expected false to be true`. No native scenario applies — a table row and
+      the model it describes.
 
 `[x]` Compile the **class reference** the styling page only sampled — `/docs/styling`
       showed ten representative classes (`h-9`, `px-3`, …) and no way to find the
