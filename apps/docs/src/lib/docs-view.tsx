@@ -15,6 +15,7 @@ import { CollectionIndexPage } from "@/components/docs/collection-index";
 import { CopyPage } from "@/components/docs/copy-page";
 import { DependencyStrip } from "@/components/docs/dependency-strip";
 import { EditPage } from "@/components/docs/edit-page";
+import { KeyboardStrip } from "@/components/docs/keyboard-strip";
 import { NativeRunNote } from "@/components/docs/native-run-note";
 import { PackageSource } from "@/components/docs/package-source";
 import { PageExample } from "@/components/docs/page-example";
@@ -180,6 +181,7 @@ function SiteContent({ path, url }: { path: string; url: string }) {
       <StatusStrip title={page.title} url={url} />
       <DependencyStrip url={url} />
       <MDX components={mdxComponents} />
+      <KeyboardStrip sections={toc.map((entry) => entry.url)} url={url} />
       <RelatedStrip sections={toc.map((entry) => entry.url)} url={url} />
     </PageFrame>
   );
@@ -223,6 +225,7 @@ function PackageContent({
         path={`${collection.dir}/${path.replace(/\.mdx$/, "")}.mdx`}
       />
       <MDX components={mdxComponents} />
+      <KeyboardStrip sections={toc.map((entry) => entry.url)} url={url} />
       <PackageSource url={url} />
       <RelatedStrip sections={toc.map((entry) => entry.url)} url={url} />
     </PageFrame>

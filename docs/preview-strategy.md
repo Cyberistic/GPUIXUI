@@ -592,6 +592,41 @@ own `ComponentSource` file. Deleting either frame's mount fails the frame case;
 emptying the index or dropping the curated half fails the curated case and both
 strip cases.
 
+### The keyboard contract is generated, not written
+
+`MISSION.md` asks every component page for its **keyboard notes**, and no page
+carried one: the site said "every component … with its keyboard contract" on the
+index while not a single key was named on a component page. A hand-written list
+would drift the first time a handler moved, so the site reads the component's own
+modules instead:
+
+- `src/lib/keyboard-contracts.ts` is the model: a page's URL, the modules its
+  keys were read from, one row per key group with the sentence that key earns,
+  and an `also` line for keys that are not fixed names (type-ahead in a list, a
+  submitted field).
+- `<KeyboardStrip>` (`src/components/docs/keyboard-strip.tsx`) renders it after
+  the page's prose on **both** frames, so a curated page and the package page it
+  shadows carry the same keys. It names the modules the keys came from, so a
+  reader can check the sentence against the handler.
+- It renders nothing on a page whose own Markdown writes a `## Keyboard`
+  section: the page's table of contents reaches the strip, and a written section
+  wins. A page no contract names renders nothing rather than a guess.
+
+`src/lib/keyboard-contracts.test.ts` holds both directions. It derives the fixed
+keys a contract's modules handle — the `@gpuixui/components` predicates in
+`internal/key.ts`, the primitives' `decideActivation`, and a key matched by its
+literal name in `Match.when("up", …)` — and fails on a key the page omits or
+invents. It then reads every curated page's `<ComponentSource>` and requires a
+contract wherever the module handles a named key, so a component cannot ship keys
+with no notes. `keyboard-strip.test.tsx` prints every note of every contract and
+holds the two mounts.
+
+Two gaps are recorded rather than papered over: the primitives' `Select` takes
+its keys from the runtime's headless list (`@gpuix/react`), which is not
+workspace source the guard can read, and the package lanes that ship no curated
+page (`files`, `shell`, `editor`, `media`, `data`, and the components without a
+curated twin) are the next wave. `TODO.md` carries both.
+
 ### The related line is generated, not written
 
 `MISSION.md` asks every component page for its related components, and that row
@@ -832,6 +867,7 @@ Every page in `content/docs/components/` follows this order. Sections that do no
 | Usage | one snippet a reader copies |
 | Composition | a `text` tree of the parts, only for a compound component |
 | API reference | tables: part → prop → type → default |
+| keyboard | the generated block: every key the component handles and what it does, read from the component's own modules |
 | Limitations | at most three one-line runtime facts |
 
 The page is the sentence, the preview, the example, the API and the limits. A

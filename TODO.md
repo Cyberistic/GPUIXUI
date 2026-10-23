@@ -10404,7 +10404,52 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 357/358
+`[x]` `[██████████]` 358/359
+
+`[x]` Publish the **keyboard contract** every component page promised — the index
+      said "every component … with its keyboard contract" and `/docs/components`
+      told a reader a page carries its keys, while **not one curated page named a
+      key**: `context-menu` even said "the keyboard route is documented here" in
+      its own Limitations and documented none. `src/lib/keyboard-contracts.ts` is
+      the model (page URL, the modules the keys are read from, one row per key
+      group, an `also` line for keys that are not fixed names), and
+      `<KeyboardStrip>` prints it after the prose on both frames — so a curated
+      page and the package page it shadows agree — naming the module the keys came
+      from. It stops on a page whose own `## Keyboard` heading is in its table of
+      contents, and on a page no contract names. `keyboard-contracts.test.ts` (5
+      cases) derives the keys from the cited modules in both directions: the
+      `@gpuixui/components` predicates in `internal/key.ts`, the primitives'
+      `decideActivation`, and a literal `Match.when("up", …)`, so a dropped
+      handler or an invented key fails by name; it also requires a contract for
+      every curated page whose `<ComponentSource>` module handles a named key.
+      `keyboard-strip.test.tsx` (6 cases) prints every note of every contract and
+      holds the two mounts. Directions measured: removing `dialog`'s Escape row
+      fails `missing Escape`; adding a Home row fails `invented Home`; deleting
+      the accordion contract fails with the page and its eight keys; unmounting
+      the package frame fails `expected 1 to be 2`. Contracted today: twenty-five
+      curated pages (accordion, alert, breadcrumb, button, carousel, checkbox,
+      collapsible, color picker, combobox, command menu, confirm dialog, context
+      menu, date picker, dialog, drawer, dropdown menu, inline edit, list,
+      navigation menu, popover, search input, switch, tabs, tag input, time
+      picker — 25 with the primitives' switch). Docs: the policy's §The keyboard
+      contract is generated, not written and the template's `keyboard` row, the
+      site ledger's two module rows. Green: the docs suite **163 files / 1 711
+      tests**, `check-types` and `build` clean. The two gaps named in the policy
+      (the primitives' `Select` and the package lanes with no curated page) are
+      the row below. No native scenario applies — the model reads source files
+      and the strip prints them; no claim about a native frame is made.
+
+`[ ]` Extend the **keyboard contracts** past the curated lane — `packages/primitives`
+      `Select` takes its arrows/Enter/Escape from the runtime's headless list
+      (`@gpuix/react`), so the key derivation cannot read them from workspace
+      source; and the package lanes with no curated twin (`files`, `shell`,
+      `editor`, `media`, `data`, plus the components without one) ship key-bearing
+      modules the model does not cover yet (`preview-card`, `mention-input`,
+      `chat`, `hotkey-recorder`, the tree/table rows, the app menu, the toolbar,
+      the media player). The first needs a cited runtime contract (or a note that
+      the keys are the runtime's, argued like the ARIA budget); the second is a
+      row per page in `keyboard-contracts.ts` with the completeness scan widened
+      to `readPackagePages`. Owner: docs-site.
 
 `[x]` Compile the **class reference** the styling page only sampled — `/docs/styling`
       showed ten representative classes (`h-9`, `px-3`, …) and no way to find the
@@ -17049,3 +17094,5 @@ which the behaviour suite runs in the real renderer.
 `[x]` `packages/media`: **a picture whose name arrived blank was announced as an unnamed image** — `ImagePreview` and `CropArea` handed the caller's `alt` straight to the `<img>`, and the pinned runtime publishes an `<img>` as an `Image` node named by that `alt` (measured in the renderer: `ImagePreview` with `alt=""` produced `{ role: "Image", label: undefined }`). A default covers only `undefined`, so an empty name from an i18n table — or a `null` a saved record writes where it carried no name — published a node no reader could identify, while every other name in the package (the frame's label, the four handles, the upload rows, the player's picture) already read a blank as its documented default. `name.ts` now owns `PICTURE_NAME` and both surfaces read the picture's name through `accessibleName`, so a blank or non-text name is announced as `Picture` and a name given is trimmed and kept. Proof: `src/behaviour/picture-name.test.tsx` (2 native cases) mounts both shipped surfaces in the real renderer and reads the `Image` node's name off `getA11yTree`; `src/image-preview.test.tsx` and `src/crop-area.test.tsx` each gain `names a picture the caller did not, never an unnamed image` (blank, whitespace and `null`, plus the `zoom={false}` host and a padded real name as the control). Directions measured: with `alt={pictureName}` restored to `alt={alt}` both window cases fail `expected [ '' ] to strictly equal [ 'Picture' ]` and both unit cases mismatch the `Some('Picture')` pair; restored, the package is 12 files / **167** unit cases and 3 files / **17** behaviour cases green with `check-types`, `oxlint` and `oxfmt` clean (`check:tests` is red only on the recorded foreign `packages/data/src/behaviour/scratch-probe.test.tsx`). Docs `packages/media/docs/{image-preview,crop-area}.mdx` §API/§Limitations state the rule, and the `Image preview`/`Crop area` rows print it with the new counts (7 + 19). No playground scenario applies — the name is read off the render, and `crop-overlay`'s measured bars/handle are unchanged.
 
 `[x]` `packages/editor`: **a blank name published an unnamed find bar and a silent diff** — `SearchReplace` and `DiffViewer` destructured their names with defaults (`findLabel = "Find"`, `label = "Diff"`, …), and a default covers only `undefined`: an i18n table's missing row or a saved record handed over `""` / `"   "`, so the find and replacement fields reached `aria-label` with nothing, the previous/next actions were named by their `↑`/`↓` glyph rather than `Previous match`/`Next match`, and the diff — whose rows are `role="presentation"` and therefore carry no words of their own — published a group with no name at all. Every name now reads through the primitives' `accessibleName` and falls back to the module's own default constant, the rule the package's `CodeEditor` and `MarkdownEditor` already followed. Proof: `src/behaviour/search-replace.test.tsx` gains `reads a blank name as the default, never an unnamed control` (both fields' `aria-label`, and the four action names read off the a11y tree) and `src/behaviour/diff-viewer.test.tsx` `names the surface when the stored label is blank`; directions measured with the guards reverted, the two cases fail by name (`expected undefined to be 'Find'`, `expected '   ' to be 'Diff'`) while the other 38 pass; restored, the package is 7 files / 64 unit cases and 5 files / **40** behaviour cases green with `check-types`, `oxlint` and `oxfmt` clean (`check:tests` is red only on the recorded foreign `packages/data/src/behaviour/scratch-probe.test.tsx`). Docs `packages/editor/docs/{search-replace,diff-viewer}.mdx` §API/§Limitations state the rule, and the `Search and replace`/`Diff viewer` rows print it with the new counts (5 native, 3 native). No native scenario applies — the names are read off the render, and the `markdown-fence`/`editor-surface` paint is unchanged.
+
+`[x]` `packages/components`: **a blank confirmation label painted the irreversible action as a nameless box** — `ConfirmDialog` destructured `confirmLabel = "Confirm"` and `cancelLabel = "Cancel"`, and a default covers only `undefined`: an i18n table's missing key or a saved record handed over `""` / `"   "`, which reached the two `Button`s as their only child, so the modal that asks before a destructive action offered two actions with no words and no accessible names — one of them the action that cannot be undone. Both labels are read through the primitives' `accessibleName` and fall back to the module's own constants, the rule `MultiStepForm`'s actions already followed. Proof: `src/behaviour/confirm-dialog.test.tsx` gains `reads a blank action label as the default, never an unnamed action` (both actions read off the a11y tree by name), measured failing at `HEAD` with `expected [ '', '' ] to deeply equal ArrayContaining ["Cancel", "Confirm"]`; restored, the file is 8/8 and the package **956** unit cases green with `check-types`, `oxlint` and `oxfmt` clean (`check:tests` is red only on the recorded foreign `packages/data/src/behaviour/scratch-probe.test.tsx`). Docs `packages/components/docs/confirm-dialog.mdx` §API/§Limitations state the rule, and the `Confirmation dialogs` row prints it with the new count (8 native). No native scenario applies — the names are read off the real renderer, and the measured `dialog-lifecycle` routes are unchanged.

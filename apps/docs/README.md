@@ -231,6 +231,7 @@ src/components/docs/copy-page.tsx         Copy the page as Markdown
 src/components/docs/edit-page.tsx         The footer link to the page's Markdown, on GitHub
 src/components/docs/status-strip.tsx      The generated COMPONENTS.md status and verdict
 src/components/docs/dependency-strip.tsx  The generated "Built on" line: the module's workspace imports, curated and package pages alike
+src/components/docs/keyboard-strip.tsx    The generated keyboard contract: the keys a component handles, read from its own modules
 src/components/docs/related-strip.tsx     The generated related-component links a package page ends with
 src/components/docs/native-run-note.tsx   The note above a package page: the playground command and its page
 src/components/docs/playground-scenarios.tsx The probe catalogue on /docs/playground, grouped by capability
@@ -371,6 +372,7 @@ src/lib/package-graph-data.ts       The graph, read from the plugin's build-time
 src/lib/page-dependencies.ts        The dependency model: a page's component imports, grouped by package
 src/lib/page-dependencies-source.ts Reads each package page's component module and each curated page's source block, at build time
 src/lib/page-dependencies-data.ts   The dependency index, read from the plugin's build-time module
+src/lib/keyboard-contracts.ts      The keyboard model: each page's keys, the modules they are read from, and the sentence each key earns
 src/lib/page-source.ts              The source model: a page's module and the loader that reads it
 src/lib/page-source-data.ts         The source index, read from the plugin's build-time module
 src/lib/examples.ts                 The example registry: ids, paths and header summaries
@@ -527,6 +529,16 @@ the inventory calls shipped is published by a page, with a row documented only o
 a lane page argued in `laneRows` beside the file and probe that teach it. The
 page therefore cannot claim more than the inventory, a row that changes changes
 the page with no docs edit, and a page that has none is argued in the module.
+
+The **Keyboard** block (`src/components/docs/keyboard-strip.tsx`) follows the
+prose on the same two frames: the keys the component handles and the sentence
+each one earns, from `src/lib/keyboard-contracts.ts`. The model names the modules
+the keys were read from, and `keyboard-contracts.test.ts` holds it to them in
+both directions — every fixed key a module handles is printed, nothing is printed
+that it does not handle — so a handler that moves or a page that teaches a key
+the component dropped fails by name. A page that writes its own `## Keyboard`
+section keeps it: the strip stops on the heading the page's table of contents
+carries.
 
 ## Pages that read the workspace
 
