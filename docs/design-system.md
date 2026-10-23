@@ -1075,7 +1075,10 @@ The paint follows the same rule: a role
 the theme lost paints nothing, and `elevationShadow` returns `undefined` for a
 level — or a whole scale — it does not carry, so no surface throws on the defect
 the report just
-explained (§7). A numeric group — and every numeric step
+explained (§7). A shape a store wrote is that same absence: a level written as one
+object where the type declares a list, a list holding a `null`, or a shadow colour
+that is not a string is one report line at its position with no colour, and it
+paints nothing rather than throwing. A numeric group — and every numeric step
 inside one — is not treated this way: adding either is a breaking change rather
 than an additive one, because the components read every step, so the gate refuses
 a theme missing one and names the group or the path (`typography.codeBlock`,

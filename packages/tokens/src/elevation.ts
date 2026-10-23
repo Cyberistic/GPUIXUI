@@ -67,11 +67,32 @@ export const elevationLevels = [
 ] as const satisfies readonly ElevationLevel[];
 
 /**
+ * Whether a stored value is one shadow. Only the shape every read depends on is
+ * checked: a level is a list of objects, and a list a store wrote can carry a
+ * `null` or a number where an entry belongs. The numbers themselves are
+ * `invalidNumbers`' business.
+ */
+const isShadow = (value: unknown): value is BoxShadow =>
+  typeof value === "object" && value !== null;
+
+/**
+ * The colour a stored shadow states, or `undefined` when it states one that is
+ * not a colour. A store can write `null` (JSON has no `undefined`) or a number
+ * where a colour belongs, and the same rule `invalidColorRoles` follows applies:
+ * a value that is not a string is the absence it is, not a crash.
+ */
+const shadowColor = (shadow: unknown): string | undefined =>
+  isShadow(shadow) && typeof shadow.color === "string"
+    ? shadow.color
+    : undefined;
+
+/**
  * The shadow an elevation level paints. A level is designed as one shadow, so it
  * resolves to its first entry; a level that paints nothing — the reserved empty
- * `overlay`, or one a theme restored from storage does not carry — returns
- * `undefined`, which `boxShadow` accepts. The runtime also accepts a shadow list;
- * the scale does not use one, so a level cannot render half of itself.
+ * `overlay`, one a theme restored from storage does not carry, or one a store
+ * wrote as something other than a list — returns `undefined`, which `boxShadow`
+ * accepts. The runtime also accepts a shadow list; the scale does not use one, so
+ * a level cannot render half of itself.
  *
  * The source is `Partial<Elevation>` because a stored theme can predate a level
  * the library added: the report names it (`invalidShadowColors`) and the surface
@@ -89,7 +110,9 @@ export function elevationShadow(
   theme: { readonly elevation?: Partial<Elevation> },
   level: ElevationLevel,
 ): BoxShadow | undefined {
-  return theme.elevation?.[level]?.[0];
+  const shadows: unknown = theme.elevation?.[level];
+  const first: unknown = Array.isArray(shadows) ? shadows[0] : undefined;
+  return isShadow(first) ? first : undefined;
 }
 
 /** One elevation shadow whose colour the renderer cannot paint. */
@@ -125,6 +148,12 @@ export interface InvalidShadowColor {
  * the group may be absent too: a store that predates the scale reports **every**
  * level missing, which is the same answer one level up.
  *
+ * **A shape a store wrote is the same absence, not a crash**: a level written as
+ * one object where the type declares a list, or a list with a `null` entry, is a
+ * surface that paints nothing, so it is reported at its position with no colour.
+ * A shadow colour that is not a string is reported the same way, by the rule
+ * `invalidColorRoles` follows for a role.
+ *
  * A level's geometry is not checked here: a number the renderer reads is
  * painted, so the failure this report covers is the silent one.
  *
@@ -148,14 +177,16 @@ export function invalidShadowColors(theme: {
   readonly elevation?: Partial<Elevation>;
 }): readonly InvalidShadowColor[] {
   return elevationLevels.flatMap((level): ReadonlyArray<InvalidShadowColor> => {
-    const shadows = theme.elevation?.[level];
-    return shadows === undefined
-      ? [{ level, index: 0, color: undefined }]
-      : shadows.flatMap((shadow, index) =>
-          isPaintableColor(shadow.color)
-            ? []
-            : [{ level, index, color: shadow.color }],
-        );
+    const shadows: unknown = theme.elevation?.[level];
+    // A level written as anything but a list is one surface's shadow this report
+    // cannot read, so it is named once — the same line an absent level gets.
+    if (!Array.isArray(shadows)) {
+      return [{ level, index: 0, color: undefined }];
+    }
+    return shadows.flatMap((shadow: unknown, index) => {
+      const color = shadowColor(shadow);
+      return isPaintableColor(color) ? [] : [{ level, index, color }];
+    });
   });
 }
 

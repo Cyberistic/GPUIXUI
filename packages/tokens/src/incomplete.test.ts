@@ -964,3 +964,99 @@ describe("a scale a store wrote", () => {
     expect(incomplete.map(({ name }) => name)).toEqual([]);
   });
 });
+
+describe("a shadow a store wrote", () => {
+  // The bug this guards: a level was read as a list unconditionally. JSON has no
+  // `undefined`, and a hand-edited or generated store can write a level as one
+  // object where the type declares a list, or a list with a `null` entry — and
+  // then `invalidShadowColors` called `.flatMap` on an object and `shadow.color`
+  // on a null, so `auditTheme` reached the consumer as
+  // `TypeError: shadows.flatMap is not a function` or
+  // `Cannot read properties of null (reading 'color')`. `invalidNumbers` threw
+  // on the null entry the same way, and `elevationShadow` returned the `null` it
+  // read as if it were a shadow.
+  const levelAsObject = () => {
+    const [first] = lightElevation.md;
+    expect(first).toBeDefined();
+    return stored({
+      elevation: { ...lightTheme.elevation, md: first ?? null },
+    });
+  };
+
+  const holedLevel = () =>
+    stored({ elevation: { ...lightTheme.elevation, lg: [null] } });
+
+  it("reports a level that is not a list once, instead of throwing", () => {
+    const object = levelAsObject();
+
+    expect(invalidShadowColors(object)).toEqual([
+      { level: "md", index: 0, color: undefined },
+    ]);
+    // The paint path answers the same absence: a surface lifts nothing.
+    expect(elevationShadow(object, "md")).toBeUndefined();
+    expect(() => auditTheme(object)).not.toThrow();
+    expect(auditTheme(object).passed).toBe(false);
+  });
+
+  it("reports an entry that is not a shadow, and paints nothing for it", () => {
+    const holed = holedLevel();
+
+    expect(invalidShadowColors(holed)).toEqual([
+      { level: "lg", index: 0, color: undefined },
+    ]);
+    expect(invalidNumbers(holed)).toEqual([]);
+    expect(elevationShadow(holed, "lg")).toBeUndefined();
+    expect(() => auditTheme(holed)).not.toThrow();
+    expect(auditTheme(holed).passed).toBe(false);
+  });
+
+  it("reports a shadow colour a store wrote as something else", () => {
+    const [first] = lightElevation.sm;
+    expect(first).toBeDefined();
+    if (first === undefined) return;
+
+    const wrong = stored({
+      elevation: {
+        ...lightTheme.elevation,
+        sm: [{ ...first, color: 42 }],
+      },
+    });
+
+    // A value that is not a colour is the absence it is, the same rule the
+    // role report follows for a stored role.
+    expect(invalidShadowColors(wrong)).toEqual([
+      { level: "sm", index: 0, color: undefined },
+    ]);
+    expect(auditTheme(wrong).passed).toBe(false);
+  });
+
+  it("paints every level a store wrote as a list", () => {
+    // The counterweight: the shipped levels and a brand's own list still paint.
+    expect(elevationShadow(lightTheme, "lg")).toEqual(
+      lightTheme.elevation.lg[0],
+    );
+    expect(elevationShadow(levelAsObject(), "sm")).toEqual(
+      lightTheme.elevation.sm[0],
+    );
+  });
+
+  it("is what the pages and the inventory promise", () => {
+    const read = (path: string) =>
+      readFileSync(
+        new URL(`../../../${path}`, import.meta.url),
+        "utf8",
+      ).replace(/\s+/g, " ");
+
+    const page = read("docs/tokens.md");
+    const system = read("docs/design-system.md");
+    const inventory = read("COMPONENTS.md");
+    const readme = read("packages/tokens/README.md");
+
+    // Every surface states the rule, and the paint path beside it.
+    expect(page).toContain("A shape a store wrote is the same absence");
+    expect(page).toContain("a list holding a `null`");
+    expect(system).toContain("A shape a store wrote is that same absence");
+    expect(inventory).toContain("a shape a store wrote");
+    expect(readme).toContain("a level a store wrote as anything but a list");
+  });
+});

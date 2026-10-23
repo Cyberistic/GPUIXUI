@@ -3498,7 +3498,11 @@ the reserved empty `overlay` level (which `boxShadow` accepts). A level the them
 does not carry — a theme restored from storage that predates it — resolves to
 `undefined` too, so a raised surface paints flat instead of throwing where
 `invalidShadowColors`/`auditTheme` already named the absence
-(§[Paint-ready values](#paint-ready-values)). A level with two
+(§[Paint-ready values](#paint-ready-values)). **A shape a store wrote is the same
+absence**: a level written as one object where the type declares a list, or a
+list with a `null` entry, is reported at its position with no colour and paints
+nothing, because JSON has no `undefined` and a generated or hand-edited store can
+write either. A level with two
 entries would be a second shadow the design did not ask for, so
 `packages/tokens/src/elevation.test.ts` fails if one appears.
 
@@ -3539,6 +3543,10 @@ const brand = extendTheme(lightTheme, {
 
 invalidShadowColors(brand); // [{ level: "md", index: 0, color: "#00000" }]
 ```
+
+The same report reads a shape a store wrote: a level that is not a list, or a
+list holding a `null`, is one line at that position with no colour rather than a
+`TypeError`, and a shadow colour that is not a string is the absence it is.
 
 `lightElevation` and `darkElevation` are the level tables the two themes carry,
 shaded from their own colour set's `shadow` role;

@@ -808,7 +808,9 @@ same list, so the report and the error cannot drift. An additive absence (a
 colour role, an elevation level, the whole elevation scale) is not in it: that is
 a report and a failing gate, and the paint side resolves it to nothing rather
 than throwing (`elevationShadow` returns `undefined` for a level a theme does not
-carry — or for every level when the scale is gone).
+carry — or for every level when the scale is gone — and for a level a store wrote
+as anything but a list, or a list holding a `null`, which `invalidShadowColors`
+names at its position with no colour).
 
 A store hands back `null` where the theme had no value — JSON has no
 `undefined` — and the suite reads that as the absence it is: a numeric token kept

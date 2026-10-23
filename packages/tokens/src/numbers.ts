@@ -281,6 +281,14 @@ const isTextStyle = (value: unknown): value is TextStyleNumbers =>
 const isShadowList = (value: unknown): value is readonly BoxShadow[] =>
   Array.isArray(value);
 
+/**
+ * Whether a stored entry is one shadow. A list a store wrote can carry `null` or
+ * a number where a shadow belongs; that entry is `invalidShadowColors`' line, so
+ * this report only reads the entries it can.
+ */
+const isShadowEntry = (value: unknown): value is BoxShadow =>
+  typeof value === "object" && value !== null;
+
 /** Every number a text role carries, and the two comparisons between them. */
 const inspectType = (
   typography: NumberSource["typography"],
@@ -567,8 +575,8 @@ export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
     ...inspect("density", "rowHeight", theme.density.rowHeight, "pressable"),
     ...Object.entries(theme.elevation ?? {}).flatMap(([level, shadows]) =>
       isShadowList(shadows)
-        ? shadows.flatMap((shadow, index) =>
-            inspectShadow(level, index, shadow),
+        ? shadows.flatMap((shadow: unknown, index) =>
+            isShadowEntry(shadow) ? inspectShadow(level, index, shadow) : [],
           )
         : [],
     ),
