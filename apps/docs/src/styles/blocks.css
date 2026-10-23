@@ -1171,6 +1171,10 @@
 }
 
 .gx-kan-nav:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
 /* ---- notification centre ----
    A panel 420–480px wide: a header, three filter tabs and grouped rows. Every
    state a reader can reach moves paint and no box: the unread dot reserves its
@@ -1271,6 +1275,12 @@
 }
 
 .gx-kan-user-avatar {
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  border-radius: 9999px;
+}
+
 .gx-notif-icon:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 1px;
@@ -2670,6 +2680,8 @@
   .gx-set-layouts {
     grid-template-columns: 1fr;
   }
+}
+
 .gx-cmd-icon {
   display: inline-flex;
   flex: none;

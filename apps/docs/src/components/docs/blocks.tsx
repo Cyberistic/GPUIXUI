@@ -261,6 +261,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...settingsDialogPackages],
     render: SettingsDialogRender,
     source: settingsDialogSource,
+  },
   "notification-centre-01": {
     name: "notification-centre-01",
     slug: "notification-centre",
