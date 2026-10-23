@@ -1059,6 +1059,7 @@ import {
   BreadcrumbNavigationProbe,
   breadcrumbNavigationSteps,
 } from "./breadcrumb-navigation-probe.js";
+import { TextUndoProbe, textUndoSteps } from "./text-undo-probe.js";
 import {
   ACTION_RING_DANGER,
   ACTION_RING_NEIGHBOUR,
@@ -28962,5 +28963,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "breadcrumb-navigation-lifecycle",
     view: () => <BreadcrumbNavigationProbe />,
     steps: breadcrumbNavigationSteps,
+  },
+  "text-undo-lifecycle": {
+    id: "text-undo-lifecycle",
+    view: () => <TextUndoProbe />,
+    steps: textUndoSteps,
   },
 };

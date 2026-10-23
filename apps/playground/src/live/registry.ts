@@ -666,6 +666,12 @@ export const liveRegistry = [
       "Navigation: a trail budgeted from its pane's own width keeps one row where the unbudgeted trail wraps, and the levels a budget hides are reachable through a menu the app composes",
     capability: "layout",
   },
+  {
+    id: "text-undo-lifecycle",
+    title:
+      "Input: a field's own cmd-z restores its text and reports it through onChange, a value pushed in from outside clears the history, and the text area undoes too",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

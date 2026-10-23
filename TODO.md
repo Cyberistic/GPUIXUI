@@ -1627,7 +1627,32 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 143/143
+`[x]` `[██████████]` 144/144
+
+`[x]` Measure **what a field's own undo does to the app** — MISSION lists
+      **input editing** among the interactions a window has to verify, and the
+      pinned binding keeps the undo history itself (`cmd-z`/`shift-cmd-z`, a
+      restore through the same `change` event a keystroke uses) while nothing in
+      this repository had driven it, so a controlled component could paint one
+      value while the field held another. The `text-undo-lifecycle` live probe
+      drives the shipped `Input` and `TextArea` and reads the app's own state:
+      typing `a` reports `input=a changes=1`, an unrelated re-render keeps both
+      (`renders=1`), `cmd-z` restores the empty value **and** reaches
+      `onChange` (`input= changes=2`) with the window log still `keys=` while
+      `shift-cmd-z` redoes it, and a second `cmd-z` empties the stack again; a
+      value the app pushes in (**Load a value**, `input=loaded changes=4`) is
+      not an edit and **clears the history** — `cmd-z` changes nothing — so the
+      next edit undoes back to the pushed value, and the `TextArea`'s undo
+      reaches its own controlled `onChange` too. 15 checks,
+      `--only text-undo-lifecycle`, green on 0.11.0 here (~1.8 s, two runs).
+      Fixture `src/live/text-undo.ts` + `text-undo.test.ts` (the readouts, the
+      ids, the three chords, the coalesce margin, the controlled mounts and the
+      push path, the registry entry, the README section and its row). Negative
+      control measured, exit `1`, restored green: claiming the push did not
+      clear the history fails `cmd-z after a value pushed in from outside
+      changes nothing` with the measured readout. Evidence:
+      `apps/playground/README.md` §`text-undo-lifecycle`. Publishing it in the
+      capability record is the Interlock below
 
 `[x]` Measure the **focus pair a window delivers** — every component that commits
       a draft on blur (`InlineEdit`, a hex field, a form that needs a field's
@@ -7647,6 +7672,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Name the **soft status tints** in the indicator-marks prose — `indicatorSurfaces` gained each status tone's `xSoft` (the surface a filled action or a status mark stands on inside a message), and both theming pages print the strip list from the array, but the sentence that explains the strips still enumerated the nine it had. Both pages now name the four soft tints and the measurement that put them there (macOS dark's system blue failed all four, so the style takes `#3B9DFF` at **3.01:1** on the warning tint, the tightest placement the sweep finds) and cite `indicator.test.ts` | docs-site (`themes.mdx` §The theme audit, `theming.mdx` §Indicator marks) | **resolved 2026-10-23** — the tokens commit (`ed6e9091`) landed the tint and macOS dark's `#3B9DFF`, and both sections teach it; `theming-page.test.ts`'s strip case now requires the tint sentence, the four soft tints and the `indicator.test.ts` citation, so the printed list and the explanation cannot separate. Directions measured: deleting the sentence fails `themes.mdx` and `theming.mdx` by name ("does not explain the tint a mark stands on"), and the file is 1 248 tests with `check-types` clean |
 | Publish the **trail rules a window measured** — Tier 4's *Breadcrumb navigation* row now cites `breadcrumb-navigation-lifecycle` (48 checks, 0.11.0), and `packages/components/docs/breadcrumb.mdx` §Limitations still says only "the collapsing ellipsis is text, not a button": it does not teach that an unbudgeted trail **wraps** (16 → **36** in a 280-wide pane) instead of clipping, that a budget derived from the pane's own `onLayout` keeps it one row (**28**), or that the levels a budget hides are reachable only through a trigger the app composes (the trail's next Tab stop, a real menu whose rows are focus stops; a chosen level leaves the trigger unpainted when the path fits). A consumer reading the page cannot build the trail the window proved | components (`packages/components/docs/breadcrumb.mdx`) | open — measured 2026-10-23; the probe and its README section are the playground's |
 | Land `chart-surface-lifecycle` as one unit — the data workstream's probe (`apps/playground/src/live/chart-surface.ts`, its view and steps in `scenarios.tsx`) was in the shared tree while its **registry entry** was committed alone (`f6f78f6b`), so `liveProbeBodies` lost the body the `Record<LiveProbeId, …>` requires and the playground did not compile; the entry is removed (`f2cf7c80`) until the body and the entry land together. The registry entry, the `liveProbeBodies` body and the README section must be one commit, in registry order (the README is held to the registry by `src/live/registry.test.ts`) | data (`apps/playground/src/live/registry.ts`, `scenarios.tsx`, `README.md`) | open — measured 2026-10-23 |
+| Publish the **undo contract a field owns** — the capability record's input/text rows stop at keystrokes, clipboard and selection, and `docs/gpuix-capabilities.md` + `/docs/runtime#measured-in-a-window` say nothing about undo, which is a field behaviour no component can implement: the playground's `text-undo-lifecycle` measured that `cmd-z`/`shift-cmd-z` restore a snapshot **and** reach a controlled `onChange`, that a value pushed in from outside the field clears both stacks (so a field the app rewrites on every change loses undo silently), that an unrelated re-render keeps the history, and that the chord never reaches an app-level window handler while the field has focus. The record should carry those four findings and the 700 ms coalesce window, and `/docs/runtime`'s row should cite the probe; the components' `InlineEdit`/field pages owe the "format on commit, not on every change" rule. Measured evidence: `apps/playground/README.md` §`text-undo-lifecycle`, 15 checks green on 0.11.0 | docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) and components (`docs/inline-edit.mdx`, `docs/field.mdx`) | open — the probe and its README section are landed; only the record, the runtime page and the two component pages are owed |
 
 ## Phase D — data and workspace components
 

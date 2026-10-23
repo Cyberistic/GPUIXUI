@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-105 probes a real window can prove, of which twenty mount shipped
+106 probes a real window can prove, of which twenty mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -793,7 +793,7 @@ does not declare — so a rename cannot quietly retire an interaction.
 | button activation | `button-activation-lifecycle` | a pointer press activates once and carries the press point; Enter activates on its press and Space on its release; a disabled or busy button refuses every route, and only the disabled one leaves the tab order |
 | dialog open/close/confirm | `dialog-lifecycle`, `confirm-dialog-lifecycle`, `nested-overlay-lifecycle` | a press opens and focuses the surface; Escape and the dialog's own close return the focus; the confirmation holds Cancel, reports once, and cancels on Enter; a dialog holding a popover holding a menu dismisses one surface per Escape and per outside press, outside-in |
 | menu selection/dismissal | `menu-lifecycle`, `context-menu-lifecycle` | a press or a keyboard open lands on row one, arrows move real focus, Enter and a press activate, Escape dismisses |
-| input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both |
+| input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle`, `text-undo-lifecycle` | typed keys reach `onChange` and Enter reaches `onSubmit`; a failed submit paints the schema's message and the destructive role, keeps the focus, and a valid value clears both; the field's own `cmd-z` restores its text through `onChange`, a value pushed in from outside clears the history, and the chord stays in the field |
 | tabs and panel switching | `tabs-lifecycle`, `dock-focus-lifecycle` | a press and an arrow select a tab and the pill follows; a rail step carries the focus and swaps the pane |
 | theme switching | `theme-switch-lifecycle`, `system-theme-follow` | a palette press repaints the page and card; a platform look re-lays an `md` control at its own density; a desktop palette change repaints a running window without a remount and a deleted palette returns its own theme |
 | table sort/selection | `table-lifecycle`, `modifier-select-lifecycle`, `data-table-lifecycle` | a header press sorts by the column it hit and a second press flips it; a row press selects and focuses, and the selected record survives the sort; a modified press carries its chord, so shift ranges from the anchor, cmd toggles one record and cmd-shift adds the range |
@@ -5888,6 +5888,68 @@ pane's report fails `the levels the budget hides leave the trail`
 platform's activation, which the probe asks for before measuring and which this
 host does not honour, which is itself the measurement.
 
+### `text-undo-lifecycle` — measured on 0.11.0 here
+
+**What does a field's own undo do to the app?** MISSION lists **input editing**
+among the interactions a window has to verify, and editing is more than typing:
+the pinned binding keeps the field's undo history itself (`cmd-z` /
+`shift-cmd-z`) and restores a snapshot through the same `change` event a
+keystroke uses, so a controlled component either hears the undo or paints one
+value while the field holds another. The probe drives the **shipped** `Input`
+and `TextArea` under the primitives' theme provider and reads the app's own
+state: the value, its edit count and the surrounding re-renders.
+
+| Step | Measured |
+| ---- | -------- |
+| the field at mount | `input= changes=0 renders=0` |
+| a press, then typing `a` | the press focuses the field, and `input=a changes=1 renders=0` |
+| a press on an unrelated control (a re-render) | `input=a changes=1 renders=1` — the value and the history survive it |
+| `cmd-z` | `input= changes=2 renders=1` — the snapshot is restored **and** reported through `onChange`; the window log stays `keys=` |
+| `shift-cmd-z` | `input=a changes=3 renders=1` |
+| `cmd-z` again | `input= changes=4 renders=1` — the history is a stack, not one snapshot |
+| pressing **Load a value** | `input=loaded changes=4 renders=1` — the push paints but is not an edit |
+| `cmd-z` after the push | `input=loaded changes=4 renders=1` — **nothing to undo** |
+| typing `b`, then `cmd-z` | `input=loadedb changes=5 renders=1`, then `input=loaded changes=6 renders=1` — the history restarts from the pushed value |
+| the text area: typing `x`, then `cmd-z` | `area=x changes=1`, then `area= changes=2` — a second host whose undo also reaches the app |
+| `cmd-k` from a plain focusable control | `keys=k` — the positive control that proves the window handler is registered |
+
+The three rules a plan needs:
+
+1. **Undo is the field's, and it reaches the app as a change.** The binding's
+   `restore` sets the text and calls `emit_change`, so a controlled field's
+   `onChange` fires exactly as it does for a keystroke. A component that keeps a
+   draft beside the field (an inline edit, a form) hears the undo and cannot
+   commit a value the field no longer holds.
+2. **A value pushed in from outside the field clears the history.** The binding
+   clears both stacks when the `value` prop changes — the push is not an edit.
+   So a field the app rewrites on every change (a formatter, a normaliser, a
+   masked input that writes the prop back) silently loses undo from the second
+   keystroke on. Format on commit, or derive the display, rather than pushing a
+   rewritten value back while the reader types. A re-render that leaves the prop
+   unchanged is safe, which is the other half of the same rule.
+3. **The chord stays in the field.** A window handler registered beside the field
+   sees no `cmd-z`, exactly as it sees no `cmd-a`/`cmd-c`/`cmd-x`; an app-level
+   undo (a canvas, a document) needs its own binding and must not assume it will
+   run while a field has focus.
+
+Two limits a plan should know. The binding coalesces consecutive inserts made
+within `UNDO_COALESCE` (700 ms in the pinned `input.rs`) into one undo step — a
+word typed quickly is one step — so the probe types one key per step and pauses
+past that window where it wants a second step. And the history is the **field's**,
+not the app's: a document with several fields has one history per field, and a
+focus move does not merge them.
+
+15 checks, `--only text-undo-lifecycle`, green on 0.11.0 here (~1.8 s, two
+consecutive runs). Fixture `src/live/text-undo.ts` (the ids, the typed words, the
+three chords, the 900 ms group pause and the readouts) +
+`text-undo.test.ts` (the readouts, the ids, the chords, the coalesce margin, the
+probe's controlled mounts and its push path, the registry entry and this
+section). Negative control measured, exit `1`: claiming the push did **not**
+clear the history fails `cmd-z after a value pushed in from outside changes
+nothing` (`expected "input= changes=5 renders=1", got "input=loaded changes=4
+renders=1"`); restored, green. The probe takes no capture: every claim is a
+readout the app's own state prints.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -6118,7 +6180,8 @@ narrower. Each deviation is deliberate and measured:
   `hidden-subtree-lifecycle` and `find-highlight` and `crop-overlay` and
   `faded-hitbox-lifecycle` and `markdown-fence` and
   `empty-error-states-lifecycle` and `blur-delivery-lifecycle` and
-  `breadcrumb-navigation-lifecycle` and `chart-surface-lifecycle` (forty-seven
+  `breadcrumb-navigation-lifecycle` and `chart-surface-lifecycle` and
+  `text-undo-lifecycle` (forty-eight
   probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
