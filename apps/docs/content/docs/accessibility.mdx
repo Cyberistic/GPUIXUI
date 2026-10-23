@@ -112,6 +112,13 @@ paints it, a mouse press does not. A programmatic focus before any keyboard inpu
 does not paint it either, so a mouse-opened overlay keeps `focusRing(theme)` — the
 unconditional shadow — for that path.
 
+- `action-ring` measured that ring on the shipped filled action (39 checks): in
+  the dark palette its `primary` fill and the `ring` role are both `#A7A9FF`, so
+  the outline sits **3** points out — `offset 2` plus half the 2-point line —
+  with the page one point out and the fill two points inside the box; the gap is
+  the whole separation. A press focuses the action but paints **no ring**, while
+  `Tab` paints it, and the outline changes no box: both actions and a neighbour
+  report identical `x, y, width, height` with and without it.
 - A `Tab` traversal runs **no** `onFocus` on this host (`focuses=0`), so a
   focus-only surface cannot open on it; the ring is declared at rest, so the cue
   still paints. A key **move** reads the key event's own element id: the first

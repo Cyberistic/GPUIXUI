@@ -1592,6 +1592,54 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("maxWidth");
   });
 
+  it("publishes the focus ring a filled action paints", () => {
+    // The accessibility page taught the ring from the tokens and the typings,
+    // and the one case the offset exists for — a filled action whose fill is
+    // the same role the ring paints — was measured by `action-ring` and cited
+    // nowhere. The bug this guards: a flush ring is invisible against its own
+    // fill, so the gap is the separation and a press must paint none.
+    const fixture = read("apps/playground/src/live/ring-offset.ts");
+    const offset = Number(/RING_OFFSET = ([\d_]+)/.exec(fixture)?.[1] ?? NaN);
+    const width = themes.dark.borderWidth.strong;
+    expect(offset).toBeGreaterThan(0);
+    expect(width).toBeGreaterThan(0);
+    expect(themes.dark.colors.primary.toUpperCase()).toBe(
+      themes.dark.colors.ring.toUpperCase(),
+    );
+    const band = offset + width / 2;
+
+    const readme = read("apps/playground/README.md");
+    const section = /### `action-ring`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ??
+      "";
+    const checks = Number(/(\d+) checks/.exec(section)?.[1] ?? Number.NaN);
+    expect(checks).toBeGreaterThan(10);
+
+    const row = rowFor("Keyboard focus ring");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("action-ring");
+    expect(row?.evidence).toContain(`${checks} checks`);
+    expect(row?.evidence).toContain(themes.dark.colors.ring.toUpperCase());
+    expect(row?.evidence).toContain(`**${band}**`);
+    expect(row?.evidence).toContain("paint");
+
+    const page = measuredRow("Keyboard focus ring");
+    expect(
+      page,
+      "the page's measured table has no focus-ring row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("action-ring");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(themes.dark.colors.ring.toUpperCase());
+    expect(page?.[1]).toContain(`**${band}**`);
+
+    const accessibility = read("apps/docs/content/docs/accessibility.mdx");
+    expect(accessibility).toContain("action-ring");
+    expect(accessibility).toContain(`${checks} checks`);
+    expect(accessibility).toContain(themes.dark.colors.ring.toUpperCase());
+    expect(accessibility).toContain(`**${band}**`);
+    expect(accessibility).toContain("paints **no ring**");
+  });
+
   it("publishes the layout a move does not report", () => {
     // A surface that stores its box from `onLayout` and subtracts a fresh
     // pointer point is how a magnetic plate, a zoom or an anchored palette
