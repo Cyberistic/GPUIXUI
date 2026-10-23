@@ -1,0 +1,266 @@
+/**
+ * `MultiStepForm`: a wizard shell over the shipped `Stepper`, with a gate on
+ * every step and a submit that only the last step offers.
+ *
+ * The state is the step index; the draft belongs to the caller, because a
+ * wizard's fields are the caller's fields — the same ownership the probe's
+ * `multi-step-form-lifecycle` measured on 0.11.0 (the caller keeps the draft,
+ * each step's gate runs **before** the step moves, and the whole record is
+ * decoded by `Form` only on the last step's submit).
+ *
+ * A step's content is mounted only while it is current. The draft survives
+ * because it lives above this component; a field's own transient state does not,
+ * which is the honest trade against keeping hidden fields in the tab order.
+ */
+
+import type { Props } from "@gpuix/react";
+import { mergeStyles } from "@gpuix/react/floating";
+import { cn } from "@gpuixui/tw";
+import * as Option from "effect/Option";
+import { useState, type ReactNode } from "react";
+import { Button } from "./internal/button.js";
+import { useControllableState } from "./internal/controllable.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { statusTone, useTheme } from "./internal/theme.js";
+import { Stepper, StepperStep } from "./stepper.js";
+import {
+  gateMessage,
+  isLastStep,
+  nextStep,
+  previousStep,
+  stepAnnouncement,
+  stepOf,
+  type StepGate,
+} from "./wizard/logic.js";
+
+/** One step of a wizard. */
+export interface MultiStep extends StepGate {
+  /** A stable key for the step and its indicator row. */
+  readonly id: string;
+  /** The step's name in the indicator. */
+  readonly title: string;
+  /** One line of supporting copy in the indicator. */
+  readonly description?: string;
+  /** The step's content, mounted only while the step is current. */
+  readonly content: ReactNode;
+}
+
+/** {@link MultiStepForm} props. */
+export interface MultiStepFormProps extends Omit<
+  Props,
+  "children" | "onSubmit"
+> {
+  /** The steps, in order. An empty list paints nothing. */
+  readonly steps: ReadonlyArray<MultiStep>;
+  /** The controlled current step, 1-based; `undefined` is uncontrolled. */
+  readonly step?: number;
+  /** The uncontrolled starting step. Default `1`. */
+  readonly defaultStep?: number;
+  /** Reports every accepted step change, in both modes. */
+  readonly onStepChange?: (step: number) => void;
+  /** Runs when the last step's gate passes. */
+  readonly onSubmit: () => void;
+  /** A submit the caller is waiting on; the actions refuse a second press. */
+  readonly pending?: boolean;
+  /** The last step's action. Default `"Submit"`. */
+  readonly submitLabel?: string;
+  /** A middle step's action. Default `"Next"`. */
+  readonly nextLabel?: string;
+  /** The backward action. Default `"Back"`. */
+  readonly backLabel?: string;
+  /** The wizard's accessible name. */
+  readonly label?: string;
+  readonly className?: string;
+}
+
+/** A refusal, remembered with the step it was raised on. */
+interface Refusal {
+  readonly step: number;
+  readonly message: string;
+}
+
+/**
+ * A step's gate, run with no content mounted.
+ *
+ * The gate belongs to the step the reader is on; the refusal is kept with that
+ * step, so a controlled `step` change cannot paint a message against another
+ * step's content.
+ */
+const guard = (step: MultiStep | undefined): Option.Option<string> =>
+  gateMessage(step);
+
+/** A wizard over the shipped stepper, with gated steps and one submit. */
+export const MultiStepForm = ({
+  steps,
+  step: stepProp,
+  defaultStep = 1,
+  onStepChange,
+  onSubmit,
+  pending = false,
+  submitLabel = "Submit",
+  nextLabel = "Next",
+  backLabel = "Back",
+  label,
+  className,
+  style,
+  ...rest
+}: MultiStepFormProps) => {
+  const theme = useTheme();
+  const count = steps.length;
+  const [value, setStep] = useControllableState({
+    value: stepProp,
+    defaultValue: defaultStep,
+    onChange: onStepChange,
+  });
+  const current = stepOf(value, count);
+  const [refusal, setRefusal] = useState<Option.Option<Refusal>>(Option.none());
+  const message = Option.flatMap(refusal, (held) =>
+    held.step === current ? Option.some(held.message) : Option.none(),
+  );
+
+  if (count === 0) return null;
+
+  const step = steps[current - 1];
+  const last = isLastStep(current, count);
+
+  const advance = (): void => {
+    Option.match(guard(step), {
+      onNone: () => {
+        setRefusal(Option.none());
+        setStep(nextStep(current, count));
+      },
+      onSome: (next) =>
+        setRefusal(Option.some({ step: current, message: next })),
+    });
+  };
+
+  const back = (): void => {
+    setRefusal(Option.none());
+    setStep(previousStep(current));
+  };
+
+  const submit = (): void => {
+    Option.match(guard(step), {
+      onNone: () => {
+        setRefusal(Option.none());
+        onSubmit();
+      },
+      onSome: (next) =>
+        setRefusal(Option.some({ step: current, message: next })),
+    });
+  };
+
+  const action = (): ReactNode =>
+    last ? (
+      <Button
+        variant="primary"
+        size="md"
+        testId="multi-step-submit"
+        disabled={pending}
+        onClick={submit}
+      >
+        {submitLabel}
+      </Button>
+    ) : (
+      <Button
+        variant="primary"
+        size="md"
+        testId="multi-step-next"
+        disabled={pending}
+        onClick={advance}
+      >
+        {nextLabel}
+      </Button>
+    );
+
+  return (
+    <div
+      {...(label === undefined ? {} : { role: "group", "aria-label": label })}
+      {...rest}
+      style={mergeStyles(
+        mergeStyles(recipeStyle(cn(className), theme), {
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
+        }),
+        style,
+      )}
+    >
+      <Stepper
+        value={current}
+        label={label ?? "Steps"}
+        testId="multi-step-steps"
+      >
+        {steps.map((entry, at) => (
+          <StepperStep
+            key={entry.id}
+            value={at + 1}
+            label={entry.title}
+            description={entry.description}
+          />
+        ))}
+      </Stepper>
+      <div
+        testId="multi-step-content"
+        aria-label={stepAnnouncement(step?.title ?? "", current, count)}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.md,
+        }}
+      >
+        {step?.content}
+      </div>
+      {Option.match(message, {
+        onNone: () => null,
+        onSome: (text) => (
+          <text
+            testId="multi-step-error"
+            role="alert"
+            style={{
+              color: statusTone(theme, "destructive").foreground,
+              fontSize: theme.typography.caption.fontSize,
+              lineHeight: theme.typography.caption.lineHeight,
+            }}
+          >
+            {text}
+          </text>
+        ),
+      })}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: theme.spacing.sm,
+        }}
+      >
+        <Button
+          variant="ghost"
+          size="md"
+          testId="multi-step-back"
+          disabled={pending || current === 1}
+          onClick={back}
+        >
+          {backLabel}
+        </Button>
+        {action()}
+      </div>
+    </div>
+  );
+};
+
+/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+export const multiStepFormMeta = {
+  name: "Multi-step forms",
+  tier: 5,
+  status: "done",
+  gpuixSupport: "yes",
+  limitations: [
+    "the draft is the caller's; a non-current step's content is unmounted",
+    "no step click: the indicator is read-only, like Stepper",
+    "the last step's gate runs before onSubmit, not the record decode — that is Form's",
+  ],
+  docs: "docs/multi-step-form.mdx",
+  example: "examples/multi-step-form.example.tsx",
+  testFile: "src/behaviour/multi-step-form.test.tsx",
+} as const;

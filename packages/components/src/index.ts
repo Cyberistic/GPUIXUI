@@ -54,6 +54,7 @@ export * from "./message.js";
 export * from "./message-scroller.js";
 export * from "./motion.js";
 export * from "./motion-grid.js";
+export * from "./multi-step-form.js";
 export * from "./navigation-menu.js";
 export * from "./page-transition.js";
 export * from "./pagination.js";

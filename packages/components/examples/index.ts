@@ -60,6 +60,7 @@ import { MessageExample } from "./message.example.js";
 import { MessageScrollerExample } from "./message-scroller.example.js";
 import { MotionExample } from "./motion.example.js";
 import { MotionGridExample } from "./motion-grid.example.js";
+import { MultiStepFormExample } from "./multi-step-form.example.js";
 import { NavigationMenuExample } from "./navigation-menu.example.js";
 import { PageTransitionExample } from "./page-transition.example.js";
 import { PaginationExample } from "./pagination.example.js";
@@ -139,6 +140,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "message-scroller": MessageScrollerExample,
   motion: MotionExample,
   "motion-grid": MotionGridExample,
+  "multi-step-form": MultiStepFormExample,
   "navigation-menu": NavigationMenuExample,
   "page-transition": PageTransitionExample,
   pagination: PaginationExample,

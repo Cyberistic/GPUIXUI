@@ -364,6 +364,12 @@ runtime has no `aria-valuenow`, so a popup spinbutton could not announce its
 value. The field root, its two segments, the separator and the clear control are
 the honest parts.
 
+### Tier 5 — specialised
+
+| Component | Parts | base-gpui guide | Source |
+| --------- | ----- | --------------- | ------ |
+| Multi-step forms | `MultiStepForm` | — | plan 611 |
+
 ### Animated primitives (plan 600)
 
 | Component | Parts | base-gpui guide | Source |

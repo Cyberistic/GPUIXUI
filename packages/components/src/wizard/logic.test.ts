@@ -1,0 +1,73 @@
+/**
+ * The wizard's step arithmetic and its gate.
+ *
+ * The bug guarded: a stored or computed step index must never paint a step that
+ * does not exist, and a gate must be consulted on the step the reader is on —
+ * a step that refuses to be left keeps the workflow where it was and reports its
+ * own message.
+ */
+
+import { describe, expect, it } from "vitest";
+import * as Option from "effect/Option";
+import {
+  gateMessage,
+  isLastStep,
+  nextStep,
+  previousStep,
+  stepAnnouncement,
+  stepOf,
+} from "./logic.js";
+
+describe("stepOf", () => {
+  it("keeps a step inside 1…count", () => {
+    expect(stepOf(1, 3)).toBe(1);
+    expect(stepOf(0, 3)).toBe(1);
+    expect(stepOf(2.8, 3)).toBe(2);
+    expect(stepOf(99, 3)).toBe(3);
+    expect(stepOf(Number.NaN, 3)).toBe(1);
+    expect(stepOf(2, 0)).toBe(1);
+  });
+});
+
+describe("nextStep / previousStep", () => {
+  it("stops at both ends", () => {
+    expect(nextStep(1, 3)).toBe(2);
+    expect(nextStep(3, 3)).toBe(3);
+    expect(previousStep(2)).toBe(1);
+    expect(previousStep(1)).toBe(1);
+    expect(previousStep(Number.NaN)).toBe(1);
+  });
+});
+
+describe("isLastStep", () => {
+  it("names the last step and never an empty workflow", () => {
+    expect(isLastStep(3, 3)).toBe(true);
+    expect(isLastStep(2, 3)).toBe(false);
+    expect(isLastStep(1, 0)).toBe(false);
+  });
+});
+
+describe("gateMessage", () => {
+  it("reads a step's own refusal", () => {
+    const refusing = { gate: () => Option.some("Accept the checklist") };
+    expect(Option.getOrNull(gateMessage(refusing))).toBe(
+      "Accept the checklist",
+    );
+  });
+
+  it("allows a step with no gate, and one whose gate passes", () => {
+    expect(Option.isNone(gateMessage(undefined))).toBe(true);
+    expect(Option.isNone(gateMessage({}))).toBe(true);
+    expect(Option.isNone(gateMessage({ gate: () => Option.none() }))).toBe(
+      true,
+    );
+  });
+});
+
+describe("stepAnnouncement", () => {
+  it("names the title and the place in the workflow", () => {
+    expect(stepAnnouncement("Review", 2, 3)).toBe("Review, step 2 of 3");
+    expect(stepAnnouncement("Review", 9, 3)).toBe("Review, step 3 of 3");
+    expect(stepAnnouncement("Review", 1, 0)).toBe("Review, step 1 of 1");
+  });
+});

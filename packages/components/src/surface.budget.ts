@@ -91,7 +91,10 @@ export const surfaceBudget = {
   // 167 → 168 for the stepper's status rule (`stepper/logic.ts`): the current
   // step a caller cannot name (`NaN`/infinity) resolves to the first step in one
   // place, so the paint and the announcement cannot disagree.
-  modules: 168,
+  // 168 → 170 for MultiStepForm (`multi-step-form.tsx` and `wizard/logic.ts`):
+  // the wizard's step arithmetic and gate live in a rule beside the shell, the
+  // same split Stepper took.
+  modules: 170,
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
   // with Magnetic, 743 KiB with LiquidButton, 759 KiB with AvatarGroup, 788 KiB
