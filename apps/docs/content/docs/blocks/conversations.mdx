@@ -1,0 +1,53 @@
+---
+title: Conversations
+description: A Messages-style window in three platform dresses — macOS, Windows 11 and Linux Breeze.
+---
+
+A Messages-window recipe: the conversation list on the left, the open thread on
+the right and the composer beneath it. The same block is drawn in three
+platform dresses so the deck on the landing page can show macOS, Windows 11 and
+Linux side by side; the preview below is the macOS one. Copy the recipe; it is
+composed from the library, not a new component.
+
+<BlockPreview name="conversations-01" />
+
+The preview is interactive: click a conversation to swap the thread (Gon,
+Kurapika and Bisky have a short one; the rest open on an empty state), type in
+the composer and press Enter to append an outgoing bubble, and type in the
+search field to filter the list by name or preview. The window keeps its height,
+so a longer thread scrolls its own log instead of moving the window; below 760px
+of viewport the right pane is hidden and the list is the whole window, as
+Messages does on a narrow screen.
+
+## The three dresses
+
+`ConversationWindow` takes `platform` and changes only the skin:
+
+- **macOS** — white window, 12px radius, traffic lights on the left, a 330px
+  grey list and a filled blue selected row; green outgoing bubbles with 18px
+  corners. The sidebar toggle sits at the list's top-right, compose at the
+  thread's top-left, video and phone at its top-right.
+- **Windows 11** — light Fluent window, 8px radius, `− □ ×` on the right, a 72px
+  icon rail with a blue selected message icon, a white list with a light blue
+  selected row, and blue outgoing bubbles. The composer's blue send is a circle.
+- **Linux (Breeze dark)** — dark window, 8px radius, traffic lights on the left
+  *and* `− □ ×` on the right, a teal-selected message icon in the rail, a teal
+  selected row and blue outgoing bubbles.
+
+The literals become roles — `success`, `primary`, `info`, `selected`,
+`success-soft`, `muted` — so every dress works in both the light and the dark
+palette. The double tick is `info` in all three.
+
+## Composition
+
+The block composes:
+
+- `Avatar` from `@gpuixui/components/avatar`
+- `ScrollArea`, `Stack`, `Text` and `Input` from `@gpuixui/primitives`
+- `Icon` from `@gpuixui/icons`
+
+The window chrome — traffic lights, window controls, the rail, the compose and
+call glyphs — is the app's own, drawn as the block's browser reproduction.
+`search`, `select` and `send` are the only handlers to wire; the list filter and
+the sent bubble are the app's state, so a new conversation is a datum, not a
+second render path.

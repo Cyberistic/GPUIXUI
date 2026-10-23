@@ -13,6 +13,7 @@
     "notification-centre",
     "command-centre",
     "file-manager",
-    "email-inbox"
+    "email-inbox",
+    "conversations"
   ]
 }

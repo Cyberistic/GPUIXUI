@@ -367,7 +367,7 @@
 .landing-deck {
   position: relative;
   width: min(880px, 100%);
-  height: 388px;
+  height: 528px;
   margin: 12px auto 0;
   overflow: visible;
 }
@@ -420,224 +420,18 @@
   opacity: 0.72;
 }
 
-.landing-deck .landing-window:not([data-pos="0"]) .landing-badge {
-  visibility: hidden;
-}
-
-/* The hunter licensing chat, one per platform window. */
+/* The conversations block, one per platform window. The block draws its own
+   traffic lights, so the deck's card is the window and carries no chrome. */
 .landing-deck .landing-window {
-  width: min(560px, calc(100% - 40px));
-  height: 302px;
+  width: min(840px, calc(100% - 40px));
+  height: 460px;
   border-radius: calc(var(--radius) + 6px);
 }
 
-.landing-chat {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  background: var(--card);
-}
-
-.landing-chat-log {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px 4px;
-  overflow: hidden;
-}
-
-.landing-chat-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.landing-chat-row-user {
-  justify-content: flex-end;
-}
-
-.landing-chat-avatar {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-}
-
-.landing-chat-bubble {
-  max-width: 78%;
-  margin: 0;
-  padding: 6px 10px;
-  border: 1px solid var(--line);
-  border-radius: calc(var(--radius) + 2px);
-  background: var(--bg-soft);
-  font-size: 11.5px;
-  line-height: 1.4;
-}
-
-.landing-chat-bubble-user {
-  border-color: transparent;
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.landing-chat-chips {
-  display: flex;
-  gap: 6px;
-  padding-left: 30px;
-}
-
-.landing-chat-chips span {
-  padding: 3px 9px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  font-size: 10px;
-  color: var(--muted);
-}
-
-.landing-chat-chips span[data-active="true"] {
-  border-color: transparent;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-weight: 600;
-}
-
-.landing-chat-licence {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-left: 30px;
-  padding: 8px 10px;
-  border: 1px solid var(--accent-text);
-  border-radius: calc(var(--radius) + 2px);
-  background: var(--accent-wash);
-}
-
-.landing-chat-licence-title {
-  font-size: 11px;
-  font-weight: 650;
-}
-
-.landing-chat-licence-meta {
-  font-family: var(--mono);
-  font-size: 10px;
-  line-height: 1.3;
-  color: var(--muted);
-}
-
-.landing-chat-composer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin: 0 12px 12px;
-  padding: 7px 10px;
-  border: 1px solid var(--field-line);
-  border-radius: calc(var(--radius) + 2px);
-  background: var(--field);
-  font-size: 11px;
-  color: var(--dim);
-}
-
-.landing-chat-send {
-  padding: 3px 10px;
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-size: 10.5px;
-  font-weight: 600;
-}
-
-/* window chrome */
-.landing-bar {
-  display: flex;
-  align-items: center;
-  height: 36px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--chrome-line);
-  background: var(--chrome);
-}
-
-.landing-bar-title {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--dim);
-}
-
-.landing-bar-mac {
-  position: relative;
-  justify-content: center;
-}
-
-.landing-bar-mac .landing-chrome {
-  position: absolute;
-  left: 12px;
-}
-
-.landing-bar-glyphs {
-  justify-content: space-between;
-}
-
-.landing-chrome {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.landing-chrome i {
-  font-style: normal;
-}
-
-.landing-chrome-mac i {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-}
-
-.landing-chrome-mac i:nth-child(1) {
-  background: #ff5f57;
-}
-
-.landing-chrome-mac i:nth-child(2) {
-  background: #febc2e;
-}
-
-.landing-chrome-mac i:nth-child(3) {
-  background: #28c840;
-}
-
-.landing-chrome-glyphs {
-  gap: 6px;
-}
-
-.landing-chrome-glyphs i {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 3px;
-  font-size: 10px;
-  line-height: 1;
-  color: var(--dim);
-  background: var(--field);
-  border: 1px solid var(--field-line);
-}
-
-.landing-window-win .landing-chrome-glyphs i {
-  border-radius: 2px;
-}
-
-.landing-window-lnx .landing-chrome-glyphs i {
-  border-radius: 50%;
+.landing-deck .gx-conv {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
 }
 
 /* dialog body — the same component on every window */
@@ -708,17 +502,6 @@
 
 .landing-window-lnx .landing-field {
   border-radius: 8px;
-}
-
-.landing-badge {
-  position: absolute;
-  left: 14px;
-  bottom: 12px;
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--dim);
 }
 
 /* ---- dashboard: the product window ---- */
@@ -1308,7 +1091,7 @@
   }
 
   .landing-deck {
-    height: 340px;
+    height: 480px;
   }
 
   .landing-deck .landing-window {
@@ -1320,7 +1103,7 @@
     position: static;
     transform: none;
     opacity: 1;
-    height: 300px;
+    height: 460px;
     width: 100%;
   }
 }

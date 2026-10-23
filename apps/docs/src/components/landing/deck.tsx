@@ -1,13 +1,20 @@
 /**
- * The hero deck: three platform windows, each running the same **hunter
- * licensing chat agent** in that platform's own theme (families, roles,
- * radius, density), so macOS, Windows 11 and Linux look like themselves.
+ * The hero deck: three platform windows, each running the **conversations
+ * block** in its own dress — macOS Messages, Windows 11 Fluent and Linux
+ * Breeze — so each card is recognisably its platform.
  *
- * The shuffle pauses on hover; the stack is a clean fan with no rotation.
+ * macOS and Windows show on the light palette, Linux on the dark one. The
+ * shuffle pauses on hover; the stack is a clean fan with no rotation.
  */
 import { useEffect, useState, type CSSProperties } from "react";
-import { darkTheme, platformTheme, type PlatformName } from "@gpuixui/tokens";
+import {
+  darkTheme,
+  lightTheme,
+  platformTheme,
+  type PlatformName,
+} from "@gpuixui/tokens";
 import { toCssVars } from "../../lib/theme-css";
+import { ConversationWindow } from "../docs/conversations-block";
 import { platforms, repo } from "./data";
 import type { Platform } from "./data";
 
@@ -16,13 +23,6 @@ const SHUFFLE_MS = 1600;
 /** The library's platform name for a landing card. */
 const platformName = (id: Platform["id"]): PlatformName =>
   id === "macos" ? "darwin" : id === "windows" ? "win32" : "linux";
-
-/** The UI family each system is recognised by, on any host. */
-const FAMILY: Readonly<Record<Platform["chrome"], string>> = {
-  mac: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif',
-  win: '"Segoe UI Variable", "Segoe UI", system-ui, sans-serif',
-  lnx: 'Cantarell, "Ubuntu", "Noto Sans", system-ui, sans-serif',
-};
 
 export function Hero() {
   const [top, setTop] = useState(0);
@@ -104,7 +104,7 @@ export function Hero() {
   );
 }
 
-/** The licensing agent: a conversation that issues one general licence. */
+/** One platform window, showing the conversations block in that theme. */
 function PlatformMini({
   platform,
   position,
@@ -112,12 +112,9 @@ function PlatformMini({
   platform: Platform;
   position: number;
 }) {
-  const theme = platformTheme(darkTheme, platformName(platform.id));
-  const style = {
-    ...toCssVars(theme),
-    "--font-sans": FAMILY[platform.chrome],
-    "--radius-window": `${theme.radius.lg}px`,
-  } as CSSProperties;
+  const palette = platform.id === "linux" ? darkTheme : lightTheme;
+  const theme = platformTheme(palette, platformName(platform.id));
+  const style = { ...toCssVars(theme) } as CSSProperties;
 
   return (
     <div
@@ -125,86 +122,8 @@ function PlatformMini({
       data-pos={position}
       style={style}
     >
-      <Bar platform={platform} />
-      <div className="landing-chat">
-        <div className="landing-chat-log">
-          <div className="landing-chat-row">
-            <span className="landing-chat-avatar">HA</span>
-            <p className="landing-chat-bubble">
-              I can issue a General Hunter License. Which class?
-            </p>
-          </div>
-
-          <div className="landing-chat-chips">
-            <span data-active="true">Single</span>
-            <span>Group</span>
-            <span>Pro</span>
-          </div>
-
-          <div className="landing-chat-row landing-chat-row-user">
-            <p className="landing-chat-bubble landing-chat-bubble-user">
-              Group — three seats.
-            </p>
-          </div>
-
-          <div className="landing-chat-row">
-            <span className="landing-chat-avatar">HA</span>
-            <p className="landing-chat-bubble">
-              Approved. Here is your licence.
-            </p>
-          </div>
-
-          <div className="landing-chat-licence">
-            <span className="landing-chat-licence-title">
-              General Hunter License
-            </span>
-            <span className="landing-chat-licence-meta">HG-0042 · 3 seats</span>
-          </div>
-        </div>
-
-        <div className="landing-chat-composer">
-          <span>Message the licensing agent</span>
-          <span className="landing-chat-send">Send</span>
-        </div>
-      </div>
-      <span className="landing-badge">{platform.label} · default</span>
+      <ConversationWindow platform={platform.id} />
     </div>
-  );
-}
-
-function Bar({ platform }: { platform: Platform }) {
-  const title = <span className="landing-bar-title">Hunter Licensing</span>;
-  const chrome = <Chrome kind={platform.chrome} />;
-
-  return platform.chrome === "mac" ? (
-    <div className="landing-bar landing-bar-mac">
-      {chrome}
-      {title}
-    </div>
-  ) : (
-    <div className="landing-bar landing-bar-glyphs">
-      {title}
-      {chrome}
-    </div>
-  );
-}
-
-function Chrome({ kind }: { kind: Platform["chrome"] }) {
-  if (kind === "mac") {
-    return (
-      <span aria-hidden="true" className="landing-chrome landing-chrome-mac">
-        <i />
-        <i />
-        <i />
-      </span>
-    );
-  }
-  return (
-    <span aria-hidden="true" className="landing-chrome landing-chrome-glyphs">
-      <i>–</i>
-      <i>□</i>
-      <i>×</i>
-    </span>
   );
 }
 
