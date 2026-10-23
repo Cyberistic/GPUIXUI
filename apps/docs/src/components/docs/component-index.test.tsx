@@ -1,17 +1,18 @@
 import { readFileSync } from "node:fs";
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { filterEntries, verdictMark } from "../../lib/component-index";
-import { componentIndex } from "../../lib/component-index-data";
+import { componentPages } from "../../lib/component-index-data";
 import { ComponentIndexView } from "./component-index";
 
 /**
- * The index's rendered rows.
+ * The index's rendered tiles.
  *
  * The page mounts this component instead of listing pages by hand, so the guard
- * is that the rendered list carries every row of the generated index — a page
- * dropped here has no other symptom — and that the count and the control are
- * what a reader sees before typing.
+ * is that the grid carries every row of the generated lane — a page dropped here
+ * has no other symptom — that every tile with a demo renders it, and that the
+ * count and the control are what a reader sees before typing.
  *
  * The mount reads its filter off the page URL, which is the one fact a server
  * render of the view cannot show: the last case reads the mount's own source,
@@ -21,58 +22,125 @@ import { ComponentIndexView } from "./component-index";
 
 const noop = (): void => undefined;
 
+// The switch resolves through the router, which a server render of the grid
+// does not mount; its own guards cover that. The grid's guard is about the
+// tiles and the demos they carry, so both read the dark macOS theme.
+vi.mock("./platform-toggle", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./platform-toggle")>();
+  const { resolvePlatformTheme } = await import("../../lib/platform");
+  const choose = (): void => undefined;
+  return {
+    ...actual,
+    usePlatform: () => ({
+      platform: "darwin" as const,
+      look: "native" as const,
+      mode: "dark" as const,
+      theme: resolvePlatformTheme("darwin", "dark"),
+      setPlatform: choose,
+      setLook: choose,
+      setMode: choose,
+    }),
+  };
+});
+
+vi.mock("./preview-surface", () => ({
+  PreviewSurface: ({ children }: { readonly children: ReactNode }) => (
+    <div className="gx-demo">{children}</div>
+  ),
+}));
+
 const markup = renderToStaticMarkup(
-  <ComponentIndexView onQueryChange={noop} query="" />,
+  <ComponentIndexView onQueryChange={noop} previews query="" />,
 );
 
-/** One rendered row: from its link to the list item's close. */
+/**
+ * One rendered tile: from its link to the next tile's marker.
+ *
+ * A demo can render its own list, so `</li>` is not the tile's edge; the tile's
+ * own marker is.
+ */
 const row = (url: string): string => {
-  const start = markup.indexOf(`href="${url}"`);
-  if (start === -1) return "";
-  const end = markup.indexOf("</li>", start);
+  const link = markup.indexOf(`href="${url}"`);
+  if (link === -1) return "";
+  const start = markup.lastIndexOf("data-component=", link);
+  const end = markup.indexOf("data-component=", link);
   return markup.slice(start, end === -1 ? undefined : end);
 };
 
 describe("the component index", () => {
   it("renders every page in the index", () => {
-    expect(componentIndex.length).toBeGreaterThan(60);
+    expect(componentPages.length).toBeGreaterThan(60);
     expect(
-      componentIndex.filter((entry) => !markup.includes(entry.url)),
+      componentPages.filter((entry) => !markup.includes(entry.url)),
     ).toEqual([]);
     expect(
-      componentIndex.filter((entry) => !markup.includes(entry.title)),
-    ).toEqual([]);
-  });
-
-  it("marks the rows that open with a browser preview, and no others", () => {
-    // The index says only the curated pages preview the component, so a reader
-    // scanning the rows can see which one to open first — and a package page,
-    // which has no preview, must not wear the badge.
-    const marked = componentIndex.filter((entry) => entry.preview);
-
-    expect(marked.length).toBeGreaterThanOrEqual(4);
-    expect(
-      marked.filter((entry) => !row(entry.url).includes("Browser preview")),
-    ).toEqual([]);
-    expect(
-      componentIndex
-        .filter((entry) => !entry.preview)
-        .filter((entry) => row(entry.url).includes("Browser preview")),
+      componentPages.filter((entry) => !markup.includes(entry.title)),
     ).toEqual([]);
   });
 
-  it("wears the inventory verdict on the rows that are not whole", () => {
+  it("renders a demo in the tiles that mount one, and a label in the rest", () => {
+    // The page says a component that mounts a preview renders it in its tile;
+    // a tile that rendered an empty frame would make that claim false.
+    const previewed = componentPages.filter(
+      (entry) => entry.demo !== undefined,
+    );
+    const staticRows = componentPages.filter(
+      (entry) => entry.demo === undefined,
+    );
+
+    expect(previewed.length).toBeGreaterThanOrEqual(75);
+    expect(
+      previewed.filter(
+        (entry) => !row(entry.url).includes('data-preview="demo"'),
+      ),
+    ).toEqual([]);
+    expect(staticRows.length).toBeGreaterThan(0);
+    expect(
+      staticRows.filter(
+        (entry) => !row(entry.url).includes('data-preview="none"'),
+      ),
+    ).toEqual([]);
+  });
+
+  it("lays the tiles out three across on a desktop, two on a tablet, one on a phone", () => {
+    // The grid replaces a one- or two-column list; a regression to the old
+    // width is invisible to every other assertion here.
+    expect(markup).toContain("grid-cols-1");
+    expect(markup).toContain("md:grid-cols-2");
+    expect(markup).toContain("lg:grid-cols-3");
+  });
+
+  it("paints the same placeholder on the server, then mounts the demos", () => {
+    // The demos carry seeded drawings and timers. Rendering them during SSR
+    // made React's first client pass disagree with the server (a hydration
+    // error across the grid), so the server and first client pass paint a
+    // placeholder and the mount turns the scenes on in an effect.
+    const firstPaint = renderToStaticMarkup(
+      <ComponentIndexView onQueryChange={noop} query="" />,
+    );
+    const mount = readFileSync(
+      new URL("./component-index.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(firstPaint).toContain(">Preview<");
+    expect(firstPaint).not.toContain("gx-grid-preview");
+    expect(mount).toContain("useEffect(() => setPreviews(true), [])");
+    expect(mount).toContain("<Scene />");
+  });
+
+  it("wears the inventory verdict on the tiles that are not whole", () => {
     // The page says status is per component but the strip is on the page a
-    // reader has not opened; the row itself has to carry the verdict, and a
+    // reader has not opened; the tile itself has to carry the verdict, and a
     // component the runtime supports whole must not wear a mark.
-    const partial = componentIndex.filter(
+    const partial = componentPages.filter(
       (entry) => verdictMark(entry.verdict)?.label === "partial",
     );
-    const whole = componentIndex.filter(
+    const whole = componentPages.filter(
       (entry) => verdictMark(entry.verdict) === undefined,
     );
 
-    expect(partial.length).toBeGreaterThan(30);
+    expect(partial.length).toBeGreaterThan(20);
     expect(whole.length).toBeGreaterThan(0);
     expect(
       partial.filter((entry) => !row(entry.url).includes(">partial<")),
@@ -84,7 +152,7 @@ describe("the component index", () => {
 
   it("prints the full count before a query narrows it", () => {
     expect(markup).toContain(
-      `${componentIndex.length} of ${componentIndex.length} pages`,
+      `${componentPages.length} of ${componentPages.length} components`,
     );
   });
 
@@ -95,24 +163,24 @@ describe("the component index", () => {
     expect(markup).toContain('type="search"');
   });
 
-  it("paints the rows a linked filter matches, and no others", () => {
+  it("paints the tiles a linked filter matches, and no others", () => {
     // The filter travels in the URL, so the first paint of a shared link is
-    // already the narrowed view. The expected rows are the pure filter's own
-    // answer, so the markup cannot list a row the query rejects.
+    // already the narrowed view. The expected tiles are the pure filter's own
+    // answer, so the markup cannot list a page the query rejects.
     const query = "DialogFooter";
-    const matches = filterEntries(componentIndex, query);
+    const matches = filterEntries(componentPages, query);
     const linked = renderToStaticMarkup(
       <ComponentIndexView onQueryChange={noop} query={query} />,
     );
 
     expect(matches.length).toBeGreaterThan(0);
-    expect(matches.length).toBeLessThan(componentIndex.length);
+    expect(matches.length).toBeLessThan(componentPages.length);
     expect(linked).toContain(
-      `${matches.length} of ${componentIndex.length} pages`,
+      `${matches.length} of ${componentPages.length} components`,
     );
     expect(matches.filter((entry) => !linked.includes(entry.url))).toEqual([]);
     expect(
-      componentIndex.filter(
+      componentPages.filter(
         (entry) => !matches.includes(entry) && linked.includes(entry.url),
       ),
     ).toEqual([]);

@@ -183,12 +183,12 @@ describe("the patterns page", () => {
     expect(page.includes("<PatternChoices />")).toBe(true);
   });
 
-  it("sits in the Composition section of the sidebar", () => {
+  it("sits with the guide pages, before the component lanes", () => {
     const sidebar = sidebarPages(new URL("../../", import.meta.url));
     const position = sidebar.indexOf("patterns");
 
-    expect(position).toBeGreaterThan(sidebar.indexOf("data-display"));
-    expect(position).toBeLessThan(sidebar.indexOf("blocks"));
+    expect(position).toBeGreaterThan(sidebar.indexOf("layouts"));
+    expect(position).toBeLessThan(sidebar.indexOf("components"));
   });
 
   it("hands off to the block, example and reference pages", () => {

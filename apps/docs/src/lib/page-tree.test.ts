@@ -6,8 +6,9 @@ import { completeSection, type SectionPage } from "./page-tree";
  * The sidebar completion.
  *
  * The site writes a page for a few components; the package writes one for all of
- * them. The tree must keep the curated order, never list a URL twice, and stay
- * stable when the package adds a page — so the guards below check all three.
+ * them. The tree must keep one row per URL, fold both sources into one
+ * alphabetical lane, and stay stable when the package adds a page — so the
+ * guards below check all three.
  */
 
 const tree = (children: ReadonlyArray<PageTree.Node>): PageTree.Root => ({
@@ -26,12 +27,29 @@ const folder = (
   children: ReadonlyArray<PageTree.Node>,
 ): PageTree.Node => ({ type: "folder", name, children: [...children] });
 
+const separator = (name: string): PageTree.Node => ({
+  type: "separator",
+  name,
+});
+
 /** The page URLs under the first folder with this name. */
 const urlsIn = (root: PageTree.Root, name: string): ReadonlyArray<string> =>
   root.children.flatMap((node) =>
     node.type === "folder" && node.name === name
       ? node.children.flatMap((child) =>
           child.type === "page" ? [child.url] : [],
+        )
+      : [],
+  );
+
+/** The page labels under the first folder with this name. */
+const namesIn = (root: PageTree.Root, name: string): ReadonlyArray<string> =>
+  root.children.flatMap((node) =>
+    node.type === "folder" && node.name === name
+      ? node.children.flatMap((child) =>
+          child.type === "page" && typeof child.name === "string"
+            ? [child.name]
+            : [],
         )
       : [],
   );
@@ -43,7 +61,7 @@ const shipped: ReadonlyArray<SectionPage> = [
 ];
 
 describe("the component section", () => {
-  it("keeps the curated pages first and appends the rest alphabetically", () => {
+  it("folds curated and package pages into one alphabetical list", () => {
     const completed = completeSection(
       tree([
         page("Introduction", "/docs"),
@@ -57,12 +75,19 @@ describe("the component section", () => {
       shipped,
     );
 
-    // Button and Tabs are curated; Tabs must not appear a second time.
+    // Button and Tabs are curated; Tabs must not appear a second time, and the
+    // curated order is not privileged over the alphabet.
+    expect(namesIn(completed, "Components")).toEqual([
+      "Accordion",
+      "Badge",
+      "Button",
+      "Tabs",
+    ]);
     expect(urlsIn(completed, "Components")).toEqual([
-      "/docs/components/button",
-      "/docs/components/tabs",
       "/docs/components/accordion",
       "/docs/components/badge",
+      "/docs/components/button",
+      "/docs/components/tabs",
     ]);
     // Siblings outside the folder are untouched, order included.
     expect(completed.children.map((node) => node.name)).toEqual([
@@ -72,40 +97,24 @@ describe("the component section", () => {
     ]);
   });
 
-  it("marks the appended pages with their own separator", () => {
+  it("drops the old group separators, so the lane reads flat", () => {
     const completed = completeSection(
-      tree([folder("Components", [page("Button", "/docs/components/button")])]),
+      tree([
+        folder("Components", [
+          page("Button", "/docs/components/button"),
+          separator("Surfaces"),
+          page("Card", "/docs/components/card"),
+        ]),
+      ]),
       "Components",
       shipped,
     );
     const [components] = completed.children;
     if (components?.type !== "folder") throw new Error("no components folder");
 
-    const separator = components.children.findIndex(
-      (node) => node.type === "separator",
+    expect(components.children.every((node) => node.type === "page")).toBe(
+      true,
     );
-    expect(separator).toBe(1);
-    expect(components.children[separator]?.name).toBe("All components");
-    // Everything after the separator is a page, so the group reads as one list.
-    expect(
-      components.children.slice(separator + 1).every((n) => n.type === "page"),
-    ).toBe(true);
-  });
-
-  it("names the separator for the section it completes", () => {
-    const completed = completeSection(
-      tree([folder("Primitives", [page("Box", "/docs/primitives/box")])]),
-      "Primitives",
-      [{ name: "Button", url: "/docs/primitives/button" }],
-      "All primitives",
-    );
-    const [primitives] = completed.children;
-    if (primitives?.type !== "folder") throw new Error("no primitives folder");
-
-    const separators = primitives.children.flatMap((node) =>
-      node.type === "separator" ? [node.name] : [],
-    );
-    expect(separators).toEqual(["All primitives"]);
   });
 
   it("presses an already-listed page only once", () => {
@@ -119,8 +128,8 @@ describe("the component section", () => {
     );
 
     expect(urlsIn(completed, "Components")).toEqual([
-      "/docs/components/tabs",
       "/docs/components/render-prop",
+      "/docs/components/tabs",
     ]);
   });
 
@@ -142,11 +151,9 @@ describe("the component section", () => {
     ).toEqual(["/docs/components/button", "/docs/components/card"]);
   });
 
-  it("returns the tree untouched when there is nothing to add", () => {
-    const original = tree([
-      folder("Components", [page("Button", "/docs/components/button")]),
-    ]);
+  it("leaves a tree with no matching folder alone", () => {
+    const original = tree([page("Introduction", "/docs")]);
 
-    expect(completeSection(original, "Components", [])).toBe(original);
+    expect(completeSection(original, "Components", shipped)).toEqual(original);
   });
 });

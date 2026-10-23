@@ -69,7 +69,7 @@ const icons: PackageCollection = {
   dir: "packages/icons/docs",
   packageName: "@gpuixui/icons",
   route: iconDocsRoute,
-  section: "Primitives",
+  section: "Icons",
   kind: "icon set",
 };
 
@@ -163,35 +163,18 @@ export const collectionByOrigin = {
 /**
  * The sidebar folders the package pages fill.
  *
- * The primitive layer is one section even though two packages write its pages;
- * a reader looks for a lane of the library, not for a package boundary. The
- * workspace lane does the same for its five packages: the dock, code, file,
- * chrome and media surfaces are one destination in the sidebar even though
- * each mounts under its own route.
+ * Each lane is one flat, alphabetical list: a reader looks for a lane of the
+ * library, not for a package boundary. The workspace lane does the same for its
+ * five packages — the dock, code, file, chrome and media surfaces are one
+ * destination in the sidebar even though each mounts under its own route.
  */
 export const packageSections: ReadonlyArray<{
   readonly name: string;
-  readonly separator: string;
   readonly origins: ReadonlyArray<PackageOrigin>;
 }> = [
-  {
-    name: "Primitives",
-    separator: "All primitives",
-    origins: ["primitives", "icons"],
-  },
-  {
-    name: "Components",
-    separator: "All components",
-    origins: ["components"],
-  },
-  {
-    name: "Data display",
-    separator: "All data surfaces",
-    origins: ["data"],
-  },
-  {
-    name: "Workspace",
-    separator: "All workspace surfaces",
-    origins: ["dock", "editor", "files", "shell", "media"],
-  },
+  { name: "Components", origins: ["components"] },
+  { name: "Primitives", origins: ["primitives"] },
+  { name: "Icons", origins: ["icons"] },
+  { name: "Data display", origins: ["data"] },
+  { name: "Workspace", origins: ["dock", "editor", "files", "shell", "media"] },
 ];

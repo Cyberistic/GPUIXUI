@@ -49,7 +49,7 @@ blocks/notification-centre.mdx A notification centre: filters, four row bodies, 
 blocks/command-centre.mdx    A command palette over a dimmed page: filter, highlight, run line
 blocks/file-manager.mdx      A three-pane browser: folders, image tiles and file facts
 blocks/email-inbox.mdx       A four-pane mail client with a filterable list
-components/index.mdx         The filterable component index, its filter in the URL
+components/index.mdx         The component grid: one preview tile per page, filter in the URL
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
 components/avatar.mdx        Curated: the fallback table, the measured dot roles, the roster panel
@@ -227,7 +227,7 @@ src/components/docs/related-strip.tsx     The generated related-component links 
 src/components/docs/native-run-note.tsx   The note above a package page: the playground command and its page
 src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
-src/components/docs/component-index.tsx   The filterable index on /docs/components
+src/components/docs/component-index.tsx   The 3-column tile grid on /docs/components and its URL filter
 src/components/docs/icon-gallery.tsx      Every icon the set publishes, from its own markup
 src/components/docs/use-index-query.ts    A list filter carried in `?q=`, shared by both indexes
 src/components/docs/examples-index.tsx    The generated registry on /docs/examples
@@ -317,7 +317,7 @@ src/lib/search-links.ts             The search dialog's pre-query entry points
 src/lib/package-docs.ts             The loaders for the three package collections
 src/lib/collection-routes.ts        The registry: every mounted package directory, route, section
 src/lib/collection-pages.ts         The pages a mounted collection serves, including one that ships none yet
-src/lib/page-tree.ts                Fills the package's pages into their sidebar section
+src/lib/page-tree.ts                Fills and alphabetically sorts each sidebar section
 src/lib/page-meta.ts                Title, description, canonical and social metadata
 src/lib/page-markdown.ts            Server function behind "Copy page"
 src/lib/page-edit.ts                The Markdown file behind a page, for its GitHub link
@@ -389,7 +389,7 @@ probe's own README section.
 ## The mounted collections
 
 The site renders a Fumadocs collection for its own pages and one for every
-package that ships documentation — nine collections filling four sidebar lanes.
+package that ships documentation — nine collections filling the sidebar lanes.
 The package pages are rendered as-is, never copied, so the site and the package
 cannot drift. A page mounts at its collection's route plus its file name, which
 is why the route column is the collection's root.
@@ -398,7 +398,7 @@ is why the route column is the collection's root.
 | ---------- | ----- | ------- |
 | `content/docs` | `/docs` | the curated pages |
 | `packages/primitives/docs` | `/docs/primitives/<name>` | Primitives |
-| `packages/icons/docs` | `/docs/icons/<name>` | Primitives |
+| `packages/icons/docs` | `/docs/icons/<name>` | Icons |
 | `packages/components/docs` | `/docs/components/<name>` | Components |
 | `packages/data/docs` | `/docs/data-display/<name>` | Data display |
 | `packages/editor/docs` | `/docs/editor/<name>` | Workspace |
@@ -407,10 +407,11 @@ is why the route column is the collection's root.
 | `packages/dock/docs` | `/docs/dock/<name>` | Workspace |
 | `packages/media/docs` | `/docs/media/<name>` | Workspace |
 
-`src/lib/page-tree.ts` fills each package's pages into its section, after the
-curated pages. A curated page keeps its URL, and the search index skips the
-package page for that URL. The primitive layer is one sidebar section even
-though two packages write its pages.
+`src/lib/page-tree.ts` merges each package's pages into its section and sorts
+the section by title, so curated and package pages read as one alphabetical lane
+with no sub-groups. A curated page keeps its URL, and the search index skips the
+package page for that URL. Components is open by default; the other lanes stay
+collapsed.
 
 ### Search
 
@@ -477,13 +478,15 @@ No page restates what the code already says:
   virtual module; `src/lib/public-symbols-data.ts` reads that module and the
   page renders one table. The symbol filter travels in `?q=` like the component
   index's, so a narrowed view can be linked.
-- **Component index** (`/docs/components`) lists every primitives and components
-  page from its frontmatter (`component-index.ts`), so the index cannot
-  advertise a page that does not exist and a new page appears without a docs
-  edit. A curated page shadows its package page, and each row carries the
-  `COMPONENTS.md` status and support verdict the page's status strip prints, so
-  a component the runtime supports only in part is marked in the list and
-  `partial` is a query.
+- **Component index** (`/docs/components`) is a three-column tile grid of every
+  composed page, read from its frontmatter and its first
+  `<ComponentPreview>` (`component-index.ts`), so the index cannot advertise a
+  page that does not exist and a new page appears without a docs edit. A curated
+  page shadows its package page, each tile renders that page's demo, and each
+  tile carries the `COMPONENTS.md` status and support verdict the page's status
+  strip prints, so a component the runtime supports only in part is marked in
+  the grid and `partial` is a query. The grid is three across on desktop, two on
+  tablet and one on a phone.
 - **Lane pages** (`/docs/layouts`, `/docs/workspace`, `/docs/data-display`) get
   their rows from the tier tables of `COMPONENTS.md` through `<LaneTable>`, so a
   page cannot call a row shipped while the inventory says `todo`.

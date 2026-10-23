@@ -98,6 +98,14 @@
   font-family: var(--font-sans);
 }
 
+/* The component grid's tiles: a scene clipped to its card, not a page's
+   full-height preview. */
+.gx-demo.gx-grid-preview {
+  min-height: 0;
+  padding: 12px;
+  overflow: hidden;
+}
+
 /* The scene's scrollbars and native widgets follow the palette it was handed,
    so a light preview is not framed by a dark chrome. */
 .gx-demo[data-mode="light"] {

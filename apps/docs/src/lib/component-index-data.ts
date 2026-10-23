@@ -50,3 +50,7 @@ export const componentIndex: ReadonlyArray<ComponentEntry> = buildIndex(
   [...pages(siteFiles), ...pages(packageFiles)],
   verdictOf,
 );
+
+/** The composed lane, which is what the Components page's grid lists. */
+export const componentPages: ReadonlyArray<ComponentEntry> =
+  componentIndex.filter((entry) => entry.section === "Components");

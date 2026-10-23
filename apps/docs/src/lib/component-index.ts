@@ -61,10 +61,15 @@ export interface ComponentEntry {
    * A page that ships a demo mounts one — curated pages and the component and
    * primitive package pages do — and a lane with no demo shows none. The note
    * above a package page labels the drawing an approximation, because the
-   * shipped code renders through GPUix. The index marks the rows so a reader
-   * can see which pages show the shape of the component before reading its API.
+   * shipped code renders through GPUix. The index keeps the flag for the
+   * `preview` query.
    */
   readonly preview: boolean;
+  /**
+   * The demo the page mounts, e.g. `button-variants`, or `undefined` when it
+   * mounts none. The index's tile renders it compactly.
+   */
+  readonly demo: string | undefined;
 }
 
 /** The section the site's own component pages belong to. */
@@ -413,6 +418,10 @@ export const verdictMark = (
       };
 };
 
+/** The first demo a page mounts, or `undefined` when it mounts none. */
+export const demoOf = (source: string): string | undefined =>
+  /<ComponentPreview\s+name="([^"]+)"/.exec(source)?.[1];
+
 /** One page's row, or `undefined` when it has no title or is not a component. */
 const entryOf = (
   page: ComponentPage,
@@ -436,6 +445,7 @@ const entryOf = (
     ...propsOf(page.source),
     limitations: limitationsOf(page.source),
     preview: page.source.includes("<ComponentPreview"),
+    demo: demoOf(page.source),
   };
 };
 

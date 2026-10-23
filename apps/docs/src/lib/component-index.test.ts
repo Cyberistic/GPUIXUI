@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   buildIndex,
+  demoOf,
   filterEntries,
   limitationsOf,
   pageUrl,
@@ -13,7 +14,7 @@ import {
   type PageVerdict,
   type VerdictOf,
 } from "./component-index";
-import { componentIndex } from "./component-index-data";
+import { componentIndex, componentPages } from "./component-index-data";
 import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
 import { laneView, summarize } from "./inventory";
@@ -65,6 +66,7 @@ const entry = (
   types,
   limitations,
   preview,
+  demo: undefined,
   verdict: undefined,
   url: `/docs/${section.toLowerCase()}/${title.toLowerCase()}`,
 });
@@ -143,7 +145,7 @@ describe("the index built from pages", () => {
     ]);
     expect(entries.map((row) => row.section)).toEqual([
       "Primitives",
-      "Primitives",
+      "Icons",
       "Components",
       "Components",
     ]);
@@ -181,6 +183,47 @@ describe("the index built from pages", () => {
       ["Card", false],
       ["Dialog", true],
     ]);
+  });
+
+  it("carries the demo a page mounts, so a tile can render it", () => {
+    const entries = buildIndex(
+      [
+        {
+          file: "content/docs/components/dialog.mdx",
+          source:
+            '---\ntitle: Dialog\n---\n\n<ComponentPreview name="dialog-demo" />',
+        },
+        page("packages/components/docs/card.mdx", "Card"),
+      ],
+      noVerdict,
+    );
+
+    expect(entries.map((row) => [row.title, row.demo])).toEqual([
+      ["Card", undefined],
+      ["Dialog", "dialog-demo"],
+    ]);
+    expect(demoOf('<ComponentPreview name="button-variants" />')).toBe(
+      "button-variants",
+    );
+    expect(demoOf("<ComponentPreview name='single-quoted' />")).toBeUndefined();
+  });
+});
+
+describe("the components lane", () => {
+  it("holds every composed page and nothing from another lane", () => {
+    expect(componentPages.length).toBeGreaterThanOrEqual(75);
+    expect(
+      componentPages.filter((entry) => entry.section !== "Components"),
+    ).toEqual([]);
+  });
+
+  it("carries a demo for all but the page that mounts none", () => {
+    const without = componentPages.filter((entry) => entry.demo === undefined);
+
+    expect(without.map((entry) => entry.url)).toEqual([
+      "/docs/components/multi-step-form",
+    ]);
+    expect(componentPages.length - without.length).toBeGreaterThanOrEqual(75);
   });
 });
 
@@ -573,6 +616,7 @@ describe("the real index", () => {
     const sections = [...new Set(componentIndex.map((row) => row.section))];
     expect(sections).toEqual([
       "Primitives",
+      "Icons",
       "Components",
       "Data display",
       "Workspace",

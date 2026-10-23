@@ -147,6 +147,7 @@ describe("matching an example to its page", () => {
         types: [],
         limitations: "",
         preview: false,
+        demo: undefined,
         verdict: undefined,
       },
       {
@@ -159,6 +160,7 @@ describe("matching an example to its page", () => {
         types: [],
         limitations: "",
         preview: false,
+        demo: undefined,
         verdict: undefined,
       },
     ];
