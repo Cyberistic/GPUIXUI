@@ -213,7 +213,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
   {
     name: "Button groups",
     status: "done",
-    gpuixSupport: "partial",
+    gpuixSupport: "yes",
     limitations: [
       "Only this package's actions square their corners; another component inside an attached group keeps its radius",
       "No overflow-to-menu behaviour for a group wider than its parent",
@@ -612,7 +612,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
   {
     name: "Rating",
     status: "done",
-    gpuixSupport: "partial",
+    gpuixSupport: "yes",
     limitations: [
       "Halves are the finest score: a press names a star's half, not a quarter",
       "The pointer preview is paint-only: a screen reader hears the value, not the previewed star",

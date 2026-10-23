@@ -527,7 +527,7 @@ describe("the gate holds the theme's own structure", () => {
     expect(auditTheme(hidden).switch).toEqual(switchFailures(hidden));
     expect(
       auditTheme(hidden).switch.placements.filter(
-        ({ slot, over, ratio }) => slot === "off" && over === "muted",
+        ({ slot, over }) => slot === "off" && over === "muted",
       ),
     ).toEqual([{ slot: "off", over: "muted", ratio: 1, floor: 1.05 }]);
     expect(auditTheme(hidden).passed).toBe(false);
