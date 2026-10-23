@@ -447,9 +447,16 @@ under `"animated"` is gone at once when the reader turns reduced motion on.
 reports an exit only through `onMotionComplete` on a `motion.div`, and the
 popover, menu and preview-card surfaces are hosted by `FloatingLayer`'s own
 element, so one mechanism covers every surface. A leaving surface paints in the
-same frame its state closed but **takes no presses**: its style goes to
-`pointerEvents: "none"` (and an anchored host drops its occlusion), so the press
-the dismissal was for lands on the control underneath. A **wrapper** — a
+same frame its state closed but **takes no presses on its own box**: its style
+goes to `pointerEvents: "none"` (and an anchored host drops its occlusion), so
+the press the dismissal was for lands on the control underneath. That rule does
+not reach the surface's **children** — `pointerEvents` does not inherit in
+`0.11.0`, and a child keeps its own hitbox, measured with a dismissed dialog
+whose confirm action ran a press during its exit — so a surface that keeps
+controls mounted for its exit covers them with `PresenceShield`, a hit-taking
+layer that answers nothing, for that window; `PageTransition`'s leaving view
+does, and the overlay family's adoption is `TODO.md` → Interlocks. A
+**wrapper** — a
 `Reveal` or an `AutoHeight` box — is not an overlay, so while open it paints no
 pointer rule at all: it must never put a hitbox over the content it holds. The
 consequence a consumer sees: a dismissal is *immediate* in state (focus returns,
@@ -471,6 +478,7 @@ the tree a level's window later.
 | Accordion panel | height from 0 to the body's measured height, plus a fade | `normal` |
 | Tabs pill | `left`/`top`/`width`/`height` between measured trigger boxes | `normal` |
 | Carousel indicator | `width` between the 6px dot and the 18px pill (both dots retarget from the widths on screen) | `fast` (160 ms) |
+| Page transition | the outgoing view fades and travels 16px out, the incoming one travels in from the far edge | `normal` (200 ms) |
 
 A surface that **enters** or **leaves** moves through the seam's frames; the two
 that only ever move **between two resting states** — the tab pill and the
@@ -522,7 +530,10 @@ turned on mid-entry, a dismissed notice and a dismissed panel removed at once,
 and a staggered `Reveal` that drops its delay with the duration), the accordion
 grows from zero to its measured height, and the tab pill lands exactly on the
 next trigger's box. A press through a leaving
-box is measured on the context menu and on a dismissed modal's veil.
+box is measured on the context menu and on a dismissed modal's veil, and a press
+on a control inside a leaving page view is measured in
+`page-transition.test.tsx`'s `stops a leaving view taking presses while it
+fades` — the shield's own case.
 `src/presence-contract.test.ts` holds every
 floating host in the package to the two rules that make it possible — a host
 that composes the presence seam paints `pointerEvents` from it, and a deferred

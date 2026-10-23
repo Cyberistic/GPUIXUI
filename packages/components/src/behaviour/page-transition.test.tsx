@@ -16,8 +16,13 @@
  */
 
 import type { ReactNode } from "react";
-import { describe, expect, it } from "vitest";
-import { requireBounds, settle, waitFor } from "../internal/interaction.js";
+import { describe, expect, it, vi } from "vitest";
+import {
+  clickCentreOf,
+  requireBounds,
+  settle,
+  waitFor,
+} from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import { MotionProvider } from "../motion.js";
 import { PageTransition } from "../page-transition.js";
@@ -130,6 +135,47 @@ describe("PageTransition", () => {
       ).toMatchObject({ transition: { duration: 0 } });
     } finally {
       reduced.unmount();
+    }
+  });
+
+  it("stops a leaving view taking presses while it fades", async () => {
+    // The bug this guards: the outgoing view is still painted for its exit half,
+    // and its controls were still live, so a press aimed at the page the reader
+    // had just navigated to re-ran an action on the page leaving the screen.
+    // The leaving view is a wrapper, so it paints the seam's no-press guard.
+    const leavingPress = vi.fn();
+    const arrivingPress = vi.fn();
+    const pressable = (key: string): ReactNode => (
+      <div testId="frame" style={{ display: "flex", flexDirection: "column" }}>
+        <PageTransition testId="page" viewKey={key} level="slow">
+          <div
+            testId={`action-${key}`}
+            onClick={key === "a" ? leavingPress : arrivingPress}
+            style={{ width: 120, height: 40 }}
+          />
+        </PageTransition>
+      </div>
+    );
+
+    const page = renderComponent(pressable("a"));
+    try {
+      page.rerender(pressable("b"));
+      settle(page);
+
+      // The old view is still painted: this is the window a press lands in.
+      expect(page.renderer.findByTestId("action-a")).toBeDefined();
+      clickCentreOf(page, "action-a");
+      settle(page);
+      expect(leavingPress).not.toHaveBeenCalled();
+
+      await waitFor(() =>
+        expect(page.renderer.findByTestId("action-b")).toBeDefined(),
+      );
+      clickCentreOf(page, "action-b");
+      settle(page);
+      expect(arrivingPress).toHaveBeenCalledTimes(1);
+    } finally {
+      page.unmount();
     }
   });
 

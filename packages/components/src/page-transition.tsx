@@ -15,7 +15,10 @@
  * the new view arrives: exactly one view is mounted at every point.
  *
  * The region clips its view, because the travel is a relative `left` on the
- * view box and would otherwise paint outside the region it belongs to. Under
+ * view box and would otherwise paint outside the region it belongs to. A view
+ * that is leaving is a ghost: it keeps its box for the exit half but paints the
+ * seam's no-press guard, so an action inside the old page cannot answer the
+ * press the reader meant for the page arriving. Under
  * `MotionProvider preference="reduced"` or `level="none"` the swap happens in
  * the frame it changes, with no travel at all.
  */
@@ -32,6 +35,8 @@ import { Match } from "effect";
 import * as Option from "effect/Option";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import {
+  PresenceShield,
+  presenceStyle,
   useMotionPreference,
   useSurfaceTiming,
   transitionWindowMs,
@@ -221,9 +226,17 @@ export const PageTransition = ({
         key={`${transition.shownKey}:${transition.run}`}
         testId={`${base}-view`}
         motion={motion}
-        style={{ position: "relative" }}
+        style={mergeStyles(
+          { position: "relative" },
+          // The view on screen is a wrapper, so it paints no pointer rule; the
+          // one leaving is a ghost of the previous page and takes no presses
+          // while it fades — its controls must not answer the press the reader
+          // meant for the page arriving.
+          presenceStyle(transition.phase !== "leaving", "wrapper"),
+        )}
       >
         {painted}
+        <PresenceShield present={transition.phase !== "leaving"} />
       </div>
     </div>
   );

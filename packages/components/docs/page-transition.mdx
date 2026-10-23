@@ -39,3 +39,7 @@ import { PageTransition } from "@gpuixui/components";
 - A clipped region; travel is a relative `left`.
 - No vertical direction.
 - The focus does not move with the swap.
+- The leaving view takes no presses: it is still painted for its exit half, so a
+  shield covers its content until the incoming view arrives. A press meant for
+  the new page cannot re-run an action on the old one (the exit is skipped
+  entirely under `level="none"` or `MotionProvider preference="reduced"`).
