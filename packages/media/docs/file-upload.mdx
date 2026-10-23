@@ -41,3 +41,4 @@ const upload: UploadFunction = async (file, onProgress) => {
 - The docs site cannot render this live; the code above is the real source.
 - A **blank `label`, `emptyLabel`, `retryLabel` or `removeLabel`** reads as its documented default and is trimmed, so a copy table's empty string cannot publish an unnamed queue, an empty sentence or an unnamed action.
 - A **blank or non-text file `name`** reads as the file's `id` in the queue, so a record restored without a name paints a named row and its action says `Remove notes.txt`, never `Remove null`.
+- A transfer that **throws before it returns its promise** fails the file it was handed: the call is lifted into a promise, so the row paints `error` and offers `Retry` — the state a rejection paints — instead of the throw escaping the starting effect and unmounting the queue.

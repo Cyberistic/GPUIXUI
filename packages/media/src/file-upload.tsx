@@ -194,11 +194,19 @@ export const FileUpload = (props: FileUploadProps): ReactElement => {
 
   const launch = useCallback(
     (item: UploadItem): void => {
-      upload({ id: item.id, name: item.name }, (progress) =>
-        setQueue((current) =>
-          reportProgress(current, item.id, item.token, progress),
+      // The caller's transfer can throw before it returns its promise — a
+      // missing token, a transport that was never configured. Lifting the call
+      // into a promise keeps that failure on the file it was handed: the row
+      // paints `error` and offers Retry, the state a rejection paints, instead
+      // of the throw escaping this effect and unmounting the queue.
+      const attempt = Promise.resolve().then(() =>
+        upload({ id: item.id, name: item.name }, (progress) =>
+          setQueue((current) =>
+            reportProgress(current, item.id, item.token, progress),
+          ),
         ),
-      ).then(
+      );
+      attempt.then(
         () => setQueue((current) => complete(current, item.id, item.token)),
         () => setQueue((current) => fail(current, item.id, item.token)),
       );
