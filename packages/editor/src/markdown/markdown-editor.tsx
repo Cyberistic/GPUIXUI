@@ -33,6 +33,7 @@ import { useControllableState } from "../internal/controllable.js";
 import { recipeStyle } from "../internal/recipe.js";
 import {
   closeFences,
+  draftOf,
   MARKDOWN_MODES,
   markdownStats,
   modeOf,
@@ -142,8 +143,11 @@ export const MarkdownEditor = ({
   // and a blank prefix would publish " source", " preview" and " split".
   const name = accessibleName(label) ?? DEFAULT_LABEL;
   const [source, setSource] = useControllableState({
-    value,
-    defaultValue,
+    // A draft restored from storage may not be text at all; it reads as an empty
+    // document rather than throwing out of the status line and the preview. An
+    // absent controlled value still means "uncontrolled".
+    value: value === undefined ? undefined : draftOf(value),
+    defaultValue: draftOf(defaultValue),
     onChange: onValueChange,
   });
   const [mode, setMode] = useControllableState({

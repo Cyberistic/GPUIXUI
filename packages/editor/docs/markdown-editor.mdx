@@ -46,6 +46,11 @@ import { MarkdownEditor } from "@gpuixui/editor";
 
 ## Limitations
 
+- **A stored draft that is not text reads as an empty document**: a saved
+  record writes `null` where it carried no draft, and the status line and the
+  preview read the text directly — so the value is read once through
+  `draftOf`, which keeps a string as written (whitespace included) and answers
+  `""` for anything else, rather than throwing out of the render.
 - **No formatting toolbar.** It needs a selection API the runtime does not have.
 - **No caret or selection read-back.** `MarkdownEditor` cannot insert at the reader's cursor.
 - **Two panes, horizontal only.** A split divides the editor left/right and the preview takes the rest; there is no stacked split.

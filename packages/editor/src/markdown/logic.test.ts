@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
   closeFences,
+  draftOf,
   markdownStats,
   modeOf,
   openFence,
@@ -127,6 +128,23 @@ describe("splitOf", () => {
     expect(splitOf(undefined, 634)).toBe(317);
     expect(splitOf(Number.NaN, 634)).toBe(317);
     expect(splitOf(Number.POSITIVE_INFINITY, 634)).toBe(317);
+  });
+});
+
+describe("draftOf", () => {
+  it("reads a stored draft that is not text as an empty document", () => {
+    // The bug guarded: a restored draft of null reached the status line and the
+    // preview, which read `.length` and `.trim()` off it and threw out of the
+    // render instead of painting the empty state.
+    expect(draftOf(null)).toBe("");
+    expect(draftOf(undefined)).toBe("");
+    expect(draftOf(42)).toBe("");
+    expect(draftOf({ body: "text" })).toBe("");
+  });
+
+  it("keeps the document's own whitespace", () => {
+    expect(draftOf("  indented\n\n")).toBe("  indented\n\n");
+    expect(draftOf("")).toBe("");
   });
 });
 

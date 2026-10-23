@@ -91,6 +91,18 @@ export const closeFences = (source: string): string =>
     onSome: (fence) => `${source}\n${fence}`,
   });
 
+/**
+ * The document a stored value carries.
+ *
+ * A draft restored from storage, or read out of a saved record, writes `null`
+ * where it carried no document. The status line and the preview read the text
+ * directly, so that value threw out of the render instead of painting the empty
+ * state the editor documents. The text is **not** trimmed: leading spaces and
+ * newlines are the document's own.
+ */
+export const draftOf = (value: unknown): string =>
+  typeof value === "string" ? value : "";
+
 /** What a status line prints about a document. */
 export interface MarkdownStats {
   /** Lines, with an empty document at zero. */

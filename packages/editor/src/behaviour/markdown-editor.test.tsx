@@ -5,7 +5,9 @@
  * that does not follow the text; a view button that does not change the panes;
  * a read-only or disabled editor that still edits; a disabled editor that keeps
  * its field, divider and preview as tab stops and paints as though it were
- * live; and an empty preview that paints nothing rather than saying why.
+ * live; an empty preview that paints nothing rather than saying why; and a
+ * draft restored from storage that is not text, which threw out of the render
+ * instead of painting an empty document.
  */
 
 import { useState, type ReactNode } from "react";
@@ -172,6 +174,42 @@ describe("MarkdownEditor", () => {
     expect(visible(editor, "markdown-empty")).toBe(true);
     expect(text(editor)).toContain("Nothing to preview yet.");
     expect(visible(editor, "markdown-rendered")).toBe(false);
+    editor.unmount();
+  });
+
+  it("reads a stored draft that is not text as an empty document", async () => {
+    // A draft restored from storage writes `null` where it carried no document.
+    // The status line and the preview read the text directly, so that value
+    // threw out of the render and the editor painted nothing at all — not the
+    // empty state it documents.
+    const Stored = () => {
+      const [draft, setDraft] = useState<string | null>(null);
+      return (
+        <MarkdownEditor
+          value={draft as unknown as string}
+          onValueChange={setDraft}
+          testId="editor"
+        />
+      );
+    };
+    const editor = render(<Stored />);
+    expect(visible(editor, "markdown-empty")).toBe(true);
+    expect(text(editor)).toContain("0 lines · 0 words");
+    type(editor, "x");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(sourceOf(editor)).toBe("x");
+    editor.unmount();
+  });
+
+  it("starts from an empty document when the stored default is not text", () => {
+    const editor = render(
+      <MarkdownEditor
+        defaultValue={null as unknown as string}
+        testId="editor"
+      />,
+    );
+    expect(visible(editor, "markdown-empty")).toBe(true);
+    expect(text(editor)).toContain("0 lines · 0 words");
     editor.unmount();
   });
 
