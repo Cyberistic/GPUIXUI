@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import {
   contrastFloorsFor,
   contrastRatio,
@@ -9,23 +10,28 @@ import {
   filledHover,
   filledPressed,
   lightTheme,
+  platformTheme,
   targetInset,
   targetSize,
+  type Theme,
 } from "@gpuixui/tokens";
 import {
   SELECTION_STATES,
   selectionBoxStyle,
   selectionMarkColor,
   selectionTargetStyle,
+  switchBox,
   switchTargetStyle,
   switchThumbInset,
   switchThumbStyle,
   switchThumbTravel,
   switchTrackStyle,
   type SelectionSpec,
+  type SwitchPaintTheme,
 } from "./selection.js";
 import { pressWash } from "./pointer.js";
 import { testTheme } from "./testing/theme.fixture.js";
+import { inventory } from "../inventory.js";
 
 /**
  * Guards the three-state selection paint.
@@ -307,6 +313,109 @@ describe("switch", () => {
     const style = switchTrackStyle(spec(), testTheme);
     expect(style.focusVisible).toBeUndefined();
     expect(style.boxShadow).toBeUndefined();
+  });
+});
+
+describe("a stored switch paint", () => {
+  const apple = platformTheme(lightTheme, "darwin");
+  /** The macOS style's own paint, which a declared table must still win with. */
+  const applePaint =
+    apple.switch ?? expect.fail("the macOS style declares no switch");
+  /** The box a theme with no declared paint draws, on this theme's scale. */
+  const derivedBox = {
+    width: Math.round(apple.iconSize.md * 1.75),
+    height: apple.iconSize.md,
+    border: apple.borderWidth.thin,
+  };
+  /** The shape a store hands back: JSON has no `undefined`, so a lost table is `null`. */
+  const stored = (theme: Theme, paint: unknown): SwitchPaintTheme => ({
+    ...theme,
+    switch: paint,
+  });
+
+  it("paints the accent toggle for the null a store writes", () => {
+    // The bug guarded: `switchBox`/`switchFill`/`switchThumbPaint` compared
+    // `theme.switch !== undefined`, so the `null` a stored theme writes for the
+    // paint it did not carry counted as a declaration and `theme.switch.on` threw
+    // `TypeError: Cannot read properties of null (reading 'on')` at the first
+    // `Switch` paint.
+    const restored = stored(apple, null);
+
+    expect(switchBox("md", restored)).toStrictEqual(derivedBox);
+    const on = switchTrackStyle(spec({ state: "checked" }), restored);
+    expect(on.backgroundColor).toBe(apple.colors.primary);
+    // The pointer feedback follows the same table, so it is the derived fill.
+    expect(on.hover?.backgroundColor).toBe(filledHover(apple, "primary"));
+    expect(on.active?.backgroundColor).toBe(filledPressed(apple, "primary"));
+    expect(
+      switchThumbStyle(spec({ state: "checked" }), restored).backgroundColor,
+    ).toBe(apple.colors.primaryForeground);
+  });
+
+  it("keeps the paint a theme actually declares", () => {
+    // The counterweight: the absence rule must not silence a declared platform.
+    expect(switchBox("md", apple)).toStrictEqual({
+      width: 51,
+      height: 31,
+      border: 0,
+    });
+    expect(
+      switchTrackStyle(spec({ state: "checked" }), apple).backgroundColor,
+    ).toBe(applePaint.on);
+    expect(switchThumbStyle(spec(), apple).backgroundColor).toBe(
+      applePaint.knob,
+    );
+  });
+
+  it("paints the accent toggle for a table that lost a slot", () => {
+    // A declaration is whole or it is nothing: the slots are one control's
+    // paint, so a stored table missing one keeps the accent toggle and the
+    // tokens' `switchFailures` names the slot to repair.
+    Arr.forEach(
+      [
+        { on: null, off: "#DCDCE1", knob: "#FFFFFF" },
+        { on: applePaint.on },
+        {},
+        "#30D158",
+      ],
+      (paint) => {
+        const lost = stored(apple, paint);
+        expect(switchBox("md", lost)).toStrictEqual(derivedBox);
+        expect(
+          switchTrackStyle(spec({ state: "checked" }), lost).backgroundColor,
+        ).toBe(apple.colors.primary);
+        expect(switchThumbStyle(spec(), lost).backgroundColor).toBe(
+          apple.colors.foreground,
+        );
+      },
+    );
+  });
+
+  it("paints the same table the theme carries, slot for slot", () => {
+    // A stored theme that kept its paint must paint exactly what the shipped
+    // style paints, or the read would have traded one silent change for another.
+    const roundTripped = stored(apple, { ...applePaint });
+    Arr.forEach(SELECTION_STATES, (state) => {
+      expect(switchTrackStyle(spec({ state }), roundTripped)).toStrictEqual(
+        switchTrackStyle(spec({ state }), apple),
+      );
+    });
+  });
+  it("teaches the fallback a stored theme gets", () => {
+    // The rule a reader needs when a restored theme paints the accent toggle:
+    // the page and the inventory record name it, so neither can keep silence
+    // about the table while the seam decodes it.
+    const page = readFileSync(
+      new URL("../../docs/switch.mdx", import.meta.url),
+      "utf8",
+    );
+    const record = Option.getOrUndefined(
+      Arr.findFirst(inventory, (meta) => meta.name === "Switches"),
+    );
+
+    expect(page).toContain("switchFailures");
+    expect(page).toMatch(/accent family/);
+    expect(record?.limitations.join(" ")).toContain("switchFailures");
   });
 });
 

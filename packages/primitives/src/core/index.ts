@@ -148,6 +148,7 @@ export type {
   SelectionAccent,
   SelectionSpec,
   SelectionState,
+  SwitchPaintTheme,
 } from "./selection.js";
 
 export {

@@ -10,6 +10,11 @@
  */
 
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Schema from "effect/Schema";
+import * as Str from "effect/String";
+import { pipe } from "effect";
 import type { StyleDesc } from "@gpuix/react";
 import {
   disabledOpacity,
@@ -19,8 +24,74 @@ import {
   targetInset,
   targetSize,
 } from "@gpuixui/tokens";
+import type { SwitchColors } from "@gpuixui/tokens";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 import { pressWash } from "./pointer.js";
+
+/** One slot of the paint a platform's own switch declares. */
+type SwitchSlot = "on" | "off" | "knob";
+
+/** A declared switch paint, as a store wrote it: an open record. */
+const DeclaredSwitch = Schema.Record(Schema.String, Schema.Unknown);
+type DeclaredSwitch = typeof DeclaredSwitch.Type;
+
+/** The one decoder for a stored table. */
+const decodeDeclaredSwitch = Schema.decodeUnknownOption(DeclaredSwitch);
+
+/**
+ * A theme as a store can hand one back.
+ *
+ * `Theme.switch` is one control's paint table, and JSON has no `undefined`: a
+ * stored theme writes the paint it did not carry as `null`, and a store can lose
+ * a slot the same way. The switch seams decode that table as the unknown data it
+ * is — the read `@gpuixui/tokens`' `switchFailures` makes — so a restored theme
+ * paints the accent switch instead of throwing at its first slot.
+ */
+export type SwitchPaintTheme = Omit<PrimitiveTheme, "switch"> & {
+  /** The stored table, as the store wrote it. */
+  readonly switch?: unknown;
+};
+
+/**
+ * The three colours a stored table carries, or `None` when it is no paint.
+ *
+ * A declaration is **whole** or it is nothing: the slots are one control's
+ * paint, and a table that lost one cannot draw a coherent switch — the tokens'
+ * report names the lost slot, and until it is repaired the control keeps the
+ * accent toggle every base theme paints.
+ */
+const declaredPaint = (source: SwitchPaintTheme): Option.Option<SwitchColors> =>
+  Option.flatMap(Option.fromNullishOr(source.switch), (table) =>
+    Option.flatMap(decodeDeclaredSwitch(table), (paint) =>
+      Option.all({
+        on: declaredColour(paint, "on"),
+        off: declaredColour(paint, "off"),
+        knob: declaredColour(paint, "knob"),
+      }),
+    ),
+  );
+
+/**
+ * The theme the switch paint reads: the declared table, or the accent switch.
+ *
+ * Parsing once at the seam is what keeps the rest of the module ordinary
+ * `Theme` code, and what makes a stored theme's `null` unrepresentable past it.
+ */
+const switchTheme = (source: SwitchPaintTheme): PrimitiveTheme => ({
+  ...source,
+  switch: Option.getOrUndefined(declaredPaint(source)),
+});
+
+/** One declared slot's colour, or `None` when the store lost it. */
+const declaredColour = (
+  paint: DeclaredSwitch,
+  slot: SwitchSlot,
+): Option.Option<string> =>
+  pipe(
+    Option.fromNullishOr(paint[slot]),
+    Option.filter(P.isString),
+    Option.filter(Str.isNonEmpty),
+  );
 
 export const SELECTION_STATES = [
   "unchecked",
@@ -151,7 +222,7 @@ export const selectionBoxStyle = (
 };
 
 /** The gap a switch thumb keeps from the track's edge, on every side. */
-export const switchThumbInset = (theme: PrimitiveTheme): number =>
+export const switchThumbInset = (theme: SwitchPaintTheme): number =>
   theme.spacing["2xs"];
 
 /**
@@ -178,15 +249,17 @@ const APPLE_SWITCH = { width: 51, height: 31, border: 0 } as const;
 /** The box a switch paints in, from the platform's paint and the size step. */
 export const switchBox = (
   size: ControlSize,
-  theme: PrimitiveTheme,
-): SwitchBox =>
-  theme.switch !== undefined && size === "md"
+  source: SwitchPaintTheme,
+): SwitchBox => {
+  const theme = switchTheme(source);
+  return theme.switch !== undefined && size === "md"
     ? APPLE_SWITCH
     : {
         width: Math.round(theme.iconSize[size] * 1.75),
         height: theme.iconSize[size],
         border: theme.borderWidth.thin,
       };
+};
 
 /**
  * The box a selection control reserves around its drawing.
@@ -241,7 +314,7 @@ export const switchTargetStyle = (spec: SelectionSpec): StyleDesc => ({
  */
 export const switchThumbTravel = (
   spec: SelectionSpec,
-  theme: PrimitiveTheme,
+  theme: SwitchPaintTheme,
 ): number => {
   const box = switchBox(spec.size, theme);
   return box.width - box.height - box.border * 2;
@@ -258,7 +331,7 @@ export const switchThumbTravel = (
  */
 export const switchThumbOffset = (
   spec: SelectionSpec,
-  theme: PrimitiveTheme,
+  theme: SwitchPaintTheme,
 ): number =>
   switchThumbInset(theme) + (filled(spec) ? switchThumbTravel(spec, theme) : 0);
 
@@ -270,6 +343,10 @@ export const switchThumbOffset = (
  * feedback is the same fill — a native switch does not tint to the pointer —
  * and an invalid off switch keeps the library's error colour, which is the one
  * state the HIG does not draw.
+ *
+ * A table a store **nulled** is no declaration, so the control paints the
+ * accent switch; a slot the store lost falls back to the library's value for
+ * that state, because a paint the renderer cannot read is not a paint.
  */
 const switchFill = (
   spec: SelectionSpec,
@@ -289,9 +366,9 @@ const switchFill = (
  */
 export const switchTrackPaint = (
   spec: SelectionSpec,
-  theme: PrimitiveTheme,
+  source: SwitchPaintTheme,
 ): StyleDesc | undefined => {
-  const fill = switchFill(spec, theme);
+  const fill = switchFill(spec, switchTheme(source));
   return fill === undefined
     ? undefined
     : {
@@ -304,14 +381,16 @@ export const switchTrackPaint = (
 
 /** The knob's paint, which follows the track's declaration. */
 export const switchThumbPaint = (
-  theme: PrimitiveTheme,
-): StyleDesc | undefined =>
-  theme.switch === undefined
+  source: SwitchPaintTheme,
+): StyleDesc | undefined => {
+  const theme = switchTheme(source);
+  return theme.switch === undefined
     ? undefined
     : {
         backgroundColor: theme.switch.knob,
         boxShadow: elevationShadow(theme, "sm"),
       };
+};
 
 /**
  * The pill a switch slides in.
@@ -323,15 +402,16 @@ export const switchThumbPaint = (
  */
 export const switchTrackStyle = (
   spec: SelectionSpec,
-  theme: PrimitiveTheme,
+  source: SwitchPaintTheme,
 ): StyleDesc => {
-  const box = switchBox(spec.size, theme);
+  const theme = switchTheme(source);
+  const box = switchBox(spec.size, source);
   const role = accentRole(spec, theme);
   const emptyBorder =
     spec.invalid === true
       ? theme.colors.destructive
       : theme.colors.borderStrong;
-  const paint = switchTrackPaint(spec, theme);
+  const paint = switchTrackPaint(spec, source);
   const fill =
     paint?.backgroundColor ??
     (filled(spec) ? role.background : theme.colors.muted);
@@ -386,15 +466,16 @@ export const switchTrackStyle = (
  */
 export const switchThumbStyle = (
   spec: SelectionSpec,
-  theme: PrimitiveTheme,
+  source: SwitchPaintTheme,
 ): StyleDesc => {
-  const paint = switchThumbPaint(theme);
-  const inset = switchThumbInset(theme);
-  const side = switchBox(spec.size, theme).height - inset * 2;
+  const theme = switchTheme(source);
+  const paint = switchThumbPaint(source);
+  const inset = switchThumbInset(source);
+  const side = switchBox(spec.size, source).height - inset * 2;
   return {
     position: "absolute",
     top: inset,
-    left: switchThumbOffset(spec, theme),
+    left: switchThumbOffset(spec, source),
     width: side,
     height: side,
     flexShrink: 0,

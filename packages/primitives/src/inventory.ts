@@ -374,6 +374,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "A visible Label paints text only; the label prop names the control",
       "The slide is 150ms; reducedMotion lands the thumb (the runtime exposes no preference)",
       "No pending state: disable the switch while a request is in flight (a busy spinner is Toggle's contract, not this control's)",
+      "A stored theme's nulled or short switch table is no paint: the accent toggle paints, and switchFailures names the slot to repair",
     ],
     source: [
       "src/components/Switch.tsx",
