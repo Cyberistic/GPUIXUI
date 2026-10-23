@@ -10408,7 +10408,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 367/368
+`[x]` `[██████████]` 368/369
+
+`[x]` Teach a reader to **read the theme editor's audit** — `/docs/themes` said
+      what the controls do and nothing about the readout, so the first line an
+      edit produces (`mutedForeground on muted — 3.90:1 (needs 4.5:1)`) or the
+      word `unmeasurable` was left to guesswork. The page gains **Reading the
+      audit**: the line's shape, the one failure a ratio cannot express (a
+      translucent value or an incompositable wash is not a pass), the report
+      kind, and the base it measures over (the sidebar's platform style in the
+      mode on screen, with edits pinned per mode). `themes-page.test.ts` (4
+      cases) uses `formatContrastFailure`'s own output as the example, holds the
+      unmeasurable claim to the formatter's answer and the page, reads
+      `data-kind={finding.kind}` off the editor, and holds the base to
+      `bases[mode]`. Directions measured: deleting the unmeasurable paragraph
+      fails the case by name (`expected … to contain 'unmeasurable'`), and the
+      example is the formatter's string, so a template change fails it.
+      No native scenario applies — a page and the formatter it quotes.
 
 `[ ]` Draw the **files and shell lanes** — six pages still ship no preview and
       are strategy 4 for lack of a drawing, not for lack of a reproducible

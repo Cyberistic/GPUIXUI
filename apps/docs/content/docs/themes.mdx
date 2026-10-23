@@ -8,3 +8,18 @@ Edit the tokens and watch them apply to a preview in real time. The editor reads
 <ThemeEditor />
 
 Light and dark are independent. Edits persist to the URL and `localStorage`; **Reset** returns to the selected platform style. **Copy theme** prints a whole resolved `createTheme` module you can ship.
+
+## Reading the audit
+
+The readout under the preview is `auditTheme`'s result, one line per finding:
+what it measured, the ratio the paint produced, and the floor it had to reach. A
+failing contrast pair reads `mutedForeground on muted — 3.90:1 (needs 4.5:1)`.
+
+**Unmeasurable** means the contrast cannot be computed — a translucent colour,
+or a selection wash that cannot be composited over its surface — rather than that
+it passed. A finding names the report it came from, so an inverted ladder reads
+as a ladder, not as a colour.
+
+The base is the platform style the sidebar selected, in the mode on screen.
+Edits are stored per mode and applied over that base, so switching the platform
+re-bases the preview and the audit while your edits stay.
