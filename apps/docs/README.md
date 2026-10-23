@@ -29,7 +29,7 @@ runtime.mdx                  What the pinned GPUix provides, what it does not, a
 accessibility.mdx            What a screen reader hears, which states have no attribute, proving the tree
 motion.mdx                   Springs, keyframes, inertia, the React hooks and the reduced-motion policy
 layouts.mdx                  The layout lane: primitives, the window frame, runtime facts
-workspace.mdx                The desktop-shell lane: composing parts, the docking gate
+workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
 data-display/index.mdx      The data lane: what ships, the table gate, runtime gaps
 patterns.mdx                 The workflows that cross components, and who owns the state
 keyboard.mdx                 The chord grammar, keymaps, sequences and command registry

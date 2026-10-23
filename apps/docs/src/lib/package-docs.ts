@@ -4,8 +4,13 @@ import type { PackageOrigin } from "./collection-routes";
 import {
   componentDocsRoute,
   dataDocsRoute,
+  dockDocsRoute,
+  editorDocsRoute,
+  filesDocsRoute,
   iconDocsRoute,
+  mediaDocsRoute,
   primitiveDocsRoute,
+  shellDocsRoute,
 } from "./shared";
 
 /**
@@ -52,11 +57,61 @@ const dataDocs = defineDocs({
   },
 });
 
+const editorDocs = defineDocs({
+  dir: "../../packages/editor/docs",
+  docs: {
+    files: ["**/*.mdx"],
+    async: true,
+    postprocess: { includeProcessedMarkdown: true },
+  },
+});
+
+const filesDocs = defineDocs({
+  dir: "../../packages/files/docs",
+  docs: {
+    files: ["**/*.mdx"],
+    async: true,
+    postprocess: { includeProcessedMarkdown: true },
+  },
+});
+
+const shellDocs = defineDocs({
+  dir: "../../packages/shell/docs",
+  docs: {
+    files: ["**/*.mdx"],
+    async: true,
+    postprocess: { includeProcessedMarkdown: true },
+  },
+});
+
+const dockDocs = defineDocs({
+  dir: "../../packages/dock/docs",
+  docs: {
+    files: ["**/*.mdx"],
+    async: true,
+    postprocess: { includeProcessedMarkdown: true },
+  },
+});
+
+const mediaDocs = defineDocs({
+  dir: "../../packages/media/docs",
+  docs: {
+    files: ["**/*.mdx"],
+    async: true,
+    postprocess: { includeProcessedMarkdown: true },
+  },
+});
+
 export const docsByOrigin = {
   primitives: primitiveDocs,
   icons: iconDocs,
   components: componentDocs,
   data: dataDocs,
+  editor: editorDocs,
+  files: filesDocs,
+  shell: shellDocs,
+  dock: dockDocs,
+  media: mediaDocs,
 } satisfies Record<PackageOrigin, typeof primitiveDocs>;
 
 const primitiveSource = loader({
@@ -79,11 +134,41 @@ const dataSource = loader({
   baseUrl: dataDocsRoute,
 });
 
+const editorSource = loader({
+  source: editorDocs.toFumadocsSource(),
+  baseUrl: editorDocsRoute,
+});
+
+const filesSource = loader({
+  source: filesDocs.toFumadocsSource(),
+  baseUrl: filesDocsRoute,
+});
+
+const shellSource = loader({
+  source: shellDocs.toFumadocsSource(),
+  baseUrl: shellDocsRoute,
+});
+
+const dockSource = loader({
+  source: dockDocs.toFumadocsSource(),
+  baseUrl: dockDocsRoute,
+});
+
+const mediaSource = loader({
+  source: mediaDocs.toFumadocsSource(),
+  baseUrl: mediaDocsRoute,
+});
+
 export const sourceByOrigin = {
   primitives: primitiveSource,
   icons: iconSource,
   components: componentSource,
   data: dataSource,
+  editor: editorSource,
+  files: filesSource,
+  shell: shellSource,
+  dock: dockSource,
+  media: mediaSource,
 } satisfies Record<PackageOrigin, typeof primitiveSource>;
 
 /** Every mounted package source, in sidebar order. */
@@ -92,6 +177,11 @@ export const packageSources = [
   iconSource,
   componentSource,
   dataSource,
+  editorSource,
+  filesSource,
+  shellSource,
+  dockSource,
+  mediaSource,
 ];
 
 /** The pages a sidebar section lists, ready for `completeSection`. */

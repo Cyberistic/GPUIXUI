@@ -10,7 +10,7 @@
  * composition, not a component.
  */
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   badgeSizes,
   badgeVariantFor,
@@ -68,7 +68,7 @@ const Run = ({
   children,
   label,
 }: {
-  readonly children: React.ReactNode;
+  readonly children: ReactNode;
   readonly label: string;
 }) => (
   <div aria-label={label} className="gx-badge-run" role="group">
@@ -271,8 +271,8 @@ export function BadgeStatesBody() {
       </Run>
 
       <p className="gx-badge-foot">
-        Every state is printed as a word beside its tint. The outline pill is the
-        one variant with no fill, so its edge carries it on every wash a row
+        Every state is printed as a word beside its tint. The outline pill is
+        the one variant with no fill, so its edge carries it on every wash a row
         wears.
       </p>
     </div>

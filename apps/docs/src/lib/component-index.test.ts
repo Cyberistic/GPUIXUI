@@ -565,15 +565,20 @@ describe("the real index", () => {
     expect(tablePage).not.toContain("the rows that remain");
   });
 
-  it("starts with the primitives and ends with the data surfaces", () => {
-    // The sections are the sidebar's order, read off the rows instead of
+  it("starts with the primitives and ends with the workspace surfaces", () => {
+    // The sections are the collection order, read off the rows instead of
     // retyped: a package that lands after the components appends a section,
     // and a row that drifts back into an earlier section fails here.
     expect(componentIndex.length).toBeGreaterThan(0);
     const sections = [...new Set(componentIndex.map((row) => row.section))];
-    expect(sections).toEqual(["Primitives", "Components", "Data display"]);
+    expect(sections).toEqual([
+      "Primitives",
+      "Components",
+      "Data display",
+      "Workspace",
+    ]);
     expect(componentIndex[0]?.section).toBe("Primitives");
-    expect(componentIndex.at(-1)?.section).toBe("Data display");
+    expect(componentIndex.at(-1)?.section).toBe("Workspace");
   });
 
   it("marks exactly the pages that mount a preview", () => {
@@ -607,8 +612,9 @@ describe("the real index", () => {
         .map((row) => row.url)
         .toSorted(),
     ).toEqual(
-      [...new Set([...curated.map((page) => page.url), ...packagePreview])]
-        .toSorted(),
+      [
+        ...new Set([...curated.map((page) => page.url), ...packagePreview]),
+      ].toSorted(),
     );
   });
 

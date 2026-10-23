@@ -694,9 +694,7 @@ describe("the curated component pages", () => {
     expect(source).toContain("fadeFromSide(side, 12)");
     expect(source).toContain('useSurfaceTiming("slow")');
     expect(flatSource).toContain("...presenceStyle(presence.present)");
-    expect(presenceSeam).toContain(
-      'pointerEvents: present ? "auto" : "none"',
-    );
+    expect(presenceSeam).toContain('pointerEvents: present ? "auto" : "none"');
     expect(source).toContain("if (!presence.mounted) return null;");
     expect(source).toContain('label="Close drawer"');
 
@@ -798,9 +796,7 @@ describe("the curated component pages", () => {
     expect(flatSource).toContain("if (!presence.mounted) return null;");
     expect(flatSource).toContain("occlude={presence.present}");
     expect(flatSource).toContain("...presenceStyle(presence.present)");
-    expect(presenceSeam).toContain(
-      'pointerEvents: present ? "auto" : "none"',
-    );
+    expect(presenceSeam).toContain('pointerEvents: present ? "auto" : "none"');
 
     // The surface itself takes focus on every open: `autoFocus` is on the
     // menu box, so the first arrow reaches the first row rather than the probe
@@ -1028,7 +1024,10 @@ describe("the curated component pages", () => {
     // The one variant with no fill draws its edge in the boundary role.
     const badgeRecipes = recipes.slice(
       recipes.indexOf("export const BADGE_VARIANTS"),
-      recipes.indexOf("} as const;", recipes.indexOf("export const BADGE_VARIANTS")),
+      recipes.indexOf(
+        "} as const;",
+        recipes.indexOf("export const BADGE_VARIANTS"),
+      ),
     );
     const outline = /outline: "([^"]+)"/.exec(badgeRecipes)?.[1] ?? "";
     expect(outline).toContain("border-strong");
@@ -1038,17 +1037,17 @@ describe("the curated component pages", () => {
     // selects its row, and the eager pill selects nothing.
     const shipped = fixture.slice(
       fixture.indexOf("  badge: {"),
-      fixture.indexOf("  \"badge-eager\": {"),
+      fixture.indexOf('  "badge-eager": {'),
     );
     const eager = fixture.slice(
-      fixture.indexOf("  \"badge-eager\": {"),
-      fixture.indexOf("  \"badge-inert\": {"),
+      fixture.indexOf('  "badge-eager": {'),
+      fixture.indexOf('  "badge-inert": {'),
     );
     expect(shipped).toContain('selects: "badge",');
     expect(eager).toContain('selects: "",');
 
     const text = body(badge).replace(/\s+/g, " ");
-    expect(text).toContain("`pointerEvents: \"none\"`");
+    expect(text).toContain('`pointerEvents: "none"`');
     expect(text).toContain("selected=badge");
     expect(text).toContain("selected=none");
     expect(text).toContain("`borderStrong`");
@@ -1358,9 +1357,7 @@ describe("the curated component pages", () => {
     expect(viewportRecipe).toContain("pointer-events-none");
     expect(cardRecipe).toContain("pointer-events-auto");
     expect(viewport).toContain("presenceStyle(present)");
-    expect(presenceSeam).toContain(
-      'pointerEvents: present ? "auto" : "none"',
-    );
+    expect(presenceSeam).toContain('pointerEvents: present ? "auto" : "none"');
     expect(viewport).toContain("held.current.focus > 0");
     expect(viewport).toContain(
       "Math.max(0, held.current.focus + (value ? 1 : -1))",
@@ -2936,5 +2933,4 @@ describe("the page a curated page displaces", () => {
     ).toBeGreaterThan(30);
     expect(gaps).toEqual([]);
   });
-
 });

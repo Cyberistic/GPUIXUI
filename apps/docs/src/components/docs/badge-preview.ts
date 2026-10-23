@@ -70,8 +70,7 @@ const wordFor: Readonly<Record<DeploymentStatus, string>> = {
 };
 
 /** The word a state is printed and announced as. */
-export const statusText = (status: DeploymentStatus): string =>
-  wordFor[status];
+export const statusText = (status: DeploymentStatus): string => wordFor[status];
 
 /** One deployment on the panel. */
 export interface Deployment {

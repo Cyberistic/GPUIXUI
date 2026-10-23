@@ -279,6 +279,11 @@ cannot ship a page the site does not show and the two cannot drift:
 | Icons | `packages/icons/docs` | `/docs/icons` | Primitives |
 | Components | `packages/components/docs` | `/docs/components` | Components |
 | Data | `packages/data/docs` | `/docs/data-display` | Data display |
+| Code surfaces | `packages/editor/docs` | `/docs/editor` | Workspace |
+| File surfaces | `packages/files/docs` | `/docs/files` | Workspace |
+| Shell surfaces | `packages/shell/docs` | `/docs/shell` | Workspace |
+| Panel surfaces | `packages/dock/docs` | `/docs/dock` | Workspace |
+| Media surfaces | `packages/media/docs` | `/docs/media` | Workspace |
 
 The table is the mounted set, not an illustration: `package-docs.test.ts` reads
 it against `packageCollections` in both directions, so a collection the site mounts

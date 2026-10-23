@@ -33,13 +33,9 @@ describe("the deployments panel preview", () => {
     expect(workflow).toContain(
       "6 deployments · 1 passed, 2 failed, 1 running, 1 queued, 1 stale",
     );
-    const missing = [
-      "Passed",
-      "Failed",
-      "Running",
-      "Queued",
-      "Stale",
-    ].filter((word) => !workflow.includes(`>${word}</span>`));
+    const missing = ["Passed", "Failed", "Running", "Queued", "Stale"].filter(
+      (word) => !workflow.includes(`>${word}</span>`),
+    );
 
     expect(missing).toEqual([]);
     // A branch names something and is the one outline pill; a state is never

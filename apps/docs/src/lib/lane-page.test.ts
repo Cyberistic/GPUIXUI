@@ -33,9 +33,16 @@ interface LanePage {
  */
 const dataDisplayPage = "data-display/index.mdx";
 
+/**
+ * The workspace lane's page lives in a folder for the same reason: the three
+ * workspace packages mount their pages under the lane's own route, so the
+ * lane page moves into `workspace/index.mdx` to leave the folder free.
+ */
+const workspacePage = "workspace/index.mdx";
+
 const pages: ReadonlyArray<LanePage> = [
   { file: "layouts.mdx", lane: "layout", title: "Layouts" },
-  { file: "workspace.mdx", lane: "workspace", title: "Workspace" },
+  { file: workspacePage, lane: "workspace", title: "Workspace" },
   { file: dataDisplayPage, lane: "data-display", title: "Data display" },
 ];
 
@@ -489,7 +496,7 @@ describe("the layouts page's direction claim", () => {
  */
 
 describe("the workspace page's pointer and terminal claims", () => {
-  const workspace = read("workspace.mdx");
+  const workspace = read(workspacePage);
 
   it("states the capture rule instead of denying capture", () => {
     const capture = rowFor(record, "Pointer capture");
@@ -811,7 +818,10 @@ describe("the data-display page's shipped rows", () => {
     // documented as painting a row without saying where a keyboard reader ends
     // up. The counts are the fixture's, not a transcription.
     const fixture = readFileSync(
-      new URL("../../../../apps/playground/src/live/data-tree.ts", import.meta.url),
+      new URL(
+        "../../../../apps/playground/src/live/data-tree.ts",
+        import.meta.url,
+      ),
       "utf8",
     );
     const revealed = Number(
@@ -820,8 +830,10 @@ describe("the data-display page's shipped rows", () => {
     const key = /export const DATA_TREE_REVEALED = "([a-z.]+)";/.exec(
       fixture,
     )?.[1];
-    expect(revealed, "the fixture no longer declares the revealed row count")
-      .toBeGreaterThan(0);
+    expect(
+      revealed,
+      "the fixture no longer declares the revealed row count",
+    ).toBeGreaterThan(0);
     expect(key, "the fixture no longer names the revealed row").toBeDefined();
 
     const readme = readFileSync(
@@ -829,9 +841,7 @@ describe("the data-display page's shipped rows", () => {
       "utf8",
     );
     expect(readme).toContain("### `data-tree-lifecycle` — measured on 0.11.0");
-    expect(readme).toContain(
-      "leaves native focus on the revealed row",
-    );
+    expect(readme).toContain("leaves native focus on the revealed row");
 
     expect(dataPage).toContain("data-tree-lifecycle");
     expect(dataPage).toContain(`${revealed} rows · active=${key}`);

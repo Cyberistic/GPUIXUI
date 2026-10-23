@@ -19,6 +19,11 @@ runtime at all.
 | `@gpuixui/primitives` | Tier 1: layout, type, actions, inputs, selection and indicators | `tokens`, `tw`, `icons` |
 | `@gpuixui/components` | Tier 2: cards, overlays, menus, tabs, pickers, feedback | `tokens`, `tw`, `icons`, `keyboard`, `motion`, `primitives` |
 | `@gpuixui/data` | Tier 3: the table core, sorting, selection, filtering, virtualisation and charts | `tokens`, `tw`, `icons`, `primitives`, `components` |
+| `@gpuixui/editor` | Tier 4 code surfaces: a highlighted editor, a diff viewer and find-and-replace | `tokens`, `tw`, `primitives` |
+| `@gpuixui/files` | Tier 4 file surfaces: a file tree, a log viewer and a property panel | `tokens`, `tw`, `icons`, `primitives`, `data` |
+| `@gpuixui/shell` | Tier 4 application chrome: menu bars, status bars and toolbars | `tokens`, `tw`, `icons`, `keyboard`, `primitives` |
+| `@gpuixui/dock` | Tier 4 panel workspace: split panes, panel groups and docking layouts | `tokens`, `tw`, `primitives`, `motion` |
+| `@gpuixui/media` | Tier 5 media surfaces: image preview, upload queue and drop zone | `tokens`, `tw`, `icons`, `primitives`, `components` |
 | `@gpuixui/keyboard` | Accelerator grammar, scoped keymaps, event matching, command registry | — |
 | `@gpuixui/motion` | Renderer-neutral springs, easing, timelines and inertia | — |
 | `@gpuixui/runtime` | The pinned GPUix capability matrix and typed refusals | — |
@@ -41,6 +46,9 @@ than reimplementing them.
 ```
 tokens ──▶ tw ──▶ primitives ──▶ components ──▶ data
    └──────▶ icons ──▶ primitives
+primitives ──▶ editor
+data, primitives ──▶ files
+primitives, keyboard ──▶ shell
 keyboard, motion, runtime, testing   stand alone
 ```
 
