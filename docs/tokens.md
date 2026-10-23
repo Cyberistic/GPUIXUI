@@ -1092,7 +1092,8 @@ no value, `mode` for a value that is neither `light` nor `dark`) and left out of
 the palette, so that role keeps the base theme's value instead of a typo
 becoming a colour. A **table header** ends the read: TOML's root keys come
 before its sections, so `[colors]` means the rest is a shape this reader does not
-understand rather than a palette. A duplicated key keeps the first statement. The
+understand rather than a palette. A duplicated key it reads keeps the first
+statement. The
 ANSI names with no role here (`color2`, `bright_red`, …) are the file's own
 vocabulary and are ignored rather than reported. What the decoder does not judge
 is whether a colour **paints** — that is `auditTheme`'s question, so the two

@@ -21,7 +21,8 @@
  *
  * What it will not do is guess. Only the flat subset is understood: a table
  * header (whose keys would be a section rather than a palette), a line without
- * `=`, an unquoted colour, a duplicated key and an empty value are **reported**
+ * `=`, an unquoted colour, a duplicated colour key and an empty value are
+ * **reported**
  * in `problems` and left out of the palette, so the role keeps the base theme's
  * value instead of a typo becoming a colour. The ANSI names the file carries
  * for its terminal (`color2`, `bright_red`, …) are well-formed keys this
