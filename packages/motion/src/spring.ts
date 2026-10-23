@@ -10,8 +10,12 @@
  * {@link springPhysics}: the samplers repair what they are handed, the way
  * {@link sampleInertia} repairs an `Inertia`. Without that, a `NaN` damping
  * made every formula answer `NaN` and the spring jumped to its target in one
- * frame, while a `NaN` rest threshold meant the run never settled at all.
+ * frame, while a `NaN` rest threshold meant the run never settled at all. A
+ * displacement the arithmetic cannot represent is read the way an interpolation
+ * is (`mix`): through the endpoints, not through their difference.
  */
+
+import { mix } from "./progress.js";
 
 /** Sanitized spring physics parameters. */
 export interface SpringPhysics {
@@ -177,32 +181,47 @@ export const sampleSpring = (
     };
   }
 
-  const displacement = safeFrom - safeTarget;
   const angularFrequency = Math.sqrt(rest.stiffness / rest.mass);
   const criticalDamping = 2 * Math.sqrt(rest.stiffness * rest.mass);
   const dampingRatio = criticalDamping > 0 ? rest.damping / criticalDamping : 1;
-
-  const [sampledDisplacement, sampledVelocity] =
+  const regime = (
+    displacement: number,
+    speed: number,
+  ): readonly [number, number] =>
     dampingRatio < 1
-      ? underdamped(
-          displacement,
-          safeVelocity,
-          angularFrequency,
-          dampingRatio,
-          t,
-        )
+      ? underdamped(displacement, speed, angularFrequency, dampingRatio, t)
       : Math.abs(dampingRatio - 1) <= EPSILON
-        ? criticallyDamped(displacement, safeVelocity, angularFrequency, t)
-        : overdamped(
-            displacement,
-            safeVelocity,
-            angularFrequency,
-            dampingRatio,
-            t,
-          );
+        ? criticallyDamped(displacement, speed, angularFrequency, t)
+        : overdamped(displacement, speed, angularFrequency, dampingRatio, t);
 
-  const value = sanitizeNumber(safeTarget + sampledDisplacement, safeTarget);
-  const outVelocity = sanitizeNumber(sampledVelocity, 0);
+  const displacement = safeFrom - safeTarget;
+  let value: number;
+  let outVelocity: number;
+  if (Number.isFinite(displacement)) {
+    const [sampledDisplacement, sampledVelocity] = regime(
+      displacement,
+      safeVelocity,
+    );
+    value = safeTarget + sampledDisplacement;
+    outVelocity = sampledVelocity;
+  } else {
+    // Both endpoints are readable and only their difference is not, so the
+    // formulas above answer `NaN` and the sanitiser would replace the whole
+    // journey with the target. The response is linear in displacement and
+    // velocity, so read its shape on unit inputs and compose it with `mix`,
+    // which weights the endpoints instead of adding a difference they cannot
+    // hold.
+    const scale = Math.max(Math.abs(safeFrom), Math.abs(safeTarget));
+    const [position, positionSpeed] = regime(1, 0);
+    const [response, responseSpeed] = regime(0, 1);
+    value = mix(safeFrom, safeTarget, 1 - position) + response * safeVelocity;
+    outVelocity =
+      scale *
+      (positionSpeed * (safeFrom / scale - safeTarget / scale) +
+        responseSpeed * (safeVelocity / scale));
+  }
+  value = sanitizeNumber(value, safeTarget);
+  outVelocity = sanitizeNumber(outVelocity, 0);
   if (withinRest(rest, value, safeTarget, outVelocity)) {
     return {
       value: safeTarget,

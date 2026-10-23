@@ -3,6 +3,10 @@
  * finite under non-finite physics, keeps velocity across a retarget, and the
  * over-damped branch never overshoots. Reverting `sample_spring_value` (the
  * open-gpui formulas) fails every assertion here.
+ *
+ * The regression it also guards: the formulas added a displacement, so two
+ * finite endpoints whose difference overflows (`-1.7e308` → `1.7e308`) made
+ * every answer `NaN` and the sanitiser painted the target on the first sample.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -76,6 +80,34 @@ describe("sampleSpring", () => {
     );
     samples.forEach((value) => expect(value).toBeLessThanOrEqual(1));
     expect(samples[samples.length - 1]).toBe(1);
+  });
+
+  it("travels between two readable endpoints whose difference it cannot hold", () => {
+    // The bug this guards: `from - target` is `-Infinity` for two finite
+    // endpoints, so every formula answered `NaN` and the sanitiser replaced the
+    // whole journey with the target — a surface that snapped to its resting
+    // frame in the first sample. The response is linear, so the sampler reads
+    // it against a scaled run instead, which is also the oracle here.
+    const from = -1.7e308;
+    const target = 1.7e308;
+    const middle = sampleSpring(layoutSpring, from, target, 0, 90);
+    expect(Number.isFinite(middle.value)).toBe(true);
+    expect(middle.value).toBeGreaterThan(from);
+    expect(middle.value).toBeLessThan(target);
+    expect(middle.settled).toBe(false);
+    expect(middle.value / 1e308).toBeCloseTo(
+      sampleSpring(layoutSpring, -1.7, 1.7, 0, 90).value,
+      9,
+    );
+
+    const back = sampleSpring(layoutSpring, 1.7e308, -1.7e308, 0, 90);
+    expect(back.value).toBeGreaterThan(-1.7e308);
+    expect(back.value).toBeLessThan(1.7e308);
+    expect(back.settled).toBe(false);
+
+    const done = sampleSpring(layoutSpring, from, target, 0, 60_000);
+    expect(done.settled).toBe(true);
+    expect(done.value).toBe(target);
   });
 });
 

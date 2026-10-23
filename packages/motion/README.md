@@ -211,6 +211,14 @@ stays inside the endpoints' own range, and an overshooting curve that pushes it
 out of range falls back to the endpoint it is heading for, so the frame is always
 a number.
 
+`sampleSpring` reads the same difference, and it needed the same rule. A spring
+response is linear in its displacement and velocity, so when the difference of
+two readable endpoints overflows, the sampler reads the response on unit inputs
+and composes it with the endpoints through `mix` — the trajectory is the one the
+same spring would draw between the endpoints scaled down, instead of every
+formula answering `NaN` and the sanitiser replacing the journey with the target
+on the first sample.
+
 The hooks' first frame is a value the runtime paints, so it gets the same rule:
 `options.initial` and the target are numbers the caller computed, and one that
 cannot be read is replaced before the frame is published — an unreadable
