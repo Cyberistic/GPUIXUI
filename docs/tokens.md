@@ -2729,6 +2729,40 @@ the runtime paints it at its own `11`, a size no role carries, so the seam hands
 scale. The **syntax palette is this package's**: `host.syntax` carries
 one colour per token type, and §[Syntax palette](#syntax-palette) is that scale.
 
+### The type a window measured
+
+The paragraphs above are a read of the pinned source. The playground's
+`document-type` probe looked at the frame on 0.11.0 with a theme whose roles
+cannot be mistaken for the runtime's own — `codeBlock` **20/24** against
+12.5/18, the caption **18** against 11 — and read four paints (11 checks,
+`--only document-type`):
+
+| Host | What the window measured |
+| ---- | ------------------------ |
+| `<code>`, themed | the word's ink is **32** device pixels tall, exactly the same word painted as a `<text>` at 20 in the theme's mono family; its two lines advance **24** each (the host is 48 tall) |
+| `<code>`, no theme | **20** device pixels, matching a `<text>` at the runtime's 12.5; two lines advance **18** (36 tall) |
+| `<diff>`, themed vs plain | the same four-row patch is **12** taller with the theme — four rows × the 3-point leading difference (24 against 21) |
+| `<markdown>` strip, themed | the language `ts` paints **26** device pixels, the caption-sized `<text>`'s own height; the plain card's strip is **17** against the runtime's 11 at **16**, within the one-row antialias slack |
+
+What it settles for a consumer:
+
+1. **The seam is the paint.** The numbers `nativeTextTheme` hands over are the
+   ones the host lays out and paints: a code block's glyph, its line advance, a
+   diff row's advance and a fenced card's language strip all move with the
+   theme, and no second table is involved.
+2. **A host handed no theme keeps the runtime's numbers.** `12.5/18`, `21` and
+   `11` are what an unthemed host paints, so the seam is a real override and not
+   the only path.
+3. **The caption role reaches the strip.** A fenced card's language label is the
+   one place `typography.caption` appears inside a document host.
+
+**Limits.** The measurement is macOS at scale 2, and ink height is an antialias
+read, so the strip can differ from its control by one row (the plain case did:
+17 against 16). The diff's glyph size is proven by its row advance rather than
+its ink, because a changed row paints a wash and several syntax colours; the
+code block's ink is the glyph-size evidence, and a fence's body lines use the
+`codeBlock` role the block above measures.
+
 ### The diff host
 
 A `<diff>` host paints its own green and red unless the theme object carries

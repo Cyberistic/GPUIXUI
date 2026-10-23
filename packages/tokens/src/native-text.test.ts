@@ -478,6 +478,87 @@ describe("nativeTextTheme", () => {
     expect(catalogue).toContain("syntax palette");
   });
 
+  it("prints the type a window measured, not only the source read", () => {
+    // The cases above hold what the seam hands a host. Whether a host *paints*
+    // those numbers was a read of the pinned Rust source until the playground's
+    // `document-type` probe measured it off a captured frame on 0.11.0 (11
+    // checks). This page is the one that says the seam carries a document host's
+    // type, so it has to carry the measurement: the probe's own record and the
+    // page's table are compared row by row, and the theme pairs are derived from
+    // the fixture, so a stale page number or a moved probe value fails.
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    );
+    const readme = readFileSync(
+      new URL("../../../apps/playground/README.md", import.meta.url),
+      "utf8",
+    );
+    const probe = readFileSync(
+      new URL(
+        "../../../apps/playground/src/live/document-type.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d.]+)`).exec(probe)?.[1] ??
+          Number.NaN,
+      );
+
+    const codeSize = constant("CODE_SIZE");
+    const codeLeading = constant("CODE_LEADING");
+    const captionSize = constant("CAPTION_SIZE");
+    const runtimeCodeSize = constant("RUNTIME_CODE_SIZE");
+    const runtimeCodeLeading = constant("RUNTIME_CODE_LEADING");
+    const runtimeDiffLeading = constant("RUNTIME_DIFF_LEADING");
+    const runtimeHeaderSize = constant("RUNTIME_HEADER_SIZE");
+    const checks = constant("DOCUMENT_TYPE_CHECKS");
+
+    // The pairs the page opens with, read off the fixture rather than retyped.
+    expect(catalogue).toContain("### The type a window measured");
+    expect(catalogue).toContain(`${codeSize}/${codeLeading}`);
+    expect(catalogue).toContain(`${runtimeCodeSize}/${runtimeCodeLeading}`);
+    expect(catalogue).toContain(
+      `the caption **${captionSize}** against ${runtimeHeaderSize}`,
+    );
+    expect(catalogue).toContain(`${checks} checks`);
+    expect(readme).toContain(`${checks} checks`);
+
+    // The four rows are the probe's record; the page cites it with the same
+    // numbers, in the same order. A palette or font move that changes a band
+    // fails here instead of leaving the sentence true of nothing.
+    const rows = [
+      "| `<code>`, themed |",
+      "| `<code>`, no theme |",
+      "| `<diff>`, themed vs plain |",
+      "| `<markdown>` strip, themed |",
+    ];
+    const numbersIn = (text: string, prefix: string): ReadonlyArray<string> =>
+      (text.split("\n").find((line) => line.startsWith(prefix)) ?? "").match(
+        /\d+(?:\.\d+)?/g,
+      ) ?? [];
+
+    rows.forEach((prefix) => {
+      expect(numbersIn(catalogue, prefix), prefix).toEqual(
+        numbersIn(readme, prefix),
+      );
+    });
+
+    // The two leading gains are arithmetic, not measurements.
+    expect(catalogue).toContain(
+      `${4 * (codeLeading - runtimeDiffLeading)}** taller`,
+    );
+    expect(catalogue).toContain(`${2 * codeLeading} tall`);
+    expect(catalogue).toContain(`${2 * runtimeCodeLeading} tall`);
+
+    // The honest half: the host, the scale and the antialias slack.
+    expect(catalogue).toContain("macOS at scale 2");
+    expect(catalogue).toContain("one-row antialias slack");
+  });
+
   it("teaches that a field's value is the element's colour, not the object's text", () => {
     // The bug this holds: this page and the seam's own snippet showed
     // `<input theme={nativeTextTheme(theme)} />` and said the object carries the
