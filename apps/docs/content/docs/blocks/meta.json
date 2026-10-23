@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "dashboard",
+    "dashboard-management",
     "login",
     "signup",
     "forgot-password",

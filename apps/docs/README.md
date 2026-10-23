@@ -43,6 +43,7 @@ blocks/forgot-password.mdx   A centered reset card: one email field, the sent no
 blocks/otp.mdx               A one-time-code card: six cells, verify, the resend countdown
 blocks/settings.mdx          A settings page with tabbed sections
 blocks/dashboard.mdx         An activity dashboard composed from the library
+blocks/dashboard-management.mdx A three-column management console: service health, deploys, toasts, keys
 blocks/kanban.mdx            A project task board: sidebar, four counted columns, cards that move
 blocks/settings-dialog.mdx   A modal settings window: section nav, switch, font-size slider, layouts
 components/index.mdx         The filterable component index
@@ -232,10 +233,11 @@ src/components/docs/patterns.tsx          The pattern workflows and the chooser
 src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
 src/components/docs/token-list.tsx       A contract's roles or surfaces, rendered from the package's array
 src/components/docs/block-index.tsx       The Blocks index
-src/components/docs/blocks.tsx            The block registry: Login, Settings, Dashboard, Kanban and Settings dialog
+src/components/docs/blocks.tsx            The block registry: Login, Settings, Dashboard, management, Kanban and Settings dialog
 src/components/docs/block-preview.tsx     A block's browser rendering
 src/components/docs/auth-blocks.tsx       The auth blocks' browser reproductions and recipes
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
+src/components/docs/dashboard-management.tsx The console block's browser reproduction and recipe
 src/components/docs/kanban-board.tsx      The kanban board's reproduction, columns and card moves
 src/components/docs/settings-dialog.tsx   The settings dialog's reproduction, theme state and controls
 src/components/docs/live-surface.tsx      Boots the wasm renderer on /live and reports what it painted

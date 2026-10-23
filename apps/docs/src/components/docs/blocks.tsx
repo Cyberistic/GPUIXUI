@@ -20,6 +20,10 @@ import {
   settingsDialogPackages,
   settingsDialogSource,
 } from "./settings-dialog";
+import {
+  DashboardManagementRender,
+  dashboardManagementSource,
+} from "./dashboard-management";
 
 /**
  * Block recipes for the docs. A block is a page-level composition of real
@@ -186,6 +190,22 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...dashboardPackages],
     render: DashboardRender,
     source: dashboardSource,
+  },
+  "dashboard-management-01": {
+    name: "dashboard-management-01",
+    slug: "dashboard-management",
+    title: "Dashboard management",
+    description:
+      "A three-column management console: service health, a command palette, deploys, toasts, a context menu and API keys.",
+    packages: [
+      "@gpuixui/components",
+      "@gpuixui/data",
+      "@gpuixui/icons",
+      "@gpuixui/primitives",
+      "@gpuixui/tokens",
+    ],
+    render: DashboardManagementRender,
+    source: dashboardManagementSource,
   },
   "login-01": {
     name: "login-01",

@@ -2152,6 +2152,573 @@
   }
 }
 
+/* ---- dashboard management ----
+   A dense three-column console. Every state keeps its box: the toast stack
+   reserves both cards, the upload and copy actions reserve their label, and a
+   selection paints a fill instead of an edge. Three columns fold to two at
+   1200px and one at 760px. */
+
+.gx-mgmt {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+}
+
+.gx-mgmt-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.gx-mgmt-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.gx-mgmt-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-mgmt-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.gx-mgmt-desc {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-glyph {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.gx-mgmt-service {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.gx-mgmt-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--success);
+}
+
+.gx-mgmt-service-name {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.gx-mgmt-service-meta {
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--border);
+}
+
+.gx-mgmt-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 10px;
+  background: var(--card);
+}
+
+.gx-mgmt-stat-label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--placeholder);
+}
+
+.gx-mgmt-stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.gx-mgmt-stat-value {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gx-mgmt-delta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gx-mgmt-delta[data-tone="up"] {
+  color: var(--success);
+}
+
+.gx-mgmt-delta[data-tone="down"] {
+  color: var(--destructive);
+}
+
+.gx-mgmt-delta[data-tone="flat"] {
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-search {
+  width: 100%;
+}
+
+.gx-mgmt-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-mgmt-group-label {
+  margin: 0 0 2px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--placeholder);
+}
+
+.gx-mgmt-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 26px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: calc(var(--radius) - 1px);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 11.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-mgmt-row:hover {
+  background: var(--hover);
+}
+
+.gx-mgmt-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-mgmt-row .gx-mgmt-glyph {
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-row-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-mgmt-danger {
+  border-color: var(--destructive);
+  background: var(--destructive-soft);
+  color: var(--destructive-soft-foreground);
+}
+
+.gx-mgmt-error-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.gx-mgmt-error-glyph {
+  margin-top: 1px;
+  color: var(--destructive);
+}
+
+.gx-mgmt-error-text {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.gx-mgmt-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.gx-mgmt-upload .gx-mgmt-desc {
+  min-height: 2.9em;
+}
+
+.gx-mgmt-meter {
+  width: 100%;
+}
+
+.gx-mgmt-meter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.gx-mgmt-meter-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-resume {
+  min-width: 64px;
+}
+
+.gx-mgmt-radios {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-mgmt-radio-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  cursor: pointer;
+}
+
+.gx-mgmt-radio-card:hover {
+  background: var(--hover);
+}
+
+.gx-mgmt-radio-card:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-mgmt-radio-card[aria-checked="true"] {
+  border-color: var(--primary);
+  background: var(--selected);
+  color: var(--selected-foreground);
+}
+
+.gx-mgmt-radio-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.gx-mgmt-radio-title {
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.gx-mgmt-radio-desc {
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-radio-card[aria-checked="true"] .gx-mgmt-radio-desc {
+  color: var(--selected-foreground);
+}
+
+.gx-mgmt-toasts {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 132px;
+}
+
+.gx-mgmt-toast {
+  padding: 10px 12px;
+  box-shadow: none;
+}
+
+.gx-mgmt-toasts-empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  font-size: 11px;
+  text-align: center;
+  color: var(--placeholder);
+}
+
+.gx-mgmt-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 11px;
+}
+
+.gx-mgmt-table th {
+  padding: 0 0 6px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--placeholder);
+}
+
+.gx-mgmt-table th:nth-child(1) {
+  width: 44%;
+}
+
+.gx-mgmt-table th:nth-child(2) {
+  width: 28%;
+}
+
+.gx-mgmt-table th:last-child {
+  text-align: right;
+}
+
+.gx-mgmt-table td {
+  height: 28px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-table td:last-child {
+  text-align: right;
+}
+
+.gx-mgmt-table tbody tr {
+  cursor: pointer;
+}
+
+.gx-mgmt-table tbody tr:hover td {
+  background: var(--hover);
+}
+
+.gx-mgmt-table tbody tr[aria-selected="true"] td {
+  background: var(--selected);
+  color: var(--selected-foreground);
+}
+
+.gx-mgmt-table tbody tr:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-mgmt-build {
+  font-family: var(--font-mono);
+  color: var(--foreground);
+}
+
+.gx-mgmt-debug {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 11.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-mgmt-debug:hover {
+  background: var(--hover);
+}
+
+.gx-mgmt-debug:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-mgmt-debug-glyph {
+  color: var(--destructive);
+}
+
+.gx-mgmt-debug-chevron {
+  margin-left: auto;
+  color: var(--placeholder);
+}
+
+.gx-mgmt-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
+}
+
+.gx-mgmt-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: calc(var(--radius) - 1px);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 11.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-mgmt-menu-row:hover {
+  background: var(--hover);
+}
+
+.gx-mgmt-menu-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-mgmt-menu-row .gx-mgmt-glyph {
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-menu-row[data-tone="danger"],
+.gx-mgmt-menu-row[data-tone="danger"] .gx-mgmt-glyph {
+  color: var(--destructive);
+}
+
+.gx-mgmt-clear {
+  align-items: center;
+  padding: 18px 14px;
+  text-align: center;
+}
+
+.gx-mgmt-shield {
+  width: 26px;
+  height: 26px;
+  color: var(--success);
+}
+
+.gx-mgmt-clear-title {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.gx-mgmt-clear-desc {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-keys {
+  display: flex;
+  flex-direction: column;
+}
+
+.gx-mgmt-key {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-mgmt-key:last-child {
+  border-bottom: 0;
+}
+
+.gx-mgmt-key-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-mgmt-key-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.gx-mgmt-key-value {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-key-calls {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-key-copy-btn {
+  justify-content: center;
+  min-width: 58px;
+}
+
+.gx-mgmt-new-key {
+  align-self: flex-start;
+}
+
+@media (max-width: 1200px) {
+  .gx-mgmt {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .gx-mgmt {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---- index cards ---- */
 
 .gx-block-index {
