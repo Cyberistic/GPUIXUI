@@ -10382,7 +10382,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 320/321
+`[ ]` `[█████████░]` 321/322
 
 `[x]` Give the **data and workspace lane entries their shipped pages** — both
       pages answered "what does this lane ship" with a hand-written list, and
@@ -10723,6 +10723,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
       and `The nine type roles` fails the count case; restored, the file is
       6/6. No native scenario applies — a site page and the source it
       documents.
+
+`[x]` Hold **`/docs/contributing`'s commands and checklist to the repository** — the
+      page prints six `nub run` commands, the clone and the staging script, and
+      nothing checked that any of them still exists; its "What a component ships
+      with" list also stopped at the inventory row, never the **verified
+      interaction in the real GPUix runtime** that `COMPONENTS.md`'s preamble
+      and `AGENTS.md` both require, so a contributor could call a component
+      finished without opening a window. The page gains that bullet, and
+      `src/lib/contributing-page.test.ts` (5 cases) holds the toolchain pins to
+      `.node-version` + `devEngines`, every command to the manifest that
+      declares it, the tree rule to `AGENTS.md` §6 and the staging script to
+      disk, the page shapes to the 50+ `packages/*/docs/*.mdx` the repo ships,
+      and the checklist to the inventory's own deliverables. The `nub run`
+      reader is shared (`src/lib/page-commands.test-util.ts`) and
+      `installation-page.test.ts` now uses it too rather than keeping a second
+      copy. Directions measured: dropping the runtime bullet fails with
+      `[ 'runtime' ]`, renaming `test` to `test:docs` fails with the missing
+      script named, a stale `Node 24.17.0` fails the pin case, and removing the
+      branch convention fails the tree case; restored, the file is 5/5 and the
+      installation guard stays 6/6. No native scenario applies — a site page,
+      the manifests it names and the script it runs.
 
 `[x]` Stop the **docs build leaving its route tree untracked** — `vite build`
       writes the generated route-tree cache to `apps/docs/.tanstack/`, and the

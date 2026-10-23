@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -7,6 +7,12 @@ import {
   typescriptSnippets,
   unresolvedImports,
 } from "./doc-snippets.test-util";
+import {
+  manifest,
+  runsIn,
+  undeclaredRuns,
+  workspaceManifests,
+} from "./page-commands.test-util";
 import { repoRoot } from "./public-symbols-source";
 
 /**
@@ -19,50 +25,15 @@ import { repoRoot } from "./public-symbols-source";
  * commands, and this does the same for the page before it.
  */
 
-interface Manifest {
-  readonly name: string;
-  readonly scripts?: Readonly<Record<string, string>>;
-  /** The root manifest's pinned toolchain. */
-  readonly devEngines?: {
-    readonly packageManager?: { readonly name?: string };
-  };
-  /** The native package's declared prebuild matrix. */
-  readonly napi?: { readonly targets?: ReadonlyArray<string> };
-}
-
-const manifest = (path: string): Manifest =>
-  JSON.parse(readRepo(path)) as Manifest;
-
 const page = readRepo("apps/docs/content/docs/installation.mdx");
 const root = manifest("package.json");
 const snippets = typescriptSnippets(page);
 const imports = namedImports(snippets);
 
-/** Every workspace package, by manifest name. */
-const workspaceManifests: ReadonlyArray<Manifest> = readdirSync(
-  join(repoRoot, "packages"),
-  { withFileTypes: true },
-).flatMap((entry) =>
-  entry.isDirectory() ? [manifest(`packages/${entry.name}/package.json`)] : [],
-);
-
 /** `nub add @gpuixui/<name>@workspace:*` targets. */
 const added: ReadonlyArray<string> = [
   ...page.matchAll(/nub add (@gpuixui\/[a-z-]+)@workspace:\*/g),
 ].map((match) => match[1] ?? "");
-
-interface Run {
-  readonly filter: string | undefined;
-  readonly script: string;
-}
-
-/** `nub run [--filter <package>] <script>` commands the page prints. */
-const runs: ReadonlyArray<Run> = [
-  ...page.matchAll(/nub run (?:(--filter (\S+) )?([\w:-]+))/g),
-].map((match) => ({
-  filter: match[2],
-  script: match[3] ?? "",
-}));
 
 describe("the installation page", () => {
   it("pins the toolchain the repository pins", () => {
@@ -83,22 +54,10 @@ describe("the installation page", () => {
   });
 
   it("runs only scripts the manifests declare", () => {
-    // A silent zero would pass the filter below without reading anything.
-    expect(runs.length).toBeGreaterThanOrEqual(4);
+    // A silent zero would pass the check below without reading anything.
+    expect(runsIn(page).length).toBeGreaterThanOrEqual(4);
 
-    const byPackage = new Map(
-      workspaceManifests.map((entry) => [entry.name, entry]),
-    );
-
-    const missing = runs.flatMap(({ filter, script }) => {
-      const owner = filter === undefined ? root : byPackage.get(filter);
-      if (owner === undefined) return [`no workspace package named ${filter}`];
-      return owner.scripts?.[script] === undefined
-        ? [`${owner.name} has no ${script} script`]
-        : [];
-    });
-
-    expect(missing).toEqual([]);
+    expect(undeclaredRuns(page)).toEqual([]);
   });
 
   it("imports only names the packages publish", () => {

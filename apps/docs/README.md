@@ -317,6 +317,7 @@ src/lib/docs-view.tsx               The shared docs layout and the two-collectio
 src/lib/layout.shared.tsx           The nav chrome: brand and top-level links
 src/lib/source.ts                   The Fumadocs collection for content/docs
 src/lib/doc-snippets.test-util.ts   The shared page-snippet and symbol resolve for the page guards
+src/lib/page-commands.test-util.ts  The shared `nub run` reader the contributing and installation guards hold to the manifests
 src/lib/column-drag.test-util.ts    The column drag both guards print, derived from the probe
 src/lib/floating-reflow.test-util.ts The panel placement both reflow guards print, derived from the probe
 src/lib/app-css.test-util.ts       The site palette both measuring guards read from the style sheet
