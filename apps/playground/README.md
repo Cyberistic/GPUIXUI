@@ -516,11 +516,13 @@ viewport` (`expected false, got true`); adding `followTail` to the feed fails
 `the feed starts at its first row` (`expected 100, got 104`) — a follow list
 mounts at its tail and is the wrong component for a history pane.
 
-Not measured here: the **loading-row correction** for infinite scroll, where the
-row standing in for the arriving page is the anchor and the app restores it with
-`getScrollTop` plus a negative `scrollToItem` offset. That path needs a window's
-`scrollToItem`, which the headless host does not expose; it is a TODO row below
-rather than a claim.
+The **loading-row correction** for infinite scroll is not measurable here: an
+arriving page's void row is the anchor and the app re-anchors it with
+`getScrollTop` plus a negative `scrollToItem` offset, and the headless host
+exposes no `scrollToItem` to drive. The window's `loading-row-correction` probe
+measures that path — the void as the anchor, the pixel the reader's message
+holds across the splice, and the guard against correcting twice — in
+§`loading-row-correction` below.
 
 ## The accessibility tree
 

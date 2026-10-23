@@ -14,6 +14,7 @@
  * Both are held here, along with the fixture's pixel arithmetic, so the
  * numbers the probe asserts are derived rather than copied.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -28,6 +29,22 @@ import {
   voidRow,
   type PageArrival,
 } from "./loading-row.js";
+import { liveRegistry } from "./registry.js";
+
+const readme = readFileSync(
+  new URL("../../README.md", import.meta.url),
+  "utf8",
+);
+
+/** One Markdown section, from its heading to the next heading of any rank. */
+const section = (heading: string): string => {
+  const start = readme.indexOf(heading);
+  if (start === -1) return "";
+  const after = readme.indexOf("\n#", start + heading.length);
+  return readme
+    .slice(start, after === -1 ? readme.length : after)
+    .replace(/\s+/g, " ");
+};
 
 /** A reader waiting in the top void: the void is the anchor at offset 0. */
 const topVoid: PageArrival = {
@@ -129,5 +146,28 @@ describe("the loading row fixture", () => {
   it("puts the void at the edge the direction names", () => {
     expect(voidRow("prepend", 10)).toBe(0);
     expect(voidRow("append", 10)).toBe(10);
+  });
+});
+
+describe("the prepend section's correction claim", () => {
+  it("sends the reader to the correction the window measured", () => {
+    // The prepend probe is headless and cannot drive `scrollToItem`, so it must
+    // name the window probe that does instead of calling the correction open.
+    const prepend = section("## A prepended page");
+    expect(prepend).not.toContain("Not measured here");
+    expect(prepend).not.toContain("it is a TODO row below");
+    expect(prepend).toContain("`loading-row-correction`");
+    expect(prepend).toContain("headless host exposes no `scrollToItem`");
+    expect(prepend).toContain("§`loading-row-correction` below");
+  });
+
+  it("records a correction the registry actually runs", () => {
+    const correction = section("### `loading-row-correction`");
+    expect(correction).toContain("58 checks");
+    expect(correction).toContain("`--only loading-row-correction`");
+    expect(correction).toContain("`flushSync`");
+    expect(
+      liveRegistry.some((probe) => probe.id === "loading-row-correction"),
+    ).toBe(true);
   });
 });
