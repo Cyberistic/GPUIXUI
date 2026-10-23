@@ -50,12 +50,12 @@ NavigationMenu
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `NavigationMenu` | `role="navigation"` named by `label` | `label` (required), `value?`, `defaultValue?`, `onValueChange?`, `openDelay?`, `closeDelay?`, children |
-| `NavigationMenuList` | `role="list"` row | children |
-| `NavigationMenuItem` | `role="listitem"` | `value` (required), children |
+| `NavigationMenu` | `role="navigation"` named by `label` | `label` (required), `value?`, `defaultValue?`, `onValueChange?`, `openDelay?`, `closeDelay?`, `className?`, `children` |
+| `NavigationMenuList` | `role="list"` row | `className?`, `children` |
+| `NavigationMenuItem` | `role="listitem"` | `value` (required), `className?`, `children` |
 | `NavigationMenuTrigger` | button with `aria-expanded` | button props |
-| `NavigationMenuContent` | anchored `role="group"` panel | children |
-| `NavigationMenuLink` | a full-width button row | `onSelect?`, `onActivate` (and the deprecated alias `onClick`), the shared `Button` props |
+| `NavigationMenuContent` | anchored `role="group"` panel | `className?`, `children` |
+| `NavigationMenuLink` | a full-width button row | `onSelect?`, `onActivate` (and the deprecated alias `onClick`), `className?`, the shared `Button` props |
 
 ## Limitations
 

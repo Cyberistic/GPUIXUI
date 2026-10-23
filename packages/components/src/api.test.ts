@@ -160,24 +160,16 @@ const rowNamesPart = (cells: ReadonlyArray<string>, part: string): boolean =>
   Arr.some(Arr.take(cells, 2), (cell) => cell.includes(`\`${part}\``));
 
 /**
- * The props every part inherits from the runtime or from this package's own
- * layout convention.
+ * The props a page must name, including the surface every part inherits.
  *
- * A page lists the props a reader decides, and these are the surface every part
- * carries (`ref` addresses, `testId` locates, `onLayout` measures, `style` and
- * `className` paint, `children` composes). They are documented once in
- * `docs/component-api.md`; this contract holds the rest, so a substantive prop
- * added to a part's type is reported until its page names it.
+ * The shape props (`className`, `children`, `style`, `ref`, `testId`,
+ * `aria-id`, `onLayout`) used to be exempt because they are the package-wide
+ * convention documented once in `docs/component-api.md` — and that exemption is
+ * exactly the gap this contract had: `Card` documented one of its three props
+ * and `BreadcrumbLink` none of its three, while every suite stayed green.
+ * A reader copies a part's row, so the row says what the part takes; the
+ * convention section teaches the meaning of the shared half.
  */
-const SHAPE_PROPS: ReadonlySet<string> = new Set([
-  "aria-id",
-  "children",
-  "className",
-  "onLayout",
-  "ref",
-  "style",
-  "testId",
-]);
 
 /** An interface header, however its `extends` list is wrapped. */
 const INTERFACE_HEADER =
@@ -255,121 +247,233 @@ const typeParts = (body: string): ReadonlyArray<string> => {
   );
 };
 
+/**
+ * The interfaces an `extends` clause names, split at its own commas.
+ *
+ * A generic's comma belongs to the generic — `Omit<InputProps, "style">` is one
+ * parent, not two — so an unclosed `<` keeps the split waiting. Splitting on
+ * commas alone read the cross-package parent as `Omit<InputProps` plus a stray
+ * `"style">`, so a field's inherited surface resolved to nothing.
+ */
+const parentParts = (clause: string): ReadonlyArray<string> => {
+  const opened = "{([";
+  const closed = "})]";
+  const initial: {
+    readonly parts: ReadonlyArray<string>;
+    readonly current: string;
+    readonly depth: number;
+    readonly generic: number;
+  } = { parts: [], current: "", depth: 0, generic: 0 };
+  const scanned = Arr.reduce(
+    Arr.fromIterable(clause),
+    initial,
+    (state, char) => {
+      const depth = opened.includes(char)
+        ? state.depth + 1
+        : closed.includes(char)
+          ? state.depth - 1
+          : state.depth;
+      const generic =
+        char === "<"
+          ? state.generic + 1
+          : char === ">"
+            ? Math.max(0, state.generic - 1)
+            : state.generic;
+      return char === "," && state.depth === 0 && state.generic === 0
+        ? {
+            parts: [...state.parts, state.current],
+            current: "",
+            depth,
+            generic,
+          }
+        : {
+            parts: state.parts,
+            current: `${state.current}${char}`,
+            depth,
+            generic,
+          };
+    },
+  );
+  return Arr.filter(
+    Arr.map(Arr.fromIterable([...scanned.parts, scanned.current]), (parent) =>
+      Str.trim(parent),
+    ),
+    Str.isNonEmpty,
+  );
+};
+
 /** A props type as the source declares it: fields, parents, or an alias body. */
 interface DeclaredType {
   readonly file: string;
   readonly props: ReadonlyArray<string>;
   readonly parents: ReadonlyArray<string>;
   readonly alias?: string;
+  /** The package that declares it, so its parents resolve there first. */
+  readonly pkg: PackageName;
 }
 
+/** The two packages a components page's props are resolved through. */
+type PackageName = "components" | "primitives";
+
+/** One package's source tree, and how a type's file is named in the index. */
+const packageSources: ReadonlyArray<{
+  readonly pkg: PackageName;
+  readonly dir: URL;
+}> = [
+  { pkg: "components", dir: new URL("./", import.meta.url) },
+  { pkg: "primitives", dir: new URL("../../primitives/src/", import.meta.url) },
+];
+
 /** Every source file whose declarations a page's props are read from. */
-const sourceFiles: ReadonlyArray<string> = Arr.filter(
-  readdirSync(fileURLToPath(new URL("./", import.meta.url)), {
-    recursive: true,
-    encoding: "utf8",
-  }),
-  (name) => /\.tsx?$/.test(name) && !name.includes(".test."),
-);
+const sourceFiles = (dir: URL): ReadonlyArray<string> =>
+  Arr.filter(
+    readdirSync(fileURLToPath(dir), {
+      recursive: true,
+      encoding: "utf8",
+    }),
+    (name) => /\.tsx?$/.test(name) && !name.includes(".test."),
+  );
+
+const readSource = (dir: URL, file: string): string =>
+  readFileSync(fileURLToPath(new URL(file, dir)), "utf8");
+
+/** Every declaration by name then package. */
+type TypeIndex = ReadonlyMap<string, ReadonlyMap<PackageName, DeclaredType>>;
 
 /**
- * Every props declaration this package's source carries, by type name.
+ * Every props declaration the two packages carry, by type name.
  *
- * A test-time repository read, the boundary `inventory.test.ts` already uses;
- * `sourceOf` is the same relative read, including the subdirectories a family
- * keeps its logic in.
+ * The components package's own declarations are what `pageTypes` associates
+ * with a page; the primitives package's are read so a type that extends a field
+ * or an action across the boundary (`FieldInputProps extends Omit<InputProps,
+ * "style">`) resolves instead of looking like a type that declares nothing.
+ * A name both packages carry (`FieldProps`) keeps both, and a parent resolves
+ * inside the package that named it before the other.
+ *
+ * A test-time repository read, the boundary `inventory.test.ts` already uses.
  */
-const declaredTypes = (): ReadonlyMap<string, DeclaredType> => {
-  const types = new Map<string, DeclaredType>();
-  Arr.forEach(sourceFiles, (file) => {
-    const source = sourceOf(file);
-    Arr.forEach(
-      Arr.fromIterable(source.matchAll(INTERFACE_HEADER)),
-      (match) => {
-        const open = (match.index ?? 0) + match[0].length - 1;
-        Option.match(balancedBody(source, open), {
+const declaredTypes = (): TypeIndex => {
+  const types = new Map<string, Map<PackageName, DeclaredType>>();
+  const remember = (name: string, declared: DeclaredType): void => {
+    const seen = types.get(name) ?? new Map<PackageName, DeclaredType>();
+    seen.set(declared.pkg, declared);
+    types.set(name, seen);
+  };
+  Arr.forEach(packageSources, ({ pkg, dir }) => {
+    Arr.forEach(sourceFiles(dir), (file) => {
+      const source = readSource(dir, file);
+      Arr.forEach(
+        Arr.fromIterable(source.matchAll(INTERFACE_HEADER)),
+        (match) => {
+          const open = (match.index ?? 0) + match[0].length - 1;
+          Option.match(balancedBody(source, open), {
+            onNone: () => undefined,
+            onSome: (body) =>
+              remember(match[1] ?? "", {
+                file,
+                props: signatureNames(body),
+                parents: parentParts(match[2] ?? ""),
+                pkg,
+              }),
+          });
+        },
+      );
+      Arr.forEach(Arr.fromIterable(source.matchAll(TYPE_ALIAS)), (match) => {
+        const start = (match.index ?? 0) + match[0].length;
+        Option.match(aliasBody(source, start), {
           onNone: () => undefined,
-          onSome: (body) =>
-            types.set(match[1] ?? "", {
+          onSome: (alias) =>
+            remember(match[1] ?? "", {
               file,
-              props: signatureNames(body),
-              parents: Arr.filter(
-                Arr.map((match[2] ?? "").split(","), (parent) =>
-                  Str.replace(/<[\s\S]*$/, "")(Str.trim(parent)),
-                ),
-                Str.isNonEmpty,
-              ),
+              props: [],
+              parents: [],
+              alias,
+              pkg,
             }),
         });
-      },
-    );
-    Arr.forEach(Arr.fromIterable(source.matchAll(TYPE_ALIAS)), (match) => {
-      const start = (match.index ?? 0) + match[0].length;
-      Option.match(aliasBody(source, start), {
-        onNone: () => undefined,
-        onSome: (alias) =>
-          types.set(match[1] ?? "", { file, props: [], parents: [], alias }),
       });
     });
   });
   return types;
 };
 
+/** The declaration a name resolves to, from the package that named it out. */
+const declarationOf = (
+  name: string,
+  types: TypeIndex,
+  from?: PackageName,
+): DeclaredType | undefined => {
+  const declared = types.get(name);
+  if (declared === undefined) return undefined;
+  const order = Arr.dedupe(
+    Arr.fromIterable([from, "components", "primitives"]).filter(
+      (pkg): pkg is PackageName => pkg !== undefined,
+    ),
+  );
+  const found = Arr.findFirst(order, (pkg) => declared.has(pkg));
+  return Option.match(found, {
+    onNone: () => undefined,
+    onSome: (pkg) => declared.get(pkg),
+  });
+};
+
 /**
  * Every prop a type carries, through `extends`, an alias intersection, a
  * parenthesised branch of a union, and an `Omit`.
  *
- * A name the package does not declare is the runtime's own surface (`Props` and
- * the floating helpers): its properties are not this package's to document, so
- * it contributes nothing. `seen` keeps a cycle from recursing.
+ * A name neither package declares is the runtime's own surface (`Props` and
+ * the floating helpers): its properties are not this repository's to document,
+ * so it contributes nothing. `seen` keeps a cycle from recursing.
  */
 const propsOf = (
   name: string,
-  types: ReadonlyMap<string, DeclaredType>,
+  types: TypeIndex,
   seen: ReadonlySet<string> = new Set(),
+  from?: PackageName,
 ): ReadonlyArray<string> => {
   if (seen.has(name)) return [];
   const next = new Set([...seen, name]);
-  const declared = types.get(name);
+  const declared = declarationOf(name, types, from);
   if (declared === undefined) return [];
   if (declared.alias === undefined) {
     return [
       ...declared.props,
       ...Arr.flatMap(declared.parents, (parent) =>
-        propsOf(parent, types, next),
+        resolvePart(parent, types, next, declared.pkg),
       ),
     ];
   }
   return Arr.flatMap(typeParts(declared.alias), (part) =>
-    resolvePart(part, types, next),
+    resolvePart(part, types, next, declared.pkg),
   );
 };
 
 /** One alias member, through a grouping parenthesis, an object, or an `Omit`. */
 const resolvePart = (
   part: string,
-  types: ReadonlyMap<string, DeclaredType>,
+  types: TypeIndex,
   seen: ReadonlySet<string>,
+  from: PackageName,
 ): ReadonlyArray<string> => {
   if (part.startsWith("(") && part.endsWith(")")) {
     return Arr.flatMap(typeParts(part.slice(1, -1)), (inner) =>
-      resolvePart(inner, types, seen),
+      resolvePart(inner, types, seen, from),
     );
   }
   if (part.startsWith("{")) return signatureNames(part);
-  const omit = /^Omit<([\w.]+)\s*,\s*([\s\S]+)>$/.exec(part);
+  const omit = /^Omit<\s*([\w.]+)\s*,\s*([\s\S]+)>$/.exec(part);
   if (omit !== null) {
     const removed = Arr.map(
       Arr.fromIterable((omit[2] ?? "").matchAll(/"([^"]+)"/g)),
       (match) => match[1] ?? "",
     );
     return Arr.filter(
-      propsOf(omit[1] ?? "", types, seen),
+      propsOf(omit[1] ?? "", types, seen, from),
       (prop) => !Arr.contains(removed, prop),
     );
   }
   const named = /^([A-Za-z_]\w*)/.exec(part)?.[1];
-  return named === undefined ? [] : propsOf(named, types, seen);
+  return named === undefined ? [] : propsOf(named, types, seen, from);
 };
 
 /** The identifiers a page's `## API` tables name in code spans. */
@@ -395,13 +499,15 @@ const slugOf = (meta: ComponentMeta): string =>
 /** The `*Props` types the record's own source file or directory declares. */
 const pageTypes = (
   meta: ComponentMeta,
-  types: ReadonlyMap<string, DeclaredType>,
+  types: TypeIndex,
 ): ReadonlyArray<string> => {
   const slug = slugOf(meta);
   return Arr.filter(Arr.fromIterable(types.keys()), (name) => {
-    const file = types.get(name)?.file ?? "";
+    const local = types.get(name)?.get("components");
+    const file = local?.file ?? "";
     return (
       Str.endsWith("Props")(name) &&
+      local !== undefined &&
       (file === `${slug}.tsx` || Str.startsWith(`${slug}/`)(file))
     );
   });
@@ -571,8 +677,9 @@ describe("component API contract", () => {
     // `stopLabel` and `attachments` — the two words its controls say and the
     // one slot above its field — and `DropdownMenuContent` shipped
     // `alignOffset`, with none of the four named anywhere on their pages. The
-    // shape props (`className`, `children`, `style`, `ref`, `testId`,
-    // `aria-id`, `onLayout`) are the package-wide convention and are exempt.
+    // shape props are no longer exempt: the shared `className`/`children`/
+    // `style`/`ref`/`testId`/`aria-id`/`onLayout` surface is the half a reader
+    // copies most often, and the pages omitted it from Accordion to Field.
     const types = declaredTypes();
     const tier2: ReadonlyArray<ComponentMeta> = Arr.filter(
       inventory,
@@ -584,16 +691,16 @@ describe("component API contract", () => {
       return Arr.flatMap(pageTypes(meta, types), (name) => {
         const props = Arr.dedupe(propsOf(name, types));
         checked += Arr.length(props);
-        return Arr.filter(
-          props,
-          (prop) => !SHAPE_PROPS.has(prop) && !documented.has(prop),
-        ).map((prop) => `${meta.docs}: ${name}.${prop} has no API row`);
+        return Arr.filter(props, (prop) => !documented.has(prop)).map(
+          (prop) => `${meta.docs}: ${name}.${prop} has no API row`,
+        );
       });
     });
 
     expect(problems).toEqual([]);
     // A reader that resolved nothing would pass vacuously: every Tier 2 page
-    // declares its props several times over, so the check counts them.
+    // declares its props several times over, and a field inherits the
+    // primitives' whole input surface, so the check counts them.
     expect(checked).toBeGreaterThan(250);
   });
 
@@ -615,5 +722,14 @@ describe("component API contract", () => {
       expect.arrayContaining(["dense", "onActivate", "selectionMode"]),
     );
     expect(propsOf("PaginationNextProps", types)).toEqual([]);
+    // The cross-package parent: a field extends the primitives' input surface,
+    // so a reader that scans only this package sees three props where the field
+    // actually carries twenty-five and every shape row would pass unmeasured.
+    expect(propsOf("FieldInputProps", types)).toEqual(
+      expect.arrayContaining(["placeholder", "ref", "aria-id", "fullWidth"]),
+    );
+    expect(propsOf("TagInputFieldProps", types)).toEqual(
+      expect.arrayContaining(["placeholder", "onKeyDown", "onLayout"]),
+    );
   });
 });

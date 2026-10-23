@@ -10507,27 +10507,39 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `apps/docs/README.md` gains the module's ledger line. No native scenario
       applies — a site page and a repository read.
 
-`[ ]` Hold the **package pages' API tables** to the props they declare too — the
-      curated pages are held now (`component-props.ts` + `component-page.test.ts`),
-      and the 137 mounted package pages are not: `packages/components/src/docs.test.ts`
-      checks an `## API` table's *shape* (a header, a row per part, the cell count)
-      and nothing resolves a prop, while `packages/primitives/src/docs.test.ts` and
-      `packages/icons/src/docs.test.ts` hold only their own two packages. Measured
-      with the new reader over the mounted collections, grouping each table's rows
-      by the part they name and reading a prop as a backticked name or an
-      `name:` in the cell (the components pages write `variant?: "outline"` in
-      prose): `packages/components/docs` is **333 props over 102 parts**, and it
-      is one gap repeated — the shared host surface (`className`, `children`,
-      `style`, the interaction handlers) is undocumented from Accordion to Field,
-      so `Card` documents one of its three props and `BreadcrumbLink` none of its
-      three. `packages/data/docs` has one (`TableSortHeader.testId`); primitives
-      and icons are already guarded by their own suites, and editor, files, shell,
-      dock and media name their parts in prose no table resolves. The fix is the
-      components workstream's page files: map each part to its type with the
-      reader the curated pages now use and add the missing rows, then land the
-      same completeness case in `packages/components/src/docs.test.ts` so its
-      shape check gains a resolution half. The docs app should not carry a
-      333-row known-gap list for another workstream's files.
+`[x]` Hold the **components package's pages** to every prop their parts declare,
+      shared surface included — the curated pages were held by
+      `component-props.ts` + `component-page.test.ts`, and `packages/components`
+      was only held for substantive props: `api.test.ts`'s completeness case
+      exempted the package-wide shape surface (`className`, `children`, `style`,
+      `ref`, `testId`, `aria-id`, `onLayout`), so `Card` documented one of its
+      three props, `BreadcrumbLink` none of its three, and a field's inherited
+      input surface was invisible. Measured with the exemption read back: **180
+      prop entries over 30 pages** (`className`/`children` on 24 of them, the
+      primitives' whole input contract on `FieldInput`, `MentionInput`,
+      `TagInputField`, `SearchInput` and `InlineEdit`, plus `List`'s and
+      `ListItem`'s `children`). Every row is documented now — grouped where one
+      contract covers several names — and `api.test.ts`'s reader resolves a
+      parent through the **primitives** package too (`FieldInputProps extends
+      Omit<InputProps, "style">`), with the generic-aware `parentParts` a
+      multiline `Omit<…>` needs. The reader case measures the cross-package
+      parent (`placeholder`/`ref`/`aria-id`/`fullWidth` on a field), so a
+      components-only index fails it rather than passing with three props.
+      Directions measured: deleting `empty-state`'s `className` row fails
+      `docs/empty-state.mdx: EmptyStateProps.className has no API row`, and
+      dropping the primitives scan fails the reader case
+      (`expected [ 'invalid', 'disabled', …(2) ]`). Green: the package is 103
+      files / 950 tests, `check-types` and `oxlint` clean. The remaining
+      packages are their owners' (open item below).
+      No native scenario applies — a page and a source read.
+
+`[ ]` Hold the **remaining package pages** to the props their parts declare —
+      `packages/data/docs` has one gap (`TableSortHeader.testId`), and
+      `packages/files`, `packages/shell` and `packages/dock` name their parts in
+      prose no table resolves. Editor and media already have their own `## API`
+      prop guards; primitives and icons hold theirs. Owner: data / files / shell
+      / dock. The docs app should not carry a known-gap list for another
+      workstream's files.
 
 `[x]` Publish the **page index an agent reads instead of the sidebar** — the
       site's map existed only as a sidebar (for a reader) and a `sitemap.xml`

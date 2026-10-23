@@ -45,12 +45,12 @@ Breadcrumb
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Breadcrumb` | `div role="navigation"` | `maxItems?` (clamps below 3), `separator?` (default `/`) |
-| `BreadcrumbList` | `div role="list"` | reads its direct children |
-| `BreadcrumbItem` | `div role="listitem"` | — |
-| `BreadcrumbLink` | `div role="link"` | `onSelect?`, `current?` |
-| `BreadcrumbPage` | `text` | the current page, not focusable |
-| `BreadcrumbSeparator` | `text role="presentation"` | — |
+| `Breadcrumb` | `div role="navigation"` | `maxItems?` (clamps below 3), `separator?` (default `/`), `className?`, `children` |
+| `BreadcrumbList` | `div role="list"` | `className?`, `children` (the trail's items, direct) |
+| `BreadcrumbItem` | `div role="listitem"` | `className?`, `children` |
+| `BreadcrumbLink` | `div role="link"` | `onSelect?`, `current?`, `className?` |
+| `BreadcrumbPage` | `text` | the current page, not focusable; `className?` |
+| `BreadcrumbSeparator` | `text role="presentation"` | `className?` |
 
 ## Limitations
 

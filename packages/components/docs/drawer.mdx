@@ -51,14 +51,14 @@ Drawer
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Drawer` | nothing; owns open state | `open?`, `defaultOpen?`, `onOpenChange?`, `dismissible?` |
+| `Drawer` | nothing; owns open state | `open?`, `defaultOpen?`, `onOpenChange?`, `dismissible?`, `children` |
 | `DrawerTrigger` | button | button props |
 | `DrawerClose` | button | button props |
-| `DrawerContent` | veil + `role="dialog"` surface | `side?`, `size?`, `label` (required), `showClose?`, `initialFocus?` |
-| `DrawerHeader` | heading block | children |
-| `DrawerTitle` | level-2 heading | text props |
-| `DrawerDescription` | muted copy | text props |
-| `DrawerFooter` | right-aligned actions | children |
+| `DrawerContent` | veil + `role="dialog"` surface | `side?`, `size?`, `label` (required), `showClose?`, `initialFocus?`, `className?`, `children` |
+| `DrawerHeader` | heading block | `className?`, `children` |
+| `DrawerTitle` | level-2 heading | text props, `className?` |
+| `DrawerDescription` | muted copy | text props, `className?` |
+| `DrawerFooter` | right-aligned actions | `children`, `className?` |
 
 ## Limitations
 

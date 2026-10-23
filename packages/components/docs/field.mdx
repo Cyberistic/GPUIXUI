@@ -38,12 +38,19 @@ Field
 | `Field` | `description` | `string` | — |
 | `Field` | `error` | `string` | — |
 | `Field` | `required` | `boolean` | `false` |
+| `Field` | `className` | `string` | — |
+| `Field` | `children` | `PartChildren` | — |
 | `FieldLabel` | `required` | `boolean` | `false` |
+| `FieldLabel` | `className` | `string` | — |
 | `FieldDescription` | `children` | `ReactNode` | — |
+| `FieldDescription` | `className` | `string` | — |
 | `FieldError` | `children` | `ReactNode` | — |
+| `FieldError` | `className` | `string` | — |
 | `FieldInput` | `invalid` | `boolean` | the field's state |
 | `FieldInput` | `disabled` | `boolean` | `false` |
 | `FieldInput` | `style` | `StateStyle<FieldInputState>` | recipe |
+| `FieldInput` | value and text | `value`, `defaultValue`, `onSubmit`, `onValueChange`, `onChange`, `placeholder`, `readOnly`, `autoFocus`, `label`, `description` | the primitives' field contract |
+| `FieldInput` | box, address and handlers | `className`, `size`, `fullWidth`, `tabIndex`, `testId`, `ref`, `aria-id`, `onLayout`, `onClick`, `onFocus`, `onBlur`, `onKeyDown`, `onKeyUp` | — |
 
 ## Limitations
 
