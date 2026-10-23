@@ -1,5 +1,13 @@
 import { readFileSync } from "node:fs";
-import { getTheme, platformTheme, themes } from "@gpuixui/tokens";
+import {
+  contrastRatio,
+  getTheme,
+  nativeFenceFill,
+  nativeFenceHeaderFill,
+  platformTheme,
+  syntaxColors,
+  themes,
+} from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { columnDrag } from "./column-drag.test-util";
 
@@ -800,6 +808,94 @@ describe("docs/gpuix-capabilities.md", () => {
     ).toBeDefined();
     expect(page?.[1]).toContain("window-backdrop");
     expect(page?.[2]).toContain("createPortal");
+  });
+
+  it("names every capability row once, so a lookup reads the row it means", () => {
+    // The table is read by phrase (`rowFor`), so a pasted row makes the lookup
+    // return the first of two and leaves the second's claims unreadable — the
+    // Confirmation flow row was duplicated and one copy could have drifted
+    // without a reader or a guard seeing it.
+    const repeated = rows
+      .map((row) => row.label)
+      .filter((label, index, labels) => labels.indexOf(label) !== index);
+    expect(repeated, "these capability rows are named more than once").toEqual(
+      [],
+    );
+  });
+
+  it("records the surface a fenced code block paints, derived from its fixture", () => {
+    // A markdown pane is designed against the fence the runtime's `<markdown>`
+    // element paints for itself, and the record said nothing about it: the
+    // block is a composite surface — `nativeFenceFill` lays the runtime's 3.5%
+    // ink over the fill behind the host and `nativeFenceHeaderFill` another 2%
+    // under the language strip — so a palette is read on the composite rather
+    // than on the page. `markdown-fence` proved both washes, the keyword on
+    // them, and the control that a missing handover is visible. The inks are
+    // derived from the same seam the probe paints, so a palette edit moves the
+    // printed values.
+    const fixture = read("apps/playground/src/live/markdown-fence.ts");
+    const checks = Number(
+      /export const MARKDOWN_FENCE_CHECKS = (\d+)/.exec(fixture)?.[1],
+    );
+    const floor = Number(
+      /export const FENCE_BODY_FLOOR = (\d+)/.exec(fixture)?.[1],
+    );
+    const runtimeKeyword =
+      /export const RUNTIME_KEYWORD = "([^"]+)"/.exec(
+        read("apps/playground/src/live/syntax-palette.ts"),
+      )?.[1] ?? "";
+
+    const inks = (theme: typeof themes.dark) => ({
+      body: nativeFenceFill(theme.colors.background),
+      strip: nativeFenceHeaderFill(theme.colors.background),
+      keyword: syntaxColors(theme).keyword,
+    });
+    const base = inks(themes.dark);
+    const look = inks(platformTheme(themes.dark, "darwin"));
+
+    expect(base.body, "the seam resolves the base fence body").toBeDefined();
+    expect(base.strip, "the seam resolves the base strip wash").toBeDefined();
+    expect(look.body, "the seam resolves the look's fence body").toBeDefined();
+    expect(look.strip, "the seam resolves the look's strip wash").toBeDefined();
+    expect(base.keyword).not.toBe(look.keyword);
+
+    const stripStep = (ink: {
+      readonly body: string | undefined;
+      readonly strip: string | undefined;
+    }): string => {
+      const ratio = contrastRatio(ink.strip, ink.body);
+      return ratio === undefined ? "" : `${ratio.toFixed(3)}:1`;
+    };
+
+    const fence = rowFor("Fenced code block");
+    expect(fence?.verdict).toBe("supported, with limits");
+    expect(fence?.evidence).toContain("markdown-fence");
+    expect(fence?.evidence).toContain(`${checks} checks`);
+    expect(fence?.evidence).toContain(`${floor}`);
+    expect(fence?.evidence).toContain(base.body ?? "");
+    expect(fence?.evidence).toContain(base.strip ?? "");
+    expect(fence?.evidence).toContain(look.body ?? "");
+    expect(fence?.evidence).toContain(look.strip ?? "");
+    expect(fence?.evidence).toContain(stripStep(base));
+    expect(fence?.evidence).toContain(stripStep(look));
+    expect(fence?.evidence).toContain(base.keyword);
+    expect(fence?.evidence).toContain(look.keyword);
+    expect(fence?.evidence).toContain(runtimeKeyword);
+    expect(fence?.workaround).toContain("behind the host");
+    expect(fence?.workaround).toContain("nativeFenceFill(card)");
+  });
+
+  it("publishes the fence surface on /docs/runtime", () => {
+    const page = measuredRow("Fenced code block");
+    expect(
+      page,
+      "the page's measured table has no fenced-code-block row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("markdown-fence");
+    expect(page?.[1]).toContain("3.5%");
+    expect(page?.[1]).toContain("behind the host");
+    expect(page?.[2]).toContain("nativeFenceFill");
+    expect(page?.[2]).toContain("behind");
   });
 
   it("records the portal a window measured, with its two limits", () => {
