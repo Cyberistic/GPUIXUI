@@ -31,13 +31,22 @@ import {
   nativeAccentShares,
   nativeAccentSurfaces,
   nativeDiffWash,
+  nativeFenceFill,
+  nativeFenceHeaderFill,
+  nativeFenceHeaderInk,
+  nativeFenceInk,
   nativeTextFills,
   nativeTextTheme,
   type NativeTextFill,
 } from "./native-text.js";
 import { platformNames } from "./platforms.js";
 import { retroNames, retroTheme } from "./retro.js";
-import { lightSyntax } from "./syntax.js";
+import {
+  darkSyntax,
+  lightSyntax,
+  syntaxColors,
+  syntaxRoleFloors,
+} from "./syntax.js";
 import {
   darkTheme,
   extendTheme,
@@ -1194,5 +1203,243 @@ describe("the accent a document host paints", () => {
     expect(catalogue).toContain(`${nativeAccentShares.marker * 100}%`);
     expect(catalogue).toContain(`${nativeAccentShares.rail * 100}%`);
     expect(catalogue).toContain("3.09");
+  });
+});
+
+/**
+ * Guards the fill a **fenced code block** paints inside a rendered document.
+ *
+ * The syntax contract measures a token on the two fills a caller can hand a
+ * host (`syntaxSurfaces`), but a `<markdown>` host's fence is a surface of its
+ * own: the runtime lays `0.035` of a neutral ink over the document's fill
+ * (`packages/native/src/markdown/render.rs` at the pinned
+ * `@gpuix/native@0.11.0`) and another `0.02` under the language strip. Nothing
+ * named that composite, so a token that cleared the page could miss its floor on
+ * the fence the same theme paints — and the dark `keyword` did, in macOS, Linux
+ * and Windows dark.
+ */
+describe("the fence a document host paints", () => {
+  /** Every token and the language label on the fence, with the ratio and floor. */
+  const fencePlacements = (theme: Theme) =>
+    nativeTextFills.flatMap((fill) => {
+      const fence = nativeFenceFill(theme.colors[fill]);
+      const strip = nativeFenceHeaderFill(theme.colors[fill]);
+      const floors = contrastFloorsFor(theme);
+      const tokens = Object.entries(syntaxColors(theme)).map(
+        ([role, colour]) => ({
+          claim: `${role} on the fence over ${fill}`,
+          ratio: fence === undefined ? undefined : contrastRatio(colour, fence),
+          floor:
+            floors[syntaxRoleFloors[role as keyof typeof syntaxRoleFloors]],
+        }),
+      );
+      return [
+        ...tokens,
+        {
+          claim: `language label on the strip over ${fill}`,
+          ratio:
+            strip === undefined
+              ? undefined
+              : contrastRatio(theme.colors.mutedForeground, strip),
+          floor: floors.secondary,
+        },
+      ];
+    });
+
+  it("holds the runtime's own shares and composites them over the fill", () => {
+    expect(nativeFenceInk).toBe(0.035);
+    expect(nativeFenceHeaderInk).toBe(0.02);
+    // The ink is neutral and its direction is the host's own `bg` lightness: a
+    // light fill takes black, a dark one white.
+    expect(nativeFenceFill(lightTheme.colors.background)).toBe(
+      blend(lightTheme.colors.background, "#000000", nativeFenceInk),
+    );
+    expect(nativeFenceFill(darkTheme.colors.background)).toBe(
+      blend(darkTheme.colors.background, "#FFFFFF", nativeFenceInk),
+    );
+    // The strip is a second wash over the block, not over the page.
+    const body = nativeFenceFill(lightTheme.colors.background);
+    expect(nativeFenceHeaderFill(lightTheme.colors.background)).toBe(
+      blend(body ?? "", "#000000", nativeFenceHeaderInk),
+    );
+    // A value the contract cannot measure is answered with absence, the rule
+    // every derived colour in this package follows.
+    expect(nativeFenceFill("oklch(0.5 0.1 250)")).toBeUndefined();
+    expect(nativeFenceHeaderFill("oklch(0.5 0.1 250)")).toBeUndefined();
+  });
+
+  it("keeps every token and the language label readable on the fence", () => {
+    const failures = shipped.flatMap(({ label, theme }) =>
+      fencePlacements(theme)
+        .filter(({ ratio, floor }) => ratio === undefined || ratio < floor)
+        .map(
+          ({ claim, ratio, floor }) =>
+            `${label} ${claim}: ${ratio?.toFixed(2) ?? "unmeasurable"} < ${floor}`,
+        ),
+    );
+
+    expect(failures).toEqual([]);
+    // 16 styles × 2 fills × (24 tokens + the strip's label): a sweep that
+    // measured nothing would otherwise pass.
+    expect(shipped.length * nativeTextFills.length * 25).toBe(800);
+
+    // The tightest is the smallest margin over its own floor: the comment sits
+    // at a lower ratio but answers the secondary floor.
+    const cells = shipped.flatMap(({ label, theme }) =>
+      fencePlacements(theme).map((placement) => ({
+        label,
+        ...placement,
+        margin: (placement.ratio ?? 0) - placement.floor,
+      })),
+    );
+    const low = cells.reduce((worst, cell) =>
+      cell.margin < worst.margin ? cell : worst,
+    );
+
+    expect([low.label, low.claim, Number((low.ratio ?? 0).toFixed(2))]).toEqual(
+      ["linux dark", "macroName on the fence over background", 7.07],
+    );
+  });
+
+  it("found the dark keyword without room on the fence", () => {
+    // The identity's dark keyword cleared the page in every style and missed the
+    // body floor on the fence the three platform styles paint — a page lighter
+    // than the base theme's is what lifts it.
+    const identity = darkSyntax.keyword;
+    const place = (theme: Theme, fill: NativeTextFill, colour: string) => {
+      const fence = nativeFenceFill(theme.colors[fill]);
+      return contrastRatio(colour, fence);
+    };
+    const linuxDark = platformTheme(themes.dark, "linux");
+    const windowsDark = platformTheme(themes.dark, "win32");
+    const macOSDark = platformTheme(themes.dark, "darwin");
+
+    expect(place(linuxDark, "background", identity)).toBeCloseTo(6.49, 2);
+    expect(place(linuxDark, "input", identity)).toBeCloseTo(6.76, 2);
+    expect(place(windowsDark, "background", identity)).toBeCloseTo(6.85, 2);
+    expect(place(windowsDark, "input", identity)).toBeCloseTo(6.94, 2);
+    expect(place(macOSDark, "input", identity)).toBeCloseTo(6.92, 2);
+    // Each of them clears its own page, so only the fence placement sees it.
+    for (const style of [linuxDark, windowsDark, macOSDark]) {
+      expect(
+        contrastRatio(identity, style.colors.background),
+      ).toBeGreaterThanOrEqual(contrastFloorsFor(style).body);
+    }
+    // A style that repaints the page owns the table for it: the three platforms
+    // carry the smallest 2% step toward white, and the identity keeps its own.
+    for (const theme of [linuxDark, windowsDark, macOSDark]) {
+      expect(syntaxColors(theme).keyword).toBe("#B0B2FF");
+    }
+    expect(darkSyntax.keyword).toBe(identity);
+    expect(syntaxColors(darkTheme).keyword).toBe(identity);
+    // Every dark style clears the fence now.
+    const dark = shipped.filter(({ theme }) => theme.mode === "dark");
+    const under = dark.flatMap(({ label, theme }) =>
+      nativeTextFills
+        .map((fill) => ({
+          label,
+          ratio: contrastRatio(
+            syntaxColors(theme).keyword,
+            nativeFenceFill(theme.colors[fill]),
+          ),
+        }))
+        .filter(
+          ({ ratio }) =>
+            ratio === undefined || ratio < contrastFloorsFor(theme).body,
+        ),
+    );
+
+    expect(under).toEqual([]);
+  });
+
+  it("reports a brand whose page lifts the fence under its keyword", () => {
+    // A brand owns the page the fence is drawn over, so the contract is about
+    // the composite and not about the shipped palettes: this page is light
+    // enough to lift the fence past the token that clears the base theme's.
+    const brand = extendTheme(darkTheme, {
+      colors: { background: "#1C1F26" },
+    });
+    const fence = nativeFenceFill(brand.colors.background);
+    const failures = fencePlacements(brand).filter(
+      ({ ratio, floor }) => ratio === undefined || ratio < floor,
+    );
+
+    expect(failures.map(({ claim }) => claim)).toContain(
+      "keyword on the fence over background",
+    );
+    // The same token clears the page it was measured on before, so only the
+    // fence placement sees this.
+    expect(
+      contrastRatio(syntaxColors(brand).keyword, brand.colors.background),
+    ).toBeGreaterThanOrEqual(contrastFloorsFor(brand).body);
+    expect(fence).not.toBeUndefined();
+  });
+
+  it("measures the strip as a wash the rule carries, not a boundary", () => {
+    const strips = shipped.flatMap(({ label, theme }) =>
+      nativeTextFills.map((fill) => ({
+        label,
+        fill,
+        ratio: contrastRatio(
+          nativeFenceHeaderFill(theme.colors[fill]),
+          nativeFenceFill(theme.colors[fill]),
+        ),
+        overPage: contrastRatio(
+          nativeFenceFill(theme.colors[fill]),
+          theme.colors[fill],
+        ),
+      })),
+    );
+    const low = strips.reduce((worst, cell) =>
+      (cell.ratio ?? 1) < (worst.ratio ?? 1) ? cell : worst,
+    );
+    const hidden = strips.filter(({ ratio }) => (ratio ?? 0) < decorativeFloor);
+
+    // Two washes three points apart are not a boundary, and the runtime does not
+    // ask them to be: the rule under the strip and around the block is. The
+    // number is recorded so a page cannot claim the fill divides anything.
+    expect(hidden.length).toBeGreaterThan(0);
+    expect([low.label, low.fill, Number((low.ratio ?? 0).toFixed(3))]).toEqual([
+      "high-contrast dark",
+      "background",
+      1.031,
+    ]);
+    // The fence itself *is* a surface: every style's block is perceivable
+    // against the page it sits on.
+    expect(
+      strips.filter(({ overPage }) => (overPage ?? 0) < decorativeFloor),
+    ).toEqual([]);
+  });
+
+  it("states the fence on the catalogue, the design system and the inventory", () => {
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const design = readFileSync(
+      new URL("../../../docs/design-system.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const inventory = readFileSync(
+      new URL("../../../COMPONENTS.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const readme = readFileSync(
+      new URL("../README.md", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    // The shares and the composite, so a reader can build the same check.
+    expect(catalogue).toContain("### The fence a document paints");
+    expect(catalogue).toContain("`nativeFenceInk` (0.035)");
+    expect(catalogue).toContain("`nativeFenceFill(fill)`");
+    expect(catalogue).toContain("6.49:1");
+    // The strip is a wash the rule carries, and the page says so rather than
+    // counting it as a boundary.
+    expect(catalogue).toContain("1.031:1");
+    expect(design).toContain("fence");
+    expect(design).toContain("7.66:1");
+    expect(inventory).toContain("nativeFenceFill");
+    expect(readme).toContain("nativeFenceFill");
   });
 });

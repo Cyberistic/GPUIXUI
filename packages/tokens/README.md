@@ -1092,9 +1092,19 @@ syntaxColors(brand).number; // the value it spread
 
 A brand's palette **replaces the table whole** — the host reads all twenty-four
 keys, so a partial palette would leave the rest on the runtime's colours — and
-a `PlatformStyle` may carry one per mode for its own page. `syntaxFailures(theme)`
-reports every token that misses its floor and is part of `auditTheme`
-(`audit.syntax`).
+a `PlatformStyle` may carry one per mode for its own page. The **fence** inside a
+rendered document is the surface that decides the tightest cell: the runtime
+paints 3.5% of a neutral ink over the page (`nativeFenceInk`) and another 2% under
+the language strip (`nativeFenceHeaderInk`), so a token that clears the page can
+miss its floor on the block the theme draws. `nativeFenceFill(fill)` and
+`nativeFenceHeaderFill(fill)` composite it. Measured on the identity's
+`#A7A9FF`, the dark keyword cleared every page and reached **6.49:1** on Linux
+dark's fence, so the three dark platform styles — the ones whose page is lighter
+than the base theme's — declare `syntax.dark` with the smallest 2% step toward
+white (`#B0B2FF`, 7.09:1 there); the identity and both looks keep `#A7A9FF`.
+`syntaxFailures(theme)` reports every token that misses its floor on the two fills
+a caller paints and is part of `auditTheme` (`audit.syntax`); the fence's own
+composite is measured by `native-text.test.ts` against the same floors.
 
 The pixels are measured, not only the host object: the playground's
 `syntax-palette` probe paints one four-line TypeScript source three times in a

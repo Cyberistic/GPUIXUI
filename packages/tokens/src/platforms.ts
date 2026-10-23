@@ -16,7 +16,7 @@ import {
   type Radius,
 } from "./scale.js";
 import type { SeriesColors } from "./series.js";
-import type { SyntaxColors } from "./syntax.js";
+import { darkSyntax, type SyntaxColors } from "./syntax.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 /** GPUI's system UI font sentinel; it resolves to each platform's own UI font. */
@@ -128,6 +128,24 @@ export interface PlatformStyle extends PlatformType {
  * a pressed destructive row, under the body floor. A role a set omits keeps the
  * base theme's value.
  */
+/**
+ * The dark syntax table the three platform styles carry.
+ *
+ * A platform style repaints the page, and a `<markdown>` host's fenced code
+ * block paints 3.5% of a neutral ink over that page (`nativeFenceFill`), so the
+ * fence sits a step above the base theme's and the dark `keyword` — the one
+ * token with no room — needs a brighter value. Measured: the identity's
+ * `#A7A9FF` clears the page in every dark style and misses the body floor on the
+ * fence in all three platforms (6.49:1 on Linux dark, 6.85:1 on Windows,
+ * 6.92:1 on macOS), and `#B0B2FF` is the smallest 2% step toward white that
+ * clears them (7.09:1). A light base keeps its page, so the light mode resolves
+ * the identity's table.
+ */
+const platformDarkSyntax: SyntaxColors = {
+  ...darkSyntax,
+  keyword: "#B0B2FF",
+};
+
 export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
   darwin: {
     label: "macOS",
@@ -136,6 +154,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     radius: { none: 0, sm: 4, md: 6, lg: 10, xl: 14, full: 9999 },
     density: "compact",
     contrast: "default",
+    syntax: { dark: platformDarkSyntax },
     colors: {
       light: {
         background: "#F2F2F7",
@@ -198,6 +217,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     radius: { none: 0, sm: 4, md: 6, lg: 9, xl: 12, full: 9999 },
     density: "spacious",
     contrast: "default",
+    syntax: { dark: platformDarkSyntax },
     colors: {
       light: {
         background: "#F6F5F4",
@@ -251,6 +271,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     radius: { none: 0, sm: 2, md: 4, lg: 8, xl: 10, full: 9999 },
     density: "comfortable",
     contrast: "default",
+    syntax: { dark: platformDarkSyntax },
     colors: {
       light: {
         background: "#F3F3F3",

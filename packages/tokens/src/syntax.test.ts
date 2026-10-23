@@ -156,7 +156,7 @@ describe("the syntax palette", () => {
       tightest.surface,
       Number((tightest.ratio ?? 0).toFixed(2)),
       tightest.theme,
-    ]).toEqual(["keyword", "background", 7.22, "Dark · Linux"]);
+    ]).toEqual(["string", "background", 7.66, "Light · Windows XP (Luna)"]);
   });
 
   it("holds a comment to the quiet floor, and the high-contrast tables to AAA", () => {

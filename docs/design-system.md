@@ -1106,11 +1106,24 @@ number, type, comment — because "this is a keyword" is not "this is a warning"
 Every token that names code is held to the body floor on both fills a native
 host paints, and a comment to the secondary floor (AAA in a high-contrast
 theme); `docs/tokens.md` §Syntax palette has the tables and the measured
-tightest cell. A brand owns the palette by carrying `syntax`, which **replaces
-the table whole** — the host reads all twenty-four keys — so recolouring one
-token means spreading `syntaxColors(theme)`, and a stored palette that names
-only some tokens is reported by `syntaxFailures` rather than painted from the
-host's own defaults.
+tightest cell — a `string` at 7.66:1 on the Windows XP (Luna) look's light page.
+A brand owns the palette by carrying `syntax`, which **replaces the table
+whole** — the host reads all twenty-four keys — so recolouring one token means
+spreading `syntaxColors(theme)`, and a stored palette that names only some
+tokens is reported by `syntaxFailures` rather than painted from the host's own
+defaults.
+
+The **fence** inside a rendered document is the surface that decides the tightest
+cell: the runtime paints 3.5% of a neutral ink over the page and another 2% under
+the language strip, so a token that clears the page can miss its floor on the
+block the same theme draws. The three dark platform styles repaint the page, so
+each declares its own dark table with a keyword one step brighter (`#B0B2FF`),
+which takes the worst of them from 6.49:1 to 7.09:1. The strip's own fill is
+three points from the block — under the perceptibility floor — and the rule the
+runtime draws under it is what carries the boundary, as it does for a field
+(§7); the strip's label is measured on the strip. `docs/tokens.md` §The fence a
+document paints has the shares, the helper a brand checks its page with
+(`nativeFenceFill`, `nativeFenceHeaderFill`) and the full table.
 
 ### Target sizes
 

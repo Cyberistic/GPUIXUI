@@ -45,6 +45,14 @@
  * it — so the seam derives that accent for the composite rather than handing
  * over the fill role ({@link nativeAccent}).
  *
+ * A fenced code block inside that document is a surface of its own: the host
+ * lays {@link nativeFenceInk} of a neutral ink over the fill it was handed and
+ * another {@link nativeFenceHeaderInk} under the language strip, so the syntax
+ * palette is read on that composite and not only on the page
+ * ({@link nativeFenceFill}). The strip's fill is three points from the block it
+ * labels — under the perceptibility floor — and the rule the runtime draws under
+ * it is what carries the boundary; the label itself is measured on the strip.
+ *
  * A `<diff>` host paints three more roles, and the runtime derives a row's wash
  * from one of them: an added line's ink is `diffAdd` with the row tinted
  * {@link nativeDiffWash} of that same colour over the fill, a removed line's is
@@ -63,6 +71,7 @@
  */
 
 import { blend } from "./color.js";
+import { opaqueRgb } from "./measure.js";
 import {
   contrastFloorsFor,
   contrastRatio,
@@ -93,6 +102,93 @@ export type NativeTextFill = (typeof nativeTextFills)[number];
  * find is not a changed line.
  */
 export const nativeDiffWash = 0.055;
+
+/**
+ * The share of a neutral ink a `<markdown>` host lays under a fenced code block:
+ * the runtime paints the fence `0.035` of black (on a light fill) or white (on a
+ * dark one) over the document's own fill (`packages/native/src/markdown/render.rs`
+ * at the pinned `@gpuix/native@0.11.0`), so the block has a surface of its own
+ * rather than borrowing the page. The ink is neutral and derived from the host's
+ * `bg` lightness, not from a role: no token carries it, so the fence fill is a
+ * composite this seam measures rather than a value a theme names
+ * ({@link nativeFenceFill}).
+ */
+export const nativeFenceInk = 0.035;
+
+/**
+ * The share of the same neutral ink the fence's **language strip** lays over the
+ * fence body, which the runtime paints as a second wash (`0.02`) under the strip
+ * and above the block's own fill.
+ *
+ * The two washes are three points apart, so the strip's own fill is under the
+ * 1.05:1 perceptibility floor over the fence in every light style (the tightest
+ * is the Windows XP look's 1.041:1). The strip is carried by its **rule** — the
+ * runtime draws a `border` under the strip and around the block — the way a
+ * field's resting edge carries it (§7 of the design system), so the fill is
+ * recorded as measured rather than treated as a boundary.
+ */
+export const nativeFenceHeaderInk = 0.02;
+
+/** The neutral ink a document's fence lays down for a fill of this lightness. */
+const fenceInk = (fill: string): string | undefined => {
+  const rgb = opaqueRgb(fill);
+  if (rgb === undefined) {
+    return undefined;
+  }
+  const channel = (at: number): number =>
+    Number.parseInt(rgb.slice(at, at + 2), 16);
+  // The runtime picks the ink from the host's `bg` in HSL (`bg.l < 0.5`, read
+  // from the theme object's `bg` field, which this seam sets to the fill). HSL
+  // lightness is the mean of the widest and narrowest channel, so a saturated
+  // fill is not mistaken for a dark one.
+  const widest = Math.max(channel(1), channel(3), channel(5));
+  const narrowest = Math.min(channel(1), channel(3), channel(5));
+  return (widest + narrowest) / 2 / 255 < 0.5 ? "#FFFFFF" : "#000000";
+};
+
+/**
+ * The fill a `<markdown>` host paints under a fenced code block.
+ *
+ * The host lays {@link nativeFenceInk} of a neutral ink over the fill it was
+ * handed, so the tokens inside a fence are read on a surface this package does
+ * not name: a dark style's page is lifted, and a token that cleared the page can
+ * miss its floor there. Pass the same role the host was handed
+ * (`theme.colors[fill]`, for a `fill` in {@link nativeTextFills}).
+ *
+ * A value the contract cannot measure — a perceptual colour — resolves to
+ * `undefined` rather than to a guessed ink, the rule the other derived colours
+ * follow.
+ *
+ * @example
+ * ```ts
+ * import { nativeFenceFill, nativeTextTheme, syntaxColors, themes } from "@gpuixui/tokens";
+ *
+ * const host = nativeTextTheme(themes.dark, "background");
+ * // The fence is the composite a keyword is read on, not the page:
+ * const fence = nativeFenceFill(themes.dark.colors.background);
+ * ```
+ */
+export function nativeFenceFill(fill: string): string | undefined {
+  const ink = fenceInk(fill);
+  return ink === undefined ? undefined : blend(fill, ink, nativeFenceInk);
+}
+
+/**
+ * The fill the fence's **language strip** paints: {@link nativeFenceHeaderInk}
+ * of the same neutral ink over {@link nativeFenceFill}.
+ *
+ * A strip that differs from its block by three points is not a boundary, and the
+ * runtime does not ask it to be one — the rule under the strip and around the
+ * block is. This is the surface the language label is read on, so the label's
+ * floor is measured here.
+ */
+export function nativeFenceHeaderFill(fill: string): string | undefined {
+  const body = nativeFenceFill(fill);
+  const ink = fenceInk(fill);
+  return body === undefined || ink === undefined
+    ? undefined
+    : blend(body, ink, nativeFenceHeaderInk);
+}
 
 /**
  * The layout numbers a native text host takes from the theme.

@@ -23,6 +23,14 @@
  * authored at the body floor, which is 7:1 in both variants. A theme that wants
  * more saturation owns a palette through `syntax`, and every value it supplies
  * is measured by {@link syntaxFailures} exactly as the shipped ones are.
+ *
+ * The surfaces are not only the fills a caller paints. A `<code>` host is handed
+ * one of those fills, but a `<markdown>` host's fenced block paints a fill of its
+ * own — 3.5% of a neutral ink over the caller's fill, and another 2% under the
+ * language strip (`nativeFenceFill` in the native text seam) — so the palette is
+ * read on that composite too. A style that repaints the page the fence sits on
+ * owns the table for it, which is why the three dark platform styles declare one
+ * with a keyword a step brighter than this identity's.
  */
 
 import type { ThemeColors } from "./color.js";

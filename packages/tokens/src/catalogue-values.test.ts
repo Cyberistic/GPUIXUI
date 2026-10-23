@@ -703,10 +703,12 @@ describe("the catalogue's syntax palette", () => {
     );
 
     expect(flatCatalogue).toContain(
-      `the tightest shipped cell is the dark \`keyword\` at **${(tightest.ratio ?? 0).toFixed(2)}:1** on Linux's page`,
+      `the tightest shipped cell is a \`${tightest.role}\` at **${(tightest.ratio ?? 0).toFixed(2)}:1**`,
     );
-    expect(tightest.role).toBe("keyword");
+    expect(flatCatalogue).toContain("Windows XP (Luna) look's light page");
+    expect(tightest.role).toBe("string");
     expect(tightest.surface).toBe("background");
+    expect(tightest.theme).toBe("Light · Windows XP (Luna)");
   });
 });
 

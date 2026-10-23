@@ -2927,6 +2927,54 @@ table cell's, a diff row's, the gutter's gap and the gap between two blocks are
 `spacing` steps, and a brand that retunes the scale moves a rendered document
 with it.
 
+### The fence a document paints
+
+A fenced code block is a surface of its own. The runtime lays **3.5% of a
+neutral ink** over the fill the host was handed — the share is `nativeFenceInk`
+(0.035) — black on a light fill and white on a dark one, chosen from the host's
+own `bg` lightness (`packages/native/src/markdown/render.rs` at the pinned
+`@gpuix/native@0.11.0`), and **another 2%** under the language strip
+(`nativeFenceHeaderInk` (0.02)). No role carries either wash, so the tokens
+inside the fence are not read on the page the caller painted.
+`nativeFenceFill(fill)` and `nativeFenceHeaderFill(fill)` composite them, and the
+contract measures the same two floors there:
+
+| Claim | Floor | What it catches |
+| ----- | ----- | --------------- |
+| every token that names code, on the fence fill | body, 7:1 | a keyword that clears the page and vanishes on a lifted one |
+| a comment, on the fence fill | secondary, 4.5:1 (7:1 high) | the quiet run with no room on a composite |
+| the language label, on the strip fill | secondary, 4.5:1 (7:1 high) | a strip whose label the second wash swallows |
+| the fence fill against the page | 1.05:1 | a block that is not a surface at all |
+
+**It found the dark keyword.** The identity's `#A7A9FF` cleared the page in every
+dark style and missed the body floor on the fence the three platform styles
+paint — a page lighter than the base theme's is what lifts it. Measured on the
+identity value: Linux dark **6.49:1** over its page fill and 6.76:1 over
+`input`, Windows dark 6.85:1 and 6.94:1, macOS dark 6.92:1 over `input`. A style
+that repaints the page owns the table for it, so `darwin`, `linux` and `win32`
+declare `syntax.dark` with the smallest 2% step toward white — `#B0B2FF`, which
+puts the worst of those at **7.09:1** — while the identity and both authored
+looks keep `#A7A9FF`, because their pages already carried it. The tightest
+placement over the sixteen styles is Linux dark's `macroName` on its fence at
+**7.07:1**.
+
+**The strip is a wash, not a boundary.** The two washes are three points apart,
+so the strip's fill sits at 1.031–1.058:1 against the fence — under the 1.05:1
+perceptibility floor in nine of the sixteen styles (eighteen of the thirty-two
+fill placements; the tightest is High contrast dark's **1.031:1**). The runtime
+does not ask the fill to divide anything: it draws a `border` under the strip and
+around the block, and that rule is what carries the boundary, the way a field's
+resting edge carries a field (§7 of the design system). The label is still
+measured on the strip, where it is read; the tightest is the Windows XP (Luna)
+look's light page at 5.59:1. The fence itself is a surface: every style's block
+is at least 1.055:1 against the page it sits on.
+
+A brand owns this the moment it owns its page: a lighter dark page lifts the
+fence further, so `nativeFenceFill(theme.colors.background)` is the surface to
+check a custom `keyword` against. The suite measures that direction — a brand
+whose page is lifted from the base theme's keeps its keyword readable on the page
+(7.67:1) and loses it on the fence (6.95:1).
+
 ### What a field's value actually paints
 
 The seam hands `text: inputForeground`, and that role is the ink a `<code>`, a
@@ -3060,15 +3108,20 @@ measured:
   string, a number or a name is the text the reader came for — on both fills a
   native host paints: the page role a code block fills (`syntaxSurfaces` is
   `background` and `input`, the two `nativeTextFills`). That is 7:1 by default
-  and 7:1 in a high-contrast theme; the tightest shipped cell is the dark
-  `keyword` at **7.22:1** on Linux's page — 0.22 of headroom, recorded rather
-  than widened, because a keyword one ramp step lighter would sit on the AAA
-  palette's other lightness band.
+  and 7:1 in a high-contrast theme; the tightest shipped cell is a `string` at
+  **7.66:1** on the Windows XP (Luna) look's light page — 0.66 of headroom, and
+  the fence a document paints is tighter still at 7.07:1 (§The fence a document
+  paints).
 - **A comment answers to the secondary floor** (4.5:1; 7:1 when the theme
   declares `contrast: "high"`), because a comment is an annotation about the code
   rather than the code. The two high-contrast tables are the default ones with
   that one role moved to the AAA floor — `#3D4552` light and `#CBD1DB` dark —
   which is why there are four rather than two.
+
+The fills above are the surfaces a **caller** hands a host. A `<markdown>` host's
+fenced block paints a fill of its own on top of one of them, so the palette is
+measured there too, and a style that repaints the page carries its own table
+(§The fence a document paints).
 
 `syntaxFailures(theme, floors?)` reports every token that misses its floor,
 naming the token, the fill and the measured ratio, and reporting a colour it
@@ -4297,7 +4350,12 @@ cannot go untested. Evidence:
   **row model** around the code stays the runtime's: a code block's gutter
   column, a diff's marker and accent-bar columns, the fixed heights its
   virtualizer measures and a document's table column minima have no token, so
-  tuning those is still a runtime change. The **paddings and the block gap are
+  tuning those is still a runtime change. A `<markdown>` **fence** is the one
+  surface a host paints for itself: its 3.5% ink and its strip's 2% are the
+  runtime's shares (measured by `nativeFenceFill`/`nativeFenceHeaderFill`, §The
+  fence a document paints), so a brand owns them only through the page it hands
+  the host and through its palette — and the strip's fill is not a boundary (the
+  runtime's rule under it is). The **paddings and the block gap are
   not part of that model**: they are `spacing` steps (§Native text hosts), so a
   brand's scale reaches a rendered document. A `<markdown>` host's inline code is
   prose in a chip rather than a second palette (`codeText` on `codeWash`), and
