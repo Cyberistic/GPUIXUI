@@ -10307,7 +10307,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 298/298
+`[x]` `[██████████]` 299/299
+
+`[x]` Publish the **typed refusal the runtime page omitted** — `/docs/runtime`
+      showed `capabilities` and `unsupportedFeature` and never named
+      `UnsupportedRuntimeFeature` or `unsupportedFeatures`, so a reader learned
+      what the pinned runtime cannot do but not how to catch the gap: the
+      package fails an Effect's error channel with a `Schema.TaggedError`, and
+      the page's `## Refusals are typed` section now shows `Effect.catchTag`
+      recovering `error.feature` and `error.workaround` beside the refused-key
+      list. `src/lib/runtime-page.test.ts` (2 cases) derives every value from the
+      package's own `export { … }` blocks (five, types left out) and requires the
+      page to catch the refusal with the fields the class carries. Directions
+      measured: deleting the section fails both cases by name (`[ 'capabilities',
+      …(2) ]` missing, and no `catchTag`); restored, the app is 127 files /
+      1 102 tests green, `check-types` clean and `page-snippets.test.ts` resolves
+      the new `Effect.catchTag` snippet. No native scenario applies — a site page
+      and the package's export surface.
 
 `[x]` Stop the policy **claiming a preview every component page ships** — it said
       "A page that ships a demo — every component and primitive page does —

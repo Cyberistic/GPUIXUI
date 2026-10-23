@@ -38,6 +38,30 @@ if (isTerminal()) {
 }
 ```
 
+## Refusals are typed
+
+A gap is an error value, not a thrown string. `unsupportedFeatures` names every key the matrix refuses, and `unsupportedFeature(key)` returns the `UnsupportedRuntimeFeature` a caller can catch — it carries the same reason and workaround the table prints.
+
+```ts
+import { Effect } from "effect";
+import {
+  UnsupportedRuntimeFeature,
+  unsupportedFeature,
+  unsupportedFeatures,
+} from "@gpuixui/runtime";
+
+const attempt = Effect.fail(unsupportedFeature("nativeView"));
+
+export const recover = Effect.catchTag(
+  attempt,
+  "UnsupportedRuntimeFeature",
+  (error: UnsupportedRuntimeFeature) =>
+    Effect.succeed(`${error.feature}: ${error.workaround}`),
+);
+
+unsupportedFeatures; // the refused keys, in matrix order
+```
+
 ## Read the matrix from code
 
 ```ts
