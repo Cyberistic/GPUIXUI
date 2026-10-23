@@ -3153,6 +3153,8 @@ describe("docs/gpuix-capabilities.md", () => {
       ["cmd-v", "a key chord the pasted-code probe pressed"],
       ["cmd-shift", "a chord the modifier-selection probe pressed"],
       ["cmd-home", "a chord the keyboard-scroll probe pressed"],
+      ["cmd-z", "the undo chord the text-undo probe pressed"],
+      ["shift-cmd-z", "the redo chord the text-undo probe pressed"],
       ["flex-1", "a utility `@gpuixui/tw` compiles into three flex fields"],
       ["wrow-60", "a row marker the windowed list probe checked for"],
       ["row-alpha", "a row marker the reorder probe dragged"],
@@ -4072,6 +4074,79 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[1]).toContain("only when that value changes");
     expect(page?.[1]).toContain("abcdefg");
     expect(page?.[2]).toContain("boundary");
+  });
+
+  it("records the undo a field's own chord delivers, from its fixture", () => {
+    // The record's input rows stopped at keystrokes, clipboard and selection:
+    // a field's undo is the binding's, not a component's, and nothing said a
+    // controlled value hears it. `text-undo-lifecycle` measured that it does —
+    // and that a value pushed in from outside the field silently clears the
+    // history, which is the one way a formatter loses undo.
+    const fixture = read("apps/playground/src/live/text-undo.ts");
+    const probe = read("apps/playground/src/live/text-undo-probe.tsx");
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d_]+);`)
+          .exec(fixture)?.[1]
+          ?.replaceAll("_", "") ?? Number.NaN,
+      );
+    const word = (name: string): string =>
+      new RegExp(`TEXT_UNDO_TEXT = \\{([\\s\\S]*?)\\n\\}`)
+        .exec(fixture)?.[1]
+        ?.match(new RegExp(`${name}: "([^"]*)"`))?.[1] ?? "";
+
+    const checks = constant("TEXT_UNDO_CHECKS");
+    const pause = constant("TEXT_UNDO_GROUP_MS");
+    const typed = word("typed");
+    const loaded = word("loaded");
+
+    // The readout's shape is the fixture's; the record quotes its lines, so a
+    // fixture that changes the format asks the record to change with it.
+    expect(fixture).toContain(
+      "`input=${value} changes=${changes} renders=${renders}`",
+    );
+    expect(checks).toBeGreaterThan(0);
+    expect(pause).toBeGreaterThan(0);
+    expect(typed.length).toBeGreaterThan(0);
+    expect(loaded.length).toBeGreaterThan(1);
+    expect(probe).toContain("cmd-z restores the empty value and reaches");
+
+    const undo = `input= changes=2 renders=1`;
+    const redo = `input=${typed} changes=3 renders=1`;
+    const pushed = `input=${loaded} changes=4 renders=1`;
+    const nextEdit = `input=${loaded} changes=6 renders=1`;
+
+    const row = rowFor("Field undo");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("text-undo-lifecycle");
+    expect(row?.evidence).toContain(`${checks} checks`);
+    expect(row?.evidence).toContain(`\`${undo}\``);
+    expect(row?.evidence).toContain(`\`${redo}\``);
+    expect(row?.evidence).toContain(`\`${pushed}\``);
+    expect(row?.evidence).toContain(`\`${nextEdit}\``);
+    expect(row?.evidence).toContain("`area= changes=2`");
+    expect(row?.evidence).toContain("`keys=`");
+    // The coalesce window is the binding's; the probe pauses longer than it, so
+    // a record that prints a window the probe cannot step past fails here.
+    const coalesce = Number(
+      /UNDO_COALESCE` \(\*\*(\d+) ms\*\*\)/.exec(row?.evidence ?? "")?.[1],
+    );
+    expect(coalesce).toBeGreaterThan(0);
+    expect(coalesce).toBeLessThan(pause);
+    expect(row?.workaround).toContain("format on commit");
+    expect(row?.workaround).toContain("application-level undo");
+
+    const page = measuredRow("Field undo");
+    expect(
+      page,
+      "the page's measured table has no field-undo row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("text-undo-lifecycle");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(undo);
+    expect(page?.[1]).toContain(pushed);
+    expect(page?.[1]).toContain(`**${coalesce} ms**`);
+    expect(page?.[2]).toContain("format on commit");
   });
 
   it("records the clamp the shipped Text paints without lineClamp", () => {

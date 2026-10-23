@@ -7674,7 +7674,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Name the **soft status tints** in the indicator-marks prose — `indicatorSurfaces` gained each status tone's `xSoft` (the surface a filled action or a status mark stands on inside a message), and both theming pages print the strip list from the array, but the sentence that explains the strips still enumerated the nine it had. Both pages now name the four soft tints and the measurement that put them there (macOS dark's system blue failed all four, so the style takes `#3B9DFF` at **3.01:1** on the warning tint, the tightest placement the sweep finds) and cite `indicator.test.ts` | docs-site (`themes.mdx` §The theme audit, `theming.mdx` §Indicator marks) | **resolved 2026-10-23** — the tokens commit (`ed6e9091`) landed the tint and macOS dark's `#3B9DFF`, and both sections teach it; `theming-page.test.ts`'s strip case now requires the tint sentence, the four soft tints and the `indicator.test.ts` citation, so the printed list and the explanation cannot separate. Directions measured: deleting the sentence fails `themes.mdx` and `theming.mdx` by name ("does not explain the tint a mark stands on"), and the file is 1 248 tests with `check-types` clean |
 | Publish the **trail rules a window measured** — Tier 4's *Breadcrumb navigation* row now cites `breadcrumb-navigation-lifecycle` (48 checks, 0.11.0), and `packages/components/docs/breadcrumb.mdx` §Limitations still says only "the collapsing ellipsis is text, not a button": it does not teach that an unbudgeted trail **wraps** (16 → **36** in a 280-wide pane) instead of clipping, that a budget derived from the pane's own `onLayout` keeps it one row (**28**), or that the levels a budget hides are reachable only through a trigger the app composes (the trail's next Tab stop, a real menu whose rows are focus stops; a chosen level leaves the trigger unpainted when the path fits). A consumer reading the page cannot build the trail the window proved | components (`packages/components/docs/breadcrumb.mdx`) | open — measured 2026-10-23; the probe and its README section are the playground's |
 | Land `chart-surface-lifecycle` as one unit — the data workstream's probe (`apps/playground/src/live/chart-surface.ts`, its view and steps in `scenarios.tsx`) was in the shared tree while its **registry entry** was committed alone (`f6f78f6b`), so `liveProbeBodies` lost the body the `Record<LiveProbeId, …>` requires and the playground did not compile; the entry is removed (`f2cf7c80`) until the body and the entry land together. The registry entry, the `liveProbeBodies` body and the README section must be one commit, in registry order (the README is held to the registry by `src/live/registry.test.ts`) | data (`apps/playground/src/live/registry.ts`, `scenarios.tsx`, `README.md`) | **resolved 2026-10-23** — `f2376f16` landed the entry, the `liveProbeBodies` body and the README section together: `registry.ts` declares `chart-surface-lifecycle` in registry order, `scenarios.tsx` exports its body, and `README.md` §`chart-surface-lifecycle` prints the 40 checks, the fixture and the two captures. `--only chart-surface-lifecycle` is 1/1 on 0.11.0, and `src/live/registry.test.ts` holds the README to the registry. No code change here — this row is the retraction of a stale open marker |
-| Publish the **undo contract a field owns** — the capability record's input/text rows stop at keystrokes, clipboard and selection, and `docs/gpuix-capabilities.md` + `/docs/runtime#measured-in-a-window` say nothing about undo, which is a field behaviour no component can implement: the playground's `text-undo-lifecycle` measured that `cmd-z`/`shift-cmd-z` restore a snapshot **and** reach a controlled `onChange`, that a value pushed in from outside the field clears both stacks (so a field the app rewrites on every change loses undo silently), that an unrelated re-render keeps the history, and that the chord never reaches an app-level window handler while the field has focus. The record should carry those four findings and the 700 ms coalesce window, and `/docs/runtime`'s row should cite the probe; the components' `InlineEdit`/field pages owe the "format on commit, not on every change" rule. Measured evidence: `apps/playground/README.md` §`text-undo-lifecycle`, 15 checks green on 0.11.0 | docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) and components (`docs/inline-edit.mdx`, `docs/field.mdx`) | open — the probe and its README section are landed; only the record, the runtime page and the two component pages are owed |
+| Publish the **undo contract a field owns** — the capability record's input/text rows stop at keystrokes, clipboard and selection, and `docs/gpuix-capabilities.md` + `/docs/runtime#measured-in-a-window` say nothing about undo, which is a field behaviour no component can implement: the playground's `text-undo-lifecycle` measured that `cmd-z`/`shift-cmd-z` restore a snapshot **and** reach a controlled `onChange`, that a value pushed in from outside the field clears both stacks (so a field the app rewrites on every change loses undo silently), that an unrelated re-render keeps the history, and that the chord never reaches an app-level window handler while the field has focus. The record should carry those four findings and the 700 ms coalesce window, and `/docs/runtime`'s row should cite the probe; the components' `InlineEdit`/field pages owe the "format on commit, not on every change" rule. Measured evidence: `apps/playground/README.md` §`text-undo-lifecycle`, 15 checks green on 0.11.0 | docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) and components (`docs/inline-edit.mdx`, `docs/field.mdx`) | **docs half landed 2026-10-23** — `docs/gpuix-capabilities.md` §3 gains **Field undo** (`supported, with limits`, 15 checks) with the stack, the push that clears it, the per-field history and the chord's owner, `/docs/runtime#measured-in-a-window` publishes the same row, §5 owes `text-undo-lifecycle`, and `capability-doc.test.ts` derives the readouts, the check count and the coalesce window from `src/live/text-undo.ts` so neither document can print a value the probe no longer measures. **Still open for components:** `docs/inline-edit.mdx` and `docs/field.mdx` owe the format-on-commit rule |
+| Document the window host's **`keyDown`** verb on `/docs/testing` — the host interface gains `keyDown(keystroke, isHeld)`, an **optional, window-only** verb that sends a key *down* with the platform's repeat flag so a held `Enter` can be refused by every activating control; the testing page's verb table has no row for it, so its guard fails `documents every verb of the window host` with `[ 'keyDown' ]`, and the page's *Five verbs are optional* sentence plus the guard's optional list would leave the sixth out | docs-site (`apps/docs/content/docs/testing.mdx`, `apps/docs/src/lib/testing-page.test.ts`) | open — the interface change is `packages/testing/src/smoke.ts`'s (uncommitted in the shared tree on 2026-10-23); the row lands with it, because the optional-verbs case cannot name a member `HEAD` does not declare |
 
 ## Phase D — data and workspace components
 
@@ -8451,6 +8452,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
     where one was expected and the second with `the tree has no Cell node`.
     Docs: `docs/frozen-columns.mdx` §An empty set, the README rule row and the
     Tier 3 Tables row. Owner: data.
+  - [x] Paint the **chart that names no category as empty** — `Arr.makeBy(0, …)`
+    yields **one** element (Effect floors the count), so the mark builders and
+    `stackedScale` read "no labels" as "one unnamed column": `barMarks` painted
+    a bar with no category under it, `linePath` painted a point, and a
+    `StackedBar` with `labels={[]}` printed an axis measured from a value it
+    never drew (`5` for a lone `5`, against `chartScale`'s `1`) — the layer is
+    suppressed, so the axis named marks the plot did not paint. `paintedSlots`
+    is the one read now (`undefined` or non-finite measures the whole series;
+    `0` or a negative count names no slot), and the geometry lays out from it.
+    `src/chart/logic.test.ts` gains one case (21 in the file) covering the five
+    builders, both scales, a negative count and the unreadable count that must
+    still paint. Directions measured: at `HEAD` `barMarks([5], …, 0)` painted
+    `{ x: 40, width: 120, height: 100 }` and `stackedScale(…, 0)` read `5`;
+    restored, the file is 21/21. Docs: `docs/charts.mdx` §API, the README chart
+    paragraph and the Tier 3 Charts row's count. Owner: data.
 
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
@@ -8669,7 +8685,35 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 237/237
+`[x]` `[██████████]` 238/238
+
+`[x]` Publish the **undo a field's own chord delivers** — the capability record's
+      input rows stopped at keystrokes, clipboard and selection, so the site said
+      nothing about `cmd-z`: the binding keeps a field's history and restores a
+      snapshot through the same `change` event a keystroke uses, which means a
+      controlled component either hears the undo or paints one value while the
+      field holds another, and a value pushed in from outside the field clears
+      both stacks (a formatter that writes the prop back loses undo from the
+      second keystroke). `docs/gpuix-capabilities.md` §3 gains **Field undo**
+      (`supported, with limits`, `text-undo-lifecycle`, 15 checks) with the
+      measured readouts (the stack, the push that clears it, the `TextArea`'s own
+      `onChange`, `cmd-k` reaching the window while the chords do not), the
+      700 ms coalesce window and the per-field history; the row's workaround is
+      format-on-commit and a separate app-level undo.
+      `/docs/runtime#measured-in-a-window` publishes the same contract, and §5
+      owes the probe. `capability-doc.test.ts` gains `records the undo a field's
+      own chord delivers, from its fixture`: it derives the two typed words, the
+      check count and the coalesce relationship from `src/live/text-undo.ts` (the
+      700 ms window must be shorter than the probe's own pause, or the probe
+      cannot step past it), requires the fixture's readout format before quoting
+      it, holds both documents to the readouts, and adds the two chords to the
+      registry's quoted-value table. Directions measured: printing `14 checks`
+      fails `expected … to contain '15 checks'`, and a printed `950 ms` window
+      fails `expected 950 to be less than 900`; restored, the file is 115/115.
+      Components' `docs/inline-edit.mdx`/`docs/field.mdx` are the interlock row
+      above. No native scenario applies — a published measurement and its guard
+      have no runtime path.
+
 
 `[x]` List the **live surface in the sitemap** — `/sitemap.xml` was built from
       the mounted collections plus a hard-coded `/` (`sitemapPaths` added the
