@@ -3281,24 +3281,32 @@
   align-items: center;
   width: var(--switch-track-width, calc(var(--icon-size-md) * 1.75));
   height: var(--switch-track-height, var(--icon-size-md));
-  border: 1px solid var(--border-strong);
+  border-width: var(--switch-border-width, 1px);
+  border-style: solid;
+  border-color: var(--switch-edge, var(--border-strong));
   border-radius: 9999px;
   background: var(--switch-off, var(--muted));
   pointer-events: none;
 }
 
 .gx-switch[data-size="sm"] .gx-switch-track {
-  width: calc(var(--icon-size-sm) * 1.75);
-  height: var(--icon-size-sm);
+  width: var(--switch-track-width-sm, calc(var(--icon-size-sm) * 1.75));
+  height: var(--switch-track-height-sm, var(--icon-size-sm));
+  border-width: var(--switch-border-width-sm, 1px);
 }
 
 .gx-switch[data-size="lg"] .gx-switch-track {
-  width: calc(var(--icon-size-lg) * 1.75);
-  height: var(--icon-size-lg);
+  width: var(--switch-track-width-lg, calc(var(--icon-size-lg) * 1.75));
+  height: var(--switch-track-height-lg, var(--icon-size-lg));
+  border-width: var(--switch-border-width-lg, 1px);
 }
 
 .gx-switch[data-invalid] .gx-switch-track[data-state="unchecked"] {
   border-color: var(--destructive);
+}
+
+.gx-switch-track[data-state="unchecked"] {
+  box-shadow: var(--switch-edge-shadow, none);
 }
 
 .gx-switch[data-state="unchecked"]:not([data-disabled]):hover .gx-switch-track {
@@ -3343,8 +3351,12 @@
 
 .gx-switch-thumb {
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: calc(
+    (var(--switch-track-height, var(--icon-size-md)) -
+        var(--switch-knob-size, calc(var(--icon-size-md) - 4px))) /
+      2 - var(--switch-border-width, 1px)
+  );
+  left: calc(var(--switch-inset, 2px) - var(--switch-border-width, 1px));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3359,18 +3371,31 @@
 }
 
 .gx-switch[data-size="sm"] .gx-switch-thumb {
-  width: calc(var(--icon-size-sm) - 4px);
-  height: calc(var(--icon-size-sm) - 4px);
+  top: calc(
+    (var(--switch-track-height-sm, var(--icon-size-sm)) -
+        var(--switch-knob-size-sm, calc(var(--icon-size-sm) - 4px))) /
+      2 - var(--switch-border-width-sm, 1px)
+  );
+  left: calc(var(--switch-inset-sm, 2px) - var(--switch-border-width-sm, 1px));
+  width: var(--switch-knob-size-sm, calc(var(--icon-size-sm) - 4px));
+  height: var(--switch-knob-size-sm, calc(var(--icon-size-sm) - 4px));
 }
 
 .gx-switch[data-size="lg"] .gx-switch-thumb {
-  width: calc(var(--icon-size-lg) - 4px);
-  height: calc(var(--icon-size-lg) - 4px);
+  top: calc(
+    (var(--switch-track-height-lg, var(--icon-size-lg)) -
+        var(--switch-knob-size-lg, calc(var(--icon-size-lg) - 4px))) /
+      2 - var(--switch-border-width-lg, 1px)
+  );
+  left: calc(var(--switch-inset-lg, 2px) - var(--switch-border-width-lg, 1px));
+  width: var(--switch-knob-size-lg, calc(var(--icon-size-lg) - 4px));
+  height: var(--switch-knob-size-lg, calc(var(--icon-size-lg) - 4px));
 }
 
 .gx-switch-track[data-state="checked"] .gx-switch-thumb {
   left: calc(
-    100% - var(--switch-knob-size, calc(var(--icon-size-md) - 4px)) - 2px
+    100% - var(--switch-knob-size, calc(var(--icon-size-md) - 4px)) -
+      var(--switch-inset, 2px) + var(--switch-border-width, 1px)
   );
   background: var(--switch-knob, var(--primary-foreground));
   color: var(--primary);
@@ -3379,13 +3404,19 @@
 .gx-switch[data-size="sm"]
   .gx-switch-track[data-state="checked"]
   .gx-switch-thumb {
-  left: calc(100% - (var(--icon-size-sm) - 4px) - 2px);
+  left: calc(
+    100% - var(--switch-knob-size-sm, calc(var(--icon-size-sm) - 4px)) -
+      var(--switch-inset-sm, 2px) + var(--switch-border-width-sm, 1px)
+  );
 }
 
 .gx-switch[data-size="lg"]
   .gx-switch-track[data-state="checked"]
   .gx-switch-thumb {
-  left: calc(100% - (var(--icon-size-lg) - 4px) - 2px);
+  left: calc(
+    100% - var(--switch-knob-size-lg, calc(var(--icon-size-lg) - 4px)) -
+      var(--switch-inset-lg, 2px) + var(--switch-border-width-lg, 1px)
+  );
 }
 
 .gx-switch[data-accent="destructive"]
@@ -3400,27 +3431,10 @@
   line-height: 1;
 }
 
-/* Apple's switch: 51×31pt with a 27pt knob at a 2pt inset and no edge, green on
-   and grey off. The colours ride the bridge from `platformStyles.darwin.switch`
-   (`--switch-on`, `--switch-off`, `--switch-knob`); the box is the one value a
-   theme does not carry. Only `md` takes it: the HIG publishes one switch, so
-   `sm` and `lg` keep the library's derived steps. The knob's lift is the
-   theme's `elevation.sm`, which the primitive paints too. */
-.gx-demo[data-platform="darwin"] .gx-switch {
-  --switch-track-width: 51px;
-  --switch-track-height: 31px;
-  --switch-knob-size: 27px;
-}
-
-.gx-demo[data-platform="darwin"] .gx-switch[data-size="md"] .gx-switch-track {
-  border-width: 0;
-}
-
-.gx-demo[data-platform="darwin"]
-  .gx-switch[data-invalid]
-  .gx-switch-track[data-state="unchecked"] {
-  background: var(--destructive);
-}
+/* A platform's switch box arrives with its paint (`switchMetricsAt`), so the
+   same rules draw macOS's 38×22 with a 20 knob, Windows' 40×20 with a 12 knob
+   and Linux's 44×24 with an 18 knob. The knob's top is derived from the track
+   and the knob, never a literal, so every platform and every size is centred. */
 
 /* ---- tooltip: mirrors primitives/src/components/Tooltip.tsx's recipe ----
    `bg-popover text-popover-foreground rounded-sm border border-border` and

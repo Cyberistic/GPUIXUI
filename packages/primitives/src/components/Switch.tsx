@@ -180,7 +180,9 @@ export const renderSwitchThumb = (
     ),
     props.style,
   );
-  const left = P.isNumber(style.left) ? style.left : switchThumbInset(theme);
+  const left = P.isNumber(style.left)
+    ? style.left
+    : switchThumbInset(spec, theme);
   return (
     <motion.div
       initial={false}

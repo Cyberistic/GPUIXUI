@@ -809,14 +809,19 @@ a value you leave out is the base theme's. The dark sets carry a lighter
 `placeholder` because their field surfaces are lighter than the base canvas.
 
 A style may also declare the platform's **own switch**, the one control whose
-paint the accent family cannot derive. Apple's toggle is green on and grey off —
-`#34C759` / `#E3E3E8` in light, `#30D158` / `#39393D` in dark, with a white 27pt
-knob — while a checked Windows or Linux switch is the accent fill.
-`PlatformStyle.switch` is that declaration, `Theme.switch` is the half for the
-resolved mode, and a primitive draws the platform's 51×31 box only when the
-theme carries it: `sm` and `lg` keep the library's derived steps, because the HIG
-publishes one switch. An authored look that declares none clears it, so Luna over
-macOS keeps Luna's chrome and the library's toggle.
+paint the accent family cannot derive. Each platform's toggle is its own box and
+paint: Apple's is a 38×22 control with a 20px knob at a 1px inset, green on
+(`#34C759` light, `#30D158` dark) and grey off (`#E9E9EA` / `#39393D`); Fluent's
+is 40×20 with a 12px knob at a 4px inset, `#0078D4` / `#4CC2FF` on and a
+transparent off track carried by a 1px `#8A8A8A` edge; Adwaita's is 44×24 with
+an 18px knob at a 3px inset, `#3584E4` / `#78AEED` on and `#DEDDDA` / `#3D3D3D`
+off. `PlatformStyle.switch` is the paint, `PlatformStyle.switchMetrics` the box,
+`Theme.switch` and `Theme.switchMetrics` the halves for the resolved mode, and a
+primitive draws the platform's box only when the theme carries the paint.
+`switchMetricsAt(metrics, size)` keeps a proportional `sm` (0.8) and `lg` (1.2)
+scale of the published `md` box, so every size keeps the knob inside the track.
+An authored look that declares none clears both, so Luna over macOS keeps Luna's
+chrome and the library's toggle.
 
 **That paint is measured like a role, because it is not one.**
 `switchPaintRoles` (`on`, `off`, `knob`) and `switchPlacements` are the table:
@@ -854,13 +859,14 @@ library's accent switch instead of declaring one. What the report refuses is the
 switch that is not there at all: a track equal to the strip it stands in, a knob
 equal to its track, or a value the runtime ignores. It found the shipped macOS
 light off track: Apple's `#E9E9EA` sat **1.003:1** from this style's own `muted`
-sidebar, and a declared switch draws **no edge** (`switchBox` gives it
-`borderWidth: 0`), so the track *was* the control's silhouette and it vanished in
-exactly the panel a switch lives in. The track takes the smallest step that
-clears (`#E3E3E8`, 1.058:1), and every other placement in both modes already
-cleared. `switchFailures` and `invalidSwitchColors` are one of the gate's
-reports now (`audit.switch`), so a declared track a brand edits is held by
-`auditTheme` rather than by a contract the consumer has to remember to run.
+sidebar, so the track's own fill was not a silhouette in the panel a switch
+lives in. The paint keeps the platform's off fill and adds a `#C7C7CC` rim,
+which the primitive draws as a ring (`boxShadow`) rather than a border, so the
+38×22 box and the 20px knob's 1px inset are unchanged; the rim measures 1.16:1
+on that sidebar. Every other platform placement clears the floor as painted.
+`switchFailures` and `invalidSwitchColors` are one of the gate's reports now
+(`audit.switch`), so a declared track a brand edits is held by `auditTheme`
+rather than by a contract the consumer has to remember to run.
 
 Each `darwin` set and all three dark sets carry their own `secondary`, because
 `platformTheme` inherits the base `#E1E5EC` and those windows and popovers sit
@@ -4168,6 +4174,7 @@ interface Theme {
   series?: SeriesColors; // a brand's categorical scale, replaced whole
   syntax?: SyntaxColors; // the palette a native <code> host highlights with
   switch?: SwitchColors; // a platform's own toggle; absent paints the accent one
+  switchMetrics?: SwitchMetrics; // the box that toggle paints, in pixels
 }
 ```
 

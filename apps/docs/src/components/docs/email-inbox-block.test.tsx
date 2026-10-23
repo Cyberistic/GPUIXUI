@@ -29,6 +29,7 @@ const render = (state: InboxState): string =>
     <EmailInboxSurface
       onSelectMessage={noop}
       onSelectTab={noop}
+      onToggleRail={noop}
       state={state}
     />,
   );
@@ -166,9 +167,7 @@ describe("the inbox filters", () => {
     });
     expect(selected.selectedId).toBe("cristine");
     expect(selected.tab).toBe("primary");
-    expect(selectedMail(selected).subject).toBe(
-      "Invitation: Yorknew auction",
-    );
+    expect(selectedMail(selected).subject).toBe("Invitation: Yorknew auction");
 
     expect(
       inboxReducer(initialInboxState, { type: "select-tab", tab: "social" })
@@ -180,6 +179,20 @@ describe("the inbox filters", () => {
     expect(selectedMail({ ...initialInboxState, selectedId: "missing" })).toBe(
       bobThread,
     );
+  });
+
+  it("collapses the folder rail to icons and expands it again", () => {
+    const collapsed = inboxReducer(initialInboxState, {
+      type: "toggle-rail",
+    });
+    const markup = render(collapsed);
+
+    expect(collapsed.railCollapsed).toBe(true);
+    expect(markup).toContain('data-collapsed="true"');
+    expect(markup).toContain('aria-expanded="false"');
+    expect(markup).toContain('aria-label="Expand sidebar"');
+    expect(markup).toContain('aria-label="Inbox"');
+    expect(markup).toContain("gx-mail-folder-label gx-rail-label");
   });
 });
 

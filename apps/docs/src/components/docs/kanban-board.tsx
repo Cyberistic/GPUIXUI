@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { RailToggle, useRailCollapse } from "./sidebar-rail";
 
 /**
  * Kanban board block — a project task board with an app sidebar and four
@@ -406,6 +407,7 @@ export const KanbanRender = () => {
   const [cards, setCards] =
     useState<ReadonlyArray<KanbanCard>>(initialKanbanCards);
   const [menu, setMenu] = useState<string | null>(null);
+  const rail = useRailCollapse();
   const counts = countCards(cards);
 
   const move = (id: string, column: KanbanColumnId) => {
@@ -415,12 +417,17 @@ export const KanbanRender = () => {
 
   return (
     <div className="gx-kan">
-      <aside className="gx-kan-side">
+      <aside className="gx-kan-side" data-collapsed={rail.collapsed}>
         <div className="gx-kan-brand">
           <span aria-hidden="true" className="gx-kan-mark" />
-          <span className="gx-kan-brand-name">Hologram</span>
+          <span className="gx-kan-brand-name gx-rail-label">Hologram</span>
+          <RailToggle
+            className="gx-kan-collapse"
+            collapsed={rail.collapsed}
+            onToggle={rail.toggle}
+          />
         </div>
-        <label className="gx-kan-search">
+        <label className="gx-kan-search gx-rail-label">
           <Glyph size={13}>{ICON.search}</Glyph>
           <input
             aria-label="Search"
@@ -436,19 +443,24 @@ export const KanbanRender = () => {
             className="gx-kan-group"
             key={group.label}
           >
-            <p className="gx-kan-group-label">{group.label}</p>
+            <p className="gx-kan-group-label gx-rail-label">{group.label}</p>
             {group.items.map((item) => (
               <button
                 aria-current={item.active ? "page" : undefined}
+                aria-label={item.label}
                 className="gx-kan-nav"
                 data-active={item.active}
                 key={item.label}
                 type="button"
               >
                 <Glyph size={13}>{ICON[item.icon]}</Glyph>
-                <span className="gx-kan-nav-label">{item.label}</span>
+                <span className="gx-kan-nav-label gx-rail-label">
+                  {item.label}
+                </span>
                 {item.badge === undefined ? null : (
-                  <span className="gx-kan-count">{item.badge}</span>
+                  <span className="gx-kan-count gx-rail-label">
+                    {item.badge}
+                  </span>
                 )}
               </button>
             ))}
@@ -456,7 +468,7 @@ export const KanbanRender = () => {
         ))}
         <div className="gx-kan-user">
           <span className="gx-kan-user-avatar">D</span>
-          <span className="gx-kan-user-text">
+          <span className="gx-kan-user-text gx-rail-label">
             <span className="gx-kan-user-name">Dom</span>
             <span className="gx-kan-user-mail">dom@hologram.co</span>
           </span>

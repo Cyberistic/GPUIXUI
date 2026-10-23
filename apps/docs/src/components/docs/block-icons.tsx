@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 export type BlockIconName =
   | "archive"
   | "chevronDown"
+  | "chevronLeft"
   | "chevronRight"
   | "columns"
   | "download"
@@ -44,6 +45,7 @@ const GLYPHS: Readonly<Record<BlockIconName, ReactNode>> = {
     </>
   ),
   chevronDown: <path d="m6 9 6 6 6-6" />,
+  chevronLeft: <path d="m15 18-6-6 6-6" />,
   chevronRight: <path d="m9 18 6-6-6-6" />,
   columns: (
     <>

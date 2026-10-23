@@ -68,7 +68,7 @@ it("slides the thumb to the far edge when the state changes", async () => {
   const travel = switchThumbTravel(spec, testTheme);
   // `left` is measured from the padding box, so the painted offset from the
   // track's own edge is the inset plus its border.
-  const inset = switchThumbInset(testTheme) + testTheme.borderWidth.thin;
+  const inset = switchThumbInset(spec, testTheme) + testTheme.borderWidth.thin;
   expect(rest.x).toBe(trackOf(runtime).x + inset);
 
   runtime.click("s");
@@ -118,7 +118,7 @@ it("keeps the knob's gap to each edge equal in both states", async () => {
   // side. A travel computed without the borders leaves them unequal.
   expect(gaps()).toEqual([rest[1], rest[0]]);
   expect(rest[0]).toBe(
-    testTheme.borderWidth.thin + switchThumbInset(testTheme),
+    testTheme.borderWidth.thin + switchThumbInset(spec, testTheme),
   );
 });
 

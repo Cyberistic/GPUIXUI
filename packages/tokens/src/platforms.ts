@@ -17,7 +17,12 @@ import {
 } from "./scale.js";
 import type { SeriesColors } from "./series.js";
 import { darkSyntax, type SyntaxColors } from "./syntax.js";
-import type { SwitchColors, ThemeContrast, ThemeMode } from "./theme.js";
+import type {
+  SwitchColors,
+  SwitchMetrics,
+  ThemeContrast,
+  ThemeMode,
+} from "./theme.js";
 
 /** GPUI's system UI font sentinel; it resolves to each platform's own UI font. */
 export const systemUiFont = ".SystemUIFont";
@@ -74,6 +79,12 @@ export interface PlatformStyle extends PlatformType {
    * knob.
    */
   readonly switch?: Readonly<Partial<Record<ThemeMode, SwitchColors>>>;
+  /**
+   * The box the platform's own switch paints, in pixels. Paired with
+   * {@link switch} because a platform's toggle is one control: its track, its
+   * knob and the gap between them come from the same system specification.
+   */
+  readonly switchMetrics?: SwitchMetrics;
   /**
    * The categorical scale the look paints its data marks in, per mode. A mode it
    * omits — and every style that declares none — resolves the base theme's scale
@@ -165,15 +176,24 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     density: "compact",
     contrast: "default",
     syntax: { dark: platformDarkSyntax },
-    // Apple's switch: 51×31pt with a 27pt knob, green on and grey off. The
-    // values are the system palette's own, published on the HIG's colour page.
-    // The light off track is one step darker than the HIG's `#E9E9EA`, because
-    // that grey is this style's own `muted` sidebar to within 1.003:1 and a
-    // declared switch draws no edge — `switchFailures` measures both halves.
+    // Apple's switch: a 38×22pt track with a 20pt knob at a 1pt inset and a
+    // hairline rim, green on and grey off. The values are the system palette's
+    // own, published on the HIG's colour page.
     switch: {
-      light: { on: "#34C759", off: "#E3E3E8", knob: "#FFFFFF" },
-      dark: { on: "#30D158", off: "#39393D", knob: "#FFFFFF" },
+      light: {
+        on: "#34C759",
+        off: "#E9E9EA",
+        knob: "#FFFFFF",
+        edge: "#C7C7CC",
+      },
+      dark: {
+        on: "#30D158",
+        off: "#39393D",
+        knob: "#FFFFFF",
+        edge: "#5A5A5E",
+      },
     },
+    switchMetrics: { width: 38, height: 22, knob: 20, inset: 1, border: 0 },
     colors: {
       light: {
         background: "#F2F2F7",
@@ -181,6 +201,7 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         popover: "#FFFFFF",
         input: "#FFFFFF",
         secondary: "#DEE3EA",
+        // The bar rail is `muted`, the strip a settings sidebar paints.
         muted: "#E9E9EF",
         skeleton: "#DCDFE7",
         hover: "#E2E2E8",
@@ -244,6 +265,13 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     density: "spacious",
     contrast: "default",
     syntax: { dark: platformDarkSyntax },
+    // Adwaita's switch: a 44×24px track with an 18px knob at a 3px inset.
+    // Blue 4 is the on fill; the off track is Adwaita's own grey step.
+    switch: {
+      light: { on: "#3584E4", off: "#DEDDDA", knob: "#FFFFFF" },
+      dark: { on: "#78AEED", off: "#3D3D3D", knob: "#FFFFFF" },
+    },
+    switchMetrics: { width: 44, height: 24, knob: 18, inset: 3, border: 0 },
     colors: {
       light: {
         // Adwaita's window fill; the control and window corners are 6px and
@@ -309,6 +337,24 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     density: "comfortable",
     contrast: "default",
     syntax: { dark: platformDarkSyntax },
+    // Fluent 2's switch: a 40×20px track with a 12px knob at a 4px inset. The
+    // off state is a transparent track whose 1px outline is the control's
+    // edge; the white knob carries the state on Fluent's elevation.
+    switch: {
+      light: {
+        on: "#0078D4",
+        off: "transparent",
+        knob: "#FFFFFF",
+        edge: "#8A8A8A",
+      },
+      dark: {
+        on: "#4CC2FF",
+        off: "transparent",
+        knob: "#FFFFFF",
+        edge: "#8A8A8A",
+      },
+    },
+    switchMetrics: { width: 40, height: 20, knob: 12, inset: 4, border: 1 },
     colors: {
       light: {
         background: "#F3F3F3",

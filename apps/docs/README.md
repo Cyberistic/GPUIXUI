@@ -254,6 +254,7 @@ src/components/docs/block-index.tsx       The Blocks index
 src/components/docs/blocks.tsx            The block registry: Login, Settings, Dashboard, Kanban, Settings dialog, File manager and Email inbox
 src/components/docs/block-preview.tsx     A block's browser rendering
 src/components/docs/block-icons.tsx       The glyphs the block previews draw
+src/components/docs/sidebar-rail.tsx      The shared collapsible-rail toggle and state
 src/components/docs/auth-blocks.tsx       The auth blocks' browser reproductions and recipes
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
 src/components/docs/kanban-board.tsx      The kanban board's reproduction, columns and card moves

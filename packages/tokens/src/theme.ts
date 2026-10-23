@@ -127,6 +127,12 @@ export interface Theme {
    * accent switch.
    */
   readonly switch?: SwitchColors;
+  /**
+   * The box a platform's own switch paints: its track, knob and inset. Absent
+   * on every base theme, which derives the box from the icon step; a style that
+   * declares a switch also owns the box the platform ships it in.
+   */
+  readonly switchMetrics?: SwitchMetrics;
 }
 
 /** The colours a platform's own switch paints, in one mode. */
@@ -137,6 +143,26 @@ export interface SwitchColors {
   readonly off: string;
   /** The knob that slides between the two tracks. */
   readonly knob: string;
+  /**
+   * The outline an off track draws when its fill is not the silhouette —
+   * Windows' transparent track, whose 1px border is the control's edge. An on
+   * track always takes its own fill as the edge.
+   */
+  readonly edge?: string;
+}
+
+/** The fixed box a platform's own switch paints, in pixels. */
+export interface SwitchMetrics {
+  /** Track width. */
+  readonly width: number;
+  /** Track height. */
+  readonly height: number;
+  /** The knob's side. */
+  readonly knob: number;
+  /** The gap between the knob and the track's edge. */
+  readonly inset: number;
+  /** The track's edge thickness. */
+  readonly border: number;
 }
 
 /**
@@ -221,6 +247,8 @@ export interface ThemeOverrides {
    * erasing it.
    */
   readonly switch?: SwitchColors;
+  /** Replace the platform switch box whole, or declare one on a theme. */
+  readonly switchMetrics?: SwitchMetrics;
 }
 
 /** Input to {@link createTheme}: a mode, a contrast variant and overrides. */
@@ -420,6 +448,7 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
     // override that names none keeps the base's declaration — the accent switch
     // when the base carries none.
     switch: overrides.switch ?? base.switch,
+    switchMetrics: overrides.switchMetrics ?? base.switchMetrics,
   };
 }
 
@@ -484,6 +513,7 @@ export function applyStyle(base: Theme, style: PlatformStyle): Theme {
   return {
     ...themed,
     switch: applies ? style.switch?.[base.mode] : base.switch,
+    switchMetrics: applies ? style.switchMetrics : base.switchMetrics,
   };
 }
 

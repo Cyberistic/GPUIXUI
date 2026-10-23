@@ -275,7 +275,24 @@ describe("preview style sheets", () => {
       "--switch-on",
       "--switch-off",
       "--switch-knob",
+      "--switch-edge",
+      "--switch-edge-shadow",
       "--switch-knob-shadow",
+      "--switch-track-width",
+      "--switch-track-height",
+      "--switch-knob-size",
+      "--switch-inset",
+      "--switch-border-width",
+      "--switch-track-width-sm",
+      "--switch-track-height-sm",
+      "--switch-knob-size-sm",
+      "--switch-inset-sm",
+      "--switch-border-width-sm",
+      "--switch-track-width-lg",
+      "--switch-track-height-lg",
+      "--switch-knob-size-lg",
+      "--switch-inset-lg",
+      "--switch-border-width-lg",
     ]);
 
     const unknown = previewCss().map(([sheet, css]) => {
@@ -448,27 +465,36 @@ describe("preview style sheets", () => {
     );
   });
 
-  it("draws Apple's switch at 51×31 with a 27px knob", () => {
-    // The HIG publishes one switch: 51×31pt, a 27pt knob at a 2pt inset and no
-    // edge. The preview draws it only under the Apple platform, and only at the
-    // standard size — `sm` and `lg` keep the library's derived steps because
-    // Apple publishes no compact or large toggle.
+  it("draws each platform's switch box from the bridge", () => {
+    // The three platforms publish different boxes — Apple 38×22 with a 20px
+    // knob, Fluent 40×20 with a 12px knob, Adwaita 44×24 with an 18px knob —
+    // and the preview writes none of them as a literal. The knob's top is
+    // derived from the track and the knob, so every box is centred.
     const css = read("../styles/demos.css");
-    const apple = block(css, '.gx-demo[data-platform="darwin"] .gx-switch');
 
-    expect(apple).toContain("--switch-track-width: 51px");
-    expect(apple).toContain("--switch-track-height: 31px");
-    expect(apple).toContain("--switch-knob-size: 27px");
-
-    const track = block(
-      css,
-      '.gx-demo[data-platform="darwin"] .gx-switch[data-size="md"] .gx-switch-track',
+    expect(block(css, ".gx-switch-track")).toContain(
+      "var(--switch-track-width, calc(var(--icon-size-md) * 1.75))",
     );
-    expect(track).toContain("border-width: 0");
-    // The paint rides the bridge: the preview carries no Apple literal of its
-    // own, so the switch cannot drift from `platformStyles.darwin.switch`.
+    expect(block(css, ".gx-switch-track")).toContain(
+      "var(--switch-track-height, var(--icon-size-md))",
+    );
+    expect(block(css, ".gx-switch-track")).toContain(
+      "var(--switch-border-width, 1px)",
+    );
+    expect(block(css, ".gx-switch-thumb")).toContain(
+      "var(--switch-knob-size, calc(var(--icon-size-md) - 4px))",
+    );
+    expect(block(css, ".gx-switch-thumb")).toContain(
+      "var(--switch-track-height, var(--icon-size-md))",
+    );
+    expect(block(css, ".gx-switch-thumb")).not.toContain("top: 2px");
+    // The paint rides the bridge: the preview carries no platform literal of
+    // its own, so the switch cannot drift from `PlatformStyle.switch`.
     expect(block(css, ".gx-switch-track")).toContain(
       "var(--switch-off, var(--muted))",
+    );
+    expect(block(css, ".gx-switch-track")).toContain(
+      "var(--switch-edge, var(--border-strong))",
     );
     expect(block(css, ".gx-switch-thumb")).toContain(
       "var(--switch-knob, var(--foreground))",
@@ -498,7 +524,16 @@ describe("preview style sheets", () => {
     expect(vars["--switch-on"]).toBe("#30D158");
     expect(vars["--switch-off"]).toBe("#39393D");
     expect(vars["--switch-knob"]).toBe("#FFFFFF");
+    expect(vars["--switch-track-width"]).toBe("38px");
+    expect(vars["--switch-track-height"]).toBe("22px");
+    expect(vars["--switch-knob-size"]).toBe("20px");
+    expect(vars["--switch-inset"]).toBe("1px");
+    expect(vars["--switch-border-width"]).toBe("0px");
     expect(vars["--switch-knob-shadow"]).toBeDefined();
+    // Windows' transparent off track carries its edge instead of a fill.
+    expect(
+      toCssVars(platformTheme(themes.dark, "win32"))["--switch-edge"],
+    ).toBe("#8A8A8A");
     // A theme without the declaration writes none of them; the preview's
     // fallbacks then paint the accent switch.
     expect(Object.keys(toCssVars(themes.dark))).not.toContain("--switch-on");

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { RailToggle, useRailCollapse } from "./sidebar-rail";
 
 /**
  * Settings dialog block — a modal two-pane settings window.
@@ -223,10 +224,11 @@ const SettingsNav = ({
   <nav aria-label="Settings sections" className="gx-set-nav">
     {SETTINGS_NAV.map((group) => (
       <div className="gx-set-group" key={group.group}>
-        <p className="gx-set-group-label">{group.group}</p>
+        <p className="gx-set-group-label gx-rail-label">{group.group}</p>
         {group.items.map((item) => (
           <button
             aria-current={active === item.id ? "page" : undefined}
+            aria-label={item.label}
             className="gx-set-nav-item"
             data-active={active === item.id}
             key={item.id}
@@ -236,7 +238,7 @@ const SettingsNav = ({
             <span className="gx-set-nav-icon">
               <Glyph name={item.icon} />
             </span>
-            <span className="gx-set-nav-text">
+            <span className="gx-set-nav-text gx-rail-label">
               <span className="gx-set-nav-label">{item.label}</span>
               <span className="gx-set-nav-desc">{item.description}</span>
             </span>
@@ -258,6 +260,7 @@ const LayoutPreview = ({ layout }: { readonly layout: MessageLayout }) => (
 export const SettingsDialogRender = () => {
   const [active, setActive] = useState<SettingsSectionId>("appearance");
   const [settings, setSettings] = useState<ThemeSettings>(initialThemeSettings);
+  const rail = useRailCollapse();
 
   return (
     <div className="gx-set-stage">
@@ -267,11 +270,16 @@ export const SettingsDialogRender = () => {
         className="gx-set-panel"
         role="dialog"
       >
-        <aside className="gx-set-side">
+        <aside className="gx-set-side" data-collapsed={rail.collapsed}>
           <div className="gx-set-side-head">
-            <h3 className="gx-set-title" id="gx-set-title">
+            <h3 className="gx-set-title gx-rail-label" id="gx-set-title">
               Settings
             </h3>
+            <RailToggle
+              className="gx-set-collapse"
+              collapsed={rail.collapsed}
+              onToggle={rail.toggle}
+            />
             <button
               aria-label="Close settings"
               className="gx-set-close"
@@ -280,7 +288,7 @@ export const SettingsDialogRender = () => {
               <Glyph name="close" />
             </button>
           </div>
-          <label className="gx-set-search">
+          <label className="gx-set-search gx-rail-label">
             <Glyph name="search" size={13} />
             <input
               aria-label="Search settings"

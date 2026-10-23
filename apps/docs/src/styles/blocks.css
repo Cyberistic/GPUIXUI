@@ -4833,3 +4833,232 @@
   font-size: 11px;
   color: var(--muted-foreground);
 }
+
+/* ---- collapsible block rails ----
+   Every block with a rail collapses it to a 64px icon strip. The rail animates
+   its width and padding for 200ms; its labels fade and take no width, so the
+   content pane takes the space back without a height change. The toggle states
+   the action (`Collapse sidebar` / `Expand sidebar`) and its `aria-expanded`
+   carries the state. Reduced motion snaps both. */
+.gx-rail-toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-size);
+  height: var(--target-size);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-rail-toggle:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-rail-toggle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-conv-side,
+.gx-fm-side,
+.gx-mail-side,
+.gx-kan-side,
+.gx-set-side {
+  flex: none;
+  transition:
+    width 200ms ease,
+    padding 200ms ease;
+}
+
+.gx-rail-label {
+  transition:
+    opacity 200ms ease,
+    max-width 200ms ease;
+}
+
+.gx-conv-side[data-collapsed="true"],
+.gx-fm-side[data-collapsed="true"],
+.gx-mail-side[data-collapsed="true"],
+.gx-kan-side[data-collapsed="true"],
+.gx-set-side[data-collapsed="true"] {
+  width: 64px;
+}
+
+.gx-conv-side[data-collapsed="true"] .gx-rail-label,
+.gx-fm-side[data-collapsed="true"] .gx-rail-label,
+.gx-mail-side[data-collapsed="true"] .gx-rail-label,
+.gx-kan-side[data-collapsed="true"] .gx-rail-label,
+.gx-set-side[data-collapsed="true"] .gx-rail-label {
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* conversations: the list pane keeps its avatars */
+.gx-conv-side[data-collapsed="true"] .gx-conv-side-head {
+  justify-content: center;
+  padding: 10px 6px;
+}
+
+.gx-conv-side[data-collapsed="true"] .gx-conv-search {
+  display: none;
+}
+
+.gx-conv-side[data-collapsed="true"] .gx-conv-list {
+  padding: 0 6px 8px;
+}
+
+.gx-conv-side[data-collapsed="true"] .gx-conv-row {
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.gx-conv-side[data-collapsed="true"] .gx-conv-row::after {
+  display: none;
+}
+
+/* file manager: folder icons only, storage facts hidden */
+.gx-fm-side[data-collapsed="true"] {
+  padding: 8px;
+}
+
+.gx-fm-side[data-collapsed="true"] .gx-fm-collapse {
+  align-self: center;
+}
+
+.gx-fm-side[data-collapsed="true"] .gx-fm-add,
+.gx-fm-side[data-collapsed="true"] .gx-fm-root,
+.gx-fm-side[data-collapsed="true"] .gx-fm-folder {
+  justify-content: center;
+  padding: 0;
+}
+
+.gx-fm-side[data-collapsed="true"] .gx-fm-storage {
+  display: none;
+}
+
+/* mail: folder icons only, the message counts and groups hidden */
+.gx-mail-side[data-collapsed="true"] {
+  padding: 8px;
+}
+
+.gx-mail-side[data-collapsed="true"] .gx-mail-side-head {
+  justify-content: center;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.gx-mail-side[data-collapsed="true"] .gx-mail-new,
+.gx-mail-side[data-collapsed="true"] .gx-mail-group-title {
+  display: none;
+}
+
+.gx-mail-side[data-collapsed="true"] .gx-mail-folder {
+  justify-content: center;
+  padding: 0;
+}
+
+.gx-mail-side[data-collapsed="true"] .gx-mail-refresh {
+  justify-content: center;
+  padding: 0;
+}
+
+.gx-mail-side[data-collapsed="true"] .gx-mail-count {
+  display: none;
+}
+
+/* kanban: the app sidebar keeps its marks and icons */
+.gx-kan-side[data-collapsed="true"] {
+  padding: 12px 8px;
+}
+
+.gx-kan-side[data-collapsed="true"] .gx-kan-brand {
+  justify-content: space-between;
+  gap: 4px;
+  padding: 0;
+}
+
+.gx-kan-side[data-collapsed="true"] .gx-kan-search,
+.gx-kan-side[data-collapsed="true"] .gx-kan-group-label,
+.gx-kan-side[data-collapsed="true"] .gx-kan-count,
+.gx-kan-side[data-collapsed="true"] .gx-kan-user-text {
+  display: none;
+}
+
+.gx-kan-side[data-collapsed="true"] .gx-kan-nav {
+  justify-content: center;
+  padding: 0;
+}
+
+.gx-kan-side[data-collapsed="true"] .gx-kan-user {
+  justify-content: center;
+}
+
+/* settings: the nav pane is an icon strip */
+.gx-set-panel {
+  display: flex;
+}
+
+.gx-set-side {
+  width: 260px;
+}
+
+.gx-set-body {
+  flex: 1;
+}
+
+.gx-set-side[data-collapsed="true"] {
+  padding: 14px 8px;
+}
+
+.gx-set-side[data-collapsed="true"] .gx-set-side-head {
+  gap: 2px;
+  padding: 0;
+}
+
+.gx-set-side[data-collapsed="true"] .gx-set-collapse,
+.gx-set-side[data-collapsed="true"] .gx-set-close {
+  width: 22px;
+  height: 22px;
+}
+
+.gx-set-side[data-collapsed="true"] .gx-set-search,
+.gx-set-side[data-collapsed="true"] .gx-set-group-label {
+  display: none;
+}
+
+.gx-set-side[data-collapsed="true"] .gx-set-nav-item {
+  justify-content: center;
+  padding: 7px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-conv-side,
+  .gx-fm-side,
+  .gx-mail-side,
+  .gx-kan-side,
+  .gx-set-side,
+  .gx-rail-label {
+    transition: none;
+  }
+}
+
+@container (max-width: 600px) {
+  .gx-set-panel {
+    flex-direction: column;
+  }
+
+  .gx-set-side,
+  .gx-set-side[data-collapsed="true"] {
+    width: auto;
+  }
+}

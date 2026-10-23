@@ -41,7 +41,8 @@ import {
 } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
-import type { SwitchColors } from "./theme.js";
+import type { ControlSize } from "./scale.js";
+import type { SwitchColors, SwitchMetrics } from "./theme.js";
 
 /**
  * The three values a declared switch carries, in the order a theme writes them:
@@ -92,6 +93,60 @@ export type SwitchPlacement =
       readonly over: SwitchSurface;
     };
 
+/** The proportional steps a declared `md` box takes at the other sizes. */
+const switchScale: Readonly<Record<ControlSize, number>> = {
+  sm: 0.8,
+  md: 1,
+  lg: 1.2,
+};
+
+/**
+ * The box a platform switch paints at a control size.
+ *
+ * `md` is the platform's published control; `sm` and `lg` scale it
+ * proportionally, because a platform specifies one switch and a preview that
+ * draws a compact or large one must keep its knob inside its track.
+ *
+ * @example
+ * ```ts
+ * import { platformStyles, switchMetricsAt } from "@gpuixui/tokens";
+ *
+ * switchMetricsAt(platformStyles.darwin.switchMetrics, "md");
+ * // { width: 38, height: 22, knob: 20, inset: 1, border: 0 }
+ * ```
+ */
+export const switchMetricsAt = (
+  metrics: SwitchMetrics,
+  size: ControlSize,
+): SwitchMetrics => {
+  const scale = switchScale[size];
+  if (scale === 1) return metrics;
+  const height = Math.round(metrics.height * scale);
+  return {
+    width: Math.round(metrics.width * scale),
+    height,
+    // A round knob, never taller than its track.
+    knob: Math.min(Math.round(metrics.knob * scale), height),
+    inset: Math.round(metrics.inset * scale),
+    border: metrics.border,
+  };
+};
+
+/**
+ * The declared switch paint's silhouette on the strip it stands on.
+ *
+ * An off track whose fill is transparent is carried by its outline, and a knob
+ * on that track is read against the same outline rather than a fill the
+ * renderer does not paint.
+ */
+const trackEdge = (
+  paint: Partial<SwitchColors>,
+  track: "on" | "off",
+): string | undefined =>
+  track === "off"
+    ? (declared(paint, "edge") ?? declared(paint, "off"))
+    : declared(paint, "on");
+
 /**
  * Every placement a declared switch paints: the knob on each track it can sit
  * in, and each track on the four strips a switch stands on.
@@ -109,8 +164,8 @@ export const switchPlacements: readonly SwitchPlacement[] = [
 
 /** A declared switch value the renderer cannot paint. */
 export interface InvalidSwitchColor {
-  /** Which of the three values. */
-  readonly slot: SwitchPaintRole;
+  /** Which of the three values, or the off track's optional outline. */
+  readonly slot: SwitchPaintRole | "edge";
   /**
    * The value as the theme carries it, or `undefined` when the slot is absent —
    * a stored theme older than the slot, which is a different thing from a typo
@@ -169,22 +224,34 @@ const declaredSwitch = (
  */
 const declared = (
   paint: Partial<SwitchColors>,
-  slot: SwitchPaintRole,
+  slot: SwitchPaintRole | "edge",
 ): string | undefined => {
   const value: unknown = paint[slot];
   return typeof value === "string" ? value : undefined;
 };
 
+/** The off track's outline, when the platform draws one, has to paint too. */
+const edgeFailures = (
+  paint: Partial<SwitchColors>,
+): ReadonlyArray<InvalidSwitchColor> => {
+  const value: unknown = paint.edge;
+  return value === undefined || isPaintableColor(value)
+    ? []
+    : [{ slot: "edge", value: typeof value === "string" ? value : undefined }];
+};
+
 /** The declared values the renderer cannot paint, in `switchPaintRoles` order. */
 const paintFailures = (
   paint: Partial<SwitchColors>,
-): ReadonlyArray<InvalidSwitchColor> =>
-  switchPaintRoles.flatMap(
+): ReadonlyArray<InvalidSwitchColor> => [
+  ...switchPaintRoles.flatMap(
     (slot): ReadonlyArray<InvalidSwitchColor> =>
       isPaintableColor(declared(paint, slot))
         ? []
         : [{ slot, value: declared(paint, slot) }],
-  );
+  ),
+  ...edgeFailures(paint),
+];
 
 /**
  * Measure a declared switch paint.
@@ -218,9 +285,16 @@ export function switchFailures(
       (placement): ReadonlyArray<SwitchPlacementFailure> => {
         const [top, under] =
           placement.slot === "knob"
-            ? [declared(paint, "knob"), declared(paint, placement.over)]
+            ? [
+                declared(paint, "knob"),
+                // A transparent off track has no fill to read the knob
+                // against; its outline is the surface the knob sits on.
+                trackEdge(paint, placement.over),
+              ]
             : [
-                declared(paint, placement.slot),
+                // An off track whose fill is transparent is carried by its
+                // outline, so that is the silhouette measured on the strip.
+                trackEdge(paint, placement.slot),
                 themeColors(theme)[placement.over],
               ];
         const ratio = contrastRatio(top, under);
