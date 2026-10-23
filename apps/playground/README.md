@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-93 probes a real window can prove, of which eighteen mount shipped
+94 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -5184,6 +5184,83 @@ whose content then fits — fails `the scrollbar-horizontal thumb paints the tin
 it asks for` (`expected a value, got none`), so the bottom-edge thumb is the
 axis's consequence rather than a decoration.
 
+### `scrollbar-thumb-both` — measured on 0.11.0 here
+
+**Does a scroller that overflows both ways paint two thumbs, and what does the
+second one cost?** `scrollbar-thumb` asked the rule one axis at a time, which is
+how every shipped scroller is built. `ScrollArea` also accepts `axis="both"` —
+the primitives mount one in `presentational.test.tsx` and no shipped component
+does yet — and a log pane, an editor surface or a treemap overflows both ways. The
+runtime paints the thumb itself, so whether that surface gets two affordances
+or one cannot be answered by a recipe.
+
+The window says **two**, and that the second one is not free. A 160×120 box with
+480×400 of content and a 10 px tint paints a vertical thumb on the right edge
+and a horizontal one along the bottom; and once both are shown the binding
+shortens **each** track by the other thumb's thickness (`paint_scrollbars`:
+`height - thickness` and `width - thickness`, the corner left to the vertical,
+which paints first) while the content still moves a full viewport's worth. So
+the vertical thumb is **31** px long for 400 px of content, not the 36 a
+viewport-only rule predicts, and the horizontal one is **48** where a one-axis
+rule says 53. The scroll distance is unchanged: a wheel past the end leaves
+`y = -280`, not the `-290` a track-derived one would.
+
+| State | Offset | Rule (start / length) | Read |
+| --- | --- | --- | --- |
+| at rest, vertical | `0` | `0` / **31** | from **0.5**, **30** long |
+| at rest, horizontal | `0` | `0` / **48** | from **0.5**, **47** long |
+| one `-100` wheel down | `y -100` | **28** / **31** | from **28.5**, **30** long |
+| a wheel past the end | `y -280` | **79** / **31** | from **79.5**, **30** long |
+| one `-100` wheel right | `x -100` | **32** / **48** | from **32.5**, **47** long |
+
+The missing point and the half point are the rounded cap, exactly as on the
+one-axis probe: a solid-colour crop cannot count the end of a 5 px radius, so
+every read is one pixel short of the rule and starts half a point in.
+
+Four rules a component needs:
+
+1. **`axis="both"` is real on both axes.** Both thumbs paint, so a log pane or
+   an editor surface can be one `ScrollArea`; no second scroller or painted cue
+   of its own is needed.
+2. **The second thumb costs the first a corner.** Each track gives up one
+   thickness once both thumbs show, so a vertical thumb is shorter on a
+   two-axis scroller than on a one-axis one at the same content. Nothing in a
+   recipe can compensate; a component that predicts a thumb's length from the
+   viewport alone is wrong by the thickness's share.
+3. **The corner belongs to the vertical thumb.** It paints first, at the full
+   track's start, and reaches the corner; the horizontal thumb stops one
+   thickness short of it. A two-axis surface therefore has no corner square, and
+   a component that wanted to paint one has to know which thumb owns it.
+4. **Each axis moves alone and clamps at its own end.** One `-100` wheel on `y`
+   leaves `x` at `0`; a wheel on `x` leaves a clamped `y` at `-280`. A component
+   that reads `scrollY` alone will believe the sideways wheel never happened,
+   the same mistake the one-axis probe warns about.
+
+35 checks, `--only scrollbar-thumb-both`, green on 0.11.0 here (~3.5–7 s across two runs).
+Fixture: `src/live/scrollbar-both.ts` (`BOTH_IDS`, the box and content constants,
+`bothTrack`/`bothScroll` keeping the shortened track apart from the scroll
+distance, `bothThumbOf`, `bothBandOf` for the corner-free strips, `BOTH_THUMBS`,
+`BOTH_STOPS`, `BOTH_CHECKS`) + `scrollbar-both.test.ts` (15 cases: the track both
+thumbs leave each other, the scroll distance the viewport keeps, both resting
+boxes, the three wheel stops, the content-fit control, the two bands' corner,
+the locators, the count, the registry entry, this section with its reads and
+rules, and the view's wiring). The view and steps live in `src/live/scenarios.tsx`.
+`thumbOf` in `src/live/scrollbar.ts` now delegates to `thumbBox(track,
+maxScroll, offset)` — the one axis and the two-axis case share the rule, and only
+the two-axis caller knows the two numbers are different.
+Evidence: `.artifacts/live/scrollbar-both.png`,
+`.artifacts/live/scrollbar-both-{0,1,2}.png`.
+
+Three negative controls measured, exit `1` each, restored green: sizing the
+two-axis thumb from the viewport alone fails `the vertical thumb is the length
+its content gives it` (`expected 36 ± 1, got 30`); mounting the two-axis content
+as `axis="vertical"` — one axis fewer — fails the same check the other way round
+(`expected 31 ± 1, got 35`), because without a horizontal thumb the vertical track
+is the full 120 and the thumb is 35 long, which is the corner's price read
+backwards; and reading the horizontal band on that one-axis mount fails `the
+horizontal band paints a thumb` (`expected a value, got none`), so the
+bottom-edge thumb is that axis's overflow rather than a decoration.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5407,8 +5484,8 @@ narrower. Each deviation is deliberate and measured:
   `action-ring`, `surface-origin`, `hover-routing-lifecycle`,
   `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box`,
   `image-fit`, `grid-focus-lifecycle`, `system-theme-follow`, `document-type`
-  `dock-split-lifecycle`, `flex-sizing` and `scrollbar-thumb` (thirty-five
-  probes, each run alone).
+  `dock-split-lifecycle`, `flex-sizing`, `scrollbar-thumb` and
+  `scrollbar-thumb-both` (thirty-six probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

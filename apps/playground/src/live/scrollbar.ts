@@ -219,8 +219,22 @@ export const thumbOf = (
   track: number,
   content: number,
   offset: number,
+): Option.Option<ThumbBox> =>
+  thumbBox(track, maxOffset(content, track), offset);
+
+/**
+ * The same rule with the two numbers kept apart.
+ *
+ * A one-axis scroller's track **is** its viewport's extent, so `thumbOf` can
+ * derive one from the other. A two-axis scroller shortens each thumb's track by
+ * the other thumb's thickness (the corner is reserved) while the content still
+ * moves the full viewport's worth — so the caller that knows both passes both.
+ */
+export const thumbBox = (
+  track: number,
+  maxScroll: number,
+  offset: number,
 ): Option.Option<ThumbBox> => {
-  const maxScroll = maxOffset(content, track);
   if (track <= 0 || maxScroll <= 0) return Option.none();
   const length = Math.min(
     Math.max(

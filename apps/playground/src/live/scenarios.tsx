@@ -871,6 +871,21 @@ import {
   FLEX_WIDTH_CASES,
 } from "./flex-sizing.js";
 import {
+  BOTH_AXES,
+  BOTH_CONTENT,
+  BOTH_FILL,
+  BOTH_IDS,
+  BOTH_SHORT_CONTENT,
+  BOTH_STOPS,
+  BOTH_THICKNESS,
+  BOTH_THUMBS,
+  BOTH_TINT,
+  BOTH_VIEWPORT,
+  bothBandOf,
+  type BothBox,
+  type BothThumb,
+} from "./scrollbar-both.js";
+import {
   SCROLLBAR_DEFAULT,
   SCROLLBAR_FILL,
   SCROLLBAR_FLOOR,
@@ -21150,6 +21165,265 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 /**
+ * Whether a `ScrollArea` with `axis="both"` paints **both** thumbs.
+ *
+ * `scrollbar-thumb` asked the thumb rule one axis at a time, as every shipped
+ * scroller is built. A log pane or an editor scroller overflows both ways, and
+ * the runtime paints the thumb itself — so whether a two-axis scroller gets two
+ * affordances or one cannot be answered by a recipe, only by a window. The
+ * fixture (`scrollbar-both.ts`) derives both bands from the same rule; this
+ * probe reads each band's own corner-free strip, so a vertical thumb cannot be
+ * mistaken for a short horizontal one.
+ */
+const ScrollbarBothProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const page = {
+    width: window.width,
+    height: window.height,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
+    display: "flex" as const,
+    flexDirection: "column" as const,
+    gap: theme.spacing.lg,
+  };
+  const row = {
+    display: "flex" as const,
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: theme.spacing.lg,
+  };
+  /**
+   * One scroller: both axes on, the caller's tint and thickness, and content
+   * that either overflows both ways or fits inside the box on both.
+   */
+  const scroller = (
+    id: string,
+    contentId: string,
+    content: { readonly width: number; readonly height: number },
+  ) => (
+    <ScrollArea
+      key={id}
+      axis="both"
+      scrollbarColor={BOTH_TINT}
+      scrollbarWidth={BOTH_THICKNESS}
+      viewportTestId={id}
+      style={{
+        width: BOTH_VIEWPORT.width,
+        height: BOTH_VIEWPORT.height,
+      }}
+    >
+      <div
+        testId={contentId}
+        style={{
+          width: content.width,
+          height: content.height,
+          flexShrink: 0,
+          backgroundColor: BOTH_FILL,
+        }}
+      />
+    </ScrollArea>
+  );
+  return (
+    <div testId={BOTH_IDS.probe} style={page}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A scroller with more to show on both axes: does the runtime paint a
+        thumb on each trailing edge, or only one?
+      </text>
+      <div style={row}>
+        {scroller(BOTH_IDS.scroller, BOTH_IDS.content, BOTH_CONTENT)}
+        {scroller(BOTH_IDS.short, BOTH_IDS.shortContent, BOTH_SHORT_CONTENT)}
+      </div>
+    </div>
+  );
+};
+
+const scrollbarBothSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(BOTH_IDS.probe);
+    yield* ctx.host.capture("scrollbar-both");
+    const frame = yield* ctx.host.pixels("scrollbar-both");
+    const window = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+
+    const scrollerBox = yield* paintedBox(ctx, BOTH_IDS.scroller);
+    yield* paintedBox(ctx, BOTH_IDS.content);
+    const shortBox = yield* paintedBox(ctx, BOTH_IDS.short);
+
+    const tint = yield* ctx.expectSome(
+      "the fixture's tint is a colour",
+      Option.fromNullishOr(Pixels.hexToRgba(BOTH_TINT)),
+    );
+    const fill = yield* ctx.expectSome(
+      "the fixture's content fill is a colour",
+      Option.fromNullishOr(Pixels.hexToRgba(BOTH_FILL)),
+    );
+
+    /**
+     * One band of a scroller, as capture pixels. The band is the strip the
+     * axis's thumb owes and stops before the corner the two thumbs share.
+     */
+    const bandCrop = (
+      source: Pixels.Pixels,
+      origin: Smoke.Bounds,
+      band: BothBox,
+    ): Option.Option<Pixels.Pixels> =>
+      Option.fromNullishOr(
+        Pixels.crop(
+          source,
+          new Pixels.PixelRegion({
+            x: Math.round((origin.x + band.x) * scale),
+            y: Math.round((origin.y + band.y) * scale),
+            width: Math.round(band.width * scale),
+            height: Math.round(band.height * scale),
+          }),
+        ),
+      );
+    /** The box the tint paints inside a band, in the band's own pixels. */
+    const tintIn = (
+      source: Pixels.Pixels,
+      origin: Smoke.Bounds,
+      band: BothBox,
+    ): Option.Option<Pixels.PixelRegion> =>
+      Option.flatMap(bandCrop(source, origin, band), (crop) =>
+        Option.fromNullishOr(Pixels.boundsOfColour(crop, tint)),
+      );
+    /** How many pixels of the tint a band paints, or `-1` when it is off frame. */
+    const countIn = (
+      source: Pixels.Pixels,
+      origin: Smoke.Bounds,
+      band: BothBox,
+    ): number =>
+      Option.match(bandCrop(source, origin, band), {
+        onNone: () => -1,
+        onSome: (crop) => Pixels.countColour(crop, tint),
+      });
+
+    // Each axis's own band: a thumb paints there, as long as the content gives
+    // it, starting where the offset puts it, and filling the strip it is owed.
+    yield* Effect.forEach(
+      BOTH_THUMBS,
+      (thumb: BothThumb) =>
+        Effect.gen(function* () {
+          const horizontal = thumb.axis === "horizontal";
+          const box = yield* ctx.expectSome(
+            `the ${thumb.axis} band paints a thumb`,
+            tintIn(frame, scrollerBox, bothBandOf(thumb.axis)),
+          );
+          yield* ctx.expectNear(
+            `the ${thumb.axis} thumb is the length its content gives it`,
+            (horizontal ? box.width : box.height) / scale,
+            horizontal ? thumb.box.width : thumb.box.height,
+            1,
+          );
+          yield* ctx.expectNear(
+            `the ${thumb.axis} thumb starts where the offset puts it`,
+            (horizontal ? box.x : box.y) / scale,
+            horizontal ? thumb.box.x : thumb.box.y,
+            1,
+          );
+          yield* ctx.expectNear(
+            `the ${thumb.axis} thumb fills the strip it is owed`,
+            (horizontal ? box.height : box.width) / scale,
+            BOTH_THICKNESS,
+            1,
+          );
+        }),
+      { concurrency: 1, discard: true },
+    );
+
+    // The thumb is painted over the content rather than in a gutter: the content
+    // fill reaches the strip the vertical thumb occupies.
+    const beside = yield* colourAtPoint(
+      ctx,
+      frame,
+      {
+        x: scrollerBox.x + BOTH_VIEWPORT.width - BOTH_THICKNESS - 2,
+        y: scrollerBox.y + 2,
+      },
+      scale,
+      "the content paints beside the thumb's strip",
+    );
+    yield* ctx.expectEqual(
+      "the content reaches the thumb, so the thumb is painted over it",
+      differs(beside, fill),
+      false,
+    );
+
+    // The control: content that fits inside the box on both axes paints no
+    // thumb at all, so a thumb is the overflow's consequence.
+    const shortThumb = Arr.reduce(
+      BOTH_AXES,
+      0,
+      (total, axis) => total + countIn(frame, shortBox, bothBandOf(axis)),
+    );
+    yield* ctx.expectEqual(
+      "a two-axis scroller whose content fits paints no thumb",
+      shortThumb,
+      0,
+    );
+
+    // Each wheel: the offset on both axes, and the thumb on the wheel's own
+    // axis following it. The left/right move is the half a one-thumb
+    // implementation cannot answer.
+    yield* Effect.forEach(
+      BOTH_STOPS,
+      (stop, index) =>
+        Effect.gen(function* () {
+          yield* ctx.host.wheel(BOTH_IDS.scroller, stop.deltaX, stop.deltaY);
+          yield* Effect.sleep(SETTLE);
+          const name = `scrollbar-both-${index}`;
+          yield* ctx.host.capture(name);
+          const after = yield* ctx.host.pixels(name);
+          const offset = yield* ctx.expectSome(
+            `${stop.label}: the scroller reports an offset`,
+            Option.fromNullishOr(
+              yield* ctx.host.scrollOffset(BOTH_IDS.scroller),
+            ),
+          );
+          yield* ctx.expectNear(
+            `${stop.label}: the wheel leaves x at its offset`,
+            offset.x,
+            stop.offset.x,
+            1,
+          );
+          yield* ctx.expectNear(
+            `${stop.label}: the wheel leaves y at its offset`,
+            offset.y,
+            stop.offset.y,
+            1,
+          );
+          const horizontal = stop.axis === "horizontal";
+          const box = yield* ctx.expectSome(
+            `${stop.label}: the ${stop.axis} thumb still paints its tint`,
+            tintIn(after, scrollerBox, bothBandOf(stop.axis)),
+          );
+          yield* ctx.expectNear(
+            `${stop.label}: the thumb starts where the offset puts it`,
+            (horizontal ? box.x : box.y) / scale,
+            stop.thumb.start,
+            1,
+          );
+          yield* ctx.expectNear(
+            `${stop.label}: the thumb keeps its length`,
+            (horizontal ? box.width : box.height) / scale,
+            stop.thumb.length,
+            1,
+          );
+        }),
+      { concurrency: 1, discard: true },
+    );
+  });
+
+/**
  * What box an `<img>` paints, and what a style can make it paint.
  *
  * An image is the one element whose intrinsic ratio the runtime owns: GPUI
@@ -26965,5 +27239,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "scrollbar-thumb",
     view: () => <ScrollbarProbe />,
     steps: scrollbarSteps,
+  },
+  "scrollbar-thumb-both": {
+    id: "scrollbar-thumb-both",
+    view: () => <ScrollbarBothProbe />,
+    steps: scrollbarBothSteps,
   },
 };

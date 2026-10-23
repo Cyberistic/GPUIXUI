@@ -594,6 +594,12 @@ export const liveRegistry = [
       "Scroll: a scroller paints a native thumb in its own tint and thickness, at the viewport's share of the content, and none at all when the content fits",
     capability: "scroll",
   },
+  {
+    id: "scrollbar-thumb-both",
+    title:
+      "Scroll: a scroller that overflows both axes paints a native thumb on each trailing edge, and none when its content fits on both",
+    capability: "scroll",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
