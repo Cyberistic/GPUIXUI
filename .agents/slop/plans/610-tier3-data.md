@@ -423,6 +423,16 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   fails both window cases (`expected '3 rows · 1 selected' to be '2 rows · 1
   selected'`). README §The data surfaces and `docs/advanced-filter.mdx`
   §Narrowing a table teach it. 176 unit / 106 behaviour green.
+- **A field in a tree row keeps its keys**: a key is dispatched along the focus
+  path, so a space typed in a field inside `renderRow` reached `TreeView`'s
+  handler and toggled the branch the field sat in, while a printable character
+  moved the cursor through type-ahead. `useTree` now answers a key only while
+  one of its **rows** holds native focus (the rule `TableExpandableRow` already
+  followed). `src/behaviour/tree.test.tsx` gains `keeps a key typed in a row's
+  field to that field`; direction measured: without the guard the space opens
+  the branch at the first assertion. README's key-routing row,
+  `docs/tree-view.mdx` §Keyboard and the Tree views row state the rule. 178 unit
+  / 107 behaviour green; live `--only data-tree-lifecycle` (1/1) unchanged.
 
 
 ## 5. Acceptance
