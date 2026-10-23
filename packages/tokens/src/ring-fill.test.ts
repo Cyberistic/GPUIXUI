@@ -3,9 +3,9 @@
  *
  * The bug this guards: `keyboardFocusRing`'s outline sat at `outlineOffset: 0`,
  * flush against the fill the control paints. `ring` *is* the brand (`ring` and
- * `primary` are the same ramp step in twelve of the sixteen styles), so a
+ * `primary` are the same ramp step in thirteen of the sixteen styles), so a
  * focused primary action painted its focus line in its own fill — measured at
- * **1.00–1.38:1** on `primary` and **1.00–1.54:1** on `destructive` in every
+ * **1.00–1.38:1** on both `primary` and `destructive` in every
  * style, at rest and under the pointer. The pair was unsatisfiable, not unmet:
  * at offset 0 one colour must clear the boundary floor against both the page and
  * the fill, and no luminance does in 8 of the sixteen styles for `primary` (9 for
@@ -245,7 +245,7 @@ describe("the ring separated from a filled action", () => {
     expect(misses("primary", "pressed")).toHaveLength(styles.length);
     expect(misses("destructive", "pressed")).toHaveLength(styles.length);
     expect(spread(ratios("primary", "rest"))).toBe("1.00–1.38");
-    expect(spread(ratios("destructive", "rest"))).toBe("1.00–1.54");
+    expect(spread(ratios("destructive", "rest"))).toBe("1.00–1.38");
 
     // The neutral faces at rest held, which is what made the finding a statement
     // about brand faces rather than about the model.
@@ -253,11 +253,11 @@ describe("the ring separated from a filled action", () => {
     expect(misses("accent", "rest")).toEqual([]);
 
     // The derived pointer fills did not: the press dropped the neutral faces
-    // under the floor in eight and six of the sixteen styles.
-    expect(misses("secondary", "pressed")).toHaveLength(8);
-    expect(misses("accent", "pressed")).toHaveLength(6);
-    expect(misses("secondary", "hover")).toHaveLength(3);
-    expect(misses("accent", "hover")).toHaveLength(3);
+    // under the floor in nine and seven of the sixteen styles.
+    expect(misses("secondary", "pressed")).toHaveLength(9);
+    expect(misses("accent", "pressed")).toHaveLength(7);
+    expect(misses("secondary", "hover")).toHaveLength(4);
+    expect(misses("accent", "hover")).toHaveLength(4);
     filledFeedbackStates.forEach((state) => {
       expect(misses("secondary", state).length).toBeLessThan(styles.length);
     });
@@ -314,13 +314,13 @@ describe("the ring separated from a filled action", () => {
       });
     });
 
-    // The tightest placement is the authored Aero light look on a red message
-    // tint, the number both pages print.
+    // The tightest placement is Windows light on its red message tint, the
+    // number both pages print.
     const cell = tightest();
     expect(`${cell.style} ring/${cell.over}`).toBe(
-      "Light · aero ring/destructiveSoft",
+      "Light · win32 ring/destructiveSoft",
     );
-    expect(cell.ratio.toFixed(2)).toBe("3.09");
+    expect(cell.ratio.toFixed(2)).toBe("3.05");
   });
 
   it("paints the offset the window probe measured", () => {
@@ -358,7 +358,7 @@ describe("the ring separated from a filled action", () => {
     ].map((text) => text.replace(/\s+/g, " "));
     surfaces.forEach((text) => {
       expect(text).toContain("one line's width");
-      expect(text).toContain("3.09");
+      expect(text).toContain("3.05");
       expect(text).toContain("gap");
     });
     // The probe is the evidence the pages owe, on the two that cite it.

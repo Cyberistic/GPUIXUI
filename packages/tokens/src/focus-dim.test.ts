@@ -390,13 +390,13 @@ describe("keyboardDimFailures", () => {
     // A saturated brand fill dims toward a light page and closes on its white
     // label: the label is still visible, but it is no longer readable, which is
     // why a control that must keep its text opts out of the dim.
-    expect(tightest.theme).toBe("Light · Linux");
+    expect(tightest.theme).toBe("Light · Windows");
     expect(tightest.pair).toEqual({
       fill: "primary",
       label: "primaryForeground",
       over: "card",
     });
-    expect(tightest.painted).toBe("#C8DDF5 on #A4C6EF");
+    expect(tightest.painted).toBe("#C2DFF5 on #99C9EE");
     expect(tightest.ratio).toBeCloseTo(1.27, 2);
     expect(tightest.ratio).toBeGreaterThan(decorativeFloor);
   });

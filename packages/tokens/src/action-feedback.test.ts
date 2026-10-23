@@ -14,7 +14,7 @@
  * The contract also found a shipped step on the floor: Windows dark's primary
  * `#60CDFF` hovered to **1.05:1**, under the 1.05 perceptibility floor — a
  * primary button on a Windows window that did not answer the pointer — so the
- * platform carries `#59C9FF` (1.059:1) now.
+ * platform carries `#4CC2FF` (1.068:1) now.
  *
  * And it measured the deviation the pages had been describing as adoption: the
  * components package's action used to paint the derived fills for `primary` and

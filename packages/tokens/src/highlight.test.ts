@@ -205,7 +205,7 @@ describe("the pair a theme can carry", () => {
 
     expect(under).toEqual([
       { name: "Dark · Linux", share: 0.22, worst: "6.14" },
-      { name: "Dark · Windows", share: 0.26, worst: "6.33" },
+      { name: "Dark · Windows", share: 0.27, worst: "6.54" },
       { name: "Dark · Windows XP (Luna)", share: 0.23, worst: "6.09" },
       { name: "Dark · Windows 7 (Aero)", share: 0.26, worst: "6.55" },
     ]);

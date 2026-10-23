@@ -1,6 +1,8 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { platformTheme, themes } from "@gpuixui/tokens";
 import { demos } from "../components/docs/demos";
+import { toCssVars } from "./theme-css";
 
 /**
  * The preview registry, held to the pages that mount it.
@@ -256,5 +258,23 @@ describe("the component previews", () => {
     expect(strategy).toContain("rounded-4xl");
     expect(strategy).toContain("elevation.lg");
     expect(strategy).toContain("differ in radius");
+  });
+});
+
+describe("the preview's window frame", () => {
+  it("reads the theme's surface corner instead of a literal offset", () => {
+    // The defect: `.gx-shell` drew `calc(var(--radius) + 6px)`, so a Windows
+    // preview (md 4) painted a 10px window while Fluent's surface corner is 8.
+    // A window is a surface, so it reads the theme's `lg` step directly.
+    const css = read("apps/docs/src/styles/demos.css");
+    const shell = css.slice(
+      css.indexOf("/* ---- layouts: the window frame"),
+      css.indexOf("/* ---- dock:"),
+    );
+    expect(shell).toContain("border-radius: var(--radius-lg)");
+    expect(shell).not.toContain("calc(var(--radius) + 6px)");
+
+    const windows = toCssVars(platformTheme(themes.dark, "win32"));
+    expect(windows["--radius-lg"]).toBe("8px");
   });
 });

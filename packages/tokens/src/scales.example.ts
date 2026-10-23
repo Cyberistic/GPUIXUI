@@ -10,12 +10,13 @@ import { extendTheme, lightTheme } from "./theme.js";
 /**
  * A theme built by spreading a factor over a base: every value is a usable
  * number, and three rungs now repeat or invert. A control asked for at `sm`
- * paints taller than the same control at `lg`; a dialog is as square as a card;
- * a second-level heading is smaller than the body text under it.
+ * paints taller than the same control at `lg`; a dialog is squarer than the
+ * card beneath it; a second-level heading is smaller than the body text under
+ * it.
  */
 export const computedBrand: Theme = extendTheme(lightTheme, {
   name: "Acme computed",
-  radius: { xl: 8 },
+  radius: { xl: 6 },
   density: { controlHeight: { sm: 40, md: 28, lg: 36 } },
   typography: { h2: { fontSize: 12 } },
 });

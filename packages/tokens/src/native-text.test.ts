@@ -1176,7 +1176,7 @@ describe("the accent a document host paints", () => {
       "darwin dark 3.14",
       "linux light 3.23",
       "linux dark 4.10",
-      "win32 light 3.73",
+      "win32 light 3.13",
       "default light 4.00",
       "luna light 3.09",
       "aero light 3.34",

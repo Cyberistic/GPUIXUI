@@ -12,7 +12,9 @@
  * than `size="lg"`, a dialog is squarer than the card beneath it, a heading is
  * smaller than its body text, a dialog casts a tighter shadow than a menu — and
  * nothing in the renderer complains, because each value is still a perfectly
- * valid number.
+ * valid number. Radius is the one ladder where two names may share a corner:
+ * Fluent 2 gives every control 4px and every surface 8px, so `sm`/`md` and
+ * `lg`/`xl` are aliases on purpose; a smaller rung is still a lie.
  *
  * Elevation is the one ladder whose rung is not a single token: a level is a
  * geometry plus a share of the `shadow` role, so its depth is the distance the
@@ -187,10 +189,16 @@ const elevationSteps = (elevation: Partial<Elevation>): readonly Step[] =>
  * Report every step that does not exceed the one before it. Two adjacent values
  * that cannot be laid out are skipped — reporting them here would duplicate
  * `invalidNumbers` and say nothing about the order.
+ *
+ * `allowEqual` is for a scale whose adjacent names are allowed to share a
+ * corner: Fluent 2 rounds every control at 4px and every surface at 8px, so a
+ * platform's `sm`/`md` and `lg`/`xl` are equal on purpose. A smaller step is
+ * still a lie; an equal one is a named alias.
  */
 const ordered = (
   group: ScaleGroup,
   steps: readonly Step[],
+  allowEqual = false,
 ): readonly InvalidScale[] =>
   steps.slice(1).flatMap(([path, value], offset) => {
     const previous = steps[offset];
@@ -201,7 +209,7 @@ const ordered = (
     if (!Number.isFinite(value) || !Number.isFinite(previousValue)) {
       return [];
     }
-    return value > previousValue
+    return value > previousValue || (allowEqual && value === previousValue)
       ? []
       : [
           {
@@ -217,20 +225,21 @@ const ordered = (
  * Every pair of adjacent steps in a theme that does not describe two sizes.
  *
  * A scale is a ladder, and each rung has to be above the one below it: spacing
- * from `2xs` to `5xl`, radii from `none` to `full`, `thin` under `strong`, icons
- * from `xs` to `xl`, control heights and horizontal padding from `sm` to `lg`,
- * type sizes from `caption` to `display`, and each elevation level reaching
- * further below its surface than the level under it. A brand that computes a
- * scale from a factor, forwards stored values, or edits one rung can invert or
- * repeat a pair while every number stays layable — and the component that selects
- * a rung by name then paints the wrong size in silence.
+ * from `2xs` to `5xl`, radii from `none` to `full` (equal adjacent radii are
+ * allowed — two names may share a corner), `thin` under `strong`, icons from
+ * `xs` to `xl`, control heights and horizontal padding from `sm` to `lg`, type
+ * sizes from `caption` to `display`, and each elevation level reaching further
+ * below its surface than the level under it. A brand that computes a scale from
+ * a factor, forwards stored values, or edits one rung can invert or repeat a
+ * pair while every number stays layable — and the component that selects a rung
+ * by name then paints the wrong size in silence.
  *
- * An empty array means every named step in the theme is larger than the one
- * before it. A value that is not finite is left to `invalidNumbers`, so a broken
- * radius is reported once, by the contract that owns it. An elevation level is
- * compared by the reach of the shadow it paints (`offsetY + blurRadius +
- * spreadRadius`), because a level is a geometry rather than one token; a level a
- * theme does not carry, and the reserved empty `overlay`, paint nothing and are
+ * An empty array means every named step in the theme is at least as large as the
+ * one before it. A value that is not finite is left to `invalidNumbers`, so a
+ * broken radius is reported once, by the contract that owns it. An elevation
+ * level is compared by the reach of the shadow it paints (`offsetY + blurRadius
+ * + spreadRadius`), because a level is a geometry rather than one token; a level
+ * a theme does not carry, and the reserved empty `overlay`, paint nothing and are
  * not rungs.
  *
  * @example
@@ -239,9 +248,9 @@ const ordered = (
  *
  * invalidScales(lightTheme); // []
  * invalidScales(
- *   extendTheme(lightTheme, { radius: { xl: 8 } }),
+ *   extendTheme(lightTheme, { radius: { xl: 6 } }),
  * );
- * // [{ group: "radius", path: "xl", value: 8,
+ * // [{ group: "radius", path: "xl", value: 6,
  * //    previous: { path: "lg", value: 8 } }]
  * ```
  */
@@ -254,6 +263,7 @@ export function invalidScales(theme: ScaleSource): readonly InvalidScale[] {
     ...ordered(
       "radius",
       keyed(radiusKeys, (key) => theme.radius[key]),
+      true,
     ),
     ...ordered(
       "borderWidth",

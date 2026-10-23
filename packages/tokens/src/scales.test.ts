@@ -13,8 +13,9 @@
  *
  * The rule also found a shipped style: the Windows platform carried `lg: 8` and
  * `xl: 8`, so `radius="xl"` and `radius="lg"` painted the same surface and the
- * larger step named nothing. It is `xl: 10` now, and the pre-fix table is the
- * regression this suite measures.
+ * larger step named nothing. It is Fluent 2 today, whose controls round at 4 and
+ * surfaces at 8, so both pairs are aliases on purpose and radius is the one
+ * scale that permits an equal adjacent pair.
  *
  * `invalidScales` is not one of `auditTheme`'s ten reports yet — the docs site's
  * readout words every report it prints, so folding it in is one coordinated
@@ -73,22 +74,27 @@ describe("every shipped theme keeps its scales ordered", () => {
     expect(failing).toEqual([]);
   });
 
-  it("holds the Windows platform's xl radius above its lg", () => {
-    // Measured before the fix: both were 8, so a dialog and a card on the
-    // platform were equally square.
-    expect(platformStyles.win32.radius.xl).toBeGreaterThan(
-      platformStyles.win32.radius.lg,
-    );
+  it("lets the Windows platform's control and surface corners alias", () => {
+    // Fluent 2's 4px grid: every control corners at 4, every surface at 8. The
+    // names are still ordered, but two names per kind share a corner.
+    expect(platformStyles.win32.radius).toMatchObject({
+      sm: 4,
+      md: 4,
+      lg: 8,
+      xl: 8,
+    });
+    expect(invalidScales(platformTheme(lightTheme, "win32"))).toEqual([]);
 
-    const preFix = brand({
-      radius: { ...platformStyles.win32.radius, xl: 8 },
+    // A smaller rung is still a lie: `xl: 6` is below `lg`.
+    const broken = brand({
+      radius: { ...platformStyles.win32.radius, xl: 6 },
     });
 
-    expect(invalidScales(preFix)).toEqual([
+    expect(invalidScales(broken)).toEqual([
       {
         group: "radius",
         path: "xl",
-        value: 8,
+        value: 6,
         previous: { path: "lg", value: 8 },
       },
     ]);
@@ -132,11 +138,11 @@ const breaks: ReadonlyArray<{
   },
   {
     label: "radius",
-    overrides: { radius: { xl: 8 } },
+    overrides: { radius: { xl: 6 } },
     expected: {
       group: "radius",
       path: "xl",
-      value: 8,
+      value: 6,
       previous: { path: "lg", value: 8 },
     },
   },
@@ -336,7 +342,7 @@ describe("the shipped example", () => {
       {
         group: "radius",
         path: "xl",
-        value: 8,
+        value: 6,
         previous: { path: "lg", value: 8 },
       },
       {

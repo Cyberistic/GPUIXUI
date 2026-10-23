@@ -984,7 +984,7 @@ describe("the theming page's focus-ring section", () => {
       'expect(spread(ratios("primary", "rest"))).toBe("1.00–1.38")',
     );
     expect(measured).toContain(
-      'expect(spread(ratios("destructive", "rest"))).toBe("1.00–1.54")',
+      'expect(spread(ratios("destructive", "rest"))).toBe("1.00–1.38")',
     );
 
     const text = section(page("theming.mdx"), "Focus rings").replace(

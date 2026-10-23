@@ -266,9 +266,15 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
   },
   win32: {
     label: "Windows",
+    // `.SystemUIFont` resolves to Segoe UI Variable on Windows 11, the Fluent 2
+    // UI face; naming the family here would pin an older Segoe UI.
     sans: systemUiFont,
     mono: "Consolas",
-    radius: { none: 0, sm: 2, md: 4, lg: 8, xl: 10, full: 9999 },
+    // Fluent 2's 4px grid: a control corners at 4px and a surface at 8px. `sm`
+    // and `md` are the control steps (`controlStyle` paints `md`), `lg` and
+    // `xl` the surface steps (`surfaceStyle` paints the radius it is given, and
+    // cards and dialogs name `lg`/`xl`).
+    radius: { none: 0, sm: 4, md: 4, lg: 8, xl: 8, full: 9999 },
     density: "comfortable",
     contrast: "default",
     syntax: { dark: platformDarkSyntax },
@@ -283,9 +289,11 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         active: "#D6D6D6",
         border: "#E5E5E5",
         borderStrong: "#696A6B",
-        primary: "#0067C0",
+        // The Fluent 2 accent (`#0078D4`) is the action fill and the focus
+        // rect; the selection wash keeps the 24% share the style has carried.
+        primary: "#0078D4",
         primaryForeground: "#FFFFFF",
-        ring: "#0067C0",
+        ring: "#0078D4",
         accent: "#CFE6F9",
         accentForeground: "#003E6F",
         selected: "#C8E0F3",
@@ -297,14 +305,16 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         selection: "#0067C03D",
       },
       dark: {
+        // Fluent's dark canvas and the layer a card sits on: the `#202020`
+        // page, then the elevated `#2C2C2C` layer. The popover sits one step
+        // above the card, which elevation separates rather than a third fill.
         background: "#202020",
-        card: "#2B2B2B",
+        card: "#2C2C2C",
         popover: "#2D2D2D",
         input: "#1F1F1F",
         secondary: "#3A3A3A",
-        // The bar rail is `muted`; the inherited value sat 1.014:1 from this
-        // card and 1.042:1 from the popover, so a bar in a dialog or on a card
-        // had no track. A step darker clears both.
+        // The bar rail is `muted`; a step below the card keeps a bar visible in
+        // a dialog and on a card.
         muted: "#262626",
         // A loading dialog paints its skeleton rows on this popover fill; the
         // inherited base skeleton sat 1.039:1 from it.
@@ -313,15 +323,13 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         active: "#3A3A3A",
         border: "#3D3D3D",
         borderStrong: "#ACACAD",
-        // The accent is one step deeper than the Fluent value (`#60CDFF`):
-        // a filled action's hover moves 12% toward `foreground`, and from a
-        // fill this light the step landed at 1.05:1 — a primary button on a
-        // Windows window that did not answer the pointer. This step keeps the
-        // hover and press visible (1.059 / 1.086) while the dark on-colour
-        // stays at 9.86:1.
-        primary: "#59C9FF",
+        // Fluent 2's dark accent (`#4CC2FF`) is the action fill and the focus
+        // rect. Its hover and press still read against the fill: the pointer
+        // steps land at 1.080:1 and 1.129:1, above the 1.05 perceptibility
+        // floor, while the dark on-colour stays at 9.19:1.
+        primary: "#4CC2FF",
         primaryForeground: "#11141A",
-        ring: "#60CDFF",
+        ring: "#4CC2FF",
         accent: "#1B3A50",
         accentForeground: "#C9E9FF",
         selected: "#143E59",
