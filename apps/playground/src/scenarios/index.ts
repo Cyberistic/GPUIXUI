@@ -13,7 +13,7 @@
 import * as Arr from "effect/Array";
 import type { PlaygroundScenario, ScenarioBody } from "../types.js";
 import { registry, type ScenarioId } from "./registry.js";
-import { layoutScenario } from "./layout.js";
+import { layoutFlexSizingScenario, layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
 import { textSelectionScenario } from "./selection.js";
 import { inputScenario } from "./input.js";
@@ -61,6 +61,7 @@ import {
 /** One implementation per registered scenario id. */
 export const implementations: Record<ScenarioId, ScenarioBody> = {
   "layout-flex": layoutScenario,
+  "layout-flex-sizing": layoutFlexSizingScenario,
   "text-native": textScenario,
   "text-selection": textSelectionScenario,
   "input-edit": inputScenario,

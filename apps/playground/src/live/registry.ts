@@ -582,6 +582,12 @@ export const liveRegistry = [
       "Theme: a running window follows a desktop palette without a restart or a remount, and returns to its own theme when the palette is deleted",
     capability: "theme",
   },
+  {
+    id: "flex-sizing",
+    title:
+      "Layout: a row's leftover goes to its growers, a basis of zero splits it evenly, an item shrinks only when it may, and alignSelf overrides a stretch",
+    capability: "layout",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

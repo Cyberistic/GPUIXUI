@@ -853,6 +853,24 @@ import {
   type AspectExpectation,
 } from "./aspect-ratio.js";
 import {
+  FLEX_ALIGN_CASES,
+  FLEX_ALIGN_COLUMN_WIDTH,
+  FLEX_ALIGN_CONTENT,
+  FLEX_ASKED_WIDTH,
+  FLEX_FIT_CONTENT,
+  FLEX_FIXED_WIDTH,
+  FLEX_FLOOR_CONTENT,
+  FLEX_FLOOR_ROW_WIDTH,
+  FLEX_IDS,
+  FLEX_LONG_CONTENT,
+  FLEX_MAX_WIDTH,
+  FLEX_NARROW_WIDTH,
+  FLEX_OVER_CONTENT,
+  FLEX_ROW_WIDTH,
+  FLEX_SHORT_CONTENT,
+  FLEX_WIDTH_CASES,
+} from "./flex-sizing.js";
+import {
   IMAGE_BOX_CASES,
   IMAGE_BOX_IDS,
   IMAGE_HEIGHT,
@@ -20409,6 +20427,296 @@ const aspectRatioSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * The flex sizing rules a split pane, a table column and a truncating label
+ * rest on, painted in a window.
+ *
+ * `@gpuixui/tw` compiles `flex-1` to `{ flexGrow: 1, flexShrink: 1, flexBasis:
+ * 0 }`, `shrink-0` to `{ flexShrink: 0 }`, and every row of the library leans on
+ * one of them — but no probe painted a grow, a shrink, a basis or an automatic
+ * minimum. The fixture mounts each rule as one row whose widths are derived from
+ * `flex-sizing.ts`, so the arithmetic under test is the same arithmetic the
+ * README prints.
+ */
+const FlexSizingProbe = (): ReactNode => {
+  const theme = useTheme();
+  const window = useWindowSize();
+  const page = {
+    width: window.width,
+    height: window.height,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
+    display: "flex" as const,
+    flexDirection: "column" as const,
+    gap: theme.spacing.sm,
+  };
+  const row = (id: string, width: number, height: number) => ({
+    testId: id,
+    style: {
+      width,
+      height,
+      display: "flex" as const,
+      flexDirection: "row" as const,
+      backgroundColor: theme.colors.muted,
+    },
+  });
+  const item = (id: string, style: object, child?: ReactNode) => (
+    <div
+      testId={id}
+      style={{ backgroundColor: theme.colors.primary, ...style }}
+    >
+      {child}
+    </div>
+  );
+  const fixed = (id: string, width: number) => (
+    <div
+      testId={id}
+      style={{
+        width,
+        flexShrink: 0,
+        backgroundColor: theme.colors.mutedForeground,
+      }}
+    />
+  );
+  /**
+   * A grower with `flexBasis: 0` (what `flex-1` compiles to), and its
+   * content-sized twin that omits the basis — two declarations, because a style
+   * key that is absent is not a value.
+   */
+  const grower = (id: string, content?: number) => (
+    <div
+      testId={id}
+      style={{
+        flexGrow: 1,
+        flexShrink: 1,
+        flexBasis: 0,
+        backgroundColor: theme.colors.primary,
+      }}
+    >
+      {content === undefined ? null : (
+        <div style={{ width: content, height: 20 }} />
+      )}
+    </div>
+  );
+  const autoGrower = (id: string, content: number) => (
+    <div
+      testId={id}
+      style={{
+        flexGrow: 1,
+        flexShrink: 1,
+        backgroundColor: theme.colors.primary,
+      }}
+    >
+      <div style={{ width: content, height: 20 }} />
+    </div>
+  );
+  return (
+    <div testId="flex-sizing-probe" style={page}>
+      <text
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        A flex row gives its leftover width to the growers: a basis of zero
+        splits it evenly while the content fits, an auto basis grows from its
+        content, a grower whose content is wider than its share keeps its
+        content and the rest goes to the other, an over-full row shrinks only
+        the items that may shrink, an item&apos;s automatic minimum is its
+        content unless minWidth lifts it, maxWidth stops a grower, and alignSelf
+        overrides a column&apos;s stretch.
+      </text>
+      <div {...row(FLEX_IDS.growRow, FLEX_ROW_WIDTH, 20)}>
+        {fixed(FLEX_IDS.growFixed, FLEX_FIXED_WIDTH)}
+        {grower(FLEX_IDS.growFill)}
+      </div>
+      <div {...row(FLEX_IDS.basisZeroRow, FLEX_ROW_WIDTH, 20)}>
+        {fixed(FLEX_IDS.basisZeroFixed, FLEX_FIXED_WIDTH)}
+        {grower(FLEX_IDS.basisZeroShort, FLEX_SHORT_CONTENT)}
+        {grower(FLEX_IDS.basisZeroFit, FLEX_FIT_CONTENT)}
+      </div>
+      <div {...row(FLEX_IDS.basisAutoRow, FLEX_ROW_WIDTH, 20)}>
+        {fixed(FLEX_IDS.basisAutoFixed, FLEX_FIXED_WIDTH)}
+        {autoGrower(FLEX_IDS.basisAutoShort, FLEX_SHORT_CONTENT)}
+        {autoGrower(FLEX_IDS.basisAutoLong, FLEX_LONG_CONTENT)}
+      </div>
+      <div {...row(FLEX_IDS.overRow, FLEX_ROW_WIDTH, 20)}>
+        {fixed(FLEX_IDS.overFixed, FLEX_FIXED_WIDTH)}
+        {grower(FLEX_IDS.overShort, FLEX_SHORT_CONTENT)}
+        {grower(FLEX_IDS.overItem, FLEX_OVER_CONTENT)}
+      </div>
+      <div {...row(FLEX_IDS.shrinkRow, FLEX_NARROW_WIDTH, 20)}>
+        {fixed(FLEX_IDS.shrinkFixed, FLEX_FIXED_WIDTH)}
+        {item(FLEX_IDS.shrinkItem, { width: FLEX_ASKED_WIDTH })}
+      </div>
+      <div {...row(FLEX_IDS.noShrinkRow, FLEX_NARROW_WIDTH, 20)}>
+        {item(FLEX_IDS.noShrinkItem, {
+          width: FLEX_ASKED_WIDTH,
+          flexShrink: 0,
+        })}
+      </div>
+      <div {...row(FLEX_IDS.floorRow, FLEX_FLOOR_ROW_WIDTH, 20)}>
+        {item(
+          FLEX_IDS.floorItem,
+          {},
+          <div
+            testId={FLEX_IDS.floorContent}
+            style={{ width: FLEX_FLOOR_CONTENT, height: 20 }}
+          />,
+        )}
+      </div>
+      <div {...row(FLEX_IDS.liftedRow, FLEX_FLOOR_ROW_WIDTH, 20)}>
+        {item(
+          FLEX_IDS.liftedItem,
+          { minWidth: 0 },
+          <div
+            testId={FLEX_IDS.liftedContent}
+            style={{ width: FLEX_FLOOR_CONTENT, height: 20 }}
+          />,
+        )}
+      </div>
+      <div {...row(FLEX_IDS.maxRow, FLEX_ROW_WIDTH, 20)}>
+        {fixed(FLEX_IDS.maxFixed, FLEX_FIXED_WIDTH)}
+        <div
+          testId={FLEX_IDS.maxGrow}
+          style={{
+            flexGrow: 1,
+            flexShrink: 1,
+            flexBasis: 0,
+            maxWidth: FLEX_MAX_WIDTH,
+            backgroundColor: theme.colors.primary,
+          }}
+        />
+      </div>
+      <div
+        testId={FLEX_IDS.alignColumn}
+        style={{
+          width: FLEX_ALIGN_COLUMN_WIDTH,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "stretch",
+          gap: theme.spacing.xs,
+        }}
+      >
+        {(
+          [
+            [FLEX_IDS.alignStart, "start"],
+            [FLEX_IDS.alignCenter, "center"],
+            [FLEX_IDS.alignEnd, "end"],
+            [FLEX_IDS.alignStretch, "stretch"],
+          ] as const
+        ).map(([id, alignSelf]) => (
+          <div
+            key={id}
+            testId={id}
+            style={{
+              alignSelf,
+              backgroundColor: theme.colors.primary,
+              padding: 0,
+            }}
+          >
+            <div
+              style={{
+                width: FLEX_ALIGN_CONTENT,
+                height: 20,
+                backgroundColor: theme.colors.success,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const flexSizingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(FLEX_IDS.growFill);
+    // The evidence frame: every row of the table above in one paint, so a
+    // reader can check the widths against the picture.
+    yield* ctx.host.capture("flex-sizing");
+    const boxOf = (id: string) =>
+      Effect.gen(function* () {
+        return yield* ctx.expectSome(
+          `${id} reports its painted box`,
+          Option.fromNullishOr(yield* ctx.host.bounds(id)),
+        );
+      });
+
+    // One check per box, so the printed count is the table's size plus the
+    // row comparisons below rather than a number written by hand.
+    yield* Effect.forEach(
+      FLEX_WIDTH_CASES,
+      (expectation) =>
+        Effect.gen(function* () {
+          const box = yield* boxOf(expectation.id);
+          yield* ctx.expectNear(
+            `${expectation.id} paints the width its rule expects`,
+            box.width,
+            expectation.width,
+            1,
+          );
+        }),
+      { concurrency: 1, discard: true },
+    );
+
+    // The grower ends exactly at the row's right edge: a grower that took its
+    // content plus the leftover would leave the row short.
+    const growRow = yield* boxOf(FLEX_IDS.growRow);
+    const growFill = yield* boxOf(FLEX_IDS.growFill);
+    yield* ctx.expectNear(
+      "the grower ends at the row's right edge",
+      growFill.x + growFill.width,
+      growRow.x + growRow.width,
+      1,
+    );
+
+    // An item that may not shrink keeps the width it asked for and paints past
+    // its row, which is the overflow a fixed pane or a column relies on.
+    const noShrinkRow = yield* boxOf(FLEX_IDS.noShrinkRow);
+    const noShrinkItem = yield* boxOf(FLEX_IDS.noShrinkItem);
+    yield* ctx.expectEqual(
+      "a non-shrinking item paints past its row's right edge",
+      noShrinkItem.x + noShrinkItem.width > noShrinkRow.x + noShrinkRow.width,
+      true,
+    );
+
+    // The floor rows read their own content: the automatic minimum holds the
+    // item at its child's width, and `minWidth: 0` lets the row shrink it while
+    // the child keeps painting past the item's edge.
+    const floorItem = yield* boxOf(FLEX_IDS.floorItem);
+    const floorContent = yield* boxOf(FLEX_IDS.floorContent);
+    const liftedItem = yield* boxOf(FLEX_IDS.liftedItem);
+    const liftedContent = yield* boxOf(FLEX_IDS.liftedContent);
+    yield* ctx.expectNear(
+      "an item with no minWidth keeps its content's width",
+      floorContent.width,
+      floorItem.width,
+      1,
+    );
+    yield* ctx.expectEqual(
+      "minWidth zero lets the row shrink an item below its content",
+      liftedContent.width > liftedItem.width,
+      true,
+    );
+
+    const column = yield* boxOf(FLEX_IDS.alignColumn);
+    yield* Effect.forEach(
+      FLEX_ALIGN_CASES,
+      (expectation) =>
+        Effect.gen(function* () {
+          const box = yield* boxOf(expectation.id);
+          yield* ctx.expectNear(
+            `${expectation.id} sits where its alignSelf places it`,
+            box.x - column.x,
+            expectation.x,
+            1,
+          );
+        }),
+      { concurrency: 1, discard: true },
+    );
+  });
+
+/**
  * What box an `<img>` paints, and what a style can make it paint.
  *
  * An image is the one element whose intrinsic ratio the runtime owns: GPUI
@@ -26214,5 +26522,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "document-type",
     view: () => <DocumentTypeProbe />,
     steps: documentTypeSteps,
+  },
+  "flex-sizing": {
+    id: "flex-sizing",
+    view: () => <FlexSizingProbe />,
+    steps: flexSizingSteps,
   },
 };

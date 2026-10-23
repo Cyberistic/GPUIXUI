@@ -54,6 +54,12 @@ export const registry = [
     capability: "layout",
   },
   {
+    id: "layout-flex-sizing",
+    title:
+      "Flex sizing: grow, shrink, basis, the automatic minimum and alignSelf",
+    capability: "layout",
+  },
+  {
     id: "text-native",
     title: "Native text: <text>, <code> and <markdown>",
     capability: "text",

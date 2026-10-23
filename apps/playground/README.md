@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-91 probes a real window can prove, of which eighteen mount shipped
+92 probes a real window can prove, of which eighteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -111,7 +111,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (44/44 green); -> 2 on a host with no binding
+# -> 0 here (45/45 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -712,10 +712,10 @@ locate rule and replace-all, so a green probe cannot stand on wrong numbers.
 
 ## Evidence on this host
 
-The suite is **44/44 green** here on GPUix 0.11.0 (`exit 0`):
+The suite is **45/45 green** here on GPUix 0.11.0 (`exit 0`):
 
 ```
-44/44 scenarios passed · capabilities: layout=verified text=verified
+45/45 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified scroll=verified panel=verified virtual-list=verified
 table=verified tree=verified log=verified theme=verified workspace=verified
@@ -727,6 +727,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | Capability | Measured on this host (0.11.0 unless noted) |
 | ---------- | ----------------------- |
 | layout, text, input | exact bounds; `getAllText`/`getPaintedText`; `onChange`/`onSubmit` |
+| layout (flex sizing) | a grower takes the leftover (280 of a 400 row beside a fixed 120); two `flexBasis: 0` growers whose content fits split it evenly (140/140) while an auto basis grows from content (70/210); a grower whose content exceeds its share keeps its content and the other takes the rest (200/80); an over-full row shrinks the item that may shrink (180) and leaves `flexShrink: 0` over-wide (320, painted past the row); an item's automatic minimum is its content (300 in a 200 row) unless `minWidth: 0` lifts it (200); `maxWidth` stops a grower (120, row left short); and `alignSelf` places content width at 0/120/240 in a 300 column whose `stretch` item is 300 (`flex-sizing`, and the headless `layout-flex-sizing`) |
 | text selection | `dragSelect` fills `getSelectedText()` for `selectable` text and nothing for chrome; `clearSelection` empties it |
 | accessibility | the offscreen renderer's `getA11yTree()` describes `role` and all seven `aria-*` props (the token mapped to the platform's role name), a node with no role is absent, and a `<text>` is a `Label` with its content (`a11y-tree`) |
 | focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do |
@@ -5033,6 +5034,67 @@ without a restart` (`expected "#F4F1EA", got "#1B1B1F"`), and keying the surface
 per theme fails `the tree is not remounted by the follow` (`expected
 "mounts=2", got "mounts=3"`).
 
+### `flex-sizing` — measured on 0.11.0 here
+
+**Do the flex rules a `flex-1` composes with actually paint?** `@gpuixui/tw`
+compiles `flex-1` to `{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }` and
+`shrink-0` to `{ flexShrink: 0 }`, and every dock pane, table column and
+truncating label leans on one of them. The headless `layout-flex` measures
+explicit widths and gaps; nothing painted a grow, a shrink, a basis, an automatic
+minimum or an `alignSelf`, so the rules the Tier 3/4 compositions assume were the
+typings' claim. The probe mounts one row per rule at 400 (and 300/200 where the
+rule needs an over-full row), reads every painted box, and the fixture holds the
+same arithmetic the headless `layout-flex-sizing` scenario asserts.
+
+| Row | Measured |
+| --- | -------- |
+| `flex-grow-row` (400): a 120 item with `flexShrink: 0` plus a `flexBasis: 0` grower | the grower paints **280** and ends at the row's right edge |
+| `flex-basis-zero-row` (400): 120 fixed, two `flexBasis: 0` growers holding 20 and 60 | both paint **140** — an even split while the content fits |
+| `flex-basis-auto-row` (400): the same two contents with **no** basis | they paint **70** and **210**: each content plus an equal share of the free 100 |
+| `flex-over-row` (400): growers holding 20 and 200 | the wide one keeps **200**, the other takes the remaining **80** |
+| `flex-shrink-row` (300): 120 fixed plus a 320 item | the item shrinks to **180** |
+| `flex-noshrink-row` (300): a 320 item with `flexShrink: 0` | keeps **320** and paints 20 past its row |
+| `flex-floor-row` (200): an item holding 300-wide content | floors at **300** — the automatic minimum is its content |
+| `flex-lifted-row` (200): the same item with `minWidth: 0` | paints **200**, with its content overflowing it |
+| `flex-max-row` (400): 120 fixed plus a grower capped at 120 | paints **120** and leaves the row short |
+| `flex-align-column` (300, `alignItems: stretch`): 60-wide content at `start`/`center`/`end` | **60** wide at **0 / 120 / 240** |
+| the same column's `alignSelf: stretch` item | **300** wide |
+
+The four rules a component plan needs:
+
+1. **`flexBasis: 0` is not equality.** `flex-1` splits the leftover evenly only
+   while every item's content fits inside its share: a grower holding content
+   wider than its share keeps its content and the row's remainder goes to the
+   sibling (measured **200** and **80**, not **140** and **140**). A column that
+   must truncate declares `minWidth: 0`, which is the same automatic minimum the
+   floor and lifted rows measure.
+2. **A shrink is the default; a fixed pane opts out.** An over-full row shrinks
+   an item (320 → **180**) and `flexShrink: 0` keeps it (**320**, painted past
+   the row), which is why a dock's fixed pane and a table's frozen column say
+   `shrink-0`.
+3. **`maxWidth` stops a grower.** The leftover the cap refuses stays unfilled
+   rather than moving to a sibling — a grower that must fill its row cannot be
+   capped.
+4. **`alignSelf` overrides the column's stretch** with the item's content width:
+   `start`, `center` and `end` place that width at **0 / 120 / 240**, and
+   `stretch` takes the column's **300**.
+
+27 checks, `--only flex-sizing`, green on 0.11.0 here (~0.1 s). Fixture:
+`src/live/flex-sizing.ts` (the ids, the constants, `leftover`/`equalShares`/
+`autoBasisShare`/`shareNextToContent`, `FLEX_WIDTH_CASES`, `FLEX_ALIGN_CASES`
+and `FLEX_CHECKS`) + `flex-sizing.test.ts` (12 cases: the arithmetic, the table
+derived from its constants, the ids apart, the registry entry, this section with
+its printed count, the properties both views ask for, and the headless scenario
+registration). The view and steps live in `src/live/scenarios.tsx`; the headless
+twin is `layout-flex-sizing` in `src/scenarios/layout.tsx`. Evidence:
+`.artifacts/live/flex-sizing.png`.
+
+Two negative controls measured, exit `1` each, restored green: dropping
+`minWidth: 0` from the lifted row fails `flex-lifted-item paints the width its
+rule expects` (`expected 200 ± 1, got 300`), and the headless twin with a
+hand-written **212** for the long auto-basis grower fails `paints the width its
+rule expects` (`expected 212 ± 1, got 210`).
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5256,7 +5318,7 @@ narrower. Each deviation is deliberate and measured:
   `action-ring`, `surface-origin`, `hover-routing-lifecycle`,
   `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box`,
   `image-fit`, `grid-focus-lifecycle`, `system-theme-follow`, `document-type`
-  and `dock-split-lifecycle` (thirty-three probes, each run alone).
+  `dock-split-lifecycle` and `flex-sizing` (thirty-four probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and
