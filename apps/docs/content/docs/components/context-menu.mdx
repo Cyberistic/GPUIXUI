@@ -215,6 +215,20 @@ without losing the open. It is a `card`-filled box with a `border` edge and
 `ContextMenuCheckboxItem` does not close the menu when it toggles, so a reader
 can switch more than one.
 
+### `ContextMenuRadioGroup` and `ContextMenuRadioItem`
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `string` | none | the chosen row's value (required on the group) |
+| `onValueChange` | `(value: string) => void` | none | reported with a row's value when it is chosen, never the current one (required) |
+| `className` | `string` | none | compiled through `@gpuixui/tw`, joined after the recipe |
+| `value` | `string` | none | this row's value inside the group (required on `ContextMenuRadioItem`) |
+| `disabled` / `leading` / `trailing` / `textValue` | as the action row | — | the row's own slots and type-ahead key |
+
+The group is controlled and owns the value — the menu unmounts on close — and
+choosing a row reports its value and closes the menu. A radio row's `style` sees
+`{ checked, disabled, highlighted }`.
+
 ### `ContextMenuSeparator`, `ContextMenuLabel`, `ContextMenuGroup`
 
 The structure parts take `children` and `className` and no required prop. The

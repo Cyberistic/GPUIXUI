@@ -158,6 +158,21 @@ without owning the highlight.
 It is a row with a check mark in the `leading` slot when checked, and takes the
 action row's `disabled`, `tone`, `leading`, `trailing`, `textValue` and `style`.
 
+### DropdownMenuRadioGroup / DropdownMenuRadioItem
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `value` | `string` (required, group) | none — the choice the group marks |
+| `onValueChange` | `(value: string) => void` (required, group) | none — reports the chosen row's value |
+| `className` | `string` | none — compiled through `@gpuixui/tw` |
+| `value` | `string` (required, row) | none — this row's value in the group |
+
+The group owns the value, and it is controlled because the menu unmounts on
+close. Choosing a row reports its value and closes the menu — the difference from
+a checkbox row, which stays open so several settings are visited in one visit. A
+radio row takes the action row's `disabled`, `leading`, `trailing`, `textValue`
+and `style`, whose function sees `{ checked, disabled, highlighted }`.
+
 ### The rest of the family
 
 `DropdownMenuSub`, `DropdownMenuSubTrigger` and `DropdownMenuSubContent` make one
