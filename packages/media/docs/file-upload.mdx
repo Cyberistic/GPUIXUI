@@ -42,6 +42,10 @@ queue = complete(queue, "a", 1);                     // → done
 - Progress only ever advances; a stale token (a removed file or a superseded
   attempt) is ignored.
 - `remove` drops the file, cancelling its attempt — later reports are no-ops.
+- The queue carries the last token minted (`{ items, attempts }`), and the
+  counter outlives the row: a file re-added under the same id starts at the
+  **next** attempt, so a late `complete` or `reportProgress` from the removed
+  transfer cannot finish or overwrite the new one.
 
 ## API
 
@@ -71,8 +75,9 @@ literal colours.
 
 ## Verification
 
-`src/upload/queue.test.ts` (7 tests) holds the state machine — retry only an
-errored file, monotonic progress, stale-token and remove-cancel guards — and
+`src/upload/queue.test.ts` (8 tests) holds the state machine — retry only an
+errored file, monotonic progress, stale-token and remove-cancel guards, and a
+removed token staying cancelled when the same id is re-added — and
 `src/file-upload.test.tsx` (3 tests) holds the view: retry is offered and routed
 for an errored file, absent for a done file (the negative control), and remove
 routes for a finished file.

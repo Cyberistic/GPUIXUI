@@ -1,11 +1,13 @@
 /**
  * The upload queue: the state machine the `FileUpload` component runs on.
  *
- * The three rules this suite guards are the ones a transfer can break silently:
+ * The four rules this suite guards are the ones a transfer can break silently:
  * a retry must not reopen a finished or in-flight file, progress must never
- * paint backwards, and a remove must cancel the removed file's token so a late
- * report cannot resurrect it. Each rule carries a negative control that the
- * opposite behaviour would trip.
+ * paint backwards, a remove must cancel the removed file's token so a late
+ * report cannot resurrect it, and that token must stay cancelled when the same
+ * id is re-added (the counter outlives the item, so a re-upload gets a fresh
+ * attempt rather than the removed transfer's number). Each rule carries a
+ * negative control that the opposite behaviour would trip.
  */
 
 import { describe, expect, it } from "vitest";
@@ -89,5 +91,17 @@ describe("upload queue", () => {
     expect(findItem(removed, "a")).toStrictEqual(Option.none());
     expect(reportProgress(removed, "a", 1, 0.9)).toStrictEqual(removed);
     expect(complete(removed, "a", 1)).toStrictEqual(removed);
+  });
+
+  it("does not let a removed transfer finish the same id re-added", () => {
+    const removed = remove(uploading("a"), "a"); // attempt 1, still counting
+    const readded = start(enqueue(removed, [file("a")]), "a");
+
+    expect(tokenOf(readded, "a")).toStrictEqual(Option.some(2));
+    expect(complete(readded, "a", 1)).toStrictEqual(readded);
+    expect(
+      progressOf(reportProgress(readded, "a", 1, 0.9), "a"),
+    ).toStrictEqual(Option.some(0));
+    expect(statusOf(readded, "a")).toStrictEqual(Option.some("uploading"));
   });
 });

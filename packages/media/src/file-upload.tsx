@@ -7,7 +7,8 @@
  * success and rejects on failure. Files are added through the controlled `files`
  * prop and auto-started; an errored file retries, and a remove drops the file
  * and cancels its attempt — a late progress or completion report for the removed
- * file's token is a no-op, so nothing can resurrect a removed row.
+ * file's token is a no-op. The queue's attempt counter outlives the row, so a
+ * file re-added under the same id cannot inherit the removed transfer's token.
  */
 
 import type { Props } from "@gpuix/react";
@@ -203,11 +204,14 @@ export const FileUpload = (props: FileUploadProps): ReactElement => {
   );
 
   useEffect(() => {
-    const retained = Arr.filter(queue, (item) =>
+    const retained = Arr.filter(queue.items, (item) =>
       Arr.some(files, (file) => file.id === item.id),
     );
-    const seeded = enqueue(retained, files);
-    const idle = Arr.filter(seeded, (item) => item.status === "idle");
+    const seeded = enqueue(
+      { attempts: queue.attempts, items: retained },
+      files,
+    );
+    const idle = Arr.filter(seeded.items, (item) => item.status === "idle");
     const started = Arr.reduce(idle, seeded, (state, item) =>
       start(state, item.id),
     );
@@ -239,7 +243,7 @@ export const FileUpload = (props: FileUploadProps): ReactElement => {
     onRemoveFile?.(id);
   };
 
-  return renderFileUpload(props, theme, queue, {
+  return renderFileUpload(props, theme, queue.items, {
     onRetry: retry,
     onRemove: removeFile,
   });
