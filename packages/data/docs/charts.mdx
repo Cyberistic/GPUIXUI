@@ -71,6 +71,9 @@ description, because a picture of numbers is the one thing a role cannot carry:
 
 - a series reads `Q1 32, Q2 48, Q3 41` — the label it stands under and the value
   it paints, in category order;
+- a series with a labelled slot keeps its image even when nothing draws: a bar
+  chart of zeros paints no bar, and a negative value no geometry can show, yet
+  the series still reads `Q1 0, Q2 -4` rather than disappearing from the tree;
 - a value past the last label draws nowhere and is not described, and one the
   caller never supplied reads `no value` rather than the `0` the geometry
   substitutes;

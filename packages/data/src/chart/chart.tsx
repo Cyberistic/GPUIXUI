@@ -202,7 +202,14 @@ const ChartLayer = ({
   />
 );
 
-/** A series chart's shared frame: axis, plot, labels and legend. */
+/**
+ * A series chart's shared frame: axis, plot, labels and legend.
+ *
+ * A series keeps its layer while it has a labelled slot, even when no value in
+ * it draws: a bar chart of zeros paints no bar, but the series is part of the
+ * picture and its numbers still reach the tree ("Q1 0, Q2 0"). A series with no
+ * labelled category is not part of the chart and paints no layer.
+ */
 const ChartFrame = ({
   series,
   labels,
@@ -286,9 +293,13 @@ const ChartFrame = ({
           }}
         >
           {Arr.map(series, (one, index) =>
-            Arr.match(layers[index] ?? [], {
+            // A series paints a layer while it has a labelled slot, even if no
+            // value in it draws: a bar chart of zeros shows no bar, but the
+            // series exists and its numbers still reach the tree. Only a series
+            // with no labelled category at all is not part of the picture.
+            Arr.match(Arr.take(one.values, labels.length), {
               onEmpty: () => null,
-              onNonEmpty: (marks) => (
+              onNonEmpty: () => (
                 <ChartLayer
                   key={one.key}
                   chartTestId={testId}
@@ -296,7 +307,7 @@ const ChartFrame = ({
                   label={one.label}
                   description={seriesDescription(one.values, labels)}
                   colour={seriesColour(palette, index)}
-                  marks={marks}
+                  marks={layers[index] ?? []}
                   box={box}
                 />
               ),

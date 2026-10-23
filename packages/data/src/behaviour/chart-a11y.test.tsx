@@ -141,4 +141,34 @@ describe("a chart's accessibility tree", () => {
       { label: "Referral", description: "60" },
     ]);
   });
+
+  it("announces a series whose values draw no bar", () => {
+    // A bar chart of zeros paints no bar — a zero keeps its slot and has no
+    // height — but the series exists and its values are the reading. Dropping
+    // the layer left the legend naming a series the tree never described, so a
+    // reader could not tell a zero from a series left out of the chart.
+    const tree = treeOf(
+      <BarChart
+        aria-label="Revenue"
+        labels={["Q1", "Q2"]}
+        series={[
+          { key: "revenue", label: "Revenue", values: [0, 0] },
+          { key: "cost", label: "Cost", values: [0, -4] },
+        ]}
+        testId="chart-zero"
+      />,
+    );
+
+    const images = withRole(tree, tree.root, "Image");
+    expect(Arr.map(images, (id) => wordsOf(tree, id))).toEqual([
+      { label: "Revenue", description: "Q1 0, Q2 0" },
+      { label: "Cost", description: "Q1 0, Q2 -4" },
+    ]);
+    // The picture did not lie to meet the words: nothing is painted, because
+    // the geometry has no bar for a zero or a negative value.
+    Arr.forEach(["revenue", "cost"], (layer) => {
+      const node = root?.renderer.findByTestId(`chart-zero-layer-${layer}`);
+      expect(node?.customProps?.source).not.toContain("<rect");
+    });
+  });
 });

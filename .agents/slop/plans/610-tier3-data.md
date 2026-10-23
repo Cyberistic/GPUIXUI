@@ -368,6 +368,14 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   directions measured: reverting it fails the new unit case (`expected 1000 to
   be 10`) and both window cases (`99` for the no-bar-past-the-labels bar, and
   the missing `tick-10`). 20 unit / 12 behaviour chart cases green.
+- **A series keeps its image while it has a labelled slot**: the frame decided a
+  layer from its marks, so a bar chart of zeros (or of negatives, which the
+  geometry cannot draw) painted no layer and the tree held no `Image` for the
+  series — the legend named it and nothing described it. The layer is decided by
+  the labelled slots now; the geometry is unchanged, so the picture still paints
+  no bar and the description still says `Q1 0, Q2 -4`. Direction measured:
+  restoring the marks test fails `announces a series whose values draw no bar`
+  with `expected [] to deeply equal [ … ]`. 7 behaviour cases green.
 
 
 ## 5. Acceptance
