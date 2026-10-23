@@ -15,6 +15,7 @@ import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
 import { motionLevels } from "@gpuixui/motion/timing";
 import type { PrimitiveTheme, RadiusStep } from "./theme.js";
+import { typeOf } from "./theme.js";
 
 /** How many steps a pulse visits before repeating. */
 export const PULSE_STEPS = 2;
@@ -90,16 +91,17 @@ export const skeletonSize = (
 ): { readonly width: number | string; readonly height: number | string } => {
   const width = paintableSide(spec.width);
   const height = paintableSide(spec.height);
+  const line = typeOf(theme, "body").lineHeight;
   if (spec.circle !== true) {
     return {
       width: width ?? "100%",
-      height: height ?? theme.typography.body.lineHeight,
+      height: height ?? line,
     };
   }
   if (width !== undefined && height !== undefined) {
     return { width, height };
   }
-  const side = width ?? height ?? theme.typography.body.lineHeight;
+  const side = width ?? height ?? line;
   return { width: side, height: side };
 };
 

@@ -1,6 +1,6 @@
 ---
 title: Drawer
-description: A modal panel anchored to a window edge
+description: A modal panel anchored to a window edge.
 ---
 
 <ComponentPreview name="drawer-sides" />
@@ -65,3 +65,13 @@ Drawer
 - Slides 12px from its edge; a full-width slide is not available.
 - No swipe-to-dismiss; no drag host feature.
 - Not portalled; painted at window coordinates.
+- Sizes are layout constants, not tokens.
+- A `side` restored from persisted state that the union does not name opens the
+  house `right` edge, and travels in from it; the box, the layout and the entry
+  frame read one edge, so a panel never opens from an edge it is not on.
+
+## Related
+
+- **Dialog** — the centred modal.
+- **Confirmation dialog** — a destructive decision.
+- **Popover** — a non-modal anchored panel.

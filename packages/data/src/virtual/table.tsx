@@ -58,6 +58,7 @@ import {
   TableViewport,
 } from "../table/table.js";
 import { useMeasuredBodyHeight } from "../table/frame.js";
+import { paintableSize } from "../internal/size.js";
 import { VirtualList, type VisibleRange } from "./list.js";
 import {
   useVirtualRows,
@@ -86,6 +87,12 @@ export interface VirtualTableBodyProps extends Omit<
   /**
    * A definite body height. Omit it inside a bounded {@link Table}: the body
    * takes the measured difference between the viewport and the header.
+   *
+   * A height the layout cannot paint reads as **no height**
+   * ({@link paintableSize}), so the body's measured frame sizes it. Measured
+   * before the rule: a `NaN` height left the runtime list with no bound, and
+   * the table painted **no row at all** against the **8** the same body paints
+   * with a readable height.
    */
   readonly height?: number;
   /** Rows mounted beyond the viewport on each side. Defaults to `4`. */
@@ -115,7 +122,10 @@ export const VirtualTableBody = ({
 }: VirtualTableBodyProps) => {
   const renderer = useGpuix().renderer;
   const measured = useMeasuredBodyHeight();
-  const definite = height ?? Option.getOrUndefined(measured);
+  // The height the body can be laid out at: the caller's, when it paints, and
+  // the measured frame otherwise. A height nothing could be read from is no
+  // height, so the frame takes it (`paintableSize`).
+  const definite = Option.orElse(paintableSize(height), () => measured);
   // The count the window can hold and the height it divides by, so the runtime
   // list, the window, the anchor and the reveal arithmetic are given one pair
   // of numbers (`rowCount`, `rowHeightOf`): a computed height nothing could be
@@ -126,7 +136,7 @@ export const VirtualTableBody = ({
   const rows = useVirtualRows({
     count: total,
     rowHeight,
-    viewportHeight: definite ?? 0,
+    viewportHeight: Option.getOrElse(definite, () => 0),
     overdraw,
     reveal,
   });
@@ -178,7 +188,7 @@ export const VirtualTableBody = ({
       {...rest}
       ref={attach}
       testId={testId}
-      height={definite}
+      height={Option.getOrUndefined(definite)}
       itemCount={total}
       estimatedItemHeight={rowHeight}
       windowStart={rows.windowStart}
@@ -199,7 +209,15 @@ export interface VirtualTableProps extends Omit<
 > {
   /** The logical row count. */
   readonly count: number;
-  /** A definite table height, in pixels. */
+  /**
+   * A definite table height, in pixels.
+   *
+   * A height the layout cannot paint reads as **no height**
+   * ({@link paintableSize}), so the table's own measured frame sizes it.
+   * Measured before the rule: a `NaN` height left the table unbounded and the
+   * windowed body with no bound, and the table painted **no row at all**
+   * against the **8** it paints with a readable height.
+   */
   readonly height: number;
   /**
    * The painted height of every row, in pixels.
@@ -261,7 +279,12 @@ export const VirtualTable = ({
   style,
   ...rest
 }: VirtualTableProps) => (
-  <Table {...rest} height={height} className={className} style={style}>
+  <Table
+    {...rest}
+    height={Option.getOrUndefined(paintableSize(height))}
+    className={className}
+    style={style}
+  >
     <TableViewport>
       <TableHeader>{header}</TableHeader>
       {rowCount(count) === 0 ? (

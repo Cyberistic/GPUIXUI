@@ -45,6 +45,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
+import { paintableSize } from "../internal/size.js";
 import { rowCount, rowHeightOf, rowIndex, overdrawRows } from "./window.js";
 
 /** The window the runtime built, in absolute logical-row indices. */
@@ -73,7 +74,12 @@ export const visibleRange = (
 
 /** The rules both list modes share. */
 interface VirtualListShared extends Omit<Props, "children" | "onVisibleRange"> {
-  /** A definite viewport height, in pixels. */
+  /**
+   * A definite viewport height, in pixels.
+   *
+   * A height the layout cannot paint reads as **no height**
+   * ({@link paintableSize}), so the caller's layout owns the viewport.
+   */
   readonly height?: number;
   /** Keep the list at its trailing edge as rows arrive. */
   readonly followTail?: boolean;
@@ -122,7 +128,13 @@ export type VirtualListProps =
       readonly windowStart?: number;
     });
 
-/** The list's viewport: a definite height when one is named. */
+/**
+ * The list's viewport: a definite height when one is named.
+ *
+ * A height the layout cannot paint reads as **no height**
+ * ({@link paintableSize}), so the caller's layout owns the viewport — the
+ * reading the prop already has when it is omitted.
+ */
 const listBox = (height?: number): StyleDesc =>
   height === undefined
     ? {}
@@ -158,7 +170,10 @@ export const VirtualList = (props: VirtualListProps) => {
     onVisibleRange: handleRange,
     style: mergeStyles(
       recipeStyle(cn(className ?? ""), theme),
-      mergeStyles(listBox(height), style),
+      mergeStyles(
+        listBox(Option.getOrUndefined(paintableSize(height))),
+        style,
+      ),
     ),
   };
   const windowed =

@@ -33,6 +33,7 @@ import type {
 } from "./theme.js";
 import { controlRing } from "./focus.js";
 import { pressWash } from "./pointer.js";
+import { familyOf, typeOf } from "./theme.js";
 import { fieldVariant } from "./variants.js";
 
 /**
@@ -109,7 +110,7 @@ export const controlStyle = (
   const { variant, size } = spec;
   const height = theme.density.controlHeight[size];
   const padding = theme.density.controlPaddingX[size];
-  const label = theme.typography.label;
+  const label = typeOf(theme, "label");
   const rest = paint(variant.background, theme);
   const border =
     spec.invalid === true
@@ -190,15 +191,18 @@ export const controlFocusStyle = (
  * type rather than the label type, and its text is selectable because it is
  * the user's content.
  */
-export const fieldTextStyle = (theme: PrimitiveTheme): StyleDesc => ({
-  justifyContent: "flex-start",
-  fontSize: theme.typography.body.fontSize,
-  lineHeight: theme.typography.body.lineHeight,
-  fontWeight: theme.typography.body.fontWeight,
-  cursor: "text",
-  userSelect: "text",
-  selectionColor: theme.colors.selection,
-});
+export const fieldTextStyle = (theme: PrimitiveTheme): StyleDesc => {
+  const body = typeOf(theme, "body");
+  return {
+    justifyContent: "flex-start",
+    fontSize: body.fontSize,
+    lineHeight: body.lineHeight,
+    fontWeight: body.fontWeight,
+    cursor: "text",
+    userSelect: "text",
+    selectionColor: theme.colors.selection,
+  };
+};
 
 /**
  * The native text theme for an `<input>`/`<textarea>`/`<code>` element.
@@ -276,14 +280,14 @@ export const clampLines = (clamp: number): number =>
   Number.isFinite(clamp) ? Math.max(1, Math.floor(clamp)) : 1;
 
 export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
-  const role = theme.typography[spec.role];
+  const role = typeOf(theme, spec.role);
   const style: StyleDesc = {
     fontSize: role.fontSize,
     lineHeight: role.lineHeight,
     fontWeight: role.fontWeight,
     fontFamily: Arr.contains(MONO_ROLES, spec.role)
-      ? theme.typography.mono
-      : theme.typography.sans,
+      ? familyOf(theme, "mono")
+      : familyOf(theme, "sans"),
     color: toneColor(theme, spec.tone),
     userSelect: spec.selectable === true ? "text" : "none",
   };
@@ -880,13 +884,14 @@ export const otpCellStyle = (
     },
     theme,
   );
+  const body = typeOf(theme, "body");
   return {
     ...control,
     justifyContent: "center",
     textAlign: "center",
-    fontSize: theme.typography.body.fontSize,
-    lineHeight: theme.typography.body.lineHeight,
-    fontWeight: theme.typography.body.fontWeight,
+    fontSize: body.fontSize,
+    lineHeight: body.lineHeight,
+    fontWeight: body.fontWeight,
     cursor: spec.disabled === true ? "not-allowed" : "text",
   };
 };

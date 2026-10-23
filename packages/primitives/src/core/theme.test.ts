@@ -4,12 +4,18 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { keyboardFocusRing } from "@gpuixui/tokens";
+import { keyboardFocusRing, typography as libraryScale } from "@gpuixui/tokens";
 import { controlStyle } from "./style.js";
 import { keyboardRing } from "./focus.js";
 import { buttonVariants } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
-import { controlSize, type PrimitiveTheme } from "./theme.js";
+import {
+  controlSize,
+  familyOf,
+  isTextRole,
+  typeOf,
+  type PrimitiveTheme,
+} from "./theme.js";
 
 /**
  * Guards the two rules that keep the design system in one place.
@@ -190,5 +196,80 @@ describe("density", () => {
     expect(dense.paddingLeft).not.toBe(comfortable.paddingLeft);
     expect(dense.backgroundColor).toBe(comfortable.backgroundColor);
     expect(dense.color).toBe(comfortable.color);
+  });
+});
+
+describe("a type role is read through one seam", () => {
+  /** The type group without the `body` role, as a store hands it back. */
+  const withoutBody = (): Partial<PrimitiveTheme["typography"]> => {
+    const typography: Partial<PrimitiveTheme["typography"]> = {
+      ...testTheme.typography,
+    };
+    delete typography.body;
+    return typography;
+  };
+
+  it("paints the theme's own role", () => {
+    expect(typeOf(testTheme, "body")).toBe(testTheme.typography.body);
+    expect(typeOf(testTheme, "h1")).toBe(testTheme.typography.h1);
+    // A theme that overrode a role paints the override, not the library's.
+    const branded: PrimitiveTheme = {
+      ...testTheme,
+      typography: {
+        ...testTheme.typography,
+        body: { fontSize: 21, lineHeight: 27, fontWeight: 500 },
+      },
+    };
+    expect(typeOf(branded, "body").fontSize).toBe(21);
+  });
+
+  it("paints the library's own role for one the theme lost", () => {
+    // The bug this holds: every painter read `theme.typography[role]` directly,
+    // so a theme restored from storage that predates a role threw
+    // `TypeError: Cannot read properties of undefined (reading 'fontSize')` in
+    // the first paint and took the tree down with it.
+    expect(typeOf({ typography: withoutBody() }, "body")).toEqual(
+      libraryScale.body,
+    );
+    // The whole group lost is the same absence.
+    expect(typeOf({}, "body")).toEqual(libraryScale.body);
+    // A role a store wrote as `null` is the absence it is.
+    expect(typeOf({ typography: { body: null } }, "body")).toEqual(
+      libraryScale.body,
+    );
+    // And the roles the theme does carry are still its own.
+    expect(typeOf({ typography: withoutBody() }, "h1")).toBe(
+      testTheme.typography.h1,
+    );
+  });
+
+  it("reads a role name the scale does not carry as the body default", () => {
+    // The same rule `controlSize` follows for a size name a release dropped: a
+    // name the scale does not carry is the documented default, not a lookup
+    // that answers `undefined`.
+    expect(isTextRole("body")).toBe(true);
+    expect(isTextRole("bodyStrong")).toBe(true);
+    expect(isTextRole("bodyy")).toBe(false);
+    expect(isTextRole("sans")).toBe(false);
+    expect(typeOf(testTheme, "bodyy")).toEqual(libraryScale.body);
+    expect(typeOf(testTheme, undefined)).toEqual(libraryScale.body);
+  });
+
+  it("reads the font family the same way", () => {
+    expect(familyOf(testTheme, "sans")).toBe(testTheme.typography.sans);
+    expect(familyOf(testTheme, "mono")).toBe(testTheme.typography.mono);
+    expect(familyOf({}, "sans")).toBe(libraryScale.sans);
+    expect(familyOf({}, "mono")).toBe(libraryScale.mono);
+  });
+
+  it("is the read every painter takes the type group through", () => {
+    // A second direct read would be a second rule: the painter would crash on
+    // the theme the seam survives.
+    const read = /\.typography\s*\[|\.typography\.[A-Za-z]/;
+    const offenders = Arr.filter(walk(sourceDir), (path) => {
+      if (path.endsWith(join("core", "theme.ts"))) return false;
+      return read.test(readFileSync(path, "utf8"));
+    });
+    expect(offenders).toEqual([]);
   });
 });

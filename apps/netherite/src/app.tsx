@@ -51,7 +51,10 @@ export const App = () => {
       (code) => {
         setRunning(undefined);
         setLog((lines) =>
-          append(lines, code === undefined ? "failed to start" : `exit ${code}`),
+          append(
+            lines,
+            code === undefined ? "failed to start" : `exit ${code}`,
+          ),
         );
       },
     );
@@ -115,7 +118,11 @@ export const App = () => {
         <text style={{ fontWeight: 600 }}>netherite</text>
         <text style={{ color: theme.colors.mutedForeground }}>
           {checkout?.root ?? "checkout not found"}
-          {checkout === undefined ? "" : checkout.built ? " · ready" : " · setup needed"}
+          {checkout === undefined
+            ? ""
+            : checkout.built
+              ? " · ready"
+              : " · setup needed"}
         </text>
       </div>
       <div style={body}>
@@ -147,11 +154,16 @@ export const App = () => {
           ))}
         </div>
         <div style={pane}>
-          <text style={{ color: theme.colors.mutedForeground, fontWeight: 600 }}>
+          <text
+            style={{ color: theme.colors.mutedForeground, fontWeight: 600 }}
+          >
             {`${verb.what}${running === undefined ? "" : `  ·  running ${running}`}`}
           </text>
           {visible.map((line, index) => (
-            <text key={`${index}-${line.slice(0, 12)}`} style={{ paddingTop: 2 }}>
+            <text
+              key={`${index}-${line.slice(0, 12)}`}
+              style={{ paddingTop: 2 }}
+            >
               {line}
             </text>
           ))}
@@ -161,13 +173,14 @@ export const App = () => {
         left={[
           {
             id: "verb",
-            label: running === undefined ? `ready · ${verb.name}` : `running ${running}`,
+            label:
+              running === undefined
+                ? `ready · ${verb.name}`
+                : `running ${running}`,
             tone: running === undefined ? "default" : "info",
           },
         ]}
-        right={[
-          { id: "keys", label: "↑↓ select · Enter run · Esc quit" },
-        ]}
+        right={[{ id: "keys", label: "↑↓ select · Enter run · Esc quit" }]}
       />
     </div>
   );

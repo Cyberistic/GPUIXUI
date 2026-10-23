@@ -44,6 +44,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
+import { paintableSize } from "../internal/size.js";
 import type { TreeCursor, TreeRow } from "./logic.js";
 import { TREE_INSET, TreeRowView } from "./row.js";
 import { TREE_ROOT } from "./recipe.js";
@@ -70,7 +71,16 @@ export interface TreeViewProps<T> extends Omit<Props, "children"> {
    * `labelOf` in the row's own text role.
    */
   readonly renderRow?: (row: TreeRow<T>) => ReactNode;
-  /** A definite height. The rows scroll inside it; omit it to lay out naturally. */
+  /**
+   * A definite height. The rows scroll inside it; omit it to lay out naturally.
+   *
+   * A height the layout cannot paint reads as **no height**
+   * ({@link paintableSize}), so the tree lays out naturally and shrinks into
+   * the pane it sits in. Measured before the rule: a `NaN` height left the tree
+   * with the flex settings the style wrote beside it and no basis, so it
+   * painted **640 points** inside a **200**-point pane — overflowing it
+   * instead of scrolling inside it.
+   */
   readonly height?: number;
   readonly className?: string;
   /** The tree's test id. Each row is `${testId}-row-${key}`. */
@@ -107,6 +117,7 @@ export const TreeView = <T,>({
   ...rest
 }: TreeViewProps<T>) => {
   const theme = useTheme();
+  const bound = Option.getOrUndefined(paintableSize(height));
   const tree = useTree({
     rows,
     labelOf,
@@ -123,9 +134,14 @@ export const TreeView = <T,>({
       testId={testId}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(TREE_ROOT, className), theme), {
-          ...(height === undefined
+          ...(bound === undefined
             ? {}
-            : { height, flexGrow: 0, flexShrink: 0, flexBasis: height }),
+            : {
+                height: bound,
+                flexGrow: 0,
+                flexShrink: 0,
+                flexBasis: bound,
+              }),
           overflowY: "scroll",
           scrollbarColor: theme.colors.scrollbar,
         }),

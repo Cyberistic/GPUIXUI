@@ -22,6 +22,7 @@ import {
 import { Button } from "../internal/button.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
+  after,
   boundsOf,
   clickCentreOf,
   focusedTestId,
@@ -203,6 +204,38 @@ describe("Drawer", () => {
     expect(bottomBox.height).toBe(420);
     expect(bottomBox.y + bottomBox.height).toBe(window.height);
     bottom.unmount();
+  });
+
+  it("opens on the house edge when the side it was stored as names no edge", async () => {
+    // The bug this guards: `side` is a stored choice, so the union the props
+    // declare is not a runtime guarantee. The box read an unnamed value as its
+    // right-hand branch while `fadeFromSide` read it as its house `bottom`: the
+    // panel painted on the right and rose from the bottom. The house answer is
+    // the component's own default — the right edge, travelled from the right.
+    // @ts-expect-error — a side a store wrote, not the union the props declare.
+    const stored: DrawerSide = "end";
+
+    const page = renderComponent(<Workspace side={stored} />);
+    try {
+      page.renderer.clockPause();
+      clickCentreOf(page, "open");
+      await after(30);
+      const entering = requireBounds(page, "drawer");
+
+      page.renderer.clockFastForward(400);
+      await after(30);
+      const resting = requireBounds(page, "drawer");
+      const window = page.renderer.getWindowSize();
+
+      // The resting box is the default edge's: a column against the right edge.
+      expect(resting.x + resting.width).toBe(window.width);
+      // The travel comes from that edge too, so the panel arrives from the
+      // right and rises from nowhere.
+      expect(entering.x - resting.x).toBe(12);
+      expect(entering.y).toBe(resting.y);
+    } finally {
+      page.unmount();
+    }
   });
 
   it("reads the surface and veil from whichever theme is active", () => {

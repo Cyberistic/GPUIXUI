@@ -1904,6 +1904,9 @@ describe("the primitives docs page contract", () => {
       roving: keyboard.includes(`\`${firstReveal}\``),
       end: keyboard.includes(`\`${end}\``),
       row: rowOf("Scrollable containers").includes("`focus-reveal-lifecycle`"),
+      rowFacts:
+        rowOf("Scrollable containers").includes(`${below} points below`) &&
+        rowOf("Scrollable containers").includes(`\`${firstReveal}\``),
     }).toEqual({
       registered: true,
       geometry: true,
@@ -1915,6 +1918,7 @@ describe("the primitives docs page contract", () => {
       roving: true,
       end: true,
       row: true,
+      rowFacts: true,
     });
   });
   it("documents the tooltip provider's own props, and no others", () => {

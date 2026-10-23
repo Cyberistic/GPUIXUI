@@ -92,7 +92,7 @@ const tier2Rows = (): ReadonlyArray<Row> =>
 
 /** The animated primitives plan 600 lands, held to the same contract. */
 const animatedRows = (): ReadonlyArray<Row> =>
-  rowsBetween("## Animated primitives (plan 600)", "## Blocked by the runtime");
+  rowsBetween("## Animated primitives (plan 600)", "");
 
 /** The Tier 3–5 target rows, which no component here implements yet. */
 const targetRows = (): ReadonlyArray<Row> =>
@@ -207,7 +207,7 @@ describe("inventory", () => {
     expect(duplicates(names)).toEqual([]);
   });
 
-  it("states the real native test count where a row claims one", () => {
+  it("states the real native test count in every package row", () => {
     const rows = packageRows();
     const problems = Arr.flatMap(
       Arr.filter(inventory, (meta: ComponentMeta) => meta.status === "done"),
@@ -227,7 +227,9 @@ describe("inventory", () => {
             );
             const actual = countBehaviourTests(meta.testFile);
             return Option.match(claimed, {
-              onNone: () => [],
+              onNone: () => [
+                `${meta.name}: row does not state a native test count`,
+              ],
               onSome: (count) =>
                 count === String(actual)
                   ? []
@@ -237,27 +239,6 @@ describe("inventory", () => {
         });
       },
     );
-
-    expect(problems).toEqual([]);
-  });
-
-  it("records one blocked capability for every partial row", () => {
-    // A partial verdict is only useful if a reader can see what is missing and
-    // what the component does instead. The capability table at the end of
-    // `COMPONENTS.md` is the one place the gaps are explained, so every row
-    // carries exactly one `blocked by … (issue) — workaround` line rather than
-    // a paragraph of measurements.
-    const partialRows = Arr.filter(
-      allRows(),
-      (row: Row) => row.support === "partial",
-    );
-    const problems = Arr.flatMap(partialRows, (row: Row) => {
-      const blocked =
-        /^blocked by .+ \((?:#\d+|unfiled)(?:, #\d+)?\) — .+$/.exec(row.notes);
-      return blocked === null
-        ? [`${row.name}: partial row has no one-line blocked note`]
-        : [];
-    });
 
     expect(problems).toEqual([]);
   });
@@ -596,26 +577,21 @@ describe("the measured target rows", () => {
     expect(readme).toContain("161 checks, `--only image-fit`");
 
     const rows = targetRows();
-    const notesOf = (name: string): string =>
-      Option.getOrElse(
+    Arr.forEach(["Image preview", "Crop area"], (name) => {
+      const notes = Option.getOrElse(
         Option.map(
           Arr.findFirst(rows, (row) => row.name === name),
           (row) => row.notes,
         ),
         () => "",
       );
-    // The preview row still carries the measurement; the crop is a partial row
-    // whose one-line note points at the capability record instead.
-    Arr.forEach(["Image preview"], (name) => {
-      const notes = notesOf(name);
       expect(notes, name).toContain("`image-fit`");
       expect(notes, name).toContain("161 checks");
-      // The placements a preview has to plan around.
+      // The placements a crop or a preview has to plan around.
       expect(notes, name).toContain("`cover`");
       expect(notes, name).toContain("`none`");
       expect(notes, name).toContain("`contain`");
     });
-    expect(notesOf("Crop area")).toContain("`image-fit`");
   });
 
   it("states the mask and the drag the crop fixture holds", () => {
@@ -646,28 +622,19 @@ describe("the measured target rows", () => {
       ),
       () => "",
     );
-    // The row names the gap and the probe; the measurements live in the
-    // capability record so the inventory stays an inventory.
     expect(notes).not.toContain("unverified");
     expect(notes).toContain("`crop-overlay`");
-    expect(notes).toContain("blocked by");
-
-    const capabilities = readFileSync(
-      fileURLToPath(new URL("docs/gpuix-capabilities.md", repoRoot)),
-      "utf8",
+    expect(notes).toContain(`${crop.checks} checks`);
+    expect(notes).toContain("four positioned veil bars");
+    expect(notes).toContain('`pointerEvents: "none"`');
+    expect(notes).toContain(`${crop.handle}×${crop.handle}`);
+    expect(notes).toContain(`${crop.moves} of ${crop.moves}`);
+    expect(notes).toContain(`**${crop.min}**-point minimum`);
+    expect(notes).toContain(
+      `${crop.x},${crop.y},${crop.boxWidth},${crop.boxHeight}`,
     );
-    Arr.forEach(
-      [
-        `${crop.checks} checks`,
-        "four positioned veil bars",
-        '`pointerEvents: "none"`',
-        `${crop.handle}×${crop.handle}`,
-        `${crop.moves} of ${crop.moves}`,
-        `**${crop.min}**-point minimum`,
-        `${crop.x},${crop.y},${crop.boxWidth},${crop.boxHeight}`,
-        `${crop.x},${crop.y},${crop.width - crop.x},${crop.height - crop.y}`,
-      ],
-      (claim) => expect(capabilities, claim).toContain(claim),
+    expect(notes).toContain(
+      `${crop.x},${crop.y},${crop.width - crop.x},${crop.height - crop.y}`,
     );
   });
 
@@ -923,16 +890,14 @@ describe("the measured target rows", () => {
     Arr.forEach(rows, (row) =>
       expect(rowText(row), row.name).toContain("`scrollbar-thumb`"),
     );
-    // The inventory row carries the capability pointer; the readings a preview
-    // pane is planned around live in the one capability record.
-    const capabilities = readFileSync(
-      fileURLToPath(new URL("docs/gpuix-capabilities.md", repoRoot)),
-      "utf8",
-    );
-    Arr.forEach(
-      ["**25**px", "**20**px", "**19**px", "trailing edge"],
-      (claim) => expect(capabilities, claim).toContain(claim),
-    );
+    // The inventory row carries the readings a preview pane is planned around.
+    expect(
+      Arr.some(rows, (row) =>
+        Arr.every(["**25**", "**20**", "no gutter"], (claim) =>
+          rowText(row).includes(claim),
+        ),
+      ),
+    ).toBe(true);
   });
 
   it("says a painted thumb takes no drag, and how a draggable bar is composed", () => {

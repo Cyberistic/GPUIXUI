@@ -40,6 +40,7 @@ import { mergeStyles } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import type { ReactNode, Ref } from "react";
+import { paintableSize } from "../internal/size.js";
 import { recipeStyle } from "../recipe.js";
 import { dividerOn, pointerWash, textStyle, useTheme } from "../theme.js";
 import {
@@ -87,31 +88,13 @@ export interface CellLayoutProps {
 }
 
 /**
- * The width a cell can be laid out at, when the caller names one.
- *
- * A cell's width is often computed — a share of a pane, a stored column size, a
- * measurement taken before the first layout — and the runtime drops a value it
- * cannot lay out: `NaN` and the infinities reach native as `null`, and a
- * negative width paints nothing usable. The cell then sizes to its own content,
- * so a column's header and its cells stop sharing a track (measured: a `Name`
- * header 62px wide above a 204px body cell, the drift a key-value list was
- * fixed for). A width that cannot paint is **no width**, the reading `width`
- * already has when it is omitted: the cell shares the leftover track, so the
- * header and every cell of one column stay aligned.
- */
-const cellWidth = (width: number | undefined): number | undefined =>
-  width === undefined || (Number.isFinite(width) && width >= 0)
-    ? width
-    : undefined;
-
-/**
  * A cell's track, and where its content sits across it.
  *
  * `justifyContent` is one decision with the track: both cell parts are flex
  * rows, so the alignment belongs here rather than in a class.
  */
 const cellLayout = ({ width, align = "left" }: CellLayoutProps): StyleDesc => {
-  const track = cellWidth(width);
+  const track = Option.getOrUndefined(paintableSize(width));
   return {
     ...(track === undefined
       ? { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 }
@@ -138,6 +121,11 @@ export interface TableProps extends Omit<Props, "children"> {
  * Set `aria-label` to name the table; a role-less node never reaches the
  * accessibility tree, and `role="table"` is written here so a consumer cannot
  * forget it.
+ *
+ * A height the layout cannot paint reads as **no height**
+ * ({@link paintableSize}), the reading the prop already has when it is
+ * omitted: the rows lay out naturally, and a table that measured 320 points
+ * paints 280 of body under it.
  */
 export const Table = ({
   height,
@@ -147,15 +135,16 @@ export const Table = ({
   ...rest
 }: TableProps) => {
   const theme = useTheme();
+  const bound = Option.getOrUndefined(paintableSize(height));
   return (
-    <TableFrameProvider initialHeight={height}>
+    <TableFrameProvider initialHeight={bound}>
       <div
         {...rest}
         role="table"
         style={mergeStyles(
           mergeStyles(
             recipeStyle(cn(TABLE_ROOT, className), theme),
-            height === undefined ? undefined : { height },
+            bound === undefined ? undefined : { height: bound },
           ),
           style,
         )}
@@ -281,6 +270,14 @@ export interface TableBodyProps extends Omit<Props, "children"> {
  * `rows` is read only when there are no children: the body then paints the
  * loading placeholder, so a table that has not loaded its first page still
  * holds its frame instead of collapsing to the header.
+ *
+ * A height the layout cannot paint reads as **no height**
+ * ({@link paintableSize}), so the body's measured frame sizes the scroller —
+ * the usual case. Measured before the rule: a `NaN` height left the scroller
+ * with the flex settings the style wrote beside it and no basis, so it
+ * collapsed to the one row it held (**37 points**) instead of the **280** its
+ * frame measures, and the rows below the first overflowed a scroller that could
+ * not scroll.
  */
 export const TableBody = ({
   rows = 3,
@@ -292,7 +289,8 @@ export const TableBody = ({
 }: TableBodyProps) => {
   const theme = useTheme();
   const empty = children === undefined || children === null;
-  const definite = height ?? Option.getOrUndefined(useMeasuredBodyHeight());
+  const measured = useMeasuredBodyHeight();
+  const definite = Option.orElse(paintableSize(height), () => measured);
   return (
     <div
       {...rest}
@@ -301,13 +299,13 @@ export const TableBody = ({
         mergeStyles(recipeStyle(cn(TABLE_BODY, className), theme), {
           overflowY: "scroll",
           scrollbarColor: theme.colors.scrollbar,
-          ...(definite === undefined
+          ...(Option.isNone(definite)
             ? {}
             : {
-                height: definite,
+                height: definite.value,
                 flexGrow: 0,
                 flexShrink: 0,
-                flexBasis: definite,
+                flexBasis: definite.value,
               }),
         }),
         style,

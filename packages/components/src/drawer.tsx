@@ -34,6 +34,7 @@ import {
   useState,
   type MutableRefObject,
 } from "react";
+import * as Schema from "effect/Schema";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
 import {
   handleModalKeyDown,
@@ -63,6 +64,9 @@ import { useTheme, type Theme } from "./internal/theme.js";
 
 /** The window edge a drawer opens from. */
 export type DrawerSide = "left" | "right" | "bottom";
+
+/** The edges a drawer can open from, as the guard reads them. */
+const DrawerEdges = Schema.Literals(["left", "right", "bottom"]);
 
 /** The surface sizes a drawer offers. */
 export type DrawerSize = "sm" | "md" | "lg";
@@ -166,7 +170,14 @@ export const DrawerClose = ({ onClick, ...rest }: ButtonProps) => {
 
 /** {@link DrawerContent} props. */
 export interface DrawerContentProps extends Omit<Props, "children"> {
-  /** The edge to open from. Default `"right"`. */
+  /**
+   * The edge to open from. Default `"right"`.
+   *
+   * The box, the layout and the entry travel read the same edge, so a value
+   * restored from storage that names no window edge (a logical `"end"`, a side
+   * a release dropped) opens on the default right edge rather than painting a
+   * right-hand panel that rises from the bottom.
+   */
   readonly side?: DrawerSide;
   /** Default `"md"`. */
   readonly size?: DrawerSize;
@@ -180,6 +191,21 @@ export interface DrawerContentProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: PartChildren;
 }
+
+/**
+ * The edge a drawer opens from, read from a value a caller may have stored.
+ *
+ * `DrawerSide` is a compile-time guarantee, but a persisted setting is not: a
+ * logical name a store wrote (`"start"`/`"end"`) or a name a release dropped
+ * reaches the component at runtime. The box, the layout and the entry travel
+ * must read the **one** edge — before this, the box took its right-hand branch
+ * while `fadeFromSide` took its house `bottom`, so a stored name painted the
+ * panel on the right and rose it from the bottom.
+ *
+ * An edge the table does not name is the component's own default, `"right"`.
+ */
+const drawerSide = (side: unknown): DrawerSide =>
+  Schema.is(DrawerEdges)(side) ? side : "right";
 
 /** Whether a side lays the surface across the window's width. */
 const isVertical = (side: DrawerSide): boolean => side === "bottom";
@@ -214,7 +240,7 @@ const surfaceStyle = (
  * closing returns focus to whatever had it before.
  */
 export const DrawerContent = ({
-  side = "right",
+  side: requestedSide,
   size = "md",
   label,
   showClose = true,
@@ -235,6 +261,9 @@ export const DrawerContent = ({
   assertParts(drawerContent, children);
   const timing = useSurfaceTiming("slow");
   const presence = useSurfacePresence(open, timing);
+  // One edge for the box, the layout and the entry travel: a side a store
+  // wrote that names no window edge lands on the component's own default.
+  const side = drawerSide(requestedSide);
   const [content, setContent] = useState<PublicInstance | undefined>(undefined);
   const contentRef = useCallback((next: PublicInstance | null) => {
     setContent(next ?? undefined);

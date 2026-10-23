@@ -248,7 +248,7 @@ export {
 } from "./variants.js";
 export type { ButtonVariant, ToggleVariant } from "./variants.js";
 
-export { controlSize } from "./theme.js";
+export { controlSize, familyOf, isTextRole, typeOf } from "./theme.js";
 
 export type {
   BorderWidth,
@@ -270,5 +270,6 @@ export type {
   ThemeIconSize,
   ThemeMode,
   ThemeShadow,
+  TypeSource,
   Typography,
 } from "./theme.js";

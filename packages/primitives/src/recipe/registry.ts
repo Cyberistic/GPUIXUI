@@ -27,6 +27,7 @@ import { switchBox, switchThumbOffset } from "../core/selection.js";
 import { pressWash } from "../core/pointer.js";
 import { paintableAspectRatio } from "../core/style.js";
 import type { RadiusStep, SpaceStep } from "../core/theme.js";
+import { familyOf, typeOf } from "../core/theme.js";
 
 /** A class-string step name → the theme key it resolves to. */
 const SPACING_STEP: Readonly<Partial<Record<string, SpaceStep>>> = {
@@ -101,7 +102,7 @@ const roleType = (
   theme: Theme,
   role: TextRole,
 ): Pick<StyleDesc, "fontSize" | "lineHeight" | "fontWeight"> => {
-  const type = theme.typography[role];
+  const type = typeOf(theme, role);
   return {
     fontSize: type.fontSize,
     lineHeight: type.lineHeight,
@@ -114,7 +115,7 @@ const roleSize = (
   theme: Theme,
   role: TextRole,
 ): Pick<StyleDesc, "fontSize" | "lineHeight"> => {
-  const type = theme.typography[role];
+  const type = typeOf(theme, role);
   return { fontSize: type.fontSize, lineHeight: type.lineHeight };
 };
 
@@ -147,7 +148,7 @@ const clampStyle = (
     : {
         whiteSpace: "normal",
         overflow: "hidden",
-        height: theme.typography[role].lineHeight * Math.max(1, Number(count)),
+        height: typeOf(theme, role).lineHeight * Math.max(1, Number(count)),
       };
 };
 
@@ -199,8 +200,8 @@ export const recipeTw = createTw({
     "text-start": () => ({ textAlign: "start" }),
     "text-end": () => ({ textAlign: "end" }),
     "text-ellipsis": () => ({ textOverflow: "ellipsis" }),
-    "font-sans": (theme) => ({ fontFamily: theme.typography.sans }),
-    "font-mono": (theme) => ({ fontFamily: theme.typography.mono }),
+    "font-sans": (theme) => ({ fontFamily: familyOf(theme, "sans") }),
+    "font-mono": (theme) => ({ fontFamily: familyOf(theme, "mono") }),
     "h-px": (theme) => ({ height: theme.borderWidth.thin }),
     "w-px": (theme) => ({ width: theme.borderWidth.thin }),
     // The runtime paints one border style for every side. `solid` is the

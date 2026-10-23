@@ -327,6 +327,23 @@ describe("MarkdownEditor", () => {
     editor.unmount();
   });
 
+  it("hands the source field the active theme's host palette", () => {
+    const editor = render(<Controlled />, lightTheme);
+    const host = editor.renderer.findByTestId("markdown-source");
+    expect(host?.customProps?.theme).toMatchObject({
+      appearance: "light",
+      bg: lightTheme.colors.background,
+      caret: lightTheme.colors.primary,
+      textMuted: lightTheme.colors.mutedForeground,
+      fontMono: lightTheme.typography.mono,
+    });
+    // The seam is a host prop, not a style: the runtime reads `appearance`,
+    // `bg` and `caret` off the theme object, and a spread into `style` is
+    // ignored, which left a light editor with the built-in dark caret.
+    expect(host?.style.appearance).toBeUndefined();
+    editor.unmount();
+  });
+
   it("paints the light theme's ink, not the dark one's", () => {
     const editor = render(<Controlled />, lightTheme);
     expect(text(editor)).toContain("Title");

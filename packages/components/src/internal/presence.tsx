@@ -26,8 +26,11 @@
  * The frames, the hold window and the pointer rule are **numbers and strings**,
  * so they live in the motion package (`@gpuixui/motion/presence`) where a
  * primitive package can compose the same ones without depending on this one.
- * This module keeps the React half: the preference hook, the mounted window and
- * the shield, because those need a React tree and a GPUix host.
+ * The **React half** lives there too — the preference provider, the surface
+ * timing it reads and the mounted window (`@gpuixui/motion/react`) — because a
+ * timer and a React tree are not this package's to give away, and a second copy
+ * of the window could only agree with this one by hand. What stays here is the
+ * GPUix half: the shield, which is a host element the runtime paints.
  *
  * The runtime is given geometry as a *between* value (the offset), so a headless
  * suite can read the movement in element bounds; the fade itself is a paint value
@@ -44,20 +47,20 @@ import {
   fadeOnly,
   presenceMotion as motionOfPresence,
   presenceStyle,
-  presenceTiming,
   transitionWindowMs,
   type PresenceFrames,
   type PresenceHitRule,
   type PresenceSide,
   type PresenceTiming,
 } from "@gpuixui/motion/presence";
-import { type MotionLevel } from "@gpuixui/motion/timing";
 import {
   MotionProvider,
   useMotionPreference,
+  useSurfacePresence,
+  useSurfaceTiming,
   type MotionProviderProps,
+  type SurfacePresence,
 } from "@gpuixui/motion/react";
-import { useEffect, useLayoutEffect, useState } from "react";
 
 /**
  * The preference provider is the motion package's, re-published here because
@@ -93,60 +96,15 @@ export {
 export type { PresenceHitRule };
 
 /**
- * The timings a surface at `level` moves with, under the current preference.
+ * The timings a surface at `level` moves with, and the window a leaving one
+ * stays mounted for, re-published from `@gpuixui/motion/react`.
  *
- * The enter decelerates and the exit accelerates, so the two are separate
- * transitions rather than one shared curve: a surface that speeds up as it
- * leaves reads as being pulled away.
+ * The window was written out here once and in the primitives' `Tooltip` once,
+ * so a package that owns a tree carried its own copy of the rule that decides
+ * when a leaving surface stops being real. It is the motion package's now, and
+ * this module keeps one import for the surfaces that use it.
  */
-export const useSurfaceTiming = (level: MotionLevel): SurfaceTiming =>
-  presenceTiming(level, useMotionPreference());
-
-/** A surface's mount and presence state while it enters or leaves. */
-export interface SurfacePresence {
-  /** Render the surface at all: true from open until its exit has run. */
-  readonly mounted: boolean;
-  /** The resting frame's target: true while open, false while leaving. */
-  readonly present: boolean;
-  readonly timing: SurfaceTiming;
-}
-
-/**
- * Keep a surface mounted for its exit tween.
- *
- * `open` publishes the resting state at once; closing flips `present` so the
- * runtime tweens to the exit frame, and the surface unmounts when that run's
- * whole window has elapsed — the tween plus the wait it sits out first. The
- * timer is keyed to that window, not to the duration, so a leave already in
- * flight is re-timed when the window changes. Re-opening during the exit keeps
- * the same instance, so the run retargets instead of restarting.
- */
-export const useSurfacePresence = (
-  open: boolean,
-  timing: SurfaceTiming,
-): SurfacePresence => {
-  const [mounted, setMounted] = useState(open);
-  // The hold is the window, not the duration: a delayed exit sits out its wait
-  // before the tween, so keying the timer to the duration would unmount a box
-  // before its journey began — and a changed wait would not re-arm it at all.
-  const windowMs = exitWindowMs(timing);
-
-  useLayoutEffect(() => {
-    if (open) setMounted(true);
-  }, [open]);
-
-  useEffect(() => {
-    if (open || !mounted) return;
-    if (windowMs === 0) {
-      setMounted(false);
-      return;
-    }
-    const handle = setTimeout(() => setMounted(false), windowMs);
-    return () => clearTimeout(handle);
-  }, [mounted, open, windowMs]);
-
-  return { mounted, present: open, timing };
-};
+export { useSurfacePresence, useSurfaceTiming, type SurfacePresence };
 
 /** The `motion` prop a surface paints for its current presence. */
 export const presenceMotion = (

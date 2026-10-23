@@ -57,6 +57,7 @@ import {
   type ReactNode,
 } from "react";
 import { useTheme } from "../theme.js";
+import { paintableSize } from "../internal/size.js";
 import type { TreeCursor, TreeRow } from "../tree/logic.js";
 import { TreeRowView } from "../tree/row.js";
 import { useTree } from "../tree/use-tree.js";
@@ -83,7 +84,15 @@ export interface VirtualTreeProps<T> extends Omit<
   readonly onActivate?: (row: TreeRow<T>) => void;
   /** Paint one row's content after its inset and chevron. */
   readonly renderRow?: (row: TreeRow<T>) => ReactNode;
-  /** A definite viewport height, in pixels. */
+  /**
+   * A definite viewport height, in pixels.
+   *
+   * A height the layout cannot paint reads as **no height**
+   * ({@link paintableSize}), so the caller's layout owns the viewport. Measured
+   * before the rule: a `NaN` height left the runtime list with no bound, and
+   * the tree painted **no row at all** against the **7** it paints with a
+   * readable height.
+   */
   readonly height: number;
   /**
    * The painted height of every row. Defaults to the density's `rowHeight`; a
@@ -123,6 +132,9 @@ export const VirtualTree = <T,>({
 }: VirtualTreeProps<T>) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
+  // The viewport's height, when it paints. A height nothing could be read from
+  // is no height, so the caller's layout owns the viewport (`paintableSize`).
+  const bound = paintableSize(height);
   // The tree's rows are built at the density's step, so a declaration the
   // window cannot divide falls back to it rather than to `NaN`: the two cursor
   // walks below divide by this number, and a `NaN` index reaches no row at all.
@@ -130,7 +142,7 @@ export const VirtualTree = <T,>({
   const window = useVirtualRows({
     count: dataRows.length,
     rowHeight,
-    viewportHeight: height,
+    viewportHeight: Option.getOrElse(bound, () => 0),
     overdraw,
   });
   const tree = useTree({
@@ -240,7 +252,7 @@ export const VirtualTree = <T,>({
       ref={attach}
       role="tree"
       testId={testId}
-      height={height}
+      height={Option.getOrUndefined(bound)}
       itemCount={dataRows.length}
       estimatedItemHeight={rowHeight}
       windowStart={window.windowStart}

@@ -796,7 +796,8 @@ role this library designed. A theme that needs the stronger cue paints the accen
 switch instead of declaring one. The paint is a theme value like any other: a
 consumer that starts from a platform style and owns its toggle replaces all three
 slots through `extendTheme` (§11), and the report holds the brand's paint to the
-same floor. A switch a store wrote as `null` is the "declares none" the accent
+same floor — it is one of `auditTheme`'s reports (`audit.switch`), so a declared
+track a brand edits fails the gate rather than waiting for a separate check. A switch a store wrote as `null` is the "declares none" the accent
 switch answers: a saved theme carries `null` where it declared no paint, and the
 report measures the toggle the theme actually paints rather than reading a slot
 off `null` — and the primitives decode that same table before they paint
@@ -1163,9 +1164,10 @@ and the text or the icon would spill or clip while every number is still layable
 (§6).
 
 The contract is public, so a brand theme runs the same checks: `auditTheme(theme)`
-reports all twelve in one call — `invalidRoles`, `invalidShadows`,
-`invalidNumbers`, `contrast`, `decorative`, `series`, `syntax`, `selection`,
-`indicators`, `highlight`, `disabledFade` and `keyboardDim` — and `passed` is
+reports all fourteen in one call — `invalidRoles`, `invalidShadows`,
+`invalidNumbers`, `scales`, `switch`, `contrast`, `decorative`, `series`,
+`syntax`, `selection`, `indicators`, `highlight`, `disabledFade` and
+`keyboardDim` — and `passed` is
 true only when every list is empty. The contrast half
 is measured against the theme's own `contrast` variant through
 `contrastFloorsFor(theme)`, so a brand derived from a high-contrast theme is held
@@ -1344,9 +1346,11 @@ roles in the tokens package, not fork components.
 
 Overrides are plain data, so `extendTheme` cannot reject a colour the renderer
 would ignore or a number it cannot lay out. The audit is the gate: `auditTheme(theme)`
-runs all twelve checks — an unpaintable role, an unpaintable shadow in a level
-the brand supplied, a size, length or shadow geometry the renderer would drop,
-every pair below the floor its variant asks for, every decorative surface too
+runs all fourteen checks — an unpaintable role, an unpaintable shadow in a level
+the brand supplied, a size, length or shadow geometry the renderer would drop, a
+named step that no longer exceeds the one before it, a declared switch track
+that vanishes into the surface it stands on, every pair below the floor its
+variant asks for, every decorative surface too
 close to its background — including the derived hover and press a filled role
 paints (§8) — a data series lost on its plot or to a colour-vision deficiency, a
 code block's syntax token that vanishes into the page it is read on,
@@ -1356,15 +1360,17 @@ told apart from the resting matches, a disabled label the fade erases, and a lab
 keyboard dim erases while another control holds the focus; run it over the
 resolved theme before it ships and assert `passed` in the package's own tests.
 
-One contract sits beside the gate rather than inside it: `invalidScales(theme)`
-holds every named ladder to its order — spacing, radii, border weights, icons,
-the type hierarchy, the control sizes and the elevation levels — because a scale
-is selected by name, and a brand whose `sm` control is taller than its `lg` has
-a `size` prop that lies while every value is still layable. The audit's report
-list is printed on the docs site and its count derived from the gate's own
-keys, so folding it in is one coordinated change with that page
-(`TODO.md` → Interlocks); until then a brand runs `invalidScales` beside
-`auditTheme`. §6 and [`tokens.md`](./tokens.md#scale-order) carry the scale rule
+Two of those checks are about the theme's own **structure** rather than its
+colours: `invalidScales(theme)` holds every named ladder to its order — spacing,
+radii, border weights, icons, the type hierarchy, the control sizes and the
+elevation levels — because a scale is selected by name, and a brand whose `sm`
+control is taller than its `lg` has a `size` prop that lies while every value
+is still layable; and `switchFailures(theme)` holds a declared switch paint to
+the perceptibility floor, so a platform's own track that matches the sidebar it
+stands in is reported rather than shipped. Both were public functions *beside*
+the gate while the docs site's readout worded every report the gate returned, so
+a consumer who ran the gate alone shipped a theme the ladder or the toggle
+contradicted. §6 and [`tokens.md`](./tokens.md#scale-order) carry the scale rule
 and the shipped style it corrected; [`tokens.md`](./tokens.md#find-highlights)
 carries the wash contract, whose report the gate already returns.
 

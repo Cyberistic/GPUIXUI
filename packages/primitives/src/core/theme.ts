@@ -7,8 +7,21 @@
  * there is exactly one declaration — in the tokens package.
  */
 
-import { isControlSize, type ControlSize } from "@gpuixui/tokens";
-import type { Radius, Spacing, Theme } from "@gpuixui/tokens";
+import {
+  isControlSize,
+  typography as libraryTypography,
+  type ControlSize,
+} from "@gpuixui/tokens";
+import type {
+  Radius,
+  Spacing,
+  TextRole,
+  TextStyle,
+  Theme,
+} from "@gpuixui/tokens";
+import * as Arr from "effect/Array";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 export type {
   BoxShadow as ThemeShadow,
@@ -44,6 +57,97 @@ export type {
  */
 export const controlSize = (size: unknown): ControlSize =>
   isControlSize(size) ? size : "md";
+
+/**
+ * A theme, or anything shaped like one, as the type scale reads it.
+ *
+ * The group may be absent, because a store can lose it: a theme restored from
+ * storage that predates a release, a hand-built literal that omitted it. A role
+ * inside it may be `null`, because JSON has no `undefined` — a store writes the
+ * roles it has and `null` for the ones it does not. The colours have the same
+ * port in `@gpuixui/tokens` (`ColourSource`), and the type group needed one for
+ * the same reason.
+ */
+export interface TypeSource {
+  readonly typography?: {
+    readonly sans?: string | null;
+    readonly mono?: string | null;
+  } & Partial<Record<TextRole, TextStyle | null>>;
+}
+
+/** The scale's names, as a list a stored value can be checked against. */
+const SCALE_NAMES: ReadonlyArray<string> = R.keys(libraryTypography);
+
+/**
+ * Whether a value names a role of the type scale.
+ *
+ * A role is a stored choice — a heading level, a caption's role — so a name a
+ * release renamed arrives as a string the union no longer names. The scale's own
+ * list is the membership test, exactly as `isControlSize` is beside
+ * `controlSizes`: a second list of the names could drift from the scale.
+ */
+export const isTextRole = (value: unknown): value is TextRole =>
+  typeof value === "string" &&
+  Arr.contains(SCALE_NAMES, value) &&
+  value !== "sans" &&
+  value !== "mono";
+
+/**
+ * Whether a value is a type role: the size, the leading and the weight.
+ *
+ * A store can write `null` where a role belongs, and a hand-edited literal can
+ * carry a number where the role is — so a role is read only when it carries all
+ * three numbers, the rule `themeColors` applies to the colour group.
+ */
+const isTextStyle = (value: unknown): value is TextStyle =>
+  typeof value === "object" &&
+  value !== null &&
+  "fontSize" in value &&
+  "lineHeight" in value &&
+  "fontWeight" in value &&
+  P.isNumber(value.fontSize) &&
+  P.isNumber(value.lineHeight) &&
+  P.isNumber(value.fontWeight);
+
+/**
+ * The type role a theme paints with.
+ *
+ * A theme restored from storage can lack a role — the scale grew one after the
+ * store was written — and every painter read `theme.typography[role]` directly,
+ * so the first lookup threw `TypeError: Cannot read properties of undefined
+ * (reading 'fontSize')` and took the tree down with it: one lost role emptied
+ * every text, every control and every skeleton on the screen.
+ *
+ * The colour group has had a total reader since the tokens package published
+ * `themeColors` — a role it does not carry is `undefined` rather than a throw.
+ * The type group answers the same way, and the fallback is the **library's own
+ * scale**: every shipped theme paints the library's roles unless it overrode
+ * them, so a role a theme does not carry is the one it would have painted
+ * anyway, and a brand that overrode it and lost it still paints readable type.
+ *
+ * A role name the scale does not carry is the `body` default, the same rule
+ * {@link controlSize} follows for a size name the scale dropped.
+ */
+export const typeOf = (theme: TypeSource, role: unknown): TextStyle => {
+  const name = isTextRole(role) ? role : "body";
+  const style: unknown = theme.typography?.[name];
+  return isTextStyle(style) ? style : libraryTypography[name];
+};
+
+/**
+ * The font family a theme paints with, or the library's own.
+ *
+ * The two families are the other half of the type group: a platform style
+ * overrides them (`applyStyle`), so a theme that lost the group loses the
+ * platform's face too — and the library's own face is what it falls back to.
+ */
+export const familyOf = (
+  theme: TypeSource,
+  family: "sans" | "mono",
+): string => {
+  const name: unknown = theme.typography?.[family];
+  return P.isString(name) && name !== "" ? name : libraryTypography[family];
+};
 
 /** A step on the spacing scale: `theme.spacing[step]`. */
 export type SpaceStep = keyof Spacing;

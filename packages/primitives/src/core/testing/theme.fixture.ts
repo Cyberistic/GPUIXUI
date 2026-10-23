@@ -13,7 +13,7 @@
  * exercised in `runtime/theme.runtime.test.tsx`.
  */
 
-import type { FontWeight, PrimitiveTheme, TextStyle } from "../theme.js";
+import type { FontWeight, PrimitiveTheme, TextRole, TextStyle } from "../theme.js";
 
 /** A distinct opaque colour per index, so two roles can never compare equal. */
 const shade = (index: number): string =>
@@ -164,4 +164,26 @@ export const testThemeDark: PrimitiveTheme = {
   name: "Test Dark",
   mode: "dark",
   colors: palette(1000),
+};
+
+/**
+ * A theme as a store can hand one back: the type group without a role.
+ *
+ * A theme restored from storage that predates a release is missing the roles
+ * that release added, and the type group is the one group a store can lose
+ * without the store noticing — JSON writes the roles it has and nothing for the
+ * ones it does not.
+ *
+ * The assertion is the honest one: a theme that lost a role is **not** a
+ * `Theme`, which is the whole point of the seam that reads it. `@gpuixui/tokens`
+ * fabricates its incomplete themes the same way (`incomplete.test.ts`), because
+ * the type system cannot describe the value a store produces.
+ */
+export const themeWithoutRole = (
+  role: TextRole,
+  theme: PrimitiveTheme = testTheme,
+): PrimitiveTheme => {
+  const typography: MutableTypeGroup = { ...theme.typography };
+  delete typography[role];
+  return { ...theme, typography } as PrimitiveTheme;
 };

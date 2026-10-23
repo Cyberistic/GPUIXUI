@@ -858,11 +858,9 @@ sidebar, and a declared switch draws **no edge** (`switchBox` gives it
 `borderWidth: 0`), so the track *was* the control's silhouette and it vanished in
 exactly the panel a switch lives in. The track takes the smallest step that
 clears (`#E3E3E8`, 1.058:1), and every other placement in both modes already
-cleared. `switchFailures` and `invalidSwitchColors` sit beside [`auditTheme`](#checking-your-own-theme)
-for now, for the reason `invalidScales` and `highlightFailures` do: the docs
-site's readout words each report it prints and derives the printed count from the
-gate's own keys, so folding a twelfth report in is one coordinated change with
-that page (`TODO.md` → Interlocks).
+cleared. `switchFailures` and `invalidSwitchColors` are one of the gate's
+reports now (`audit.switch`), so a declared track a brand edits is held by
+`auditTheme` rather than by a contract the consumer has to remember to run.
 
 Each `darwin` set and all three dark sets carry their own `secondary`, because
 `platformTheme` inherits the base `#E1E5EC` and those windows and popovers sit
@@ -1306,8 +1304,8 @@ is made from this run.
 
 ## Checking your own theme
 
-A theme fails silently in twelve independent ways, and `auditTheme(theme)` is
-the one call that returns all twelve reports:
+A theme fails silently in fourteen independent ways, and `auditTheme(theme)` is
+the one call that returns all fourteen reports:
 
 ```ts
 import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
@@ -1315,10 +1313,12 @@ import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
 const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
 const audit = auditTheme(brand);
 
-audit.passed; // true only when all twelve reports below are empty
+audit.passed; // true only when all fourteen reports below are empty
 audit.invalidRoles; // roles the renderer cannot paint
 audit.invalidShadows; // elevation shadow colours the renderer cannot paint
 audit.invalidNumbers; // sizes, lengths and shadows the renderer cannot lay out
+audit.scales; // a step that no longer exceeds the one before it
+audit.switch; // a declared switch paint the renderer ignores, or cannot find
 audit.contrast; // text, icon and boundary pairs below their floor
 audit.decorative; // dividers, skeleton fills, veils, status edges, washes, control faces and shadows too subtle to see
 audit.series; // data-series colours lost on their plot, against each other, or for a colour-blind reader
@@ -1330,7 +1330,7 @@ audit.disabledFade; // a disabled control whose faded label vanishes into the fa
 audit.keyboardDim; // a control whose label the runtime's keyboard dim erases
 ```
 
-`passed` is computed from the twelve reports, so it cannot drift from them. The
+`passed` is computed from the fourteen reports, so it cannot drift from them. The
 contrast floors come from the theme's own `contrast` variant —
 `contrastFloorsFor(theme)` returns `highContrastFloors` for a theme that declares
 `contrast: "high"` and `contrastFloors` otherwise — so a brand built from a
@@ -1368,7 +1368,9 @@ floors, so they are two contracts rather than one measurement twice: a label
 that lands at 1.45:1 is reported by the fade and not by the dim.
 
 Each report is also a function of its own, for a caller that wants one check.
-The three below are here; the categorical scale is §Data series
+The three below are here; the scale order is §Scale order (`invalidScales`), the
+declared switch is §Platform styles (`switchFailures`), the categorical scale is
+§Data series
 (`seriesFailures`), the code palette is §Syntax palette (`syntaxFailures`),
 the selection wash is §Text selection
 (`selectionFailures`), the fade is §The fade a disabled control paints
@@ -1880,12 +1882,13 @@ adjacent pair; a rung that *shrinks* is still reported, so `xl: 6` under `lg: 8`
 fails. The two executed brands are `equalRadiusBrand` (accepted, `// []`) and
 `computedBrand` (its `xl: 6` reported) in `src/scales.example.ts`.
 
-`invalidScales` is not one of `auditTheme`'s twelve reports yet. The docs site's
-theme readout words each report it prints, so folding this in is one coordinated
-change with that page — recorded in `TODO.md` → Interlocks. Run it beside
-`auditTheme` until then: `src/scales.example.ts` is a brand whose `sm` control is
-taller than its `lg`, and `scales.test.ts` proves the audit passes it while
-three steps are out of order.
+`invalidScales` is one of `auditTheme`'s fourteen reports: a theme whose ladder
+lies fails the gate, so a brand cannot ship one by running the other reports.
+It was a public function *beside* the gate while the docs site's theme readout
+worded every report the gate returned, and it is one of the fourteen now:
+`src/scales.example.ts` is a brand whose `sm` control is taller than its `lg`,
+and `scales.test.ts` proves the gate fails it while three steps are out of
+order.
 
 ### Contrast
 

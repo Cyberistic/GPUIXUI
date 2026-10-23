@@ -325,7 +325,7 @@ const switchPendingProblems = (): ReadonlyArray<string> =>
             ...(row.notes.includes("busy toggle")
               ? ["Switches: the row promises the Toggle's busy state"]
               : []),
-            ...(row.notes.toLowerCase().includes("no pending state") &&
+            ...(row.notes.includes("No pending state") &&
             row.notes.includes("in flight")
               ? []
               : [

@@ -11,9 +11,15 @@ import { withWindowKeys, type KeyHandler } from "./keys.js";
 
 let handler: KeyHandler | undefined;
 
-render(withWindowKeys((next) => {
-  handler = next;
-}, <App />), {
-  terminal: true,
-  onKeyDown: (event: KeyEvent) => handler?.(event),
-});
+render(
+  withWindowKeys(
+    (next) => {
+      handler = next;
+    },
+    <App />,
+  ),
+  {
+    terminal: true,
+    onKeyDown: (event: KeyEvent) => handler?.(event),
+  },
+);

@@ -106,7 +106,6 @@ const sourceStyle = (
   width: number,
   height: number,
 ): StyleDesc => ({
-  ...nativeTextTheme(theme),
   width,
   height,
   padding: theme.spacing.md,
@@ -185,6 +184,10 @@ export const MarkdownEditor = ({
           onChange={(event) => {
             if (!readOnly && !disabled) setSource(event.value ?? "");
           }}
+          // The runtime shapes an unthemed host from its built-in dark palette,
+          // so the source pane's caret and selection wash follow the active
+          // theme only when the host is handed the seam.
+          theme={nativeTextTheme(theme, "background")}
           aria-label={`${label} source`}
           aria-description={help ?? "Markdown source"}
           readOnly={readOnly || disabled}

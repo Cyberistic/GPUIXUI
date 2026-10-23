@@ -13,11 +13,13 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 /** The binary inside a checkout. */
-export const binaryOf = (root: string): string => join(root, "out", "bin", "netherite");
+export const binaryOf = (root: string): string =>
+  join(root, "out", "bin", "netherite");
 
 /** Whether a directory is a Netherite checkout. */
 export const isCheckout = (dir: string): boolean =>
-  existsSync(join(dir, "AGENTS.md")) && existsSync(join(dir, "csrc", "Makefile"));
+  existsSync(join(dir, "AGENTS.md")) &&
+  existsSync(join(dir, "csrc", "Makefile"));
 
 /** The checkout, or `undefined` when none is reachable. */
 export const findRoot = (
