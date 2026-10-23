@@ -15,7 +15,9 @@
  */
 
 import type { StyleDesc } from "@gpuix/react";
+import type { ReactElement } from "react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { DIVIDER_WIDTH, SplitPane } from "@gpuixui/dock";
 import { Button, ScrollArea } from "@gpuixui/primitives";
 import {
   fieldHelp,
@@ -74,6 +76,12 @@ export interface MarkdownEditorProps {
   readonly height?: number;
   /** The editor's width in points. Default `640`. */
   readonly width?: number;
+  /** The split's source-pane size in points. Controlled. */
+  readonly splitSize?: number;
+  /** The uncontrolled starting source-pane size. Default half the body. */
+  readonly defaultSplitSize?: number;
+  /** Reports the source pane's size after a divider drag or key. */
+  readonly onSplitSizeChange?: (size: number) => void;
   /** Editable or read-only. A read-only editor keeps its tab stop. */
   readonly readOnly?: boolean;
   /** Not editable, out of the tab order, painted with the disabled chrome. */
@@ -90,14 +98,22 @@ const DEFAULT_WIDTH = 640;
 const bodyHeight = (height: number): number =>
   Number.isFinite(height) && height > 0 ? height : DEFAULT_HEIGHT;
 
-/** The width of each pane once the divider and the visible views are known. */
-const paneWidthOf = (
-  view: MarkdownMode,
-  divider: number,
-  total: number,
-): number => {
-  const panes = view === "split" ? 2 : 1;
-  return Math.floor((total - (panes === 2 ? divider : 0)) / panes);
+/**
+ * The share of the split a pane may take. A quarter each way keeps both views
+ * readable and leaves the divider inside the editor at every width.
+ */
+const SPLIT_MIN_SHARE = 0.25;
+const SPLIT_MAX_SHARE = 0.75;
+
+/** The source pane's bounds for a body of `available` points. */
+const splitBounds = (
+  available: number,
+): { readonly min: number; readonly max: number } => {
+  const width = Math.max(0, available);
+  return {
+    min: Math.floor(width * SPLIT_MIN_SHARE),
+    max: Math.floor(width * SPLIT_MAX_SHARE),
+  };
 };
 
 /** A source pane: a code-styled `<textarea>` the runtime edits directly. */
@@ -127,6 +143,9 @@ export const MarkdownEditor = ({
   placeholder,
   height = DEFAULT_HEIGHT,
   width = DEFAULT_WIDTH,
+  splitSize,
+  defaultSplitSize,
+  onSplitSizeChange,
   readOnly = false,
   disabled = false,
   className,
@@ -147,19 +166,91 @@ export const MarkdownEditor = ({
   const view = modeOf(mode);
   const body = bodyHeight(height);
   const total = Number.isFinite(width) && width > 0 ? width : DEFAULT_WIDTH;
-  const paneWidth = paneWidthOf(view, theme.borderWidth.thin, total);
+  const available = Math.max(0, total - DIVIDER_WIDTH);
+  const split = splitBounds(available);
+  const [splitAt, setSplitAt] = useControllableState({
+    value: splitSize,
+    defaultValue: defaultSplitSize ?? Math.floor(available / 2),
+    onChange: onSplitSizeChange,
+  });
+  const splitWidth = Math.min(Math.max(splitAt, split.min), split.max);
+  const paneWidth = view === "split" ? splitWidth : total;
   const stats = markdownStats(source);
   const showsSource = view !== "preview";
   const showsPreview = view !== "source";
+  const help = fieldHelp({ placeholder }, source);
+
   // 0.11.0 shapes a host placeholder in a fixed grey no token reaches, so the
   // source field paints the hint itself in the measured `placeholder` role.
-  const sourceChrome = sourceStyle(theme, paneWidth, body);
-  const hint = fieldHint({ placeholder, disabled }, theme, source, {
-    origin: "host",
-    align: "top",
-    style: sourceChrome,
-  });
-  const help = fieldHelp({ placeholder }, source);
+  const sourcePane = (width: number): ReactElement => {
+    const chrome = sourceStyle(theme, width, body);
+    const hint = fieldHint({ placeholder, disabled }, theme, source, {
+      origin: "host",
+      align: "top",
+      style: chrome,
+    });
+    return (
+      <div
+        style={mergeStyles(
+          recipeStyle(SOURCE_VIEW, theme),
+          hintHost({ width }),
+        )}
+      >
+        <textarea
+          value={source}
+          onChange={(event) => {
+            if (!readOnly && !disabled) setSource(event.value ?? "");
+          }}
+          aria-label={`${label} source`}
+          aria-description={help ?? "Markdown source"}
+          readOnly={readOnly || disabled}
+          testId="markdown-source"
+          style={chrome}
+        />
+        {Option.match(hint, {
+          onNone: () => null,
+          onSome: (painted) => renderFieldHint(painted, "markdown-source"),
+        })}
+      </div>
+    );
+  };
+
+  const previewPane = (width?: number): ReactElement => (
+    <div
+      style={mergeStyles(
+        recipeStyle(PREVIEW_VIEW, theme),
+        width === undefined ? {} : { width },
+      )}
+    >
+      <ScrollArea
+        axis="vertical"
+        focusable
+        label={`${label} preview`}
+        testId="markdown-preview"
+        padding="sm"
+        style={{ height: body }}
+      >
+        {source.trim() === "" ? (
+          <text
+            testId="markdown-empty"
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            Nothing to preview yet.
+          </text>
+        ) : (
+          <markdown
+            testId="markdown-rendered"
+            source={closeFences(source)}
+            theme={nativeTextTheme(theme, "background")}
+            style={{ color: theme.colors.foreground }}
+          />
+        )}
+      </ScrollArea>
+    </div>
+  );
 
   return (
     <div
@@ -197,72 +288,22 @@ export const MarkdownEditor = ({
         </text>
       </div>
       <div style={recipeStyle(BODY, theme)}>
-        {showsSource ? (
-          <div
-            style={mergeStyles(
-              recipeStyle(SOURCE_VIEW, theme),
-              hintHost({ width: paneWidth }),
-            )}
-          >
-            <textarea
-              value={source}
-              onChange={(event) => {
-                if (!readOnly && !disabled) setSource(event.value ?? "");
-              }}
-              aria-label={`${label} source`}
-              aria-description={help ?? "Markdown source"}
-              readOnly={readOnly || disabled}
-              testId="markdown-source"
-              style={sourceChrome}
-            />
-            {Option.match(hint, {
-              onNone: () => null,
-              onSome: (painted) => renderFieldHint(painted, "markdown-source"),
-            })}
-          </div>
-        ) : null}
         {showsSource && showsPreview ? (
-          <div
-            style={{
-              width: theme.borderWidth.thin,
-              backgroundColor: theme.colors.border,
-            }}
+          <SplitPane
+            size={splitWidth}
+            min={split.min}
+            max={split.max}
+            onResize={setSplitAt}
+            disabled={disabled}
+            dividerLabel={`${label} split`}
+            testId={testId === undefined ? undefined : `${testId}-split`}
+            first={sourcePane(splitWidth)}
+            second={previewPane()}
           />
-        ) : null}
-        {showsPreview ? (
-          <div
-            style={mergeStyles(recipeStyle(PREVIEW_VIEW, theme), {
-              width: paneWidth,
-            })}
-          >
-            <ScrollArea
-              axis="vertical"
-              focusable
-              label={`${label} preview`}
-              testId="markdown-preview"
-              padding="sm"
-              style={{ height: body }}
-            >
-              {source.trim() === "" ? (
-                <text
-                  testId="markdown-empty"
-                  style={{
-                    ...textStyle(theme, "body"),
-                    color: theme.colors.mutedForeground,
-                  }}
-                >
-                  Nothing to preview yet.
-                </text>
-              ) : (
-                <markdown
-                  testId="markdown-rendered"
-                  source={closeFences(source)}
-                  theme={nativeTextTheme(theme, "background")}
-                  style={{ color: theme.colors.foreground }}
-                />
-              )}
-            </ScrollArea>
-          </div>
+        ) : showsSource ? (
+          sourcePane(paneWidth)
+        ) : showsPreview ? (
+          previewPane(paneWidth)
         ) : null}
       </div>
     </div>

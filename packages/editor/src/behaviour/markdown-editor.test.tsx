@@ -8,6 +8,7 @@
  */
 
 import { useState, type ReactNode } from "react";
+import { DIVIDER_STEP } from "@gpuixui/dock";
 import { createTestRoot } from "@gpuix/react/testing";
 import { darkTheme, lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -80,6 +81,27 @@ const type = (root: Root, keys: string): void => {
   const field = root.renderer.findByTestId("markdown-source");
   root.renderer.focusElement(field?.id ?? -1);
   root.renderer.simulateKeystrokes(keys);
+};
+
+const boundsOf = (
+  root: Root,
+  testId: string,
+): { readonly x: number; readonly y: number; readonly width: number } => {
+  const element = root.renderer.findByTestId(testId);
+  const bounds = root.renderer.getElementBounds(element?.id ?? -1);
+  if (element == null || bounds == null) {
+    throw new Error(`no painted ${testId} to measure`);
+  }
+  return bounds;
+};
+
+const dragDivider = (root: Root, delta: number): void => {
+  const divider = boundsOf(root, "editor-split-divider");
+  const x = divider.x + divider.width / 2;
+  const y = divider.y + 40;
+  root.renderer.nativeSimulateMouseDown(x, y);
+  root.renderer.nativeSimulateMouseMove(x + delta, y, 0);
+  root.renderer.nativeSimulateMouseUp(x + delta, y);
 };
 
 /** A controlled editor whose value the harness owns. */
@@ -191,6 +213,45 @@ describe("MarkdownEditor", () => {
     expect(onModeChange).toHaveBeenCalledWith("preview");
     expect(visible(controlled, "markdown-preview")).toBe(false);
     controlled.unmount();
+  });
+
+  it("resizes the split from the divider and reports the size", () => {
+    const sizes: number[] = [];
+    const editor = render(
+      <Controlled onSplitSizeChange={(size) => sizes.push(size)} />,
+    );
+    const before = boundsOf(editor, "markdown-source").width;
+    dragDivider(editor, 60);
+    expect(sizes.at(-1)).toBe(before + 60);
+    expect(boundsOf(editor, "markdown-source").width).toBe(before + 60);
+    editor.unmount();
+  });
+
+  it("holds a controlled split size until the caller moves it", () => {
+    const sizes: number[] = [];
+    const editor = render(
+      <Controlled
+        splitSize={200}
+        onSplitSizeChange={(size) => sizes.push(size)}
+      />,
+    );
+    expect(boundsOf(editor, "markdown-source").width).toBe(200);
+    dragDivider(editor, 60);
+    expect(sizes.at(-1)).toBe(260);
+    expect(boundsOf(editor, "markdown-source").width).toBe(200);
+    editor.unmount();
+  });
+
+  it("steps the split from the divider's keyboard", () => {
+    const sizes: number[] = [];
+    const editor = render(
+      <Controlled onSplitSizeChange={(size) => sizes.push(size)} />,
+    );
+    const before = boundsOf(editor, "markdown-source").width;
+    const divider = editor.renderer.findByTestId("editor-split-divider");
+    editor.renderer.nativeSimulateKeyDown(divider?.id ?? -1, "right");
+    expect(sizes.at(-1)).toBe(before + DIVIDER_STEP);
+    editor.unmount();
   });
 
   it("paints the light theme's ink, not the dark one's", () => {

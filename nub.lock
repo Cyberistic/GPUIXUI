@@ -473,6 +473,9 @@ importers:
       '@gpuix/react':
         specifier: 'catalog:'
         version: 0.11.0(react@19.3.1)
+      '@gpuixui/dock':
+        specifier: workspace:*
+        version: link:../dock
       '@gpuixui/primitives':
         specifier: workspace:*
         version: link:../primitives

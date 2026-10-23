@@ -24,13 +24,25 @@ import { MarkdownEditor } from "@gpuixui/editor";
 
 | Mode | Paints |
 | ---- | ------ |
-| `split` (default) | source and preview side by side, one border between |
+| `split` (default) | source and preview side by side, a draggable divider between |
 | `source` | the source only |
 | `preview` | the rendered document only |
 
 `mode`/`defaultMode`/`onModeChange` is the controlled/uncontrolled contract; the
 three toolbar buttons report a change in both modes. A stored mode that is not
 one of the three reads as `split`.
+
+## The split
+
+A split is the shipped `SplitPane` (`@gpuixui/dock`): its divider is a
+`role="separator"` Tab stop, and a drag or an arrow key changes the source
+pane's size while the preview takes the rest. The size is
+`splitSize`/`defaultSplitSize`/`onSplitSizeChange` — controlled and
+uncontrolled like the other two contracts — and is held to **25–75%** of the
+body, so neither pane can be dragged away. A controlled `splitSize` is
+authoritative: a drag reports through `onSplitSizeChange` and the pane moves only
+when the caller renders the new value. A divider drag never edits the document,
+and a disabled editor disables the divider with the rest of its chrome.
 
 ## The document
 
@@ -50,10 +62,12 @@ appends the missing marker (`markdown/logic.ts`).
 | ----- | -------- |
 | source | the runtime's native text editing, including IME, paste and undo |
 | toolbar | the shipped `Button` activation — Enter and Space on release |
+| divider | a `role="separator"`: arrows resize by 16 points, Home/End name the 25%/75% bounds |
 | preview | a focusable `ScrollArea`, so a long document scrolls from the keyboard |
 
 The editor installs no key handler of its own: typing is the textarea's, and the
-runtime has no caret or selection API to build one against.
+runtime has no caret or selection API to build one against. The divider's keys
+are `SplitPane`'s, not a second implementation.
 
 ## API
 
@@ -69,6 +83,9 @@ runtime has no caret or selection API to build one against.
 | `placeholder` | `string` | — |
 | `width` | `number` | `640` |
 | `height` | `number` | `280` |
+| `splitSize` | `number` | — (uncontrolled) |
+| `defaultSplitSize` | `number` | half the body |
+| `onSplitSizeChange` | `(size: number) => void` | — |
 | `readOnly` | `boolean` | `false` |
 | `disabled` | `boolean` | `false` |
 | `className` | `string` | — |
@@ -81,13 +98,16 @@ handed no placeholder loses its `aria-placeholder` with it.
 
 ## Accessibility
 
-The source is a real text field named `<label> source` and is the editor's tab
-stop; a read-only editor stays focusable, and a disabled one leaves the tab order.
-The preview is a `ScrollArea` named `<label> preview`, so a keyboard reader can
-scroll a long document. The mode buttons are the shipped `Button`s with their own
-accessible names and activation contract. The status line is plain text, not a
-live region (the runtime has none), so a reader who needs the count announced
-should render it beside the editor.
+The source is a real text field named `<label> source`; a read-only editor stays
+focusable, and a disabled one leaves the tab order. The split's divider is a
+`role="separator"` tab stop named `<label> split`, announcing the source pane's
+size (`320 px`) because 0.11.0 has no `aria-valuenow`, so a reader who cannot
+drag can still resize it from the keyboard. The preview is a `ScrollArea` named
+`<label> preview`, so a keyboard reader can scroll a long document. The mode
+buttons are the shipped `Button`s with their own accessible names and activation
+contract. The status line is plain text, not a live region (the runtime has
+none), so a reader who needs the count announced should render it beside the
+editor.
 
 ## Why not rich text
 
@@ -110,14 +130,15 @@ and it is what `CodeEditor` does one tier down.
 - **No formatting toolbar.** It needs a selection API the runtime does not have.
 - **No caret or selection read-back.** `MarkdownEditor` cannot insert at the
   reader's cursor.
-- **Two panes, fixed widths.** A split divides the editor between the two panes;
-  the caller sets the editor's `width`.
+- **Two panes, horizontal only.** A split divides the editor left/right and the
+  preview takes the rest; there is no stacked split.
 - **Preview is read-only.** Editing happens in the source, by design.
 
 ## Evidence
 
-`src/behaviour/markdown-editor.test.tsx` (9 native behaviour tests) types into the
-real field, follows the edit into the preview, switches all three views, and
+`src/behaviour/markdown-editor.test.tsx` (12 native behaviour tests) types into
+the real field, follows the edit into the preview, switches all three views,
+drags the divider and steps it by keyboard (a controlled size stays put), and
 holds the read-only and disabled refusals; `src/markdown/logic.test.ts` (12
 cases) holds the fence, the counts and the stored mode;
 `src/behaviour/hints.test.tsx` holds the painted hint in both themes, the help
