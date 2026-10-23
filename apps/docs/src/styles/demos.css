@@ -2667,7 +2667,7 @@
 
 .gx-list-row:hover:not(:disabled) {
   background: var(--accent);
-  color: var(--accent-foreground);
+  color: var(--foreground);
 }
 
 .gx-list-row[data-selected="true"] {
@@ -2676,7 +2676,7 @@
 }
 
 .gx-list-row[data-selected="true"]:hover:not(:disabled) {
-  background: var(--selected);
+  background: var(--accent);
   color: var(--selected-foreground);
 }
 

@@ -175,8 +175,9 @@ are clipped to one line and can never stretch the row.
 | Part | Reads |
 | ---- | ----- |
 | row, rest | no fill; title `foreground`, description `mutedForeground` |
-| row, hover | `accent` fill, `accentForeground` text |
+| row, hover | `accent` fill; the title keeps its role — `foreground`, or `selectedForeground` on a chosen row |
 | row, selected | `selected` fill; the title takes `selectedForeground` |
+| row, selected under the pointer | `accent` fill; the title keeps `selectedForeground` |
 | row, disabled | `disabledForeground` title and description; `mutedForeground` title when it is also selected |
 | row, keyboard focus | the runtime's `focusVisible` outline in the `ring` role |
 | row height | `density.rowHeight + spacing.md` (40px at the default density), or `density.rowHeight` when `dense` |
@@ -185,6 +186,11 @@ A selected row's title takes the row's **on-colour**, not the page's body role:
 the wash is a saturated fill and the token contract measures
 `selectedForeground` on it. Its description keeps `mutedForeground`, the pair
 measured on that same fill at the secondary floor.
+
+A chosen row also paints `accent` under the pointer — the row answers the
+pointer like any other — but its title keeps `selectedForeground` on that wash,
+so the selection moves the fill and not the words. A hover wash leaves an
+unchosen row's title on `foreground`; no row's label takes `accentForeground`.
 
 A disabled row keeps every fill it would paint — including a selection wash it
 already holds — and carries its state in the text roles. It never fades by

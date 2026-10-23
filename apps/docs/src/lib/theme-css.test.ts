@@ -332,6 +332,26 @@ describe("preview style sheets", () => {
     expect(row).toContain("--spacing-md");
   });
 
+  it("keeps a hovered row's label in the role the row resolves", () => {
+    // The row's hover record paints `accent` and no colour; the title resolves
+    // `foreground` (or `selectedForeground` on a chosen row). The preview painted
+    // `accentForeground`, a role the shipped label never takes, and kept a chosen
+    // row on `selected` while the native row answers the pointer with `accent`.
+    const css = read("../styles/demos.css");
+    const hovered = block(css, ".gx-list-row:hover:not(:disabled)");
+    const chosen = block(
+      css,
+      '.gx-list-row[data-selected="true"]:hover:not(:disabled)',
+    );
+
+    expect(hovered).toContain("background: var(--accent)");
+    expect(hovered).toContain("color: var(--foreground)");
+    expect(hovered).not.toContain("--accent-foreground");
+    expect(chosen).toContain("background: var(--accent)");
+    expect(chosen).toContain("color: var(--selected-foreground)");
+    expect(chosen).not.toContain("--accent-foreground");
+  });
+
   it("read a search field's clear target from the shared floor", () => {
     // The shipped clear control is a 24px press target around the recipe's
     // 18px drawing, so a preview that copied the drawing's size would paint a

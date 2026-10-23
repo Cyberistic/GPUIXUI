@@ -1295,6 +1295,30 @@ describe("the curated component pages", () => {
     );
     expect(rowPaint).toContain("theme.colors.selected");
     expect(source).not.toContain("opacity: disabled");
+    // A hovered row paints the `accent` fill and nothing else: the hover record
+    // carries no colour, and the title resolves `selectedForeground` for a
+    // chosen row and `foreground` otherwise. The page said the text became
+    // `accentForeground`, a role the shipped label never takes, and the drawing
+    // painted it.
+    expect(source).toContain("hover: { backgroundColor: theme.colors.accent }");
+    const title = source.slice(
+      source.indexOf("export const ListItemTitle"),
+      source.indexOf("export const ListItemDescription"),
+    );
+    expect(title).toContain(": theme.colors.selectedForeground");
+    expect(title).toContain(": theme.colors.foreground;");
+    const hoverRow = themingRow(list, "row, hover");
+    expect(hoverRow, "the list page lost its hover row").toBeDefined();
+    expect(hoverRow).toContain("`accent` fill");
+    expect(hoverRow).toContain("keeps its role");
+    expect(hoverRow).not.toContain("accentForeground");
+    const chosenHover = themingRow(list, "row, selected under the pointer");
+    expect(
+      chosenHover,
+      "the list page lost the chosen row's pointer rule",
+    ).toBeDefined();
+    expect(chosenHover).toContain("`accent` fill");
+    expect(chosenHover).toContain("`selectedForeground`");
     const at = recipes.indexOf("export const LIST_ITEM =");
     const item =
       at === -1 ? "" : recipes.slice(at, recipes.indexOf("\n\n", at));
@@ -1308,6 +1332,8 @@ describe("the curated component pages", () => {
     expect(text).toContain("No `aria-multiselectable`");
     expect(text).toContain("without running its `onFocus`");
     expect(text).toContain("never fades by opacity");
+    expect(text).toContain("no row's label takes `accentForeground`");
+    expect(text).not.toContain("`accent` fill, `accentForeground` text");
     // Derived, so a case added to the suite fails the generic count check above
     // rather than leaving this line asserting a stale number.
     expect(list.suite, "the list page names no behaviour suite").toBeDefined();

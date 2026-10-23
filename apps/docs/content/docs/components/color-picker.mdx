@@ -199,13 +199,13 @@ and validates honestly, but `0.11.0` cannot draw a saturation square, has no
 `aria-invalid` or `aria-disabled`, and the grid is six independent tab stops
 rather than a roving arrow grid.
 
-`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer — 9 native
+`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer — 10 native
 behaviour tests: the group, the field and the preview; the six theme swatches;
 a swatch press and its selected mark; a typed shorthand; an invalid draft that
 refuses to commit; a valid blur commit and an invalid blur revert; the disabled
-tab order and read-only field; the `{ disabled, valid }` style callback in both
-themes; and the chosen mark measured on every default swatch in both shipped
-themes. The focus sweep is
+tab order and read-only field; a hex commit refused once the picker is disabled;
+the `{ disabled, valid }` style callback in both themes; and the chosen mark
+measured on every default swatch in both shipped themes. The focus sweep is
 `src/behaviour/focus-ring.test.tsx`; `src/color/hex.test.ts` adds 8 pure tests
 for the normal form.
 

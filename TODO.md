@@ -4045,6 +4045,26 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       `COMPONENTS.md` rows to the code, so that table cannot drift again;
       their pages now render on the site at `/docs/primitives/<name>` (and the
       icon page at `/docs/icons/icon`), linked from the Primitives section index
+`[x]` `packages/primitives`: **the element that scrolls published no layout
+      event** — a scroll reading needs the viewport's own height (an edge fade,
+      a position bar, a "more below" cue), and `ScrollArea` forwarded
+      `onScroll`/`onScrollChange` for that element but no `onLayout`, so
+      `packages/components`' `ScrollProgress`/`ScrollFade` had to duplicate the
+      viewport in `internal/scroll-surface.tsx` — and the copy gave up the
+      keyboard contract, which both components record as a limitation. The area
+      and a composed `ScrollAreaViewport` now take `onLayout`, forwarded from the
+      viewport (the frame's padding excluded; a composed viewport's own wins),
+      so one element carries the offset and its box. Proof:
+      `presentational.test.tsx`'s `lets a scroll reading measure the scroller,
+      and a composed viewport override it` and `layout.runtime.test.tsx`'s
+      `reports the scroll box's own height, not the frame's` (a 120px frame with
+      `padding="md"` reports `120 − 2 × md`, equal to the element's painted box).
+      Directions measured: with the forwarding line removed, both cases fail by
+      name (`Option.none()` where the handler is required; no event arrived),
+      and restored the suites are 986 unit / 292 runtime green. Docs:
+      `docs/scroll-area.mdx` §API, the package README's capability table and the
+      `COMPONENTS.md` row. The components half — the seam composing this
+      primitive instead of its own viewport — is the Interlocks row below.
 `[x]` `packages/primitives`: **a word group a provider forwarded as
       `undefined` erased the table** — `resolveMessages` spread the caller's
       keys over the inherited table, so a nested provider handing over an
@@ -6454,6 +6474,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Publish the **flex sizing rules** the playground measured — the capability record's **Flexbox and grid** row is supported on the typings alone (`display`, `flexDirection`, `flexWrap`, `gap`), so a plan composing a dock pane, a table column or a truncating label has no measured statement of what `flexGrow`, `flexShrink`, `flexBasis`, `minWidth`/`maxWidth` and `alignSelf` actually paint. The `flex-sizing` probe (27 checks, 0.11.0) and the headless `layout-flex-sizing` twin measured: the leftover goes to the grower (**280** beside a fixed 120); `flexBasis: 0` splits it evenly (**140/140**) only while the content fits, an auto basis grows from content (**70/210**), and **a grower whose content is wider than its share keeps its content and the other takes the rest (200/80)** — so `flex-1` is not equality and a truncating column declares `minWidth: 0`; an over-full row shrinks the item that may shrink (**180**) while `flexShrink: 0` keeps **320** painted past the row; an item's automatic minimum is its content (**300** in a 200 row) until `minWidth: 0` lifts it (**200**); `maxWidth` stops a grower (**120**, row left short); and `alignSelf` places content width at **0/120/240** in a 300 column whose `stretch` item is **300**. The row should carry the measurements, the `minWidth: 0` rule and the probe ids, and `/docs/runtime`'s *measured in a window* section should publish it | docs-site (`docs/gpuix-capabilities.md` *Flexbox and grid*, `/docs/runtime`) | **resolved 2026-10-23** — the record's **Flexbox and grid** row now carries the `flex-sizing` measurement (280 of 400 to the grower beside a fixed 120; 140/140 for two fitting `flexBasis: 0` growers against 70/210 with no basis; 200 and 80 for a grower holding more than its share, so `flex-1` is **not equality**; 320 → 180 in a 300 row while `flexShrink: 0` keeps 320 painted 20 past it; 300 floors in a 200 row until `minWidth: 0` lifts it to 200; `maxWidth: 120` leaves the row short; `alignSelf` at 0/120/240 with `stretch` at 300), names the headless `layout-flex-sizing` twin, and states the two rules in its workaround. `/docs/runtime#measured-in-a-window` publishes **Flex sizing**, and §5's owed-probe list names both probes. `capability-doc.test.ts` gains `records the flex rules a flex-1 composes with, derived from its fixture`, which parses the probe's own constants and derives every printed width, so neither file can teach a number the probe no longer paints; `flex-1` joins the evidence scan's quoted values. Directions measured: the page at **281** and the record at **140/141** each fail the new case by name; restored, `capability-doc.test.ts` is 94/94 and the docs suite is 1100 passed with only the two foreign editor/dock guards red |
 | Publish the **horizontal thumb** the same probe measured — `scrollbar-thumb` now asks the rule on the other axis too (content **1 000** px wide in a 260×160 viewport): the thumb reads **67** long against a rule's **68**, lies along the bottom edge with the content keeping its full height, and a `-400` sideways wheel starts it at **104** (read **104.5**, because the cap rounds), so a component that reads `scrollY` alone believes a table's sideways scroller never moved. The record's **Scrollbar thumb** row and `/docs/runtime` publish the vertical half only, and `capability-doc.test.ts`'s derived guard reads the fixture's cases but asserts none of the horizontal numbers | docs-site (the record and `/docs/runtime`) | open — the probe is now 72 checks on 0.11.0 (`--only scrollbar-thumb`), and `apps/playground/README.md` §`scrollbar-thumb` carries the reads, the sideways row and the third negative control |
 | Publish the **thumb a `ScrollArea` paints** in the inventory — `COMPONENTS.md`'s capability-matrix row for **Scrollable containers** says "verified (native thumb tint and thickness measured on 0.11.0)" without naming the probe, while the capability record now carries **Scrollbar thumb** with the `scrollbar-thumb` measurement (59 checks: the length is `track² / (track + maxScroll)` with a **20**px floor — 1 000px → **25** against **26**, 500px → **50**, 10 000px → **19**, content that fits → **none**; one −400 wheel → start **64**; the end `−840` → start **134**, bottom **159** of **160**; the thumb takes no gutter) | components (`COMPONENTS.md`, the Scrollable containers capability and inventory rows) | open — the docs half landed 2026-10-23 (the record, `/docs/runtime`, `capability-doc.test.ts`); the inventory rows should cite `scrollbar-thumb` and the values they already claim |
+| Adopt the **scroll box's published layout** in the reading seam — `packages/components/src/internal/scroll-surface.tsx` duplicates a viewport (`overflowY: "scroll"`, its own content box and `onLayout`) instead of composing `ScrollArea`, and its header gives the reason: the primitive published no layout event for the element that scrolls, so `ScrollProgress`/`ScrollFade` lost the keyboard contract to get a height (recorded on both components and in `COMPONENTS.md`). The primitives' `ScrollArea`/`ScrollAreaViewport` now forward `onLayout` from the viewport (frame padding excluded, a composed viewport's own winning), measured by `packages/primitives/runtime/layout.runtime.test.tsx`'s `reports the scroll box's own height, not the frame's`. The seam can now compose `ScrollArea` and both components regain arrows/PageUp/PageDown/Home/End; its surface budget and the two rows move with it | components (`src/internal/scroll-surface.tsx`, `scroll-progress.tsx`, `scroll-fade.tsx`, `src/surface.budget.ts`, both `COMPONENTS.md` rows) | open — the primitives half landed 2026-10-23 |
 | Retire the **components' duplicate edge on the tonal action** — `packages/components/src/internal/button.tsx`'s `VARIANT_CLASS` still adds `border border-strong` to `secondary` and justifies it with "the primitive's recipe paints `border-0`", a premise the primitives' half of the row above retired on 2026-10-23 (`core/variants.ts`'s variant table and `recipe/index.ts`'s `bg-secondary text-secondary-foreground border border-strong` now paint the edge). The class is harmless — the same role drawn twice — but the comment teaches a reader a decision that no longer exists, and either resolution is the components' own: drop the class and the clause, or keep the class as a defensive copy and restate why. `packages/tokens/src/decorative.test.ts`'s `leaves a row's wash to the edge both packages paint` reads that class as the second painter, so the tokens owner widens that reader in the same change (the recipe is the authority). Measured 2026-10-23: with the class removed and the recipe's `border border-strong` intact, the primitives still paint the edge | components (`internal/button.tsx`) + tokens (the guard's second painter) | **resolved on the components side 2026-10-23** — the class stays as the components' copy of the measured role, because `packages/tokens/src/decorative.test.ts` reads it as the second painter of a row's wash and that file belongs to the tokens workstream; the two comments that taught the borderless premise now name the recipe as a painter too (`bg-secondary text-secondary-foreground border border-strong`) and say the copy keeps this package's action on `borderStrong` if that line moves. `src/button-edge.test.ts` (3 cases) holds the pair: the primitive's recipe still names the edge, the adapter still carries the same class, and the adapter's prose refuses `has no border`/`recipe paints \`border-0\`` while naming the recipe's edge. Both directions measured: at `HEAD` the naming case fails on both retracted sentences; with the comment corrected the file is 3/3 and `button.test.tsx`'s native `draws an outlined action's edge in the measured boundary role` still reads `borderStrong` off the renderer |
 
 | Correct the **Dropdown menus row's printed test count** — `packages/components/src/behaviour/dropdown-menu.test.tsx` now runs **42** native cases (the menu-radio work added one) while `COMPONENTS.md`'s Dropdown menus row still prints `41 native behaviour tests`, so the inventory undersells the suite by a case. The docs site's curated page prints 42 and `component-page-truth.test.ts` derives it from the suite, which is how the drift surfaced (the generic count case failed on the page before it was corrected) | components (`COMPONENTS.md`'s Dropdown menus row) | **resolved 2026-10-23** (`2b166041`) — the row prints 42, the suite runs 42, and `src/inventory.test.ts`'s `states the real native test count in every package row` derives the number from the behaviour file, so the row cannot drift again |
@@ -7096,7 +7117,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 203/203
+`[x]` `[██████████]` 204/204
+
+`[x]` Keep the **Color picker page's printed count** with its suite — the
+components workstream landed `fb45954b` (`refuse a disabled color picker's hex
+commit`), which added the suite's tenth native case, while the curated page's
+Status still printed **9**; the generic count case was red on `master` with
+`color-picker.mdx: says 9, suite runs 10`. The page prints 10 and names the new
+case in the list it enumerates, so the reader sees the disabled commit among the
+behaviours the suite proves. Direction measured: the case fails with that exact
+message at 9 and is 45/45 at 10. No native scenario applies — a printed count
+and its guard have no runtime path.
 
 `[x]` Hold the **list row's hover label** to the role the row resolves — the
 curated List page's Theming table said a hovered row paints "`accent` fill,
@@ -7117,6 +7148,10 @@ roles and the three page rows (and refuses `accentForeground` on a label);
 resolves`. Directions measured: restoring the `accentForeground` row fails the
 truth case naming `keeps its role`, recolouring the preview's hover with
 `--accent-foreground` fails the bridge case, and both pass restored.
+`nub run --filter @gpuixui/docs test` is **1 114 passed** with only the two
+foreign failures recorded in Interlocks (the editor pages' six cross-links and
+the two dock pages with no limitations section); `check-types` is clean. No
+native scenario applies — a docs page and its drawing have no runtime path.
 
 `[x]` Follow the **table row's derived rule** the data package landed into the
 curated page and its drawing — commit `7aa1c2a0` moved `TableRow` and
