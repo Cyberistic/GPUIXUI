@@ -10382,7 +10382,31 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 316/318
+`[ ]` `[█████████░]` 317/319
+
+`[x]` Put the **look picker back where plan 433 asks for it** — the plan's
+      deliverable is "a docs page with a live switch XP ↔ Aero ↔ default
+      Windows", and `8c180a9f` removed the sidebar's Look group without giving
+      the page a control: `/docs/theming` documented `?look=` in one sentence,
+      so a reader could follow a shared link but could neither press a look nor
+      see what each one changes. `components/docs/look-picker.tsx` is the page's
+      own control (the sidebar stays the mission's four platform names), and the
+      section prints each look's mono face, `radius.md` and density from
+      `retroStyles`, names the runtime gaps a look cannot draw
+      (`backdropFilter`, multi-stop/radial gradients, `filter`/`clip-path`,
+      `transform`) beside the two it can (two-stop gradients, `inset` shadows),
+      and records both provenances. The shared probe now opens the theming page
+      and presses all three looks, reading `data-look`, `--background` and
+      `?look=`: `Windows XP (Luna): #101E33 over darwin`,
+      `Windows 7 (Aero): #101C27 over darwin`, `Omarchy: #1A1B26 over darwin`,
+      exit 0. Direction measured: wiring the buttons to a no-op fails all three
+      with `FAIL pressing … left no preview surface on …`, exit 1. Guards:
+      `look-picker.test.tsx` (5 cases), `theming-page.test.ts`'s look suite (4)
+      and `platform-switch.test.ts`'s look readout suite (5). `apps/docs` is
+      142 files / 1 256 tests green with `check-types` and `build` clean. No
+      native smoke scenario applies — a docs page's own control. The plan's
+      licence-credit half stays with the recorded licensing row
+      (`LICENSES/omarchy.md` / the retro provenance row).
 
 `[x]` Give the **curated component pages their generated verdict and packages** —
       both strips were mounted on the package frame only (`docs-view.tsx`'s

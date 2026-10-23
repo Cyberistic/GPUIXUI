@@ -55,3 +55,25 @@
   font-size: 11px;
   color: var(--muted-foreground);
 }
+
+/*
+ * The authored-look picker on the Theming page. It reuses the switch's buttons;
+ * a page has room for the full look names, so the rows are wider and taller
+ * than the sidebar's fixed 28px.
+ */
+.gx-look {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.gx-look .gx-platform-group {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.gx-look .gx-platform-option {
+  height: auto;
+  min-height: 32px;
+  padding: 4px 10px;
+}

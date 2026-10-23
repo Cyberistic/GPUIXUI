@@ -354,6 +354,30 @@ to Windows` — so a page whose one preview never re-resolved cannot pass on the
 surfaces that did. `src/lib/platform-switch.test.ts` holds the policy, the
 command, both measurements and the parser the assertions read.
 
+### The look picker is a measured click
+
+The authored looks are the third axis (`?look=luna|aero|omarchy`), and the
+sidebar deliberately does not carry them: the platform switch stays the
+mission's four names. The control lives on `/docs/theming`
+(`src/components/docs/look-picker.tsx`), so the press has its own page to be
+measured on. The same probe opens the theming page after the platform steps,
+waits for the picker's first button to carry `__reactProps.onClick`, then
+presses **Windows XP (Luna)**, **Windows 7 (Aero)** and **Omarchy**. It reads
+the first preview surface's `data-look`, its `data-platform` and `data-mode`,
+the `--background` the bridge wrote and the address bar. The background is held
+to `resolvePlatformTheme(platform, mode, look).colors.background`, the exact
+theme the provider resolves, because a look owns the palette for the mode and a
+constant would pass on the wrong one.
+
+Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
+against the dev server: `Windows XP (Luna): #101E33 over darwin`,
+`Windows 7 (Aero): #101C27 over darwin`, `Omarchy: #1A1B26 over darwin`, exit
+`0`. The negative control is a wiring that drops `setLook`: the URL and every
+surface stay unchanged and the probe prints
+`FAIL pressing Windows XP (Luna) left no preview surface on luna` — the same
+line for `aero` and `omarchy` — exit `1`. `src/lib/platform-switch.test.ts`
+holds the section, the command, the three readouts and the look readout parser.
+
 ### The docs theme switch is a measured click
 
 The site has **two** palettes, and they are deliberately independent:
@@ -641,13 +665,14 @@ when it is crossed.
 The site has its own identity (a neutral shadcn palette on `/docs` and the
 landing's own vocabulary); the components have the library's tokens (iris). A
 preview must show the latter, and it must follow the platform switch, the palette
-switch and the look parameter. All three are library values: the platform names
+switch and the look picker. All three are library values: the platform names
 come from `platformStyles`, the palettes are the library's own light and dark
 themes, and the looks are the authored `retroStyles` — Windows XP (Luna),
 Windows 7 (Aero) and Omarchy — which are styles of the same shape, not a fifth
 platform (the mission's toggle stays
-macOS · Linux · Windows · Default, and the sidebar offers platforms only). Each
-is written to the URL (`?platform=…&mode=…&look=…`) so a link carries what the
+macOS · Linux · Windows · Default, and the sidebar offers platforms only; the
+look picker is the Theming page's own control, not a sidebar group). Each is
+written to the URL (`?platform=…&mode=…&look=…`) so a link carries what the
 reader saw.
 
 The palette is the one axis a reader chooses to see a component in both themes:

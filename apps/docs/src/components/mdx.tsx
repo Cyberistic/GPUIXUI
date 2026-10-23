@@ -9,6 +9,7 @@ import { IconGallery } from "./docs/icon-gallery";
 import { Install } from "./docs/install";
 import { LaneTable } from "./docs/lane-table";
 import { LicenseInventory } from "./docs/license-table";
+import { LookPicker } from "./docs/look-picker";
 import { Pattern, PatternChoices } from "./docs/patterns";
 import { SeriesSwatches } from "./docs/series-swatches";
 import { ThemeEditor } from "./docs/theme-editor";
@@ -35,6 +36,7 @@ export const mdxComponents = {
   Install,
   LaneTable,
   LicenseInventory,
+  LookPicker,
   Pattern,
   PatternChoices,
   SeriesSwatches,

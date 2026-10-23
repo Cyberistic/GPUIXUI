@@ -119,9 +119,43 @@ A high-contrast base keeps its own colours and takes only geometry and families.
 
 A browser that refuses site storage keeps the URL's choice and the identity, and does not remember the choice.
 
-### The look parameter
+### The look picker
 
-`?look=` selects an authored style (Luna, Aero, Omarchy); the sidebar offers platforms only.
+<LookPicker />
+
+A **platform style** is one of the four variants of the identity; an **authored
+look** is a style applied over one. The picker paints a look over whichever
+platform the sidebar switch shows and writes it to the URL (`?look=luna`), so a
+link carries the choice and the store remembers it. The sidebar itself offers
+the four platform names only, because a look is not a fifth platform.
+
+| Look | `mono` | `radius.md` | Density |
+| ---- | ------ | ----------- | ------- |
+| `luna` — Windows XP (Luna) | `Lucida Console` | 2 | `compact` |
+| `aero` — Windows 7 (Aero) | `Consolas` | 4 | `comfortable` |
+| `omarchy` — Omarchy | `JetBrains Mono` | 2 | `compact` |
+
+The UI face stays the runtime's sentinel on all three: the package bundles no
+font, so naming Tahoma, Segoe UI or JetBrains Mono as the UI face would silently
+fall back on a machine that lacks it. The monospace family is the look's own.
+
+#### What an authored look does not draw
+
+A look is token values — colours, radii, density and the monospace family. It
+copies no artwork: no gradient, bitmap, icon, cursor or logo, so there is no
+redistributable asset and no trademark in the identity. The runtime could not
+paint most of that chrome at all: there is no `backdropFilter` for Aero's glass,
+no multi-stop, radial or conic gradient for a title bar, and no CSS `filter`,
+`clip-path`, blend mode or per-element `transform` for a glow, reflection or
+shaped clip. Two-stop linear gradients and `inset` shadows are available; see
+[Runtime](/docs/runtime) for the measured verdicts.
+
+Neither Windows era shipped a dark mode, so the two dark editions are authored
+here — invented, not reconstructions. Omarchy's pair is not invented: its dark
+set is Tokyo Night and its light set the Flexoki Light reference. All six themes
+are held to the same contrast and decorative contracts as every other theme.
+Provenance and the palette mapping are recorded in `docs/tokens.md` §Authored
+looks and §Omarchy's `colors.toml`.
 
 ### Author a style
 

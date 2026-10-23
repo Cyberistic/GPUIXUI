@@ -94,23 +94,23 @@ describe("the apps/docs ledger", () => {
     expect(policy).toContain("## The strategy");
   });
 
-  it("says the sidebar offers platforms, not a look control it retired", () => {
-    // `8c180a9f` removed the Look group, and `/docs/theming` and the preview
-    // policy were corrected with it. The site's own ledger still described a
-    // **Look** group and a "look picker" no reader can press, so a contributor
-    // would look for the control and change the wrong file. The page, not the
-    // policy, is the name the ledger has to match.
+  it("says the sidebar offers platforms and names where the look control lives", () => {
+    // `8c180a9f` removed the sidebar's Look group, and `/docs/theming` and the
+    // preview policy were corrected with it. A look picker returned to the page
+    // — not the sidebar — so the ledger has to name the file a contributor
+    // edits without claiming a group the footer does not carry.
     const readme = ledger.join("\n");
     const page = readFileSync(
       new URL("../../content/docs/theming.mdx", import.meta.url),
       "utf8",
     );
 
-    expect(page).toContain("### The look parameter");
-    expect(readme).toContain("## The platform switch and the look parameter");
+    expect(page).toContain("### The look picker");
+    expect(page).toContain("<LookPicker />");
+    expect(readme).toContain("## The platform switch and the look picker");
     expect(readme).toContain("no look group");
     expect(readme).toContain("?look=luna");
-    expect(readme).not.toContain("look picker");
+    expect(readme).toContain("components/docs/look-picker.tsx");
     expect(readme).not.toContain("**Look** offers");
   });
 

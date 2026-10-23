@@ -245,7 +245,8 @@ src/components/docs/package-graph.tsx     The direction diagram below it, from t
 src/components/docs/type-scale.tsx        The typography specimen, from the theme
 src/components/docs/theme-matrix.tsx      The built-in themes, generated from the token package
 src/components/docs/token-scales.tsx      The spacing/radius/density specimens on /docs/theming
-src/components/docs/platform-toggle.tsx   The platform and look switch, and its provider
+src/components/docs/platform-toggle.tsx   The platform and palette switch, and the shared preview provider
+src/components/docs/look-picker.tsx       The authored looks, as a control on /docs/theming
 src/components/docs/license-table.tsx     LICENSES/*.md, rendered
 src/components/docs/patterns.tsx          The pattern workflows and the chooser
 src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
@@ -599,21 +600,22 @@ Press me,Waiting for a press`, the button sampled `#a7a9ff` at `41,113`, the
 banner `#1e222a` at `500,149`, and one press through the automation locator
 sampled `#0e5135` with "Pressed 1 time" — a React tree, a real press.
 
-## The platform switch and the look parameter
+## The platform switch and the look picker
 
 `PlatformToggle` sits in the sidebar footer and offers macOS, Linux, Windows and
 Default — the mission's four platform names and **no look group**, because a look
 is not a fifth platform. `src/lib/platform.ts` resolves
-`platformTheme(themes[mode], platform)`; a look is still applied over it when a
-link carries one, because the authored styles are library data:
-`?look=luna`, `?look=aero` or `?look=omarchy` resolves `retroStyles`
-(**Windows XP (Luna)**, **Windows 7 (Aero)**, **Omarchy**) through
-`applyStyle`. The choice is carried in
+`platformTheme(themes[mode], platform)`; a look is applied over it because the
+authored styles are library data: `?look=luna`, `?look=aero` or `?look=omarchy`
+resolves `retroStyles` (**Windows XP (Luna)**, **Windows 7 (Aero)**, **Omarchy**)
+through `applyStyle`. The choice is carried in
 `?platform=…&mode=…&look=…` and remembered in local storage, and every preview
 renders on a `PreviewSurface` that applies the resolved theme's variables,
 `data-platform`, `data-mode` and `data-look`. A preview therefore paints the
 library's roles, radii, families and density, not a docs palette. `/docs/theming`
-documents the parameter under **The look parameter**.
+mounts `components/docs/look-picker.tsx` — the page's own control, not a sidebar
+group — so a reader presses a look and the specimens beside it repaint; it is
+documented there under **The look picker**.
 
 ## The theme editor
 
