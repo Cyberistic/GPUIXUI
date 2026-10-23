@@ -174,9 +174,12 @@ describe("the registry and the README", () => {
   });
 
   it("names the probe in the input interaction row it belongs to", () => {
-    const flat = readme.replace(/\s+/g, " ");
-    expect(flat).toContain(
-      "| input update/validation | `text-input`, `validation-lifecycle`, `date-picker-lifecycle`, `text-undo-lifecycle` |",
-    );
+    // The row's probe list grows as input probes land, so this holds the
+    // membership and the row, not a snapshot of every sibling.
+    const row = readme
+      .split("\n")
+      .find((line) => line.startsWith("| input update/validation |"));
+    expect(row).toBeDefined();
+    expect(row).toContain("`text-undo-lifecycle`");
   });
 });
