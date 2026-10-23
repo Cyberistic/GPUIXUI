@@ -69,7 +69,10 @@ panel after `openDelay`, moving across the row switches panels, and leaving the
 trigger **and** its panel closes after `closeDelay`. Both default to 150 ms. A
 delay a caller derives (a reduced-motion branch, a rate) is read at the gesture:
 a value that is not a finite number takes the default rather than opening at
-once, and a negative one is no delay. An
+once, and a negative one is no delay. Disabling a trigger while its open is
+still waiting **cancels** that open, so a control that started the clock and
+then became inert does not mount a panel over a trigger that refuses every
+route; re-enabling it means entering the trigger again. An
 explicit press, key, `Escape` or outside press cancels a pending hover timer and
 suspends the pointer policy until the pointer reaches a trigger again, because
 the runtime delivers the pointer's leave *after* the event that opened another
@@ -191,7 +194,7 @@ and the missing half is the API rather than the opening path: no `href`, no
 `aria-haspopup`, no pointer-type signal and no `aria-current`. The one-panel
 rule, the hover clock and the roving group are measured in the real renderer.
 
-`packages/components/src/behaviour/navigation-menu.test.tsx` runs **23 native
+`packages/components/src/behaviour/navigation-menu.test.tsx` runs **24 native
 behaviour tests** on `@gpuix/native@0.11.0`: a disabled trigger opening nothing,
 the triggers rendering in order with no panel, a press opening and reporting
 `aria-expanded`, exactly one panel, `Enter`/`ArrowDown` opening with `ArrowDown`
@@ -200,7 +203,8 @@ closing and returning focus, an outside press closing, a link running once and
 closing, a link's `Enter` activation running from inside the panel, the
 deprecated `onClick` alias running when it is the only handler, the controlled
 value, the four hover rules (delay, crossing into the panel, switching panels, a
-key beating a pending open), the two "does not spring back" rules, a hover open
+key beating a pending open), a trigger disabled mid-wait cancelling its open,
+the two "does not spring back" rules, a hover open
 on a controlled nav that stays closed, the panel reading the active theme, and
 the three motion cases (4px of travel, the exit frame without a press, reduced
 motion at rest).

@@ -1,11 +1,20 @@
 import { readFileSync } from "node:fs";
 import {
+  brandText,
+  contrastFloorsFor,
   contrastRatio,
   darkTheme,
   disabledOpacity,
   elevationShadow,
+  highContrastDarkTheme,
   highContrastLightColors,
+  highContrastLightTheme,
   lightTheme,
+  platformNames,
+  platformTheme,
+  retroNames,
+  retroTheme,
+  themes,
 } from "@gpuixui/tokens";
 import { switchThumbStyle, switchTrackStyle } from "@gpuixui/primitives/core";
 import { describe, expect, it } from "vitest";
@@ -1586,10 +1595,13 @@ describe("the curated component pages", () => {
 
   it("hold the alert's text action to the tint it derives against", () => {
     // A link inside a message sits on the tone's own soft fill, where the shared
-    // page brand is measured under the text floor in 29 of the 64 tint
+    // page brand is measured under the text floor in a large share of the tint
     // placements; the part derives against that tint instead, keeps the 24px
     // target and publishes `role="link"`. The page and the painter are read
-    // together, so neither can describe the other's colour.
+    // together, so neither can describe the other's colour — and the share is
+    // derived here, because the sweep grows with every shipped style: the page
+    // printed 29 of the 64 (the pre-Omarchy set) while the tokens suite walked
+    // eighteen styles and 72 placements, with nothing holding the page.
     const alert = pages.find((page) => page.file === "alert.mdx");
     expect(alert, "the alert page is not in the curated set").toBeDefined();
     if (alert === undefined) return;
@@ -1603,10 +1615,59 @@ describe("the curated component pages", () => {
       "brandTextOn(theme, softRoles[value])",
     );
 
+    // Every shipped style: four built-in themes, a light and a dark theme per
+    // platform and per authored look — the set `brand-text.test.ts` sweeps.
+    const styles = [
+      lightTheme,
+      darkTheme,
+      highContrastLightTheme,
+      highContrastDarkTheme,
+      ...platformNames.flatMap((name) => [
+        platformTheme(themes.light, name),
+        platformTheme(themes.dark, name),
+      ]),
+      ...retroNames.flatMap((look) => [
+        retroTheme(themes.light, look),
+        retroTheme(themes.dark, look),
+      ]),
+    ];
+    // The four fills an `Alert` paints, one per message family.
+    const tints = [
+      "infoSoft",
+      "successSoft",
+      "warningSoft",
+      "destructiveSoft",
+    ] as const;
+    const placements = styles.flatMap((theme) =>
+      tints.map((tint) => ({
+        tints: tint,
+        theme,
+        ratio: contrastRatio(brandText(theme), theme.colors[tint]) ?? 0,
+        floor: contrastFloorsFor(theme).secondary,
+      })),
+    );
+    const under = placements.filter(({ ratio, floor }) => ratio < floor);
+    const worst = placements.reduce((low, placement) =>
+      placement.ratio < low.ratio ? placement : low,
+    );
+
+    expect(placements.length).toBeGreaterThanOrEqual(72);
+    expect(under.length).toBeGreaterThan(0);
+    expect(under.length).toBeLessThan(placements.length);
+
     const text = body(alert).replace(/\s+/g, " ");
     expect(text).toContain("`AlertLink`");
     expect(text).toContain("message's own tint");
-    expect(text).toContain("29 of the 64");
+    expect(text).toContain(`${under.length} of the ${placements.length}`);
+    expect(text).not.toContain("29 of the 64");
+    // The one cell the page names is the sweep's own worst, so a palette move
+    // that hands the title to another style cannot leave the page naming the
+    // runner-up.
+    expect(worst.tints).toBe("warningSoft");
+    expect(worst.theme.name).toContain("macOS");
+    expect(text).toContain(
+      `\`warningSoft\` at **${worst.ratio.toFixed(2)}:1**`,
+    );
     expect(text).toContain('`role="link"`');
     expect(text).toContain("13 native behaviour tests");
   });
@@ -3240,6 +3301,8 @@ describe("the curated component pages", () => {
       "if (hovered.current !== null || panelHovered.current) return;",
     );
     expect(source).toContain("if (isTriggerPoint(event.x, event.y)) return;");
+    // A trigger disabled while its open is still waiting drops it.
+    expect(source).toContain("const cancelOpening = useCallback(() => {");
 
     // The trigger's three refusal routes, and the panel it names.
     expect(source.match(/if \(disabled\) return;/g)).toHaveLength(2);
@@ -3271,6 +3334,9 @@ describe("the curated component pages", () => {
 
     const text = body(page).replace(/\s+/g, " ");
     expect(text).toContain("150 ms");
+    // The cancel is taught where the page teaches the clock, so the sentence
+    // cannot outlive the function that performs it.
+    expect(text).toContain("cancels** that open");
     expect(text).toContain("Exactly one panel is open");
     expect(text).toContain("`elevation.md` lift");
     expect(text).toContain("rounded-lg");

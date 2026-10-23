@@ -8637,6 +8637,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Publish the **media frame** measurement and retire the `?` on Tier 5's media row — `COMPONENTS.md`'s *Video / audio player + waveform* row reads `todo | ?` and says "Playback needs a platform surface — **unverified**; a waveform can be drawn as one tinted `<svg>` layer per colour (measured by `content-surfaces`; `<canvas>` paints nothing)". The playground's `media-frame-lifecycle` now measures both halves on 0.11.0: the installed `@gpuix/react` `IntrinsicElements` declares twelve elements and **no `video`/`audio`**, so playback is `not supported` rather than unverified; and a media card is a composed player — an `img` whose buffer is re-pushed per frame with `setImagePixels`, an app-owned interval (the playhead walked `playhead=100` → `400` in whole 100 ms ticks), and an app-drawn transport (the shipped `Button`, a track whose fill is the playhead's share, an `m:ss` clock, a Home/End/Left/Right pad). 48 checks; the poster paints its 240×135 box in its frame's own colour, the pause holds the fill at 20 of 200, the seek repaints it to `#047857` with none of the first frame left, and a playhead at the clip's end stops the transport. The row should say `not supported (no playback surface)`, carry the measured workaround (poster + pushed buffers + app clock; audio is unreachable), cite `media-frame-lifecycle` and keep the waveform sentence | components (the Tier 5 row in `COMPONENTS.md`) | **playground half landed 2026-10-23** — `apps/playground/README.md` §`media-frame-lifecycle`, fixture `src/live/media-frame.ts`, probe `src/live/media-frame-probe.tsx`, suite `src/live/media-frame.test.ts`; the task's own TODO row is ticked under §Playground and native smoke. **components half resolved 2026-10-23** — the Tier 5 *Video / audio player + waveform* row reads `not supported (no playback surface)` (no `video`/`audio` in the installed `IntrinsicElements`, so playback and audio are unreachable rather than unverified) and carries the measured workaround: a composed card with `setImagePixels` frames pushed from a layout effect, an app-owned 100 ms tick, the shipped `Button` transport with a fill, a clock and a Home/End/Left/Right pad, the stable 240×135 poster and the paint-rate limit; it cites `media-frame-lifecycle` (48 checks) and keeps the waveform sentence (`content-surfaces`; `<canvas>` paints nothing). `src/inventory.test.ts` gains `cites the frame surface a media card composes`: it derives the check count, the clip and tick, the poster box and the readme's no-`video`/`audio` sentence from `apps/playground/src/live/media-frame.ts` and the section, so the row cannot print a figure or a verdict the fixture no longer holds. Directions measured: restoring the `?` row fails the case by name (`expected '?' to contain 'not supported'`); restored, 1/1 |
 
+| Print the **tint share the sweep measures** in the two source JSDocs that still carry it — `packages/components/src/internal/theme.ts` and `alert.tsx` both say the shared brand is under the floor "on 29 of the 64 tint placements the message is filled with", figures from before the two authored Omarchy looks landed: `packages/tokens/src/brand-text.test.ts` walks **18 styles × 4 tints = 72** placements and derives **28 of the 72**, which is what the tokens catalogue, the design system, the package README and the seam's JSDoc print. The curated Alert page carried the same pair and now derives it (`component-page-truth.test.ts`), so these two JSDocs are the last surfaces teaching a set that no longer exists | components (`packages/components/src/internal/theme.ts`, `alert.tsx`) | open — found 2026-10-23 while deriving the curated page's share; the fix is the one sentence in each file, and `packages/tokens/src/brand-text.test.ts`'s print case can hold them once they name the seam |
 | The **anchored layer's placement still trusts a stored side** — `packages/components/src/internal/placement.ts`'s `oppositeSide`/`roomOn`/`extentOn`/`alignOffsetOn` and `resolvePlacement` branch on `FloatingSide`/`FloatingAlign` with `Match.exhaustive`, so a `side` or `align` an application reads back from persisted state and passes to `PopoverContent`/`DropdownMenuContent`/a picker throws `effect/match/Match/exhaustive: absurd` out of the render when the surface overlaps its trigger, instead of opening on the house side. `@gpuixui/motion`'s `fadeFromSide` already reads an unnamed side as `bottom`, so the placement is the one half of an anchored overlay that still trusts the union. Repair each reader the way the frame builders now do (`Schema.is` → the house `bottom`/`start`) and add one unit case per reader to `internal/placement.test.ts` | components (overlay placement) | **resolved 2026-10-23** — `PlacementInput.side`/`align` are now `unknown`, and every reader (`oppositeSide`, `roomOn`, `extentOn`, `alignOffsetOn`, `resolveSide`, `resolvePlacement`) normalises through `sideOf`/`alignOf` (`Schema.Literals` → the house `bottom`/`start`), so an unknown name cannot reach a `Match.exhaustive`. The unmeasured path is repaired too: `requestedPlacement(side, align)` is the placement a surface asks for before its boxes exist, and `usePlacement` returns it instead of the raw pair, so a stored name never reaches the anchored host for the first render. Proof: `internal/placement.test.ts` gains `a stored placement the unions do not name` (5 cases — the house side, the mirrored house side when the surface covers its trigger, the roomier-side branch, host-`start` with no offset, and the pre-measurement pair); measured against the pre-fix readers all five fail (two asserting the raw `'over'`, three with `effect/match/Match/exhaustive: absurd`), and with the guards the file is 14/14. Docs: `docs/popover.mdx`, `docs/dropdown-menu.mdx` and `docs/combobox.mdx` §Limitations state the house fallback, and the README's module table row names the guard. No native scenario applies — a pure rule; the painters that read it stay the behaviour suites'. |
 
 
@@ -9944,7 +9945,41 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 259/259
+`[x]` `[██████████]` 261/261
+
+`[x]` Print the **tint share the tokens sweep measures**, not the pre-Omarchy
+      pair — the curated Alert page taught the `AlertLink` rule with "under the
+      text floor on **29 of the 64** tint placements across the shipped styles",
+      figures from before the two authored Omarchy looks landed: `brand-text.test.ts`
+      has walked **18** styles × 4 tints = **72** placements since, and the tokens
+      catalogue, the design system, the package README and the seam's own JSDoc
+      all print the derived **28 of the 72**. The page printed a share from a set
+      that no longer exists, and `component-page-truth.test.ts` asserted the stale
+      string literally, so the suite was green on a pair its own table had
+      outgrown. The case now builds the sweep from `@gpuixui/tokens` (four built-in
+      themes, a light and a dark theme per platform and per authored look, the
+      four `xSoft` tints, `brandText` against `contrastFloorsFor(...).secondary`),
+      requires the page to print `${under} of the ${placements}` and the worst
+      cell's own ratio, and refuses the retired pair. Directions measured:
+      restoring `29 of the 64` fails by name (`expected … to contain '28 of the
+      72'`). The two remaining carriers are the components package's source
+      JSDocs (`alert.tsx`, `internal/theme.ts`), recorded as an interlock row.
+
+`[x]` Follow the **navigation menu's new cancel** into the curated page — `7cdf88df`
+      made a trigger disabled while its hover open is still waiting drop that
+      open, added the twenty-fourth native case and taught the rule on
+      `packages/components/docs/navigation-menu.mdx`, while the curated page the
+      site serves still printed **23** native tests and enumerated the old list,
+      so `component-page-truth.test.ts` was red on `master`
+      (`navigation-menu.mdx: says 23, suite runs 24`). The page prints 24, names
+      the new case, and teaches the cancel where it teaches the pointer clock (a
+      control that armed the timer and became inert does not mount a panel over a
+      trigger that refuses every route; re-enabling means entering it again). The
+      page's source case holds `cancelOpening` and the sentence together.
+      Directions measured: the count failure above is what the case reported
+      before the edit, and dropping the bolded sentence fails `holds the nav's
+      one-panel rule…` (`expected … to contain 'cancels** that open'`). Restored,
+      the file is 55/55 and the docs app 121 files / 1 316 tests.
 
 `[x]` Record the **mark an exclusive-choice menu paints** — the playground landed
       `menu-radio-lifecycle` (31 checks on 0.11.0) the same hour, and the
