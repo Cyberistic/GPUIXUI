@@ -4,8 +4,9 @@
  * The bugs these guard: a diff that reports a non-minimal edit (every changed
  * line outside the common subsequence must be reported exactly once, never
  * delete-all-then-add-all); a diff that eats a line (reconstructing either side
- * from the edits must return the source); and a line split that invents a line
- * for a trailing newline or drops an interior blank line.
+ * from the edits must return the source); a line split that invents a line for a
+ * trailing newline or drops an interior blank line; and a split pairing that
+ * stacked a removed line and its replacement on two rows instead of one.
  *
  * The suite runs under `environment: "node"`; nothing here needs a renderer.
  */
