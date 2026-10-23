@@ -234,6 +234,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       component("field", "Field and inline validation"),
       component("fieldset", "Fieldset"),
       component("form", "Form"),
+      component("multi-step-form", "MultiStepForm"),
       component("inline-edit", "Inline edit"),
       component("hotkey-recorder", "Hotkey recorder"),
       component("keyboard-shortcuts", "Keyboard shortcuts"),
