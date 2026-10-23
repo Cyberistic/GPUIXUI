@@ -121,6 +121,12 @@ export interface RadioGroupProps
   readonly accent?: SelectionAccent;
   /** Disables every option. */
   readonly disabled?: boolean;
+  /**
+   * Validation failed: every empty circle's edge and every row's focus ring take
+   * the destructive role, exactly as a standalone `Checkbox` does. A chosen
+   * radio keeps its accent fill — the fill is the selection, not the error.
+   */
+  readonly invalid?: boolean;
   /** Accessible name for the group. */
   readonly label?: string;
   /** Extra style, resolved against the group's live state and merged last. */
@@ -182,6 +188,7 @@ export const renderRadioGroup = (
   messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const { orientation = "vertical", size = "md", accent = "primary" } = props;
+  const invalid = props.invalid === true;
   const options = radioItems(props);
   const count = Arr.length(options);
   const isDisabled = optionDisabled(options, props.disabled);
@@ -280,6 +287,7 @@ export const renderRadioGroup = (
           accent,
           shape: "circle",
           disabled,
+          invalid,
         };
         const resolved = recipeTw.classesToStyle(
           selectionBoxClass(spec),
@@ -293,7 +301,7 @@ export const renderRadioGroup = (
             : resolved.style,
         );
         const row = mergeStyle(
-          optionRowStyle({ disabled, invalid: spec.invalid }, theme),
+          optionRowStyle({ disabled, invalid }, theme),
           resolveStyle(props.itemStyle, {
             disabled,
             focused: Option.contains(focused, index),

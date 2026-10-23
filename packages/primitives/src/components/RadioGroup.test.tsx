@@ -13,7 +13,7 @@ import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
-import { targetSize } from "@gpuixui/tokens";
+import { keyboardFocusRing, targetSize } from "@gpuixui/tokens";
 import { decideTypeAhead } from "../core/keyboard.js";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -326,6 +326,49 @@ describe("RadioGroup", () => {
     expect(Option.isSome(hostStyle(circle, "focusVisible"))).toBe(false);
     expect(expectSome(hostStyleString(circle, "pointerEvents"))).toBe("none");
     expect(expectSome(hostStyle(row, "minHeight"))).toBe(targetSize.minimum);
+  });
+
+  it("marks an invalid group on every empty edge and every row ring", () => {
+    // The bug guarded: `CheckboxGroup` could paint a failed validation but its
+    // sibling `RadioGroup` had no `invalid` prop at all, so a form could not
+    // show the error a radio group failed on. A chosen radio keeps its accent
+    // fill — the fill is the selection, not the error — while an empty circle's
+    // edge and every row's keyboard ring take the destructive role, the same
+    // split the standalone `Checkbox` and the checkbox group paint.
+    const element = renderRadioGroup(
+      { options, invalid: true },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const checkedRow = expectSome(Option.fromNullishOr(rows(element)[0]));
+    const emptyRow = expectSome(Option.fromNullishOr(rows(element)[1]));
+    const checkedCircle = expectSome(
+      Option.fromNullishOr(elementChildren(checkedRow)[0]),
+    );
+    const emptyCircle = expectSome(
+      Option.fromNullishOr(elementChildren(emptyRow)[0]),
+    );
+
+    expect(expectSome(hostStyleString(checkedCircle, "backgroundColor"))).toBe(
+      testTheme.colors.primary,
+    );
+    expect(expectSome(hostStyleString(emptyCircle, "borderColor"))).toBe(
+      testTheme.colors.destructive,
+    );
+    expect(hostStyle(emptyCircle, "backgroundColor")).toStrictEqual(
+      Option.none(),
+    );
+    Arr.forEach([checkedRow, emptyRow], (row) =>
+      expect(hostStyle(row, "focusVisible")).toStrictEqual(
+        Option.some({
+          ...keyboardFocusRing(testTheme).focusVisible,
+          outlineColor: testTheme.colors.destructive,
+        }),
+      ),
+    );
   });
 });
 

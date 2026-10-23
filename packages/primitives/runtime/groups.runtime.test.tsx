@@ -39,7 +39,7 @@ import {
   type Bounds,
   type Runtime,
 } from "./harness.js";
-import { Surface, openWindow } from "./fixture.js";
+import { Surface, openWindow, testTheme } from "./fixture.js";
 
 /** The row an option painted, found by the name it announces. */
 const rowOf = (runtime: Runtime, label: string) =>
@@ -174,6 +174,38 @@ it("declares the keyboard ring on the option that holds native focus", async () 
   ).toBe("Xray");
   expect(ringed(xray)).toBe(true);
   expect(ringed(boxOf(runtime, "Xray"))).toBe(false);
+});
+
+it("paints a failed radio group's empty edge and keeps the chosen fill", async () => {
+  // The bug this guards: `CheckboxGroup` could paint a failed validation but
+  // `RadioGroup` had no `invalid` prop at all, so a form could mark one group
+  // and not the other. The chosen radio keeps its accent fill — the fill is the
+  // selection, not the error — while an empty circle's edge takes the
+  // destructive role; both rows still declare the keyboard ring. Read back off
+  // the runtime, because the prop only matters if it reaches the paint.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="radios"
+        label="Pick"
+        invalid
+        defaultValue="a"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+    </Surface>,
+  );
+
+  const chosen = boxOf(runtime, "Alpha");
+  const empty = boxOf(runtime, "Beta");
+  expect(chosen.style["backgroundColor"]).toBe(testTheme.colors.primary);
+  expect(empty.style["borderColor"]).toBe(testTheme.colors.destructive);
+  expect(empty.style["backgroundColor"]).toBeUndefined();
+  expect(ringed(rowOf(runtime, "Alpha"))).toBe(true);
+  expect(ringed(rowOf(runtime, "Beta"))).toBe(true);
 });
 
 it("publishes a row's trimmed name, and no name at all for a blank label", async () => {
