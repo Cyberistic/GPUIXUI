@@ -97,6 +97,30 @@ const animatedRows = (): ReadonlyArray<Row> =>
 const targetRows = (): ReadonlyArray<Row> =>
   rowsBetween("## Tier 3", "## Animated primitives (plan 600)");
 
+/** Every inventory row in the file, whatever heading or column count it has. */
+const allRows = (): ReadonlyArray<Row> => rowsBetween("## Design system", "");
+
+/** The rows one name selects, so a renamed or duplicated row fails by name. */
+const rowsNamed = (name: string): ReadonlyArray<Row> =>
+  Arr.filter(allRows(), (row) => row.name === name);
+
+/** Every cell of a row, because a three-column table carries its verdict in `support`. */
+const rowText = (row: Row): string =>
+  [row.status, row.support, row.notes].join(" ");
+
+/** One `###` section of the playground README, from its heading to the next. */
+const readmeSection = (heading: string): string => {
+  const readme = readFileSync(
+    fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
+    "utf8",
+  );
+  const start = readme.indexOf(heading);
+  if (start < 0) return "";
+  const rest = readme.slice(start + heading.length);
+  const end = rest.indexOf("\n### ");
+  return end < 0 ? rest : rest.slice(0, end);
+};
+
 /** Every `COMPONENTS.md` row that belongs to this package's inventory. */
 const packageRows = (): ReadonlyArray<Row> => [
   ...tier2Rows(),
@@ -546,5 +570,64 @@ describe("the measured target rows", () => {
     );
 
     expect(problems).toEqual([]);
+  });
+
+  it("states the thumb a ScrollArea paints", () => {
+    const section = readmeSection(
+      "### `scrollbar-thumb` — measured on 0.11.0 here",
+    );
+    expect(section).toContain("72 checks, `--only scrollbar-thumb`");
+    Arr.forEach(
+      [
+        "track * track / (track + maxScroll)",
+        "at least 20",
+        "**25**",
+        "**50**",
+        "**19**",
+        "none at all",
+        "flush against the trailing edge",
+      ],
+      (claim) => expect(section, claim).toContain(claim),
+    );
+
+    const rows = rowsNamed("Scrollable containers");
+    expect(rows.length).toBe(2);
+    Arr.forEach(rows, (row) =>
+      expect(rowText(row), row.name).toContain("`scrollbar-thumb`"),
+    );
+    // The inventory row carries the readings a preview pane is planned around.
+    expect(
+      Arr.some(rows, (row) =>
+        Arr.every(["**25**", "**20**", "no gutter"], (claim) =>
+          rowText(row).includes(claim),
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it("cites the roving-focus grid a window measured", () => {
+    const section = readmeSection(
+      "### `grid-focus-lifecycle` — measured on 0.11.0 here",
+    );
+    expect(section).toContain("20 checks, `--only grid-focus-lifecycle`");
+    expect(section).toContain("**before** the zero-index stops");
+
+    const rows = rowsNamed("Keyboard navigation");
+    const row = Option.getOrElse(Arr.head(rows), () => {
+      throw new Error("COMPONENTS.md: no Keyboard navigation row");
+    });
+    expect(row.support).not.toBe("?");
+    expect(row.support).toContain("measured");
+    Arr.forEach(
+      [
+        "`grid-focus-lifecycle`",
+        "20 checks",
+        "`focusElement`",
+        "`gridfocus-r2c2`",
+        "**ordered before**",
+        "clamps",
+      ],
+      (claim) => expect(rowText(row), claim).toContain(claim),
+    );
   });
 });
