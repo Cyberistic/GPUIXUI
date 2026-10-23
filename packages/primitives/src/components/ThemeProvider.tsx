@@ -42,9 +42,9 @@ export interface ThemeProviderProps {
   readonly density?: Density;
   /**
    * The words the controls below announce — a localised interface's copy. A
-   * named group replaces its default group whole (`selection`, `press`), and a
-   * group left out keeps the default; `MessagesProvider` does the merge, so a
-   * nested provider can extend a table instead of replacing it.
+   * named group replaces its inherited group whole (`selection`, `press`), and
+   * a group left out or written `undefined` keeps it; `MessagesProvider` does
+   * the merge, so a nested provider can extend a table instead of replacing it.
    */
   readonly messages?: Partial<PrimitiveMessages>;
   readonly children: ReactNode;

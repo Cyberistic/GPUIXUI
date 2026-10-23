@@ -95,6 +95,31 @@ describe("resolveMessages", () => {
     expect(resolved.press).toEqual(french.press);
     expect(resolved.codeDigit(0, "Code")).toBe("Code chiffre 1");
   });
+
+  it("keeps a key a forwarded table leaves undefined", () => {
+    // The bug guarded: the merge spread the caller's keys over the inherited
+    // table, so a group a caller forwarded as `undefined` (an optional prop it
+    // never received) erased it. A localised tree dropped back to the shipped
+    // English for that group, and the two keys that are sentences made their
+    // component throw during render — `messages.starName is not a function`
+    // from Rating and `messages.codeDigit is not a function` from OTPField —
+    // which a window paints as an empty area, not an error. A key written
+    // `undefined` inherits, the rule `extendTheme` applies to a theme's groups.
+    const resolved = resolveMessages(
+      {
+        selection: undefined,
+        press: undefined,
+        star: undefined,
+        starName: undefined,
+        scrollRegion: undefined,
+        codeDigit: undefined,
+      },
+      french,
+    );
+    expect(resolved).toEqual(french);
+    expect(resolved.starName(1, 2)).toBe("étoile 1 sur 2");
+    expect(resolved.codeDigit(0, undefined)).toBe("Code chiffre 1");
+  });
 });
 
 describe("every control announces the table it is handed", () => {

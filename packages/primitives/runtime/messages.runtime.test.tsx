@@ -129,6 +129,31 @@ it("lets a nested provider extend the table instead of resetting it", async () =
   expect(announced(runtime, "Preview")).toBe("coché");
 });
 
+it("keeps the words a nested provider leaves undefined", async () => {
+  // The bug: a group a caller forwards as `undefined` — an optional prop it
+  // never received — erased the table above it instead of inheriting. The
+  // selection group dropped back to the shipped English, and an erased
+  // `starName` made Rating throw while rendering, which this window painted as
+  // no rating at all rather than as an error.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface messages={french}>
+      <MessagesProvider
+        messages={{ selection: undefined, starName: undefined }}
+      >
+        <Stack direction="column" gap="sm">
+          <Checkbox testId="check" label="Preview" defaultChecked />
+          <Rating testId="rating" label="Qualité" max={2} defaultValue={1} />
+        </Stack>
+      </MessagesProvider>
+    </Surface>,
+  );
+
+  expect(announced(runtime, "Preview")).toBe("coché");
+  expect(announced(runtime, "étoile 1 sur 2")).toBe("plein");
+  expect(announced(runtime, "étoile 2 sur 2")).toBe("vide");
+});
+
 it("keeps the shipped words when a caller names none", async () => {
   // The compatibility direction: adopting the seam changes nothing on a screen
   // that names no words.

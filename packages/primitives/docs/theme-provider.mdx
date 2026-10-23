@@ -27,6 +27,12 @@ A control's state is announced in words, because this runtime has no
 `messages`, one complete group per state set: `selection` and `press`, `star` and
 `starName`, `scrollRegion` and `codeDigit`.
 
+A group named whole replaces the inherited one; a group left out — or written
+`undefined` — keeps it, so a provider forwarding an optional group it never
+received cannot erase the words around it. That matters most for `starName` and
+`codeDigit`: they are sentences a control calls, so a hole there is a render
+that throws.
+
 ## API
 
 | Prop | Type | Default | Consequence |

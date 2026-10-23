@@ -3833,6 +3833,25 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       `COMPONENTS.md` rows to the code, so that table cannot drift again;
       their pages now render on the site at `/docs/primitives/<name>` (and the
       icon page at `/docs/icons/icon`), linked from the Primitives section index
+`[x]` `packages/primitives`: **a word group a provider forwarded as
+      `undefined` erased the table** — `resolveMessages` spread the caller's
+      keys over the inherited table, so a nested provider handing over an
+      optional group it never received (`messages={{ starName: undefined }}`)
+      replaced that key with `undefined`, while §Words promises one complete
+      group per state set and `useMessages` promises a complete table. Measured
+      in the window: the selection group dropped back to the shipped English in
+      a French tree (`coché` → `checked`), and the two keys that are sentences
+      made their control throw mid-render — `messages.starName is not a
+      function` from `Rating` and `messages.codeDigit is not a function` from
+      `OTPField` — which this renderer paints as **nothing**: the whole subtree
+      vanished, so a reader saw an empty row rather than an error. Every key
+      now reads `messages.<key> ?? inherited.<key>`, the rule `extendTheme`
+      applies to a theme's groups. `messages.test.tsx` gains `keeps a key a
+      forwarded table leaves undefined` and the window suite `keeps the words a
+      nested provider leaves undefined`; directions measured — with the spread
+      restored the unit case reports all six keys `undefined` and the window
+      case fails `no accessibility node announced Preview`. Docs:
+      `docs/theme-provider.mdx` §Words and the providers' JSDoc.
 `[x]` `packages/primitives`: a **coincident range pair could only be pulled one
       way** — both ends on one value is a legitimate range (a filter opened at
       "any price") and it is **one point**, so `nearestEnd` answered the tie with

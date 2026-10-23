@@ -29,9 +29,10 @@ const MessagesContext = createContext<PrimitiveMessages>(defaultMessages);
 /** {@link MessagesProvider} props. */
 export interface MessagesProviderProps {
   /**
-   * The words to announce. A named group replaces its default group whole; a
-   * group left out keeps the table above this provider. Omit the prop to keep
-   * that table untouched.
+   * The words to announce. A named group replaces its inherited group whole; a
+   * group left out — or written `undefined` — keeps the table above this
+   * provider, so an optional group a caller forwards cannot erase it. Omit the
+   * prop to keep that table untouched.
    */
   readonly messages?: Partial<PrimitiveMessages>;
   readonly children: ReactNode;

@@ -76,18 +76,34 @@ export const defaultMessages: PrimitiveMessages = {
 };
 
 /**
- * The table a provider paints: the caller's groups over the defaults.
+ * The table a provider paints: the caller's keys over the table above it.
  *
- * A group named whole replaces its default whole; a group left out keeps the
- * default, so `messages={{ press: … }}` does not silence a checkbox. The
- * defaults are returned **as they are** when nothing is overridden, so the
+ * A group named whole replaces its inherited group whole; a group left out
+ * keeps it, so `messages={{ press: … }}` does not silence a checkbox. **A key
+ * written `undefined` inherits too**, the rule `extendTheme` applies to a
+ * theme's groups: a caller forwarding an optional group it never received must
+ * not erase it. Two of these keys are sentences a component calls
+ * (`starName`, `codeDigit`), so a hole there is a render that throws, and a
+ * hole in `selection` silently speaks the shipped English inside a localised
+ * tree.
+ *
+ * The defaults are returned **as they are** when nothing is overridden, so the
  * shipped table has one identity rather than a copy per provider.
  */
 export const resolveMessages = (
   messages?: Partial<PrimitiveMessages>,
   inherited: PrimitiveMessages = defaultMessages,
 ): PrimitiveMessages =>
-  messages === undefined ? inherited : { ...inherited, ...messages };
+  messages === undefined
+    ? inherited
+    : {
+        selection: messages.selection ?? inherited.selection,
+        press: messages.press ?? inherited.press,
+        star: messages.star ?? inherited.star,
+        starName: messages.starName ?? inherited.starName,
+        scrollRegion: messages.scrollRegion ?? inherited.scrollRegion,
+        codeDigit: messages.codeDigit ?? inherited.codeDigit,
+      };
 
 /**
  * The word a selection announces.
