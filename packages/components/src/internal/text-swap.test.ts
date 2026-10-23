@@ -14,6 +14,7 @@ import { describe, expect, it } from "vitest";
 import {
   initialSwap,
   requestSwap,
+  restSwap,
   settleSwap,
   swapFrames,
   swapHalves,
@@ -78,6 +79,25 @@ describe("settleSwap", () => {
   it("settles nothing outside the leaving half", () => {
     const rest = initialSwap("a");
     expect(settleSwap(rest)).toBe(rest);
+  });
+});
+
+describe("restSwap", () => {
+  it("lands the swap once the incoming value has arrived", () => {
+    const entering = settleSwap(requestSwap(initialSwap("a"), "b", false));
+    expect(entering.phase).toBe("entering");
+    expect(restSwap(entering)).toMatchObject({
+      shown: "b",
+      phase: "rest",
+      run: 1,
+    });
+  });
+
+  it("leaves a phase it did not start, so a leaving value keeps its exit", () => {
+    const leaving = requestSwap(initialSwap("a"), "b", false);
+    expect(restSwap(leaving)).toBe(leaving);
+    const rest = initialSwap("a");
+    expect(restSwap(rest)).toBe(rest);
   });
 });
 

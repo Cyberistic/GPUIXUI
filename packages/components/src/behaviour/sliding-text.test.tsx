@@ -182,6 +182,41 @@ describe("SlidingText", () => {
     }
   });
 
+  it("settles to rest once the incoming value has landed", async () => {
+    const phases: string[] = [];
+    const slide = (text: string) => (
+      <SlidingText
+        testId="slide"
+        text={text}
+        style={(state) => {
+          phases.push(state.phase);
+          return { width };
+        }}
+      />
+    );
+    const page = renderComponent(slide("first"));
+    try {
+      settle(page);
+      page.renderer.clockPause();
+      await change(page, slide("second"));
+      await waitFor(() => expect(painted(page)).toBe("second"));
+      settle(page);
+      expect(phases.at(-1)).toBe("entering");
+      expect(offsetOf(page)).toBeCloseTo(width, 1);
+
+      page.renderer.clockFastForward(400);
+      settle(page);
+      expect(phases.at(-1)).toBe("rest");
+      // The resting phase has no entry frame left to restart from.
+      expect(host(page).customProps?.motion).toMatchObject({
+        initial: false,
+        transition: { duration: 0 },
+      });
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("paints the new value at once under the reduced preference", async () => {
     const page = renderComponent(
       <MotionProvider preference="reduced">{slide("first")}</MotionProvider>,

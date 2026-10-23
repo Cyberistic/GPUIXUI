@@ -154,6 +154,41 @@ describe("RollingText", () => {
     }
   });
 
+  it("settles to rest once the incoming value has landed", async () => {
+    const phases: string[] = [];
+    const roll = (text: string) => (
+      <RollingText
+        testId="roll"
+        text={text}
+        style={(state) => {
+          phases.push(state.phase);
+          return {};
+        }}
+      />
+    );
+    const page = renderComponent(roll("first"));
+    try {
+      page.renderer.clockPause();
+      await change(page, roll("second"));
+      await waitFor(() => expect(painted(page)).toBe("second"));
+      // The entry is still painting its journey, so the phase is the entry's.
+      settle(page);
+      expect(phases.at(-1)).toBe("entering");
+      expect(offsetOf(page, "roll")).toBeCloseTo(lineHeight, 1);
+
+      page.renderer.clockFastForward(400);
+      settle(page);
+      expect(phases.at(-1)).toBe("rest");
+      // The resting phase has no entry frame left to restart from.
+      expect(host(page).customProps?.motion).toMatchObject({
+        initial: false,
+        transition: { duration: 0 },
+      });
+    } finally {
+      page.unmount();
+    }
+  });
+
   it("paints the new value at once under the reduced preference", async () => {
     const page = renderComponent(
       <MotionProvider preference="reduced">
