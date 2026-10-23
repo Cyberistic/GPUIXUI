@@ -10,7 +10,7 @@
 
 import type { EventPayload, MotionStyle } from "@gpuix/react";
 import * as Option from "effect/Option";
-import type { MeasuredBox } from "../internal/measure.js";
+import { measuredPoint, type MeasuredBox } from "../internal/measure.js";
 
 /** A press point in the control's own coordinates. */
 export interface RipplePoint {
@@ -32,16 +32,14 @@ export const rippleOpacity = 0.28;
  *
  * A pointer press reports its window position, re-expressed inside the control.
  * A keyboard activation reports none, so it ripples from the centre — the only
- * point that belongs to no pointer.
+ * point that belongs to no pointer — and so does a press whose axis the payload
+ * cannot read, which the seam's point decoder resolves as none.
  */
 export const ripplePoint = (
   event: EventPayload,
   box: MeasuredBox,
 ): RipplePoint =>
-  Option.all({
-    x: Option.fromNullishOr(event.x),
-    y: Option.fromNullishOr(event.y),
-  }).pipe(
+  measuredPoint(event).pipe(
     Option.map((point) => ({ x: point.x - box.x, y: point.y - box.y })),
     Option.getOrElse(() => ({ x: box.width / 2, y: box.height / 2 })),
   );

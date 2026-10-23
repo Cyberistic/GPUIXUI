@@ -4,8 +4,9 @@
  * The bugs these guard: a ripple that starts where the window is rather than
  * where the control is; a keyboard activation that ripples from a corner; a
  * circle too small to cover the control when the press is at an edge; frames
- * whose left/top drift off the press point as the radius grows; and a newborn
- * ripple that is already invisible.
+ * whose left/top drift off the press point as the radius grows; a newborn
+ * ripple that is already invisible; and a press payload whose axis cannot be
+ * read starting the disc at `NaN` instead of the centre.
  */
 
 import type { EventPayload } from "@gpuix/react";
@@ -43,6 +44,16 @@ describe("ripplePoint", () => {
 
   it("ignores a lone axis instead of mixing a pointer with the centre", () => {
     expect(ripplePoint(event({ x: 124 }), box)).toEqual({ x: 40, y: 16 });
+  });
+
+  it("starts a press it cannot locate at the centre", () => {
+    // A payload axis the runtime cannot read is no press point: the ripple it
+    // paints would otherwise be born at `NaN` and the disc would vanish. The
+    // centre is the same point a keyboard activation uses.
+    expect(ripplePoint(event({ x: Number.NaN, y: 52 }), box)).toEqual({
+      x: 40,
+      y: 16,
+    });
   });
 });
 
