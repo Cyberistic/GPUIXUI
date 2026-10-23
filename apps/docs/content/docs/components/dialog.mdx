@@ -102,6 +102,15 @@ Open overlays share one dismiss stack: Escape and outside presses are consumed b
 the **topmost** layer only. A popover inside a dialog closes the popover first;
 one event cannot close both.
 
+`nested-overlay-lifecycle` measured that stack on the shipped `Dialog` → `Popover`
+→ `DropdownMenu` tree (41 checks): three `Escape`s leave the menu, the popover
+and the dialog in that order, each returning the focus to the control that opened
+it, while
+a press outside both floating surfaces is **one gesture** that closes one layer
+(`closes=1,1,2`) and the next press closes the popover with the dialog still
+painted. A pointer-opened menu nested in a popover takes the popover's focus, so
+one arrow reaches its first row.
+
 ## Keyboard
 
 | Key | Effect |

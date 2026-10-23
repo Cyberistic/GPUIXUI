@@ -1592,6 +1592,67 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("maxWidth");
   });
 
+  it("publishes the dismissal order a three-level stack measured", () => {
+    // A dialog holding a popover holding a menu is the composition MISSION
+    // names under nested overlays, and its one contract is the order a
+    // dismissal resolves in: every enclosing surface hears the keystroke, so a
+    // missing layer closes all three at once. `nested-overlay-lifecycle` drove
+    // the shipped tree in a window and printed the order, and the values below
+    // are derived from the probe's own surfaces and its README, so neither the
+    // record nor a page can teach an order the window no longer measured.
+    const fixture = read("apps/playground/src/live/nested-overlay.ts");
+    const declared =
+      /export const nestedSurfaces = \[([^\]]*)\]/.exec(fixture)?.[1] ?? "";
+    const surfaces = [...declared.matchAll(/"([a-z]+)"/g)].map(
+      (match) => match[1] ?? "",
+    );
+    expect(surfaces.length).toBe(3);
+    expect(surfaces.at(0)).toBe("dialog");
+    expect(surfaces.at(-1)).toBe("menu");
+
+    const readme = read("apps/playground/README.md");
+    const section =
+      /### `nested-overlay-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ??
+      "";
+    const checks = Number(/(\d+) checks/.exec(section)?.[1] ?? Number.NaN);
+    expect(checks, "the probe's README has no check count").toBeGreaterThan(20);
+
+    const outward = [...surfaces].reverse();
+    const first = outward[0] ?? "";
+    const second = outward.slice(0, 2).join(",");
+    const third = outward.join(",");
+
+    const row = rowFor("Nested overlays");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("nested-overlay-lifecycle");
+    expect(row?.evidence).toContain(`${checks} checks`);
+    expect(row?.evidence).toContain(`dismissed=${first}`);
+    expect(row?.evidence).toContain(`dismissed=${second}`);
+    expect(row?.evidence).toContain(`dismissed=${third}`);
+    expect(row?.evidence).toContain("closes=1,1,2");
+    expect(row?.evidence).toContain("closes=1,2,2");
+    expect(row?.evidence).toContain("closes=2,2,2");
+    expect(row?.workaround).toContain("one dismiss");
+
+    const page = measuredRow("Nested overlays");
+    expect(
+      page,
+      "the page's measured table has no nested-overlays row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("nested-overlay-lifecycle");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(`dismissed=${first}`);
+    expect(page?.[1]).toContain(`dismissed=${second}`);
+    expect(page?.[1]).toContain(`dismissed=${third}`);
+    expect(page?.[1]).toContain("closes=1,1,2");
+    expect(page?.[2]).toContain("one dismiss");
+
+    const dialog = read("apps/docs/content/docs/components/dialog.mdx");
+    expect(dialog).toContain("nested-overlay-lifecycle");
+    expect(dialog).toContain(`${checks} checks`);
+    expect(dialog).toContain("closes=1,1,2");
+  });
+
   it("records the thumb a scroller paints, derived from its fixture", () => {
     // The record called scrolling supported on the strength of the offsets and
     // events, and said nothing about the bar a reader actually sees.

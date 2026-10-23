@@ -6964,7 +6964,30 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 195/195
+`[x]` `[██████████]` 196/196
+
+`[x]` Publish the **nested-overlay dismissal order** a window measured — the
+curated Dialog page said one dismiss stack closes "the topmost layer only" and
+nothing on the site cited a window: `nested-overlay-lifecycle` (41 checks) drove
+the shipped `Dialog` → `Popover` → `DropdownMenu` tree and printed the order. §3
+gains **Nested overlays** (`supported, with limits`, composed rather than
+provided) with the three `Escape` readouts (`dismissed=menu`, `menu,popover`,
+`menu,popover,dialog`, each enclosing surface surviving the one inside it), the
+one-gesture pointer rule (`closes=1,1,2` → `1,2,2` → `2,2,2`, focus back at the
+app's opener) and the pointer-opened menu's surface focus; `/docs/runtime`
+publishes the same row, §5 owes the probe, and the Dialog page's §Dismissal
+carries the measured order beside the rule it already taught.
+`capability-doc.test.ts` gains `publishes the dismissal order a three-level stack
+measured`: it derives the stack from `nestedSurfaces` in
+`src/live/nested-overlay.ts`, derives the close order by reversing it, reads the
+probe's check count out of the README section, and holds the record, the page
+and the Dialog page to each value. Directions measured: with the row absent the
+case fails `expected undefined to be 'supported, with limits'`, and the page at
+`closes=1,1,9` fails `to contain 'closes=1,1,2'`; restored, 96/96 with
+`check-types` clean. `nub run --filter @gpuixui/docs test` is 1106 passed with
+the two foreign failures recorded in Interlocks (the editor pages' six
+cross-links and two dock pages with no limitations section). No native scenario
+applies — a docs page and its guard have no runtime path.
 
 `[x]` Keep the **platform switch working where the browser refuses its store**
 — the switch read `window.localStorage` directly inside the provider's mount
