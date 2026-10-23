@@ -1,4 +1,5 @@
 import { packageCollections } from "./collection-routes";
+import { servedPages } from "./curated-twins";
 import { absoluteUrl } from "./site";
 import { appName } from "./shared";
 
@@ -84,14 +85,15 @@ const note = (description: string | undefined): string => {
  * `site` is the site's own collection and `packaged` the pages the packages
  * write. A curated page shadows the package page at the same URL, so the site's
  * copy is the one that survives — the same precedence the sitemap and the
- * search index use.
+ * search index use. A package page a curated page in another section replaces
+ * is not served at all (`curated-twins.ts`), so it is not printed either.
  */
 export const llmsTxt = (
   site: ReadonlyArray<LlmsPage>,
   packaged: ReadonlyArray<LlmsPage>,
 ): string => {
   const seen = new Set<string>();
-  const pages = [...site, ...packaged].filter((page) => {
+  const pages = [...site, ...servedPages(packaged)].filter((page) => {
     if (seen.has(page.url)) return false;
     seen.add(page.url);
     return true;

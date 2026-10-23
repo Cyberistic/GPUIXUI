@@ -250,6 +250,20 @@ describe("the component index", () => {
     expect(linked).not.toContain("data-other-lane");
   });
 
+  it("does not offer the package twin of a component the composed lane lists", () => {
+    // Five primitives are curated in this lane, so their package pages are not
+    // served (`curated-twins.ts`). Suggesting one would send a reader to a
+    // redirect for a component the grid already answered.
+    const elsewhere = (query: string): string[] =>
+      otherLaneMatches(componentIndex, query).flatMap((group) =>
+        group.entries.map((entry) => entry.url),
+      );
+
+    expect(elsewhere("tooltip")).not.toContain("/docs/primitives/tooltip");
+    // The positive control: a primitive with no curated page still surfaces.
+    expect(elsewhere("slider")).toContain("/docs/primitives/slider");
+  });
+
   it("reads the filter off the URL instead of state the page cannot share", () => {
     // The mount is what the MDX page renders; the view is the markup. A filter
     // that never touches `location.search` is the defect this holds shut. The

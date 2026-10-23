@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { packageCollections } from "./collection-routes";
 import { collectionPages } from "./collection-pages";
+import { curatedPrimitiveTwins, servedPages } from "./curated-twins";
 import {
   llmsContentType,
   llmsSectionOrder,
@@ -100,7 +101,7 @@ describe("the /llms.txt index", () => {
     expect(site.length).toBeGreaterThan(20);
     expect(packaged.length).toBeGreaterThan(100);
 
-    const expected = [...site, ...packaged].reduce(
+    const expected = [...site, ...servedPages(packaged)].reduce(
       (pages, page) =>
         pages.has(page.url) ? pages : pages.set(page.url, page),
       new Map<string, LlmsPage>(),
@@ -146,6 +147,27 @@ describe("the /llms.txt index", () => {
     expect(
       entries(text).filter((line) => line.includes(absoluteUrl(url))),
     ).toHaveLength(1);
+  });
+
+  it("prints the curated page instead of the primitive page it replaces", () => {
+    // Five components are documented in the Components section, so the
+    // package's second page for the same component must not be listed: an
+    // agent reading the index would otherwise learn two addresses for one
+    // component and cite the retired one.
+    expect(curatedPrimitiveTwins.length).toBeGreaterThan(0);
+
+    // Read whole link targets: `/docs/primitives/button` is a prefix of the
+    // real `/docs/primitives/button-group`, so a substring test passes for the
+    // wrong reason on two of the five.
+    const targets = new Set(listed.flatMap((line) => targetOf(line) ?? []));
+    const wrong = curatedPrimitiveTwins.flatMap((twin) =>
+      targets.has(absoluteUrl(twin.curated)) &&
+      !targets.has(absoluteUrl(twin.retired))
+        ? []
+        : [twin.retired],
+    );
+
+    expect(wrong).toEqual([]);
   });
 
   it("prints a page with no description as a bare link", () => {

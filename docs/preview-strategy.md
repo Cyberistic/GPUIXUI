@@ -474,7 +474,8 @@ mounting the note. The primitive layer is one sidebar section even though two
 packages write its pages, because a reader looks for a lane of the library, not
 for a package boundary. `src/lib/collection-routes.ts` is the single registry;
 `src/lib/package-docs.test.ts` holds it to every `packages/*/docs` directory and
-checks that the primitives index links every page in the section.
+checks that the primitives index links every page in the section at the address
+that documents it — the curated page, for the five primitives that have one.
 
 **A snippet is code, not prose.** Every `ts` and `tsx` fence on every mounted
 page — the site's own and each package's — has its `@gpuixui/*` imports resolved
@@ -515,6 +516,21 @@ Table, Tag input, Tabs, Time picker, Timeline, Tooltip, Toast.
 every `<ComponentPreview name>` on a page names a registered demo, and every demo
 is mounted by a page (a key nobody renders is dead code, and a typo throws in the
 browser rather than failing the build).
+
+**One component, one page.** Five of those curated pages document a primitive —
+Button, Checkbox, Select, Switch and Tooltip — so the package page for each was a
+second live copy of one component: the sidebar listed two entries with one title,
+a search returned both, and the sitemap advertised two addresses. The curated
+page is canonical, because it is the fuller page and it sits where a reader
+browses a component. `src/lib/curated-twins.ts` is the one list of the five
+retired addresses: `/docs/primitives/<name>` answers a **301** to the curated
+page with the reader's query preserved, and the sidebar fill, the search index,
+the sitemap and `/llms.txt` all read the list, so none of them can serve the
+twin. The package keeps its Markdown and the tests that hold its API table to
+the props it declares; the site simply does not render a second page for the
+component. `src/lib/curated-twins.test.ts` derives the duplicate set from the two
+trees by title, so curating a sixth primitive without retiring its package page
+fails by name rather than shipping two pages again.
 
 ### The dependency line is generated, not written
 

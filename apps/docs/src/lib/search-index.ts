@@ -1,3 +1,5 @@
+import { servedPages } from "./curated-twins";
+
 /**
  * The search index's page list.
  *
@@ -5,6 +7,9 @@
  * curated site page keeps the URL of the package page it shadows: indexing both
  * would give the index two documents with one id, so a query returns the same
  * result twice and the reader cannot tell which page is current.
+ *
+ * A package page a curated page in another section replaces is not served at
+ * all (`curated-twins.ts`), so it is not indexed either.
  */
 export interface SearchPage {
   readonly url: string;
@@ -21,7 +26,7 @@ export const uniqueSearchPages = <Page extends SearchPage>(
 ): Array<Page> => {
   const seen = new Set<string>();
 
-  return [...site, ...packages.flat()].filter((page) => {
+  return [...site, ...packages.map(servedPages).flat()].filter((page) => {
     if (seen.has(page.url)) return false;
     seen.add(page.url);
     return true;

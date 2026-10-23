@@ -1,3 +1,4 @@
+import { servedUrls } from "./curated-twins";
 import { absoluteUrl } from "./site";
 
 /**
@@ -35,13 +36,16 @@ const onePerUrl = (paths: ReadonlyArray<string>): ReadonlyArray<string> =>
 /**
  * The union of the site's routes, its own pages and the package pages, as paths.
  *
- * A curated page shadows the package page that shares its URL, so the result is
- * a set.
+ * A curated page shadows the package page that shares its URL, and a package
+ * page a curated page in another section replaces is not served at all
+ * (`curated-twins.ts`), so the result is a set of the addresses a reader can
+ * open.
  */
 export const sitemapPaths = (
   site: ReadonlyArray<string>,
   packaged: ReadonlyArray<string>,
-): ReadonlyArray<string> => onePerUrl([...siteRoutes, ...site, ...packaged]);
+): ReadonlyArray<string> =>
+  onePerUrl([...siteRoutes, ...site, ...servedUrls(packaged)]);
 
 /** The sitemap document for these paths, with absolute URLs. */
 export const sitemapXml = (

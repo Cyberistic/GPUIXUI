@@ -1,6 +1,7 @@
 import { loader } from "fumadocs-core/source";
 import { defineDocs } from "fumadocs-mdx/macro";
 import { packageCollections, type PackageOrigin } from "./collection-routes";
+import { servedPages } from "./curated-twins";
 import {
   componentDocsRoute,
   dataDocsRoute,
@@ -176,10 +177,15 @@ export const packageSources = packageCollections.map(
   (collection) => sourceByOrigin[collection.origin],
 );
 
-/** The pages a sidebar section lists, ready for `completeSection`. */
+/**
+ * The pages a sidebar section lists, ready for `completeSection`.
+ *
+ * A primitive page a curated page in another section replaces is not listed
+ * twice (`curated-twins.ts`).
+ */
 export const sectionPages = (origins: ReadonlyArray<PackageOrigin>) =>
   origins.flatMap((origin) =>
-    sourceByOrigin[origin].getPages().map((page) => ({
+    servedPages(sourceByOrigin[origin].getPages()).map((page) => ({
       name: page.data.title,
       url: page.url,
     })),

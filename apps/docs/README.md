@@ -323,6 +323,7 @@ src/lib/floating-reflow.test-util.ts The panel placement both reflow guards prin
 src/lib/aria-budget.test-util.ts   The runtime's closed `aria-*` set, and the absence a page's limits claim
 src/lib/app-css.test-util.ts       The site palette both measuring guards read from the style sheet
 src/lib/search-index.ts             The search index's page list: curated pages shadow package pages
+src/lib/curated-twins.ts            The primitive pages a curated page replaces: served, indexed and listed once
 src/lib/search-tree.ts              The tree search reads: package sections filled, separators unnamed
 src/lib/search-links.ts             The search dialog's pre-query entry points
 src/lib/package-docs.ts             The loaders for the three package collections

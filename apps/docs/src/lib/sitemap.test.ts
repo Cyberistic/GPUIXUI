@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
+import { curatedPrimitiveTwins, servedUrls } from "./curated-twins";
 import { absoluteUrl, siteOrigin } from "./site";
 import {
   siteRoutes,
@@ -109,15 +110,22 @@ describe("the sitemap", () => {
     expect(sitemapXml(["/docs/a&b"])).toContain("a&amp;b");
   });
 
-  it("could list every page the site and its packages ship", () => {
+  it("lists every page the site serves, and no page a curated page replaces", () => {
+    // The five primitives documented under Components have a second page in
+    // their package; only the curated URL is served, so only it is advertised.
     const site = sitePages(docsDir);
     const packaged = packagedPages();
+    const served = servedUrls(packaged);
     const paths = sitemapPaths(site, packaged);
 
     expect(site.length).toBeGreaterThan(0);
     expect(packaged.length).toBeGreaterThan(0);
+    expect(served.length).toBe(packaged.length - curatedPrimitiveTwins.length);
     expect(paths).toEqual(expect.arrayContaining(site));
-    expect(paths).toEqual(expect.arrayContaining(packaged));
+    expect(paths).toEqual(expect.arrayContaining(served));
+    expect(
+      curatedPrimitiveTwins.filter((twin) => paths.includes(twin.retired)),
+    ).toEqual([]);
     expect(new Set(paths).size).toBe(paths.length);
     expect(
       paths.filter(

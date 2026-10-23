@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { collectionPages } from "./collection-pages";
 import { packageCollections, packageSections } from "./collection-routes";
+import { curatedTwinOf } from "./curated-twins";
 
 /**
  * The package-owned documentation the site mounts.
@@ -276,6 +277,9 @@ describe("the package docs collections", () => {
   );
 
   it("list every primitive the package ships on the section index", () => {
+    // Five primitives are documented in the Components section, so their row
+    // links the curated page rather than the package page the site does not
+    // serve (`curated-twins.ts`). Either address answers the same component.
     const index = read(new URL("primitives/", docsDir), "index.mdx");
     const linked = new Set(
       [...index.matchAll(/\]\((\/docs\/[a-z0-9/-]+)\)/g)].flatMap((match) =>
@@ -288,7 +292,11 @@ describe("the package docs collections", () => {
       .flatMap((collection) =>
         mdxFiles(new URL(`${collection.dir}/`, root)).flatMap((name) => {
           const url = `${collection.route}/${name.replace(/\.mdx$/, "")}`;
-          return linked.has(url) ? [] : [url];
+          const curated = curatedTwinOf(url);
+          return linked.has(url) ||
+            (curated !== undefined && linked.has(curated))
+            ? []
+            : [url];
         }),
       );
 

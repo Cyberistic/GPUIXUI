@@ -1,4 +1,5 @@
 import { packageCollections } from "./collection-routes";
+import { servedPages } from "./curated-twins";
 
 /**
  * The component index.
@@ -536,6 +537,10 @@ export interface LaneMatches {
  *
  * An empty query is not a lane question, so it answers with no groups: the
  * full grid is already every composed page.
+ *
+ * A primitive page a curated page in another section replaces is not offered
+ * as a second result for a component the reader can already see
+ * (`curated-twins.ts`).
  */
 export const otherLaneMatches = (
   entries: ReadonlyArray<ComponentEntry>,
@@ -545,7 +550,7 @@ export const otherLaneMatches = (
   query.trim() === ""
     ? []
     : filterEntries(
-        entries.filter((entry) => entry.section !== lane),
+        servedPages(entries).filter((entry) => entry.section !== lane),
         query,
       ).reduce<ReadonlyArray<LaneMatches>>((groups, entry) => {
         const found = groups.find((group) => group.lane === entry.section);
