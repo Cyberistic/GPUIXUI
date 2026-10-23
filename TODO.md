@@ -8778,6 +8778,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Take the **brand example's dark fill to the find wash's separation** — `packages/tokens/src/brand-theme.example.ts`'s dark brand is `primary: "#B49CFF"`, and folding `highlightFailures` into `auditTheme` makes that file's own audit fail: `findHighlight` derives a resting 30% and an active 31% share from it, one share apart and under the 1.05:1 separation, so the gate reports `distinct` on all four content strips. The smallest step that clears is `#A78BFA` (30% / 36%), which keeps the indicator mark and the `#1C1547` label where they were; `/docs/theming`'s dark snippet and its brand paragraph already print `#A78BFA` with the measured reason, and `theming-page.test.ts` audits the snippet it reads | tokens-theme (`brand-theme.example.ts`, `theme.test.ts`'s brand audit); docs-site (`theming.mdx`) | **tokens half resolved 2026-10-23 by the derivation, not the fill** — `findHighlight` now takes the strongest **secondary-safe** share when the strongest body-safe share cannot be told apart from the resting one, so `#B49CFF` derives 30% / 50% and clears the 1.05:1 separation on all four strips; `theme.test.ts`'s documented-brand audit passes unchanged and `brand-theme.example.ts` keeps its identity. The docs page is the remaining half and is now stale the other way: `/docs/theming` prints `#A78BFA` with a paragraph saying `#B49CFF` fails, which the fixed derivation no longer does — it should print the package's `#B49CFF` and retract the one-share-apart sentence (`theming-page.test.ts` audits whatever snippet it reads, so the value itself is green) |
 
 | The **design-system `Text selection wash` row** still printed the pre-look sweep — it says `selection.test.ts` holds "the 30/5.21 measurement, the 64-placement sweep", while the suite derives **32 of the 36 dark** placements at Windows dark's **5.21:1** over **72** placements across the 18 styles (`selection.test.ts`'s `states the tint contract and its numbers on every page` requires `32 of the 36 dark` and `All 72 tint placements resolve` on the same row, so the stale pair sits beside the derived one) | tokens-theme (owns the design-system table) | **resolved 2026-10-23 — the row prints the suite's own measurements.** The `Text selection wash` row now reads "the 32-of-36 dark measure at Windows dark's 5.21:1, the 72-placement sweep", so the row names the same pair the paragraph above it and `selection.test.ts` prints. `selection.test.ts`'s `the wash a status message can carry` suite holds the row to the sweep it derives: it refuses the retired `30/5.21` and `64-placement` phrases and requires the row to print `${derived.length}-placement sweep`, so the row cannot outlive the sweep again. Directions measured: restoring the pre-look row fails the case by name (`expected '# COMPONENTS.md …' not to contain '30/5.21'`); restored, `selection.test.ts` is 37/37 green. No native scenario applies — a printed count a suite derives |
+| Give **`packages/media/docs/qr-code.mdx` its accessibility budget** — the page ships `## Anatomy`, `## Sizes`, `## Levels and capacity`, `## Colour`, `## API`, `## Encoder` and `## Limits`, so the package page template's required "accessibility or limitations" section is absent (`package-page-template.test.ts` records it as a known gap with this owner; the site-side half — the page's place in **Media surfaces** — is landed). The frame is `role="img"` with `label` as its name, so an Accessibility section has real material: the name reaches a screen reader, nothing inside the symbol is interactive, and the overflow message is text a reader hears | media (`packages/media/docs/qr-code.mdx`) | open — the docs suite is green with the gap recorded; delete the `knownGaps` entry when the section lands |
 | Cite the **second-window measurement** in the rows that assume it — the Tier 4 *Detachable / movable tabs*, *Workspace layouts* and *Drag and drop* rows, the capability record's *Portals*, *Movable tabs* and *Drag reorder* rows, and the README's `portal-layer`/`movable-tabs-lifecycle`/`drag-reorder` limits all state "the binding opens one window per process" without a citation. The playground's `second-window-lifecycle` (8 checks, 0.11.0) now measures it: a second `GpuixRenderer.init()` is refused with `A GPUI application already exists on this thread`, the refused renderer reports `isInitialized() === false`, a second attempt is refused the same way, and the running window still reports a size, paints its marker and hears a press; the installed typings publish no other window verb and `WindowOptions` names no parent or child window, so an application cannot side-step it. The rows should cite the probe and keep the honest verdict (`partial` for detachable tabs and drag-and-drop; a second process is the only route for a detached tab) | components (`COMPONENTS.md` Tier 4 rows, `@gpuixui/dock`) and docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) | **components half landed 2026-10-23** — the three rows the probe names cite it: *Detachable / movable tabs* records the refusal, the `isInitialized() === false` answer, the retry and the still-live window, and names the second process as the only route for a detached tab; *Workspace layouts* and *Drag and drop* carry the same measured sentence where each used to infer "one window per process" (no `@gpuixui/dock` row carried it). **Still open:** docs-site's *Portals*, *Movable tabs* and *Drag reorder* rows and `/docs/runtime` — the record still states the limit without the probe. Evidence `apps/playground/README.md` §`second-window-lifecycle`, `.artifacts/live/second-window{,-pressed}.png` |
 
 ## Phase D — data and workspace components
@@ -10162,7 +10163,53 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 269/269
+`[x]` `[██████████]` 272/272
+
+`[x]` Place the **QrCode page** the media workstream mounted — `related.test.ts`
+      requires every package page to sit in a family or be argued solo, and
+      `package-page-template.test.ts` requires an accessibility or limitations
+      section: the page is now `media("qr-code", "QrCode")` in **Media
+      surfaces**, and its `## Limits` is the honest gap the template records
+      (`knownGaps`, owner `media workstream`) rather than a heading invented from
+      the site side. The staleness case deletes the entry the moment the page
+      gains the section. Both guards were red on the mounted page
+      (`expected [ '/docs/media/qr-code' ] to deeply equal []` and
+      `packages/media/docs/qr-code.mdx: no accessibility or limitations
+      section`); green after.
+
+`[x]` Prove the **docs theme switch is a press**, and that it leaves every
+      preview alone — the chrome (sidebar, page, prose) has its own `.dark`
+      palette in `app.css` while a preview paints the library's theme from
+      `?mode=`/`?platform=`, and nothing held the separation: the toggle is
+      next-themes' React state, so a static read of `<html>` proved nothing.
+      `apps/docs/scripts/docs-theme-probe.ts` waits for `[data-theme-toggle]` to
+      carry `__reactProps.onClick`, reads the scheme, the chrome's computed
+      `--background` (held to the value the sheet declares for that scheme), the
+      remembered choice and every `.gx-demo[data-mode]` surface's
+      `mode:platform:fill` (each fill held to
+      `platformTheme(themes[mode], platform).colors.background`), presses both
+      directions and requires the whole preview set to stay put — compared field
+      by field, because a `join(",")` reads `[object Object]`. A `chromeMode`
+      override in `PreviewSurface` made the drawings follow the chrome and is
+      reverted (its guards hold `data-mode={theme.mode}`); `docs/preview-strategy.md`
+      gains §The docs theme switch is a measured click and the README ledger names
+      the probe. Directions measured against the dev server on 2026-10-23:
+      `light: chrome #ffffff, 3 previews stayed on dark darwin at #1C1C1E`, exit
+      0; `--timeout 500` prints the hydration `FAIL` and exits 1.
+      `src/lib/docs-theme-switch.test.ts` (14 cases) holds the parser (a
+      truncated line and an unreadable preview are refused, not guessed), the
+      same-fields comparison, both presses, the sheet-derived fills, the policy
+      and the ledger.
+
+`[x]` Read a style sheet's **exact selector**, not a suffix of a compound one —
+      `theme-css.test.ts`'s `block()` used `css.indexOf(".gx-demo {")`, which is
+      a suffix of the landing's `.gx-base.gx-demo {` rule the dashboard pass
+      added above it, so the scene cases read the defaulted block and failed
+      (`background-color: transparent`, `color-scheme: dark`). The reader anchors
+      the selector at a line start, and the landing's two `"\n"` prefixes are
+      gone. A new case reads a two-block fixture where the compound rule comes
+      first; directions measured: with the substring reader restored, that case
+      and both scene cases fail by name, green after (27/27).
 
 `[x]` Print the **two structural reports as the gate's thirteenth and
       fourteenth**, and delete the beside-the-gate split — `auditTheme` gained

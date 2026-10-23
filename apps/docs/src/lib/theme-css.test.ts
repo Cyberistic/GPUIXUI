@@ -53,10 +53,21 @@ const previewCss = (): ReadonlyArray<readonly [string, string]> => [
   ["blocks.css", read("../styles/blocks.css")],
 ];
 
-/** The declarations of the first `selector { … }` block in a style sheet. */
+/**
+ * The declarations of the first `selector { … }` block in a style sheet.
+ *
+ * The selector has to start its line: `.gx-demo {` is a suffix of
+ * `.gx-base.gx-demo {`, which is the landing's defaulted scene, so a substring
+ * search read that block as the scene's and held the wrong declarations.
+ */
 const block = (css: string, selector: string): string => {
-  const start = css.indexOf(`${selector} {`);
-  if (start === -1) throw new Error(`no ${selector} block`);
+  const pattern = new RegExp(
+    `^[ \\t]*${selector.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{`,
+    "m",
+  );
+  const match = pattern.exec(css);
+  if (match === null) throw new Error(`no ${selector} block`);
+  const start = match.index;
   return css.slice(start, css.indexOf("}", start));
 };
 
@@ -230,6 +241,26 @@ describe("theme bridge", () => {
 
     expect(vars["--font-sans"]).toContain("BlinkMacSystemFont");
     expect(vars["--font-mono"]).toBe(themes.dark.typography.mono);
+  });
+});
+
+describe("the block reader", () => {
+  it("reads the selector that starts a line, not a compound one ending in it", () => {
+    // `.gx-demo {` is a suffix of `.gx-base.gx-demo {` — the landing's defaulted
+    // scene — so a substring search read that block as the scene's and held its
+    // `var(--background)` against a rule that must declare no variable at all.
+    const sheet = [
+      ".gx-base.gx-demo {",
+      "  background: red;",
+      "}",
+      "",
+      ".gx-demo {",
+      "  background: blue;",
+      "}",
+    ].join("\n");
+
+    expect(block(sheet, ".gx-demo")).toContain("background: blue");
+    expect(block(sheet, ".gx-base.gx-demo")).toContain("background: red");
   });
 });
 
@@ -691,8 +722,8 @@ describe("the data series", () => {
         .filter(({ name }) => name.startsWith("--dash-series-"))
         .map(({ value }) => value);
 
-    expect(values("\n.landing .gx-dash")).toEqual(cssSeries(lightSeries));
-    expect(values("\n.dark .landing .gx-dash")).toEqual(cssSeries(darkSeries));
+    expect(values(".landing .gx-dash")).toEqual(cssSeries(lightSeries));
+    expect(values(".dark .landing .gx-dash")).toEqual(cssSeries(darkSeries));
   });
 
   it("draws the dashboard's charts from the variables, not a palette", () => {

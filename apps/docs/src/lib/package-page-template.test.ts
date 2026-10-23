@@ -95,6 +95,11 @@ const knownGaps: ReadonlyArray<KnownGap> = [
     section: "accessibility or limitations",
     owner: "dock workstream",
   },
+  {
+    page: "packages/media/docs/qr-code.mdx",
+    section: "accessibility or limitations",
+    owner: "media workstream",
+  },
 ];
 
 const missing = pages.flatMap((page) =>

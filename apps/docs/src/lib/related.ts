@@ -323,6 +323,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       media("drop-zone", "DropZone"),
       media("file-upload", "FileUpload"),
       media("image-preview", "ImagePreview"),
+      media("qr-code", "QrCode"),
     ],
   },
 ];

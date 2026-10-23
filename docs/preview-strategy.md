@@ -343,6 +343,59 @@ to Windows` — so a page whose one preview never re-resolved cannot pass on the
 surfaces that did. `src/lib/platform-switch.test.ts` holds the policy, the
 command, both measurements and the parser the assertions read.
 
+### The docs theme switch is a measured click
+
+The site has **two** palettes, and they are deliberately independent:
+
+- the **docs chrome** — the sidebar, the page and the prose — reads its own
+  `:root`/`.dark` values from `src/styles/app.css`;
+- a **preview** paints the library's theme, resolved from `?mode=`, `?platform=`
+  and `?look=`, so a component can be read in the dark palette while the page is
+  light.
+
+The chrome's switch is React state held by next-themes, so no static read proves
+it: `?theme=dark` in a URL, or the class on `<html>` at load, says nothing about
+whether pressing the toggle moves one and leaves the other. The separation is the
+honesty rule of this file — a preview **does not follow the docs chrome's theme**,
+because the library's palette is what the page documents, not the page's own
+skin.
+
+`apps/docs/scripts/docs-theme-probe.ts` presses `[data-theme-toggle]` on the
+served Button page once per direction. It waits for the toggle to carry
+`__reactProps.onClick`, then reads, as one line:
+
+- the scheme `<html>` carries (`light`/`dark`),
+- the chrome's computed `--background`, held to the value `app.css` declares for
+  that scheme (read from the sheet, never a hex of the probe's own),
+- the scheme `localStorage` remembers,
+- every `.gx-demo[data-mode]` surface's `mode:platform:fill`, each fill held to
+  `platformTheme(themes[mode], platform).colors.background` — the library's own
+  role, so a palette edit moves the probe with it.
+
+It requires the chrome to move both ways, the remembered choice to agree with the
+paint, and the **whole preview set to stay put** — compared field by field,
+because the previews are objects and a `join(",")` reads `[object Object]` for
+every one of them. Run it with a dev or preview server up:
+
+```sh
+nub run --filter @gpuixui/docs dev
+nub apps/docs/scripts/docs-theme-probe.ts
+```
+
+Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
+against the dev server: `light: chrome #ffffff, 3 previews stayed on dark darwin
+at #1C1C1E`, exit `0` — the chrome in its light palette while three previews
+stayed on the library's dark macOS page, then back to light. The negative
+control is the hydration budget: `--timeout 500` prints
+`FAIL the docs theme toggle never hydrated within 500 ms (it carries no React
+onClick)` and exits `1`. A preview that followed the chrome fails the other way —
+`FAIL a preview followed the docs theme (dark:darwin:#1C1C1E became
+light:darwin:#F6F8FA)` — so a page whose drawings inherited the docs skin cannot
+pass on the chrome's own readout. `src/lib/docs-theme-switch.test.ts` holds the
+readout parser (a truncated line and an unreadable preview are refused, not
+guessed), the comparison, both presses, the sheet-derived fills, this section and
+the command.
+
 ### Pages the package writes
 
 Each package writes the page a component ships with. The site mounts those
