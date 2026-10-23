@@ -514,7 +514,9 @@ each (`settles a surface that is still moving when the setting turns on`,
 
 **Verification.** `packages/components/src/behaviour/presence.test.tsx` measures
 the movement and the mount window in the real renderer: bounds move by the
-surface's offset, the exit keeps the box painted and then removes it, the
+surface's offset on the way in **and back out** while it leaves, the exit keeps
+the box painted and then removes it, a leave already in flight re-times to a
+window that gains a wait, the
 reduced preference paints the resting frame with no travel (including a setting
 turned on mid-entry, a dismissed notice and a dismissed panel removed at once,
 and a staggered `Reveal` that drops its delay with the duration), the accordion
