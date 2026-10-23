@@ -228,6 +228,41 @@ src/components/docs/dashboard.tsx         The dashboard's charts and stats
 src/components/docs/live-surface.tsx      Boots the wasm renderer on /live and reports what it painted
 src/components/docs/theme-editor.tsx      The live token editor on /docs/themes
 src/components/docs/theme-editor-logic.ts Its pure core: edits, audit, copy output
+src/components/docs/scatter.ts              The decorative fields' deterministic point scatter
+src/components/docs/auto-height-demo.tsx   The auto height's expand/collapse preview and its source
+src/components/docs/avatar-group-demo.tsx  The facepile's overlap, ring and overflow chip
+src/components/docs/bubbles-demo.tsx       The bubbles field's rising scatter
+src/components/docs/code-block-demo.tsx    The code block's title bar, gutter and source
+src/components/docs/copy-button-demo.tsx   The copy button's acknowledge flip
+src/components/docs/countdown-demo.tsx     The countdown's clock formats
+src/components/docs/fireworks-demo.tsx     The fireworks field's bursting sparks
+src/components/docs/glyph-demo.tsx         The glyph wall's seeded marks
+src/components/docs/gradient-demo.tsx      The gradient surface's two-stop ramp
+src/components/docs/gradient-text-demo.tsx The gradient text's per-glyph ramp
+src/components/docs/gravity-stars-demo.tsx The gravity stars field's falling lights
+src/components/docs/hexagon-demo.tsx       The hexagon field's outline grid
+src/components/docs/highlight-text-demo.tsx The highlight text's query wash
+src/components/docs/image-zoom-demo.tsx    The image zoom's pointer lens
+src/components/docs/liquid-button-demo.tsx The liquid button's flooding fill
+src/components/docs/magnetic-demo.tsx      The magnetic card's pointer lean
+src/components/docs/motion-grid-demo.tsx   The motion grid's slot travel
+src/components/docs/page-transition-demo.tsx The page transition's view swap
+src/components/docs/particles-demo.tsx     The particles field's drifting motes
+src/components/docs/pinned-list-demo.tsx   The pinned list's sticky headers
+src/components/docs/reveal-demo.tsx        The reveal's fade-and-rise entrance
+src/components/docs/ripple-button-demo.tsx The ripple button's press wash
+src/components/docs/rolling-text-demo.tsx  The rolling text's vertical roll
+src/components/docs/rotating-text-demo.tsx The rotating text's phrase interval
+src/components/docs/scroll-fade-demo.tsx   The scroll fade's edge strips
+src/components/docs/scroll-progress-demo.tsx The scroll progress's reading line
+src/components/docs/shine-button-demo.tsx  The shine button's sheen sweep
+src/components/docs/sliding-number-demo.tsx The sliding number's rolling digits
+src/components/docs/sliding-text-demo.tsx  The sliding text's horizontal slide
+src/components/docs/splitting-text-demo.tsx The splitting text's word stagger
+src/components/docs/stars-demo.tsx         The stars field's twinkling lights
+src/components/docs/theme-toggler-demo.tsx The theme toggler's light/dark flip
+src/components/docs/topography-demo.tsx    The topography field's contour lines
+src/components/docs/typing-text-demo.tsx   The typing text's character reveal
 src/styles/app.css                        Tailwind, Fumadocs presets and the docs palette
 src/styles/demos.css                      Scoped browser previews of the native components
 src/styles/blocks.css                     The block recipes' preview styles
