@@ -2,9 +2,9 @@
  * Toggle example: a canvas toolbar.
  *
  * Modes, not settings — grid and snapping change what the next drag does, so
- * they are toggles; the lock is a mode that is unavailable until something is
- * selected. The group holds one tab stop and the panel's state is controlled,
- * which is the API a toolbar uses.
+ * they are a group of toggles with one tab stop; the preview is a single mode
+ * outside the group, because it changes what the canvas paints rather than
+ * joining the tool cluster.
  */
 
 import { useState, type ReactElement } from "react";
@@ -14,6 +14,7 @@ import {
   Separator,
   Stack,
   Text,
+  Toggle,
   ToggleGroup,
   type GroupOption,
 } from "../src/index.js";
@@ -25,9 +26,10 @@ const MODES: ReadonlyArray<GroupOption> = [
   { value: "lock", label: "Lock layer", disabled: true },
 ];
 
-/** Canvas toolbar: a pressed mode, a second mode, and an unavailable one. */
+/** Canvas toolbar: a group of modes, a standalone mode, and an unavailable one. */
 export const ToggleExample = (): ReactElement => {
   const [modes, setModes] = useState<ReadonlyArray<string>>(["grid"]);
+  const [preview, setPreview] = useState(true);
   const grid = Arr.contains(modes, "grid");
   const snap = Arr.contains(modes, "snap");
 
@@ -53,10 +55,18 @@ export const ToggleExample = (): ReactElement => {
           testId="toggle-example-modes"
         />
 
+        <Toggle
+          pressed={preview}
+          onPressedChange={setPreview}
+          testId="toggle-example-preview"
+        >
+          Live preview
+        </Toggle>
+
         <Separator orientation="horizontal" />
 
         <Text role="caption" tone="muted">
-          {`Grid ${grid ? "on" : "off"} · Snap ${snap ? "on" : "off"} · Lock unavailable until a layer is selected.`}
+          {`Grid ${grid ? "on" : "off"} · Snap ${snap ? "on" : "off"} · Preview ${preview ? "on" : "off"} · Lock unavailable until a layer is selected.`}
         </Text>
       </Stack>
     </Box>

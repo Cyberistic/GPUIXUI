@@ -234,6 +234,40 @@ it("flips the toggle example's snap mode and repaints its summary", async () => 
   ).toBe(true);
 });
 
+it("flips the toggle example's standalone mode and repaints its summary", async () => {
+  // The bug guarded: `toggle.example.tsx` composed only a `ToggleGroup`, while
+  // the Toggle record and `docs/README.md`'s page table both named it as the
+  // standalone control's example — so the one screen a consumer copies never
+  // mounted the primitive the row calls done. The mode is controlled and its
+  // paint is the pressed state's own, so both the announcement and the fill are
+  // read back here.
+  const runtime = await openWindow();
+  renderExample(runtime, "toggle");
+  const background = (): unknown =>
+    Option.getOrElse(runtime.element("toggle-example-preview"), () =>
+      expect.fail("the runtime retained no standalone toggle"),
+    ).style["backgroundColor"];
+  expect(
+    Option.getOrUndefined(
+      a11yValueOf(runtime.a11y(), { label: "Live preview" }),
+    ),
+  ).toBe("pressed");
+  expect(background()).toBe(testTheme.colors.accent);
+
+  runtime.clickElement(byLabel(runtime, "Live preview"));
+  expect(
+    Option.getOrUndefined(
+      a11yValueOf(runtime.a11y(), { label: "Live preview" }),
+    ),
+  ).toBe("not pressed");
+  expect(background()).toBeUndefined();
+  expect(
+    Arr.some(runtime.allText(), (line) =>
+      line.startsWith("Grid on · Snap off · Preview off"),
+    ),
+  ).toBe(true);
+});
+
 it("steps the number-field example's copies and repaints its summary", async () => {
   const runtime = await openWindow();
   renderExample(runtime, "numberField");

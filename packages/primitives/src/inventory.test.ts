@@ -127,6 +127,58 @@ const deniedParts = (text: string): ReadonlyArray<string> =>
 const sourceOf = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, packageRoot)), "utf8");
 
+/**
+ * The component each record's example must render.
+ *
+ * The record's `example` field is a claim — "this is the screen a consumer
+ * copies and it demonstrates this control" — and `names files that exist` only
+ * checks that the path is there. So a row could point at any example in the
+ * package and stay green: the Toggle record and `docs/README.md`'s page table
+ * both named `toggle.example.tsx`, which composed only a `ToggleGroup`, and the
+ * standalone mode the row calls done had no example anywhere.
+ *
+ * One identifier per control is enough to prove the example mounts it; the
+ * runtime suite (`runtime/examples.runtime.test.tsx`) owns what the mounted
+ * screen does.
+ */
+const EXAMPLE_COMPONENTS: Readonly<Record<string, ReadonlyArray<string>>> = {
+  "Text / typography": ["Text"],
+  Icons: ["Icon"],
+  Separators: ["Separator"],
+  Spacers: ["Spacer"],
+  "Stack / layout primitives": ["Stack"],
+  Grid: ["Grid"],
+  "Boxes / containers": ["Box"],
+  "Scrollable containers": ["ScrollArea"],
+  Buttons: ["Button"],
+  "Icon buttons": ["IconButton"],
+  "Button groups": ["ButtonGroup"],
+  Labels: ["Label"],
+  "Text inputs": ["Input"],
+  "Text areas": ["TextArea"],
+  Checkboxes: ["Checkbox"],
+  "Checkbox group": ["CheckboxGroup"],
+  "Radio groups": ["RadioGroup"],
+  Selects: ["Select"],
+  Switches: ["Switch"],
+  Progress: ["Progress"],
+  Tooltips: ["Tooltip"],
+  Skeletons: ["Skeleton"],
+  "Loading indicators": ["Spinner"],
+  Slider: ["Slider"],
+  "Range slider": ["RangeSlider"],
+  Meter: ["Meter"],
+  "Number Field": ["NumberField"],
+  "OTP Field": ["OTPField"],
+  Toggle: ["Toggle"],
+  "Toggle group": ["ToggleGroup"],
+  Rating: ["Rating"],
+};
+
+/** Whether a file renders a component named `component`, not a longer name. */
+const renders = (source: string, component: string): boolean =>
+  new RegExp(`<\\s*${component}(?=[\\s/>])`).test(source);
+
 /** Every problem with one state control's record, row and source. */
 const announceProblems = ({
   name,
@@ -310,6 +362,35 @@ describe("Tier 1 inventory", () => {
         (path) => !fileExists(path),
       ).map((path) => `${meta.name}: missing ${path}`),
     );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("points every row at an example that renders it", () => {
+    // The bug guarded: the Toggle record named `toggle.example.tsx`, which
+    // composes only a `ToggleGroup`, so the standalone mode had no native
+    // example while the record, the docs page table and the ledger all said it
+    // did. The map is the contract between a row and its screen: a record with
+    // no entry, an entry with no record and a tag the example never mounts are
+    // all failures, so a new component cannot be filed against a screen that
+    // does not demonstrate it.
+    const problems = [
+      ...Arr.filter(
+        Arr.map(inventory, (meta) => meta.name),
+        (name) => EXAMPLE_COMPONENTS[name] === undefined,
+      ).map((name) => `${name}: no example contract`),
+      ...Arr.filter(
+        R.keys(EXAMPLE_COMPONENTS),
+        (name) => !Arr.some(inventory, (meta) => meta.name === name),
+      ).map((name) => `${name}: example contract with no record`),
+      ...Arr.flatMap(inventory, (meta) =>
+        Arr.flatMap(EXAMPLE_COMPONENTS[meta.name] ?? [], (component) =>
+          renders(sourceOf(meta.example), component)
+            ? []
+            : [`${meta.name}: ${meta.example} renders no <${component}>`],
+        ),
+      ),
+    ];
 
     expect(problems).toEqual([]);
   });
