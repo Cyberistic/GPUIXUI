@@ -21,7 +21,7 @@ import { SearchReplace } from "@gpuixui/editor";
 
 | Key | Contract |
 | --- | -------- |
-| F3 | next match |
+| F3 (in either field) | next match |
 | Shift+F3 | previous match |
 | Tab, then Enter/Space on `Aa` or `W` | flip the match-case or whole-word toggle |
 
@@ -85,10 +85,11 @@ non-overlapping occurrence found, an empty query returning nothing, case and
 whole-word matching (including `cat_x`/`cat2`), a regex character treated
 literally, replace-all agreeing with the match count under the same options, and
 a 20 000-match document found and replaced without exhausting the stack.
-`src/behaviour/search-replace.test.tsx` (2 native behaviour tests) drives the
+`src/behaviour/search-replace.test.tsx` (3 native behaviour tests) drives the
 real bar: typing `cat` counts `1 / 2`, the `Aa` toggle raises it to `1 / 3`, `W`
-lowers it to `1 / 2`, and replace-all hands the caller `" concatenate "`; the
-second test reads a single replacement back from the replacement field.
+lowers it to `1 / 2`, and replace-all hands the caller `" concatenate "`; a
+single replacement is read back from the replacement field, and `F3` steps the
+match from that field too.
 
 ## Related
 

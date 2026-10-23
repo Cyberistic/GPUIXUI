@@ -172,6 +172,7 @@ export const SearchReplace = ({
       <Input
         value={replacement}
         onValueChange={setReplacement}
+        onKeyDown={onKeyDown}
         placeholder={replacePlaceholder}
         label={replaceFieldLabel}
         disabled={disabled}

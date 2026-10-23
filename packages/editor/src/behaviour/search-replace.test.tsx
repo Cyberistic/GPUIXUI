@@ -112,6 +112,19 @@ describe("SearchReplace", () => {
     search.unmount();
   });
 
+  it("steps matches from the replacement field too", () => {
+    const search = render(
+      <Harness initial="cat cat" onChange={() => undefined} />,
+    );
+
+    typeInto(search, "search-replace-find", "cat");
+    expect(text(search)).toContain("1 / 2");
+    const field = search.renderer.findByTestId("search-replace-replace");
+    search.renderer.nativeSimulateKeyDown(field?.id ?? -1, "f3");
+    expect(text(search)).toContain("2 / 2");
+    search.unmount();
+  });
+
   it("replaces the active match with the replacement field's text", () => {
     const changes: string[] = [];
     const search = render(
