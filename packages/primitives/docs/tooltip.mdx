@@ -65,6 +65,7 @@ const theme = useTheme();
 | Package | Why |
 | ------- | --- |
 | `@gpuix/react/tooltip` | the anchored layer, the hover/focus wiring and dismissal, which this wrapper themes |
+| `@gpuixui/motion` | the house presence rule the tip moves with (`@gpuixui/motion/presence`), read through the package's `core/presence.ts` seam |
 | `@gpuixui/icons` | the `info` glyph in the usage snippet |
 
 ## Motion
@@ -72,8 +73,11 @@ const theme = useTheme();
 A tip is the smallest floating surface, so it uses the smallest movement: a fade
 plus two pixels along the axis it is anchored to (`side`), over
 `motionLevels.fast` (160 ms) — the `easeOut` entry and the `easeIn` exit every
-other surface uses. Both frames come from `@gpuixui/motion/timing`, so a change
-to the house timing reaches the tip with no component change.
+other surface uses. The frames, the exit window and the pointer rule are
+`@gpuixui/motion/presence`'s, and the level's two phases come from that module's
+`presenceTiming`, so a change to the house motion reaches the tip with no
+component change and the two packages that float a surface compose one table
+rather than agreeing by hand.
 
 **A dismissed tip keeps its box for the exit.** The runtime publishes no exit
 lifecycle (`TooltipContent` returns nothing when closed), so the wrapper holds

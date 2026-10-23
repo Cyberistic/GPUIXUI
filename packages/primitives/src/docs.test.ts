@@ -626,7 +626,12 @@ describe("the primitives docs page contract", () => {
     expect(page).toContain("| `reducedMotion` |");
     const sourceOf = (path: string): string =>
       readFileSync(fileURLToPath(new URL(path, packageRoot)), "utf8");
-    expect(sourceOf("src/core/presence.ts")).toContain('motionTiming("fast"');
+    // The seam composes the published rule rather than restating it: the frames,
+    // the window and the pointer rule are `@gpuixui/motion/presence`'s, and the
+    // level is named through that module's own phase pairing.
+    const presence = sourceOf("src/core/presence.ts");
+    expect(presence).toContain('from "@gpuixui/motion/presence"');
+    expect(presence).toContain('presenceTiming("fast"');
     const tooltip = sourceOf("src/components/Tooltip.tsx");
     expect(tooltip).toContain("surfaceMotion(");
     expect(tooltip).toContain("useHeldOpen(");
