@@ -2806,6 +2806,7 @@ export const demos: Readonly<Record<string, Demo>> = {
   "preview-card-demo": {
     render: PreviewCardDemo,
     source: previewCardDemoSource,
+  },
   "box-demo": { render: BoxDemo, source: boxDemoSource },
   "button-group-demo": {
     render: ButtonGroupDemo,
