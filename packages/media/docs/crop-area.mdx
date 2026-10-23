@@ -37,13 +37,17 @@ different shape is stretched into that same coordinate space rather than
 letterboxed — a crop drawn over a `contain` placement would not name the pixels
 the reader sees.
 
-Three rules keep the hole usable:
+Rules that keep the hole usable:
 
 - every edge stays inside the frame;
 - a side never shrinks below `minSize` (24 points by default);
 - a stored rectangle the current frame cannot hold is **clamped before it
   paints**, so a crop restored from a smaller picture does not leave the hole
   outside the bitmap;
+- a rectangle field that cannot be laid out (`NaN`, infinity) reads as the
+  origin for `x`/`y` and as the floor for a side, so a crop computed from a
+  measurement that never arrived still paints a grabbable hole and announces a
+  real rectangle instead of `NaN`;
 - a `minSize` or `handleSize` that cannot be read (`NaN`, infinity) reads as its
   default, so a stored preference cannot collapse the hole to nothing or paint a
   `NaN` handle box.
@@ -130,3 +134,10 @@ beside the frame, as the example does.
 Measurement, fixture and captures live with the playground:
 `apps/playground/README.md` §`crop-overlay` and
 `.artifacts/live/crop-{rest,min,max,dragged}.png`.
+
+`src/crop/logic.test.ts` (21 cases) holds the clamp — including a rectangle
+whose four fields cannot be laid out — the bars as the hole's complement, every
+corner's resize, both clamps, moves, the keyboard step and the gesture seam;
+`src/crop-area.test.tsx` (9 cases) holds the frame, the bars' pointer
+transparency, the four slider handles and their ring, the unreadable rectangle,
+minimum and handle side, the blank source, the repaint and the disabled state.

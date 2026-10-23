@@ -45,6 +45,22 @@ describe("clampCrop", () => {
     ).toStrictEqual({ x: 0, y: 136, width: 240, height: 24 });
   });
 
+  it("reads a field it cannot lay out as the origin and the floor", () => {
+    expect(
+      boxes(
+        clampCrop(
+          new CropRect({
+            x: Number.NaN,
+            y: Number.NaN,
+            width: Number.NaN,
+            height: Number.NaN,
+          }),
+          bounds,
+        ),
+      ),
+    ).toStrictEqual({ x: 0, y: 0, width: 24, height: 24 });
+  });
+
   it("takes the floor a frame smaller than the minimum can offer", () => {
     expect(
       boxes(

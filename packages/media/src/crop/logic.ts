@@ -93,11 +93,17 @@ export const clampCrop = (
   min: number = CROP_MIN_SIZE,
 ): CropRect => {
   const floor = floorOf(bounds, min);
-  const width = clamp(crop.width, floor, Math.max(0, bounds.width));
-  const height = clamp(crop.height, floor, Math.max(0, bounds.height));
+  // A restored rectangle may carry a field that cannot be laid out (a ratio
+  // over a frame that never arrived). A coordinate reads from the origin and a
+  // side from the floor, so the hole is still painted and still grabbable.
+  const side = (value: number): number =>
+    Number.isFinite(value) ? value : floor;
+  const point = (value: number): number => (Number.isFinite(value) ? value : 0);
+  const width = clamp(side(crop.width), floor, Math.max(0, bounds.width));
+  const height = clamp(side(crop.height), floor, Math.max(0, bounds.height));
   return new CropRect({
-    x: clamp(crop.x, 0, Math.max(0, bounds.width - width)),
-    y: clamp(crop.y, 0, Math.max(0, bounds.height - height)),
+    x: clamp(point(crop.x), 0, Math.max(0, bounds.width - width)),
+    y: clamp(point(crop.y), 0, Math.max(0, bounds.height - height)),
     width,
     height,
   });

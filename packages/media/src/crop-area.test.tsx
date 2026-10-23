@@ -156,6 +156,32 @@ describe("renderCropArea", () => {
     ).toBe("60, 40, 24 × 24");
   });
 
+  it("reads a rectangle it cannot lay out as the origin and the floor", () => {
+    const broken = new CropRect({
+      x: Number.NaN,
+      y: Number.NaN,
+      width: Number.NaN,
+      height: Number.NaN,
+    });
+    const root = renderCropArea(
+      props({ value: broken }),
+      lightTheme,
+      surfaceOf(),
+    );
+    expect(expectSome(hostProp(root, "style"))).toMatchObject({
+      width: 240,
+      height: 160,
+    });
+    const se = handleOf(root, "se");
+    expect(expectSome(elementProp(se, "aria-valuetext"))).toBe("0, 0, 24 × 24");
+    expect(expectSome(hostProp(se, "style"))).toMatchObject({
+      left: 19,
+      top: 19,
+      width: 10,
+      height: 10,
+    });
+  });
+
   it("paints no picture for a blank source", () => {
     const root = renderCropArea(props({ src: "  " }), lightTheme, surfaceOf());
     const images = elementChildren(root).filter(
