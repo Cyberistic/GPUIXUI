@@ -118,6 +118,43 @@ describe("Progress", () => {
     expect(announced(bar(Option.some(42)))).toBe("42%");
   });
 
+  it("keeps its own words for a formatter that says nothing", () => {
+    // The bug guarded: a caller's answer was published exactly as it arrived, so
+    // a formatter whose locale table had no row for this bar (`""`) announced an
+    // empty value — the one channel a progressbar has — while the bar still had
+    // a share to report, and `ProgressValue` painted nothing beside a 42% fill.
+    // `loadingText` had the same hole on an indeterminate bar.
+    const empty = (): string => "";
+    const props = { value: 42, formatValue: empty };
+    expect(announced(renderProgress(props, testTheme, 0))).toBe("42%");
+    expect(
+      textOf(renderProgressValue({}, progressPart(props, testTheme, 0))),
+    ).toBe("42%");
+    expect(
+      announced(
+        renderProgress({ value: 42, formatValue: () => "   " }, testTheme, 0),
+      ),
+    ).toBe("42%");
+    expect(
+      announced(
+        renderProgress({ value: 42, formatValue: empty }, testTheme, 0),
+      ),
+    ).toBe("42%");
+    expect(announced(renderProgress({ loadingText: "  " }, testTheme, 0))).toBe(
+      "loading",
+    );
+    // A real answer still wins, trimmed, so the rule is not "use the default".
+    expect(
+      announced(
+        renderProgress(
+          { value: 42, formatValue: () => " nearly half " },
+          testTheme,
+          0,
+        ),
+      ),
+    ).toBe("nearly half");
+  });
+
   it("hands the formatter the clamped percentage, not the raw prop", () => {
     const said = (value: number): string =>
       announced(

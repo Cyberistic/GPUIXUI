@@ -94,6 +94,27 @@ describe("Meter", () => {
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("12 of 16");
   });
 
+  it("keeps the measurement when a formatter says nothing", () => {
+    // The bug guarded: a formatter's answer was published as it arrived, so one
+    // whose lookup table had no row for this measurement (`""`) announced an
+    // empty value — the only channel 0.11.0 has for a meter — and `MeterValue`
+    // painted nothing beside a filled bar.
+    const part = meterPart({ value: 62, formatValue: () => "" }, testTheme);
+    const blank = renderMeter({ value: 62, formatValue: () => "" }, testTheme);
+    expect(expectSome(hostProp(blank, "aria-valuetext"))).toBe("62");
+    expect(textOf(renderMeterValue({}, part))).toBe("62");
+    expect(part.valueText).toBe("62");
+    // A real answer is still the caller's, trimmed.
+    expect(
+      expectSome(
+        hostProp(
+          renderMeter({ value: 62, formatValue: () => " 62 GB " }, testTheme),
+          "aria-valuetext",
+        ),
+      ),
+    ).toBe("62 GB");
+  });
+
   it("is status, so it is never a tab stop and never takes a handler", () => {
     const element = renderMeter({ value: 10 }, testTheme);
     expect(hostProp(element, "tabIndex")).toStrictEqual(Option.none());

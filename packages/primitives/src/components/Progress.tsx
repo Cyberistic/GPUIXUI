@@ -27,7 +27,7 @@ import {
 import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
-import { accessibleName } from "../core/a11y.js";
+import { accessibleName, spokenText } from "../core/a11y.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import {
   indeterminateOffset,
@@ -145,10 +145,15 @@ export const progressPart = (
     label,
     // The share is said in the caller's words: a locale, a unit, or a buffer the
     // default phrase cannot know about. The formatter sees the **clamped**
-    // percentage, so it cannot announce a number the track never paints.
+    // percentage, so it cannot announce a number the track never paints, and an
+    // answer that says nothing — a locale table with no row for this bar —
+    // leaves the default standing rather than announcing an empty value.
     valueText: determinate
-      ? (formatValue?.(percent) ?? `${percent}%`)
-      : (loadingText ?? messages.loading.indeterminate),
+      ? spokenText(Option.fromNullishOr(formatValue?.(percent)), `${percent}%`)
+      : spokenText(
+          Option.fromNullishOr(loadingText),
+          messages.loading.indeterminate,
+        ),
   };
 };
 

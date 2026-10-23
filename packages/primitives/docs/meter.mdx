@@ -36,11 +36,16 @@ import { Meter, Stack, Text } from "@gpuixui/primitives";
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs` / `sm` |
 | `label` | `string` | none | accessible name, and `MeterLabel`'s default text |
-| `formatValue` | `(value: number) => string` | `String` | the announced and displayed measurement |
+| `formatValue` | `(value: number) => string` | `String` | the announced and displayed measurement; a blank answer keeps the number |
 | `children` | `ReactNode` | the track | the parts to draw |
 | `style` | `StyleDesc` | — | merged last, on the root frame |
 | `className` | `string` | — | Tailwind classes, joined last on the root frame |
 | `testId` | `string` | — | stable locator, on the root |
+
+`formatValue` is interface copy, so a **blank answer is absence**: a formatter
+whose lookup table has no row for this measurement returns `""`, and the meter
+announces and paints the clamped number rather than an empty value. A real
+answer is trimmed and used as it is.
 
 ## Limitations
 

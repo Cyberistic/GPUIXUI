@@ -21,6 +21,26 @@ export const accessibleName = (label: string | undefined): string | undefined =>
   );
 
 /**
+ * The words a caller's formatter supplies, or the component's own when it says nothing.
+ *
+ * A component that announces a measurement asks its caller for the sentence — a
+ * locale, a unit, a buffered share — and that answer is interface copy like a
+ * name: a formatter handed a key it does not know, or a locale table with a
+ * missing row, answers `""`, which reaches `aria-valuetext` as an announcement
+ * of **nothing** while the bar still has a value to report. A blank answer is
+ * absence, so the component's own words stand — the rule `accessibleName`
+ * already applies to a name, and `fieldHelp` to a description.
+ */
+export const spokenText = (
+  words: Option.Option<string>,
+  fallback: string,
+): string =>
+  Option.getOrElse(
+    Option.flatMap(words, (word) => Option.fromNullishOr(accessibleName(word))),
+    () => fallback,
+  );
+
+/**
  * The help a text field announces after its name.
  *
  * A field's `description` is its permanent help and wins. A `placeholder` is the

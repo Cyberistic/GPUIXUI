@@ -37,13 +37,18 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm` |
 | `label` | `string` | none | accessible name, and `ProgressLabel`'s default text |
-| `formatValue` | `(percent: number) => string` | `` `${percent}%` `` | the announced and painted share |
-| `loadingText` | `string` | `loading.indeterminate` (`"loading"`) | what an indeterminate bar says instead of a percentage |
+| `formatValue` | `(percent: number) => string` | `` `${percent}%` `` | the announced and painted share; a blank answer keeps the default |
+| `loadingText` | `string` | `loading.indeterminate` (`"loading"`) | what an indeterminate bar says instead of a percentage; a blank one keeps the provider's |
 | `reducedMotion` | `boolean` | `false` | holds the indeterminate segment; no effect with `value` |
 | `children` | `ReactNode` | the track | the parts to draw |
 | `style` | `StyleDesc` | — | merged last, on the root frame |
 | `className` | `string` | — | Tailwind classes, joined last on the root frame |
 | `testId` | `string` | — | stable locator, on the root |
+
+`formatValue` and `loadingText` are interface copy, so a **blank answer is
+absence**: a locale table with no row for this bar returns `""`, and the bar
+announces and paints its own words rather than an empty value. A real answer is
+trimmed and used as it is.
 
 ## Limitations
 

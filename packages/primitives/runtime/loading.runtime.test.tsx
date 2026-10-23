@@ -137,6 +137,37 @@ it("says a Progress's share in the caller's words in a window", async () => {
   expect(runtime.text("pg-value")).toEqual(Option.some("42% uploaded"));
 });
 
+it("keeps a Progress's own words when its formatter says nothing", async () => {
+  // The bug guarded: the caller's answer was published exactly as it arrived, so
+  // a formatter whose locale table had no row for this bar (`""`) reached the
+  // accessibility tree as an empty value — the only channel 0.11.0 has — while
+  // the bar still had a share to report, and the painted value part was blank.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Progress testId="pg" value={42} label="Uploading" formatValue={() => ""}>
+        <ProgressTrack>
+          <ProgressIndicator />
+        </ProgressTrack>
+        <ProgressValue testId="pg-value" />
+      </Progress>
+    </Surface>,
+  );
+  expect(a11yValueOf(runtime.a11y(), { label: "Uploading" })).toEqual(
+    Option.some("42%"),
+  );
+  expect(runtime.text("pg-value")).toEqual(Option.some("42%"));
+  // The indeterminate word is the provider's fallback for the same blank answer.
+  runtime.render(
+    <Surface>
+      <Progress testId="pg" label="Uploading" loadingText="  " />
+    </Surface>,
+  );
+  expect(a11yValueOf(runtime.a11y(), { label: "Uploading" })).toEqual(
+    Option.some("loading"),
+  );
+});
+
 it("fills a determinate Progress to its value", async () => {
   const runtime = await openWindow();
   const widths = async (

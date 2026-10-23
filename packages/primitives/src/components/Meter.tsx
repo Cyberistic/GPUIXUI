@@ -23,7 +23,8 @@ import {
 } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
-import { accessibleName } from "../core/a11y.js";
+import * as Option from "effect/Option";
+import { accessibleName, spokenText } from "../core/a11y.js";
 import type { ProgressTone } from "../core/style.js";
 import { clampValue, normalizeRange, valueFraction } from "../core/value.js";
 import type { PrimitiveTheme } from "../core/theme.js";
@@ -87,7 +88,12 @@ export const meterPart = (
     tone: props.tone ?? "primary",
     size: props.size ?? "md",
     label: props.label,
-    valueText: props.formatValue?.(value) ?? String(value),
+    // A formatter answers for this measurement; an answer that says nothing
+    // falls back to the number rather than announcing an empty value.
+    valueText: spokenText(
+      Option.fromNullishOr(props.formatValue?.(value)),
+      String(value),
+    ),
   };
 };
 
