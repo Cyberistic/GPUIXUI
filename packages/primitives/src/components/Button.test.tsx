@@ -26,6 +26,8 @@ import {
   disabledOpacity,
   filledHover,
   filledPressed,
+  highContrastDarkTheme,
+  highContrastLightTheme,
   keyboardDimFailures,
   lightTheme,
   platformNames,
@@ -185,14 +187,16 @@ describe("Button", () => {
     // content strips a control rests on and passes there, but the documented
     // place for an explicit action is a list row's trailing slot, where the row
     // is wearing a wash — it measures under the 1.05:1 perceptibility floor in
-    // 29 of its 64 wash placements over the 16 styles, as low as 1.000:1
-    // (Light · macOS hovered, Dark · Windows pressed). A tonal action there was
+    // 32 of its 64 wash placements over the 16 styles, as low as 1.000:1 in the
+    // High contrast pair and Light · macOS hovered. A tonal action there was
     // a label with no button around it. The edge is the same measured
     // `borderStrong` boundary the components package paints, held against the
     // washes it can sit on as well as the strips the pair table already names.
     const styled: ReadonlyArray<readonly [string, Theme]> = [
-      ["Light", themes.light],
-      ["Dark", themes.dark],
+      [lightTheme.name, lightTheme],
+      [darkTheme.name, darkTheme],
+      [highContrastLightTheme.name, highContrastLightTheme],
+      [highContrastDarkTheme.name, highContrastDarkTheme],
       ...Arr.flatMap(platformNames, (platform) =>
         Arr.map(
           ["light", "dark"] as const,
@@ -230,9 +234,9 @@ describe("Button", () => {
     });
 
     // The premise: no fill the palette can carry answers the washes. `secondary`
-    // is under the perceptibility floor in 29 of its 64 wash placements, and
-    // the tightest on each base theme is the `accent` a row tints under the
-    // pointer, so "the fill is the whole button" cannot hold there.
+    // is under the perceptibility floor in 32 of its 64 wash placements, and a
+    // row's `accent` is one of them on each base theme, so "the fill is the
+    // whole button" cannot hold there.
     const swallowed = Arr.flatMap(styled, ([name, theme]) =>
       Arr.flatMap(washes, (wash) =>
         (contrastRatio(theme.colors.secondary, theme.colors[wash]) ??
@@ -241,7 +245,7 @@ describe("Button", () => {
           : [],
       ),
     );
-    expect(swallowed.length).toBe(29);
+    expect(swallowed.length).toBe(32);
     Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
       expect(
         contrastRatio(theme.colors.secondary, theme.colors.accent) ?? Infinity,
