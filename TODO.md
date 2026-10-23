@@ -9949,6 +9949,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
     stop, `Right` expands in place, and a collapse that hides the cursor's row
     keeps a live keyboard stop. Docs `packages/data/docs/virtual-tree.mdx`;
     example `virtual-tree.example.tsx`. Owner: data.
+  - [x] **Rich-text editing** — `@gpuixui/editor` ships `MarkdownEditor`: the
+    runtime has no editable rich-text host (no caret or selection on
+    `<textarea>`, no caret over a `<code>` view, and `<code>`/`<markdown>` are
+    read-only), so the honest surface is markdown **source** in a real field
+    with the rendered document beside it. `split`/`source`/`preview` views, a
+    controlled and uncontrolled text/mode contract, a status line in code
+    points, read-only and disabled states, and an unclosed fence closed in the
+    preview only (the source is untouched) so a mid-block document does not
+    swallow the page. `src/markdown/logic.test.ts` (12 cases) and
+    `src/behaviour/markdown-editor.test.tsx` (9 native behaviour tests in the
+    real renderer, a new `test:behaviour` project for the package). Docs
+    `packages/editor/docs/markdown-editor.mdx`; example
+    `markdown-editor.example.tsx`; inventory row `done` with the limitation
+    named. Owner: components.
   - [x] **Multi-step forms** — `@gpuixui/components` ships `MultiStepForm` over
     the shipped `Stepper`: each step carries `{ id, title, description?,
     content, gate? }` and a gate answers `Option<string>` before the step moves
