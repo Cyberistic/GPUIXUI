@@ -23,6 +23,13 @@ const menus: ReadonlyArray<AppMenuEntry> = [
 <AppMenu label="Editor" menus={menus} onSelect={(menuId, itemId) => run(menuId, itemId)} />;
 ```
 
+## Pointer
+
+A closed bar opens nothing on hover: a menu opens on press. Once one menu is
+open, moving the pointer onto a sibling title switches to that menu at once and
+closes the previous one, the macOS menu-bar rule; pressing the open title again
+closes it. Moving off a title into its dropdown keeps the dropdown open.
+
 ## API
 
 | Part | Renders | Props |
