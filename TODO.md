@@ -350,7 +350,27 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 211/211
+`[x]` `[██████████]` 212/212
+
+`[x]` Search the **accent's ladder lazily**, and hold it to the smallest step —
+`nativeAccent` walked the whole 2% ladder before choosing a rung
+(`Array.from({ length: 51 }, …).find(carries)`), so every call blended all 51
+colours even when the brand's own `primary` already carried the mark: `nativeTextTheme`
+calls it, and a field or code host calls that on every render, so a paint-path
+helper cost 51 × four surfaces × two ratios per field. The rung is now found over
+indices with the blend inside the predicate, so a theme that needs no step costs
+**one** blend and a stepped one costs its own rung: measured in one process, 500
+`nativeAccent` calls on the base dark theme went **832 → 216 ms** and the base light
+theme (which does step) 1 268 → 1 118 ms. The promise the JSDoc makes — "the
+**smallest** 2% step whose marker composite clears" — was held by nothing: the suite
+measured only "the brand was not enough" and "the result clears", so a search that
+started above the brand or over-shot into the ink passed. `native-text.test.ts` gains
+`steps by the smallest share that clears, never past it`, which re-derives the first
+carrying rung per style from the floors and the two shares and requires the resolved
+colour to be exactly it (the granularity is read from the source, so a changed step
+count fails until the case moves). Directions measured: a search that starts at step
+1 fails four cases by name, the new one included. Docs already state the smallest
+step; no page changes. No native scenario applies — a pure derivation.
 
 `[x]` Keep the **role and level sweeps inside the suite's own budget** — the broad
 guards a role or an elevation level added to a theme must pass without a new case
@@ -1847,7 +1867,7 @@ the report built on it.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 154/154
+`[x]` `[██████████]` 155/155
 
 `[x]` Follow the **tooltip's presence seam** after the primitives moved it —
       `tooltip-fade.test.ts` held the tip's entry level by reading
@@ -9715,8 +9735,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
       overflow trigger instead) and `src/live/app-chrome.test.ts` holds the
       fixture, the `splitOverflow` agreement, the registry, the count and the
       README section. One measured gap went to `TODO.md` → Interlocks: `escape`
-      does not dismiss the toolbar's overflow menu (owner: shell). Owner:
-      playground
+      does not dismiss the toolbar's overflow menu (owner: shell). The example
+      gallery also merges the shell package's three examples under the docs'
+      ids, so `packages/shell/examples/index.ts`'s "mounted by the playground"
+      header is true and `--only examples-mount` pages 79 screens / 318 checks,
+      the shell's three included. Owner: playground
+`[x]` Close the **capability verdict's count hole** in `@gpuixui/testing` — a
+      capability is `verified` only when every probe covering it ran and passed,
+      but the verdict compared the number of **results** to the number of
+      declared entries, so a caller that handed `runScenarios`/`runAsyncScenarios`
+      the same scenario twice reported the capability `verified` while the other
+      probe had never run — the same evidence lie a scoped `--only` is protected
+      from, one layer in. Probes are compared by `id` on both sides now
+      (`HashSet` of the declared ids and of the ids that ran), and a registry
+      that lists one id twice declares one probe instead of a scope no run could
+      cover. `smoke.test.ts` gains `does not let a repeated probe stand in for
+      the one it skipped` and grows `counts the distinct probes the registry
+      declares…`; both fail at `HEAD` (`expected 'verified' to be 'unverified'`
+      and `declared: 4` where 2 is right) and pass after, 20/20 in the file.
+      README §What it is not teaches the id rule. No native scenario applies —
+      a pure verdict over results.
 
 ## Phase E — specialised components
 

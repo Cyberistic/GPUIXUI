@@ -16,9 +16,16 @@
  * a sentence edited alone both fail.
  */
 import { readFileSync } from "node:fs";
+import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(new URL("./examples.tsx", import.meta.url), "utf8");
+
+/** The components registry, read as keys so a collision is checked without loading it. */
+const componentRegistry = readFileSync(
+  new URL("../../../../packages/components/examples/index.ts", import.meta.url),
+  "utf8",
+);
 
 const readme = readFileSync(
   new URL("../../README.md", import.meta.url),
@@ -117,5 +124,32 @@ describe("the example gallery's README section", () => {
     expect(gallerySection).toContain("`no two examples paint the same screen`");
     expect(source).toContain('"no two examples paint the same screen"');
     expect(source).toContain("`${id} lays out a height of its own`");
+  });
+});
+
+describe("the example gallery's registry", () => {
+  it("merges the shell package's three examples under the docs' ids", () => {
+    expect(source).toContain('from "@gpuixui/shell/examples"');
+    expect(source).toContain("AppMenuExample");
+    expect(source).toContain("StatusBarExample");
+    expect(source).toContain("ToolbarExample");
+    expect(source).toContain('"app-menu": AppMenuExample');
+    expect(source).toContain('"status-bar": StatusBarExample');
+    expect(source).toContain("toolbar: ToolbarExample");
+    expect(source).toContain("...componentExamples");
+    expect(source).toContain("...shellExamples");
+  });
+
+  it("gives the merged ids no name the components registry already uses", () => {
+    // A shared id would mount one screen under two names, which the run's
+    // no-two-pages-paint-one-screen check would report after 79 mounts instead
+    // of here.
+    const componentIds = Arr.fromIterable(
+      componentRegistry.matchAll(/^  "([a-z0-9-]+)":/gm),
+    ).map((match) => match[1] ?? "");
+    expect(Arr.length(componentIds)).toBeGreaterThan(40);
+    expect(
+      Arr.intersection(componentIds, ["app-menu", "status-bar", "toolbar"]),
+    ).toEqual([]);
   });
 });

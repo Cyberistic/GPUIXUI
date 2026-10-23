@@ -1,13 +1,12 @@
 /**
- * The example gallery: every shipped `@gpuixui/components` example in the real
- * runtime.
+ * The example gallery: every shipped example the docs quote, in the real runtime.
  *
  * A component's behaviour suite proves its parts; nothing proved that the
- * screens a reader copies out of the docs *mount*. `packages/components/examples`
- * is the registry this app is its only consumer of, so the gallery pages through
- * it one screen at a time: mounting every screen at once would lay out a very
- * tall tree and leave a screen's timer or `Effect` fiber running behind the next
- * one.
+ * screens a reader copies out of the docs *mount*. The components package ships
+ * a registry and the shell package ships three components, so this module merges
+ * both into the one list the gallery pages through: mounting every screen at
+ * once would lay out a very tall tree and leave a screen's timer or `Effect`
+ * fiber running behind the next one.
  *
  * Per page, all read from the renderer: the readout names the id, the example's
  * wrapper lays out a height of its own, and the wrapper's subtree carries text —
@@ -23,10 +22,31 @@ import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { useState } from "react";
 import type { ComponentType, ReactNode } from "react";
-import { examples } from "@gpuixui/components/examples";
+import { examples as componentExamples } from "@gpuixui/components/examples";
+import {
+  AppMenuExample,
+  StatusBarExample,
+  ToolbarExample,
+} from "@gpuixui/shell/examples";
 import type { Smoke } from "@gpuixui/testing";
 import type { ScenarioBody } from "../types.js";
 import { Body, Pressable, Readout } from "../ui.js";
+
+/**
+ * The shell package's three examples, under the kebab-case ids the docs index
+ * and the components registry use.
+ */
+const shellExamples: Readonly<Record<string, ComponentType>> = {
+  "app-menu": AppMenuExample,
+  "status-bar": StatusBarExample,
+  toolbar: ToolbarExample,
+};
+
+/** The one registry the gallery pages: the components' and the shell's. */
+export const examples: Readonly<Record<string, ComponentType>> = {
+  ...componentExamples,
+  ...shellExamples,
+};
 
 /**
  * Every example id, sorted.
