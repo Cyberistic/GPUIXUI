@@ -4,7 +4,10 @@
  * The bug guarded: an unclosed fence swallows every following line in the
  * preview, so a preview that trusts the source turns the rest of the document
  * into one code block while the reader is still typing the block. The source is
- * never repaired; only the preview closes the fence.
+ * never repaired; only the preview closes the fence. A draft that already ended
+ * on a newline — the state of a field after Enter — also took a separator line
+ * before the marker, so the preview gained a blank code line the reader never
+ * typed.
  */
 
 import { describe, expect, it } from "vitest";
@@ -73,6 +76,13 @@ describe("closeFences", () => {
   it("appends only the missing marker", () => {
     expect(closeFences("```\ncode")).toBe("```\ncode\n```");
     expect(closeFences("~~~\ncode")).toBe("~~~\ncode\n~~~");
+  });
+
+  it("does not add a blank line when the draft already ends on a newline", () => {
+    expect(closeFences("```\ncode\n")).toBe("```\ncode\n```");
+    // A blank line the reader did type is content and stays.
+    expect(closeFences("~~~\ncode\n\n")).toBe("~~~\ncode\n\n~~~");
+    expect(closeFences(closeFences("```\ncode\n"))).toBe("```\ncode\n```");
   });
 });
 

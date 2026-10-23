@@ -84,11 +84,17 @@ export const openFence = (source: string): Option.Option<string> =>
     (held) => Str.repeat(held.length)(held.family === "ticks" ? "`" : "~"),
   );
 
-/** The source with the fence a preview needs closed, and only that. */
+/**
+ * The source with the fence a preview needs closed, and only that.
+ *
+ * A draft that already ends on a newline takes the marker on the next line
+ * directly: a separator would become a blank code line the reader never typed.
+ */
 export const closeFences = (source: string): string =>
   Option.match(openFence(source), {
     onNone: () => source,
-    onSome: (fence) => `${source}\n${fence}`,
+    onSome: (fence) =>
+      Str.endsWith("\n")(source) ? `${source}${fence}` : `${source}\n${fence}`,
   });
 
 /**
