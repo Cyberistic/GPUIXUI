@@ -769,6 +769,8 @@ describe("the data series", () => {
     // means the charts stop following the theme again.
     expect(source.match(/#[0-9a-f]{6}\b/gi) ?? []).toEqual([]);
     expect(source).toContain("var(--dash-series-");
-    expect(source).toContain("seriesColors(useTheme())");
+    // The recipe's swatches read the same scale through the theme hook.
+    expect(source).toContain("const series = seriesColors(theme)");
+    expect(source).toContain("const theme = useTheme()");
   });
 });

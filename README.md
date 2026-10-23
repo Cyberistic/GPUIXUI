@@ -38,8 +38,8 @@ implementation. The remaining shadcn surfaces — **Blocks** (`/docs/blocks`) an
 the **Theme Editor** (`/docs/themes`) — landed too: recipe pages composed from
 the library and a live token editor backed by `@gpuixui/tokens`. The **Dashboard**
 block (`/docs/blocks/dashboard`) is the landing's product window: a six-card
-activity dashboard composed from the library with a labelled-gap SVG chart
-primitive (bars, donut, stacked bars).
+activity dashboard composed from the library, with `BarChart`, `DonutChart` and
+`StackedBar` from `@gpuixui/data`.
 
 ## Layout
 

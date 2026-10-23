@@ -558,12 +558,13 @@ role on the card surface in both schemes.
 A block page mounts its reproduction by registry key (`<BlockPreview
 name="dashboard-01" />`); `src/lib/block-page.test.ts` holds every page to a
 registered key and every registered block to a page, and checks both are in the
-Blocks sidebar. The dashboard's chart recipe states the runtime's measured rule —
-one `<svg source>` paints one tint, so a multi-series chart is one stacked
-element per colour — because the page used to call a single element a native
-chart. The Code tab is the real source too: `src/lib/block-source.test.ts`
-resolves every recipe's `@gpuixui/*` imports against the workspace, so a renamed
-export fails instead of teaching a broken import.
+Blocks sidebar. The dashboard's charts are `@gpuixui/data`'s — `BarChart`,
+`DonutChart` and `StackedBar` — and the page states the runtime's measured rule
+the package implements: one `<svg source>` paints one tint, so a multi-series
+chart is one stacked element per colour. The Code tab is the real source too:
+`src/lib/block-source.test.ts` resolves every recipe's `@gpuixui/*` imports
+against the workspace, so a renamed export fails instead of teaching a broken
+import.
 
 ## The live surface
 

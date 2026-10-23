@@ -10382,7 +10382,38 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 322/323
+`[ ]` `[█████████░]` 323/324
+
+`[x]` Stop the **dashboard recipe denying the charts the library ships** — the
+      block page said "the library has no chart component yet", so its copyable
+      recipe carried a local `Chart` whose `markup` was a **comment**
+      (`markup="/* Mon–Sun bars, 0/4/8/12h axis */"`) — a reader who pasted it got
+      a blank panel — while `@gpuixui/data` has shipped `BarChart`,
+      `StackedBar`, `LineChart`, `DonutChart`, `Sparkline` and `ChartLegend`
+      (the `Charts` inventory row is `done`, measured by `chart-surface-lifecycle`
+      in a window). The page also said the app and database glyphs "are not in the
+      icon set", and `database` has been an icon name since the 76-icon pass. The
+      recipe now composes `BarChart`/`DonutChart`/`StackedBar` from
+      `@gpuixui/data` with its real data (twelve buckets, seven days, five model
+      shares), `Box` replaces the DOM `<span>` swatch, `Icon` draws the nav rows the
+      set carries, and `dashboardPackages` lists the data package; the page's
+      `## Charts` states the one-tint rule the package implements, says the glyph
+      gaps that remain (no globe or report mark) and links
+      `/docs/data-display/charts`. The recipe was extracted and type-checked
+      against the package declarations while making the change (it had been
+      neither: `marginTop: "auto"` is not a `StyleDesc` spacing value and `Box`
+      requires a `tone`). Guards: `block-page.test.ts`'s chart suite now requires
+      `} from "@gpuixui/data"`, all three part names on the recipe and the page,
+      the charts link, and **no** `markup="/*` placeholder or "no chart component"
+      line; `theme-css.test.ts` reads the recipe's new theme hook
+      (`const series = seriesColors(theme)`). Directions measured: dropping the
+      data import fails `composes the charts the data package ships`
+      (`expected … to contain '} from "@gpuixui/data"'`), and planting
+      `markup="/* one donut segment */"` fails `hands the recipe no placeholder
+      geometry`. `apps/docs` is 147 files / 1 283 tests green, `check-types`,
+      `oxlint` and `build` clean. No native scenario applies — the recipes and the
+      charts' own window measurement (`chart-surface-lifecycle`, 41 checks) are
+      already on the record.
 
 `[x]` Give the **data and workspace lane entries their shipped pages** — both
       pages answered "what does this lane ship" with a hand-written list, and

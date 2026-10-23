@@ -992,8 +992,10 @@ blueprint sidebar entry.
 A block that draws must state the runtime's measured rule, not a browser one: one
 `<svg source>` paints **one tint** (a shape's own `fill` never reaches the
 frame), so a multi-series chart is one stacked element per colour. The dashboard
-page teaches that and its recipe takes the colour per layer; the evidence is
-`docs/gpuix-capabilities.md` §Inline SVG painting.
+page teaches that and its recipe composes `@gpuixui/data`'s charts, which do the
+stacking themselves — the page links their own docs page rather than
+reimplementing the geometry; the evidence is `docs/gpuix-capabilities.md`
+§Inline SVG painting.
 
 **A block's source is code too.** A recipe is a `source` string in
 `src/components/docs/blocks.tsx`, not a fence, so the page-snippet walk never

@@ -11,10 +11,11 @@ import { sidebarPages } from "./sidebar-pages.test-util";
  * registered block with no page is dead code nothing links to. Neither shows up
  * in the build, so the two are held together here.
  *
- * The dashboard page is also where the chart gap is explained, and that
- * explanation drifted: it said GPUix paints `<svg source>` "natively, so this is
- * not a DOM widget", while the measured rule is one tint per element. The
- * claims are held to the capability record.
+ * The dashboard page is also where a chart's runtime rule is explained, and that
+ * explanation drifted once: it said GPUix paints `<svg source>` "natively, so
+ * this is not a DOM widget", while the measured rule is one tint per element.
+ * The claims are held to the capability record, and the recipe is held to the
+ * charts `@gpuixui/data` actually ships.
  */
 
 const here = (path: string): string =>
@@ -92,10 +93,11 @@ describe("the block pages", () => {
   });
 });
 
-describe("the dashboard page's chart gap", () => {
+describe("the dashboard page's charts", () => {
   const dashboard = pageFor("dashboard");
+  const recipe = here("../components/docs/dashboard.tsx");
 
-  it("labels the preview and states the one-tint rule", () => {
+  it("labels the preview as a reproduction and states the one-tint rule", () => {
     expect(record).toContain("as one tint");
     expect(dashboard).toContain("browser reproduction");
     expect(dashboard).toContain("one tint");
@@ -103,10 +105,27 @@ describe("the dashboard page's chart gap", () => {
     expect(dashboard).not.toContain("not a DOM widget");
   });
 
-  it("hands the recipe the same rule", () => {
-    const recipe = here("../components/docs/dashboard.tsx");
+  it("composes the charts the data package ships", () => {
+    // Bug guarded: the page said "the library has no chart component yet" and
+    // the recipe carried its own `<Chart>` whose markup was a comment
+    // (`markup="/* Mon–Sun bars */"`), so the copyable source painted nothing
+    // and the reader was told a shipped component did not exist. `@gpuixui/data`
+    // ships `BarChart`, `DonutChart` and `StackedBar`, and the composition list
+    // names them.
+    expect(recipe).toContain('} from "@gpuixui/data"');
+    expect(
+      ["BarChart", "DonutChart", "StackedBar"].flatMap((part) =>
+        recipe.includes(part) && dashboard.includes(part) ? [] : [part],
+      ),
+    ).toEqual([]);
+    expect(dashboard).toContain("/docs/data-display/charts");
+  });
 
-    expect(recipe).toContain("one stacked <Chart>");
-    expect(recipe).toContain("style={{ color }}");
+  it("hands the recipe no placeholder geometry", () => {
+    // A `markup="/* … */"` string is not geometry: it is a comment where a
+    // chart should be, and a reader who pasted the recipe got a blank panel.
+    expect(recipe).not.toMatch(/markup="\/\*/);
+    expect(recipe).not.toContain("no chart component");
+    expect(dashboard).not.toContain("Charts are a gap");
   });
 });

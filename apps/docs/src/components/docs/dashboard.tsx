@@ -4,11 +4,8 @@ import { useState, type CSSProperties, type ReactNode } from "react";
  * Dashboard block — the landing's product window and the `/docs/blocks/dashboard`
  * recipe. Like every block, `DashboardRender` is a browser reproduction of the
  * native geometry/palette (the shipped tree renders through GPUix, not the DOM);
- * `dashboardSource` is the `@gpuixui/*` recipe a consumer copies.
- *
- * Charts and the app/database glyphs are a labelled gap: the library has no
- * chart component yet, so the recipe ships a minimal SVG primitive and the
- * composition note says so.
+ * `dashboardSource` is the `@gpuixui/*` recipe a consumer copies, and its charts
+ * are `@gpuixui/data`'s — the browser drawing below cannot mount them.
  *
  * The categorical colours are the library's data series, never a palette of the
  * docs' own: `--series-*` arrives from the preview surface's theme (so the
@@ -414,7 +411,13 @@ function HourlyStack() {
 }
 
 /** A green ▲ delta badge and its “vs. previous day” caption. */
-function Delta({ pct, period = "previous day" }: { pct: number; period?: string }) {
+function Delta({
+  pct,
+  period = "previous day",
+}: {
+  pct: number;
+  period?: string;
+}) {
   return (
     <span className="gx-dash-delta">
       <span className="gx-dash-delta-pct">▲ {pct}%</span>
@@ -734,36 +737,38 @@ export function DashboardRender() {
 
 export const dashboardPackages = [
   "@gpuixui/components",
+  "@gpuixui/data",
   "@gpuixui/primitives",
   "@gpuixui/icons",
   "@gpuixui/tokens",
 ] as const;
 
-/** The recipe a consumer copies — real `@gpuixui/*` parts, chart gap labelled. */
+/** The recipe a consumer copies — real `@gpuixui/*` parts, charts included. */
 export const dashboardSource = `import { Badge } from "@gpuixui/components/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@gpuixui/components/card";
 import { SearchInput } from "@gpuixui/components/search-input";
-import { Button, Progress, Stack, Text } from "@gpuixui/primitives";
+import { BarChart, DonutChart, StackedBar } from "@gpuixui/data";
 import { Icon } from "@gpuixui/icons";
+import { Box, Button, Progress, Stack, Text } from "@gpuixui/primitives";
 import { seriesColors } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 
-// gap: the library has no chart component yet. Chart is the recipe's minimal SVG
-// primitive. One <svg source> paints as ONE tint — the whole markup is masked in
-// style.color, so a shape's own fill never reaches the frame (measured by the
-// playground's \`content-surfaces\`). A multi-series chart is one stacked <Chart>
-// per colour, each with its own markup; one element cannot hold a palette.
-const Chart = ({ viewBox, markup, color }: { viewBox: string; markup: string; color: string }) => (
-  <svg source={\`<svg viewBox="\${viewBox}" xmlns="http://www.w3.org/2000/svg">\${markup}</svg>\`} style={{ color }} />
-);
+// The icon set carries no globe or report glyph, so the nav is the four rows it
+// can draw.
+const nav = [
+  { label: "Overview", icon: "grid" },
+  { label: "Projects", icon: "folder" },
+  { label: "Timeline", icon: "clock" },
+  { label: "Settings", icon: "settings" },
+] as const;
 
-// No colour on a series: the row's position picks one from the theme's scale.
+// No colour on a row: its position picks one from the theme's scale.
 const models = [
-  { name: "Kimi", model: "moonshot-v1-32k", pct: 33, tokens: "409k", series: 0 },
-  { name: "DeepSeek", model: "deepseek-chat", pct: 24, tokens: "298k", series: 1 },
-  { name: "Qwen", model: "qwen3-14b", pct: 18, tokens: "224k", series: 2 },
-  { name: "GLM", model: "glm-4-9b", pct: 14, tokens: "174k", series: 3 },
-  { name: "Minimax", model: "minimax-8b", pct: 11, tokens: "136k", series: 4 },
+  { name: "Kimi", model: "moonshot-v1-32k", pct: 33, tokens: "409k" },
+  { name: "DeepSeek", model: "deepseek-chat", pct: 24, tokens: "298k" },
+  { name: "Qwen", model: "qwen3-14b", pct: 18, tokens: "224k" },
+  { name: "GLM", model: "glm-4-9b", pct: 14, tokens: "174k" },
+  { name: "Minimax", model: "minimax-8b", pct: 11, tokens: "136k" },
 ];
 
 const projects = [
@@ -772,21 +777,49 @@ const projects = [
   { name: "Heavens Arena", time: "1h 24m", pct: 18 },
 ];
 
+const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const hours = [6.5, 8, 7.2, 9.5, 10, 4, 3.5];
+
+// One column per two-hour bucket, one value per model.
+const buckets = [
+  { label: "12AM", values: [18, 12, 8, 4, 2] },
+  { label: "2AM", values: [12, 9, 6, 3, 2] },
+  { label: "4AM", values: [9, 7, 5, 3, 1] },
+  { label: "6AM", values: [14, 10, 8, 5, 3] },
+  { label: "8AM", values: [22, 16, 12, 9, 6] },
+  { label: "10AM", values: [30, 22, 17, 12, 8] },
+  { label: "12PM", values: [34, 26, 20, 15, 10] },
+  { label: "2PM", values: [36, 28, 22, 16, 11] },
+  { label: "4PM", values: [33, 25, 19, 14, 10] },
+  { label: "6PM", values: [28, 21, 16, 12, 8] },
+  { label: "8PM", values: [24, 18, 13, 10, 7] },
+  { label: "10PM", values: [16, 12, 9, 6, 4] },
+];
+
+// A stacked series is one model across every bucket, so the table is read by
+// column: key, label and twelve values.
+const hourly = models.map((model, index) => ({
+  key: model.name,
+  label: model.name,
+  values: buckets.map((bucket) => bucket.values[index] ?? 0),
+}));
+
 export function DashboardPage() {
-  const series = seriesColors(useTheme());
+  const theme = useTheme();
+  const series = seriesColors(theme);
 
   return (
     <Stack direction="row" grow>
       <Stack direction="column" style={{ width: 240, padding: 16 }}>
         <Text role="h3">Hunter Association</Text>
-        {["Overview", "Projects", "Languages", "Timeline", "Reports", "Settings"].map(
-          (label, i) => (
-            <Button key={label} variant={i === 0 ? "secondary" : "ghost"}>{label}</Button>
-          ),
-        )}
-        <Stack direction="column" gap="2xs" style={{ marginTop: "auto" }}>
-          <Text role="caption" tone="muted">Tracking · Last activity: 2m ago</Text>
-        </Stack>
+        {nav.map((item, i) => (
+          <Button key={item.label} variant={i === 0 ? "secondary" : "ghost"}>
+            <Icon color={theme.colors.mutedForeground} name={item.icon} />
+            {item.label}
+          </Button>
+        ))}
+        <Stack direction="column" grow />
+        <Text role="caption" tone="muted">Tracking · Last activity: 2m ago</Text>
       </Stack>
 
       <Stack direction="column" grow gap="lg" style={{ padding: 20 }}>
@@ -806,7 +839,14 @@ export function DashboardPage() {
                 <Badge variant="success">▲ 12%</Badge>
                 <Text role="caption" tone="muted">vs. previous day</Text>
               </Stack>
-              <Chart viewBox="0 0 300 116" markup="/* Mon–Sun bars, 0/4/8/12h axis */" color={series[0]} />
+              <BarChart
+                aria-label="Hours per day"
+                height={116}
+                labels={days}
+                legend={false}
+                series={[{ key: "hours", label: "Hours", values: hours }]}
+                width={300}
+              />
             </CardContent>
           </Card>
 
@@ -817,10 +857,19 @@ export function DashboardPage() {
             <CardContent>
               <Text role="display">1.24M tokens</Text>
               <Badge variant="success">▲ 18%</Badge>
-              <Chart viewBox="0 0 100 100" markup="/* one donut segment; repeat per colour */" color={series[2]} />
-              {models.map((model) => (
+              <DonutChart
+                aria-label="Token usage by model"
+                data={models.map((model) => ({
+                  key: model.name,
+                  label: model.name,
+                  value: model.pct,
+                }))}
+                legend={false}
+                size={100}
+              />
+              {models.map((model, i) => (
                 <Stack direction="row" gap="sm" align="center" key={model.name}>
-                  <span style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: series[model.series] }} />
+                  <Box tone="none" style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: series[i] }} />
                   <Text role="label">{model.name}</Text>
                   <Text role="caption" tone="muted">{model.tokens}</Text>
                   <Text role="caption" tone="muted">{model.pct}%</Text>
@@ -852,7 +901,13 @@ export function DashboardPage() {
             <CardTitle>Token usage over time</CardTitle>
           </CardHeader>
           <CardContent>
-            <Chart viewBox="0 0 320 120" markup="/* 12AM–10PM stacked bars, one layer */" color={series[0]} />
+            <StackedBar
+              aria-label="Token usage over time"
+              height={120}
+              labels={buckets.map((bucket) => bucket.label)}
+              series={hourly}
+              width={320}
+            />
           </CardContent>
         </Card>
       </Stack>
