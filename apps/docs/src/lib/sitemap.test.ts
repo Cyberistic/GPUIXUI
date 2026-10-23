@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
 import { absoluteUrl, siteOrigin } from "./site";
-import { sitemapContentType, sitemapPaths, sitemapXml } from "./sitemap";
+import {
+  siteRoutes,
+  sitemapContentType,
+  sitemapPaths,
+  sitemapXml,
+} from "./sitemap";
 
 /**
  * The sitemap and the file that points crawlers at it.
@@ -69,9 +74,32 @@ describe("the sitemap", () => {
       "/docs",
       "/docs/components/accordion",
       "/docs/components/dialog",
+      "/live",
     ]);
     expect(paths.filter((path) => path === "/docs/components/dialog")).toEqual([
       "/docs/components/dialog",
+    ]);
+  });
+
+  it("lists both of the site's routes, which no collection carries", () => {
+    // `/live` is the real GPUix surface and is linked from every component
+    // page's preview note, but it is a route rather than a collection
+    // document, so a sitemap derived from the collections alone omitted it and
+    // a crawler had no path to the site's strongest preview.
+    const paths = sitemapPaths(["/docs"], []);
+
+    expect([...siteRoutes]).toEqual(["/", "/live"]);
+    expect(paths).toEqual(["/", "/docs", "/live"]);
+
+    // The document does not re-add the routes to a list it was handed: the
+    // route composes `sitemapPaths`, and a second `<loc>` is a duplicate.
+    const xml = sitemapXml(["/docs/installation", "/docs", "/"]);
+    expect(
+      [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]),
+    ).toEqual([
+      `${siteOrigin}/`,
+      `${siteOrigin}/docs`,
+      `${siteOrigin}/docs/installation`,
     ]);
   });
 

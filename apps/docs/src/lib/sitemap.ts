@@ -22,24 +22,33 @@ const escapeXml = (value: string): string =>
 export const sitemapContentType = "application/xml; charset=utf-8";
 
 /**
- * The union of the site's own pages and the package pages, as paths.
+ * The site's own routes. They are pages a reader can open, but no collection
+ * lists them: the landing is a route document and `/live` is the real GPUix
+ * surface, so a sitemap built from collections alone would omit both.
+ */
+export const siteRoutes = ["/", "/live"] as const;
+
+/** One entry per URL, sorted — the protocol forbids a second `<loc>`. */
+const onePerUrl = (paths: ReadonlyArray<string>): ReadonlyArray<string> =>
+  [...new Set(paths)].toSorted();
+
+/**
+ * The union of the site's routes, its own pages and the package pages, as paths.
  *
  * A curated page shadows the package page that shares its URL, so the result is
- * a set: a second `<loc>` for one page is a duplicate the protocol forbids. The
- * landing page is added here because it is a route, not a collection document.
+ * a set.
  */
 export const sitemapPaths = (
   site: ReadonlyArray<string>,
   packaged: ReadonlyArray<string>,
-): ReadonlyArray<string> =>
-  [...new Set(["/", ...site, ...packaged])].toSorted();
+): ReadonlyArray<string> => onePerUrl([...siteRoutes, ...site, ...packaged]);
 
 /** The sitemap document for these paths, with absolute URLs. */
 export const sitemapXml = (
   paths: ReadonlyArray<string>,
   origin?: string,
 ): string => {
-  const urls = sitemapPaths([], paths).flatMap((path) => {
+  const urls = onePerUrl(paths).flatMap((path) => {
     const href =
       origin === undefined ? absoluteUrl(path) : new URL(path, origin).href;
     return [`  <url><loc>${escapeXml(href)}</loc></url>`];

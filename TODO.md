@@ -8624,7 +8624,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 236/236
+`[x]` `[██████████]` 237/237
+
+`[x]` List the **live surface in the sitemap** — `/sitemap.xml` was built from
+      the mounted collections plus a hard-coded `/` (`sitemapPaths` added the
+      landing "because it is a route, not a collection document"), and `/live` is
+      the site's other route: the real GPUix surface, linked from every component
+      page's preview note, with its own title and description, yet absent from
+      the one file a crawler reads. The site's routes are now one exported
+      `siteRoutes = ["/", "/live"]`, `sitemapPaths` adds them, and `sitemapXml`
+      no longer composes `sitemapPaths` — it normalises to one entry per URL, so
+      a caller's document cannot grow a route the caller did not pass (the route
+      already composes `sitemapPaths`). `sitemap.test.ts` gains `lists both of
+      the site's routes, which no collection carries` and holds both halves: the
+      `/live` entry, and a document built from three paths that stays three.
+      Directions measured: `siteRoutes = ["/"]` fails the landing case and the
+      new case (`expected [ '/', '/docs', …(2) ] to deeply equal …`), and
+      composing `sitemapPaths` inside `sitemapXml` again fails the
+      one-URL-per-page case with the extra `https://gpuixui.sudokw.com/live`;
+      restored, the file is 6/6. `apps/docs/README.md` §Sitemap names both
+      routes. No native scenario applies — a generated document and its guard
+      have no runtime path.
 
 `[x]` Correct the **plan that said a shipped route was unbuilt** — plan 440's
       status row still read "the `/live` route is **not built**" and its §1 ended

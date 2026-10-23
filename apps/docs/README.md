@@ -421,8 +421,9 @@ No page restates what the code already says:
   `<LicenseInventory>`; a record added beside the code appears with no docs
   change.
 - **Sitemap** (`/sitemap.xml`) is generated per request from the same
-  collections (`src/lib/sitemap.ts`), with one URL per page and a curated page
-  shadowing its package page; `public/robots.txt` points at it.
+  collections plus the site's two routes — the landing and `/live`
+  (`src/lib/sitemap.ts`) — with one URL per page and a curated page shadowing
+  its package page; `public/robots.txt` points at it.
 
 ## Preview honesty
 
