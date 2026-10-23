@@ -3505,13 +3505,15 @@ a dense list row and the base a normal row adds `spacing.md` to
 viewer's row (`packages/files/src/log/log-viewer.tsx`) and the line a scroller
 moves per arrow key (`packages/primitives/src/components/ScrollArea.tsx`), with
 `@gpuixui/tw` exposing the same step as its `row-height` utility
-(`packages/tw/src/calc.ts`). A **menu row**
-is a `controlHeight.sm` box (`packages/components/src/menu/item.tsx`) and a
-**data-table row** is laid out by its cells rather than by a row token, so
-neither reads it. Every preset sets `rowHeight` to `controlHeight.md`, so a row
-and the default `md` control beside it share a height; `scale.test.ts` holds the
-three presets to that equality and `density-adoption.test.ts` holds this list to
-the sources that read the step.
+(`packages/tw/src/calc.ts`). A **menu row** is a `controlHeight.sm` box
+(`packages/components/src/menu/item.tsx`) and a **data-table row** is laid out by
+its cells rather than by a row token, so neither reads it. Every preset sets
+`rowHeight` to `controlHeight.md`, so a row and the default `md` control beside
+it share a height; `scale.test.ts` holds the three presets to that equality and
+`density-adoption.test.ts` holds this list to the sources that read the step. A
+brand that moves one without the other still passes the gate — the reports
+measure what a painter can lay out, not how two boxes line up — so the pair is
+the brand's to keep.
 
 A platform style picks the preset its native controls sit at — macOS `compact`,
 Windows `comfortable`, Linux `spacious` — so `platformTheme` carries a density
@@ -3525,9 +3527,10 @@ changes one step of must not lose the steps the audit requires:
 ```ts
 import { extendTheme, lightTheme } from "@gpuixui/tokens";
 
-// md becomes 34px; sm stays 28 and lg stays 36.
+// md becomes 34px; sm stays 28 and lg stays 36. A row takes the same step, so
+// a dense row and the default control beside it still share a height.
 export const roomier = extendTheme(lightTheme, {
-  density: { controlHeight: { md: 34 } },
+  density: { controlHeight: { md: 34 }, rowHeight: 34 },
 });
 ```
 

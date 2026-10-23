@@ -221,4 +221,12 @@ describe("the pages that teach the row height", () => {
       expect(catalogue, path).toContain(path),
     );
   });
+
+  it("moves the row with the control in the per-size override example", () => {
+    // The example raised `md` alone while the page said a row and the default
+    // control beside it share a height — the documented brand was the drift.
+    expect(pages["docs/tokens.md"]).toContain(
+      "density: { controlHeight: { md: 34 }, rowHeight: 34 }",
+    );
+  });
 });
