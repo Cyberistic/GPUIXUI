@@ -33,6 +33,7 @@ import {
   fieldHint,
   renderFieldHint,
 } from "@gpuixui/primitives/hint";
+import { accessibleName } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import { nativeTextTheme, syntaxColors, textStyle } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
@@ -40,6 +41,7 @@ import * as Option from "effect/Option";
 import { useState } from "react";
 import { useControllableState } from "../internal/controllable.js";
 import { recipeStyle } from "../internal/recipe.js";
+import { draftOf } from "../internal/text.js";
 import { codeLines } from "./highlight.js";
 import { enterIndent, tabIndent, tabInserts, type TabMode } from "./logic.js";
 
@@ -63,9 +65,9 @@ export interface CodeEditorState {
 
 /** {@link CodeEditor} props. */
 export interface CodeEditorProps {
-  /** The controlled text. Omit it to let the editor hold its own draft. */
+  /** The controlled text. Omit it to let the editor hold its own draft. A stored value that is not text reads as an empty document. */
   readonly value?: string;
-  /** The initial text when uncontrolled. */
+  /** The initial text when uncontrolled. A stored value that is not text reads as an empty document. */
   readonly defaultValue?: string;
   /** Every edit, including Tab and Enter insertions. */
   readonly onValueChange?: (value: string) => void;
@@ -90,7 +92,7 @@ export interface CodeEditorProps {
   /** Rows after which the editor scrolls. */
   readonly maxRows?: number;
   readonly fullWidth?: boolean;
-  /** Accessible name. Default `"Code editor"`. */
+  /** Accessible name. Default `"Code editor"`; a blank name reads as the default. */
   readonly label?: string;
   /** A Tailwind class string for the surface, joined after the recipe so it wins. */
   readonly className?: string;
@@ -120,15 +122,21 @@ export const CodeEditor = ({
   minRows,
   maxRows,
   fullWidth = false,
-  label = "Code editor",
+  label,
   className,
   style,
   testId = "code-editor",
 }: CodeEditorProps) => {
   const theme = useTheme();
+  // A blank name is an absence: an unnamed field is worse than the default, and
+  // a label restored from an i18n table with a missing row arrives blank.
+  const name = accessibleName(label) ?? "Code editor";
   const [value, setValue] = useControllableState({
-    value: valueProp,
-    defaultValue,
+    // A draft restored from storage may not be text at all; it reads as an
+    // empty document rather than throwing out of the tokenizer and the gutter.
+    // An absent controlled value still means "uncontrolled".
+    value: valueProp === undefined ? undefined : draftOf(valueProp),
+    defaultValue: draftOf(defaultValue),
     onChange: onValueChange,
   });
   const [focused, setFocused] = useState(false);
@@ -251,7 +259,7 @@ export const CodeEditor = ({
         <textarea
           testId={testId}
           theme={nativeTextTheme(theme, "background")}
-          aria-label={label}
+          aria-label={name}
           {...(help === undefined ? {} : { "aria-description": help })}
           value={value}
           readOnly={readOnly || disabled}

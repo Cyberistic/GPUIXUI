@@ -106,8 +106,7 @@ export const closeFences = (source: string): string =>
  * state the editor documents. The text is **not** trimmed: leading spaces and
  * newlines are the document's own.
  */
-export const draftOf = (value: unknown): string =>
-  typeof value === "string" ? value : "";
+export { draftOf } from "../internal/text.js";
 
 /** What a status line prints about a document. */
 export interface MarkdownStats {

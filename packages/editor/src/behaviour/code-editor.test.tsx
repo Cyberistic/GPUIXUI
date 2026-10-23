@@ -111,6 +111,30 @@ describe("CodeEditor", () => {
     editor.unmount();
   });
 
+  it("paints a stored draft that is not text as an empty document", () => {
+    // The bug guarded: a draft restored from storage as `null` reached the
+    // tokenizer and the gutter, so the editor threw out of the render instead
+    // of painting the empty document it documents — while the markdown editor
+    // already read the same prop through `draftOf`.
+    const editor = render(
+      <CodeEditor defaultValue={null as unknown as string} />,
+    );
+    expect(valueOf(editor)).toBe("");
+    type(editor, "tab");
+    expect(valueOf(editor)).toBe("  ");
+    editor.unmount();
+  });
+
+  it("names the field when the stored label is blank", () => {
+    // The bug guarded: a label restored from an i18n table with a missing row
+    // published `aria-label=""`, so the editor had no name in the a11y tree.
+    const editor = render(<CodeEditor label="" />);
+    expect(
+      editor.renderer.findByTestId("code-editor")?.customProps?.["aria-label"],
+    ).toBe("Code editor");
+    editor.unmount();
+  });
+
   it("does not edit when read-only, even for Tab and Enter", () => {
     const onChange = vi.fn();
     const editor = render(
