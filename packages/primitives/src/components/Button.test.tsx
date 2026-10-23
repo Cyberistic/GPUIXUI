@@ -21,15 +21,19 @@ import {
   contrastFloorsFor,
   contrastRatio,
   darkTheme,
+  decorativeFloor,
   disabledAction,
   disabledOpacity,
   filledHover,
   filledPressed,
   keyboardDimFailures,
   lightTheme,
+  platformNames,
   platformTheme,
+  retroNames,
   retroTheme,
   themes,
+  type Theme,
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton, type ButtonState } from "./Button.js";
@@ -173,6 +177,75 @@ describe("Button", () => {
       expect(
         contrastRatio(theme.colors.border, theme.colors.background) ?? Infinity,
       ).toBeLessThan(contrastFloors.boundary);
+    });
+  });
+
+  it("gives the secondary action an edge a row's wash cannot swallow", () => {
+    // The bug: `secondary` was fill-only. Its fill is designed against the four
+    // content strips a control rests on and passes there, but the documented
+    // place for an explicit action is a list row's trailing slot, where the row
+    // is wearing a wash — it measures under the 1.05:1 perceptibility floor in
+    // 29 of its 64 wash placements over the 16 styles, as low as 1.000:1
+    // (Light · macOS hovered, Dark · Windows pressed). A tonal action there was
+    // a label with no button around it. The edge is the same measured
+    // `borderStrong` boundary the components package paints, held against the
+    // washes it can sit on as well as the strips the pair table already names.
+    const styled: ReadonlyArray<readonly [string, Theme]> = [
+      ["Light", themes.light],
+      ["Dark", themes.dark],
+      ...Arr.flatMap(platformNames, (platform) =>
+        Arr.map(
+          ["light", "dark"] as const,
+          (mode) =>
+            [
+              `${mode} ${platform}`,
+              platformTheme(themes[mode], platform),
+            ] as const,
+        ),
+      ),
+      ...Arr.flatMap(retroNames, (retro) =>
+        Arr.map(
+          ["light", "dark"] as const,
+          (mode) =>
+            [`${mode} ${retro}`, retroTheme(themes[mode], retro)] as const,
+        ),
+      ),
+    ];
+    const washes = ["hover", "active", "accent", "selected"] as const;
+
+    Arr.forEach(styled, ([name, theme]) => {
+      const element = renderButton(
+        { variant: "secondary", children: "Save" },
+        theme,
+        { focused: false },
+      );
+      const edge = expectSome(hostStyleString(element, "borderColor"));
+      expect(edge, name).toBe(theme.colors.borderStrong);
+      Arr.forEach(washes, (wash) => {
+        expect(
+          contrastRatio(edge, theme.colors[wash]) ?? 0,
+          `${name} edge on ${wash}`,
+        ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).boundary);
+      });
+    });
+
+    // The premise: no fill the palette can carry answers the washes. `secondary`
+    // is under the perceptibility floor in 29 of its 64 wash placements, and
+    // the tightest on each base theme is the `accent` a row tints under the
+    // pointer, so "the fill is the whole button" cannot hold there.
+    const swallowed = Arr.flatMap(styled, ([name, theme]) =>
+      Arr.flatMap(washes, (wash) =>
+        (contrastRatio(theme.colors.secondary, theme.colors[wash]) ??
+          Infinity) < decorativeFloor
+          ? [{ name, wash }]
+          : [],
+      ),
+    );
+    expect(swallowed.length).toBe(29);
+    Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
+      expect(
+        contrastRatio(theme.colors.secondary, theme.colors.accent) ?? Infinity,
+      ).toBeLessThan(decorativeFloor);
     });
   });
 

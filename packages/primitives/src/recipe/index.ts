@@ -70,7 +70,7 @@ const BUTTON_VARIANT: Readonly<Record<ButtonVariant, string>> = {
   primary:
     "bg-primary text-primary-foreground border-0 hover:fill-primary active:fill-primary-pressed",
   secondary:
-    "bg-secondary text-secondary-foreground border-0 hover:fill-secondary active:fill-secondary-pressed",
+    "bg-secondary text-secondary-foreground border border-strong hover:fill-secondary active:fill-secondary-pressed",
   outline:
     "text-foreground border border-strong hover:bg-hover active:bg-active",
   ghost: "text-foreground border-0 hover:bg-hover active:bg-active",

@@ -25,11 +25,19 @@ import { Button, Stack } from "@gpuixui/primitives";
 | `variant` | Rest |
 | --------- | ---- |
 | `primary` (default) | `primary` fill, `primaryForeground` text |
-| `secondary` | `secondary` fill |
+| `secondary` | `secondary` fill with the `borderStrong` edge |
 | `outline` | border only |
 | `ghost` | no chrome at rest |
 | `destructive` | `destructive` fill |
 | `link` | text in `brandText(theme)` |
+
+`secondary`'s edge is functional, not decoration: its fill measures under the
+1.05:1 perceptibility floor against a row's `hover`, `active`, `accent` and
+`selected` washes in most shipped styles, so a tonal action in a row's
+`trailing` slot would be a label with no button around it. The edge is
+`borderStrong`, the role the boundary contract holds to 3:1 on every strip a
+control sits on. `Button.test.tsx` measures it against those washes in all 16
+shipped, platform and authored styles and names the fill it replaced.
 
 ## API
 

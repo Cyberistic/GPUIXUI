@@ -69,11 +69,20 @@ const primary: ControlVariant = {
   ...filled("primary"),
 };
 
-/** Filled, neutral: the second most important action in a view. */
+/**
+ * Filled, neutral: the second most important action in a view.
+ *
+ * The fill alone is not a surface: `secondary` measures under the 1.05:1
+ * perceptibility floor against a row's `hover`, `active`, `accent` and
+ * `selected` washes in most shipped styles, so a tonal action in a list row's
+ * trailing slot was a label with no button around it. The edge is
+ * `borderStrong` — the role `contrastPairs` holds to the 3:1 boundary floor —
+ * which is what the components package adds to the same action.
+ */
 const secondary: ControlVariant = {
   background: (theme) => theme.colors.secondary,
   foreground: (theme) => theme.colors.secondaryForeground,
-  border: undefined,
+  border: (theme) => theme.colors.borderStrong,
   ...filled("secondary"),
 };
 
