@@ -7680,7 +7680,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 210/210
+`[x]` `[██████████]` 211/211
+
+`[x]` Ledger the **auth blocks another session landed** —
+      `blocks/{signup,forgot-password,otp}.mdx` and
+      `src/components/docs/auth-blocks.tsx` were committed without the site's
+      ledger lines, so `readme-ledger.test.ts` failed both listing cases naming
+      the three pages and the module. `apps/docs/README.md` now names all three
+      (sign-up's four fields and terms checkbox, the reset card's sent note, the
+      one-time code's six cells and resend countdown) and the module beside
+      `block-preview.tsx`; both cases are green, and the full docs suite is
+      114 files / 1 197 tests with only the two foreign failures already recorded
+      in Interlocks (the editor cross-links and the two dock pages). No native
+      scenario applies — a ledger line has no runtime path.
 
 `[x]` Send the **Button ledger line to the page the site serves** — the ledger
       said `components/button.mdx` carried "previews, install, source (the
