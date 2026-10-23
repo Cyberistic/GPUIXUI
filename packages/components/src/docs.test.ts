@@ -211,6 +211,15 @@ const repoFile = (relative: string): string =>
     "utf8",
   );
 
+/** One number a playground fixture declares, so a page cannot print its own. */
+const numberIn = (source: string, path: string, name: string): number => {
+  const match = new RegExp(`${name}\\s*[:=]\\s*(\\d+)`).exec(source);
+  if (match?.[1] === undefined) {
+    throw new Error(`${path}: no ${name}`);
+  }
+  return Number(match[1]);
+};
+
 describe("the trail a narrow pane needs", () => {
   // The shipped list is `flex-wrap`, so an unbudgeted trail grows a second row
   // instead of clipping. A window drove the shipped trail at two widths and the
@@ -223,18 +232,11 @@ describe("the trail a narrow pane needs", () => {
     section(read("breadcrumb.mdx"), "## A trail in a narrow pane") ?? "";
   const middle =
     section(read("breadcrumb.mdx"), "## Reaching the hidden middle") ?? "";
-  const fixture = repoFile("apps/playground/src/live/breadcrumb-navigation.ts");
-
-  /** One number the fixture declares, so the page cannot print its own. */
-  const fixtureNumber = (name: string): number => {
-    const match = new RegExp(`${name}\\s*[:=]\\s*(\\d+)`).exec(fixture);
-    if (match?.[1] === undefined) {
-      throw new Error(
-        `apps/playground/src/live/breadcrumb-navigation.ts: no ${name}`,
-      );
-    }
-    return Number(match[1]);
-  };
+  const fixturePath = "apps/playground/src/live/breadcrumb-navigation.ts";
+  const fixture = repoFile(fixturePath);
+  const narrow = numberIn(fixture, fixturePath, "narrow");
+  const entry = numberIn(fixture, fixturePath, "BREADCRUMB_ENTRY_WIDTH");
+  const budget = Math.max(3, Math.floor(narrow / entry));
 
   it("warns that an unbudgeted trail wraps instead of clipping", () => {
     expect(rules).toMatch(/`flex-wrap`/);
@@ -245,10 +247,6 @@ describe("the trail a narrow pane needs", () => {
   });
 
   it("derives the budget from the pane's report, not a constant", () => {
-    const narrow = fixtureNumber("narrow");
-    const entry = fixtureNumber("BREADCRUMB_ENTRY_WIDTH");
-    const budget = Math.max(3, Math.floor(narrow / entry));
-
     expect(rules).toContain("`onLayout`");
     expect(rules).toContain(`w=${narrow} budget=${budget}`);
     expect(rules).toMatch(/one row/i);
@@ -265,25 +263,65 @@ describe("the trail a narrow pane needs", () => {
 
   it("cites the window that measured the trail, with its check count", () => {
     const page = `${rules}\n${middle}`;
-    const checks = fixtureNumber("BREADCRUMB_CHECKS");
+    const checks = numberIn(fixture, fixturePath, "BREADCRUMB_CHECKS");
     expect(page).toContain(probe);
     expect(page).toContain(`${checks} checks`);
-    expect(page).toContain("apps/playground/src/live/breadcrumb-navigation.ts");
+    expect(page).toContain(fixturePath);
   });
 
   it("keeps the measured numbers on the playground's section", () => {
     // The page quotes the record, so the record must still print them; the
     // playground's own suite holds the record to the probe.
-    const narrow = fixtureNumber("narrow");
-    const entry = fixtureNumber("BREADCRUMB_ENTRY_WIDTH");
     expect(playgroundReadme).toMatch(
       new RegExp(`^### \`${probe}\` — measured on 0\\.11\\.0 here`, "m"),
     );
-    expect(playgroundReadme).toContain(
-      `w=${narrow} budget=${Math.max(3, Math.floor(narrow / entry))}`,
-    );
+    expect(playgroundReadme).toContain(`w=${narrow} budget=${budget}`);
     expect(playgroundReadme).toContain("**36**");
     expect(playgroundReadme).toContain("**28**");
+  });
+});
+
+describe("the blur route a window cannot prove", () => {
+  // `InlineEdit` commits a draft from the host's `onBlur`, which is right for an
+  // active app — but GPUI dispatches element focus listeners only for an active
+  // window, and a live automation window never becomes one. The offscreen
+  // renderer is the only host that can prove the commit here, so the page has to
+  // say so and give a consumer a route the harness does prove.
+  const probe = "blur-delivery-lifecycle";
+  const fixturePath = "apps/playground/src/live/blur-delivery.ts";
+  const page = read("inline-edit.mdx");
+  const blur = (
+    section(page, "### Blur commits, and the host that proves it") ?? ""
+  ).replace(/\s+/g, " ");
+
+  it("calls a live blur commit unproven instead of teaching it as verified", () => {
+    expect(blur).toMatch(/live/i);
+    expect(blur).toMatch(/never commits/);
+    expect(blur).toContain(`\`${probe}\``);
+    expect(blur).toMatch(/active window/i);
+    // The retracted claim would be a live measurement of the commit.
+    expect(page).not.toMatch(
+      /blur commit(?:s|ted)? (?:is|was) verified in a window/i,
+    );
+  });
+
+  it("names the host that proves the commit", () => {
+    expect(blur).toMatch(/offscreen/i);
+    expect(blur).toContain("commits a changed draft on blur");
+    expect(blur).toContain("set_active_for_tests");
+  });
+
+  it("gives a consumer a route the harness proves", () => {
+    expect(blur).toContain("`Enter`");
+    expect(blur).toMatch(/caller-owned/);
+  });
+
+  it("cites the probe with the fixture's count and its record", () => {
+    const checks = numberIn(repoFile(fixturePath), fixturePath, "BLUR_CHECKS");
+    expect(blur).toContain(`${checks} checks`);
+    expect(playgroundReadme).toMatch(
+      new RegExp(`^### \`${probe}\` — measured on 0\\.11\\.0 here`, "m"),
+    );
   });
 });
 

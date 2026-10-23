@@ -1635,7 +1635,41 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 145/145
+`[x]` `[██████████]` 146/146
+
+`[x]` Measure **whether a scroller shows the control a traversal just focused**
+      — the runtime moves focus without moving the glass (`focus_next` calls
+      `Window::focus_next` and nothing else), and `keyboard-scroll-lifecycle`
+      proved a focused **scroller** answers keys while `tab-overflow` proved a
+      selected tab stays clipped until the app scrolls it; no probe had asked
+      what happens to the row a traversal focused, which is the shape every form
+      taller than its pane meets on every `Tab`. The `focus-reveal-lifecycle`
+      live probe mounts two panes of one geometry (nine 40px rows in 200×120, so
+      the content is three panes tall and the end is `-240`): a **form** whose
+      nine rows are ordinary tab stops and a **roving list** whose arrows move a
+      cursor and reveal the row they land on through the renderer's
+      `scrollIntoView`. Measured on 0.11.0: the traversal reaches
+      `focus-reveal-form-8` with the offset still **`0`**, the focused row starts
+      **200** points below the pane's bottom edge, a code focus on the first or
+      the last row moves nothing either, and the row paints **0** pixels of its
+      own `#FF3B30` inside the pane. The roving half reveals what its key moved
+      onto — three arrows leave `cursor=3 keys=3` at offset **`-40`** (one row,
+      the minimal move), five more reach `cursor=8 keys=8` at **`-240`** (the
+      content's end, not the row's top), an arrow past the end changes neither,
+      and in the same frame the revealed row paints **30350** pixels of its
+      marker while the form's still paints **0**. 44 checks,
+      `--only focus-reveal-lifecycle`, green on 0.11.0 here (~2.8 s). Fixture
+      `src/live/focus-reveal.ts` (the ids, the pane geometry, the
+      minimal-reveal prediction and the readout) + `focus-reveal.test.ts` (the
+      geometry, the prediction above and below the fold, the containment rule,
+      the probe's mounts and its `scrollIntoView` route, the count and the
+      README section). Negative control measured, exit `1`, restored green:
+      dropping the reveal leaves the roving row clipped, so
+      `the reveal lands where a minimal reveal puts it` fails with
+      `expected -0 to be -40` along with the containment and paint checks.
+      Evidence: `apps/playground/README.md` §`focus-reveal-lifecycle`,
+      `.artifacts/live/focus-reveal-{hidden,revealed}.png`. Publishing it in
+      `packages/primitives` and the capability record is the Interlocks below.
 
 `[x]` Measure **whether a window ever says "this is a repeat"** — every
       activating control in the library refuses an activation whose event carries
@@ -7792,7 +7826,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Land `chart-surface-lifecycle` as one unit — the data workstream's probe (`apps/playground/src/live/chart-surface.ts`, its view and steps in `scenarios.tsx`) was in the shared tree while its **registry entry** was committed alone (`f6f78f6b`), so `liveProbeBodies` lost the body the `Record<LiveProbeId, …>` requires and the playground did not compile; the entry is removed (`f2cf7c80`) until the body and the entry land together. The registry entry, the `liveProbeBodies` body and the README section must be one commit, in registry order (the README is held to the registry by `src/live/registry.test.ts`) | data (`apps/playground/src/live/registry.ts`, `scenarios.tsx`, `README.md`) | **resolved 2026-10-23** — `f2376f16` landed the entry, the `liveProbeBodies` body and the README section together: `registry.ts` declares `chart-surface-lifecycle` in registry order, `scenarios.tsx` exports its body, and `README.md` §`chart-surface-lifecycle` prints the 40 checks, the fixture and the two captures. `--only chart-surface-lifecycle` is 1/1 on 0.11.0, and `src/live/registry.test.ts` holds the README to the registry. No code change here — this row is the retraction of a stale open marker |
 | Publish the **undo contract a field owns** — the capability record's input/text rows stop at keystrokes, clipboard and selection, and `docs/gpuix-capabilities.md` + `/docs/runtime#measured-in-a-window` say nothing about undo, which is a field behaviour no component can implement: the playground's `text-undo-lifecycle` measured that `cmd-z`/`shift-cmd-z` restore a snapshot **and** reach a controlled `onChange`, that a value pushed in from outside the field clears both stacks (so a field the app rewrites on every change loses undo silently), that an unrelated re-render keeps the history, and that the chord never reaches an app-level window handler while the field has focus. The record should carry those four findings and the 700 ms coalesce window, and `/docs/runtime`'s row should cite the probe; the components' `InlineEdit`/field pages owe the "format on commit, not on every change" rule. Measured evidence: `apps/playground/README.md` §`text-undo-lifecycle`, 15 checks green on 0.11.0 | docs-site (`docs/gpuix-capabilities.md`, `/docs/runtime`) and components (`docs/inline-edit.mdx`, `docs/field.mdx`) | **docs half landed 2026-10-23** — `docs/gpuix-capabilities.md` §3 gains **Field undo** (`supported, with limits`, 15 checks) with the stack, the push that clears it, the per-field history and the chord's owner, `/docs/runtime#measured-in-a-window` publishes the same row, §5 owes `text-undo-lifecycle`, and `capability-doc.test.ts` derives the readouts, the check count and the coalesce window from `src/live/text-undo.ts` so neither document can print a value the probe no longer measures. **Still open for components:** `docs/inline-edit.mdx` and `docs/field.mdx` owe the format-on-commit rule |
 | Document the window host's **`keyDown`** verb on `/docs/testing` — the host interface gains `keyDown(keystroke, isHeld)`, an **optional, window-only** verb that sends a key *down* with the platform's repeat flag so a held `Enter` can be refused by every activating control; the testing page's verb table has no row for it, so its guard fails `documents every verb of the window host` with `[ 'keyDown' ]`, and the page's *Five verbs are optional* sentence plus the guard's optional list would leave the sixth out | docs-site (`apps/docs/content/docs/testing.mdx`, `apps/docs/src/lib/testing-page.test.ts`) | open — the interface change is `packages/testing/src/smoke.ts`'s (uncommitted in the shared tree on 2026-10-23); the row lands with it, because the optional-verbs case cannot name a member `HEAD` does not declare |
+| State that **a traversal focuses a control a pane cannot show** — `packages/primitives/docs/scroll-area.mdx` §Keyboard teaches the arrows/PageUp/PageDown/Home/End contract and the Scrollable containers row teaches the region's keyboard rule, and neither says the fact the playground's `focus-reveal-lifecycle` measured on 0.11.0: a `Tab` traversal into a scroller's content focuses the ninth row with the offset still **`0`** (`focus-reveal-form-8` starts **200** points below the pane's bottom edge and paints **0** pixels of its own marker), a code focus on the first or the last row moves nothing either, and only a **roving** control reveals what its own key moved onto (three arrows leave `cursor=3` at **`-40`** with the row wholly inside, five more reach **`-240`** at the content's end, and an arrow past the end changes neither). A form whose controls are ordinary tab stops therefore has no reveal route in this runtime, and a consumer planning a long form in a bounded pane reads the page today and is not told | primitives (`packages/primitives/docs/scroll-area.mdx` §Keyboard/§Limitations, the `COMPONENTS.md` Scrollable containers row) | open — measured 2026-10-23 (44 checks, `--only focus-reveal-lifecycle`); the probe, its fixture and its README section are the playground's |
 | State the **pointer-only half of a primitive `Button`'s `onClick`** — the playground's `key-hold-lifecycle` measured that a keyboard activation of the shipped `Button` reaches `onActivate` alone (`presses=0` through six key events) while a pointer press runs both props, so a consumer wiring `onClick` — the React habit, and a prop `ButtonProps` still accepts — has a control no keyboard can trigger. `packages/primitives/docs/button.mdx`'s API table says `onActivate` is "click or activating key" without saying `onClick` is the pointer route, and `interaction` props are inherited silently. Either state the split on the page and in `ButtonProps`' JSDoc, or drop `onClick` from the primitive's public surface once plan 160's adapter is gone. Measured evidence: `apps/playground/README.md` §`key-hold-lifecycle`, 17 checks green on 0.11.0 | primitives (`packages/primitives/docs/button.mdx`, `src/components/Button.tsx`'s `onClick` doc) | open — the probe and its README section are landed; the page and the prop's JSDoc are owed |
+| Publish **what a traversal does to a scroller's focused row** in the capability record — §3's keyboard rows cover a focused region answering keys (`keyboard-scroll-lifecycle`) and a selection staying clipped until the app reveals it (`tab-overflow`), and nothing records that a **focus** past the fold is not revealed at all while a roving control's own reveal is. The record's new row should carry the probe's readouts (`0` offset across nine tab stops, **200** points below the pane, `0` marker pixels; `-40` then `-240` for the roving list, with the clamp and the idempotent key) and the workaround (a roving list reveals itself, a form of plain stops must keep its controls visible), and `/docs/runtime#measured-in-a-window` should publish the same row with §5 naming `focus-reveal-lifecycle` among the owed probes | docs-site (`docs/gpuix-capabilities.md` §3 and §5, `/docs/runtime#measured-in-a-window`) | open — measured 2026-10-23; `capability-doc.test.ts`'s published-gaps list will need the id when the row lands |
 
 ## Phase D — data and workspace components
 
@@ -8838,7 +8874,42 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 239/239
+`[x]` `[██████████]` 240/240
+
+`[x]` Generate the **related components a package page cannot link** — `MISSION.md`
+      asks every component page for its related components, and that was the row
+      the site could not keep: a package page is Markdown the site mounts and
+      cannot resolve its siblings, so only the curated 38 wrote a `## Related`
+      section while **73 of the 104 mounted package pages** shipped without one
+      (and `README.md` and `docs/preview-strategy.md` both claimed
+      `package-page-template.test.ts` held every page to four sections — the
+      guard holds two, and 87 of the 104 mounted pages carry no evidence heading
+      either). `src/lib/related.ts` names a
+      **family** per layer (actions, text fields, overlays, table surfaces,
+      panels…) as the pages a reader is choosing between, with each page's own
+      frontmatter title as its label; `<RelatedStrip>` prints it at the end of a
+      mounted package page, after the source block, and omits the page itself. A
+      family may hold a curated page because the curated page is the URL the site
+      serves; three pages are argued as `soloPages` (the provider, the one overlay
+      primitive whose curated page is the same component, the one-page icon set).
+      `related.test.ts` (6 cases) covers every mounted package page exactly once
+      or as a named solo (floors 90 pages / 20 families), holds every link and
+      label to the mounted page and its own title, refuses a one-member family or
+      a page in two, and keeps a solo out of every family; `related-strip.test.tsx`
+      (3 cases) holds the rendered line and the silent solos. Both documents now
+      say the guard holds **two** sections, that Related is generated, and that
+      the evidence section is optional; `package-page-template.test.ts` gains
+      `states the two sections it holds, and where Related comes from`, which ties
+      the guard's own `sections` to both documents and refuses the retracted
+      "Four sections are not optional". Directions measured: deleting the Ripple
+      button's member fails the coverage case naming
+      `/docs/components/ripple-button`; shortening `Liquid button` to `Liquid`
+      fails `reads "Liquid", the page says "Liquid button"`; dropping the
+      self-exclusion renders the page's own href and fails the strip case; and
+      restoring "Four sections are not optional" fails the policy case by name.
+      `nub run --filter @gpuixui/docs` is green at 120 files / 1 275 tests with
+      `check-types` and the build clean. No native scenario applies — generated
+      navigation and its data have no runtime path.
 
 `[x]` Document the **repeat flag a held key carries** — the harness's window host
       gained `keyDown(keystroke, isHeld)`, the one route that sends the platform's
