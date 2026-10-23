@@ -1308,7 +1308,9 @@
   height: 300px;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 6px);
+  /* A window is a surface, not a control: the theme's `lg` corner (8px on
+     Windows' Fluent grid, 8px on the library's own scale). */
+  border-radius: var(--radius-lg);
   background: var(--background);
   text-align: left;
 }

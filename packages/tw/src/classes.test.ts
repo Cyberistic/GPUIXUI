@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { MotionStyle } from "@gpuix/react";
-import { alpha, lightTheme } from "@gpuixui/tokens";
+import { alpha, lightTheme, platformTheme, themes } from "@gpuixui/tokens";
 import { cn } from "cn";
 import { classesToStyle } from "./classes.js";
 import {
@@ -22,6 +22,7 @@ import {
   BUTTON_BASE,
   BUTTON_SIZES,
   BUTTON_VARIANTS,
+  CARD_BASE,
   DIALOG_CONTENT,
   INPUT_BASE,
   INPUT_FOCUS,
@@ -52,6 +53,17 @@ describe("cn", () => {
 
   it("joins conditions", () => {
     expect(cn("h-9", false, "px-3", { "text-sm": true })).toContain("px-3");
+  });
+});
+
+describe("platform corners", () => {
+  it("rounds Windows controls at 4px and surfaces at 8px", () => {
+    // The recipe names a step, not a value: `rounded-md` resolves through the
+    // platform theme, so a Windows button takes Fluent's 4px control corner
+    // without a Windows-only recipe.
+    const windows = platformTheme(themes.light, "win32");
+    expect(classesToStyle(BUTTON_BASE, windows).style.borderRadius).toBe(4);
+    expect(classesToStyle(CARD_BASE, windows).style.borderRadius).toBe(8);
   });
 });
 

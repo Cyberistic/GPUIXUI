@@ -388,7 +388,7 @@ a deep navy, so the page still reads and the fill still carries its white label)
 hovers to exactly the fill it replaces, and the gate reports it. One shipped step
 sat on the floor: Windows dark's `#60CDFF` primary hovered to **1.05:1**, a
 primary button that never answered the pointer, so the platform carries
-`#59C9FF` (1.059:1 hover, 1.086:1 press) and you can see the change in the
+`#4CC2FF` (1.068:1 hover, 1.095:1 press) and you can see the change in the
 [platform chrome table](#platform-styles). The tightest placement over all 16
 shipped, high-contrast, platform and authored styles is **1.06:1** (high-contrast
 dark's primary hover).
@@ -495,7 +495,7 @@ placed there paints the tone's tint, not the page — and the tints are
 deliberately **not** in `brandTextSurfaces`, because a tint is one tone away
 from the page and a single colour measured on all of them would be dragged away
 from the brand everywhere. Measured, the shared colour is under its floor in
-**27 of the 64** tint placements across the sixteen styles (the count and every
+**28 of the 64** tint placements across the sixteen styles (the count and every
 cell below are computed by `brand-text.test.ts`, so they move with the
 palettes):
 
@@ -778,7 +778,7 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 | Role | macOS light | macOS dark | Linux light | Linux dark | Windows light | Windows dark |
 | ---- | ----------- | ---------- | ----------- | ---------- | ------------- | ------------ |
 | `background` | `#F2F2F7` | `#1C1C1E` | `#F6F5F4` | `#242424` | `#F3F3F3` | `#202020` |
-| `card` | `#FFFFFF` | `#26262A` | `#FFFFFF` | `#303030` | `#FFFFFF` | `#2B2B2B` |
+| `card` | `#FFFFFF` | `#26262A` | `#FFFFFF` | `#303030` | `#FFFFFF` | `#2C2C2C` |
 | `popover` | `#FFFFFF` | `#2C2C30` | `#FFFFFF` | `#383838` | `#FFFFFF` | `#2D2D2D` |
 | `input` | `#FFFFFF` | `#1F1F22` | `#FFFFFF` | `#212121` | `#FFFFFF` | `#1F1F1F` |
 | `muted` | `#E9E9EF` | `#16161A` | `#ECEBE9` | `#2A2A2A` | `#EBEBEB` | `#262626` |
@@ -788,9 +788,9 @@ destructive row and 6.77:1 on Luna light's, under the body floor (§Contrast).
 | `active` | `#DEDEE6` | `#3A3A40` | `#DCDBD8` | `#3D3D3D` | `#D6D6D6` | `#3A3A3A` |
 | `border` | `#D9D9E0` | `#3A3A40` | `#D4D2CF` | `#464646` | `#E5E5E5` | `#3D3D3D` |
 | `borderStrong` | `#67686D` | `#ACACB1` | `#6A6965` | `#B2B3B4` | `#696A6B` | `#ACACAD` |
-| `primary` | `#0A6CD6` | `#0A84FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#59C9FF` |
+| `primary` | `#0A6CD6` | `#0A84FF` | `#1C71D8` | `#78AEED` | `#0078D4` | `#4CC2FF` |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` | `#FFFFFF` | `#11141A` |
-| `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0067C0` | `#60CDFF` |
+| `ring` | `#0A6CD6` | `#4CA2FF` | `#1C71D8` | `#78AEED` | `#0078D4` | `#4CC2FF` |
 | `accent` | `#CADEF7` | `#1A3D60` | `#D2E4F7` | `#1B3E60` | `#CFE6F9` | `#1B3A50` |
 | `accentForeground` | `#08407A` | `#B2D3F9` | `#12457F` | `#BBD9F7` | `#003E6F` | `#C9E9FF` |
 | `selected` | `#D3E5FB` | `#0C3864` | `#CADDF3` | `#1F4363` | `#C8E0F3` | `#143E59` |
@@ -1867,9 +1867,9 @@ painters and reports the two erased rings, so the pairs cannot outlive the paint
 or the geometry.
 
 A **filled action** is the case that decides the geometry. `ring` *is* the brand
-— `ring` and `primary` are the same ramp step in twelve of the sixteen styles —
+— `ring` and `primary` are the same ramp step in thirteen of the sixteen styles —
 so a line flush with the fill is drawn in the action's own colour: measured, it
-reads **1.00–1.38:1** on `primary` and **1.00–1.54:1** on `destructive` in
+reads **1.00–1.38:1** on both `primary` and `destructive` in
 every style, at rest and under the pointer. A flush ring is not a palette the
 styles fail to meet; it is unsatisfiable. One colour would have to clear the
 boundary floor against both the page and the fill, and no luminance does in **8
@@ -1902,7 +1902,7 @@ authored Aero light look's own blue the same 2.84. Both base rings move one ramp
 step deeper (light `iris[600]` `#5F4BDB`, high contrast `iris[800]` `#3B2C8F`)
 and Aero light takes the smallest step that clears (`#287ABA`), which closes all
 four placements rather than documenting them. The tightest shipped ring
-placement overall is now the Aero look's red message tint at 3.09:1, so the
+placement overall is now Windows's red message tint at 3.05:1, so the
 number this page prints is the one the whole ring contract measures.
 `contrast.test.ts`'s `the ring on a message's own tint` suite holds the
 coverage, reads the alert's composer and the button's ring, reports a ring
@@ -3196,7 +3196,7 @@ and the tables; the probe is the paint. Evidence:
 | `full` | 9999 | pills and avatars |
 
 This is the default theme's scale. A platform style replaces it —
-macOS 4/6/10/14, Linux 4/6/9/12, Windows 2/4/8/8 — so a Windows control reads
+macOS 4/6/10/14, Linux 4/6/9/12, Windows 4/4/8/8 — so a Windows control reads
 squarer than a macOS one. `full` stays rounded everywhere.
 
 ## Density
@@ -3789,7 +3789,8 @@ export const searchHighlight = (theme: Theme) => {
 - The resting match keeps the runtime's **30%** where it holds, and steps down to
   the largest share whose composite is both visible on the strip (1.05:1) and
   keeps body text at the theme's own floor. Four dark styles step: Linux to
-  **22%**, Windows XP (Luna) to **23%**, Windows and Windows 7 (Aero) to **26%**.
+  **22%**, Windows XP (Luna) to **23%**, Windows to **27%**, Windows 7 (Aero) to
+  **26%**.
 - The active match takes the strongest wash that still keeps body text readable,
   and falls back to the theme's **secondary** floor only when the accent has no
   stronger safe wash — a dark palette whose text is already near the floor. Both

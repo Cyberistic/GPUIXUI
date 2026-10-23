@@ -92,7 +92,7 @@ theme's `foreground` until the least readable of the eight surfaces it can sit o
 and the `accent`/`selected` washes a row paints under an action) clears the
 floor the theme's variant asks for — 4.5:1 default, 7:1 high contrast. A run
 that knows its surface asks for it: a link inside an `Alert`'s description sits
-on that message's `xSoft` tint, where the shared colour is under the floor in 27
+on that message's `xSoft` tint, where the shared colour is under the floor in 28
 of the 64 tint placements (macOS dark on `warningSoft` measures 3.43:1), so it
 paints `brandTextOn(theme, surface)`. The message's own copy keeps the tone's
 readable role. The same rule covers status text: a required marker or a field
@@ -217,7 +217,7 @@ Density is a **theme** property, not a component prop:
 
 The default is `comfortable`; a platform style carries the preset its native
 windows use — macOS `compact`, Windows `comfortable`, GNOME `spacious`. Radius
-scales follow the same rule: macOS 4/6/10/14, Linux 4/6/9/12, Windows 2/4/8/10,
+scales follow the same rule: macOS 4/6/10/14, Linux 4/6/9/12, Windows 4/4/8/8,
 against the default 4/6/8/12.
 
 It changes control height, horizontal padding and row height only. Type sizes
@@ -522,7 +522,7 @@ press) are measured against the fill they replace at the decorative floor —
 `actionFeedbackPlacements` and `actionFeedbackFailures` in §9 — because the
 contrast table measures role pairs and a derived fill is not a role. That found
 Windows dark's `#60CDFF` primary hovered at 1.05:1 (a primary button that never
-answered the pointer; the platform carries `#59C9FF` now, 1.059:1) and it holds
+answered the pointer; the platform carries `#4CC2FF` now, 1.068:1) and it holds
 the catalogue's one-hue brand, whose page copy and `primary` are the same navy so
 its hover lands on its own fill. The components package's `Button` derives the fills for all three actions, and
 its **`secondary` variant** does too: it swapped in the `hover` / `active` washes
@@ -716,7 +716,7 @@ The ring is measured on every strip a control sits on — the page, a card, a
 popover, a toolbar, a secondary panel, the `input`/`selected`/`hover`/`active`/
 `accent` surfaces a control can sit inside, and the soft status tint an action
 inside a message is drawn on, where the light ring used to read 2.84:1 on the red
-tint; the tightest placement is the Aero look's red message tint at 3.09:1
+tint; the tightest placement is Windows's red message tint at 3.05:1
 against the 3:1 boundary floor. The playground's `focus-ring-offset` probe
 measured the geometry in a window: the gap shows the strip, the line paints
 outside it, and neither control nor sibling changes box.
@@ -731,7 +731,7 @@ component packages already apply in their own seam.
 
 A **filled action** is why the ring is separated. `ring` is the brand and
 `primary` is the brand, so a flush line is drawn in the fill it touches —
-**1.00–1.38:1** on `primary` and **1.00–1.54:1** on `destructive` in every
+**1.00–1.38:1** on both `primary` and `destructive` in every
 shipped style — and the pair is unsatisfiable rather than unmet: at
 `outlineOffset: 0` one colour would have to clear the boundary floor against both
 the page and the fill, and no luminance does in 8 of the sixteen styles for

@@ -2442,8 +2442,8 @@ describe("the ring on a message's own tint", () => {
     );
 
     expect(hidden).toEqual([]);
-    expect(tightest.name).toBe("Light · Windows 7 (Aero)/ring/destructiveSoft");
-    expect(tightest.ratio?.toFixed(2)).toBe("3.09");
+    expect(tightest.name).toBe("Light · Windows/ring/destructiveSoft");
+    expect(tightest.ratio?.toFixed(2)).toBe("3.05");
     // The catalogue prints the number this suite measures, so a palette edit
     // moves the sentence instead of leaving a stale claim.
     expect(
@@ -2452,7 +2452,7 @@ describe("the ring on a message's own tint", () => {
         "utf8",
       ).replace(/\s+/g, " "),
     ).toContain(
-      `Aero look's red message tint at ${tightest.ratio?.toFixed(2)}:1`,
+      `Windows's red message tint at ${tightest.ratio?.toFixed(2)}:1`,
     );
   });
 });

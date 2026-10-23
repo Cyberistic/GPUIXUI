@@ -247,7 +247,7 @@ now. The derivation's step is
 measured too — `actionFeedbackPlacements` and `actionFeedbackFailures` hold both
 states of all four roles against the fill each replaces, inside the
 `decorative` report, which is how Windows dark's `#60CDFF` primary hover at
-1.05:1 was found and fixed (`#59C9FF`, 1.059:1) and how a one-hue brand whose
+1.05:1 was found and fixed (`#4CC2FF`, 1.068:1) and how a one-hue brand whose
 `foreground` sits on its own action fill is caught. `filledFeedback(source,
 role, state)` is the derivation for a stored theme, and answers `undefined` for
 a role the theme lost.
@@ -319,7 +319,7 @@ const link = { color: brandText(theme) };
 
 A run that knows its surface asks for that surface: a link inside an `Alert`'s
 description sits on the message's `xSoft` tint, and the shared colour is under
-the floor there in 29 of the 64 tint placements (macOS dark on `warningSoft`
+the floor there in 28 of the 64 tint placements (macOS dark on `warningSoft`
 measures 3.43:1), so it paints `brandTextOn(theme, "infoSoft")` — the same
 derivation held to one role.
 
@@ -390,14 +390,14 @@ sibling keep their boxes. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
 A **filled action's** own face is why the ring is separated. `ring` *is* the
-brand, so a flush line merges with `primary`/`destructive` (**1.00–1.38:1** and
-**1.00–1.54:1** in all sixteen styles), and at `outlineOffset: 0` one colour
+brand, so a flush line merges with `primary`/`destructive` (**1.00–1.38:1** on
+both faces in all sixteen styles), and at `outlineOffset: 0` one colour
 would have to clear the boundary floor against both the face and the page — the
 feasible luminance set is empty in **8 of the sixteen** styles for `primary` and
 9 for `destructive`, and where one exists it is ≥0.11 from the brand. With the
 line one line's width outside the control, every filled action is measured on
 the surface it sits on like any other control, and the tightest ring placement
-over the sixteen styles is the Aero look's red message tint at 3.09:1.
+over the sixteen styles is Windows's red message tint at 3.05:1.
 `ring-fill.test.ts` holds the offset, the arithmetic that forced it, the strips
 and the probe; `docs/tokens.md` §Contrast carries the reasoning.
 
@@ -515,7 +515,7 @@ Linux 6.14:1 on its popover).
 `findHighlight(theme)` derives the pair a theme can carry from its `primary`:
 the resting match is the runtime's 30% where it holds and steps down to the
 largest share whose composite is visible (1.05:1) and keeps body text at the
-theme's body floor — Linux 22%, Luna 23%, Windows and Aero 26% — while the
+theme's body floor — Linux 22%, Luna 23%, Windows 27%, Aero 26% — while the
 active match is the strongest wash that keeps body text readable, falling back
 to the secondary floor only when the accent has no stronger safe wash. Its
 `radius` is `radius.sm`, the tightest step the scale carries; the runtime's 2px
