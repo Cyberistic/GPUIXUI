@@ -278,6 +278,26 @@ const readmeImports: ReadonlyArray<ReadmeImport> = [
     .filter((name) => name.length > 0),
 }));
 
+describe("the reduced coast the README teaches", () => {
+  const react = sources.find(({ name }) => name === "react.ts")?.text ?? "";
+
+  it("projects a release from the frame on screen, not the mounted offset", () => {
+    // The bug this guards: the reduced branch projected from `offset`, so a
+    // reader whose coast had rested was sent back to where the gesture began by
+    // the next release — or by a release of `0`. The rule lives in `coastRest`,
+    // and both the frame it paints and the run it retires read it.
+    expect(react).toContain(
+      "const resting = coastRest(running, motion.current);",
+    );
+    expect(react).toContain(
+      "const destination = coastRest(running, motion.current);",
+    );
+    expect(readme).toMatch(
+      /A coast's projected rest is read \*\*from the\s+frame on screen\*\*/,
+    );
+  });
+});
+
 describe("the imports the README teaches", () => {
   it("reaches each symbol from the subpath that exports it", () => {
     // A floor: deleting the snippets must not make the rule vacuous.

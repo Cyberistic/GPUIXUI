@@ -212,6 +212,20 @@ const restingValue = (named: number, current: number): number =>
   Number.isFinite(named) ? named : current;
 
 /**
+ * The frame a release names from the position the surface is on.
+ *
+ * A release is a new gesture from where the surface is, which is the rule the
+ * retained `MotionValue.coast` follows (`from = this.value`) and the one the
+ * README prints. The reduced branch used to project from the offset the hook
+ * mounted at, so a reader whose coast had already rested at `140` saw the next
+ * release or a release of `0` send the surface back to `0`.
+ */
+const coastRest = (declaration: CoastDeclaration, position: number): number =>
+  Number.isFinite(declaration.velocity)
+    ? project(declaration.inertia, position, declaration.velocity)
+    : position;
+
+/**
  * The retained-motion hook: animates `target` with `transition` on a monotonic
  * `performance.now()` clock.
  *
@@ -343,6 +357,11 @@ export const useTransition = (
  * initial, so the run starts at `0`. Until this hook read it, the option was
  * accepted and silently dropped, so a caller that handed a drag's offset got a
  * value starting at zero.
+ *
+ * A new release is a gesture from where the surface is, not from the offset it
+ * mounted at. That holds under the reduced preference too: the frame it paints
+ * projects from the frame on screen, so a reader whose coast has rested is not
+ * sent back to the offset by the next release (or by a release of `0`).
  */
 export const useInertia = (
   velocity: number,
@@ -351,7 +370,7 @@ export const useInertia = (
 ): MotionState => {
   const reducedMotion = reduced(options);
   const [offset] = useState(() => startValue(0, options.initial));
-  const [rest] = useState(() => project(inertia, offset, velocity));
+  const [rest] = useState(() => coastRest({ inertia, velocity }, offset));
   const [motion] = useState(() => new MotionValue(offset));
   const [start] = useState(() => performance.now());
   const [frame, setFrame] = useState<MotionFrame>(() => {
@@ -374,13 +393,19 @@ export const useInertia = (
 
   useEffect(() => {
     if (reduced(options)) {
-      // The render paints the projection the declaration names; establishing the
-      // coast and finishing it in this commit retires the run so a preference
-      // that turns back on does not relaunch a gesture the reader saw end.
-      motion.coast(running.inertia, running.velocity);
-      const ended = motion.sample(performance.now() - start, true);
+      // The render paints the projection the declaration names from the frame on
+      // screen; retiring the value there in this commit means a preference that
+      // turns back on does not relaunch a gesture the reader saw end.
+      const destination = coastRest(running, motion.current);
+      if (destination === motion.current) return;
+      motion.set(destination);
       skippingStart.current = false;
-      publish(setFrame, ended);
+      publish(setFrame, {
+        value: destination,
+        velocity: 0,
+        active: false,
+        complete: true,
+      });
       return;
     }
     const sampled = settleBefore(motion, start, reduced(options));
@@ -405,14 +430,13 @@ export const useInertia = (
   }, [motion, running, start, offset, options.reducedMotion]);
 
   /**
-   * The frame a reduced render paints: the projection the release names, or —
-   * when the release cannot be read — the frame on screen, which is the
-   * standstill. Projecting `NaN` as `0` would flash the offset the gesture
-   * already left.
+   * The frame a reduced render paints: the projection the release names from
+   * the frame on screen, or — when the release cannot be read — that frame,
+   * which is the standstill. A projection read from the mount offset sent a
+   * reader who had already coasted back to where the gesture began, and
+   * projecting `NaN` as `0` flashed the same first frame.
    */
-  const resting = Number.isFinite(running.velocity)
-    ? project(running.inertia, offset, running.velocity)
-    : motion.current;
+  const resting = coastRest(running, motion.current);
   return reducedMotion
     ? restingFrame(
         resting,

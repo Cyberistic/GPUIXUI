@@ -93,6 +93,23 @@ const ReducedCoast = ({
   );
 };
 
+/** A coast with a short time constant, so a case can wait for its rest. */
+const RestedCoast = ({
+  release,
+  reduced,
+}: {
+  readonly release: number;
+  readonly reduced: boolean;
+}) => {
+  const { value, velocity, complete } = useInertia(release, inertia(50), {
+    initial: 0,
+    reducedMotion: reduced,
+  });
+  return (
+    <text testId="rested-coast">{`${value}:${velocity}:${complete}`}</text>
+  );
+};
+
 /** Every painted string, joined: the frame the loop last published. */
 const painted = (page: ReturnType<typeof renderComponent>): string =>
   page.renderer.getAllText().join("");
@@ -148,12 +165,42 @@ describe("the reduced preference's later frames", () => {
 
   it("paints a release changed while it is on in the frame it arrives", () => {
     // The projection is the resting frame, so a new release names a new one;
-    // the previous projection must not survive the commit that changes it.
+    // the previous projection must not survive the commit that changes it. A
+    // release is a new gesture from where the surface is, so it projects from
+    // the `140` the reduced mount painted — not from the offset it mounted at.
     const page = renderComponent(<ReducedCoast release={400} reduced />);
     try {
       expect(painted(page)).toBe("140:0:true");
       page.rerender(<ReducedCoast release={300} reduced />);
-      expect(painted(page)).toBe("105:0:true");
+      expect(painted(page)).toBe("245:0:true");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("starts a reduced release from the frame on screen after a coast", async () => {
+    // The defect: the reduced projection read the mount offset as the release
+    // position, so a reader whose coast had already rested at `140` was sent
+    // back to `0` by the next gesture — the `coast` it retires starts from the
+    // presentation, and the painted frame must name the same journey.
+    const page = renderComponent(<RestedCoast release={400} reduced={false} />);
+    try {
+      await waitFor(() => expect(painted(page)).toBe("20:0:true"));
+      page.rerender(<RestedCoast release={300} reduced />);
+      expect(painted(page)).toBe("35:0:true");
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("holds the frame on screen for a reduced release of zero after a coast", async () => {
+    // A release of `0` asks for no journey, so it stays where the surface is;
+    // reading the offset instead painted the first frame the coast left.
+    const page = renderComponent(<RestedCoast release={400} reduced={false} />);
+    try {
+      await waitFor(() => expect(painted(page)).toBe("20:0:true"));
+      page.rerender(<RestedCoast release={0} reduced />);
+      expect(painted(page)).toBe("20:0:true");
     } finally {
       page.unmount();
     }
