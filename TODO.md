@@ -8714,7 +8714,34 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 238/238
+`[x]` `[██████████]` 239/239
+
+`[x]` Document the **repeat flag a held key carries** — the harness's window host
+      gained `keyDown(keystroke, isHeld)`, the one route that sends the platform's
+      repeat state, and `/docs/testing` listed every other window verb while its
+      table had no `keyDown` row: the site's own guard failed
+      (`documents every verb of the window host` → `[ 'keyDown' ]`), and a probe
+      author reading the page could not tell a held `Enter` from a single press.
+      The row now says the verb sends a key **down** with the repeat flag, and the
+      window section teaches the rule the flag exists for: the platform repeats a
+      held key as key-down stamped `isHeld: true`, activation is the one thing
+      that must not repeat, and `decideActivation`
+      (`packages/primitives/src/core/keyboard.ts`) refuses any event whose
+      `isHeld` is true — so a held `Enter` on a button, checkbox or menu row runs
+      once while `Space` still activates on release, and a handler that *should*
+      repeat (an arrow walking a tree, `PageDown` in a log) ignores the flag. The
+      optional-verb sentence now names six (`keyDown` joined `activateWindow`,
+      `blur` and the three clock verbs) and the limitations list the window-only
+      verbs. `testing-page.test.ts` gains `states the repeat flag a held key
+      carries` (the seam's `if (held) return false;`, the row's `isHeld` and
+      `repeat`, and the page's citation) and its optional case now requires six.
+      Directions measured: deleting the row fails three cases by name
+      (`expected [ 'keyDown' ] to deeply equal []` twice, and
+      `the window table has no keyDown row`), and retracting the prose sentence
+      fails the new case with `to contain 'ignores the flag'`; restored,
+      `nub run --filter @gpuixui/docs test` is 118 files / 1 266 tests green and
+      `check-types` and `check:tests` are clean. No native scenario applies — the
+      page and its guard read the seam that every control shares.
 
 `[x]` Publish the **undo a field's own chord delivers** — the capability record's
       input rows stopped at keystrokes, clipboard and selection, so the site said
