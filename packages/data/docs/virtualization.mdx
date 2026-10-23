@@ -45,7 +45,7 @@ import { VirtualList } from "@gpuixui/data";
 | `height` | `number` | measured body | a definite table (or body) height |
 | `header` | `ReactNode` | — | the header row's cells |
 | `empty` | `ReactNode` | — | painted inside a `TableEmpty` row when `count` is `0` |
-| `caption` | `ReactNode` | — | the line below the frame |
+| `caption` | `ReactNode` | — | the line below the frame; a string paints as its own text element |
 | `overdraw` | `number` | `4` | rows mounted beyond the viewport on each side |
 | `reveal` | `VirtualReveal` | — | `{ index }`; the window moves, then the body scrolls |
 | `onVisibleRange` | `(range: VisibleRange) => void` | — | the runtime's lagging report |

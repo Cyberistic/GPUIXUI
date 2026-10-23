@@ -6992,7 +6992,31 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 196/196
+`[x]` `[██████████]` 197/197
+
+`[x]` Publish the **theme switch a window measured** — MISSION lists theme
+switching among the critical interactions, and `/docs/theming` taught the token
+layer without saying what a window does when the provider's value changes.
+`theme-switch-lifecycle` (73 checks) drove both axes and the frame proves them:
+the palette cycle repaints (dark `#11141A`/`#191D25` → light `#F6F8FA`/`#FFFFFF`
+→ high contrast `#000000`/`#0D0D0D`) with the `md` control at **32** throughout,
+so a palette press does not reflow; the platform cycle re-lays it out (macOS
+**28**, Linux **36**, Windows **32**, Default **32**) and the page stays
+`#000000`, because `applyStyle` reserves a high-contrast palette while it takes
+the look's density; both cycles close on the opening frame. §3 gains **Theme and
+density switch** (`supported`), `/docs/runtime` publishes it, §5 owes the probe,
+and `/docs/theming` gains **A window measured the switch** under Platform
+styles. `capability-doc.test.ts` gains `publishes the theme switch a window
+measured`: it derives every frame from `getTheme` (three palettes' `background`
+and `card`) and every height from `platformTheme(...).density.controlHeight.md`,
+reads the probe's check count out of the README section, and holds the record,
+the page and the theming page to each value, with the premise that at least
+three platform heights differ. Directions measured: with the row absent the case
+fails `expected undefined to be 'supported'`, and the theming page at **29**
+fails `to contain '**28**'`; restored, 97/97 and `check-types` clean. The touched
+theming guards are 65/65; the full docs suite keeps the two foreign failures
+recorded in Interlocks. No native scenario applies — a docs page and its guard
+have no runtime path.
 
 `[x]` Publish the **nested-overlay dismissal order** a window measured — the
 curated Dialog page said one dismiss stack closes "the topmost layer only" and

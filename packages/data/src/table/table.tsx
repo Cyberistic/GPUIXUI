@@ -41,7 +41,7 @@ import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import type { ReactNode, Ref } from "react";
 import { recipeStyle } from "../recipe.js";
-import { pointerWash, useTheme } from "../theme.js";
+import { pointerWash, textStyle, useTheme } from "../theme.js";
 import {
   reportBoth,
   TableFrameProvider,
@@ -494,7 +494,17 @@ export interface TableCaptionProps extends Omit<Props, "children"> {
   readonly children?: ReactNode;
 }
 
-/** The one line below the frame: a count, a range, or the source of the data. */
+/**
+ * The one line below the frame: a count, a range, or the source of the data.
+ *
+ * A **string** child is painted as a `<text>` element, because that is the only
+ * shape the runtime puts in the accessibility tree: a raw string inside a box
+ * paints but produces no node, so a caller's `"12 files"` was silent to a
+ * reader. Pass a node (a `<text>` of your own) when the caption needs more than
+ * one run. 0.11.0 has no caption role, so the line is a `Label` beside the
+ * table's row groups rather than an associated caption — keep the table's own
+ * name in `aria-label`.
+ */
 export const TableCaption = ({
   className,
   children,
@@ -510,7 +520,18 @@ export const TableCaption = ({
         style,
       )}
     >
-      {children}
+      {typeof children === "string" || typeof children === "number" ? (
+        <text
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          {children}
+        </text>
+      ) : (
+        children
+      )}
     </div>
   );
 };

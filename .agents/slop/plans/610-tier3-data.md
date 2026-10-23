@@ -156,6 +156,13 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   `TableEmpty`, and the same suite's windowed case holds the message's `Label`
   under a `Cell` whose parent is a `Row` (removing the wrap fails with `the
   tree has no Cell node`).
+- **A caption string is text the tree can hear**: a raw string inside the
+  caption's box paints but the runtime makes no node of it, so the documented
+  `<TableCaption>12 files</TableCaption>` was silent; a string or number child
+  now paints as the caption's own `<text>`, and `table-caption.test.tsx` holds
+  the value under the table (the old `{children}` fails `expected [] to include
+  '12 files'`). There is no caption role in 0.11.0, so it is a `Label` beside
+  the row groups.
 - **Phase 3 (columns and resizing) landed**: `columns/logic` (visibility,
   visible-order moves, per-column resize bounds, keyboard steps), `useColumns`,
   `ColumnMenu` (the component package's measured DropdownMenu) and

@@ -15,9 +15,14 @@
  */
 
 import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
-import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
+import {
+  decodeA11yTree,
+  onlyRole,
+  roleOf,
+  withRole,
+  type A11yTree,
+} from "../internal/a11y.js";
 import {
   renderData,
   settle,
@@ -33,52 +38,6 @@ import {
   TableViewport,
 } from "../table/table.js";
 import { VirtualTable } from "../virtual/table.js";
-
-/** One node of the accessibility tree the renderer reports. */
-class A11yNode extends Schema.Class<A11yNode>("A11yNode")({
-  aria: Schema.Struct({
-    role: Schema.optionalKey(Schema.String),
-    label: Schema.optionalKey(Schema.String),
-  }),
-  children: Schema.optionalKey(Schema.Array(Schema.String)),
-}) {}
-
-/** The tree, with its node table addressed by id. */
-class A11yTree extends Schema.Class<A11yTree>("A11yTree")({
-  root: Schema.String,
-  nodes: Schema.Record(Schema.String, A11yNode),
-}) {}
-
-/** The role the platform gave one node, if any. */
-const roleOf = (tree: A11yTree, id: string): string =>
-  tree.nodes[id]?.aria.role ?? "";
-
-/** Every node id under one id, in paint order. */
-const descendants = (tree: A11yTree, id: string): ReadonlyArray<string> =>
-  Arr.flatMap(tree.nodes[id]?.children ?? [], (child) => [
-    child,
-    ...descendants(tree, child),
-  ]);
-
-/** The node ids under one id whose role is `role`, in paint order. */
-const withRole = (
-  tree: A11yTree,
-  id: string,
-  role: string,
-): ReadonlyArray<string> =>
-  Arr.filter(descendants(tree, id), (node) => roleOf(tree, node) === role);
-
-/** The one node id carrying `role`, failing the case when there is not one. */
-const onlyRole = (tree: A11yTree, role: string): string =>
-  Option.getOrElse(
-    Arr.findFirst(
-      Object.keys(tree.nodes),
-      (node) => roleOf(tree, node) === role,
-    ),
-    () => {
-      throw new Error(`the tree has no ${role} node`);
-    },
-  );
 
 /** The empty table under a header, which is the shape the example mounts. */
 const emptyTable = () => (
@@ -103,7 +62,7 @@ const withEmptyTree = (read: (tree: A11yTree) => void): void => {
   const root: DataTestRoot = renderData(emptyTable());
   try {
     settle(root);
-    read(Schema.decodeUnknownSync(A11yTree)(root.renderer.getA11yTree()));
+    read(decodeA11yTree(root.renderer.getA11yTree()));
   } finally {
     root.unmount();
   }
@@ -131,7 +90,7 @@ const withEmptyVirtualTree = (read: (tree: A11yTree) => void): void => {
   const root: DataTestRoot = renderData(emptyVirtualTable());
   try {
     settle(root);
-    read(Schema.decodeUnknownSync(A11yTree)(root.renderer.getA11yTree()));
+    read(decodeA11yTree(root.renderer.getA11yTree()));
   } finally {
     root.unmount();
   }

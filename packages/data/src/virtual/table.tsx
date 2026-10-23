@@ -200,7 +200,12 @@ export interface VirtualTableProps extends Omit<
    * grid as a cell rather than directly under the body's row group — the shape
    * the accessibility tree needs.
    */
-  readonly empty?: ReactNode;  readonly caption?: ReactNode;
+  readonly empty?: ReactNode;
+  /**
+   * The line below the frame. A string is painted as the caption's own text
+   * element; pass a node for anything richer.
+   */
+  readonly caption?: ReactNode;
   /** Rows mounted beyond the viewport on each side. Defaults to `4`. */
   readonly overdraw?: number;
   /** A row to reveal: the window moves, then the body scrolls to it. */
