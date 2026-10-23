@@ -77,6 +77,14 @@ export const mergeStyle = (
  * at all; a field's disabled state is an observation surface and keeps them.
  */
 export interface InteractionProps {
+  /**
+   * A **pointer** press, composed before the part's own action.
+   *
+   * The runtime sends `click` for a press and never for a key: a keyboard
+   * activation runs the part's action (`onActivate` on an action, the selection
+   * on a row) alone, so a control wired only through this handler has no
+   * keyboard route.
+   */
   readonly onClick?: (event: EventPayload) => void;
   readonly onKeyDown?: (event: KeyEvent) => void;
   readonly onKeyUp?: (event: KeyEvent) => void;

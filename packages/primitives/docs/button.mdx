@@ -54,7 +54,7 @@ shipped, platform and authored styles and names the fill it replaced.
 | `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
 | `label` | `string` | none | accessible name; required for an icon-only button |
 | `onActivate` | `(event: EventPayload) => void` | none | click or activating key; not called while busy |
-| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own; a click is observed first, an activating key acts first |
+| `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the button's own. `onClick` is the **pointer** route: a keyboard activation never runs it (a click is observed first, an activating key acts first) |
 | `onMouseEnter` / `onMouseLeave` | host handlers | none | forwarded to the host; the pair a `Tooltip` trigger needs |
 | `aria-description` | `string` | none | supplementary description; `Tooltip` passes the tip here |
 | `ref` | `Ref<PublicInstance>` | — | the element itself |
@@ -75,4 +75,7 @@ click keeps the caller-first order.
 - No native button element: a `div` with a role and handlers.
 - The runtime's headless `@gpuix/react/button` is **not adopted**: `buttonProps` would drop the busy description, hand a `style` callback only `disabled`, keep a disabled action in the tab order and lose the held-key guard on the Space release (evaluated and declined).
 - An icon-only button must pass `label`; use `IconButton`.
+- `onClick` is the pointer route: a keyboard activation reaches `onActivate`
+  alone (measured in a window — six key events, no press), so anything a
+  keyboard must reach is wired through `onActivate`.
 - The ring paint is the runtime's.

@@ -177,6 +177,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     limitations: [
       "No aria-disabled and no aria-pressed",
       "No native button element: a div with a role and handlers",
+      "onClick is the pointer route: a keyboard activation reaches onActivate alone",
     ],
     source: [
       "src/components/Button.tsx",

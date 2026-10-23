@@ -67,6 +67,32 @@ resized. `onScrollChange` names the offset on the same element, which is why the
 two belong together: one says how tall the window is, the other where the
 content sits in it.
 
+## Keyboard
+
+The viewport is one tab stop, and a key only moves the region that already holds
+the focus — the traversal into it is part of the contract.
+
+| Key | Move |
+| --- | ---- |
+| `Up` / `Down` | one `density.rowHeight` (32px) |
+| `PageUp` / `PageDown` | one painted viewport (160px: `-32` → `-192`) |
+| `Home` / `End` | one end of the content |
+| `Left` / `Right` | one column in a sideways region; its page is the width it shows (`-352`) |
+
+A `Cmd`/`Ctrl` chord belongs to the platform (`Cmd+Home` moves nothing), a field
+inside keeps its arrows and the region still, and `focusable={false}` takes the
+region out of the traversal.
+
+**A traversal does not reveal the control it focuses.** A window measured
+(`focus-reveal-lifecycle`, 44 checks on 0.11.0): tabbing into a 200×120 pane of
+nine 40px rows focused the ninth row with the offset still `0` — the row began
+200 points below the pane's bottom edge and painted none of its marker — and a
+code focus on the first or the last row moved nothing either. Only a **roving**
+control reveals what its own key moved onto (three arrows leave the offset at
+`-40`, five more reach `-240` at the content's end). A long form of ordinary tab
+stops in a bounded pane therefore keeps no control in view: keep its rows to the
+pane, or compose a roving list.
+
 ## Limitations
 
 - No `Scrollbar`/`Thumb`/`Corner` parts: the platform paints one native thumb.

@@ -1580,6 +1580,113 @@ describe("the primitives docs page contract", () => {
       true,
     );
   });
+
+  it("splits the press route from the keyboard route", () => {
+    // The measured split (`key-hold-lifecycle`, 17 checks on 0.11.0): a keyboard
+    // activation of the shipped `Button` reaches `onActivate` alone — six key
+    // events ran no press — so a consumer wiring the React habit `onClick` has a
+    // control no keyboard can trigger. The page states which route is which, and
+    // the shared prop's JSDoc says it where a caller reads it.
+    const page = read("button.mdx");
+    const api = Option.getOrElse(bodyOf(page, "API"), () => "");
+    const limitations = Option.getOrElse(bodyOf(page, "Limitations"), () => "");
+    const props = readFileSync(
+      fileURLToPath(new URL("./components/internal.ts", import.meta.url)),
+      "utf8",
+    );
+
+    expect({
+      row: api.includes("`onClick` is the **pointer** route"),
+      keyboard: api.includes("a keyboard activation never runs it"),
+      limitation: limitations.includes("`onClick` is the pointer route"),
+      pointer: props.includes("A **pointer** press"),
+      editor: props.includes("never for a key"),
+      action: props.includes("`onActivate` on an action"),
+    }).toEqual({
+      row: true,
+      keyboard: true,
+      limitation: true,
+      pointer: true,
+      editor: true,
+      action: true,
+    });
+  });
+
+  it("states the reveal a traversal does not give a scrolled control", () => {
+    // The bug guarded: the page taught the keyboard step and said nothing about
+    // the control a traversal focuses below the fold — `focus-reveal-lifecycle`
+    // measured the offset staying `0`, 200 points of row below the pane — so a
+    // consumer planning a long form in a bounded pane had no way to learn that
+    // no reveal is coming. The distances are derived from the probe's own
+    // geometry, so a moved fixture fails the page rather than agreeing with it.
+    const page = read("scroll-area.mdx");
+    const keyboard = Option.getOrElse(bodyOf(page, "Keyboard"), () => "");
+    const fixture = readFileSync(
+      fileURLToPath(
+        new URL("apps/playground/src/live/focus-reveal.ts", repoRoot),
+      ),
+      "utf8",
+    );
+    const registry = readFileSync(
+      fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
+      "utf8",
+    );
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      "utf8",
+    );
+    const pane = /FOCUS_REVEAL_PANE = \{ width: (\d+), height: (\d+) \}/.exec(
+      fixture,
+    );
+    const count = (name: string): number =>
+      Number(new RegExp(`${name} = (\\d+);`).exec(fixture)?.[1] ?? Number.NaN);
+    const paneWidth = Number(pane?.[1] ?? Number.NaN);
+    const paneHeight = Number(pane?.[2] ?? Number.NaN);
+    const rows = count("FOCUS_REVEAL_ROWS");
+    const row = count("FOCUS_REVEAL_ROW");
+    // The last row's start, measured from the pane's bottom edge...
+    const below = (rows - 1) * row - paneHeight;
+    // ...and the two offsets a reveal can produce: the first row a roving cursor
+    // scrolls to, and the content's end.
+    const firstReveal = paneHeight - (paneHeight / row + 1) * row;
+    const end = -(rows * row - paneHeight);
+    const rowOf = (label: string): string =>
+      Option.getOrElse(
+        Arr.findFirst(catalogue.split("\n"), (line) =>
+          Str.startsWith(`| ${label} | done |`)(line),
+        ),
+        () => "",
+      );
+
+    expect({
+      registered: registry.includes('id: "focus-reveal-lifecycle"'),
+      geometry:
+        Number.isFinite(below) && Number.isFinite(firstReveal) && end < 0,
+      pane: keyboard.includes(`${paneWidth}×${paneHeight}`),
+      listed: keyboard.includes(`nine ${row}px rows`),
+      focused: keyboard.includes("focused the ninth row"),
+      still: keyboard.includes("offset still `0`"),
+      below: keyboard.includes(`${below} points below`),
+      roving: keyboard.includes(`\`${firstReveal}\``),
+      end: keyboard.includes(`\`${end}\``),
+      row: rowOf("Scrollable containers").includes("`focus-reveal-lifecycle`"),
+      rowFacts:
+        rowOf("Scrollable containers").includes(`${below} points below`) &&
+        rowOf("Scrollable containers").includes(`\`${firstReveal}\``),
+    }).toEqual({
+      registered: true,
+      geometry: true,
+      pane: true,
+      listed: true,
+      focused: true,
+      still: true,
+      below: true,
+      roving: true,
+      end: true,
+      row: true,
+      rowFacts: true,
+    });
+  });
 });
 
 /**

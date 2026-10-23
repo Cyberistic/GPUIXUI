@@ -123,6 +123,24 @@ describe("Button", () => {
     expect(onActivate).toHaveBeenCalledTimes(3);
   });
 
+  it("reaches the action from a key and never the caller's press", () => {
+    // The measured split (`key-hold-lifecycle`, 17 checks on 0.11.0): a keyboard
+    // activation reaches `onActivate` alone — six key events ran no press — so a
+    // consumer wiring the React habit `onClick` has a control no keyboard can
+    // trigger. The page and `InteractionProps`' JSDoc state the split; this case
+    // is what fails if the implementation ever merges the two routes.
+    const onActivate = vi.fn();
+    const onClick = vi.fn();
+    const element = resting({ onActivate, onClick });
+
+    press(element, "enter", "down");
+    press(element, "space", "down");
+    press(element, "space", "up");
+
+    expect(onActivate).toHaveBeenCalledTimes(2);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
   it("is a named button the runtime can hit-test", () => {
     const element = resting({ children: "Save changes" });
     expect(expectSome(hostTag(element))).toBe("div");
