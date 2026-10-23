@@ -42,6 +42,16 @@ switch therefore reshapes the preview's corner and not the native one, so the tw
 agree on palette and lift and differ in radius — an approximation, not a
 measurement of the shipped surface.
 
+The lift half is the shipped fact and the four curated overlay pages say it under
+**Theming**: the seam composes the theme's `elevation.lg` beside the recipe's 1px
+`foreground` ring, which is the only way the level paints (the compiler applies a
+recipe's ring last and the ring is the one `boxShadow` slot). Each page also
+prints its own fixed corner — 32px for the dialog, 24px for the popover and the
+two menus — because that is the number the platform switch does not move.
+`overlay-paint.test.ts` derives the level from the painter, the corner from the
+recipe and the compiler's radius table, and fails a page that prints either the
+retracted "no lift" or the preview's corner as the component's.
+
 The same is true, more narrowly, of a **carousel's track corner**.
 `CAROUSEL_TRACK` names `rounded-lg`, which the recipe compiler resolves to a
 fixed 8px, while `.gx-carousel-card` draws the platform radius plus the two

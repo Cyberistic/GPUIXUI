@@ -70,3 +70,11 @@ Popover
 - `aria-expanded` is on the trigger.
 - **No `aria-haspopup`, `aria-controls` or `aria-labelledby`** in `@gpuix/native@0.11.0`; the link between trigger and surface is positional, not semantic.
 - Positioning is the runtime's anchored layer: no arrow, no custom anchor element, no backdrop.
+
+## Theming
+
+The surface paints the theme's `elevation.lg` beside its 1px `foreground` ring,
+so a brand's lift and edge both show. Its corner is the recipe's fixed **24px**
+(`rounded-3xl`): the platform switch repaints the roles and leaves the corner
+alone, while the preview follows the platform radius. The preview is the
+approximation; the shipped box is the fixed one.

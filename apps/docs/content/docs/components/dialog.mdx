@@ -94,3 +94,11 @@ Dialog
 - `role="dialog"` with the required `label` as its accessible name.
 - Focus enters the surface on open and returns to the opener on close.
 - **No `aria-modal` and no `aria-labelledby`** in `@gpuix/native@0.11.0`.
+
+## Theming
+
+The box paints the theme's `elevation.lg` beside its 1px `foreground` ring, so a
+brand's lift and edge both show. Its corner is the recipe's fixed **32px**
+(`rounded-4xl`): the platform switch repaints the roles and leaves the corner
+alone, while the preview draws the platform radius plus 8px. The preview is the
+approximation; the shipped box is the fixed one.

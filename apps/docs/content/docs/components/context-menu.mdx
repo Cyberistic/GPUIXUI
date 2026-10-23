@@ -141,3 +141,11 @@ ContextMenu
 - The runtime role is `menu`, with `menuitem` and `menuitemcheckbox` on rows.
 - No `aria-haspopup` on the trigger and no `aria-activedescendant`: the keyboard route is documented here rather than announced.
 - The surface is **not portalled**: it is an anchored layer at window coordinates, so it paints correctly but is not clipped by a scroll container.
+
+## Theming
+
+The surface paints the theme's `elevation.lg` beside its 1px `foreground` ring,
+so a brand's lift and edge both show. Its corner is the recipe's fixed **24px**
+(`rounded-3xl`): the platform switch repaints the roles and leaves the corner
+alone, while the preview follows the platform radius. The preview is the
+approximation; the shipped box is the fixed one.
