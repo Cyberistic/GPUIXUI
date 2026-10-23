@@ -526,6 +526,11 @@ describe("brand text on a message's own tint", () => {
       `under the floor in ${under.length} of the ${placements.length} tint placements`,
     );
     expect(designSystem).toContain("brandTextOn(theme, surface)");
+    // The catalogue prints the row-wash set too, so a style that joins it
+    // cannot leave that sentence teaching the previous count.
+    expect(page).toContain(
+      `Measured across the ${everyTheme.length} shipped styles`,
+    );
     // The package README prints the same pair: the denominator is the sweep's
     // length, which outgrew the sixteen styles the sentence was written for.
     expect(readme).toContain(

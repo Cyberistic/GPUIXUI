@@ -476,7 +476,7 @@ it, so it is measured like one. The four status tints are deliberately outside
 it; the next section measures why. The row is not decoration: the components
 package's list row documents that slot as the place for an explicit action and
 paints both washes there, the primitives' `Text tone="primary"` paints this
-colour, and a `Box` can fill either wash behind it. Measured across the sixteen
+colour, and a `Box` can fill either wash behind it. Measured across the 18
 shipped styles, most already cleared the row through the derivation, but the
 Luna look's dark brand landed at **4.50:1** on the row it selects — under the
 floor — so it steps once more, to 4.55:1.
@@ -2054,8 +2054,8 @@ luminance away from the brand — so it is never the brand the ring is. Two of t
 four faces were paired and held at rest (`ring` on `secondary`, `ring` on
 `accent`), because a neutral face is close enough to the page for one colour to
 serve both; their derived `filledHover`/`filledPressed` fills were not, and the
-press dropped below the floor in **8 of the sixteen** styles for `secondary` and
-**6** for `accent`. So the line is **separated from the fill**: the outline sits
+press dropped below the floor in **9 of the 18** styles for `secondary` and
+**7** for `accent`. So the line is **separated from the fill**: the outline sits
 one `borderWidth.strong` outside the control, the strip shows through the gap,
 and every filled action is measured on the surface it is drawn on like any other
 control. The playground's `focus-ring-offset` probe measured the geometry in a

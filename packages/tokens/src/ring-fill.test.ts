@@ -297,6 +297,9 @@ describe("the ring separated from a filled action", () => {
     expect(tokens).toContain(
       `same ramp step in ${sameStep} of the ${styles.length} styles`,
     );
+    expect(tokens).toContain(
+      `in **${secondary} of the ${styles.length}** styles for \`secondary\` and **${accent}** for \`accent\``,
+    );
     expect(design).toContain(
       `in **${secondary} of the ${styles.length}** styles for \`secondary\` and ${accent} for \`accent\``,
     );
