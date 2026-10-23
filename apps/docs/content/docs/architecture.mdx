@@ -16,7 +16,7 @@ runtime at all.
 | `@gpuixui/tokens` | Semantic colour roles, type, spacing, radii, density, elevation; light/dark, high contrast, platform styles | — |
 | `@gpuixui/tw` | The Tailwind-subset recipe registry; compiles class strings to a GPUix `StyleDesc` | `tokens` |
 | `@gpuixui/icons` | Icon markup, size scale and accessibility rules | `tokens` |
-| `@gpuixui/primitives` | Tier 1: layout, type, actions, inputs, selection and indicators | `tokens`, `tw`, `icons` |
+| `@gpuixui/primitives` | Tier 1: layout, type, actions, inputs, selection and indicators | `tokens`, `tw`, `icons`, `motion` |
 | `@gpuixui/components` | Tier 2: cards, overlays, menus, tabs, pickers, feedback | `tokens`, `tw`, `icons`, `keyboard`, `motion`, `primitives` |
 | `@gpuixui/data` | Tier 3: the table core, sorting, selection, filtering, virtualisation and charts | `tokens`, `tw`, `icons`, `primitives`, `components` |
 | `@gpuixui/editor` | Tier 4 code surfaces: a highlighted editor, a diff viewer and find-and-replace | `tokens`, `tw`, `primitives` |
@@ -46,10 +46,11 @@ than reimplementing them.
 ```
 tokens ──▶ tw ──▶ primitives ──▶ components ──▶ data
    └──────▶ icons ──▶ primitives
+motion ──▶ primitives
 primitives ──▶ editor
 data, primitives ──▶ files
 primitives, keyboard ──▶ shell
-keyboard, motion, runtime, testing   stand alone
+keyboard, runtime, testing   stand alone
 ```
 
 Each arrow means "may import at build time". The graph is acyclic, and three
