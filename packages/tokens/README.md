@@ -622,8 +622,12 @@ fail, while the same hue at the theme's 24% clears the contract.
 `auditTheme` is the contract: a partial palette is a mix, and a palette whose one
 red cannot serve both a fill and a mark is reported, not repaired — measured on
 the example night palette at 4.39:1 to its chosen ink and 2.93:1 as a mark. The
-consumer owns the platform file's decoder; the live Linux follow is the
-playground's to record. Runnable call sites are in
+consumer owns the platform file's decoder. The paint a running window makes of a
+changed palette is measured by the playground's `system-theme-follow` probe on
+the pinned runtime (12 checks): both palettes and their accents are asserted on
+the frame, the follow re-renders the tree without remounting it (`mounts=1`), and
+a deleted theme returns to the application's own — while this host is macOS, so
+`omarchy-theme-set` itself is not run. Runnable call sites are in
 [`src/system-theme.example.ts`](./src/system-theme.example.ts).
 
 ## Checking a theme

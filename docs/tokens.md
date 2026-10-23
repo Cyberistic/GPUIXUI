@@ -1091,9 +1091,35 @@ gate and then either names the roles a palette cannot answer (the full look
 belongs in the `PlatformStyle` shape, where a style owns its surfaces and its
 chart scale) or accepts the reported mix. Decoding Omarchy's `colors.toml` (or a
 macOS appearance, or a Windows accent) belongs to the consumer's boundary — this
-package names the semantic shape, not a file format — and the live Linux proof,
-where `omarchy-theme-set` changes a running window's colours, is the playground's
-to record.
+package names the semantic shape, not a file format. The paint a running window
+makes of a changed palette is measured below.
+
+### The paint a window measured
+
+`system-theme.test.ts` proves the mapping and the poll without a clock or a
+window; the half a consumer relies on is the paint. The playground's
+`system-theme-follow` probe (12 checks, on the pinned `@gpuix/native@0.11.0`)
+mounts the applied theme, changes the palette under the running window, deletes
+it, and reads every state off the captured frame:
+
+- the night desktop paints its page `#1B1B1F` with a `#B49CFF` accent;
+- the paper desktop replaces both without a restart — `#F4F1EA` and `#6A45F0` —
+  and the two page samples differ;
+- the mount count stays `1` across the change, so the follow **re-renders** the
+  provider's subtree instead of remounting it, which would cost every control
+  its state;
+- a deleted theme returns the window to the application's own `#11141A` page and
+  `#A7A9FF` accent, not to a guessed palette.
+
+Two negative controls fail by name: a poll that never fires again, and a `key`
+per theme, which reads `mounts=2`. Evidence is
+`apps/playground/README.md` §`system-theme-follow`.
+
+**This host is macOS**, so the platform's file is not read here and
+`omarchy-theme-set` is not run: the probe stands in for the decoder at the seam,
+handing over the same `SystemPalette` a real reader must produce. What it
+measures is the follow's paint, interval and lifetime; the Linux half is the
+decoder plus the same poll, and no claim about Hyprland is made from this run.
 
 ## Checking your own theme
 

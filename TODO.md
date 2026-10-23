@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 163/163
+`[x]` `[██████████]` 164/164
 
 `[x]` Read a **stored value as absence, not a crash** — the incomplete-theme rule
 stopped at roles, levels and numeric groups, and the two nested tables a theme may
@@ -1064,6 +1064,28 @@ the two transitions `pointerWashTransitions` derives; it names the derivation, a
 Directions measured: restoring either retracted sentence fails its case by name,
 restoring the stale source comment fails the new case by name, and the tests read the
 real seams so a dropped `selectionWash`/`fieldHint` fails too.
+
+`[x]` Cite the **follow's paint** where the catalogue teaches it — `docs/tokens.md`
+      §System palettes ended by sending a reader to the playground for "the live Linux
+      proof, where `omarchy-theme-set` changes a running window's colours", and the
+      playground had already recorded the half this host can measure: the
+      `system-theme-follow` probe (12 checks, 0.11.0) applies the desktop's night page
+      `#1B1B1F` with its `#B49CFF` accent, re-applies a paper theme without a restart
+      (`#F4F1EA`/`#6A45F0`), keeps the mount count at `1` across the change (a
+      re-render, not a remount), and returns the window to its own
+      `#11141A`/`#A7A9FF` when the palette is deleted, with two negative controls
+      (a poll that never fires, a `key` per theme) failing by name. The page now cites
+      the probe and keeps the honest half — this host is macOS, so the platform file's
+      decoder stays the consumer's and `omarchy-theme-set` itself is not run — and the
+      package README carries the same sentence. `system-theme.test.ts` gains `prints
+      the paint the window measured, not only the poll`: it derives the six frame
+      values through `paletteToTokens` (`#1B1B1F`, `#B49CFF`, `#F4F1EA`, `#6A45F0`,
+      dark `#11141A`, `#A7A9FF`), requires the probe's fixture to still carry the two
+      palettes, reads the check count out of `SYSTEM_THEME_CHECKS`, and refuses the
+      retracted promise on either page. Directions measured: on the committed page the
+      case fails printing `#1B1B1F` absent, and restoring "is the playground's to
+      record" to the README fails the retraction assertion by name; green it is 43
+      files / 2 488 tests.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
@@ -3650,6 +3672,36 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
 
 `[x]` `[██████████]` 3/3
 
+`[x]` `packages/components`: an **exclusive choice had no menu row** — the menu
+      family shipped an action and an on/off `MenuCheckboxItem`, so an
+      appearance or "sort by" menu had to be built from checkbox rows: several
+      rows could read chosen at once while each announced itself as a checkbox.
+      `MenuRadioGroup` + `MenuRadioItem` (and their `DropdownMenu…` /
+      `ContextMenu…` aliases) are the group whose `value` is the only truth, one
+      marked row, a choice that reports its value and closes the menu (a
+      checkbox row stays open), a press on the chosen row that reports nothing,
+      a disabled row that reports nothing and keeps the menu open, and a
+      controlled value because the popup unmounts on close. The row shares the
+      checkbox row's mark (`MenuCheckMark`, `colors.primary`, the role
+      `indicatorRoles` measures at the 3:1 mark floor) and states itself with
+      `aria-selected` because 0.11.0 has no `aria-checked`; the group's surface
+      is the one `MenuGroupSurface` the labelled group also paints.
+      `src/behaviour/menu-radio.test.tsx` (7 window cases: the marked row, the
+      `menuitemradio` roles and their names, one report with focus returned,
+      the chosen row reporting nothing, the disabled row, the keyboard path,
+      and the same rule mounted from a context menu) holds both menu families.
+      **A row's accessible name is its label**: the accessible tree names no
+      container from its children, so `MenuItem` derives `aria-label` from
+      `textValue`/string children (measured: without it the radio rows read
+      `[ '', '', '' ]`). Directions measured: reverting the role to
+      `menuitemcheckbox` fails `presents its rows as radio items` with
+      `expected [] to deeply equal [ 'System', 'Light', 'Dark' ]`, and removing
+      the chosen-row guard fails `reports nothing when the chosen row is chosen
+      again`. Docs: `docs/dropdown-menu.mdx` §Choice rows/§API/§Composition,
+      `docs/context-menu.mdx` §Choice rows/§API, both examples, the two
+      inventory rows and `docs/component-api.md` §8; the two metas record the
+      group's controlled value and the missing `aria-checked`.
+
 `[x]` Tier 1 foundational components (code + test + example + docs + inventory):
       all 19 components have code, tests, a runtime-verified interaction, an
       in-package docs page, a mounted example and an inventory row;
@@ -5625,7 +5677,7 @@ this time.
 
 ## Interlocks (cross-workstream dependencies)
 
-| Cite the **system-theme follow's paint** where the catalogue teaches it — `docs/tokens.md` §System palettes still ends "the live Linux proof, where `omarchy-theme-set` changes a running window's colours, is the playground's to record", and the playground has now recorded what this host can measure: the `system-theme-follow` probe (12 checks, 0.11.0) re-applies a changed palette in a running window without a remount, asserts both palettes' page and accent on the frame, and returns the window to its own theme when the palette is deleted. The page should cite the probe and keep the honest half — this host is macOS, so the platform file's decoder stays the consumer's and `omarchy-theme-set` itself is not measured. Same sentence in `COMPONENTS.md`'s `System palettes` row (this workstream updated that row's clause; the page is tokens-theme's) | tokens-theme (`docs/tokens.md` §System palettes) | **open** — measured 2026-10-23; the probe, the fixture and the README section are landed, the two negative controls are in the section, and no code change is needed on the page beyond the citation |
+| Cite the **system-theme follow's paint** where the catalogue teaches it — `docs/tokens.md` §System palettes still ends "the live Linux proof, where `omarchy-theme-set` changes a running window's colours, is the playground's to record", and the playground has now recorded what this host can measure: the `system-theme-follow` probe (12 checks, 0.11.0) re-applies a changed palette in a running window without a remount, asserts both palettes' page and accent on the frame, and returns the window to its own theme when the palette is deleted. The page should cite the probe and keep the honest half — this host is macOS, so the platform file's decoder stays the consumer's and `omarchy-theme-set` itself is not measured. Same sentence in `COMPONENTS.md`'s `System palettes` row (this workstream updated that row's clause; the page is tokens-theme's) | tokens-theme (`docs/tokens.md` §System palettes) | **resolved 2026-10-23** — the page's new **The paint a window measured** section cites the `system-theme-follow` probe (12 checks, 0.11.0) with the three states read off the frame: the night page `#1B1B1F` and its `#B49CFF` accent, the paper theme `#F4F1EA`/`#6A45F0` re-applied without a restart, `mount count stays 1` (a re-render, not a remount), and the deleted palette returning the application's own `#11141A`/`#A7A9FF`, plus both negative controls. The honest half stays: this host is macOS, the platform file's decoder is the consumer's, and `omarchy-theme-set` is not run. The package README carries the same citation. `system-theme.test.ts` gains `prints the paint the window measured, not only the poll`, which derives all six values, holds the probe's fixture to the palettes it prints, reads the count from `SYSTEM_THEME_CHECKS`, and refuses the retracted promise (measured both ways: absent `#1B1B1F` on the committed page, and the restored "playground's to record" on the README) |
 | Re-anchor the **data-display controller rules** to the table-core migration — the data workstream moved `useTable` onto `@tanstack/table-core` (`src/grid-core.ts`), and the docs still read the pre-migration shape in four places: `lane-page.test.ts` required `clearSelection(selection)` (the controller writes `clearSelection(chosen)`), `table-preview.test.ts` read the deleted `packages/data/src/filter/logic.ts` at module scope (so the whole file died at import with `ENOENT` instead of guarding anything), and both copyable snippets — `table-demo.tsx`'s `tableWorkflowSource` and the curated Table page's usage block — still called `useTable({ rows, keyOf, textOf, valueOf })`, options the shipped hook no longer takes; the lane page's Sort bullet also described `sortRows(rows, key, direction)`, a helper the package does not export | data (the migration) + docs-site (`lane-page.test.ts`, `table-preview.test.ts`, `/docs/data-display`, `/docs/components/table`) | **resolved 2026-10-23 — all four suites green and the pages describe the row model.** The public contract did not move (`selection`, `selectedCount`, `activeKey`, `clear()`, `isSelected`), so the page's four bullets stand; what changed is **where the ids live**. `/docs/data-display`'s *A release is a view, not a write* now names the grid's **row model** (`rowSelection`, read back through `getSelectedRowIds()`) instead of "the controller keeps the chosen records", and its **Sort** rule is the core's sorted row model (`sortFn: "basic"`, the column's `valueOf` owning the comparison) instead of a `sortRows` helper. The clamp sentence is untouched (`useVirtualRows` did not move). `lane-page.test.ts` derives `chosen` from the core's ids (`HashSet.fromIterable(table.getSelectedRowIds())`), requires `retainSelection(chosen, keys)` and `clearSelection(chosen)`, and **refuses** `clearSelection(selection)` plus a page that stops naming the row model. `table-preview.test.ts` reads `grid-core.ts` for the rule the core owns (`globalFilterFn: "includesString"`, the trim in `constructGrid`, `accessorFn: column.valueOf`), and its `read` helper fails **naming the path** that vanished instead of throwing `ENOENT` from the import. **The migration exposed a real preview bug**: the browser preview joined a row's four cells into one string, so `api production` matched `billing-api` + `production` — a query that spans two cells, which the core's per-column filter never matches; `cellsOf` searches each cell on its own and a case holds it. Both copyable snippets now pass the one `columns` list, and the demo's renders `TableFilterField` against `table.query`/`table.setQuery` and imports `Option` for `table.setSort`. Directions measured: joining the cells again fails `expected [ { id: 'billing' … } ] to deeply equal []`; restoring the old demo snippet fails `expected 'import * as Option …' to contain 'columns: ['`; restoring the `textOf` usage block fails `expected '---\ntitle: Table …' to contain 'columns: ['`; restoring `sortRows` fails `expected '---\ntitle: Data display …' to contain 'sortFn: "basic"'`; and the stale `clearSelection(selection)` is the failure the suite reported on `master` before the fix. `nub run --filter @gpuixui/docs test`: 99 files / 987 tests green (was 2 failed / 978 passed); `check-types` and `check:tests` clean. No native scenario applies — a docs page and its guards have no runtime path |
 
 
@@ -8894,6 +8946,7 @@ numbers).
 `[x]` `@gpuixui/motion`: **a coast after `set` never started** — the re-declaration guard added above compares the coast on screen (an inertia mode, the release speed, the physics a sample reads) and stands down only when `animate` replaces that mode, so `set` — which assigns a presentation and cancels the run — left the retired declaration behind: `coast` → `set` → the same release matched the guard and returned, and the value sat at the set frame with `active` false and no completion. Both the `coast` JSDoc and the README promise "a coast after `set`/`animate`" starts where the surface is, and `animate` did (it replaces the mode); `set` did not, so the promise was true of one arm and false of the other. `set` now retires the run with the value — mode back to `instant`, retained release velocity cleared — so a release with the last gesture's speed is a new gesture. Proof: `motion.test.ts`'s `starts a new coast after a set, even with the same release` — a coast rests at `140`, `set(80)`, the same `inertia(350)`/`400` release coasts again, and the sample 100 ms later is `active` and on the trajectory (`80 + 140·(1−e^−0.285714) ≈ 114.79`); measured failing at `HEAD` with `expected false to be true` and the value held at `80`. Restored: 10 files / 106 tests, `check-types` clean. Docs: the `set` JSDoc, the `coast` JSDoc and `packages/motion/README.md` §The single entry point.
 `[x]` `@gpuixui/motion`: **a phase the table does not own reached the runtime as a method** — `phaseOf` guarded with `phase in motionEasings`, which is true for every name `Object.prototype` carries, so a persisted `phase: "toString"` — the exact shape the house fallback exists for — passed the guard and the lookup handed the runtime `Object.prototype.toString` where a curve belongs: `motionTiming("fast", { phase: "toString" })` returned `{ duration: 0.16, ease: [Function toString] }` while every existing case stayed green. Both table lookups now read their **own** keys (`namesLevel`/`namesPhase` over `Object.hasOwn`), so a level or phase the table does not name — including a prototype member — takes the house fallback (`normal`, 200 ms, and the between-states curve) instead of a `NaN` duration or a function. Proof: `timing.test.ts`'s `reads a phase from the table's own keys, not the ones it inherits` (four inherited names) measured failing at `HEAD` on the exact payload (`+ "ease": [Function toString]`); restored, 10 files / 112 tests green, `check-types`, lint, `fmt` and `check:tests` clean. Docs: `packages/motion/README.md` §The runtime's declarative timing.
 `[x]` Hold the **panel leave** to the reduced preference, not only the notice — `docs/component-api.md` §11 and the seam's own JSDoc promise that a leaving panel is gone at once when the reader turns the setting on, and `useSurfacePresence` reads its window from the timing on every render (the effect depends on `timing.exit.duration`), while the only measured case was the toast stack's own timer, a different implementation. `presence.test.tsx` gains `removes a panel at once when the setting turns on while it leaves`: a dismissed dialog is still painted for its `slow` window, the preference turns on, and the box is gone well inside the 320 ms it would have run. Directions measured: dropping `timing.exit.duration` from the seam's effect dependencies leaves the panel painted and fails the case (`expected true to be false`); restored, 20/20 in the file. Docs: §11's preference paragraph and its Verification parenthetical name the case.
+`[x]` `@gpuixui/motion`: **the usage example shipped in the package**. `src/example.ts` was not matched by `tsconfig.build.json`'s `*.example.ts` exclusion, so `nub run --filter @gpuixui/motion build` published `dist/example.js` and `dist/example.d.ts` — a usage module the file's own header promised was excluded — and nothing called it, so a break in the documented composition compiled and shipped unexercised. Renamed to `api.example.ts` (the tokens convention; the build now ships no example) and `example.test.ts` runs it through the public API: a retargeted spring lands on its new target, reduced motion completes at once, the bezier tween is `0.96…` at its half way, the stagger is `0/20/40`, three 100 ms steps staggered by 20 ms end at `140`, the keyframe sample is `50`, and a bounded coast accumulates above `0` and below its `50` rest. The same suite holds the exclusion to the config — every `*example.ts` in `src` must match one `exclude` glob — and the barrel to publishing none. Directions measured: restoring the file as `example.ts` fails the exclusion case with `expected [ 'example.ts' ] to deeply equal []`, and pointing the example's `retarget` at `1` fails the value case with `expected 1 to be close to 2`; restored, 11 files / 115 tests, `check-types`, `check:tests`, lint, fmt and the build green (no `example.js` in `dist`).
 `[x]` Phase 0: wire `@gpuixui/motion` into Dialog, Drawer, Popover, DropdownMenu, CommandMenu, Toast, Accordion, Tabs and PreviewCard (shadcn/Base UI enter-exit patterns; fade + offset, never `transform`) — the timing policy is `motionTiming` in `@gpuixui/motion`, the frames and mount window are `packages/components/src/internal/presence.tsx`, the preference is `MotionProvider`, and `src/behaviour/presence.test.tsx` measures the movement and exit in the real renderer
 `[x]` Close the popup family the nine Phase 0 surfaces left out: `NavigationMenuContent` was the
       last anchored panel in `packages/components` that popped into place, so it now enters and

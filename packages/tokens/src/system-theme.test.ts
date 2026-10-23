@@ -145,6 +145,57 @@ describe("the palette a desktop hands over", () => {
     expect(selectionFailures(high)).toEqual([]);
   });
 
+  it("prints the paint the window measured, not only the poll", () => {
+    // The unit suite proves the mapping and the poll's arithmetic; the half a
+    // consumer relies on is the paint — a running window repaints without
+    // remounting and returns to its own theme when the desktop theme is
+    // deleted. The playground's `system-theme-follow` measures that, and the
+    // page used to send a reader to it as future work, so a proven follow read
+    // exactly like a planned one. Every value below is derived, and the probe's
+    // fixture must still carry the palettes the page prints.
+    const catalogue = read("../../../docs/tokens.md");
+    const readme = read("../README.md");
+    const fixture = read("../../../apps/playground/src/live/system-theme.ts");
+    const checks = /export const SYSTEM_THEME_CHECKS = (\d+)/.exec(
+      fixture,
+    )?.[1];
+
+    const night = paletteToTokens(nightPalette, darkTheme);
+    const paper = paletteToTokens(paperPalette, lightTheme);
+
+    expect(checks, "the probe's check count").toBeDefined();
+    [nightPalette, paperPalette].forEach((palette) => {
+      expect(fixture).toContain(`background: "${palette.background}"`);
+      expect(fixture).toContain(`accent: "${palette.accent}"`);
+    });
+
+    // The three states the probe reads off the frame.
+    const painted = [
+      night.colors.background,
+      night.colors.primary,
+      paper.colors.background,
+      paper.colors.primary,
+      darkTheme.colors.background,
+      darkTheme.colors.primary,
+    ];
+    painted.forEach((value) => {
+      expect(catalogue, `${value} on the page`).toContain(value);
+    });
+
+    [catalogue, readme].forEach((page) => {
+      expect(page).toContain("system-theme-follow");
+      expect(page).toContain(`${checks} checks`);
+      // The retracted promise: the paint was the playground's to record.
+      expect(page).not.toContain("is the playground's to record");
+      expect(page).not.toContain("the playground's to record");
+    });
+
+    // The honest half stays: macOS host, the decoder is the consumer's, and
+    // `omarchy-theme-set` itself was not run.
+    expect(catalogue).toContain("`omarchy-theme-set` is not run");
+    expect(catalogue).toContain("mount count stays `1`");
+  });
+
   it("prints the selection rule it applies", () => {
     const catalogue = read("../../../docs/tokens.md");
     const design = read("../../../docs/design-system.md");
