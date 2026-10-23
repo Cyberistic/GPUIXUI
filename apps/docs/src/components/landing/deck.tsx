@@ -1,10 +1,9 @@
 /**
- * The hero deck: three platform windows, each a miniature of the dashboard and
- * painted from that platform's own theme (families, roles, radius, density),
- * so macOS, Windows 11 and Linux look like themselves rather than one skin.
+ * The hero deck: three platform windows, each running the same **hunter
+ * licensing chat agent** in that platform's own theme (families, roles,
+ * radius, density), so macOS, Windows 11 and Linux look like themselves.
  *
- * The shuffle pauses on hover; the stack is a clean fan with no rotation, so
- * nothing drifts off the baseline.
+ * The shuffle pauses on hover; the stack is a clean fan with no rotation.
  */
 import { useEffect, useState, type CSSProperties } from "react";
 import { darkTheme, platformTheme, type PlatformName } from "@gpuixui/tokens";
@@ -66,10 +65,7 @@ export function Hero() {
       </p>
 
       <div className="landing-actions">
-        <a
-          className="landing-btn landing-btn-primary"
-          href="/docs/getting-started"
-        >
+        <a className="landing-btn landing-btn-primary" href="/docs/getting-started">
           Get started
         </a>
         <a
@@ -88,7 +84,6 @@ export function Hero() {
 
       <div
         className="landing-deck"
-        data-paused={paused}
         onBlur={() => setPaused(false)}
         onFocus={() => setPaused(true)}
         onMouseEnter={() => setPaused(true)}
@@ -106,7 +101,7 @@ export function Hero() {
   );
 }
 
-/** One mini dashboard in a platform's chrome and palette. */
+/** The licensing agent: a conversation that issues one general licence. */
 function PlatformMini({
   platform,
   position,
@@ -128,40 +123,45 @@ function PlatformMini({
       style={style}
     >
       <Bar platform={platform} />
-      <div className="landing-mini">
-        <aside className="landing-mini-side">
-          <span className="landing-mini-brand">HA</span>
-          {["Overview", "Projects", "Nen", "Reports"].map((item, index) => (
-            <span
-              className="landing-mini-nav"
-              data-active={index === 0}
-              key={item}
-            >
-              {item}
+      <div className="landing-chat">
+        <div className="landing-chat-log">
+          <div className="landing-chat-row">
+            <span className="landing-chat-avatar">HA</span>
+            <p className="landing-chat-bubble">
+              I can issue a General Hunter License. Which class?
+            </p>
+          </div>
+
+          <div className="landing-chat-chips">
+            <span data-active="true">Single</span>
+            <span>Group</span>
+            <span>Pro</span>
+          </div>
+
+          <div className="landing-chat-row landing-chat-row-user">
+            <p className="landing-chat-bubble landing-chat-bubble-user">
+              Group — three seats.
+            </p>
+          </div>
+
+          <div className="landing-chat-row">
+            <span className="landing-chat-avatar">HA</span>
+            <p className="landing-chat-bubble">
+              Approved. Here is your licence.
+            </p>
+          </div>
+
+          <div className="landing-chat-licence">
+            <span className="landing-chat-licence-title">
+              General Hunter License
             </span>
-          ))}
-        </aside>
-        <div className="landing-mini-main">
-          <div className="landing-mini-head">
-            <span className="landing-mini-name">Hunter Association</span>
-            <span className="landing-mini-pill">7h 42m</span>
+            <span className="landing-chat-licence-meta">HG-0042 · 3 seats</span>
           </div>
-          <div className="landing-mini-grid">
-            <div className="landing-mini-card">
-              <span className="landing-mini-label">Total time</span>
-              <span className="landing-mini-value">7h 42m</span>
-              <div className="landing-mini-bars" aria-hidden="true">
-                {[9, 14, 11, 18, 22, 13, 16].map((height, index) => (
-                  <i key={index} style={{ height }} />
-                ))}
-              </div>
-            </div>
-            <div className="landing-mini-card">
-              <span className="landing-mini-label">Token usage</span>
-              <span className="landing-mini-value">1.24M</span>
-              <div className="landing-mini-donut" aria-hidden="true" />
-            </div>
-          </div>
+        </div>
+
+        <div className="landing-chat-composer">
+          <span>Message the licensing agent</span>
+          <span className="landing-chat-send">Send</span>
         </div>
       </div>
       <span className="landing-badge">{platform.label} · default</span>
@@ -170,7 +170,7 @@ function PlatformMini({
 }
 
 function Bar({ platform }: { platform: Platform }) {
-  const title = <span className="landing-bar-title">Hunter Association</span>;
+  const title = <span className="landing-bar-title">Hunter Licensing</span>;
   const chrome = <Chrome kind={platform.chrome} />;
 
   return platform.chrome === "mac" ? (

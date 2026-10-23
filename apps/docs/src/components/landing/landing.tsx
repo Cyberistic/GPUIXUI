@@ -16,7 +16,6 @@ export function Landing() {
         <Dashboard />
         <Terminal />
         <Lineage />
-        <Licence />
         <Defaults />
         <CodeAndComponent />
         <Footer />
@@ -125,49 +124,6 @@ function Dashboard() {
         Browser preview of the native composition · the shipped window renders
         through GPUix, not the DOM.
       </p>
-    </section>
-  );
-}
-
-function Licence() {
-  const entitlements = [
-    { title: "Components", body: "typed, composable parts" },
-    { title: "Themes", body: "light, dark, high contrast" },
-    { title: "Platforms", body: "macOS, Windows 11, Linux" },
-    { title: "Runtime", body: "real GPUix, not a browser" },
-    { title: "Source", body: "copy it, own it, edit it" },
-    { title: "Limits", body: "documented, with evidence" },
-  ] as const;
-
-  return (
-    <section className="landing-section">
-      <p className="landing-kicker">The licence</p>
-      <h2 className="landing-h2">What you get when you carry it.</h2>
-      <div className="landing-licence">
-        <div className="landing-licence-head">
-          <span aria-hidden="true" className="landing-seal">
-            X
-          </span>
-          <div>
-            <p className="landing-licence-title">The Hunter License</p>
-            <p className="landing-licence-sub">
-              GPUIxUI · one component set, three native looks
-            </p>
-          </div>
-        </div>
-        <p className="landing-lead landing-licence-lead">
-          A licence to build native software with one component set: composable
-          parts, semantic tokens, both themes, and the limitations written down
-          instead of hidden.
-        </p>
-        <ul className="landing-licence-list">
-          {entitlements.map((item) => (
-            <li key={item.title}>
-              <b>{item.title}</b> — {item.body}
-            </li>
-          ))}
-        </ul>
-      </div>
     </section>
   );
 }
