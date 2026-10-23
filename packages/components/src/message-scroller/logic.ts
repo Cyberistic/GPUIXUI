@@ -33,11 +33,18 @@ export interface ScrollObservation {
  * Fold one scroll observation. A pinned reader clears the unread count because
  * the end is visible again; leaving the end keeps the count untouched. An
  * unchanged state is returned by identity so React does not re-render.
+ *
+ * An observation the scroller cannot read is **no observation**: the threshold
+ * is often a measurement (`Math.round(inset)`) and the distance is bounds
+ * arithmetic, and `NaN` fails every comparison — which used to read as "away
+ * from the end", so a reader resting at the bottom stopped following new rows
+ * and was offered "jump to latest".
  */
 export const observeScroll = (
   state: MessageScrollerState,
   { distanceFromEnd, threshold }: ScrollObservation,
 ): MessageScrollerState => {
+  if (Number.isNaN(distanceFromEnd) || Number.isNaN(threshold)) return state;
   const pinned = distanceFromEnd <= Math.max(0, threshold);
   const unread = pinned ? 0 : state.unread;
   return pinned === state.pinned && unread === state.unread
@@ -47,13 +54,15 @@ export const observeScroll = (
 
 /**
  * Fold rows appended to the viewport. A pinned reader sees them, so only the
- * unpinned case counts; a non-positive count is not an arrival.
+ * unpinned case counts; a count that is not an arrival — zero, negative, or one
+ * the scroller cannot read — changes nothing, because `unread` names a number
+ * of messages the affordance paints.
  */
 export const addItems = (
   state: MessageScrollerState,
   count: number,
 ): MessageScrollerState =>
-  state.pinned || count <= 0
+  state.pinned || Number.isNaN(count) || count <= 0
     ? state
     : { pinned: false, unread: state.unread + count };
 

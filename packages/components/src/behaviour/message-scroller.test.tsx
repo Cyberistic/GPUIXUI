@@ -4,9 +4,11 @@
  * The bugs these guard: a new row that yanks a reader who scrolled up; an
  * unread count that increments while pinned; a "jump to latest" that does not
  * reach the end or leaves the count behind; a short history that offers a
- * pointless control; and a streamed row that grows without keeping its bottom
- * visible. The scroll position is read from the renderer, not inferred from the
- * component's own state, so a wrong pin decision fails here.
+ * pointless control; a streamed row that grows without keeping its bottom
+ * visible; and a threshold that measured `NaN`, which used to read as "away
+ * from the end" so a reader at the bottom stopped following new rows. The
+ * scroll position is read from the renderer, not inferred from the component's
+ * own state, so a wrong pin decision fails here.
  */
 
 import * as Option from "effect/Option";
@@ -28,6 +30,7 @@ interface TranscriptProps {
   /** Give the last row extra height, as a streamed reply would gain. */
   readonly grown?: boolean;
   readonly onPinnedChange?: (pinned: boolean) => void;
+  readonly threshold?: number;
 }
 
 /** A bounded transcript: 26px-ish rows in a 200px viewport. */
@@ -35,12 +38,14 @@ const Transcript = ({
   count,
   grown = false,
   onPinnedChange,
+  threshold,
 }: TranscriptProps) => (
   <div style={{ width: 480 }}>
     <MessageScroller
       testId="scroller"
       label="Conversation"
       onPinnedChange={onPinnedChange}
+      {...(threshold === undefined ? {} : { threshold })}
     >
       <MessageScrollerViewport testId="viewport" style={{ height: 200 }}>
         {Array.from({ length: count }, (_, index) => (
@@ -138,6 +143,32 @@ describe("MessageScroller", () => {
     expect(text(root)).toContain("1 new message");
 
     root.unmount();
+  });
+
+  it("keeps following rows when its threshold cannot be measured", () => {
+    // The threshold is a layout token, often arithmetic over a measured inset,
+    // and `NaN` failed every comparison: a reader who moved 10px — inside the
+    // default 24px — was read as away from the end, so the next row stopped
+    // following and the affordance offered a jump the reader did not need.
+    const unreadable = Number.NaN;
+    const root = renderComponent(
+      <Transcript count={40} threshold={unreadable} />,
+    );
+    wheel(root, 10);
+    const before = offsetOf(root);
+
+    root.rerender(<Transcript count={41} threshold={unreadable} />);
+
+    const after = offsetOf(root);
+    const endVisible = endIsVisible(root, 40);
+    const jump = root.renderer.findByTestId("jump");
+    const painted = text(root);
+    root.unmount();
+
+    expect(after).toBeLessThan(before);
+    expect(endVisible).toBe(true);
+    expect(jump).toBeUndefined();
+    expect(painted).not.toContain("1 new message");
   });
 
   it("counts every row that arrives while unpinned", () => {

@@ -51,6 +51,16 @@ MessageScroller
 | `MessageScrollerItem` | one row, no surface | `style`, children |
 | `MessageScrollerJumpToLatest` | a secondary button; nothing while pinned | `label?`, `style` |
 
+## When a measurement is unreadable
+
+`threshold` defaults to the theme's `spacing["2xl"]`, and callers often compute
+their own from a measured inset. A threshold that never arrived (`NaN`), or a
+scroll distance the bounds arithmetic could not produce, is not an observation:
+the scroller keeps the pin and unread state it had, so a reader resting at the
+bottom keeps following new rows instead of being read as scrolled up. An
+arrival count it cannot read is not an arrival either, so the affordance never
+paints `NaN` where a number of messages belongs.
+
 ## Limitations
 
 - Not virtualized; every row renders.
