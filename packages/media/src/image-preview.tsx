@@ -38,7 +38,7 @@ const isStatus = Schema.is(ImagePreviewStatus);
 
 /** {@link ImagePreview} props. */
 export interface ImagePreviewProps extends Omit<Props, "children"> {
-  /** A filesystem path, data URL or http(s) URL for the picture. */
+  /** A filesystem path, data URL or http(s) URL for the picture. A blank or non-text value paints the error state. */
   readonly src: string;
   /** The picture's accessible name. */
   readonly alt: string;
@@ -123,7 +123,11 @@ export const renderImagePreview = (
   const loading = accessibleName(loadingLabel, "Loading");
   const error = accessibleName(errorLabel, "Could not load image");
   const retry = accessibleName(retryLabel, "Retry");
-  const status = resolveStatus(src, statusProp);
+  // A record restored from storage writes `null` where it carried no picture;
+  // reading the source as text keeps the derived error state paintable instead
+  // of throwing out of `isBlank`.
+  const source = typeof src === "string" ? src : "";
+  const status = resolveStatus(source, statusProp);
   const boxWidth = frameSide(width, DEFAULT_WIDTH);
   const boxHeight = frameSide(height, DEFAULT_HEIGHT);
   const corner = cornerRadius(radius, theme);
@@ -154,7 +158,7 @@ export const renderImagePreview = (
     Match.when("loaded", () =>
       zoom ? (
         <ImageZoom
-          src={src}
+          src={source}
           alt={alt}
           width={boxWidth}
           height={boxHeight}
@@ -163,7 +167,7 @@ export const renderImagePreview = (
         />
       ) : (
         <img
-          src={src}
+          src={source}
           alt={alt}
           objectFit="contain"
           style={{ width: "100%", height: "100%" }}

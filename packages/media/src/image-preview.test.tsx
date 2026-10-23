@@ -38,6 +38,17 @@ describe("ImagePreview", () => {
     expect(hostTag(error)).toStrictEqual(Option.some("div"));
   });
 
+  it("paints the error state for a source that is not text", () => {
+    // The bug guarded: a record restored from storage writes `null` where it
+    // carried no picture, and `isBlank` trimmed it, throwing out of the render
+    // instead of painting the error state a blank source paints.
+    const root = renderImagePreview(
+      { src: null as unknown as string, alt: "photo" },
+      lightTheme,
+    );
+    expect(Option.isSome(findByTestId(root, "image-preview-error"))).toBe(true);
+  });
+
   it("paints the picture, not the error, for a real src", () => {
     const root = renderImagePreview(
       { src: "data:image/png;base64,AA==", alt: "photo" },

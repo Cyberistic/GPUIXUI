@@ -10049,6 +10049,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 `[x]` Read a **stored image status as the derived state**, not as a crash — `ImagePreview`'s `resolveStatus` passed the prop straight into `Match.exhaustive`, so a `status` restored from storage whose name the union no longer carries (`"ready"`, an older spelling) threw `effect/match/Match/exhaustive: absurd` out of the render while the same component already read an unlayable width, height and radius as their defaults. `ImagePreviewStatus` is a `Schema.Literals` and `isStatus` guards the read: anything the union does not name falls back to the derived state — blank `src` → `"error"`, else `"loaded"` — so the public prop keeps its declared union and a stored value can never skip the paint. `src/image-preview.test.tsx` gains `reads a stored status the union does not name as the derived state` (a real source paints the picture, a blank source paints the error) and the page's stale count moves 3 → 5. Direction measured: with the plain `status ?? …` restored the case fails with `Error: effect/match/Match/exhaustive: absurd`; restored, the file is 5/5 and the package 99/99, `check-types` clean. Docs `packages/media/docs/image-preview.mdx` §Anatomy/§Verification and the `Image preview` row. No native scenario applies — the states are styles and slots the `image-fit` probe measured.
 
+`[x]` `packages/media`: **an image preview's source restored as non-text threw out of the blank check** — `ImagePreview`'s `isBlank` trimmed `src` directly, so a saved record whose picture was `null` answered `Cannot read properties of null (reading 'trim')` out of `resolveStatus` before any state painted — the crop area already reads `src` as text once for the same record shape. The source is read as text at the boundary now and both painter branches (`ImageZoom` and the bare `<img>`) use the read value, so a non-text source paints the derived error state the blank one paints. Proof: `src/image-preview.test.tsx` gains `paints the error state for a source that is not text`, measured failing at `HEAD` with the TypeError; restored, the package is 162/162 unit and `check-types` clean. Docs `packages/media/docs/image-preview.mdx` §API/§Limitations and the `Image preview` row (5 → 6). No native scenario applies — the states are styles and slots the `image-fit` probe measured.
+
 `[x]` Read a **stored editor split as the middle of the body** — `MarkdownEditor` held the source pane with `Math.min(Math.max(splitAt, split.min), split.max)`, which is `NaN` for a `splitSize` restored from storage that is not finite, so the `SplitPane` was handed a width that is not a number (it painted **336** against the middle's **317** in the renderer) while the editor already read an unlayable width, height and mode as their defaults. `markdown/logic.ts` now owns `splitBounds` and `splitOf`: a readable value is floored and clamped to the 25–75% band, and an absent or unreadable one is the middle of the body. `src/markdown/logic.test.ts` gains `holds a stored split inside the view's band` and `reads a split it cannot lay out as the middle of the body`; `src/behaviour/markdown-editor.test.tsx` gains `reads a stored split size it cannot lay out as the middle` (the painted source field is 317). Directions measured: with the old expression restored the window case fails `expected 336 to be 317`; restored, logic 17/17, the markdown behaviour file 13/13 (the package's behaviour suite 24/24) and the package unit suite 45/45, `check-types` clean. Docs `packages/editor/docs/markdown-editor.mdx` §The split/§Evidence (17 + 13) and the `Rich-text editing` row. No native scenario applies — the divider's drag and keys are the dock's measured `split-pane-lifecycle`; this is the arithmetic before the paint.
 
 `[x]` Publish the **step a wizard is on**, not a label on a node the tree drops — `MultiStepForm` painted `aria-label={stepAnnouncement(...)}` on the content `div` with no role, and 0.11.0 publishes an element to the accessibility tree only when it has a role, so the announcement (`Name, step 1 of 2`) reached no reader; the renderer's own `getA11yTree` showed the root group alone while the intent sat in `wizard/logic.ts`'s `stepAnnouncement` and in the component's test id. The content wrapper is `role="group"` with the same name, so `nodesWithRole(renderer, "group")` carries `Name, step 1 of 2` beside the wizard's own name. `src/behaviour/multi-step-form.test.tsx` gains `announces the step's place on the content it mounts`; direction measured: without the role the case fails `expected [ 'Workspace setup' ] to include 'Name, step 1 of 2'`; restored, the file is 9/9 and the package's behaviour suite is 99 files / 1 011 tests green, `check-types` clean. Docs `packages/components/docs/multi-step-form.mdx` §Accessibility (the runtime rule and the name) and the `Multi-step forms` row (the group and the new count). No native scenario applies — the a11y tree is the renderer's, the same contract the `a11y-tree` probe measured.
@@ -10398,7 +10400,32 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 356/358
+`[x]` `[██████████]` 357/358
+
+`[x]` Compile the **class reference** the styling page only sampled — `/docs/styling`
+      showed ten representative classes (`h-9`, `px-3`, …) and no way to find the
+      other eighty the default registry resolves, so a consumer writing a recipe read
+      `packages/tw/src/utilities.ts` to learn the vocabulary while the refusals were
+      prose. `src/lib/style-reference.ts` holds the families as data and compiles every
+      row through `classesToStyle`/`unsupportedReason` against the resolved platform
+      theme; `src/components/docs/style-reference.tsx` prints them, and each refusal
+      carries the compiler's own sentence. `style-reference.test.tsx` (8 cases) holds
+      the list to the compiler in both directions — it parses `utilities.ts`'s **54**
+      literals and **39** prefix families and fails on an accepted class with no row —
+      holds a typo'd row to `Refused`, derives the reason from the package rather than
+      the page, keeps "paints nothing" to the group that says so, and repaints
+      `h-9`/`rounded-lg` under `platformTheme(…, "darwin"|"linux")`. Directions
+      measured: deleting `flex-col` fails `expected [ 'flex-col' ] to deeply equal []`;
+      `gap-2` → `gp-2` fails the compile case; pinning the body to `themes.light` fails
+      both paint cases; deleting the page's `<StyleReference />` fails the mount case.
+      Verified on a served build (`vite preview`): `/docs/styling?platform=…` prints
+      `h-9` **28**/**36**/**32** and `rounded-lg` **14**/**12**/**8** for
+      darwin/linux/win32, with the default matching Windows. Green: the docs suite
+      **161 files / 1 700 tests**, `check-types`, `build`, `oxlint` and `oxfmt` clean;
+      `check:tests` accepts the file (red only on the foreign
+      `packages/data/src/behaviour/scratch-probe.test.tsx`). The page and the site
+      ledger describe the generated table. No native scenario applies — the table
+      resolves the compiler's styles in the browser and claims no native frame.
 
 `[x]` Draw the **docking layout from its own tree** — `dock-layout.mdx` was the
       last dock page with no preview: it described a named tree of splits and
