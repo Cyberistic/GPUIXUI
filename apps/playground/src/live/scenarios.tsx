@@ -996,6 +996,7 @@ import {
   HiddenSubtreeProbe,
   hiddenSubtreeSteps,
 } from "./hidden-subtree-probe.js";
+import { CropOverlayProbe, cropOverlaySteps } from "./crop-overlay-probe.js";
 import {
   ACTION_RING_DANGER,
   ACTION_RING_NEIGHBOUR,
@@ -28010,5 +28011,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "hidden-subtree-lifecycle",
     view: () => <HiddenSubtreeProbe />,
     steps: hiddenSubtreeSteps,
+  },
+  "crop-overlay": {
+    id: "crop-overlay",
+    view: () => <CropOverlayProbe />,
+    steps: cropOverlaySteps,
   },
 };

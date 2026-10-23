@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-98 probes a real window can prove, of which nineteen mount shipped
+99 probes a real window can prove, of which nineteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -5487,6 +5487,77 @@ the paint read is comparing the frame's bytes rather than the style's intent.
 Evidence: `.artifacts/live/hidden-subtree.png`,
 `.artifacts/live/hidden-subtree-stepped.png`.
 
+### `crop-overlay` — measured on 0.11.0 here
+
+**Can a crop area be built from what the runtime provides?** The inventory said
+the paint *under* a crop was measured and the crop itself was not, which leaves
+three questions a crop component must answer first: is a mask paintable, does a
+mask keep the press meant for the picture, and can a corner handle drag the hole
+inside the bitmap's bounds?
+
+The runtime has no `clip-path`, no mask, no radial gradient and no `<canvas>`
+paint, so the only mask is **four positioned veil bars** around the hole. The
+probe mounts one 240×160 bitmap (`#34C759`, printed through `setImagePixels` in
+a layout effect) inside a frame, four bars in the theme's `overlay` role, and a
+10×10 handle straddling the hole's bottom-right corner. Every bar is read back
+two ways: its painted box against the fixture's arithmetic, and its pixel
+against the veil composited over the bitmap (`#12451F` on the dark theme).
+
+| Step | Result |
+| ---- | ------ |
+| the frame | paints **240×160**, the bitmap's own box |
+| the bars at rest | each paints exactly the box the hole leaves: top `0,0,240,40`, right `160,40,80,70`, bottom `0,110,240,50`, left `0,40,60,70` |
+| the handle | **10×10** at `155,105`, centred on the hole's `160,110` corner |
+| a bar's pixel | `#12451F` — the theme's veil composited over the bitmap, so the mask paints *above* the picture |
+| the hole's pixel | `#34C759` — the bitmap itself, not the veil |
+| drag −1000, −1000 | `crop=60,40,24,24`: the hole clamps at the **24**-point minimum |
+| drag +1000, +1000 | `crop=60,40,180,120`: the hole clamps at the bitmap's own edges, with the right and bottom bars gone |
+| the pixel at `220,140` | the veil at rest, the bitmap after the second drag: the bars re-paint with the hole |
+| a press on the top bar | `frame=1 image=0` — the press reaches the **frame beneath the mask** and the hole does not move |
+| a press on the bitmap | `frame=2 image=0` — an `<img>` reports no press of its own; the frame under it hears both |
+
+37 checks, `--only crop-overlay`, green on 0.11.0 here (~5.6 s). Fixture:
+`src/live/crop-overlay.ts` — `cropBars`, `cropHandleBox` and `draggedCrop` are
+the arithmetic the view, the checks and `crop-overlay.test.ts` share, so a bar
+cannot be painted where the probe does not measure it.
+
+Four rules a crop component carries:
+
+1. **The mask is four bars, because nothing else exists.** A `clip-path`, a
+   mask or a radial gradient cannot be written; a rounded `borderRadius` clips
+   an `<img>` but cannot punch a hole in a covering fill. Four positioned bars
+   over the picture are the whole mechanism, and a bar that paints *beneath*
+   the bitmap masks nothing — the probe's pixel read is what separates the two.
+2. **A mask bar declares `pointerEvents: "none"`.** Without it the bar is the
+   hit test's answer and the picture beneath it is unreachable; the negative
+   control above is that failure. A bar is decoration, so it takes no input.
+3. **An `<img>` is not a press target.** A press on the bitmap reports on the
+   frame that holds it (`image=0` after both presses), so a "drag the picture
+   under the crop" gesture belongs on the frame or on a positioned layer over
+   it — never on the image's own handler, which never runs.
+4. **The handle must keep every move.** The press and each move land in one
+   React commit, so the drag's start state lives in a ref (`draggedCrop` is
+   applied to the crop the *press* saw). It heard **8 of 8** moves and clamped at
+   both bounds; a move-only handle would hear one, the rule `pointer-capture`
+   measured.
+
+Not measured here, and named rather than implied: a crop that shrinks from the
+top-left corner (this probe drags one corner), a rotate gesture, and there is
+**no keyboard path for the handle** — the runtime has no host control for a
+crop, so all three are the component's own work on top of this mechanism.
+
+Two negative controls measured, exit `1` each, restored green: dropping
+`pointerEvents: "none"` from the bars fails
+`a press on a veil bar reaches the frame beneath it and leaves the hole`
+(`expected "crop=60,40,180,120 moves=16 frame=1 image=0", got
+"crop=60,40,180,120 moves=16 frame=0 image=0"`: the bar takes the press), and
+painting the bars before the bitmap fails
+`the top bar paints the veil over the bitmap` (`expected false, got true`: the
+sample reads the picture where the veil should be).
+
+Evidence: `.artifacts/live/crop-rest.png`, `.artifacts/live/crop-min.png`,
+`.artifacts/live/crop-max.png`, `.artifacts/live/crop-dragged.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5652,6 +5723,8 @@ src/live/editor-overlay.ts the editable-code fixture: one source under a field a
 src/live/multi-pane.ts  the two-pane editor fixture: buffers, split arithmetic and the drag clamp
 src/live/table-filter.ts the filtered-grid fixture: the label match, the selection rule and the filtered-order step
 src/live/table-columns.ts the configurable-grid fixture: widths, column offsets, the pan end and the column move
+src/live/crop-overlay.ts the crop frame's mask, handle and clamp arithmetic
+src/live/crop-overlay-probe.tsx the crop overlay's view and steps (one module)
 src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
@@ -5712,8 +5785,8 @@ narrower. Each deviation is deliberate and measured:
   `image-fit`, `grid-focus-lifecycle`, `system-theme-follow`, `document-type`
   `dock-split-lifecycle`, `flex-sizing`, `scrollbar-thumb`,
   `scrollbar-thumb-both`, `collapsible-lifecycle`, `scrollbar-drag` and
-  `hidden-subtree-lifecycle` and `find-highlight` (forty probes, each run
-  alone).
+  `hidden-subtree-lifecycle` and `find-highlight` and `crop-overlay`
+  (forty-one probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

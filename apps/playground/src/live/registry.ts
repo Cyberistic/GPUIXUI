@@ -624,6 +624,12 @@ export const liveRegistry = [
       "Focus: a display:none box still paints and keeps its tab stop while visibility:hidden paints nothing, and the carousel's spare slide is a display no-op",
     capability: "focus",
   },
+  {
+    id: "crop-overlay",
+    title:
+      "Content: a crop frame masks a bitmap with four veil bars that take no press, and a corner handle drags the hole inside the bitmap's own bounds",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
