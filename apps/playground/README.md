@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-107 probes a real window can prove, of which twenty mount shipped
+108 probes a real window can prove, of which twenty mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -6006,6 +6006,63 @@ nothing` (`expected "input= changes=5 renders=1", got "input=loaded changes=4
 renders=1"`); restored, green. The probe takes no capture: every claim is a
 readout the app's own state prints.
 
+### `focus-reveal-lifecycle` — measured on 0.11.0 here
+
+**Does a control the keyboard reaches inside a scroller get shown to the
+reader?** The runtime moves focus without moving the glass — `focus_next` calls
+`Window::focus_next` and nothing else — and a form taller than its pane is the
+everyday shape that meets it: a `Tab` lands on a control below the fold.
+`keyboard-scroll-lifecycle` measured a focused **scroller** answering keys, and
+`tab-overflow` measured a selected tab staying clipped until the app scrolls it;
+neither asked what happens to the row a traversal focused. The probe mounts two
+panes of one geometry — nine 40px rows in 200×120, so the content is three panes
+tall and the end is `-240` — and reads the offset and the paint for both:
+
+| Step | Measured |
+| ---- | -------- |
+| the control before the panes takes the focus | `focus-reveal-before`, both panes at `0` |
+| the traversal walks into the form | it reaches `focus-reveal-form-8`, the ninth row, and the pane's offset stays **`0`** |
+| the focused row's box | it starts **200** points below the pane's bottom edge — wholly out of sight, not half clipped |
+| a code focus on the first row, then the last | `0` both times: `focusElement` does not reveal either |
+| the paint while it is focused | **0** pixels of the row's own `#FF3B30` inside the pane |
+| three arrows in the roving list | the cursor and the readout read `cursor=3 keys=3`, the focus is `focus-reveal-roving-3`, and the offset is **`-40`** — one row, exactly where a minimal reveal puts it |
+| five more arrows | `cursor=8 keys=8`, `focus-reveal-roving-8`, offset **`-240`** — the content's end, not the row's top |
+| one arrow past the end | `cursor=8 keys=9` and the offset unchanged: a clamped cursor asks for nothing |
+| the same frame, two panes | the revealed row paints **30350** pixels of its marker inside its pane, and the form's row still paints **0** |
+| the roving list's last row, before a key moves onto it | **0** pixels: the reveal is what paints it, not the mount |
+
+Three rules a plan needs:
+
+1. **A native traversal does not reveal the control it focuses, and nothing in
+   the pane hears it.** The offset stayed `0` across all nine rows and a code
+   focus behaved the same way, so a form whose controls are ordinary tab stops
+   has no route to the control it just focused. Design for it: keep the pane
+   tall enough for its controls, or make the reveal part of a roving list.
+2. **A roving list reveals what its own key moved onto.** The row the cursor
+   lands on calls the renderer's `scrollIntoView` from a layout effect, and the
+   move is the minimal one: row 3 asks for `-40`, not for the row's top. This is
+   the shape `Select`, `List` and `Tabs` ship, and the reason a keyboard-driven
+   list is safe where a plain form is not.
+3. **The reveal clamps at the content's end, and an idempotent key costs
+   nothing.** The last row reveals to `-240` (the end) rather than its own top,
+   and an arrow past the end keeps both the cursor and the offset — so an app
+   may call the reveal on every move without a guard.
+
+A limit this host states rather than assumes: the paint is counted in a device
+pixel capture at scale 2 (a 200×40 marker covers 32 000 pixels, and the 30 350
+measured is that row minus its label), and the focus ids come from the
+renderer, which is the channel that works here — the `onFocus` pair is a separate
+measured gap (`blur-delivery-lifecycle`).
+
+44 checks, `--only focus-reveal-lifecycle`, green on 0.11.0 here (~2.8 s). Fixture
+`src/live/focus-reveal.ts` (the ids, the pane geometry, the minimal-reveal
+prediction and the readout) + `focus-reveal.test.ts` (the geometry, the
+prediction in both directions, the containment rule, the probe's mounts and its
+`scrollIntoView` route, the count and this section). Negative control measured,
+exit `1`, restored green: dropping the reveal leaves the roving row clipped, so
+the run stops at `the reveal lands where a minimal reveal puts it (y=0)` with
+`expected -40 ± 1, got 0` after 28 of the 44 checks; restored, 44/44.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -6237,8 +6294,8 @@ narrower. Each deviation is deliberate and measured:
   `faded-hitbox-lifecycle` and `markdown-fence` and
   `empty-error-states-lifecycle` and `blur-delivery-lifecycle` and
   `breadcrumb-navigation-lifecycle` and `chart-surface-lifecycle` and
-  `text-undo-lifecycle` and `key-hold-lifecycle` (forty-nine
-  probes, each run alone).
+  `text-undo-lifecycle` and `key-hold-lifecycle` and `focus-reveal-lifecycle`
+  (fifty probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

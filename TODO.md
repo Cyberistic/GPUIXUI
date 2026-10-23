@@ -8916,7 +8916,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
       dropping the heading check prints the generated family under a written
       `## Related` and fails the silence case; and restoring "Four sections are
       not optional" fails the policy case by name.
-      `nub run --filter @gpuixui/docs` is green at 120 files / 1 276 tests with
+      `nub run --filter @gpuixui/docs` is green at 120 files / 1 279 tests with
       `check-types` and the build clean. No native scenario applies — generated
       navigation and its data have no runtime path.
 

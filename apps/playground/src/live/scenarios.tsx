@@ -1061,6 +1061,7 @@ import {
 } from "./breadcrumb-navigation-probe.js";
 import { KeyHoldProbe, keyHoldSteps } from "./key-hold-probe.js";
 import { TextUndoProbe, textUndoSteps } from "./text-undo-probe.js";
+import { FocusRevealProbe, focusRevealSteps } from "./focus-reveal-probe.js";
 import {
   ACTION_RING_DANGER,
   ACTION_RING_NEIGHBOUR,
@@ -28974,5 +28975,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "text-undo-lifecycle",
     view: () => <TextUndoProbe />,
     steps: textUndoSteps,
+  },
+  "focus-reveal-lifecycle": {
+    id: "focus-reveal-lifecycle",
+    view: () => <FocusRevealProbe />,
+    steps: focusRevealSteps,
   },
 };

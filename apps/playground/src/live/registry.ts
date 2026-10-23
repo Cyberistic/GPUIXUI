@@ -678,6 +678,12 @@ export const liveRegistry = [
       "Input: a field's own cmd-z restores its text and reports it through onChange, a value pushed in from outside clears the history, and the text area undoes too",
     capability: "input",
   },
+  {
+    id: "focus-reveal-lifecycle",
+    title:
+      "Focus: a traversal focuses a control past its pane's fold without revealing it, while a roving list reveals the row its own key moved onto",
+    capability: "focus",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
