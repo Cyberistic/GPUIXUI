@@ -1,6 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  DIVIDER_STEP,
+  DIVIDER_WIDTH,
+  clampSize,
+  dragSize,
+  resizeByKey,
+  sizeBounds,
+} from "@gpuixui/dock/logic";
+import {
   DOCK_BOUNDS,
   DOCK_DIVIDER_WIDTH,
   DOCK_INITIAL,
@@ -8,18 +16,20 @@ import {
   clampWidth,
   dragWidth,
   dockKeyOf,
+  dockKeys,
   keyWidth,
+  type DockKey,
 } from "./dock-preview";
 
 /**
  * The dock preview's rule, held to the component it stands in for.
  *
  * `@gpuixui/dock`'s `SplitPane` ships a 6px divider that steps 16px on the
- * arrows and clamps to the caller's bounds, and the browser preview restates
- * that arithmetic so the divider is explorable on `/docs/workspace`. The
- * numbers and the CSS are read from the package and the style sheet, so a
- * preview that drifts from the shipped control fails here instead of teaching a
- * rule the library does not use.
+ * arrows and clamps to the caller's bounds, and the browser preview used to
+ * restate that arithmetic so the divider was explorable on `/docs/workspace`.
+ * A restatement is a second rule that drifts, so the preview now calls the
+ * package's own reducers and this file holds the drawing to them over a matrix
+ * of sizes and bounds. A preview may approximate the paint, never the rule.
  */
 
 const root = new URL("../../../../../", import.meta.url);
@@ -35,18 +45,10 @@ const block = (css: string, selector: string): string => {
   return end === -1 ? "" : css.slice(start, end + 1);
 };
 
-/** A numeric export in `packages/dock/src/logic.ts`. */
-const constant = (name: string): number =>
-  Number(
-    new RegExp(`export const ${name} = ([\\d.]+);`).exec(
-      read("packages/dock/src/logic.ts"),
-    )?.[1] ?? Number.NaN,
-  );
-
 describe("the dock preview's split arithmetic", () => {
   it("takes the divider's width and step from the component", () => {
-    expect(constant("DIVIDER_WIDTH")).toBe(DOCK_DIVIDER_WIDTH);
-    expect(constant("DIVIDER_STEP")).toBe(DOCK_STEP);
+    expect(DOCK_DIVIDER_WIDTH).toBe(DIVIDER_WIDTH);
+    expect(DOCK_STEP).toBe(DIVIDER_STEP);
 
     // The bounds are the preview's caller-owned numbers, so both ends are
     // reachable from where it opens.
@@ -77,6 +79,42 @@ describe("the dock preview's split arithmetic", () => {
     expect(keyWidth(DOCK_INITIAL, "end", DOCK_BOUNDS)).toBe(DOCK_BOUNDS.max);
   });
 
+  it("answers what the package's own reducers answer", () => {
+    const bounds = [
+      DOCK_BOUNDS,
+      { min: 0, max: Infinity },
+      { min: 100, max: 100 },
+    ] as const;
+    const widths = [-50, 0, 219, 220, 312, 380, 381, 10_000] as const;
+    const keys: ReadonlyArray<DockKey> = ["left", "right", "home", "end"];
+
+    const mismatched = bounds.flatMap((bound) => {
+      const packageBounds = sizeBounds(bound.min, bound.max);
+      return widths.flatMap((width) =>
+        keys.flatMap((key) =>
+          keyWidth(width, key, bound) === resizeByKey(width, key, packageBounds)
+            ? []
+            : [`${key} ${width} in ${bound.min}..${bound.max}`],
+        ),
+      );
+    });
+
+    expect(mismatched).toEqual([]);
+    // The two reductions are also the package's, not a second clamp.
+    expect(widths.map((width) => clampWidth(width, DOCK_BOUNDS))).toEqual(
+      widths.map((width) => clampSize(width, sizeBounds(220, 380))),
+    );
+    expect(widths.map((width) => dragWidth(width, 40, DOCK_BOUNDS))).toEqual(
+      widths.map((width) => dragSize(width, 40, sizeBounds(220, 380))),
+    );
+
+    // A matrix that agreed for one key would still pass, so the keys have to
+    // disagree with each other where the rule says they do.
+    expect(keyWidth(DOCK_INITIAL, "left", DOCK_BOUNDS)).not.toBe(
+      keyWidth(DOCK_INITIAL, "right", DOCK_BOUNDS),
+    );
+  });
+
   it("answers the four browser keys and ignores the rest", () => {
     expect(["ArrowLeft", "ArrowRight", "Home", "End"].map(dockKeyOf)).toEqual([
       "left",
@@ -92,6 +130,25 @@ describe("the dock preview's split arithmetic", () => {
 
     // A step of zero would let the two keys disagree with the package's.
     expect(DOCK_STEP).toBeGreaterThan(0);
+    // A vertical split answers Up/Down, but this drawing is horizontal, so it
+    // answers exactly the four keys its map names.
+    expect(dockKeys).toEqual(["left", "right", "home", "end"]);
+  });
+});
+
+describe("the dock preview's source", () => {
+  it("runs the package's rules instead of restating them", () => {
+    const preview = read("apps/docs/src/components/docs/dock-preview.ts");
+
+    // Bug guarded: the module restated `Math.min(Math.max(...))`, the 16px step
+    // and a `widths` table of its own, so a package change left the preview
+    // teaching yesterday's rule.
+    expect(preview).toContain('from "@gpuixui/dock/logic"');
+    expect(preview).toContain("clampSize");
+    expect(preview).toContain("dragSize");
+    expect(preview).toContain("resizeByKey");
+    expect(preview).not.toMatch(/Math\.min\(Math\.max/);
+    expect(preview).not.toContain("const widths");
   });
 });
 

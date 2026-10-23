@@ -10390,7 +10390,33 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 354/356
+`[ ]` `[██████████]` 355/357
+
+`[x]` Make the **split preview run the dock package's rule** — `dock-preview.ts`
+      restated the shipped arithmetic: `clampWidth` was its own
+      `Math.min(Math.max(...))`, `dragWidth` added the delta itself, and
+      `keyWidth` read a local `widths` table, so a change to `sizeBounds`,
+      `resizeByKey` or the 16px step left the drawing on `/docs/workspace` and
+      `/docs/dock/split-pane` teaching yesterday's rule while the package's own
+      suite stayed green. The module now calls `clampSize`, `dragSize`,
+      `resizeByKey` and `sizeBounds` from `@gpuixui/dock/logic`, and
+      `DOCK_DIVIDER_WIDTH`/`DOCK_STEP` are the package's `DIVIDER_WIDTH`/
+      `DIVIDER_STEP` (the preview keeps only its caller-owned `220–380` bounds
+      and the DOM key map). `dock-preview.test.ts` replaces the source-text
+      regex with a matrix that runs both sides: every key over seven widths and
+      three bound sets must equal `resizeByKey`, and the drag and clamp lists
+      must equal `dragSize`/`clampSize`, with a key-disagreement premise so a
+      matrix that agreed for one key cannot pass; a source case refuses
+      `Math.min(Math.max` and a local `widths` table. `docs/preview-strategy.md`
+      now lists the split's three reducers beside the panel group's, so the
+      "drawings run the packages' own logic" sentence is true of every dock
+      drawing, and the site ledger describes the module that way. Directions
+      measured: restoring the local clamp fails `runs the package's rules
+      instead of restating them` by name (`not to match /Math\.min\(Math\.max/`),
+      and a source read of the package's `DIVIDER_WIDTH` is no longer needed —
+      the constant is the import. Restored, the touched files are 326/326 across
+      the preview, panel-group and every-demo-render suites. No native scenario
+      applies — pure arithmetic the package's own suite already holds.
 
 `[x]` Let the **split pane page draw the split it documents** — `/docs/dock/split-pane`
       opened with its props and two limitations and no drawing, although the

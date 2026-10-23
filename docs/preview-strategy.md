@@ -466,8 +466,9 @@ draws all six of its surfaces
 `media-player`)
 and the editor lane draws all four of its own (`code-editor`, `diff-viewer`,
 `markdown-editor`, `search-replace`). Those drawings run the packages' own
-**logic** — `@gpuixui/dock`'s `logic` (`normalizePanels`, `resizePanels`,
-`resizePanelsByKey`, `togglePanelCollapsed`), `@gpuixui/media`'s `crop/logic`,
+**logic** — `@gpuixui/dock`'s `logic` (`clampSize`, `dragSize`, `resizeByKey`,
+`normalizePanels`, `resizePanels`, `resizePanelsByKey`,
+`togglePanelCollapsed`), `@gpuixui/media`'s `crop/logic`,
 `qr/encode` and `upload/queue`, and `@gpuixui/editor`'s `diff/logic`,
 `markdown/logic` and `search/logic` — so a group's fractions and its resize,
 collapse and step reducers, the crop's masks and handlers, the symbol's modules,
