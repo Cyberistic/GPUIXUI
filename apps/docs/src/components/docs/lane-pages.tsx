@@ -35,8 +35,11 @@ export function LanePages({ lane }: { readonly lane: PackageLane }) {
         >
           <table className="w-full border-collapse text-sm">
             <caption className="border-b border-border bg-muted/60 px-3 py-2 text-left font-mono text-xs font-normal text-muted-foreground">
-              {collection.packageName} · {pages.length}{" "}
-              {pages.length === 1 ? "page" : "pages"}
+              <a className="underline" href={collection.route}>
+                {collection.packageName}
+              </a>
+              {" · "}
+              {pages.length} {pages.length === 1 ? "page" : "pages"}
             </caption>
             <thead>
               <tr className="border-b border-border bg-muted/60 text-left">

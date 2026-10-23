@@ -10411,7 +10411,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `/llms.txt` must read the registry — and
       `src/components/docs/collection-index.test.tsx` (2 cases) renders the list
       (a header row plus one row per page, each link and sentence, and the
-      singular count). Directions measured: dropping media's entry fails
+      singular count). The lane lists link to it: each package's name in the
+      data and workspace lane tables is now the link to that package's section
+      entry (`lane-pages.test.tsx`'s `links each package's name to the section
+      entry it opens` fails with the five workspace routes when the caption is
+      text again). Directions measured: dropping media's entry fails
       `covers every mounted collection…` with `[ '/docs/media' ]`; replacing the
       index branch with a package page fails the wiring case by name
       (`<CollectionIndexPage`); dropping one row fails the render case

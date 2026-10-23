@@ -153,6 +153,22 @@ describe("the lane page list", () => {
     expect(markup).toContain('href="/docs/editor/code-editor"');
   });
 
+  it("links each package's name to the section entry it opens", () => {
+    // The caption used to print the package as text, so the only way from the
+    // lane to a package's own list was the sidebar. Every mounted collection
+    // route answers now (a site page, a package index, or the generated index),
+    // so the name is the link a reader expects.
+    const markup = render("workspace");
+    const routes = packageCollections
+      .filter((collection) => collection.section === "Workspace")
+      .map((collection) => collection.route);
+
+    expect(routes.length).toBe(5);
+    expect(
+      routes.filter((route) => !markup.includes(`href="${route}"`)),
+    ).toEqual([]);
+  });
+
   it("keeps each lane to its own packages' pages", () => {
     const data = render("data-display");
     const workspace = render("workspace");

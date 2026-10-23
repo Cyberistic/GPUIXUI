@@ -235,7 +235,7 @@ src/components/docs/native-run-note.tsx   The note above a package page: the pla
 src/components/docs/playground-scenarios.tsx The probe catalogue on /docs/playground, grouped by capability
 src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
-src/components/docs/lane-pages.tsx        The generated page list on the data and workspace lanes
+src/components/docs/lane-pages.tsx        The generated page list on the data and workspace lanes, each package linked to its section entry
 src/components/docs/collection-index.tsx The list a collection route serves when the package writes no landing page
 src/components/docs/component-index.tsx   The 3-column tile grid on /docs/components and its URL filter
 src/components/docs/icon-gallery.tsx      Every icon the set publishes, from its own markup
