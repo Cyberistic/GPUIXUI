@@ -35,6 +35,7 @@ import { currentPlatform, disabledOpacity, useTheme } from "../theme.js";
 import type { Theme } from "../theme.js";
 import {
   dismiss,
+  hoverOpen,
   initial,
   step,
   type AppMenuSpec,
@@ -75,18 +76,24 @@ export interface AppMenuProps extends Omit<Props, "children"> {
   readonly className?: string;
 }
 
-/** The resting box of a menu-bar button, with its open/highlight wash. */
+/**
+ * The resting box of a menu-bar button: pressed while its dropdown is open,
+ * washed while the keyboard highlights it, and hovered otherwise.
+ */
 const triggerStyle = (
   theme: Theme,
+  open: boolean,
   highlighted: boolean,
   disabled: boolean,
 ): StyleDesc => ({
   ...recipeStyle(MENU_TRIGGER, theme),
   ...(disabled
     ? { opacity: disabledOpacity }
-    : highlighted
-      ? { backgroundColor: theme.colors.hover }
-      : { hover: { backgroundColor: theme.colors.hover } }),
+    : open
+      ? { backgroundColor: theme.colors.active }
+      : highlighted
+        ? { backgroundColor: theme.colors.hover }
+        : { hover: { backgroundColor: theme.colors.hover } }),
 });
 
 /** The resting box of a dropdown row, with its highlight wash. */
@@ -275,9 +282,14 @@ export const AppMenu = ({
               }}
               onClick={() => {
                 if (disabled) return;
-                setState(step(state, specs, { _tag: "Open", menu: index }));
+                setState(
+                  Option.contains(state.openMenu, index)
+                    ? dismiss(state).state
+                    : step(state, specs, { _tag: "Open", menu: index }),
+                );
               }}
-              style={triggerStyle(theme, highlighted, disabled)}
+              onMouseEnter={() => setState(hoverOpen(state, specs, index))}
+              style={triggerStyle(theme, open, highlighted, disabled)}
             >
               {menu.label}
             </div>
@@ -286,6 +298,7 @@ export const AppMenu = ({
                 role="menu"
                 aria-label={menu.label}
                 tabIndex={-1}
+                testId={`app-menu-panel-${menu.id}`}
                 side="bottom"
                 align="start"
                 sideOffset={2}

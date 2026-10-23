@@ -3,8 +3,10 @@
  *
  * The bugs these guard: `ArrowLeft`/`ArrowRight` from the first or last menu
  * stopped instead of wrapping; `ArrowUp`/`ArrowDown` in a dropdown stopped at
- * the ends instead of wrapping; a move landed on a disabled menu or row; and
- * Escape closed the dropdown without saying where focus should return.
+ * the ends instead of wrapping; a move landed on a disabled menu or row; a
+ * pointer crossing a sibling's title opened nothing while a menu was open (or
+ * opened one while the bar was closed); and Escape closed the dropdown without
+ * saying where focus should return.
  */
 
 import { describe, expect, it } from "vitest";
@@ -12,6 +14,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   dismiss,
+  hoverOpen,
   initial,
   step,
   type AppMenuSpec,
@@ -63,10 +66,39 @@ describe("bar traversal", () => {
     expect(next.activeMenu).toEqual(Option.some(2));
   });
 
-  it("moves the open dropdown to the adjacent menu", () => {
+  it("moves the open dropdown to the adjacent menu and highlights it", () => {
     const next = step(open(0), menus(3), { _tag: "MoveBar", delta: 1 });
     expect(next.openMenu).toEqual(Option.some(1));
+    expect(next.activeMenu).toEqual(Option.some(1));
     expect(next.activeItem).toEqual(Option.none());
+  });
+});
+
+describe("hover switching", () => {
+  it("opens a sibling while a menu is open and closes the previous one", () => {
+    const next = hoverOpen(open(0, 1), menus(3), 1);
+    expect(next.openMenu).toEqual(Option.some(1));
+    expect(next.activeMenu).toEqual(Option.some(1));
+    expect(next.activeItem).toEqual(Option.none());
+  });
+
+  it("switches back to the menu it came from", () => {
+    const there = hoverOpen(open(0), menus(3), 1);
+    expect(hoverOpen(there, menus(3), 0).openMenu).toEqual(Option.some(0));
+  });
+
+  it("opens nothing while the bar is closed (negative control)", () => {
+    expect(hoverOpen(initial, menus(3), 0)).toEqual(initial);
+    expect(hoverOpen(bar(1), menus(3), 2)).toEqual(bar(1));
+  });
+
+  it("keeps the row highlighted when the open menu's trigger is entered", () => {
+    const withRow = open(1, 2);
+    expect(hoverOpen(withRow, menus(3), 1)).toEqual(withRow);
+  });
+
+  it("does not open a disabled sibling (negative control)", () => {
+    expect(hoverOpen(open(0), menus(3, 3, [1]), 1)).toEqual(open(0));
   });
 });
 
