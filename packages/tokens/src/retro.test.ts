@@ -126,7 +126,7 @@ describe("retroStyles", () => {
     expect(empty).toEqual([]);
   });
 
-  it("paints each era as its own look, not a renamed platform", () => {
+  it("paints each look as its own, not a renamed platform", () => {
     themeModes.forEach((mode) => {
       const painted = looks.map((name) => retroTheme(themes[mode], name));
       const windows = platformTheme(themes[mode], "win32");
@@ -213,9 +213,10 @@ describe("retroTheme", () => {
     });
   });
 
-  it("ships a dark edition for an era that had none", () => {
-    // Neither Luna nor Aero shipped a dark mode; these are authored for the
-    // library, so each must exist for both modes and be a real second palette.
+  it("ships both editions as a real second palette", () => {
+    // Luna and Aero are authored for the library because neither era shipped a
+    // dark mode; Omarchy's pair is the shell's own. Whichever the provenance,
+    // each look must carry a real second palette for both modes.
     const overBlack = (color: string | undefined): number =>
       contrastRatio(color ?? "#FFFFFF", "#000000") ?? 0;
     looks.forEach((name) => {

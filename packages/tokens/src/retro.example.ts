@@ -8,14 +8,15 @@ import {
 } from "./index.js";
 
 /**
- * Resolve an authored look for a mode. Both modes, both eras; `retroTheme`
- * keeps the base theme untouched, so it is safe to call on every render.
+ * Resolve an authored look for a mode. Every mode of every look — Luna, Aero
+ * and Omarchy; `retroTheme` keeps the base theme untouched, so it is safe to
+ * call on every render.
  */
 export const resolveRetroTheme = (mode: ThemeMode, name: RetroName): Theme =>
   retroTheme(themes[mode], name);
 
 /**
- * Take an era's chrome and make it your own: the radius and the accent family
+ * Take a look's chrome and make it your own: the radius and the accent family
  * are the same roles every component reads, so a brand owns the values it
  * changes and inherits the rest. A look is data, not a preset — read
  * `retroStyles`, override what you want, and check the result.
@@ -23,9 +24,9 @@ export const resolveRetroTheme = (mode: ThemeMode, name: RetroName): Theme =>
  * The brand owns `primary` **per mode**: it is also the mark a checked menu row
  * paints, and the look's dark washes are light enough that a single dark blue
  * sat at 1.70:1 and 1.46:1 on the row a reader points at (the mark contract
- * measures those strips). Light keeps the era's deep blue with white; dark takes
- * the light blue the brand already uses as its ring, with the near-black it
- * carries.
+ * measures those strips). Light keeps the look's deep blue with white; dark
+ * takes the light blue the brand already uses as its ring, with the near-black
+ * it carries.
  */
 export const resolveRetroBrand = (mode: ThemeMode): Theme =>
   extendTheme(resolveRetroTheme(mode, "aero"), {
