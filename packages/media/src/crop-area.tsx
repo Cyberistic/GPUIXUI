@@ -26,6 +26,7 @@ import {
   clampCrop,
   cornerLabel,
   cropBars,
+  cropGuides,
   cropLabel,
   CROP_HANDLE_SIZE,
   CROP_MIN_SIZE,
@@ -85,6 +86,8 @@ export interface CropAreaProps extends Omit<Props, "children" | "onChange"> {
    * leaves the hole free.
    */
   readonly aspectRatio?: number;
+  /** Paint the rule-of-thirds guides inside the hole. Default `false`. */
+  readonly guides?: boolean;
   /** The frame's accessible name. Default `"Crop area"`. */
   readonly label?: string;
   /** Refuse the gestures; the frame keeps painting. */
@@ -106,6 +109,24 @@ const absolute = (box: CropRect): StyleDesc => ({
   top: box.y,
   width: box.width,
   height: box.height,
+});
+
+/**
+ * A guide is a one-point line the page colour fills with an ink outline, so one
+ * of the two contrasts on any picture: a white line on a dark photo, its dark
+ * outline on a white one.
+ */
+const guideStyle = (theme: Theme, box: CropRect): StyleDesc => ({
+  ...absolute(box),
+  backgroundColor: theme.colors.background,
+  boxShadow: {
+    offsetX: 0,
+    offsetY: 0,
+    blurRadius: 0,
+    spreadRadius: 1,
+    color: theme.colors.foreground,
+  },
+  pointerEvents: "none",
 });
 
 const handleStyle = (
@@ -139,6 +160,7 @@ export const renderCropArea = (
     minSize = CROP_MIN_SIZE,
     handleSize = CROP_HANDLE_SIZE,
     aspectRatio,
+    guides = false,
     label = "Crop area",
     disabled = false,
     className,
@@ -194,6 +216,17 @@ export const renderCropArea = (
             }}
           />
         ))}
+      </>
+      <>
+        {guides
+          ? cropGuides(crop).map((guide) => (
+              <div
+                key={guide.name}
+                testId={`crop-guide-${guide.name}`}
+                style={guideStyle(theme, guide.box)}
+              />
+            ))
+          : null}
       </>
       <>
         {CORNERS.map((corner) => (

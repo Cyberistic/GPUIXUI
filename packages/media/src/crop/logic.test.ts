@@ -14,6 +14,7 @@ import {
   clampCrop,
   cornerLabel,
   cropBars,
+  cropGuides,
   cropLabel,
   gestureCrop,
   CROP_HANDLE_SIZE,
@@ -95,6 +96,53 @@ describe("cropBars", () => {
       bounds,
     );
     expect(bars).toStrictEqual([]);
+  });
+});
+
+describe("cropGuides", () => {
+  it("divides the hole into thirds, inside its bounds", () => {
+    const guides = cropGuides(opening);
+    expect(guides.map((guide) => guide.name)).toStrictEqual([
+      "v1",
+      "v2",
+      "h1",
+      "h2",
+    ]);
+    const at = (index: number): CropRect => {
+      const guide = guides[index];
+      if (guide === undefined) {
+        throw new Error(`no guide at ${index}`);
+      }
+      return guide.box;
+    };
+    const [v1, v2, h1, h2] = [at(0), at(1), at(2), at(3)];
+    expect(v1.x).toBeCloseTo(opening.x + opening.width / 3, 6);
+    expect(v2.x).toBeCloseTo(opening.x + (opening.width * 2) / 3, 6);
+    expect(h1.y).toBeCloseTo(opening.y + opening.height / 3, 6);
+    expect(h2.y).toBeCloseTo(opening.y + (opening.height * 2) / 3, 6);
+    expect([v1.y, v2.y]).toStrictEqual([opening.y, opening.y]);
+    expect([v1.height, v2.height]).toStrictEqual([
+      opening.height,
+      opening.height,
+    ]);
+    expect([h1.x, h2.x]).toStrictEqual([opening.x, opening.x]);
+    expect([h1.width, h2.width]).toStrictEqual([opening.width, opening.width]);
+    expect([v1.width, v2.width, h1.height, h2.height]).toStrictEqual([
+      1, 1, 1, 1,
+    ]);
+  });
+
+  it("keeps every guide inside the hole it divides", () => {
+    const wide = new CropRect({ x: 10, y: 20, width: 300, height: 30 });
+    expect(
+      cropGuides(wide).every(
+        (guide) =>
+          guide.box.x >= wide.x &&
+          guide.box.y >= wide.y &&
+          guide.box.right <= wide.right &&
+          guide.box.bottom <= wide.bottom,
+      ),
+    ).toBe(true);
   });
 });
 

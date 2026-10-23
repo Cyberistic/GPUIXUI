@@ -26,6 +26,7 @@ const [crop, setCrop] = useState(
   value={crop}
   onChange={setCrop}
   aspectRatio={1}
+  guides
   label="Crop the thumbnail"
 />;
 ```
@@ -96,6 +97,15 @@ complement drawn as up to four bars:
   window as `#12451F` over a `#34C759` picture;
 - the hole itself paints nothing, so the picture shows through untouched.
 
+## Guides
+
+`guides` paints the rule of thirds inside the hole — two vertical and two
+horizontal one-point lines at a third and two thirds. A guide is filled with the
+page colour and outlined with the ink role, because no single token can contrast
+an arbitrary picture: a white line on a dark photo, its dark outline on a white
+one. The guides take no pointer (the frame still owns the move gesture) and paint
+nothing to the accessibility tree; they are a composing aid, not content.
+
 ## API
 
 | Prop | Type | Default |
@@ -109,6 +119,7 @@ complement drawn as up to four bars:
 | `minSize` | `number` | `24` |
 | `handleSize` | `number` | `10` |
 | `aspectRatio` | `number` (width / height) | — (free) |
+| `guides` | `boolean` | `false` |
 | `label` | `string` | `"Crop area"` |
 | `disabled` | `boolean` | `false` |
 | `className` | `string` | — |
@@ -130,9 +141,6 @@ beside the frame, as the example does.
 
 - **No rotation.** A rotated crop is a transform of the picture, and the runtime
   has no `transform` (upstream issue #102); rotate the bytes before cropping.
-- **No guides.** A rule-of-thirds overlay is not painted; the frame shows the
-  hole and the mask only. The rectangle itself is free unless `aspectRatio` is
-  set.
 - **The window measured the bottom-right drag.** The playground's `crop-overlay`
   probe (37 checks, 0.11.0) dragged the bottom-right handle through 8 moves,
   clamped it at the 24-point minimum and the bitmap's edges, and read the bars
@@ -148,12 +156,13 @@ Measurement, fixture and captures live with the playground:
 `apps/playground/README.md` §`crop-overlay` and
 `.artifacts/live/crop-{rest,min,max,dragged}.png`.
 
-`src/crop/logic.test.ts` (28 cases) holds the clamp — including a rectangle
-whose four fields cannot be laid out — the bars as the hole's complement, every
-corner's resize, both clamps, moves, the keyboard step, the gesture seam and the
-ratio lock (a stored rectangle shaped to it, a height-first drag, the fixed
-opposite corner, the keyboard path, a frame too small for the minimum at the
-ratio, and an unreadable ratio); `src/crop-area.test.tsx` (10 cases) holds the
-frame, the bars' pointer transparency, the four slider handles and their ring,
-the painted ratio, the unreadable rectangle, minimum and handle side, the blank
-source, the repaint and the disabled state.
+`src/crop/logic.test.ts` (30 cases) holds the clamp — including a rectangle
+whose four fields cannot be laid out — the bars as the hole's complement, the
+guides' thirds, every corner's resize, both clamps, moves, the keyboard step, the
+gesture seam and the ratio lock (a stored rectangle shaped to it, a height-first
+drag, the fixed opposite corner, the keyboard path, a frame too small for the
+minimum at the ratio, and an unreadable ratio); `src/crop-area.test.tsx` (11
+cases) holds the frame, the bars' pointer transparency, the four slider handles
+and their ring, the painted ratio, the guides on and off, the unreadable
+rectangle, minimum and handle side, the blank source, the repaint and the
+disabled state.

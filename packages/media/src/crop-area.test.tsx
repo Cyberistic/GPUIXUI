@@ -9,6 +9,7 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Option from "effect/Option";
 import { lightTheme } from "@gpuixui/tokens";
 import { CropRect } from "./crop/logic.js";
 import {
@@ -199,6 +200,31 @@ describe("renderCropArea", () => {
         hostProp(expectSome(findByTestId(root, "crop-bar-bottom")), "style"),
       ),
     ).toMatchObject({ top: 90, height: 70 });
+  });
+
+  it("paints the rule-of-thirds guides only when asked", () => {
+    const plain = renderCropArea(props(), lightTheme, surfaceOf());
+    expect(Option.isNone(findByTestId(plain, "crop-guide-v1"))).toBe(true);
+
+    const ruled = renderCropArea(
+      props({ guides: true }),
+      lightTheme,
+      surfaceOf(),
+    );
+    const v1 = expectSome(findByTestId(ruled, "crop-guide-v1"));
+    expect(expectSome(hostProp(v1, "style"))).toMatchObject({
+      left: 60 + 100 / 3,
+      top: 40,
+      width: 1,
+      height: 70,
+      pointerEvents: "none",
+      backgroundColor: lightTheme.colors.background,
+    });
+    expect(
+      ["v1", "v2", "h1", "h2"].every((name) =>
+        Option.isSome(findByTestId(ruled, `crop-guide-${name}`)),
+      ),
+    ).toBe(true);
   });
 
   it("paints no picture for a blank source", () => {

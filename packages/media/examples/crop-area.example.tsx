@@ -27,6 +27,7 @@ export const CropAreaExample = () => {
         value={crop}
         onChange={setCrop}
         aspectRatio={1}
+        guides
         label="Crop the thumbnail"
       />
       <text>

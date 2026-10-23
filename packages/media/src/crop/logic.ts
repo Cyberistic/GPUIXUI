@@ -219,6 +219,62 @@ export const cropBars = (
   return bars.filter(({ box }) => box.width > 0 && box.height > 0);
 };
 
+/** One rule-of-thirds guide inside the hole. */
+export interface CropGuide {
+  /** `v1`/`v2` are the vertical thirds; `h1`/`h2` the horizontal ones. */
+  readonly name: "v1" | "v2" | "h1" | "h2";
+  readonly box: CropRect;
+}
+
+/**
+ * The four rule-of-thirds guides inside a hole.
+ *
+ * They are thin boxes inside the crop, not lines the runtime draws: the mask's
+ * bars sit around the hole, and a guide is the same absolute box one point wide.
+ */
+export const cropGuides = (crop: CropRect): ReadonlyArray<CropGuide> => {
+  const thirdW = crop.width / 3;
+  const thirdH = crop.height / 3;
+  return [
+    {
+      name: "v1",
+      box: new CropRect({
+        x: crop.x + thirdW,
+        y: crop.y,
+        width: 1,
+        height: crop.height,
+      }),
+    },
+    {
+      name: "v2",
+      box: new CropRect({
+        x: crop.x + thirdW * 2,
+        y: crop.y,
+        width: 1,
+        height: crop.height,
+      }),
+    },
+    {
+      name: "h1",
+      box: new CropRect({
+        x: crop.x,
+        y: crop.y + thirdH,
+        width: crop.width,
+        height: 1,
+      }),
+    },
+    {
+      name: "h2",
+      box: new CropRect({
+        x: crop.x,
+        y: crop.y + thirdH * 2,
+        width: crop.width,
+        height: 1,
+      }),
+    },
+  ];
+};
+
 /**
  * A corner handle's box, centred on the crop's corner. A side that cannot be
  * read reads as {@link CROP_HANDLE_SIZE}, never a `NaN` box.
