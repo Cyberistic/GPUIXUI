@@ -1087,7 +1087,10 @@ level — or a whole scale — it does not carry, and `brandText`/`statusTone` a
 `undefined` when the roles they derive from are gone (a `Theme` still answers a
 colour outright), so no surface throws on the defect
 the report just
-explained (§7). A shape a store wrote is that same absence: a level written as one
+explained (§7). The seam every role is read through **keeps only the strings**,
+so the `null` JSON writes for a role the theme never carried is the absence it
+is: no paint seam hands it to the runtime, and a focus ring keeps its geometry
+with no colour so the runtime paints its own outline. A shape a store wrote is that same absence: a level written as one
 object where the type declares a list, a list holding a `null`, or a shadow colour
 that is not a string is one report line at its position with no colour, and it
 paints nothing rather than throwing. A numeric group — and every numeric step

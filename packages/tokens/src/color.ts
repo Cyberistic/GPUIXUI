@@ -208,16 +208,33 @@ export interface ColourSource {
  * (`invalidColorRoles` names every role) instead of throwing a `TypeError` at
  * the first lookup. A theme that carries the group is returned as it is.
  *
+ * **A value a store wrote as `null` is the absence it is.** JSON has no
+ * `undefined`, so a role a theme never carried comes back as `null`, and a
+ * hand-edited literal can carry a number or an object where a colour belongs.
+ * The seam keeps only the strings, which is the rule `invalidColorRoles` already
+ * reports by — so a paint seam reading a role answers `undefined` rather than
+ * handing the runtime a `null` it drops silently.
+ *
  * @example
  * ```ts
  * import { lightTheme, themeColors } from "@gpuixui/tokens";
  *
  * themeColors(lightTheme).primary; // the brand role
  * themeColors({ colors: undefined }); // {} — no role to paint
+ * themeColors({ colors: { primary: null } }); // {} — the null JSON writes
  * ```
  */
 export function themeColors(theme: ColourSource): Partial<ThemeColors> {
-  return theme.colors ?? {};
+  const colors = theme.colors;
+  if (colors === undefined || colors === null) {
+    return {};
+  }
+  return Object.values(colors).every((value) => typeof value === "string")
+    ? colors
+    : colorRoles.reduce<Partial<ThemeColors>>((roles, role) => {
+        const value = colors[role];
+        return typeof value === "string" ? { ...roles, [role]: value } : roles;
+      }, {});
 }
 
 /** Light theme semantic roles. */

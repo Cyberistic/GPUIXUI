@@ -456,7 +456,7 @@ describe("the control ring's claim", () => {
     // a ring is built. A page cannot outlive either.
     const source = read("../src/styles.ts");
 
-    expect(source).toContain("outlineColor: theme.colors.destructive");
+    expect(source).toContain("themeColors(theme).destructive");
     expect(source).toContain("if (state.disabled === true)");
   });
 });

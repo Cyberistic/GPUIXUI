@@ -1435,10 +1435,15 @@ whose role is absent is reported **unmeasurable** (`ratio: undefined`) rather
 than skipped — a pair nobody can verify is not a pass — so `auditTheme` on a
 theme restored from storage returns a line naming the role and a failing gate,
 never a `TypeError`. The seam every one of those measurements resolves through
-takes the value a store hands back, so the `null` JSON writes for a role that was
-absent when the theme was saved is **unmeasurable** rather than a crash: its
-pairs report `ratio: undefined`, `alphaOf` reads it as opaque so a composite is
-reported rather than guessed, and `blend` returns what it was given. The two
+**keeps only the strings**, so the `null` JSON writes for a role that was absent
+when the theme was saved — or a number where a colour belongs — is the absence it
+is: its pairs report `ratio: undefined`, `alphaOf` reads it as opaque so a
+composite is reported rather than guessed, `blend` returns what it was given, and
+no paint seam hands the runtime a `null`. A stored role that is gone reaches a
+painter the way a dropped one does: `brandText`/`brandTextOn` and `statusTone`
+answer `undefined`, `nativeTextTheme` leaves the field out of the host object,
+and the focus ring keeps its geometry with no colour — **the runtime paints its
+own outline** rather than reading a `null`. The two
 **nested tables** a theme may carry follow the same rule — a `series` short of
 its five positions and a `syntax` palette that names only some of its tokens are
 reported, not skipped and not thrown on (§Data series, §Syntax palette). A

@@ -195,8 +195,12 @@ export function focusRing(theme: Theme): FocusRing {
 export interface FocusVisibleOutline {
   /** Line thickness in pixels, from the theme's strong border. */
   readonly outlineWidth: number;
-  /** Outline colour, the theme's `ring` role. */
-  readonly outlineColor: string;
+  /**
+   * Outline colour, the theme's `ring` role — absent when a stored theme lost
+   * it, so the runtime paints its own outline colour rather than the `null` a
+   * store wrote.
+   */
+  readonly outlineColor?: string;
   /**
    * Distance outside the border box, one line's width. A separated line is read
    * against the strip behind the control rather than the fill it paints, which
@@ -243,7 +247,9 @@ export function keyboardFocusRing(theme: Theme): KeyboardFocusRing {
   return {
     focusVisible: {
       outlineWidth: theme.borderWidth.strong,
-      outlineColor: theme.colors.ring,
+      // A role a stored theme lost is a colour the runtime does not get, so it
+      // paints its own outline rather than the `null` JSON wrote.
+      outlineColor: themeColors(theme).ring,
       outlineOffset: theme.borderWidth.strong,
     },
   };
@@ -298,7 +304,10 @@ export function controlFocusRing(
     ? {
         focusVisible: {
           ...ring.focusVisible,
-          outlineColor: theme.colors.destructive,
+          // An invalid control's line takes the status role; a theme that lost
+          // it keeps the ring's own colour rather than painting nothing.
+          outlineColor:
+            themeColors(theme).destructive ?? ring.focusVisible.outlineColor,
         },
       }
     : ring;

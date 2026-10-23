@@ -830,7 +830,11 @@ a design tool's `"8"` or `"8px"` — is the number report's instead, reported un
 `finite` with the value the store wrote, so neither shape can pass; the measuring seam
 `measuredColour`/`opaqueRgb`/`alphaOf` takes `unknown` and resolves any non-string
 to unmeasurable, so a `null` role is a report line rather than
-`TypeError: Cannot read properties of null (reading 'trim')`. The two **nested
+`TypeError: Cannot read properties of null (reading 'trim')`. The seam every role
+is read through **keeps only the strings**, so a `null` never reaches a paint
+seam: `brandText`/`statusTone` answer `undefined`, `nativeTextTheme` leaves the
+field out, and a focus ring keeps its geometry with no colour so the runtime
+paints its own outline. The two **nested
 tables** follow the same rule. `seriesFailures` measures every one of the five
 positions a chart indexes, so a stored table shorter than that — or with a `null`
 position — is reported on every surface and in every pair instead of passing

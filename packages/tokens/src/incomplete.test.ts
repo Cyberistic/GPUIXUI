@@ -33,6 +33,7 @@ import {
   brandText,
   brandTextOn,
   colorRoles,
+  controlFocusRing,
   defaultDensity,
   densityNames,
   densityPresets,
@@ -45,6 +46,7 @@ import {
   invalidShadowColors,
   invalidSwitchColors,
   isPaintableColor,
+  keyboardFocusRing,
   lightElevation,
   lightTheme,
   missingTokens,
@@ -1314,5 +1316,137 @@ describe("an optional table a store nulled", () => {
     expect(designSystem).toContain("A switch a store wrote as `null`");
     expect(readme).toContain("A switch a store wrote as `null`");
     expect(inventory).toContain("A table a store nulled is absence");
+  });
+});
+
+/**
+ * Guards the absence rule for the value JSON actually writes.
+ *
+ * The bug this holds: the reports learned to read a role a store **dropped**
+ * (`undefined`), and the paint seams still treated the value JSON writes for
+ * that same key — `null` — as a colour. `statusTone` checked its three roles
+ * against `undefined` only, so `{ successSoftForeground: null }` answered
+ * `{ foreground: null }` and a component handed `null` as a text colour;
+ * `brandText` answered `null` for a null `primary`, `keyboardFocusRing` handed
+ * the runtime `outlineColor: null`, and `nativeTextTheme` put `diffAdd: null` in
+ * a field its type declares a string. Measured on the shipped light theme with
+ * one role nulled.
+ *
+ * The decision is the rule the gate already reports by: the seam every role is
+ * read through keeps only the strings, so a `null` — or a number where a colour
+ * belongs — is the absence it is, and each paint seam answers the way it does
+ * for a dropped role: `undefined` from the deriving helpers, no colour on the
+ * ring's outline, no field in the host object. A complete theme is returned as
+ * it is, so no shipped style moved.
+ */
+describe("a role a store wrote as null", () => {
+  /** `record` without `key` — what the seam must answer with. */
+  const without = <Record_ extends object>(
+    record: Record_,
+    key: keyof Record_,
+  ): Partial<Record_> => {
+    const partial: Partial<Record_> = { ...record };
+    delete partial[key];
+    return partial;
+  };
+
+  /** A theme with one role written the way `JSON.stringify` writes an absent one. */
+  const nulled = (role: keyof ThemeColors): Theme =>
+    ({
+      ...lightTheme,
+      colors: { ...lightTheme.colors, [role]: null },
+    }) as unknown as Theme;
+
+  it("is the absence it is in the seam every role is read through", () => {
+    expect(themeColors(nulled("primary"))).toEqual(
+      without(lightTheme.colors, "primary"),
+    );
+    // A complete theme is returned as it is, not copied.
+    expect(themeColors(lightTheme)).toBe(lightTheme.colors);
+    // The report already named it with no value.
+    expect(invalidColorRoles(nulled("primary"))).toEqual([
+      { role: "primary", value: undefined },
+    ]);
+  });
+
+  it("is dropped by every paint seam that reads a role", () => {
+    // The brand and the two derivations that move it.
+    expect(brandText(nulled("primary"))).toBeUndefined();
+    expect(brandTextOn(nulled("primary"), "infoSoft")).toBeUndefined();
+    expect(nativeTextTheme(nulled("primary")).caret).toBeUndefined();
+    expect(nativeTextTheme(nulled("primary")).accent).toBeUndefined();
+
+    // A status tone is three roles, and the ink it names is the readable one.
+    expect(
+      statusTone(nulled("successSoftForeground"), "success"),
+    ).toBeUndefined();
+    expect(
+      nativeTextTheme(nulled("successSoftForeground")).diffAdd,
+    ).toBeUndefined();
+
+    // The ring keeps its geometry and hands the runtime no colour, so the
+    // runtime paints its own outline rather than reading a `null`.
+    expect(
+      keyboardFocusRing(nulled("ring")).focusVisible.outlineColor,
+    ).toBeUndefined();
+    // An invalid control falls back to that ring colour, not to `null`.
+    const invalid = controlFocusRing(nulled("destructive"), { invalid: true });
+    expect(invalid?.focusVisible.outlineColor).toBe(lightTheme.colors.ring);
+  });
+
+  // 18 styles × 47 roles: every seam that reads a role, with one nulled.
+  it("never reaches a paint seam as a value", () => {
+    const wrong = shipped.flatMap((theme) =>
+      colorRoles.flatMap((role) => {
+        const broken = {
+          ...theme,
+          colors: { ...theme.colors, [role]: null },
+        } as unknown as Theme;
+        const host = nativeTextTheme(broken, "background");
+        const ring = controlFocusRing(broken)?.focusVisible.outlineColor;
+        const tones = statusTone(broken, "info");
+        const named = invalidColorRoles(broken).some(
+          ({ role: at, value }) => at === role && value === undefined,
+        );
+        const clean =
+          Object.values(host).every((value) => value !== null) &&
+          ring !== null &&
+          (tones === undefined ||
+            Object.values(tones).every((value) => typeof value === "string")) &&
+          named;
+        return clean ? [] : [`${theme.name} · ${role}`];
+      }),
+    );
+
+    expect(wrong).toEqual([]);
+  });
+
+  it("still paints a complete theme's every role", () => {
+    // The counterweight: dropping null must not drop the shipped values.
+    expect(nativeTextTheme(lightTheme).caret).toBe(lightTheme.colors.primary);
+    expect(controlFocusRing(lightTheme)?.focusVisible.outlineColor).toBe(
+      lightTheme.colors.ring,
+    );
+    expect(statusTone(lightTheme, "success")).toEqual(
+      expect.objectContaining({
+        foreground: lightTheme.colors.successSoftForeground,
+      }),
+    );
+    expect(auditTheme(lightTheme).passed).toBe(true);
+  });
+
+  it("is taught on both token pages, the README and the inventory", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const catalogue = read("../../../docs/tokens.md");
+    const designSystem = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+    const inventory = read("../../../COMPONENTS.md");
+
+    expect(catalogue).toContain("keeps only the strings");
+    expect(catalogue).toContain("the runtime paints its own outline");
+    expect(designSystem).toContain("keeps only the strings");
+    expect(readme).toContain("keeps only the strings");
+    expect(inventory).toContain("keeps only the strings");
   });
 });
