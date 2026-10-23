@@ -1,7 +1,11 @@
 /**
- * Compile-checked usage of the public API. This file is type-checked with the
- * package (like `@gpuixui/tokens`' `*.example.ts`) and excluded from the build,
- * so the documented surface is exercised rather than illustrative.
+ * Compile-checked usage of the public API.
+ *
+ * The `*.example.ts` name is the build exclusion: `tsconfig.build.json` skips
+ * every example under `src`, so a usage module type-checks with the package
+ * (like `@gpuixui/tokens`' examples) without shipping as public API.
+ * `example.test.ts` runs these functions and holds the exclusion to this
+ * directory, because a module named `example.ts` is not matched by the pattern.
  */
 import {
   MotionValue,
@@ -61,6 +65,6 @@ export const compositionExample = (): readonly number[] => {
     ...delays,
     sequence.duration(),
     keyed,
-    coast.current,
+    coast.sample(100).value,
   ];
 };
