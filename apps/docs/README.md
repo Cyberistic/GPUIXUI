@@ -38,6 +38,9 @@ reference.mdx                The public entry points and the symbols behind them
 themes.mdx                   The live token editor, its audit and its copy output
 blocks/index.mdx             Page-level recipes composed from the library
 blocks/login.mdx             A centered sign-in card
+blocks/signup.mdx            A centered registration card
+blocks/forgot-password.mdx   A centered reset card with an inline success note
+blocks/otp.mdx               A centered one-time-code card with a resend countdown
 blocks/settings.mdx          A settings page with tabbed sections
 blocks/dashboard.mdx         An activity dashboard composed from the library
 components/index.mdx         The filterable component index
@@ -225,8 +228,9 @@ src/components/docs/patterns.tsx          The pattern workflows and the chooser
 src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
 src/components/docs/token-list.tsx       A contract's roles or surfaces, rendered from the package's array
 src/components/docs/block-index.tsx       The Blocks index
-src/components/docs/blocks.tsx            The Login, Settings and Dashboard recipes
+src/components/docs/blocks.tsx            The block registry: Login, Sign up, Forgot password, One-time code, Settings and Dashboard
 src/components/docs/block-preview.tsx     A block's browser rendering
+src/components/docs/auth-blocks.tsx       The auth blocks' states, validation and source strings
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
 src/components/docs/live-surface.tsx      Boots the wasm renderer on /live and reports what it painted
 src/components/docs/theme-editor.tsx      The live token editor on /docs/themes

@@ -1,0 +1,29 @@
+---
+title: Sign up
+description: A centered registration card — name, email, password and confirmation, a terms checkbox and an account footer.
+---
+
+A registration recipe: a `Card` with four fields, a `Checkbox` for the terms of
+service, a primary action and a footer that opens sign-in. Copy the recipe; it
+is composed from the library, not a new component.
+
+<BlockPreview name="signup-01" />
+
+The preview is interactive: submit with a missing field, a short password,
+mismatched passwords or the terms unchecked to see each error, or fill the form
+in to watch the button go busy and the account resolve. The status row is
+reserved, so the card never moves between states.
+
+## Composition
+
+The block composes:
+
+- `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent` and
+  `CardFooter` from `@gpuixui/components/card`
+- `Button`, `Checkbox`, `Input`, `Label`, `Stack` and `Text` from
+  `@gpuixui/primitives`
+
+Both are workspace packages already on the component page; the recipe adds no
+new dependency. `Checkbox` renders its label beside the control, and
+`Button`'s `loading` prop is the busy state. Wire `createAccount` and
+`openSignIn`, and keep the password rules in one place on the way in.
