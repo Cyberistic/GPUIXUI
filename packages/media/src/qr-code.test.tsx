@@ -173,4 +173,13 @@ describe("QrCode", () => {
       height: 145,
     });
   });
+
+  it("reads a negative quiet zone as the default, not as no quiet zone", () => {
+    const root = render({ quietZone: -4 });
+    expect(sourceOf(root)).toContain('viewBox="0 0 29 29"');
+    expect(expectSome(hostProp(root, "style"))).toMatchObject({
+      width: 145,
+      height: 145,
+    });
+  });
 });

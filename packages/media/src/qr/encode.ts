@@ -835,11 +835,12 @@ export interface QrPlacement {
 
 /**
  * The quiet zone in whole modules. A stored preference may arrive unreadable,
- * so a non-finite count reads as the default rather than poisoning every field
- * it is multiplied into.
+ * so a count that is not finite and non-negative reads as the default rather
+ * than poisoning every field it is multiplied into. Zero stays zero: a caller
+ * may ask for no quiet zone, but a negative count cannot mean one.
  */
 const quietZoneOf = (quiet: number): number =>
-  Number.isFinite(quiet) ? Math.max(0, Math.floor(quiet)) : QR_QUIET_ZONE;
+  Number.isFinite(quiet) && quiet >= 0 ? Math.floor(quiet) : QR_QUIET_ZONE;
 
 /**
  * Resolve a painted square.

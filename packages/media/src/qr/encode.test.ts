@@ -450,6 +450,14 @@ describe("qrPlacement", () => {
       fallback,
     );
   });
+
+  it("reads a negative quiet zone as the default, not as no quiet zone", () => {
+    const symbol = encodeQr("place", { level: "L" });
+    if (!(symbol instanceof QrSymbol)) return expect.fail("no symbol");
+    const fallback = qrPlacement(symbol, 160, QR_QUIET_ZONE);
+    expect(qrPlacement(symbol, 160, -4)).toStrictEqual(fallback);
+    expect(qrPlacement(symbol, 160, -4).quiet).not.toBe(0);
+  });
 });
 
 describe("qrSvgSource", () => {
@@ -480,5 +488,6 @@ describe("qrSvgSource", () => {
       qrSvgSource(symbol, QR_QUIET_ZONE),
     );
     expect(qrSvgSource(symbol, Number.NaN)).not.toContain("NaN");
+    expect(qrSvgSource(symbol, -4)).toBe(qrSvgSource(symbol, QR_QUIET_ZONE));
   });
 });
