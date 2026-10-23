@@ -44,6 +44,17 @@ const tree = useExpandedRows({
 | `height` | `number` | — | a definite height; the rows scroll inside it |
 | `testId` | `string` | — | the tree's locator |
 
+## Keyboard
+
+The tree is one Tab stop. Up/Down/Home/End move the cursor and the platform
+focus together; Right opens a closed branch, steps into an open one, and leaves
+a leaf where it is; Left closes an open branch and otherwise steps out to the
+parent, while a **root stays put** — a root has no parent, and an empty cursor
+falls back to the first painted row, which would move a reader standing on a
+later root. Enter and Space toggle the branch under the cursor or activate a
+leaf; a printable character jumps to the first row after the cursor whose label
+starts with the typed prefix.
+
 ## Limitations
 
 - One active row; a multi-select tree is not shipped.

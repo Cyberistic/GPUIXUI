@@ -326,7 +326,14 @@ export const treeCursorMove = <T>(
         onSome: (row) =>
           row.hasChildren && isExpanded(cursor.expanded, row.key)
             ? opened(row, false)
-            : focus(row.parent),
+            : Option.match(row.parent, {
+                // A root has no parent to step out to, so Left leaves the
+                // cursor where it is rather than clearing it: an empty cursor
+                // falls back to the first row, which moves a reader standing on
+                // a later root.
+                onNone: () => cursor,
+                onSome: (parent) => focus(Option.some(parent)),
+              }),
       }),
     ),
     Match.when("enter", () =>

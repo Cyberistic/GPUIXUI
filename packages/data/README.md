@@ -286,9 +286,10 @@ const tree = useExpandedRows({ roots: files, keyOf, childrenOf, labelOf });
 ```
 
 Up/Down/Home/End move the cursor (and the platform focus); Right opens a branch
-or steps into it; Left closes it or steps out; a printable character jumps to the
-first row after the cursor whose label starts with the prefix. `reveal(key)` opens
-the path to a node and moves the cursor to it.
+or steps into it; Left closes it or steps out — a root stays where it is, because
+clearing the cursor would fall back to the first painted row; a printable
+character jumps to the first row after the cursor whose label starts with the
+prefix. `reveal(key)` opens the path to a node and moves the cursor to it.
 
 A tree of thousands uses **`VirtualTree`**: the same rows and keyboard over the
 runtime's `itemCount` window, so only the rows around the viewport are retained.

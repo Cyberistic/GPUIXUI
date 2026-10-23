@@ -191,6 +191,23 @@ describe("the tree cursor", () => {
     );
   });
 
+  it("keeps a root in place on Left, because it has no parent to step out to", () => {
+    const onRoot = {
+      expanded: open("src", "components"),
+      active: Option.some("readme.md"),
+    };
+    // `readme.md` is the second root: clearing the cursor would move the tab
+    // stop to the first painted row (`cursorRow`'s fallback), so a reader on a
+    // root who pressed Left would lose the row they were standing on.
+    expect(treeCursorMove(rows, onRoot, "left")).toEqual(onRoot);
+    // A closed root branch has nothing to close and no parent either.
+    const onClosedBranch = {
+      expanded: open("components"),
+      active: Option.some("src"),
+    };
+    expect(treeCursorMove(rows, onClosedBranch, "left")).toEqual(onClosedBranch);
+  });
+
   it("toggles the branch under Enter or Space and leaves a leaf alone", () => {
     const onSrc = {
       ...emptyCursor,

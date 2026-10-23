@@ -6379,6 +6379,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
     removing the branch toggle fails the press and inset cases; a detail cell
     that does not fill fails the width case; removing the row's press fails all
     five expandable cases.
+  - [x] Keep a **root where it stands on Left** — `treeCursorMove` cleared the
+    cursor for a row with no parent, and an empty cursor falls back to the first
+    painted row (`cursorRow`), so a reader standing on the second root who
+    pressed Left was moved to the first. A root now keeps the cursor (a closed
+    root branch too, which has nothing to close and no parent either), while a
+    nested row still steps out. `src/tree/logic.test.ts` gains the case; the
+    README's key sentence and `docs/tree-view.mdx`'s new §Keyboard state the
+    rule. Direction measured: with the old `focus(row.parent)` the case fails
+    `expected { _tag: "None" } to deeply equal { _tag: "Some", value:
+    "readme.md" }`.
   - [x] Tier 3 phase 6 — SVG charts: `BarChart`, `StackedBar`, `LineChart`,
     `DonutChart`, `Sparkline` and `ChartLegend` in `packages/data/src/chart/`
     over the pure geometry in `chart/logic.ts`. An `<svg source>` is one tinted
