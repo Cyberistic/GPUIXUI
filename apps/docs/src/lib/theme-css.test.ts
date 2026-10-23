@@ -241,8 +241,11 @@ describe("preview style sheets", () => {
     // only a host outside a preview wears.
     const scene = block(read("../styles/demos.css"), ".gx-demo");
     expect(declarations(scene)).toEqual([]);
-    // The scene still paints: it reads the roles its surface wrote.
-    expect(scene).toContain("background-color: var(--background)");
+    // The scene paints nothing of its own surface: the page behind it shows
+    // through, and only the role-tinted wash above it is drawn. A scene that
+    // went back to a solid `var(--background)` would box every preview in a
+    // colour the surface it sits on does not own.
+    expect(scene).toContain("background-color: transparent");
     expect(scene).toContain("color: var(--foreground)");
 
     // The one host outside a preview is the landing's product window, and it

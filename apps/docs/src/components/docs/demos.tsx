@@ -44,6 +44,7 @@ import {
   collapsibleStatesSource,
   collapsibleWorkflowSource,
 } from "./collapsible-demo";
+import { DockPreview, dockPreviewSource } from "./dock-demo";
 import {
   ColorPickerStates,
   ColorPickerWorkflow,
@@ -2683,6 +2684,11 @@ export const demos: Readonly<Record<string, Demo>> = {
   "layout-shell": {
     render: LayoutShell,
     source: shellSource,
+    composition: true,
+  },
+  "panel-preview": {
+    render: DockPreview,
+    source: dockPreviewSource,
     composition: true,
   },
   "list-demo": { render: ListDemo, source: listDemoSource },

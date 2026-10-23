@@ -66,6 +66,18 @@ this runtime cannot keep. The shipped parts and their APIs are on
 [Split pane](/docs/dock/split-pane), [Panel groups](/docs/dock/panel-group) and
 [Docking layouts](/docs/dock/dock-layout).
 
+## A split you can resize
+
+<ComponentPreview name="panel-preview" />
+
+The editor pane is the **sized** one: a drag reports the width the press found
+plus its delta, an arrow steps it **16px**, Home and End take the caller's
+bounds, and the inspector fills the rest. The divider is a `role="separator"`
+tab stop whose value reaches assistive technology as `aria-valuetext`, because
+0.11.0 has no `aria-valuenow`. The preview is a browser drawing of
+[`SplitPane`](/docs/dock/split-pane) in the platform you picked; the Code tab is
+the shipped native call.
+
 ## A dock's panes own their scrollers
 
 A wheel does not stop at the pane under the pointer. A window measured

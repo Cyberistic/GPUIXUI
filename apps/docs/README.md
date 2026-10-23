@@ -131,6 +131,8 @@ src/components/docs/drawer-preview.ts     The drawer preview's edge box, dismiss
 src/components/docs/drawer-demo.tsx       The drawer's two browser renderings and their source strings
 src/components/docs/list-preview.ts       The list preview's arrow order, type-ahead and selection rules
 src/components/docs/list-demo.tsx         The list's two browser renderings and their source strings
+src/components/docs/dock-preview.ts       The split preview's divider width, step and clamps
+src/components/docs/dock-demo.tsx         The dock's browser rendering and its SplitPane source
 src/components/docs/inline-edit-preview.ts The rename's finish rule, focus reason and the app's name gate
 src/components/docs/inline-edit-demo.tsx  The inline edit's two browser renderings and their source strings
 src/components/docs/pagination-preview.ts The pagination preview's window rule, clamp and page slice
