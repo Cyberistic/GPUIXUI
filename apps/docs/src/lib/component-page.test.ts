@@ -112,7 +112,7 @@ describe("the curated component pages", () => {
       return positions.flatMap((position, index) => {
         const section = required[index] ?? "";
         if (position === -1) return [`${name}: no ## ${section}`];
-        // Order matters: API before limitations before related.
+        // Order matters: the API precedes the limits.
         const previous = positions[index - 1];
         return previous !== undefined && position < previous
           ? [`${name}: ## ${section} is out of order`]
@@ -123,30 +123,17 @@ describe("the curated component pages", () => {
     expect(missing).toEqual([]);
   });
 
-  it("requires the sections its policy declares, in the policy's order", () => {
-    // The guard was behind its own policy: `docs/preview-strategy.md`'s template
-    // table has a `Keyboard` row, MISSION.md requires keyboard notes on every
-    // component page, and the required list omitted it — so a page could drop its
-    // keyboard contract and stay green. The table is parsed rather than trusted,
-    // so a renamed or reordered row fails here too.
-    const declared = policySections();
-    const undeclared = required.filter(
-      (section) => !declared.includes(section),
-    );
-    expect(
-      undeclared,
-      "the template policy has no row for these required sections",
-    ).toEqual([]);
+  it("requires every permanent section its policy declares, in its order", () => {
+    // `frontmatter` and `preview` are not `##` headings, and `Composition` is
+    // declared for compound components only, so the other rows are the ones
+    // every page carries. The table is parsed rather than trusted: a row added
+    // to the policy fails here until `required` gains it, and a required section
+    // the policy withdraws fails the same way.
+    const conditional = new Set(["frontmatter", "preview", "Composition"]);
 
-    const positions = required.map((section) => declared.indexOf(section));
-    const ascending = positions.every(
-      (position, index) =>
-        index === 0 || position > (positions[index - 1] ?? -1),
-    );
     expect(
-      ascending,
-      "the guard's section order disagrees with the policy",
-    ).toBe(true);
+      policySections().filter((section) => !conditional.has(section)),
+    ).toEqual([...required]);
   });
 
   it("open with a preview and a sentence saying what the component is not", () => {

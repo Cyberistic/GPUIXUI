@@ -10308,7 +10308,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 300/300
+`[x]` `[██████████]` 301/301
+
+`[x]` Hold the **component-page contract to its policy in both directions** —
+      the guard that "requires the sections its policy declares" only checked
+      `required` ⊆ policy, so a row the pages carry could leave the table (as
+      the 2026-10-23 prune did) and the guard stayed green; its comment still
+      claimed the template had a `Keyboard` row. The case now parses the table,
+      subtracts the three documented non-heading/conditional rows, and requires
+      the remainder to equal `required` in order; the stale comment and the
+      "API before limitations before related" order note say what the code
+      does. Directions measured: adding `Keyboard` to the table fails with the
+      extra row named, and removing `Limitations` from `required` fails with it
+      named. No native scenario applies — a page contract and its guard.
 
 `[x]` Draw the **architecture direction from the manifests** — the page's
       direction fence was hand-written and named neither `@gpuixui/dock` nor
