@@ -157,13 +157,13 @@ describe("contrast floors", () => {
  * individual report did not: `contrastFailures(theme)` defaulted to the default
  * floors, so a brand built from a high-contrast theme passed a check whose
  * floors its own variant does not accept. The brand below is exactly that
- * mistake — `#505050` keeps every pair above 4.5:1 and drops the four washes and
- * the group panel under 7:1 — and the default-floor call is the passing twin
- * that makes the variant call the failure it is.
+ * mistake — `#464646` keeps every pair above 4.5:1 and drops the two soft tints,
+ * the press and the selected wash under 7:1 — and the default-floor call is the
+ * passing twin that makes the variant call the failure it is.
  */
 describe("the floors a contrast report uses", () => {
   const brand = extendTheme(highContrastLightTheme, {
-    colors: { mutedForeground: "#505050" },
+    colors: { mutedForeground: "#464646" },
   });
 
   it("takes the high floors from the theme without being told", () => {
@@ -176,10 +176,13 @@ describe("the floors a contrast report uses", () => {
         floor,
       })),
     ).toEqual([
-      { foreground: "mutedForeground", background: "hover", floor: 7 },
+      { foreground: "mutedForeground", background: "successSoft", floor: 7 },
+      {
+        foreground: "mutedForeground",
+        background: "destructiveSoft",
+        floor: 7,
+      },
       { foreground: "mutedForeground", background: "active", floor: 7 },
-      { foreground: "mutedForeground", background: "accent", floor: 7 },
-      { foreground: "mutedForeground", background: "secondary", floor: 7 },
       { foreground: "mutedForeground", background: "selected", floor: 7 },
     ]);
     expect(
@@ -199,7 +202,7 @@ describe("the floors a contrast report uses", () => {
 
   it("an explicit floor set still overrides the declaration", () => {
     expect(contrastFailures(brand, contrastFloors)).toEqual([]);
-    expect(contrastFailures(brand, highContrastFloors).length).toBe(5);
+    expect(contrastFailures(brand, highContrastFloors).length).toBe(4);
   });
 });
 
@@ -474,6 +477,131 @@ describe("the ink an alert paints on its own tint", () => {
     expect(system).toContain(
       "Windows XP (Luna) dark's `warningSoft` at 7.14:1",
     );
+  });
+});
+
+/**
+ * Guards the quiet ink a changed line carries: the diff viewer tints an added or
+ * removed row with the tone's soft role and paints that row's numbers and its
+ * `+`/`-` marker in `mutedForeground`. The table held the tone's readable role
+ * and the page role on a tint, so the line numbers of the rows a reader is
+ * reading ran on a surface no pair measured — a brand whose grey sits near its
+ * pale green or red erases them while every report stays empty.
+ */
+describe("the quiet ink a changed line paints on its tint", () => {
+  /** The two tints the diff viewer fills a row with. */
+  const tints = ["successSoft", "destructiveSoft"] as const;
+
+  it("measures `mutedForeground` on both tints at the secondary floor", () => {
+    const missing = tints.filter(
+      (background) =>
+        !contrastPairs.some(
+          (pair) =>
+            pair.foreground === "mutedForeground" &&
+            pair.background === background &&
+            pair.floor === "secondary",
+        ),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("reads the painter that puts the numbers on the row's tint", () => {
+    const viewer = readFileSync(
+      new URL("../../editor/src/diff/diff-viewer.tsx", import.meta.url),
+      "utf8",
+    );
+
+    // The surface is the page, so a tint's perceptibility is already measured on
+    // it; the quiet role and the tint mapping are what the pairs exist for.
+    expect(viewer).toContain("bg-background");
+    expect(viewer).toContain("color: theme.colors.mutedForeground");
+    expect(viewer).toContain('kind === "added" ? "success" : "destructive"');
+    expect(viewer).toContain(".background");
+
+    // Unified mode merges the tint into the row element, which is what makes the
+    // numbers and the marker sit *on* it; a split row tints the code only.
+    const start = viewer.indexOf('{mode === "unified" ? (');
+    const unified = viewer.slice(start, viewer.indexOf(") : (", start));
+    expect(unified).toContain("mergeStyles(");
+    expect(unified).toContain("lineStyle(theme, metrics, row.kind)");
+    expect(unified).toContain("style={quiet}");
+  });
+
+  it("reports line numbers a tint swallows", () => {
+    const broken = {
+      colors: { ...lightColors, successSoft: lightColors.mutedForeground },
+    };
+
+    expect(
+      contrastFailures(broken).find(
+        ({ foreground, background }) =>
+          foreground === "mutedForeground" && background === "successSoft",
+      ),
+    ).toMatchObject({ ratio: 1, floor: contrastFloors.secondary });
+  });
+
+  it("clears the secondary floor in every style, tightest on the light red tint", () => {
+    const styles = [
+      themes.light,
+      themes.dark,
+      highContrastThemes.light,
+      highContrastThemes.dark,
+      ...platformNames.flatMap((platform) => [
+        platformTheme(themes.light, platform),
+        platformTheme(themes.dark, platform),
+      ]),
+      ...retroNames.flatMap((look) => [
+        retroTheme(themes.light, look),
+        retroTheme(themes.dark, look),
+      ]),
+    ];
+    const placements = styles.flatMap((theme) =>
+      tints.map((tint) => ({
+        theme: theme.name,
+        tint,
+        ratio: contrastRatio(theme.colors.mutedForeground, theme.colors[tint]),
+      })),
+    );
+
+    expect(styles).toHaveLength(16);
+    expect(placements).toHaveLength(32);
+    expect(
+      placements
+        .filter(
+          ({ ratio }) =>
+            ratio === undefined ||
+            ratio < contrastFloorsFor(themes.light).secondary,
+        )
+        .map(({ theme, tint }) => `${theme} ${tint}`),
+    ).toEqual([]);
+    // The catalogue prints this placement, so a palette edit moves both.
+    const tightest = placements.reduce((low, next) =>
+      (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
+    );
+    expect(
+      `${tightest.theme} ${tightest.tint} ${printedRatio(tightest.ratio)}`,
+    ).toBe("Light destructiveSoft 5.21:1");
+  });
+
+  it("prints the placement and the pair on both token pages", () => {
+    const catalogue = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    );
+    const system = readFileSync(
+      new URL("../../../docs/design-system.md", import.meta.url),
+      "utf8",
+    );
+
+    [catalogue, system].forEach((page) => {
+      expect(page).toContain("`mutedForeground`");
+      expect(page).toContain("`successSoft`");
+      expect(page).toContain("`destructiveSoft`");
+    });
+    // `design-system.md` prints 5.21:1 for an unrelated warning tint, so the
+    // catalogue's own sentence is the claim that has to hold.
+    expect(catalogue).toContain("the light styles' red tint at 5.21:1");
   });
 });
 

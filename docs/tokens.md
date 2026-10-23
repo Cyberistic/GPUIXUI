@@ -1701,7 +1701,7 @@ values).
 — an empty array means the theme is readable. The floors are the theme's own
 variant's unless one is passed, which is the rule `auditTheme` applies: a brand
 derived from a high-contrast theme is measured at 7:1 for secondary text without
-the caller remembering to say so. The 103 pairs cover the text role
+the caller remembering to say so. The 105 pairs cover the text role
 on each surface it can sit on: body text on a container's own `muted` or
 `popover` surface (a message bubble is `bg-muted`), the text typed into an
 `input` — and into a **composite field**, which paints the page role as its own
@@ -1719,6 +1719,12 @@ the **page role an alert paints on its own soft tint** — its description is
 control are read on `xSoft` in the page's ink rather than the tone's readable
 role (the tightest shipped placement is Windows XP (Luna) dark's `warningSoft`
 at 7.14:1) —
+the **quiet ink a changed line writes on its own tint**: the diff viewer fills an
+added or removed row with the tone's soft role and paints that row's numbers and
+its `+`/`-` marker in `mutedForeground` (`lineTint` and `quiet` in
+`packages/editor/src/diff/diff-viewer.tsx`), so the secondary floor is measured
+on `successSoft` and `destructiveSoft` too — the tightest shipped placement is
+the light styles' red tint at 5.21:1 —
 the unavailable label on the fill that disables it, on the three page
 surfaces and on the two group strips a disabled control sits in (`muted`,
 `secondary`), accent and selected, the state washes,

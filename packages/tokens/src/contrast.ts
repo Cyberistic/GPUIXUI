@@ -219,6 +219,23 @@ export const contrastPairs: readonly ContrastPair[] = [
   { foreground: "foreground", background: "successSoft", floor: "body" },
   { foreground: "foreground", background: "warningSoft", floor: "body" },
   { foreground: "foreground", background: "destructiveSoft", floor: "body" },
+  // A tinted surface carries a second, quieter role too: the diff viewer fills a
+  // changed line with the tone's soft role and paints that line's numbers and its
+  // `+`/`-` marker in `mutedForeground` (`lineTint` and `quiet` in
+  // `packages/editor/src/diff/diff-viewer.tsx`). The table held the tone's own ink
+  // and the page role on a tint, so the line numbers of exactly the rows a reader
+  // is reading were measured by nothing — a brand whose grey sits near its pale
+  // green or red would erase them with every report empty.
+  {
+    foreground: "mutedForeground",
+    background: "successSoft",
+    floor: "secondary",
+  },
+  {
+    foreground: "mutedForeground",
+    background: "destructiveSoft",
+    floor: "secondary",
+  },
   {
     foreground: "successSoftForeground",
     background: "successSoft",

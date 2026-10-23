@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 171/171
+`[x]` `[██████████]` 172/172
 
 `[x]` Decode **Omarchy's `colors.toml`** into the palette this package maps — the
 follow had a poll and a semantic shape but no reader: `docs/tokens.md` §System
@@ -1359,9 +1359,38 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       `docs/design-system.md` §8, the package README and the `Native text hosts`
       inventory row.
 
+`[x]` Measure the **quiet ink a changed diff line writes on its own tint** — the
+editor's `DiffViewer` fills an added or removed unified row with the tone's soft
+role and paints that row's numbers and its `+`/`-` marker in `mutedForeground`
+(`lineTint` and `quiet` in `packages/editor/src/diff/diff-viewer.tsx`), and
+`contrastPairs` measured the tone's readable role and the page role on a tint and
+**never the quiet one**: the line numbers of exactly the rows a reader is reading
+sat on a surface no pair named, so a brand whose grey sat near its pale green or
+red erased them while every report stayed empty. Two pairs joined the table
+(103 → 105) at the secondary floor — `mutedForeground` on `successSoft` and
+`destructiveSoft` — and no palette moved: every shipped, high-contrast, platform
+and authored style already cleared 4.5:1, the tightest being the light styles'
+red tint at **5.21:1**. The floor fixture in `contrast.test.ts` moved with the
+contract: its `#505050` grey cleared the old table at the default floor and now
+lands at 4.08:1 on the high-contrast red tint, so the brand is `#464646` and its
+high-floor report names the two tints and the `active`/`selected` washes it
+drops under 7:1. `contrast.test.ts` gains `the quiet ink a changed line paints on
+its tint` (5 cases): the coverage and floor, the painter (the page fill, the
+quiet role, the tone mapping and the merged row style in unified mode, so the
+pair cannot outlive the paint), a brand whose grey **is** its green tint reported
+at 1.00:1, the 16-style × 2-tint sweep with the printed 5.21, and both pages
+(the catalogue's own sentence, because `design-system.md` prints an unrelated
+5.21:1 for a warning tint). Four directions measured: dropping the two pairs
+fails five cases by name (the coverage, the brand, both floor-fixture cases and
+the catalogue count) plus the inventory count; painting the numbers in
+`foreground` fails the painter case; a catalogue at 5.22:1 fails the page case;
+green, 46 files / 2 581 tests. Docs in `docs/tokens.md` §Contrast,
+`docs/design-system.md` §9 and the `Contrast contract` inventory row (pair count
+and clause).
+
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 133/133
+`[x]` `[██████████]` 134/134
 
 `[x]` Measure the **two hiding words a component reaches for** — `display: none`
       and `visibility: hidden` are both in the runtime's style type, so a

@@ -759,7 +759,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | ---------- | ------- | ------------- |
 | body text on background/card/popover/muted, on the accent and selected washes, and on the `secondary` group strip a control sits in | 7:1 | 7:1 |
 | text typed into an input, on `input` and on the page role a composite field paints its fill with | 7:1 | 7:1 |
-| secondary text on background/card/muted/popover, on a selected row, inside a field's own fill (`input`), and on a control's `secondary` group strip | 4.5:1 | 7:1 |
+| secondary text on background/card/muted/popover, on a selected row, inside a field's own fill (`input`), on a control's `secondary` group strip, and on the two soft status tints a diff writes its line numbers and change markers on (`successSoft`, `destructiveSoft`) | 4.5:1 | 7:1 |
 | a selected row's title on its own selection and on the `hover`/`active`/`accent` wash it tints (the `selectedForeground` it paints, held to the body floor), the `foreground` a default `Text` keeps on a selected surface, and a chosen row inside a popover resting in its surface's role (`popoverForeground` on `selected`) | 7:1 | 7:1 |
 | a row's label on the accent it tints — a navigation row or a mention suggestion (`accentForeground` on `accent`); a filled accent control's own label keeps the on-colour row below | 7:1 | 7:1 |
 | on-colour text, placeholder (on `input` and on the page fill) | 4.5:1 | 7:1 |
