@@ -57,6 +57,19 @@ export interface CropBounds {
  */
 export const sameCrop = Schema.toEquivalence(CropRect);
 
+/**
+ * Whether a pointer payload names the primary press a gesture may begin on.
+ *
+ * The runtime reports which button went down (0 is the primary one). A
+ * secondary press on the picture is the reader asking for a context menu, not
+ * a drag: beginning a gesture on it would move or resize the hole, and a
+ * release delivered outside the frame would leave that gesture armed for the
+ * next plain hover. A payload that names no button is a primary press — the
+ * only one a gesture begins on.
+ */
+export const isPrimaryPress = (button: number | null | undefined): boolean =>
+  button === undefined || button === null || button === 0;
+
 /** One side of the mask. */
 export const CROP_BAR_SIDES = ["top", "right", "bottom", "left"] as const;
 /** One side of the mask. */

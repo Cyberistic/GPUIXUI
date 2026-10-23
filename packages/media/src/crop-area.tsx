@@ -13,7 +13,8 @@
  * restored, applied to the picture and shown in a readout from one value. A
  * press on the picture moves the hole; a corner handle resizes from that
  * corner, by pointer or by the arrow keys (the handle is a focusable
- * `role="slider"` that announces the rectangle).
+ * `role="slider"` that announces the rectangle). Both gestures begin on the
+ * **primary** press — a secondary press is a context-menu gesture, not a drag.
  */
 
 import type { Props, StyleDesc } from "@gpuix/react";
@@ -35,6 +36,7 @@ import {
   cropKey,
   gestureCrop,
   handleBox,
+  isPrimaryPress,
   sameCrop,
   type CropBounds,
   type CropGesture,
@@ -55,6 +57,8 @@ export interface CropAreaSurface {
 export interface CropPointer {
   readonly x?: number | null;
   readonly y?: number | null;
+  /** Which button went down; `0` is the primary one. Absent reads as primary. */
+  readonly button?: number | null;
   readonly stopPropagation?: () => void;
 }
 
@@ -286,6 +290,7 @@ export const CropArea = (props: CropAreaProps): ReactElement => {
 
   const surface: CropAreaSurface = {
     onFrameDown: (event) => {
+      if (!isPrimaryPress(event.button)) return;
       if (Option.isSome(gesture.current)) return;
       gesture.current = Option.some({
         kind: "move",
@@ -307,6 +312,7 @@ export const CropArea = (props: CropAreaProps): ReactElement => {
       gesture.current = Option.none();
     },
     onHandleDown: (corner, event) => {
+      if (!isPrimaryPress(event.button)) return;
       event.stopPropagation?.();
       gesture.current = Option.some({
         kind: "corner",

@@ -10,6 +10,10 @@
  * The second: both move paths clamped with the **default** minimum, so a hole
  * the caller allowed to be smaller (a `minSize` below 24) grew to 24 on a
  * pointer drag or an `Alt`+arrow — a move changed the hole's sides.
+ * The third: both gestures began on **any** button, so a right press on the
+ * picture or on a handle armed a move/resize — a right-drag dragged the hole,
+ * and a release delivered outside the frame left the gesture armed for a plain
+ * hover. A gesture begins on the primary press alone.
  */
 
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
@@ -120,6 +124,31 @@ describe("CropArea gestures", () => {
       { x: 60, y: 40, width: 110, height: 80 },
       { x: 60, y: 40, width: 120, height: 90 },
     ]);
+    root.unmount();
+  });
+
+  it("does not begin a move on a secondary press", () => {
+    // A right press on the picture is the reader asking for a context menu, not
+    // a drag: it used to arm a move, so a right-drag dragged the hole and a
+    // release delivered outside the frame left the gesture armed for a hover.
+    const { root, reports } = mount();
+    const at = centreOf(root, "crop");
+    root.renderer.nativeSimulateMouseDown(at.x, at.y, 2);
+    root.renderer.nativeSimulateMouseMove(at.x + 10, at.y + 10);
+    root.renderer.nativeSimulateMouseUp(at.x + 10, at.y + 10);
+
+    expect(reports).toStrictEqual([]);
+    root.unmount();
+  });
+
+  it("does not begin a resize on a secondary press", () => {
+    const { root, reports } = mount();
+    const at = centreOf(root, "crop-handle-se");
+    root.renderer.nativeSimulateMouseDown(at.x, at.y, 2);
+    root.renderer.nativeSimulateMouseMove(at.x + 10, at.y + 10);
+    root.renderer.nativeSimulateMouseUp(at.x + 10, at.y + 10);
+
+    expect(reports).toStrictEqual([]);
     root.unmount();
   });
 

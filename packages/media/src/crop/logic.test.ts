@@ -22,6 +22,7 @@ import {
   CROP_HANDLE_SIZE,
   CropRect,
   handleBox,
+  isPrimaryPress,
   keyboardCrop,
   keyboardMove,
   moveCrop,
@@ -488,6 +489,20 @@ describe("sameCrop", () => {
     expect(sameCrop(opening, new CropRect({ ...boxes(opening), x: 61 }))).toBe(
       false,
     );
+  });
+});
+
+describe("isPrimaryPress", () => {
+  it("begins a gesture on the primary press alone", () => {
+    // The bug guarded: a right press on the picture began a move, so a
+    // context-menu press dragged the hole and, when its release landed
+    // outside the frame, stayed armed for the next plain hover.
+    expect(isPrimaryPress(0)).toBe(true);
+    expect(isPrimaryPress(undefined)).toBe(true);
+    expect(isPrimaryPress(null)).toBe(true);
+    expect(isPrimaryPress(2)).toBe(false);
+    expect(isPrimaryPress(1)).toBe(false);
+    expect(isPrimaryPress(-1)).toBe(false);
   });
 });
 
