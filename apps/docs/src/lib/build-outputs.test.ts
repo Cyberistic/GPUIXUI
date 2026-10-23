@@ -12,7 +12,11 @@ import { describe, expect, it } from "vitest";
  *
  * `.tanstack/` was the one nothing ignored, which is why `apps/docs/.gitignore`
  * exists. The other two are ignored by the repository root; this guard holds
- * all three together so a moved root rule cannot quietly expose one.
+ * all three together so a moved root rule cannot quietly expose one. It carries
+ * the **live probes' evidence directory** (`.artifacts/`, at the repository
+ * root) for the same reason: the docs probes capture frames there, and the
+ * policy used to tell a reader to delete the directory by hand because no rule
+ * covered it.
  *
  * Git answers, rather than a pattern reader: a hand-written matcher would be a
  * second implementation of gitignore semantics that can disagree with the tool
@@ -50,6 +54,9 @@ const generated: ReadonlyArray<string> = [
   ".tanstack/routeTree.gen.ts",
   ".source/index.ts",
   "dist/index.html",
+  // The live probes' frames are written at the repository root, not in the app,
+  // so this one is named from here rather than asserted in the app's own rules.
+  "../../.artifacts/live/docs-live-route-before.png",
 ];
 
 /** Files a contributor edits, which must never be ignored. */

@@ -161,8 +161,9 @@ perfectly well, so its existence proves nothing.
 
 Run it with `nub apps/docs/scripts/live-surface-probe.ts`; the frames land in
 `.artifacts/live/`. They are **local evidence** for the run and nothing under
-`.artifacts/` is site content: read them, then **delete** the directory rather
-than staging it. (`TODO.md` tracks the missing `.gitignore` rule for it.)
+`.artifacts/` is site content: the directory is **gitignored**
+(`build-outputs.test.ts` asks git, so a removed rule fails), and a frame is read
+and then deleted rather than staged.
 `scripts/live-frame.ts` is the frame contract it judges against, and
 `src/lib/live-frame.test.ts` holds both directions: a frame that reported itself
 healthy while its pixels were white fails by name.
@@ -237,7 +238,8 @@ nub apps/docs/scripts/live-route-probe.ts
 ```
 
 Frames land in `.artifacts/live/docs-live-route-{before,after}.png` as **local
-evidence**: read them, then **delete** the directory rather than staging it.
+evidence**: the directory is ignored by the repository root, so a frame is read
+and then deleted rather than staged.
 Measured on 2026-10-22, macOS 15.8.1 x86_64,
 headless Google Chrome 155.0.8059.80 over SwiftShader: the button sampled
 `#a7a9ff` (`controlStyle`'s dark primary), the banner `#1e222a` (`muted`), and

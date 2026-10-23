@@ -10382,7 +10382,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 323/324
+`[ ]` `[█████████░]` 324/325
 
 `[x]` Stop the **dashboard recipe denying the charts the library ships** — the
       block page said "the library has no chart component yet", so its copyable
@@ -10814,10 +10814,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
       README §Generated trees documents the three trees. No native scenario
       applies — a repository rule and the tool that applies it.
 
-`[ ]` Ignore the **live probes' evidence directory** — the docs probes write
-      frames to `.artifacts/live/` at the repository root and `.gitignore` does
-      not carry it, so `docs/preview-strategy.md` has to tell a reader to delete
-      the directory by hand. Owner: repo tooling (`.gitignore` is shared).
+`[x]` Ignore the **live probes' evidence directory** — the docs probes write
+      frames to `.artifacts/live/` at the repository root and `.gitignore` did
+      not carry it, so `docs/preview-strategy.md` told a reader to delete the
+      directory by hand and `git status` showed it beside the tree. The root now
+      ignores `.artifacts/` (frames are local evidence, never repository
+      content), and `build-outputs.test.ts`'s generated list carries a frame's
+      path — `../../.artifacts/live/…` from the app — so the rule is held by the
+      same case that holds `.tanstack/`, `.source/` and `dist/`, with the three
+      contributor files as its negative control. Directions measured: with the
+      rule removed the case fails by name (`expected [ Array(1) ] to deeply equal
+      []`); restored, it is 2/2. `docs/preview-strategy.md` §The paint is
+      measured and §The live surface and `apps/docs/README.md` §Generated trees /
+      the route probe's frames now say the directory is ignored instead of
+      instructing a manual delete. No native scenario applies — a repository
+      ignore rule.
 
 `[x]` Give the **data lane its first honest preview** — the policy said every
       lane but Components and Primitives was strategy 4, so `/docs/data-display`

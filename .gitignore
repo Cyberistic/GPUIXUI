@@ -45,5 +45,9 @@ references
 # Agent screenshot artifacts — verification only, never repository content
 .agents/slop/dashboard/
 
+# Frames the live probes capture (docs and playground). Local evidence for a
+# run: read them, then delete them; nothing here is repository content.
+.artifacts/
+
 # salvage queue (working state; originals live in the salvage/* tags)
 .agents/slop/salvage-queue/
