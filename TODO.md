@@ -10304,7 +10304,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 288/288
+`[x]` `[██████████]` 289/289
+
+`[x]` Hold the component index's **hand-written curated list** to the pages it
+      summarizes — the intro names every component the site documents in depth
+      before the generated `<ComponentIndex />`, while the list is prose beside
+      generated rows: a curated page added to `content/docs/components` (or a
+      page whose title moved) left the bullet behind while the sidebar and the
+      index above it grew, and an advertised name with no page was equally
+      silent. `component-index.test.ts` gains `names every curated page in the
+      intro's list, and no page it does not have`: it reads each curated page's
+      frontmatter title, parses the bullet between "documented here in depth" and
+      "with browser previews" (a segment is a title, or two joined with "and" —
+      "Tooltip and Toast" — and a title that contains "and", "Field and inline
+      validation", is tried whole first), and reports the two directions by name.
+      Directions measured: deleting `Card` fails `{ missing: [ 'Card' ], extra: [] }`,
+      adding `Sidebar` fails `{ missing: [], extra: [ 'Sidebar' ] }`, and renaming
+      the Tooltip page's title fails the same case; restored, the file is 50/50,
+      the app is 136 files / 1 464 tests green with `check-types` and `build`
+      clean. No native scenario applies — a Markdown bullet and its pages.
 
 `[x]` Give every page the **Markdown file it renders**, named and linked — the
       site renders the pages it writes and the pages each package writes, and no

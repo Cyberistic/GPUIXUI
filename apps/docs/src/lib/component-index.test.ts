@@ -821,6 +821,51 @@ describe("the real index", () => {
     expect(intro).toContain("/docs/data-display");
   });
 
+  it("names every curated page in the intro's list, and no page it does not have", () => {
+    // The bullet is the reader's summary of which components the site documents
+    // in depth. It is prose beside generated rows, so a new curated page — or a
+    // page whose title moved — leaves it behind while the sidebar and the index
+    // above it grow. The list is held to the pages' own frontmatter, in both
+    // directions, so an advertised name with no page fails too.
+    const dir = new URL("apps/docs/content/docs/components/", root);
+    const titles = readdirSync(dir)
+      .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
+      .map((name) => {
+        const source = readFileSync(new URL(name, dir), "utf8");
+        const frontmatter = source.slice(0, source.indexOf("---", 3));
+        const title = /^title:\s*(.+)$/m.exec(frontmatter)?.[1]?.trim() ?? name;
+        return title.replace(/^["']|["']$/g, "");
+      });
+
+    const page = readFileSync(
+      new URL("../../content/docs/components/index.mdx", import.meta.url),
+      "utf8",
+    );
+    const listed =
+      /documented here in depth — ([\s\S]+?) — with browser previews/.exec(
+        page,
+      )?.[1];
+    expect(listed, "the intro no longer lists the curated pages").toBeDefined();
+
+    // A segment is one page's title, or two titles the author joined with
+    // "and" ("Tooltip and Toast"); a title that itself contains "and" stays
+    // whole because the exact match is tried first.
+    const names = (listed ?? "").split(/,\s*/).flatMap((segment) => {
+      const text = segment.trim();
+      if (titles.includes(text)) return [text];
+      const joined = text.split(/\sand\s/);
+      return joined.every((name) => titles.includes(name)) ? joined : [text];
+    });
+
+    // Two named lists rather than one array comparison: a failure says which
+    // page the bullet forgot or which name it advertises with no page behind it.
+    expect({
+      missing: titles.filter((title) => !names.includes(title)),
+      extra: names.filter((name) => !titles.includes(name)),
+    }).toEqual({ missing: [], extra: [] });
+    expect(titles.length).toBeGreaterThanOrEqual(30);
+  });
+
   it("lists only parts the library actually exports", () => {
     const exported = new Set(
       readPublishedModules(repoRoot).flatMap((module) =>
