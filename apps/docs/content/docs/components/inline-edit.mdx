@@ -213,13 +213,14 @@ the whole control with no code change — see
 whole, but 0.11.0 has no `contenteditable` (the swap is explicit) and no
 `aria-invalid`/`aria-describedby` (a refused commit is the app's feedback).
 
-`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer — 11 native
+`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer — 12 native
 behaviour tests: the display with no input, the click swap with focus, the
 keyboard swap, an `Enter` commit that returns the focus, the `Escape` discard, a
 blur commit, the unchanged draft, a draft the caller disables before the `Enter`
 commit and one it disables before the blur commits (both discarded, with nothing
-reported), the caller's `onChange`/`onSubmit`/`onBlur` firing beside the
-component's own, and a controlled edit state.
+reported), the editor a control disabled mid-edit takes out of the tab order,
+the caller's `onChange`/`onSubmit`/`onBlur` firing beside the component's own,
+and a controlled edit state.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

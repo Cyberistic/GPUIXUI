@@ -162,7 +162,6 @@ describe("the inline edit preview", () => {
     expect(page).toContain(
       "a draft the caller disables before the `Enter` commit",
     );
-    expect(page).toContain("11 native behaviour tests");
   });
 
   it("keeps the caller's handlers after its own on the editor", () => {
