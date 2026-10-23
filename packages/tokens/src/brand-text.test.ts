@@ -489,9 +489,13 @@ describe("brand text on a message's own tint", () => {
     ).toBeGreaterThanOrEqual(contrastFloors.secondary);
   });
 
-  it("prints the tint measurements and the rule on both token pages", () => {
+  it("prints the tint measurements and the rule on the pages that teach it", () => {
     const page = source("../../../docs/tokens.md").replace(/\s+/g, " ");
     const designSystem = source("../../../docs/design-system.md").replace(
+      /\s+/g,
+      " ",
+    );
+    const readme = source("../../../packages/tokens/README.md").replace(
       /\s+/g,
       " ",
     );
@@ -522,5 +526,10 @@ describe("brand text on a message's own tint", () => {
       `under the floor in ${under.length} of the ${placements.length} tint placements`,
     );
     expect(designSystem).toContain("brandTextOn(theme, surface)");
+    // The package README prints the same pair: the denominator is the sweep's
+    // length, which outgrew the sixteen styles the sentence was written for.
+    expect(readme).toContain(
+      `in ${under.length} of the ${placements.length} tint placements`,
+    );
   });
 });

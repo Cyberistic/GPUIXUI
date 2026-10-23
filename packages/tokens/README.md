@@ -328,7 +328,7 @@ const link = { color: brandText(theme) };
 
 A run that knows its surface asks for that surface: a link inside an `Alert`'s
 description sits on the message's `xSoft` tint, and the shared colour is under
-the floor there in 28 of the 64 tint placements (macOS dark on `warningSoft`
+the floor there in 28 of the 72 tint placements (macOS dark on `warningSoft`
 measures 3.43:1), so it paints `brandTextOn(theme, "infoSoft")` — the same
 derivation held to one role.
 
