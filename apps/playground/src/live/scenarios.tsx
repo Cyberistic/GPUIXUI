@@ -25514,6 +25514,15 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `content=${DATA_TABLE_CONTENT_WIDTH}`,
     );
 
+    // A leaving surface keeps its shield for the exit tween and takes the press
+    // meant for the page behind it (`presence`), so the drag waits until the
+    // menu the reset closed is actually gone rather than racing its fade.
+    yield* ctx.expectEqual(
+      "the reset's menu is gone before the divider takes a press",
+      yield* settleGone(ctx, dataTableColumnToggle("status")),
+      true,
+    );
+
     // The shipped divider's drag: eight moves, the column's own clamp, and the
     // header and every cell on the width it reports.
     yield* ctx.host.drag(DATA_TABLE_DIVIDER, DATA_TABLE_DRAG, 0);

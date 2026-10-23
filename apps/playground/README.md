@@ -4635,7 +4635,7 @@ a change to the screen fails here instead of measuring a copy.
 | drag the divider `+40` | `… w=300 · content=500 …` | the shipped divider's eight moves resize the column, and the header and the cell under it paint the new width |
 | open the column menu | — | the trigger opens the shipped `DropdownMenu`; Escape dismisses it and returns the focus to the trigger |
 | hide Status | `cols=name,size · content=350` | hiding takes the column's width out of the content, unpaints its header and cells, and shifts the later column left by exactly 110 |
-| Reset columns | `cols=name,status,size · content=460` | the declared order and widths come back |
+| Reset columns | `cols=name,status,size · content=460` | the declared order and widths come back; the drag below waits for the menu this closes to finish leaving, because a leaving surface keeps its shield and takes a press meant for the page behind it (`presence`) |
 | type `001` | `1 rows · 0 selected` | the query narrows the painted set and releases the choice it hides in the same commit |
 | select all, type `file` | `60 rows · 2 selected` | widening the query brings the whole set back **and the chosen records with it** |
 
@@ -4643,14 +4643,17 @@ The last row is a design rule rather than a quirk: `useTable` retains the store
 and computes the visible selection during render, so a query releases what it
 hides without dropping it, and the next wider query paints it again. A grid that
 needs a permanent release must commit one on the query change; the filter probe
-page says the same beside its own contract. Two harness notes the probe records:
-a window's press commits its state on the next frame, so every read of the
-readout follows a settle (the first run failed `a press chooses the row it hit`
-on the pre-press readout), and the automation's `key` runs no native edit for a
+page says the same beside its own contract. Three harness notes the probe
+records: a window's press commits its state on the next frame, so every read of
+the readout follows a settle (the first run failed `a press chooses the row it
+hit` on the pre-press readout); the automation's `key` runs no native edit for a
 named key, so the query is replaced by select-all-then-type rather than
-backspaces.
+backspaces; and a drag that follows a menu action waits for that menu's exit —
+the shipped surface keeps a no-press shield for its leaving tween, so a press
+inside that window dismisses rather than resizes, and the probe now waits for the
+toggle row to unpaint before dragging.
 
-43 checks, `--only data-table-lifecycle`, green on 0.11.0 (~9 s, three
+44 checks, `--only data-table-lifecycle`, green on 0.11.0 (~7 s, three
 consecutive runs). Fixture: `src/live/data-table.ts` (the example's ids, its
 declared widths, the content arithmetic and the readout's spelling) +
 `data-table.test.ts` (7 cases: every width and the content read from the
