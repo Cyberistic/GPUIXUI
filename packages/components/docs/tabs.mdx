@@ -63,4 +63,9 @@ Tabs
   (`blur-delivery-lifecycle`). The event is not a channel to depend on — the
   ring declared at rest is the cue, and an arrow move anchors on the key's own
   element rather than a `focused` flag.
-- The selected surface is measured, not styled per trigger.
+- The selected surface is measured, not styled per trigger. It is re-measured
+  after a reflow, because a layout event reports a **size** change rather than a
+  move: a tab pushed along by a longer neighbour, or by a trigger appearing
+  before it, would otherwise leave the pill at the place it used to occupy. The
+  pill slides to its new box on the `normal` level; `MotionProvider
+  preference="reduced"` paints it there in the frame the reflow lands.

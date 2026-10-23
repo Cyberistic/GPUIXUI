@@ -22,6 +22,12 @@
  * So the pill follows a trigger that resizes, and a caller's rail padding or
  * border cannot leave it short.
  *
+ * A layout event reports a **size** change, not a move, so a trigger pushed
+ * along the rail by a sibling that grew keeps the box it last reported. The rail
+ * therefore re-reads its origin and every trigger from the renderer in one pass
+ * whenever a box, the origin or the row set changes: a tab shoved aside by a
+ * longer neighbour keeps the pill under it, not at the place it used to occupy.
+ *
  * Measured limitations: the pill **slides** by retargeting the box's
  * `left`/`top`/`width`/`height` (a `normal` motion target), because
  * `@gpuix/native@0.11.0` has no `transform`; the movement is a box
@@ -63,6 +69,7 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -444,9 +451,19 @@ export const TabsList = ({
   ...rest
 }: TabsListProps) => {
   const theme = useTheme();
-  const { orientation, moveBy, jumpTo, selectActive, selected, boxes, rows } =
-    useTabsContext();
+  const renderer = useGpuix().renderer;
+  const {
+    orientation,
+    moveBy,
+    jumpTo,
+    selectActive,
+    selected,
+    boxes,
+    rows,
+    reportBox,
+  } = useTabsContext();
   const [origin, setOrigin] = useState<Option.Option<TabBox>>(Option.none());
+  const probe = useRef<PublicInstance | null>(null);
   const timing = useSurfaceTiming("normal");
   assertParts(tabsList, children);
 
@@ -490,25 +507,56 @@ export const TabsList = ({
 
   /**
    * The origin is the box the pill's absolute children resolve against, in
-   * window coordinates — so the rail moving (a window resize, a pane opening
-   * above it) makes the newest report the origin. An unmoved box keeps the
-   * previous state, so repainting the same rail costs no render.
+   * window coordinates. An unmoved box keeps the previous state, so repainting
+   * the same rail costs no render.
    */
+  const keepOrigin = (box: TabBox): void =>
+    setOrigin((current) =>
+      Option.match(current, {
+        onNone: () => Option.some(box),
+        onSome: (previous) =>
+          sameBox(previous, box) ? current : Option.some(box),
+      }),
+    );
+
   const noteOrigin = (event: EventPayload): void =>
     pipe(
       measuredBox(event),
-      Option.match({
-        onNone: () => undefined,
-        onSome: (box) =>
-          setOrigin((current) =>
-            Option.match(current, {
-              onNone: () => Option.some(box),
-              onSome: (previous) =>
-                sameBox(previous, box) ? current : Option.some(box),
-            }),
-          ),
-      }),
+      Option.match({ onNone: () => undefined, onSome: keepOrigin }),
     );
+
+  /**
+   * Re-read every box after a reflow.
+   *
+   * A layout event reports a **size** change, not a move: a trigger pushed along
+   * the rail by a sibling that grew — or by a caller's own rail padding — keeps
+   * the box it last reported, so the pill stayed where its tab used to be. One
+   * pass reads the origin and every trigger from the renderer's current paint,
+   * the rule `usePlacement` uses, so the offsets are exact even when the rail
+   * itself moved. The renderer's bounds are the boxes `onLayout` carries, so the
+   * two paths cannot disagree, and an unchanged pass sets no state.
+   */
+  useLayoutEffect(() => {
+    const at = (id: number) =>
+      Option.fromNullishOr(renderer?.getElementBounds?.(id));
+    Option.match(
+      Option.flatMap(Option.fromNullishOr(probe.current), (element) =>
+        at(element.id),
+      ),
+      {
+        onNone: () => undefined,
+        onSome: (box) => {
+          keepOrigin(box);
+          Arr.forEach(rows, (row) =>
+            Option.match(at(row.id), {
+              onNone: () => undefined,
+              onSome: (next) => reportBox(row.value, next),
+            }),
+          );
+        },
+      },
+    );
+  }, [boxes, className, origin, renderer, reportBox, rows, style]);
 
   const surface = Option.all({
     origin,
@@ -543,6 +591,7 @@ export const TabsList = ({
     >
       <div
         testId="tabs-origin"
+        ref={probe}
         onLayout={noteOrigin}
         style={{
           position: "absolute",
