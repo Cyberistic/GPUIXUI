@@ -33,6 +33,7 @@ import { textStyle, useTheme } from "../theme.js";
 import {
   axisTicks,
   barSlot,
+  chartBox,
   chartMarkup,
   chartScale,
   donutSegments,
@@ -64,6 +65,15 @@ export const DEFAULT_CHART_WIDTH = 320;
 
 /** The plot's height when the caller names none. */
 export const DEFAULT_CHART_HEIGHT = 160;
+
+/** The side of a donut's square plot when the caller names none. */
+const DEFAULT_DONUT_SIZE = 160;
+
+/** The width of a sparkline's plot when the caller names none. */
+const DEFAULT_SPARKLINE_WIDTH = 120;
+
+/** The height of a sparkline's plot when the caller names none. */
+const DEFAULT_SPARKLINE_HEIGHT = 32;
 
 /** The y-axis column's width: a measurement of the widest tick it holds. */
 export const CHART_AXIS_WIDTH = 36;
@@ -148,12 +158,6 @@ export interface ChartProps extends Omit<Props, "children"> {
   /** The chart's test id. A series layer is `${testId}-layer-${key}`. */
   readonly testId?: string;
 }
-
-/** The plot box from the caller's size, never zero. */
-const boxOf = (width: number, height: number): ChartBox => ({
-  width: Math.max(1, width),
-  height: Math.max(1, height),
-});
 
 /** One series' mask, tinted by the element's `color`. */
 const ChartLayer = ({
@@ -242,7 +246,10 @@ const ChartFrame = ({
   ) => ReadonlyArray<ReadonlyArray<ChartMark>>;
 }) => {
   const theme = useTheme();
-  const box = boxOf(width, height);
+  const box = chartBox(width, height, {
+    width: DEFAULT_CHART_WIDTH,
+    height: DEFAULT_CHART_HEIGHT,
+  });
   const scale = scaleOf(series, labels.length);
   const palette = seriesColors(theme);
   const layers = marks(box, scale);
@@ -441,7 +448,7 @@ export interface DonutChartProps extends Omit<Props, "children"> {
  */
 export const DonutChart = ({
   data,
-  size = 160,
+  size = DEFAULT_DONUT_SIZE,
   legend = true,
   className,
   testId,
@@ -449,7 +456,10 @@ export const DonutChart = ({
   ...rest
 }: DonutChartProps) => {
   const theme = useTheme();
-  const box = boxOf(size, size);
+  const box = chartBox(size, size, {
+    width: DEFAULT_DONUT_SIZE,
+    height: DEFAULT_DONUT_SIZE,
+  });
   const palette = seriesColors(theme);
   const segments = donutSegments(
     Arr.map(data, (one) => one.value),
@@ -530,8 +540,8 @@ export interface SparklineProps extends Omit<Props, "children"> {
  */
 export const Sparkline = ({
   values,
-  width = 120,
-  height = 32,
+  width = DEFAULT_SPARKLINE_WIDTH,
+  height = DEFAULT_SPARKLINE_HEIGHT,
   color,
   className,
   testId,
@@ -540,7 +550,10 @@ export const Sparkline = ({
   ...rest
 }: SparklineProps) => {
   const theme = useTheme();
-  const box = boxOf(width, height);
+  const box = chartBox(width, height, {
+    width: DEFAULT_SPARKLINE_WIDTH,
+    height: DEFAULT_SPARKLINE_HEIGHT,
+  });
   const scale = chartScale([{ key: "sparkline", label: "sparkline", values }]);
   const d = linePath(values, box, scale);
   return (

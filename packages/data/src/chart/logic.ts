@@ -32,6 +32,32 @@ export interface ChartBox {
   readonly height: number;
 }
 
+/** One side of a plot: the caller's when it can paint, else the fallback. */
+const paintableSide = (side: number, fallback: number): number =>
+  Number.isFinite(side) && side > 0
+    ? side
+    : Math.max(1, Number.isFinite(fallback) && fallback > 0 ? fallback : 1);
+
+/**
+ * The plot box a chart lays out in, from the sides a caller gives.
+ *
+ * A side is often computed — a share of a pane, a measurement taken before the
+ * first layout — and one the geometry cannot lay out (`NaN`, an infinity, zero
+ * or a negative) reads as the fallback side. `Math.max(1, NaN)` is `NaN`, so an
+ * unreadable width used to reach the `<svg>` viewBox, the axis column and every
+ * category slot's width: the plot collapsed to `0 × 0` while the group kept its
+ * name, and the labels lost their tracks. A finite positive side is kept as
+ * given — a fractional width is paintable.
+ */
+export const chartBox = (
+  width: number,
+  height: number,
+  fallback: ChartBox,
+): ChartBox => ({
+  width: paintableSide(width, fallback.width),
+  height: paintableSide(height, fallback.height),
+});
+
 /** One painted shape, in the plot's pixel space. */
 export type ChartMark =
   | {

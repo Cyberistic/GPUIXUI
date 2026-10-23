@@ -90,6 +90,7 @@ export {
   axisTicks,
   barMarks,
   barSlot,
+  chartBox,
   chartMarkup,
   chartMaxOf,
   chartScale,

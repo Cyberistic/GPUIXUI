@@ -26,6 +26,7 @@ import {
   axisTicks,
   barMarks,
   barSlot,
+  chartBox,
   chartMarkup,
   chartScale,
   donutMarks,
@@ -274,6 +275,46 @@ describe("the line and ring marks", () => {
     // A full ring is two halves: an arc from an angle to itself paints nothing.
     expect(donutMarks([100], box)).toHaveLength(2);
     expect(donutMarks([0, 0], box)).toEqual([]);
+  });
+});
+
+describe("the plot box", () => {
+  const fallback: ChartBox = { width: 320, height: 160 };
+
+  it("keeps the size the caller gave, fractional pixels included", () => {
+    expect(chartBox(200, 100, fallback)).toEqual({ width: 200, height: 100 });
+    expect(chartBox(200.5, 100.25, fallback)).toEqual({
+      width: 200.5,
+      height: 100.25,
+    });
+  });
+
+  it("reads a side it cannot lay out as the default that side", () => {
+    // A size is often computed — a share of a pane, a measurement taken before
+    // the first layout — and `Math.max(1, NaN)` is `NaN`: it reached the
+    // viewBox, the axis and every label's slot width, so the plot collapsed to
+    // 0×0 while the chart kept its name.
+    Arr.forEach(
+      [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, 0, -12],
+      (side) =>
+        expect(chartBox(side, side, fallback)).toEqual({
+          width: 320,
+          height: 160,
+        }),
+    );
+    expect(chartBox(Number.NaN, 90, fallback)).toEqual({
+      width: 320,
+      height: 90,
+    });
+  });
+
+  it("never falls back to a side that cannot paint either", () => {
+    // The fallback is a component's own default, but it arrives through a
+    // public helper: an unreadable one must still lay out a pixel rather than
+    // hand `NaN` back to the caller.
+    expect(
+      chartBox(Number.NaN, Number.NaN, { width: Number.NaN, height: 0 }),
+    ).toEqual({ width: 1, height: 1 });
   });
 });
 

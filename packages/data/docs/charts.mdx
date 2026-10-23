@@ -65,6 +65,18 @@ the centre of their slot, like a bar and the label under it, so a series with
 fewer values than labels stays in the columns it names instead of stretching
 across the plot.
 
+## Sizing
+
+`width` and `height` are the plot's own box; the axis column stands beside it.
+A side is often computed — a share of a pane, a measurement taken before the
+first layout — so `chartBox(width, height, fallback)` reads one the geometry
+cannot lay out (`NaN`, an infinity, zero or a negative) as the component's
+default: 320 × 160 for a series chart, 160 square for a donut and 120 × 32 for a
+sparkline. `Math.max(1, NaN)` is `NaN`, and that number reaches the viewBox, the
+axis column and every label's slot width, so the plot collapsed to `0 × 0` while
+the group kept its name. A computed size therefore paints a readable chart
+instead of an empty one, and a fractional side is kept as given.
+
 ## Accessibility
 
 A chart is a **group** named by its `aria-label`, holding one **image** per

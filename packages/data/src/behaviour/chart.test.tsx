@@ -273,6 +273,38 @@ describe("the charts", () => {
     expect(topOfLayer(root, "chart-ragged-bars-layer-revenue")).toBe(40);
   });
 
+  it("lays out the default plot when a computed size cannot paint", () => {
+    // A size is often computed — a share of a pane, a measurement taken before
+    // the first layout. `Math.max(1, NaN)` is `NaN`, so the unreadable side
+    // reached the viewBox, the axis and every label's slot width: the plot
+    // collapsed to 0×0 and the labels lost their tracks while the chart kept
+    // its name.
+    root = renderData(
+      <BarChart
+        aria-label="Revenue by quarter"
+        labels={["Q1", "Q2"]}
+        series={[{ key: "revenue", label: "Revenue", values: [3, 6] }]}
+        width={Number.NaN}
+        height={Number.POSITIVE_INFINITY}
+        testId="chart-unreadable"
+      />,
+    );
+    settle(root);
+
+    const plot = requireBounds(root, "chart-unreadable-plot");
+    expect(plot.width).toBe(320);
+    expect(plot.height).toBe(160);
+
+    const source = root.renderer.findByTestId("chart-unreadable-layer-revenue")
+      ?.customProps?.source;
+    if (typeof source !== "string") {
+      throw new Error("behaviour: no SVG source on the layer");
+    }
+    expect(source).toContain('viewBox="0 0 320 160"');
+    // The labels keep their slots: 320 / two categories.
+    expect(requireBounds(root, "chart-unreadable-label-0").width).toBe(160);
+  });
+
   it("puts a line's points over the labels it draws under", () => {
     // The labels (and the bars) are centred in `width / labels.length` slots,
     // so a path spaced edge to edge stood its first and last points half a slot
