@@ -43,7 +43,7 @@ Breadcrumb
 
 ## A trail in a narrow pane
 
-`BreadcrumbList` is `flex-wrap`, so a trail wider than its pane **wraps instead of clipping**. In a 280px pane the five-level trail paints two 16px rows — 36px in total — and whatever sits below it moves down. A toolbar, dock header or split pane therefore has to budget the trail; there is no clipping fallback.
+`BreadcrumbList` is `flex-wrap`, so a trail wider than its pane **wraps instead of clipping**. In a 280px pane the five-level trail paints two 16px rows plus the list's 4px gap — 36px in total — and whatever sits below it moves down. A toolbar, dock header or split pane therefore has to budget the trail; there is no clipping fallback.
 
 `maxItems` is that budget, and it wants a measured count rather than a constant. Report the pane's width from `onLayout` and divide it by the entry width your own labels need:
 
