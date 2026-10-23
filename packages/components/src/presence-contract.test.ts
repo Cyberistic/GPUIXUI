@@ -280,3 +280,36 @@ describe("the house timing", () => {
     expect(Str.includes("delay: delayMs / 1000")(seam)).toBe(true);
   });
 });
+
+/** A source that reads a surface timing's own duration. */
+const readsTimingDuration = (body: string): boolean =>
+  Str.includes("timing.enter.duration")(body) ||
+  Str.includes("timing.exit.duration")(body);
+
+/** A source that keeps a box painted for a timing it reads itself. */
+const holdsForTiming = (body: string): boolean =>
+  readsTimingDuration(body) && Str.includes("setTimeout")(body);
+
+/** The seam's one conversion from a timing's seconds to a hold window. */
+const windowConversion = /(?:transitionWindowMs|exitWindowMs)\(/;
+
+describe("the hold window", () => {
+  it("is the seam's conversion, so a delayed run keeps its box", () => {
+    // The bug this guards: `PageTransition` divided its own window out of the
+    // timing (`Math.round((timing.exit.duration ?? 0) * 1000)`), a second copy
+    // of the rule `transitionWindowMs` exists to own. The runtime waits a
+    // delayed run's first frame for `delay`, so a hand-built window counted only
+    // the duration and unmounted a view before its journey began — and a delay
+    // change did not re-run the timer at all. The seam's conversion is one home
+    // for the duration *and* the wait. `gradient-text` and `splitting-text`
+    // read the duration only to report the reduced preference, so they are not
+    // hold windows.
+    const holding = Arr.filter(sources, ({ body }) => holdsForTiming(body));
+    // A scan that reads no hold window cannot pass vacuously.
+    expect(Arr.length(holding)).toBeGreaterThan(0);
+    const offenders = Arr.filterMap(holding, ({ path, body }) =>
+      windowConversion.test(body) ? Result.failVoid : Result.succeed(path),
+    );
+    expect(offenders).toEqual([]);
+  });
+});

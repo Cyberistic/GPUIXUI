@@ -31,7 +31,11 @@ import { cn } from "@gpuixui/tw";
 import { Match } from "effect";
 import * as Option from "effect/Option";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
+import {
+  useMotionPreference,
+  useSurfaceTiming,
+  transitionWindowMs,
+} from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
 import {
@@ -136,12 +140,12 @@ export const PageTransition = ({
     setTransition(requestPage(transition, viewKey, instant));
   }
 
+  /** The view stays painted for its half of the swap; a wait before it counts. */
+  const exitWindow = transitionWindowMs(timing.exit);
+  const enterWindow = transitionWindowMs(timing.enter);
+
   useLayoutEffect(() => {
-    const ms = Math.round(
-      (transition.phase === "leaving"
-        ? (timing.exit.duration ?? 0)
-        : (timing.enter.duration ?? 0)) * 1000,
-    );
+    const ms = transition.phase === "leaving" ? exitWindow : enterWindow;
 
     if (transition.phase === "leaving") {
       if (ms <= 0) {
@@ -160,12 +164,7 @@ export const PageTransition = ({
       const handle = setTimeout(() => setTransition(finishPage), ms);
       return () => clearTimeout(handle);
     }
-  }, [
-    transition.phase,
-    transition.run,
-    timing.enter.duration,
-    timing.exit.duration,
-  ]);
+  }, [transition.phase, transition.run, exitWindow, enterWindow]);
 
   const frames = pageFrames(
     direction,
