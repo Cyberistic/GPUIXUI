@@ -58,7 +58,7 @@ import {
   otpLength,
   type OtpEdit,
 } from "../core/otp.js";
-import { accessibleName } from "../core/a11y.js";
+import { accessibleName, spokenSentence } from "../core/a11y.js";
 import { controlRing, keepContent } from "../core/focus.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { nativeTextTheme } from "../core/style.js";
@@ -141,12 +141,24 @@ export interface OTPFieldHandlers {
   ) => (instance: PublicInstance | null) => void;
 }
 
-/** A cell's accessible name: the group's name plus its position. */
+/**
+ * A cell's accessible name: the group's name plus its position.
+ *
+ * A table with a missing row answers nothing, so the shipped sentence names the
+ * cell rather than publishing an empty name — the field's own name still leads
+ * it, so a reader can tell which code a cell belongs to (see `spokenSentence`).
+ */
 export const otpCellLabel = (
   label: string | undefined,
   index: number,
   messages: PrimitiveMessages = defaultMessages,
-): string => messages.codeDigit(index, accessibleName(label));
+): string => {
+  const name = accessibleName(label);
+  return spokenSentence(
+    messages.codeDigit(index, name),
+    defaultMessages.codeDigit(index, name),
+  );
+};
 
 /** What every cell part reads from the OTP field that owns it. */
 export interface OTPFieldPart {

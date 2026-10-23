@@ -41,6 +41,19 @@ export const spokenText = (
   );
 
 /**
+ * The sentence a caller's function answers, or the component's own when it says nothing.
+ *
+ * `starName`, `codeDigit` and `rangeEnd` are sentences a component calls with
+ * the caller's own data, so their answers are interface copy like a formatter's
+ * — and a localised table with a missing row answers `""`, which would name a
+ * star or a code cell with **nothing**. A blank answer is absence, so the
+ * component's shipped sentence stands; a real one is trimmed and used. It is
+ * `spokenText` for a value that arrives through a function.
+ */
+export const spokenSentence = (answer: string, fallback: string): string =>
+  spokenText(Option.fromNullishOr(answer), fallback);
+
+/**
  * The help a text field announces after its name.
  *
  * A field's `description` is its permanent help and wins. A `placeholder` is the

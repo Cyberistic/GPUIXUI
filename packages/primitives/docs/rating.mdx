@@ -45,6 +45,15 @@ const [score, setScore] = useState(0);
 | `ref` / `aria-id` / `onLayout` | host props | none | land on the star that holds the tab stop, so they follow the score; measure a wrapper for the whole control |
 | `testId` | `string` | — | stable locator on the group |
 
+## Words
+
+Each star is a `radio` of its own, named from the provider's `starName` sentence
+over its position and the count (`"1 of 5"` shipped), because 0.11.0 publishes no
+`aria-labelledby` for the group to name it. **A blank answer is absence**: a
+localised table with no row for a star names it from the shipped sentence rather
+than publishing an empty `aria-label`, and a real answer is trimmed and used. The
+star's own state is the `star` group's fill word (`checked`/`half`/`unchecked`).
+
 ## Limitations
 
 - A stored `value` is placed on the painted scale: without `allowHalf`, the

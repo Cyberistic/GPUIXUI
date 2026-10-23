@@ -59,6 +59,14 @@ const [code, setCode] = useState("");
 | `ref` / `aria-id` / `onLayout` | host props | none | land on the first cell; the code belongs to the group |
 | `testId` | `string` | — | the group's locator; cells are `<testId>-cell-N` |
 
+## Words
+
+Every cell is named from the provider's `codeDigit` sentence, with the field's
+`label` in front when it has one (`"Verification code digit 1"`). **A blank
+answer is absence**: a localised table with no row names the cell from the
+shipped sentence — the field's name still leads it — rather than publishing an
+empty name a reader could only count by pressing Tab.
+
 ## Limitations
 
 - There is no `onPaste`: a pasted code arrives as one multi-character edit and

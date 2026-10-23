@@ -47,6 +47,14 @@ the component's own words (the clamped percentage, the provider's indeterminate
 word, or the number) standing rather than publishing an empty `aria-valuetext`.
 A real answer is trimmed and used.
 
+The three **sentences** a control calls — `starName`, `codeDigit` and
+`rangeEnd` — are words in the same sense, so a missing row is absence there too:
+a star, a code cell or a range's end that answers `""` is named by the shipped
+sentence (`"1 of 5"`, `"Code digit 1"`, `"<label> minimum"`) rather than
+publishing an empty `aria-label` on a control that still holds a value. A real
+answer is trimmed and used. `rangeEnd` has a second blank: a group the caller
+never named names neither end.
+
 That is **not** the same as a busy action's `loadingLabel`, where a blank word is
 a deliberate silence: the action's own text still says what is happening, so
 `Button`, `Toggle` and `IconButton` publish no busy description. A bar has no

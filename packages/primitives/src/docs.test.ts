@@ -834,6 +834,69 @@ describe("the primitives docs page contract", () => {
     expect(words).toContain("`RangeSlider`");
   });
 
+  it("keeps a control's own sentence when the table's says nothing", () => {
+    // The bug guarded: `starName`, `codeDigit` and `rangeEnd` are sentences a
+    // component calls with the caller's data, and each answer was published as
+    // it arrived — so a localised table with a missing row (`""`) named a
+    // rating's stars and a code field's cells with nothing and left both of a
+    // range's thumbs unnamed, while every report stayed empty. The three
+    // painters must ask `spokenSentence`, and the words page plus each control
+    // page must teach the rule, or a reader cannot tell a missing row from a
+    // deliberate silence.
+    const rating = readFileSync(
+      fileURLToPath(new URL("../src/components/Rating.tsx", import.meta.url)),
+      "utf8",
+    );
+    expect(rating).toContain("spokenSentence");
+    expect(rating).not.toContain("aria-label={messages.starName(");
+    const otp = readFileSync(
+      fileURLToPath(new URL("../src/components/OTPField.tsx", import.meta.url)),
+      "utf8",
+    );
+    const cell = otp
+      .slice(otp.indexOf("export const otpCellLabel"))
+      .split("\n\n")[0];
+    expect(cell).toContain("spokenSentence");
+    expect(cell).not.toContain(
+      "messages.codeDigit(index, accessibleName(label))",
+    );
+    const messages = readFileSync(
+      fileURLToPath(new URL("../src/core/messages.ts", import.meta.url)),
+      "utf8",
+    );
+    const ends = messages
+      .slice(messages.indexOf("const spokenEnd"))
+      .split("\n\n")[0];
+    expect(ends).toContain("spokenSentence");
+    expect(ends).not.toContain("): string =>\n  end(");
+    expect(ends).toContain("end(label, side)");
+    const unstated = Arr.filter(
+      ["rating.mdx", "otp-field.mdx", "range-slider.mdx"],
+      (page) =>
+        !read(page)
+          .replaceAll("*", "")
+          .replaceAll(/\s+/g, " ")
+          .includes("A blank answer is absence"),
+    );
+    expect(unstated).toEqual([]);
+    const words = Option.getOrElse(
+      bodyOf(read("theme-provider.mdx"), "Words"),
+      () => "",
+    );
+    expect(words).toContain("`starName`");
+    expect(words).toContain("`codeDigit`");
+    expect(words).toContain("`rangeEnd`");
+    expect(words).toContain("`rangeEnd` has a second blank");
+    // The package README teaches the same seam, and a renamed export would
+    // otherwise leave it naming a helper that no longer exists.
+    expect(
+      readFileSync(
+        fileURLToPath(new URL("../README.md", import.meta.url)),
+        "utf8",
+      ),
+    ).toContain("`spokenSentence`");
+  });
+
   it("lists only props its module graph declares", () => {
     // The bug guarded: the Switches inventory row promised a `loading` prop
     // while `SwitchProps` declares none (see `inventory.test.ts`'s `keeps the

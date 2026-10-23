@@ -27,6 +27,7 @@
  * localised tree from repeating the word on every action.
  */
 
+import { accessibleName, spokenSentence } from "./a11y.js";
 import type { StarState } from "./rating.js";
 import type { SelectionState } from "./selection.js";
 
@@ -111,19 +112,33 @@ export const defaultMessages: PrimitiveMessages = {
     `${label} ${end === "start" ? "minimum" : "maximum"}`,
 };
 
+/** One end's name: the caller's sentence, or the shipped one when it says nothing. */
+const spokenEnd = (
+  label: string,
+  end: RangeEndWords,
+  side: "start" | "end",
+): string =>
+  spokenSentence(end(label, side), defaultMessages.rangeEnd(label, side));
+
 /**
  * The two names a range slider's thumbs announce.
  *
  * A blank group name names nothing, so both ends stay unnamed rather than
- * announcing " minimum" and " maximum" — the same rule the group itself follows.
+ * announcing " minimum" and " maximum" — the same rule the group itself follows
+ * (`accessibleName`, not `=== undefined`, decides it). A sentence that answers
+ * nothing is the other blank: a localised table with a missing row would name
+ * each thumb with nothing, so the shipped sentence stands, the rule every
+ * sentence a component calls follows.
  */
 export const rangeThumbNames = (
   label: string | undefined,
   end: RangeEndWords = defaultMessages.rangeEnd,
-): readonly [string | undefined, string | undefined] =>
-  label === undefined
+): readonly [string | undefined, string | undefined] => {
+  const name = accessibleName(label);
+  return name === undefined
     ? [undefined, undefined]
-    : [end(label, "start"), end(label, "end")];
+    : [spokenEnd(name, end, "start"), spokenEnd(name, end, "end")];
+};
 
 /**
  * The table a provider paints: the caller's keys over the table above it.

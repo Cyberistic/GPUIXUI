@@ -495,6 +495,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "A composed part cannot answer a press",
       "The thumb cannot rotate or scale: the runtime has no transform",
       "Each thumb is named from the provider's rangeEnd sentence; the shipped one is English",
+      "A blank rangeEnd answer names both thumbs from the shipped sentence; a blank label names neither",
       "formatValue says the caller's words; a blank answer keeps the number, because each thumb's value text is its only channel",
     ],
     source: [
@@ -553,6 +554,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "No onPaste: a pasted code arrives as one multi-character edit and fills forward (measured by otp-paste-lifecycle)",
       "Arrows are handled on key up, so they do not repeat",
       "Clearing a middle character shifts the following ones left",
+      "Each cell is named from the provider's codeDigit sentence; a blank answer names it from the shipped sentence (a code cell has no other channel)",
     ],
     source: ["src/components/OTPField.tsx", "src/core/otp.ts"],
     docs: "docs/otp-field.mdx",
@@ -609,6 +611,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "Halves are the finest score: a press names a star's half, not a quarter",
       "The pointer preview is paint-only: a screen reader hears the value, not the previewed star",
       "Clearing is explicit (Delete/Backspace); an arrow clamps at the lowest rated place once rated",
+      "Each star is named from the provider's starName sentence; a blank answer names it from the shipped sentence (a star has no other channel)",
     ],
     source: ["src/components/Rating.tsx", "src/core/rating.ts"],
     docs: "docs/rating.mdx",

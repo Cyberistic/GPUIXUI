@@ -209,6 +209,42 @@ it("names a range slider's ends in the caller's words", async () => {
   expect(announced(runtime, "maximum de Prix")).toBe("60");
 });
 
+it("keeps the shipped sentence when a caller's says nothing", async () => {
+  // The bug guarded: `starName`, `codeDigit` and `rangeEnd` are sentences a
+  // component calls with the caller's own data, and a localised table with a
+  // missing row answers `""`. That named a rating's stars and a code field's
+  // cells with nothing and left both of a range's thumbs unnamed — a reader
+  // heard "checked" on an unnamed radio, and Tab crossed six unnamed inputs.
+  // A blank answer is absence, so the shipped sentence is what the window
+  // reports; each node is found by that name and by no empty one.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface
+      messages={{
+        ...french,
+        starName: () => "",
+        codeDigit: () => "",
+        rangeEnd: () => "",
+      }}
+    >
+      <Stack direction="column" gap="sm">
+        <Rating testId="rating" label="Qualité" max={2} defaultValue={1} />
+        <OTPField length={2} label="Vérification" />
+        <RangeSlider label="Prix" defaultValue={[20, 60]} />
+      </Stack>
+    </Surface>,
+  );
+
+  // The names fall back to the shipped sentence; the state words stay the
+  // caller's, because that group was not the one left blank.
+  expect(announced(runtime, "1 of 2")).toBe("plein");
+  expect(announced(runtime, "2 of 2")).toBe("vide");
+  expect(named(runtime, "TextInput", "Vérification digit 1")).toBe(true);
+  expect(named(runtime, "TextInput", "Vérification digit 2")).toBe(true);
+  expect(named(runtime, "Slider", "Prix minimum")).toBe(true);
+  expect(named(runtime, "Slider", "Prix maximum")).toBe(true);
+});
+
 it("keeps the shipped words when a caller names none", async () => {
   // The compatibility direction: adopting the seam changes nothing on a screen
   // that names no words.

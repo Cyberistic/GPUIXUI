@@ -48,6 +48,7 @@ import {
   elementChildren,
   elementProp,
   hostProp,
+  hostPropString,
 } from "./testing/element.js";
 
 /** A caller's table: the words a French interface announces. */
@@ -61,6 +62,21 @@ const french: PrimitiveMessages = {
   loading: { busy: "Chargement", indeterminate: "chargement" },
   rangeEnd: (label, end) =>
     `${end === "start" ? "minimum" : "maximum"} de ${label}`,
+};
+
+/**
+ * A table whose three sentences answer nothing.
+ *
+ * A localised table is written once and indexed per row, so a row that was not
+ * translated answers `""` — the same shape a formatter with no entry for one
+ * value has. The sentences are the only names a star, a code cell and a range's
+ * two thumbs have.
+ */
+const silent: PrimitiveMessages = {
+  ...french,
+  starName: () => "",
+  codeDigit: () => "",
+  rangeEnd: () => "",
 };
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
@@ -413,6 +429,155 @@ describe("every control announces the table it is handed", () => {
         renderProgress({ loadingText: "en cours" }, testTheme, 0, french),
       ),
     ).toBe("en cours");
+  });
+});
+
+describe("a sentence a caller's table says nothing for", () => {
+  it("names a range's ends from the shipped sentence", () => {
+    // The bug guarded: `rangeEnd` is a sentence the range calls with the
+    // caller's own label, and a table with a missing row answers `""` — the
+    // exact shape `spokenText` exists for. Both thumbs published an empty name,
+    // so a reader heard two unnamed sliders. A blank answer is absence, so the
+    // shipped sentence names the ends; a real answer is trimmed and used.
+    expect(rangeThumbNames("Prix", silent.rangeEnd)).toEqual([
+      "Prix minimum",
+      "Prix maximum",
+    ]);
+    expect(rangeThumbNames("Prix", () => "   ")).toEqual([
+      "Prix minimum",
+      "Prix maximum",
+    ]);
+    expect(
+      rangeThumbNames(
+        "Prix",
+        (label, end) => ` ${end === "start" ? "min" : "max"} ${label} `,
+      ),
+    ).toEqual(["min Prix", "max Prix"]);
+    // The group's own name is the other blank: a caller who has not named the
+    // control names neither end, which is what the helper's own doc promises
+    // and what `accessibleName` decides for every other name site.
+    expect(rangeThumbNames("", french.rangeEnd)).toEqual([
+      undefined,
+      undefined,
+    ]);
+    expect(rangeThumbNames("   ", french.rangeEnd)).toEqual([
+      undefined,
+      undefined,
+    ]);
+    // The painted thumbs carry the fallback too, so the rule is not the
+    // helper's alone.
+    const range = renderRangeSlider(
+      { label: "Prix" },
+      testTheme,
+      initValueState<readonly [number, number]>(
+        Option.some([20, 60]),
+        [0, 100],
+      ),
+      { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+      {
+        onSpanChange: vi.fn(),
+        registerTrack: () => () => {},
+        registerThumb: () => () => {},
+        onPointerDown: vi.fn(),
+        onPointerMove: vi.fn(),
+        onPointerUp: vi.fn(),
+      },
+      silent,
+    );
+    const provider = elementChildren(range)[0] ?? expect.fail("no parts");
+    const rail = elementChildren(provider)[0] ?? expect.fail("no rail");
+    const thumbs = Arr.filter(elementChildren(rail), (part) =>
+      Option.contains(hostProp(part, "role"), "slider"),
+    );
+    expect(
+      Arr.map(thumbs, (thumb) =>
+        expectSome(hostPropString(thumb, "aria-label")),
+      ),
+    ).toEqual(["Prix minimum", "Prix maximum"]);
+  });
+
+  it("names each star from the shipped sentence", () => {
+    // The bug guarded, one control over: a star's `starName` answer was
+    // published as it arrived, so a table with a missing row left every star of
+    // the group an unnamed radio — a reader heard "checked" with no idea which
+    // star. The shipped sentence is the fallback, and a real answer is trimmed.
+    const stars = (messages: PrimitiveMessages): ReadonlyArray<string> =>
+      Arr.map(
+        elementChildren(
+          renderRating(
+            { max: 3, allowHalf: true },
+            testTheme,
+            initValueState(Option.some(2.5), 0),
+            { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+            {
+              onSelect: vi.fn(),
+              onMove: vi.fn(),
+              registerItem: () => () => {},
+            },
+            undefined,
+            messages,
+          ),
+        ),
+        (star) => expectSome(hostPropString(star, "aria-label")),
+      );
+    expect(stars(silent)).toEqual(["1 of 3", "2 of 3", "3 of 3"]);
+    expect(stars({ ...french, starName: () => "  " })).toEqual([
+      "1 of 3",
+      "2 of 3",
+      "3 of 3",
+    ]);
+    expect(
+      stars({ ...french, starName: (index, max) => ` ${index}/${max} ` }),
+    ).toEqual(["1/3", "2/3", "3/3"]);
+  });
+
+  it("names each code cell from the shipped sentence", () => {
+    // The bug guarded, the third sentence: `codeDigit` is called per cell with
+    // the field's own name, and a blank answer named every cell with nothing —
+    // six unnamed inputs a reader can only count by pressing Tab. The field's
+    // name still leads the shipped sentence, so the cells stay groupable.
+    const cells = (
+      label: string | undefined,
+      messages: PrimitiveMessages,
+    ): ReadonlyArray<string> =>
+      Arr.map(Arr.range(0, 1), (index) =>
+        expectSome(
+          hostPropString(
+            renderOtpFieldInput(
+              { index },
+              otpFieldPart(
+                { length: 2, label },
+                testTheme,
+                text("12"),
+                {
+                  focusedIndex: Option.none(),
+                  onFocus: vi.fn(),
+                  onBlur: vi.fn(),
+                },
+                {
+                  onEdit: vi.fn(),
+                  onKey: vi.fn(),
+                  onPick: vi.fn(),
+                  registerCell: () => () => {},
+                },
+              ),
+              messages,
+            ),
+            "aria-label",
+          ),
+        ),
+      );
+    expect(cells("Vérification", silent)).toEqual([
+      "Vérification digit 1",
+      "Vérification digit 2",
+    ]);
+    expect(cells(undefined, silent)).toEqual(["Code digit 1", "Code digit 2"]);
+    expect(
+      cells("Vérification", {
+        ...french,
+        codeDigit: (index, label) => ` ${label ?? "Code"} ${index + 1} `,
+      }),
+    ).toEqual(["Vérification 1", "Vérification 2"]);
   });
 });
 

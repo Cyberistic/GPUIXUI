@@ -27,7 +27,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
-import { accessibleName } from "../core/a11y.js";
+import { accessibleName, spokenSentence } from "../core/a11y.js";
 import {
   decideActivation,
   isPlainKey,
@@ -191,6 +191,14 @@ export const renderRating = (
   const half = props.allowHalf === true;
   const value = clampRating(state.current, max, half);
   const tabStop = ratingTabStop(value, max, half);
+  // A star's name is the provider's sentence over its position. A table with a
+  // missing row answers nothing, so the shipped sentence names it rather than an
+  // empty `aria-label` on a radio (see `spokenSentence`).
+  const starName = (index: number): string =>
+    spokenSentence(
+      messages.starName(index, max),
+      defaultMessages.starName(index, max),
+    );
   // A star the rating no longer draws cannot hold focus: `max` is caller
   // arithmetic, so a list that shrank would otherwise leave the group painting
   // itself focused over stars nobody focused and send the next key to the
@@ -249,7 +257,7 @@ export const renderRating = (
             : handlers.registerItem(index)
         }
         role="radio"
-        aria-label={messages.starName(index, max)}
+        aria-label={starName(index)}
         aria-id={index === tabStop ? props["aria-id"] : undefined}
         // The state stays the rating's: a previewed star is filled, not chosen.
         aria-valuetext={starWord(starState(index, value), messages.star)}

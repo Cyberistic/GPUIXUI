@@ -80,6 +80,11 @@ table with no row for an end returns `""`, and that thumb announces its own
 number rather than an empty `aria-valuetext` — the only channel it has. A real
 answer is trimmed and used as it is.
 
+The group's `label` names both thumbs through the provider's `rangeEnd`
+sentence. **A blank answer is absence there too**: a sentence that says nothing
+falls back to the shipped `<label> minimum` / `<label> maximum`, while a group
+the caller never named names neither end.
+
 ## Limitations
 
 - No `aria-valuenow`/`min`/`max`: each thumb announces its value as

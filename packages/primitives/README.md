@@ -56,7 +56,11 @@ table. A **formatter** a caller passes for one bar is words too: `Progress`'s
 `formatValue`/`loadingText` and `Meter`'s `formatValue` go through
 `spokenText`, so an answer that says nothing (a locale table with no row for
 this measurement) leaves the component's own words standing instead of
-publishing an empty `aria-valuetext`. Reference:
+publishing an empty `aria-valuetext`. The three **sentences** a control calls —
+`starName`, `codeDigit` and `rangeEnd` — answer the same way through
+`spokenSentence`, so a missing row names the star, the code cell or the range's
+thumbs from the shipped sentence rather than publishing an empty `aria-label`.
+Reference:
 [`docs/theme-provider.mdx`](./docs/theme-provider.mdx) §Words.
 
 No colour, space, radius or font literal may appear outside `src/core/` and its
