@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-116 probes a real window can prove, of which twenty-three mount shipped
+117 probes a real window can prove, of which twenty-three mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -6532,6 +6532,72 @@ readout, the check count, the registry entry and wiring, the installed typings'
 window-verb set, and this section). Evidence:
 `.artifacts/live/second-window.png`, `.artifacts/live/second-window-pressed.png`.
 
+### `qr-matrix` — measured on 0.11.0 here
+
+**Can a QR symbol be painted at all?** Tier 5's *QR code* row said the matrix
+can be "a grid of `div`s or one `<svg>`" and left the runtime half at `?`. The
+encoder is not a runtime question — a package supplies the modules — so the
+probe paints a **synthetic** version-1 matrix (21×21 modules: three finder
+patterns, their separators, the two timing strips, the dark module and an
+uneven data area) on a four-module quiet zone, and asks the window three
+questions:
+
+1. does a grid of filled boxes paint the module grid?
+2. does one tinted `<svg>` mask paint the same grid?
+3. is the quiet zone paper, or does a neighbour bleed into it?
+
+| Step | Measured |
+| ---- | -------- |
+| the readout | `qr=21x21 dark=192 side=174 quiet=4` |
+| the module grid | paints **174×174** points — 29 modules of 6 |
+| the svg mask | paints the frame's own **174×174**, and the frame around it the same |
+| the grid's field | all **841** cells of the 29×29 field (the symbol **and** its quiet zone) are the module the matrix names — **0** mismatches |
+| the svg mask's field | the same **0** mismatches |
+| the ink | **27648** pixels of `#111111` in each route — 192 modules × 12×12 device pixels at the window's 2× |
+| the paper | **93456** pixels of `#FFFFFF` in each route, the quiet zone included |
+| the quiet zone | all four corners read as paper in both routes |
+| the two routes | **0** differing pixels — the grid and the mask are the same paint |
+| the polarity | `#111111` on `#FFFFFF` is **18.88:1**, and neither colour is the page's own foreground or background |
+
+33 checks, `--only qr-matrix`, green on 0.11.0 here (~0.5 s). Fixture
+`src/live/qr-matrix.ts` — `qrModule`, `qrDarkCells`, `qrModuleBox`,
+`qrCellCentre` and `qrMismatches` are the arithmetic the view, the checks and
+`qr-matrix.test.ts` share, so a symbol cannot be painted where the probe does
+not measure it.
+
+Three rules a QR component carries:
+
+1. **Both routes paint the module grid, and they agree.** A grid of positioned
+   boxes and one `<svg>` mask are the same paint, pixel for pixel, so the
+   choice is the consumer's (a grid needs no markup generation; a mask is one
+   element).
+2. **An `<svg>` is one tint.** The runtime rasterises the markup into a single
+   mask and paints it in `style.color`, so a symbol needs one `fill="#000"` and
+   one ink colour — the rule `content-surfaces` measured for every shape. The
+   probe's ink is a fixed `#111111` on a fixed `#FFFFFF` because a symbol's
+   polarity is not a theme's business: a scanner wants dark on light whatever
+   the page wears.
+3. **The quiet zone is four modules of paper, and it is measured.** The scan
+   covers the whole 29×29 field, so a symbol whose neighbour bleeds into the
+   ring fails; the four corners are read separately so a ring that is paper
+   only at its corners still fails.
+
+Not measured here, and named rather than implied: the probe paints a
+**synthetic** matrix, so there is **no encoder** in it — nothing here says a
+real symbol scans, that the runtime carries error correction, or that a
+version-2 to version-40 matrix paints. The runtime's part is the module grid
+and the mask; the modules themselves are a package's work.
+
+Two negative controls measured, exit `1` each, restored green: dropping one
+rect from the svg markup fails
+`every cell of the svg mask's field is the module the matrix names`
+(`expected 0, got 1`), and reading a scanned cell a quiet zone away from the
+module it is compared with fails the grid's own scan (`expected 0, got 496`) —
+the fixture's own coordinate space, which the first run of this probe got
+wrong.
+
+Evidence: `.artifacts/live/qr-matrix.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -6699,6 +6765,8 @@ src/live/table-filter.ts the filtered-grid fixture: the label match, the selecti
 src/live/table-columns.ts the configurable-grid fixture: widths, column offsets, the pan end and the column move
 src/live/crop-overlay.ts the crop frame's mask, handle and clamp arithmetic
 src/live/crop-overlay-probe.tsx the crop overlay's view and steps (one module)
+src/live/qr-matrix.ts the QR symbol's matrix, its two coordinate spaces and the scan
+src/live/qr-matrix-probe.tsx the QR matrix's view and steps (one module)
 src/live/notification-centre.ts the notification queue's bound, stack geometry and readouts
 src/live/notification-centre-probe.tsx the notification centre's view and steps (one module)
 src/live/media-frame.ts the clip's frames, buffer bytes and transport arithmetic
@@ -6771,7 +6839,8 @@ narrower. Each deviation is deliberate and measured:
   and `z-index-lifecycle` and `floating-reflow-lifecycle` and
   `notification-centre-lifecycle` and `sidebar-clip-lifecycle` and
   `media-frame-lifecycle` and `menu-radio-lifecycle` and `app-chrome-lifecycle`
-  and `second-window-lifecycle` (fifty-eight probes, each run alone).
+  and `second-window-lifecycle` and `qr-matrix` (fifty-nine probes, each run
+  alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry and the shell package's three examples
   (four checks per page plus two for the run, the shape `examples.test.ts`

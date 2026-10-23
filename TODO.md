@@ -1867,7 +1867,7 @@ the report built on it.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 157/157
+`[x]` `[██████████]` 158/158
 
 `[x]` Follow the **tooltip's presence seam** after the primitives moved it —
       `tooltip-fade.test.ts` held the tip's entry level by reading
@@ -5240,6 +5240,40 @@ the report built on it.
       branch restored above the guards all four fail (`expected +0 to be 2`);
       restored, the two files are 33/33. Docs: the README's flag paragraph says
       `--list` waits for the guards.
+
+`[x]` Measure **a QR matrix painted twice** — Tier 5's *QR code* row said the
+      matrix can be "a grid of `div`s or one `<svg>`" and left the runtime half
+      at `?`, so nothing said whether a symbol paints at all. The `qr-matrix`
+      live probe paints a **synthetic** version-1 matrix (21×21 modules: three
+      finder patterns with their separator rings, the two timing strips, the
+      dark module and an uneven data area) on a four-module quiet zone, twice:
+      as a grid of positioned boxes and as one tinted `<svg>` mask. Measured on
+      0.11.0 here: both routes paint **174×174** points, all **841** cells of
+      the 29×29 field (the symbol **and** its quiet zone) are the module the
+      matrix names — **0** mismatches each — the ink is **27648** device pixels
+      of `#111111` and the paper **93456** of `#FFFFFF` in both, the four quiet
+      corners read as paper, the two routes differ in **0** pixels, and the
+      polarity is **18.88:1** (a fixed ink and paper, because a symbol's
+      polarity is not a theme's business). 33 checks, `--only qr-matrix`, green
+      (~0.5 s). Two negative controls measured, exit `1` each, restored green:
+      dropping one rect from the svg markup fails `every cell of the svg mask's
+      field is the module the matrix names` (`expected 0, got 1`), and reading
+      a scanned cell a quiet zone away from the module it is compared with
+      fails the grid's own scan (`expected 0, got 496`) — the fixture's own
+      coordinate space, which the first run of this probe got wrong (the
+      sample and the predicate were a quiet zone apart). The fixture's
+      separator ring was also wrong on two of a finder's four sides; it now
+      rings the finder's **inner** sides only, and the matrix carries **192**
+      dark modules. `src/live/qr-matrix.ts` (the matrix, its two coordinate
+      spaces, the scan and the markup) + `qr-matrix-probe.tsx` (the view and the
+      steps) + `qr-matrix.test.ts` (20 cases: the finder, separator, timing and
+      dark-module rules, the two coordinate spaces in both directions, the
+      pixel arithmetic, the markup, the registry entry and wiring, the count
+      and this section). Not measured, and named rather than implied: the
+      matrix is **synthetic**, so there is **no encoder** in it — nothing here
+      says a real symbol scans or that a version-2 to version-40 matrix paints.
+      Evidence: `apps/playground/README.md` §`qr-matrix`,
+      `.artifacts/live/qr-matrix.png`.
 
 ## Phase C — Tier 1–2 components
 

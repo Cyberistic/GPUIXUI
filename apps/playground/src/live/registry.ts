@@ -732,6 +732,12 @@ export const liveRegistry = [
       "Workspace: a second window is refused while one is open, so a detached tab needs a second process",
     capability: "workspace",
   },
+  {
+    id: "qr-matrix",
+    title:
+      "Content: a 21×21 matrix paints the same module for module as a grid of boxes and as one tinted svg mask, and its quiet zone stays paper",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
