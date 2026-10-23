@@ -79,6 +79,15 @@ export const hostProp = propOf(hostProps);
 export const elementKey = (element: ReactElement): Option.Option<string> =>
   Option.fromNullishOr(element.key);
 
+/** A named host prop decoded as a string — a role, a name, an announced value. */
+export const hostPropString = (
+  element: ReactElement,
+  name: string,
+): Option.Option<string> =>
+  Option.flatMap(hostProp(element, name), (value) =>
+    Schema.decodeUnknownOption(Schema.String)(value),
+  );
+
 /** A named event handler, decoded. */
 export const hostHandler = (
   element: ReactElement,

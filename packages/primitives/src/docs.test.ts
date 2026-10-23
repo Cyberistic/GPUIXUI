@@ -802,6 +802,38 @@ describe("the primitives docs page contract", () => {
     expect(words).toContain("a deliberate silence");
   });
 
+  it("keeps a slider's own words when its formatter says nothing", () => {
+    // The bug guarded: `Slider`/`RangeSlider`'s `formatValue` is a caller's
+    // localised copy and its answer was published as it arrived, so a formatter
+    // with no row for this value (`""`) left the control announcing nothing on
+    // `aria-valuetext` — the only channel a slider has. The painter must ask
+    // `spokenText`, and all three pages must teach the rule, or a reader cannot
+    // tell it from a busy word's deliberate silence.
+    const painter = readFileSync(
+      fileURLToPath(new URL("../src/components/Slider.tsx", import.meta.url)),
+      "utf8",
+    );
+    const announcement = painter
+      .slice(painter.indexOf("export const sliderValueText"))
+      .split("\n\n")[0];
+    expect(announcement).toContain("spokenText");
+    expect(announcement).not.toContain("formatValue?.(value) ??");
+    const unstated = Arr.filter(["slider.mdx", "range-slider.mdx"], (page) => {
+      const text = read(page).replaceAll("*", "");
+      return (
+        !text.includes("a blank answer is absence") ||
+        !text.includes("a blank answer keeps the number")
+      );
+    });
+    expect(unstated).toEqual([]);
+    const words = Option.getOrElse(
+      bodyOf(read("theme-provider.mdx"), "Words"),
+      () => "",
+    );
+    expect(words).toContain("`Slider`");
+    expect(words).toContain("`RangeSlider`");
+  });
+
   it("lists only props its module graph declares", () => {
     // The bug guarded: the Switches inventory row promised a `loading` prop
     // while `SwitchProps` declares none (see `inventory.test.ts`'s `keeps the

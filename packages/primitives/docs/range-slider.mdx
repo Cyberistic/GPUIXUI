@@ -60,7 +60,7 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |
 | `label` | `string` | none | group name; thumbs become the provider's `rangeEnd` sentence (`"<label> minimum"` / `"<label> maximum"`) |
 | `description` | `string` | none | announced help on the group node |
-| `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
+| `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb; a blank answer keeps the number |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | the axis the two values run along; a vertical track needs a definite height |
 | `style` | `StateStyle<SliderState>` | — | resolved against the live state, merged last on the track |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
@@ -74,6 +74,11 @@ moves the nearer end of a `10-90` pair to `50-90` by a press at the centre and
 to `25-90` by a drag to the quarter, the other end staying and the two thumbs'
 ink at **194** and **74.5**. The headless `runtime/value.runtime.test.tsx`
 holds the arithmetic; the probe holds the paint and the runtime's pointer path.
+
+`formatValue` is interface copy, so a **blank answer is absence**: a locale
+table with no row for an end returns `""`, and that thumb announces its own
+number rather than an empty `aria-valuetext` — the only channel it has. A real
+answer is trimmed and used as it is.
 
 ## Limitations
 

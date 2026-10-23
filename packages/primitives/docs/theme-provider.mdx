@@ -40,11 +40,12 @@ the order rather than receiving an English suffix. The shipped sentence is
 `"<label> minimum"` / `"<label> maximum"`; a blank label names neither thumb.
 
 A **formatter** a caller passes for one measurement is words too, and it follows
-the same rule a blank name does: `Progress`'s `formatValue`/`loadingText` and
-`Meter`'s `formatValue` go through `spokenText`, so an answer that says nothing
-— a locale table with no row for this bar — leaves the component's own words
-(the clamped percentage, or the provider's indeterminate word) standing rather
-than publishing an empty `aria-valuetext`. A real answer is trimmed and used.
+the same rule a blank name does: `Progress`'s `formatValue`/`loadingText`, and
+`Meter`, `Slider` and `RangeSlider`'s `formatValue`, go through `spokenText`, so
+an answer that says nothing — a locale table with no row for this value — leaves
+the component's own words (the clamped percentage, the provider's indeterminate
+word, or the number) standing rather than publishing an empty `aria-valuetext`.
+A real answer is trimmed and used.
 
 That is **not** the same as a busy action's `loadingLabel`, where a blank word is
 a deliberate silence: the action's own text still says what is happening, so

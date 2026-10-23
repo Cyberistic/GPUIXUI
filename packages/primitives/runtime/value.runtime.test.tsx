@@ -437,6 +437,33 @@ it("moves by a step, a page and to the ends with the keyboard", async () => {
   expect(announced(runtime, "Volume")).toBe("100");
 });
 
+it("keeps its own words for a formatter that says nothing", async () => {
+  // The bug guarded: `aria-valuetext` is the only channel a slider has, and a
+  // formatter whose locale table had no row (`""`) published an announcement of
+  // nothing while the thumb still sat at a value. A blank answer is absence, so
+  // the clamped number is what the window reports — for the single track and for
+  // each end of a range.
+  const runtime = await mount(
+    <>
+      <Slider
+        testId="s"
+        label="Volume"
+        defaultValue={42}
+        formatValue={() => ""}
+      />
+      <RangeSlider
+        testId="r"
+        label="Price"
+        defaultValue={[20, 60]}
+        formatValue={() => ""}
+      />
+    </>,
+  );
+  expect(announced(runtime, "Volume")).toBe("42");
+  expect(announced(runtime, "Price minimum")).toBe("20");
+  expect(announced(runtime, "Price maximum")).toBe("60");
+});
+
 it("reaches its maximum when the step does not divide the span", async () => {
   // The bug guarded: the snap made the maximum unreachable, so the thumb
   // stopped at 9 and the end of the track was a place the control could not be

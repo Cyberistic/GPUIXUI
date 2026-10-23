@@ -4548,7 +4548,33 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 12/12
+`[x]` `[██████████]` 13/13
+
+`[x]` `packages/primitives`: **a blank formatter answer left a slider announcing
+      nothing** — `Slider`'s and `RangeSlider`'s `formatValue` are interface copy
+      a localised app supplies from a table, and each answer was published as it
+      arrived: a table with no row for this value answers `""`, so a 42 slider
+      announced **nothing** on `aria-valuetext` — the only channel 0.11.0
+      publishes for a slider, because there is no `aria-valuenow` — with every
+      report empty. It is the rule `Progress`/`Meter` already keep through
+      `core/a11y.ts`'s `spokenText`, now the sliders' too: the clamped number
+      stands, a real answer is trimmed and used, and a range keeps each end's own
+      words. Proof: `Slider.test.tsx`'s two new cases (the single track and both
+      ends, a whitespace answer, a real answer still winning) and
+      `runtime/value.runtime.test.tsx`'s `keeps its own words for a formatter
+      that says nothing`, which reads the announcement back off the window's
+      accessibility tree. Directions measured: with the old publish restored both
+      unit cases fail (`expected [ '', '' ] to strictly equal [ '20', '60' ]`)
+      and the window case fails `no accessibility node announced Volume`; green
+      it is the package's 55 files / 1 034 tests and 21 runtime files / 305
+      tests. Docs in `docs/slider.mdx`/`docs/range-slider.mdx` §API (the
+      blank-answer rule), `docs/theme-provider.mdx` §Words (which now names all
+      four formatter-bearing controls), `src/docs.test.ts`'s `keeps a slider's
+      own words when its formatter says nothing` (the painter must ask
+      `spokenText` and both pages plus the words page must teach it; measured
+      failing on the old painter), `inventory.ts`'s two records and the Slider
+      and Range slider rows. `src/components/testing/element.ts` gains
+      `hostPropString`, the decoded string prop those cases assert on.
 
 `[x]` `packages/primitives`: **a caller's blank words became the announced value
       of a bar** — `Progress`'s `formatValue`/`loadingText` and `Meter`'s

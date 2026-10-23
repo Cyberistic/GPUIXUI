@@ -55,7 +55,7 @@ indicator take no handlers of their own, because the track owns the press.
 | `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |
 | `label` | `string` | none | accessible name |
 | `description` | `string` | none | announced help |
-| `formatValue` | `(value: number) => string` | `String` | the announced text |
+| `formatValue` | `(value: number) => string` | `String` | the announced text; a blank answer keeps the number |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | the axis the value runs along; a vertical track needs a definite height |
 | `style` | `StateStyle<SliderState>` | — | resolved against the live state, merged last on the track |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
@@ -69,6 +69,11 @@ paints a **32 × 200** track (its width is `density.controlHeight.md`) with a
 **4 × 184** rail, and the thumb's ink sits at **240**, **148**, **194** and
 **56** for 0, 50, 25 and 100. The headless `runtime/value.runtime.test.tsx`
 holds the arithmetic; the probe holds the paint and the runtime's pointer path.
+
+`formatValue` is interface copy, so a **blank answer is absence**: a locale
+table with no row for this value returns `""`, and the slider announces its own
+number rather than an empty `aria-valuetext` — the only channel it has. A real
+answer is trimmed and used as it is.
 
 ## Limitations
 

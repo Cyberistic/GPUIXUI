@@ -473,6 +473,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "A vertical track needs a caller-supplied height",
       "A composed part cannot answer a press",
       "The thumb cannot rotate or scale: the runtime has no transform",
+      "formatValue says the caller's words; a blank answer keeps the number, because the value text is the only channel",
     ],
     source: [
       "src/components/Slider.tsx",
@@ -494,6 +495,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
       "A composed part cannot answer a press",
       "The thumb cannot rotate or scale: the runtime has no transform",
       "Each thumb is named from the provider's rangeEnd sentence; the shipped one is English",
+      "formatValue says the caller's words; a blank answer keeps the number, because each thumb's value text is its only channel",
     ],
     source: [
       "src/components/Slider.tsx",

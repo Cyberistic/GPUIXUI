@@ -38,6 +38,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostPropString,
   hostRef,
   hostStyle,
   hostStyleRecord,
@@ -124,6 +125,30 @@ describe("Slider", () => {
       sliderHandlers(vi.fn()),
     );
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("42%");
+  });
+
+  it("keeps its own words for a formatter that says nothing", () => {
+    // The bug guarded: `formatValue` is interface copy from a localised table,
+    // and an answer of `""` was published as it arrived — a slider announcing
+    // nothing on `aria-valuetext`, its only channel (0.11.0 has no
+    // `aria-valuenow`). A blank answer is absence, so the clamped number stands;
+    // a real answer is still the caller's, trimmed.
+    const announce = (formatValue?: (value: number) => string): string =>
+      expectSome(
+        hostPropString(
+          renderSlider(
+            { value: 42, formatValue },
+            testTheme,
+            valueOf(42),
+            idle,
+            sliderHandlers(vi.fn()),
+          ),
+          "aria-valuetext",
+        ),
+      );
+    expect(announce(() => "")).toBe("42");
+    expect(announce(() => "   ")).toBe("42");
+    expect(announce((value) => ` ${value}% `)).toBe("42%");
   });
 
   it("hands its element the caller's address, layout and help", () => {
@@ -318,6 +343,32 @@ describe("RangeSlider", () => {
         expectSome(hostProp(thumb ?? expect.fail("no thumb"), "tabIndex")),
       ),
     ).toStrictEqual([0, 0]);
+  });
+
+  it("keeps each end's own words for a formatter that says nothing", () => {
+    // The bug guarded, one control over: a range's `formatValue` is the same
+    // localised copy, and each thumb's `aria-valuetext` is its only channel. A
+    // blank answer left both thumbs announcing nothing beside a painted span.
+    const announce = (
+      formatValue?: (value: number) => string,
+    ): ReadonlyArray<string> => {
+      const [, start, , end] = partsOf(
+        renderRangeSlider(
+          { label: "Price", formatValue },
+          testTheme,
+          spanOf(20, 60),
+          { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+          rangeHandlers(vi.fn()),
+        ),
+      );
+      return [start, end].map((thumb) =>
+        expectSome(
+          hostPropString(thumb ?? expect.fail("no thumb"), "aria-valuetext"),
+        ),
+      );
+    };
+    expect(announce(() => "")).toStrictEqual(["20", "60"]);
+    expect(announce((value) => `$${value}`)).toStrictEqual(["$20", "$60"]);
   });
 
   it("addresses the thumb the form focuses and announces the group's help", () => {

@@ -43,7 +43,7 @@ import type {
 import { useGpuix } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
-import { accessibleName } from "../core/a11y.js";
+import { accessibleName, spokenText } from "../core/a11y.js";
 import {
   defaultMessages,
   rangeThumbNames,
@@ -117,7 +117,7 @@ export interface SliderProps
   readonly invalid?: boolean;
   /** Accessible name. */
   readonly label?: string;
-  /** How the value is announced. Defaults to `String(value)`. */
+  /** How the value is announced. Defaults to `String(value)`; a blank answer keeps it. */
   readonly formatValue?: (value: number) => string;
   /**
    * The axis the value runs along. Defaults to `horizontal`.
@@ -152,6 +152,7 @@ export interface RangeSliderProps
   readonly invalid?: boolean;
   /** The group's name; each thumb becomes the provider's `rangeEnd` sentence. */
   readonly label?: string;
+  /** How each thumb's value is announced. Defaults to `String(value)`; a blank answer keeps it. */
   readonly formatValue?: (value: number) => string;
   /** The axis the value runs along. Defaults to `horizontal`. */
   readonly orientation?: SliderOrientation;
@@ -198,11 +199,19 @@ const sliderState = (
   invalid: props.invalid === true,
 });
 
-/** The text a slider announces. */
+/**
+ * The text a slider announces.
+ *
+ * `aria-valuetext` is the only channel a slider has (there is no
+ * `aria-valuenow`), and a formatter is interface copy: a locale table with no
+ * row for this value answers `""`, which must not become an announcement of
+ * nothing. A blank answer is absence, so the clamped number stands.
+ */
 export const sliderValueText = (
   value: number,
   formatValue?: (value: number) => string,
-): string => formatValue?.(value) ?? String(value);
+): string =>
+  spokenText(Option.fromNullishOr(formatValue?.(value)), String(value));
 
 /** What a rendered slider needs from the component that owns its state. */
 export interface SliderHandlers {
