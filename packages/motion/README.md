@@ -157,7 +157,10 @@ time constant that cannot run takes the house 350 ms, a bound that cannot be rea
 is dropped while the readable one beside it still clamps, an inverted pair is
 swapped, and a non-finite position or velocity reads as a standstill. A coast
 therefore always projects a finite rest and settles, instead of painting `NaN` and
-sampling forever.
+sampling forever. A bound is a wall the coast stops at only while it moves into
+it: a surface released *on* a bound with its velocity pointing back into its
+range travels inward rather than being read as already settled — which used to
+finish the run at the release frame and jump to the rest at the far end.
 
 The spring physics are repaired the same way, because `SpringPhysics` is
 structural: a mass, stiffness, damping or rest threshold that cannot be read

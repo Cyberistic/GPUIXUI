@@ -118,3 +118,46 @@ describe("an inertia built by hand", () => {
     expect(project(hand, 20, -100)).toBe(0);
   });
 });
+
+describe("a coast released on a wall", () => {
+  // The sampler read "the value is at a bound" as "the coast is over", without
+  // asking which way it was moving. A surface dragged to the edge of its range
+  // and released *back into* the range therefore reported itself settled on the
+  // release frame, so `MotionValue` finished the run there and jumped to the
+  // projected rest at the far end instead of travelling.
+  const bounded = inertia(350, { min: 0, max: 20 });
+
+  it("moves back into the range instead of settling at the release frame", () => {
+    const fromFloor = sampleInertia(bounded, 0, 100, 0);
+    expect(fromFloor).toEqual({
+      value: 0,
+      velocity: 100,
+      settled: false,
+    });
+    const fromCeiling = sampleInertia(bounded, 20, -100, 0);
+    expect(fromCeiling).toEqual({
+      value: 20,
+      velocity: -100,
+      settled: false,
+    });
+    // The next sample is inside the range, so the release frame was a start
+    // rather than the end of the journey.
+    expect(sampleInertia(bounded, 0, 100, 100).value).toBeGreaterThan(0);
+    expect(sampleInertia(bounded, 20, -100, 100).value).toBeLessThan(20);
+  });
+
+  it("still settles a release that pushes into the wall", () => {
+    // The control: a wall is hard when the velocity points at it, which is the
+    // rule that zeroes the speed at the bound.
+    expect(sampleInertia(bounded, 0, -100, 0)).toEqual({
+      value: 0,
+      velocity: 0,
+      settled: true,
+    });
+    expect(sampleInertia(bounded, 20, 100, 0)).toEqual({
+      value: 20,
+      velocity: 0,
+      settled: true,
+    });
+  });
+});

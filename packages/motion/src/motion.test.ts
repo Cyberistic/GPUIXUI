@@ -89,6 +89,24 @@ describe("MotionValue", () => {
     expect(done.complete).toBe(true);
   });
 
+  it("keeps a coast released on a wall travelling back into its range", () => {
+    // A drag released at the edge of its bounds with the velocity pointing back
+    // inside: the sampler used to read "the value is at a bound" as "settled",
+    // and the release sample finished the run at the projected rest on the
+    // *other* side, so the surface teleported across the whole range.
+    const value = new MotionValue(20);
+    value.coast(inertia(350, { min: 0, max: 20 }), -100);
+
+    const release = value.sample(0);
+    expect(release.value).toBe(20);
+    expect(release.active).toBe(true);
+    expect(release.complete).toBe(false);
+
+    const moved = value.sample(100);
+    expect(moved.value).toBeLessThan(20);
+    expect(moved.value).toBeGreaterThan(0);
+  });
+
   it("falls back from a tween duration that cannot run", () => {
     // A `NaN` duration divides the clock into `NaN`: every sample is `NaN` (the
     // runtime paints a null inset) and the run never reports completion, so the

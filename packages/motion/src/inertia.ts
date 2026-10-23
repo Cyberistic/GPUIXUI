@@ -3,8 +3,11 @@
  *
  * Borrowed from `gpui-ce-motion`'s `Inertia` (MIT OR Apache-2.0). Exponential
  * deceleration toward the projected rest position `value + velocity * tau`,
- * clamped to `[min, max]` when bounds are configured. The first slice clamps at
- * a bound with zero velocity; the boundary spring from the source is deferred.
+ * clamped to `[min, max]` when bounds are configured. A bound is a wall a coast
+ * stops at only while it is moving into it: a release *on* a wall with its
+ * velocity pointing back into the range is the start of a journey, not the end
+ * of one, so it travels inward instead of reporting itself settled at the
+ * release frame. The boundary spring from the source is deferred.
  *
  * `Inertia` is structural, so a caller may build one without {@link inertia}:
  * the samplers repair what they are handed — a time constant that cannot run
@@ -75,6 +78,12 @@ export const project = (
  * approaches {@link project} and clamps to bounds with zero velocity. A `NaN`
  * elapsed time reads as the release frame, so a clock the caller could not read
  * never reaches the formulas.
+ *
+ * A bound is a wall, and it stops a coast only when the coast is moving into it:
+ * a surface released *on* a wall with its velocity pointing back into its range
+ * is at the start of a journey, not the end of one. Reading the position alone
+ * reported that release as settled, and `MotionValue` finished the run at the
+ * projected rest on the far side — a teleport across the whole range.
  */
 export const sampleInertia = (
   inertia: Inertia,
@@ -91,9 +100,9 @@ export const sampleInertia = (
   const rest = position + speed * tau;
   const value = clampTo(position + (rest - position) * (1 - decay), limits);
   const outVelocity = speed * decay;
-  const atBound =
-    (limits.min !== null && value <= limits.min) ||
-    (limits.max !== null && value >= limits.max);
-  const settled = atBound || Math.abs(outVelocity) <= REST_SPEED;
-  return { value, velocity: atBound ? 0 : outVelocity, settled };
+  const intoWall =
+    (limits.min !== null && value <= limits.min && outVelocity <= 0) ||
+    (limits.max !== null && value >= limits.max && outVelocity >= 0);
+  const settled = intoWall || Math.abs(outVelocity) <= REST_SPEED;
+  return { value, velocity: intoWall ? 0 : outVelocity, settled };
 };
