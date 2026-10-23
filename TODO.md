@@ -9335,6 +9335,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 `[x]` `[██████████]` 249/249
 
+`[x]` Print the **icon count the set ships** on the primitives index — the
+      section index called it "Forty-seven monochrome icons" while
+      `packages/icons/src/names.ts` had grown to **76**, and the page it links
+      (`packages/icons/docs/icon.mdx`) prints the real number in its frontmatter,
+      so a reader met two counts for one package on two clicks. The row reads
+      76 now and `package-docs.test.ts` gains `prints the icon count the set
+      ships, not the one it shipped before`: it derives the count from
+      `ICON_NAMES`, requires the index row and the mounted page to print it,
+      and floors the list at 40 so an empty read cannot pass. Direction
+      measured: restoring "Forty-seven" fails with `expected 'Forty-seven
+      monochrome icons, their s…' to contain '76 monochrome icons'`; restored,
+      the file is 16/16. No native scenario applies — a printed count and the
+      page that prints it.
+
 `[x]` Follow the **seams the other workstreams moved**, where the docs suite was
       red on `master` in three places. `component-page-truth.test.ts` still
       required `Match.when("secondary", () => theme.colors.secondaryForeground)`

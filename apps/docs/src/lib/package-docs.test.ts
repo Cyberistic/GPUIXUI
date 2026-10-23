@@ -259,4 +259,26 @@ describe("the package docs collections", () => {
 
     expect(unlinked).toEqual([]);
   });
+
+  it("prints the icon count the set ships, not the one it shipped before", () => {
+    // The section index called the set "Forty-seven monochrome icons" while
+    // `ICON_NAMES` had grown to 76 — the page links the icon page, whose
+    // frontmatter prints the real number, so a reader met two counts for one
+    // package. The count is derived from the set's own list, which is the
+    // single source `registry.ts` is checked against.
+    const names = read(new URL("packages/icons/src/", root), "names.ts");
+    const listed = /export const ICON_NAMES = \[([\s\S]*?)\]/.exec(names)?.[1];
+    const count = (listed?.match(/^\s*"/gm) ?? []).length;
+
+    expect(count, "the set's name list is empty").toBeGreaterThan(40);
+
+    const index = read(new URL("primitives/", docsDir), "index.mdx");
+    const row = /^\| \[Icons\]\(\/docs\/icons\/icon\) \| (.+) \|$/m.exec(index);
+    expect(row?.[1] ?? "").toContain(`${count} monochrome icons`);
+
+    // The page it links prints the same number in the sentence a search
+    // result shows, so the two surfaces cannot disagree.
+    const page = read(new URL("packages/icons/docs/", root), "icon.mdx");
+    expect(page).toContain(`${count} monochrome icons`);
+  });
 });
