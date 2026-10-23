@@ -558,6 +558,30 @@ describe("resizable columns", () => {
     expect(received.every((width) => width >= 80 && width <= 120)).toBe(true);
   });
 
+  it("refuses a press that is not the primary button", () => {
+    const root = mount();
+    const { x, y, width, height } = boundsOf(root, "files-divider-name");
+    const startX = x + width / 2;
+    const startY = y + height / 2;
+    expect(readout(root)).toContain("w=260");
+
+    // The runtime delivers mouseDown for all three buttons: a right press is
+    // the context-menu gesture and a middle one is nothing, so neither may arm
+    // a resize the caller never saw.
+    Arr.forEach([1, 2], (button) => {
+      root.renderer.nativeSimulateMouseDown(startX, startY, button);
+      root.renderer.flush();
+      // Stay inside the 6px strip: without capture, a move past its box is not
+      // the divider's event, so a bug that armed the gesture would show on the
+      // move that is still over it.
+      root.renderer.nativeSimulateMouseMove(startX + 2, startY);
+      root.renderer.flush();
+      root.renderer.nativeSimulateMouseUp(startX + 2, startY, button);
+      root.renderer.flush();
+      expect(readout(root)).toContain("w=260");
+    });
+  });
+
   it("widens the column a drag ends, and keeps the cells on the new track", () => {
     const root = mount();
     expect(readout(root)).toContain("w=260");

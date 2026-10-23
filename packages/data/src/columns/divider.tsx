@@ -22,10 +22,16 @@
  * It is a control, not a decoration: it is a tab stop, the arrows step it, Home
  * and End name its bounds, and `aria-valuetext` announces the width because
  * 0.11.0 has no `aria-valuenow`.
+ *
+ * Only the **primary** button arms the drag: the runtime delivers `mouseDown`
+ * for all three buttons while `onClick` is the primary one's, so a right press —
+ * the context-menu gesture — and a middle press would otherwise start a resize
+ * the caller never saw. The rule is the primitives' `primaryButton`.
  */
 
 import type { EventPayload } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { primaryButton } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
 import { useRef } from "react";
@@ -109,6 +115,7 @@ export const TableColumnDivider = ({
         },
       )}
       onMouseDown={(event: EventPayload) => {
+        if (!primaryButton(event)) return;
         press.current = Option.some({ x: event.x ?? 0, width });
       }}
       onMouseMove={(event: EventPayload) =>
