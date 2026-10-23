@@ -49,6 +49,14 @@ describe("the keyboard strip", () => {
     expect(strip("/docs/components/time-picker")).toContain("time-picker.tsx");
   });
 
+  it("names the runtime a wrapper's keys belong to", () => {
+    // `Select` handles none of its keys itself; the strip says which module the
+    // runtime owns rather than implying the wrapper implements them.
+    const markup = decode(strip("/docs/components/select"));
+    expect(markup).toContain("select.js");
+    expect(markup).toContain("in the pinned GPUix runtime");
+  });
+
   it("prints every note of every contract", () => {
     const missing = keyboardContracts.flatMap((contract) => {
       const markup = decode(strip(contract.url));

@@ -23,7 +23,10 @@ export function KeyboardStrip({
   const contract = keyboardContractFor(url);
   if (contract === undefined || sections.includes("#keyboard")) return null;
 
-  const modules = contract.sources.map((source) => source.split("/").at(-1));
+  const modules = [
+    ...contract.sources,
+    ...(contract.runtime === undefined ? [] : [contract.runtime]),
+  ].map((source) => source.split("/").at(-1));
 
   return (
     <div
@@ -47,6 +50,7 @@ export function KeyboardStrip({
             <code className="text-foreground">{module}</code>
           </span>
         ))}
+        {contract.runtime === undefined ? null : " in the pinned GPUix runtime"}
       </p>
     </div>
   );

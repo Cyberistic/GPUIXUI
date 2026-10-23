@@ -6,10 +6,11 @@ import { packageCollections } from "./collection-routes";
 import {
   keyLabels,
   keyboardContracts,
+  type KeyboardContract,
   type KeyLabel,
 } from "./keyboard-contracts";
 import { readCuratedPages, readPackagePages } from "./page-dependencies-source";
-import { servedPages } from "./curated-twins";
+import { curatedTwinOf, servedPages } from "./curated-twins";
 
 /**
  * The keyboard strip is the only place a component page states its keys, so it
@@ -27,9 +28,11 @@ import { servedPages } from "./curated-twins";
  * `decideAbsolute` and `core/rating.ts`'s `decideRating`; a component that grows
  * a handler by one of these names is covered without a docs edit.
  *
- * What remains outside this wave is the primitives' `Select` (its keys belong to
- * the runtime's headless list) and a page whose keys are handled by a sink the
- * derivation cannot see; `TODO.md` carries the first.
+ * A component whose keys belong to the runtime's headless surface cites the
+ * installed `@gpuix/*` module (`KeyboardContract.runtime`) instead of workspace
+ * source, and the same derivation reads it: the primitives' `Select` prints the
+ * arrows, Enter, Space, Escape and Tab its runtime list handles, so a release
+ * that moves one of those handlers fails the page by key.
  */
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url)).replace(
@@ -69,6 +72,17 @@ const predicateKeys: Readonly<Record<string, readonly KeyLabel[]>> = {
   isPageDown: ["Page Down"],
   isSelectAll: ["Cmd/Ctrl+A"],
   isMenuKey: ["Shift+F10"],
+  onEscapeKeyDown: ["Escape"],
+};
+
+/**
+ * A key the runtime handles through its own modifier guard — the headless list
+ * writes `event.key === "n" && event.modifiers?.ctrl`, so the chord is read only
+ * where the guard is there; a plain `"n"` is type-ahead, not Ctrl+N.
+ */
+const chordKeys: Readonly<Record<string, KeyLabel>> = {
+  n: "Ctrl+N",
+  p: "Ctrl+P",
 };
 
 /**
@@ -107,12 +121,25 @@ const keysIn = (source: string): ReadonlySet<KeyLabel> => {
     );
     return pattern.test(source) ? [key] : [];
   });
-  return new Set([...predicates, ...literals]);
+  const chords = Object.entries(chordKeys).flatMap(([literal, key]) =>
+    new RegExp(
+      `key === "${escapeRegExp(literal)}"\\s*&&\\s*event\\.modifiers\\?\\.ctrl`,
+    ).test(source)
+      ? [key]
+      : [],
+  );
+  return new Set([...predicates, ...literals, ...chords]);
 };
 
+/** Every module a contract's keys are read from, workspace or runtime. */
+const citedModules = (contract: KeyboardContract): readonly string[] => [
+  ...contract.sources,
+  ...(contract.runtime === undefined ? [] : [contract.runtime]),
+];
+
 /** The keys a contract's cited modules handle. */
-const derivedKeys = (sources: readonly string[]): ReadonlySet<KeyLabel> =>
-  sources.reduce<Set<KeyLabel>>((keys, source) => {
+const derivedKeys = (contract: KeyboardContract): ReadonlySet<KeyLabel> =>
+  citedModules(contract).reduce<Set<KeyLabel>>((keys, source) => {
     keysIn(read(source)).forEach((key) => keys.add(key));
     return keys;
   }, new Set());
@@ -127,7 +154,12 @@ const difference = (
 ): ReadonlyArray<KeyLabel> =>
   ordered(new Set([...left].filter((k) => !right.has(k))));
 
-/** Every URL the site serves, so a strip cannot mount on a 404. */
+/**
+ * Every URL the site serves, so a strip cannot mount on a 404.
+ *
+ * A retired package twin redirects to its curated page, so a contract on the
+ * retired address would never render; `servedUrls`' rule is applied here too.
+ */
 const mountedPages = (): ReadonlySet<string> => {
   const site = (directory: string, prefix: string): string[] =>
     readdirSync(join(root, directory), { withFileTypes: true }).flatMap(
@@ -140,14 +172,16 @@ const mountedPages = (): ReadonlySet<string> => {
       },
     );
 
-  return new Set([
-    ...site("apps/docs/content/docs", "/docs"),
-    ...packageCollections.flatMap((collection) =>
-      readdirSync(join(root, collection.dir))
-        .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
-        .map((name) => `${collection.route}/${name.replace(/\.mdx$/, "")}`),
-    ),
-  ]);
+  return new Set(
+    [
+      ...site("apps/docs/content/docs", "/docs"),
+      ...packageCollections.flatMap((collection) =>
+        readdirSync(join(root, collection.dir))
+          .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
+          .map((name) => `${collection.route}/${name.replace(/\.mdx$/, "")}`),
+      ),
+    ].filter((url) => curatedTwinOf(url) === undefined),
+  );
 };
 
 const contractFor = (url: string) =>
@@ -156,7 +190,7 @@ const contractFor = (url: string) =>
 describe("the keyboard contracts", () => {
   it("prints every key the cited modules handle, and no other", () => {
     const failures = keyboardContracts.flatMap((contract) => {
-      const derived = derivedKeys(contract.sources);
+      const derived = derivedKeys(contract);
       const printed = new Set(contract.notes.flatMap((note) => note.keys));
       const missing = difference(derived, printed);
       const invented = difference(printed, derived);
@@ -191,17 +225,34 @@ describe("the keyboard contracts", () => {
   it("reads at least one key from every contract, and a real module", () => {
     expect(keyboardContracts.length).toBeGreaterThanOrEqual(20);
     expect(
-      keyboardContracts.filter((contract) => contract.sources.length === 0),
+      keyboardContracts.filter(
+        (contract) => citedModules(contract).length === 0,
+      ),
     ).toEqual([]);
     expect(
       keyboardContracts.filter((contract) => contract.notes.length === 0),
     ).toEqual([]);
 
     const unreadable = keyboardContracts.flatMap((contract) =>
-      contract.sources.filter((source) => read(source).trim() === ""),
+      citedModules(contract).filter((source) => read(source).trim() === ""),
     );
 
     expect(unreadable).toEqual([]);
+  });
+
+  it("cites the installed runtime for a page the wrapper does not handle", () => {
+    // `Select` is a themed wrapper: every key is the runtime's headless list's,
+    // so its contract names the installed module rather than workspace source —
+    // a path outside `node_modules` would be a file this repo could edit, and
+    // the point is that a runtime release moves the page.
+    const cited = keyboardContracts.flatMap((contract) =>
+      contract.runtime === undefined ? [] : [contract.runtime],
+    );
+
+    expect(cited.length).toBeGreaterThan(0);
+    expect(
+      cited.filter((path) => !path.includes("/node_modules/@gpuix/")),
+    ).toEqual([]);
   });
 
   it("gives every page whose component handles a key a contract", () => {

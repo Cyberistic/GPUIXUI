@@ -372,7 +372,7 @@ src/lib/package-graph-data.ts       The graph, read from the plugin's build-time
 src/lib/page-dependencies.ts        The dependency model: a page's component imports, grouped by package
 src/lib/page-dependencies-source.ts Reads each package page's component module and each curated page's source block, at build time
 src/lib/page-dependencies-data.ts   The dependency index, read from the plugin's build-time module
-src/lib/keyboard-contracts.ts      The keyboard model: each page's keys, the modules they are read from, and the sentence each key earns
+src/lib/keyboard-contracts.ts      The keyboard model: each page's keys, the modules (workspace or installed runtime) they are read from, and the sentence each key earns
 src/lib/page-source.ts              The source model: a page's module and the loader that reads it
 src/lib/page-source-data.ts         The source index, read from the plugin's build-time module
 src/lib/examples.ts                 The example registry: ids, paths and header summaries
@@ -536,9 +536,11 @@ each one earns, from `src/lib/keyboard-contracts.ts`. The model names the module
 the keys were read from, and `keyboard-contracts.test.ts` holds it to them in
 both directions — every fixed key a module handles is printed, nothing is printed
 that it does not handle — so a handler that moves or a page that teaches a key
-the component dropped fails by name. A page that writes its own `## Keyboard`
-section keeps it: the strip stops on the heading the page's table of contents
-carries.
+the component dropped fails by name. A wrapper that handles none of its own keys
+(the primitives' `Select`, over the runtime's headless list) cites the installed
+`@gpuix/react` module instead, and the strip says so, so a runtime release moves
+the page's keys the same way. A page that writes its own `## Keyboard` section
+keeps it: the strip stops on the heading the page's table of contents carries.
 
 ## Pages that read the workspace
 

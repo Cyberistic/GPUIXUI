@@ -10,7 +10,9 @@
  * teach a key its component dropped or stay silent about one it gained.
  *
  * A component whose keys belong to the runtime's headless surface (the
- * primitives' `Select`) has no entry to read, and a page that writes its own
+ * primitives' `Select`) handles none of them itself; it cites the installed
+ * runtime module through `runtime` instead, so a release that moves a handler
+ * fails the page the same way a workspace edit does. A page that writes its own
  * `## Keyboard` section keeps it: `<KeyboardStrip>` renders nothing there.
  */
 
@@ -48,8 +50,14 @@ export interface KeyboardNote {
 export interface KeyboardContract {
   /** The page the strip renders on. */
   readonly url: string;
-  /** The modules the keys are read from, repository-relative. */
+  /** The workspace modules the keys are read from, repository-relative. */
   readonly sources: readonly string[];
+  /**
+   * The pinned runtime module whose headless surface handles the keys, when the
+   * wrapper handles none of them itself — a path into an installed `@gpuix/*`
+   * package, read like source so a runtime release moves the page with it.
+   */
+  readonly runtime?: string;
   readonly notes: readonly KeyboardNote[];
   /** Keys that are not fixed names — type-ahead, a submitted value. */
   readonly also?: string;
@@ -372,6 +380,33 @@ export const keyboardContracts: readonly KeyboardContract[] = [
       { keys: activation, action: "clears through the clear target" },
     ],
     also: "Enter in the field submits through `onSubmit`.",
+  },
+  {
+    url: "/docs/components/select",
+    sources: [],
+    runtime: "apps/docs/node_modules/@gpuix/react/dist/components/select.js",
+    notes: [
+      {
+        keys: ["Arrow Down", "Arrow Up"],
+        action: "opens the list on the trigger, then moves the highlight a row",
+      },
+      {
+        keys: ["Ctrl+N", "Ctrl+P"],
+        action:
+          "the same move by its chord, and the same open from the trigger",
+      },
+      {
+        keys: activation,
+        action:
+          "opens or closes the list on the trigger, then chooses the highlighted row",
+      },
+      { keys: ["Escape"], action: "closes the open list" },
+      {
+        keys: ["Tab"],
+        action: "stays in the open list; it moves on once the list closes",
+      },
+    ],
+    also: "The list is modal while it is open: a press outside closes it.",
   },
   {
     url: "/docs/components/switch",

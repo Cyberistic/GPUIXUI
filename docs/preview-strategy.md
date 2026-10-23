@@ -603,10 +603,12 @@ modules instead:
 - `src/lib/keyboard-contracts.ts` is the model: a page's URL, the modules its
   keys were read from, one row per key group with the sentence that key earns,
   and an `also` line for keys that are not fixed names (type-ahead in a list, a
-  submitted field).
+  submitted field). A wrapper that handles none of its own keys cites the
+  installed runtime module through `runtime` instead of workspace source.
 - `<KeyboardStrip>` (`src/components/docs/keyboard-strip.tsx`) renders it after
   the page's prose on **both** frames, so a curated page and the package page it
-  shadows carry the same keys. It names the modules the keys came from, so a
+  shadows carry the same keys. It names the modules the keys came from — and,
+  for a runtime citation, says the module is the pinned GPUix runtime's — so a
   reader can check the sentence against the handler.
 - It renders nothing on a page whose own Markdown writes a `## Keyboard`
   section: the page's table of contents reaches the strip, and a written section
@@ -616,15 +618,16 @@ modules instead:
 keys a contract's modules handle — the `@gpuixui/components` predicates in
 `internal/key.ts`, the primitives' `decideActivation`, and a key matched by its
 literal name in `Match.when("up", …)` — and fails on a key the page omits or
-invents. It then reads every curated page's `<ComponentSource>` and requires a
-contract wherever the module handles a named key, so a component cannot ship keys
-with no notes. `keyboard-strip.test.tsx` prints every note of every contract and
-holds the two mounts.
-
-One gap is recorded rather than papered over: the primitives' `Select` takes its
-keys from the runtime's headless list (`@gpuix/react`), which is not workspace
-source the guard can read. A page whose keys are handled by a sink the derivation
-cannot see stays out until the sink is named; `TODO.md` carries the first.
+invents. A runtime citation is read the same way, from the installed module: the
+primitives' `Select` is a themed wrapper over `@gpuix/react`'s headless list, so
+it prints the arrows, `Ctrl+N`/`Ctrl+P`, Enter, Space, Escape and Tab that
+`select.js` handles, and a runtime release that moves one of them fails the page
+by key. The escape key is read where a module subscribes `onEscapeKeyDown`, and a
+chord only where the module's own ctrl guard is there. It then reads every
+curated page's `<ComponentSource>` and requires a contract wherever the module
+handles a named key, so a component cannot ship keys with no notes.
+`keyboard-strip.test.tsx` prints every note of every contract and holds the two
+mounts.
 
 ### The related line is generated, not written
 

@@ -10404,7 +10404,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 359/360
+`[x]` `[██████████]` 360/360
 
 `[x]` Publish the **keyboard contract** every component page promised — the index
       said "every component … with its keyboard contract" and `/docs/components`
@@ -10458,13 +10458,36 @@ Work that this workstream needs but does not own. Another agent owns each row.
       fails the case naming `button.mdx`. Green: 17/17 in the file. No native
       scenario applies — a page and a source contract.
 
-`[ ]` Give the **primitives' Select** keyboard notes — its arrows, Enter and Escape
+`[x]` Give the **primitives' Select** keyboard notes — its arrows, Enter and Escape
       belong to the runtime's headless list (`@gpuix/react`), so the derivation
-      cannot read them from workspace source and the page keeps its prose alone.
-      It needs a cited runtime contract (or a note that the keys are the headless
-      list's, argued the way the ARIA budget is) and a derivation that reads it,
-      so a runtime bump fails the page the way a moved handler does. Owner:
-      docs-site.
+      could not read them from workspace source and the page printed no key at
+      all. `KeyboardContract` gains a `runtime` citation: an installed
+      `@gpuix/*` module read like source, so the same both-directions guard holds
+      it. The curated `/docs/components/select` now prints the arrows, the
+      `Ctrl+N`/`Ctrl+P` chords, Enter/Space, Escape and Tab that
+      `select.js` handles — the chord only where the module's own ctrl guard is
+      there, Escape where it subscribes `onEscapeKeyDown` — and the strip appends
+      "in the pinned GPUix runtime" beside the module name so the handler is not
+      mistaken for the wrapper's own. **The first draft mounted on
+      `/docs/primitives/select`, where it never rendered**: that address is a
+      retired twin that redirects to the curated page, and the suite's served-page
+      set enumerated collection files without applying `curatedTwinOf`;
+      `mountedPages` now filters by the same rule, so a contract on the retired
+      address fails by name. `keyboard-contracts.test.ts` gains
+      `cites the installed runtime for a page the wrapper does not handle` (a
+      citation must point into `node_modules/@gpuix/`, so a workspace file cannot
+      stand in for it). Directions measured: dropping the Escape row fails
+      `/docs/components/select: missing Escape`; adding a Home row fails
+      `invented Home`; a copy of `select.js` with `onEscapeKeyDown` renamed fails
+      `invented Escape` — the runtime bump this guards; pointing the citation at
+      `Select.tsx` fails both the derivation and the citation case; restoring the
+      retired URL fails the served-page case. `keyboard-strip.test.tsx` gains
+      `names the runtime a wrapper's keys belong to`. Verified on the dev server:
+      the curated page prints the strip and its five rows. Docs:
+      `docs/preview-strategy.md` §The keyboard contract is generated, not written
+      and the site ledger. No native scenario applies — the model reads the
+      installed module and the strip prints it; no claim about a native frame is
+      made.
 
 `[x]` Compile the **class reference** the styling page only sampled — `/docs/styling`
       showed ten representative classes (`h-9`, `px-3`, …) and no way to find the
