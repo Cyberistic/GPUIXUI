@@ -39,14 +39,14 @@ export interface MailMessage {
   readonly tag?: string;
 }
 
-/** The open thread: Bob's message is not in the list, as in a thread view. */
+/** The open thread: Killua's message is not in the list, as in a thread view. */
 export const bobThread: MailMessage = {
   id: "bob-dylan",
-  sender: "Bob Dylan",
+  sender: "Killua Zoldyck",
   subject: "Long time no see!",
   preview: "About our picnic — we'll be meeting at the park around 2PM.",
   date: "Fri, 07 March 2025, 09:10",
-  body: "Hi Alice,\n\nHope you're doing well!\n\nAbout our picnic — we'll be meeting at the park around 2PM.\n\nBest regards, Bob",
+  body: "Hi Gon,\n\nHope you're doing well!\n\nAbout our picnic — we'll be meeting at the park around 2PM.\n\nBest regards, Killua",
   avatar: "BD",
   category: "primary",
   unread: false,
@@ -58,8 +58,8 @@ export const bobThread: MailMessage = {
 export const inboxMessages: ReadonlyArray<MailMessage> = [
   {
     id: "em-client",
-    sender: "eM Client Team",
-    subject: "Welcome to eM Client",
+    sender: "Hunter Association",
+    subject: "Welcome to the Hunter Association",
     preview: "Your mail, calendar and contacts are ready in one place.",
     date: "10/10/2024",
     body: "Welcome aboard.\n\nYour mail, calendar and contacts are ready in one place. Press N to write your first message.",
@@ -71,8 +71,8 @@ export const inboxMessages: ReadonlyArray<MailMessage> = [
   },
   {
     id: "google-play",
-    sender: "Google Play",
-    subject: "New Options to Manage Personalization",
+    sender: "Heavens Arena",
+    subject: "Ticket presale opens tonight",
     preview: "Choose which ads you see, or reset your advertising ID.",
     date: "10/09/2024",
     body: "You can now choose which ads you see and reset your advertising ID at any time, from Play Store settings.",
@@ -85,8 +85,8 @@ export const inboxMessages: ReadonlyArray<MailMessage> = [
   },
   {
     id: "cristine",
-    sender: "Cristine",
-    subject: "Invitation: Next release meeting",
+    sender: "Kurapika",
+    subject: "Invitation: Yorknew auction",
     preview: "Thursday at 15:00 — the agenda is attached.",
     date: "10/09/2024",
     body: "Here is the invite for our next release meeting, Thursday at 15:00.\n\nThe agenda is attached; add your items before Wednesday.",
@@ -98,8 +98,8 @@ export const inboxMessages: ReadonlyArray<MailMessage> = [
   },
   {
     id: "vox-pride",
-    sender: "Vox's Today Explained",
-    subject: "The hollowness of corporate Pride",
+    sender: "Ging Freecss",
+    subject: "A note from the Dark Continent",
     preview: "How brands borrowed the language of the movement.",
     date: "10/08/2024",
     body: "This week we look at how brands borrowed the language of Pride, and what the parade looks like without them.",
@@ -111,7 +111,7 @@ export const inboxMessages: ReadonlyArray<MailMessage> = [
   },
   {
     id: "vox-power",
-    sender: "Vox's",
+    sender: "Ging Freecss",
     subject: "Why the most powerful men are the…",
     preview: "A new season asks why so few people hold so much.",
     date: "10/07/2024",
@@ -124,8 +124,8 @@ export const inboxMessages: ReadonlyArray<MailMessage> = [
   },
   {
     id: "ann-handley",
-    sender: "Ann Handley",
-    subject: "IA #164",
+    sender: "Leorio Paladiknight",
+    subject: "Clinic roster #164",
     preview: "The small, unglamorous habits that compound.",
     date: "10/06/2024",
     body: "Issue 164: the small, unglamorous habits that compound — and the four-word question that makes a draft better.",
@@ -137,8 +137,8 @@ export const inboxMessages: ReadonlyArray<MailMessage> = [
   },
   {
     id: "marginalian",
-    sender: "The Marginalian",
-    subject: "Polyvagal theory…",
+    sender: "Chimera Ant Research",
+    subject: "Nen and the ant hierarchy…",
     preview: "Safety, connection and the stories we tell ourselves.",
     date: "10/05/2024",
     body: "A conversation about safety, connection and the stories we tell ourselves when the body keeps the score.",
@@ -150,8 +150,8 @@ export const inboxMessages: ReadonlyArray<MailMessage> = [
   },
   {
     id: "new-yorker",
-    sender: "New Yorker",
-    subject: "What is the Opposite of Oil Drilling?",
+    sender: "Yorknew Times",
+    subject: "What is the opposite of Nen?",
     preview: "The case against the wells we cannot see.",
     date: "10/04/2024",
     body: "The case against the wells we cannot see, and for the unglamorous work of putting carbon back where it came from.",
@@ -282,7 +282,7 @@ function ContactRail() {
       <div className="gx-mail-person">
         <span className="gx-mail-avatar gx-mail-avatar-lg">BD</span>
         <div>
-          <p className="gx-mail-person-name">Bob Dylan</p>
+          <p className="gx-mail-person-name">Killua Zoldyck</p>
           <p className="gx-mail-person-mail">bob.dylan@example.com</p>
         </div>
       </div>
@@ -400,7 +400,7 @@ export function EmailInboxSurface({
         </section>
 
         <section className="gx-mail-group">
-          <h4 className="gx-mail-group-title">Alice - Work</h4>
+          <h4 className="gx-mail-group-title">Gon - Work</h4>
           {workFolders.map((folder) => (
             <FolderRow
               active={folder.label === "Inbox"}
@@ -416,7 +416,7 @@ export function EmailInboxSurface({
         <section className="gx-mail-group">
           <h4 className="gx-mail-group-title">
             <BlockIcon name="chevronRight" size={11} />
-            Alice - Personal
+            Gon - Personal
           </h4>
         </section>
         <section className="gx-mail-group">
@@ -531,7 +531,7 @@ export function EmailInboxSurface({
               <div className="gx-mail-from-text">
                 <p>
                   <strong>{message.sender}</strong>
-                  <span className="gx-mail-to">to aliceglassemc@gmail.com</span>
+                  <span className="gx-mail-to">to gon@hunterassociation.org</span>
                 </p>
                 <span className="gx-mail-date">{message.date}</span>
               </div>
@@ -597,9 +597,9 @@ import { Button, ScrollArea, Stack, Text, TextArea } from "@gpuixui/primitives";
 import { Icon } from "@gpuixui/icons";
 
 const messages = [
-  { sender: "eM Client Team", subject: "Welcome to eM Client", date: "10/10/2024", unread: true },
-  { sender: "Google Play", subject: "New Options to Manage Personalization", date: "10/09/2024", tag: "Promotion" },
-  { sender: "Cristine", subject: "Invitation: Next release meeting", date: "10/09/2024" },
+  { sender: "Hunter Association", subject: "Welcome to the Hunter Association", date: "10/10/2024", unread: true },
+  { sender: "Heavens Arena", subject: "Ticket presale opens tonight", date: "10/09/2024", tag: "Promotion" },
+  { sender: "Kurapika", subject: "Invitation: Yorknew auction", date: "10/09/2024" },
   // …the rest of the inbox
 ];
 
@@ -619,7 +619,7 @@ export function EmailInboxPage() {
             <Text role="caption" tone="muted">{folder.count}</Text>
           </Stack>
         ))}
-        <Text role="label">Alice - Work</Text>
+        <Text role="label">Gon - Work</Text>
         {folders.map((folder) => (
           <Button key={folder.label} variant={folder.label === "Inbox" ? "secondary" : "ghost"}>
             <Icon name="folder" /> {folder.label}
@@ -663,7 +663,7 @@ export function EmailInboxPage() {
             <Stack direction="row" gap="sm" align="center">
               <Avatar name={open.sender} size="md" />
               <Text role="label">{open.sender}</Text>
-              <Text role="caption" tone="muted">to aliceglassemc@gmail.com</Text>
+              <Text role="caption" tone="muted">to gon@hunterassociation.org</Text>
             </Stack>
             <Text role="body">{open.body}</Text>
             <TextArea label={\`Reply to \${open.sender}\`} placeholder="Reply…" />
@@ -675,8 +675,8 @@ export function EmailInboxPage() {
 
           <Stack direction="column" gap="sm" style={{ width: 280, padding: 16 }}>
             <Text role="label">Contact Details</Text>
-            <Avatar name="Bob Dylan" size="lg" />
-            <Text role="h3">Bob Dylan</Text>
+            <Avatar name="Killua Zoldyck" size="lg" />
+            <Text role="h3">Killua Zoldyck</Text>
             <Text role="caption" tone="muted">bob.dylan@example.com</Text>
             <Stack direction="row" gap="sm"><Icon name="mail" /><Text role="caption">Mail</Text></Stack>
             <Stack direction="row" gap="sm"><Icon name="phone" /><Text role="caption">Phone</Text></Stack>

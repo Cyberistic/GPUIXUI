@@ -48,8 +48,8 @@ describe("the email inbox preview", () => {
     expect(initial).toContain('class="gx-mail-contact"');
     expect(initial).toContain("All Inboxes");
     expect(initial).toContain(">768<");
-    expect(initial).toContain("Alice - Work");
-    expect(initial).toContain("Alice - Personal");
+    expect(initial).toContain("Gon - Work");
+    expect(initial).toContain("Gon - Personal");
     expect(initial).toContain("Local Folders");
   });
 
@@ -77,16 +77,16 @@ describe("the email inbox preview", () => {
   it("lists the Primary rows with their metadata", () => {
     expect(initial.match(/class="gx-mail-row"/g)).toHaveLength(7);
     for (const sender of [
-      "eM Client Team",
-      "Cristine",
-      "Vox",
-      "Ann Handley",
-      "The Marginalian",
-      "New Yorker",
+      "Hunter Association",
+      "Kurapika",
+      "Ging Freecss",
+      "Leorio Paladiknight",
+      "Chimera Ant Research",
+      "Yorknew Times",
     ]) {
       expect(initial).toContain(sender);
     }
-    expect(initial).toContain("Welcome to eM Client");
+    expect(initial).toContain("Welcome to the Hunter Association");
     expect(initial).toContain("10/10/2024");
     expect(initial).toContain('data-icon="paperclip"');
     expect(initial).toContain('data-icon="flag"');
@@ -94,11 +94,11 @@ describe("the email inbox preview", () => {
   });
 
   it("keeps the Promotion row for the Promotions tab", () => {
-    expect(initial).not.toContain("New Options to Manage Personalization");
+    expect(initial).not.toContain("Ticket presale opens tonight");
     const promotions = render({ ...initialInboxState, tab: "promotions" });
     expect(promotions.match(/class="gx-mail-row"/g)).toHaveLength(1);
-    expect(promotions).toContain("Google Play");
-    expect(promotions).toContain("New Options to Manage Personalization");
+    expect(promotions).toContain("Heavens Arena");
+    expect(promotions).toContain("Ticket presale opens tonight");
     expect(promotions).toContain(">Promotion<");
   });
 
@@ -115,28 +115,28 @@ describe("the email inbox preview", () => {
       'class="gx-mail-contact"',
     );
     expect(read).toContain("Long time no see!");
-    expect(read).toContain("Bob Dylan");
-    expect(read).toContain("aliceglassemc@gmail.com");
+    expect(read).toContain("Killua Zoldyck");
+    expect(read).toContain("gon@hunterassociation.org");
     expect(read).toContain("About our picnic");
-    expect(read).toContain("Reply to Bob Dylan");
+    expect(read).toContain("Reply to Killua Zoldyck");
   });
 
   it("repaints the reading pane with the selected message", () => {
     const vox = render({ ...initialInboxState, selectedId: "vox-pride" });
     const read = pane(vox, 'class="gx-mail-read"', 'class="gx-mail-contact"');
-    expect(read).toContain("The hollowness of corporate Pride");
-    expect(read).toContain("Today Explained");
+    expect(read).toContain("A note from the Dark Continent");
+    expect(read).toContain("Ging Freecss");
     expect(read).toContain("brands borrowed the language of Pride");
     expect(read).not.toContain("Long time no see!");
     expect(
       selectedMail({ ...initialInboxState, selectedId: "vox-pride" }).sender,
-    ).toBe("Vox's Today Explained");
+    ).toBe("Ging Freecss");
   });
 
   it("carries the sender card, its tabs and the older threads", () => {
     const contact = pane(initial, 'class="gx-mail-contact"', "</aside>");
     expect(contact).toContain("Contact Details");
-    expect(contact).toContain("Bob Dylan");
+    expect(contact).toContain("Killua Zoldyck");
     expect(contact).toContain(">Mail<");
     expect(contact).toContain(">Phone<");
     expect(contact).toContain(">History<");
@@ -155,7 +155,7 @@ describe("the inbox filters", () => {
     expect(messagesInTab("social")).toHaveLength(0);
     expect(primary.length + promotions.length).toBe(inboxMessages.length);
     expect(promotions.map((message) => message.sender)).toEqual([
-      "Google Play",
+      "Heavens Arena",
     ]);
   });
 
@@ -167,7 +167,7 @@ describe("the inbox filters", () => {
     expect(selected.selectedId).toBe("cristine");
     expect(selected.tab).toBe("primary");
     expect(selectedMail(selected).subject).toBe(
-      "Invitation: Next release meeting",
+      "Invitation: Yorknew auction",
     );
 
     expect(
