@@ -10146,7 +10146,51 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 266/266
+`[x]` `[██████████]` 269/269
+
+`[x]` Print the **two structural reports as the gate's thirteenth and
+      fourteenth**, and delete the beside-the-gate split — `auditTheme` gained
+      `scales` and `switch` (a ladder whose steps no longer separate, a declared
+      switch the surface under it has swallowed) while `/docs/themes` called
+      them "the two contracts beside the gate" and `besideGateFindings` recomputed
+      them outside the gate: a consumer running `auditTheme` alone shipped a theme
+      the editor flagged. `auditFindings` now flattens all fourteen reports,
+      `besideGateFindings`/`ThemeFindings` are gone and `themeFindings` returns
+      the one list, so the editor prints one heading instead of two. `themes.mdx`
+      prints fourteen, teaches both under **The two structural reports** and its
+      copy-theme note lists all fourteen reports; `theming.mdx` and
+      `docs/preview-strategy.md` print the derived count. Guards:
+      `theme-editor-logic.test.ts` derives the word from the gate's keys and
+      requires every `report.<key>` in the fold, the shipped themes/platform
+      styles to an empty list, a raised radius and a hidden switch to report; the
+      beside case becomes `reads the structural reports from the gate, not from a
+      second call` (refusing `invalidScales(theme)`/`switchFailures(theme)`);
+      `theming-page.test.ts` reads the page's fourteen and the copy note;
+      `theme-editor.test.tsx` holds the pass sentence. Directions measured:
+      before, the two suites failed with `reads all undefined in one` and
+      `expected undefined to be defined`; with the three maps removed, four cases
+      fail (`expected [ 'scales', 'switch' ] to deeply equal []`).
+
+`[x]` Document the **presence hooks** on `/docs/motion` — the motion package
+      exports `useSurfacePresence` (the mounted window: `{ mounted, present,
+      timing }`, the window keyed to `exitWindowMs` rather than the duration, a
+      re-open retargeting instead of restarting) and `useSurfaceTiming`, and the
+      page named neither, so a reader building a disclosure had to read the
+      components seam. §Presence: the mount and the window teaches both with a
+      copyable `presenceMotion` example and says where the React half lives and
+      why. `motion-page.test.ts` (24/24) is the guard: it failed on the missing
+      export before the section existed.
+
+`[x]` Follow the **drawer's stored side and its eleventh native case** — the
+      component now decodes `side` through a three-name `Schema` and reads an
+      unnamed stored value as its default right edge (the box and the fade used
+      to disagree, painting the panel on the right and rising it from the
+      bottom), so the curated page prints **11** native tests, names the case and
+      adds the `effect` dependency row the imports now carry. Directions
+      measured: `component-page-truth.test.ts` failed with
+      `drawer.mdx: says 10, suite runs 11` and
+      `drawer.mdx: imports effect, which its Dependencies table does not list`;
+      green after.
 
 `[x]` Print the **find wash as the gate's twelfth report** — the tokens
       workstream folded `highlightFailures` into `auditTheme` while the readout

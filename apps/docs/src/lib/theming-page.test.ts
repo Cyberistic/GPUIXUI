@@ -63,6 +63,8 @@ const numberWords = [
   "ten",
   "eleven",
   "twelve",
+  "thirteen",
+  "fourteen",
 ];
 
 /** The `## Contrast` section of a page, without its following siblings. */
@@ -409,27 +411,26 @@ describe("the theme page", () => {
     expect(audit).toContain("localStorage");
   });
 
-  it("prints the two contracts the gate does not carry, beside it", () => {
-    // `invalidScales` and `switchFailures` ship as public functions beside
-    // `auditTheme`, and an edit the editor exposes can break both — raising
-    // `radius.md` past `radius.lg` inverts the radius ladder, and recolouring a
-    // surface loses a declared switch. The readout printed eleven gate reports
-    // as the whole audit, so the page has to say where the other two come from.
-    // The find wash is no longer here: it is a gate report now (twelve).
+  it("names the two structural reports inside the gate, not beside it", () => {
+    // `invalidScales` and `switchFailures` were public functions *beside*
+    // `auditTheme` while the page said the readout prints them separately: a
+    // consumer running the gate alone shipped a theme whose `lg` corner was
+    // smaller than its `md`. Both are gate keys now, so the page teaches one
+    // call and one list.
     const audit = section(page("themes.mdx"), "The theme audit");
 
     const reports = ["invalidScales", "switchFailures"];
     expect(reports.filter((report) => !audit.includes(report))).toEqual([]);
     expect(audit).toContain("highlightFailures");
-    expect(audit).toContain("twelve");
+    expect(audit).toContain("fourteen");
     expect(audit).toContain("radius.md");
     expect(audit).toContain("radius.lg");
-    expect(audit).toContain("beside");
+    expect(audit).not.toContain("beside the gate");
     // The copy block promises the same set, so a consumer can run it on the
     // theme they copied.
-    expect(page("themes.mdx")).toContain(
-      "as are the two the readout prints beside it",
-    );
+    const body = page("themes.mdx");
+    expect(body).toContain("every report the gate carries");
+    expect(body).not.toContain("the readout prints beside it");
   });
 
   it("derives the floors the fade and the dim are held to", () => {
@@ -801,8 +802,12 @@ describe("the theming pages' find highlights", () => {
     expect(marks).toContain("highlightFailures(theme)");
     // The corner is a scale step, not the runtime's literal.
     expect(marks).toContain("`radius.sm`");
-    // The gate boundary is stated, because the report is one of its keys now.
-    expect(marks).toContain("twelve");
+    // The gate boundary is stated, because the report is one of its keys now,
+    // and the count is derived so the section cannot fall behind the gate.
+    const reports = Object.keys(auditTheme(themes.light)).filter(
+      (key) => key !== "passed",
+    );
+    expect(marks).toContain(numberWords[reports.length]);
     expect(marks).toContain("`auditTheme`");
   });
 

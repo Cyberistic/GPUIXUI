@@ -356,6 +356,53 @@ time. The package drives the numeric fields a GPUix `MotionStyle` has — `width
 There is no `transform` key, so scale, rotate and translate cannot be painted or
 animated; motion on those axes waits on a runtime change.
 
+### Presence: the mount and the window
+
+An overlay is two questions, and the package answers them separately because
+only one of them is a React tree. `useSurfaceTiming(level)` reads the
+preference provider and returns the enter and exit timings a surface at that
+level moves with — the enter decelerates and the exit accelerates, so they are
+two transitions rather than one shared curve. `useSurfacePresence(open, timing)`
+is the mounted window: it publishes `{ mounted, present, timing }` for the
+surface.
+
+```tsx
+import { motion } from "@gpuix/react";
+import { fadeOnly, presenceMotion } from "@gpuixui/motion/presence";
+import {
+  useSurfacePresence,
+  useSurfaceTiming,
+} from "@gpuixui/motion/react";
+
+export const Tip = ({ open }: { readonly open: boolean }) => {
+  const timing = useSurfaceTiming("fast");
+  const { mounted, present } = useSurfacePresence(open, timing);
+
+  return mounted ? (
+    <motion.div {...presenceMotion(fadeOnly, present, timing)}>…</motion.div>
+  ) : null;
+};
+```
+
+`presenceMotion` picks the frame and transition the surface is *in* — the
+resting frame and the enter timing while it is open, the exit frame and the
+exit timing while it leaves — so the spread is the whole paint rule rather than
+a choice the caller repeats per phase.
+
+`open` publishes the resting state at once. Closing flips `present`, so the
+runtime tweens the exit frame while the surface stays mounted, and the surface
+unmounts when that run's **whole window** has elapsed — the tween plus the wait
+it sits out first, read from `exitWindowMs(timing)` rather than the duration, so
+a delayed exit is not unmounted before its journey begins and a changed wait
+re-arms the timer. Re-opening during the exit keeps the same instance, so the run
+retargets instead of restarting; a timing that cannot be scheduled holds nothing.
+
+The React half is the package's because a timer and a tree are not a toolkit's to
+give away: `packages/components/src/internal/presence.tsx` composes these two
+hooks with the frames (`@gpuixui/motion/presence`) and the GPUix half — the
+`motion` prop and the shield a leaving surface covers its controls with — so a
+second copy of the window cannot agree with the first only by hand.
+
 ## Reduced motion is a policy, not a capability
 
 The pinned runtime exposes no reduced-motion preference — the capability record

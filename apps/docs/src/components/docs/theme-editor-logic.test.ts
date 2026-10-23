@@ -16,7 +16,6 @@ import { platformThemes } from "../../lib/platform";
 import {
   auditFindings,
   auditReport,
-  besideGateFindings,
   decodeState,
   defaultState,
   editableRoles,
@@ -690,6 +689,8 @@ describe("theme-editor audit readout", () => {
       "ten",
       "eleven",
       "twelve",
+      "thirteen",
+      "fourteen",
     ];
     const source = readFileSync(
       new URL("./theme-editor-logic.ts", import.meta.url),
@@ -709,63 +710,61 @@ describe("theme-editor audit readout", () => {
   });
 });
 
-describe("the contracts beside the gate", () => {
+describe("the structural edits the gate reports", () => {
   it("passes the shipped themes in both modes, and over every platform style", () => {
-    // The readout prints their findings before a reader touches anything, so a
-    // false positive here would put a permanent red line on a shipped theme.
-    for (const mode of ["light", "dark"] as const) {
-      expect(besideGateFindings(themes[mode])).toEqual([]);
-      for (const platform of platformNames) {
-        expect(besideGateFindings(platformThemes(platform)[mode])).toEqual([]);
-      }
-    }
+    // The readout prints the gate's findings before a reader touches anything, so
+    // a false positive here would put a permanent red line on a shipped theme.
+    const findings = (["light", "dark"] as const).flatMap((mode) => [
+      ...auditFindings(auditTheme(themes[mode])),
+      ...platformNames.flatMap((platform) =>
+        auditFindings(auditTheme(platformThemes(platform)[mode])),
+      ),
+    ]);
+
+    expect(findings).toEqual([]);
   });
 
-  it("reports a radius an edit raises out of the scale, which the gate passes", () => {
+  it("reports a radius an edit raises out of the scale", () => {
     // The editor exposes `radius.md`, so this is an edit a reader can make: 12
     // makes `md` larger than the `lg` above it, and a dialog asking for `lg`
-    // then paints a smaller corner than a card asking for `md`. `auditTheme`
-    // has no scale report, so this line has to come from beside it.
-    const { gate, beside } = themeFindings("light", {
+    // then paints a smaller corner than a card asking for `md`.
+    const findings = themeFindings("light", {
       colors: {},
       radiusMd: 12,
     });
 
-    expect(gate).toEqual([]);
-    expect(beside.map((finding) => finding.text)).toEqual([
+    expect(findings.map((finding) => finding.text)).toEqual([
       "radius lg — 8 does not exceed md at 12",
     ]);
-    expect(beside[0]?.kind).toBe("scale");
+    expect(findings[0]?.kind).toBe("scale");
   });
 
-  it("reports a find wash an edit paints invisible, through the gate", () => {
-    // The report is `auditTheme`'s twelfth key now, so the readout prints it
-    // with the rest: a `primary` equal to its own card is a match nobody sees,
-    // and it reaches the reader from the gate rather than a section of its own.
-    const { gate, beside } = themeFindings("light", {
+  it("reports a find wash an edit paints invisible", () => {
+    // A `primary` equal to its own card is a match nobody sees, and it reaches
+    // the reader from the gate rather than a section of its own.
+    const findings = themeFindings("light", {
       colors: { primary: themes.light.colors.card },
     });
-    const highlight = gate.filter((finding) => finding.kind === "highlight");
+    const highlight = findings.filter(
+      (finding) => finding.kind === "highlight",
+    );
 
     expect(highlight.map((finding) => finding.text)).toContain(
       "find match on card — 1.00:1 (needs 1.05:1)",
     );
     expect(highlight.length).toBeGreaterThan(0);
-    expect(beside.filter((finding) => finding.kind === "highlight")).toEqual(
-      [],
-    );
   });
 
   it("reports a declared switch an edit hides on the strip it stands on", () => {
-    // A platform style's three switch colours enter the theme through no role,
-    // so only `switchFailures` sees them. The macOS light track is Apple's
-    // green; painting the card that same green leaves a switch nobody can find.
-    const { beside } = themeFindings(
+    // A platform style's three switch colours enter the theme through no role.
+    // The macOS light track is Apple's green; painting the card that same green
+    // leaves a switch nobody can find.
+    const findings = themeFindings(
       "light",
       { colors: { card: "#34C759" } },
       platformThemes("darwin").light,
     );
-    const toggle = beside.filter((finding) => finding.kind === "switch");
+    const toggle = findings.filter((finding) => finding.kind === "switch");
 
     expect(toggle.map((finding) => finding.text)).toContain(
       "switch on on card — 1.00:1 (needs 1.05:1)",
@@ -828,23 +827,23 @@ describe("the contracts beside the gate", () => {
     ).toBe("find match on popover — could not be composited (needs 1.05:1)");
   });
 
-  it("names every report the gate does not carry, so one cannot be read silently", () => {
-    // Two public contracts ship beside `auditTheme`; this readout is the only
-    // place an editor prints them, so a third must fail here rather than be
-    // forgotten. The list is derived from the package's exports that no audit
-    // key covers, not written by hand.
+  it("reads the structural reports from the gate, not from a second call", () => {
+    // The scale order and a declared switch used to be public functions the
+    // readout called *beside* `auditTheme`, which meant a consumer running the
+    // gate alone shipped a theme the editor flagged. Both are gate keys now, and
+    // the readout must take them from that one call: recomputing either here
+    // would let the shipped gate and the editor's copy disagree.
     const source = readFileSync(
       new URL("./theme-editor-logic.ts", import.meta.url),
       "utf8",
     );
-    const besideFunctions = ["invalidScales", "switchFailures"];
 
-    expect(
-      besideFunctions.filter((name) => !source.includes(`${name}(theme)`)),
-    ).toEqual([]);
     // The switch report has two halves, and a readout that printed only the
     // paint would pass a track nobody can find.
-    expect(source).toContain("toggle.paint");
-    expect(source).toContain("toggle.placements");
+    expect(source).toContain("report.scales");
+    expect(source).toContain("report.switch.paint");
+    expect(source).toContain("report.switch.placements");
+    expect(source).not.toContain("invalidScales(theme)");
+    expect(source).not.toContain("switchFailures(theme)");
   });
 });

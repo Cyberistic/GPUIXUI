@@ -74,6 +74,13 @@ drawer-size role — and are measured in the real renderer at 1280 × 800: a
 `right`/`md` surface is 400 × 800 at the right edge, a `left`/`sm` one is
 320 × 800 at the left, and a `bottom`/`lg` one is 1280 × 420 at the bottom.
 
+A `side` is a stored choice as often as a literal. `drawerSide` decodes it
+through the same three-name schema the table lists, so a value a release renamed
+or dropped — a logical `"start"`/`"end"` a settings file wrote — opens on the
+component's own default, `"right"`, and the entry travel comes from that edge
+too. The box, the layout and the fade read the one edge, so a stored value cannot
+paint the panel on one side while it rises from another.
+
 The surface is **square**, because `DRAWER_CONTENT` names no radius utility;
 only the drawing in this page is rounded. It is not portalled: the veil is an
 `<anchored>` element at window coordinates, so a drawer mounted inside a
@@ -214,6 +221,7 @@ as soon as `open` flips rather than a duration later.
 | `@gpuix/react/floating` | `mergeStyles` for the surface and part styles |
 | `@gpuixui/icons` | the `x` in the close control |
 | `@gpuixui/tw` | the drawer recipes and `cn` conflict resolution |
+| `effect` | `Schema.is` decoding the stored `side` before it reaches the box or the fade |
 
 ## Related
 
@@ -229,12 +237,13 @@ and the missing half is the surface itself: no swipe-to-dismiss, no full-width
 slide (`transform`), no `aria-modal`/`aria-labelledby`, and no portal. The size
 table is a layout constant rather than a token.
 
-`packages/components/src/behaviour/drawer.test.tsx` runs **10 native behaviour
+`packages/components/src/behaviour/drawer.test.tsx` runs **11 native behaviour
 tests** in the real renderer on `@gpuix/native@0.11.0`: the closed mount, the
 named dialog and `aria-expanded`, the full-window veil, focus in and its return
 on Escape, a backdrop press that closes while a press inside does not, the Tab
-trap at both ends, all three sides and sizes, both themes, an uninterruptible
-drawer, and a controlled drawer that stays closed. The shared rules were
+trap at both ends, all three sides and sizes, a stored side that names no edge
+opening on the default one, both themes, an uninterruptible drawer, and a
+controlled drawer that stays closed. The shared rules were
 extracted from Dialog into `internal/modal.ts` with no behaviour change, and
 `dialog.test.tsx` (15 tests) and `confirm-dialog.test.tsx` (7) stay as the
 guard.

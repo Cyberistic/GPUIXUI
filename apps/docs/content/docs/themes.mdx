@@ -48,7 +48,7 @@ cannot. The bridge exists only for this preview.
 The readout under the preview runs `auditTheme` on the theme the edits resolve to
 — the same gate `@gpuixui/tokens` tells a theme author to run before shipping, so
 an edit is measured against exactly the contract the library holds itself to. One
-call reports twelve independent failures:
+call reports fourteen independent failures:
 
 - **Roles** the renderer cannot paint. GPUix ignores a colour string it cannot
   parse and keeps the previous value or paints black, so the editor names the role
@@ -204,11 +204,10 @@ call reports twelve independent failures:
   actions do. The editor does not edit the dim, but every filled action is one of
   these pairs, so an action-fill edit can erase one.
 
-### The two contracts beside the gate
+### The two structural reports
 
-Two contracts the library measures are not `auditTheme` keys yet, and both can
-be broken by an edit this editor exposes, so the readout prints them under a
-heading of their own rather than passing a theme they measure:
+The other two reports measure the theme's structure rather than its colours, and
+both fold into the same call:
 
 - **The scale order** — `invalidScales` reads every named ladder a component
   selects from (spacing, radii, border widths, icon sizes, the type hierarchy,
@@ -224,10 +223,10 @@ heading of their own rather than passing a theme they measure:
   those can leave a switch nobody can find, while the role reports stay clean
   because the three colours are not roles.
 
-Those lines are printed separately because `auditTheme` does not return them:
-the readout names which call reported each finding instead of presenting a
-beside-the-gate report as one of the twelve. A find wash used to be the third
-line here; it is a gate report now, worded under **Find highlights** above.
+Both are `auditTheme` keys now, so the readout prints them with the rest and a
+consumer running the gate alone cannot ship a theme the editor would have
+flagged. A find wash used to be a contract of its own here; it is a gate report
+too, worded under **Find highlights** above.
 Folding one of these two in is a coordinated change with this readout; the token
 catalogue records where each report stands today.
 
@@ -244,8 +243,8 @@ reports, not a malformed state.
 the preview resolved — in the exact format `@gpuixui/tokens` consumes, plus a
 one-line usage note. Running the same audit on the result is up to the consumer;
 `auditTheme` and the reports it folds — `invalidColorRoles`, `invalidShadowColors`,
-`invalidNumbers`, `contrastFailures`, `decorativeFailures`, `seriesFailures`,
-`syntaxFailures`, `selectionFailures`, `indicatorFailures`,
-`highlightFailures`, `disabledFadeFailures` and `keyboardDimFailures` — are
-public for exactly that, as are the two the readout prints beside it:
-`invalidScales` and `switchFailures`.
+`invalidNumbers`, `invalidScales`, `switchFailures`, `contrastFailures`,
+`decorativeFailures`, `seriesFailures`, `syntaxFailures`, `selectionFailures`,
+`indicatorFailures`, `highlightFailures`, `disabledFadeFailures` and
+`keyboardDimFailures` — are public for exactly that, so every report the gate carries
+is one a consumer can run on the theme they copied.

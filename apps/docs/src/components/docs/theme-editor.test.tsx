@@ -48,13 +48,15 @@ describe("the theme editor", () => {
     );
   });
 
-  it("says the three contracts beside the gate pass too, not only its eleven", () => {
+  it("holds every report the one gate carries, not a subset of them", () => {
     // The readout used to present `auditTheme` alone as the whole audit, so an
     // edit that inverted the radius scale or hid a find wash read as a pass.
-    expect(builtIn).toContain("The three contracts beside the gate pass too");
-    expect(builtIn).toContain("the scales stay in order");
+    // Both are gate keys now, so the pass sentence names them in the same list.
+    expect(builtIn).toContain("Passes the library audit");
+    expect(builtIn).toContain("every ladder stays in order");
     expect(builtIn).toContain("the declared switch is findable");
     expect(builtIn).toContain("every find wash stands out");
+    expect(builtIn).not.toContain("beside the gate");
   });
 
   it("renders one control per editable role", () => {

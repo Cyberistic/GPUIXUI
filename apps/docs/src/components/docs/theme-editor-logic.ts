@@ -1,8 +1,6 @@
 import {
   auditTheme,
   extendTheme,
-  invalidScales,
-  switchFailures,
   targetSize,
   themes,
   type ContrastFailure,
@@ -141,16 +139,13 @@ export const themeConfig = (
  * a syntax token that matches the fill a code block paints, a selection wash
  * that hides itself or the text it covers, an indicator mark a reader cannot
  * find on the strip it is drawn on, a disabled control whose faded label
- * vanishes into its faded fill, and a control the runtime's keyboard dim erases.
- * `auditTheme` reads all twelve in one call, so the editor cannot show some
+ * vanishes into its faded fill, a control the runtime's keyboard dim erases,
+ * a ladder whose steps no longer describe two sizes, and a declared switch a
+ * reader cannot find on the surface it stands on.
+ *
+ * `auditTheme` reads all fourteen in one call, so the editor cannot show some
  * reports and leave the others silent. The base is the platform style the
  * preview is painted over, so the audit measures what the reader sees.
- *
- * Two contracts the library measures *beside* the gate are read separately by
- * {@link besideGateFindings}, because a reader can break both with an edit this
- * editor exposes: the scale order (raising `radius.md` past `radius.lg` makes
- * the larger name paint the smaller corner) and a declared switch's paint
- * (recolouring a surface Apple's track stands on can lose the track).
  */
 export const auditReport = (
   mode: ThemeMode,
@@ -158,10 +153,7 @@ export const auditReport = (
   base: Theme = themes[mode],
 ): ThemeAudit => auditTheme(resolveTheme(mode, pins, base));
 
-/**
- * Which of the audit's twelve reports — or which of the two contracts beside it
- * — a finding came from.
- */
+/** Which of the audit's fourteen reports a finding came from. */
 export type AuditKind =
   | "role"
   | "shadow"
@@ -471,6 +463,18 @@ export const auditFindings = (
     kind: "number" as const,
     text: formatInvalidNumber(failure),
   })),
+  ...report.scales.map((failure) => ({
+    kind: "scale" as const,
+    text: formatInvalidScale(failure),
+  })),
+  ...report.switch.paint.map((failure) => ({
+    kind: "switch" as const,
+    text: formatInvalidSwitch(failure),
+  })),
+  ...report.switch.placements.map((failure) => ({
+    kind: "switch" as const,
+    text: formatSwitchPlacement(failure),
+  })),
   ...report.contrast.map((failure) => ({
     kind: "contrast" as const,
     text: formatContrastFailure(failure),
@@ -518,58 +522,14 @@ export const auditFindings = (
 ];
 
 /**
- * The two contracts the library measures beside the gate, worded for the same
- * readout: the scale order and a switch a platform style declares. Each runs
- * beside `auditTheme` rather than inside it — folding one in is a change to the
- * audit's own key list and this readout together — but an edit can break both,
- * so the readout reports them instead of passing a theme whose `lg` corner is
- * smaller than its `md` or whose declared track has vanished.
- */
-export const besideGateFindings = (
-  theme: Theme,
-): ReadonlyArray<AuditFinding> => {
-  const toggle = switchFailures(theme);
-  return [
-    ...invalidScales(theme).map((failure) => ({
-      kind: "scale" as const,
-      text: formatInvalidScale(failure),
-    })),
-    ...toggle.paint.map((failure) => ({
-      kind: "switch" as const,
-      text: formatInvalidSwitch(failure),
-    })),
-    ...toggle.placements.map((failure) => ({
-      kind: "switch" as const,
-      text: formatSwitchPlacement(failure),
-    })),
-  ];
-};
-
-/** Every finding the editor prints, split by the contract that reported it. */
-export interface ThemeFindings {
-  /** The twelve reports `auditTheme` returns, already worded. */
-  readonly gate: ReadonlyArray<AuditFinding>;
-  /** The two contracts that run beside the gate, already worded. */
-  readonly beside: ReadonlyArray<AuditFinding>;
-}
-
-/**
- * The readout's whole list for an edit: the gate's findings and the two
- * contracts beside it, both measured on the theme the preview paints. Split
- * rather than concatenated so the readout can say which call reported a line —
- * a bespoke report presented as an `auditTheme` one would overstate the gate.
+ * The readout's whole list for an edit, measured on the theme the preview
+ * paints: every finding `auditTheme` returns, already worded for a reader.
  */
 export const themeFindings = (
   mode: ThemeMode,
   pins: ThemePins,
   base: Theme = themes[mode],
-): ThemeFindings => {
-  const theme = resolveTheme(mode, pins, base);
-  return {
-    gate: auditFindings(auditTheme(theme)),
-    beside: besideGateFindings(theme),
-  };
-};
+): ReadonlyArray<AuditFinding> => auditFindings(auditReport(mode, pins, base));
 
 /**
  * True when the resolved theme paints every role — the audit's own role check,
