@@ -9,7 +9,9 @@
  *
  * It exits `2` — never `1` — when the host cannot open a window (no desktop
  * session, a missing binding): no window means no evidence. `--list` and an
- * argument error are answered before the native modules load.
+ * argument error are answered before the native modules load, and `--list`
+ * waits for the argument guards so a typo beside it is reported rather than
+ * printed over.
  */
 import {
   Clock,
@@ -377,16 +379,6 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
       chrome: chromeArgs.chrome,
     };
 
-    if (parsed.flags.list) {
-      yield* Console.log(
-        Arr.join(
-          Arr.map(liveRegistry, (probe) => probe.id),
-          "\n",
-        ),
-      );
-      return EXIT.passed;
-    }
-
     if (Arr.isReadonlyArrayNonEmpty(unknownArgs)) {
       yield* Console.error(
         Arr.join(
@@ -422,6 +414,16 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
         ),
       );
       return EXIT.unverified;
+    }
+
+    if (parsed.flags.list) {
+      yield* Console.log(
+        Arr.join(
+          Arr.map(liveRegistry, (probe) => probe.id),
+          "\n",
+        ),
+      );
+      return EXIT.passed;
     }
 
     const selected = selectProbes(parsed.flags.only);

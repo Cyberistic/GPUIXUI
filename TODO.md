@@ -5243,7 +5243,38 @@ the report built on it.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 21/21
+`[x]` `[██████████]` 22/22
+
+`[x]` `packages/primitives`: **a stored control size painted a control with no
+      box** — a control size is one of the seven choices a consumer stores
+      (`@gpuixui/tokens` publishes `controlSizes` beside `isControlSize` for
+      exactly that read), so a preference a release renamed reaches a component
+      as a string the union no longer names. Fourteen components indexed the
+      scale with it: `controlHeight[unknown]`, `iconSize[unknown]` and
+      `size-icon-<unknown>` all answer `undefined`, which the runtime paints as
+      no dimension — the same class as the `Icon` whose stored size name
+      vanished. One helper now owns the rule: `controlSize` in `core/theme.ts`
+      reads a name the current scale does not carry as `md`, the default every
+      control documents, and every component that accepts a `size` resolves it
+      through it (Button, IconButton, Toggle, Input, TextArea, NumberField,
+      OTPField, Checkbox, Switch, Rating, Select, Slider, RangeSlider, and the
+      three groups). Proof: `theme.test.ts` gains two cases — the resolver's
+      answers (a shipped step, a name from another release, a number, an absent
+      value) and a derived scan over the components that declare
+      `size?: ControlSize`, requiring `controlSize(` and refusing the two
+      retracted defaults (`props.size ?? "md"`, `size = "md"`). Five suites hold
+      the paint per family (Button, Input, Checkbox, Switch, Slider): the stored
+      name's resolved style must equal the `md` style and its height/box the
+      scale's own. `runtime/controls.runtime.test.tsx` measures the painted
+      window: a stored name painted a **17px** action beside the **32px** `md`
+      control, and a press on the corrected box activates. Directions measured:
+      with `controlSize` answering its input unchanged, 14 unit cases fail
+      (including the existing press-floor/thumb/slide cases that relied on the
+      default) and the window case reads `expected 17 to be 32`; restored, the
+      six unit files are 123/123, the window file 50/50, `check-types` clean.
+      Docs: `README.md` §The theme, `docs/button.mdx` §API, the Tier 1 preamble
+      in `COMPONENTS.md`. No live scenario applies — the box is the
+      `TestRenderer`'s paint.
 
 `[x]` `packages/primitives`: **a text area dropped a row count the runtime could
       not parse** — `minRows`/`maxRows` are caller arithmetic (a measured height

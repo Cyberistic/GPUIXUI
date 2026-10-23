@@ -127,7 +127,8 @@ Artifacts (gitignored, under `.artifacts/`):
 
 Flags: `--list` (print the scenario ids, exit `0`), `--json`,
 `--only <scenario-id>`, `--screenshots`, `--artifacts <dir>`. An unknown flag or
-scenario id prints the usage line and exits `2` before the binding loads.
+scenario id prints the usage line and exits `2` before the binding loads —
+`--list` included, so a typo beside it is reported rather than printed over.
 
 Nothing is written to `.artifacts/` on an unsupported host: exit `2` means there
 is no evidence, and a stale report must never be mistaken for a fresh one.

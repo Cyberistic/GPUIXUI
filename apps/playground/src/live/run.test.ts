@@ -66,6 +66,26 @@ describe("live main", () => {
     });
   });
 
+  it.effect("reports a typo beside --list instead of printing over it", () => {
+    // The same contract as the headless CLI: `--list` answers `0` only after
+    // the arguments were validated, so a typo cannot ride along unnoticed.
+    const deps = probe(["--list", "--onlyy", "focus-visible"]);
+    return Effect.gen(function* () {
+      const code = yield* main(deps);
+      expect(code).toBe(EXIT.unverified);
+      expect(deps.loaded()).toBe(false);
+    });
+  });
+
+  it.effect("rejects an unknown probe id beside --list", () => {
+    const deps = probe(["--list", "--only", "no-such-probe"]);
+    return Effect.gen(function* () {
+      const code = yield* main(deps);
+      expect(code).toBe(EXIT.unverified);
+      expect(deps.loaded()).toBe(false);
+    });
+  });
+
   it.effect("rejects an unknown probe id with exit 2 before loading", () => {
     const deps = probe(["--only", "no-such-probe"]);
     return Effect.gen(function* () {

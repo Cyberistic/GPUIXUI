@@ -178,6 +178,27 @@ describe("main", () => {
     });
   });
 
+  it.effect("reports a typo beside --list instead of printing over it", () => {
+    // The parser's promise is that a typo is never silently ignored; `--list`
+    // used to answer `0` before that guard ran, so this exact pair was a silent
+    // pass. `--list` now waits for both guards.
+    const deps = probe(["--list", "--onlyy", "layout-flex"]);
+    return Effect.gen(function* () {
+      const code = yield* main(deps);
+      expect(code).toBe(EXIT.unverified);
+      expect(deps.loaded()).toBe(false);
+    });
+  });
+
+  it.effect("rejects an unknown --only beside --list too", () => {
+    const deps = probe(["--list", "--only", "no-such-scenario"]);
+    return Effect.gen(function* () {
+      const code = yield* main(deps);
+      expect(code).toBe(EXIT.unverified);
+      expect(deps.loaded()).toBe(false);
+    });
+  });
+
   it.effect("rejects an unknown flag with exit 2 before loading", () => {
     const deps = probe(["--onlyy", "layout-flex"]);
     return Effect.gen(function* () {

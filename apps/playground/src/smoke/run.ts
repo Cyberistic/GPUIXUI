@@ -11,7 +11,9 @@
  * `nub run --filter playground smoke` is the entrypoint. The exit code is the
  * contract: `0` passed, `1` a real failure, `2` no evidence (unsupported host,
  * or an argument this CLI does not understand). Arguments are validated before
- * the preflight, so `--list` and a typo cost no binding load.
+ * the preflight, so `--list` and a typo cost no binding load — and `--list`
+ * answers only after that validation, because a mode that reported `0` over a
+ * typo would be the silent pass the parser exists to prevent.
  */
 import {
   Clock,
@@ -360,11 +362,6 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
   Effect.gen(function* () {
     const parsed = parseArgs(deps.argv);
 
-    if (parsed.flags.list) {
-      yield* Console.log(Arr.join(idsOf(registry), "\n"));
-      return EXIT.passed;
-    }
-
     if (Arr.isReadonlyArrayNonEmpty(parsed.unknown)) {
       yield* Console.error(
         Arr.join(
@@ -393,6 +390,11 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
         ),
       );
       return EXIT.unverified;
+    }
+
+    if (parsed.flags.list) {
+      yield* Console.log(Arr.join(idsOf(registry), "\n"));
+      return EXIT.passed;
     }
 
     return yield* runScenarioCli({
