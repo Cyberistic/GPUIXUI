@@ -10377,7 +10377,48 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 310/311
+`[ ]` `[█████████░]` 311/312
+
+`[x]` Publish the **companion playground's catalogue**, generated from its three
+      registries — the preview policy calls the native playground the runtime half
+      of every component page (strategy 2), and the site had no page for it: a
+      package page's note named `nub run dev:playground` and sent the reader to
+      five lines of `installation.mdx`, so nothing told them *what* the app could
+      prove. `/docs/playground` now owns the run instructions (the app, one
+      scoped headless scenario, one scoped live probe, the terminal platform,
+      `--list`, and the release-gate rule) and catalogues all three suites —
+      **46 headless scenarios, 117 live probes and 4 terminal probes over 17
+      capabilities** — grouped per capability, each row the probe's id and its
+      own measured sentence. The catalogue is read at build time
+      (`src/lib/playground-registry.ts`) from the exact files the runners print
+      with `--list`, so a probe added to the playground appears on the page
+      without an edit; the parse reports an unreadable entry as an error the
+      component prints rather than dropping it. `native-run-note.tsx` now points
+      at this page (the installation section links on to it), and the page is in
+      the sidebar after Testing, the ledger and the preview policy's strategy-2
+      paragraph. Guards: `src/lib/playground-registry.test.ts` (7 cases) reads
+      each registry with a line reader — a different algorithm from the module's
+      parser — and requires the three suites' probes, order, hosts, sources and
+      counts to match, every id unique, no parse problem, the page to mount the
+      catalogue in the sidebar and print the commands the manifests and runner
+      files define, and the group order to be first-appearance; a fixture proves
+      a malformed entry is reported (`expected [] to deeply equal [ '`no-title`
+      is declared but not read…' ]` with the first `declared` regex restored).
+      `src/components/docs/playground-scenarios.test.tsx` (3 cases) holds every
+      printed count, host, source and entry, the open/closed rule for a short
+      suite, and the unreadable-entry alert. Direction measured: deleting the
+      page's `PlaygroundScenarios` mount fails `mounts the generated catalogue
+      and lists it in the sidebar`. Verified on a served build: `/docs/playground`
+      answers 200 and its markup carries `46 probes · 17 capabilities`,
+      `117 probes · 17 capabilities`, `4 probes · 3 capabilities`, the probe ids
+      and titles, and `/api/search?query=playground` returns the page and its
+      sections. Docs: the page itself, `installation.mdx` §Run the playground,
+      `testing.mdx`, `components/index.mdx`, `docs/preview-strategy.md` and the
+      `apps/docs/README.md` ledger. `nub run --filter @gpuixui/docs test` is
+      **137 files / 1 175 tests** green, `check-types` and `build` clean,
+      `check:tests` red only on the recorded foreign
+      `packages/data/src/behaviour/scratch-probe.test.tsx`. No native scenario
+      applies — a docs page and a build-time registry read have no runtime path.
 
 `[x]` Send the **curated component pages their related links back** — the page
       prune removed the hand-written `## Related` section from all 39 curated

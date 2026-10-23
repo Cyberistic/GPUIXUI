@@ -441,7 +441,8 @@ browser can draw honestly. Either way
 the page opens with a note saying the drawing is not the shipped frame and
 naming the command that opens the companion playground — `nub run
 dev:playground`, read from the root manifest rather than typed twice — with a
-link to [how to run it](/docs/installation#run-the-playground).
+link to [the native playground page](/docs/playground), which catalogues every
+probe and gives the scoped run commands.
 `src/components/docs/native-run-note.test.tsx` holds the command to the manifest's
 script, the link to a heading the installation page has, and the page frame to
 mounting the note. The primitive layer is one sidebar section even though two

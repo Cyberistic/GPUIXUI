@@ -34,6 +34,7 @@ data-display/index.mdx      The data lane: what ships, the table gate, runtime g
 patterns.mdx                 The workflows that cross components, and who owns the state
 keyboard.mdx                 The chord grammar, keymaps, sequences, the command registry and its React provider
 examples.mdx                 The example registry, generated from every package's examples
+playground.mdx               The companion native app: run commands, the probe catalogue, where evidence lands
 reference.mdx                The public entry points and the symbols behind them
 themes.mdx                   The live token editor, its audit and its copy output
 blocks/index.mdx             Page-level recipes composed from the library
@@ -229,6 +230,7 @@ src/components/docs/status-strip.tsx      The generated COMPONENTS.md status and
 src/components/docs/dependency-strip.tsx  The generated "Built on" line: the component's workspace imports
 src/components/docs/related-strip.tsx     The generated related-component links a package page ends with
 src/components/docs/native-run-note.tsx   The note above a package page: the playground command and its page
+src/components/docs/playground-scenarios.tsx The probe catalogue on /docs/playground, grouped by capability
 src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
 src/components/docs/component-index.tsx   The 3-column tile grid on /docs/components and its URL filter
@@ -352,6 +354,7 @@ src/lib/examples-data.ts            Reads packages/*/examples/*.example.tsx at b
 src/lib/component-index.ts          The component index: URL mapping, curated shadowing, filter
 src/lib/component-index-data.ts     The index, from every docs collection at build time
 src/lib/component-props.ts          The props a component declares, read through extends, aliases and Omit
+src/lib/playground-registry.ts      The three playground registries, read at build time for the probe catalogue
 src/lib/component-index-query.ts    The docs indexes' filter on the page URL (`?q=`)
 src/lib/icon-gallery.ts             The icon gallery's entries and its paint rule
 src/lib/related.ts                  The related-component families a package page's strip prints

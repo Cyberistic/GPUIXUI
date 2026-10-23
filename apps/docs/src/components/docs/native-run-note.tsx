@@ -9,7 +9,7 @@ import { Callout } from "fumadocs-ui/components/callout";
  */
 export const playgroundScript = "dev:playground";
 export const playgroundCommand = `nub run ${playgroundScript}`;
-export const playgroundHref = "/docs/installation#run-the-playground";
+export const playgroundHref = "/docs/playground";
 
 /**
  * The note above a page the package ships.

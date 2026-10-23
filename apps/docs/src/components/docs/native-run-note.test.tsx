@@ -108,12 +108,17 @@ describe("the native playground note", () => {
     expect(index).not.toContain("a browser preview is not available");
   });
 
-  it("points at a heading the installation page actually has", () => {
+  it("points at the page that runs and catalogues the probes", () => {
+    const playground = read("apps/docs/content/docs/playground.mdx");
     const installation = read("apps/docs/content/docs/installation.mdx");
 
+    expect(playgroundHref).toBe("/docs/playground");
+    expect(playground).toContain("## Run the app");
+    expect(playground).toContain(playgroundCommand);
+    // The installation page keeps the short command and sends a reader on.
     expect(installation).toContain("## Run the playground");
-    expect(playgroundHref).toBe("/docs/installation#run-the-playground");
     expect(installation).toContain(playgroundCommand);
+    expect(installation).toContain("(/docs/playground)");
   });
 
   it("is the note every package page mounts", () => {

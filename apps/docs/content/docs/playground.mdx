@@ -1,0 +1,74 @@
+---
+title: Native playground
+description: The companion GPUix app — the probes it runs, how to run one, and where the evidence lands.
+---
+
+import { PlaygroundScenarios } from "@/components/docs/playground-scenarios";
+
+Every preview on this site is a drawing: a browser reproduction of a component
+that renders through GPUix. `apps/playground` is the companion app that runs the
+real thing — the pinned `@gpuix/native` binding, the library's own modules, and a
+scripted interaction with checks in it. It is not `/live`: that route runs the
+same renderer compiled to wasm, while the playground opens a native surface.
+
+## Run the app
+
+```sh
+nub run dev:playground
+```
+
+The window mounts the shipped components on the desktop the app runs on. A host
+with no prebuilt binding — an Intel Mac — builds one first;
+[Platform support](/docs/installation#platform-support) names the targets and
+the source build.
+
+## Run one probe
+
+A probe is not a screenshot: it drives the shipped component with the host's
+automation verbs and asserts what the runtime did. `--only` is repeatable, so a
+change runs the probes it touches instead of the suite.
+
+```sh
+# The offscreen renderer — painted styles and the accessibility tree.
+nub apps/playground/dist/smoke/run.js --only <id>
+
+# A real window — hit-testing, focus, keys, wheel and captured pixels.
+nub run --filter playground build && nub apps/playground/dist/live/run.js --only <id>
+
+# The terminal platform, captured through a pty.
+nub run --filter playground terminal
+```
+
+`--list` prints the ids and runs nothing. Both runners execute the built tree, so
+a source change needs `nub run --filter playground build` first. The full live
+suite opens a real window and takes minutes: it is a release gate, not something
+to run while iterating.
+
+## What it mounts
+
+<PlaygroundScenarios />
+
+The tables are read from the three registries at build time — the same metadata
+`--list` prints — so a probe added to the playground appears here without an
+edit to this page, and a page row cannot name a probe that does not exist. An
+entry the catalogue cannot read is printed as an error rather than dropped.
+
+## Where the evidence lands
+
+`apps/playground/README.md` has a section per probe: the checks, the negative
+controls that were measured, and the frame a window captured. The frames under
+`.artifacts/live` are local evidence for the run, not site content. The verdicts
+these probes produce are published in [Runtime](/docs/runtime) and
+`docs/gpuix-capabilities.md`; [Testing](/docs/testing) describes the two lanes
+and the report shape.
+
+## Limits
+
+- **The two hosts are not interchangeable.** An offscreen scenario can read
+  `paintedStyle` and the accessibility tree; a window proves hit-testing, focus,
+  the wheel and pixels. Neither can stand in for the other.
+- **A probe is evidence for one host and one runtime version.** Passing means
+  the declared checks passed on this machine and this binding — not that the
+  capability is guaranteed everywhere.
+- **The binding is version-specific.** The playground builds `@gpuix/native`
+  from the pinned release, so a version bump re-opens the native half.
