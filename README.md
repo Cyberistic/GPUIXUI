@@ -99,6 +99,7 @@ edited:
 - shadcn/ui — https://github.com/shadcn-ui/ui
 - Fumadocs — https://github.com/fuma-nama/fumadocs
 - TanStack — https://github.com/TanStack (table, virtual, form, pacer, hotkeys: headless cores; the docs app runs TanStack Start)
+- Netherite — https://github.com/Infatoshi/netherite (the C/CUDA Minecraft 1.7.10 engine; `apps/netherite` wraps its CLI in a GPUix terminal client; clone at `references/netherite`)
 - PanelUI — https://panelui.dev/docs/components (documentation only: no public
   source repository, so it is read as documentation and not cloned)
 
