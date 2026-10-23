@@ -176,6 +176,17 @@ export const renderFieldHint = (
 );
 
 /**
+ * The words the paint must also *say*.
+ *
+ * A host handed no `placeholder` also loses the runtime's `aria_placeholder`, so
+ * a field that paints this hint has to publish the same words on the help
+ * channel — `fieldHelp` is that rule (`core/a11y.ts`), re-exported here because
+ * the paint and its announcement are one contract: a second package that calls
+ * this seam must not forget the half that reaches a reader.
+ */
+export { fieldHelp } from "../core/a11y.js";
+
+/**
  * The box a hinted host sits in.
  *
  * The frame above is absolutely positioned, so the host needs a positioning

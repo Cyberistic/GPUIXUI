@@ -9,7 +9,7 @@
  */
 
 export { alpha } from "@gpuixui/tokens";
-export { accessibleName } from "./a11y.js";
+export { accessibleName, fieldHelp } from "./a11y.js";
 
 export {
   defaultMessages,

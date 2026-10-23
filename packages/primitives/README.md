@@ -157,12 +157,17 @@ facing the same runtime paints the same hint rather than keeping a copy:
 - `hintHost` — `hintHost(layout?)` is the positioning context the absolute
   frame needs, carrying the host's own flex layout;
 - `renderFieldHint` — `renderFieldHint(hint, testId)` paints one `<text>` named
-  `${testId}-hint`.
+  `${testId}-hint`;
+- `fieldHelp` — `fieldHelp(field, value)` is the words the paint must also
+  **say**: a host handed no `placeholder` loses the runtime's `aria_placeholder`,
+  so the hint is announced as the field's `aria-description` while the box is
+  empty (a caller's `description` wins). The paint and its announcement are one
+  contract, so they ship together.
 
 The subpath is deliberate: the package root re-exports every primitive, so
 reaching this seam through the barrel loads the whole Tier 1 package to paint
-one line of text. `fieldHint`, `hintFrame`, `hintHost` and `renderFieldHint`
-are also on the root for the fields in this package.
+one line of text. `fieldHelp`, `fieldHint`, `hintFrame`, `hintHost` and
+`renderFieldHint` are also on the root for the fields in this package.
 
 `spec` is either `{ size, align, origin }` with `origin: "field"` (measured from
 the field's border box) or `"content"` (a host already inside that chrome), or

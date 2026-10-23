@@ -26,6 +26,7 @@ import * as hintSubpath from "@gpuixui/primitives/hint";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
+  fieldHelp as publishedFieldHelp,
   fieldHint as publishedFieldHint,
   hintFrame as publishedHintFrame,
   hintHost as publishedHintHost,
@@ -33,6 +34,7 @@ import {
 } from "../index.js";
 import { fieldChrome, renderInput, type FieldProps } from "./Input.js";
 import {
+  fieldHelp,
   fieldHint,
   hintFrame,
   hintHost,
@@ -231,6 +233,7 @@ describe("the published hint seam", () => {
   // exporting one of the parts leaves that package with a second copy (the
   // two-copy state `TODO.md` → Interlocks records).
   it("publishes the frame, the hint and its element from the package root", () => {
+    expect(publishedFieldHelp).toBe(fieldHelp);
     expect(publishedFieldHint).toBe(fieldHint);
     expect(publishedHintFrame).toBe(hintFrame);
     expect(publishedHintHost).toBe(hintHost);
@@ -309,7 +312,7 @@ describe("the published hint seam", () => {
     );
     expect(
       Arr.filter(
-        ["fieldHint", "hintFrame", "hintHost", "renderFieldHint"],
+        ["fieldHint", "hintFrame", "hintHost", "renderFieldHint", "fieldHelp"],
         (name) => !readme.includes(`\`${name}\``),
       ),
     ).toEqual([]);
@@ -323,11 +326,13 @@ describe("the published hint seam", () => {
   // that makes the shared frame cheaper than the copy.
   it("loads the seam from its subpath without the package barrel", () => {
     expect(Arr.sort(Object.keys(hintSubpath), Order.String)).toEqual([
+      "fieldHelp",
       "fieldHint",
       "hintFrame",
       "hintHost",
       "renderFieldHint",
     ]);
+    expect(hintSubpath.fieldHelp).toBe(fieldHelp);
     expect(hintSubpath.fieldHint).toBe(fieldHint);
     expect(hintSubpath.hintFrame).toBe(hintFrame);
     expect(hintSubpath.hintHost).toBe(hintHost);
