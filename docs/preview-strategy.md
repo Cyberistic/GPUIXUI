@@ -365,10 +365,14 @@ The table is the mounted set, not an illustration: `package-docs.test.ts` reads
 it against `packageCollections` in both directions, so a collection the site mounts
 and this table omits fails, and so does a row no collection backs.
 
-Those pages are **strategy 4**: no browser rendering, the real API tables and
-limitations, and a note at the top naming the command that opens the companion
-playground — `nub run dev:playground`, read from the root manifest rather than
-typed twice — with a link to
+A page that ships a demo — every component and primitive page does — mounts it
+exactly as a curated page does, so that page's preview is **strategy 3**: a
+browser approximation, labelled, with the real API tables and limitations beside
+it. The lanes with no demo (data, dock, editor, files, media, shell) are
+**strategy 4**: no browser rendering at all. Either way the page opens with a
+note saying the drawing is not the shipped frame and naming the command that
+opens the companion playground — `nub run dev:playground`, read from the root
+manifest rather than typed twice — with a link to
 [how to run it](/docs/installation#run-the-playground).
 `src/components/docs/native-run-note.test.ts` holds the command to the manifest's
 script, the link to a heading the installation page has, and the page frame to
@@ -687,9 +691,10 @@ worked-example strip (and, on a package page, the status strip) from the example
 registry and `COMPONENTS.md` respectively. A page cannot claim an example or a
 status it does not have, which is why neither is a table row an author writes.
 
-The package's own pages are the component's doc file and use strategy 4 from the
-top of this file: no browser preview, and a section that does not apply (no
-sizes, no keyboard path) is omitted rather than faked. Four sections are not
+The package's own pages are the component's doc file: a page that ships a demo
+mounts it as a labelled browser approximation (strategy 3), a lane with no demo
+shows none (strategy 4), and a section that does not apply (no sizes, no
+keyboard path) is omitted rather than faked. Four sections are not
 optional on any component page, though — `## API`, an accessibility or
 limitations section, the evidence section (`## Verification` or `## Testing`)
 and `## Related` — and `src/lib/package-page-template.test.ts` holds every page

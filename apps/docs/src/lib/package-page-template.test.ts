@@ -11,10 +11,11 @@ import { packageCollections } from "./collection-routes";
  * documentation, the runtime's accessibility budget and limitations, the
  * evidence that the behaviour was measured, and where a reader goes next.
  * The curated pages are held to the full template by `component-page.test.ts`.
- * The package pages are strategy 4 — no browser preview, the real API — and
- * until this guard they were exempt from everything: a page could lose its
- * `## API` table or its limitations and the build stayed green, while the site
- * kept rendering it as the component's documentation.
+ * The package pages carry the real API and limitations, and a component or
+ * primitive page also mounts a labelled browser approximation; until this guard
+ * they were exempt from everything: a page could lose its `## API` table or its
+ * limitations and the build stayed green, while the site kept rendering it as
+ * the component's documentation.
  *
  * Only the sections every page can carry are required. A page without sizes,
  * a keyboard path or a theming decision omits that section by design

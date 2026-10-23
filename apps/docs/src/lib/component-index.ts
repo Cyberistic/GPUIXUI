@@ -58,10 +58,11 @@ export interface ComponentEntry {
   /**
    * True when the page opens with a browser preview (`<ComponentPreview`).
    *
-   * Only a curated page mounts one; a package page is strategy 4 in
-   * `docs/preview-strategy.md` and opens with the native-run note instead. The
-   * index marks the rows so a reader can see which pages show the shape of the
-   * component before reading its API.
+   * A page that ships a demo mounts one — curated pages and the component and
+   * primitive package pages do — and a lane with no demo shows none. The note
+   * above a package page labels the drawing an approximation, because the
+   * shipped code renders through GPUix. The index marks the rows so a reader
+   * can see which pages show the shape of the component before reading its API.
    */
   readonly preview: boolean;
 }

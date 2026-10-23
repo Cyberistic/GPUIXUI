@@ -7641,7 +7641,36 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 206/206
+`[x]` `[██████████]` 207/207
+
+`[x]` Stop the **package-page note denying the preview the same page draws** —
+      every component and primitive page mounts a `<ComponentPreview>` (75/75 and
+      31/31; `component-index.ts` already marks those rows `preview: true`), and
+      the note `docs-view.tsx` mounts directly above it said "A browser preview
+      is not available for this component: run it in the native playground", so
+      the page made two opposite claims about one drawing. `NativeRunNote` now
+      says a Preview tab, where the page has one, is a **browser approximation,
+      labelled as one**, and the shipped code renders through GPUix; the note
+      still names `nub run dev:playground` and the installation heading. The
+      policy's two "package pages are strategy 4: no browser rendering"
+      statements, `component-index.ts`'s `preview` comment, the package-page
+      template header and the components index page's "those pages open with a
+      note saying a browser preview is not available" said the same false thing,
+      so all now split strategy 3 (a page that ships a demo, labelled) from
+      strategy 4 (the lanes with no demo). `native-run-note.test.tsx` gains `does
+      not deny the preview the page it sits above draws` (5 in the file): it
+      refuses the retracted sentence, counts the pages that do mount a preview in
+      both collections (floors of 70 and 25) and a lane that mounts none, reads
+      the package frame's note-before-body order and the MDX registry, and holds
+      the policy, the index page and the old strategy-4 absolute. Directions
+      measured: restoring the note text fails both note cases by name (`expected
+      … to contain 'browser approximation'`), and the strategy-4 absolute fails
+      the new case. `nub run --filter @gpuixui/docs test src/components/docs/
+      native-run-note.test.tsx`: 5/5; the full docs suite is 1 165 passed with
+      only the two foreign failures recorded in Interlocks (the editor pages'
+      six cross-links and the two dock pages with no limitations section);
+      `check-types`, `oxlint` and `oxfmt` clean. No native GPUix scenario applies
+      — a docs note and its guards have no runtime path.
 
 `[x]` Curate the **Navigation menu** page and hold its pointer clock, its
 one-panel rule and its panel to the source — `/docs/components/navigation-menu`

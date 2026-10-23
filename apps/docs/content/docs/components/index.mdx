@@ -30,12 +30,14 @@ The pages come from two places:
   Inline edit, List, Navigation menu, Pagination, Popover, Search input, Select,
   Stepper, Switch, Color picker, Table, Tag input, Tabs, Time picker, Timeline,
   Tooltip and Toast — with browser previews, an install block and the copyable
-  source. Those rows are marked **Browser preview** in the index above.
+  source. A page that mounts a preview is marked **Browser preview** in the
+  index above.
 - **The package's own page** for every other component, rendered from
   `packages/components/docs/`. That file is what the component ships with, so
-  the page and the package cannot disagree. Those pages open with a note saying
-  a browser preview is not available and naming the command that opens the
-  companion playground.
+  the page and the package cannot disagree. A component or primitive page mounts
+  its own preview too — a browser approximation, labelled as one — while a page
+  with no demo opens with a note naming the command that opens the companion
+  playground.
 
 **What the marks mean.** A **Browser preview** mark is about the page: it opens
 with a rendering you can press. A **partial** mark is about the component:

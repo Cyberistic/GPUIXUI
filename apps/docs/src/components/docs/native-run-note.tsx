@@ -14,9 +14,11 @@ export const playgroundHref = "/docs/installation#run-the-playground";
 /**
  * The note above a page the package ships.
  *
- * A package page is rendered as-is from `packages/<pkg>/docs`, and the site has
- * no native surface, so it states that the browser will not draw the component
- * and points at the command that will.
+ * A package page is rendered as-is from `packages/<pkg>/docs` and the site has
+ * no native surface, so a `Preview` the page mounts is a browser drawing and
+ * says nothing about the GPUix frame. The note cannot deny that preview — a
+ * component or primitive page mounts one — so it labels the drawing an
+ * approximation and points at the command that shows the real component.
  */
 export function NativeRunNote({
   kind,
@@ -30,8 +32,9 @@ export function NativeRunNote({
   return (
     <Callout title={`This page ships with the ${kind}`} type="info">
       It is rendered from <code>{path}</code>, the page the package maintains. A
-      browser preview is not available for this {kind}: run it in the native
-      playground with <code>{playgroundCommand}</code> —{" "}
+      Preview tab, where the page has one, is a browser approximation, labelled
+      as one — the shipped code renders through GPUix. Run the real component in
+      the native playground with <code>{playgroundCommand}</code> —{" "}
       <a href={playgroundHref}>how to run the playground</a>.
     </Callout>
   );

@@ -477,6 +477,92 @@ describe("the motion page", () => {
     expect(pageText).not.toContain("detects the system");
   });
 
+  it("carries the reduced preference past the mount's first frame", () => {
+    // The page taught the preference's first render only, so a reader adjusting
+    // a control under it could not learn that the previous frame never survives
+    // the change — the defect the hooks fixed: a reduced render kept the old
+    // frame for one commit, and a target changed while it was on reported the
+    // skipped run against the frame that was leaving. Both halves live in
+    // `react.ts`'s reduced branch, so the page is held to that branch rather
+    // than to the sentence it prints.
+    const reducedUseMotion = react.slice(
+      react.indexOf(
+        "if (reduced(options)) {",
+        react.indexOf("export const useMotion"),
+      ),
+      react.indexOf(
+        "publish(setFrame, settleBefore(motion, origin, reduced(options)));",
+      ),
+    );
+    expect(reducedUseMotion, "useMotion has no reduced branch").toContain(
+      "if (resting === motion.current) return;",
+    );
+    expect(reducedUseMotion).toContain("motion.set(resting);");
+    expect(reducedUseMotion).toContain("complete: true,");
+
+    const reducedUseInertia = react.slice(
+      react.indexOf(
+        "if (reduced(options)) {",
+        react.indexOf("export const useInertia"),
+      ),
+      react.indexOf(
+        "const sampled = settleBefore(motion, start, reduced(options));",
+      ),
+    );
+    expect(reducedUseInertia, "useInertia has no reduced branch").toContain(
+      "motion.coast(running.inertia, running.velocity);",
+    );
+    expect(reducedUseInertia).toContain(
+      "const ended = motion.sample(performance.now() - start, true);",
+    );
+    expect(reducedUseInertia).toContain("skippingStart.current = false;");
+
+    // The completion edge is read in the render, so a destination the commit
+    // just reached reports its end with the frame instead of one commit later.
+    expect(
+      react.match(/frame\.complete \|\| resting !== motion\.current,/g),
+      "a hook stopped reporting the journey a reduced render removed",
+    ).toHaveLength(2);
+
+    expect(pageText).toContain("read on every render, not only at mount");
+    expect(pageText).toContain(
+      "the previous frame never survives the change for a commit",
+    );
+    expect(pageText).toContain("a mount that asked for no journey");
+    expect(pageText).toContain(
+      "Turning the preference back off starts from where the reader is",
+    );
+    expect(pageText).toContain(
+      "rather than relaunching a gesture the reader already saw end",
+    );
+    expect(pageText).toContain(
+      "`packages/components/src/behaviour/motion-hooks.test.tsx`",
+    );
+
+    // A page cannot print a reading the renderer suite does not measure.
+    const reducedSuite = readRepo(
+      "packages/components/src/behaviour/motion-hooks.test.tsx",
+    );
+    [
+      "paints a target changed while it is on in the frame it arrives",
+      "paints a release changed while it is on in the frame it arrives",
+      "paints the resting frame in the commit the preference turns on",
+      "keeps a mount that asked for no journey from reporting one",
+    ].forEach((name) => {
+      expect(reducedSuite, `the suite no longer runs ${name}`).toContain(name);
+    });
+    ["100:0:false", "200:0:true", "140:0:true", "105:0:true"].forEach(
+      (reading) => {
+        expect(reducedSuite, `the suite no longer reads ${reading}`).toContain(
+          `"${reading}"`,
+        );
+        expect(pageText, `the page no longer prints ${reading}`).toContain(
+          `\`${reading}\``,
+        );
+      },
+    );
+  });
+
   it("quotes the runtime's measured tween and its clip", () => {
     // These are runtime facts, so the page is held to the record's row rather
     // than to the sentence it prints, and the probe it cites has to be the one
