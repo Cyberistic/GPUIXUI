@@ -6,7 +6,8 @@
  * tinted `<svg>` mask with the quiet zone inside the viewBox, never a themed
  * approximation of a QR code — a symbol whose modules are clipped or whose
  * paper follows a dark theme cannot be scanned. The over-long case must name
- * the capacity instead of painting a truncated (unreadable) symbol.
+ * the capacity instead of painting a truncated (unreadable) symbol, and must
+ * keep the box its caller reserved so the page does not jump as a value grows.
  */
 
 import { describe, expect, it } from "vitest";
@@ -117,5 +118,26 @@ describe("QrCode", () => {
     expect(expectSome(elementProp(text, "children"))).toBe(
       qrOverflowMessage(capacity + 1, capacity),
     );
+  });
+
+  it("keeps the box the caller reserved in the overflow state", () => {
+    const capacity = qrByteCapacity(10, "M");
+    const root = render({
+      value: "y".repeat(capacity + 1),
+      style: { width: 240, height: 90 },
+    });
+    expect(expectSome(hostProp(root, "style"))).toMatchObject({
+      width: 240,
+      height: 90,
+    });
+  });
+
+  it("reads a stored quiet zone it cannot lay out as the default", () => {
+    const root = render({ quietZone: Number.NaN });
+    expect(sourceOf(root)).toContain('viewBox="0 0 29 29"');
+    expect(expectSome(hostProp(root, "style"))).toMatchObject({
+      width: 145,
+      height: 145,
+    });
   });
 });

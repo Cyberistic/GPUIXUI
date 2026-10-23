@@ -13,6 +13,8 @@
  * The bug guarded: the encoder existed only in the playground's probe, which
  * painted a synthetic matrix. Every value now encodes to a scannable symbol,
  * and one that does not fit is refused with its capacity rather than truncated.
+ * A quiet zone is a stored preference as often as a literal, so an unreadable
+ * count must read as the default rather than reach the viewBox as `NaN`.
  */
 
 import { describe, expect, it } from "vitest";
@@ -29,6 +31,7 @@ import {
   qrVersionBits,
   qrVersionFor,
   QR_MAX_VERSION,
+  QR_QUIET_ZONE,
   QR_VERSIONS,
   QrOverflow,
   QrSymbol,
@@ -403,6 +406,16 @@ describe("qrPlacement", () => {
     expect(qrPlacement(symbol, Number.NaN).side).toBe(145);
     expect(qrPlacement(symbol, -20).side).toBe(145);
   });
+
+  it("reads an unreadable quiet zone as the default, never a NaN field", () => {
+    const symbol = encodeQr("place", { level: "L" });
+    if (!(symbol instanceof QrSymbol)) return expect.fail("no symbol");
+    const fallback = qrPlacement(symbol, 160, QR_QUIET_ZONE);
+    expect(qrPlacement(symbol, 160, Number.NaN)).toStrictEqual(fallback);
+    expect(qrPlacement(symbol, 160, Number.POSITIVE_INFINITY)).toStrictEqual(
+      fallback,
+    );
+  });
 });
 
 describe("qrSvgSource", () => {
@@ -424,5 +437,14 @@ describe("qrSvgSource", () => {
       ),
     ).toBe(dark);
     expect(source).toContain('fill="#000"');
+  });
+
+  it("reads an unreadable quiet zone as the default in the viewBox", () => {
+    const symbol = encodeQr("svg", { level: "L" });
+    if (!(symbol instanceof QrSymbol)) return expect.fail("no symbol");
+    expect(qrSvgSource(symbol, Number.NaN)).toBe(
+      qrSvgSource(symbol, QR_QUIET_ZONE),
+    );
+    expect(qrSvgSource(symbol, Number.NaN)).not.toContain("NaN");
   });
 });

@@ -102,8 +102,11 @@ export const renderQrCode = (
         role="img"
         aria-label={label}
         style={mergeStyles(
-          recipeStyle(cn("rounded-sm", className), theme),
-          errorStyle(theme),
+          mergeStyles(
+            recipeStyle(cn("rounded-sm", className), theme),
+            errorStyle(theme),
+          ),
+          style,
         )}
       >
         <text style={errorText(theme)}>

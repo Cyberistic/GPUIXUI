@@ -822,11 +822,19 @@ export interface QrPlacement {
 }
 
 /**
+ * The quiet zone in whole modules. A stored preference may arrive unreadable,
+ * so a non-finite count reads as the default rather than poisoning every field
+ * it is multiplied into.
+ */
+const quietZoneOf = (quiet: number): number =>
+  Number.isFinite(quiet) ? Math.max(0, Math.floor(quiet)) : QR_QUIET_ZONE;
+
+/**
  * Resolve a painted square.
  *
  * Modules are whole points so the grid stays crisp; the square is the largest
  * one the caller's side can hold, never larger. A side that cannot be laid out
- * reads as `fallback`.
+ * reads as `fallback`, and so does a quiet zone that cannot be read.
  */
 export const qrPlacement = (
   symbol: QrSymbol,
@@ -834,7 +842,7 @@ export const qrPlacement = (
   quiet: number = QR_QUIET_ZONE,
   fallback = 160,
 ): QrPlacement => {
-  const zone = Math.max(0, Math.floor(quiet));
+  const zone = quietZoneOf(quiet);
   const cells = symbol.modules + zone * 2;
   const asked = Number.isFinite(side) && side > 0 ? side : fallback;
   const module = Math.max(1, Math.floor(asked / cells));
@@ -846,7 +854,7 @@ export const qrSvgSource = (
   symbol: QrSymbol,
   quiet: number = QR_QUIET_ZONE,
 ): string => {
-  const offset = Math.max(0, Math.floor(quiet));
+  const offset = quietZoneOf(quiet);
   const cells = symbol.modules + offset * 2;
   const runs = Arr.flatMap(
     Arr.makeBy(symbol.modules, (row) => row),

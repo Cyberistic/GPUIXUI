@@ -37,7 +37,9 @@ hold and never larger:
 - a version-1 symbol (21 modules) with the default `quietZone={4}` is a 29-cell
   field; `size={160}` paints a 5-point module and a **145**-point square;
 - the same symbol with `quietZone={0}` is 21 cells; `size={160}` paints **147**;
-- a side that cannot be laid out (`NaN`, zero, negative) reads as the default.
+- a side that cannot be laid out (`NaN`, zero, negative) reads as the default;
+- a `quietZone` that cannot be read (`NaN`, infinity) reads as the default `4`, so
+  a stored preference never reaches the viewBox as `NaN`.
 
 Reserve the square the component paints (`side`) rather than `size` when a layout
 depends on it.
@@ -59,6 +61,10 @@ a stronger level spends a bigger symbol for the same text. A value past version
 <QrCode value={veryLongText} level="H" label="The address" />
 // A QR code holds 119 bytes at this level; the value is 240.
 ```
+
+The overflow box is the caller's like the symbol's frame: `className` and `style`
+merge last, so a page that reserved a square for the symbol keeps its box when a
+longer value turns the symbol into a message.
 
 ## Colour
 
