@@ -33,6 +33,12 @@ import {
  * page must state both the insertion and the missing edit, and the filled
  * `OTPField` cell that refuses to delete twice, or the next window probe
  * plans a deletion it cannot drive.
+ *
+ * The `keyDown` row is held to `decideActivation`: the platform stamps a held
+ * key's repeated key-down with `isHeld`, and that flag is the difference
+ * between an activation that runs once and one that fires per repeat. A row
+ * that says only "a key down" leaves a probe author unable to drive the
+ * branch every activating control in the library rests on.
  */
 
 /** True when the value is a plain object, the shape a manifest or a meta file has. */
@@ -207,13 +213,14 @@ describe("the testing page", () => {
   });
 
   it("names the window-only verbs that are optional in the host", () => {
-    // The five verbs a synchronous host has no surface for are declared with a
+    // The six verbs a synchronous host has no surface for are declared with a
     // `?`, and the guard above read only the required members: a probe author
     // could not look up the clock, the activation or the renderer's blur.
     const verbs = interfaceVerbs("AsyncSmokeHost");
     const optional = [
       "activateWindow",
       "blur",
+      "keyDown",
       "clockPause",
       "clockFastForward",
       "clockResume",
@@ -221,7 +228,26 @@ describe("the testing page", () => {
 
     expect(optional.filter((verb) => !verbs.includes(verb))).toEqual([]);
     expect(optional.filter((verb) => !hasRow(verb))).toEqual([]);
-    expect(pageText).toContain("Five verbs are optional");
+    expect(pageText).toContain("Six verbs are optional");
+  });
+
+  it("states the repeat flag a held key carries", () => {
+    // A window repeats a held key as key-down events stamped `isHeld: true`,
+    // and `decideActivation` refuses an activation for one — the guard that
+    // keeps a held Enter from firing a row's action over and over. A page that
+    // lists the verb as "a key down" is indistinguishable from `key`.
+    const keyboard = readRepo("packages/primitives/src/core/keyboard.ts");
+    expect(keyboard).toContain("export const decideActivation = (");
+    expect(keyboard).toContain("if (held) return false;");
+
+    const row = rowOf("keyDown");
+    expect(row, "the window table has no keyDown row").not.toBe("");
+    expect(row).toContain("repeat");
+    expect(row).toContain("`isHeld`");
+
+    expect(pageText).toContain("`decideActivation`");
+    expect(pageText).toContain("packages/primitives/src/core/keyboard.ts");
+    expect(pageText).toContain("ignores the flag");
   });
 
   it("states the focus pair a live window does not deliver", () => {

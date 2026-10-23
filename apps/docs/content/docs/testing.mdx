@@ -169,6 +169,7 @@ Four of those are measured facts rather than conveniences:
 | `drag` | a real pointer drag, button held |
 | `wheel` | a wheel over an element's centre |
 | `key` | a key **down**; a printable character is inserted, but no native text edit runs |
+| `keyDown` | a key **down** carrying the platform's repeat flag (`isHeld`), the one route a held key arrives through |
 | `keyUp` | releases a held key, for a control that activates on release |
 | `scrollOffset` | the window's scroll handle for an element |
 | `scrollToItem` | reveals a `<virtual-list>` row by index |
@@ -192,10 +193,11 @@ that activates on release (Space on a button, checkbox or switch, the platform's
 own rule) is only provable with `keyUp`. And a window's renderer reports no
 style, so `paintedStyle` has no twin: a live probe proves paint from `pixels`.
 
-Five verbs are optional because only a window has the surface they drive:
-`activateWindow`, `blur`, `clockPause`, `clockFastForward` and `clockResume`. A
-probe that needs one reads it off `ctx.host` and fails with a `SmokeHostError`
-naming the verb when the runner exposes none, rather than assuming it.
+Six verbs are optional because only a window has the surface they drive:
+`activateWindow`, `blur`, `keyDown`, `clockPause`, `clockFastForward` and
+`clockResume`. A probe that needs one reads it off `ctx.host` and fails with a
+`SmokeHostError` naming the verb when the runner exposes none, rather than
+assuming it.
 `clockPause` is what makes a faded or travelling surface measurable: a software
 paint can outlast a 320 ms tween, so a probe freezes the clock, advances it by
 an exact number of milliseconds and captures that frame.
@@ -230,6 +232,17 @@ ran — and its native single-delete guard is
 `packages/primitives/runtime/otp.runtime.test.tsx`, while `otp-keys-lifecycle`
 measured the window half (the automation's Backspace runs no edit, and the
 field's key-up leaves the code alone rather than clearing a second cell).
+
+`keyDown(keystroke, isHeld)` is the one verb that sends the **repeat flag**, and
+it carries the piece of a key event `key` cannot produce: the platform sends
+key-down again while a key is held, stamped `isHeld: true`, and a handler that
+acts on the flag fires as many times as the OS repeated. Activation is the thing
+that must not repeat, so `decideActivation`
+(`packages/primitives/src/core/keyboard.ts`) refuses any event whose `isHeld` is
+true — a held `Enter` on a button, checkbox or menu row runs once, and `Space`
+still activates on its release. A handler that is *meant* to repeat — an arrow
+walking a tree, `PageDown` in a log — ignores the flag and keeps moving. A probe
+therefore drives a held key with `keyDown` and a single press with `key`.
 
 ## The report
 
@@ -383,8 +396,8 @@ computed halfway through the fold.
   to `.artifacts/`, so a stale report cannot be mistaken for a fresh one.
 - **The two hosts are not interchangeable.** `paintedStyle` and `a11yTree` are
   `TestRenderer` facts, and `windowSize`, `zoomWindow`, `hover`, `rightClick`,
-  `keyUp`, `registerFont` and `pixels` are window facts. A probe that needs both
-  is two probes.
+  `keyDown`, `keyUp`, `registerFont` and `pixels` are window facts. A probe that
+  needs both is two probes.
 - **A check is evidence of what ran.** `verified` never means "should work": it
   means every scenario the registry declares for that capability ran and passed
   on the host in this run, so a scoped `--only` run reports the capability it
