@@ -1513,6 +1513,85 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("height");
   });
 
+  it("records the flex rules a `flex-1` composes with, derived from its fixture", () => {
+    // The record called Flexbox supported on the strength of the `StyleDesc`
+    // fields, so a dock pane, a table column or a truncating label leaning on
+    // `flex-1` had only the typings' word. `flex-sizing` painted each rule, and
+    // the numbers below are derived from its own constants, so a record that
+    // teaches a width the probe no longer paints fails by name. The bug this
+    // guards: `flexBasis: 0` is not equality — a grower whose content is wider
+    // than its share keeps the content, and the sibling takes the rest.
+    const fixture = read("apps/playground/src/live/flex-sizing.ts");
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d.]+);`).exec(fixture)?.[1] ??
+          Number.NaN,
+      );
+    const row = constant("FLEX_ROW_WIDTH");
+    const narrow = constant("FLEX_NARROW_WIDTH");
+    const fixed = constant("FLEX_FIXED_WIDTH");
+    const asked = constant("FLEX_ASKED_WIDTH");
+    const short = constant("FLEX_SHORT_CONTENT");
+    const long = constant("FLEX_LONG_CONTENT");
+    const over = constant("FLEX_OVER_CONTENT");
+    const floorRow = constant("FLEX_FLOOR_ROW_WIDTH");
+    const floorContent = constant("FLEX_FLOOR_CONTENT");
+    const max = constant("FLEX_MAX_WIDTH");
+    const column = constant("FLEX_ALIGN_COLUMN_WIDTH");
+    const alignContent = constant("FLEX_ALIGN_CONTENT");
+
+    const free = row - fixed;
+    const share = free / 2;
+    const autoFree = free - (short + long);
+    const autoShort = short + autoFree / 2;
+    const autoLong = long + autoFree / 2;
+    const overShort = free - over;
+    const alignEnd = column - alignContent;
+    const alignCenter = alignEnd / 2;
+
+    // The premises: the fit pair splits evenly where the auto pair does not,
+    // and the over-full grower would have fitted an equal share.
+    expect(share).not.toBe(autoShort);
+    expect(over).toBeGreaterThan(share);
+    expect(asked).toBeGreaterThan(narrow);
+
+    const flex = rowFor("Flexbox and grid");
+    expect(flex?.verdict).toBe("supported");
+    expect(flex?.evidence).toContain("flex-sizing");
+    expect(flex?.evidence).toContain("layout-flex-sizing");
+    expect(flex?.evidence).toContain(`**${free}**`);
+    expect(flex?.evidence).toContain(`**${share}/${share}**`);
+    expect(flex?.evidence).toContain(`**${autoShort}/${autoLong}**`);
+    expect(flex?.evidence).toContain(`**${over}**`);
+    expect(flex?.evidence).toContain(`**${overShort}**`);
+    expect(flex?.evidence).toContain(`**${narrow - fixed}**`);
+    expect(flex?.evidence).toContain(`**${asked}**`);
+    expect(flex?.evidence).toContain(`**${floorContent}**`);
+    expect(flex?.evidence).toContain(`**${floorRow}**`);
+    expect(flex?.evidence).toContain(`**${max}**`);
+    expect(flex?.evidence).toContain(`**0/${alignCenter}/${alignEnd}**`);
+    expect(flex?.evidence).toContain("not equality");
+    expect(flex?.workaround).toContain("minWidth: 0");
+    expect(flex?.workaround).toContain("shrink-0");
+
+    const page = measuredRow("Flex sizing");
+    expect(
+      page,
+      "the page's measured table has no flex-sizing row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("flex-sizing");
+    expect(page?.[1]).toContain("layout-flex-sizing");
+    expect(page?.[1]).toContain(`**${free}**`);
+    expect(page?.[1]).toContain(`**${share}/${share}**`);
+    expect(page?.[1]).toContain(`**${autoShort}/${autoLong}**`);
+    expect(page?.[1]).toContain(`**${narrow - fixed}**`);
+    expect(page?.[1]).toContain(`**${asked}**`);
+    expect(page?.[1]).toContain(`**0/${alignCenter}/${alignEnd}**`);
+    expect(page?.[2]).toContain("shrink-0");
+    expect(page?.[2]).toContain("minWidth: 0");
+    expect(page?.[2]).toContain("maxWidth");
+  });
+
   it("records the box an image occupies, derived from its fixture", () => {
     // An image is the one element whose intrinsic ratio the runtime owns, and
     // the record taught the four sources an `<img>` can paint from without
@@ -1594,7 +1673,10 @@ describe("docs/gpuix-capabilities.md", () => {
 
     const at = (x: number, y: number, w: number, h: number): string =>
       `${x},${y} ${w}×${h}`;
-    const scaled = (box: { width: number; height: number }, scale: number): string =>
+    const scaled = (
+      box: { width: number; height: number },
+      scale: number,
+    ): string =>
       at(
         (box.width - sourceWidth * scale) / 2,
         (box.height - sourceHeight * scale) / 2,
@@ -1602,9 +1684,18 @@ describe("docs/gpuix-capabilities.md", () => {
         sourceHeight * scale,
       );
     const fill = at(0, 0, full.width, full.height);
-    const contain = scaled(full, Math.min(full.width / sourceWidth, full.height / sourceHeight));
-    const cover = scaled(full, Math.max(full.width / sourceWidth, full.height / sourceHeight));
-    const coverScale = Math.max(full.width / sourceWidth, full.height / sourceHeight);
+    const contain = scaled(
+      full,
+      Math.min(full.width / sourceWidth, full.height / sourceHeight),
+    );
+    const cover = scaled(
+      full,
+      Math.max(full.width / sourceWidth, full.height / sourceHeight),
+    );
+    const coverScale = Math.max(
+      full.width / sourceWidth,
+      full.height / sourceHeight,
+    );
     const cropStart = Math.round(
       (0 - (full.width - sourceWidth * coverScale) / 2) / coverScale,
     );
@@ -2089,12 +2180,16 @@ describe("docs/gpuix-capabilities.md", () => {
       ["cmd-v", "a key chord the pasted-code probe pressed"],
       ["cmd-shift", "a chord the modifier-selection probe pressed"],
       ["cmd-home", "a chord the keyboard-scroll probe pressed"],
+      ["flex-1", "a utility `@gpuixui/tw` compiles into three flex fields"],
       ["wrow-60", "a row marker the windowed list probe checked for"],
       ["row-alpha", "a row marker the reorder probe dragged"],
       ["row-delta", "a row marker the reorder probe dropped onto"],
       ["gridfocus-r2c2", "a cell id the roving-grid probe focused by hand"],
       ["grid-focus-before", "a control id the roving grid's next Tab reached"],
-      ["grid-focus-after", "a control id a one-press exit from the grid reached"],
+      [
+        "grid-focus-after",
+        "a control id a one-press exit from the grid reached",
+      ],
     ]);
 
     const evidenceTokens = rows.flatMap((row) =>

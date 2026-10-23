@@ -59,7 +59,7 @@ Verdicts: **supported** · **supported, with limits** · **not supported** ·
 
 | Capability | Verdict | Evidence | Workaround |
 | ---------- | ------- | -------- | ---------- |
-| Flexbox and grid | supported | `StyleDesc.display`, `flexDirection`, `flexWrap`, `gap`/`rowGap`/`columnGap`, `alignItems`, `justifyContent`; `gridTemplateColumns`/`Rows` are integers | — |
+| Flexbox and grid | supported | `StyleDesc.display`, `flexDirection`, `flexWrap`, `gap`/`rowGap`/`columnGap`, `alignItems`, `justifyContent`; `gridTemplateColumns`/`Rows` are integers. **Measured** by `flex-sizing` in a window (27 checks; the headless `layout-flex-sizing` asserts the same arithmetic), because the typings name the fields and not what they paint: a 120px item with `flexShrink: 0` beside a `flexBasis: 0` grower gives the grower the row's **280** of 400; two `flexBasis: 0` growers whose content fits split it evenly (**140/140**), while the same contents with no basis grow from themselves (**70/210** — each content plus an equal share of the free 100); a grower holding **200** of content keeps it and the other takes the **80** left, so `flex-1` is **not equality**; a 320px item in a 300px row shrinks to **180**, while `flexShrink: 0` keeps **320** and paints 20 past the row; an item holding 300px of content floors at **300** in a 200px row until `minWidth: 0` lifts it to **200**, with the content overflowing; `maxWidth: 120` stops a grower at **120** and leaves the row short; and `alignSelf` places 60px of content at **0/120/240** in a 300px column whose `stretch` item paints **300** | give a fixed pane or a frozen column `shrink-0` and a column that must truncate `minWidth: 0`, because `flexBasis: 0` does not override an item's automatic content minimum; a grower that must fill its row cannot be capped by `maxWidth`, since the refused leftover stays unfilled |
 | Grid span | not supported | no `gridColumn`/`gridRow`; only `gridColumnMin`/`gridRowMin` track sizing | size the track, or give the item an explicit width |
 | Two-stop linear gradients | supported, with limits | `LinearGradientBackground.stops` is a 2-tuple; `angle` in degrees; `colorSpace` `srgb` or `oklab`. **Measured** by `box-paint` on a 240×60 box (`#FF3B30` → `#0A84FF` at 90°): the 10% sample paints `231,67,69`, the 90% sample `34,124,234`, and neither is the page `17,20,26`, so the fill grades rather than falling back to one stop | a gradient is real but has exactly **two** stops: stack divs or use `svg` for a three-stop scale |
 | Multi-stop, radial, conic, repeating gradients | not supported | the stop tuple holds exactly two | paint a stack of divs, or an `svg` |
@@ -208,7 +208,7 @@ out.
   `virtual-list-lifecycle`, `virtual-list-windowed`, `virtual-list-rows`,
   `virtual-list-expand`, `portal-layer`, `data-grid-frozen-column`,
   `select-lifecycle`, `floating-sides`, `dock-reflow`, `docking-nested`,
-  `panel-resize`, `split-pane-lifecycle`, `column-resize-lifecycle`, `a11y-tree`, `drag-between-panes`,
+  `panel-resize`, `split-pane-lifecycle`, `column-resize-lifecycle`, `flex-sizing`, `layout-flex-sizing`, `a11y-tree`, `drag-between-panes`,
   `keyboard-focus-dim`, `filled-action-dim`, `motion-geometry`,
   `scroll-horizontal`, `tab-overflow`, `drag-autoscroll`, `keyboard-scroll-lifecycle`,
   `window-key-shortcut`, `window-shortcut-lifecycle`,
