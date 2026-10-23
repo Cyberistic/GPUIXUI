@@ -337,3 +337,48 @@ describe("the hold window", () => {
     expect(handBuilt).toEqual([]);
   });
 });
+
+/** The layer a surface paints over the content it keeps for its exit. */
+const shield = /<PresenceShield\b/;
+
+/** The shared menu box, which paints the shield for both menu roots. */
+const sharedShield = /<MenuSurface\b/;
+
+/** A shield handed a constant, which covers a surface that is not leaving. */
+const constantShield = /<PresenceShield\b[^>]*present=\{(?:true|false)\}/;
+
+describe("the leaving shell", () => {
+  it("covers the content it keeps mounted for its exit", () => {
+    // The bug this guards: the seam removes a surface's **own** hitbox and
+    // nothing it holds (`pointerEvents` does not inherit), so a card or panel
+    // that stays painted for its exit must cover its content. The rule was one
+    // omission away from the surface it was written for: a dismissed notice kept
+    // its action painted with nothing over it, so the ghost's `Undo` answered a
+    // press. Every surface the seam keeps paints the shield itself; the two menu
+    // roots get it from the shared `MenuSurface` they render.
+    const mounted = Arr.filter(
+      sources,
+      ({ body }) =>
+        (Str.includes("useSurfacePresence(")(body) ||
+          Str.includes("presenceMotion(")(body)) &&
+        !neverLeaves.test(body),
+    );
+    // A floor rather than the exact count: a new surface joins the rule.
+    expect(Arr.length(mounted)).toBeGreaterThanOrEqual(10);
+    const offenders = Arr.filterMap(mounted, ({ path, body }) =>
+      shield.test(body) || sharedShield.test(body)
+        ? Result.failVoid
+        : Result.succeed(path),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it("is derived from the state that owns it, never a constant", () => {
+    // A shield painted while the surface is open covers the controls the reader
+    // is using, which is the opposite failure to a missing one.
+    const offenders = Arr.filterMap(sources, ({ path, body }) =>
+      constantShield.test(body) ? Result.succeed(path) : Result.failVoid,
+    );
+    expect(offenders).toEqual([]);
+  });
+});

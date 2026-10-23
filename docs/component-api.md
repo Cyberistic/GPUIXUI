@@ -548,7 +548,10 @@ thrown with in the box it had, and that painted action answers nothing
 `src/presence-contract.test.ts` holds every
 floating host in the package to the two rules that make it possible — a host
 that composes the presence seam paints `pointerEvents` from it, and a deferred
-`anchored` host drops its occlusion with it — and holds a stagger to
+`anchored` host drops its occlusion with it — holds every surface that keeps
+content for an exit to the seam's `PresenceShield` (derived from its presence,
+never a constant, with the two menu roots drawing it from the shared
+`MenuSurface`), and holds a stagger to
 `delayedTiming`, one implementation of the reduced rule. The live playground
 proves the fade itself (a window reports painted bounds, not painted opacity).
 
