@@ -10306,7 +10306,24 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 296/296
+`[x]` `[██████████]` 297/297
+
+`[x]` Teach the **styling page the extension API and React bridge it promised** —
+      `/docs/styling` described itself as "how to extend the rules" and stopped
+      at the default registry: no `createTw`, no `unsupportedReason`, no
+      `@gpuixui/tw/react`, no `jsxImportSource`, so a consumer could adopt the
+      compiler and still not add a utility or mount a classed element. The page
+      gains **Your own utilities** (a `createTw` snippet for the primitives'
+      `text-brand` utility, the four `TwRegistryConfig` extension points and the
+      refusal), and **React wrappers and the JSX runtime** (`TwProvider`,
+      `Tw.div`/`Tw.text`/`Tw.input`, and `"jsxImportSource": "@gpuixui/tw"`).
+      `src/lib/styling-page.test.ts` (4 cases) derives the reader-facing entry
+      points from `exports` (arguing the two `jsx-*` compiler targets out), the
+      `Tw` host table from `react.tsx`, and holds `createTw`/`unsupportedReason`
+      to the root module. Directions measured: deleting both sections fails all
+      four cases by name; restored, the app is 126 files / 1 099 tests green,
+      `check-types` clean and `page-snippets.test.ts` resolves the new imports.
+      No native scenario applies — a site page and the manifest it documents.
 
 `[x]` Say where the **keyboard's React provider lives** — `/docs/keyboard` named
       `CommandRegistryProvider` and `useCommandRegistry` in a table row and never
