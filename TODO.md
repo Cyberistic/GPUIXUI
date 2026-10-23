@@ -7368,6 +7368,40 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       package (the run's one failure is another workstream's untracked
       `src/behaviour/zz-probe.test.tsx`, left in place).
 
+`[x]` `packages/components`: **a `Stepper` given a step it could not read
+      painted no current step** — the statuses are derived from one `value`, and
+      a step index computed before its total arrived (`NaN`, or an infinity from
+      a division that had no denominator yet) matched no step: every marker
+      painted `upcoming`, the label row went muted, and `aria-selected` was
+      `false` on all of them, so the indicator claimed the workflow had not
+      started while the page around it said otherwise (the class `Countdown`,
+      `Carousel`, `Pagination` and `MentionInput` each closed for their own
+      unreadable value). The rule moved to `stepper/logic.ts`: `currentStep`
+      resolves a finite value unchanged and reads anything else as the **first
+      step** — the one state a stepper can always mark — and `statusOf` derives
+      through it, so the paint, the `style` callback's status and the
+      announcement all read the same resolved step. An explicit value below the
+      first step (`0`, "not started") still paints no current step, because that
+      is a state the caller asked for rather than one the component could not
+      read. Proof: `stepper/logic.test.ts` (6 rule cases — the finite values
+      including a fractional and a below-first one, the three unnameable ones,
+      the complete/current/upcoming boundaries, exactly one current step over a
+      five-step ladder, and the explicit "not started" case) and
+      `behaviour/stepper.test.tsx`'s `reads a value it cannot name as the first
+      step` (marker 1 the primary fill, marker 2 muted, `aria-selected` on the
+      first row only, and the infinity case). Directions measured: with the raw
+      value restored, the two rule cases fail by name and the window case reads
+      `expected '#1E222A' to be '#A7A9FF'` while the other eight pass (the case
+      unmounts in a `finally`, so one failure no longer reports the file as a
+      leaked root); restored, `src/stepper/logic.test.ts` is 6/6,
+      `src/behaviour/stepper.test.tsx` is 9/9 and the package is 99 files / 933
+      tests green. `surface.budget.ts` records the new module (167 → 168; the
+      entry is 168 modules / 1 095 KiB, under the 1 120 KiB ceiling). Docs:
+      `docs/stepper.mdx` §API states the rule and the difference from an
+      explicit `0`, and the `COMPONENTS.md` row carries it (that row's hunk was
+      swept into `e927ea4e` by the shared-index hazard — the content is on
+      `master` under a message that does not name it).
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21
