@@ -47,6 +47,23 @@ const Slug = Schema.NonEmptyString.check(
 const message = Effect.runSync(validate(Slug)(value));
 ```
 
+## Undo, and the value you push back
+
+The `<input>` keeps its own undo history, and it recognises the values it
+reported: a controlled field that writes back exactly what `onChange` gave it
+keeps `cmd-z`. A value the field did not produce — a normalised, masked or
+truncated rewrite — arrives as an outside set and **clears both stacks**, so the
+history is gone from the second keystroke while `cmd-z` still looks like it
+works. **Format on commit, or derive the display**, rather than writing a
+rewritten value back while the reader types. A re-render that leaves the value
+unchanged is safe, and the chord stays in the field: an app-level undo handler
+beside it never sees `cmd-z` while the field has focus.
+
+`FieldInput` renders that host. Measured by `text-undo-lifecycle` (15 checks,
+0.11.0): the field restores its snapshot through `onChange`, a pushed value
+clears the history, and an unrelated re-render keeps it. Fixture
+`apps/playground/src/live/text-undo.ts`.
+
 ## API
 
 | Part | Prop | Type | Default |

@@ -325,6 +325,51 @@ describe("the blur route a window cannot prove", () => {
   });
 });
 
+describe("the undo a rewritten value costs", () => {
+  // The runtime keeps the field's undo stack and recognises the values the field
+  // itself reported. A normalising rewrite is a value it did not produce, so both
+  // stacks are cleared and `cmd-z` stops working while it still looks fine. Both
+  // pages that own a draft have to say where to format instead.
+  const probe = "text-undo-lifecycle";
+  const fixturePath = "apps/playground/src/live/text-undo.ts";
+  const checks = numberIn(
+    repoFile(fixturePath),
+    fixturePath,
+    "TEXT_UNDO_CHECKS",
+  );
+  const field = (
+    section(read("field.mdx"), "## Undo, and the value you push back") ?? ""
+  ).replace(/\s+/g, " ");
+  const edit = (
+    section(read("inline-edit.mdx"), "### An undo history is the field's") ?? ""
+  ).replace(/\s+/g, " ");
+
+  it("tells the field page what clears the history, and how to avoid it", () => {
+    expect(field).toMatch(/undo/i);
+    expect(field).toMatch(/clears both stacks/i);
+    expect(field).toMatch(/format on commit/i);
+    expect(field).toContain(`\`${probe}\``);
+    expect(field).toContain(`${checks} checks`);
+  });
+
+  it("tells the inline editor to format at the commit, not per keystroke", () => {
+    expect(edit).toMatch(/undo/i);
+    expect(edit).toMatch(/clears its undo history/i);
+    expect(edit).toContain("`onCommit`");
+    expect(edit).toContain(`\`${probe}\``);
+    expect(edit).toContain(`${checks} checks`);
+  });
+
+  it("cites the record the count and the fixture come from", () => {
+    expect(playgroundReadme).toMatch(
+      new RegExp(`^### \`${probe}\` — measured on 0\\.11\\.0 here`, "m"),
+    );
+    Arr.forEach([field, edit], (sectionText) =>
+      expect(sectionText).toContain(fixturePath),
+    );
+  });
+});
+
 /** The capability record a page's accessibility claim is derived from. */
 const capabilityRecord = readFileSync(
   fileURLToPath(

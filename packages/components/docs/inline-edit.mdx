@@ -57,6 +57,18 @@ If a draft must not be lost without a proven route, take one the harness proves:
 `Enter` commits, or the consumer commits on the press that leaves the field
 (a caller-owned commit).
 
+### An undo history is the field's
+
+The commit is where to format. The editor's draft is the `<input>`'s own text, so
+a normaliser applied on every keystroke writes back a value the field did not
+produce: the host **clears its undo history** for it, and `cmd-z` stops reaching
+earlier text. Format in `onCommit` instead, and let a re-render that leaves the
+value unchanged keep the history. The chord stays in the field while it has
+focus, so an app-level undo must not be the only route.
+
+Measured by `text-undo-lifecycle` (15 checks, 0.11.0); fixture
+`apps/playground/src/live/text-undo.ts`.
+
 ## Limitations
 
 - No rich text; the editor is a single-line `<input>`.
