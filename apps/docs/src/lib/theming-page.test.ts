@@ -1008,12 +1008,16 @@ describe("the theming page's look parameter", () => {
     expect(picker).not.toContain("Beside it, **Look** applies");
   });
 
-  it("keeps the preview policy on the parameter, not a retired control", () => {
+  it("keeps the preview policy and the site ledger on the parameter, not a retired control", () => {
     // `docs/preview-strategy.md` taught the same control and the landing's
-    // retired green identity. Both are read here so the page and the policy
-    // fail together.
+    // retired green identity. The site ledger restates both, so all three are
+    // read here and fail together.
     const policy = readFileSync(
       new URL("../../../../docs/preview-strategy.md", import.meta.url),
+      "utf8",
+    );
+    const ledger = readFileSync(
+      new URL("../../README.md", import.meta.url),
       "utf8",
     );
 
@@ -1021,15 +1025,16 @@ describe("the theming page's look parameter", () => {
     expect(policy).toContain("the sidebar offers platforms only");
     expect(policy).not.toContain("look picker");
     expect(policy).not.toContain("Hunter License green");
+    expect(ledger).toContain("look parameter");
+    expect(ledger).toContain("no look group");
     // The policy named the era pair after `omarchy` joined `retroNames`, so a
-    // reader of the policy could not see the third style. Deriving the labels
-    // makes a fourth look fail here too.
-    expect(
-      retroNames
-        .map((name) => retroStyles[name].label)
-        .filter((label) => !policy.includes(label)),
-    ).toEqual([]);
+    // reader of the policy could not see the third style. The ledger carried
+    // the same pair. Deriving the labels makes a fourth look fail here too.
+    const labels = retroNames.map((name) => retroStyles[name].label);
+    expect(labels.filter((label) => !policy.includes(label))).toEqual([]);
+    expect(labels.filter((label) => !ledger.includes(label))).toEqual([]);
     expect(policy).not.toContain("Luna and Aero");
+    expect(ledger).not.toContain("Luna and Aero");
   });
 
   it("describes the styles the library ships, not ones the site invented", () => {

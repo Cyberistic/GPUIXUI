@@ -9735,7 +9735,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 253/253
+`[x]` `[██████████]` 254/254
+
+`[x]` Hold the **site ledger to the records it restates** — `apps/docs/README.md`
+      copied two measurements and drifted from both. Its live-surface paragraph
+      still printed the banner at `#222730` after the palette pass moved the
+      route sample to `#1e222a` (the policy was corrected, the ledger was not,
+      because `gpuix-web.test.ts` read only `docs/preview-strategy.md`), and its
+      platform-switch paragraph named `?look=luna`/`?look=aero` and two labels
+      after `omarchy` joined `retroNames` — the third style `/docs/theming`
+      already teaches. The ledger now prints the derived `muted` value and all
+      three looks, and the guards read both documents: the route-sample case
+      builds its three `hex (role)` lines from `themes.dark.colors` and requires
+      each on the policy **and** the ledger, and the look case requires every
+      `retroStyles` label on the policy and the ledger and refuses the retired
+      era pair on both. Directions measured: restoring `#222730` fails with
+      `expected [ 'the banner `#1e222a` (`muted`)' ] to deeply equal []`, and
+      cutting the ledger back to the era pair fails with
+      `expected [ 'Omarchy' ] to deeply equal []`. Restored, the two files are
+      58/58 and the docs app is 121 files / 1 311 tests green with `oxlint` and
+      `oxfmt` clean. No native scenario applies — a ledger sentence and the
+      values its suites derive.
 
 `[x]` Re-anchor the **tooltip preview's rule at the seam the motion package
       owns** — `core/presence.ts` stopped restating the pointer rule and the

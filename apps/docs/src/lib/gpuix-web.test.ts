@@ -54,6 +54,8 @@ const nativeManifest = (): Record<string, unknown> => {
 };
 
 const policy = read("docs/preview-strategy.md");
+/** The site's own ledger restates the measurement, so it is held with the policy. */
+const ledger = read("apps/docs/README.md");
 
 /** Every non-test module the docs app ships. */
 const appSources = (): ReadonlyArray<string> =>
@@ -216,17 +218,15 @@ describe("the GPUix web build", () => {
     // banner's `muted` and the listener's `successSoft` — so a palette move
     // makes the printed sample a measurement of a theme that no longer ships.
     // The values come from the package, never retyped, so the next move fails
-    // here instead of leaving the policy quoting an old hex.
+    // here instead of leaving the policy or the site ledger quoting an old hex.
     const dark = themes.dark.colors;
     expect(dark.primary.toLowerCase()).toBe("#a7a9ff");
-    expect(policy).toContain(
+    const sampled = [
       `\`${dark.primary.toLowerCase()}\` (\`controlStyle\`'s dark primary)`,
-    );
-    expect(policy).toContain(
       `the banner \`${dark.muted.toLowerCase()}\` (\`muted\`)`,
-    );
-    expect(policy).toContain(
       `\`${dark.successSoft.toLowerCase()}\` (\`successSoft\`)`,
-    );
+    ];
+    expect(sampled.filter((line) => !policy.includes(line))).toEqual([]);
+    expect(sampled.filter((line) => !ledger.includes(line))).toEqual([]);
   });
 });

@@ -498,7 +498,7 @@ presses through `renderer.simulateClick`, and samples the banner again.
 
 Measured 2026-10-22, macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
 over SwiftShader: the button sampled `#a7a9ff` (`controlStyle`'s dark primary),
-the banner `#222730` (`muted`), and after a press `#0e5135` (`successSoft`) with
+the banner `#1e222a` (`muted`), and after a press `#0e5135` (`successSoft`) with
 the status line reading "Pressed 1 time". Frames:
 `.artifacts/live/docs-live-route-{before,after}.png` (verification-only).
 
@@ -514,8 +514,9 @@ Default — the mission's four platform names and **no look group**, because a l
 is not a fifth platform. `src/lib/platform.ts` resolves
 `platformTheme(themes[mode], platform)`; a look is still applied over it when a
 link carries one, because the authored styles are library data:
-`?look=luna` or `?look=aero` resolves `retroStyles` (`Windows XP (Luna)`,
-`Windows 7 (Aero)`) through `applyStyle`. The choice is carried in
+`?look=luna`, `?look=aero` or `?look=omarchy` resolves `retroStyles`
+(**Windows XP (Luna)**, **Windows 7 (Aero)**, **Omarchy**) through
+`applyStyle`. The choice is carried in
 `?platform=…&mode=…&look=…` and remembered in local storage, and every preview
 renders on a `PreviewSurface` that applies the resolved theme's variables,
 `data-platform`, `data-mode` and `data-look`. A preview therefore paints the
