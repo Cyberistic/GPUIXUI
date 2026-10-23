@@ -6956,6 +6956,24 @@ Work that this workstream needs but does not own. Another agent owns each row.
     with it behaviour 12 files / 86 tests and unit 17 files / 139 tests green.
     `docs/{key-value,stat-card,property-panel,advanced-filter}.mdx` gain
     §Accessibility and the four inventory rows state the shape. Owner: data.
+  - [x] Announce a **chart's data, and a sparkline once** — a chart is a picture
+    of numbers, but each series layer was named by its series label alone
+    (`Revenue`), so the values it drew reached no reader: measured in a window,
+    the tree held the axis ticks and the category labels as loose `Label`s and
+    no number beside the series. A series now carries `Q1 3, Q2 6` in
+    `aria-description` (0.11.0 has no figure or table role), describes only the
+    labelled slots it paints, reads an unreadable value as `no value` rather
+    than the geometry's `0`, and a ring slice reads its own value. The same
+    measurement found a `Sparkline` announcing itself **twice** — its wrapper
+    and its single layer both claimed `role="img"` with the same name, two
+    `Image` nodes in the tree; it is one image now, named by the caller
+    (`Trend` when absent). `src/behaviour/chart-a11y.test.tsx` (6 cases) holds
+    the tree and `seriesDescription`'s cases in `src/chart/logic.test.ts` hold
+    the words. Directions measured: all six cases fail on the previous painter
+    (`Image` ×2 for a sparkline, an empty description for every series), and
+    with it the unit suite is 143 and the behaviour suite 92. Docs:
+    `docs/charts.mdx` §Accessibility, the `Charts` inventory row and the
+    README's chart rule. Owner: data.
   - [ ] Hoist the recipe-compile cache into `@gpuixui/tw` — `packages/data/src/recipe.ts`
     is a second copy of the components' private seam (a `WeakMap` keyed by theme
     and capped per theme), because that seam is not importable and a data grid
