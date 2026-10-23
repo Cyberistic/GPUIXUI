@@ -45,7 +45,11 @@ import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
-import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
+import {
+  busyWord,
+  defaultMessages,
+  type PrimitiveMessages,
+} from "../core/messages.js";
 import {
   decideActivation,
   isPlainKey,
@@ -188,8 +192,9 @@ export const renderButton = (
   } = props;
   const busy = isBusy({ disabled, loading });
   // The busy words are the caller's: a localised interface must not announce an
-  // English state word. A blank label silences the announcement.
-  const loadingWord = loadingLabel ?? messages.loading.busy;
+  // English state word. A blank label silences the announcement; a blank table
+  // row is a missing translation and keeps the shipped word (`busyWord`).
+  const loadingWord = loadingLabel ?? busyWord(messages.loading);
   const activate = (event: EventPayload): void => {
     if (busy) return;
     onActivate?.(event);

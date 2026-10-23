@@ -54,6 +54,22 @@ export const spokenSentence = (answer: string, fallback: string): string =>
   spokenText(Option.fromNullishOr(answer), fallback);
 
 /**
+ * A state word a caller's table supplies, or the component's own when it says nothing.
+ *
+ * A `messages` group is written once and filled per state, so a group whose
+ * translation is incomplete carries `""` for a state its author never reached —
+ * the same blank a formatter or a sentence answers. A state word is the **only**
+ * channel this runtime has (`aria-valuetext`; there is no `aria-checked`,
+ * `aria-pressed` or `aria-busy`), so a blank one announces nothing at all while
+ * the control still holds a value. A blank word is absence, so the shipped word
+ * stands; a real one is trimmed and used.
+ */
+export const spokenWord = (
+  word: string | undefined,
+  fallback: string,
+): string => spokenText(Option.fromNullishOr(word), fallback);
+
+/**
  * The help a text field announces after its name.
  *
  * A field's `description` is its permanent help and wins. A `placeholder` is the

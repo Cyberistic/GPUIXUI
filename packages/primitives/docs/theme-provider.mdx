@@ -55,6 +55,16 @@ publishing an empty `aria-label` on a control that still holds a value. A real
 answer is trimmed and used. `rangeEnd` has a second blank: a group the caller
 never named names neither end.
 
+The **state words** — `selection`, `press`, `star`, `scrollRegion` and the two
+`loading` words — are read one state at a time, so a row a translation never
+reached is absence there too: `selection: { checked: "coché", unchecked: "",
+mixed: "" }` still announces `"coché"` and names the other two states with the
+shipped `"unchecked"`/`"mixed"`. A real word is trimmed.
+
+`scrollRegion` has no blank of its own, because a focusable scroller is a tab
+stop and an unnamed one is a stop assistive technology cannot describe: a blank
+row keeps the shipped name, and `focusable={false}` is what adds neither.
+
 That is **not** the same as a busy action's `loadingLabel`, where a blank word is
 a deliberate silence: the action's own text still says what is happening, so
 `Button`, `Toggle` and `IconButton` publish no busy description. A bar has no

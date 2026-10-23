@@ -28,7 +28,11 @@ import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { cn } from "@gpuixui/tw";
 import { accessibleName, spokenText } from "../core/a11y.js";
-import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
+import {
+  defaultMessages,
+  indeterminateWord,
+  type PrimitiveMessages,
+} from "../core/messages.js";
 import {
   indeterminateOffset,
   progressAnimates,
@@ -152,7 +156,8 @@ export const progressPart = (
       ? spokenText(Option.fromNullishOr(formatValue?.(percent)), `${percent}%`)
       : spokenText(
           Option.fromNullishOr(loadingText),
-          messages.loading.indeterminate,
+          // A blank provider row is absence too, so the shipped word stands.
+          indeterminateWord(messages.loading),
         ),
   };
 };

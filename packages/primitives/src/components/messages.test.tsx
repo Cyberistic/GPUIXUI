@@ -22,9 +22,14 @@ import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  busyWord,
   defaultMessages,
+  indeterminateWord,
+  pressWord,
   rangeThumbNames,
   resolveMessages,
+  selectionWord,
+  starWord,
   type PrimitiveMessages,
 } from "../core/messages.js";
 import { initValueState, type ValueState } from "../core/state.js";
@@ -578,6 +583,174 @@ describe("a sentence a caller's table says nothing for", () => {
         codeDigit: (index, label) => ` ${label ?? "Code"} ${index + 1} `,
       }),
     ).toEqual(["Vérification 1", "Vérification 2"]);
+  });
+});
+
+/**
+ * A table whose state words are there but blank.
+ *
+ * A translation is written once and filled per state, so a row nobody reached
+ * is `""` — the same blank a formatter or a sentence answers, and the shape
+ * every rule in this package reads as absence.
+ */
+const hollow: PrimitiveMessages = {
+  ...french,
+  selection: { checked: "", unchecked: "", mixed: "" },
+  press: { pressed: "", notPressed: "" },
+  star: { checked: "", half: "", unchecked: "" },
+  scrollRegion: "",
+  loading: { busy: "", indeterminate: "" },
+};
+
+describe("a state word a caller's table says nothing for", () => {
+  it("answers the shipped word for the state that is blank", () => {
+    // The bug guarded: `selectionWord`, `pressWord` and `starWord` published a
+    // caller's word as it arrived, so one state a localised table never reached
+    // (`""`) announced **nothing** on `aria-valuetext` — the only channel this
+    // runtime gives a checkbox, a switch, a toggle or a rating star, because it
+    // has no `aria-checked`/`aria-pressed`. A blank answer is absence, the rule
+    // `spokenText` already applies to a formatter and `spokenSentence` to a
+    // sentence, so the shipped word stands; a real one is trimmed and used.
+    expect(selectionWord("checked", hollow.selection)).toBe("checked");
+    expect(selectionWord("unchecked", hollow.selection)).toBe("unchecked");
+    expect(selectionWord("indeterminate", hollow.selection)).toBe("mixed");
+    expect(pressWord(true, hollow.press)).toBe("pressed");
+    expect(pressWord(false, hollow.press)).toBe("not pressed");
+    expect(starWord("checked", hollow.star)).toBe("checked");
+    expect(starWord("half", hollow.star)).toBe("half");
+    expect(starWord("unchecked", hollow.star)).toBe("unchecked");
+    // The loading words are the same kind of word: `busy` names a busy action
+    // and its spinner, `indeterminate` is a bar's only report.
+    expect(busyWord(hollow.loading)).toBe("Loading");
+    expect(indeterminateWord(hollow.loading)).toBe("loading");
+    // Resolution is per word, not per group: the rows a table did translate
+    // keep the caller's language.
+    expect(
+      selectionWord("checked", {
+        checked: "coché",
+        unchecked: "",
+        mixed: "partiel",
+      }),
+    ).toBe("coché");
+    expect(
+      selectionWord("indeterminate", {
+        checked: "coché",
+        unchecked: "",
+        mixed: "partiel",
+      }),
+    ).toBe("partiel");
+    // A real word is trimmed, the rule every name site follows.
+    expect(
+      selectionWord("checked", {
+        checked: "  coché  ",
+        unchecked: "décoché",
+        mixed: "partiel",
+      }),
+    ).toBe("coché");
+    expect(
+      busyWord({ busy: "  Chargement  ", indeterminate: "chargement" }),
+    ).toBe("Chargement");
+  });
+
+  it("paints the shipped words on every control that carries one", () => {
+    const box = (checked: boolean, indeterminate: boolean) =>
+      renderCheckbox(
+        { checked, indeterminate },
+        testTheme,
+        flag(checked),
+        idle,
+        vi.fn(),
+        hollow,
+      );
+    expect(announced(box(true, false))).toBe("checked");
+    expect(announced(box(false, true))).toBe("mixed");
+    expect(announced(box(false, false))).toBe("unchecked");
+    expect(
+      announced(
+        renderSwitch(
+          { checked: false },
+          testTheme,
+          flag(false),
+          idle,
+          vi.fn(),
+          hollow,
+        ),
+      ),
+    ).toBe("unchecked");
+    expect(
+      announced(
+        renderToggle({}, testTheme, flag(false), idle, vi.fn(), hollow),
+      ),
+    ).toBe("not pressed");
+    const stars = elementChildren(
+      renderRating(
+        { max: 2, allowHalf: true },
+        testTheme,
+        initValueState(Option.some(0.5), 0),
+        { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+        { onSelect: vi.fn(), onMove: vi.fn(), registerItem: () => () => {} },
+        undefined,
+        hollow,
+      ),
+    );
+    expect(Arr.map(stars, announced)).toEqual(["half", "unchecked"]);
+    // A focusable scroller is a tab stop, and a tab stop with no name is one
+    // assistive technology cannot describe — the defect `DEFAULT_SCROLL_NAME`
+    // exists to prevent.
+    expect(
+      expectSome(
+        hostProp(
+          renderScrollAreaViewport(
+            {},
+            scrollPart({ axis: "vertical" }, testTheme),
+            undefined,
+            hollow,
+          ),
+          "aria-label",
+        ),
+      ),
+    ).toBe("Scroll region");
+    const button = renderButton(
+      { loading: true },
+      testTheme,
+      idle,
+      false,
+      hollow,
+    );
+    expect(expectSome(hostProp(button, "aria-description"))).toBe("Loading");
+    const [spinner] = elementChildren(button);
+    expect(
+      expectSome(elementProp(spinner ?? expect.fail("no spinner"), "label")),
+    ).toBe("Loading");
+    expect(
+      expectSome(
+        hostProp(renderSpinner({}, testTheme, 0, hollow), "aria-label"),
+      ),
+    ).toBe("Loading");
+    expect(
+      announced(renderProgress({ label: "Import" }, testTheme, 0, hollow)),
+    ).toBe("loading");
+  });
+
+  it("keeps a busy prop's blank as the silence it documents", () => {
+    // The opt-out is the **prop**, not the table: a blank `loadingLabel` is a
+    // deliberate silence on an action whose own text still says what is
+    // happening, while a blank table row is a missing translation. The two must
+    // not collapse into one rule.
+    const silentButton = renderButton(
+      { loading: true, loadingLabel: "" },
+      testTheme,
+      idle,
+      false,
+      hollow,
+    );
+    expect(hostProp(silentButton, "aria-description")).toStrictEqual(
+      Option.none(),
+    );
+    const [spinner] = elementChildren(silentButton);
+    expect(
+      hostProp(spinner ?? expect.fail("no spinner"), "aria-label"),
+    ).toStrictEqual(Option.none());
   });
 });
 

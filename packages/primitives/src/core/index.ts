@@ -14,10 +14,13 @@ export {
   fieldHelp,
   spokenSentence,
   spokenText,
+  spokenWord,
 } from "./a11y.js";
 
 export {
+  busyWord,
   defaultMessages,
+  indeterminateWord,
   pressWord,
   rangeThumbNames,
   resolveMessages,

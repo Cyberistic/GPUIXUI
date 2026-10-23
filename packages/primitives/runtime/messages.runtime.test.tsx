@@ -245,6 +245,63 @@ it("keeps the shipped sentence when a caller's says nothing", async () => {
   expect(named(runtime, "Slider", "Prix maximum")).toBe(true);
 });
 
+it("keeps the shipped state word when the table's says nothing", async () => {
+  // The bug guarded: a `messages` group is filled per state, and a row nobody
+  // translated answers `""` — the shape `starName` and a formatter already read
+  // as absence. A state word is the only channel this runtime gives a checkbox,
+  // a switch, a toggle or a star (there is no `aria-checked`/`aria-pressed`), so
+  // the blank row announced nothing while the control still held a value, and a
+  // blank `scrollRegion` left the tab stop a group with an empty name. The
+  // shipped words are what the window reports, and a real word is trimmed.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface
+      messages={{
+        ...french,
+        selection: { checked: "", unchecked: "", mixed: "" },
+        press: { pressed: "", notPressed: "" },
+        star: { checked: "", half: "", unchecked: "" },
+        scrollRegion: "  ",
+        loading: { busy: "  ", indeterminate: "" },
+      }}
+    >
+      <Stack direction="column" gap="sm">
+        <Checkbox testId="check" label="Notify" defaultChecked />
+        <Toggle testId="toggle" label="Bold" defaultPressed />
+        <Rating testId="rating" label="Qualité" max={2} defaultValue={1} />
+        <Button testId="save" loading>
+          Save
+        </Button>
+        <Progress testId="bar" label="Import" />
+        <ScrollArea
+          axis="vertical"
+          testId="scroller"
+          viewportTestId="scroller-port"
+          style={{ height: 60 }}
+        >
+          <Text>rows</Text>
+        </ScrollArea>
+      </Stack>
+    </Surface>,
+  );
+
+  expect(announced(runtime, "Notify")).toBe("checked");
+  expect(announced(runtime, "Bold")).toBe("pressed");
+  // A rating's fill vocabulary is its own group and falls back word by word.
+  expect(announced(runtime, "étoile 1 sur 2")).toBe("checked");
+  expect(announced(runtime, "étoile 2 sur 2")).toBe("unchecked");
+  expect(
+    Option.getOrElse(described(runtime, "Save"), () =>
+      expect.fail("the busy action carries no description"),
+    ),
+  ).toBe("Loading");
+  expect(named(runtime, "Status", "Loading")).toBe(true);
+  expect(announced(runtime, "Import")).toBe("loading");
+  // The tab stop keeps a name a reader can reach: an empty `Group` would be the
+  // unnamed stop `DEFAULT_SCROLL_NAME` exists to prevent.
+  expect(named(runtime, "Group", "Scroll region")).toBe(true);
+});
+
 it("keeps the shipped words when a caller names none", async () => {
   // The compatibility direction: adopting the seam changes nothing on a screen
   // that names no words.

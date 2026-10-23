@@ -58,6 +58,7 @@ import * as Option from "effect/Option";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
 import { isPlainKey } from "../core/keyboard.js";
+import { spokenWord } from "../core/a11y.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { scrollTarget } from "../core/scroll.js";
 import type { ScrollSpec } from "../core/style.js";
@@ -274,9 +275,15 @@ export const renderScrollAreaViewport = (
   if ((scrollbarWidth ?? part.scrollbarWidth) !== undefined) {
     viewport.scrollbarWidth = scrollbarWidth ?? part.scrollbarWidth;
   }
+  // The scroller's name: the caller's `label` wins, then the table's word. Both
+  // are names, so both are trimmed and a blank one is absence — and this one
+  // cannot be absent while the viewport is a tab stop, because an unnamed stop
+  // is one assistive technology cannot describe: the shipped word stands.
   const name =
     accessibleName(label ?? part.label) ??
-    (focusablePort ? messages.scrollRegion : undefined);
+    (focusablePort
+      ? spokenWord(messages.scrollRegion, defaultMessages.scrollRegion)
+      : undefined);
   // The keyboard contract needs the id and the caller needs the element, so
   // both are written instead of one replacing the other.
   const attach =

@@ -897,6 +897,71 @@ describe("the primitives docs page contract", () => {
     ).toContain("`spokenSentence`");
   });
 
+  it("keeps a control's own state word when the table's says nothing", () => {
+    // The bug guarded: a `messages` group is filled per state, so a row nobody
+    // translated answers `""` — the shape a formatter and a sentence already
+    // read as absence. These are not sentences but static words, and they are
+    // the **only** channel this runtime gives a checkbox, a switch, a toggle or
+    // a star, so a blank row announced nothing at all while the control still
+    // held a value; a blank `scrollRegion` left a tab-stop scroller a `group`
+    // with an empty name. Every reader must resolve through `spokenWord`, and
+    // the words page plus the README must teach the rule so a reader can tell a
+    // missing translation from the busy prop's deliberate silence.
+    const messages = readFileSync(
+      fileURLToPath(new URL("../src/core/messages.ts", import.meta.url)),
+      "utf8",
+    );
+    const helper = (name: string): string => {
+      const start = messages.indexOf(`export const ${name} = (`);
+      const end = messages.indexOf("\n\nexport", start);
+      return messages.slice(start, end === -1 ? undefined : end);
+    };
+    expect(
+      Arr.filter(
+        [
+          "selectionWord",
+          "pressWord",
+          "starWord",
+          "busyWord",
+          "indeterminateWord",
+        ],
+        (name) => !helper(name).includes("spokenWord"),
+      ),
+    ).toEqual([]);
+    const readComponent = (path: string): string =>
+      readFileSync(
+        fileURLToPath(new URL(`../src/components/${path}`, import.meta.url)),
+        "utf8",
+      );
+    // The busy word is a static field on two more painters and a bar's word on
+    // a third, so each must ask its helper rather than publish the table raw.
+    expect(readComponent("Button.tsx")).toContain("busyWord(messages.loading)");
+    expect(readComponent("Toggle.tsx")).toContain("busyWord(messages.loading)");
+    expect(readComponent("Spinner.tsx")).toContain(
+      "busyWord(messages.loading)",
+    );
+    expect(readComponent("Progress.tsx")).toContain(
+      "indeterminateWord(messages.loading)",
+    );
+    // `scrollRegion` is a name, not only a word: it is trimmed, and a blank row
+    // keeps the shipped name instead of leaving the stop unnamed.
+    expect(readComponent("ScrollArea.tsx")).toContain(
+      "spokenWord(messages.scrollRegion, defaultMessages.scrollRegion)",
+    );
+    const words = Option.getOrElse(
+      bodyOf(read("theme-provider.mdx"), "Words"),
+      () => "",
+    );
+    expect(words).toContain("are read one state at a time");
+    expect(words).toContain("`scrollRegion` has no blank of its own");
+    expect(
+      readFileSync(
+        fileURLToPath(new URL("../README.md", import.meta.url)),
+        "utf8",
+      ),
+    ).toContain("`spokenWord`");
+  });
+
   it("lists only props its module graph declares", () => {
     // The bug guarded: the Switches inventory row promised a `loading` prop
     // while `SwitchProps` declares none (see `inventory.test.ts`'s `keeps the

@@ -23,7 +23,11 @@ import {
   type SpinnerAccent,
 } from "../core/loading.js";
 import { accessibleName } from "../core/a11y.js";
-import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
+import {
+  busyWord,
+  defaultMessages,
+  type PrimitiveMessages,
+} from "../core/messages.js";
 import { stillFrame } from "../core/motion.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { spinnerDotClass, spinnerGroupClass } from "../recipe/index.js";
@@ -85,8 +89,10 @@ export const renderSpinner = (
     <div
       role="status"
       // The caller's own word wins; the provider's `loading.busy` is what a
-      // localised tree otherwise has to spell out on every indicator.
-      aria-label={accessibleName(label ?? messages.loading.busy)}
+      // localised tree otherwise has to spell out on every indicator, and a
+      // blank row there is a missing translation rather than a silence, so the
+      // shipped word stands (`busyWord`).
+      aria-label={accessibleName(label ?? busyWord(messages.loading))}
       testId={testId}
       style={group}
     >

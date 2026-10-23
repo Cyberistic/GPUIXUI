@@ -13,7 +13,10 @@
  * The defaults are the words the library shipped, and the table is **complete**
  * per group rather than word by word: a caller replacing `selection.checked`
  * also owns `unchecked` and `mixed`, because a half-translated state set reads
- * as a bug. A group a caller leaves out keeps the default.
+ * as a bug. A group a caller leaves out keeps the default. A row a table does
+ * leave blank is absence, not a silence — a control's state word is the only
+ * channel this runtime gives it, so `spokenWord` keeps the shipped word (see
+ * `docs/theme-provider.mdx` §Words).
  *
  * A rating speaks a second vocabulary: a star is `checked`, `half` or
  * `unchecked` (how much of the glyph is filled, not what the rating says), and
@@ -27,7 +30,7 @@
  * localised tree from repeating the word on every action.
  */
 
-import { accessibleName, spokenSentence } from "./a11y.js";
+import { accessibleName, spokenSentence, spokenWord } from "./a11y.js";
 import type { StarState } from "./rating.js";
 import type { SelectionState } from "./selection.js";
 
@@ -176,23 +179,28 @@ export const resolveMessages = (
  * The word a selection announces.
  *
  * `mixed` is the indeterminate box: a third state rather than a value, and the
- * one a screen reader has no `aria-checked` channel for either.
+ * one a screen reader has no `aria-checked` channel for either. A row the
+ * table leaves blank is absence — the rule `spokenSentence` applies to a
+ * sentence — because `aria-valuetext` is the only channel a checkbox has.
  */
 export const selectionWord = (
   state: SelectionState,
   words: SelectionWords = defaultMessages.selection,
 ): string =>
   state === "indeterminate"
-    ? words.mixed
+    ? spokenWord(words.mixed, defaultMessages.selection.mixed)
     : state === "checked"
-      ? words.checked
-      : words.unchecked;
+      ? spokenWord(words.checked, defaultMessages.selection.checked)
+      : spokenWord(words.unchecked, defaultMessages.selection.unchecked);
 
 /** The word a toggle announces: there is no `aria-pressed` to carry it. */
 export const pressWord = (
   pressed: boolean,
   words: PressWords = defaultMessages.press,
-): string => (pressed ? words.pressed : words.notPressed);
+): string =>
+  pressed
+    ? spokenWord(words.pressed, defaultMessages.press.pressed)
+    : spokenWord(words.notPressed, defaultMessages.press.notPressed);
 
 /** The word one star announces: how much of the glyph is painted. */
 export const starWord = (
@@ -200,7 +208,25 @@ export const starWord = (
   words: StarWords = defaultMessages.star,
 ): string =>
   state === "checked"
-    ? words.checked
+    ? spokenWord(words.checked, defaultMessages.star.checked)
     : state === "half"
-      ? words.half
-      : words.unchecked;
+      ? spokenWord(words.half, defaultMessages.star.half)
+      : spokenWord(words.unchecked, defaultMessages.star.unchecked);
+
+/**
+ * The word a busy action and its spinner announce.
+ *
+ * A busy action has no `aria-busy`, so this word is both the action's
+ * description and the indicator's name; a blank row would leave the status
+ * silent, so the shipped word stands. A `loadingLabel` prop is the deliberate
+ * opt-out and is resolved by the component, not here.
+ */
+export const busyWord = (
+  words: LoadingWords = defaultMessages.loading,
+): string => spokenWord(words.busy, defaultMessages.loading.busy);
+
+/** The word an indeterminate bar announces when it has no percentage. */
+export const indeterminateWord = (
+  words: LoadingWords = defaultMessages.loading,
+): string =>
+  spokenWord(words.indeterminate, defaultMessages.loading.indeterminate);

@@ -60,6 +60,10 @@ publishing an empty `aria-valuetext`. The three **sentences** a control calls �
 `starName`, `codeDigit` and `rangeEnd` — answer the same way through
 `spokenSentence`, so a missing row names the star, the code cell or the range's
 thumbs from the shipped sentence rather than publishing an empty `aria-label`.
+The **state words** themselves go through `spokenWord` for the same reason: a
+blank row in `selection`, `press`, `star`, `scrollRegion` or `loading` keeps the
+shipped word instead of publishing an empty `aria-valuetext`, and a tab-stop
+scroller is never left unnamed.
 Reference:
 [`docs/theme-provider.mdx`](./docs/theme-provider.mdx) §Words.
 

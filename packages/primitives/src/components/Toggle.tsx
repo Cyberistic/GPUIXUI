@@ -34,6 +34,7 @@ import {
   swallowKeyDefault,
 } from "../core/keyboard.js";
 import {
+  busyWord,
   defaultMessages,
   pressWord,
   type PressWords,
@@ -129,7 +130,9 @@ export const renderToggle = (
 ): ReactElement => {
   const { size = "md", variant = "default" } = props;
   const busy = props.disabled === true || props.loading === true;
-  const loadingWord = props.loadingLabel ?? messages.loading.busy;
+  // The prop's blank is a deliberate silence; a blank table row is absence and
+  // keeps the shipped word (`busyWord`).
+  const loadingWord = props.loadingLabel ?? busyWord(messages.loading);
   const toggle = (): void => {
     if (busy) return;
     onPressedChange(!state.current);
