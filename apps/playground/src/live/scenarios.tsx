@@ -28,6 +28,7 @@ import {
   extendTheme,
   elevationShadow,
   filledHover,
+  findHighlight,
   keyboardFocusRing,
   nativeTextTheme,
   statusTone,
@@ -130,6 +131,7 @@ import {
   motion,
 } from "@gpuix/react";
 import type {
+  HighlightSpec,
   ImgInstance,
   KeyEvent,
   NativeWindowInsets,
@@ -763,6 +765,16 @@ import {
   SYNTAX_LANGUAGE,
   SYNTAX_SOURCE,
 } from "./syntax-palette.js";
+import {
+  dominantWash,
+  FIND_IDS,
+  FIND_LINE,
+  FIND_QUERY,
+  isWashPainted,
+  nearColour,
+  paintedWash,
+  themedWashes,
+} from "./find-highlight.js";
 import {
   inkBounds,
   thumbCentreAt,
@@ -24040,6 +24052,207 @@ const syntaxPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/** The block every find-highlight sample paints: one card face, one line. */
+const findWashStyle = (theme: Theme): StyleDesc => ({
+  display: "flex",
+  alignItems: "center",
+  width: 520,
+  height: 44,
+  paddingLeft: theme.spacing.sm,
+  paddingRight: theme.spacing.sm,
+  backgroundColor: theme.colors.card,
+  borderRadius: theme.radius.md,
+});
+
+/**
+ * What colour a window paints behind a find's match.
+ *
+ * Three blocks hold the same line, and the line holds the query once: the
+ * theme's resting wash, the theme's active wash, and a control handed no
+ * colour, which the runtime paints from its own accent. Each block's own box is
+ * read out of the capture, so a wash painted elsewhere on the page cannot stand
+ * in for the one being measured.
+ */
+const FindHighlightProbe = (): ReactNode => {
+  const theme = useTheme();
+  const highlight = findHighlight(theme);
+  const block = (testId: string, spec: HighlightSpec): ReactNode => (
+    <div testId={testId} highlight={spec} style={findWashStyle(theme)}>
+      <text
+        style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}
+      >
+        {FIND_LINE}
+      </text>
+    </div>
+  );
+  return (
+    <div
+      testId="findhl-probe"
+      style={{
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        testId={FIND_IDS.caption}
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        Find highlight: a themed match paints the theme&apos;s wash, the active
+        match a stronger one, and a host handed no colour the runtime&apos;s
+        own.
+      </text>
+      {block(FIND_IDS.rest, { query: FIND_QUERY, ...highlight })}
+      {block(FIND_IDS.active, {
+        query: FIND_QUERY,
+        activeIndex: 0,
+        ...highlight,
+      })}
+      {block(FIND_IDS.runtime, { query: FIND_QUERY })}
+    </div>
+  );
+};
+
+const findHighlightSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(FIND_IDS.rest);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.hover(FIND_IDS.caption);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("find-highlight");
+    const frame = yield* ctx.host.pixels("find-highlight");
+    const window = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+
+    const theme = palettes.dark;
+    const wash = themedWashes(theme);
+    const strip = theme.colors.card;
+    const ink = theme.colors.foreground;
+    const highlight = findHighlight(theme);
+
+    /** The wash a block paints, refusing a crop that was never read. */
+    const washOf = (id: string) =>
+      Effect.gen(function* () {
+        const box = yield* paintedBox(ctx, id);
+        const read = yield* ctx.expectSome(
+          `${id} paints a wash of its own`,
+          dominantWash(frame, box, scale, strip, ink),
+        );
+        return { box, read };
+      });
+
+    const rest = yield* washOf(FIND_IDS.rest);
+    const active = yield* washOf(FIND_IDS.active);
+    const runtime = yield* washOf(FIND_IDS.runtime);
+    yield* Effect.logInfo(
+      `find-highlight: rest=${rest.read.hex}/${rest.read.count} active=${active.read.hex}/${active.read.count} runtime=${runtime.read.hex}/${runtime.read.count} theme=${wash.rest}/${wash.active}`,
+    );
+
+    // 1. Each block paints the composite its state names, and the
+    //    resting match is not the active one.
+    yield* ctx.expectEqual(
+      "the resting block paints the theme's resting wash",
+      nearColour(rest.read.hex, wash.rest),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the active block paints the theme's active wash",
+      nearColour(active.read.hex, wash.active),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the active wash is stronger than the resting one",
+      nearColour(wash.active, wash.rest),
+      false,
+    );
+
+    // 2. A block paints one state, so the two cannot be confused for each
+    //    other by counting the same hex twice.
+    yield* ctx.expectEqual(
+      "the resting block paints no active wash",
+      nearColour(rest.read.hex, wash.active),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "the active block paints no resting wash",
+      nearColour(active.read.hex, wash.rest),
+      false,
+    );
+
+    // 3. The wash is a real area rather than a stray antialiased edge.
+    yield* ctx.expectEqual(
+      "the resting wash covers the match",
+      isWashPainted(rest.read.count),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the active wash covers the match",
+      isWashPainted(active.read.count),
+      true,
+    );
+
+    // 4. The control: a host handed no colour paints the runtime's own accent,
+    //    which is neither of the theme's washes — the fallback the token
+    //    package exists to replace.
+    yield* ctx.expectEqual(
+      "an unthemed host paints none of the theme's resting wash",
+      nearColour(runtime.read.hex, wash.rest),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "an unthemed host paints none of the theme's active wash",
+      nearColour(runtime.read.hex, wash.active),
+      false,
+    );
+    yield* ctx.expectEqual(
+      "an unthemed host still paints its own wash",
+      isWashPainted(runtime.read.count),
+      true,
+    );
+
+    // 5. The three blocks are laid out alike, so a difference is the colour
+    //    handed over rather than a block that moved or resized.
+    yield* ctx.expectEqual(
+      "the three blocks measure the same box",
+      Arr.join(
+        Arr.map(
+          [rest.box, active.box, runtime.box],
+          (box) => `${box.width}x${box.height}`,
+        ),
+        ",",
+      ),
+      "520x44,520x44,520x44",
+    );
+
+    // 6. Every block paints its line: a missing line would read as a clean
+    //    negative on the colour reads above.
+    yield* Effect.forEach(
+      [FIND_IDS.rest, FIND_IDS.active, FIND_IDS.runtime],
+      (id) =>
+        Effect.gen(function* () {
+          const text = yield* ctx.host.text(id);
+          yield* ctx.expectContains(`${id} paints its line`, text, FIND_LINE);
+        }),
+      { concurrency: 1 },
+    );
+
+    // The wash the token contract measured is the one the frame carries: the
+    // resting composite keeps the marked text at the theme's body floor.
+    yield* ctx.expectEqual(
+      "the resting composite is the one the token contract measures",
+      nearColour(rest.read.hex, paintedWash(strip, highlight.color)),
+      true,
+    );
+  });
+
 /** How many cases the left column holds; the rest go right so the frame fits a window. */
 const PRESS_LEFT_COUNT = Math.ceil(PRESS_CASES.length / 2);
 
@@ -27687,6 +27900,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "syntax-palette",
     view: () => <SyntaxPaletteProbe />,
     steps: syntaxPaletteSteps,
+  },
+  "find-highlight": {
+    id: "find-highlight",
+    view: () => <FindHighlightProbe />,
+    steps: findHighlightSteps,
   },
   "press-routing-lifecycle": {
     id: "press-routing-lifecycle",

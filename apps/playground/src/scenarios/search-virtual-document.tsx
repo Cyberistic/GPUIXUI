@@ -35,6 +35,7 @@ import { Effect, Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
+import { findHighlight, type FindHighlight } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Pressable, Readout } from "../ui.js";
@@ -91,10 +92,12 @@ const highlightOf = (
   query: string,
   active: number,
   mode: OffsetMode,
+  wash: FindHighlight,
 ): HighlightSpec | undefined => {
   const ranges = findRanges({ text: row.text, query });
   if (query === "" || ranges.length === 0) return undefined;
   return {
+    ...wash,
     ranges,
     activeIndex: active < 0 ? undefined : active,
     matchIndexOffset: offsetOf(row, mode),
@@ -103,6 +106,7 @@ const highlightOf = (
 
 const SearchVirtualProbe = () => {
   const theme = useTheme();
+  const wash = findHighlight(theme);
   const renderer = useGpuix().renderer;
   const list = useRef<PublicInstance | null>(null);
   const [rows, setRows] = useState(documentRows);
@@ -201,7 +205,7 @@ const SearchVirtualProbe = () => {
             <div
               key={row.id}
               testId={row.id}
-              highlight={highlightOf(row, query, active, mode)}
+              highlight={highlightOf(row, query, active, mode, wash)}
               style={{ height: ROW_HEIGHT, paddingLeft: 4 }}
             >
               <text style={{ color: theme.colors.foreground }}>{row.text}</text>

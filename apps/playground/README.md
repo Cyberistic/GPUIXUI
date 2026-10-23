@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-97 probes a real window can prove, of which nineteen mount shipped
+98 probes a real window can prove, of which nineteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -62,7 +62,8 @@ window's own backdrop, the app-level key handler, the app-level selection
 handler, a field's hint and value ink, a configurable data grid, a resizable
 data-grid column, a generated
 SVG pattern, a property inspector beside its preview, a table's chorded
-selection, right-to-left text shaping and a code host's syntax palette).
+selection, right-to-left text shaping, a code host's syntax palette and a find
+highlight's painted wash).
 `apps/playground` depends on `@gpuixui/components` for exactly that.
 
 ## Run it
@@ -4219,6 +4220,62 @@ Two negative controls measured, exit `1` each, then restored green:
   palette's keyword` with **`expected true, got false`** — the positive count is
   what proves a palette reached the glyphs rather than a default matching it.
 
+### `find-highlight` — measured on 0.11.0 here
+
+**What colour does a window paint behind a find's match?** A GPUix text host
+marks a match with a **wash behind the text**, and a host handed no colour
+paints the runtime's own accent at 30% (65% for the active match, a 2px corner)
+— one text surface still painted from the runtime's palette. `@gpuixui/tokens`
+answers `findHighlight(theme)`: the theme's `primary` at the largest share that
+keeps the marked text readable, the strongest body-safe share for the active
+match, and the theme's tightest radius step. Both washes are translucent, so the
+frame carries the composite over the block's fill — the value
+`blend(strip, wash, alphaOf(wash))` computes.
+
+Three blocks hold the same line, `a highlight here`, and the line holds the
+query once. Each block's own box is read out of the capture, and the wash is
+the most-painted colour in it that is neither the card fill nor the ink — so
+a glyph's antialiased edge cannot stand in for a wash.
+
+| Block | Spec handed over | Wash painted | Pixels | The theme's other wash |
+| ----- | ---------------- | ------------ | ------ | ---------------------- |
+| resting | `{ query, ...findHighlight(theme) }` | `#444767` | **3 056** | none |
+| active | `{ query, activeIndex: 0, ...findHighlight(theme) }` | `#616494` | **3 056** | none |
+| no colour | `{ query }` | **`#373D66`** (runtime default) | **3 108** | none |
+
+The active wash covers the same area as the resting one and is the stronger
+colour, which is the only difference a host can paint between one match and the
+next. The unthemed control is the fallback the token package exists to replace:
+the runtime's accent is not the theme's `primary`, and neither is its share.
+
+19 checks, `--only find-highlight`, green on 0.11.0 (~0.5 s). Fixture:
+`src/live/find-highlight.ts` — `paintedWash` composites a translucent wash the
+way the window does, `dominantWash` reads a block's own crop while ignoring the
+strip and the ink, and `nearColour` holds a painted byte to the composite with a
+two-byte tolerance (the round trip through premultiplied alpha); an unread crop
+is `None` rather than an absent wash. `find-highlight.test.ts` (15 cases) draws
+the frames the reader counts, holds the two composites to `findHighlight` and
+the body floor, and holds the registry, the printed count and the mounted blocks
+to the probe. Evidence: `.artifacts/live/find-highlight.png`.
+
+One negative control measured, exit `1`, then restored green: handing the
+resting block the **active** pair paints `#616494` there and fails
+`the resting block paints the theme's resting wash` with **`expected true, got
+false`** — the state read is the composite, not "a wash exists".
+
+What it settles:
+
+1. **The wash travels with the theme.** A themed block paints the composite
+   `findHighlight` derives and none of the other state's, so a brand's accent
+   and share reach the match a reader searches for.
+2. **The fallback is real.** A host handed no colour paints the runtime's accent
+   at its own 30%, which is why a search surface must spread the helper rather
+   than pass `query` alone — `search-highlights` and `search-virtual-document`
+   now do, and the headless suites still read the same washes.
+3. **The composite is the one the contract measured.** The resting wash keeps
+   the marked text at the theme's body floor, so a find result is readable while
+   it is marked; `highlightFailures` is the report a brand runs to check it.
+
 ### `press-routing-lifecycle` — measured on 0.11.0 here
 
 **Which handler does a press on a row's inner element run?** A Tier 3 table puts
@@ -5655,7 +5712,8 @@ narrower. Each deviation is deliberate and measured:
   `image-fit`, `grid-focus-lifecycle`, `system-theme-follow`, `document-type`
   `dock-split-lifecycle`, `flex-sizing`, `scrollbar-thumb`,
   `scrollbar-thumb-both`, `collapsible-lifecycle`, `scrollbar-drag` and
-  `hidden-subtree-lifecycle` (thirty-nine probes, each run alone).
+  `hidden-subtree-lifecycle` and `find-highlight` (forty probes, each run
+  alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

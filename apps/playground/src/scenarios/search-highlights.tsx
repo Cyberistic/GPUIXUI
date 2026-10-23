@@ -14,6 +14,7 @@
  */
 import { useState } from "react";
 import { Effect } from "effect";
+import { findHighlight } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Pressable, Readout } from "../ui.js";
@@ -35,6 +36,7 @@ interface Spec {
 
 const SearchProbe = () => {
   const theme = useTheme();
+  const wash = findHighlight(theme);
   const [spec, setSpec] = useState<Spec>({
     query: "",
     caseSensitive: false,
@@ -83,10 +85,12 @@ const SearchProbe = () => {
         highlight={
           spec.ranges.length > 0
             ? {
+                ...wash,
                 ranges: spec.ranges,
                 activeIndex: spec.activeIndex,
               }
             : {
+                ...wash,
                 query: spec.query,
                 caseSensitive: spec.caseSensitive,
                 wholeWord: spec.wholeWord,

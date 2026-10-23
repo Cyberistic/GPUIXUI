@@ -493,6 +493,12 @@ export const liveRegistry = [
     capability: "text",
   },
   {
+    id: "find-highlight",
+    title:
+      "Search: a find paints the theme's resting and active washes, and a host handed no colour paints the runtime's own",
+    capability: "search",
+  },
+  {
     id: "press-routing-lifecycle",
     title:
       "Input: a press or key on a composite row's inner element names every handler it runs, in the order it runs",
