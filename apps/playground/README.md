@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-111 probes a real window can prove, of which twenty-two mount shipped
+112 probes a real window can prove, of which twenty-two mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -6238,6 +6238,74 @@ allowed to hide. Evidence: `apps/playground/README.md` §`floating-reflow-lifecy
 `.artifacts/live/floating-reflow.png` and
 `.artifacts/live/floating-reflow-zoomed.png`.
 
+### `sidebar-clip-lifecycle` — measured on 0.11.0 here
+
+**Does a collapsing sidebar's clip hide its content — or only its layout?**
+Tier 4's *Collapsible sidebars* row names the mechanism: `motion` width on an
+**outer clipping container**, never an inner reflow. The evidence behind it was
+layout arithmetic — `motion-geometry` sampled a raw 120×40 box and
+`docking-nested` collapsed a caller-owned width to 0 — and a layout read cannot
+answer the question. A clipped child still **reports** its full box:
+`dock-focus-lifecycle` measured a control keeping its 12pt box inside a
+zero-width parent. If the box were only a layout bound, a 120pt sidebar would
+still **paint** its 240pt content over the document beside it, and if the hit
+test followed the paint, every control in the hidden half would take the
+document's presses.
+
+The fixture is the smallest composition that asks it: a fixed 240pt content (a
+200pt spacer, then a 40pt **marker**) inside a width-tweened box with
+`overflow: "hidden"`, over a document pane. The document is absolutely
+positioned and painted **before** the sidebar, so an overflowing marker would
+land **on top of** it; laid out the other way round, the next sibling's opaque
+fill would hide the overflow and the probe would pass with no clip at all. The
+marker's whole band lies over the document once the clip is narrower than 200,
+so its red is the leak, counted inside the band the clip hides. The mid frame is
+sampled on the renderer's **motion clock**: frozen before the press, stepped 10ms
+at a time until the sidebar sits below the marker's start, then captured.
+
+| State | Clip width | Marker band | A press at the marker's centre |
+| ----- | ---------- | ----------- | ------------------------------ |
+| open | 240 | paints red | runs the marker (`marker=1`) |
+| travelling (≤176) | the document's edge | paints **0** red | runs the document (`main=1`) |
+| closed | 0 | paints **0** red | runs the document (`main=2`) |
+| reopened | 240 | paints red again | runs the marker again |
+
+The content reports **240** in every state, including at width 0, so the inner
+box never reflows while the outer one shrinks — and the red count is the paint
+that says the box is really a clip. `dock-focus-lifecycle` is the other half of
+the same rule: the hidden controls keep their **tab stops**, so a dock guards
+them with `tabIndex={-1}` or unmounts them. The paint and the pointer are
+clipped; the traversal is not.
+
+Three rules a sidebar plan can use:
+
+1. **Animate the outer box and clip it.** `motion` width plus
+   `overflow: "hidden"` hides the content in the paint and the press; the
+   content keeps its own width, so the panel is not re-laid-out mid-tween.
+2. **Guard the hidden controls yourself.** A clipped control is still a tab stop
+   (`dock-focus-lifecycle`), so the app removes the stop or unmounts the pane.
+3. **A press follows the paint, not the child's reported box.** A press aimed at
+   a clipped child's centre runs the document underneath, so hit-testing needs no
+   separate mask.
+
+Two honest limits. The probe drives a declared 0.32s tween on the renderer's own
+motion clock; the renderer reads `duration` in seconds, which is why the probe
+**finds** a travelling frame rather than assuming an offset from the number. And
+it measures the paint on this host's software renderer: the crop compares an
+exact colour, so a brand that gives its content a translucent fill is not
+measured by it.
+
+47 checks, `--only sidebar-clip-lifecycle`, green on 0.11.0 here (~9.3–11.2 s,
+three runs). Fixture `src/live/sidebar-clip.ts` (the ids, the fills, the hidden
+band arithmetic, the travelling rule and the readout) + `sidebar-clip.test.ts`
+(the band arithmetic at each width, the travelling bounds, the probe's clip and
+fixed content, its freeze-before-press route, the count and this section).
+Negative control measured, exit `1`, restored green: dropping `overflow` from
+the animated box paints the **whole 40×160 band** over the document — 25 600
+red pixels at this capture's 2× scale — and fails `the band the clip hides
+paints none of the marker over the document` with `expected 0, got 25600`.
+Evidence: `.artifacts/live/sidebar-{open,mid,closed,again}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -6473,7 +6541,8 @@ narrower. Each deviation is deliberate and measured:
   `breadcrumb-navigation-lifecycle` and `chart-surface-lifecycle` and
   `text-undo-lifecycle` and `key-hold-lifecycle` and `focus-reveal-lifecycle`
   and `z-index-lifecycle` and `floating-reflow-lifecycle` and
-  `notification-centre-lifecycle` (fifty-three probes, each run alone).
+  `notification-centre-lifecycle` and `sidebar-clip-lifecycle` (fifty-four
+  probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

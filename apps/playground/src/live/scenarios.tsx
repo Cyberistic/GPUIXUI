@@ -1067,6 +1067,7 @@ import {
   hiddenSubtreeSteps,
 } from "./hidden-subtree-probe.js";
 import { CropOverlayProbe, cropOverlaySteps } from "./crop-overlay-probe.js";
+import { SidebarClipProbe, sidebarClipSteps } from "./sidebar-clip-probe.js";
 import {
   NotificationCentreProbe,
   notificationCentreSteps,
@@ -29413,5 +29414,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "floating-reflow-lifecycle",
     view: () => <FloatingReflowProbe />,
     steps: floatingReflowSteps,
+  },
+  "sidebar-clip-lifecycle": {
+    id: "sidebar-clip-lifecycle",
+    view: () => <SidebarClipProbe />,
+    steps: sidebarClipSteps,
   },
 };

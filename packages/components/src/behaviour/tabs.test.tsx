@@ -15,9 +15,8 @@
  * single element could move; a wrong origin (the rail's box instead of the box
  * its absolute children resolve against) or a stale box leaves the pill off its
  * trigger, and a pill that swallows the pointer makes the trigger unclickable.
- * A layout event reports a size change, not a move, so a trigger pushed along by
- * a growing or newly inserted sibling used to keep the pill at the place its tab
- * had left — the rail re-reads every box after a reflow for that reason.
+ * The reflow that moves a trigger without resizing it is `tabs-reflow.test.tsx`'s
+ * contract, because it is a measurement rule rather than a Tabs behaviour.
  */
 
 import * as Option from "effect/Option";
@@ -268,86 +267,6 @@ describe("Tabs", () => {
 
     expect(requireBounds(tabs, "tabs-indicator")).toEqual(
       requireBounds(tabs, "shifted-danger"),
-    );
-
-    tabs.unmount();
-  });
-
-  it("keeps the pill under a tab a growing sibling pushed along", () => {
-    // The bug this guards: `onLayout` reports a **size** change, not a move, so
-    // the tab the pill was under never re-reported when the label before it grew
-    // — the pill stayed at the x its tab used to occupy. The reflow pass reads
-    // every box from the renderer again after a measurement changes.
-    const Growing = ({ first }: { readonly first: string }) => (
-      <Tabs defaultValue="danger" testId="growing-root">
-        <TabsList testId="growing-list">
-          <TabsTrigger testId="growing-profile" value="profile">
-            {first}
-          </TabsTrigger>
-          <TabsTrigger testId="growing-danger" value="danger">
-            Danger
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent testId="growing-panel" value="danger">
-          <text>Danger panel</text>
-        </TabsContent>
-      </Tabs>
-    );
-
-    const tabs = renderComponent(<Growing first="P" />);
-    settleMotion(tabs);
-    settleMotion(tabs);
-    expect(requireBounds(tabs, "tabs-indicator")).toEqual(
-      requireBounds(tabs, "growing-danger"),
-    );
-    const before = requireBounds(tabs, "growing-danger").x;
-
-    tabs.rerender(<Growing first="A much longer profile tab" />);
-    settleMotion(tabs);
-    settleMotion(tabs);
-
-    // The selected tab really moved; the pill moved with it.
-    expect(requireBounds(tabs, "growing-danger").x).toBeGreaterThan(before);
-    expect(requireBounds(tabs, "tabs-indicator")).toEqual(
-      requireBounds(tabs, "growing-danger"),
-    );
-
-    tabs.unmount();
-  });
-
-  it("keeps the pill under its tab when a trigger appears before it", () => {
-    // The row set is the other reflow path: an inserted trigger shifts the
-    // selected one without resizing it, so only a fresh read can place the pill.
-    const Growing = ({ extra }: { readonly extra: boolean }) => (
-      <Tabs defaultValue="danger" testId="insert-root">
-        <TabsList testId="insert-list">
-          {extra ? (
-            <TabsTrigger testId="insert-files" value="files">
-              Files and folders
-            </TabsTrigger>
-          ) : null}
-          <TabsTrigger testId="insert-danger" value="danger">
-            Danger
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent testId="insert-panel" value="danger">
-          <text>Danger panel</text>
-        </TabsContent>
-      </Tabs>
-    );
-
-    const tabs = renderComponent(<Growing extra={false} />);
-    settleMotion(tabs);
-    settleMotion(tabs);
-    const before = requireBounds(tabs, "insert-danger").x;
-
-    tabs.rerender(<Growing extra />);
-    settleMotion(tabs);
-    settleMotion(tabs);
-
-    expect(requireBounds(tabs, "insert-danger").x).toBeGreaterThan(before);
-    expect(requireBounds(tabs, "tabs-indicator")).toEqual(
-      requireBounds(tabs, "insert-danger"),
     );
 
     tabs.unmount();
