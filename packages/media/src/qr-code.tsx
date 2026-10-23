@@ -44,7 +44,7 @@ export const QR_PAPER = "#FFFFFF";
 
 /** {@link QrCode} props. */
 export interface QrCodeProps extends Omit<Props, "children"> {
-  /** The text or URL the symbol carries. */
+  /** The text or URL the symbol carries. A value that is not text carries nothing. */
   readonly value: string;
   /** The error correction level. Default `"M"`. */
   readonly level?: QrLevel;

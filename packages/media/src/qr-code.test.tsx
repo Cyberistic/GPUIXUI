@@ -79,6 +79,16 @@ describe("QrCode", () => {
     });
   });
 
+  it("reads a value that is not text as nothing, never the word null", () => {
+    // The bug guarded: `TextEncoder` stringifies whatever it is handed, so a
+    // value restored from storage as `null` encoded the four bytes of "null" —
+    // a symbol a scanner reads back as a payload the record never carried.
+    const stored = render({ value: null as unknown as string });
+    const empty = render({ value: "" });
+    expect(sourceOf(stored)).toBe(sourceOf(empty));
+    expect(sourceOf(stored)).not.toBe(sourceOf(render({ value: "null" })));
+  });
+
   it("carries every dark module and the four-module quiet zone", () => {
     const source = sourceOf(render());
     expect(source).toContain('viewBox="0 0 29 29"');

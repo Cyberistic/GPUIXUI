@@ -287,6 +287,17 @@ export const qrVersionFor = (
 const utf8 = (value: string): ReadonlyArray<number> =>
   Arr.fromIterable(new TextEncoder().encode(value));
 
+/**
+ * The text a value carries.
+ *
+ * A value restored from storage may not be text at all, and `TextEncoder`
+ * stringifies whatever it is handed — so `null` would encode the four bytes of
+ * `"null"` and a scanner would read back a payload the record never carried.
+ * Anything that is not a string carries nothing.
+ */
+const qrTextOf = (value: unknown): string =>
+  typeof value === "string" ? value : "";
+
 /** A symbol that was encoded. */
 export class QrSymbol extends Schema.Class<QrSymbol>("QrSymbol")({
   _tag: Schema.tag("symbol"),
@@ -761,7 +772,7 @@ export const encodeQr = (
   options: QrEncodeOptions = {},
 ): QrEncoding => {
   const level = levelOf(options.level);
-  const bytes = utf8(value);
+  const bytes = utf8(qrTextOf(value));
   const capacity = qrByteCapacity(QR_MAX_VERSION, level);
   const versionOf = qrVersionFor(bytes.length, level);
   if (Option.isNone(versionOf)) {

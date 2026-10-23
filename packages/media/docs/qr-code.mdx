@@ -32,6 +32,10 @@ import { QrCode } from "@gpuixui/media";
 ## Limitations
 
 - **Versions 1–10.** The largest symbol holds 271 bytes at `L`.
+- **A value that is not text carries nothing**: a record restored from storage
+  writes `null` where it carried no value, and the encoder reads that as the
+  empty string — `TextEncoder` would otherwise stringify it to the four bytes of
+  `"null"`, so a scanner would read a payload the record never carried.
 - A `quietZone` that is not finite and non-negative reads as the default `4`; `0` asks for no quiet zone, while a stored `-4` cannot mean one.
 - **A value that does not fit is an alert, not an image**: the box announces the capacity sentence, keeps the caller's reserved square (`size`, or an explicit `style` box) and never paints a partial symbol; `label` names the painted symbol only.
 - A **blank `label`** reads as the default `"QR code"`; a symbol that names nothing would be an unnamed image to assistive technology.

@@ -270,6 +270,21 @@ describe("encodeQr", () => {
     expect(refused.matrix).toStrictEqual(plain.matrix);
   });
 
+  it("reads a value that is not text as nothing, never the word null", () => {
+    // The bug guarded: `TextEncoder` stringifies whatever it is handed, so a
+    // value restored from storage as `null` encoded the four bytes of "null" —
+    // a symbol every scanner reads back as a payload the record never carried.
+    const stored = encodeQr(null as unknown as string, { level: "M" });
+    const empty = encodeQr("", { level: "M" });
+    if (!(stored instanceof QrSymbol)) return expect.fail("no symbol");
+    if (!(empty instanceof QrSymbol)) return expect.fail("no symbol");
+    expect(stored.matrix).toStrictEqual(empty.matrix);
+
+    const word = encodeQr("null", { level: "M" });
+    if (!(word instanceof QrSymbol)) return expect.fail("no symbol");
+    expect(stored.matrix).not.toStrictEqual(word.matrix);
+  });
+
   it("picks the mask with the lowest penalty of the eight", () => {
     const value = "https://gpuixui.dev/docs";
     const auto = encodeQr(value, { level: "Q" });
