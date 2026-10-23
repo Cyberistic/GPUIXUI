@@ -11711,6 +11711,27 @@ which the behaviour suite runs in the real renderer.
 `[x]` `packages/components`: **a text swap never left its entry phase** — `RollingText` and `SlidingText` share `internal/text-swap.ts`'s three phases, and `settleSwap` moved a swap into `"entering"` while nothing ever moved it out: the entry is a tween, not a state, so after the incoming value landed the machine reported `"entering"` for the life of the component and the host kept the entry's `initial` frame in its motion description, ready to be the run's start again on any later sync. The phase now settles on the entry tween's own completion (`onMotionComplete`, the runtime's motion clock rather than a wall-clock window a blocked software paint can outrun): `restSwap` returns `"entering"` to `"rest"` and leaves every other phase alone. Proof: `behaviour/rolling-text.test.tsx` and `behaviour/sliding-text.test.tsx`'s `settles to rest once the incoming value has landed` read the state a caller's `style` sees and the host's motion description after the entry completes; both measured failing at `HEAD` with `expected 'entering' to be 'rest'`, and `internal/text-swap.test.ts`'s two `restSwap` cases hold the transition and its two no-ops. Restored: 17/17 across the two files and 17/17 in the shared suite. Docs: `docs/rolling-text.mdx` and `docs/sliding-text.mdx` §State, both state JSDocs and the two `COMPONENTS.md` rows (counts 7→8, 8→9).
 
 
+`[x]` `packages/components`: **a lean survived the preference that removes it** — `Magnetic`'s
+      pull is derived from the stored pointer on every render, so turning
+      `MotionProvider preference="reduced"` on **mid-hover** repainted the plate at the offset it
+      had already reached (with a zero-duration transition, so it landed there at once) and left
+      it there until the pointer left: the component's own record and page say a reduced reader
+      "gets no lean", and `state.pulled` reported `true` while nothing was supposed to move. The
+      reduced case in the suite only hovered *from* reduced, where `follow` never stores a point,
+      which is why the frozen lean passed. The pull is now `magneticRest` in the render that names
+      the preference (the lean is a journey, not content — the rule `RippleButton`, `ShineButton`
+      and `LiquidButton` already follow for their layers), and the pointer that earned it is
+      released with it, so a preference turned back on leans from the next move rather than the
+      old point. Proof: `src/behaviour/magnetic.test.tsx`'s `drops a lean the reader already earned
+      when the preference turns on` hovers to the capped offset, flips the provider's preference
+      on the mounted tree and reads the plate back at rest, then moves the pointer again and reads
+      rest a second time; measured at `HEAD` the first read is `expected { left: 12, top: +0 } to
+      deeply equal { left: +0, top: +0 }` while the other 7 cases pass. Restored: 8/8 in the file,
+      the package's behaviour suite 966/966 (96 files) and its unit suite 897/897, `check-types`
+      clean. Docs: `docs/magnetic.mdx` §Limitations states the mid-switch rule and the released
+      pointer, and the `COMPONENTS.md` Magnetic row carries both with the count 7 → 8. No live
+      scenario applies — the preference is a React prop and the frame is the renderer's.
+
 ## TanStack cores
 
 `[x]` `[████░░░░░░]` 4/5

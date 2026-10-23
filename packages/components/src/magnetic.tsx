@@ -23,7 +23,7 @@ import {
 import type { MotionLevel } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { measuredPoint, type MeasuredPoint } from "./internal/measure.js";
 import { useMotionPreference, useSurfaceTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
@@ -91,19 +91,30 @@ export const Magnetic = ({
   // The pull is derived, not stored: the origin the probe reports is a fresh
   // reading of the same pointer, so a surface a layout above moved leans from
   // the centre it has now without waiting for another move.
-  const pull = Option.match(
-    Option.all({ surface: surface.box, point: pointer }),
-    {
-      onNone: () => magneticRest,
-      onSome: ({ surface, point }) =>
-        magneticPull(
-          point,
-          surface,
-          strength ?? undefined,
-          maxOffset ?? undefined,
-        ),
-    },
-  );
+  //
+  // The lean is a journey, not content, so the preference removes it from the
+  // render that names it — including a lean the reader had already earned. Read
+  // from the pointer alone, turning reduced motion on mid-hover froze the plate
+  // at the offset it had reached, and the record said it paints no lean at all.
+  const pull = reduced
+    ? magneticRest
+    : Option.match(Option.all({ surface: surface.box, point: pointer }), {
+        onNone: () => magneticRest,
+        onSome: ({ surface, point }) =>
+          magneticPull(
+            point,
+            surface,
+            strength ?? undefined,
+            maxOffset ?? undefined,
+          ),
+      });
+
+  // The pointer that earned the removed lean is released with it, so a
+  // preference turned back on leans from the next move rather than an old point.
+  useEffect(() => {
+    if (!reduced) return;
+    setPointer((current) => (Option.isNone(current) ? current : Option.none()));
+  }, [reduced]);
 
   const measure = (event: EventPayload) => {
     surface.measure(event);

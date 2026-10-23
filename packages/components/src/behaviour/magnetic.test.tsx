@@ -5,8 +5,9 @@
  * lands on a child and does not reach the wrapper; a plate that moves the
  * surface's own box, so the cursor walks out of it; a lean that runs uncapped; a
  * plate that stays where the pointer left it instead of returning to rest; a
- * reduced-motion reader who is still pulled; and handlers the caller passed that
- * the component swallows.
+ * reduced-motion reader who is still pulled — including one who turns the
+ * preference on while the plate is already leaning; and handlers the caller
+ * passed that the component swallows.
  *
  * The motion clock is paused for the frame readings, so the plate's offset is
  * the declared target rather than wherever real time had got.
@@ -187,6 +188,37 @@ describe("Magnetic", () => {
       moveTo(page, 0.75, 0.5);
 
       expect(pullOf(page, plate)).toEqual({ left: 0, top: 0 });
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("drops a lean the reader already earned when the preference turns on", () => {
+    const Page = ({ reduced }: { readonly reduced: boolean }) => (
+      <MotionProvider preference={reduced ? "reduced" : "animated"}>
+        <Magnetic testId="surface" style={surface}>
+          <text>Lean</text>
+        </Magnetic>
+      </MotionProvider>
+    );
+    const page = renderComponent(<Page reduced={false} />);
+    settle(page);
+    try {
+      // Read at rest: the frame the plate started on, before the lean.
+      const rest = requireBounds(page, "magnetic-plate");
+      page.renderer.clockPause();
+      moveTo(page, 0.75, 0.5);
+      // A quarter of the 200px surface to the right of its centre, capped.
+      expect(pullOf(page, rest).left).toBe(magneticReach);
+
+      page.rerender(<Page reduced />);
+      settle(page);
+      // The preference removes the journey, including one already on screen.
+      expect(pullOf(page, rest)).toEqual({ left: 0, top: 0 });
+
+      // A pointer that moves after the switch cannot re-earn it either.
+      moveTo(page, 0.75, 0.25);
+      expect(pullOf(page, rest)).toEqual({ left: 0, top: 0 });
     } finally {
       page.unmount();
     }
