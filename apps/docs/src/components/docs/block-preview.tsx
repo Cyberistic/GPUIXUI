@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { HighlightedCode } from "@/components/highlighted-code";
 import {
   Tabs,
   TabsContent,
@@ -51,7 +51,7 @@ export function BlockPreview({ name }: { name: string }) {
           className="gx-component-panel gx-component-code"
           value="code"
         >
-          <DynamicCodeBlock lang="tsx" code={block.source} />
+          <HighlightedCode lang="tsx" code={block.source} />
         </TabsContent>
       </Tabs>
       <p className="gx-component-note">

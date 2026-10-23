@@ -1,4 +1,4 @@
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { HighlightedCode } from "@/components/highlighted-code";
 import { useState } from "react";
 import { examples } from "../../lib/examples-data";
 import { filterExamples, type ExampleEntry } from "../../lib/examples";
@@ -115,7 +115,7 @@ export function ExamplesIndex() {
                       </button>
                       {open ? (
                         <div className="mt-3">
-                          <DynamicCodeBlock lang="tsx" code={entry.source} />
+                          <HighlightedCode lang="tsx" code={entry.source} />
                         </div>
                       ) : null}
                     </li>

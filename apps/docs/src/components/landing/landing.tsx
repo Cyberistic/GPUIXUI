@@ -1,5 +1,5 @@
 import { useTheme } from "fumadocs-ui/provider/base";
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { HighlightedCode } from "@/components/highlighted-code";
 import { mainContentId } from "../skip-link";
 import { Hero } from "./deck";
 import { Lineage } from "./lineage";
@@ -190,7 +190,7 @@ function CodeAndComponent() {
       </p>
 
       <div className="landing-code">
-        <DynamicCodeBlock lang="tsx" code={demo.source} />
+        <HighlightedCode lang="tsx" code={demo.source} />
         <div className="landing-code-preview">
           {/* The landing sits outside a `PreviewSurface`, so the scene needs the
               dark defaults `gx-base` carries; on a docs page the surface does. */}

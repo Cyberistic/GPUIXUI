@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
 import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
+import { appCssSchemes as schemes } from "./app-css.test-util";
 
 /**
  * The docs site's own palette — the one thing on the site that is not the
@@ -14,30 +14,6 @@ import { describe, expect, it } from "vitest";
  * (`@gpuixui/tokens`), so the docs identity is held to the contract the
  * components are.
  */
-
-const css = readFileSync(new URL("../styles/app.css", import.meta.url), "utf8");
-
-/** The custom properties of one selector's block. */
-const variables = (selector: string): Readonly<Record<string, string>> => {
-  const start = css.indexOf(`${selector} {`);
-  const end = css.indexOf("\n}", start);
-  const block = start === -1 || end === -1 ? "" : css.slice(start, end);
-  return Object.fromEntries(
-    [...block.matchAll(/(--[a-z0-9-]+):\s*([^;]+);/g)].flatMap((match) => {
-      const [, name, value] = match;
-      return name === undefined || value === undefined
-        ? []
-        : [[name, value.trim()]];
-    }),
-  );
-};
-
-const schemes: Readonly<
-  Record<"light" | "dark", Readonly<Record<string, string>>>
-> = {
-  light: variables(":root"),
-  dark: variables(".dark"),
-};
 
 const schemeNames = ["light", "dark"] as const;
 
@@ -57,7 +33,11 @@ const pairs: ReadonlyArray<
   // The theme editor draws a destructive-filled action with this pair; the
   // variable was never declared, so its label inherited the page's ink.
   ["--destructive-foreground", "--destructive", contrastFloors.secondary],
-  ["--sidebar-primary-foreground", "--sidebar-primary", contrastFloors.secondary],
+  [
+    "--sidebar-primary-foreground",
+    "--sidebar-primary",
+    contrastFloors.secondary,
+  ],
   ["--sidebar-accent-foreground", "--sidebar-accent", contrastFloors.secondary],
   // The theme editor prints a broken pair in `--destructive`.
   ["--destructive", "--background", contrastFloors.secondary],

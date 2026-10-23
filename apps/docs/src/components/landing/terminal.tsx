@@ -1,4 +1,4 @@
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { HighlightedCode } from "@/components/highlighted-code";
 
 /**
  * The "Run it in your terminal" section: a kitty/Ghostty-style dark frame with
@@ -61,7 +61,7 @@ export function Terminal() {
 
       <div className="landing-terminal">
         <TerminalWindow />
-        <DynamicCodeBlock lang="tsx" code={terminalSource} />
+        <HighlightedCode lang="tsx" code={terminalSource} />
       </div>
 
       <p className="landing-terminal-caption">

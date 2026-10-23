@@ -1,4 +1,5 @@
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
+import { codeOptions } from "./src/lib/code-theme";
 
 // Docs content lives in apps/docs/content/docs/<page>.mdx.
 export const docs = defineDocs({ dir: "content/docs" });
@@ -27,4 +28,11 @@ export const dataDocs = defineDocs({
   docs: { files: ["**/*.mdx"] },
 });
 
-export default defineConfig();
+// Code blocks highlight with the library's own syntax palette, in both schemes,
+// rather than Fumadocs' bundled GitHub themes. `code-theme.test.ts` holds the
+// themes to `@gpuixui/tokens` and measures every role on the docs card surface.
+export default defineConfig({
+  mdxOptions: {
+    rehypeCodeOptions: codeOptions,
+  },
+});

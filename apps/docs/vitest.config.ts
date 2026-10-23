@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import { fileURLToPath } from "node:url";
 import { pageDependenciesPlugin } from "./plugins/page-dependencies-plugin.ts";
 import { pageSourcesPlugin } from "./plugins/page-source-plugin.ts";
 import { packageGraphPlugin } from "./plugins/package-graph-plugin.ts";
@@ -20,6 +21,16 @@ export default defineConfig({
     pageSourcesPlugin(),
     packageGraphPlugin(),
   ],
+  // `@/` is the alias `vite.config.ts` defines for the site's own modules; a
+  // test that mounts a component resolves its imports through the same one.
+  resolve: {
+    alias: [
+      {
+        find: /^@\//,
+        replacement: `${fileURLToPath(new URL("./src", import.meta.url))}/`,
+      },
+    ],
+  },
   test: {
     include: ["src/**/*.test.{ts,tsx}"],
     environment: "node",

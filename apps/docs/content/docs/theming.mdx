@@ -3,7 +3,7 @@ title: Theming
 description: Semantic colour roles, typography, spacing, radius and density — one theme shape for light, dark and high contrast.
 ---
 
-import { colorRoles, contrastFloors, contrastRatio, highlightShares, highlightSurfaces, indicatorSurfaces, keyboardFocusRing, seriesColors, seriesSurfaces, themes } from "@gpuixui/tokens";
+import { colorRoles, contrastFloors, contrastRatio, highlightShares, highlightSurfaces, indicatorSurfaces, keyboardFocusRing, seriesColors, seriesSurfaces, syntaxRoles, syntaxSurfaces, themes } from "@gpuixui/tokens";
 import { TokenList } from "@/components/docs/token-list";
 import { previewMode } from "@/lib/platform";
 import { omarchyAudit, omarchyFile, omarchySample, omarchyTheme } from "@/lib/system-palette";
@@ -199,6 +199,34 @@ three blocks holding the same line, where the active wash covers the same area a
 the resting one and is the stronger colour — which is the only difference a host
 can paint between the match a reader is on and the ones around it — while a block
 handed no colour paints the runtime's accent instead.
+
+## Code colours
+
+A code block is the one surface a reader spends time in, and the runtime paints
+it from the theme's own `syntax` table: a host handed none falls back to the
+palette designed for the runtime's dark default, so a light theme's comments and
+keywords would be chosen for a dark canvas. `syntaxRoles` is the closed set —
+{syntaxRoles.length} token types, from `comment` to `invalid` — and a palette is
+complete rather than partial, so every token type is the theme's own.
+`syntaxColors(theme)` answers one colour per role for the theme's mode and
+contrast variant, and an authored theme or look can replace the table whole.
+
+A syntax colour is **not** a semantic role. `keyword` and `string` mean "a
+category of token", so reusing `danger` for a string literal would make code read
+as a status and a brand's `primary` repaint would recolor it. Nor is it a data
+series: a chart asks whether two categories are distinct, while code asks whether
+a token is readable and can be told from the token beside it.
+
+`syntaxFailures(theme)` reads every role on the two fills a host can paint
+(<TokenList names={syntaxSurfaces} />) at the floor the role names: a comment is
+an annotation about the code and answers the {contrastFloors.secondary}:1
+secondary floor, while every role that names code answers the
+{contrastFloors.body}:1 body floor. The report is one of `auditTheme`'s fourteen,
+so `/docs/themes` prints it in the editor's readout.
+
+This site's code blocks use the same palette: `apps/docs/src/lib/code-theme.ts`
+builds both Shiki schemes from `syntaxColors(themes[mode])`, so a sample in the
+light or dark docs scheme reads in the colours the library's native host paints.
 
 ## Built-in themes
 

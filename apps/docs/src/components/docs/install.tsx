@@ -1,4 +1,4 @@
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { HighlightedCode } from "@/components/highlighted-code";
 import {
   Tabs,
   TabsContent,
@@ -37,7 +37,7 @@ export function Install({
           <TabsTrigger value="manual">Manual</TabsTrigger>
         </TabsList>
         <TabsContent value="nub">
-          <DynamicCodeBlock lang="bash" code={command} />
+          <HighlightedCode lang="bash" code={command} />
           <p className="gx-install-note">
             Run this inside the GPUIXUI workspace. The packages are private and
             not published to a registry, so the workspace protocol is the
@@ -46,12 +46,12 @@ export function Install({
           </p>
         </TabsContent>
         <TabsContent value="manual">
-          <DynamicCodeBlock lang="json" code={manifest} />
+          <HighlightedCode lang="json" code={manifest} />
           <p className="gx-install-note">
             Add the dependency to the consuming package, run{" "}
             <code>nub install</code>, then import from the package root:
           </p>
-          <DynamicCodeBlock lang="tsx" code={usage} />
+          <HighlightedCode lang="tsx" code={usage} />
         </TabsContent>
       </Tabs>
     </div>

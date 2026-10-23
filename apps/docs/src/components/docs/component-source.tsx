@@ -1,5 +1,5 @@
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { HighlightedCode } from "@/components/highlighted-code";
 import { githubUrl } from "@/lib/page-source";
 import { gitConfig } from "@/lib/shared";
 import { componentSources, type ComponentSourceName } from "./sources";
@@ -52,7 +52,7 @@ export function SourceAccordion({
             </a>
             .
           </p>
-          <DynamicCodeBlock lang="tsx" code={code} />
+          <HighlightedCode lang="tsx" code={code} />
         </Accordion>
       </Accordions>
     </div>

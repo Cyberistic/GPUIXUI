@@ -10298,7 +10298,53 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 286/286
+`[x]` `[██████████]` 287/287
+
+`[x]` Highlight the **code in the library's own syntax palette** — every MDX
+      fence and every render-time block (an install command, a preview's Code
+      tab, an example's source) highlighted with Fumadocs' bundled
+      `github-light`/`github-dark`, while `@gpuixui/tokens` ships a **24-role**
+      syntax palette measured for readability on the fills a native `<code>`
+      host paints. The docs' code was the one surface on the site carrying a
+      third party's colours, and nothing measured it. `src/lib/code-theme.ts`
+      builds both Shiki themes from `syntaxColors(themes[mode])`: one rule per
+      role in the palette's own order over the TextMate scopes that role names
+      (longer scopes win, so `keyword.operator` paints as the operator and
+      `string.regexp` as a special string), plus an unscoped default rule at the
+      palette's `variable` ink so no token falls back. `codeOptions` is the one
+      options object — `source.config.ts` gives it to `rehypeCodeOptions`, and
+      `src/components/highlighted-code.tsx` is the only path a render-time block
+      takes (nine call sites in seven components), because `DynamicCodeBlock`
+      defaults to the GitHub themes when it is handed no options.
+      `vitest.config.ts` gains the `@/` alias `vite.config.ts` already had, so a
+      test that mounts a component resolves its imports; `theming.mdx` gains
+      **Code colours** (the role set, what is not a semantic role, the two
+      floors, and the site's own half) and the README records the bridge.
+      Guards: `code-theme.test.ts` (11 cases) — both themes rule-for-rule against
+      the palette, a real Shiki run reading ten token types back through their
+      scopes in both modes, a TSX tag and attribute, both schemes emitted as the
+      `--shiki-light`/`--shiki-dark` variables Fumadocs' stylesheet reads, every
+      role held to its own floor on the docs card surface parsed from `app.css`
+      in both schemes, the build wiring, the one-wrapper rule with a six-call-site
+      floor, and the page section. Directions measured: reverting
+      `source.config.ts` fails `is the theme the docs build highlights with`;
+      painting `keyword` with the comment scope fails both token cases; dropping
+      `support.class.component` from `tag` fails the TSX case (`expected false to
+      be true`); a card at `#777777` fails the floors case naming all 24 roles
+      (`light: comment #545D6C on #777777 — 1.48:1 (needs 4.5:1)`); one direct
+      `<DynamicCodeBlock` in `install.tsx` fails naming the file; a wrapper
+      without `options={codeOptions}` fails; deleting the page section fails
+      `teaches the palette on the theming page`. End to end on the built app
+      (`vite preview` on :4399, headless Chrome): the install block's span reads
+      `--shiki-light: #0C1D42; --shiki-dark: #DEE9FF` and computes
+      `rgb(12, 29, 66)` in the light scheme and `rgb(222, 233, 255)` in the dark
+      one — the palette's `function` role in each — and the SSR page carries
+      `--shiki-light`/`--shiki-dark` on every fence with no `github-light`.
+      `apps/docs` is 134 files / 1 454 tests, `check-types` and `build` clean,
+      `fmt` clean on every touched file; `check:tests` is red only on the data
+      workstream's untracked `scratch-probe.test.tsx` and `lint` only on
+      `packages/tokens/src/audit.test.ts`. No native scenario applies — a
+      browser build's code colouring.
 
 `[x]` Stop the **section index spending a row on the same section twice** — its
       "How to read a page" map is the reader's summary of the page template, and
