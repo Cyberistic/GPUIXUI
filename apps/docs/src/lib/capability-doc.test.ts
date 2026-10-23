@@ -398,6 +398,33 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("<textarea>");
   });
 
+  it("records the one root element a window paints", () => {
+    // The window paints a single element at its render root. The toast probe
+    // found it by accident: `ToastProvider` mounted *as* the root painted its
+    // viewport and not its panel, while the same provider inside one wrapper
+    // painted both. Nothing in the typings says it, and a fragment at the root
+    // loses a child with no error — so the durable record and the page both
+    // have to carry the rule.
+    const readme = read("apps/playground/README.md");
+    expect(readme).toContain("**A root-level fragment paints one child.**");
+
+    const root = rowFor("Render root");
+    expect(root?.verdict).toBe("supported, with limits");
+    expect(root?.evidence).toContain("toast-lifecycle");
+    expect(root?.evidence).toContain("only **one**");
+    expect(root?.evidence).toContain("getPaintedText()");
+    expect(root?.workaround).toContain("one element from the app root");
+
+    const page = measuredRow("Render root");
+    expect(
+      page,
+      "the page's measured table has no render-root row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("toast-lifecycle");
+    expect(page?.[1]).toContain("getPaintedText()");
+    expect(page?.[2]).toContain("one element from the app root");
+  });
+
   it("records the property inspector a window composed, with its readouts", () => {
     // Tier 3's property panels, key-value displays and statistic cards and
     // Tier 4's inspector panels are composition, and the record read as

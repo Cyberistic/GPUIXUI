@@ -4544,7 +4544,33 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 11/11
+`[x]` `[██████████]` 12/12
+
+`[x]` `packages/primitives`: **a caller's blank words became the announced value
+      of a bar** — `Progress`'s `formatValue`/`loadingText` and `Meter`'s
+      `formatValue` are interface copy a localised app supplies from a table, and
+      each was published exactly as it arrived: a formatter whose table has no row
+      for this bar answers `""`, so a 42% bar announced **nothing** on
+      `aria-valuetext` — the only channel 0.11.0 publishes for a progressbar or a
+      meter — and `ProgressValue`/`MeterValue` painted an empty string beside a
+      filled track, while every report stayed empty. `core/a11y.ts`'s
+      `spokenText` is the rule names and help already keep: a blank answer is
+      **absence**, so the component's own words stand (the clamped `42%`, or the
+      provider's indeterminate word) and a real answer is trimmed and used.
+      Proof: `a11y.test.ts`'s `spokenText` (2 cases), `Progress.test.tsx`'s
+      `keeps its own words for a formatter that says nothing` (the formatter, a
+      whitespace answer, `loadingText`, and a real answer still winning),
+      `Meter.test.tsx`'s matching case, and
+      `runtime/loading.runtime.test.tsx`'s `keeps a Progress's own words when its
+      formatter says nothing`, which reads the value back off the accessibility
+      tree and the painted `ProgressValue` in a window. Directions measured: with
+      `spokenText` publishing the answer as it arrives, four unit cases fail
+      (`expected '' to be '42%'` twice, and Meter's empty `aria-valuetext`) and
+      the window case fails on the missing value; green it is the package's 55
+      files / 1 030 tests and 21 runtime files / 304 tests. Docs in
+      `docs/progress.mdx`/`docs/meter.mdx` §API (the blank-answer rule),
+      `COMPONENTS.md`'s Progress and Meter rows, and `core/index.ts` publishes the
+      helper beside `accessibleName`/`fieldHelp`.
 
 `[x]` `packages/components`: **a row still promised a package that shipped** —
       `COMPONENTS.md`'s Command menus row justified its host input with "input is
@@ -8083,6 +8109,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
     maxWidth: 640 }`; with it 163/163. The README's runtime-rules table, its
     §Columns paragraph and the Tier 3 **Resizable columns** row state it.
     Owner: data.
+  - [x] Hold the **printed case counts to the suites they name** — the Tier 3
+    `Tables` row still said "7 native behaviour cases mount the example" while
+    `src/behaviour/table.test.tsx` had grown to **26**, and two path-qualified
+    counts had drifted the same way: `frozen-table.test.tsx` printed 6 with 5
+    shipped, and `src/tree/logic.test.ts` printed 13 with 15. `src/inventory.test.ts`
+    derives every printed count from the file a row names (the two-space `it(`
+    convention the components package's guard applies), sweeps every row naming
+    `@gpuixui/data`, holds the Tables row's unnamed count by name and reads
+    `docs/virtual-tree.mdx`'s `7 tests`. Directions measured: with the old rows
+    three cases fail by name (`7 native behaviour cases`, `(13 cases)`,
+    `(6 cases)`); corrected, 4/4 and the package unit suite is 20 files / 171
+    tests green. Owner: data.
+
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's eleven
       representative interactions now map to live probes in
@@ -8300,7 +8339,28 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 227/227
+`[x]` `[██████████]` 228/228
+
+`[x]` Record the **one element a window paints at its render root** — the toast
+      probe found it by accident: `ToastProvider` mounted *as* the window's root
+      painted its viewport and not its panel (the automation tree listed only the
+      viewport and `getPaintedText()` was empty for the panel), while the same
+      provider inside one wrapper paints both and siblings **inside** a host
+      element paint normally. Nothing in the typings says it, and a fragment at
+      the root loses a child with **no error**, so an app that follows the
+      README's provider composition can silently paint half its window.
+      `docs/gpuix-capabilities.md` §3 gains **Render root**
+      (`supported, with limits`) with the probe's reading and the workaround, §5
+      owes `toast-lifecycle`, and `/docs/runtime#measured-in-a-window` publishes
+      the same row. `capability-doc.test.ts` gains `records the one root element
+      a window paints`: it reads the README's own finding
+      (`**A root-level fragment paints one child.**`), the record row, and the
+      page row, so neither can state a rule the playground did not measure.
+      Directions measured: deleting the record row fails the case, and deleting
+      the page row fails it by name; restored, the file is 113/113 and the docs
+      suite 117 files / 1 238 tests, `check-types`, `build` and the formatter
+      clean. No live re-run: `toast-lifecycle`'s 4-check run on 0.11.0 is the
+      playground's, and this change publishes it.
 
 `[x]` Publish the **press the shipped dock divider cannot take** on
       `/docs/workspace` — the page taught the divider as a control that drags:
