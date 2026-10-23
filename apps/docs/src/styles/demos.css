@@ -1693,7 +1693,7 @@
 
 .gx-inspector-rows {
   display: grid;
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: 96px 1fr;
   align-items: center;
   gap: 3px 8px;
   margin: 0;

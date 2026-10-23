@@ -77,6 +77,9 @@ describe("the native playground note", () => {
     expect(previewPages("packages/primitives/docs")).toBeGreaterThanOrEqual(25);
     // A lane with no demo still needs the note's wording to be true.
     expect(previewPages("packages/dock/docs")).toBe(0);
+    // The data lane draws one composition, so the policy names that page
+    // instead of calling every lane but Components and Primitives strategy 4.
+    expect(previewPages("packages/data/docs")).toBe(1);
 
     // ...and the frame draws the note and the page body that mounts it.
     const view = read("apps/docs/src/lib/docs-view.tsx");
@@ -91,9 +94,12 @@ describe("the native playground note", () => {
 
     // The policy and the index have to say both, or the next page follows the
     // old rule.
-    const policy = read("docs/preview-strategy.md");
+    const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
     expect(policy).toContain("that page's preview is **strategy 3**");
-    expect(policy).toContain("The lanes with no demo");
+    expect(policy).toContain(
+      "the dock, editor, files, media and shell lanes still ship none",
+    );
+    expect(policy).toContain("Property panels");
     expect(policy).not.toContain("Those pages are **strategy 4**");
 
     const index = read("apps/docs/content/docs/components/index.mdx");

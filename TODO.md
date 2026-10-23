@@ -10361,9 +10361,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `native-run-note.test.tsx` moves its lane sentence to the five lanes and
       measures the data lane's one demo. Directions measured: raising the
       opening height to 90 fails **6** cases by name (the fixture, `10800`, the
-      caption, the reset, and both markup cases), and deleting the page's mount
+      caption, the reset, and both markup cases), deleting the page's mount
       fails **3** (`is mounted by the page it documents`, the policy case, and
-      `expected [ 'property-panel-demo' ] to deeply equal []`). Verified on a
+      `expected [ 'property-panel-demo' ] to deeply equal []`), and a 72px label
+      column fails the drawing case against the probe's
+      `INSPECTOR_LABEL_WIDTH` (96). Verified on a
       served build: `vite preview` on :4391 returns **200** and the SSR markup
       carries `Alpha — 120 x 80`, the six-row panel, the two-row readout, the
       metric and `width:120px;height:80px`; the page's labelled-approximation

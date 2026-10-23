@@ -177,6 +177,10 @@ import { ChatDemo, chatDemoSource } from "./chat-demo";
 import { EmptyStateDemo, emptyStateDemoSource } from "./empty-state-demo";
 import { FieldsetDemo, fieldsetDemoSource } from "./fieldset-demo";
 import {
+  PropertyPanelDemo,
+  propertyPanelDemoSource,
+} from "./property-panel-demo";
+import {
   HotkeyRecorderDemo,
   hotkeyRecorderDemoSource,
 } from "./hotkey-recorder-demo";
@@ -3004,6 +3008,10 @@ export const demos: Readonly<Record<string, Demo>> = {
   "chat-demo": { render: ChatDemo, source: chatDemoSource },
   "empty-state-demo": { render: EmptyStateDemo, source: emptyStateDemoSource },
   "fieldset-demo": { render: FieldsetDemo, source: fieldsetDemoSource },
+  "property-panel-demo": {
+    render: PropertyPanelDemo,
+    source: propertyPanelDemoSource,
+  },
   "hotkey-recorder-demo": {
     render: HotkeyRecorderDemo,
     source: hotkeyRecorderDemoSource,

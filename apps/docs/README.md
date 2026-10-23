@@ -133,6 +133,8 @@ src/components/docs/keyboard-shortcuts-demo.tsx The cheat sheet's groups and key
 src/components/docs/mention-input-demo.tsx The mention field's query and ranked list
 src/components/docs/message-demo.tsx       The conversation row's variants and slots
 src/components/docs/message-scroller-demo.tsx The scroller's pin, unread and jump
+src/components/docs/inspector-preview.ts    The property inspector preview's one object, its area and its two size actions
+src/components/docs/property-panel-demo.tsx The inspector's four readers of that object and its source string
 src/components/docs/navigation-menu-demo.tsx The nav's two browser renderings and their source strings
 src/components/docs/navigation-menu-preview.ts The nav's reducer, its hover clock and its roving group
 src/components/docs/preview-card-demo.tsx  The hoverable card's open and close

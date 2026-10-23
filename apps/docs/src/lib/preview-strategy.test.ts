@@ -175,6 +175,22 @@ describe("the preview strategy document", () => {
     );
   });
 
+  it("names the one demo outside the component and primitive lanes, and only that one", () => {
+    // Bug guarded: the policy said every lane but Components and Primitives was
+    // strategy 4, while the Property panels page now draws its composition. A
+    // second demo outside those lanes has to ask the policy to say so, and a
+    // page that loses this one has to ask it too.
+    const lanes = ["data", "dock", "editor", "files", "media", "shell"];
+    const withDemo = packagePages.filter(
+      (path) =>
+        lanes.some((lane) => path.startsWith(`packages/${lane}/docs/`)) &&
+        read(path).includes("<ComponentPreview"),
+    );
+
+    expect(withDemo).toEqual(["packages/data/docs/property-panel.mdx"]);
+    expect(read("docs/preview-strategy.md")).toContain("Property panels");
+  });
+
   it("states the Related rule without a count the pages can outgrow", () => {
     // Bug guarded: the policy said "31 of the 104 mounted package pages" write
     // `## Related`. The prune then removed thirty of those sections and the
