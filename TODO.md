@@ -9333,6 +9333,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 `[x]` `[██████████]` 249/249
 
+`[x]` Follow the **seams the other workstreams moved**, where the docs suite was
+      red on `master` in three places. `component-page-truth.test.ts` still
+      required `Match.when("secondary", () => theme.colors.secondaryForeground)`
+      in `packages/components/src/internal/button.tsx`, which now delegates its
+      label role to the primitives' variant table
+      (`primitiveActionOnColor(theme, LOOKS[variant].variant)`), so the two cases
+      read the delegation and `core/variants.ts`'s own `secondary` and `ghost`
+      rows. `motion-page.test.ts` required `motion.coast(...)` inside
+      `useInertia`'s reduced branch and `105:0:true` from the behaviour suite:
+      the branch retires the value to `coastRest(running, motion.current)` with
+      no coast left running, and the suite reads `245:0:true` (a release changed
+      from `400` to `300` projects from the `140` on screen) and `35:0:true` (a
+      coast that had already rested), so `/docs/motion` prints them and says a
+      release's retained value is the projection it names. The focus-ring case
+      required `outlineColor: theme.colors.destructive` where
+      `controlFocusRing` now falls back to the ring's own colour for a theme that
+      lost the role, and `/docs/theming` teaches that fallback. Directions
+      measured on the pre-fix tree: those three cases failed with the stale
+      strings (`expected … to contain 'Match.when("secondary", …)'`, `'105:0:true'`
+      and `'outlineColor: theme.colors.destructive'`); after, the docs app is 120
+      files / 1302 tests green with `check-types` clean. No native scenario
+      applies — three source seams and the pages that cite them.
+
 `[x]` Print the **three contracts the theme readout never measured** — `/docs/themes`
       called its readout "the whole audit" while it printed `auditTheme`'s eleven
       reports and nothing beside them, and an edit the editor exposes can break
@@ -12836,6 +12859,8 @@ fails the case by name; restored, the file is 44/44 and
       hunks were swept into `34bf0da6` by another workstream's commit before this
       one (the shared-index hazard; the content is on `master` under a message
       that does not name it).
+
+`[x]` `packages/primitives`: **a `Select` was the one focusable control with no address and no announced help** — the pass that gave every other control a `ref`/`aria-id`/`onLayout` and `description` → `aria-description` skipped `Select`, whose `SelectProps` extended only the value channel: a form could not focus the select it failed on, an automation host could not address it, a layout could not measure it, and a visible `Label`'s help line reached nobody (0.11.0 has no `aria-describedby`). The four props now land on the **trigger** — the one focusable element and the node that already carries the combobox role, name, open state and choice — with a blank `description` publishing nothing, the same name rule every control follows. Proof: `src/components/Select.test.tsx` gains `gives the trigger the address and help a form owns` (the four props on the trigger, blank description absent), measured failing at HEAD with the first `Option.none()` (`expected { _id: 'Option', _tag: 'None' } to strictly equal … Some`); `runtime/address.runtime.test.tsx` mounts a select and reads its help, author id and ref off the runtime's own a11y tree and element, measured failing at HEAD with `expected undefined to be 'Pick a fruit to ship.'`, `expected undefined to be 'fruit-trigger-id'` and `expected undefined to be 73` for the ref. Restored: the package is 56 files / 1 074 tests green, `check-types` clean, and the window suite 3/3. Docs: the `select.mdx` API table names `description` and `ref`/`aria-id`/`onLayout` and says the trigger is the addressed element, and the `COMPONENTS.md` Selects row records the channel. No playground scenario applies — the native proof is the package's own window suite (`runtime/address.runtime.test.tsx`).
 
 ## Swarm-owned blockers (fix these)
 

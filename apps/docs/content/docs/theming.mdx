@@ -326,9 +326,10 @@ keep identical boxes.
 
 A component declares its ring through
 `controlFocusRing(theme, { disabled, invalid })`, which composes the same helper:
-an invalid field repaints the line with the `destructive` role, and a disabled
-one gets **no ring at all** — the runtime does not move the focus off a control
-that becomes disabled, so a declaration made anyway would stay painted on
+an invalid field repaints the line with the `destructive` role — a theme that
+lost that role keeps the ring's own colour rather than painting no line — and a
+disabled one gets **no ring at all**: the runtime does not move the focus off a
+control that becomes disabled, so a declaration made anyway would stay painted on
 something that refuses every key.
 
 ## Platform styles

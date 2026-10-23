@@ -598,12 +598,19 @@ describe("the motion page", () => {
       ),
     );
     expect(reducedUseInertia, "useInertia has no reduced branch").toContain(
-      "motion.coast(running.inertia, running.velocity);",
+      "const destination = coastRest(running, motion.current);",
     );
-    expect(reducedUseInertia).toContain(
-      "const ended = motion.sample(performance.now() - start, true);",
-    );
+    expect(reducedUseInertia).toContain("motion.set(destination);");
     expect(reducedUseInertia).toContain("skippingStart.current = false;");
+    expect(reducedUseInertia).toContain("complete: true,");
+    // The branch retires the value rather than starting a coast it then has to
+    // finish: a coast established in this commit was what relaunched the
+    // gesture a preference that turned back on had already ended.
+    expect(reducedUseInertia).not.toContain("motion.coast(");
+    expect(pageText).toContain(
+      "retained value is set to the projection the release names",
+    );
+    expect(pageText).toContain("no coast is left running");
 
     // The completion edge is read in the render, so a destination the commit
     // just reached reports its end with the frame instead of one commit later.
@@ -634,21 +641,26 @@ describe("the motion page", () => {
     [
       "paints a target changed while it is on in the frame it arrives",
       "paints a release changed while it is on in the frame it arrives",
+      "starts a reduced release from the frame on screen after a coast",
       "paints the resting frame in the commit the preference turns on",
       "keeps a mount that asked for no journey from reporting one",
     ].forEach((name) => {
       expect(reducedSuite, `the suite no longer runs ${name}`).toContain(name);
     });
-    ["100:0:false", "200:0:true", "140:0:true", "105:0:true"].forEach(
-      (reading) => {
-        expect(reducedSuite, `the suite no longer reads ${reading}`).toContain(
-          `"${reading}"`,
-        );
-        expect(pageText, `the page no longer prints ${reading}`).toContain(
-          `\`${reading}\``,
-        );
-      },
-    );
+    [
+      "100:0:false",
+      "200:0:true",
+      "140:0:true",
+      "245:0:true",
+      "35:0:true",
+    ].forEach((reading) => {
+      expect(reducedSuite, `the suite no longer reads ${reading}`).toContain(
+        `"${reading}"`,
+      );
+      expect(pageText, `the page no longer prints ${reading}`).toContain(
+        `\`${reading}\``,
+      );
+    });
   });
 
   it("places the motion preference in the package that owns it", () => {
@@ -673,9 +685,7 @@ describe("the motion page", () => {
     expect(presence).toContain('} from "@gpuixui/motion/react";');
     expect(components).toContain('} from "./internal/presence.js";');
 
-    const preference = section(
-      "Reduced motion is a policy, not a capability",
-    );
+    const preference = section("Reduced motion is a policy, not a capability");
     expect(preference).toContain("### Where the preference lives");
     expect(pageText).toContain(
       "`MotionProvider` and `useMotionPreference` are `@gpuixui/motion/react`'s",

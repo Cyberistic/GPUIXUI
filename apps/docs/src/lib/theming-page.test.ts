@@ -1103,7 +1103,12 @@ describe("the theming page's focus-ring section", () => {
       stylesheet.indexOf("export type FilledAction"),
     );
     expect(control).toContain("if (state.disabled === true) {");
-    expect(control).toContain("outlineColor: theme.colors.destructive");
+    // An invalid control's line takes the status role, and a theme that lost
+    // that role keeps the ring's own colour — a brand that dropped
+    // `destructive` must still show where focus is.
+    expect(control).toContain(
+      "themeColors(theme).destructive ?? ring.focusVisible.outlineColor",
+    );
 
     // The measured premise lives in the package's own test: the page names it
     // instead of printing a range that every palette pass has to re-edit (the

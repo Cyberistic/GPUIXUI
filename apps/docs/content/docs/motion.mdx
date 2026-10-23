@@ -395,12 +395,15 @@ there is no run to finish.
 Measured in the renderer
 (`packages/components/src/behaviour/motion-hooks.test.tsx`): a reduced spring
 mounted at `100` paints `100:0:false`, the same hook retargeted to `200` paints
-`200:0:true`, and a reduced coast released at `400` paints `140:0:true` where a
-release at `300` paints `105:0:true`.
+`200:0:true`, and a reduced coast released at `400` paints `140:0:true`. A
+release changed to `300` on the next commit paints `245:0:true`, because it
+projects from the `140` on screen rather than the offset the mount asked for, and
+a coast that had already rested paints `35:0:true` from the same reduced release.
 
 Turning the preference back off starts from where the reader is. A reduced commit
-retires the run it skipped — the retained value is set to the resting frame, and
-a coast is established and finished in that commit — so a later animated change
+retires the run it skipped: a spring's retained value is set to the resting
+frame, and a release's retained value is set to the projection the release names
+from the frame on screen, so no coast is left running. A later animated change
 retargets from the frame on screen rather than relaunching a gesture the reader
 already saw end.
 

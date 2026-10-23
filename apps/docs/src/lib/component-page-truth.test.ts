@@ -530,9 +530,17 @@ describe("the curated component pages", () => {
     expect(source).toContain('label="In progress"');
     expect(source).toContain("actionOnColor(theme, variant)");
     // The mark takes the action's own label role; the page names the role and
-    // the button source proves it, rather than the page printing a colour.
-    expect(read("packages/components/src/internal/button.tsx")).toContain(
-      'Match.when("secondary", () => theme.colors.secondaryForeground)',
+    // the button source proves it, rather than the page printing a colour. The
+    // components' action delegates its role to the primitive's variant table —
+    // the single source `actionOnColor` reads — so the two are held together
+    // rather than to a second list this package could drift from.
+    const actionButton = read("packages/components/src/internal/button.tsx");
+    const variants = read("packages/primitives/src/core/variants.ts");
+    expect(actionButton).toContain(
+      "primitiveActionOnColor(theme, LOOKS[variant].variant)",
+    );
+    expect(variants).toContain(
+      "foreground: (theme) => theme.colors.secondaryForeground",
     );
 
     // The surface is the dialog's own, at `sm`, with no close control: a page
@@ -964,8 +972,11 @@ describe("the curated component pages", () => {
     expect(text).not.toContain("reshapes the page buttons");
     // The disabled share the page prints is the recipe's compiled one.
     expect(text).toContain(`\`disabledOpacity\`, \`${fade}\``);
-    expect(button).toContain(
-      'Match.when("ghost", () => theme.colors.foreground)',
+    // A ghost action paints no fill, so its label is the `foreground` role —
+    // read from the primitive's variant table, which `actionOnColor` answers
+    // from and the components' action delegates to.
+    expect(read("packages/primitives/src/core/variants.ts")).toContain(
+      "foreground: (theme) => theme.colors.foreground",
     );
 
     // A count or a bound the control cannot read is the case a page built from
