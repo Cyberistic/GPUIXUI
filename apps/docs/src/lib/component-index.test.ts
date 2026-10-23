@@ -217,13 +217,13 @@ describe("the components lane", () => {
     ).toEqual([]);
   });
 
-  it("carries a demo for all but the page that mounts none", () => {
+  it("carries a demo for every component page", () => {
+    // `MultiStepForm` was the last page without one; its preview now drives the
+    // same caller-owned draft the page documents.
     const without = componentPages.filter((entry) => entry.demo === undefined);
 
-    expect(without.map((entry) => entry.url)).toEqual([
-      "/docs/components/multi-step-form",
-    ]);
-    expect(componentPages.length - without.length).toBeGreaterThanOrEqual(75);
+    expect(without.map((entry) => entry.url)).toEqual([]);
+    expect(componentPages.length).toBeGreaterThanOrEqual(76);
   });
 });
 

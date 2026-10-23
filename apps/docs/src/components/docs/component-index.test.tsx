@@ -78,28 +78,21 @@ describe("the component index", () => {
     ).toEqual([]);
   });
 
-  it("renders a demo in the tiles that mount one, and a label in the rest", () => {
-    // The page says a component that mounts a preview renders it in its tile;
-    // a tile that rendered an empty frame would make that claim false.
+  it("renders a demo in every component tile", () => {
+    // Every component page mounts one now that `MultiStepForm` has a preview;
+    // a tile that rendered an empty frame would make the page's claim false.
     const previewed = componentPages.filter(
       (entry) => entry.demo !== undefined,
     );
-    const staticRows = componentPages.filter(
-      (entry) => entry.demo === undefined,
-    );
 
-    expect(previewed.length).toBeGreaterThanOrEqual(75);
+    expect(previewed.length).toBeGreaterThanOrEqual(76);
+    expect(previewed).toHaveLength(componentPages.length);
     expect(
       previewed.filter(
         (entry) => !row(entry.url).includes('data-preview="demo"'),
       ),
     ).toEqual([]);
-    expect(staticRows.length).toBeGreaterThan(0);
-    expect(
-      staticRows.filter(
-        (entry) => !row(entry.url).includes('data-preview="none"'),
-      ),
-    ).toEqual([]);
+    expect(markup).not.toContain('data-preview="none"');
   });
 
   it("lays the tiles out three across on a desktop, two on a tablet, one on a phone", () => {

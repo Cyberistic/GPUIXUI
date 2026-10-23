@@ -110,6 +110,10 @@ import {
   type MenuEntry,
 } from "./menu-preview";
 import {
+  MultiStepFormWorkflow,
+  multiStepFormWorkflowSource,
+} from "./multi-step-form-demo";
+import {
   SelectDemo,
   SelectStates,
   selectDemoSource,
@@ -2940,6 +2944,10 @@ export const demos: Readonly<Record<string, Demo>> = {
   },
   "form-states": { render: FormStates, source: formStatesSource },
   "form-workflow": { render: FormWorkflow, source: formWorkflowSource },
+  "multi-step-form-workflow": {
+    render: MultiStepFormWorkflow,
+    source: multiStepFormWorkflowSource,
+  },
   "inline-edit-states": {
     render: InlineEditStates,
     source: inlineEditStatesSource,

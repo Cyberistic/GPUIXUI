@@ -26,7 +26,7 @@ theming.mdx                  Semantic roles, themes, the platform switch, the lo
 dark-mode.mdx                App-owned mode switching, following the desktop's palette, restoring a stored theme
 typography.mdx               The ten type roles, the two families, the platform rule
 runtime.mdx                  What the pinned GPUix provides, what it does not, the browser build behind /live, and the workaround
-accessibility.mdx            What a screen reader hears, which states have no attribute, proving the tree
+accessibility.mdx            What a screen reader hears, which states have no attribute, proving the tree, the pressable-target floors and the keyboard dim
 motion.mdx                   Springs, keyframes, inertia, the presence seam, the React hooks and the reduced-motion policy
 layouts.mdx                  The layout lane: primitives, the window frame, runtime facts
 workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
@@ -175,6 +175,8 @@ src/components/docs/search-input-preview.ts The search preview's filter, count a
 src/components/docs/search-input-demo.tsx The search field's two browser renderings and their source strings
 src/components/docs/stepper-preview.ts    The stepper preview's derived status and the step gate
 src/components/docs/stepper-demo.tsx      The stepper's two browser renderings and their source strings
+src/components/docs/multi-step-form-preview.ts The wizard preview's gates and step arithmetic
+src/components/docs/multi-step-form-demo.tsx The wizard's browser rendering and its source string
 src/components/docs/avatar-preview.ts     The avatar preview's initials, roster and presence words
 src/components/docs/avatar-demo.tsx       The avatar's roster panel and state gallery
 src/components/docs/badge-preview.ts       The badge preview's statuses, filter and press route

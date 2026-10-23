@@ -158,9 +158,10 @@ describe("the preview strategy document", () => {
 
   it("does not claim a preview every component page ships", () => {
     // Bug guarded: the policy said "A page that ships a demo — every component
-    // and primitive page does". `MultiStepForm` ships none: its state belongs
-    // to the caller and the page has only usage, API and limitations, which is
-    // strategy 4. The pages that do mount one are measured by
+    // and primitive page does". When this case was written `MultiStepForm`
+    // shipped none — the caller owns its state — so that page was strategy 4;
+    // every component page mounts one now, and the rule still has to allow a
+    // page that ships none. The pages that mount one are measured by
     // `native-run-note.test.ts`; this case keeps the sentence from promising
     // the rest.
     const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
