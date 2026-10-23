@@ -40,12 +40,13 @@ import {
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { controlHeight, useTheme, type Theme } from "./internal/theme.js";
+import { currentStep, statusOf, type StepperStatus } from "./stepper/logic.js";
 
 /** The two axes a stepper can run along. */
 export type StepperOrientation = "horizontal" | "vertical";
 
 /** Where a step sits relative to the current one. */
-export type StepperStatus = "complete" | "current" | "upcoming";
+export type { StepperStatus } from "./stepper/logic.js";
 
 /** What a step derives from the root. */
 interface StepperContextValue {
@@ -65,10 +66,6 @@ const useStepper = (): StepperContextValue => {
   }
   return value;
 };
-
-/** A step's status relative to the current value. One place, one rule. */
-const statusOf = (current: number, step: number): StepperStatus =>
-  step < current ? "complete" : step === current ? "current" : "upcoming";
 
 /** The marker's fill and text colour for one status. */
 const markerPalette = (
@@ -93,7 +90,11 @@ const markerPalette = (
 
 /** {@link Stepper} props. */
 export interface StepperProps extends Omit<Props, "children"> {
-  /** The current step, 1-based. Steps below it are complete. */
+  /**
+   * The current step, 1-based. Steps below it are complete, it is current and
+   * the rest are upcoming. A value the caller cannot read (`NaN` or an
+   * infinity, from arithmetic over a step index) reads as the first step.
+   */
   readonly value: number;
   /** Default `"horizontal"`. */
   readonly orientation?: StepperOrientation;
@@ -103,7 +104,11 @@ export interface StepperProps extends Omit<Props, "children"> {
   readonly children?: PartChildren;
 }
 
-/** A read-only step list. The statuses come from `value`. */
+/**
+ * A read-only step list. The statuses come from `value`, resolved once through
+ * `currentStep`: a value the caller cannot name reads as the first step, so the
+ * paint and the announcement agree instead of every step reading upcoming.
+ */
 export const Stepper = ({
   value,
   orientation = "horizontal",
@@ -117,7 +122,7 @@ export const Stepper = ({
   assertParts(stepperRoot, children);
 
   return (
-    <StepperContext.Provider value={{ value, orientation }}>
+    <StepperContext.Provider value={{ value: currentStep(value), orientation }}>
       <div
         role="list"
         {...(label === undefined ? {} : { "aria-label": label })}

@@ -3,8 +3,9 @@
  *
  * The bugs these guard: a status that is passed instead of derived from `value`;
  * an inverted comparison that swaps complete and upcoming; a current step that is
- * never announced; labels that ignore the muted role for upcoming steps; and a
- * `style` callback that cannot see the derived status.
+ * never announced; a `value` the caller cannot name leaving every marker
+ * upcoming; labels that ignore the muted role for upcoming steps; and a `style`
+ * callback that cannot see the derived status.
  */
 
 import { describe, expect, it } from "vitest";
@@ -92,6 +93,41 @@ describe("Stepper", () => {
     ]);
 
     stepper.unmount();
+  });
+
+  it("reads a value it cannot name as the first step", () => {
+    // A step index computed before its total arrives is `NaN`; the indicator
+    // used to paint every marker upcoming and announce no current step at all,
+    // so it claimed the workflow had not started. The first step is the state a
+    // stepper can always mark, and the paint and the announcement agree on it.
+    const stepper = renderComponent(<Checkout value={Number.NaN} />);
+    try {
+      expect(marker(stepper, 1)?.style.backgroundColor).toBe(
+        darkTheme.colors.primary,
+      );
+      expect(marker(stepper, 2)?.style.backgroundColor).toBe(
+        darkTheme.colors.muted,
+      );
+      const rows = nodesWithRole(stepper.renderer, "listitem");
+      expect(rows.map((row) => Option.contains(row.selected, true))).toEqual([
+        true,
+        false,
+        false,
+      ]);
+    } finally {
+      stepper.unmount();
+    }
+
+    const infinite = renderComponent(
+      <Checkout value={Number.POSITIVE_INFINITY} />,
+    );
+    try {
+      expect(marker(infinite, 1)?.style.backgroundColor).toBe(
+        darkTheme.colors.primary,
+      );
+    } finally {
+      infinite.unmount();
+    }
   });
 
   it("keeps current and complete labels in the foreground, upcoming muted", () => {

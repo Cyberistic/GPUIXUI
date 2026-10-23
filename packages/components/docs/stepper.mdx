@@ -37,6 +37,15 @@ Stepper
 | `Stepper` | `div` with `role="list"` | `value` (required), `orientation?`, `label?`, children |
 | `StepperStep` | `div` with `role="listitem"` | `value` (required), `label` (required), `description?`, `style?` |
 
+The statuses are derived from the one `value`: a step below it is complete, the
+step itself is current, the rest are upcoming. A `value` the caller cannot name
+— a `NaN` or an infinity from arithmetic over a step index, stamped before its
+total arrived — reads as the **first step**, because that is the one state a
+stepper can always mark; the alternative would paint every marker upcoming and
+announce no current step at all, claiming the workflow had not started. An
+explicit value below the first step (`0`) is the caller's own "not started"
+state and paints no current step.
+
 ## Limitations
 
 - Display-only: no step click, disabled policy or `onValueChange`.
