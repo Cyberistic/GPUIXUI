@@ -3,13 +3,12 @@
  *
  * The bug this guards: `keyboardFocusRing`'s outline sat at `outlineOffset: 0`,
  * flush against the fill the control paints. `ring` *is* the brand (`ring` and
- * `primary` are the same ramp step in thirteen of the sixteen styles), so a
+ * `primary` are the same ramp step in 15 of the 18 styles), so a
  * focused primary action painted its focus line in its own fill — measured at
  * **1.00–1.38:1** on both `primary` and `destructive` in every
  * style, at rest and under the pointer. The pair was unsatisfiable, not unmet:
  * at offset 0 one colour must clear the boundary floor against both the page and
- * the fill, and no luminance does in 8 of the sixteen styles for `primary` (9 for
- * `destructive`).
+ * the fill, and no luminance does in 10 of the 18 styles for either face.
  *
  * The fix is the geometry, not the palette: the line now sits **one line's
  * width outside the border box**, so the strip behind the control shows through
@@ -253,7 +252,7 @@ describe("the ring separated from a filled action", () => {
     expect(misses("accent", "rest")).toEqual([]);
 
     // The derived pointer fills did not: the press dropped the neutral faces
-    // under the floor in nine and seven of the sixteen styles.
+    // under the floor in 9 and 7 of the 18 styles.
     expect(misses("secondary", "pressed")).toHaveLength(9);
     expect(misses("accent", "pressed")).toHaveLength(7);
     expect(misses("secondary", "hover")).toHaveLength(3);
@@ -265,11 +264,44 @@ describe("the ring separated from a filled action", () => {
     // No flush colour could clear both the page and a brand face, and where one
     // existed it was far from the brand.
     const brandFaces: ReadonlyArray<FilledRole> = ["primary", "destructive"];
+    const sameStep = styles.filter(
+      ([, theme]) => theme.colors.ring === theme.colors.primary,
+    ).length;
     const empty = (role: FilledRole) =>
       styles.filter(([, theme]) => flushColours(theme, role).length === 0)
         .length;
     expect(empty("primary")).toBe(10);
     expect(empty("destructive")).toBe(10);
+
+    // The header and the three pages print these figures, so they are derived
+    // here: a style that joins the sweep fails until every surface counts it.
+    const header = readFileSync(
+      new URL("./ring-fill.test.ts", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const tokens = document("docs/tokens.md").replace(/\s+/g, " ");
+    const design = document("docs/design-system.md").replace(/\s+/g, " ");
+    const readme = document("packages/tokens/README.md").replace(/\s+/g, " ");
+    const secondary = misses("secondary", "pressed").length;
+    const accent = misses("accent", "pressed").length;
+
+    expect(header).toContain(
+      `same ramp step in ${sameStep} of the ${styles.length} styles`,
+    );
+    expect(header).toContain(
+      `in ${empty("primary")} of the ${styles.length} styles for either face`,
+    );
+    expect(header).toContain(
+      `in ${secondary} and ${accent} of the ${styles.length} styles`,
+    );
+    expect(tokens).toContain(
+      `same ramp step in ${sameStep} of the ${styles.length} styles`,
+    );
+    expect(design).toContain(
+      `in **${secondary} of the ${styles.length}** styles for \`secondary\` and ${accent} for \`accent\``,
+    );
+    expect(readme).toContain(`in all ${styles.length} styles`);
+    expect(readme).toContain(`over the ${styles.length} styles`);
 
     const distances = styles.flatMap(([, theme]) => {
       const ring = luminance(theme.colors.ring);

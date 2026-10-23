@@ -400,12 +400,12 @@ sibling keep their boxes. A runnable example lives in
 
 A **filled action's** own face is why the ring is separated. `ring` *is* the
 brand, so a flush line merges with `primary` (**1.00–1.15:1**) and `destructive`
-(**1.00–1.38:1**) in all sixteen styles, and at `outlineOffset: 0` one colour
+(**1.00–1.38:1**) in all 18 styles, and at `outlineOffset: 0` one colour
 would have to clear the boundary floor against both the face and the page — the
 feasible luminance set is empty in **ten of the eighteen** styles for either face, and where one exists it is ≥0.11 from the brand. With the
 line one line's width outside the control, every filled action is measured on
 the surface it sits on like any other control, and the tightest ring placement
-over the sixteen styles is Windows's red message tint at 3.05:1.
+over the 18 styles is Windows's red message tint at 3.05:1.
 `ring-fill.test.ts` holds the offset, the arithmetic that forced it, the strips
 and the probe; `docs/tokens.md` §Contrast carries the reasoning.
 
@@ -1102,8 +1102,8 @@ is handed the theme's mode, families, `inputForeground`/`mutedForeground`, the
 a `<markdown>` host paints an ordered list's number and a bullet at **85%** of
 it, a block quote's rail at **60%** and a wash at **5%**
 (`packages/native/src/markdown/render.rs` at the pinned release), and the fill
-role at the marker share lands under the 4.5:1 label floor in ten of the sixteen
-styles — every light one, plus Dark · macOS and Dark · Linux — the tightest being
+role at the marker share lands under the 4.5:1 label floor in 11 of the 18
+styles — every light one, plus Dark · macOS (3.97:1) and Dark · Linux (4.10:1) — the tightest being
 Windows XP (Luna) light's `muted` strip at **3.09:1**. So
 `accent` is `nativeAccent(theme)` — `primary` moved toward `foreground` by the
 smallest 2% step whose 85% composite clears that floor on the four fills a

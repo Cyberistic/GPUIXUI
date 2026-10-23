@@ -1192,6 +1192,30 @@ describe("the accent a document host paints", () => {
 
     expect(seam).toContain(`Measured over the ${shipped.length} shipped,`);
     expect(seam).toContain(`in **${under.length} of them**`);
+
+    // The three pages print the same count and the two dark rows it names.
+    const worstOf = (label: string) =>
+      under.find((entry) => entry.label === label)?.worst;
+    const pages = [
+      readFileSync(new URL("../../../docs/tokens.md", import.meta.url), "utf8"),
+      readFileSync(
+        new URL("../../../docs/design-system.md", import.meta.url),
+        "utf8",
+      ),
+      readFileSync(new URL("../README.md", import.meta.url), "utf8"),
+    ].map((text) => text.replace(/\s+/g, " "));
+
+    pages.forEach((page, at) => {
+      expect(page, `surface ${at}`).toContain(
+        `${under.length} of the ${shipped.length}`,
+      );
+      expect(page, `surface ${at}`).toContain(
+        `Dark · macOS (${worstOf("darwin dark")}:1)`,
+      );
+      expect(page, `surface ${at}`).toContain(
+        `Dark · Linux (${worstOf("linux dark")}:1)`,
+      );
+    });
   });
 
   it("keeps the caret a mark on the field, not the document's label", () => {

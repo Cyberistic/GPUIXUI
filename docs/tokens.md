@@ -2042,7 +2042,7 @@ painters and reports the two erased rings, so the pairs cannot outlive the paint
 or the geometry.
 
 A **filled action** is the case that decides the geometry. `ring` *is* the brand
-— `ring` and `primary` are the same ramp step in thirteen of the sixteen styles —
+— `ring` and `primary` are the same ramp step in 15 of the 18 styles —
 so a line flush with the fill is drawn in the action's own colour: measured, it
 reads **1.00–1.15:1** on `primary` and **1.00–1.38:1** on `destructive`
 in every style, at rest and under the pointer. A flush ring is not a palette the
@@ -2999,8 +2999,8 @@ A `<markdown>` host paints three things in the theme's accent, never solid
 list's number and an unordered list's disc are **85%** of it, a block quote's
 rail is **60%**, and the wash behind its copy is **5%**. So the role a reader
 actually sees is the composite, and the fill role is not readable there — at the
-85% marker share `primary` lands under the **4.5:1** label floor in **ten of the
-sixteen** styles — every light one, plus Dark · macOS (3.14:1) and Dark · Linux
+85% marker share `primary` lands under the **4.5:1** label floor in **11 of the
+18** styles — every light one, plus Dark · macOS (3.97:1) and Dark · Linux
 (4.10:1) — the tightest being Windows XP (Luna) light's `muted` strip at
 **3.09:1** (the base theme's page reads 4.00:1), while the same role drawn as a
 solid mark clears the 3:1 floor the mark contract measures. No existing contract

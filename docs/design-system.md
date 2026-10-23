@@ -366,8 +366,8 @@ document, which paints its own marks in the accent at fixed shares of it — a
 list number and a bullet at 85%, a block quote's rail at 60% — so the seam hands
 an accent derived for that composite (`nativeAccent`) rather than the fill role:
 measured, the fill role leaves a numbered list's digits under the 4.5:1 label
-floor in ten of the sixteen styles — every light one, plus the two dark platform
-rows — the tightest Windows XP (Luna) light at 3.09:1.
+floor in 11 of the 18 styles — every light one, plus Dark · macOS (3.97:1) and
+Dark · Linux (4.10:1) — the tightest Windows XP (Luna) light at 3.09:1.
 **The runtime does not let the
 theme colour an empty field's placeholder** — at the pinned release it shapes the
 hint with a fixed `#8F8F8F` (`custom_elements/input.rs`), so no token can move it
@@ -721,7 +721,7 @@ width** (one `borderWidth.strong`, 2 points in the shipped themes), so the strip
 behind the control shows through the gap and the ring is read against that strip.
 That is what lets a filled action be focused at all: `ring` is the brand, so a
 flush line was drawn in the action's own colour (1.00–1.15:1 on `primary`, 1.00–1.38:1
-on `destructive`, in all sixteen styles), and no single colour could clear both the
+on `destructive`, in all 18 styles), and no single colour could clear both the
 page and a brand face.
 The ring is measured on every strip a control sits on — the page, a card, a
 popover, a toolbar, a secondary panel, the `input`/`selected`/`hover`/`active`/
@@ -748,8 +748,8 @@ in every shipped style — and the pair is unsatisfiable rather than unmet: at
 the page and the fill, and no luminance does in ten of the eighteen styles for
 either `primary` or `destructive`, while where one exists it is at least 0.11 of
 relative luminance from the brand. The neutral faces held at rest, but their
-derived pointer fills did not — the press fell under the floor in **8 of the
-sixteen** styles for `secondary` and six for `accent`. The line now sits **one
+derived pointer fills did not — the press fell under the floor in **9 of the
+18** styles for `secondary` and 7 for `accent`. The line now sits **one
 line's width outside the border box**, so the strip behind the action shows
 through the gap and every filled action is read on the surface it sits on like
 any other control. The geometry is the window probe's
