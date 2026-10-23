@@ -109,7 +109,11 @@ export const surfaceBudget = {
   // family's headroom. 1 072 KiB measured with the leaving surface guard on
   // every overlay and wrapper (the seam's `PresenceShield` adopted by the eight
   // surfaces and the two wrappers); the ceiling moved 1070 → 1090 KiB.
-  bytes: 1090 * 1024,
+  // 1 091 KiB measured with the scroll seam composing the primitives'
+  // `ScrollArea` (the reading, fade and pinned list now carry its prop surface
+  // instead of a private viewport), so the ceiling moved 1090 → 1120 KiB for the
+  // next family's headroom.
+  bytes: 1120 * 1024,
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
   // `@tanstack/highlight` with CodeBlock's tokenizer.
