@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-96 probes a real window can prove, of which nineteen mount shipped
+97 probes a real window can prove, of which nineteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -5374,6 +5374,62 @@ probe that cannot drag.
 Evidence: `.artifacts/live/scrollbar-drag-rest.png`,
 `.artifacts/live/scrollbar-drag-wheeled.png`.
 
+### `hidden-subtree-lifecycle` — measured on 0.11.0 here
+
+**Which of the two hiding words does the runtime honour — paint, layout, and
+the Tab traversal?** Both are in the style type (`display?: string;
+visibility?: string`), so a component can write either and nothing at compile
+time tells it which one works. The pinned renderer answers it in one function:
+`apply_styles` matches `display` against `"flex"` and `"grid"` only, while
+`visibility: "hidden"` becomes GPUI's `invisible()`. The probe mounts both words
+around a focusable control, then mounts the shipped `Carousel` — every slide
+stays mounted so its state survives, and only the active one is meant to be laid
+out with `display`.
+
+| Step | Result |
+| ---- | ------ |
+| the `display: none` wrapper's control | still reports its own **200×32** box (at `16,92`) and paints its own `#1E222A` fill on the `#11141A` page: the word did nothing |
+| the `visibility: hidden` wrapper's control | reports **no** box, and the 32-point row it would fill paints the page |
+| Tab from `hidden-before` | `hidden-display-control` → `hidden-carousel` → `hidden-active-slide` → `hidden-inactive-slide` → `hidden-after` → back |
+| the invisible control in that walk | **absent**: `visibility` removes a stop the way `display` was meant to |
+| the carousel's two slide boxes | both paint, in one row, each **433** wide: the spare slide is laid out beside the active one |
+| `right` on the carousel | `slide=1`, and **both** slides still report their box |
+| `focusElement` on the invisible control | the window reports its id as focused |
+| a key typed then | never reaches it (`invisibleKeys=0`) |
+
+23 checks, `--only hidden-subtree-lifecycle`, green on 0.11.0 here (~1.0 s).
+
+Five rules a component carries:
+
+1. **`display: none` is not a hiding word in this runtime.** A box written with
+   it still lays out and still paints; the Tab traversal still reaches its
+   controls. A component that means "not on screen" cannot use it.
+2. **`visibility: hidden` is.** It paints nothing and reports no box, so an
+   `onLayout` measurement never sees it — and it still takes its row in the
+   layout, which is what keeps a hidden element's neighbours where they belong.
+3. **The traversal follows `visibility`, not `display`.** A `visibility: hidden`
+   control is skipped; a `display: none` one is a live stop. The guard is the
+   word itself, not a `tabIndex` a caller has to remember.
+4. **A code focus on an invisible control is a focus id with no input.** The
+   window reports the id, and the typed key is not delivered. An app that parks
+   focus on a hidden surface must move it back before it expects a keystroke.
+5. **The shipped `Carousel` is broken by rule 1.** Every slide it keeps mounted
+   is painted and layout-taken: the frame is two slides wide, the spare slide's
+   controls are tab stops, and stepping the selection hides nothing. The
+   component declares "inactive slides are hidden with `display: none`", which
+   the window contradicts. The fix is the component's (see `TODO.md` →
+   Interlocks): unmount the slides the reader cannot see, or compose
+   `visibility` with a measured frame so the row is the active slide's width —
+   and the probe's spare-slide checks flip with it.
+
+One negative control measured, exit `1`, restored green: painting the
+`display: none` control in the page role fails
+`the display:none control paints its own fill` (`expected false, got true`), so
+the paint read is comparing the frame's bytes rather than the style's intent.
+
+Evidence: `.artifacts/live/hidden-subtree.png`,
+`.artifacts/live/hidden-subtree-stepped.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5598,8 +5654,8 @@ narrower. Each deviation is deliberate and measured:
   `multi-step-form-lifecycle`, `aspect-ratio-paint`, `image-box`,
   `image-fit`, `grid-focus-lifecycle`, `system-theme-follow`, `document-type`
   `dock-split-lifecycle`, `flex-sizing`, `scrollbar-thumb`,
-  `scrollbar-thumb-both`, `collapsible-lifecycle` and `scrollbar-drag`
-  (thirty-eight probes, each run alone).
+  `scrollbar-thumb-both`, `collapsible-lifecycle`, `scrollbar-drag` and
+  `hidden-subtree-lifecycle` (thirty-nine probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

@@ -981,6 +981,10 @@ import {
 } from "./surface-origin.js";
 import { HoverRoutingProbe, hoverRoutingSteps } from "./hover-probe.js";
 import {
+  HiddenSubtreeProbe,
+  hiddenSubtreeSteps,
+} from "./hidden-subtree-probe.js";
+import {
   ACTION_RING_DANGER,
   ACTION_RING_NEIGHBOUR,
   ACTION_RING_PRIMARY,
@@ -27783,5 +27787,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "scrollbar-drag",
     view: () => <ScrollbarDragProbe />,
     steps: scrollbarDragSteps,
+  },
+  "hidden-subtree-lifecycle": {
+    id: "hidden-subtree-lifecycle",
+    view: () => <HiddenSubtreeProbe />,
+    steps: hiddenSubtreeSteps,
   },
 };

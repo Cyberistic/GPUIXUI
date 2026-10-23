@@ -1331,7 +1331,36 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 132/132
+`[x]` `[██████████]` 133/133
+
+`[x]` Measure the **two hiding words a component reaches for** — `display: none`
+      and `visibility: hidden` are both in the runtime's style type, so a
+      component can write either and nothing at compile time says which one
+      works; the pinned `apply_styles` matches `display` against `"flex"` and
+      `"grid"` only and maps `visibility: "hidden"` to GPUI's `invisible()`. The
+      `hidden-subtree-lifecycle` probe mounts both around a focusable control and
+      the shipped `Carousel` (which hides its spare slides with `display`) on
+      0.11.0: the `display: none` control still reports its own **200×32** box,
+      paints its `#1E222A` fill on the `#11141A` page and keeps its Tab stop,
+      while the `visibility: hidden` control reports **no** box, leaves its
+      32-point row painting the page and is **skipped** by the traversal; the
+      carousel paints **both** slides in one row, each **433** wide, before and
+      after a step, so its spare slide's controls are live tab stops. A code
+      focus on the invisible control reports its id but a typed key never reaches
+      it (`invisibleKeys=0`). 23 checks, `--only hidden-subtree-lifecycle`, green
+      on 0.11.0 here (~1.0 s). Fixture `src/live/hidden-subtree.ts` + 14 unit
+      cases (the two words and their costs, the stops the window measured, the
+      readout, the count, the registry entry, the README's printed reads, rules
+      and negative control, and the view's wiring); view and steps in
+      `src/live/hidden-subtree-probe.tsx`. One negative control measured, exit
+      `1`, restored green: painting the `display: none` control in the page role
+      fails `the display:none control paints its own fill` (`expected false, got
+      true`), so the paint read compares frame bytes rather than the style's
+      intent. **The probe found a component defect** — the shipped `Carousel` is
+      broken by the ignored word — recorded for its owner in `TODO.md` →
+      Interlocks with the fix routes. Evidence:
+      `apps/playground/README.md` §`hidden-subtree-lifecycle`,
+      `.artifacts/live/hidden-subtree{,-stepped}.png`
 
 `[x]` Measure the **flex sizing rules** a `flex-1` composes with — `@gpuixui/tw`
       compiles `flex-1` to `{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }` and
@@ -6678,7 +6707,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Paint a **find highlight from the theme**, not the runtime's built-in accent — `@gpuixui/tokens` now ships `findHighlight(theme)` (`color`, `activeColor`, `radius`), `highlightSurfaces` and `highlightFailures`, because the runtime's own pair (accent at 30%/65%, a 2px corner) leaves body text under the 7:1 floor in every shipped style at the active share and in four dark ones at the resting share. A search surface should spread it into the host's `highlight` spec (`<text highlight={{ query, ...findHighlight(theme) }}>`), and the playground's `search-highlights` / `search-virtual-document` probes hand the host **no** colour, so they paint the runtime's palette rather than the theme's — the probe is also where the painted wash should be read back (two matches apart, the active one stronger). `HighlightText`'s sweeping marker defaults to the `selection` role, which is a different job and may stay | components + playground | open |
 | Fold **`highlightFailures` into the gate** and the docs-site readout — the find-highlight contract runs beside `auditTheme` because `/docs/themes`' `AuditKind`/`auditFindings` in `apps/docs/src/components/docs/theme-editor-logic.ts` words every report the gate returns and derives its printed count from the gate's own keys. The coordinated change is a twelfth `ThemeAudit` key and `passed` term, an `AuditKind` line (`highlight`) with a formatter naming the state, the strip and the ratio, the `themes.mdx` count/bullet and copy-theme note, and the editor's pass sentence; `packages/tokens/src/highlight.test.ts` already holds the report, its three kinds and both floor sets | docs-site + tokens-theme | open |
 
-| Carry the **scrollbar thumb's missing hitbox** into the inventory — the capability record's **Scrollbar thumb** row and `/docs/runtime#measured-in-a-window` now state the `scrollbar-drag` measurement (a drag on the thumb's centre and a press on its track both leave `x=0 y=0`, while the same drag on a sibling handle runs `moves=8` and a wheel moves the scroller), so a reader of the site knows the painted bar is an affordance and not a control. `COMPONENTS.md`'s **Scrollable containers** rows still describe the thumb's paint and cite `scrollbar-thumb` only, and the `ScrollArea` limitation should say the same thing: the thumb takes no pointer input, the wheel and the keys are the working routes, and a draggable bar is composed from `onScrollChange` → `scrollTo` | components (`COMPONENTS.md`, the Scrollable containers capability and inventory rows) | open — add the `scrollbar-drag` sentence and citation; `packages/components/src/inventory.test.ts`'s `states the thumb a ScrollArea paints` should read the new probe so the row cannot outlive the paint |
+| Carry the **scrollbar thumb's missing hitbox** into the inventory — the capability record's **Scrollbar thumb** row and `/docs/runtime#measured-in-a-window` now state the `scrollbar-drag` measurement (a drag on the thumb's centre and a press on its track both leave `x=0 y=0`, while the same drag on a sibling handle runs `moves=8` and a wheel moves the scroller), so a reader of the site knows the painted bar is an affordance and not a control. `COMPONENTS.md`'s **Scrollable containers** rows still describe the thumb's paint and cite `scrollbar-thumb` only, and the `ScrollArea` limitation should say the same thing: the thumb takes no pointer input, the wheel and the keys are the working routes, and a draggable bar is composed from `onScrollChange` → `scrollTo` | components (`COMPONENTS.md`, the Scrollable containers capability and inventory rows) | **resolved 2026-10-23** — the **Scrollable containers** capability row and the inventory row both cite `scrollbar-drag` and state the rule the probe measured: the painted thumb is an affordance, not a control and takes **no pointer input** (a drag from its centre and a press on the track 40px below it both leave `x=0 y=0` while the same drag on a sibling React handle runs `moves=8`), a wheel moves that scroller to `y = -100`, so the wheel and the keyboard region are the routes, and a draggable bar is the consumer's composition from `onScrollChange` → `scrollTo`. `packages/components/src/inventory.test.ts` gains `says a painted thumb takes no drag, and how a draggable bar is composed`: it reads the probe's README section (the 21-check line, `x=0 y=0`, `moves=8`, `y = -100`) and holds both rows to the five claims, so a row cannot outlive the paint. Directions measured: dropping the citation and route from the capability row fails `Scrollable containers: \`scrollbar-drag\`: expected … to contain`; restored, the file is 24/24. |
+| Stop the **shipped `Carousel` from trusting `display: none`** — the component keeps every slide mounted so its state survives and lays out only the active one with `display` (`carousel.tsx`: `display: active ? "flex" : "none"`, and `carouselMeta` limits say "inactive slides stay mounted and are hidden with `display: none`"). The pinned renderer's `apply_styles` matches `display` against `"flex"` and `"grid"` **only** (`packages/native/src/renderer.rs`), so `"none"` is ignored: the playground's `hidden-subtree-lifecycle` measured a `display: none` wrapper's control still reporting its own 200×32 box, painting its `#1E222A` fill on the `#11141A` page, and keeping its Tab stop, and it measured the **carousel itself** painting both slides in one row, each **433** wide, before and after a step — so a reader sees every slide, the frame is two slides wide, and the spare slide's controls are tab stops. The honest fix is the component's: unmount the slides the reader cannot see (document that a slide's local state does not survive the visit), or compose `visibility: "hidden"` with a measured frame and an explicit stop guard for the spare slide's controls (the probe measured that `visibility` paints nothing, reports no box, and is skipped by the traversal, while a code focus on it reports the id yet never receives a key). Docs (`docs/carousel.mdx` §Limitations) and the `COMPONENTS.md` Carousel row carry the false claim too. The probe's spare-slide checks flip with the fix | components (`packages/components/src/carousel.tsx`, `docs/carousel.mdx`, the Carousel row) | **open** — measured 2026-10-23 by `hidden-subtree-lifecycle` (23 checks on 0.11.0, run alone). Evidence: `apps/playground/README.md` §`hidden-subtree-lifecycle`, `.artifacts/live/hidden-subtree.png` |
 
 ## Phase D — data and workspace components
 

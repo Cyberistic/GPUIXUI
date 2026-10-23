@@ -612,6 +612,12 @@ export const liveRegistry = [
       "Scroll: the runtime's scrollbar is painted with no hitbox, so its thumb takes no pointer drag and only the wheel moves it",
     capability: "scroll",
   },
+  {
+    id: "hidden-subtree-lifecycle",
+    title:
+      "Focus: a display:none box still paints and keeps its tab stop while visibility:hidden paints nothing, and the carousel's spare slide is a display no-op",
+    capability: "focus",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
