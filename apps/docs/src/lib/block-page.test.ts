@@ -91,6 +91,33 @@ describe("the block pages", () => {
       "blocks",
     );
   });
+
+  it("teaches one conversation dress per platform the block paints", () => {
+    // Bug guarded: the page said "three platform dresses" and listed macOS,
+    // Windows 11 and Linux while the block ships a fourth, Omarchy.
+    const block = here("../components/docs/conversations-block.tsx");
+    const names = [
+      ...(
+        block.split("export type ConversationPlatform = ")[1]?.split(";")[0] ??
+        ""
+      ).matchAll(/"(\w+)"/g),
+    ].flatMap((match) => match[1] ?? []);
+    const labels: Readonly<Record<string, string>> = {
+      macos: "macOS",
+      windows: "Windows 11",
+      linux: "Linux (Breeze dark)",
+      omarchy: "Omarchy",
+    };
+    const words = ["zero", "one", "two", "three", "four", "five"];
+    const page = pageFor("conversations").replace(/\s+/g, " ");
+
+    expect(names).toEqual(["macos", "windows", "linux", "omarchy"]);
+    expect(page).toContain(`## The ${words[names.length]} dresses`);
+    names.forEach((name) => {
+      expect(page).toContain(`**${labels[name]}**`);
+    });
+    expect(page).not.toMatch(/three platform dresses|all three/);
+  });
 });
 
 describe("the dashboard page's charts", () => {

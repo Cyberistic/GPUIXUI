@@ -99,4 +99,17 @@ describe("the motion page", () => {
     expect(declaredLevels.length).toBeGreaterThanOrEqual(5);
     expect(printedLevels).toEqual(declaredLevels);
   });
+
+  it("calls the frame builder with the arguments it declares", () => {
+    // Bug guarded: the snippet called `fadeFrom("top")` with one argument
+    // while the builder takes an axis and an offset, and the frames table
+    // named the side-aware builder `fadeFrom` instead of `fadeFromSide`.
+    expect(read("packages/motion/src/presence.ts")).toContain(
+      "export const fadeFromSide = (",
+    );
+    expect(page).toContain('fadeFromSide("top", 8)');
+    expect(page).toContain("`fadeFromSide(side, offset)`");
+    expect(page).toContain("`fadeFrom(axis, offset)`");
+    expect(page).not.toMatch(/fadeFrom\("top"\)/);
+  });
 });

@@ -1,5 +1,10 @@
 import { readFileSync } from "node:fs";
-import { densityPresets, type DensityName } from "@gpuixui/tokens";
+import {
+  densityPresets,
+  platformStyles,
+  themes,
+  type DensityName,
+} from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -140,5 +145,14 @@ describe("the styling page", () => {
     expect(page).toContain(`${height("spacious")} spacious`);
     expect(page).not.toContain("`h-9` is 36");
     expect(page).not.toContain("height: 36");
+  });
+
+  it("teaches the corner the theme carries, not Tailwind's", () => {
+    // Bug guarded: `rounded-lg` was tabulated as a fixed 8 while the compiler
+    // reads `theme.radius.lg`, so every platform style repaints the corner.
+    expect(page).toContain("`borderRadius: theme.radius.lg`");
+    expect(page).toContain(
+      `${themes.light.radius.lg} at the default, ${platformStyles.darwin.radius.lg} on macOS, ${platformStyles.linux.radius.lg} on Linux`,
+    );
   });
 });

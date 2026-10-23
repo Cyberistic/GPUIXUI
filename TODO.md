@@ -10385,7 +10385,43 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[██████████]` 327/328
+`[ ]` `[██████████]` 328/329
+
+`[x]` Correct the **second set of claims the site's prose made against the
+      source** — five more pages printed a rule the library had outgrown.
+      `/docs/motion` called `fadeFrom("top")` with one argument and tabulated the
+      builder as `fadeFrom(side)`, while the package declares
+      `fadeFrom(axis, offset)` and keeps the side-aware builder as
+      `fadeFromSide(side, offset)` — the snippet a reader copies did not compile,
+      and the presence-value guard passed only because the name appears in the
+      entry-point table. `/docs/styling` tabulated `rounded-lg` as a fixed
+      `borderRadius: 8` while `classesToStyle` reads `theme.radius.lg` (8
+      default, 14 macOS, 12 Linux). `/docs/blocks/conversations` said "three
+      platform dresses" and listed three, while `ConversationPlatform` is four
+      and the Omarchy skin is painted. `/docs/layouts` counted "five layout
+      primitives" (the inventory's five rows) where the package exports six
+      components, and turned the scale's one-shadow-per-level design rule into
+      "One shadow per element" although the runtime takes a shadow list.
+      `/docs/workspace` said "each part's page is under Components" while six of
+      the parts it links mount in the Workspace section. Guards:
+      `motion-page.test.ts` gains `calls the frame builder with the arguments it
+      declares`; `styling-page.test.ts` gains `teaches the corner the theme
+      carries, not Tailwind's` (the three values from `themes.light` and
+      `platformStyles`); `block-page.test.ts` gains `teaches one conversation
+      dress per platform the block paints` (the union, one label per bullet, the
+      count word); `lane-page.test.ts` gains the layouts suite (six names,
+      "five inventory rows", the runtime's `boxShadow` list read from
+      `host.d.ts`); `workspace-page.test.ts` gains `sends each part to the
+      section its page lives in` (the composition table's links resolved through
+      `packageCollections`). Directions measured: restoring each retired line
+      fails its case by name (`fadeFromSide("top", 8)`, `borderRadius:
+      theme.radius.lg`, `## The four dresses`, `six layout primitives`,
+      `A shadow, or a shadow list`, `Workspace` in the closing sentence).
+      `apps/docs` is **150 files / 1 307 tests** green, `check-types` clean,
+      format and lint clean on every changed file; built and served on
+      `vite preview` with `/docs/motion`, `/docs/styling`,
+      `/docs/blocks/conversations`, `/docs/layouts` and `/docs/workspace` all
+      200. No native scenario applies — site prose and the declarations it cites.
 
 `[x]` Correct the **claims the site's prose made that the sources refuse** — four
       pages printed a number or a technical fact the library had moved past, and

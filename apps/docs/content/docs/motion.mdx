@@ -54,12 +54,12 @@ A surface that leaves keeps a frame mounted while it fades, and a box that is st
 ```ts
 import {
   exitWindowMs,
-  fadeFrom,
+  fadeFromSide,
   presenceStyle,
   presenceTiming,
 } from "@gpuixui/motion/presence";
 
-const frames = fadeFrom("top"); // initial, animate and exit
+const frames = fadeFromSide("top", 8); // initial, animate and exit
 const timing = presenceTiming("normal"); // enter and exit transitions
 const held = exitWindowMs(timing); // 200 — the exit window, in ms
 const rule = presenceStyle(false, "target"); // { pointerEvents: "none" }
@@ -70,8 +70,9 @@ const rule = presenceStyle(false, "target"); // { pointerEvents: "none" }
 | Frames | Shape |
 | ------ | ----- |
 | `fadeOnly` | opacity only, for a box that must not move |
-| `fadeFrom(side)` | fades and travels a few pixels from a side |
-| `fadeFromAnchor(anchor)` | travels from the trigger's own edge |
+| `fadeFrom(axis, offset)` | fades and travels `offset` pixels along `top` or `left` |
+| `fadeFromSide(side, offset)` | arrives from a window edge |
+| `fadeFromAnchor(side, offset)` | travels out from the trigger's own edge |
 
 ## Limitations
 

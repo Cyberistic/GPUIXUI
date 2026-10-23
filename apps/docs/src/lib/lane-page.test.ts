@@ -148,3 +148,30 @@ describe("the composition pages", () => {
     expect(orphans).toEqual([]);
   });
 });
+
+describe("the layouts page's own rules", () => {
+  const page = read("layouts.mdx").replace(/\s+/g, " ");
+  const host = readFileSync(
+    new URL("../../node_modules/@gpuix/native/dist/host.d.ts", import.meta.url),
+    "utf8",
+  );
+
+  it("counts the primitives the package exports, not the inventory rows", () => {
+    // Bug guarded: "five layout primitives" counted the lane's five inventory
+    // rows while `Box`, `Stack`, `Grid`, `Separator`, `Spacer` and `ScrollArea`
+    // are six components.
+    const names = ["Box", "Stack", "Grid", "Separator", "Spacer", "ScrollArea"];
+
+    expect(page).toContain("six layout primitives");
+    names.forEach((name) => expect(page).toContain(`\`${name}\``));
+    expect(page).toContain("five inventory rows");
+  });
+
+  it("does not turn the one-shadow design rule into a runtime limit", () => {
+    // The runtime takes a shadow list (`boxShadow?: BoxShadow | BoxShadow[]`);
+    // the one-shadow-per-level rule is the scale's, not the platform's.
+    expect(host).toMatch(/boxShadow\?:\s*BoxShadow\s*\|\s*BoxShadow\[\]/);
+    expect(page).toContain("A shadow, or a shadow list");
+    expect(page).not.toContain("One shadow per element");
+  });
+});

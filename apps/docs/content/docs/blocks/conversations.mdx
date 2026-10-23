@@ -1,13 +1,13 @@
 ---
 title: Conversations
-description: A Messages-style window in three platform dresses — macOS, Windows 11 and Linux Breeze.
+description: A Messages-style window in four platform dresses — macOS, Windows 11, Linux Breeze and Omarchy.
 ---
 
 A Messages-window recipe: the conversation list on the left, the open thread on
-the right and the composer beneath it. The same block is drawn in three
-platform dresses so the deck on the landing page can show macOS, Windows 11 and
-Linux side by side; the preview below is the macOS one. Copy the recipe; it is
-composed from the library, not a new component.
+the right and the composer beneath it. The same block is drawn in four
+platform dresses so the deck on the landing page can show macOS, Windows 11,
+Linux and Omarchy side by side; the preview below is the macOS one. Copy the
+recipe; it is composed from the library, not a new component.
 
 <BlockPreview name="conversations-01" />
 
@@ -19,10 +19,10 @@ so a longer thread scrolls its own log instead of moving the window; below 760px
 of viewport the right pane is hidden and the list is the whole window, as
 Messages does on a narrow screen.
 
-## The three dresses
+## The four dresses
 
 `ConversationWindow` takes `platform` and changes only the skin. **The control
-set is identical across the three**: a compose glyph at the thread's top left,
+set is identical across the four**: a compose glyph at the thread's top left,
 video and phone at its top right, a search field and selectable rows, and a
 composer of `+`, the field, emoji, attach and send.
 
@@ -36,11 +36,15 @@ composer of `+`, the field, emoji, attach and send.
 - **Linux (Breeze dark)** — dark window, 8px radius, `− □ ×` on the right, a
   teal-selected message icon in the rail, a teal selected row and blue outgoing
   bubbles.
+- **Omarchy** — the Linux rail and window in the desktop's own Tokyo Night
+  look: near-square corners, the theme's `selected` row and a `primary`
+  outgoing bubble, so it follows the palette an Omarchy desktop stages.
 
-The rail is the Windows and Linux skin's replacement for the macOS sidebar
-toggle, not a different feature set. The literals become roles — `success`,
-`primary`, `info`, `selected`, `success-soft`, `muted` — so every dress works in
-both the light and the dark palette. The double tick is `info` in all three.
+The rail is the Windows, Linux and Omarchy skin's replacement for the macOS
+sidebar toggle, not a different feature set. The literals become roles —
+`success`, `primary`, `info`, `selected`, `success-soft`, `muted` — so every
+dress works in both the light and the dark palette. The double tick is `info` in
+all four.
 
 ## Composition
 
