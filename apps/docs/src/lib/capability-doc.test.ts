@@ -1633,6 +1633,117 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("cell");
   });
 
+  it("records the mark an exclusive-choice row paints, from its fixture", () => {
+    // `menu-radio-lifecycle` measured what no box read can: a radio row's state
+    // is one glyph in a fixed leading slot, so the chosen row's box is the same
+    // as an unchecked one, and only a frame says the choice painted. The check
+    // count, the tolerance and the three choices are derived from the probe's
+    // fixture and its README section, so a record teaching a mark the window no
+    // longer paints fails by name.
+    const fixture = read("apps/playground/src/live/menu-radio.ts");
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = (\\d+);`).exec(fixture)?.[1] ??
+          Number.NaN,
+      );
+    const word = (name: string): string =>
+      new RegExp(`export const ${name} = "([^"]+)";`).exec(fixture)?.[1] ?? "";
+    const checks = constant("MENU_RADIO_CHECKS");
+    const tolerance = constant("MARK_TOLERANCE");
+    const initial = word("MENU_RADIO_INITIAL");
+    const next = word("MENU_RADIO_NEXT");
+    const label = word("MENU_RADIO_LABEL");
+    expect(checks).toBeGreaterThan(20);
+    expect(tolerance).toBeGreaterThan(0);
+    expect(initial).not.toBe("");
+    expect(next).not.toBe(initial);
+    expect(label).not.toBe("");
+
+    const options = [
+      ...fixture.matchAll(/\{ value: "([^"]+)", label: "([^"]+)"/g),
+    ].map((match) => ({ value: match[1] ?? "", label: match[2] ?? "" }));
+    expect(options.length).toBe(3);
+    expect(options.map((option) => option.value)).toContain(initial);
+    expect(options.map((option) => option.value)).toContain(next);
+
+    // The probe prints its state through the fixture, so a readout the record
+    // quotes is the fixture's own field names in its own order.
+    expect(fixture).toMatch(
+      /value=\$\{state\.value\} reports=\$\{state\.reports\} opens=\$\{state\.opens\} closes=\$\{state\.closes\}/,
+    );
+    const readout = (state: {
+      readonly value: string;
+      readonly reports: number;
+      readonly opens: number;
+      readonly closes: number;
+    }): string =>
+      `value=${state.value} reports=${state.reports} opens=${state.opens} closes=${state.closes}`;
+
+    const readme = read("apps/playground/README.md");
+    const section =
+      /### `menu-radio-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ??
+      "";
+    const measured = (pattern: RegExp, what: string): number => {
+      const found = Number(pattern.exec(section)?.[1] ?? Number.NaN);
+      expect(Number.isFinite(found), `the probe's README has no ${what}`).toBe(
+        true,
+      );
+      return found;
+    };
+    const readmeChecks = measured(/(\d+) checks/, "check count");
+    const mark = measured(/\*\*(\d+)\*\* `primary` pixels/, "mark pixel count");
+    const share = measured(/(\d+)% of/, "ink share");
+    const inkDistance = measured(/(\d+) away in RGB/, "ink distance");
+    const textDistance = measured(/text is (\d+) away/, "text distance");
+    expect(readmeChecks).toBe(checks);
+
+    const opening = readout({
+      value: initial,
+      reports: 0,
+      opens: 0,
+      closes: 0,
+    });
+    const chosen = readout({ value: next, reports: 1, opens: 2, closes: 2 });
+    const again = "opens=4 closes=4";
+
+    const row = rowFor("Exclusive-choice menu");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("menu-radio-lifecycle");
+    expect(row?.evidence).toContain(`${checks} checks`);
+    expect(
+      options.filter((option) => row?.evidence.includes(`\`${option.label}\``))
+        .length,
+    ).toBe(options.length);
+    expect(row?.evidence).toContain(`${share}%`);
+    expect(row?.evidence).toContain(`**${inkDistance}** away in RGB`);
+    expect(row?.evidence).toContain(`text is **${textDistance}** away`);
+    expect(row?.evidence).toContain(`\`MARK_TOLERANCE\` of **${tolerance}**`);
+    expect(row?.evidence).toContain(opening);
+    expect(row?.evidence).toContain(chosen);
+    expect(row?.evidence).toContain(again);
+    expect(row?.evidence).toContain(`row 1 paints **${mark}**`);
+    expect(row?.evidence).toContain(`the next open paints **${mark}**`);
+    expect(row?.workaround).toContain("checkbox");
+
+    const page = measuredRow("Exclusive-choice menu");
+    expect(
+      page,
+      "the page's measured table has no exclusive-choice row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("menu-radio-lifecycle");
+    expect(page?.[1]).toContain(`${checks} checks`);
+    expect(page?.[1]).toContain(`${mark}`);
+    expect(page?.[1]).toContain(`${share}%`);
+    expect(page?.[1]).toContain(`${tolerance}`);
+    expect(page?.[1]).toContain(chosen);
+    expect(page?.[1]).toContain(again);
+    expect(page?.[2]).toContain("checkbox");
+
+    expect(
+      doc.slice(doc.indexOf("## 5. Keeping this document true")),
+    ).toContain("`menu-radio-lifecycle`");
+  });
+
   it("records the floating placement a window measured, including the centre quirk", () => {
     // The headless `floating-placement` scenario drove the engine against a
     // `TestRenderer`; a window measured the horizontal sides and found that
@@ -1661,8 +1772,10 @@ describe("docs/gpuix-capabilities.md", () => {
     // panel was placed against the old one. `floating-reflow-lifecycle` measured
     // the zoom half on three anchors at once, so the record and the page print
     // the geometry the fixture derives rather than copying a run.
-    const at = (placement: { readonly x: number; readonly y: number }): string =>
-      `${placement.x},${placement.y}`;
+    const at = (placement: {
+      readonly x: number;
+      readonly y: number;
+    }): string => `${placement.x},${placement.y}`;
 
     const row = rowFor("Floating panel reflow");
     expect(row?.verdict).toBe("supported, with limits");
@@ -1672,7 +1785,9 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(row?.evidence).toContain(at(reflow.right.anchor.zoomed));
     expect(row?.evidence).toContain(at(reflow.right.panel.rest));
     expect(row?.evidence).toContain(at(reflow.right.panel.zoomed));
-    expect(row?.evidence).toContain(`y ${reflow.bottom.rest.y} → ${reflow.bottom.zoomed.y}`);
+    expect(row?.evidence).toContain(
+      `y ${reflow.bottom.rest.y} → ${reflow.bottom.zoomed.y}`,
+    );
     expect(row?.evidence).toContain(at(reflow.popoverTrigger.rest));
     expect(row?.evidence).toContain(at(reflow.popoverTrigger.zoomed));
     expect(row?.evidence).toContain(`**${reflow.gap}**`);
@@ -1692,13 +1807,17 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[1]).toContain("floating-reflow-lifecycle");
     expect(page?.[1]).toContain(`${reflow.checks} checks`);
     expect(page?.[1]).toContain(at(reflow.right.panel.zoomed));
-    expect(page?.[1]).toContain(`y ${reflow.bottom.rest.y} → ${reflow.bottom.zoomed.y}`);
+    expect(page?.[1]).toContain(
+      `y ${reflow.bottom.rest.y} → ${reflow.bottom.zoomed.y}`,
+    );
     expect(page?.[2]).toContain("divider drag");
 
     // The probe's own record is the third surface: the fixture derives the
     // travel the section prints, so a gap or an inset that moves fails here.
     const section = read("apps/playground/README.md").slice(
-      read("apps/playground/README.md").indexOf("### `floating-reflow-lifecycle`"),
+      read("apps/playground/README.md").indexOf(
+        "### `floating-reflow-lifecycle`",
+      ),
     );
     expect(section).toContain(`${reflow.travel.dx}`);
     expect(section).toContain(`${reflow.travel.dy}`);
@@ -2925,9 +3044,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain('pointerEvents: "none"');
 
     // §5 owes the probe — the section itself, not the row's own citation.
-    const keeping = doc.slice(
-      doc.indexOf("## 5. Keeping this document true"),
-    );
+    const keeping = doc.slice(doc.indexOf("## 5. Keeping this document true"));
     expect(keeping).toContain("`crop-overlay`");
   });
 
@@ -2945,8 +3062,9 @@ describe("docs/gpuix-capabilities.md", () => {
     const suite = read("apps/playground/src/live/key-hold.test.ts");
 
     const keys =
-      /export const KEY_HOLD_KEYS = \{([\s\S]*?)\} as const;/.exec(fixture)?.[1] ??
-      "";
+      /export const KEY_HOLD_KEYS = \{([\s\S]*?)\} as const;/.exec(
+        fixture,
+      )?.[1] ?? "";
     const key = (name: string): string =>
       new RegExp(`${name}: "([^"]+)"`).exec(keys)?.[1] ?? "";
     const press = key("press");
@@ -3007,10 +3125,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(row?.workaround).toContain("onClick");
 
     const page = measuredRow("Held key repeat");
-    expect(
-      page,
-      "the page's measured table has no key-hold row",
-    ).toBeDefined();
+    expect(page, "the page's measured table has no key-hold row").toBeDefined();
     const pageEvidence = page?.[1] ?? "";
     expect(pageEvidence).toContain("key-hold-lifecycle");
     expect(pageEvidence).toContain(`${checks} checks`);
@@ -3023,9 +3138,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("onClick");
 
     // §5 owes the probe — the section itself, not the row's own citation.
-    const keeping = doc.slice(
-      doc.indexOf("## 5. Keeping this document true"),
-    );
+    const keeping = doc.slice(doc.indexOf("## 5. Keeping this document true"));
     expect(keeping).toContain("`key-hold-lifecycle`");
   });
 
@@ -3073,7 +3186,9 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(fixture).toContain(
       "DIFF_ROWS * (CODE_LEADING - RUNTIME_DIFF_LEADING)",
     );
-    expect(fixture).toContain("CODE_LEADING_GAIN = 2 * (CODE_LEADING - RUNTIME_CODE_LEADING)");
+    expect(fixture).toContain(
+      "CODE_LEADING_GAIN = 2 * (CODE_LEADING - RUNTIME_CODE_LEADING)",
+    );
     expect(probe).toContain("2 * CODE_LEADING");
     expect(probe).toContain("2 * RUNTIME_CODE_LEADING");
     expect(probe).toContain("DIFF_LEADING_GAIN");
@@ -3089,7 +3204,9 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(evidence).toContain(
       `\`${codeSize}/${codeLeading}\` against the runtime's \`${runtimeCodeSize}\`/\`${runtimeCodeLeading}\``,
     );
-    expect(evidence).toContain(`\`${captionSize}\` against \`${runtimeHeaderSize}\``);
+    expect(evidence).toContain(
+      `\`${captionSize}\` against \`${runtimeHeaderSize}\``,
+    );
     expect(evidence).toContain(`**${themedBlock}** tall`);
     expect(evidence).toContain(`**${plainBlock}**`);
     expect(evidence).toContain(
@@ -3111,16 +3228,16 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(pageEvidence).toContain(
       `\`${codeSize}/${codeLeading}\` against the runtime's \`${runtimeCodeSize}\`/\`${runtimeCodeLeading}\``,
     );
-    expect(pageEvidence).toContain(`\`${captionSize}\` against \`${runtimeHeaderSize}\``);
+    expect(pageEvidence).toContain(
+      `\`${captionSize}\` against \`${runtimeHeaderSize}\``,
+    );
     expect(pageEvidence).toContain(`**${themedBlock}**`);
     expect(pageEvidence).toContain(`**${plainBlock}**`);
     expect(pageEvidence).toContain(`**${diffGain}**`);
     expect(page?.[2]).toContain("nativeTextTheme(theme)");
 
     // §5 owes the probe — the section itself, not the row's own citation.
-    const keeping = doc.slice(
-      doc.indexOf("## 5. Keeping this document true"),
-    );
+    const keeping = doc.slice(doc.indexOf("## 5. Keeping this document true"));
     expect(keeping).toContain("`document-type`");
   });
 
@@ -3141,7 +3258,9 @@ describe("docs/gpuix-capabilities.md", () => {
       tokens,
     )?.[1];
     const share = (name: string): number =>
-      Number(new RegExp(`${name}: ([\\d.]+)`).exec(shares ?? "")?.[1] ?? Number.NaN);
+      Number(
+        new RegExp(`${name}: ([\\d.]+)`).exec(shares ?? "")?.[1] ?? Number.NaN,
+      );
 
     const defaults = { match: share("match"), active: share("active") };
     const theme = themes.dark;
@@ -3198,9 +3317,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("findHighlight(theme)");
 
     // §5 owes the probe — the section itself, not the row's own citation.
-    const keeping = doc.slice(
-      doc.indexOf("## 5. Keeping this document true"),
-    );
+    const keeping = doc.slice(doc.indexOf("## 5. Keeping this document true"));
     expect(keeping).toContain("`find-highlight`");
   });
 
@@ -3269,9 +3386,10 @@ describe("docs/gpuix-capabilities.md", () => {
         )?.[1] ?? Number.NaN,
       );
 
-    const widths = /export const SIDEBAR_WIDTHS = \{ open: (\d+), closed: (\d+) \} as const;/.exec(
-      fixture,
-    );
+    const widths =
+      /export const SIDEBAR_WIDTHS = \{ open: (\d+), closed: (\d+) \} as const;/.exec(
+        fixture,
+      );
     const open = Number(widths?.[1] ?? Number.NaN);
     const closed = Number(widths?.[2] ?? Number.NaN);
     const rowHeight = constant("SIDEBAR_ROW_HEIGHT");
@@ -3320,7 +3438,10 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(row?.workaround).toContain("hit-testing");
 
     const page = measuredRow("Sidebar clip");
-    expect(page, "the page's measured table has no sidebar-clip row").toBeDefined();
+    expect(
+      page,
+      "the page's measured table has no sidebar-clip row",
+    ).toBeDefined();
     const pageEvidence = page?.[1] ?? "";
     expect(pageEvidence).toContain("sidebar-clip-lifecycle");
     expect(pageEvidence).toContain("dock-focus-lifecycle");
@@ -3332,9 +3453,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("tabIndex");
 
     // §5 owes the probe — the section itself, not the row's own citation.
-    const keeping = doc.slice(
-      doc.indexOf("## 5. Keeping this document true"),
-    );
+    const keeping = doc.slice(doc.indexOf("## 5. Keeping this document true"));
     expect(keeping).toContain("`sidebar-clip-lifecycle`");
   });
 
