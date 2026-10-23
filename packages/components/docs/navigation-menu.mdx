@@ -60,6 +60,8 @@ NavigationMenu
 ## Limitations
 
 - No `href`; `NavigationMenuLink` is a button.
-- Hover is a timer policy; touch opens by press.
+- Hover is a timer policy; touch opens by press. A delay that is not a finite
+  number takes the documented default (`150` ms), and `0` opens or closes at
+  once, so a computed delay cannot open a panel in the pointer's frame.
 - `ArrowDown` focuses the panel surface.
 - No `aria-haspopup`.

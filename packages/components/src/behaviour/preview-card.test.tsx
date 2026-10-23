@@ -38,10 +38,14 @@ const Workspace = ({
   open,
   onOpenChange,
   disabled,
+  openDelay = 20,
+  closeDelay = 20,
 }: {
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly disabled?: boolean;
+  readonly openDelay?: number;
+  readonly closeDelay?: number;
 }) => (
   <div
     style={{
@@ -55,8 +59,8 @@ const Workspace = ({
     <PreviewCard
       open={open}
       onOpenChange={onOpenChange}
-      openDelay={20}
-      closeDelay={20}
+      openDelay={openDelay}
+      closeDelay={closeDelay}
     >
       <PreviewCardTrigger testId="trigger" disabled={disabled}>
         design-system.md
@@ -97,6 +101,29 @@ describe("PreviewCard", () => {
     card.unmount();
   });
 
+  it("takes the documented delay when the delay it was given cannot be read", async () => {
+    const card = renderComponent(
+      <Workspace openDelay={Number.POSITIVE_INFINITY} />,
+    );
+
+    try {
+      hoverCentreOf(card, "trigger");
+
+      // `setTimeout` floors a delay it cannot read to one millisecond, so an
+      // infinite wait used to open the card in the pointer's frame. The
+      // documented default is 300 ms.
+      await after(120);
+      expect(card.renderer.findByTestId("preview")).toBeUndefined();
+
+      await waitFor(
+        () => expect(card.renderer.findByTestId("preview")).toBeDefined(),
+        1_000,
+      );
+    } finally {
+      card.unmount();
+    }
+  });
+
   it("opens on a press with no delay, and a second press closes it", async () => {
     const card = renderComponent(<Workspace />);
 
@@ -107,17 +134,7 @@ describe("PreviewCard", () => {
       // not after `openDelay` (20 ms here, 300 by default).
       expect(card.renderer.findByTestId("preview")).toBeDefined();
 
-      // eslint-disable-next-line no-console
-      console.error(
-        "AFTER OPEN",
-        JSON.stringify(card.renderer.findByTestId("trigger")?.customProps),
-      );
       clickCentreOf(card, "trigger");
-      // eslint-disable-next-line no-console
-      console.error(
-        "AFTER SECOND",
-        JSON.stringify(card.renderer.findByTestId("trigger")?.customProps),
-      );
       await waitFor(() =>
         expect(card.renderer.findByTestId("preview")).toBeUndefined(),
       );

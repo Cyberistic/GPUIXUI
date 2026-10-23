@@ -56,6 +56,7 @@ import {
   useState,
 } from "react";
 import { Button, type ButtonProps } from "./internal/button.js";
+import { hoverDelay } from "./internal/clock.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
@@ -158,14 +159,18 @@ export interface NavigationMenuProps extends Omit<Props, "children"> {
   readonly children?: PartChildren;
 }
 
+/** The waits a panel opens and closes after, when its props do not name one. */
+const OPEN_DELAY_MS = 150;
+const CLOSE_DELAY_MS = 150;
+
 /** The nav root: one open item, the dismiss layer and the roving triggers. */
 export const NavigationMenu = ({
   label,
   value: valueProp,
   defaultValue = null,
   onValueChange,
-  openDelay = 150,
-  closeDelay = 150,
+  openDelay = OPEN_DELAY_MS,
+  closeDelay = CLOSE_DELAY_MS,
   className,
   children,
   style,
@@ -198,6 +203,9 @@ export const NavigationMenu = ({
   // that stale leave must not close the panel the caller just opened.
   const suspended = useRef(false);
   assertParts(navigationMenuRoot, children);
+
+  const openMs = hoverDelay(openDelay, OPEN_DELAY_MS);
+  const closeMs = hoverDelay(closeDelay, CLOSE_DELAY_MS);
 
   const clearOpenTimer = useCallback(() => {
     if (openTimer.current !== undefined) {
@@ -240,10 +248,10 @@ export const NavigationMenu = ({
         openTimer.current = undefined;
         setOpen(value);
       };
-      if (openDelay <= 0) show();
-      else openTimer.current = setTimeout(show, openDelay);
+      if (openMs === 0) show();
+      else openTimer.current = setTimeout(show, openMs);
     },
-    [clearCloseTimer, clearOpenTimer, open, openDelay, setOpen],
+    [clearCloseTimer, clearOpenTimer, open, openMs, setOpen],
   );
 
   const scheduleClose = useCallback(() => {
@@ -254,9 +262,9 @@ export const NavigationMenu = ({
       closeTimer.current = undefined;
       setOpen(null);
     };
-    if (closeDelay <= 0) hide();
-    else closeTimer.current = setTimeout(hide, closeDelay);
-  }, [clearCloseTimer, closeDelay, open, setOpen]);
+    if (closeMs === 0) hide();
+    else closeTimer.current = setTimeout(hide, closeMs);
+  }, [clearCloseTimer, closeMs, open, setOpen]);
 
   const hoverClose = useCallback(
     (value: string) => {

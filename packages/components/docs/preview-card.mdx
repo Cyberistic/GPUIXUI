@@ -46,7 +46,9 @@ PreviewCard
 
 ## Limitations
 
-- Timers are the component's; pass `0` to disable.
+- Timers are the component's; pass `0` to disable them. A delay that is not a
+  finite number takes the documented default (300 ms to open, 150 ms to close),
+  so a computed delay cannot open the card in the pointer's frame.
 - No pointer-type signal; touch is press-to-toggle.
 - A `Tab` traversal opens nothing; press to open.
 - No anchor arrow, `aria-haspopup` or follow-cursor.

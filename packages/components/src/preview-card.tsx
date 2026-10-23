@@ -33,6 +33,7 @@ import {
   type RefObject,
 } from "react";
 import { Button, type ButtonProps } from "./internal/button.js";
+import { hoverDelay } from "./internal/clock.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
@@ -94,13 +95,17 @@ export interface PreviewCardProps {
   readonly children?: PartChildren;
 }
 
+/** The waits a preview opens and closes after, when its props do not name one. */
+const OPEN_DELAY_MS = 300;
+const CLOSE_DELAY_MS = 150;
+
 /** The open policy: hover/focus in, leave both to close. */
 export const PreviewCard = ({
   open: openProp,
   defaultOpen = false,
   onOpenChange,
-  openDelay = 300,
-  closeDelay = 150,
+  openDelay = OPEN_DELAY_MS,
+  closeDelay = CLOSE_DELAY_MS,
   children,
 }: PreviewCardProps) => {
   const [open, setOpen] = useControllableState({
@@ -134,25 +139,28 @@ export const PreviewCard = ({
 
   useLayoutEffect(() => cancelTimers, [cancelTimers]);
 
+  const openMs = hoverDelay(openDelay, OPEN_DELAY_MS);
+  const closeMs = hoverDelay(closeDelay, CLOSE_DELAY_MS);
+
   const scheduleOpen = useCallback(() => {
     cancelTimers();
     if (open) return;
-    if (openDelay <= 0) {
+    if (openMs === 0) {
       setOpen(true);
       return;
     }
-    openTimer.current = setTimeout(() => setOpen(true), openDelay);
-  }, [cancelTimers, open, openDelay, setOpen]);
+    openTimer.current = setTimeout(() => setOpen(true), openMs);
+  }, [cancelTimers, open, openMs, setOpen]);
 
   const scheduleClose = useCallback(() => {
     cancelTimers();
     if (!open || inside.current.trigger || inside.current.content) return;
-    if (closeDelay <= 0) {
+    if (closeMs === 0) {
       setOpen(false);
       return;
     }
-    closeTimer.current = setTimeout(() => setOpen(false), closeDelay);
-  }, [cancelTimers, closeDelay, open, setOpen]);
+    closeTimer.current = setTimeout(() => setOpen(false), closeMs);
+  }, [cancelTimers, closeMs, open, setOpen]);
 
   const setInside = useCallback(
     (surface: "trigger" | "content", value: boolean) => {
