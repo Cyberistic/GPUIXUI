@@ -46,7 +46,7 @@ components/alert.mdx         Curated: four tones, the composition, no announceme
 components/avatar.mdx        Curated: the fallback table, the measured dot roles, the roster panel
 components/badge.mdx         Curated: the seven variants, the fixed sizes, the press it leaves to its row
 components/breadcrumb.mdx    Curated: the collapse budget, the separator that leaves with its item
-components/button.mdx        Curated: previews, install, source (the package page keeps the API)
+components/button.mdx        Curated: previews, install, source, variants and its own API table
 components/card.mdx          Curated: the three treatments, the recipe's fixed metrics
 components/carousel.mdx      Curated: discrete stepping, the dot pill and the kept slides
 components/checkbox.mdx      Curated: the three states, the 24px target, the mixed parent

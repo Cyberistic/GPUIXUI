@@ -7680,7 +7680,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 209/209
+`[x]` `[██████████]` 210/210
+
+`[x]` Send the **Button ledger line to the page the site serves** — the ledger
+      said `components/button.mdx` carried "previews, install, source (the
+      package page keeps the API)", but a curated page **shadows** its package
+      page at the same URL and `packages/components/docs/button.mdx` does not
+      exist; the curated page carries `## API reference` itself, so the
+      parenthetical sent a contributor to a page no reader can reach. The line
+      now names the API table it owns, and `readme-ledger.test.ts` gained `keeps
+      every curated line on the page the site actually serves`: every
+      `components/*.mdx` ledger line must avoid deferring to a package page,
+      the Button line must name its API, and the page must still carry
+      `## API reference`. Direction measured: restoring the parenthetical fails
+      the case naming the old line; green it passes. The file's two listing
+      cases are red in the working tree only because another session's untracked
+      `blocks/{forgot-password,otp,signup}.mdx` have no ledger line yet (the
+      open two-docs-writers blocker); this case is green alone.
 
 `[x]` Retract the **retired Look control from the site's own ledger** — `8c180a9f`
       removed the sidebar's Look group and corrected `/docs/theming` (now **The

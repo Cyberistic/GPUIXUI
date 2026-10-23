@@ -93,4 +93,26 @@ describe("the apps/docs ledger", () => {
     expect(readme).not.toContain("look picker");
     expect(readme).not.toContain("**Look** offers");
   });
+
+  it("keeps every curated line on the page the site actually serves", () => {
+    // A curated page shadows its package page at the same URL, and the site
+    // serves one page per URL (the preview policy records the displacement).
+    // The Button line still said "the package page keeps the API": that page is
+    // not mounted, and the curated page carries its own `## API reference`, so
+    // the ledger sent a contributor to a route no reader can reach.
+    const curated = ledger.filter((line) =>
+      /^\s*components\/[a-z0-9-]+\.mdx/.test(line),
+    );
+    const button =
+      curated.find((line) => line.includes("components/button.mdx")) ?? "";
+    const page = readFileSync(
+      new URL("../../content/docs/components/button.mdx", import.meta.url),
+      "utf8",
+    );
+
+    expect(curated.length).toBeGreaterThanOrEqual(30);
+    expect(curated.filter((line) => line.includes("package page"))).toEqual([]);
+    expect(page).toContain("## API reference");
+    expect(button).toContain("API");
+  });
 });
