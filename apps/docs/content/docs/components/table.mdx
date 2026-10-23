@@ -34,8 +34,16 @@ import {
   TableHeaderCell,
   TableRow,
   TableViewport,
+  useColumns,
   useTable,
 } from "@gpuixui/data";
+
+const columns = useColumns({
+  columns: [
+    { id: "service", label: "Service", width: 260 },
+    { id: "environment", label: "Environment", width: 140 },
+  ],
+});
 
 const table = useTable({
   rows,
@@ -46,6 +54,8 @@ const table = useTable({
     { id: "service", valueOf: (row) => row.service },
     { id: "environment", valueOf: (row) => row.environment },
   ],
+  // A column the menu hides leaves the query; it keeps its sort.
+  hiddenColumns: columns.hidden,
 });
 
 <Table aria-label="Deploy queue" height={320}>
@@ -79,7 +89,11 @@ package's own suite). `Table` reads the viewport's and the header's `onLayout`
 heights and hands the difference to the body, so the header stays painted and
 the rows scroll. A column's width is data, not a token: the header and every
 row read the **same** column list, or hiding, moving or resizing one leaves the
-cells on a second copy of the layout.
+cells on a second copy of the layout. Hiding reaches the row model too:
+`ColumnMenu` writes visibility into the controller, and
+`useTable({ hiddenColumns: columns.hidden })` marks the hidden tracks out of the
+**query** while they still sort — a grid that omits the option keeps records by
+text no painted cell shows.
 
 ## Composition
 

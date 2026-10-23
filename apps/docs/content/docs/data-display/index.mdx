@@ -326,6 +326,18 @@ re-deriving them.
   order and not the width, with the cells following the header. So derive every
   width and offset from the visible list, and read `onScrollChange` as the
   clamp's report rather than a value to set (`table-columns-lifecycle`).
+- **A hidden column leaves the search, not the sort** — the visible list is also
+  what the query may match, so `@gpuixui/data` marks every hidden column
+  `enableGlobalFilter: false` and `useTable` takes the controller's
+  `hiddenColumns`. Typing `modified` over 60 files matched the **20** whose
+  *status* cell says so; hiding `status` from the column menu took the query to
+  **0 rows** with no cell painted, and restoring the column brought the 20 back
+  (`table.test.tsx`'s `keeps a hidden column's text out of the search`). A sort
+  on the hidden column still orders the set (`grid-core.test.ts`'s `keeps its
+  sort, so hiding the sorted column does not restore the source`), because the
+  row model is the same list whether the track paints or not — so a grid that
+  hides a column passes `hiddenColumns: columns.hidden` to `useTable`, or a query
+  keeps records by text no painted cell shows.
 - **A selection toolbar is told, and told when it empties** — the runtime has
   one app-level selection event, `render(<App/>, { onSelectionChange })`, and a
   window measured the contract (`window-selection-lifecycle`): a pointer drag
