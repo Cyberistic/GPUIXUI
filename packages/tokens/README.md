@@ -589,7 +589,11 @@ carrying the knob. A switch a store wrote as `null` is the "declares none" its
 accent toggle answers — a saved theme writes `null` for the paint it never
 carried — and the same rule covers the other two optional tables: a `null`
 `series` or `syntax` resolves the shipped table for the theme's mode and variant
-(`seriesColors`/`syntaxColors`), so no painter is handed one.
+(`seriesColors`/`syntaxColors`), so no painter is handed one. The paint keeps
+that rule at its own seam: the primitives decode the stored table once
+(`declaredPaint` in `packages/primitives/src/core/selection.ts`), so a restored
+theme draws the accent toggle rather than throwing at its first slot
+(`core/selection.test.ts`'s `a stored switch paint`).
 
 All three axes are measured as painted: the playground's `theme-platform` probe
 reads each platform's mono family, `primary` fill, `lg` radius and `md` control

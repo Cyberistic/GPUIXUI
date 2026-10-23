@@ -1303,8 +1303,14 @@ describe("an optional table a store nulled", () => {
     expect(catalogue).toContain(
       'A switch a store wrote as `null` is that same "declares none"',
     );
-    // The paint path beside the report: the primitives still read the field.
-    expect(catalogue).toContain("the paint path does not yet");
+    // The paint path follows the report: the primitives decode the stored table
+    // at their own seam (`declaredPaint`), so no page can claim the throw the
+    // source fixed.
+    expect(catalogue).toContain("**The paint follows the same rule.**");
+    expect(catalogue).toContain("`declaredPaint`");
+    expect(catalogue).not.toContain("the paint path does not yet");
+    expect(designSystem).toContain("decode that same table before they paint");
+    expect(readme).toContain("The paint keeps that rule at its own seam");
     expect(designSystem).toContain("A switch a store wrote as `null`");
     expect(readme).toContain("A switch a store wrote as `null`");
     expect(inventory).toContain("A table a store nulled is absence");

@@ -779,7 +779,9 @@ slots through `extendTheme` (§11), and the report holds the brand's paint to th
 same floor. A switch a store wrote as `null` is the "declares none" the accent
 switch answers: a saved theme carries `null` where it declared no paint, and the
 report measures the toggle the theme actually paints rather than reading a slot
-off `null`.
+off `null` — and the primitives decode that same table before they paint
+(`declaredPaint`), so a restored theme draws the accent toggle instead of throwing
+at its first slot (`core/selection.test.ts`'s `a stored switch paint`).
 
 Components that cannot express hover or active in the runtime (for example
 `virtual-list`, whose GPUI list has no pressed or hovered style) put the state

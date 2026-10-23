@@ -38,6 +38,20 @@ const catalogue = read("../../../docs/tokens.md");
 const designSystem = read("../../../docs/design-system.md");
 const readme = read("../README.md");
 const inventory = read("../../../COMPONENTS.md");
+const primitivePaint = read(
+  "../../../packages/primitives/src/core/selection.ts",
+);
+const primitiveSuite = read(
+  "../../../packages/primitives/src/core/selection.test.ts",
+);
+
+/** One exported seam of the primitive painter, from its name to its closing brace. */
+const painter = (name: string): string => {
+  const start = primitivePaint.indexOf(`export const ${name}`);
+  return start === -1
+    ? ""
+    : primitivePaint.slice(start, primitivePaint.indexOf("\n};", start));
+};
 
 /** A `COMPONENTS.md` row, by its first cell. */
 const inventoryRow = (name: string): string => {
@@ -317,5 +331,45 @@ describe("the pages that teach the declared paint", () => {
     expect(readme).toContain("platform's `switch` paint replaces whole");
     expect(resolveSwitchTheme("light").switch?.on).toBe("#16A34A");
     expect(resolveSwitchTheme("dark").switch?.off).toBe("#3B3B40");
+  });
+
+  it("holds the paint half to the seam the primitives read", () => {
+    // The bug guarded: the pages said the reports answered a nulled switch
+    // "but the paint path does not yet" — `switchBox`/`switchFill`/
+    // `switchThumbPaint` compared `theme.switch !== undefined`, so a restored
+    // theme threw at its first slot. The primitives decode the table once at
+    // the seam now, and the claim is held to both halves: the source that
+    // normalises it and the suite that paints through it.
+    expect(primitivePaint).toContain(
+      "const declaredPaint = (source: SwitchPaintTheme): Option.Option<SwitchColors>",
+    );
+    expect(primitivePaint).toContain("Option.fromNullishOr(source.switch)");
+    expect(primitivePaint).toContain(
+      "switch: Option.getOrUndefined(declaredPaint(source))",
+    );
+    // Each painter reads the normalised theme, so a stored table cannot reach
+    // a slot read raw.
+    ["switchBox", "switchTrackPaint", "switchThumbPaint"].forEach((name) => {
+      expect(painter(name), name).toContain("switchTheme(source)");
+    });
+    [
+      "paints the accent toggle for the null a store writes",
+      "paints the accent toggle for a table that lost a slot",
+      "keeps the paint a theme actually declares",
+      "paints the same table the theme carries, slot for slot",
+    ].forEach((name) => {
+      expect(primitiveSuite, name).toContain(name);
+    });
+    [
+      [catalogue, "catalogue"],
+      [designSystem, "design system"],
+      [readme, "readme"],
+    ].forEach(([page, name]) => {
+      expect(page, name).toContain("declaredPaint");
+      expect(page, name).toContain("a stored switch paint");
+      expect(page, name).not.toContain("the paint path does not yet");
+      expect(page, name).not.toContain("still needs that read moved");
+    });
+    expect(catalogue).toContain("packages/primitives/src/core/selection.ts");
   });
 });
