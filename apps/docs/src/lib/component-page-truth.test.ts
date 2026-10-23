@@ -3153,9 +3153,15 @@ describe("the hint a composited field announces", () => {
     readonly page: string;
     readonly source: string;
   }> = [
-    { page: "search-input.mdx", source: "packages/components/src/search-input.tsx" },
+    {
+      page: "search-input.mdx",
+      source: "packages/components/src/search-input.tsx",
+    },
     { page: "tag-input.mdx", source: "packages/components/src/tag-input.tsx" },
-    { page: "time-picker.mdx", source: "packages/components/src/time-picker.tsx" },
+    {
+      page: "time-picker.mdx",
+      source: "packages/components/src/time-picker.tsx",
+    },
     { page: "combobox.mdx", source: "packages/components/src/combobox.tsx" },
     {
       page: "command-menu.mdx",
@@ -3191,7 +3197,8 @@ describe("the hint a composited field announces", () => {
   it("hands every composited host's help channel the seam's answer", () => {
     const missing = hosts.flatMap((host) => {
       const source = read(host.source).replace(/\s+/g, " ");
-      return source.includes("fieldHelp(") && source.includes("aria-description")
+      return source.includes("fieldHelp(") &&
+        source.includes("aria-description")
         ? []
         : [`${host.source}: does not announce the hint it paints`];
     });
@@ -3219,16 +3226,13 @@ describe("the hint a composited field announces", () => {
   it("refuses the retracted gap and holds the window case that measured it", () => {
     const retracted = hosts.flatMap((host) => {
       const page = pages.find((candidate) => candidate.file === host.page);
-      return page !== undefined &&
-        body(page).includes("rather than announced")
+      return page !== undefined && body(page).includes("rather than announced")
         ? [`${host.page}: still says the hint is not announced`]
         : [];
     });
     expect(retracted).toEqual([]);
 
-    const evidence = read(
-      "packages/components/src/behaviour/hints.test.tsx",
-    );
+    const evidence = read("packages/components/src/behaviour/hints.test.tsx");
     expect(evidence).toContain(
       "says the words it paints, because the host lost its own announcement",
     );
