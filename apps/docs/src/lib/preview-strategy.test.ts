@@ -139,6 +139,28 @@ describe("the preview strategy document", () => {
     expect({ missing, extra }).toEqual({ missing: [], extra: [] });
   });
 
+  it("does not claim a preview every component page ships", () => {
+    // Bug guarded: the policy said "A page that ships a demo — every component
+    // and primitive page does". `MultiStepForm` ships none: its state belongs
+    // to the caller and the page has only usage, API and limitations, which is
+    // strategy 4. The claim is measured rather than repeated, and the floor
+    // doubles as the reminder to revisit the sentence once the last page gains
+    // a demo.
+    const visualPages = [
+      ...markdownUnder("packages/components/docs"),
+      ...markdownUnder("packages/primitives/docs"),
+    ];
+    const withoutDemo = visualPages.filter(
+      (path) => !read(path).includes("<ComponentPreview"),
+    );
+
+    expect(visualPages.length).toBeGreaterThanOrEqual(100);
+    expect(withoutDemo).toContain("packages/components/docs/multi-step-form.mdx");
+    expect(read("docs/preview-strategy.md")).not.toContain(
+      "every component and primitive page does",
+    );
+  });
+
   it("states the Related rule without a count the pages can outgrow", () => {
     // Bug guarded: the policy said "31 of the 104 mounted package pages" write
     // `## Related`. The prune then removed thirty of those sections and the
