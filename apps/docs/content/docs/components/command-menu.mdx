@@ -163,6 +163,10 @@ repaints and re-shapes it with every other preview on the site.
 
 - The dialog is named `"Command menu"`, the input is `"Search commands"`, and
   rows are `role="option"` with `aria-selected` tracking the highlight.
+- The palette field announces the hint it paints (`Type a command…`) as its
+  `aria-description` while the query is empty: the host is handed no
+  `placeholder`, so the runtime's own announcement leaves with the prop. The
+  hint leaves the description once text is typed.
 - **No `aria-activedescendant` or `aria-controls`** in `@gpuix/native@0.11.0`:
   the input never points assistive technology at the highlighted row, so the
   relationship between the query and the active row is visual only.

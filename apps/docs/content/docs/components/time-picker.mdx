@@ -208,6 +208,10 @@ presentational, for a caller's `style` function.
 - The field is a labelled `role="group"`; each segment carries
   `aria-label="<label> hours"` / `"<label> minutes"` and announces its value
   natively.
+- Each segment **announces the format hint it paints** — `HH` on an empty hours
+  segment, `MM` on an empty minutes segment — as its `aria-description`, because
+  the host is handed no `placeholder` and the runtime's own announcement leaves
+  with the prop. The hint leaves the description once the segment holds a value.
 - **No `aria-valuenow` and no spinbutton role** in `@gpuix/native@0.11.0`. The
   arrows are an enhancement, not the only way to enter a time.
 - **No `aria-disabled`** in `@gpuix/native@0.11.0`. `disabled` is `readOnly` on

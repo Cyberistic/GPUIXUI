@@ -199,6 +199,10 @@ a recipe step; a chip is therefore 28px tall even where the group is 32.
 - The group is a named `group` (`aria-label={label}`); each removal control is a
   `button` named `Remove <token>`, so a keyboard or a screen reader reaches
   removal per chip rather than through a gesture.
+- The painted hint is **announced** as the field's `aria-description` while the
+  draft is empty: the host is handed no `placeholder`, so the runtime's own
+  announcement leaves with the prop. A caller's `aria-description` is permanent
+  help and wins, and once the draft holds text the hint leaves the description.
 - **No `Backspace`-on-empty removal.** The pinned runtime emits no key event for
   Backspace or Delete in the test renderer, so the chip's control is the only
   route the component can test.

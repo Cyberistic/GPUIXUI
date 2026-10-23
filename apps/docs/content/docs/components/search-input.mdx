@@ -127,7 +127,7 @@ not a key-down — measured in `@gpuix/native@0.11.0` — so a caller's own
 | `onChange` | host change event | none | the raw host payload, called before the value is applied |
 | `onSubmit` | `(value: string) => void` | none | `Enter`, with the current text |
 | `onClear` | `() => void` | none | the clear control or `Escape`, only when the field held text |
-| `placeholder` | `string` | `"Search…"` | the hint the field paints while the value is empty |
+| `placeholder` | `string` | `"Search…"` | the hint the field paints — and announces — while the value is empty |
 | `disabled` | `boolean` | `false` | `readOnly` plus the half-opacity paint; no ring, no tab stop, and an inert clear target |
 | `className` | `string` | none | joined after the recipe, so it wins conflicts |
 | `style` | `StateStyle<SearchInputState>` | none | resolved against `{ disabled, focused }` and merged last on the field surface |
@@ -165,11 +165,11 @@ repaints and re-heights the field but does not round it differently. That is
 the same rule the [Card](/docs/components/card) follows — the components
 compile against shadcn's registry, not the primitives' density scale.
 
-The hint is a paint, not a host property. A field on a `muted` toolbar is
-filled with the page role, so the strip behind it does not tint the field's
-own ink; a theme that brings `background` and `muted` together makes the field
-disappear instead of the hint, which the contrast table reports as a measured
-failure rather than a silent one.
+The hint is painted by the field, not shaped by the host's own placeholder. A
+field on a `muted` toolbar is filled with the page role, so the strip behind it
+does not tint the field's own ink; a theme that brings `background` and `muted`
+together makes the field disappear instead of the hint, which the contrast table
+reports as a measured failure rather than a silent one.
 
 ## Accessibility and limitations
 
@@ -185,9 +185,12 @@ failure rather than a silent one.
   debouncing here would hide it and make the field's typing feel lagged.
 - **No matching, ranking, history, suggestions or shortcut binding.** The
   component is the text field; `⌘F` belongs to the app, not the field.
-- The hint is painted beside the value rather than announced as a separate
-  description, because the runtime has no `aria-describedby`; a hint that
-  carries instructions belongs in a `Field` description.
+- The painted hint is **also announced**. The field hands its host no
+  `placeholder`, so the runtime's own announcement leaves with the prop; while
+  the box is empty the hint travels as the host's `aria-description` instead. A
+  caller's `aria-description` is permanent help and wins over the hint, and once
+  the box holds text the hint leaves the description. An instruction that has to
+  stay readable after typing belongs in a `Field` description.
 - The runtime's input role is a text field, not a search landmark: there is no
   `role="searchbox"` or `aria-autocomplete` in 0.11.0.
 

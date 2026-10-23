@@ -8455,7 +8455,34 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 229/229
+`[x]` `[██████████]` 230/230
+
+`[x]` Teach the **hint a composited field announces** on the curated pages —
+      `cdc3ff43` made the seven composited text hosts publish the hint they
+      paint on the one help channel 0.11.0 has (`fieldHelp` hands it to the
+      host as `aria-description`), because handing the host no `placeholder`
+      takes the runtime's own `aria_placeholder` with it — so an empty field
+      announced no format at all. The curated Search input page still taught the
+      opposite ("painted beside the value rather than announced as a separate
+      description"), and the Tag input, Time picker, Combobox, Command menu and
+      Field pages said nothing, so a screen-reader consumer read the defect on
+      one page and nothing on five. Each page now states what is said and when:
+      the hint while the box is empty, a caller's own `aria-description` (or a
+      `Field` `description`) winning and staying after typing where the host
+      takes one, and the format words each segment announces. The Search input
+      page's `placeholder` row and Theming paragraph no longer call the hint "a
+      paint, not a host property". `component-page-truth.test.ts` gains `the
+      hint a composited field announces` (4 cases): it reads `fieldHelp`'s
+      description-wins and empty-only branches, holds every painter to passing
+      the seam's answer to `aria-description`, requires each page's
+      accessibility section to state the announcement and the empty rule,
+      refuses the retracted sentence, and reads the two window case titles that
+      measured it (`packages/components/src/behaviour/hints.test.tsx`).
+      Directions measured: restoring the old bullet fails two cases by name, and
+      deleting the combobox bullet fails the page case naming `combobox.mdx`;
+      green the file is 51/51 and the docs suite 117 files / 1 247 tests,
+      `check-types`, `build` and `check:tests` clean. No native scenario
+      applies — page prose and its guard have no runtime path.
 
 `[x]` Carry the **status strip to every mounted page, and hold the inventory in
       both directions** — `inventory-status.test.ts` retyped the mounted

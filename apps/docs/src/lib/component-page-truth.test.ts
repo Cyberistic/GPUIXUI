@@ -3137,6 +3137,107 @@ const apiSection = (text: string): string => {
   return end === -1 ? rest : rest.slice(0, end);
 };
 
+describe("the hint a composited field announces", () => {
+  /**
+   * The help seam, and every curated page whose component paints a hint.
+   *
+   * Bug guarded: the composited fields paint their own hint and hand the host
+   * no `placeholder`, which takes the runtime's `aria_placeholder` with the
+   * prop — so an empty field announced no format at all, while the search page
+   * told a reader the hint is "painted beside the value rather than announced
+   * as a separate description". `fieldHelp` now publishes the hint on the one
+   * help channel 0.11.0 has (`aria-description`), and a caller's own
+   * `aria-description` still wins.
+   */
+  const hosts: ReadonlyArray<{
+    readonly page: string;
+    readonly source: string;
+  }> = [
+    { page: "search-input.mdx", source: "packages/components/src/search-input.tsx" },
+    { page: "tag-input.mdx", source: "packages/components/src/tag-input.tsx" },
+    { page: "time-picker.mdx", source: "packages/components/src/time-picker.tsx" },
+    { page: "combobox.mdx", source: "packages/components/src/combobox.tsx" },
+    {
+      page: "command-menu.mdx",
+      source: "packages/components/src/command-menu.tsx",
+    },
+    { page: "field.mdx", source: "packages/components/src/field.tsx" },
+  ];
+
+  /** A page's accessibility (or limitations) section, flattened. */
+  const accessibility = (text: string): string => {
+    const start = text.search(/^## (Accessibility|Limitations)/m);
+    if (start === -1) return "";
+    const rest = text.slice(start);
+    const end = rest.indexOf("\n## ", 1);
+    return (end === -1 ? rest : rest.slice(0, end)).replace(/\s+/g, " ");
+  };
+
+  it("derives the help from the field's description, else the empty box's hint", () => {
+    const rule = read("packages/primitives/src/core/a11y.ts").replace(
+      /\s+/g,
+      " ",
+    );
+
+    expect(rule).toContain("export const fieldHelp");
+    // A permanent description wins, whatever the box holds…
+    expect(rule).toContain(
+      "onSome: (help) => help, onNone: () => value.length === 0 ?",
+    );
+    // …and the hint is help only while the box is empty.
+    expect(rule).toContain("accessibleName(props.placeholder) : undefined");
+  });
+
+  it("hands every composited host's help channel the seam's answer", () => {
+    const missing = hosts.flatMap((host) => {
+      const source = read(host.source).replace(/\s+/g, " ");
+      return source.includes("fieldHelp(") && source.includes("aria-description")
+        ? []
+        : [`${host.source}: does not announce the hint it paints`];
+    });
+
+    expect(missing).toEqual([]);
+  });
+
+  it("states the announcement on every page whose field paints a hint", () => {
+    const silent = hosts.flatMap((host) => {
+      const page = pages.find((candidate) => candidate.file === host.page);
+      if (page === undefined) return [`${host.page}: not in the curated set`];
+      const section = accessibility(body(page));
+      return section.includes("announc") &&
+        section.includes("`aria-description`") &&
+        section.includes("empty")
+        ? []
+        : [
+            `${host.page}: its accessibility section does not state the hint the field announces`,
+          ];
+    });
+
+    expect(silent).toEqual([]);
+  });
+
+  it("refuses the retracted gap and holds the window case that measured it", () => {
+    const retracted = hosts.flatMap((host) => {
+      const page = pages.find((candidate) => candidate.file === host.page);
+      return page !== undefined &&
+        body(page).includes("rather than announced")
+        ? [`${host.page}: still says the hint is not announced`]
+        : [];
+    });
+    expect(retracted).toEqual([]);
+
+    const evidence = read(
+      "packages/components/src/behaviour/hints.test.tsx",
+    );
+    expect(evidence).toContain(
+      "says the words it paints, because the host lost its own announcement",
+    );
+    expect(evidence).toContain(
+      "keeps a caller's permanent help over the hint, and drops the hint once typed",
+    );
+  });
+});
+
 describe("the menu group's name", () => {
   it("is the prop both curated menu pages document, read from the group source", () => {
     // `MenuGroup` and `MenuRadioGroup` each take `label` — the group's

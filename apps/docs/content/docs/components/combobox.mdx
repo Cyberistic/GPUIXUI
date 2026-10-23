@@ -256,6 +256,10 @@ card; and the search field keeps `input`, because it is where a reader types.
 - The trigger and the search field are named by their `label`; the listbox takes
   `ComboboxList`'s `label`, and each row reports `aria-selected`. The selected
   mark is decorative, because the row already reports its state.
+- The search field announces the hint it paints (`Search…`) as its
+  `aria-description` while the query is empty, because the host is handed no
+  `placeholder`. The field takes no `aria-description` prop of its own, so the
+  hint is the only help it speaks; it leaves the description once text is typed.
 - **No `aria-activedescendant`** in `0.11.0`: the highlighted row is a visual
   state while the input keeps the focus, so assistive technology is not handed
   the input→row relationship. `aria-selected` is the supported signal.

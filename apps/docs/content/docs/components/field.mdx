@@ -161,6 +161,11 @@ that refuses every key should not advertise the same colour as one that works.
 
 - The input's accessible name is the field's label; the message and the required
   note travel as `aria-description`.
+- A `description` is the field's permanent help and is announced for as long as
+  it is set. When the field has none, the painted hint speaks instead **while
+  the box is empty**, because the host is handed no `placeholder` and the
+  runtime's own announcement leaves with the prop. A hint that must stay
+  readable after typing belongs in `description`.
 - **No `aria-describedby`, `aria-invalid` or `aria-required`** in
   `@gpuix/native@0.11.0`: the association is a description rather than an id
   reference, and invalidity is carried by the edge, the message and
