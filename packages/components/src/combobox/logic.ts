@@ -19,9 +19,18 @@ export interface ComboboxOption {
   readonly disabled?: boolean;
 }
 
-/** The text shown for an option, falling back to its value. */
-export const labelOf = (option: ComboboxOption): string =>
-  Str.isNonEmpty(option.label) ? option.label : option.value;
+/**
+ * The text shown for an option, falling back to its value.
+ *
+ * A label is often a column a caller decoded from a table, so a blank one is
+ * absence rather than a name: a whitespace-only label would paint an empty
+ * trigger and an empty row where the value is the only name there is, which is
+ * the rule `AvatarGroup` and `CopyButton` apply to the names they are handed.
+ */
+export const labelOf = (option: ComboboxOption): string => {
+  const label = Str.trim(option.label);
+  return Str.isNonEmpty(label) ? label : option.value;
+};
 
 interface Ranked {
   readonly option: ComboboxOption;

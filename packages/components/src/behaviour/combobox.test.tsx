@@ -6,7 +6,9 @@
  * value; a single select that does not replace the previous value; a multi select
  * that loses order or duplicates; a disabled option that can still be chosen; an
  * empty state that never appears; a ranking that puts `Vacation` before
- * `Calendar`; and Escape that does not return focus to the trigger.
+ * `Calendar`; a whitespace-only option label that painted the trigger blank
+ * instead of naming the value; and Escape that does not return focus to the
+ * trigger.
  *
  * Pointer coverage: the suite originally drove every selection from the
  * keyboard, so a wrapper that ignored a clicked option, kept the popup open, or
@@ -637,6 +639,25 @@ describe("Combobox", () => {
     ).toBe("Reviewer");
 
     picker.unmount();
+
+    // A blank label is absence, not a name: a list decoded from a table whose
+    // name column has no text must name the selection by its value instead of
+    // painting the caller's whitespace as an empty trigger.
+    const blankLabel = renderComponent(
+      <div style={{ width: 360, padding: 40 }}>
+        <Combobox options={[{ value: "ada", label: "   " }]} defaultValue="ada">
+          <ComboboxTrigger label="Assign reviewer" />
+          <ComboboxContent>
+            <ComboboxInput label="Search reviewers" />
+            <ComboboxList label="Reviewers" />
+          </ComboboxContent>
+        </Combobox>
+      </div>,
+    );
+
+    expect(blankLabel.renderer.getAllText()).toContain("ada");
+
+    blankLabel.unmount();
   });
 });
 

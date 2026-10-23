@@ -33,6 +33,14 @@ import {
 </Combobox>;
 ```
 
+## Option labels
+
+An option's `label` is the name a reader sees — in the trigger once chosen and on
+the row it picks. A label that is empty or whitespace-only is **absence**, not a
+name, so it falls back to the option's `value`: a list decoded from a table whose
+name column is blank still names the selection instead of painting an empty
+trigger. A label that has text is trimmed.
+
 ## Composition
 
 ```text

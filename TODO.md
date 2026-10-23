@@ -5044,6 +5044,27 @@ applies — printed figures a suite derives.
       Inline edit row. No native scenario applies — the tab stop is the
       declaration the real renderer reads, and the behaviour suite runs it.
 
+`[x]` `packages/components`: **a blank option label painted an empty trigger** —
+      `labelOf` promised it fell back to the option's `value`, but the test was
+      `Str.isNonEmpty`, which is true for a label of spaces: a list decoded from
+      a table whose name column had no text therefore painted the caller's
+      whitespace as the selected option's name, so a chosen value read as nothing
+      chosen (and the row's own label was blank). A label is now trimmed and a
+      blank one is absence — the rule `AvatarGroup`'s group name and
+      `CopyButton`'s names already keep — so the value names the trigger and the
+      row. Proof: `combobox/logic.test.ts`'s `reads a blank label as absence, and
+      trims the one it keeps` (whitespace falls back to the value; `" Alpha "`
+      prints `Alpha`) and `behaviour/combobox.test.tsx`'s `takes the trigger's
+      placeholder and name from the part`, which now also mounts a
+      blank-labelled option selected by `defaultValue` and reads `ada` on the
+      trigger; measured at HEAD as `expected [ '   ' ] to include 'ada'`.
+      Restored, the behaviour file is 27/27 (the count the curated page and the
+      inventory row already state, so no cross-workstream count moves), the
+      package unit suite 101 files / 947 tests, with `check-types` and lint
+      clean. Docs: `docs/combobox.mdx` §Option labels and the `COMPONENTS.md`
+      Comboboxes row. No native scenario applies — the label is the string the
+      real renderer paints, and the behaviour suite mounts it.
+
 `[x]` `packages/primitives`: **a failed radio group painted no error at all** —
       `CheckboxGroup` could paint a failed validation (`invalid` turns every
       empty box's edge and every row's ring destructive) while its sibling

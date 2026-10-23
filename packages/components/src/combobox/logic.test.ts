@@ -47,6 +47,13 @@ describe("labelOf", () => {
     expect(labelOf(option("a", "Alpha"))).toBe("Alpha");
     expect(labelOf(option("a", ""))).toBe("a");
   });
+
+  it("reads a blank label as absence, and trims the one it keeps", () => {
+    // A label decoded from a table is often whitespace where it has no name;
+    // the value is then the only name the trigger and the row have.
+    expect(labelOf(option("a", "   "))).toBe("a");
+    expect(labelOf(option("a", " Alpha "))).toBe("Alpha");
+  });
 });
 
 describe("filterOptions", () => {
