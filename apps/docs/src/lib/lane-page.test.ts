@@ -798,7 +798,15 @@ describe("the workspace page's pointer and terminal claims", () => {
     expect(workspace).toContain("multi-pane-editor");
     expect(workspace).toContain("One text session, one buffer per pane");
     expect(workspace).toContain("A press moves the editing session");
-    expect(workspace).toContain("does not take the session");
+    // The divider is a control, so a drag's press parks the session on it and a
+    // press on a pane returns it. The retired sentence said the drag left the
+    // focus in the field, which the `role="separator"` tab stop made false.
+    expect(probe).toContain("mp-divider");
+    expect(workspace).toContain(
+      "A splitter drag parks the session on the divider",
+    );
+    expect(workspace).toContain("mp-divider");
+    expect(workspace).not.toContain("does not take the session");
     expect(workspace).toContain("Closing a pane is a layout change");
     expect(workspace).toContain(`stopped at ${max}`);
     expect(workspace).toContain(`${min}`);

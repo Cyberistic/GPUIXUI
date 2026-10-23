@@ -143,6 +143,13 @@ export const laneRows: ReadonlyArray<{
       "the trail is the shipped Breadcrumb and the routing is the app's; the package page records the narrow-pane measurement",
   },
   {
+    row: "Multi-pane editing layouts",
+    file: "apps/docs/content/docs/workspace/index.mdx",
+    cites: "multi-pane-editor",
+    reason:
+      "a composition of SplitPane and an editor field per pane; the window holds one platform text session, and the page teaches the press that moves it and the divider that parks it",
+  },
+  {
     row: "Syntax highlighting",
     file: "apps/docs/content/docs/runtime.mdx",
     cites: "editor-surface",

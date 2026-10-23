@@ -253,10 +253,14 @@ in a window — two real `<textarea>` panes, the divider the shipped `SplitPane`
   changed the right buffer and left the left one alone; a press on the left moved
   the session back. The session follows the pointer, and each pane's buffer stays
   in app state rather than in the field.
-- **A splitter drag does not take the session.** A +60 drag resized the split to
-  440 and left the focus in the right field, so the next key still reached it.
-  The clamps are the pane's own — a further drag stopped at 460, a −260 drag at
-  220 — and the session stayed where the reader left it.
+- **A splitter drag parks the session on the divider.** A +60 drag resized the
+  split to 440 and changed neither buffer, and the focus read `mp-divider`
+  afterwards: the divider is a `role="separator"` tab stop, so the drag's press
+  takes the editing session and no buffer receives a key while the control holds
+  it. A press on the right pane returned the session there, and the next key
+  reached its buffer with the left unchanged. The clamps are the pane's own — a
+  further drag stopped at 460, a −260 drag at 220. A workspace therefore keeps
+  one rule: a pane must be re-pressed before typing continues after a resize.
 - **Closing a pane is a layout change, not data loss.** The closed pane painted
   nothing, the surviving editor took the whole row, and both buffers were still
   in the app; reopening painted the split at the width it held, with the right
