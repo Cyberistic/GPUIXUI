@@ -1369,7 +1369,8 @@ const INTERFACE_HEADER =
 const TYPE_ALIAS = /(?:^|\n)(?:export\s+)?type\s+(\w+)(?:<[^>]*>)?\s*=\s*/g;
 
 /** `readonly name?:` and `readonly "aria-id"?:`, the shape every prop is written in. */
-const PROP_SIGNATURE = /readonly\s+(?:"([^"]+)"|([A-Za-z_][\w-]*))\s*\??:/g;
+const PROP_SIGNATURE =
+  /(?:readonly\s+|^[ \t]*)(?:"([^"]+)"|([A-Za-z_][\w-]*))\s*\??:/gm;
 
 /** The prop names one object type's body declares. */
 const signatureNames = (body: string): ReadonlyArray<string> =>

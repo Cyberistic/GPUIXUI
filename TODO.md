@@ -125,7 +125,12 @@ resolves nothing cannot pass. Directions measured: deleting `number-field`'s
 address row fails with its three props by name, and adding `readonly probe?:
 string` to `SpacerProps` fails `spacer.mdx: SpacerProps.probe has no API row`;
 green, the package is 55 files / 1 021 tests, `check-types` and `lint` clean,
-and `nub run check:tests` accepts the two cases. Docs: `docs/README.md` §Page
+and `nub run check:tests` accepts the two cases. The sibling page is held the
+same way: `packages/icons/src/docs.test.ts` gains `documents every prop
+IconProps declares` (the one Tier 1 component page outside this package, whose
+`size`/`label`/`testId` are not even `readonly` — the matcher reads a property
+line as well as a `readonly` one), measured failing by removing the `label` row
+(`expected [ 'label' ] to deeply equal []`). Docs: `docs/README.md` §Page
 contract states the rule and what the address row must say.
 `[x]` Land the docs platform switch (macOS · Linux · Windows · Default) — the
 sidebar switch resolves `platformTheme` from `@gpuixui/tokens`, writes

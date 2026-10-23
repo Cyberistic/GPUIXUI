@@ -17,6 +17,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Result from "effect/Result";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Tokens from "@gpuixui/tokens";
@@ -78,6 +79,42 @@ describe("the icon page", () => {
       Order.String,
     );
     expect(listed).toEqual([...ICON_NAMES]);
+  });
+
+  it("documents every prop IconProps declares", () => {
+    // The bug guarded: the page lists the props it remembers, so a new prop
+    // (`testId`, `size`'s raw-pixel form) ships without a reader learning it
+    // exists. The same rule `packages/primitives/src/docs.test.ts` holds every
+    // Tier 1 page to, applied to the one component page outside that package.
+    const declared = Arr.filterMap(
+      Arr.fromIterable(
+        (
+          /export interface IconProps \{([\s\S]*?)\n\}/.exec(iconSource)?.[1] ??
+          ""
+        ).matchAll(
+          /(?:readonly\s+|^[ \t]*)(?:"([^"]+)"|([A-Za-z_][\w-]*))\s*\??:/gm,
+        ),
+      ),
+      (match) => {
+        const name = match[1] ?? match[2];
+        return name === undefined ? Result.failVoid : Result.succeed(name);
+      },
+    );
+    const api = section("API");
+    const cells = Arr.map(
+      Arr.filter(api.split("\n"), (line) => line.startsWith("|")),
+      (line) => /^\|\s*([^|]*)/.exec(line)?.[1] ?? "",
+    );
+    const documented = new Set(
+      Arr.flatMap(cells, (cell) =>
+        Arr.map([...cell.matchAll(/`([^`]+)`/g)], (match) => match[1] ?? ""),
+      ),
+    );
+    expect(Arr.length(declared)).toBeGreaterThan(0);
+    expect(
+      Arr.filter(declared, (name) => !documented.has(name)),
+      "props IconProps declares that the API table does not document",
+    ).toEqual([]);
   });
 
   it("cites a provenance record that carries both notices", () => {
