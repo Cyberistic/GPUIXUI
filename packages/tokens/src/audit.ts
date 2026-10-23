@@ -143,6 +143,7 @@ const readPath = (source: unknown, path: string): unknown =>
         isRecord(value) && key in value ? value[key] : undefined,
       source,
     );
+
 /**
  * Why a numeric part of a theme is absent: a whole group, a step inside one, or
  * a family that is present but names no face.
