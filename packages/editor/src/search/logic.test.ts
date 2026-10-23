@@ -3,8 +3,9 @@
  *
  * The bugs these guard: overlapping matches reported twice (the scan must
  * resume at a match's end, so `"aa"` in `"aaa"` is one match, not two); an
- * empty query matching at every position; and a replace-all that disagrees
- * with the match count about what "one match" is.
+ * empty query matching at every position; a replace-all that disagrees
+ * with the match count about what "one match" is; and a large file whose
+ * matches exhausted the call stack (the scan was recursive per match).
  */
 
 import { describe, expect, it } from "vitest";
@@ -34,6 +35,16 @@ describe("findRanges", () => {
       { start: 1, end: 3 },
     ]);
   });
+
+  it("finds every match in a document larger than the call stack", () => {
+    // The scan used to recurse once per match, so a 20 000-match file threw
+    // `RangeError: Maximum call stack size exceeded` instead of reporting them.
+    const text = "a".repeat(20_000);
+    const ranges = findRanges(text, "a");
+    expect(ranges).toHaveLength(20_000);
+    expect(ranges[0]).toEqual({ start: 0, end: 1 });
+    expect(ranges[19_999]).toEqual({ start: 19_999, end: 20_000 });
+  });
 });
 
 describe("replaceAll", () => {
@@ -50,5 +61,12 @@ describe("replaceAll", () => {
     // The same text, but with a match present, must differ — so the no-match
     // path above is genuinely the "nothing to do" branch, not a no-op bug.
     expect(replaceAll("abc", "a", "x")).toBe("xbc");
+  });
+
+  it("replaces every match in a document larger than the call stack", () => {
+    // The same scan backed a replace-all: a large file threw before the first
+    // replacement instead of returning the replaced text.
+    const replaced = replaceAll("a".repeat(20_000), "a", "b");
+    expect(replaced).toBe("b".repeat(20_000));
   });
 });

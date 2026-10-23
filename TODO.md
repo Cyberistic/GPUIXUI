@@ -8157,6 +8157,25 @@ the report built on it.
       follows the constants (docs-site). No new module — the rule lives on the
       existing time seam, so the entry graph stays 168 modules.
 
+`[x]` `packages/editor`: **search and replace exhausted the stack on a large
+      file** — `search/logic.ts`'s `findRanges` recursed once per match
+      (`collect(from, found)`), so a document with a match per character threw
+      `RangeError: Maximum call stack size exceeded` before it reported the first
+      range; `replaceAll` is built on the same scan, so a replace-all on that
+      file threw too. Both now fold: the scan is `Arr.unfold` over the next
+      index and the replacement is an `Arr.reduce` over the reversed ranges (the
+      same last-to-first order, so no index shifts). The observable contract is
+      unchanged — overlap skipping, the empty query and the count/replace
+      agreement are the old cases. `src/search/logic.test.ts` gains `finds every
+      match in a document larger than the call stack` and `replaces every match
+      in a document larger than the call stack` (20 000 matches, first and last
+      range pinned). Directions measured: with the recursion restored, both new
+      cases fail with that `RangeError` while the other seven pass; restored,
+      the file is 9/9 and the package 36/36 with `check-types` clean. Docs
+      `packages/editor/docs/search-replace.mdx` §The matcher/§Verification.
+      No native scenario applies — the matcher is a pure function and the bar's
+      window route is `search-replace`'s own.
+
 ## Blockers (project-level, with evidence)
 
 `[!]` **Two docs-site sessions write `apps/docs` at once — measured 2026-10-21

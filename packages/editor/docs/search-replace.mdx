@@ -43,7 +43,9 @@ import { SearchReplace } from "@gpuixui/editor";
 
 `src/search/logic.ts` scans left to right and resumes at a match's end, so
 overlapping matches are skipped: `"aa"` inside `"aaa"` is one match, not two. An
-empty query matches nothing. `replaceAll` is built from the same ranges, replaced
+empty query matches nothing. The scan is a fold rather than a recursion, so a
+large file with a match per character reports every range instead of exhausting
+the call stack. `replaceAll` is built from the same ranges, replaced
 last-to-first so an earlier replacement never shifts a later index.
 
 ## Limitations
@@ -59,8 +61,9 @@ last-to-first so an earlier replacement never shifts a later index.
 
 `src/search/logic.test.ts` holds the matcher: overlapping matches skipped (with a
 negative control against an overlapping scan), every non-overlapping occurrence
-found, an empty query returning nothing, and replace-all agreeing with the match
-count.
+found, an empty query returning nothing, replace-all agreeing with the match
+count, and a 20 000-match document found and replaced without exhausting the
+stack.
 
 ## Related
 

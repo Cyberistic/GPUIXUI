@@ -9,6 +9,7 @@
  */
 
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 
 /** A half-open `[start, end)` range in UTF-16 code units, the units `indexOf` returns. */
 export interface MatchRange {
@@ -23,26 +24,28 @@ export interface MatchRange {
  * length needle would otherwise match at every position. Overlapping matches
  * are skipped: the scan resumes at a match's `end`, so `"aa"` inside `"aaa"`
  * yields one range, not two.
+ *
+ * The scan is a fold rather than a recursion: a document can hold a match per
+ * character, and one call frame per match exhausted the stack on a large file.
  */
 export const findRanges = (
   text: string,
   query: string,
-): ReadonlyArray<MatchRange> => {
-  const collect = (
-    from: number,
-    found: ReadonlyArray<MatchRange>,
-  ): ReadonlyArray<MatchRange> => {
-    if (query.length === 0) return [];
-    const index = text.indexOf(query, from);
-    return index === -1
-      ? found
-      : collect(
-          index + query.length,
-          Arr.append(found, { start: index, end: index + query.length }),
-        );
-  };
-  return collect(0, []);
-};
+): ReadonlyArray<MatchRange> =>
+  query.length === 0
+    ? []
+    : Arr.unfold(
+        0,
+        (from: number): Option.Option<readonly [MatchRange, number]> => {
+          const index = text.indexOf(query, from);
+          return index === -1
+            ? Option.none()
+            : Option.some([
+                { start: index, end: index + query.length },
+                index + query.length,
+              ] as const);
+        },
+      );
 
 /**
  * The text with every non-overlapping occurrence of `query` replaced.
@@ -57,11 +60,14 @@ export const replaceAll = (
   replacement: string,
 ): string => {
   const ranges = findRanges(text, query);
-  if (Arr.length(ranges) === 0) return text;
-  let result = text;
-  for (const range of Arr.reverse(ranges)) {
-    result =
-      result.slice(0, range.start) + replacement + result.slice(range.end);
-  }
-  return result;
+  return Arr.length(ranges) === 0
+    ? text
+    : Arr.reduce(
+        Arr.reverse(ranges),
+        text,
+        (result, range) =>
+          result.slice(0, range.start) +
+          replacement +
+          result.slice(range.end),
+      );
 };
