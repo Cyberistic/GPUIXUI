@@ -1,0 +1,36 @@
+---
+title: Email inbox
+description: A four-pane mail client — folders, a filterable message list, the reading pane and the sender's contact card.
+---
+
+A mail-client recipe: a folder rail with favorites and accounts, a toolbar over
+the message list, a reading pane for the open thread and a contact card for its
+sender. Copy the recipe; it is composed from the library, not a new component.
+
+<BlockPreview name="email-inbox-01" />
+
+The preview is interactive: click a message to repaint the reading pane with its
+subject, sender and body; the Primary / Promotions / Social tabs filter the list
+(Social is empty on this data, so the list says so instead of going blank); the
+toolbar's Reply action focuses the reply box, and the contact card switches
+between History and Attachments. The toolbar wraps at narrow widths, and the
+contact rail is dropped below 1120px of the block's own width — the viewport's
+1100px breakpoint does the same — so neither the list nor the reading pane is
+clipped to make room for it.
+
+## Composition
+
+The block composes:
+
+- `Avatar` from `@gpuixui/components/avatar`, `Badge` from
+  `@gpuixui/components/badge`, `Tabs` and its parts from
+  `@gpuixui/components/tabs`, `EmptyState` from
+  `@gpuixui/components/empty-state`
+- `Button`, `IconButton`, `ScrollArea`, `Stack`, `Text` and `TextArea` from
+  `@gpuixui/primitives`
+- `Icon` from `@gpuixui/icons`
+
+A provider's chip (`Promotion`) is a `Badge` in the success tone; the unread dot
+is the primary role. The message's `category` is the filter the tabs read, so a
+new tab is a datum, not a second list. The reply box is a `TextArea`; wire
+`send`, `archive`, `snooze` and the rest of the toolbar to your own handlers.

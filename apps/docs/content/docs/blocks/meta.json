@@ -11,6 +11,8 @@
     "kanban",
     "settings-dialog",
     "notification-centre",
-    "command-centre"
+    "command-centre",
+    "file-manager",
+    "email-inbox"
   ]
 }
