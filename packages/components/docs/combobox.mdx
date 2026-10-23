@@ -41,6 +41,45 @@ name, so it falls back to the option's `value`: a list decoded from a table whos
 name column is blank still names the selection instead of painting an empty
 trigger. A label that has text is trimmed.
 
+## Remote options
+
+The component never fetches. A list that lives behind a search belongs to the
+caller, and two props hand it over:
+
+- `onQueryChange` reports each search the popup runs — every typed query, and the
+  empty one it opens with, because each open is a new search. A closed popup
+  reports nothing, and neither does one the caller disables: the close path
+  clears the query in the same commit, and that cleared string is not a search.
+  Debouncing, cancelling and the loading flag are the caller's, the same division
+  `SearchInput` keeps.
+- `shouldFilter={false}` paints `options` in the order they are given instead of
+  ranking them locally. Use it whenever the remote search chose the rows: a
+  result that matched on a synonym, a tag or a description the query never
+  appears in would be hidden by the local ranking.
+- `loading` says the caller's fetch is in flight. While the list is empty the
+  empty slot paints `Searching…` instead of `No matches`; a `ComboboxEmpty` with
+  children paints the caller's words instead.
+
+```tsx
+const [results, setResults] = useState<ReadonlyArray<ComboboxOption>>([]);
+const [pending, setPending] = useState(false);
+
+<Combobox
+  options={results}
+  shouldFilter={false}
+  loading={pending}
+  onQueryChange={(query) => void search(query)}
+  onValueChange={setReviewer}
+>
+  <ComboboxTrigger label="Assign reviewer" />
+  <ComboboxContent>
+    <ComboboxInput label="Search reviewers" />
+    <ComboboxList label="Reviewers" />
+    <ComboboxEmpty />
+  </ComboboxContent>
+</Combobox>;
+```
+
 ## Composition
 
 ```text
@@ -64,6 +103,9 @@ Combobox
 | `Combobox` | `disabled` | `boolean` | `false` |
 | `Combobox` | `onCreate` | `(query: string) => void` | — |
 | `Combobox` | `createLabel` | `(query: string) => string` | `Create "…"` |
+| `Combobox` | `onQueryChange` | `(query: string) => void` | — |
+| `Combobox` | `shouldFilter` | `boolean` | `true` |
+| `Combobox` | `loading` | `boolean` | `false` |
 | `ComboboxTrigger` | `placeholder` / `label` | `string` | `"Select…"` / — |
 | `ComboboxContent` | `side` / `align` | `"top" \| "right" \| "bottom" \| "left"` · `"start" \| "center" \| "end"` | `"bottom"` / `"start"` |
 | `ComboboxContent` | `sideOffset` / `alignOffset` | `number` | `4` / `0` |
@@ -75,7 +117,8 @@ Combobox
 
 ## Limitations
 
-- No async option loading or group headers.
+- No group headers, and no fetching: a remote list is the caller's, through
+  `onQueryChange`/`shouldFilter` (§Remote options).
 - Create-new is single-select and offered only when nothing matches.
 - No `aria-activedescendant`; `aria-selected` is the signal.
 - The popup has an entry tween only.

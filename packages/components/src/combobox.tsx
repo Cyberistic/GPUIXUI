@@ -111,6 +111,8 @@ interface ComboboxContextValue {
   readonly selectedValues: ReadonlyArray<string>;
   readonly open: boolean;
   readonly disabled: boolean;
+  /** The caller's fetch is in flight; the empty slot says so. */
+  readonly loading: boolean;
   /** The text in the search field; the popup owns it through the runtime. */
   readonly query: string;
   readonly labelFor: (value: string) => string;
@@ -152,6 +154,20 @@ export interface ComboboxProps {
   readonly onCreate?: (query: string) => void;
   /** The create row's label for a query. Default `Create "…"`. */
   readonly createLabel?: (query: string) => string;
+  /**
+   * Reports every search the popup runs: each typed query, and the empty one a
+   * popup opens with (each open is a new search). The caller fetches, debounces
+   * and cancels; the component never does.
+   */
+  readonly onQueryChange?: (query: string) => void;
+  /**
+   * Whether `options` are filtered and ranked locally. Default `true`. Set
+   * `false` when a remote search already chose and ordered the rows — a result
+   * that matches on a synonym rather than on the label would be hidden.
+   */
+  readonly shouldFilter?: boolean;
+  /** The caller's fetch is in flight; the empty slot says so. Default `false`. */
+  readonly loading?: boolean;
   readonly children?: PartChildren;
 }
 
@@ -221,6 +237,9 @@ export const Combobox = ({
   disabled = false,
   onCreate,
   createLabel = (query) => `Create "${query}"`,
+  onQueryChange,
+  shouldFilter = true,
+  loading = false,
   children,
 }: ComboboxProps) => {
   const renderer = useGpuix().renderer;
@@ -229,6 +248,24 @@ export const Combobox = ({
   const trigger = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
   const wasOpen = useRef(false);
+
+  // A remote list needs the query, not only the rows, and the caller's handler
+  // is usually an inline closure over its own draft: keeping it in a ref lets
+  // the report read the current one without re-running on every render (which
+  // would report again for the same query).
+  const onQueryChangeRef = useRef(onQueryChange);
+  useLayoutEffect(() => {
+    onQueryChangeRef.current = onQueryChange;
+  });
+
+  // Report each search the popup runs, including the empty one it opens with.
+  // A closed popup is not a search: the close path clears the query in the same
+  // commit, and reporting that would ask a caller to fetch nothing. A control
+  // the caller disables is closing for the same reason.
+  useLayoutEffect(() => {
+    if (!open || disabled) return;
+    onQueryChangeRef.current?.(query);
+  }, [disabled, open, query]);
 
   const [selected, setSelected] = useControllableState<ComboboxValue>({
     value: toRuntimeValue(valueProp, multiple),
@@ -243,7 +280,8 @@ export const Combobox = ({
       ? []
       : [selected];
 
-  const visible = filterOptions(options, query);
+  const visible =
+    shouldFilter === true ? filterOptions(options, query) : options;
   const create = offersCreate(
     visible,
     query,
@@ -309,6 +347,7 @@ export const Combobox = ({
         selectedValues,
         open,
         disabled,
+        loading,
         query,
         labelFor,
         isDisabled: (value) =>
@@ -695,14 +734,21 @@ export interface ComboboxEmptyProps {
   readonly children?: ReactNode;
 }
 
-/** GPUix's empty slot: shown only while no option matches the query. */
+/**
+ * GPUix's empty slot: shown while no option matches the query. A caller's
+ * children win, so a remote list can paint its own searching row; without them
+ * the root's `loading` chooses the words.
+ */
 export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
   const theme = useTheme();
+  const { loading } = useCombobox();
 
   return (
     <HeadlessEmpty testId="combobox-empty">
       {children ?? (
-        <text style={recipeStyle(COMBOBOX_EMPTY, theme)}>No matches</text>
+        <text style={recipeStyle(COMBOBOX_EMPTY, theme)}>
+          {loading ? "Searching…" : "No matches"}
+        </text>
       )}
     </HeadlessEmpty>
   );
@@ -749,7 +795,7 @@ export const comboboxMeta = {
     "selection yields option values, never labels",
     "no aria-activedescendant in 0.11.0: the highlighted row is visual while the input keeps focus",
     "create-new is single-select only, is offered when the query matches no option, and reports the query — the caller adds the option and owns the selection",
-    "no async options",
+    "async is the caller's: onQueryChange reports each search and shouldFilter={false} paints the rows a remote search already chose and ranked; the component neither fetches nor debounces",
     'the popup placement is corrected by the component: the runtime snaps but does not flip, and align="center" is measured from the trigger',
     "the popup has an entry tween only (a fade plus 4px out from its measured side): the runtime's ComboboxContent renders nothing while closed, so a closing popup cannot stay mounted for an exit",
   ],

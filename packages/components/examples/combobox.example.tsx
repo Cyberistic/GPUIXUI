@@ -3,11 +3,16 @@
  *
  * The single picker closes on select and shows one name; the multi picker stays
  * open and reports an ordered array; the third picker creates a reviewer from a
- * query nobody matches. All use the same option shape and ranking from
- * `combobox/logic.ts`.
+ * query nobody matches; the fourth is fed by a simulated remote search, so it
+ * turns the local ranking off and shows what each query asked for. All use the
+ * same option shape and ranking from `combobox/logic.ts`.
  */
 
 import { useState } from "react";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import * as R from "effect/Record";
+import * as Str from "effect/String";
 import {
   Combobox,
   ComboboxContent,
@@ -34,6 +39,28 @@ const labels: ReadonlyArray<ComboboxOption> = [
   { value: "desk", label: "Desk booking", description: "Workspace" },
 ];
 
+const tags: Readonly<Record<string, ReadonlyArray<string>>> = {
+  ada: ["engineering", "analytical engine"],
+  grace: ["compilers", "cobol"],
+  alan: ["research", "cryptography"],
+};
+
+/**
+ * What a remote search would answer. The tags are the point: a result matched
+ * on `engineering` does not contain the query in its label, which is why the
+ * picker hands the rows over with `shouldFilter={false}`.
+ */
+const searchReviewers = (query: string): ReadonlyArray<ComboboxOption> => {
+  const needle = Str.toLowerCase(Str.trim(query));
+  if (Str.isEmpty(needle)) return reviewers;
+  return Arr.filter(reviewers, (option) =>
+    Arr.some(
+      Option.getOrElse(R.get(tags, option.value), () => []),
+      Str.includes(needle),
+    ),
+  );
+};
+
 /** One picker composed from the parts; both cards use the same shape. */
 const Picker = ({
   label,
@@ -41,18 +68,24 @@ const Picker = ({
   options,
   onValueChange,
   onCreate,
+  onQueryChange,
+  shouldFilter,
 }: {
   readonly label: string;
   readonly multiple?: boolean;
   readonly options: ReadonlyArray<ComboboxOption>;
   readonly onValueChange: (value: ComboboxSelection) => void;
   readonly onCreate?: (query: string) => void;
+  readonly onQueryChange?: (query: string) => void;
+  readonly shouldFilter?: boolean;
 }) => (
   <Combobox
     multiple={multiple}
     options={options}
     onValueChange={onValueChange}
     {...(onCreate === undefined ? {} : { onCreate })}
+    {...(onQueryChange === undefined ? {} : { onQueryChange })}
+    {...(shouldFilter === undefined ? {} : { shouldFilter })}
   >
     <ComboboxTrigger label={label} />
     <ComboboxContent>
@@ -71,6 +104,10 @@ export const ComboboxExample = () => {
   const [people, setPeople] =
     useState<ReadonlyArray<ComboboxOption>>(reviewers);
   const [invited, setInvited] = useState("none");
+  const [remote, setRemote] =
+    useState<ReadonlyArray<ComboboxOption>>(reviewers);
+  const [lastQuery, setLastQuery] = useState("");
+  const [remotePick, setRemotePick] = useState<string | null>(null);
 
   /** The create contract: add the option, then select it. */
   const createReviewer = (query: string): void => {
@@ -173,6 +210,43 @@ export const ComboboxExample = () => {
             }
           />
         </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.xs,
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "label"),
+              color: theme.colors.foreground,
+            }}
+          >
+            Remote search (simulated)
+          </text>
+          <Picker
+            label="Remote reviewer"
+            options={remote}
+            shouldFilter={false}
+            onQueryChange={(query) => {
+              setLastQuery(query);
+              setRemote(searchReviewers(query));
+            }}
+            onValueChange={(value) =>
+              setRemotePick(typeof value === "string" ? value : null)
+            }
+          />
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            {`Query “${lastQuery}” → ${String(remote.length)} result(s)`}
+            {remotePick === null ? "" : ` · picked ${remotePick}`}
+          </text>
+        </div>
         <text
           style={{
             ...textStyle(theme, "caption"),
@@ -180,7 +254,9 @@ export const ComboboxExample = () => {
           }}
         >
           Try “ca”: Calendar, Camera, then Vacation — prefix matches first. Type
-          a name nobody matches into “Invite a reviewer” to create it.
+          a name nobody matches into “Invite a reviewer” to create it. Try
+          “engineer” in the remote picker: it finds Ada through a tag her label
+          never shows, which is why that list turns the local ranking off.
         </text>
       </div>
     </Card>
