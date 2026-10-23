@@ -165,9 +165,17 @@ body {
   font-size: 12.5px;
 }
 
+/* A platform style changes control heights, so the preview's content grows
+   from macOS to Linux. The panel keeps one height and scrolls instead, so
+   switching a theme never moves the page under the reader. */
 .gx-component-panel {
   margin: 0;
-  min-height: 340px;
+  height: 520px;
+  overflow: auto;
+}
+
+.gx-component-panel .gx-demo {
+  min-height: 100%;
 }
 
 .gx-component-code {
