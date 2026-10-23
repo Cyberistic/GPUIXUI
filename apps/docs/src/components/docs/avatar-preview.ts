@@ -72,9 +72,7 @@ export const visibleMembers = (
   members: ReadonlyArray<RosterMember>,
   onlineOnly: boolean,
 ): ReadonlyArray<RosterMember> =>
-  onlineOnly
-    ? members.filter((member) => member.status === "online")
-    : members;
+  onlineOnly ? members.filter((member) => member.status === "online") : members;
 
 /** A sentence for the roster: the size, then the states somebody is in. */
 export const describeRoster = (

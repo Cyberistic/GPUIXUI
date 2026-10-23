@@ -36,7 +36,13 @@ describe("the avatar roster preview", () => {
     expect(workflow).toContain(
       "5 members · 1 online, 1 away, 1 busy, 1 offline",
     );
-    for (const word of ["Online", "Away", "Busy", "Offline", "No presence shown"]) {
+    for (const word of [
+      "Online",
+      "Away",
+      "Busy",
+      "Offline",
+      "No presence shown",
+    ]) {
       expect(workflow).toContain(word);
     }
   });

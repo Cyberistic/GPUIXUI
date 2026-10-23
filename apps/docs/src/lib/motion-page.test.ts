@@ -503,7 +503,10 @@ describe("the motion page", () => {
     const value = readRepo("packages/motion/src/motion.ts");
     const coast = value.slice(
       value.indexOf("coast(inertia: Inertia"),
-      value.indexOf("sample(elapsedMs", value.indexOf("coast(inertia: Inertia")),
+      value.indexOf(
+        "sample(elapsedMs",
+        value.indexOf("coast(inertia: Inertia"),
+      ),
     );
     expect(coast).toContain('this.mode.kind === "inertia"');
     expect(coast).toContain("this.initialVelocity === release");

@@ -27,10 +27,7 @@ import {
  */
 
 const component = readFileSync(
-  new URL(
-    "../../../../../packages/components/src/avatar.tsx",
-    import.meta.url,
-  ),
+  new URL("../../../../../packages/components/src/avatar.tsx", import.meta.url),
   "utf8",
 );
 
@@ -90,16 +87,22 @@ describe("the avatar preview's roster", () => {
     const counts = presenceCounts(initialMembers);
 
     expect(initialMembers).toHaveLength(5);
-    expect(counts).toEqual({ online: 1, away: 1, busy: 1, offline: 1, none: 1 });
+    expect(counts).toEqual({
+      online: 1,
+      away: 1,
+      busy: 1,
+      offline: 1,
+      none: 1,
+    });
   });
 
   it("leaves only the online members under the filter, and never adds one", () => {
     const online = visibleMembers(initialMembers, true);
 
     expect(online.map((member) => member.name)).toEqual(["Ada Lovelace"]);
-    expect(
-      online.every((member) => initialMembers.includes(member)),
-    ).toBe(true);
+    expect(online.every((member) => initialMembers.includes(member))).toBe(
+      true,
+    );
     expect(visibleMembers(initialMembers, false)).toBe(initialMembers);
   });
 
@@ -107,9 +110,9 @@ describe("the avatar preview's roster", () => {
     expect(describeRoster(initialMembers)).toBe(
       "5 members · 1 online, 1 away, 1 busy, 1 offline",
     );
-    expect(
-      describeRoster([{ name: "Ada Lovelace", role: "Maintainer" }]),
-    ).toBe("1 members · no presence shown");
+    expect(describeRoster([{ name: "Ada Lovelace", role: "Maintainer" }])).toBe(
+      "1 members · no presence shown",
+    );
   });
 
   it("names every presence state in words, because the dot is colour-only", () => {

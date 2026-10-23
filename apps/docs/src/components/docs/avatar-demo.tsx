@@ -208,7 +208,9 @@ export function AvatarStatesBody() {
         {presenceStates.map((status) => (
           <span className="gx-avatar-state" key={status}>
             <Disc name="Ada Lovelace" status={status} />
-            <span className="gx-avatar-state-label">{presenceText(status)}</span>
+            <span className="gx-avatar-state-label">
+              {presenceText(status)}
+            </span>
           </span>
         ))}
         <span className="gx-avatar-state">
@@ -249,9 +251,9 @@ export function AvatarStatesBody() {
       </Run>
 
       <p className="gx-avatar-foot">
-        A dot is colour-only, so every presence state is printed beside its face.
-        The fallback runs are the names the component&apos;s own table uses,
-        including the placeholder a name with no letter gets.
+        A dot is colour-only, so every presence state is printed beside its
+        face. The fallback runs are the names the component&apos;s own table
+        uses, including the placeholder a name with no letter gets.
       </p>
     </div>
   );
