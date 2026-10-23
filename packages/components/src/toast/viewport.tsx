@@ -88,6 +88,10 @@ const useToastStack = (
   );
   const painted = useRef(entries);
   const timers = useRef(new Map<string, ExitTimer>());
+  // The window a leave occupies: the tween plus the wait it sits out first. The
+  // timers are keyed by this value, so a preference change (or a timing that
+  // gains a wait) rescales a leave already in flight.
+  const windowMs = exitWindowMs(timing);
 
   useLayoutEffect(() => {
     painted.current = entries;
@@ -112,7 +116,6 @@ const useToastStack = (
       (toast): StackEntry => ({ toast, present: true }),
     );
     const merged = [...kept, ...appended];
-    const ms = exitWindowMs(timing);
     setEntries(merged);
     Arr.forEach(merged, (entry) => {
       if (entry.present) return;
@@ -120,19 +123,19 @@ const useToastStack = (
       const running = timers.current.get(id);
       // Re-running for a new toast must not restart a leave already timed, but
       // a new window (the preference changed) must replace the old one.
-      if (running !== undefined && running.ms === ms) return;
+      if (running !== undefined && running.ms === windowMs) return;
       if (running !== undefined) clearTimeout(running.handle);
       timers.current.set(id, {
-        ms,
+        ms: windowMs,
         handle: setTimeout(() => {
           timers.current.delete(id);
           setEntries((list) =>
             Arr.filter(list, (item) => item.toast.id !== id),
           );
-        }, ms),
+        }, windowMs),
       });
     });
-  }, [timing.exit.duration, toasts]);
+  }, [windowMs, toasts]);
 
   useLayoutEffect(
     () => () => {

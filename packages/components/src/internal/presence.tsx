@@ -228,15 +228,21 @@ export interface SurfacePresence {
  * Keep a surface mounted for its exit tween.
  *
  * `open` publishes the resting state at once; closing flips `present` so the
- * runtime tweens to the exit frame, and the surface unmounts when that tween's
- * duration has elapsed. Re-opening during the exit keeps the same instance, so
- * the run retargets instead of restarting.
+ * runtime tweens to the exit frame, and the surface unmounts when that run's
+ * whole window has elapsed — the tween plus the wait it sits out first. The
+ * timer is keyed to that window, not to the duration, so a leave already in
+ * flight is re-timed when the window changes. Re-opening during the exit keeps
+ * the same instance, so the run retargets instead of restarting.
  */
 export const useSurfacePresence = (
   open: boolean,
   timing: SurfaceTiming,
 ): SurfacePresence => {
   const [mounted, setMounted] = useState(open);
+  // The hold is the window, not the duration: a delayed exit sits out its wait
+  // before the tween, so keying the timer to the duration would unmount a box
+  // before its journey began — and a changed wait would not re-arm it at all.
+  const windowMs = exitWindowMs(timing);
 
   useLayoutEffect(() => {
     if (open) setMounted(true);
@@ -244,14 +250,13 @@ export const useSurfacePresence = (
 
   useEffect(() => {
     if (open || !mounted) return;
-    const ms = exitWindowMs(timing);
-    if (ms === 0) {
+    if (windowMs === 0) {
       setMounted(false);
       return;
     }
-    const handle = setTimeout(() => setMounted(false), ms);
+    const handle = setTimeout(() => setMounted(false), windowMs);
     return () => clearTimeout(handle);
-  }, [mounted, open, timing.exit.duration]);
+  }, [mounted, open, windowMs]);
 
   return { mounted, present: open, timing };
 };

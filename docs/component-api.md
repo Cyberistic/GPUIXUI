@@ -435,10 +435,15 @@ translates beyond an inset offset (upstream issue #102, plan `600` §3). shadcn'
 `zoom-in-95` stays unsupported rather than being faked.
 
 **Presence is a duration.** A closed surface stays mounted for its exit tween and
-unmounts when that duration has elapsed (`useSurfacePresence`, and the toast
-stack's per-card removal on the same `exitWindowMs`). A preference change
-rescales that window, so a card or a panel already leaving under `"animated"`
-is gone at once when the reader turns reduced motion on. `AnimatePresence`
+unmounts when that run's whole window has elapsed (`useSurfacePresence`, and the
+toast stack's per-card removal on the same `exitWindowMs`). The window is the
+duration **plus the wait a delayed run sits out first** — the runtime holds a
+delayed run's first frame, so a box unmounted at the duration alone would lose
+its journey before it began — and both the seam and the toast stack key their
+timers to that window, so a leave already in flight is re-timed when it changes.
+A preference change rescales that window, so a card or a panel already leaving
+under `"animated"` is gone at once when the reader turns reduced motion on.
+`AnimatePresence`
 reports an exit only through `onMotionComplete` on a `motion.div`, and the
 popover, menu and preview-card surfaces are hosted by `FloatingLayer`'s own
 element, so one mechanism covers every surface. A leaving surface paints in the
@@ -449,7 +454,7 @@ the dismissal was for lands on the control underneath. A **wrapper** — a
 pointer rule at all: it must never put a hitbox over the content it holds. The
 consequence a consumer sees: a dismissal is *immediate* in state (focus returns,
 `onOpenChange` fires) while the box fades out, and an element disappears from
-the tree a level's duration later.
+the tree a level's window later.
 
 **Per surface:**
 

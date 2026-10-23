@@ -60,6 +60,11 @@ import {
 } from "../internal/interaction.js";
 import { MotionProvider } from "../motion.js";
 import { renderComponent } from "../internal/test-root.js";
+import {
+  presenceStyle,
+  useSurfacePresence,
+  type SurfaceTiming,
+} from "../internal/presence.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
 import {
   PreviewCard,
@@ -133,6 +138,38 @@ describe("a modal surface", () => {
     expect(entering - resting).toBe(8);
 
     clickCentreOf(page, "cancel");
+    await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(false));
+    page.unmount();
+  });
+
+  it("travels back out while it leaves", async () => {
+    const page = renderComponent(
+      <Page>
+        <Dialog>
+          <DialogTrigger testId="open">Rename</DialogTrigger>
+          <DialogContent label="Rename" testId="dialog" size="sm">
+            <DialogFooter>
+              <DialogClose testId="cancel">Cancel</DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </Page>,
+    );
+    page.renderer.clockPause();
+    clickCentreOf(page, "open");
+    await delay();
+    page.renderer.clockFastForward(400);
+    await delay();
+    const resting = where(page.renderer, "dialog", "y");
+
+    clickCentreOf(page, "cancel");
+    await delay();
+    expect(where(page.renderer, "dialog", "y")).toBe(resting);
+    page.renderer.clockFastForward(250);
+    await delay();
+    const leaving = where(page.renderer, "dialog", "y");
+    expect(leaving).toBeGreaterThan(resting);
+    page.renderer.clockResume();
     await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(false));
     page.unmount();
   });
@@ -839,5 +876,59 @@ describe("a leaving subtree", () => {
     } finally {
       page.unmount();
     }
+  });
+});
+
+/**
+ * A bare surface that owns only the seam's mount window.
+ *
+ * The two windows a shipped surface reads are fixed by its level, so the case
+ * below drives the seam directly: it is the one way to change a wait without
+ * changing the duration, which is the half the timer used to ignore.
+ */
+const WindowProbe = ({
+  open,
+  waitMs,
+}: {
+  readonly open: boolean;
+  readonly waitMs: number;
+}) => {
+  const timing: SurfaceTiming = {
+    enter: { duration: 0.05 },
+    exit: { duration: 0.05, delay: waitMs / 1000 },
+  };
+  const presence = useSurfacePresence(open, timing);
+  return presence.mounted ? (
+    <div
+      testId="seam-window"
+      style={{ width: 120, height: 60, ...presenceStyle(presence.present) }}
+    />
+  ) : null;
+};
+
+describe("the seam's mount window", () => {
+  /**
+   * The bug this guards: `useSurfacePresence` holds a leaving box for
+   * `exitWindowMs(timing)` — the tween plus the wait it sits out first — but the
+   * effect that schedules the unmount listened to `timing.exit.duration` alone.
+   * A leave already timed therefore kept its old window when the wait changed,
+   * so a delayed journey could lose its box before it started. `PageTransition`
+   * had the same shape and was closed on its own window; this is the seam's
+   * half, and the toast stack's timers now read the same value.
+   */
+  it("re-times a leave when the window changes, not only its duration", async () => {
+    const page = renderComponent(<WindowProbe open waitMs={0} />);
+    await delay();
+    page.rerender(<WindowProbe open={false} waitMs={0} />);
+    await delay();
+    // Same 50 ms duration, a 200 ms longer window.
+    page.rerender(<WindowProbe open={false} waitMs={200} />);
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    // The 50 ms window has passed; the re-timed one has not.
+    expect(painted(page.renderer, "seam-window")).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    // The longer window still ends, so the timer was re-armed rather than lost.
+    expect(painted(page.renderer, "seam-window")).toBe(false);
+    page.unmount();
   });
 });
