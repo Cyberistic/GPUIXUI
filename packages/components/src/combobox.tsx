@@ -269,6 +269,16 @@ export const Combobox = ({
           onSome: labelOf,
         });
 
+  // A popup already open when the caller disables the combobox closes with it:
+  // the trigger refuses every route, so a surface left mounted paints rows no
+  // press can choose. A layout effect retires it before the frame paints, and
+  // the query is dropped with it so re-enabling does not reopen on a stale one.
+  useLayoutEffect(() => {
+    if (!disabled) return;
+    setOpen(false);
+    setQuery("");
+  }, [disabled]);
+
   /** Close, restoring focus only for the paths that should (Escape, select). */
   useLayoutEffect(() => {
     if (wasOpen.current && !open && restoreFocus.current) {

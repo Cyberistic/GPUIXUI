@@ -52,6 +52,7 @@ const Picker = ({
   onValueChange,
   multiple,
   disabledCamera,
+  disabled,
   empty,
   triggerPlaceholder,
   triggerLabel = "Assign reviewer",
@@ -62,6 +63,7 @@ const Picker = ({
   ) => void;
   readonly multiple?: boolean;
   readonly disabledCamera?: boolean;
+  readonly disabled?: boolean;
   readonly empty?: string;
   readonly triggerPlaceholder?: string;
   readonly triggerLabel?: string;
@@ -79,6 +81,7 @@ const Picker = ({
           : options
       }
       multiple={multiple}
+      disabled={disabled}
       onValueChange={onValueChange}
       {...(onCreate === undefined ? {} : { onCreate })}
     >
@@ -424,6 +427,35 @@ describe("Combobox", () => {
           0,
       ).toBeGreaterThanOrEqual(contrastFloors.disabled);
     });
+  });
+
+  it("closes a popup the caller disables, and does not reopen it", async () => {
+    // The bug this guards: a trigger that is disabled while its popup is open
+    // leaves the surface mounted, so the control paints rows no press can
+    // choose. The popped-out list closes with the control and the stored request
+    // is dropped, so re-enabling does not resurrect it.
+    const onValueChange = vi.fn();
+    const picker = renderComponent(<Picker onValueChange={onValueChange} />);
+    await open(picker);
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    picker.rerender(<Picker disabled onValueChange={onValueChange} />);
+    await settle();
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+
+    // Re-enabling brings no surface back on its own, and the trigger still
+    // refuses while it is disabled.
+    picker.rerender(<Picker onValueChange={onValueChange} />);
+    await settle();
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    picker.rerender(<Picker disabled onValueChange={onValueChange} />);
+    await settle();
+    clickCentreOf(picker, "combobox-trigger");
+    await settle();
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(onValueChange).not.toHaveBeenCalled();
+
+    picker.unmount();
   });
 
   it("closes on Escape and returns focus to the trigger", async () => {
