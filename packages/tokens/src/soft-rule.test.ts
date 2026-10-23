@@ -54,8 +54,8 @@ const recipe = read("../../tw/src/recipes.ts");
 const painter = read("../../components/src/menu/item.tsx");
 
 /**
- * The sentence both pages carry, so a reader is told which floor the rule is
- * held to and why the share exists rather than inferring it from the table.
+ * The sentence both pages carry, so a reader is told the rule is a share rather
+ * than inferring it from the placement table.
  */
 const ruleParagraph =
   "A menu's rule between two groups is the same role painted at half strength";
@@ -193,11 +193,15 @@ describe("the rule a menu draws between groups", () => {
   });
 
   it("states the floor the rule is held to", () => {
-    // A rule is decorative: it is not the 3:1 a control boundary gets, and the
-    // pages have to say which floor they mean.
-    expect(decorativeFloor).toBe(1.05);
+    // A rule is decorative: it is not the 3:1 a control boundary gets, and both
+    // pages print the floor they mean rather than leaving a reader to find it in
+    // the table.
+    const floor = `${decorativeFloor}:1`;
+
     expect(catalogue).toContain(ruleParagraph);
     expect(designSystem).toContain(ruleParagraph);
+    expect(catalogue).toContain(floor);
+    expect(designSystem).toContain(floor);
   });
 
   it("teaches the rule where a reader meets it", () => {
