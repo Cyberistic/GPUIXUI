@@ -10,6 +10,8 @@
  * The suite runs under `environment: "node"`; nothing here needs a renderer.
  */
 
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
   diffLines,
@@ -18,8 +20,19 @@ import {
   reconstructAfter,
   reconstructBefore,
   splitLines,
+  splitPairs,
+  type DiffRow,
   type LineEdit,
+  type SplitPair,
 } from "./logic.js";
+
+/** One side of one split row, as `None` when the row or that side is absent. */
+const side = (
+  pairs: ReadonlyArray<SplitPair>,
+  index: number,
+  which: "left" | "right",
+): Option.Option<DiffRow> =>
+  Option.flatMap(Arr.get(pairs, index), (pair) => pair[which]);
 
 describe("splitLines", () => {
   it("treats a trailing newline as the end of the last line, not a line", () => {
@@ -79,5 +92,46 @@ describe("numberDiff", () => {
       "Some",
       "Some",
     ]);
+  });
+});
+
+describe("splitPairs", () => {
+  it("puts a removed line and the line that replaces it on one row", () => {
+    const pairs = splitPairs(numberDiff(diffStrings("a\nb\nc", "a\nB\nc")));
+    // A one-line edit is one row, not a removal and an addition stacked apart.
+    expect(pairs).toHaveLength(3);
+    expect(Option.getOrUndefined(side(pairs, 1, "left"))?.text).toBe("b");
+    expect(Option.getOrUndefined(side(pairs, 1, "right"))?.text).toBe("B");
+    // The context rows pair with themselves and keep both line numbers.
+    expect(Option.getOrUndefined(side(pairs, 0, "left"))).toBe(
+      Option.getOrUndefined(side(pairs, 0, "right")),
+    );
+    expect(Option.getOrUndefined(side(pairs, 0, "left"))?.before).toEqual(
+      Option.some(1),
+    );
+  });
+
+  it("blanks the side that ran out in an uneven run", () => {
+    const pairs = splitPairs(numberDiff(diffStrings("a\nb\nc", "a\nB")));
+    expect(pairs).toHaveLength(3);
+    expect(Option.getOrUndefined(side(pairs, 1, "left"))?.text).toBe("b");
+    expect(Option.getOrUndefined(side(pairs, 1, "right"))?.text).toBe("B");
+    expect(Option.isNone(side(pairs, 2, "right"))).toBe(true);
+    expect(Option.getOrUndefined(side(pairs, 2, "left"))?.text).toBe("c");
+  });
+
+  it("pairs a purely added run against blank left cells", () => {
+    const pairs = splitPairs(numberDiff(diffStrings("a", "a\nb\nc")));
+    expect(pairs).toHaveLength(3);
+    expect(Option.isNone(side(pairs, 1, "left"))).toBe(true);
+    expect(Option.getOrUndefined(side(pairs, 1, "right"))?.text).toBe("b");
+    expect(Option.getOrUndefined(side(pairs, 2, "right"))?.text).toBe("c");
+  });
+
+  it("pairs a purely removed run against blank right cells", () => {
+    const pairs = splitPairs(numberDiff(diffStrings("a\nb\nc", "a")));
+    expect(pairs).toHaveLength(3);
+    expect(Option.getOrUndefined(side(pairs, 1, "left"))?.text).toBe("b");
+    expect(Option.isNone(side(pairs, 1, "right"))).toBe(true);
   });
 });

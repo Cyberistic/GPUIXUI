@@ -182,3 +182,53 @@ export const numberDiff = (
   }
   return rows;
 };
+
+/** One row of a side-by-side diff: what each side paints, `None` where it has none. */
+export interface SplitPair {
+  readonly left: Option.Option<DiffRow>;
+  readonly right: Option.Option<DiffRow>;
+}
+
+/** The two sides of one changed run, zipped by index and padded with blanks. */
+const pairRun = (run: ReadonlyArray<DiffRow>): ReadonlyArray<SplitPair> => {
+  const removals = Arr.filter(run, (row) => row.kind === "removed");
+  const additions = Arr.filter(run, (row) => row.kind === "added");
+  const height = Math.max(removals.length, additions.length);
+  if (height === 0) return [];
+  return Arr.map(Arr.range(0, height - 1), (index) => ({
+    left: Arr.get(removals, index),
+    right: Arr.get(additions, index),
+  }));
+};
+
+/**
+ * Pair the flat rows so a side-by-side viewer reads one change per row.
+ *
+ * A context line pairs with itself. A run of removed and added lines is zipped
+ * by index — the first removal beside the first addition, and so on — with a
+ * blank cell on the side that ran out, so a one-line edit is **one** row rather
+ * than a removal and an addition stacked apart. This is the pairing a split
+ * diff exists to show: the left cell is what was there and the right cell what
+ * replaced it.
+ */
+export const splitPairs = (
+  rows: ReadonlyArray<DiffRow>,
+): ReadonlyArray<SplitPair> =>
+  Arr.match(rows, {
+    onEmpty: () => [],
+    onNonEmpty: (nonEmpty) =>
+      Arr.flatMap(
+        Arr.groupWith(
+          nonEmpty,
+          (left, right) =>
+            (left.kind === "context") === (right.kind === "context"),
+        ),
+        (group) =>
+          Arr.getUnsafe(group, 0).kind === "context"
+            ? Arr.map(group, (row) => ({
+                left: Option.some(row),
+                right: Option.some(row),
+              }))
+            : pairRun(group),
+      ),
+  });

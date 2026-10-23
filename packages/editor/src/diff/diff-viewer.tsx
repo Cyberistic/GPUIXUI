@@ -27,7 +27,7 @@ import {
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { diffStrings, numberDiff, type DiffRow } from "./logic.js";
+import { diffStrings, numberDiff, splitPairs, type DiffRow } from "./logic.js";
 import { recipeStyle } from "../internal/recipe.js";
 
 /** The viewer's resting surface. */
@@ -61,12 +61,6 @@ export interface DiffViewerProps {
   readonly testId?: string;
 }
 
-/** One split row: what each side paints, `None` where a side has no line. */
-interface SplitPair {
-  readonly left: Option.Option<DiffRow>;
-  readonly right: Option.Option<DiffRow>;
-}
-
 /** The ink a line paints: the page ink, or the tone's readable role for a change. */
 const lineColor = (theme: Theme, kind: DiffRow["kind"]): string =>
   kind === "context"
@@ -94,21 +88,6 @@ const lineStyle = (
     ? {}
     : { backgroundColor: lineTint(theme, kind) }),
 });
-
-/** Pair the flat rows so a removed line sits beside the added line that follows it. */
-const splitPairs = (rows: ReadonlyArray<DiffRow>): ReadonlyArray<SplitPair> => {
-  const pairs: Array<SplitPair> = [];
-  for (const row of rows) {
-    if (row.kind === "context") {
-      pairs.push({ left: Option.some(row), right: Option.some(row) });
-    } else if (row.kind === "removed") {
-      pairs.push({ left: Option.some(row), right: Option.none() });
-    } else {
-      pairs.push({ left: Option.none(), right: Option.some(row) });
-    }
-  }
-  return pairs;
-};
 
 /** The line number a row carries on one side, or a blank cell. */
 const rowNumber = (number: Option.Option<number>): string =>
@@ -158,6 +137,7 @@ export const DiffViewer = ({
           {rows.map((row, index) => (
             <div
               key={index}
+              testId={`${testId}-row-${index}`}
               style={mergeStyles(
                 { display: "flex", flexDirection: "row" },
                 lineStyle(theme, metrics, row.kind),
@@ -196,7 +176,11 @@ export const DiffViewer = ({
       ) : (
         <div style={{ display: "flex", flexDirection: "column" }}>
           {splitPairs(rows).map((pair, index) => (
-            <div key={index} style={{ display: "flex", flexDirection: "row" }}>
+            <div
+              key={index}
+              testId={`${testId}-row-${index}`}
+              style={{ display: "flex", flexDirection: "row" }}
+            >
               {renderSide(
                 theme,
                 metrics,

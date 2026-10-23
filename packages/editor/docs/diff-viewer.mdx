@@ -23,6 +23,14 @@ import { DiffViewer } from "@gpuixui/editor";
 | `className` | `string` | — | A Tailwind class string, merged last. |
 | `style` | `StateStyle<DiffViewerState>` | — | The surface, or a function of `{ changed }`. |
 
+## Split mode
+
+`mode="split"` puts a changed line and its replacement on **one** row: a run of
+removed and added lines is zipped by index, and a side that ran out gets a blank
+cell. A one-line edit is therefore one row with the old line on the left and the
+new one on the right, not a removal and an addition stacked apart. Context rows
+pair with themselves and keep both line numbers.
+
 ## Limitations
 
 - **`O(n·m)` time and space.** The LCS table is the size of the two files, so very large files are slow.
