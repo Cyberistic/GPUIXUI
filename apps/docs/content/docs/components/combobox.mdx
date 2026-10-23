@@ -316,6 +316,8 @@ card; and the search field keeps `input`, because it is where a reader types.
   would cover the trigger. `align="center"` is measured from the trigger rather
   than the runtime's containing-block centre, and it is clamped by the 8px snap
   margin near a window edge.
+- A `side` or `align` restored from persisted state that the union does not name
+  opens the house `bottom`/`start`; it never throws out of the render.
 - **No grouping headers, and no fetch of its own.** A grouped list is a select's
   shape, not a combobox's; a remote list is the caller's, handed over through
   `onQueryChange`, `shouldFilter` and `loading` (§Remote options).

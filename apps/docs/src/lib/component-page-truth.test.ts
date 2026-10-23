@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import {
   brandText,
   contrastFloorsFor,
@@ -3652,4 +3652,103 @@ describe("the page a curated page displaces", () => {
     ).toBeGreaterThan(30);
     expect(gaps).toEqual([]);
   });
+
+  it("teaches the placement a stored side or align opens at", () => {
+    // A surface can be reopened with a `side` or `align` an application restored
+    // from persisted state — a value the union no longer names. The house rules
+    // read both through schema guards, so an unknown name opens the house
+    // `bottom`/`start` instead of reaching a `Match.exhaustive` that throws out
+    // of the render. The package pages record that for Popover, Dropdown menu
+    // and Combobox, but a curated page displaces the package page, so the rule
+    // was documented nowhere a reader of this site can reach; the Date picker
+    // forwards its own `side`/`align` into `PopoverContent`, so the same rule
+    // protects it. The page set is derived from the component's import graph
+    // reaching `internal/use-placement.ts`, not listed here: a new anchored
+    // surface joins the guard when it lands.
+    const placement = read("packages/components/src/internal/placement.ts");
+    expect(placement).toContain(
+      "const sideOf = (side: unknown): FloatingSide =>",
+    );
+    expect(placement).toContain(
+      'Schema.is(PlacementSide)(side) ? side : "bottom"',
+    );
+    expect(placement).toContain(
+      "const alignOf = (align: unknown): FloatingAlign =>",
+    );
+    expect(placement).toContain(
+      'Schema.is(PlacementAlign)(align) ? align : "start"',
+    );
+
+    const anchored = pages.filter((page) => {
+      // The page documents both as placement props (a row of its own in the
+      // API table), not merely mentions them in a limit.
+      const api = apiSection(body(page));
+      return (
+        /^\|\s*`side`\s*\|/m.test(api) &&
+        /^\|\s*`align`\s*\|/m.test(api) &&
+        reachesHousePlacement(page.source)
+      );
+    });
+    const gaps = anchored
+      .filter((page) => {
+        // Prose wraps, so the rule is read with its line breaks flattened.
+        const text = body(page).replaceAll(/\s+/g, " ");
+        return (
+          !text.includes("restored from persisted state") ||
+          !text.includes("house `bottom`/`start`") ||
+          !text.includes("never throws out of the render")
+        );
+      })
+      .map(
+        (page) =>
+          `${page.file}: does not teach the placement a stored \`side\` or \`align\` opens at`,
+      );
+
+    // The four anchored surfaces the library owns: three read the rules
+    // directly, the Date picker through the Popover it renders. A page that
+    // stops documenting `side`/`align` leaves the set and fails here, so the
+    // rule cannot quietly lose its reader.
+    expect(anchored.map((page) => page.file)).toEqual([
+      "combobox.mdx",
+      "date-picker.mdx",
+      "dropdown-menu.mdx",
+      "popover.mdx",
+    ]);
+    expect(gaps).toEqual([]);
+  });
 });
+
+/**
+ * Whether a component's module graph reaches the house placement rules.
+ *
+ * Relative imports only: the components package resolves its siblings with
+ * `./name.js` while the file on disk is `.ts`/`.tsx`, so a specifier is tried as
+ * a file and as a directory's index before it is dropped. URLs normalise the
+ * specifier, so `./` and `../` cannot send the walk down a second spelling of a
+ * module it already read.
+ */
+const reachesHousePlacement = (entry: string): boolean => {
+  const house = new URL(
+    "packages/components/src/internal/use-placement.ts",
+    root,
+  ).href;
+  const pending = [new URL(entry, root)];
+  const seen = new Set<string>();
+  while (pending.length > 0) {
+    const url = pending.pop();
+    if (url === undefined || seen.has(url.href)) continue;
+    seen.add(url.href);
+    if (url.href === house) return true;
+    for (const match of readFileSync(url, "utf8").matchAll(
+      /from\s+"(\.[^"]+)"/g,
+    )) {
+      const target = new URL(match[1] ?? "", url);
+      const stem = target.href.replace(/\.js$/, "");
+      const resolved = [".ts", ".tsx", "/index.ts", "/index.tsx"]
+        .map((suffix) => new URL(`${stem}${suffix}`))
+        .find((candidate) => existsSync(candidate));
+      if (resolved !== undefined) pending.push(resolved);
+    }
+  }
+  return false;
+};

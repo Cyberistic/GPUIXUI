@@ -218,6 +218,8 @@ dialog** when the action cannot be undone.
   both sides can still cover its trigger, and `align="center"` is clamped by the
   snap margin near a window edge.
 - Type-ahead is a prefix match with no fuzzy scoring.
+- A `side` or `align` restored from persisted state that the union does not name
+  opens the house `bottom`/`start`; it never throws out of the render.
 - The preview above is a browser reproduction: it follows the same focus,
   highlight and dismissal rules, but the shipped component runs through GPUix.
 

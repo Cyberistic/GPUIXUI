@@ -234,6 +234,10 @@ density scale.
 - The trigger publishes `aria-expanded` only. `0.11.0` has no `aria-haspopup`, and
   the floating surface carries no dialog role, so the named grid is the region a
   reader lands in rather than a named dialog.
+- A `side` or `align` restored from persisted state that the union does not name
+  opens the house `bottom`/`start`; the content forwards both into the popover's
+  placement, which reads them through the house guards, so it never throws out of
+  the render.
 - **Fixed English labels.** The repo has no i18n layer; month and weekday names
   are strings in `date-picker/calendar.ts`. Wiring a locale means a real message
   catalogue, not a prop that silently does nothing.

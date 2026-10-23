@@ -639,13 +639,13 @@ still print the identity's roles; `theme-editor-logic.test.ts` holds the pins to
 the base in both directions and keeps the persistence boundary (`parseState`)
 rejecting a pinned value the renderer cannot paint.
 
-The readout under the preview is the whole audit, not a contrast check: all eleven
+The readout under the preview is the whole audit, not a contrast check: all twelve
 `auditTheme` reports are flattened into one list (`auditFindings`), each worded
 for a reader, because a theme that paints a divider into itself, drops a `NaN`
 radius, erases a disabled label or hides a chart series is still broken and none
 of those is a text pair. The page prints the number as a word derived from the
-gate's own keys, so an eleventh report cannot land while `/docs/themes` promises
-ten, and every report has a case in `theme-editor-logic.test.ts` — the cases for
+gate's own keys, so a thirteenth report cannot land while `/docs/themes` promises
+eleven, and every report has a case in `theme-editor-logic.test.ts` — the cases for
 the reports no contrast pair covers also prove the colour reports stay silent on
 that brand, so only the new line can fail the gate.
 
@@ -737,7 +737,15 @@ slots, the trigger's button props and the surface's `alignOffset`, so none of
 them could be found from the page a reader lands on.
 `component-page-truth.test.ts` derives the displaced set from the two folders
 (a new collision fails until it is named) and requires every prop the displaced
-page documents to be named in the curated page's API section. The same file
+page documents to be named in the curated page's API section. A displaced page
+can carry a **rule** as well as a prop: the anchored surfaces read a stored
+`side`/`align` through the house guards, so a name the union no longer carries
+opens `bottom`/`start` instead of throwing out of the render. The package pages
+recorded it and the curated Popover, Dropdown menu and Combobox pages — the
+pages the site actually serves — did not; the case now derives every curated
+page whose API documents both props and whose component's import graph reaches
+`internal/use-placement.ts` (the Date picker forwards into `PopoverContent`) and
+requires the rule on each. The same file
 holds the Status section to **both** words of its inventory row — the status and
 the runtime support verdict — so a page cannot drop `partial` and read as a
 component the runtime covers whole.

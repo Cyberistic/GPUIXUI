@@ -10010,7 +10010,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 261/261
+`[x]` `[██████████]` 262/262
 
 `[x]` Print the **tint share the tokens sweep measures**, not the pre-Omarchy
       pair — the curated Alert page taught the `AlertLink` rule with "under the
@@ -13816,6 +13816,30 @@ fails the case by name; restored, the file is 44/44 and
       that does not name it).
 
 `[x]` `packages/primitives`: **a `Select` was the one focusable control with no address and no announced help** — the pass that gave every other control a `ref`/`aria-id`/`onLayout` and `description` → `aria-description` skipped `Select`, whose `SelectProps` extended only the value channel: a form could not focus the select it failed on, an automation host could not address it, a layout could not measure it, and a visible `Label`'s help line reached nobody (0.11.0 has no `aria-describedby`). The four props now land on the **trigger** — the one focusable element and the node that already carries the combobox role, name, open state and choice — with a blank `description` publishing nothing, the same name rule every control follows. Proof: `src/components/Select.test.tsx` gains `gives the trigger the address and help a form owns` (the four props on the trigger, blank description absent), measured failing at HEAD with the first `Option.none()` (`expected { _id: 'Option', _tag: 'None' } to strictly equal … Some`); `runtime/address.runtime.test.tsx` mounts a select and reads its help, author id and ref off the runtime's own a11y tree and element, measured failing at HEAD with `expected undefined to be 'Pick a fruit to ship.'`, `expected undefined to be 'fruit-trigger-id'` and `expected undefined to be 73` for the ref. Restored: the package is 56 files / 1 074 tests green, `check-types` clean, and the window suite 3/3. Docs: the `select.mdx` API table names `description` and `ref`/`aria-id`/`onLayout` and says the trigger is the addressed element, and the `COMPONENTS.md` Selects row records the channel. No playground scenario applies — the native proof is the package's own window suite (`runtime/address.runtime.test.tsx`).
+
+`[x]` Teach the **placement a stored `side` or `align` opens at** on the curated
+      anchored-surface pages — `310fffd5` made the house rules read both through
+      `Schema.is` guards (an unknown name is the house `bottom`/`start`, never a
+      `Match.exhaustive` that throws out of the render) and recorded the rule on
+      the *package* pages for Popover, Dropdown menu and Combobox — which the
+      curated pages displace, so the site a reader lands on taught it nowhere;
+      the Date picker forwards its own `side`/`align` into `PopoverContent`, so
+      the same rule protects it and its page never said so either. The four
+      curated pages' Accessibility-and-limitations lists now carry the sentence
+      (the date picker's names the forwarding). `component-page-truth.test.ts`
+      gains `teaches the placement a stored side or align opens at`: it reads
+      the two guards and both house defaults out of `internal/placement.ts`,
+      derives the curated pages whose **API table** documents both props and
+      whose component's relative import graph reaches
+      `internal/use-placement.ts` (URL-normalised, so a module cannot be read
+      under two spellings), requires the rule on each, and pins the derived set
+      to the four anchored surfaces so a new one cannot land untaught. Directions
+      measured: deleting the Popover bullet fails with `popover.mdx: does not
+      teach the placement a stored side or align opens at`, and deleting
+      the Date picker's two API rows drops it from the set and fails the pinned
+      list; restored, the file is 56/56 and `nub run --filter @gpuixui/docs
+      check-types` is clean. No native scenario applies — a source seam and the
+      pages that teach it.
 
 ## Swarm-owned blockers (fix these)
 
