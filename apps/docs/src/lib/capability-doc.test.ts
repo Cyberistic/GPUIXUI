@@ -1592,6 +1592,124 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("maxWidth");
   });
 
+  it("records the thumb a scroller paints, derived from its fixture", () => {
+    // The record called scrolling supported on the strength of the offsets and
+    // events, and said nothing about the bar a reader actually sees.
+    // `scrollbar-thumb` painted it, and the numbers below are derived from the
+    // probe's own constants, so neither file can teach a length the window no
+    // longer paints. The bug this guards: the share is a length, not a bar —
+    // 1 000px of content is a thumb, 10 000px is still a target a reader can
+    // find, and content that fits is no affordance at all.
+    const fixture = read("apps/playground/src/live/scrollbar.ts");
+    const block = (name: string): string =>
+      new RegExp(
+        `export const ${name}: ScrollbarCase = \\{([\\s\\S]*?)\\n\\};`,
+      ).exec(fixture)?.[1] ?? "";
+    const field = (source: string, key: string): number =>
+      Number(
+        new RegExp(`${key}: ([\\d_]+)`)
+          .exec(source)?.[1]
+          ?.replaceAll("_", "") ?? Number.NaN,
+      );
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d_]+);`)
+          .exec(fixture)?.[1]
+          ?.replaceAll("_", "") ?? Number.NaN,
+      );
+
+    const track = Number(
+      /height: ([\d_]+)/
+        .exec(
+          /export const SCROLLBAR_VIEWPORT = \{([^}]*)\}/.exec(fixture)?.[1] ??
+            "",
+        )?.[1]
+        ?.replaceAll("_", "") ?? Number.NaN,
+    );
+    const min = constant("SCROLLBAR_MIN_THUMB");
+    const floorContent = constant("SCROLLBAR_FLOOR_CONTENT");
+    const wheel = constant("SCROLLBAR_SCROLLED_BY");
+    const defaultWidth = constant("SCROLLBAR_DEFAULT_WIDTH");
+    const tinted = field(block("SCROLLBAR_TINTED"), "content");
+    const wide = field(block("SCROLLBAR_WIDE"), "content");
+    const short = field(block("SCROLLBAR_SHORT"), "content");
+
+    // The premises: the cases are ordered by content, and the floor case is
+    // longer than the track could ever share.
+    expect(track).toBeGreaterThan(0);
+    expect(min).toBeGreaterThan(0);
+    expect(tinted).toBeGreaterThan(wide);
+    expect(wide).toBeGreaterThan(short);
+
+    const maxScroll = (content: number): number =>
+      Math.max(0, content - track);
+    const rule = (content: number): number => {
+      const max = maxScroll(content);
+      if (max <= 0) return 0;
+      return Math.round(
+        Math.min(
+          Math.max((track * track) / (track + max), Math.min(min, track)),
+          track,
+        ),
+      );
+    };
+    /** The probe counts the painted tint, and the rounded cap loses its point. */
+    const painted = (content: number): number => rule(content) - 1;
+    const startAt = (offset: number): number => {
+      const max = maxScroll(tinted);
+      return Math.round(
+        Math.min(Math.max(-offset / max, 0), 1) * (track - rule(tinted)),
+      );
+    };
+
+    const endOffset = -maxScroll(tinted);
+    const moved = startAt(-wheel);
+    const end = startAt(endOffset);
+    const bottom = track - 1;
+
+    expect(moved).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(moved);
+    expect(rule(floorContent)).toBe(Math.min(min, track));
+    expect(rule(short)).toBe(0);
+
+    const row = rowFor("Scrollbar thumb");
+    expect(row?.verdict).toBe("supported");
+    expect(row?.evidence).toContain("scrollbar-thumb");
+    expect(row?.evidence).toContain(`**${painted(tinted)}**`);
+    expect(row?.evidence).toContain(`**${rule(tinted)}**`);
+    expect(row?.evidence).toContain(`**${painted(wide)}**`);
+    expect(row?.evidence).toContain(`**${rule(wide)}**`);
+    expect(row?.evidence).toContain(`**${painted(floorContent)}**`);
+    expect(row?.evidence).toContain(`**${rule(floorContent)}**`);
+    expect(row?.evidence).toContain(`**${min}**`);
+    expect(row?.evidence).toContain(`**${moved}**`);
+    expect(row?.evidence).toContain(`**${end}**`);
+    expect(row?.evidence).toContain(`**${bottom}**`);
+    expect(row?.evidence).toContain(`**${track}**`);
+    expect(row?.evidence).toContain(`**${defaultWidth}**`);
+    expect(row?.evidence).toContain("paints **none**");
+    expect(row?.workaround).toContain("a bar of your own");
+
+    const page = measuredRow("Scrollbar thumb");
+    expect(
+      page,
+      "the page's measured table has no scrollbar-thumb row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("scrollbar-thumb");
+    expect(page?.[1]).toContain(`**${painted(tinted)}**`);
+    expect(page?.[1]).toContain(`**${rule(tinted)}**`);
+    expect(page?.[1]).toContain(`**${painted(wide)}**`);
+    expect(page?.[1]).toContain(`**${painted(floorContent)}**`);
+    expect(page?.[1]).toContain(`**${rule(floorContent)}**`);
+    expect(page?.[1]).toContain(`**${moved}**`);
+    expect(page?.[1]).toContain(`**${end}**`);
+    expect(page?.[1]).toContain(`**${bottom}**`);
+    expect(page?.[1]).toContain(`**${track}**`);
+    expect(page?.[1]).toContain(`**${defaultWidth}**`);
+    expect(page?.[1]).toContain("paints **none**");
+    expect(page?.[2]).toContain("a bar of your own");
+  });
+
   it("records the box an image occupies, derived from its fixture", () => {
     // An image is the one element whose intrinsic ratio the runtime owns, and
     // the record taught the four sources an `<img>` can paint from without
