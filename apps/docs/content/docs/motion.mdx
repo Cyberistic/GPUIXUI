@@ -211,14 +211,18 @@ export const halfway = sampleKeyframes(offsets, 0.5);
 export const delayAt = (index: number) => stagger(20, index, 3, "center");
 ```
 
-Frames must be sorted ascending by `at`. `t <= first.at` returns the first value
-and `t >= last.at` the last, so the ends do not extrapolate; between two frames
-the **upper** frame's easing shapes the segment that ends at it. `stagger(stepMs,
-index, count, from?)` returns a delay from `start`, `end` or `center`. A `from`
-the package does not name is the house `start`, not the centre: an unreadable
-value used to fall through the distance arithmetic to the centre — the longest
-wait — so a hand-built config that never decoded its `from` started its group
-later than a caller who wrote nothing meant.
+Frames are read by the offsets they name, not by the order they were declared —
+a list built from a map interpolates through the journey it describes — and two
+frames at one offset are an instant jump, with the value declared last at it in
+effect from that offset on. A progress below the lowest offset returns that
+frame's value and one above the highest returns its value, so the ends do not
+extrapolate; between two frames the **upper** frame's easing shapes the segment
+that ends at it. `stagger(stepMs, index, count, from?)` returns a delay from
+`start`, `end` or `center`. A `from` the package does not name is the house
+`start`, not the centre: an unreadable value used to fall through the distance
+arithmetic to the centre — the longest wait — so a hand-built config that never
+decoded its `from` started its group later than a caller who wrote nothing
+meant.
 
 A frame whose `at` or `value` cannot be read **is not a stop**: `sampleKeyframes`
 drops it before sampling, so the segment spans its readable neighbours instead

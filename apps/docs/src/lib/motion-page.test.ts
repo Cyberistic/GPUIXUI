@@ -259,6 +259,16 @@ describe("the motion page", () => {
     expect(pageText).toContain("a list with no readable frame samples `0`");
     expect(pageText).toContain("**completed on the first sample**");
     expect(pageText).toContain("is no wait rather than a `NaN` delay");
+
+    // The order of a frame list is not a caller's obligation: the sample reads
+    // the stops the offsets name, so a set decoded from a map interpolates
+    // rather than answering its first-declared frame for the span below it.
+    expect(pageText).toContain("not by the order they were declared");
+    expect(pageText).toContain("an instant jump");
+    expect(pageText).not.toContain("sorted ascending");
+    expect(timeline).not.toContain("sorted ascending");
+    expect(timeline).toContain("const lowerStop = (");
+    expect(timeline).toContain("const upperStop = (");
   });
 
   it("places the unrepresentable rest in the sampler that projects it", () => {
@@ -307,9 +317,7 @@ describe("the motion page", () => {
     // physics, so the page has to teach the repair where a reader builds one
     // by hand rather than leaving it in the constructor's paragraph.
     expect(spring).toContain("const physicsOf = (");
-    expect(spring).toContain(
-      "fields: SpringPhysicsParams | null | undefined,",
-    );
+    expect(spring).toContain("fields: SpringPhysicsParams | null | undefined,");
     expect(spring).toContain("): SpringPhysics => ({");
     expect(spring).toContain("const rest = physicsOf(physics);");
     expect(spring).toContain(

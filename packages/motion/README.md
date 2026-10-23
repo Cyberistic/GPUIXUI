@@ -243,7 +243,12 @@ spring samples as the built one does.
 
 A timeline is repaired at the value the caller supplies: a keyframe whose offset
 or value cannot be read is not a stop (it is dropped, and a set with none answers
-`0`), a `Sequence` step whose start cannot be read is placed at `0`, and a
+`0`), a set is read by the offsets its frames name rather than by the order they
+were declared — a list built from a map interpolates through the journey it
+describes, where reading the first and last entries as the ends made the frame
+declared first answer for every progress below its offset — two frames at one
+offset are an instant jump, so the value declared last at it holds from that
+offset on, a `Sequence` step whose start cannot be read is placed at `0`, and a
 duration it cannot run is no duration at all — the step is completed on the
 first sample, and the sequence's own end never lands before a step it still has
 to run. A stagger step that is non-finite or negative is no wait, and both

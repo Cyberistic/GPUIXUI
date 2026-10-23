@@ -66,6 +66,33 @@ describe("sampleKeyframes", () => {
     expect(sampleKeyframes(frames, Number.NaN)).toBe(10);
     expect(sampleKeyframes(frames, Number.POSITIVE_INFINITY)).toBe(20);
   });
+
+  it("samples the stops a list names, in whatever order it declared them", () => {
+    // The bug this guards: the sampler read the **first and last entries** of
+    // the list as its ends, so a set built from a map — where the offsets arrive
+    // in the source's key order, not ascending — answered the frame declared
+    // first for every progress below its offset. These three frames describe the
+    // same journey as `[0.2 → 0, 0.8 → 1]`; declared in this order the sample
+    // used to answer `1` everywhere below `0.8`.
+    const frames = [keyframe(0.8, 1), keyframe(0.2, 0)];
+    expect(sampleKeyframes(frames, 0.1)).toBe(0);
+    expect(sampleKeyframes(frames, 0.5)).toBeCloseTo(0.5, 6);
+    expect(sampleKeyframes(frames, 0.9)).toBe(1);
+    // A third stop declared out of order keeps its own segment.
+    const three = [keyframe(0.5, 40), keyframe(0, 0), keyframe(1, 100)];
+    expect(sampleKeyframes(three, 0.25)).toBe(20);
+    expect(sampleKeyframes(three, 0.75)).toBe(70);
+  });
+
+  it("changes over at an offset two frames share, holding the last value", () => {
+    // A repeated offset is an instant jump: from that offset on the value
+    // declared last at it is in effect. The sampler used to return the **first**
+    // declaration at the shared offset for the whole span after it.
+    const frames = [keyframe(0.5, 1), keyframe(0.5, 3), keyframe(1, 5)];
+    expect(sampleKeyframes(frames, 0.25)).toBe(1);
+    expect(sampleKeyframes(frames, 0.5)).toBe(3);
+    expect(sampleKeyframes(frames, 0.75)).toBe(4);
+  });
 });
 
 describe("stagger", () => {

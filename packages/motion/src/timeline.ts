@@ -57,14 +57,62 @@ const stopsOf = (frames: readonly Keyframe[]): ReadonlyArray<Keyframe> =>
     (frame) => Number.isFinite(frame.at) && Number.isFinite(frame.value),
   );
 
+/** The stop the set starts at: the least offset, the first declared at it. */
+const firstStop = (stops: ReadonlyArray<Keyframe>): Keyframe =>
+  stops.reduce((first, frame) => (frame.at < first.at ? frame : first));
+
 /**
- * Samples sorted keyframes at unit progress, interpolating between the
- * surrounding keyframes and applying the upper keyframe's easing. Frames must be
- * sorted ascending by `at`. A progress that is not a number reads as `0`, a
- * frame whose offset or value cannot be read is dropped rather than becoming the
- * segment's endpoint — an unreadable stop would make every value between it and
- * its neighbour `NaN`, which the runtime paints as nothing — and a curve that
- * cannot read the segment falls back to its linear progress.
+ * The stop in effect at `progress`: the last frame declared at the greatest
+ * offset at or below it.
+ *
+ * The later declaration wins among frames sharing an offset because that is how
+ * a keyframe format reads a repeated stop — an instant jump at it — and the
+ * sample below lands on this frame's value exactly at the offset.
+ */
+const lowerStop = (
+  stops: ReadonlyArray<Keyframe>,
+  progress: number,
+): Keyframe | undefined =>
+  stops.reduce<Keyframe | undefined>(
+    (lower, frame) =>
+      frame.at > progress
+        ? lower
+        : lower === undefined || frame.at >= lower.at
+          ? frame
+          : lower,
+    undefined,
+  );
+
+/** The stop the segment ends at: the first frame declared above `progress`. */
+const upperStop = (
+  stops: ReadonlyArray<Keyframe>,
+  progress: number,
+): Keyframe | undefined =>
+  stops.reduce<Keyframe | undefined>(
+    (upper, frame) =>
+      frame.at <= progress || (upper !== undefined && frame.at >= upper.at)
+        ? upper
+        : frame,
+    undefined,
+  );
+
+/**
+ * Samples a set of keyframes at unit progress, interpolating between the stops
+ * around it and applying the upper stop's easing.
+ *
+ * The frames are read as a **set of stops**, not as the order they were
+ * declared: a caller who builds them from a map or a decoded config hands them
+ * over in whatever order the source iterates, and reading the first and last
+ * entries as the ends made one frame declared first answer for every progress
+ * below its offset — a step function instead of the journey the frames describe.
+ * Two frames at one offset are an instant jump, the way a keyframe format reads
+ * them: from that offset on the value declared last at it is in effect.
+ *
+ * A progress that is not a number reads as `0`, a frame whose offset or value
+ * cannot be read is dropped rather than becoming the segment's endpoint — an
+ * unreadable stop would make every value between it and its neighbour `NaN`,
+ * which the runtime paints as nothing — and a curve that cannot read the segment
+ * falls back to its linear progress.
  */
 export const sampleKeyframes = (
   frames: readonly Keyframe[],
@@ -73,18 +121,11 @@ export const sampleKeyframes = (
   const stops = stopsOf(frames);
   if (stops.length === 0) return 0;
   const t = clamp01(progress);
-  const first = stops[0];
-  const last = stops[stops.length - 1];
-  if (first === undefined || last === undefined) return 0;
-  if (t <= first.at) return first.value;
-  if (t >= last.at) return last.value;
+  const lo = lowerStop(stops, t);
+  if (lo === undefined) return firstStop(stops).value;
+  const hi = upperStop(stops, t);
+  if (hi === undefined) return lo.value;
 
-  const upper = stops.findIndex((frame) => frame.at >= t);
-  const hi = stops[upper];
-  const lo = stops[upper - 1];
-  if (lo === undefined || hi === undefined || hi.at === lo.at) {
-    return hi?.value ?? lo?.value ?? 0;
-  }
   const local = (t - lo.at) / (hi.at - lo.at);
   const easing = hi.easing ?? linear;
   return mix(lo.value, hi.value, eased(easing, local));
