@@ -763,7 +763,15 @@ a step — or a whole numeric group — and names the path (`typography.codeBloc
 asks every font family to name a face, because `sans: ""` is present but paints
 the renderer's fallback for every text role instead of the face the theme states.
 The required steps are derived from the scales the package ships, so a role or
-metric added to one is required on the next release.
+metric added to one is required on the next release. All three lists are available
+**before** the refusal as `missingTokens`: called with a theme, it returns
+`{ group, path, kind }` entries, with a group named once and a step once rather
+than once per field, so
+a caller deciding whether to restore a stored theme reads the absence as data
+instead of catching the gate's error; `auditTheme` builds its messages from the
+same list, so the report and the error cannot drift. An additive absence (a
+colour role, an elevation level) is not in it: that is a report and a failing
+gate.
 
 A store hands back `null` where the theme had no value — JSON has no
 `undefined` — and the suite reads that as the absence it is: the measuring seam

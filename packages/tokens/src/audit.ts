@@ -82,29 +82,6 @@ type NumericGroupSource = {
   readonly [group in (typeof numericGroups)[number]]?: unknown;
 };
 
-/**
- * Refuse a theme that is missing a numeric group, naming it.
- *
- * A stored theme is decoded or cast, so the type cannot catch this: without the
- * guard the first report reads `Object.entries(undefined)` and the consumer sees
- * `TypeError: Cannot convert undefined or null to object` with no hint which
- * group their release lost. Throwing is deliberate — this is an invariant of the
- * gate's input rather than a theme state the reports can describe.
- */
-const requireGroups = (theme: NumericGroupSource): void => {
-  const missing = numericGroups.filter((group) => theme[group] === undefined);
-  if (missing.length === 0) {
-    return;
-  }
-  throw new Error(
-    `a theme must carry every numeric group: ${missing
-      .map((group) => `\`${group}\``)
-      .join(", ")} ${
-      missing.length === 1 ? "is" : "are"
-    } missing. A group is a breaking change, so a theme stored by an older release must be rebuilt from a shipped one with \`extendTheme\`.`,
-  );
-};
-
 /** One token a numeric group must carry: `spacing.md`, `typography.body`. */
 interface RequiredStep {
   /** The group it lives in. */
@@ -166,58 +143,141 @@ const readPath = (source: unknown, path: string): unknown =>
         isRecord(value) && key in value ? value[key] : undefined,
       source,
     );
+/**
+ * Why a numeric part of a theme is absent: a whole group, a step inside one, or
+ * a family that is present but names no face.
+ */
+export type MissingTokenKind = "group" | "step" | "family";
 
 /**
- * Refuse a theme that is missing a step of a group it carries, naming every
- * path — and a family that is present but blank.
+ * A numeric part a theme does not carry.
  *
- * The group rule one level up covers a stored theme that predates a whole scale;
- * this covers the theme that predates a step inside it, which fails the same way:
- * `textStyle(theme, "codeBlock")` reads `typography.codeBlock.fontSize`, so an
- * absent role is a `TypeError` at the first paint that asks for it, and an absent
- * `lineHeight` is a property the serialised batch drops, so the role paints at
- * the runtime's leading. Neither is a report — `invalidNumbers` walks the steps a
- * theme carries, so it returns nothing for a step that is not there — which is
- * why the gate refuses the theme instead of passing it. An absent role is named
- * once, rather than once per field it would have carried.
- *
- * A family is a **name**, so the same rule covers the one way a present step can
- * still carry nothing: `sans: ""` is what a design-tool export or a stored
- * preference writes when the face is gone, and the runtime then paints its own
- * fallback for every text role — the identity a theme exists to state, gone with
- * every report empty. The refusal names the family, because "empty" is not a
- * colour or a number a report could measure.
+ * The three kinds are the three refusals {@link auditTheme} makes, because they
+ * are the three absences no report can describe: a report walks what a theme
+ * carries, and a component reads these by name.
  */
-const requireSteps = (theme: NumericGroupSource): void => {
-  const missing = requiredSteps.flatMap(({ group, path, fields }) => {
+export interface MissingToken {
+  /** The group it belongs to, so a failure names the scale that is incomplete. */
+  readonly group: (typeof numericGroups)[number];
+  /**
+   * Its path inside that group — `md` for `spacing.md`, `body.lineHeight` for
+   * `typography.body.lineHeight`, `sans` for a blank `typography.sans` — and an
+   * empty string when the whole group is what is missing.
+   */
+  readonly path: string;
+  /** What is absent: the group, a step in it, or the name a family would state. */
+  readonly kind: MissingTokenKind;
+}
+
+/**
+ * Every numeric part a theme does not carry, as data.
+ *
+ * This is the list {@link auditTheme} refuses a theme over, before the refusal:
+ * a stored theme is decoded or cast, so the type cannot say whether it predates
+ * a scale, a step or a family this release ships, and a caller deciding whether
+ * to restore it — or which release it came from — reads the absence instead of
+ * catching the gate's error. A group the theme does not carry is named **once**:
+ * none of its steps exists to name, so listing them would bury the one decision
+ * the reader has to make. A step is named once too, rather than once per field
+ * it would have carried.
+ *
+ * An **additive** absence is not here: a colour role or an elevation level a
+ * theme lost is a report (`invalidColorRoles`, `invalidShadowColors`) and a
+ * failing gate, because the runtime can paint the rest. Only a numeric group, a
+ * step inside one and a blank family are refusals, because every component reads
+ * them by name.
+ *
+ * @example
+ * ```ts
+ * import { lightTheme, missingTokens } from "@gpuixui/tokens";
+ *
+ * missingTokens(lightTheme); // [] — a shipped theme carries every part
+ * const stored = JSON.parse(fromStorage) as typeof lightTheme;
+ * missingTokens(stored);
+ * // [
+ * //   { group: "density", path: "rowHeight", kind: "step" },
+ * //   { group: "typography", path: "sans", kind: "family" },
+ * // ]
+ * ```
+ */
+export function missingTokens(
+  theme: NumericGroupSource,
+): readonly MissingToken[] {
+  const carries = (group: MissingToken["group"]): boolean =>
+    theme[group] !== undefined;
+  const groups = numericGroups
+    .filter((group) => !carries(group))
+    .map((group): MissingToken => ({ group, path: "", kind: "group" }));
+  const steps = requiredSteps.flatMap(({ group, path, fields }) => {
+    if (!carries(group)) {
+      return [];
+    }
     const step = readPath(theme[group], path);
     if (step === undefined) {
-      return [`${group}.${path}`];
+      return [{ group, path, kind: "step" as const }];
     }
     return (fields ?? [])
       .filter((field) => readPath(step, field) === undefined)
-      .map((field) => `${group}.${path}.${field}`);
+      .map((field) => ({
+        group,
+        path: `${path}.${field}`,
+        kind: "step" as const,
+      }));
   });
-  if (missing.length > 0) {
+  const families = requiredSteps.flatMap(({ group, path, family }) => {
+    if (family !== true || !carries(group)) {
+      return [];
+    }
+    const value = readPath(theme[group], path);
+    // An absent family is the step rule's; this is the one a store wrote as a
+    // present but empty name.
+    return value === undefined ||
+      (typeof value === "string" && value.trim() !== "")
+      ? []
+      : [{ group, path, kind: "family" as const }];
+  });
+  return [...groups, ...steps, ...families];
+}
+
+/** The dotted names of missing parts, as the gate's message prints them. */
+const tokenNames = (missing: readonly MissingToken[]): string =>
+  missing
+    .map(({ group, path }) => `\`${path === "" ? group : `${group}.${path}`}\``)
+    .join(", ");
+
+/**
+ * Refuse a theme that is missing a numeric part, naming it.
+ *
+ * A stored theme is decoded or cast, so the type cannot catch this: without the
+ * guard the first report reads `Object.entries(undefined)` and the consumer sees
+ * `TypeError: Cannot convert undefined or null to object` with no hint which
+ * group their release lost. Throwing is deliberate — this is an invariant of the
+ * gate's input rather than a theme state the reports can describe — and the same
+ * three lists are readable without the throw through {@link missingTokens}.
+ */
+const requireTokens = (theme: NumericGroupSource): void => {
+  const missing = missingTokens(theme);
+  const groups = missing.filter(({ kind }) => kind === "group");
+  if (groups.length > 0) {
     throw new Error(
-      `a theme must carry every numeric step: ${missing
-        .map((path) => `\`${path}\``)
-        .join(", ")} ${
-        missing.length === 1 ? "is" : "are"
+      `a theme must carry every numeric group: ${tokenNames(groups)} ${
+        groups.length === 1 ? "is" : "are"
+      } missing. A group is a breaking change, so a theme stored by an older release must be rebuilt from a shipped one with \`extendTheme\`.`,
+    );
+  }
+  const steps = missing.filter(({ kind }) => kind === "step");
+  if (steps.length > 0) {
+    throw new Error(
+      `a theme must carry every numeric step: ${tokenNames(steps)} ${
+        steps.length === 1 ? "is" : "are"
       } missing. A step is what the components read, so a theme stored by an older release must be rebuilt from a shipped one with \`extendTheme\`.`,
     );
   }
-  const unnamed = requiredSteps.flatMap(({ group, path, family }) => {
-    const value = readPath(theme[group], path);
-    const named = typeof value === "string" && value.trim() !== "";
-    return family === true && !named ? [`${group}.${path}`] : [];
-  });
-  if (unnamed.length > 0) {
+  const families = missing.filter(({ kind }) => kind === "family");
+  if (families.length > 0) {
     throw new Error(
-      `a theme must name every font family: ${unnamed
-        .map((path) => `\`${path}\``)
-        .join(", ")} ${
-        unnamed.length === 1 ? "is" : "are"
+      `a theme must name every font family: ${tokenNames(families)} ${
+        families.length === 1 ? "is" : "are"
       } blank. A family is the face every text role is laid out in, so an empty one paints the renderer's fallback instead of the theme — a theme stored without it must be rebuilt from a shipped one with \`extendTheme\`.`,
     );
   }
@@ -297,7 +357,9 @@ export interface ThemeAudit {
  * it is present but **blank**, so no report can measure it, while every text
  * role paints the renderer's fallback instead of the face the theme names. Such
  * a theme must be rebuilt from a shipped one: a step is a breaking change rather
- * than an additive one.
+ * than an additive one. All three lists are readable **before** the refusal with
+ * {@link missingTokens}, so a caller deciding whether to restore a stored theme
+ * reads the absence as data instead of catching this function's error.
  *
  * `passed` is the only passing result — a report nobody checked is not a pass.
  *
@@ -318,8 +380,7 @@ export function auditTheme(
     NumberSource,
   floors: ContrastFloors = contrastFloorsFor(theme),
 ): ThemeAudit {
-  requireGroups(theme);
-  requireSteps(theme);
+  requireTokens(theme);
   const invalidRoles = invalidColorRoles(theme);
   const invalidShadows = invalidShadowColors(theme);
   const numbers = invalidNumbers(theme);

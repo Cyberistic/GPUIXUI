@@ -42,6 +42,7 @@ import {
   isPaintableColor,
   lightElevation,
   lightTheme,
+  missingTokens,
   platformNames,
   platformTheme,
   retroNames,
@@ -452,6 +453,147 @@ describe("an absent numeric step", () => {
     expect(catalogue).toContain("`typography.codeBlock`");
     expect(catalogue).toContain("`density.controlHeight.sm`");
     expect(designSystem).toContain("every numeric step");
+  });
+});
+
+/**
+ * The bug this holds: the three refusals above were **only** a throw. A caller
+ * holding a theme a store handed back had no way to ask *whether* it predates a
+ * scale, a step or a family without calling `auditTheme` and catching its
+ * `Error` — which the house rules forbid in Effect code, and which turns a
+ * decision about restoring a theme into control flow through an exception. The
+ * lists existed inside `requireGroups`/`requireSteps`, so the knowledge was
+ * there and unreadable.
+ *
+ * The decision: absence is **data first**, the refusal second. `missingTokens`
+ * returns the three lists — a group named once (none of its steps exists to
+ * name), a step named once (not once per field), and a family that is present
+ * but blank — and `auditTheme` builds its three messages from the same list, so
+ * the report and the error cannot drift. An additive absence (a colour role, an
+ * elevation level) stays out: it is a report and a failing gate, not a refusal.
+ */
+describe("the parts a theme lost, as data", () => {
+  it("names a whole group once, without the steps inside it", () => {
+    const stored = omit(lightTheme, "typography");
+
+    expect(missingTokens(stored)).toEqual([
+      { group: "typography", path: "", kind: "group" },
+    ]);
+  });
+
+  it("names every group it lost, in scale order", () => {
+    const stored = omit(omit(lightTheme, "density"), "radius");
+
+    expect(missingTokens(stored)).toEqual([
+      { group: "radius", path: "", kind: "group" },
+      { group: "density", path: "", kind: "group" },
+    ]);
+  });
+
+  it("names a step and a field the theme lost, once each", () => {
+    const stored = {
+      ...lightTheme,
+      spacing: omit(lightTheme.spacing, "md"),
+      typography: {
+        ...lightTheme.typography,
+        body: omit(lightTheme.typography.body, "lineHeight"),
+      },
+    };
+
+    expect(missingTokens(stored)).toEqual([
+      { group: "spacing", path: "md", kind: "step" },
+      { group: "typography", path: "body.lineHeight", kind: "step" },
+    ]);
+  });
+
+  it("tells a family a store wrote blank from one it lost", () => {
+    const blank = {
+      ...lightTheme,
+      typography: { ...lightTheme.typography, sans: "  " },
+    };
+    const absent = {
+      ...lightTheme,
+      typography: omit(lightTheme.typography, "sans"),
+    };
+
+    expect(missingTokens(blank)).toEqual([
+      { group: "typography", path: "sans", kind: "family" },
+    ]);
+    // A family that is gone is the step rule's, not a second finding.
+    expect(missingTokens(absent)).toEqual([
+      { group: "typography", path: "sans", kind: "step" },
+    ]);
+  });
+
+  it("reads every shipped style and preset as whole", () => {
+    const presets = densityNames.map((density) =>
+      extendTheme(lightTheme, { density }),
+    );
+    const incomplete = [...shipped, ...presets].filter(
+      (theme) => missingTokens(theme).length > 0,
+    );
+
+    expect(incomplete.map(({ name }) => name)).toEqual([]);
+  });
+
+  it("leaves an additive absence to the reports", () => {
+    // The report is about the parts a component reads by name; a role or a level
+    // a theme lost is a measured absence with a failing gate, not a refusal.
+    const additive = {
+      ...lightTheme,
+      colors: colorsWithout(lightTheme, "primary"),
+      elevation: elevationWithout(lightTheme, "md"),
+    };
+
+    expect(missingTokens(additive)).toEqual([]);
+    expect(auditTheme(additive).passed).toBe(false);
+  });
+
+  it("agrees with the refusal, path for path", () => {
+    const broken: ReadonlyArray<readonly [string, Theme]> = [
+      ["a group", stored({ typography: undefined })],
+      ["two groups", stored({ radius: undefined, iconSize: undefined })],
+      ["a step", stored({ spacing: omit(lightTheme.spacing, "2xs") })],
+      [
+        "a field",
+        stored({
+          typography: {
+            ...lightTheme.typography,
+            h1: omit(lightTheme.typography.h1, "fontSize"),
+          },
+        }),
+      ],
+      [
+        "a blank family",
+        stored({ typography: { ...lightTheme.typography, mono: "" } }),
+      ],
+    ];
+
+    const drift = broken.flatMap(([label, theme]) => {
+      const missing = missingTokens(theme);
+      const message = refusedWith(theme) ?? "";
+      const named = missing.map(({ group, path }) =>
+        path === "" ? `\`${group}\`` : `\`${group}.${path}\``,
+      );
+      return missing.length > 0 && named.every((name) => message.includes(name))
+        ? []
+        : [label];
+    });
+
+    expect(drift).toEqual([]);
+  });
+
+  it("is taught on both token pages and the package README", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const catalogue = read("../../../docs/tokens.md");
+    const designSystem = read("../../../docs/design-system.md");
+    const readme = read("../README.md");
+
+    expect(catalogue).toContain("`missingTokens(theme)`");
+    expect(catalogue).toContain("names a group once");
+    expect(designSystem).toContain("`missingTokens`");
+    expect(readme).toContain("`missingTokens`");
   });
 });
 

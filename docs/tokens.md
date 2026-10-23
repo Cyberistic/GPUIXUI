@@ -1376,6 +1376,35 @@ the gate reads a non-blank string, not a registered one — so a custom family
 passes, and an uninstalled face is the font limitation in §Limitations rather
 than a theme defect.
 
+**The three refusals are readable before they are thrown.** A caller holding a
+theme a store handed back — deciding whether to restore it, or which release it
+predates — should not have to call `auditTheme` and catch its error, so
+`missingTokens(theme)` returns the same three lists as data: `{ group, path,
+kind }` entries of kind `group`, `step` or `family`. It **names a group once**,
+because none of the steps inside a group the theme lost exists to name, and names
+a step once rather than once per field it would have carried. A family that is
+present but blank is the third kind; a family that is gone entirely is the step
+rule's. An **additive** absence is not in the list — a colour role or an
+elevation level a stored theme lost is `invalidColorRoles`/`invalidShadowColors`'
+business and a failing gate, because the runtime can paint the rest.
+
+```ts
+import { lightTheme, missingTokens } from "@gpuixui/tokens";
+
+missingTokens(lightTheme); // [] — a shipped theme carries every part
+
+const stored = JSON.parse(fromStorage) as typeof lightTheme;
+missingTokens(stored);
+// [
+//   { group: "density", path: "rowHeight", kind: "step" },
+//   { group: "typography", path: "sans", kind: "family" },
+// ]
+```
+
+`auditTheme` builds its three messages from the same list, so the report a caller
+reads and the error the gate throws cannot drift: a theme the report calls whole
+is one the gate reads, and a theme it names is one the gate refuses.
+
 **The measurement dialect is the colour grammar the renderer paints, minus the
 perceptual spaces.** `contrastRatio`, `alphaOf`, `blend`, `selectionFailures` and
 the decorative contracts resolve a value through one seam: hex in every length

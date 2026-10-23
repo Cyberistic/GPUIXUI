@@ -1036,7 +1036,11 @@ a theme missing one and names the group or the path (`typography.codeBlock`,
 `extendTheme`. A **font family** is refused the same way when it is blank: the
 gate asks every font family to name a face, and `sans: ""` is present but says
 nothing, so every text role paints the renderer's fallback instead of the face
-the theme states (§5).
+the theme states (§5). The three refusals are also **readable before they are
+thrown**: `missingTokens` returns `{ group, path, kind }` for the stored theme,
+so an application deciding whether to restore one reads the absence as data
+instead of catching the gate's error, and the gate's three messages are built
+from that same list (`docs/tokens.md` §Paint-ready values).
 
 A value it cannot **lay out** is the third: a style batch is JSON, so `NaN` and
 `Infinity` arrive as `null`, the property is dropped, and the element paints as

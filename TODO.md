@@ -302,7 +302,33 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 173/173
+`[x]` `[██████████]` 174/174
+
+`[x]` Read **what a stored theme lost as data, before the gate refuses it** —
+`auditTheme` refuses a stored theme missing a numeric group, a step inside one or
+a blank font family, because a component reads every step by name and a report
+cannot describe an absence it walks past. That knowledge lived inside
+`requireGroups`/`requireSteps`, so a caller deciding whether to restore a stored
+theme had to call the gate and catch its `Error` — the control flow the house
+rules forbid, and a decision about a theme expressed as an exception. The three
+lists are now public as `missingTokens(theme)` (`{ group, path, kind }` of kind
+`group`, `step` or `family`), and `requireTokens` builds the gate's three
+messages from the same list, so the report and the refusal cannot drift. A group
+is named **once** — none of its steps exists to name, so listing them would bury
+the decision — and a step once, not once per field; a family that is gone is the
+step rule's, while a present-but-blank one is the third kind. An additive absence
+stays out: a colour role or elevation level a stored theme lost is
+`invalidColorRoles`/`invalidShadowColors`' report and a failing gate, not a
+refusal, because the runtime can paint the rest. `incomplete.test.ts` gains
+`the parts a theme lost, as data` (8 cases): the group once, every group in scale
+order, a step and a field, blank-versus-absent family, every shipped style and
+preset whole, the additive absence left to the reports, the refusal agreeing path
+for path, and the three pages teaching it. Directions measured: `missingTokens`
+returning `[]` fails **12** cases by name (the five new ones included) while the
+gate keeps its old messages; the shipped suite is green at 46 files / 2 595
+tests. Docs in `docs/tokens.md` §Paint-ready values, `docs/design-system.md` §9,
+the package README §Incomplete themes and the `Theme extension` row. No native
+scenario applies — a pure report and its guards have no runtime path.
 
 `[x]` Decode **Omarchy's `colors.toml`** into the palette this package maps — the
 follow had a poll and a semantic shape but no reader: `docs/tokens.md` §System
