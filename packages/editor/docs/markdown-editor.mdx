@@ -54,7 +54,10 @@ empty document reads `0 lines · 0 words`.
 An **unclosed code fence is closed in the preview only**. A document being
 written mid-block would otherwise swallow every following line into one code
 block; the source keeps exactly the characters the reader typed, and the preview
-appends the missing marker (`markdown/logic.ts`).
+appends the missing marker (`markdown/logic.ts`). A closer must be **at least as
+long as the opening run and carry nothing after it** (trailing spaces aside), so
+a three-tick line inside a four-tick block, or a ```` ```js ```` line inside a
+block, stays content instead of ending the preview's block early.
 
 ## Keyboard
 
@@ -139,7 +142,8 @@ and it is what `CodeEditor` does one tier down.
 `src/behaviour/markdown-editor.test.tsx` (12 native behaviour tests) types into
 the real field, follows the edit into the preview, switches all three views,
 drags the divider and steps it by keyboard (a controlled size stays put), and
-holds the read-only and disabled refusals; `src/markdown/logic.test.ts` (12
-cases) holds the fence, the counts and the stored mode;
+holds the read-only and disabled refusals; `src/markdown/logic.test.ts` (15
+cases) holds the fence families, the run length and the closer's rules, the
+counts and the stored mode;
 `src/behaviour/hints.test.tsx` holds the painted hint in both themes, the help
 sentence the host loses, and the hint's return when the field clears.

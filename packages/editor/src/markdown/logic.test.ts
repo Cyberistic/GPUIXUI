@@ -38,6 +38,27 @@ describe("openFence", () => {
   it("does not read inline ticks as a fence", () => {
     expect(Option.isNone(openFence("use ```x``` inline"))).toBe(true);
   });
+
+  it("does not let a shorter run close a longer fence", () => {
+    // The bug guarded: the preview treated any tick line as a closer, so a
+    // three-tick line inside a four-tick block ended it and swallowed the rest.
+    expect(Option.getOrNull(openFence("````\n```\ncode"))).toBe("````");
+    expect(Option.getOrNull(openFence("~~~~\n~~~\ncode"))).toBe("~~~~");
+    expect(closeFences("````\n```\ncode")).toBe("````\n```\ncode\n````");
+    expect(Option.isNone(openFence("```\ncode\n````"))).toBe(true);
+  });
+
+  it("does not let an info string close a fence", () => {
+    // ```js opens a block; inside another one it is content, not a closer.
+    expect(Option.getOrNull(openFence("```\n```js\ncode"))).toBe("```");
+    expect(Option.getOrNull(openFence("```\n``` js\ncode"))).toBe("```");
+    // Trailing spaces alone are still a closing fence in CommonMark.
+    expect(Option.isNone(openFence("```\ncode\n```   \nmore"))).toBe(true);
+  });
+
+  it("keeps a fence of the other family open", () => {
+    expect(Option.getOrNull(openFence("```\n~~~\ncode"))).toBe("```");
+  });
 });
 
 describe("closeFences", () => {

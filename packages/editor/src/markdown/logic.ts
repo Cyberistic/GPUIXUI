@@ -34,6 +34,40 @@ export const modeOf = (
 /** A fence line: up to three spaces, then at least three ticks or tildes. */
 const FENCE = /^\s{0,3}(`{3,}|~{3,})/;
 
+/** The fence a preview has open: its family and the length it must match. */
+interface OpenFence {
+  readonly family: "ticks" | "tildes";
+  readonly length: number;
+}
+
+/**
+ * Read one line against the fence a block opened with.
+ *
+ * A closing fence is at least as long as the opening one and carries nothing
+ * after its run; a shorter run, or one followed by an info string, is content
+ * inside the block. Reading either as a close would end the preview's block
+ * early — the same swallowed document this module exists to prevent.
+ */
+const foldFence = (
+  open: Option.Option<OpenFence>,
+  line: string,
+): Option.Option<OpenFence> => {
+  const match = FENCE.exec(line);
+  const marker = match?.[1];
+  if (match === null || marker === undefined) return open;
+  const family = Str.startsWith("`")(marker) ? "ticks" : "tildes";
+  const rest = Str.trim(Str.slice(match[0].length)(line));
+  return Option.match(open, {
+    onNone: () => Option.some({ family, length: marker.length }),
+    onSome: (held) =>
+      held.family === family &&
+      marker.length >= held.length &&
+      Str.isEmpty(rest)
+        ? Option.none()
+        : open,
+  });
+};
+
 /**
  * The fence a preview must close, if any.
  *
@@ -41,25 +75,14 @@ const FENCE = /^\s{0,3}(`{3,}|~{3,})/;
  * being written mid-block shows the rest of the page as one code block. The
  * **source** is not repaired: closing it here keeps the reader's text as they
  * typed it while the preview shows what they mean. Fences of the two families
- * are counted apart, because a `~~~` does not close a ``` block.
+ * are counted apart, because a `~~~` does not close a ``` block, and the
+ * returned marker is the opening run (`````` for a four-tick block).
  */
-export const openFence = (source: string): Option.Option<string> => {
-  const state = Arr.reduce(
-    Str.split(source, "\n"),
-    { ticks: false, tildes: false },
-    (open, line) => {
-      const match = FENCE.exec(line);
-      const marker = match?.[1];
-      if (marker === undefined) return open;
-      return Str.startsWith("`")(marker)
-        ? { ...open, ticks: !open.ticks }
-        : { ...open, tildes: !open.tildes };
-    },
+export const openFence = (source: string): Option.Option<string> =>
+  Option.map(
+    Arr.reduce(Str.split(source, "\n"), Option.none<OpenFence>(), foldFence),
+    (held) => Str.repeat(held.length)(held.family === "ticks" ? "`" : "~"),
   );
-  if (state.ticks) return Option.some("```");
-  if (state.tildes) return Option.some("~~~");
-  return Option.none();
-};
 
 /** The source with the fence a preview needs closed, and only that. */
 export const closeFences = (source: string): string =>
