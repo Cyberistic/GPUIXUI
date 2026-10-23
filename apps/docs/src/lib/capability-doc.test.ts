@@ -2872,6 +2872,104 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(keeping).toContain("`crop-overlay`");
   });
 
+  it("records the repeat flag a held key carries, from its fixture", () => {
+    // Every activating control refuses an event that carries `isHeld`, and until
+    // `key-hold-lifecycle` no window had delivered the flag: the guard was a
+    // branch nobody had taken, and a binding that never set it would leave every
+    // guard dead code with every unit test green. The record named the key
+    // events and never the repeat, so a plan could not tell a real flag from a
+    // synthetic one. The keys, the count and the log shapes are derived from the
+    // fixture; the readouts are the ones the fixture's suite and the probe
+    // assert, so a document cannot print a state the probe never measured.
+    const fixture = read("apps/playground/src/live/key-hold.ts");
+    const probe = read("apps/playground/src/live/key-hold-probe.tsx");
+    const suite = read("apps/playground/src/live/key-hold.test.ts");
+
+    const keys =
+      /export const KEY_HOLD_KEYS = \{([\s\S]*?)\} as const;/.exec(fixture)?.[1] ??
+      "";
+    const key = (name: string): string =>
+      new RegExp(`${name}: "([^"]+)"`).exec(keys)?.[1] ?? "";
+    const press = key("press");
+    const release = key("release");
+    const raw = key("raw");
+    const checks = Number(
+      /export const KEY_HOLD_CHECKS = (\d+);/.exec(fixture)?.[1] ?? Number.NaN,
+    );
+
+    // The log and readout shapes the fixture writes, so a printed line cannot
+    // outlive the codec that produces it.
+    expect(fixture).toContain(
+      'down=${downs.map((down) => `${down.key}:${down.held}`).join(",")} up=${ups}',
+    );
+    expect(fixture).toContain(
+      'window=${downs.map((down) => `${down.key}:${down.held}`).join(",")}',
+    );
+    expect(fixture).toContain("activations=${activations} presses=${presses}");
+
+    const downLog = `down=${raw}:false,${raw}:true up=1`;
+    const windowLog = `window=${raw}:false,${raw}:true`;
+    const readout = (activations: number, presses: number): string =>
+      `activations=${activations} presses=${presses}`;
+    const once = readout(1, 0);
+    const released = readout(2, 0);
+    const bothRoutes = readout(3, 1);
+
+    // The fixture's suite asserts both logs and the two extremes; the probe
+    // asserts the three activation states. A reading missing from either side
+    // means the document is teaching a measurement nobody makes.
+    expect(suite).toContain(`"${downLog}"`);
+    expect(suite).toContain(`"${windowLog}"`);
+    expect(probe).toContain("keyHoldReadout(1, 0)");
+    expect(probe).toContain("keyHoldReadout(2, 0)");
+    expect(probe).toContain("keyHoldReadout(3, 1)");
+
+    // The premises: three distinct keys, so the repeat log is not an activation,
+    // and a check count the probe actually carries.
+    expect(press).toBe("enter");
+    expect(release).toBe("space");
+    expect(new Set([press, release, raw]).size).toBe(3);
+    expect(checks).toBeGreaterThanOrEqual(15);
+
+    const readings = [downLog, windowLog, once, released, bothRoutes];
+
+    const row = rowFor("Held key repeat");
+    expect(row?.verdict).toBe("supported");
+    const evidence = row?.evidence ?? "";
+    expect(evidence).toContain("key-hold-lifecycle");
+    expect(evidence).toContain(`${checks} checks`);
+    expect(evidence).toContain("`isHeld`");
+    readings.forEach((reading) => {
+      expect(evidence, `the record no longer prints ${reading}`).toContain(
+        reading,
+      );
+    });
+    expect(row?.workaround).toContain("onActivate");
+    expect(row?.workaround).toContain("onClick");
+
+    const page = measuredRow("Held key repeat");
+    expect(
+      page,
+      "the page's measured table has no key-hold row",
+    ).toBeDefined();
+    const pageEvidence = page?.[1] ?? "";
+    expect(pageEvidence).toContain("key-hold-lifecycle");
+    expect(pageEvidence).toContain(`${checks} checks`);
+    readings.forEach((reading) => {
+      expect(pageEvidence, `the page no longer prints ${reading}`).toContain(
+        reading,
+      );
+    });
+    expect(page?.[2]).toContain("onActivate");
+    expect(page?.[2]).toContain("onClick");
+
+    // §5 owes the probe — the section itself, not the row's own citation.
+    const keeping = doc.slice(
+      doc.indexOf("## 5. Keeping this document true"),
+    );
+    expect(keeping).toContain("`key-hold-lifecycle`");
+  });
+
   it("publishes the order a negative tab index gives, not a skip", () => {
     // The dock's keyboard row said a `tabIndex={-1}` control was "skipped by
     // the same traversal", which is only true forwards. `grid-focus-lifecycle`

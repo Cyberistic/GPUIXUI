@@ -9098,7 +9098,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 245/245
+`[x]` `[██████████]` 246/246
 
 `[x]` Follow the **preference the primitives now read from the provider** — the
       primitives' `Button`, `Switch` and `Tooltip` gained `useMotionPreference`
@@ -9303,6 +9303,33 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `check-types` and `check:tests` are clean. No native scenario applies — the
       page and its guard read the seam every control shares and the probe's
       published measurement.
+
+`[x]` Publish the **repeat a held key sends** in the capability record — the
+      playground's `key-hold-lifecycle` measured the runtime fact every
+      activating control rests on and the record never stated it: a key held
+      down keeps arriving as key-down with the event's `isHeld` flag set, on the
+      element and on the app-level `onKeyDown`, which is the only difference
+      between an activation and a repeat. The record's key row named the events
+      and stopped, and `/docs/testing` carried the flag for probe authors while
+      a component plan reading the record could not tell a real flag from a
+      synthetic one. §3 gains **Held key repeat** (`supported`) with the probe's
+      own readouts — the unguarded control's `down=j:false,j:true up=1`, the
+      app-level `window=j:false,j:true`, the shipped `Button`'s
+      `activations=0 presses=0` before `Enter` reaches `activations=1 presses=0`
+      through two repeats, `activations=2 presses=0` on `Space`'s release and
+      `activations=3 presses=1` on a pointer press — the negative control that
+      reads `activations=2`, and the rule both halves need (read `isHeld` where
+      an action must not repeat, ignore it where it should; wire `onActivate`,
+      not `onClick`). `/docs/runtime#measured-in-a-window` publishes the same
+      row and §5 owes `key-hold-lifecycle`. `capability-doc.test.ts` gains
+      `records the repeat flag a held key carries, from its fixture`: it derives
+      the three keys and the check count from `src/live/key-hold.ts`, asserts
+      the log and readout templates the fixture writes, requires the two logs in
+      the fixture's suite and the three activation states in the probe, then
+      holds both documents to every readout and §5 to the probe. Directions
+      measured: the record at `activations=4 presses=0` fails by name
+      (`the record no longer prints activations=2 presses=0`); restored, the
+      file is 119/119 with `check-types` green.
 
 `[x]` Publish the **undo a field's own chord delivers** — the capability record's
       input rows stopped at keystrokes, clipboard and selection, so the site said
