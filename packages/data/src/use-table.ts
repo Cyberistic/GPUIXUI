@@ -14,6 +14,13 @@
  * reads the same state: `allSelected`/`someSelected` are computed over the
  * painted keys, and `toggleSelection`/`setAllSelected` write it.
  *
+ * The grid is **one stop in the Tab order** and the stop always exists:
+ * `tabStop` is the chosen record, or the first painted row when nothing is
+ * chosen. A tab stop that waited for a pointer press left a fresh table out of
+ * the Tab order entirely, and a filter that releases the chosen record removed
+ * the stop the reader was standing on — measured by
+ * `src/behaviour/table.test.tsx` through the renderer's own `focusNext`.
+ *
  * The order a reader expects: narrow first, then sort the narrowed set, and
  * measure a Shift range over what is painted. A filter that hides a chosen
  * record releases it in the same commit, so no frame shows a selection the
@@ -109,8 +116,18 @@ export interface TableController<Row extends RowData> {
   readonly allSelected: boolean;
   /** Some visible records are chosen — the header checkbox's mixed state. */
   readonly someSelected: boolean;
-  /** The record that owns the roving tab stop, when one is chosen. */
+  /** The chosen record, when one is chosen: what a focus-follow effect reads. */
   readonly activeKey: Option.Option<string>;
+  /**
+   * The record that owns the roving tab stop: the chosen one, or the first
+   * painted row when nothing is chosen.
+   *
+   * A grid is a single stop in the Tab order, and its stop must exist before a
+   * pointer press chooses a record — otherwise Tab from the toolbar skips the
+   * rows entirely, and a filter that releases the chosen record removes the
+   * stop a keyboard reader was standing on.
+   */
+  readonly tabStop: Option.Option<string>;
   /** The core table the controller runs on, for a consumer that needs more. */
   readonly table: GridTable<Row>;
   readonly setSort: (next: Option.Option<SortState>) => void;
@@ -242,6 +259,7 @@ export const useTable = <Row extends RowData>({
     allSelected: allSelected(selection, keys),
     someSelected: someSelected(selection, keys),
     activeKey: currentKey(selection),
+    tabStop: Option.orElse(currentKey(selection), () => Arr.head(keys)),
     setSort: (next) => setSorting(sortingOf(next)),
     toggleSort: (field) =>
       setSorting(sortingOf(Option.some(nextSort(sortOf(sorting), field)))),

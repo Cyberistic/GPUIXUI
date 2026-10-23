@@ -116,6 +116,15 @@ const table = useTable({ rows, keyOf: (row) => row.id, columns });
 </Table>;
 ```
 
+The rows are **one stop in the Tab order**, and the stop always exists.
+`table.tabStop` is the chosen record, or the first painted row when nothing is
+chosen; a row takes `tabIndex={Option.contains(table.tabStop, row.id) ? 0 : -1}`.
+A stop that waited for a pointer press left a fresh table out of the Tab order
+entirely — Tab walked the column menu, the header controls and the per-row boxes
+and reached no row — and a filter that released the chosen record then removed
+the stop the reader was standing on. The arrow walk moves the selection, which
+moves the stop with it.
+
 A **checkbox column** is a fixed track at the head of the header and every row.
 The controller supplies the tri-state over the painted set, so the header cannot
 claim a record a filter hides:
@@ -404,7 +413,7 @@ in the primitives' registry and a column width is data.
 | ------- | ----- |
 | Table core, fixed header, empty and loading states | shipped, window-verified |
 | Sort reducer + `TableSortHeader` | shipped, window-verified |
-| Selection reducer + row paint + keyboard walk | shipped (the walk is composed in the example; no roving-focus API in the runtime) |
+| Selection reducer + row paint + keyboard walk | shipped (the walk is composed in the example; `tabStop` names the one row stop, and no roving-focus API exists in the runtime) |
 | Selection column (`TableSelectionHeader`, `TableSelectionCell`) | shipped, window-verified |
 | Filter reducer + `TableFilterField` | shipped, window-verified |
 | Column visibility + order (`ColumnMenu`, `useColumns`) | shipped, window-verified |

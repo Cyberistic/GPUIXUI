@@ -82,6 +82,37 @@ const allText = (root: DataTestRoot): string =>
 /** The readout's words. The runtime reports a `<text>`'s run through `getAllText`. */
 const readout = (root: DataTestRoot): string => allText(root);
 
+/**
+ * The elements that hold focus as Tab walks off `testId`, at most `count`.
+ *
+ * `focusNext` is the renderer's own traversal, so this reads the Tab order the
+ * runtime builds rather than a `tabIndex` prop a suite could only guess at.
+ */
+const tabStops = (
+  root: DataTestRoot,
+  testId: string,
+  count: number,
+): ReadonlyArray<string> => {
+  root.renderer.focusElement(findId(root, testId));
+  root.renderer.flush();
+  const tabOnce = (): string => {
+    root.renderer.focusNext();
+    root.renderer.flush();
+    return Option.getOrElse(focusedTestId(root), () => "none");
+  };
+  // Stops at the first row: the assertion is where a row appears in the order,
+  // and every stop after it is a control the row holds.
+  return Arr.reduce(Arr.range(1, count), Arr.empty<string>(), (stops) =>
+    Arr.some(stops, Str.startsWith("files-row-"))
+      ? stops
+      : Arr.append(stops, tabOnce()),
+  );
+};
+
+/** The rows in a Tab walk, without the per-row controls they hold. */
+const rowsIn = (stops: ReadonlyArray<string>): ReadonlyArray<string> =>
+  Arr.filter(stops, Str.startsWith("files-row-"));
+
 let root: DataTestRoot | undefined;
 
 /** Mount the example; `afterEach` tears it down even when an assertion fails. */
@@ -322,6 +353,33 @@ describe("the example table", () => {
     expect(focusedTestId(root)).toEqual(Option.some("files-row-file-2"));
 
     expect(readout(root)).toContain("1 selected");
+  });
+
+  it("keeps one row in the Tab order, before a press and after a filter releases the chosen one", () => {
+    const root = mount();
+
+    // A fresh grid holds no selection, so a tab stop that waited for a press
+    // would leave the rows out of the Tab order: a keyboard reader tabbing off
+    // the toolbar lands on the column menu and the header controls, then walks
+    // the per-row boxes, and never reaches a row the arrow keys move.
+    const before = tabStops(root, "files-filter", 16);
+    expect(rowsIn(before)).toEqual(["files-row-file-1"]);
+
+    click(root, "files-row-file-3");
+    root.renderer.flush();
+    // The chosen record owns the stop until the filter hides it.
+    expect(rowsIn(tabStops(root, "files-filter", 16))).toEqual([
+      "files-row-file-3",
+    ]);
+
+    root.renderer.nativeSimulateKeystrokes(findId(root, "files-filter"), "060");
+    root.renderer.flush();
+    expect(readout(root)).toContain("1 rows · 0 selected");
+
+    // The release takes the old stop with it, so the stop moves to the first
+    // painted row rather than leaving the table unreachable.
+    const after = tabStops(root, "files-filter", 16);
+    expect(rowsIn(after)).toEqual(["files-row-file-60"]);
   });
 
   it("paints the empty state when nothing matches", () => {

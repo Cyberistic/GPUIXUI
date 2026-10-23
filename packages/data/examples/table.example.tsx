@@ -15,6 +15,10 @@
  * - ArrowUp/ArrowDown move the chosen row **and** native focus, because a
  *   selection the keyboard moved but focus did not is a row the next key does
  *   not reach;
+ * - the rows are **one stop in the Tab order**, owned by the chosen record or
+ *   by the first painted row when nothing is chosen, so Tab reaches them before
+ *   any press and a filter that releases a chosen record does not remove the
+ *   stop the reader was standing on;
  * - the filter field narrows the set, and the controller releases a chosen
  *   record the narrower set hides;
  * - the header and every row read **one** column list (`columns.visible`) and
@@ -393,7 +397,7 @@ export const TableExample = () => {
                   row={row}
                   columns={columns.visible}
                   selected={table.isSelected(row.id)}
-                  tabbable={Option.contains(table.activeKey, row.id)}
+                  tabbable={Option.contains(table.tabStop, row.id)}
                   elements={elements}
                   onPress={(event) => table.press(row.id, event.modifiers)}
                   onKeyDown={onRowKeyDown(row.id)}

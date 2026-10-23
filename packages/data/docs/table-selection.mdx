@@ -76,4 +76,6 @@ header's box sits on the card strip and keeps that fill.
 
 - A row box toggles one record; the header box toggles the whole visible set.
 - No `aria-checked`: state is announced through `aria-valuetext`.
-- A filter that hides a chosen record releases it from the painted selection.
+- A filter that hides a chosen record releases it from the painted selection;
+  the grid's row tab stop (`useTable().tabStop`) then moves to the first painted
+  row, so the table stays reachable from the keyboard.
