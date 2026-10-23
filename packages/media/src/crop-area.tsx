@@ -80,6 +80,11 @@ export interface CropAreaProps extends Omit<Props, "children" | "onChange"> {
   readonly minSize?: number;
   /** A corner handle's side. Default `10`. */
   readonly handleSize?: number;
+  /**
+   * The hole's width / height. A drag keeps it; a ratio that cannot be read
+   * leaves the hole free.
+   */
+  readonly aspectRatio?: number;
   /** The frame's accessible name. Default `"Crop area"`. */
   readonly label?: string;
   /** Refuse the gestures; the frame keeps painting. */
@@ -133,6 +138,7 @@ export const renderCropArea = (
     onChange: _onChange,
     minSize = CROP_MIN_SIZE,
     handleSize = CROP_HANDLE_SIZE,
+    aspectRatio,
     label = "Crop area",
     disabled = false,
     className,
@@ -140,7 +146,7 @@ export const renderCropArea = (
     ...rest
   } = props;
   const bounds = cropBounds(width, height);
-  const crop = clampCrop(value, bounds, minSize);
+  const crop = clampCrop(value, bounds, minSize, aspectRatio);
   const bars = cropBars(crop, bounds);
 
   return (
@@ -227,7 +233,12 @@ export const CropArea = (props: CropAreaProps): ReactElement => {
   const gesture = useRef<Option.Option<CropGesture>>(Option.none());
 
   const bounds = cropBounds(props.width, props.height);
-  const crop = clampCrop(props.value, bounds, props.minSize);
+  const crop = clampCrop(
+    props.value,
+    bounds,
+    props.minSize,
+    props.aspectRatio,
+  );
   const min = props.minSize ?? CROP_MIN_SIZE;
   const point = (event: CropPointer): { x: number; y: number } => ({
     x: event.x ?? 0,
@@ -247,7 +258,9 @@ export const CropArea = (props: CropAreaProps): ReactElement => {
       Option.match(gesture.current, {
         onNone: () => undefined,
         onSome: (held) => {
-          props.onChange(gestureCrop(held, point(event), bounds, min));
+          props.onChange(
+            gestureCrop(held, point(event), bounds, min, props.aspectRatio),
+          );
         },
       });
     },
@@ -266,7 +279,15 @@ export const CropArea = (props: CropAreaProps): ReactElement => {
     onHandleKey: (corner, event) => {
       const step = event.modifiers?.shift === true ? 8 : 1;
       Option.match(
-        keyboardCrop(crop, corner, event.key ?? "", step, bounds, min),
+        keyboardCrop(
+          crop,
+          corner,
+          event.key ?? "",
+          step,
+          bounds,
+          min,
+          props.aspectRatio,
+        ),
         {
           onNone: () => undefined,
           onSome: (next) => {

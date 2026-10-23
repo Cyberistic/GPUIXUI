@@ -196,6 +196,81 @@ describe("resizeCrop", () => {
   });
 });
 
+describe("aspect ratio", () => {
+  const frame = { width: 400, height: 400 };
+  const square = new CropRect({ x: 100, y: 100, width: 100, height: 100 });
+
+  it("shapes a stored rectangle to the ratio, keeping its width", () => {
+    expect(
+      boxes(
+        clampCrop(
+          new CropRect({ x: 60, y: 40, width: 100, height: 100 }),
+          bounds,
+          24,
+          2,
+        ),
+      ),
+    ).toStrictEqual({ x: 60, y: 40, width: 100, height: 50 });
+  });
+
+  it("lets a height-first drag resize a locked square", () => {
+    expect(boxes(resizeCrop(square, "se", 0, 50, frame, 24, 1))).toStrictEqual({
+      x: 100,
+      y: 100,
+      width: 150,
+      height: 150,
+    });
+  });
+
+  it("keeps the corner opposite the drag", () => {
+    expect(
+      boxes(resizeCrop(square, "nw", -50, 0, frame, 24, 1)),
+    ).toStrictEqual({ x: 50, y: 50, width: 150, height: 150 });
+  });
+
+  it("keeps the ratio through a live gesture", () => {
+    expect(
+      boxes(
+        gestureCrop(
+          { kind: "corner", corner: "se", start: square, x: 200, y: 200 },
+          { x: 250, y: 200 },
+          frame,
+          24,
+          1,
+        ),
+      ),
+    ).toStrictEqual({ x: 100, y: 100, width: 150, height: 150 });
+  });
+
+  it("keeps the ratio on the keyboard path", () => {
+    expect(
+      Option.map(
+        keyboardCrop(square, "se", "down", 10, frame, 24, 1),
+        boxes,
+      ),
+    ).toStrictEqual(
+      Option.some({ x: 100, y: 100, width: 110, height: 110 }),
+    );
+  });
+
+  it("leaves the hole free when the frame cannot hold the minimum at the ratio", () => {
+    const small = new CropRect({ x: 10, y: 10, width: 20, height: 12 });
+    const tight = { width: 40, height: 30 };
+    expect(boxes(clampCrop(small, tight, 24, 100))).toStrictEqual(
+      boxes(clampCrop(small, tight)),
+    );
+  });
+
+  it("reads an unreadable ratio as a free crop", () => {
+    const free = boxes(clampCrop(opening, bounds));
+    expect(
+      [Number.NaN, 0, -2, Number.POSITIVE_INFINITY].map((ratio) =>
+        boxes(clampCrop(opening, bounds, 24, ratio)),
+      ),
+    ).toStrictEqual([free, free, free, free]);
+  });
+});
+
 describe("moveCrop", () => {
   it("translates the hole and keeps its size", () => {
     expect(boxes(moveCrop(opening, 30, -20, bounds))).toStrictEqual({

@@ -1,6 +1,6 @@
 /**
  * The crop area's arithmetic: the hole, the mask it leaves, the handle that
- * drags it and the bounds every edge keeps.
+ * drags it, the bounds every edge keeps and the ratio a resize preserves.
  *
  * A crop is one rectangle in the frame's own points. The runtime has no mask
  * and no clip path, so the mask is four positioned bars around the hole — the
@@ -80,17 +80,81 @@ const floorOf = (bounds: CropBounds, min: number): number =>
     ),
   );
 
+/** A caller's ratio (width / height), when it names a shape a crop can keep. */
+const ratioOf = (ratio: number | undefined): Option.Option<number> =>
+  typeof ratio === "number" && Number.isFinite(ratio) && ratio > 0
+    ? Option.some(ratio)
+    : Option.none();
+
 /**
- * The crop a frame can hold: inside the bounds and at least the minimum side.
+ * A rectangle reshaped to `ratio` around the corner that stays put.
+ *
+ * The moving corner's larger movement drives the width, so a vertical drag
+ * resizes a locked square as surely as a horizontal one. A frame that cannot
+ * hold a minimum-sized hole at the ratio leaves the rectangle free rather than
+ * painting a hole too thin to grab.
+ */
+const fitRatio = (
+  rect: CropRect,
+  start: CropRect,
+  corner: CropCorner,
+  bounds: CropBounds,
+  min: number,
+  ratio: number,
+): CropRect => {
+  const maxW = Math.max(0, bounds.width);
+  const maxH = Math.max(0, bounds.height);
+  const floor = floorOf(bounds, min);
+  const minWidth = Math.max(floor, floor * ratio);
+  const minHeight = minWidth / ratio;
+  if (minWidth > maxW || minHeight > maxH) {
+    return rect;
+  }
+  const across = rect.width - start.width;
+  const down = (rect.height - start.height) * ratio;
+  const wanted =
+    start.width + (Math.abs(across) >= Math.abs(down) ? across : down);
+  let width = Math.max(minWidth, wanted);
+  let height = width / ratio;
+  if (height > maxH) {
+    height = maxH;
+    width = height * ratio;
+  }
+  if (width > maxW) {
+    width = maxW;
+    height = width / ratio;
+  }
+  const anchor = Match.value(corner).pipe(
+    Match.when("se", () => ({ x: rect.x, y: rect.y })),
+    Match.when("nw", () => ({ x: rect.right, y: rect.bottom })),
+    Match.when("ne", () => ({ x: rect.x, y: rect.bottom })),
+    Match.when("sw", () => ({ x: rect.right, y: rect.y })),
+    Match.exhaustive,
+  );
+  const movesLeft = corner === "nw" || corner === "sw";
+  const movesTop = corner === "nw" || corner === "ne";
+  return new CropRect({
+    x: clamp(movesLeft ? anchor.x - width : anchor.x, 0, maxW - width),
+    y: clamp(movesTop ? anchor.y - height : anchor.y, 0, maxH - height),
+    width,
+    height,
+  });
+};
+
+/**
+ * The crop a frame can hold: inside the bounds, at least the minimum side and,
+ * when the caller names one, on its aspect ratio.
  *
  * A crop restored from storage may name a rectangle the frame it is shown in
  * cannot hold, so a component clamps before it paints rather than drawing a
- * hole outside the picture.
+ * hole outside the picture. A ratio that cannot be read leaves the rectangle
+ * free, the same rule the other stored values follow.
  */
 export const clampCrop = (
   crop: CropRect,
   bounds: CropBounds,
   min: number = CROP_MIN_SIZE,
+  aspectRatio?: number,
 ): CropRect => {
   const floor = floorOf(bounds, min);
   // A restored rectangle may carry a field that cannot be laid out (a ratio
@@ -101,11 +165,15 @@ export const clampCrop = (
   const point = (value: number): number => (Number.isFinite(value) ? value : 0);
   const width = clamp(side(crop.width), floor, Math.max(0, bounds.width));
   const height = clamp(side(crop.height), floor, Math.max(0, bounds.height));
-  return new CropRect({
+  const free = new CropRect({
     x: clamp(point(crop.x), 0, Math.max(0, bounds.width - width)),
     y: clamp(point(crop.y), 0, Math.max(0, bounds.height - height)),
     width,
     height,
+  });
+  return Option.match(ratioOf(aspectRatio), {
+    onNone: () => free,
+    onSome: (ratio) => fitRatio(free, free, "se", bounds, min, ratio),
   });
 };
 
@@ -184,8 +252,9 @@ export const resizeCrop = (
   dy: number,
   bounds: CropBounds,
   min: number = CROP_MIN_SIZE,
+  aspectRatio?: number,
 ): CropRect => {
-  const held = clampCrop(crop, bounds, min);
+  const held = clampCrop(crop, bounds, min, aspectRatio);
   const floor = floorOf(bounds, min);
   const movesLeft = corner === "nw" || corner === "sw";
   const movesTop = corner === "nw" || corner === "ne";
@@ -205,11 +274,15 @@ export const resizeCrop = (
         held.y + floor,
         Math.max(0, bounds.height),
       );
-  return new CropRect({
+  const free = new CropRect({
     x: left,
     y: top,
     width: Math.max(floor, right - left),
     height: Math.max(floor, bottom - top),
+  });
+  return Option.match(ratioOf(aspectRatio), {
+    onNone: () => free,
+    onSome: (ratio) => fitRatio(free, held, corner, bounds, min, ratio),
   });
 };
 
@@ -255,10 +328,11 @@ export const keyboardCrop = (
   step: number,
   bounds: CropBounds,
   min: number = CROP_MIN_SIZE,
+  aspectRatio?: number,
 ): Option.Option<CropRect> => {
   const move = keyDelta(key, Math.abs(step));
   return Option.map(move, (delta) =>
-    resizeCrop(crop, corner, delta.dx, delta.dy, bounds, min),
+    resizeCrop(crop, corner, delta.dx, delta.dy, bounds, min, aspectRatio),
   );
 };
 
@@ -284,6 +358,7 @@ export const gestureCrop = (
   at: { readonly x: number; readonly y: number },
   bounds: CropBounds,
   min: number = CROP_MIN_SIZE,
+  aspectRatio?: number,
 ): CropRect =>
   gesture.kind === "move"
     ? moveCrop(gesture.start, at.x - gesture.x, at.y - gesture.y, bounds)
@@ -294,6 +369,7 @@ export const gestureCrop = (
         at.y - gesture.y,
         bounds,
         min,
+        aspectRatio,
       );
 
 /** A crop's bounds as the sentence a reader hears on its handle. */

@@ -182,6 +182,25 @@ describe("renderCropArea", () => {
     });
   });
 
+  it("paints and announces a hole on the caller's ratio", () => {
+    const root = renderCropArea(
+      props({
+        aspectRatio: 2,
+        value: new CropRect({ x: 60, y: 40, width: 100, height: 100 }),
+      }),
+      lightTheme,
+      surfaceOf(),
+    );
+    expect(
+      expectSome(elementProp(handleOf(root, "se"), "aria-valuetext")),
+    ).toBe("60, 40, 100 × 50");
+    expect(
+      expectSome(
+        hostProp(expectSome(findByTestId(root, "crop-bar-bottom")), "style"),
+      ),
+    ).toMatchObject({ top: 90, height: 70 });
+  });
+
   it("paints no picture for a blank source", () => {
     const root = renderCropArea(props({ src: "  " }), lightTheme, surfaceOf());
     const images = elementChildren(root).filter(

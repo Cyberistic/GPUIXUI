@@ -15,7 +15,7 @@ import { useState } from "react";
 import { CropArea, CropRect } from "@gpuixui/media";
 
 const [crop, setCrop] = useState(
-  new CropRect({ x: 60, y: 40, width: 100, height: 70 }),
+  new CropRect({ x: 60, y: 40, width: 100, height: 100 }),
 );
 
 <CropArea
@@ -25,6 +25,7 @@ const [crop, setCrop] = useState(
   height={160}
   value={crop}
   onChange={setCrop}
+  aspectRatio={1}
   label="Crop the thumbnail"
 />;
 ```
@@ -52,16 +53,26 @@ Rules that keep the hole usable:
   default, so a stored preference cannot collapse the hole to nothing or paint a
   `NaN` handle box.
 
+**A ratio locks the shape, not the size.** `aspectRatio` is `width / height`:
+the hole is shaped to it before it paints, every drag and key step keeps it,
+and the corner opposite the moving one stays put. The drag's larger movement
+drives the width, so a downward drag resizes a locked square as surely as a
+sideways one. A ratio that cannot be read (`NaN`, zero, negative, infinity)
+leaves the hole free — the same rule the other stored values follow — and so
+does a frame too small to hold a `minSize` hole at that ratio, because a hole
+too thin to grab is worse than an unlocked one.
+
 `clampCrop`, `cropBars`, `handleBox`, `moveCrop`, `resizeCrop` and `keyboardCrop`
 are exported from `@gpuixui/media/crop/logic`, so a crop can be clamped or
-gestured without mounting the component.
+gestured without mounting the component; `clampCrop`, `resizeCrop`,
+`keyboardCrop` and `gestureCrop` take the ratio as their last argument.
 
 ## Gestures
 
 | Gesture | Result |
 | ------- | ------ |
 | press the picture and drag | moves the hole, keeping its size |
-| press a corner handle and drag | resizes from that corner |
+| press a corner handle and drag | resizes from that corner, keeping `aspectRatio` when one is set |
 | `←` `→` `↑` `↓` on a focused handle | resizes that corner by 1 point |
 | `Shift` + arrow | resizes by 8 points |
 
@@ -97,6 +108,7 @@ complement drawn as up to four bars:
 | `onChange` | `(crop: CropRect) => void` | required |
 | `minSize` | `number` | `24` |
 | `handleSize` | `number` | `10` |
+| `aspectRatio` | `number` (width / height) | — (free) |
 | `label` | `string` | `"Crop area"` |
 | `disabled` | `boolean` | `false` |
 | `className` | `string` | — |
@@ -118,8 +130,9 @@ beside the frame, as the example does.
 
 - **No rotation.** A rotated crop is a transform of the picture, and the runtime
   has no `transform` (upstream issue #102); rotate the bytes before cropping.
-- **No aspect-ratio lock or guides.** The rectangle is free; a caller that needs
-  a fixed ratio clamps the rectangle it is handed before storing it.
+- **No guides.** A rule-of-thirds overlay is not painted; the frame shows the
+  hole and the mask only. The rectangle itself is free unless `aspectRatio` is
+  set.
 - **The window measured the bottom-right drag.** The playground's `crop-overlay`
   probe (37 checks, 0.11.0) dragged the bottom-right handle through 8 moves,
   clamped it at the 24-point minimum and the bitmap's edges, and read the bars
@@ -135,9 +148,12 @@ Measurement, fixture and captures live with the playground:
 `apps/playground/README.md` §`crop-overlay` and
 `.artifacts/live/crop-{rest,min,max,dragged}.png`.
 
-`src/crop/logic.test.ts` (21 cases) holds the clamp — including a rectangle
+`src/crop/logic.test.ts` (28 cases) holds the clamp — including a rectangle
 whose four fields cannot be laid out — the bars as the hole's complement, every
-corner's resize, both clamps, moves, the keyboard step and the gesture seam;
-`src/crop-area.test.tsx` (9 cases) holds the frame, the bars' pointer
-transparency, the four slider handles and their ring, the unreadable rectangle,
-minimum and handle side, the blank source, the repaint and the disabled state.
+corner's resize, both clamps, moves, the keyboard step, the gesture seam and the
+ratio lock (a stored rectangle shaped to it, a height-first drag, the fixed
+opposite corner, the keyboard path, a frame too small for the minimum at the
+ratio, and an unreadable ratio); `src/crop-area.test.tsx` (10 cases) holds the
+frame, the bars' pointer transparency, the four slider handles and their ring,
+the painted ratio, the unreadable rectangle, minimum and handle side, the blank
+source, the repaint and the disabled state.

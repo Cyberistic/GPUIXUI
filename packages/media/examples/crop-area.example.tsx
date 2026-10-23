@@ -14,7 +14,7 @@ const PICTURE =
 
 export const CropAreaExample = () => {
   const [crop, setCrop] = useState(
-    new CropRect({ x: 60, y: 40, width: 100, height: 70 }),
+    new CropRect({ x: 60, y: 40, width: 100, height: 100 }),
   );
 
   return (
@@ -26,6 +26,7 @@ export const CropAreaExample = () => {
         height={160}
         value={crop}
         onChange={setCrop}
+        aspectRatio={1}
         label="Crop the thumbnail"
       />
       <text>
