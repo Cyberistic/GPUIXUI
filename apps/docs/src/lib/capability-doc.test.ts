@@ -3540,6 +3540,24 @@ describe("docs/gpuix-capabilities.md", () => {
     ).toContain("hidden-subtree-lifecycle");
   });
 
+  it("keeps the staying neighbour a panel, not the slide the carousel unmounts", () => {
+    // The hiding row's workaround used to offer "a carousel's spare slide" as
+    // the row that stays and takes `visibility: "hidden"`. The shipped Carousel
+    // now returns `null` for every slide but the active one, so a reader
+    // following the record would hide a slide the component never mounts while
+    // the real case — a collapsed panel whose neighbours must not move — went
+    // unnamed. The unmount route has to stay beside it, because that is what the
+    // carousel actually does.
+    const carousel = read("packages/components/src/carousel.tsx");
+    expect(carousel).toContain("if (index !== activeIndex) return null;");
+
+    const workaround = rowFor("Hiding a subtree")?.workaround ?? "";
+    expect(workaround).toContain("collapsed panel");
+    expect(workaround).toContain("unmount the subtree");
+    expect(workaround).toContain("Carousel");
+    expect(workaround).not.toContain("carousel's spare slide");
+  });
+
   it("records the focus a dialog contains, from both probes", () => {
     // The runtime moves focus from code and offers `focusNextWithin`, but it
     // does not trap Tab — the surface cancels it. A plan that reads `role=
