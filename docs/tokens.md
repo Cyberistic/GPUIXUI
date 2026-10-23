@@ -3498,6 +3498,21 @@ described from memory.
 | `comfortable` (default) | 28 / 32 / 36 | 8 / 10 / 12 | 32 |
 | `spacious` | 32 / 36 / 40 | 10 / 12 / 14 | 36 |
 
+`rowHeight` is the height a **row** is built at, and the row painters read it:
+a dense list row and the base a normal row adds `spacing.md` to
+(`packages/components/src/list.tsx`), a tree row and its virtual twin
+(`packages/data/src/tree/row.tsx`, `packages/data/src/virtual/tree.tsx`), a log
+viewer's row (`packages/files/src/log/log-viewer.tsx`) and the line a scroller
+moves per arrow key (`packages/primitives/src/components/ScrollArea.tsx`), with
+`@gpuixui/tw` exposing the same step as its `row-height` utility
+(`packages/tw/src/calc.ts`). A **menu row**
+is a `controlHeight.sm` box (`packages/components/src/menu/item.tsx`) and a
+**data-table row** is laid out by its cells rather than by a row token, so
+neither reads it. Every preset sets `rowHeight` to `controlHeight.md`, so a row
+and the default `md` control beside it share a height; `scale.test.ts` holds the
+three presets to that equality and `density-adoption.test.ts` holds this list to
+the sources that read the step.
+
 A platform style picks the preset its native controls sit at — macOS `compact`,
 Windows `comfortable`, Linux `spacious` — so `platformTheme` carries a density
 too. Layer `extendTheme` to change it without losing the platform's look.

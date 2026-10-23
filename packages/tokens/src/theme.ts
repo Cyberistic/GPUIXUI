@@ -168,7 +168,7 @@ export interface DensityOverrides {
   readonly controlHeight?: Partial<Record<ControlSize, number>>;
   /** Horizontal control padding per size; an omitted size inherits. */
   readonly controlPaddingX?: Partial<Record<ControlSize, number>>;
-  /** Table, list, menu and tree row height. */
+  /** A row's height — a dense list, tree or log row, or a scroller's line. */
   readonly rowHeight?: number;
 }
 

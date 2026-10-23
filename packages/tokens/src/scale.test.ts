@@ -99,6 +99,20 @@ describe("density presets", () => {
       );
     });
   });
+
+  it("lines every preset's rows up with its default control", () => {
+    // A dense list, tree or log row and one line of a scroller's step are built
+    // at `rowHeight`; a `md` control is built at `controlHeight.md`, and a list
+    // row sits beside the toolbar's default actions. The catalogue states the
+    // two share a height, so a preset that moves one must move the other — the
+    // numbers are both valid, and no report can see the two-pixel mismatch.
+    densityNames.forEach((preset) => {
+      expect(
+        densityPresets[preset].rowHeight,
+        `${preset}: a row and the md control beside it`,
+      ).toBe(densityPresets[preset].controlHeight.md);
+    });
+  });
 });
 
 describe("radius, border and icon scales", () => {

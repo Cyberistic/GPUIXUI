@@ -255,6 +255,20 @@ The two halves still have to fit together:
   passes. Every shipped preset clears it — the tallest control role is `body` at
   20px and the control glyph is 16px, four pixels under `compact` `sm`.
 
+- **A row is built at `rowHeight`, and it lines up with the default control
+  beside it.** A dense list row and the base a normal row adds `spacing.md` to
+  (`packages/components/src/list.tsx`), a tree row and its virtual twin
+  (`packages/data/src/tree/row.tsx`, `packages/data/src/virtual/tree.tsx`), a log
+  row (`packages/files/src/log/log-viewer.tsx`) and one line of a scroller's
+  keyboard step (`packages/primitives/src/components/ScrollArea.tsx`) are built
+  at the theme's `rowHeight`, which `@gpuixui/tw` also exposes as `row-height`.
+  Every preset sets it to `controlHeight.md`, so a row and the default `md`
+  control beside it share a height — `scale.test.ts` holds that equality for the
+  three presets. A menu row is a `controlHeight.sm` box
+  (`packages/components/src/menu/item.tsx`) and a data-table row is laid out by
+  its cells, so neither reads the row step; `density-adoption.test.ts` holds this
+  list to the sources that read it.
+
 The shortest of those controls — `compact` `sm` at 24px — is also the
 pressable-target floor, so a control built at a control height never needs
 extra hit-area padding. That is a claim about a theme, not only about the built-in

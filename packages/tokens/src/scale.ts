@@ -199,7 +199,20 @@ export interface Density {
   readonly controlHeight: Readonly<Record<ControlSize, number>>;
   /** Horizontal control padding per size. */
   readonly controlPaddingX: Readonly<Record<ControlSize, number>>;
-  /** Table, list, menu and tree row height. */
+  /**
+   * The height a **row** is built at: a dense list row
+   * (`packages/components/src/list.tsx`), a tree row and its virtual twin
+   * (`packages/data/src/tree/row.tsx`, `packages/data/src/virtual/tree.tsx`),
+   * a log viewer's row (`packages/files/src/log/log-viewer.tsx`) and the line a
+   * scroller moves per arrow key
+   * (`packages/primitives/src/components/ScrollArea.tsx`); `@gpuixui/tw` also
+   * registers it as its `row-height` utility (`packages/tw/src/calc.ts`). A
+   * **menu** row is a `controlHeight.sm` box
+   * (`packages/components/src/menu/item.tsx`) and a data-table row is laid out
+   * by its cells, so neither reads this step. Every preset sets it to
+   * `controlHeight.md`, so a row and the default control beside it share a
+   * height (`scale.test.ts`).
+   */
   readonly rowHeight: number;
 }
 
