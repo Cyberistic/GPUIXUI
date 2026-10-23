@@ -560,6 +560,9 @@ export interface TableEmptyProps extends Omit<Props, "children"> {
   readonly children?: ReactNode;
 }
 
+/** The words a windowed table shows when its set is empty and none are given. */
+export const DEFAULT_EMPTY_MESSAGE = "No rows";
+
 /**
  * What a table paints when its set is empty: a message, not a blank frame.
  *
@@ -569,6 +572,11 @@ export interface TableEmptyProps extends Omit<Props, "children"> {
  * the empty state used to be a `RowGroup` with the message's text directly
  * under it. The cell carries the recipe's column layout, so the paint does not
  * move.
+ *
+ * A **string** child paints as the cell's own `<text>`, the rule
+ * {@link TableCaption} follows: a raw string inside a box paints but produces no
+ * accessibility node, so `empty="No matches"` would be silent to a reader. Pass
+ * a node for anything richer than one run.
  */
 export const TableEmpty = ({
   className,
@@ -592,7 +600,18 @@ export const TableEmpty = ({
           gap: theme.spacing.xs,
         }}
       >
-        {children}
+        {typeof children === "string" || typeof children === "number" ? (
+          <text
+            style={{
+              ...textStyle(theme, "body"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            {children}
+          </text>
+        ) : (
+          children
+        )}
       </div>
     </div>
   );

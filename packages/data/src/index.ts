@@ -20,6 +20,7 @@
  */
 
 export {
+  DEFAULT_EMPTY_MESSAGE,
   Table,
   TableBody,
   TableCaption,

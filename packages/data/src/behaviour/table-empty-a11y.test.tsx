@@ -12,9 +12,21 @@
  * shape rather than a screenshot: the empty state must be a `Row` with a `Cell`
  * inside the body's `RowGroup`, and the message must stay under that cell.
  * Restoring the role-less box fails the first case by name.
+ *
+ * Two more shapes are held here, because "empty" has two ways to go wrong:
+ *
+ * - `VirtualTable` with `count={0}` and **no** `empty` prop painted the body's
+ *   loading skeleton (three placeholder rows of bars), so a caller who passed no
+ *   message was told the set was still loading. It paints a default `No rows`
+ *   message instead, in the same row-and-cell shape.
+ * - `TableEmpty` painted a **string** child as a raw run the tree never hears,
+ *   the defect `TableCaption` already lost. A string now paints as its own
+ *   `<text>`, so `empty="No matches"` reaches a reader.
  */
 
 import * as Arr from "effect/Array";
+import * as Result from "effect/Result";
+import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import {
   decodeA11yTree,
@@ -96,6 +108,44 @@ const withEmptyVirtualTree = (read: (tree: A11yTree) => void): void => {
   }
 };
 
+/** A windowed table over no rows, with whatever empty node the case names. */
+const windowedTable = (empty?: ReactNode) => (
+  <VirtualTable
+    height={200}
+    aria-label="Files"
+    count={0}
+    rowHeight={32}
+    header={
+      <TableRow>
+        <TableHeaderCell width={260}>Name</TableHeaderCell>
+      </TableRow>
+    }
+    row={() => null}
+    empty={empty}
+  />
+);
+
+/** Render a windowed table over no rows and read its tree and painted text. */
+const withWindowedEmpty = (
+  empty: ReactNode,
+  read: (tree: A11yTree, root: DataTestRoot) => void,
+): void => {
+  const root: DataTestRoot = renderData(windowedTable(empty));
+  try {
+    settle(root);
+    read(decodeA11yTree(root.renderer.getA11yTree()), root);
+  } finally {
+    root.unmount();
+  }
+};
+
+/** The words the tree announces under one node, in paint order. */
+const labelValues = (tree: A11yTree, id: string): ReadonlyArray<string> =>
+  Arr.filterMap(withRole(tree, id, "Label"), (node) => {
+    const value = tree.nodes[node]?.aria.value;
+    return value === undefined ? Result.failVoid : Result.succeed(value);
+  });
+
 describe("the table's empty state", () => {
   it("is a row with a cell, inside the body's row group", () => {
     withEmptyTree((tree) => {
@@ -125,6 +175,32 @@ describe("the table's empty state", () => {
         (node.children ?? []).includes(cell),
       );
       expect(parents.map(([id]) => roleOf(tree, id))).toEqual(["Row"]);
+    });
+  });
+
+  it("paints no rows as an empty set, not as a loading skeleton", () => {
+    // `count={0}` with no `empty` node used to fall through to `TableBody`'s
+    // no-children branch, which paints the loading placeholder: a caller who
+    // told the table there are no records saw three rows of skeleton bars.
+    withWindowedEmpty(undefined, (tree, root) => {
+      const table = onlyRole(tree, "Table");
+      // One body cell — the empty state's — not the skeleton's nine.
+      expect(withRole(tree, table, "Cell")).toHaveLength(1);
+      expect(root.renderer.getAllText()).toContain("No rows");
+      expect(labelValues(tree, onlyRole(tree, "Cell"))).toEqual(["No rows"]);
+    });
+  });
+
+  it("paints a caller's empty message given as a string as text", () => {
+    // The runtime reaches the tree only through `<text>` elements, so a raw
+    // string inside the empty cell painted but could not be heard.
+    withWindowedEmpty("No file matches that filter.", (tree, root) => {
+      expect(root.renderer.getAllText()).toContain(
+        "No file matches that filter.",
+      );
+      expect(labelValues(tree, onlyRole(tree, "Cell"))).toEqual([
+        "No file matches that filter.",
+      ]);
     });
   });
 

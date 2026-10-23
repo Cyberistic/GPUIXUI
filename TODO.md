@@ -7164,6 +7164,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
     with it the unit suite is 143 and the behaviour suite 92. Docs:
     `docs/charts.mdx` §Accessibility, the `Charts` inventory row and the
     README's chart rule. Owner: data.
+  - [x] Paint an **empty windowed set as empty, not as loading** — `VirtualTable`
+    with `count={0}` and no `empty` node passed `undefined` into `TableBody`,
+    whose no-children branch is the **loading skeleton**: a caller who said there
+    were no records was shown three rows of placeholder bars (nine `Cell`s,
+    measured) and no message, and `TableEmpty`'s documented shape
+    (`empty="No matches"`) painted a raw string the accessibility tree never
+    hears — the defect `TableCaption` had already lost. `count === 0` now always
+    paints one `TableEmpty` row holding `empty ?? DEFAULT_EMPTY_MESSAGE`
+    (`No rows`), and `TableEmpty` paints a string or number child as its own
+    `<text>` in the body role, the caption's rule. `src/behaviour/table-empty-a11y.test.tsx`
+    gains `paints no rows as an empty set, not as a loading skeleton` (one cell
+    and the announced `No rows`; the old branch measured `9` cells and no label)
+    and `paints a caller's empty message given as a string as text` (no `Label`
+    before the wrap; one after). Docs: `docs/virtualization.mdx` §Usage/API, the
+    README's `VirtualTable` rule and the Tier 3 **Tables**/**Virtualized tables**
+    rows. Verified: `--filter @gpuixui/data test` 146/146, `test:behaviour` 95/95
+    and the headless `--only data-table-core` (1/1). Owner: data.
   - [x] Keep a **hidden column's text out of the search** — the field above the
     rows is the core's global filter over every column accessor, so hiding
     `status` and typing `modified` kept 20 records whose painted cells showed

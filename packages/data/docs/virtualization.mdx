@@ -44,7 +44,7 @@ import { VirtualList } from "@gpuixui/data";
 | `row` / `renderRow` | `(index: number) => ReactNode` | — | paints one absolute row index |
 | `height` | `number` | measured body | a definite table (or body) height |
 | `header` | `ReactNode` | — | the header row's cells |
-| `empty` | `ReactNode` | — | painted inside a `TableEmpty` row when `count` is `0` |
+| `empty` | `ReactNode` | `No rows` | painted inside a `TableEmpty` row when `count` is `0`; a string paints as its own text element |
 | `caption` | `ReactNode` | — | the line below the frame; a string paints as its own text element |
 | `overdraw` | `number` | `4` | rows mounted beyond the viewport on each side |
 | `reveal` | `VirtualReveal` | — | `{ index }`; the window moves, then the body scrolls |
@@ -54,7 +54,15 @@ import { VirtualList } from "@gpuixui/data";
 
 An empty set paints `empty` inside a `TableEmpty` row: the message is a cell of
 the grid, not a loose label under the body's row group — the same shape the
-plain table's empty state has.
+plain table's empty state has. A **string** is painted as the cell's own
+`<text>`, because the runtime reaches its accessibility tree only through text
+elements: a raw string in a box paints and is never announced.
+
+`count={0}` is an empty set, not a load. A windowed table with no `empty` node
+used to fall through to the body's no-children branch and paint the **loading
+skeleton** — three rows of placeholder bars — so a caller who said there were no
+records was told the first page was still arriving. It paints
+`DEFAULT_EMPTY_MESSAGE` (`No rows`) instead; pass `empty` to choose the words.
 
 ## Limitations
 

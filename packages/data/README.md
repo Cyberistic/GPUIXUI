@@ -280,6 +280,13 @@ The row must paint exactly `rowHeight`: the window's positions come from the
 runtime's estimate, so a taller row would push the rows below it out of place.
 A row of a different height uses `VirtualList` in children mode instead.
 
+A set of **no rows is empty, not loading**: `count={0}` paints the `empty` message
+inside a `TableEmpty` row, and `DEFAULT_EMPTY_MESSAGE` (`No rows`) when the
+caller names none — the body's no-children branch is the loading skeleton, and a
+caller who said there are no records must not be told the first page is still
+arriving. A string `empty` paints as the cell's own `<text>`, because a raw
+string in a box paints and is never announced (`src/behaviour/table-empty-a11y.test.tsx`).
+
 A **tree** is a flattened column of rows with one tab stop. `useExpandedRows`
 holds the expansion set and the cursor; `TreeView` paints the rows and owns the
 keys and the native focus. A typed prefix is the **published** rule —

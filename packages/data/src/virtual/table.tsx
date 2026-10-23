@@ -49,6 +49,7 @@ import {
   type Ref,
 } from "react";
 import {
+  DEFAULT_EMPTY_MESSAGE,
   Table,
   TableBody,
   TableCaption,
@@ -198,7 +199,9 @@ export interface VirtualTableProps extends Omit<
    *
    * The table wraps it in a `TableEmpty` row, so the message sits inside the
    * grid as a cell rather than directly under the body's row group — the shape
-   * the accessibility tree needs.
+   * the accessibility tree needs. A string paints as its own text element.
+   * Defaults to `DEFAULT_EMPTY_MESSAGE` (`No rows`): an empty set is empty,
+   * not loading, so the body must not paint its skeleton.
    */
   readonly empty?: ReactNode;
   /**
@@ -243,7 +246,7 @@ export const VirtualTable = ({
       <TableHeader>{header}</TableHeader>
       {count === 0 ? (
         <TableBody>
-          {empty === undefined ? undefined : <TableEmpty>{empty}</TableEmpty>}
+          <TableEmpty>{empty ?? DEFAULT_EMPTY_MESSAGE}</TableEmpty>
         </TableBody>
       ) : (
         <VirtualTableBody
