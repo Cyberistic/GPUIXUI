@@ -4650,7 +4650,10 @@ cannot go untested. Evidence:
   not here: a second copy would duplicate the package that owns reduced-motion
   policy. The components package composes it through `internal/presence.tsx`,
   the one seam that resolves a level and the reduced preference for a surface's
-  entry and exit (`useSurfaceTiming`), and the animated components — splitting
+  entry and exit (`useSurfaceTiming`); the frames and the timing it composes are
+  the motion package's `@gpuixui/motion/presence`, and the preference is the
+  `MotionProvider` hook that `@gpuixui/motion/react` publishes, so a primitive
+  below the same provider reads the same flag. The animated components — splitting
   text, image zoom, rolling text — read the same levels for their own tweens
   (`@gpuixui/motion/timing`). The timing is measured in
   `packages/motion/src/timing.test.ts` and

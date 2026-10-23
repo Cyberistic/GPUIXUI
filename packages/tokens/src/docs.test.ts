@@ -404,13 +404,19 @@ describe("the motion claim", () => {
     expect(catalogue).toContain("`internal/presence.tsx`");
     expect(catalogue).toContain("`useSurfaceTiming`");
     expect(catalogue).toContain("`@gpuixui/motion/timing`");
+    expect(catalogue).toContain("`@gpuixui/motion/presence`");
+    expect(catalogue).toContain("`@gpuixui/motion/react`");
   });
 
   it("matches the sources: the seam composes the timing and components use it", () => {
     const seam = read("../../../packages/components/src/internal/presence.tsx");
 
-    expect(seam).toContain('from "@gpuixui/motion/timing"');
-    expect(seam).toContain("motionTiming");
+    // The seam's timing moved to the motion package's `presence` entry when the
+    // provider landed; the preference is the React entry's hook.
+    expect(seam).toContain('from "@gpuixui/motion/presence"');
+    expect(seam).toContain("presenceTiming");
+    expect(seam).toContain('from "@gpuixui/motion/react"');
+    expect(seam).toContain("useMotionPreference");
 
     // The retracted claim was "none"; a floor is enough to keep the page honest
     // without pinning a count that a new component would move.
