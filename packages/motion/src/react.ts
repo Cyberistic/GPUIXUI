@@ -51,10 +51,10 @@ export interface MotionState {
  *
  * The preference removes the journey, so the presentation is the resting value
  * from the render that names it — not the frame the removed run would have
- * started from. The retained value still samples the run in an effect (so a
- * later animated preference starts where the reader is), but the paint must not
- * wait for that commit: a changed target would otherwise show the previous
- * frame first, which is the one-frame flash the mount rule already forbids.
+ * started from. The retained value is settled in an effect, so a later animated
+ * preference starts where the reader is, but the paint must not wait for that
+ * commit: a changed target would otherwise show the previous frame first, which
+ * is the one-frame flash the mount rule already forbids.
  */
 const restingFrame = (value: number, complete: boolean): MotionState => ({
   value,
