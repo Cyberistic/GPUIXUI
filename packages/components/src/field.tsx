@@ -30,7 +30,12 @@ import {
 import * as Option from "effect/Option";
 import { createContext, useContext, useState } from "react";
 import { useFieldsetDisabled } from "./fieldset.js";
-import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
+import {
+  fieldHelp,
+  fieldHint,
+  hintHost,
+  renderFieldHint,
+} from "@gpuixui/primitives/hint";
 import {
   assertParts,
   type PartChildren,
@@ -264,6 +269,12 @@ export const FieldInput = ({
     onNone: () => (field?.required === true ? "Required" : undefined),
     onSome: (text) => (field?.required === true ? `${text}. Required` : text),
   });
+  // The painted hint has to be said as well: the host is handed no
+  // `placeholder`, so the runtime's own `aria_placeholder` is gone too.
+  const help = fieldHelp(
+    { description: description ?? rest["aria-description"], placeholder },
+    text,
+  );
 
   const hostStyle = mergeStyles(
     mergeStyles(recipeStyle(cn(FIELD_INPUT, className), theme), {
@@ -300,9 +311,7 @@ export const FieldInput = ({
         value={value}
         {...(isDisabled ? { readOnly: true, tabIndex: -1 } : {})}
         {...(field === undefined ? {} : { "aria-label": field.label })}
-        {...(description === undefined
-          ? {}
-          : { "aria-description": description })}
+        {...(help === undefined ? {} : { "aria-description": help })}
         onChange={(event) => {
           if (value === undefined) setDraft(event.value ?? "");
           onChange?.(event);

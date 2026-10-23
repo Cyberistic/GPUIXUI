@@ -27,7 +27,12 @@ import {
 import * as Option from "effect/Option";
 import { useCallback, useRef, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
-import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
+import {
+  fieldHelp,
+  fieldHint,
+  hintHost,
+  renderFieldHint,
+} from "@gpuixui/primitives/hint";
 import { activationHandlers, isDismiss } from "./internal/key.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
@@ -152,6 +157,13 @@ export const SearchInput = ({
           // A disabled field leaves the tab order: the runtime has no
           // `disabled` on a host input, and `readOnly` still takes focus.
           tabIndex={disabled ? -1 : 0}
+          // The hint is painted, so the host is handed no placeholder and the
+          // runtime's `aria_placeholder` is gone; the same words go on the
+          // help channel while the box is empty.
+          aria-description={fieldHelp(
+            { description: rest["aria-description"], placeholder },
+            value,
+          )}
           onChange={(event) => {
             onChange?.(event);
             setValue(event.value ?? "");

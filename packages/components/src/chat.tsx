@@ -64,7 +64,12 @@ import * as Machine from "./chat/logic.js";
 export * from "./chat/logic.js";
 import { Button } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
-import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
+import {
+  fieldHelp,
+  fieldHint,
+  hintHost,
+  renderFieldHint,
+} from "@gpuixui/primitives/hint";
 import { isDismiss } from "./internal/key.js";
 import {
   assertParts,
@@ -414,6 +419,9 @@ export const ChatComposer = ({
           <textarea
             testId="chat-field"
             aria-label={label}
+            // The hint is painted, so the runtime's `aria_placeholder` left
+            // with the prop; the empty composer announces the same words.
+            aria-description={fieldHelp({ placeholder }, draft)}
             // The composer paints the page role behind its transparent field.
             theme={nativeTextTheme(theme, "background")}
             value={draft}

@@ -46,7 +46,12 @@ import {
   type ReactNode,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
-import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
+import {
+  fieldHelp,
+  fieldHint,
+  hintHost,
+  renderFieldHint,
+} from "@gpuixui/primitives/hint";
 import { activationHandlers } from "./internal/key.js";
 import {
   assertParts,
@@ -325,6 +330,7 @@ export const TimePickerSegment = ({
     registerHours,
   } = useTimePicker();
   const text = segment === "hours" ? hoursText : minutesText;
+  const placeholder = segment === "hours" ? "HH" : "MM";
   const state: TimePickerSegmentState = { disabled, focused };
 
   const fieldStyle = mergeStyles(
@@ -340,6 +346,9 @@ export const TimePickerSegment = ({
   const props: InputProps = {
     testId: `${testId}-${segment}`,
     "aria-label": `${groupLabel} ${segment}`,
+    // The format hint is painted, so its words travel on the help channel
+    // while the segment is empty.
+    "aria-description": fieldHelp({ placeholder }, text),
     // The segments are transparent over the picker's `input` fill; the format
     // hint is painted, because the host's own placeholder is a fixed grey.
     theme: nativeTextTheme(theme, "input"),
@@ -355,12 +364,11 @@ export const TimePickerSegment = ({
     },
     style: fieldStyle,
   };
-  const hint = fieldHint(
-    { placeholder: segment === "hours" ? "HH" : "MM", disabled },
-    theme,
-    text,
-    { origin: "host", align: "center", style: fieldStyle },
-  );
+  const hint = fieldHint({ placeholder, disabled }, theme, text, {
+    origin: "host",
+    align: "center",
+    style: fieldStyle,
+  });
 
   return (
     <div

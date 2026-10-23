@@ -36,7 +36,12 @@ import {
   type ReactElement,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
-import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
+import {
+  fieldHelp,
+  fieldHint,
+  hintHost,
+  renderFieldHint,
+} from "@gpuixui/primitives/hint";
 import { activationHandlers, isDismiss, isDown, isUp } from "./internal/key.js";
 import {
   assertParts,
@@ -228,6 +233,12 @@ export const MentionInput = ({
               // is painted because the host's own placeholder is a fixed grey.
               theme={nativeTextTheme(theme, "background")}
               aria-label={label}
+              // The hint is painted; its words travel on the help channel
+              // while the field is empty.
+              aria-description={fieldHelp(
+                { description: rest["aria-description"], placeholder },
+                text,
+              )}
               testId={testId}
               value={text}
               readOnly={disabled}

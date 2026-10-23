@@ -43,7 +43,12 @@ import {
 } from "react";
 import { Dialog, DialogContent } from "./dialog.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
-import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
+import {
+  fieldHelp,
+  fieldHint,
+  hintHost,
+  renderFieldHint,
+} from "@gpuixui/primitives/hint";
 import { isDismiss, isDown, isFirst, isLast, isUp } from "./internal/key.js";
 import { overlaySurfaceStyle } from "./internal/overlay.js";
 import {
@@ -344,6 +349,9 @@ export const CommandMenuInput = ({
         ref={registerInput}
         testId="command-input"
         aria-label={label}
+        // The hint is painted, so the runtime's `aria_placeholder` left with
+        // the prop; the empty field announces the same words as help.
+        aria-description={fieldHelp({ placeholder }, query)}
         // The palette's field paints the `input` role as its own fill; its hint
         // is painted, because the host's own placeholder is a fixed grey.
         theme={nativeTextTheme(theme, "input")}

@@ -72,7 +72,12 @@ import {
   type ComboboxOption,
 } from "./combobox/logic.js";
 import { useControllableState } from "./internal/controllable.js";
-import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
+import {
+  fieldHelp,
+  fieldHint,
+  hintHost,
+  renderFieldHint,
+} from "@gpuixui/primitives/hint";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
 import { isDismiss } from "./internal/key.js";
@@ -550,6 +555,9 @@ export const ComboboxInput = ({
       <HeadlessInput
         testId="combobox-input"
         aria-label={label}
+        // The hint is painted, so the runtime's `aria_placeholder` left with
+        // the prop; the empty field announces the same words as help.
+        aria-description={fieldHelp({ placeholder }, query)}
         // The headless field forwards the host theme; its own fill is `input`.
         // The hint is painted, because the host's placeholder is a fixed grey.
         theme={nativeTextTheme(theme, "input")}

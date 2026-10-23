@@ -35,6 +35,7 @@ import {
   CommandMenuList,
 } from "../command-menu.js";
 import { Field, FieldInput } from "../field.js";
+import { a11yNodes } from "../internal/a11y.js";
 import {
   clickCentreOf,
   focusedTestId,
@@ -192,7 +193,64 @@ const hintColour = (root: ComponentTestRoot, hintId: string): unknown =>
 const isPainted = (root: ComponentTestRoot, testId: string): boolean =>
   root.renderer.findByTestId(testId) !== undefined;
 
+/** Every help sentence the last painted frame publishes. */
+const help = (root: ComponentTestRoot): ReadonlyArray<string> =>
+  Arr.getSomes(Arr.map(a11yNodes(root.renderer), (node) => node.description));
+
 describe("the painted field hint", () => {
+  it("says the words it paints, because the host lost its own announcement", () => {
+    Arr.forEach(hosts, (host) => {
+      const root = host.render();
+
+      // The premise case above: the host is handed no placeholder. The hint is
+      // therefore the only copy of the format words, and it must be read out.
+      expect(
+        root.renderer.findByTestId(host.hostId)?.customProps?.placeholder,
+        host.name,
+      ).toBeUndefined();
+      expect(help(root), host.name).toContain(host.hint);
+
+      cleanup();
+    });
+  });
+
+  it("keeps a caller's permanent help over the hint, and drops the hint once typed", () => {
+    const permanent = mount(
+      <SearchInput
+        testId="search"
+        aria-description="Searches the whole workspace"
+        placeholder="Filter files…"
+      />,
+    );
+    expect(help(permanent)).toContain("Searches the whole workspace");
+    expect(help(permanent)).not.toContain("Filter files…");
+    cleanup();
+
+    const typed = mount(
+      <SearchInput testId="search" value="readme" onChange={() => undefined} />,
+    );
+    expect(help(typed)).not.toContain("Search…");
+  });
+
+  it("says the combobox field's hint once its popup opens", async () => {
+    const root = mount(
+      <Combobox options={options}>
+        <ComboboxTrigger label="Assign reviewer" />
+        <ComboboxContent>
+          <ComboboxInput />
+          <ComboboxList />
+        </ComboboxContent>
+      </Combobox>,
+    );
+
+    clickCentreOf(root, "combobox-trigger");
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(help(root)).toContain("Search…");
+  });
+
   it("paints every host's hint in the measured role, and hands the host none", () => {
     Arr.forEach(hosts, (host) => {
       const root = host.render();

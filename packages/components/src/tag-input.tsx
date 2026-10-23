@@ -30,7 +30,12 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { createContext, useContext, useState } from "react";
-import { fieldHint, hintHost, renderFieldHint } from "@gpuixui/primitives/hint";
+import {
+  fieldHelp,
+  fieldHint,
+  hintHost,
+  renderFieldHint,
+} from "@gpuixui/primitives/hint";
 import { activationHandlers, isEnter } from "./internal/key.js";
 import {
   assertParts,
@@ -222,6 +227,12 @@ export const TagInputField = ({
         // and `readOnly` still takes focus.
         tabIndex={disabled ? -1 : 0}
         value={draft}
+        // The hint is painted, so the runtime's `aria_placeholder` left with
+        // the prop; the empty field announces the same words as help.
+        aria-description={fieldHelp(
+          { description: rest["aria-description"], placeholder },
+          draft,
+        )}
         onChange={(event) => editDraft(event.value ?? "")}
         onKeyDown={(event: KeyEvent) => {
           onKeyDown?.(event);
