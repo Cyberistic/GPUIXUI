@@ -207,4 +207,13 @@ describe("the keyboard contracts", () => {
       keyboardContracts.filter((contract) => !served.has(contract.url)),
     ).toEqual([]);
   });
+
+  it("is taught on the page that explains what a page carries", () => {
+    // The index's "How to read a page" table is the reader's map of a
+    // component page; a generated block it does not name is one a reader
+    // cannot look for.
+    expect(read("apps/docs/content/docs/components/index.mdx")).toContain(
+      "| Keyboard | every key the component handles, and what each does (generated) |",
+    );
+  });
 });

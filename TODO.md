@@ -10416,7 +10416,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `<KeyboardStrip>` prints it after the prose on both frames — so a curated
       page and the package page it shadows agree — naming the module the keys came
       from. It stops on a page whose own `## Keyboard` heading is in its table of
-      contents, and on a page no contract names. `keyboard-contracts.test.ts` (5
+      contents, and on a page no contract names. `keyboard-contracts.test.ts` (6
       cases) derives the keys from the cited modules in both directions: the
       `@gpuixui/components` predicates in `internal/key.ts`, the primitives'
       `decideActivation`, and a literal `Match.when("up", …)`, so a dropped
@@ -10431,13 +10431,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
       collapsible, color picker, combobox, command menu, confirm dialog, context
       menu, date picker, dialog, drawer, dropdown menu, inline edit, list,
       navigation menu, popover, search input, switch, tabs, tag input, time
-      picker — 25 with the primitives' switch). Docs: the policy's §The keyboard
-      contract is generated, not written and the template's `keyboard` row, the
-      site ledger's two module rows. Green: the docs suite **163 files / 1 711
-      tests**, `check-types` and `build` clean. The two gaps named in the policy
-      (the primitives' `Select` and the package lanes with no curated page) are
-      the row below. No native scenario applies — the model reads source files
-      and the strip prints them; no claim about a native frame is made.
+      picker). Docs: the policy's §The keyboard contract is generated, not
+      written and the template's `keyboard` row, the components index's "How to
+      read a page" row (the case that teaches the row fails without it), the site
+      ledger's two module rows. Green: the docs suite **163 files / 1 712
+      tests**, `check-types` and `build` clean. The two gaps
+      named in the policy (the primitives' `Select` and the package lanes with no
+      curated page) are the row below. No native scenario applies — the model
+      reads source files and the strip prints them; no claim about a native frame
+      is made.
 
 `[ ]` Extend the **keyboard contracts** past the curated lane — `packages/primitives`
       `Select` takes its arrows/Enter/Escape from the runtime's headless list

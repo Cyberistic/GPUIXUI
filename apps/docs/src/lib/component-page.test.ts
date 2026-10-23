@@ -591,12 +591,19 @@ describe("the curated component pages", () => {
   });
 
   it("requires every permanent section its policy declares, in its order", () => {
-    // `frontmatter` and `preview` are not `##` headings, and `Composition` is
-    // declared for compound components only, so the other rows are the ones
-    // every page carries. The table is parsed rather than trusted: a row added
-    // to the policy fails here until `required` gains it, and a required section
-    // the policy withdraws fails the same way.
-    const conditional = new Set(["frontmatter", "preview", "Composition"]);
+    // `frontmatter` and `preview` are not `##` headings, `Composition` is
+    // declared for compound components only, and `keyboard` is the block the
+    // frame generates after the prose rather than a heading a page writes, so
+    // the other rows are the ones every page carries. The table is parsed
+    // rather than trusted: a row added to the policy fails here until
+    // `required` gains it, and a required section the policy withdraws fails
+    // the same way.
+    const conditional = new Set([
+      "frontmatter",
+      "preview",
+      "Composition",
+      "keyboard",
+    ]);
 
     expect(
       policySections().filter((section) => !conditional.has(section)),
@@ -805,11 +812,16 @@ describe("the component section index", () => {
   it("teaches only the sections a page can actually have", () => {
     // The index described a page from memory — Variants / Sizes / States,
     // Keyboard, Theming, "Accessibility and limitations" — while the template
-    // the pages follow has none of those headings, so a reader arrived at
-    // Button looking for a Keyboard section that no page carries. The rows are
-    // the policy's own section names plus the three generated strips, held to
-    // the template table rather than to this comment.
-    const generated = ["Status", "Dependencies", "Related"] as const;
+    // the pages follow has none of those headings. `Keyboard` returned as the
+    // strip the frame generates, not as an authored heading: the rows are the
+    // policy's own section names plus the four generated blocks, held to the
+    // template table rather than to this comment.
+    const generated = [
+      "Status",
+      "Dependencies",
+      "Keyboard",
+      "Related",
+    ] as const;
     const allowed = [
       ...policySections().filter((section) => section !== "frontmatter"),
       ...generated,
