@@ -1197,7 +1197,7 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 129/129
+`[x]` `[██████████]` 129/130
 
 `[x]` Measure the **flex sizing rules** a `flex-1` composes with — `@gpuixui/tw`
       compiles `flex-1` to `{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }` and
@@ -3871,6 +3871,20 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       `.artifacts/live/scrollbar.png` and
       `.artifacts/live/scrollbar-{400,840,hover,top,sideways}.png`. Publishing it
       in the capability record is the Interlocks row below.
+
+`[ ]` Measure **whether a two-axis scroller paints two thumbs** — `scrollbar-thumb`
+      asked the rule on each axis separately, and `ScrollArea` also accepts
+      `axis="both"` (the primitives' `layout.runtime.test.tsx` mounts one, and no
+      shipped component does yet): if the runtime paints one thumb for a
+      both-axis scroller, the other axis has no affordance and a log pane or an
+      editor scroller needs two `ScrollArea`s per direction or a painted cue of
+      its own. A separate probe is required rather than an eighth case: the
+      900×520 window holds two 160 px rows of scrollers and not a third, so the
+      case cannot join `scrollbar-thumb` without renumbering every read it
+      already prints. Mount a 160×120 both-axis scroller with content wider and
+      taller than its box, read each edge (a vertical thumb at the right, a
+      horizontal one at the bottom), and `--only scrollbar-thumb-both`. Blocked
+      on nothing; owner: playground.
 
 ## Phase C — Tier 1–2 components
 
@@ -6604,6 +6618,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
     parent to be a `Row`. Direction measured: with the old branch the case fails
     with `the tree has no Cell node`. `docs/virtualization.mdx` and the Tier 3
     Virtualized tables row state the rule.
+  - [x] Paint a **caption string as text the tree can hear** — `TableCaption`
+    took a `ReactNode` and the documented shape was
+    `<TableCaption>12 files</TableCaption>`, but the runtime reaches the
+    accessibility tree only through `<text>` elements: a raw string inside a box
+    paints (`getAllText` reported it) and produces **no node**, so a reader
+    heard the table's rows and never its count. A string or number child is now
+    painted as the caption's own `<text>` in the caption type role; a caller's
+    node passes through untouched. `src/behaviour/table-caption.test.tsx`
+    (2 cases) decodes the tree, requires the value under the `Table`, and holds
+    the pass-through to exactly one `Label`. Direction measured: with the old
+    `{children}` the string case fails `expected [] to include '12 files'` while
+    the paint assertion still passes. 0.11.0 has no caption role, so the line is
+    a `Label` beside the row groups — documented on `TableCaption`, in
+    `docs/virtualization.mdx` and in the Tier 3 Tables row.
   - [x] Paint the **checkbox column's target in its row's fill** — the box's
     painted target is the hit boundary that keeps a box press off its row, and
     it was fixed to `card`, so a chosen row (`selected`) carried a card-coloured
