@@ -179,6 +179,12 @@ describe("component pages", () => {
   });
 });
 
+/** The playground's own record of what each live probe measured. */
+const playgroundReadme = readFileSync(
+  fileURLToPath(new URL("../../../apps/playground/README.md", import.meta.url)),
+  "utf8",
+);
+
 describe("the selection chord the list page teaches", () => {
   // The contract a file list, tree or grid would otherwise reimplement: a range
   // press extends from the anchor and keeps it, a plain or toggle press moves it.
@@ -186,12 +192,6 @@ describe("the selection chord the list page teaches", () => {
   // point at that measurement instead of asserting a rule nobody drove.
   const probe = "modifier-select-lifecycle";
   const selection = section(read("list.mdx"), "## Selection") ?? "";
-  const playgroundReadme = readFileSync(
-    fileURLToPath(
-      new URL("../../../apps/playground/README.md", import.meta.url),
-    ),
-    "utf8",
-  );
 
   it("states the anchor rule a composed grid would otherwise reimplement", () => {
     expect(selection).toMatch(/keeps the anchor/i);
@@ -201,6 +201,89 @@ describe("the selection chord the list page teaches", () => {
   it("cites the window that measured the chord", () => {
     expect(selection).toContain(probe);
     expect(playgroundReadme).toMatch(new RegExp(`^#{1,4} \`${probe}\``, "m"));
+  });
+});
+
+/** The repository root, for the playground reads below. */
+const repoFile = (relative: string): string =>
+  readFileSync(
+    fileURLToPath(new URL(`../../../${relative}`, import.meta.url)),
+    "utf8",
+  );
+
+describe("the trail a narrow pane needs", () => {
+  // The shipped list is `flex-wrap`, so an unbudgeted trail grows a second row
+  // instead of clipping. A window drove the shipped trail at two widths and the
+  // app's own budgeted trail beside it; the page has to teach what that measured
+  // — the wrapping, the budget's source and the trigger the app must compose —
+  // because a consumer who reads only the component's props would plan a toolbar
+  // around a clipping fallback that does not exist.
+  const probe = "breadcrumb-navigation-lifecycle";
+  const rules =
+    section(read("breadcrumb.mdx"), "## A trail in a narrow pane") ?? "";
+  const middle =
+    section(read("breadcrumb.mdx"), "## Reaching the hidden middle") ?? "";
+  const fixture = repoFile("apps/playground/src/live/breadcrumb-navigation.ts");
+
+  /** One number the fixture declares, so the page cannot print its own. */
+  const fixtureNumber = (name: string): number => {
+    const match = new RegExp(`${name}\\s*[:=]\\s*(\\d+)`).exec(fixture);
+    if (match?.[1] === undefined) {
+      throw new Error(
+        `apps/playground/src/live/breadcrumb-navigation.ts: no ${name}`,
+      );
+    }
+    return Number(match[1]);
+  };
+
+  it("warns that an unbudgeted trail wraps instead of clipping", () => {
+    expect(rules).toMatch(/`flex-wrap`/);
+    expect(rules).toMatch(/wraps? instead of clipping/i);
+    // The two rows the window painted, and that there is nothing to fall back on.
+    expect(rules).toMatch(/16px rows?[^.]*36px/);
+    expect(rules).toMatch(/no clipping fallback/i);
+  });
+
+  it("derives the budget from the pane's report, not a constant", () => {
+    const narrow = fixtureNumber("narrow");
+    const entry = fixtureNumber("BREADCRUMB_ENTRY_WIDTH");
+    const budget = Math.max(3, Math.floor(narrow / entry));
+
+    expect(rules).toContain("`onLayout`");
+    expect(rules).toContain(`w=${narrow} budget=${budget}`);
+    expect(rules).toMatch(/one row/i);
+    // The row the budgeted trail painted: its trigger's own height.
+    expect(rules).toMatch(/28px/);
+  });
+
+  it("says the shipped middle is decorative and the app composes the trigger", () => {
+    expect(middle).toMatch(/decorative/i);
+    expect(middle).toMatch(/second tab stop/i);
+    expect(middle).toMatch(/focus stop/i);
+    expect(middle).toMatch(/unpaints/i);
+  });
+
+  it("cites the window that measured the trail, with its check count", () => {
+    const page = `${rules}\n${middle}`;
+    const checks = fixtureNumber("BREADCRUMB_CHECKS");
+    expect(page).toContain(probe);
+    expect(page).toContain(`${checks} checks`);
+    expect(page).toContain("apps/playground/src/live/breadcrumb-navigation.ts");
+  });
+
+  it("keeps the measured numbers on the playground's section", () => {
+    // The page quotes the record, so the record must still print them; the
+    // playground's own suite holds the record to the probe.
+    const narrow = fixtureNumber("narrow");
+    const entry = fixtureNumber("BREADCRUMB_ENTRY_WIDTH");
+    expect(playgroundReadme).toMatch(
+      new RegExp(`^### \`${probe}\` — measured on 0\\.11\\.0 here`, "m"),
+    );
+    expect(playgroundReadme).toContain(
+      `w=${narrow} budget=${Math.max(3, Math.floor(narrow / entry))}`,
+    );
+    expect(playgroundReadme).toContain("**36**");
+    expect(playgroundReadme).toContain("**28**");
   });
 });
 

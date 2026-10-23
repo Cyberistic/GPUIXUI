@@ -41,6 +41,46 @@ Breadcrumb
         └── BreadcrumbSeparator
 ```
 
+## A trail in a narrow pane
+
+`BreadcrumbList` is `flex-wrap`, so a trail wider than its pane **wraps instead of clipping**. In a 280px pane the five-level trail paints two 16px rows — 36px in total — and whatever sits below it moves down. A toolbar, dock header or split pane therefore has to budget the trail; there is no clipping fallback.
+
+`maxItems` is that budget, and it wants a measured count rather than a constant. Report the pane's width from `onLayout` and divide it by the entry width your own labels need:
+
+```tsx
+const [width, setWidth] = useState(0);
+// Your entries' width, not a library constant: a translation or a wider
+// face moves it.
+const maxItems = Math.floor(width / CRUMB_WIDTH);
+
+<div onLayout={(event) => setWidth(event.width ?? 0)}>
+  <Breadcrumb maxItems={maxItems}>…</Breadcrumb>
+</div>;
+```
+
+The count clamps to three. A budget that keeps the trail inside its pane paints **one row**: at 280px the readout is `w=280 budget=3` — the root, the collapsed middle and the current page — and the list is 28px, exactly its trigger's height. A width that never arrives reads as the three-entry minimum, so a trail cannot collapse to nothing before its first layout report.
+
+## Reaching the hidden middle
+
+The collapsed middle is **decorative by design** (shadcn parity): it is named text, not a tab stop, and it takes no press. The levels it hides are reachable only through a trigger the app composes in its place — wrap the ellipsis in a `DropdownMenuTrigger` and the trigger becomes the trail's second tab stop, while the menu's rows are real focus stops.
+
+```tsx
+<BreadcrumbItem>
+  <DropdownMenu>
+    <DropdownMenuTrigger>…</DropdownMenuTrigger>
+    <DropdownMenuContent>
+      <DropdownMenuItem onSelect={() => go("Overlays")}>
+        Overlays
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+</BreadcrumbItem>
+```
+
+Choosing a level keeps the trail collapsed around it while levels remain hidden, and the focus returns to the trigger. When the chosen path fits the budget the trigger **unpaints in the same commit** as the close — there is nothing left to hide — so the trail's own crumbs are the remaining stops and the traversal continues to the control after the trail.
+
+**Measured in a window:** `breadcrumb-navigation-lifecycle` (48 checks, `--only breadcrumb-navigation-lifecycle`) paints the shipped `Breadcrumb` at 560 and 280px beside an app trail whose middle is the shipped menu. Fixture `apps/playground/src/live/breadcrumb-navigation.ts`.
+
 ## API
 
 | Part | Renders | Props |
