@@ -1760,7 +1760,7 @@ applies — printed figures a suite derives.
       none of the first frame left; a playhead at the clip's end stops the
       transport (`playing=false playhead=4000`); and the poster is 240×135 in
       every state, so a frame sequence never reflows the card. **48 checks**,
-      `--only media-frame-lifecycle`, green (~16–18 s, four captures). Fixture
+      `--only media-frame-lifecycle`, green (~7–8 s, four captures). Fixture
       `src/live/media-frame.ts` + `media-frame-probe.tsx` + `media-frame.test.ts`
       (the installed typings' element list, the clip/fill/frame arithmetic, the
       RGBA buffer, the registry and wiring, the count and the README section).

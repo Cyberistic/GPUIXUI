@@ -708,6 +708,12 @@ export const liveRegistry = [
       "Panel: a collapsing sidebar's outer clip hides its content in the paint and the press, not only in the layout report",
     capability: "panel",
   },
+  {
+    id: "media-frame-lifecycle",
+    title:
+      "Content: a clip has no media host, so its frame is an image buffer the app's clock re-pushes and its transport is app-drawn",
+    capability: "content",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */

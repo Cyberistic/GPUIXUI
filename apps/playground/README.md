@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-112 probes a real window can prove, of which twenty-two mount shipped
+113 probes a real window can prove, of which twenty-two mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -50,9 +50,9 @@ the command palette, the tabs, the list, the collapsible section, the popover,
 the popover's reflow,
 the message scroller, the
 combobox, the date picker, the shipped data tables, the nested overlay stack,
-the modal focus rule and the breadcrumb trail), eight mount
+the modal focus rule and the breadcrumb trail), nine mount
 `@gpuixui/primitives` (the Input, OTPField, Checkbox, Slider, Text, Tooltip, the
-ScrollArea and the Button), three mount `@gpuixui/data`'s examples (the table, the virtualized
+ScrollArea and the Button, and the media probe's play/pause action), three mount `@gpuixui/data`'s examples (the table, the virtualized
 table and the tree), one mounts the package's shipped charts, one more
 mounts the runtime's own `Select` parts, and the rest prove the runtime itself
 (focus, paint, fonts, placement, content surfaces, pointer capture, the window's
@@ -6306,6 +6306,69 @@ red pixels at this capture's 2× scale — and fails `the band the clip hides
 paints none of the marker over the document` with `expected 0, got 25600`.
 Evidence: `.artifacts/live/sidebar-{open,mid,closed,again}.png`.
 
+### `media-frame-lifecycle` — measured on 0.11.0 here
+
+**What is a video, on a runtime with no media host element?** Tier 5's
+*Video / audio player + waveform* row says playback "needs a platform surface —
+**unverified**". The typings settle half of it: `@gpuix/react`'s
+`IntrinsicElements` declares `div`, `text`, `img`, `svg`, `canvas`, `input`,
+`textarea`, `anchored`, `code`, `diff`, `markdown` and `virtual-list` — there is
+no `video` or `audio`, so there is no element to mount and no playback call to
+make. The other half had never been painted: what a media card can be **built
+from** on this runtime, which is the question a media component plan actually
+asks.
+
+The probe composes the only player the runtime allows and measures it in one
+window: an `img` whose buffer is re-pushed with `setImagePixels` for every
+frame, an interval the app owns, and a transport the app draws (the shipped
+`Button` for play/pause, a track whose fill is the playhead's share, a `m:ss`
+clock, and a focusable pad whose Home/End/Left/Right move the playhead). The
+clip is four seconds cut into four frames of one colour each, so the picture
+names the playhead it is on and a still poster cannot pass as a moving one.
+
+| Step | Measured |
+| ---- | -------- |
+| at rest | `playing=false playhead=0`, the clock reads `0:00 / 0:04`, the transport offers **Play**, and the fill is empty |
+| the poster | 240×135, painted as its first frame's own `#1e3a8a` across the whole box (129 600 pixels in a 2× capture), and none of the second frame's `#7c3aed` |
+| a press on play | `playing=true playhead=100`, then `playhead=400` about two seconds later: the app's interval advances the playhead in whole 100 ms ticks, and the fill grows with it |
+| a second press | `playing=false playhead=400` (no further tick), the fill paints exactly the paused share (20 of 200), and the readout and the fill both hold 140 ms later |
+| the paused picture | the frame the playhead names — `#1e3a8a` across the whole box, not the frame it was on while playing |
+| the seek pad | Home → `0:00 / 0:04` with the transport still **Play** (a seek starts nothing); End → `0:04 / 0:04` with the fill full; Home then three Rights → `0:03 / 0:04` with the fill at 150 of 200 |
+| the seek's paint | the poster repaints to the third second's `#047857`, and none of the first frame's colour survives |
+| play from three quarters, then End | the playhead lands on the last tick and the transport **stops itself** (`playing=false playhead=4000`) |
+| the box | the poster is 240×135 in every state, so a frame sequence never reflows the card |
+
+Three rules a media plan needs:
+
+1. **Playback is not a runtime capability here.** There is no `video`/`audio`
+   element and no playback verb, so audio cannot be reached at all and a clip's
+   frames must arrive as pixels the app pushes.
+2. **`setImagePixels` is the frame surface, and a layout effect is the seam.** A
+   new buffer replaces the previous one whole, with no re-mount and no reflow
+   (`chart-raster` measured the same element at two sizes), so a poster, a video
+   frame and a live chart are one mechanism.
+3. **The app owns the clock and the transport.** The window paints what the
+   interval produces; with the shipped `Button` for play/pause, a focusable pad
+   for the keys, and `fillWidth` arithmetic for the track, the whole player is
+   composition. The measured pace of the interval in this harness is slower than
+   the 100 ms it declares — the playhead read `400` after roughly two seconds of
+   wall time, about half a second per tick — so a smooth frame sequence is bounded
+   by the window's paint rate, not by the timer.
+
+48 checks, `--only media-frame-lifecycle`, green on 0.11.0 here (~7–8 s, four
+captures). Fixture `src/live/media-frame.ts` (the ids, the clip, the four frame
+colours, the buffer bytes, the clock and fill arithmetic and the readout) +
+`media-frame.test.ts` (the installed runtime's element list with no media host,
+the clip's arithmetic and clamping, the frame schedule, the RGBA buffer, the
+registry entry and wiring, the count, and this section). Two negative controls
+measured, exit `1` each, restored green: pushing the first frame's bytes for
+every playhead leaves the poster on `#1e3a8a` and fails
+`the seek paints the frame the playhead landed on` with
+`expected 129600 ± 6480, got 0`; and a transport whose press toggles nothing
+fails `a press starts the clip and its app clock advances it` with
+`expected a string containing "playing=true", got "playing=false playhead=0"`.
+Evidence: `.artifacts/live/media-{rest,playing,paused,sought}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -6475,6 +6538,8 @@ src/live/crop-overlay.ts the crop frame's mask, handle and clamp arithmetic
 src/live/crop-overlay-probe.tsx the crop overlay's view and steps (one module)
 src/live/notification-centre.ts the notification queue's bound, stack geometry and readouts
 src/live/notification-centre-probe.tsx the notification centre's view and steps (one module)
+src/live/media-frame.ts the clip's frames, buffer bytes and transport arithmetic
+src/live/media-frame-probe.tsx  the player's view and steps (one module)
 src/live/settle.ts      the bounded poll a probe waits for a settled paint with
 src/live/host.ts         the window → AsyncSmokeHost adapter
 src/live/run.ts          the live CLI (preflight → mount each probe → report)
@@ -6541,8 +6606,8 @@ narrower. Each deviation is deliberate and measured:
   `breadcrumb-navigation-lifecycle` and `chart-surface-lifecycle` and
   `text-undo-lifecycle` and `key-hold-lifecycle` and `focus-reveal-lifecycle`
   and `z-index-lifecycle` and `floating-reflow-lifecycle` and
-  `notification-centre-lifecycle` and `sidebar-clip-lifecycle` (fifty-four
-  probes, each run alone).
+  `notification-centre-lifecycle` and `sidebar-clip-lifecycle` and
+  `media-frame-lifecycle` (fifty-five probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

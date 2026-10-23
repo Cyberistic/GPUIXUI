@@ -1068,6 +1068,7 @@ import {
 } from "./hidden-subtree-probe.js";
 import { CropOverlayProbe, cropOverlaySteps } from "./crop-overlay-probe.js";
 import { SidebarClipProbe, sidebarClipSteps } from "./sidebar-clip-probe.js";
+import { MediaFrameProbe, mediaFrameSteps } from "./media-frame-probe.js";
 import {
   NotificationCentreProbe,
   notificationCentreSteps,
@@ -29429,5 +29430,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "sidebar-clip-lifecycle",
     view: () => <SidebarClipProbe />,
     steps: sidebarClipSteps,
+  },
+  "media-frame-lifecycle": {
+    id: "media-frame-lifecycle",
+    view: () => <MediaFrameProbe />,
+    steps: mediaFrameSteps,
   },
 };
