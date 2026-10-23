@@ -21,8 +21,12 @@
  *   its `label` is required, because an icon-only control has no text to read.
  *   The glyph tint is the `mutedForeground` role at rest (the `foreground` role
  *   under the pointer), which the recipe does not paint.
- * - The activation runs **before** a caller's key handler, the order this
- *   package's triggers were written against; see {@link activation}.
+ * - The primitive owns the activation contract for both routes: a click and an
+ *   activating key reach `onActivate`, and the caller's key handlers run after
+ *   it — the order this package's triggers were written against (a menu trigger
+ *   records the row its surface must focus in `onKeyDown`, which the action
+ *   must not clear). Nothing here may install a second one; see
+ *   `button-activation.test.ts`.
  */
 
 import type { Props } from "@gpuix/react";
@@ -32,7 +36,6 @@ import {
 } from "@gpuixui/primitives/button";
 import { cn } from "@gpuixui/tw";
 import { Match } from "effect";
-import { activationHandlers } from "./key.js";
 import type { Theme } from "./theme.js";
 
 /** The four looks a control can take. */
@@ -104,25 +107,6 @@ export const actionOnColor = (theme: Theme, variant: ButtonVariant): string =>
   );
 
 /**
- * The key half of a press, on the adapter rather than the primitive.
- *
- * The primitive runs a caller's key handler **before** its own activation, and
- * this package's triggers depend on the opposite order: a menu trigger opens on
- * `onKeyDown` and records which row should take focus, then the activation click
- * it also receives must not clear that record (its own guard reads "activation
- * clicks run before onKeyDown within the same render"). Installing the
- * activation here restores the order the 21 call sites were written against,
- * while the primitive still owns the pointer press, the held-key guard and the
- * disabled refusal.
- */
-const activation = (
-  disabled: boolean,
-  onClick: Props["onClick"],
-  observe: Pick<Props, "onKeyDown" | "onKeyUp">,
-): Pick<Props, "onKeyDown" | "onKeyUp"> =>
-  disabled ? observe : activationHandlers((event) => onClick?.(event), observe);
-
-/**
  * A labelled action. `variant` picks the look, `size` the density-defined
  * height; the caller's `style` is resolved against the live state and merged
  * last, so it wins.
@@ -132,8 +116,6 @@ export const Button = ({
   size = "md",
   disabled = false,
   onClick,
-  onKeyDown,
-  onKeyUp,
   style,
   "aria-label": ariaLabel,
   ...rest
@@ -145,8 +127,7 @@ export const Button = ({
     disabled={disabled}
     label={ariaLabel}
     className={cn(VARIANT_CLASS[variant])}
-    onClick={onClick}
-    {...activation(disabled, onClick, { onKeyDown, onKeyUp })}
+    onActivate={onClick}
     style={style}
   />
 );

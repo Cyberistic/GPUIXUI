@@ -9,6 +9,19 @@ actions). Phase 3 (base the two public prop types on the primitives') and Phase 
 the measured deltas a Phase 4 executor must carry over — in particular the key
 order, which is not visible in the primitive's API.
 
+**The adapter's activation install is gone (2026-10-23)** — the primitives'
+`Button` now runs its activation before a caller's key handler, so the adapter
+hands the caller's press to `onActivate` and forwards the caller's key handlers
+untouched; the local `activation` helper and its `activationHandlers` import are
+deleted (175 → 148 lines). `src/button-activation.test.ts` holds both halves —
+the adapter names no second contract, and the primitive still composes
+`onKey("down")` before `onKeyDown` — and fails on the previous adapter
+(`expected … not to contain 'onClick={onClick}'`). Behaviour: the button,
+activation-release, dropdown-menu, context-menu, navigation-menu, popover,
+preview-card, dialog, drawer, confirm-dialog, date-picker, pagination,
+command-menu, message-scroller, carousel and toast suites are green (258 cases).
+What remains of Phase 4 is the call-site rewrite and the adapter's deletion.
+
 ## Why
 
 `packages/components/src/internal/button.tsx` is a **222-LOC second button
