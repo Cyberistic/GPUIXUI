@@ -2210,14 +2210,15 @@ keyboardDimFailures(lightTheme); // [] — every dimmed label stays visible
 
 ### Decorative surfaces
 
-Thirteen surfaces carry no text and are not an essential boundary, so WCAG's floors
+Fourteen surfaces carry no text and are not an essential boundary, so WCAG's floors
 do not apply to them: the dividers (`border`), the skeleton fill, the modal veil
 (`overlay`), a status message's soft tint and its edge, a scrollbar thumb, the
 wash a row is tinted with while it is hovered, pressed, selected or accented, the
 resting fill of a tonal action (`secondary`), the rail a bar draws its value
 inside (`muted`), the face a control wears while it
 is unavailable (`disabled`), the derived hover and press a filled role paints, the
-derived wash a row paints in a pointer state, and
+derived wash a row paints in a pointer state, the derived rule a row draws across
+the wash it crosses, and
 the shadow a raised surface drops. They still
 have one job — be seen — so they get one floor of their own,
 `decorativeFloor = 1.05:1`. Below it a
@@ -2225,7 +2226,8 @@ surface reads as the fill it is painted on: a card without an edge, a skeleton
 that looks like an empty row or an empty dialog, a dialog with no layer behind
 it, a message with no surface or no boundary, a scroller whose thumb nobody can
 find, a menu row that does not answer the pointer, a button that looks like a
-label, a bar with no total, a disabled control that looks available.
+label, a bar with no total, a disabled control that looks available, a table whose
+grid disappears on the row the reader chose.
 
 `decorativeFailures(theme, floor?)` measures every placement the system paints,
 compositing a translucent role over its surface first, so the veil — translucent
@@ -2245,6 +2247,7 @@ how a status edge is measured at the alpha its component actually uses:
 | filledAction | `secondary` | `background`, `card`, `popover`, `muted` |
 | track | `muted` | `background`, `card`, `popover` (never `muted` itself) |
 | disabledFace | `disabled` | `primary`, `secondary`, `destructive`, `accent`, `input` |
+| derivedDivider | `border`, stepped toward `borderStrong` | `hover`, `active`, `accent`, `selected` |
 
 The thumb is chrome: the platform paints and sizes it and the role only tints it,
 so it is not held to the 3:1 a control boundary gets. It is still held to being
@@ -2453,6 +2456,41 @@ message that asked for it, so the veil has to recede the tint the message is
 painted on. A surface that cannot be measured at all — a
 translucent page — is reported with `ratio: undefined`, exactly as a text pair
 is.
+
+A **rule a row draws** is the same defect one surface on, and it is not a state.
+A table row paints its own rule inside the row — `borderWidth.thin` in `border`,
+on the row's own fill (`packages/data/src/table/table.tsx`) — so the line that
+separates two records is measured against the wash the row is wearing. Measured
+over the sixteen shipped, high-contrast, platform and authored styles, the raw
+`border` is under the 1.05:1 floor on **17 of the 64** placements: the base light
+theme's and the base dark theme's `accent` at **1.001:1** and **1.004:1**, macOS
+light's `active` at 1.050:1 and its `accent` at 1.023:1, macOS dark's `active` at
+**1.000:1** and its `accent` at 1.011:1, Windows light's `hover` at 1.048:1 and
+its `accent` at 1.020:1, Windows dark's `active` at 1.047:1 and its `selected` at
+1.038:1, and Aero light's `selected` at 1.036:1. A palette edit cannot close it:
+the same `border` carries the page and the card under every quiet row, so raising
+it to clear a saturated wash draws a grid on the surfaces it already reads on.
+
+`dividerOn(theme, surface)` therefore derives the rule from the surface it
+crosses: the theme's `border`, stepped toward `borderStrong` — the functional
+boundary and the strongest line a theme owns — by the smallest **2%** step that
+clears the floor, returned unchanged where it already does. `borderStrong` clears
+all 64 placements in every shipped style (its tightest is 3.73:1, Windows light's
+`active`), so the derivation always has room: the lines it moves land at
+**1.057:1 to 1.080:1**, while the tightest placement overall is an authored rule
+the derivation did not touch (macOS dark's `selected` at **1.053:1**), so a quiet
+row keeps the rule it had. A surface the renderer
+cannot measure (a translucent role, or the `null` a store hands back) keeps
+`border` rather than a guess, and a palette whose own strongest line cannot
+answer a wash keeps `borderStrong`. `dividerWashes` is the four surfaces and
+`dividerFailures` names a placement the palette cannot answer; the report rides
+the `decorative` one, so the gate holds it without a new contract.
+
+**Adoption is the data workstream's, and the defect is live until it lands.**
+`packages/data`'s table still paints `colors.border` on its header and every row
+(`table.tsx`), so the measured placements above are what a reader sees today; the
+tokens half is the helper, this measurement and the report
+(`TODO.md` → Interlocks records the remaining half).
 
 The **elevation tint** is in the table too, and it is the surface this page used
 to say was deliberately outside it. A shadow is a blurred geometry, so a flat

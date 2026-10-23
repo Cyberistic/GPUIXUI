@@ -305,6 +305,21 @@ Two border roles:
   1.01–1.04:1 on the green and amber tints), so the four tints joined the same
   contract — thirteen of the sixteen styles missed it, the worst at 2.23:1.
 
+A **rule drawn on a row** is not a state, and it is measured against the state
+the row is in. A table row paints its own rule inside the row — the thin
+`border` role, on the row's own fill — so a selected row fills `selected` and a
+pointed one tints `hover`/`accent` under it. Measured over the shipped styles,
+the raw `border` is under the 1.05:1 perceptibility floor on 17 of the 64 wash
+placements (the base themes' `accent` at 1.001:1 and 1.004:1, macOS dark's
+`active` at 1.000:1), so the grid disappears exactly where the reader is
+looking. The rule is derived instead: `dividerOn(theme, surface)` steps `border`
+toward `borderStrong` by the smallest 2% that clears the floor and returns the
+role where it already does, so a quiet row keeps its rule and only a washed one
+steps. The helper, the placement count and the four washes are in
+[`docs/tokens.md` §Decorative surfaces](./tokens.md#decorative-surfaces). The
+data package's table does not ask for it yet, so that defect is live until it
+does.
+
 A **field is carried by its edge, not its fill.** A field sits on the page, a
 card, a popover and a `muted` toolbar, and in the light palettes the page
 (`#F6F8FA`) and a card (`#FFFFFF`) are only 1.06:1 apart — less than the

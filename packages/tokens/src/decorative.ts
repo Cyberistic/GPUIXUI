@@ -25,9 +25,10 @@
  * of the one it replaced looks available; a filled action's derived step that
  * lands on the fill it replaces is an action that does not answer the pointer; a
  * row's derived press that lands on the wash it replaces is a row that does not
- * answer the pointer either; a
+ * answer the pointer either; a rule that vanishes on the row the reader chose is
+ * a table grid that separates nothing; a
  * shadow that cannot darken the page it falls on leaves every raised surface
- * flat. One floor covers all thirteen, 1.05:1.
+ * flat. One floor covers all fourteen, 1.05:1.
  */
 
 import { alphaOf, blend, type ThemeColors } from "./color.js";
@@ -70,8 +71,9 @@ export interface DecorativeSurface {
    * `actionFeedback` is the derived hover or press a filled role paints (its
    * placements are {@link actionFeedbackPlacements}, because the paint is
    * derived rather than a role), `pointerWash` is the derived wash a row paints
-   * over the wash it already wears (see {@link pointerWashTransitions}), and
-   * `elevation` is the shadow a raised surface drops.
+   * over the wash it already wears (see {@link pointerWashTransitions}),
+   * `derivedDivider` is the rule a row paints on the wash it wears (see
+   * {@link dividerOn}), and `elevation` is the shadow a raised surface drops.
    */
   readonly surface:
     | "divider"
@@ -86,6 +88,7 @@ export interface DecorativeSurface {
     | "disabledFace"
     | "actionFeedback"
     | "pointerWash"
+    | "derivedDivider"
     | "elevation";
   /** The role painted. Its alpha, if it has one, is part of the measurement. */
   readonly role: keyof ThemeColors;
@@ -479,6 +482,134 @@ export function pointerWashFailures(
 }
 
 /**
+ * The washes a row can wear, which a rule crossing the row has to be seen on.
+ *
+ * The four states a row takes: the `hover` a menu or table row tints, the
+ * `accent` a list row tints under the pointer, the `active` a row keeps while
+ * the press is down and the `selected` fill it holds once chosen. A row's rule
+ * is painted inside the row, so each of these is the surface behind it.
+ */
+export const dividerWashes = [
+  "hover",
+  "active",
+  "accent",
+  "selected",
+] as const satisfies ReadonlyArray<keyof ThemeColors>;
+
+/** One row state a rule can be drawn on. */
+export type DividerWash = (typeof dividerWashes)[number];
+
+/** The granularity of the divider derivation: 2% of the way to `borderStrong`. */
+const DIVIDER_STEPS = 50;
+
+/**
+ * The colour a rule — a table row's divider, a list row's baseline — paints on
+ * the surface it crosses.
+ *
+ * `border` is the decorative rule role, and a row is a surface of its own: a
+ * chosen row fills `selected` and tints `accent` under the pointer, a pressed
+ * row repaints the derived wash. Measured over the sixteen shipped,
+ * high-contrast, platform and authored styles, the raw `border` is under the
+ * 1.05:1 perceptibility floor on **17 of the 64** wash placements — the base
+ * light theme's `accent` is **1.001:1** and the base dark theme's **1.004:1**,
+ * while macOS dark's pressed wash is **1.000:1** — so a table's grid vanishes
+ * on exactly the rows the reader is looking at. The palette cannot answer it
+ * with one role: the base light page and card are themselves carried by that
+ * same rule, and raising `border` to clear a saturated wash would draw a grid
+ * on every quiet surface.
+ *
+ * The rule is therefore derived: the theme's `border`, stepped toward
+ * `borderStrong` — the functional boundary role, the strongest line a theme
+ * owns — by the smallest **2%** step that clears {@link decorativeFloor}
+ * against the surface it crosses. `borderStrong` clears all 64 placements in
+ * every shipped style (its tightest is 3.73:1), so the derivation always has
+ * room; the derived line lands just over the floor (1.057–1.080:1 in the
+ * shipped styles) rather than at the boundary's weight, so a row keeps the quiet
+ * rule it had and only a washed row's line steps. The role is returned
+ * unchanged where it already clears, so a resting row paints exactly `border`.
+ *
+ * A surface the renderer cannot measure — a translucent or missing role, which
+ * is what a theme restored from storage hands back — returns `border` rather
+ * than a guess, and a theme that carries neither `border` nor `borderStrong`
+ * returns `undefined`, the absence rule {@link elevationShadow} follows. A
+ * palette whose strongest line cannot clear a wash keeps `borderStrong` and
+ * {@link dividerFailures} reports it.
+ *
+ * @example
+ * ```tsx
+ * import { dividerOn, type Theme } from "@gpuixui/tokens";
+ *
+ * <div style={{ borderBottomWidth: theme.borderWidth.thin, borderColor: dividerOn(theme, theme.colors.selected) }} />
+ * ```
+ */
+export function dividerOn(
+  source: { readonly colors: Partial<ThemeColors> },
+  surface: string | undefined,
+  floor: number = decorativeFloor,
+): string | undefined {
+  const base = source.colors.border;
+  const strongest = source.colors.borderStrong;
+  if (base === undefined || strongest === undefined) return undefined;
+  if (surface === undefined) return base;
+  const seen = (colour: string): boolean => {
+    const ratio = contrastRatio(colour, surface);
+    return ratio !== undefined && ratio >= floor;
+  };
+  // A surface that cannot be measured keeps the authored role: the derivation
+  // must not move a line for a surface it cannot see.
+  if (contrastRatio(base, surface) === undefined || seen(base)) return base;
+  return (
+    Array.from({ length: DIVIDER_STEPS }, (_, offset) =>
+      blend(base, strongest, (offset + 1) / DIVIDER_STEPS),
+    ).find(seen) ?? strongest
+  );
+}
+
+/**
+ * The wash placements a theme's rule cannot answer.
+ *
+ * Each of {@link dividerWashes} is held to {@link decorativeFloor}: a table's
+ * grid that cannot be seen on the row the reader selected separates nothing.
+ * The report names the role the rule is derived from and the wash it crosses, so
+ * a reader can tell which state broke; a theme with no `border`, no
+ * `borderStrong` or no wash role is reported unmeasurable rather than skipped,
+ * the rule every other contract follows.
+ *
+ * @example
+ * ```ts
+ * import { dividerFailures, type Theme } from "@gpuixui/tokens";
+ *
+ * dividerFailures(brandTheme); // [] when a rule is visible on every row state
+ * ```
+ */
+export function dividerFailures(
+  theme: {
+    readonly colors: Partial<ThemeColors>;
+  },
+  floor: number = decorativeFloor,
+): readonly DecorativeFailure[] {
+  return dividerWashes.flatMap((over) => {
+    const surface = theme.colors[over];
+    const painted = dividerOn(theme, surface, floor);
+    const ratio =
+      painted === undefined || surface === undefined
+        ? undefined
+        : contrastRatio(painted, surface);
+    return ratio !== undefined && ratio >= floor
+      ? []
+      : [
+          {
+            surface: "derivedDivider" as const,
+            role: "border" as const,
+            over,
+            ratio,
+            floor,
+          },
+        ];
+  });
+}
+
+/**
  * The faces a control can wear while it is available.
  *
  * A disabled control replaces one of these rather than sitting on a strip, so
@@ -807,7 +938,9 @@ export interface DecorativeFailure {
  * step is relative to `foreground`, which a brand is free to put on top of its
  * own action role. The derived washes a row paints answer it the same way
  * through {@link pointerWashTransitions}: a press that lands on the wash the row
- * already wears is a row that does not answer the pointer.
+ * already wears is a row that does not answer the pointer. The rule a row paints
+ * answers it through {@link dividerFailures}: a grid line that vanishes on the
+ * row the reader selected separates nothing.
  *
  * @example
  * ```ts
@@ -852,5 +985,6 @@ export function decorativeFailures(
   );
   const feedback = actionFeedbackFailures(theme, floor);
   const washes = pointerWashFailures(theme, floor);
-  return [...surfaces, ...feedback, ...washes];
+  const rules = dividerFailures(theme, floor);
+  return [...surfaces, ...feedback, ...washes, ...rules];
 }
