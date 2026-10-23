@@ -10381,12 +10381,12 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 `[x]` Give the **curated component pages their generated verdict and packages** —
       both strips were mounted on the package frame only (`docs-view.tsx`'s
-      `PackageContent`), so the 38 pages a reader opens in the Components lane —
-      the curated pages that shadow their package copies — carried no
-      `COMPONENTS.md` verdict and no "Built on" line, while the page each one
-      displaces carried both. **26 of the 38 are `done` on a `partial` GPUix
-      verdict** (Breadcrumb, Button, Checkbox, Dialog, Select, Table, Tooltip,
-      …), and the index tile's badge was the only place a reader could see it;
+      `PackageContent`), so the 38 curated pages in the Components lane carried no
+      `COMPONENTS.md` verdict and no "Built on" line, while the package page each
+      one displaces at the same URL — 32 of the 38 — carried both. **26 of the 38
+      are `done` on a `partial` GPUix verdict** (Breadcrumb, Button, Checkbox,
+      Dialog, Select, Table, Tooltip, …), and the index tile's badge was the only
+      place a reader could see it;
       `page-dependencies.test.ts` even asserted the strip was "not" on the
       curated frame because "the curated page writes its own Dependencies table"
       — no curated page writes one. `SiteContent` now mounts `<StatusStrip>` and
