@@ -8624,7 +8624,29 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 235/235
+`[x]` `[██████████]` 236/236
+
+`[x]` Correct the **plan that said a shipped route was unbuilt** — plan 440's
+      status row still read "the `/live` route is **not built**" and its §1 ended
+      "the site does not mount it", while `src/routes/live.tsx` has mounted the
+      wasm renderer since 2026-10-22 and two probes measured the paint; the plan
+      index repeated "the route is unbuilt", so a later executor would have
+      rebuilt a surface that already ships. The plan now carries its outcome
+      (§6: a step-by-step table of what shipped where, the probes' measured
+      colours, and the one honest remainder — the React reconciler mount, since
+      `@gpuix/react`'s module graph is still unmeasured for a browser), §1 reads
+      "the site mounts it", and the index row says **implemented**.
+      `gpuix-web.test.ts` gained `keeps the plan's status and the route in
+      agreement`: it reads the route, the plan and the index, refuses the
+      retracted sentence, requires §6 and the route path, and holds the "Still
+      owed" paragraph to the surface's own imports — so the plan may claim the
+      reconciler gap only while `live-surface.tsx` imports no `@gpuix/react`.
+      Directions measured: restoring the index's "the route is unbuilt" fails
+      `expected … not to contain 'the route is unbuilt'`, and planting
+      `import { render } from "@gpuix/react"` in the surface fails
+      `expected true to be false`; restored, the file is 11/11. No native
+      scenario applies — a plan, an index row and their guard have no runtime
+      path.
 
 `[x]` Measure the **landing page's own palette** — `src/styles/app.css` had been
       held to the library's floors since the docs palette landed, and

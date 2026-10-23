@@ -126,7 +126,7 @@ component call sites adopt the outline in their own workstream.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [440](./440-live-gpuix-web-surface.md) | A live GPUix surface in the docs site: the wasm browser build, cross-origin isolation, one mount per page load | F | `203` (capability record), the docs deploy middleware | **spike planned** — the capability evaluation, the policy section and `apps/docs/src/lib/gpuix-web.test.ts` are on `master`; the route is unbuilt because no browser-automation tool on this host can prove a paint |
+| [440](./440-live-gpuix-web-surface.md) | A live GPUix surface in the docs site: the wasm browser build, cross-origin isolation, one mount per page load | F | `203` (capability record), the docs deploy middleware | **implemented** — `/live` boots the wasm build through the batch protocol and paints a real frame; `live-surface-probe` and `live-route-probe` measured it, `src/lib/gpuix-web.test.ts` holds the route, the isolation and the policy together. Owed: the React reconciler mount (`@gpuix/react`'s module graph is unmeasured for the browser), so the route uses the same operations directly. §6 records the outcome |
 
 > The earlier phase-E docs plans (`433` platform recipes, `434` landing, `435a–c`
 > Pele / Editor / RTL) are listed in the reference-adoption table above; they

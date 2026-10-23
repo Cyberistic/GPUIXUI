@@ -155,6 +155,30 @@ describe("the GPUix web build", () => {
     expect(policy).toContain("440-live-gpuix-web-surface");
   });
 
+  it("keeps the plan's status and the route in agreement", () => {
+    // Plan 440 is the swarm's record of this work, and it said the route was
+    // "not built" after `/live` shipped: a later executor reading the plan would
+    // rebuild a surface that already paints. The remaining gap is real — `/live`
+    // drives the batch protocol, not `render()` — so the plan owes that sentence
+    // only while the surface imports no reconciler.
+    const plan = read(".agents/slop/plans/440-live-gpuix-web-surface.md");
+    const index = read(".agents/slop/plans/README.md");
+    const surface = read("apps/docs/src/components/docs/live-surface.tsx");
+    const usesReconciler = /from\s+["']@gpuix\/react["']/.test(surface);
+
+    expect(read("apps/docs/src/routes/live.tsx")).toContain(
+      'createFileRoute("/live")',
+    );
+    expect(plan).not.toContain("the `/live` route is **not built**");
+    expect(plan).toContain("## 6. Outcome (landed)");
+    expect(plan).toContain("apps/docs/src/routes/live.tsx");
+    expect(index).not.toContain("the route is unbuilt");
+    expect(index).toMatch(
+      /\| \[440\]\(\.\/440-live-gpuix-web-surface\.md\) \|.*\| \*\*implemented\*\*/,
+    );
+    expect(plan.includes("**Still owed:**")).toBe(!usesReconciler);
+  });
+
   it("holds the measured paint to the probe that measures it", () => {
     const probe = read("apps/docs/scripts/live-surface-probe.ts");
     const frame = read("apps/docs/scripts/live-frame.ts");
