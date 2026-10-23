@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-99 probes a real window can prove, of which nineteen mount shipped
+100 probes a real window can prove, of which nineteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -5560,6 +5560,51 @@ sample reads the picture where the veil should be).
 Evidence: `.artifacts/live/crop-rest.png`, `.artifacts/live/crop-min.png`,
 `.artifacts/live/crop-max.png`, `.artifacts/live/crop-dragged.png`.
 
+### `faded-hitbox-lifecycle` — measured on 0.11.0 here
+
+**Whether a fade removes the hitbox, not only the ink.** Every leaving surface
+in the library fades to zero and stays mounted for its exit, and two guards rest
+on what happens next: `presenceStyle` writes `pointerEvents: "none"` while a
+surface leaves, and `PresenceShield` covers the controls a dismissed shell keeps
+mounted. If a share of zero removed the box from the pointer's path those guards
+would be ceremony; if it does not, a ghost swallows the press meant for the
+screen behind it. The probe mounts three shapes: a control at `opacity: 0` on
+its own row, a painted target with a transparent cover over it, and the same
+pair whose cover declares `pointerEvents: "none"`.
+
+| Shape | Measured |
+| ----- | -------- |
+| the faded control | still reports its **200×32** box, paints the page at its centre, keeps its **Tab stop**, and hears the press (`faded=1`) and the key typed while it holds focus (`keys=1`) |
+| a target under a transparent cover | the target's fill paints through the cover, but a press at the shared point lands on the **cover** (`cover=1 target=0`) |
+| the same pair with `pointerEvents: "none"` on the cover | the press reaches the target (`inertTarget=1`) while the cover's own handler still runs (`inertCover=1`) — the opt-out removes the fill's hitbox, not the handler |
+
+19 checks, `--only faded-hitbox-lifecycle`, green on 0.11.0 here. Fixture:
+`src/live/opacity-hit.ts` — the ids, the share, the size, the six counters, the
+readout and the check count; `opacity-hit.test.ts` holds them and the section
+below.
+
+What it settles, for a fade or a dismissed shell:
+
+1. **Opacity hides paint, not interaction.** A box at zero is still laid out,
+   still a Tab stop and still in the pointer's path, so a surface cannot fade
+   itself out and expect the press to reach what is behind it.
+2. **The guard is the opt-out.** `pointerEvents: "none"` is what removes the
+   cover from the hit test, which is why the motion seam's leaving rule and the
+   overlay shield must be written rather than inferred from the tween. The
+   opt-out keeps the cover's own handler, so a shield must be a surface with no
+   action of its own — the rule `hover-routing-lifecycle` measured for hover.
+3. **A key follows the focus, not the fade.** The key reached the faded control
+   while it held focus, so a leaving control that keeps a stop is live to the
+   keyboard until it is unmounted — a shell that keeps its controls mounted owes
+   both the pointer guard and the unmount.
+
+Negative control, measured: mounting the second pair with the cover's opt-out
+removed (`inert={false}`) fails `the inert cover lets the press through to its
+target` with `inertCover=1 inertTarget=0` — the press lands on the cover, not
+the target. Exit `1`; restored, green.
+
+Captures: `.artifacts/live/faded-hitbox{,-pressed}.png`.
+
 ## Terminal mode: the pty probe
 
 `docs/gpuix-capabilities.md` lists **Terminal rendering** as supported — the
@@ -5787,8 +5832,8 @@ narrower. Each deviation is deliberate and measured:
   `image-fit`, `grid-focus-lifecycle`, `system-theme-follow`, `document-type`
   `dock-split-lifecycle`, `flex-sizing`, `scrollbar-thumb`,
   `scrollbar-thumb-both`, `collapsible-lifecycle`, `scrollbar-drag` and
-  `hidden-subtree-lifecycle` and `find-highlight` and `crop-overlay`
-  (forty-one probes, each run alone).
+  `hidden-subtree-lifecycle` and `find-highlight` and `crop-overlay` and
+  `faded-hitbox-lifecycle` (forty-two probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

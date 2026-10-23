@@ -997,6 +997,7 @@ import {
   hiddenSubtreeSteps,
 } from "./hidden-subtree-probe.js";
 import { CropOverlayProbe, cropOverlaySteps } from "./crop-overlay-probe.js";
+import { FadedHitboxProbe, fadedHitboxSteps } from "./opacity-hit-probe.js";
 import {
   ACTION_RING_DANGER,
   ACTION_RING_NEIGHBOUR,
@@ -28016,5 +28017,10 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "crop-overlay",
     view: () => <CropOverlayProbe />,
     steps: cropOverlaySteps,
+  },
+  "faded-hitbox-lifecycle": {
+    id: "faded-hitbox-lifecycle",
+    view: () => <FadedHitboxProbe />,
+    steps: fadedHitboxSteps,
   },
 };

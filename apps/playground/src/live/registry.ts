@@ -630,6 +630,12 @@ export const liveRegistry = [
       "Content: a crop frame masks a bitmap with four veil bars that take no press, and a corner handle drags the hole inside the bitmap's own bounds",
     capability: "content",
   },
+  {
+    id: "faded-hitbox-lifecycle",
+    title:
+      "Input: a box at opacity zero paints nothing yet keeps its tab stop, its press and its keys, so only an opt-out lets a press through a ghost",
+    capability: "input",
+  },
 ] as const satisfies ReadonlyArray<LiveProbeMeta>;
 
 /** The id of a registered live probe. */
