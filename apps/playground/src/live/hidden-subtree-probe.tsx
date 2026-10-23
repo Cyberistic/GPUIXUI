@@ -279,9 +279,7 @@ export const hiddenSubtreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const wrapper = yield* ctx.expectSome(
       "the visibility:hidden frame keeps the row its invisible control holds",
-      Option.fromNullishOr(
-        yield* ctx.host.bounds(HIDDEN_IDS.visibilityFrame),
-      ),
+      Option.fromNullishOr(yield* ctx.host.bounds(HIDDEN_IDS.visibilityFrame)),
     );
     yield* ctx.expectNear(
       "the invisible control still takes its 32-point row",
@@ -327,9 +325,7 @@ export const hiddenSubtreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     //    probe records until the component stops trusting `display`.
     const active = yield* ctx.expectSome(
       "the active slide paints",
-      Option.fromNullishOr(
-        yield* ctx.host.bounds(HIDDEN_IDS.activeSlideFrame),
-      ),
+      Option.fromNullishOr(yield* ctx.host.bounds(HIDDEN_IDS.activeSlideFrame)),
     );
     const inactive = yield* ctx.expectSome(
       "the spare slide paints: the carousel's hide is a no-op",

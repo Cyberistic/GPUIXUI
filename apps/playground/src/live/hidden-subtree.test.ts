@@ -84,7 +84,9 @@ describe("the stops the window measured", () => {
 
   it("leaves the invisible control out of the walk", () => {
     // The one rule the runtime does keep: `visibility` removes a stop.
-    expect(Arr.contains(HIDDEN_STOPS, HIDDEN_IDS.visibilityControl)).toBe(false);
+    expect(Arr.contains(HIDDEN_STOPS, HIDDEN_IDS.visibilityControl)).toBe(
+      false,
+    );
     // The walk has to be long enough to see the whole cycle and repeat once.
     expect(HIDDEN_WALK).toBeGreaterThan(HIDDEN_STOPS.length);
   });
@@ -107,7 +109,10 @@ describe("the stops the window measured", () => {
 describe("the hidden-subtree-lifecycle probe's record", () => {
   it("registers the probe with the focus capability", () => {
     expect(
-      Arr.filter(liveRegistry, (probe) => probe.id === "hidden-subtree-lifecycle"),
+      Arr.filter(
+        liveRegistry,
+        (probe) => probe.id === "hidden-subtree-lifecycle",
+      ),
     ).toEqual([
       {
         id: "hidden-subtree-lifecycle",
@@ -149,10 +154,14 @@ describe("the hidden-subtree-lifecycle probe's record", () => {
   });
 
   it("states the rules and the carousel defect they leave", () => {
-    expect(flat).toContain("`display: none` is not a hiding word in this runtime");
+    expect(flat).toContain(
+      "`display: none` is not a hiding word in this runtime",
+    );
     expect(flat).toContain("`visibility: hidden` is.");
     expect(flat).toContain("The traversal follows `visibility`, not `display`");
-    expect(flat).toContain("A code focus on an invisible control is a focus id with no input");
+    expect(flat).toContain(
+      "A code focus on an invisible control is a focus id with no input",
+    );
     expect(flat).toContain("The shipped `Carousel` is broken by rule 1");
   });
 
@@ -168,12 +177,8 @@ describe("the probe asks the question the section answers", () => {
     expect(probeSource).toContain("<Carousel");
     expect(probeSource).toContain('style={{ display: "none" as const }}');
     expect(probeSource).toContain('style={{ visibility: "hidden" as const }}');
-    expect(probeSource).toContain(
-      "testId={HIDDEN_IDS.activeSlideFrame}",
-    );
-    expect(probeSource).toContain(
-      "testId={HIDDEN_IDS.inactiveSlideFrame}",
-    );
+    expect(probeSource).toContain("testId={HIDDEN_IDS.activeSlideFrame}");
+    expect(probeSource).toContain("testId={HIDDEN_IDS.inactiveSlideFrame}");
   });
 
   it("types the one key the hidden control counts", () => {
