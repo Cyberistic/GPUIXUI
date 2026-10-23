@@ -156,6 +156,26 @@ describe("SearchReplace", () => {
     search.unmount();
   });
 
+  it("reads a stored document that is not text as an empty one", () => {
+    // The bug guarded: `value` is a document restored from storage as often as
+    // a literal, and a saved record writes `null` where it carried no text.
+    // `findRanges` called `text.indexOf` on it the moment the reader typed, so
+    // the bar threw out of the render instead of reporting no matches — the
+    // rule `CodeEditor` and `MarkdownEditor` already follow through `draftOf`.
+    const search = render(
+      <SearchReplace
+        value={null as unknown as string}
+        onValueChange={() => undefined}
+      />,
+    );
+    typeInto(search, "search-replace-find", "cat");
+    expect(text(search)).toContain("No matches");
+    // The replace-all route is disabled with no match, and must stay inert.
+    press(search, "search-replace-replace-all");
+    expect(text(search)).toContain("No matches");
+    search.unmount();
+  });
+
   it("reads a blank name as the default, never an unnamed control", () => {
     // The bug guarded: a destructuring default covers only `undefined`, so a
     // name a table or a saved record handed over blank reached `aria-label`

@@ -58,3 +58,7 @@ occurrence the rule rejects is still found.
   copy from an i18n table or a saved record as often as literals, so an empty or
   whitespace-only name is an absence — never an unnamed control — and a name
   given is trimmed.
+- **A document that is not text reads as an empty one**: `value` is a document
+  restored from storage as often as a literal, and a saved record writes `null`
+  where it carried no text; it is read once through `draftOf`, so typing a query
+  reports `No matches` instead of throwing out of the render.

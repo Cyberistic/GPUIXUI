@@ -23,6 +23,7 @@ import * as Arr from "effect/Array";
 import { useState } from "react";
 import { findRanges, replaceAll } from "./logic.js";
 import { recipeStyle } from "../internal/recipe.js";
+import { draftOf } from "../internal/text.js";
 
 /** The bar's resting surface. */
 const SEARCH_ROOT = "flex flex-row items-center gap-2 flex-wrap";
@@ -37,7 +38,7 @@ const PREVIOUS_NAME = "Previous match";
 
 /** {@link SearchReplace} props. */
 export interface SearchReplaceProps {
-  /** The controlled document text. */
+  /** The controlled document text. A value that is not text reads as an empty document. */
   readonly value: string;
   /** Reports every edit: a single replace and a replace-all. */
   readonly onValueChange: (value: string) => void;
@@ -103,8 +104,13 @@ export const SearchReplace = ({
   const [matchCase, setMatchCase] = useState(true);
   const [wholeWord, setWholeWord] = useState(false);
 
+  // A document restored from storage or read out of a saved record writes
+  // `null` where it carried no text; `findRanges` and a replacement call
+  // `.indexOf`/`.slice` on it, so it is read as text once — the rule
+  // `CodeEditor` and `MarkdownEditor` already follow through `draftOf`.
+  const document = draftOf(value);
   const options = { caseSensitive: matchCase, wholeWord };
-  const ranges = findRanges(value, query, options);
+  const ranges = findRanges(document, query, options);
   const count = ranges.length;
   const active = count === 0 ? 0 : Math.min(activeIndex, count - 1);
 
@@ -117,13 +123,13 @@ export const SearchReplace = ({
     if (disabled || count === 0) return;
     const range = Arr.getUnsafe(ranges, active);
     onValueChange(
-      value.slice(0, range.start) + replacement + value.slice(range.end),
+      document.slice(0, range.start) + replacement + document.slice(range.end),
     );
   };
 
   const replaceEvery = (): void => {
     if (disabled || count === 0) return;
-    onValueChange(replaceAll(value, query, replacement, options));
+    onValueChange(replaceAll(document, query, replacement, options));
   };
 
   const onKeyDown = (event: KeyEvent): void => {
