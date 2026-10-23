@@ -136,11 +136,23 @@ describe("column configuration", () => {
     expect(contentWidth(moved)).toBe(460);
     expect(widthOf(moved, "name")).toBe(260);
 
-    expect(ids(moveColumn(state, "size", -2))).toEqual(["size", "name", "status"]);
+    expect(ids(moveColumn(state, "size", -2))).toEqual([
+      "size",
+      "name",
+      "status",
+    ]);
 
     // A step past either end clamps at the end rather than stopping one short.
-    expect(ids(moveColumn(state, "name", 9))).toEqual(["status", "size", "name"]);
-    expect(ids(moveColumn(state, "size", -9))).toEqual(["size", "name", "status"]);
+    expect(ids(moveColumn(state, "name", 9))).toEqual([
+      "status",
+      "size",
+      "name",
+    ]);
+    expect(ids(moveColumn(state, "size", -9))).toEqual([
+      "size",
+      "name",
+      "status",
+    ]);
   });
 
   it("resizes within the column's own bounds and leaves other tracks alone", () => {
