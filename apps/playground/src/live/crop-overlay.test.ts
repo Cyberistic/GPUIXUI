@@ -244,6 +244,17 @@ describe("the probe and the registry", () => {
     // it is unreachable — the measured control this suite exists to keep.
     expect(probe).toContain('pointerEvents: "none"');
   });
+
+  it("counts the checks the probe can assert", () => {
+    // The printed count is the run's own, so it cannot be derived statically;
+    // the assertion sites are the floor a hollow probe cannot fall below.
+    const steps = probe.slice(probe.indexOf("export const cropOverlaySteps"));
+    const sites = Arr.length(
+      Arr.fromIterable(steps.matchAll(/ctx\.expect\w+\(/g)),
+    );
+    expect(sites).toBeGreaterThan(0);
+    expect(CROP_CHECKS).toBeGreaterThanOrEqual(sites);
+  });
 });
 
 describe("the README", () => {
