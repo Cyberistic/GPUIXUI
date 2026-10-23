@@ -318,10 +318,11 @@ export interface TableRowProps extends Omit<Props, "children"> {
 /**
  * One row.
  *
- * A row with a press handler answers the pointer (a hover wash and a pointer
- * cursor); a chosen row answers it a step off the selection fill (`accent`,
- * and the derived press wash over it), so the pointer can see the record it is
- * over while the row keeps saying which record is chosen.
+ * A row with a press handler answers the pointer: the recipe tints `hover` and
+ * the press paints `pointerWash(theme, "active", "hover")`, the derived wash the
+ * tokens contract measures over the one it replaces. A chosen row answers it a
+ * step later (`accent`, then the derived press over that), so the pointer can see
+ * the record it is over while the row keeps saying which record is chosen.
  *
  * A press stops at the **first child that paints a fill**, not at the innermost
  * handler (`press-routing-lifecycle`: filled `text` ran none, an unfilled one
@@ -378,15 +379,30 @@ export const TableRow = ({
           // pointer is on it. The press takes the wash derived over the hover,
           // because a palette's own `active` role can sit under the
           // perceptibility floor beside the `accent` it replaces.
-          ...(selected === true && interactive
+          //
+          // An unchosen row is the same rule one step earlier: the recipe tints
+          // `hover`, and the press derives over the wash it replaces — the
+          // contract's third transition (`active` over `hover`), not the raw
+          // role.
+          ...(interactive
             ? {
                 cursor: "pointer",
-                hover: { backgroundColor: theme.colors.accent },
-                active: {
-                  backgroundColor:
-                    pointerWash(theme, "active", "accent") ??
-                    theme.colors.active,
-                },
+                ...(selected === true
+                  ? {
+                      hover: { backgroundColor: theme.colors.accent },
+                      active: {
+                        backgroundColor:
+                          pointerWash(theme, "active", "accent") ??
+                          theme.colors.active,
+                      },
+                    }
+                  : {
+                      active: {
+                        backgroundColor:
+                          pointerWash(theme, "active", "hover") ??
+                          theme.colors.active,
+                      },
+                    }),
               }
             : {}),
         }),

@@ -197,6 +197,18 @@ describe("the example table", () => {
     });
   });
 
+  it("answers a press on an unchosen row, not only the pointer's hover", () => {
+    const root = mount();
+
+    // The recipe tints `hover`; with the pointer down the row must paint the
+    // wash derived over it — the tokens contract's `active`-over-`hover`
+    // transition — or the press looks exactly like the hover it already had.
+    expect(requireStyle(root, "files-row-file-3").active).toMatchObject({
+      backgroundColor:
+        pointerWash(darkTheme, "active", "hover") ?? darkTheme.colors.active,
+    });
+  });
+
   it("paints the box in the fill of the row it sits in", () => {
     const root = mount();
 
