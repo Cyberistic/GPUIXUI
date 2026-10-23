@@ -120,9 +120,15 @@ describe("the component index", () => {
 
   it("reads the filter off the URL instead of state the page cannot share", () => {
     // The mount is what the MDX page renders; the view is the markup. A filter
-    // that never touches `location.search` is the defect this holds shut.
+    // that never touches `location.search` is the defect this holds shut. The
+    // rule lives in the shared hook now that the icon gallery carries the same
+    // filter, so both surfaces are held by one read.
     const mount = readFileSync(
       new URL("./component-index.tsx", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const hook = readFileSync(
+      new URL("./use-index-query.ts", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
     const page = readFileSync(
@@ -130,10 +136,11 @@ describe("the component index", () => {
       "utf8",
     ).replace(/\s+/g, " ");
 
-    expect(mount).toContain("select: (state) => state.location.searchStr");
-    expect(mount).toContain("indexQueryFromSearch(search)");
-    expect(mount).toContain('history.replaceState(null, "", url.toString())');
-    expect(mount).toContain("componentIndexSearch(next, url.search)");
+    expect(mount).toContain("useIndexQuery()");
+    expect(hook).toContain("select: (state) => state.location.searchStr");
+    expect(hook).toContain("indexQueryFromSearch(search)");
+    expect(hook).toContain('history.replaceState(null, "", url.toString())');
+    expect(hook).toContain("componentIndexSearch(next, url.search)");
     // The page teaches the parameter it writes, so a reader can link a view.
     expect(page).toContain("`?q=partial`");
     // And it mounts the URL-backed component, not the view directly.

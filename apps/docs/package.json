@@ -13,6 +13,7 @@
   "dependencies": {
     "@gpuix/native": "catalog:",
     "@gpuix/react": "catalog:",
+    "@gpuixui/icons": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "@tanstack/react-router": "catalog:",

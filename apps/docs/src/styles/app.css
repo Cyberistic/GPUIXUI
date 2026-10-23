@@ -204,3 +204,12 @@ body {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* The icon gallery: the package's markup carries no size, so the cell gives the
+   `<svg>` its box and the stroke inherits the cell's ink. */
+.gx-icon-gallery svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+

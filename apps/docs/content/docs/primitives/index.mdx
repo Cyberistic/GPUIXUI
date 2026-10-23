@@ -89,6 +89,17 @@ previews. Run the component natively from `apps/playground` instead.
 | --------- | ---------- |
 | [Theme provider](/docs/primitives/theme-provider) | Supplies the theme every primitive draws with |
 
+## The icon set
+
+Every icon in `@gpuixui/icons`, drawn from the markup the package ships — the
+same string GPUix paints, so a glyph here and a glyph in a window are one
+geometry. The browser is asked for the page's ink where GPUix takes the tint
+from `style.color`; nothing else in the markup changes. The
+[Icons page](/docs/icons/icon) is the reference half: the props, the size scale
+and the two accessibility rules.
+
+<IconGallery />
+
 ## How to read a page
 
 Each page follows the same order: what it is, usage, variants and sizes, API,

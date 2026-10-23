@@ -225,6 +225,8 @@ src/components/docs/native-run-note.tsx   The note above a package page: the pla
 src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
 src/components/docs/component-index.tsx   The filterable index on /docs/components
+src/components/docs/icon-gallery.tsx      Every icon the set publishes, from its own markup
+src/components/docs/use-index-query.ts    A list filter carried in `?q=`, shared by both indexes
 src/components/docs/examples-index.tsx    The generated registry on /docs/examples
 src/components/docs/api-reference.tsx     The entry-point table and the symbol index
 src/components/docs/type-scale.tsx        The typography specimen, from the theme
@@ -335,6 +337,7 @@ src/lib/examples-data.ts            Reads packages/*/examples/*.example.tsx at b
 src/lib/component-index.ts          The component index: URL mapping, curated shadowing, filter
 src/lib/component-index-data.ts     The index, from every docs collection at build time
 src/lib/component-index-query.ts    The index filter on the page URL (`?q=`)
+src/lib/icon-gallery.ts             The icon gallery's entries and its paint rule
 src/lib/related.ts                  The related-component families a package page's strip prints
 src/lib/patterns.ts                 The one source of the patterns and their parts
 src/lib/licenses.ts                 The LICENSES/*.md parse

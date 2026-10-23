@@ -5,6 +5,7 @@ import { ComponentIndex } from "./docs/component-index";
 import { ComponentPreview } from "./docs/component-preview";
 import { ComponentSource } from "./docs/component-source";
 import { ExamplesIndex } from "./docs/examples-index";
+import { IconGallery } from "./docs/icon-gallery";
 import { Install } from "./docs/install";
 import { LaneTable } from "./docs/lane-table";
 import { LicenseInventory } from "./docs/license-table";
@@ -30,6 +31,7 @@ export const mdxComponents = {
   ComponentPreview,
   ComponentSource,
   ExamplesIndex,
+  IconGallery,
   Install,
   LaneTable,
   LicenseInventory,

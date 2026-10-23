@@ -1,11 +1,6 @@
-import { useRouterState } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
 import { componentIndex } from "../../lib/component-index-data";
 import { filterEntries, verdictMark } from "../../lib/component-index";
-import {
-  componentIndexSearch,
-  indexQueryFromSearch,
-} from "../../lib/component-index-query";
+import { useIndexQuery } from "./use-index-query";
 
 /**
  * A filterable index of every component and primitive page.
@@ -28,20 +23,7 @@ import {
  * so a shared link opens filtered rather than painting the whole list first.
  */
 export function ComponentIndex() {
-  const search = useRouterState({
-    select: (state) => state.location.searchStr,
-  });
-  // Resolved in the initializer, the rule the platform switch follows: the
-  // first render is already the linked view.
-  const [query, setQuery] = useState(() => indexQueryFromSearch(search));
-
-  const chooseQuery = useCallback((next: string) => {
-    setQuery(next);
-
-    const url = new URL(window.location.href);
-    url.search = componentIndexSearch(next, url.search);
-    window.history.replaceState(null, "", url.toString());
-  }, []);
+  const { query, chooseQuery } = useIndexQuery();
 
   return <ComponentIndexView onQueryChange={chooseQuery} query={query} />;
 }

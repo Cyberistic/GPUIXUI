@@ -8822,6 +8822,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Re-state the **session a splitter drag leaves** — the live `multi-pane-editor` probe now fails its step "the drag leaves the text session where the reader left it" (`expected "mp-input-right", got "mp-divider"`, measured 2026-10-23 on this tree). The cause is the deliberate newer contract: `SplitPane`'s divider is a `role="separator"` Tab stop (`split-pane-lifecycle` measures its ring, keys and steps), so a press on it moves real focus to the divider. Two halves: the probe's check and the Tier 4 *Multi-pane editing layouts* row (still `todo`) say a drag does **not** take the session, and one of them must move — either the probe asserts that typing after a re-press reaches the pane again, or the dock's divider declines focus on press. Until then the row is not marked done, though the composition itself is measured | playground (`apps/playground/src/live/scenarios.tsx` §`multi-pane-editor`, `README.md`) + dock (the divider's press rule) | **resolved 2026-10-23** — the probe moved, because the divider's contract is the deliberate one: `SplitPane`'s divider is a `role="separator"` tab stop (`split-pane-lifecycle`), so a drag's press parks the one text session on the divider and no buffer receives a key. `multi-pane-editor` asserts that, then presses the pane again and types, so both directions are measured: the drag changes neither buffer, and a press returns the session. 31 checks, `--only multi-pane-editor` green 1/1 on this tree; the README and Tier 4's *Multi-pane editing layouts* row carry the contract, and the row is `done (composed)` / `yes (measured)`. The docs-site half landed beside it: `/docs/workspace` teaches the divider's contract and `lane-page.test.ts` refuses the retired "does not take the session" sentence |
 
 | Publish the **five composed Tier 4/5 rows** the components pass marked — `COMPONENTS.md` now reads Collapsible sidebars, Keyboard navigation, Command palette, Breadcrumb navigation and Syntax highlighting as done, and `apps/docs/src/lib/inventory-status.test.ts`'s `publishes every shipped row on a page` reports exactly those five: none has a component page of its own (the palette is the shipped `CommandMenu`, the trail the shipped `Breadcrumb`, the highlighting the shipped `CodeBlock`, and the sidebar and the roving-focus model are compositions). The join is the docs site's: add each to `laneRows` in `apps/docs/src/lib/inventory-status.ts` with the lane file that teaches it and the probe it cites (`sidebar-clip-lifecycle`, `grid-focus-lifecycle`, `command-palette`, `editor-surface`) — or add the aliases to `pageRows` where a page already exists — and have the breadcrumb's lane page cite `breadcrumb-navigation-lifecycle`, which no page names yet. Until then that one docs case is red by design; every other docs case is green | docs-site (`apps/docs/src/lib/inventory-status.ts`, the lane pages) | **resolved 2026-10-23** — `laneRows` carries all five (sidebar and keyboard navigation on `/docs/runtime`, the palette on `/docs/patterns`, the trail on the breadcrumb package page, the highlighting on `/docs/runtime`) with the probe each page cites, and `Multi-pane editing layouts` joined them with `multi-pane-editor`; `publishes every shipped row on a page` is green |
+| **A browser-React app cannot import the icon set's root** — `packages/icons/src/Icon.tsx` renders a GPUix host `<svg>` but carries no per-file JSX pragma: its package tsconfig sets `jsxImportSource: "@gpuix/react"`, so the file type-checks there, while a consumer whose program uses React's automatic runtime (the docs site does) resolves the element against React's `SVGProps` and `tsc` reports `Type 'StyleDesc' is not assignable to type 'Properties<string | number, string & {}>'` at `Icon.tsx:71` — for a component the consumer never mounts. Measured 2026-10-23: `@gpuixui/icons`'s own `check-types` was clean while `nub run --filter @gpuixui/docs check-types` failed with that one error the moment the gallery imported the package root, and the icon gallery reads `src/names.ts`/`src/registry.ts` directly to avoid it. `packages/tokens/src/react.tsx` already takes the fix (`/** @jsxImportSource @gpuix/react */` at the top of the file), which is what makes the file's JSX its own runtime whatever compiles it | icons (`packages/icons/src/Icon.tsx`) | open — add the pragma, then `@gpuixui/docs/src/lib/icon-gallery.ts` can import the package root and drop the two internal paths (its `reads the data modules the icon package publishes` case would move to the root import). No component behaviour changes: the pragma only says which JSX runtime the file was written for |
+| **Two icon cards say the same thing in two layers** — the primitives index now draws every icon in a gallery (`/docs/primitives#the-icon-set`), and the API page at `/docs/icons/icon` still carries its prose §Names list of the same 76 names; a name added to the set has to satisfy the gallery's guard (it is derived, so it cannot miss one) and the icons page's own §Names guard. The two surfaces answer different questions — what it looks like, and what it is called with its props — so this is duplication to keep in step rather than to remove | icons (`packages/icons/docs/icon.mdx`) + docs-site (`/docs/primitives`) | open — no action needed while the icons page's §Names guard derives from the package; if the list is ever hand-kept, point it at the gallery instead |
 
 ## Phase D — data and workspace components
 
@@ -10270,7 +10272,47 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 279/279
+`[x]` `[██████████]` 280/280
+
+`[x]` Show the **icon set** instead of naming it — `/docs/primitives` linked
+      `/docs/icons/icon`, whose §Names is a prose list of 76 names: the one page
+      a reader opens for "what does `git-branch` look like" showed no glyph, so
+      the only way to see the set was to run the playground. The primitives
+      index gains **The icon set** with a gallery that draws every icon from the
+      markup the package ships (`icons` in `packages/icons/src/registry.ts`, the
+      record GPUix paints), so a glyph on the page and a glyph in a window are
+      one string. The one edit is the paint: GPUix replaces a monochrome
+      `<svg>`'s stroke with `style.color`, a browser honours the markup's
+      reserved black, so `lib/icon-gallery.ts` asks for `currentColor` and the
+      ink comes from the page — the page says so, and links the reference half
+      for the API, the size scale and the two accessibility rules. The filter
+      travels in `?q=` like the component index's; the ten-line mount was hoisted
+      into `use-index-query.ts`, which both indexes now share (`component-index
+      .test.tsx` reads the rule there instead of in the mount). The data modules
+      are imported directly rather than through `@gpuixui/icons`'s root because
+      the root's `Icon` renders a GPUix host element and this site compiles with
+      React's JSX runtime — `check-types` reported the two runtimes' `boxShadow`
+      mismatch for a component the page never mounts (the one-line fix, a
+      per-file `@jsxImportSource` in `Icon.tsx`, is the icons interlock below).
+      Guards: `icon-gallery.test.ts` (9 cases — every published name once, the
+      shipped geometry byte for byte through the paint, one reserved stroke per
+      icon so `replace` cannot leave a black glyph, the whole set for an empty
+      query, case/space-insensitive matches, and the two modules the package
+      index publishes) and `icon-gallery.test.tsx` (6 cases — a tile per entry,
+      each glyph's string exactly once, the glyphs out of the accessibility
+      tree, the count derived from the model, the filter label, and the mount's
+      `useIndexQuery()` plus the page's mount, link and ink sentence).
+      Directions measured: the paint left unswapped fails three model cases
+      (`expected [ { name: 'arrow-down' … } ] to deeply equal []`); the filter
+      returning every entry fails both filter cases; dropping the first entry
+      fails the entry list and the arrow query (`2 failed`); deleting
+      `<IconGallery />` fails the page case by name; deleting the three README
+      ledger lines fails `names every module the site is built from` with the
+      three paths. Restored: the docs suite is 131 files / 1 424 tests green,
+      `check-types` is clean, and `/docs/primitives` renders `76 of 76 icons`
+      while `?q=arrow` renders `4 of 76` with `bell` absent. `check:tests` and
+      `lint` are red only on the two foreign files the gate row already names.
+      No playground scenario applies — a browser page and its URL.
 
 `[x]` Mount the live surface through the **React reconciler** — `/live` was the
       one real GPUix surface in the docs and it fed the renderer a hand-written
