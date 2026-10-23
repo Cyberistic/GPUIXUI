@@ -619,15 +619,14 @@ keys a contract's modules handle — the `@gpuixui/components` predicates in
 `internal/key.ts`, the primitives' `decideActivation`, and a key matched by its
 literal name in `Match.when("up", …)` — and fails on a key the page omits or
 invents. A runtime citation is read the same way, from the installed module: the
-primitives' `Select` is a themed wrapper over `@gpuix/react`'s headless list, so
-it prints the arrows, `Ctrl+N`/`Ctrl+P`, Enter, Space, Escape and Tab that
-`select.js` handles, and a runtime release that moves one of them fails the page
-by key. The escape key is read where a module subscribes `onEscapeKeyDown`, and a
-chord only where the module's own ctrl guard is there. It then reads every
-curated page's `<ComponentSource>` and requires a contract wherever the module
-handles a named key, so a component cannot ship keys with no notes.
-`keyboard-strip.test.tsx` prints every note of every contract and holds the two
-mounts.
+primitives' `Select` and the components' `Combobox` are wrappers over
+`@gpuix/react`'s headless surfaces, so they print the keys those modules handle,
+and a runtime release that moves one of them fails the page by key. The escape
+key is read where a module subscribes `onEscapeKeyDown`, and a chord only where
+the module's own ctrl guard is there. It then reads every curated page's
+`<ComponentSource>` and requires a contract wherever the module handles a named
+key, so a component cannot ship keys with no notes. `keyboard-strip.test.tsx`
+prints every note of every contract and holds the two mounts.
 
 ### The related line is generated, not written
 

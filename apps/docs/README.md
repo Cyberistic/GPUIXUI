@@ -537,10 +537,11 @@ the keys were read from, and `keyboard-contracts.test.ts` holds it to them in
 both directions — every fixed key a module handles is printed, nothing is printed
 that it does not handle — so a handler that moves or a page that teaches a key
 the component dropped fails by name. A wrapper that handles none of its own keys
-(the primitives' `Select`, over the runtime's headless list) cites the installed
-`@gpuix/react` module instead, and the strip says so, so a runtime release moves
-the page's keys the same way. A page that writes its own `## Keyboard` section
-keeps it: the strip stops on the heading the page's table of contents carries.
+(the primitives' `Select`, the components' `Combobox`, over the runtime's
+headless lists) cites the installed `@gpuix/react` module instead, and the strip
+says so, so a runtime release moves the page's keys the same way. A page that
+writes its own `## Keyboard` section keeps it: the strip stops on the heading the
+page's table of contents carries.
 
 ## Pages that read the workspace
 

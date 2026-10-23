@@ -10404,7 +10404,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 360/360
+`[x]` `[██████████]` 361/361
 
 `[x]` Publish the **keyboard contract** every component page promised — the index
       said "every component … with its keyboard contract" and `/docs/components`
@@ -10488,6 +10488,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
       and the site ledger. No native scenario applies — the model reads the
       installed module and the strip prints it; no claim about a native frame is
       made.
+
+`[x]` Hold the **Combobox** contract to the list that owns its arrows — the page's
+      `also` line said "The option list's arrows and Enter belong to the runtime's
+      headless list (`@gpuix/react`), not to this package", and nothing derived
+      them: the contract printed only the wrapper's Escape, so a runtime release
+      could have dropped the arrows and the page would still teach them.
+      `/docs/components/combobox` now cites `combobox.js` the same way Select
+      cites its list, and prints Arrow Up/Down, `Ctrl+N`/`Ctrl+P` and Escape; the
+      `also` line keeps only what the module cannot show — Enter reaches the
+      highlighted option through the field's own submit. Directions measured:
+      dropping the arrows row fails `missing Arrow Up, Arrow Down`; adding a Home
+      row fails `invented Home`; a copy of `combobox.js` with the ctrl guards
+      removed fails `invented Ctrl+N, Ctrl+P`. Green: the two keyboard files
+      14/14. Docs: the policy and the site ledger name both pages. No native
+      scenario applies — the model reads the installed module.
 
 `[x]` Compile the **class reference** the styling page only sampled — `/docs/styling`
       showed ten representative classes (`h-9`, `px-3`, …) and no way to find the

@@ -158,8 +158,20 @@ export const keyboardContracts: readonly KeyboardContract[] = [
   {
     url: "/docs/components/combobox",
     sources: ["packages/components/src/combobox.tsx"],
-    notes: [{ keys: ["Escape"], action: "closes the open list" }],
-    also: "The option list's arrows and Enter belong to the runtime's headless list (`@gpuix/react`), not to this package.",
+    runtime: "apps/docs/node_modules/@gpuix/react/dist/components/combobox.js",
+    notes: [
+      {
+        keys: ["Arrow Down", "Arrow Up"],
+        action:
+          "opens the list from the trigger, and moves the highlight from the field",
+      },
+      {
+        keys: ["Ctrl+N", "Ctrl+P"],
+        action: "moves the field's highlight by the same step",
+      },
+      { keys: ["Escape"], action: "closes the open list" },
+    ],
+    also: "Enter runs the highlighted option through the field's own submit.",
   },
   {
     url: "/docs/components/command-menu",
