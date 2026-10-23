@@ -3249,6 +3249,95 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[2]).toContain("move focus out");
   });
 
+  it("records the clip a collapsing sidebar really paints, from its fixture", () => {
+    // Tier 4's *Collapsible sidebars* row rests on **layout** evidence —
+    // `motion-geometry` sampled an animated box, `docking-nested` collapsed a
+    // caller-owned width to 0 — and a layout read cannot tell a hidden panel
+    // from one painting its content over the document beside it: a clipped child
+    // still reports its full box (`dock-focus-lifecycle`). `sidebar-clip-lifecycle`
+    // measured the paint and the pointer: the outer box is a real clip, a press
+    // follows the paint, and the hidden controls keep their tab stops. The
+    // widths, the escaped band, the tween and the check count are derived from
+    // the fixture, so neither document can print a state the window did not
+    // paint.
+    const fixture = read("apps/playground/src/live/sidebar-clip.ts");
+    const probe = read("apps/playground/src/live/sidebar-clip-probe.tsx");
+    const constant = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = (\\d+(?:\\.\\d+)?);`).exec(
+          fixture,
+        )?.[1] ?? Number.NaN,
+      );
+
+    const widths = /export const SIDEBAR_WIDTHS = \{ open: (\d+), closed: (\d+) \} as const;/.exec(
+      fixture,
+    );
+    const open = Number(widths?.[1] ?? Number.NaN);
+    const closed = Number(widths?.[2] ?? Number.NaN);
+    const rowHeight = constant("SIDEBAR_ROW_HEIGHT");
+    const contentWidth = constant("SIDEBAR_CONTENT_WIDTH");
+    const markerX = constant("SIDEBAR_MARKER_X");
+    const markerWidth = constant("SIDEBAR_MARKER_WIDTH");
+    const margin = constant("SIDEBAR_TRAVEL_MARGIN");
+    const checks = constant("SIDEBAR_CHECKS");
+    const tween = Number(
+      /duration: (\d+(?:\.\d+)?),/.exec(fixture)?.[1] ?? Number.NaN,
+    );
+
+    // The widest travelling frame the probe samples, and the band dropping the
+    // clip leaks (four device pixels per point at this capture's 2× scale).
+    const travelling = markerX - margin;
+    const leaked = (markerWidth * rowHeight * 4)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+    // The premises: the marker's band lies past the travelling clip, the
+    // content is wider than the frame, and the fixture states the clip.
+    expect(travelling).toBeGreaterThan(closed);
+    expect(travelling).toBeLessThan(markerX);
+    expect(contentWidth).toBeGreaterThan(travelling);
+    expect(rowHeight).toBeGreaterThan(0);
+    expect(checks).toBeGreaterThan(0);
+    expect(probe).toContain('overflow: "hidden"');
+
+    const row = rowFor("Sidebar clip");
+    expect(row?.verdict).toBe("supported, with limits");
+    const evidence = row?.evidence ?? "";
+    expect(evidence).toContain("sidebar-clip-lifecycle");
+    expect(evidence).toContain("dock-focus-lifecycle");
+    expect(evidence).toContain(`**${open}**`);
+    expect(evidence).toContain(`**≤${travelling}**`);
+    expect(evidence).toContain(`**${contentWidth}**`);
+    expect(evidence).toContain(`**${leaked}**`);
+    expect(evidence).toContain(`**${tween}s**`);
+    expect(evidence).toContain(`${checks} checks`);
+    expect(evidence).toContain("marker=1");
+    expect(evidence).toContain("main=1");
+    expect(evidence).toContain("main=2");
+    expect(evidence).toContain("tab stops");
+    expect(row?.workaround).toContain("overflow");
+    expect(row?.workaround).toContain("tabIndex={-1}");
+    expect(row?.workaround).toContain("hit-testing");
+
+    const page = measuredRow("Sidebar clip");
+    expect(page, "the page's measured table has no sidebar-clip row").toBeDefined();
+    const pageEvidence = page?.[1] ?? "";
+    expect(pageEvidence).toContain("sidebar-clip-lifecycle");
+    expect(pageEvidence).toContain("dock-focus-lifecycle");
+    expect(pageEvidence).toContain(`${checks} checks`);
+    expect(pageEvidence).toContain(`**≤${travelling}**`);
+    expect(pageEvidence).toContain(`**${leaked}**`);
+    expect(pageEvidence).toContain(`**${tween}s**`);
+    expect(pageEvidence).toContain("tab stops");
+    expect(page?.[2]).toContain("tabIndex");
+
+    // §5 owes the probe — the section itself, not the row's own citation.
+    const keeping = doc.slice(
+      doc.indexOf("## 5. Keeping this document true"),
+    );
+    expect(keeping).toContain("`sidebar-clip-lifecycle`");
+  });
+
   it("records the Select reveal gap a window and a runtime suite measured", () => {
     // `Select` is named in §2 as provided, so the record read as "a Select is
     // just a wrapper". A window measured the overlay half (`select-lifecycle`)
