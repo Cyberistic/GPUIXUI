@@ -35,6 +35,7 @@ import {
   focusRing,
   platformTheme,
   retroNames,
+  retroStyles,
   retroTheme,
   textStyle,
   typography,
@@ -606,8 +607,11 @@ export const themeLookScenario: ScenarioBody = {
       );
 
       // The samples only prove `retroTheme` painted the look if they differ from
-      // the base and from each other; the probe's negative control is a row that
-      // inherited the base's radius or primary fill.
+      // the base; the probe's negative control is a row that inherited the
+      // base's radius or primary fill. Two looks may legitimately share an `lg`
+      // step — Luna and Omarchy both author 3 — so the aggregate reads the
+      // styles' own table instead of demanding that every look be unique: a look
+      // that fell back to the base would drop a step the table authors.
       const radii = Arr.map(painted, ({ theme }) => theme.radius.lg);
       yield* ctx.expectEqual(
         "every look paints a radius the base does not",
@@ -615,9 +619,11 @@ export const themeLookScenario: ScenarioBody = {
         false,
       );
       yield* ctx.expectEqual(
-        "the looks do not share one lg radius",
+        "the looks paint as many distinct lg steps as their styles author",
         Arr.length(Arr.dedupe(radii)),
-        Arr.length(painted),
+        Arr.length(
+          Arr.dedupe(Arr.map(retroNames, (look) => retroStyles[look].radius.lg)),
+        ),
       );
       const fills = Arr.map(painted, ({ theme }) => theme.colors.primary);
       yield* ctx.expectEqual(

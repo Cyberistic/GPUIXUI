@@ -42,7 +42,7 @@ unreachable entry would be a scenario the app cannot open — and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-100 probes a real window can prove, of which nineteen mount shipped
+101 probes a real window can prove, of which nineteen mount shipped
 `@gpuixui/components` (the dialog and its fade, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -4222,6 +4222,57 @@ Two negative controls measured, exit `1` each, then restored green:
   palette's keyword` with **`expected true, got false`** — the positive count is
   what proves a palette reached the glyphs rather than a default matching it.
 
+### `markdown-fence` — measured on 0.11.0 here
+
+**What surface does a fenced code block paint, and what ink does the palette put
+on it?** `@gpuixui/tokens` derives both fills — `nativeFenceFill` lays the
+runtime's 3.5% neutral ink over the host's fill, `nativeFenceHeaderFill` lays its
+2% language-strip wash over that — and reads the syntax palette on the composite
+rather than on the page. Until this probe, that was an arithmetic read of
+`packages/native/src/markdown/render.rs`. A window now paints three fences from
+one four-line source and counts each block's own box:
+
+| Block | Fill behind the host | Fence body | Strip | Keyword |
+| ----- | -------------------- | ---------- | ----- | ------- |
+| base dark | `darkTheme.background` `#11141A` | `#191C22` (**174 776** px) | `#1E2126` (**57 822** px) | `#A7A9FF` (**896** px) |
+| macOS dark | `platformTheme(dark, "darwin").background` `#1C1C1E` | `#242426` (**174 570** px) | `#28282A` (**57 630** px) | `#B0B2FF` (**896** px) |
+| no theme | the shell's page `#11141A` | composites to `#191C22` (**263 920** px differ from the page) | runtime's own | **`#8F96ED`** (runtime default, **988** px) |
+
+Both shipped composites land exactly where `nativeFenceFill`/`nativeFenceHeaderFill`
+put them, the strip is a second wash (1.057:1 over the base body, 1.053:1 over
+the platform's) carried by the rule the runtime draws, and the platform look's
+keyword is the one its own syntax table names — the identity keeps `#A7A9FF` and
+the platform table steps to `#B0B2FF`, each clearing the body floor on its own
+fence. The two themed blocks measure 520×119; the control keeps the runtime's own
+code metrics and measures 520×127, which is why the box rule only asks the two
+themed blocks to match.
+
+**The measured rule: a fence composites over the fill behind the host, not over
+the theme object's `bg`.** The first run painted the platform block on the
+shell's base-dark page; its fence composited to `#191C22` — the base page's
+fence — and the platform body check read its expected `#242426` on **6** pixels
+of rounded corners. The view therefore paints each block on its own theme's page
+(`FenceBlock`'s `page` prop), and that wrapper is what makes the fill assertion
+name the surface the ink is actually laid on. A consumer mounting a themed
+document inside a card must derive the fence from the card's fill, not from the
+theme's page.
+
+50 checks, `--only markdown-fence`, green on 0.11.0 (~0.6 s stable across three
+runs). Fixture: `src/live/markdown-fence.ts` — `fenceBody`/`fenceStrip` resolve
+the two composites from the fill the theme paints, `keywordClearsFence` holds
+the keyword to the fence rather than to the page, and `stripIsSecondWash` refuses
+a strip that became an edge; `markdown-fence.test.ts` (14 cases) holds both
+washes to `nativeFenceFill`/`nativeFenceHeaderFill`, both keywords to
+`syntaxColors`, the source to one fenced `ts` block, the page-wrapper wiring, the
+registry entry, the printed count and the measured inks. The body counts move by
+a few hundred glyph-edge pixels between runs; the floors are what the probe
+asserts. Evidence: `.artifacts/live/markdown-fence.png`.
+
+One negative control measured, exit `1`, then restored green: painting the
+platform block on the shell's page instead of its own fails `the platform fence
+paints its own body fill` with the expected `#242426` present on 6 pixels while
+the block paints the base page's `#191C22`.
+
 ### `find-highlight` — measured on 0.11.0 here
 
 **What colour does a window paint behind a find's match?** A GPUix text host
@@ -5833,7 +5884,8 @@ narrower. Each deviation is deliberate and measured:
   `dock-split-lifecycle`, `flex-sizing`, `scrollbar-thumb`,
   `scrollbar-thumb-both`, `collapsible-lifecycle`, `scrollbar-drag` and
   `hidden-subtree-lifecycle` and `find-highlight` and `crop-overlay` and
-  `faded-hitbox-lifecycle` (forty-two probes, each run alone).
+  `faded-hitbox-lifecycle` and `markdown-fence` (forty-three probes, each run
+  alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry (four checks per page plus two for the
   run, the shape `examples.test.ts` derives from the probe's assertion sites) and

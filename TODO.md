@@ -302,7 +302,46 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 174/174
+`[x]` `[██████████]` 175/175
+
+`[x]` Measure the **switch paint a platform style declares** — `PlatformStyle.switch`
+carries three raw colours (`on`, `off`, `knob`) into `Theme.switch`, and because
+they enter the theme through no role, nothing measured them: a typo paints the
+value the runtime ignores (black, or the previous paint) and a track equal to its
+own surface draws a switch a reader cannot find, while every report stayed empty.
+`switchFailures(theme)` is the table — `switchPaintRoles` (`on`/`off`/`knob`),
+`switchPlacements` (the knob on each track, each track on the four strips a
+switch stands on, `switchSurfaces` = page, card, popover and the `muted` sidebar a
+settings switch lives in) and both halves of the report, `paint` (the grammar
+`invalidColorRoles`/`invalidShadowColors` hold the other authored colour tables
+to, also public alone as `invalidSwitchColors`) and `placements`. A theme that
+declares no switch answers with an empty report, because its toggle is painted
+from `primary`/`muted`/`foreground`, which the mark, contrast and decorative
+tables already measure. The floor is the **perceptibility** one (1.05:1) and that
+is stated as a measured deviation rather than dressed as conformance: Apple's own
+green is **1.98:1** on its page and its white knob **1.24:1** on its off track,
+with the HIG's shadow (which the primitive paints) carrying the knob, and a
+consumer who needs the 3:1 state cue paints the accent switch instead of
+declaring one. **It found the shipped macOS light off track**: Apple's `#E9E9EA`
+sat **1.003:1** from that style's own `muted` sidebar, and a declared switch
+draws no edge (`switchBox` gives it `borderWidth: 0`), so the track was the whole
+control and it vanished in exactly the panel a switch lives in; it takes the
+smallest step that clears (`#E3E3E8`, **1.058:1**, the tightest placement) and
+every other placement in both modes already cleared. Both reports sit beside
+`auditTheme` for now (a twelfth report needs `/docs/themes`'s worded readout and
+its derived count — the Interlocks row below), and `platforms.test.ts` now holds
+the negative control both ways (`expected 14, got 8` and the first run's
+`expected 10, got 8`) after the HIG radius moved. `switch.test.ts` (12 cases)
+holds the tables, both shipped modes, the measured pre-fix cell by value and
+ratio, a typo by slot, a stored `null`/absent slot, a knob painted in its own
+track, a track painted in its strip, an unmeasurable `oklch()` value, the empty
+answer for the accent switch and the four documents. Directions measured:
+restoring `#E9E9EA` fails three cases by name (the sweep, the tightest cell and
+the pre-fix cell) while the other nine pass.
+Docs in `docs/tokens.md` §Platform styles, `docs/design-system.md` §8/§9, the
+package README §Platform styles and the `Platform styles` inventory row. No
+native scenario applies — a pure report and its values; the primitive's paint is
+`Switch.test.tsx`'s.
 
 `[x]` Read **what a stored theme lost as data, before the gate refuses it** —
 `auditTheme` refuses a stored theme missing a numeric group, a step inside one or
@@ -6752,6 +6791,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | The docs pages still print the mark contract at **four strips** — `/docs/themes` (the audit bullet) and `/docs/theming` (§Indicator marks) both say `indicatorFailures` holds a mark "on the four strips a mark is drawn on (`background`, `card`, `popover`, `muted`)", while `indicatorSurfaces` has been **seven** since the `hover` and `active` washes a row tints and a field's own `input` fill (the caret) joined. The tokens package's own page loads the count and the names; the site prints them literally, which is the drift `theming-page.test.ts` already guards against for the selection pairs (it derives that surface list from `selectionPairs`). Found while adding the floating-surface pair (`TODO.md` → Design tokens), which left `indicatorSurfaces` untouched | docs-site | **resolved** — both pages interpolate the count (`{indicatorSurfaces.length}`) and print all seven strips, naming the two washes a row tints under the pointer and the field fill that carries its caret; `theming-page.test.ts` gains `the theming pages' indicator strips`: each page must import `indicatorSurfaces`, print the count, print the package's own backticked list built from `indicatorSurfaces`, and keep no stale "four strips"/"seven strips". Directions measured: dropping `input` from `theming.mdx`'s list fails `theming.mdx: does not print (...)`; restoring "the four strips" fails `prints a literal strip count` + `keeps a stale strip count`. `nub run --filter @gpuixui/docs test` green (69 files / 597 tests), `check-types` and `build` green |
 | Fold `invalidScales` into `auditTheme` — the tokens workstream ships the scale-order contract as a public function *beside* the gate: a brand whose `sm` control is taller than its `lg` passes all ten reports today. It cannot be folded in alone because `/docs/themes`'s readout words every report `auditTheme` returns and derives its printed count from the gate's own keys. The coordinated change is: an eleventh `ThemeAudit` key and `passed` term, an `AuditKind` line (`scale`), a formatter naming both steps, the `themes.mdx` count/bullet and copy-theme note, and the editor's pass sentence | docs-site + tokens-theme | open — the report, its tests (`packages/tokens/src/scales.test.ts`, 7 cases) and both token pages are on `master`; `docs/tokens.md` §Scale order and `docs/design-system.md` §11 say it sits beside the gate until the readout maps it |
+| Fold the **declared switch's reports** into `auditTheme` — `switchFailures` and `invalidSwitchColors` hold a platform style's own three colours (`on`, `off`, `knob`), which enter a theme through no role, and they ship *beside* the gate for the same reason `invalidScales` does: a twelfth `ThemeAudit` key makes `/docs/themes`'s printed count ("eleven independent failures", derived from the gate's own keys) wrong and leaves the new report unworded. The change is one `ThemeAudit` key + `passed` term, an `AuditKind` line (`switch`, formatting `off on muted — 1.00:1 (needs 1.05:1)` and `off is not a colour the renderer paints`), a `themes.mdx` bullet, and the editor's pass sentence | docs-site + tokens-theme | open — the report, its 12 tests (`packages/tokens/src/switch.test.ts`), both token pages and the `Platform styles` row are on `master`; `docs/tokens.md` §Platform styles and `docs/design-system.md` §8 say it sits beside the gate until the readout maps it |
 | Publish the **loading-row restore** a paginated list owes — the playground's `loading-row-correction` probe measured what `virtual-list-prepend` could not: while a page is in flight the loading void **is** the list's anchor, so the splice keeps the void pixel-fixed and replaces the screen the reader was reading. The app re-anchors on the message under a top void (`scrollToItem(index, −edgeHeight)`) and pins the first new row on a trailing void's old top edge at the at-end sentinel (`edgeHeight − viewportHeight`), and must **not** correct once the anchor is a message row. It also measured that the scroll has to be queued after the splice (`flushSync` first) and that `getListScrollTop` reports the row at the viewport top *after* layout, not the request | docs-site (capability record + `/docs/runtime`), and the Tier 3/4 list, log and message-scroller plans that would otherwise rebuild the wrong thing | **resolved** — `docs/gpuix-capabilities.md` §3 gains a **Loading-row restore** row (`supported, with limits`: composed, not provided) carrying both edges' measurements (`y=80` held on the corrected prepend while the naive one replaced the reader's message, the at-end sentinel's `y=0` against the pinned `y=80` with the row above at `y=40`, the `guarded=1` second page that must not correct, `corrected=2` after wheeling back, and the `request=3:-80` reads that lag because `getListScrollTop` reports the row at the viewport top after layout) and the workaround (`scrollToItem(voidRow + 1 + pageRows, offset - edgeHeight)` under a top void, `edgeHeight - viewportHeight` at the sentinel, correct only while the void is the anchor, `flushSync` the splice before the scroll). `/docs/runtime#measured-in-a-window` publishes the row, §5's owed-probe list names `loading-row-correction`, and the Data display lane page gains the rule where a paginated table is designed, so a table/log/message plan reads it without the playground. Guards: `capability-doc.test.ts` gained the record-and-page case and the published-gaps line, and `lane-page.test.ts` holds the data page's bullet to the record's row. Three directions measured: flipping the row's verdict fails `expected 'supported' to be 'supported, with limits'` and `expected … to contain 'supported, with limits'`, and dropping the page row fails the new case plus `publishes the measured gaps` (`expected … to contain 'loading-row-correction'`). `nub run --filter @gpuixui/docs test` 60 files / 495 tests green, `check-types` and `build` green; the dev server renders the row at `/docs/runtime` and the bullet at `/docs/data-display`. The probe itself was measured earlier and is not re-run here (evidence: `apps/playground/README.md` §`loading-row-correction`, 58 checks green on 0.11.0) |
 
 | Record the **fixed macOS application menu** the runtime installs — the capability record has no application-menu row, so a consumer planning one reads only `WindowOptions.appName` and the absent global shortcut, and may assume an API to add items exists (it does not: `app_menu.rs` is `pub(crate)` and no napi method takes a menu). Measured from the pinned source: the Apple menu (Services/Hide/Hide Others/Show All/Quit) and a Window menu (Minimize/Zoom/Close) with ⌘Q/⌘H/⌥⌘H/⌘M/⌘W bound, **no Edit menu** on purpose so ⌘C/⌘V reach the window's text handling, and `appName` names only the Hide/Quit items. The honest alternative is a caller-drawn in-window menu. | docs-site (capability record + `/docs/runtime`) | **resolved** — the record gains **Application menu (adding items)** (`not supported`, proven by the pinned source rather than a type: the fixed Apple and Window menus, the deliberate absence of an Edit menu so ⌘C/⌘V reach the window, the bound ⌘Q/⌘H/⌥⌘H/⌘M/⌘W, `app_menu::init`/`default_menus` as `pub(crate)`, `appName` naming only the Hide/Quit items, and no napi method taking a menu) with the caller-drawn in-window alternative, and `/docs/runtime`'s *Not in the typings* section publishes a sixth row for it. §5 names the source-proven sixth absence beside the five the typings alone prove. `capability-doc.test.ts`'s two typings-gap cases gained the record-row and page-row assertions. Directions measured: a `supported` verdict fails `expected 'supported' to be 'not supported'`, and renaming the page row to `App menu` fails `the page has no application-menu row`; restored, 48/48 green. `nub run --filter @gpuixui/docs test` green (62 files / 517 tests) |
@@ -10319,6 +10359,57 @@ fails the case by name; restored, the file is 44/44 and
       `nub run --filter @gpuixui/docs test src/lib/component-page-truth.test.ts
       src/components/docs/inline-edit-preview.test.ts` → 58/58. No native GPUix
       scenario applies — a docs page and its source guard have no runtime path.
+
+`[x]` Document the **order a table's header reports** — the data package grew a
+      multi-column sort (`pressSortOrder`, `sortOrder`, `toggleSort`'s
+      `additive` and `pressSort`), and the curated Table page still taught the
+      single press cycle: its copyable source passed `onSort`/`setSort`, its
+      Composition row called the header's report "the next `SortState`", and
+      nothing on the site taught the Shift tie-break. The Sort rule now states
+      the Shift press (keep the order, flip a field where it sits or append it
+      at the initial direction), the API gains `TableSortHeader` (`order`,
+      `onSortPress`, `initialDirection`) and the `useTable` sort surface
+      (`sort`, `sortOrder`, `setSort`, `toggleSort`, `pressSort`, `rows`), and
+      the accessibility bullet prints the announced "sort 2 of 2" and the
+      `↑1`/`↓2` glyph. The browser preview mirrors the order
+      (`pressSortOrder`, `sortOrderLabel`, `sortOrderGlyph`), shows the Shift
+      hint, orders by every entry and gains a **Two sorts** state card whose
+      environment groups the fixture's repeated values; the old
+      third-press-clears gesture, which the native header never does, is gone.
+      `table-preview.test.ts` holds the press sweep (plain replaces, Shift
+      appends, Shift flips, an empty order starts), the multi-entry order over
+      the fixture, the announced name and glyph, and the copyable source's
+      `order`/`onSortPress` while refusing `onSort={(next)`. Directions
+      measured against `HEAD`: `pressSortOrder` is absent from
+      `packages/data/src/sort/logic.ts`, and the page and the snippet lack
+      `order={table.sortOrder}`, `pressSortOrder` and `tie-break`; the working
+      tree's versions pass. Scoped:
+      `nub run --filter @gpuixui/docs test src/components/docs/table-preview.test.ts
+      src/lib/component-page-truth.test.ts` → 61/61, `check-types` clean. No
+      native scenario applies — the preview is a browser surface; the
+      package's own `sort/logic.test.ts` and `table.example.tsx` hold the rule
+      natively.
+
+`[x]` Correct the **Carousel page's mount window** — the components workstream
+      now mounts only the slide on screen, because the pinned renderer lays a
+      mounted `display: none` subtree out anyway (it would paint beside the
+      active slide and keep its controls in the tab order), while the page
+      still opened "every slide kept mounted", promised that a form's state
+      survives a visit, and its Status printed "one displayed slide with every
+      slide mounted". The page now states the mount window and its cost (a
+      slide's local state does not survive a visit), the `CarouselSlide` row
+      says "mounted only while it is the active one", and the accessibility
+      bullet explains why the `display` swap was replaced. The carousel case in
+      `component-page-truth.test.ts` holds the painter's
+      `if (index !== activeIndex) return null;`, refuses the
+      `display: active ? …` swap, requires the page's "does not survive a
+      visit" and refuses "stays mounted" and "their state survives". Directions
+      measured: at `HEAD` the source still carries the display swap and the
+      page still says "stays mounted", so both halves of the case fail there;
+      with the tree's component change and the corrected page they pass
+      (61/61 across the two files), `check-types` clean. No native scenario
+      applies — the suite's own `mounts only the slide on screen` case holds
+      the behaviour in the renderer.
 
 
 ## Phase G — release readiness

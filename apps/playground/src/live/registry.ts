@@ -493,6 +493,12 @@ export const liveRegistry = [
     capability: "text",
   },
   {
+    id: "markdown-fence",
+    title:
+      "Text: a markdown fence paints its body fill and language strip, and the syntax palette's keyword on that composite",
+    capability: "text",
+  },
+  {
     id: "find-highlight",
     title:
       "Search: a find paints the theme's resting and active washes, and a host handed no colour paints the runtime's own",

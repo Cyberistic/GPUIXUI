@@ -776,6 +776,20 @@ import {
   themedWashes,
 } from "./find-highlight.js";
 import {
+  FENCE_BODY_FLOOR,
+  FENCE_SOURCE,
+  FENCE_STRIP_FLOOR,
+  FENCE_TOLERANCE,
+  fenceBaseTheme,
+  fenceBody,
+  fenceKeyword,
+  fencePlatformTheme,
+  fenceStrip,
+  keywordClearsFence,
+  MARKDOWN_FENCE_IDS,
+  stripIsSecondWash,
+} from "./markdown-fence.js";
+import {
   inkBounds,
   thumbCentreAt,
   VERTICAL_FRACTION,
@@ -24054,6 +24068,296 @@ const syntaxPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
+/** One fenced document, on the fill its own theme paints, or handed no theme. */
+const FenceBlock = ({
+  id,
+  theme,
+  page,
+}: {
+  readonly id: string;
+  readonly theme?: Theme;
+  readonly page: string;
+}): ReactNode => (
+  <div style={{ width: 520, backgroundColor: page }}>
+    <markdown
+      testId={id}
+      source={FENCE_SOURCE}
+      theme={
+        theme === undefined ? undefined : nativeTextTheme(theme, "background")
+      }
+    />
+  </div>
+);
+
+/**
+ * The surface a fenced code block paints, and the keyword the palette puts on
+ * it.
+ *
+ * The token package derives both washes and reads the palette on the composite,
+ * but until the fence itself is painted that is a source read. Three blocks
+ * share one source — the base dark theme, the macOS dark look and a host
+ * handed no theme — and each one's own box is counted, so a fill or a keyword
+ * painted elsewhere on the page cannot stand in for the block being measured.
+ */
+const MarkdownFenceProbe = (): ReactNode => {
+  const theme = useTheme();
+  return (
+    <div
+      testId={MARKDOWN_FENCE_IDS.probe}
+      style={{
+        padding: theme.spacing.lg,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      <text
+        testId={MARKDOWN_FENCE_IDS.caption}
+        style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        Markdown fence: the block paints its own fill and a strip above it, and
+        the palette&apos;s keyword is the ink on that composite — a host handed
+        no theme paints the runtime&apos;s own.
+      </text>
+      <FenceBlock
+        id={MARKDOWN_FENCE_IDS.base}
+        theme={fenceBaseTheme}
+        page={fenceBaseTheme.colors.background}
+      />
+      <FenceBlock
+        id={MARKDOWN_FENCE_IDS.platform}
+        theme={fencePlatformTheme}
+        page={fencePlatformTheme.colors.background}
+      />
+      <FenceBlock
+        id={MARKDOWN_FENCE_IDS.runtime}
+        page={palettes.dark.colors.background}
+      />
+    </div>
+  );
+};
+
+const markdownFenceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(MARKDOWN_FENCE_IDS.base);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.hover(MARKDOWN_FENCE_IDS.caption);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("markdown-fence");
+    const frame = yield* ctx.host.pixels("markdown-fence");
+    const window = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, window),
+    );
+
+    const baseBody = yield* ctx.expectSome(
+      "the base fence's body fill is measurable",
+      fenceBody(fenceBaseTheme),
+    );
+    const baseStrip = yield* ctx.expectSome(
+      "the base fence's strip fill is measurable",
+      fenceStrip(fenceBaseTheme),
+    );
+    const platformBody = yield* ctx.expectSome(
+      "the platform fence's body fill is measurable",
+      fenceBody(fencePlatformTheme),
+    );
+    const platformStrip = yield* ctx.expectSome(
+      "the platform fence's strip fill is measurable",
+      fenceStrip(fencePlatformTheme),
+    );
+
+    const base = yield* paintedBox(ctx, MARKDOWN_FENCE_IDS.base);
+    const platform = yield* paintedBox(ctx, MARKDOWN_FENCE_IDS.platform);
+    const runtime = yield* paintedBox(ctx, MARKDOWN_FENCE_IDS.runtime);
+
+    /** How many pixels in a block's own box paint one colour. */
+    const inkOf = (id: string, hex: string, tolerance = 0) =>
+      Effect.gen(function* () {
+        const box = yield* paintedBox(ctx, id);
+        return yield* ctx.expectSome(
+          `${id} is inside the capture`,
+          countInk(frame, box, scale, hex, tolerance),
+        );
+      });
+
+    const baseFill = yield* inkOf(
+      MARKDOWN_FENCE_IDS.base,
+      baseBody,
+      FENCE_TOLERANCE,
+    );
+    const baseStripe = yield* inkOf(
+      MARKDOWN_FENCE_IDS.base,
+      baseStrip,
+      FENCE_TOLERANCE,
+    );
+    const baseKeyword = yield* inkOf(
+      MARKDOWN_FENCE_IDS.base,
+      fenceKeyword(fenceBaseTheme),
+    );
+    const platformFill = yield* inkOf(
+      MARKDOWN_FENCE_IDS.platform,
+      platformBody,
+      FENCE_TOLERANCE,
+    );
+    const platformStripe = yield* inkOf(
+      MARKDOWN_FENCE_IDS.platform,
+      platformStrip,
+      FENCE_TOLERANCE,
+    );
+    const platformKeyword = yield* inkOf(
+      MARKDOWN_FENCE_IDS.platform,
+      fenceKeyword(fencePlatformTheme),
+    );
+
+    yield* Effect.logInfo(
+      `markdown-fence: base=${baseBody}/${baseFill} ${base.width}x${base.height} strip=${baseStrip}/${baseStripe} keyword=${fenceKeyword(fenceBaseTheme)}/${baseKeyword} platform=${platformBody}/${platformFill} ${platform.width}x${platform.height} strip=${platformStrip}/${platformStripe} keyword=${fenceKeyword(fencePlatformTheme)}/${platformKeyword}`,
+    );
+
+    // 1. The fence is a surface: both washes the token seam derives are the
+    //    fills a window paints, and the strip is a band above the body rather
+    //    than the whole block.
+    yield* ctx.expectEqual(
+      "the base fence paints the body fill its seam derives",
+      baseFill >= FENCE_BODY_FLOOR,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the base fence paints the language strip above the body",
+      baseStripe >= FENCE_STRIP_FLOOR && baseStripe < baseFill,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the platform fence paints its own body fill",
+      platformFill >= FENCE_BODY_FLOOR,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the platform fence paints its own language strip",
+      platformStripe >= FENCE_STRIP_FLOOR && platformStripe < platformFill,
+      true,
+    );
+
+    // 2. The keyword the palette names is the ink on that composite, for both
+    //    shipped themes, and each clears the floor its own contract asks.
+    yield* ctx.expectEqual(
+      "the base fence paints its palette's keyword",
+      isPainted(baseKeyword),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the platform fence paints its palette's keyword",
+      isPainted(platformKeyword),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the base keyword clears the body floor on the fence",
+      keywordClearsFence(fenceBaseTheme),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the platform keyword clears the body floor on the fence",
+      keywordClearsFence(fencePlatformTheme),
+      true,
+    );
+
+    // 3. The platform look moved the keyword onto its own table without
+    //    touching the identity's: neither block paints the other's ink.
+    yield* ctx.expectEqual(
+      "the platform palette is a different keyword from the base one",
+      fenceKeyword(fencePlatformTheme) !== fenceKeyword(fenceBaseTheme),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the base fence paints none of the platform's keyword",
+      yield* inkOf(MARKDOWN_FENCE_IDS.base, fenceKeyword(fencePlatformTheme)),
+      0,
+    );
+    yield* ctx.expectEqual(
+      "the platform fence paints none of the base keyword",
+      yield* inkOf(MARKDOWN_FENCE_IDS.platform, fenceKeyword(fenceBaseTheme)),
+      0,
+    );
+
+    // 4. The strip is a second wash over the body, not a boundary: the rule
+    //    the runtime draws carries it, and the two dark pages measure 1.057:1
+    //    and 1.053:1, so the probe refuses a fill that became an edge.
+    yield* ctx.expectEqual(
+      "the base strip is a second wash over the body, not a boundary",
+      stripIsSecondWash(fenceBaseTheme),
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the platform strip is a second wash over the body, not a boundary",
+      stripIsSecondWash(fencePlatformTheme),
+      true,
+    );
+
+    // 5. The control: a host handed no theme paints the runtime's own palette,
+    //    on a surface of its own.
+    const runtimeInk = yield* ctx.expectSome(
+      `${MARKDOWN_FENCE_IDS.runtime} is inside the capture`,
+      countInkOn(
+        frame,
+        runtime,
+        scale,
+        palettes.dark.colors.background,
+        FENCE_TOLERANCE,
+      ),
+    );
+    yield* ctx.expectEqual(
+      "a host handed no theme still paints a fenced surface",
+      runtimeInk >= FENCE_BODY_FLOOR,
+      true,
+    );
+    const runtimeKeyword = yield* inkOf(
+      MARKDOWN_FENCE_IDS.runtime,
+      RUNTIME_KEYWORD,
+      RUNTIME_KEYWORD_TOLERANCE,
+    );
+    yield* Effect.logInfo(
+      `markdown-fence control: ink=${runtimeInk} box=${runtime.width}x${runtime.height} keyword=${RUNTIME_KEYWORD}/${runtimeKeyword}`,
+    );
+    yield* ctx.expectEqual(
+      "a host handed no theme paints none of the base keyword",
+      yield* inkOf(MARKDOWN_FENCE_IDS.runtime, fenceKeyword(fenceBaseTheme)),
+      0,
+    );
+    yield* ctx.expectEqual(
+      "a host handed no theme paints none of the platform keyword",
+      yield* inkOf(
+        MARKDOWN_FENCE_IDS.runtime,
+        fenceKeyword(fencePlatformTheme),
+      ),
+      0,
+    );
+    yield* ctx.expectEqual(
+      "a host handed no theme paints the runtime's own keyword",
+      isPainted(runtimeKeyword),
+      true,
+    );
+
+    // 6. The two themed blocks share one source, one width and one code scale,
+    //    so a colour that differs is the palette and not a different layout;
+    //    the control keeps the runtime's own metrics, which is why its height
+    //    is not the shipped one.
+    yield* ctx.expectEqual(
+      "the two themed fences share one box",
+      `${base.width}x${base.height}`,
+      `${platform.width}x${platform.height}`,
+    );
+    yield* ctx.expectEqual(
+      "the unthemed fence keeps the runtime's own code metrics",
+      runtime.height !== base.height,
+      true,
+    );
+  });
+
 /** The block every find-highlight sample paints: one card face, one line. */
 const findWashStyle = (theme: Theme): StyleDesc => ({
   display: "flex",
@@ -27902,6 +28206,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "syntax-palette",
     view: () => <SyntaxPaletteProbe />,
     steps: syntaxPaletteSteps,
+  },
+  "markdown-fence": {
+    id: "markdown-fence",
+    view: () => <MarkdownFenceProbe />,
+    steps: markdownFenceSteps,
   },
   "find-highlight": {
     id: "find-highlight",
