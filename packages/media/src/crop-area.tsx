@@ -22,7 +22,7 @@ import { mergeStyles } from "@gpuix/react/floating";
 import { keyboardFocusRing } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
-import { useRef, type ReactElement } from "react";
+import { useEffect, useRef, type ReactElement } from "react";
 import {
   clampCrop,
   cornerCursor,
@@ -284,6 +284,14 @@ export const renderCropArea = (
 export const CropArea = (props: CropAreaProps): ReactElement => {
   const theme = useTheme();
   const gesture = useRef<Option.Option<CropGesture>>(Option.none());
+
+  // A drag that was in flight when the frame became disabled cannot finish: the
+  // runtime delivers no release while the surface refuses the gesture. Drop it
+  // here, so the next hover after re-enabling does not continue the old drag
+  // without a press.
+  useEffect(() => {
+    if (props.disabled === true) gesture.current = Option.none();
+  }, [props.disabled]);
 
   const bounds = cropBounds(props.width, props.height);
   const crop = clampCrop(props.value, bounds, props.minSize, props.aspectRatio);

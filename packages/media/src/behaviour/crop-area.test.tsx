@@ -14,6 +14,9 @@
  * picture or on a handle armed a move/resize — a right-drag dragged the hole,
  * and a release delivered outside the frame left the gesture armed for a plain
  * hover. A gesture begins on the primary press alone.
+ * The fourth: a disabled window kept the drag that was in flight, so the frame
+ * resumed it on the next plain hover once it could act again — a disabled crop
+ * still moved its hole without a press.
  */
 
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
@@ -30,10 +33,12 @@ const opening = new CropRect({ x: 60, y: 40, width: 100, height: 70 });
 const Harness = ({
   start,
   minSize,
+  disabled,
   onReport,
 }: {
   readonly start: CropRect;
   readonly minSize?: number;
+  readonly disabled?: boolean;
   readonly onReport: (crop: CropRect) => void;
 }) => {
   const [crop, setCrop] = useState(start);
@@ -45,6 +50,7 @@ const Harness = ({
       height={160}
       value={crop}
       minSize={minSize}
+      disabled={disabled}
       testId="crop"
       label="Crop"
       onChange={(next) => {
@@ -58,19 +64,27 @@ const Harness = ({
 const mount = (
   start: CropRect = opening,
   minSize?: number,
-): { readonly root: TestRoot; readonly reports: CropRect[] } => {
+): {
+  readonly root: TestRoot;
+  readonly reports: CropRect[];
+  readonly show: (disabled: boolean) => void;
+} => {
   const reports: CropRect[] = [];
   const root = createTestRoot({ width: 1280, height: 800 });
-  root.render(
-    <ThemeProvider theme={lightTheme}>
-      <Harness
-        start={start}
-        minSize={minSize}
-        onReport={(crop) => reports.push(crop)}
-      />
-    </ThemeProvider>,
-  );
-  return { root, reports };
+  const show = (disabled: boolean): void => {
+    root.render(
+      <ThemeProvider theme={lightTheme}>
+        <Harness
+          start={start}
+          minSize={minSize}
+          disabled={disabled}
+          onReport={(crop) => reports.push(crop)}
+        />
+      </ThemeProvider>,
+    );
+  };
+  show(false);
+  return { root, reports, show };
 };
 
 /** The centre of `testId` in window points; a missing element is a broken suite. */
@@ -174,6 +188,38 @@ describe("CropArea gestures", () => {
     root.renderer.simulateKeystrokes("right");
 
     expect(reports).toStrictEqual([]);
+    root.unmount();
+  });
+
+  it("drops a drag a disabled window interrupts", () => {
+    // A crop disabled mid-drag kept the armed gesture, so once it could act
+    // again the next plain hover continued the interrupted drag and moved the
+    // hole with no press at all.
+    const { root, reports, show } = mount();
+    const at = centreOf(root, "crop-handle-se");
+    root.renderer.nativeSimulateMouseDown(at.x, at.y);
+    root.renderer.nativeSimulateMouseMove(at.x + 10, at.y + 10);
+    expect(reports.map(boxes)).toStrictEqual([
+      { x: 60, y: 40, width: 110, height: 80 },
+    ]);
+
+    show(true);
+    show(false);
+    root.renderer.nativeSimulateMouseMove(at.x + 60, at.y + 50);
+
+    expect(reports.map(boxes)).toStrictEqual([
+      { x: 60, y: 40, width: 110, height: 80 },
+    ]);
+
+    // A fresh primary press still drags the corner, so the drop is not a
+    // disabled window that leaves the frame permanently deaf.
+    root.renderer.nativeSimulateMouseDown(at.x + 10, at.y + 10);
+    root.renderer.nativeSimulateMouseMove(at.x + 20, at.y + 20);
+    expect(reports.map(boxes)).toStrictEqual([
+      { x: 60, y: 40, width: 110, height: 80 },
+      { x: 60, y: 40, width: 120, height: 90 },
+    ]);
+    root.renderer.nativeSimulateMouseUp(at.x + 20, at.y + 20);
     root.unmount();
   });
 

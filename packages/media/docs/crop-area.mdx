@@ -50,6 +50,7 @@ const [crop, setCrop] = useState(
 - **No rotation**: rotate the bytes before cropping.
 - A gesture reports a rectangle **once**, when it changes; `minSize` is 24 points and a stored rectangle is clamped first.
 - **Gestures begin on the primary button**: a secondary press on the picture starts no move and one on a handle starts no resize, so the press a context menu wants cannot drag the hole.
+- A **disabled frame drops the gesture in flight**: it refuses every move, so a drag interrupted by `disabled` cannot resume on the first hover after it can act again — the next drag begins with a fresh press.
 - A `minSize` or `handleSize` that is not a positive number reads as its default, so a stored `0` or `-1` cannot paint a hole that collapses or a one-point handle no pointer can grab.
 - A corner handle is held **inside** the frame: the frame clips its children, so a hole touching an edge would otherwise paint half a handle and keep half the press target.
 - A **move** never changes the hole's sides: the caller's `minSize` travels with a pointer drag and with `Alt`+arrow, so a hole allowed below the default does not grow to it.
