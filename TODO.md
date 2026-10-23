@@ -10251,6 +10251,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `docs/chat.mdx: ChatComposerProps.probe has no API row`; fixed, 10/10.
     Docs: `docs/chat.mdx` §API and `docs/dropdown-menu.mdx` §API.
 
+    - [x] `packages/editor` and `packages/media`: **three editor pages and
+      three media pages listed the props their authors remembered.** Only
+      `MarkdownEditor`'s page was held to its type, so `testId` — the address an
+      automation host locates a surface by — was documented on one of four
+      editor pages, and `className` on two of five media pages while every
+      `*Props` interface declares it. Each package gains a page→type contract
+      (`src/docs.test.ts`) that reads the interface body and the page's `## API`
+      rows and checks **both** directions, with a per-page floor so a reader
+      that resolved nothing cannot pass; a combined cell (`minRows` / `maxRows`,
+      `width` / `height`) is read as a set, and the surface a page may inherit
+      rather than declare (`style`, `testId`, `ref`, `onLayout`, `aria-id`,
+      `children`) is exempt from the phantom-row check. Directions measured: the
+      committed pages failed 3 editor cases (`expected [ 'testId' ] to deeply
+      equal []`) and 3 media cases (`expected [ 'className' ] …`, and the
+      inherited `style` rows read as phantom until the exemption landed), and a
+      planted `readonly probe?: string` on `DropZoneProps` fails
+      `../docs/drop-zone.mdx … expected [ 'probe' ]`; fixed, editor 59/59 and
+      media 108/108, `check-types` clean on both. No native scenario applies —
+      a page read against a type.
+
 `[x]` Follow a **desktop palette in a running window** — the tokens half of the
       system-theme recipe (`paletteToTokens`/`watchSystemTheme`) was proven on a
       hand-driven clock, while the claim a consumer relies on — that a running
@@ -10308,7 +10328,49 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 307/307
+`[x]` `[██████████]` 308/308
+
+`[x]` Give the **data lane its first honest preview** — the policy said every
+      lane but Components and Primitives was strategy 4, so `/docs/data-display`
+      described the property inspector in prose while the one composition the
+      `inspector-lifecycle` probe measured had nothing a reader could press.
+      `packages/data/docs/property-panel.mdx` now opens with
+      `<ComponentPreview name="property-panel-demo" />`: one caller-owned object
+      read four ways — a preview stage drawn at the object's own
+      `width`/`height`, an editable `Tag` row, the key-value rows with the four
+      the probe reads first (Name, Tag, Size, Area) and a metric card whose
+      `9600 px²` is **derived**, never stored — plus the app's two size actions
+      (`Wide` moves the width to 240, `Reset size` returns 120 × 80 and keeps
+      the caller's edit). `inspector-preview.ts` owns the arithmetic and the
+      rules (an unset tag prints `none`, the caption is `Alpha — 120 x 80`, the
+      metric follows the object), `property-panel-demo.tsx` only renders them,
+      and the Code tab shows the shipped composition of `PropertyPanel`,
+      `KeyValue` and `StatCard`. `docs/preview-strategy.md` now names the five
+      lanes that still ship no demo and this page as the exception, rather than
+      calling the whole data lane strategy 4. Guards:
+      `inspector-preview.test.ts` (7 cases) reads the probe's own fixture
+      (`INITIAL_OBJECT`'s three fields and `WIDE_WIDTH` from
+      `apps/playground/src/live/inspector.ts`) and holds the opening object, the
+      derived area (9600 → 19200), the tag/caption, both actions, the row order
+      and the page's mount to it; `property-panel-demo.test.tsx` (5 cases) holds
+      the rendered markup to the four readers, the rows, `none`, both actions
+      and the box's own `120px`/`80px`, the style sheet to the fixed label
+      column and `var(--control-height-sm)` (so the platform switch resizes the
+      field), and the sample to the three data surfaces; `preview-strategy.test.ts`
+      gains the one-demo-outside-the-component-and-primitive-lanes case, and
+      `native-run-note.test.tsx` moves its lane sentence to the five lanes and
+      measures the data lane's one demo. Directions measured: raising the
+      opening height to 90 fails **6** cases by name (the fixture, `10800`, the
+      caption, the reset, and both markup cases), and deleting the page's mount
+      fails **3** (`is mounted by the page it documents`, the policy case, and
+      `expected [ 'property-panel-demo' ] to deeply equal []`). Verified on a
+      served build: `vite preview` on :4391 returns **200** and the SSR markup
+      carries `Alpha — 120 x 80`, the six-row panel, the two-row readout, the
+      metric and `width:120px;height:80px`; the page's labelled-approximation
+      note is mounted above it. `check-types` and `build` clean; the docs suite
+      is **135 files / 1157 tests** green. No native scenario applies — a site
+      page painting a browser approximation, and the composition's window
+      evidence is the `inspector-lifecycle` probe already on the record.
 
 `[x]` Teach the **pressable-target floors and the keyboard dim** — `/docs/accessibility`
       published the ARIA budget and stopped: `targetSize` (the fixed 24px AA and
