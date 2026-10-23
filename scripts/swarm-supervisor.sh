@@ -50,7 +50,7 @@ workstream_scope() {
       echo "foundational render primitives and Tier 1 components (layout, text, boxes, scroll, buttons, inputs, selection controls, progress, tooltips, loading). You own packages/primitives and packages/icons."
       ;;
     components)
-      echo "the four components still to build: rich-text editing (`packages/editor`), multi-step forms (`packages/components`), crop area and QR code (`packages/media`). You own those packages for this wave. After each lands, also verify and mark the seven shipped-but-unchecked rows: Collapsible sidebars, Command palette, Breadcrumb navigation, Terminal surfaces, Multi-pane editing layouts, Syntax highlighting, Keyboard navigation."
+      echo "the four components still to build: rich-text editing in packages/editor, multi-step forms in packages/components, crop area and QR code in packages/media. You own those packages for this wave. After each lands, also verify and mark the seven shipped-but-unchecked rows: Collapsible sidebars, Command palette, Breadcrumb navigation, Terminal surfaces, Multi-pane editing layouts, Syntax highlighting, Keyboard navigation."
       ;;
     docs-site)
       echo "the Fumadocs documentation site and showcase: information architecture, component pages, API metadata, light/dark docs themes, search. You own apps/docs, docs/preview-strategy.md and the component-page template."
