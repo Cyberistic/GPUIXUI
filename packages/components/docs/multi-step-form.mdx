@@ -81,6 +81,14 @@ as the nearest real step — `0` is the first, `99` is the last.
 is authoritative: `Next` reports and repaints only when the caller passes a new
 step.
 
+## Accessibility
+
+The mounted step's content is a named `group`: `<title>, step N of M`. The name
+matters because the runtime publishes an element to the accessibility tree only
+when it has a role, so the same `aria-label` on a plain `div` would reach no
+reader; the group is how a screen reader hears which step it is on when the
+content changes.
+
 ## Keyboard and focus
 
 The actions are the shipped `Button`s, so a click and the platform's activation

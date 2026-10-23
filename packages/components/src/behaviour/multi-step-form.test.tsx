@@ -120,6 +120,17 @@ describe("MultiStepForm", () => {
     wizard.unmount();
   });
 
+  it("announces the step's place on the content it mounts", () => {
+    // The bug guarded: a roleless div carrying only `aria-label` paints no a11y
+    // node, so the step announcement never reached a reader.
+    const wizard = renderComponent(<Harness />);
+    const groups = nodesWithRole(wizard.renderer, "group").map(
+      (node) => node.name,
+    );
+    expect(groups).toContain("Name, step 1 of 2");
+    wizard.unmount();
+  });
+
   it("keeps the reader on a step whose gate refuses, and shows why", () => {
     const wizard = renderComponent(<Harness />);
     clickCentreOf(wizard, "multi-step-next");

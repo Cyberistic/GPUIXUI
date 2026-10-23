@@ -202,6 +202,7 @@ export const MultiStepForm = ({
       </Stepper>
       <div
         testId="multi-step-content"
+        role="group"
         aria-label={stepAnnouncement(step?.title ?? "", current, count)}
         style={{
           display: "flex",
