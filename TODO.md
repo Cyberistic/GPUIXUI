@@ -10347,7 +10347,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 309/309
+`[x]` `[██████████]` 309/310
 
 `[x]` Send the **curated component pages their related links back** — the page
       prune removed the hand-written `## Related` section from all 39 curated
@@ -10371,6 +10371,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `data-related="Overlays"` with three links to `/docs/components/drawer`,
       and `/docs/theming` carries no strip. No native scenario applies — a site
       page's navigation links.
+
+`[ ]` Hold each **curated page's API table to the props its component declares** —
+      `component-page.test.ts` resolves every name a table *does* list, so a
+      renamed prop fails, but a prop the prune's hand-written table omits is
+      silent. Measured on `/docs/components/button`: the table documents
+      `onClick` and `style` and stops, while `ButtonProps` also carries
+      `className`, `onKeyDown`, `onKeyUp`, `onFocus`, `onBlur` and the tooltip
+      trigger's `onMouseEnter`/`onMouseLeave`; none of the six appears on the
+      page. The package pages are held to this rule by
+      `packages/primitives/src/docs.test.ts` §The primitives API tables (a page →
+      props-type map resolved through `extends`, an alias intersection and
+      `Omit`, with the runtime's own `Props`/`ActionHostProps` surface left
+      opaque); the 39 curated pages have no such guard. Reuse that reader, map
+      each page's documented part to its type, and add the missing rows.
 
 `[x]` Give the **data lane its first honest preview** — the policy said every
       lane but Components and Primitives was strategy 4, so `/docs/data-display`
