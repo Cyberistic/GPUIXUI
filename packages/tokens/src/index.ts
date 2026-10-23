@@ -10,6 +10,7 @@ export * from "./fonts.js";
 export * from "./indicator.js";
 export * from "./native-text.js";
 export * from "./numbers.js";
+export * from "./omarchy.js";
 export * from "./platforms.js";
 export * from "./retro.js";
 export * from "./scale.js";

@@ -333,14 +333,15 @@ report by line and reason, an empty file decoding to the base unchanged, the
 decoded theme (including the selection share) and the four documents;
 `system-theme.test.ts` gains a stated mode winning over the page and a
 mode-switching follow through `baseFor` (22 cases). Directions measured:
-dropping `color8` from the quiet fallback fails the generated-theme case by name,
-skipping the duplicate check fails the duplicate case in both directions, and
-reading `background` before `mode` in `paletteMode` fails the stated-mode case.
-Docs in `docs/tokens.md` §Omarchy's `colors.toml`/§Following a change, the
-package README and the `System palettes` row; plan 433's decoder half is ticked
-and its docs-page/live-probe half stays open. Not done here: the
-`LICENSES/omarchy.md` record is the licensing workstream's (plan 433's credit
-line).
+dropping `color8` from the quiet fallback fails the generated-theme and
+empty-colour cases by name, skipping the duplicate check lets the second
+statement win (`#202020` for `#101010`), ignoring the stated `mode` makes the
+inverted-page case read `dark`, and dropping `baseFor` leaves the light palette
+on the dark base (`dark` for `light`). Docs in `docs/tokens.md` §Omarchy's
+`colors.toml`/§Following a change, the package README and the `System palettes`
+row; plan 433's decoder half is ticked and its docs-page/live-probe half stays
+open. Not done here: the `LICENSES/omarchy.md` record is the licensing
+workstream's (plan 433's credit line).
 
 `[x]` State the **target sizes' adoption where it landed**, and stop teaching a
 chevron that is not a target — `docs/tokens.md` §Target sizes and

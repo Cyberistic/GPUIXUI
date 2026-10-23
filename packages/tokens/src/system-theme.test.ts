@@ -281,6 +281,16 @@ describe("the palette a desktop hands over", () => {
     expect(paletteMode({ background: "oklch(0.4 0.1 260)" })).toBeUndefined();
   });
 
+  it("takes a stated mode over the one a page's lightness implies", () => {
+    // A desktop that says `light` has answered the question its page only
+    // approximates — a mid-grey page is neither, and an inverted theme is a
+    // choice rather than a measurement error.
+    expect(paletteMode({ background: "#000000", mode: "light" })).toBe("light");
+    expect(paletteMode({ background: "#FFFFFF", mode: "dark" })).toBe("dark");
+    // A mode with no page is still an answer; nothing has to be measured.
+    expect(paletteMode({ mode: "dark" })).toBe("dark");
+  });
+
   it("follows the palette's page without a base to hand", () => {
     expect(followPalette(nightPalette).mode).toBe("dark");
     expect(followPalette(nightPalette).name).toBe(darkTheme.name);
@@ -351,6 +361,49 @@ describe("following a palette", () => {
 
     expect(applied).toHaveLength(2);
     expect(applied[1]?.colors.primary).toBe("#7CC7B0");
+  });
+
+  it("maps a palette onto the base its mode asks for", () => {
+    // A desktop switches its light and dark themes, not only their colours: the
+    // light page must land on the light base's surfaces, or the window wears a
+    // light page with dark cards and the gate reports the mix.
+    const manual = manualTimer();
+    const applied: Array<Theme> = [];
+    let palette: SystemPalette = { ...nightPalette, mode: "dark" };
+    watchSystemTheme({
+      read: () => palette,
+      base: darkTheme,
+      baseFor: (next) =>
+        paletteMode(next) === "light" ? lightTheme : darkTheme,
+      onChange: (theme) => applied.push(theme),
+      every: 2000,
+      timer: manual.timer,
+    });
+    palette = { ...paperPalette, mode: "light" };
+    manual.tick();
+
+    expect(applied).toHaveLength(2);
+    expect(applied[1]?.mode).toBe("light");
+    expect(applied[1]?.colors.background).toBe(paperPalette.background);
+    expect(applied[1]?.colors.card).toBe(lightTheme.colors.card);
+
+    // Without `baseFor` the watch keeps the base it started on, which is the
+    // documented default rather than a second guess at the palette's mode.
+    const fixedManual = manualTimer();
+    const fixed: Array<Theme> = [];
+    let next: SystemPalette = { ...nightPalette, mode: "dark" };
+    watchSystemTheme({
+      read: () => next,
+      base: darkTheme,
+      onChange: (theme) => fixed.push(theme),
+      every: 2000,
+      timer: fixedManual.timer,
+    });
+    next = { ...paperPalette, mode: "light" };
+    fixedManual.tick();
+
+    expect(fixed[1]?.mode).toBe("dark");
+    expect(fixed[1]?.colors.card).toBe(darkTheme.colors.card);
   });
 
   it("returns the base theme when the file is gone, once", () => {
@@ -428,6 +481,7 @@ describe("following a palette", () => {
     // to the palette fails the compile until it is named here, and each one is
     // then driven through the watch. `selection` is the field this caught.
     const pair: Record<keyof SystemPalette, readonly [string, string]> = {
+      mode: ["dark", "light"],
       background: ["#101418", "#101419"],
       foreground: ["#E6E9EE", "#E6E9EF"],
       accent: ["#7C5CFF", "#7C5CFE"],

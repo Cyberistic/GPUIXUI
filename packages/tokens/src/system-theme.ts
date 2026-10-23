@@ -16,6 +16,11 @@
  * role the palette does not name keeps the base theme's value, so a palette of
  * two colours produces a page and an ink rather than a half-built theme.
  *
+ * It **carries the mode the desktop states**. A platform that says `dark` has
+ * answered the question a page's lightness only approximates, so a stated mode
+ * wins over the page; a palette that states none is read by lightness, which is
+ * the one question a page can answer without naming a mode.
+ *
  * It **never invents a fill**. The one choice the mapper makes is which of the
  * palette's own inks reads on a filled role, and it makes it by measurement
  * (`contrastRatio`), never by mixing a new colour. A palette whose ink cannot
@@ -56,10 +61,20 @@ import { extendTheme, getTheme, type Theme, type ThemeMode } from "./theme.js";
  * palette is the page, the ink and a handful of accents, not forty roles.
  *
  * A consumer decodes its own platform's file into this shape at the boundary;
- * Omarchy's `colors.toml`, a macOS appearance and a Windows accent all have
- * their own reader, and the mapping from those files is theirs to own.
+ * Omarchy's `colors.toml` reader ships as `decodeOmarchyPalette` in
+ * `./omarchy.js`, while a macOS appearance and a Windows accent still have their
+ * own reader, because this package names the semantic shape rather than every
+ * platform's file format.
  */
 export interface SystemPalette {
+  /**
+   * The mode the desktop states, when it states one.
+   *
+   * A theme file that says `light` or `dark` has answered a question its page's
+   * lightness only approximates — a mid-grey page is neither — so a stated mode
+   * is what {@link paletteMode} returns. Omit it and the page decides.
+   */
+  readonly mode?: ThemeMode;
   /** The window's own page fill. */
   readonly background?: string;
   /** The page's body ink. */
@@ -107,12 +122,15 @@ const inkOn = (fill: string, palette: SystemPalette, base: Theme): string => {
 };
 
 /**
- * The mode a palette's own page implies, or `undefined` when it names no page
- * or a colour that cannot be measured.
+ * The mode a palette states, or the one its own page implies.
  *
- * A page reads as dark when white is the better contrast against it, which is
- * the one lightness question a palette can answer without naming a mode. A
- * reader follows the palette's page rather than an app switch:
+ * A palette that carries `mode` has answered the question — the desktop said
+ * so — and that answer is returned unchanged, even when the page's lightness
+ * would classify it the other way (a mid-grey page is neither light nor dark).
+ * Otherwise a page reads as dark when white is the better contrast against it,
+ * which is the one lightness question a page can answer by itself. A palette
+ * that names no page, or a page in a colour form the measurement dialect cannot
+ * resolve, has no mode at all.
  *
  * @example
  * ```ts
@@ -126,7 +144,10 @@ const inkOn = (fill: string, palette: SystemPalette, base: Theme): string => {
  * ```
  */
 export function paletteMode(palette: SystemPalette): ThemeMode | undefined {
-  const { background } = palette;
+  const { background, mode } = palette;
+  if (mode !== undefined) {
+    return mode;
+  }
   if (background === undefined) {
     return undefined;
   }
@@ -251,6 +272,17 @@ export interface WatchSystemThemeOptions {
   readonly read: () => SystemPalette | undefined;
   /** The theme the palette is mapped onto; its mode and variant are kept. */
   readonly base: Theme;
+  /**
+   * The base for a palette that needs a different one, such as a desktop that
+   * switched from a dark theme to a light one.
+   *
+   * Without it every palette is mapped onto `base`, which is right for a desktop
+   * that only moves its colours and wrong across a mode switch: a light page on
+   * the dark base's surfaces is exactly the mix `auditTheme` reports. The
+   * function is called per palette, so it can choose by
+   * `getTheme(paletteMode(palette) ?? base.mode)`.
+   */
+  readonly baseFor?: (palette: SystemPalette) => Theme;
   /** Called with a new theme whenever the palette changes. */
   readonly onChange: (theme: Theme) => void;
   /** Milliseconds between polls. The runtime has no file watcher to subscribe to. */
@@ -269,6 +301,7 @@ export interface WatchSystemThemeOptions {
  * named there) and proves that changing any one field alone re-applies.
  */
 const paletteFields = [
+  "mode",
   "background",
   "foreground",
   "accent",
@@ -292,7 +325,9 @@ const paletteKey = (palette: SystemPalette | undefined): string =>
  * decode the platform's file should answer `undefined` rather than throw — that
  * is how a deleted theme file returns the application to its base theme — and a
  * throw from it is a defect the caller's boundary owns, not something this
- * functions hides.
+ * functions hides. A desktop that switches between its light and dark themes
+ * hands `baseFor` so each palette is mapped onto the matching base; without it
+ * every palette keeps the one `base` it was started with.
  *
  * @example
  * ```tsx
@@ -307,7 +342,14 @@ const paletteKey = (palette: SystemPalette | undefined): string =>
  * ```
  */
 export function watchSystemTheme(options: WatchSystemThemeOptions): () => void {
-  const { read, base, onChange, every, timer = intervalTimer } = options;
+  const {
+    read,
+    base,
+    baseFor,
+    onChange,
+    every,
+    timer = intervalTimer,
+  } = options;
   let applied: string | undefined;
   const tick = (): void => {
     const palette = read();
@@ -316,7 +358,11 @@ export function watchSystemTheme(options: WatchSystemThemeOptions): () => void {
       return;
     }
     applied = key;
-    onChange(palette === undefined ? base : paletteToTokens(palette, base));
+    onChange(
+      palette === undefined
+        ? base
+        : paletteToTokens(palette, baseFor?.(palette) ?? base),
+    );
   };
   tick();
   return timer.poll(every, tick);

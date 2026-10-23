@@ -593,18 +593,30 @@ A runnable example lives in [`src/retro.example.ts`](./src/retro.example.ts).
 ## System palettes
 
 A system palette is what a desktop offers the application — a page, an ink, an
-accent, a quiet strip, a border, an error colour, a selection wash — and
-`paletteToTokens(palette, base)` turns it into a theme. `SystemPalette` is that
-shape (every field optional), `paletteMode(palette)` reads the mode off the
-page's own lightness, and `watchSystemTheme` follows a palette through a poll
-because the runtime has no file watcher:
+accent, a quiet strip, a border, an error colour, a selection wash, and the mode
+it states — and `paletteToTokens(palette, base)` turns it into a theme.
+`SystemPalette` is that shape (every field optional), `paletteMode(palette)`
+returns the mode the palette states or the one its page implies, and
+`watchSystemTheme` follows a palette through a poll because the runtime has no
+file watcher:
 
 ```ts
-import { darkTheme, watchSystemTheme } from "@gpuixui/tokens";
+import {
+  decodeOmarchyPalette,
+  getTheme,
+  paletteMode,
+  watchSystemTheme,
+} from "@gpuixui/tokens";
+
+const appTheme = getTheme("dark");
 
 const stop = watchSystemTheme({
-  read: () => readSystemPalette(), // your decoder; `undefined` when absent
-  base: darkTheme,
+  read: () => {
+    const text = readThemeFile(); // `undefined` when the file is gone
+    return text === undefined ? undefined : decodeOmarchyPalette(text).palette;
+  },
+  base: appTheme,
+  baseFor: (palette) => getTheme(paletteMode(palette) ?? appTheme.mode),
   onChange: setTheme,
   every: 2000,
 });
@@ -621,14 +633,29 @@ night palette's body ink reads **1.81:1** on the page and 8 selection placements
 fail, while the same hue at the theme's 24% clears the contract.
 `auditTheme` is the contract: a partial palette is a mix, and a palette whose one
 red cannot serve both a fill and a mark is reported, not repaired — measured on
-the example night palette at 4.39:1 to its chosen ink and 2.93:1 as a mark. The
-consumer owns the platform file's decoder. The paint a running window makes of a
-changed palette is measured by the playground's `system-theme-follow` probe on
-the pinned runtime (12 checks): both palettes and their accents are asserted on
-the frame, the follow re-renders the tree without remounting it (`mounts=1`), and
-a deleted theme returns to the application's own — while this host is macOS, so
-`omarchy-theme-set` itself is not run. Runnable call sites are in
-[`src/system-theme.example.ts`](./src/system-theme.example.ts).
+the example night palette at 4.39:1 to its chosen ink and 2.93:1 as a mark.
+`baseFor` is how a desktop that switches between its light and dark themes moves
+the base with the palette; without it every palette keeps the one base the watch
+started with.
+
+**Omarchy's `colors.toml` ships decoded.** `decodeOmarchyPalette(source)` reads
+the file `omarchy-theme-set` stages at
+`~/.local/state/omarchy/current/theme/colors.toml` (format documented in
+Omarchy's `docs/theming.md`, MIT) and maps its names to the roles: `red` is the
+shell's urgent colour (`danger` → `destructive`), `muted` is **both** the quiet
+strip and the divider, `accent` is the `primary` fill, `mode` chooses the base,
+and `bg`/`fg` plus the ANSI `color1`/`color4`/`color8` are the fallbacks a theme
+generated from Alacritty writes instead of the canonical keys. A line the reader
+cannot use — a table header, an unquoted colour, a duplicate, an empty value, a
+mode it does not know — is named in `problems` with its line and reason and left
+out of the palette, so the role keeps the base's value instead of a typo becoming
+a colour. Log the report beside the theme you apply. The paint a running window
+makes of a changed palette is measured by the playground's `system-theme-follow`
+probe on the pinned runtime (12 checks): both palettes and their accents are
+asserted on the frame, the follow re-renders the tree without remounting it
+(`mounts=1`), and a deleted theme returns to the application's own — while this
+host is macOS, so `omarchy-theme-set` itself is not run. Runnable call sites are
+in [`src/system-theme.example.ts`](./src/system-theme.example.ts).
 
 ## Checking a theme
 

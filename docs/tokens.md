@@ -1032,12 +1032,73 @@ The mapping has three rules, and all of them matter.
   `selection_foreground` cannot be honoured — the runtime paints the wash behind
   a run that keeps the colour it already had.
 
-`paletteMode(palette)` reads the mode from the page itself: a page that white
-contrasts with more than black is dark. Use it to hand the matching built-in
-theme to `paletteToTokens` (and to keep the app's mode switch honest), or omit
-`base` and the mapper does it for you. The base still owns everything the
-palette does not name — a card, a modal, a state wash — so a palette of only a
-page and an ink is a recolour, not a new design system.
+`paletteMode(palette)` returns the mode the palette **states**, or the one its
+page implies when it states none: a page that white contrasts with more than
+black is dark. A stated mode wins because a desktop that says so has answered a
+question a page's lightness only approximates — a mid-grey page is neither, and
+an inverted theme is a choice. Use it to hand the matching built-in theme to
+`paletteToTokens` (and to keep the app's mode switch honest), or omit `base` and
+the mapper does it for you. The base still owns everything the palette does not
+name — a card, a modal, a state wash — so a palette of only a page and an ink is
+a recolour, not a new design system.
+
+### Omarchy's `colors.toml`
+
+Omarchy (the Hyprland/Arch setup) is the one platform whose file this package
+reads. `omarchy-theme-set` stages the active theme at
+`~/.local/state/omarchy/current/theme/colors.toml`, and that file is the palette
+its templates use, documented in Omarchy's own `docs/theming.md` (MIT,
+`omacom/omarchy`; no artwork, font or code is copied).
+`decodeOmarchyPalette` turns its text into the palette above:
+
+```ts
+import { readFileSync } from "node:fs";
+import { decodeOmarchyPalette, paletteToTokens } from "@gpuixui/tokens";
+
+const file = decodeOmarchyPalette(
+  readFileSync(
+    `${process.env.HOME}/.local/state/omarchy/current/theme/colors.toml`,
+    "utf8",
+  ),
+);
+// The palette carries the mode the file declares, so the mapper picks the base.
+const theme = paletteToTokens(file.palette);
+```
+
+The file's names are not this library's roles, so the reader maps them:
+
+| `colors.toml` | `SystemPalette` | Painted as |
+| ------------- | --------------- | ---------- |
+| `background` (`bg`) | `background` | the page |
+| `foreground` (`fg`) | `foreground` | the body ink |
+| `muted` (`color8`) | `muted` and `border` | the quiet strip **and** the divider — Omarchy's one quiet colour |
+| `accent` (`color4`) | `accent` | the `primary` fill |
+| `red` (`color1`) | `danger` | the `destructive` fill; Omarchy's shell calls it the urgent colour |
+| `selection` | `selection` | a fill, restated at the base theme's share |
+| `mode` | `mode` | which base theme is chosen |
+
+The bracketed names are the fallbacks, not aliases to prefer: a theme generated
+from an Alacritty palette (`omarchy-theme-colors-from-alacritty`) names
+`color1`/`color4`/`color8` and no `red`, `accent` or `muted` at all, while a
+hand-written theme names the canonical keys. A canonical key wins over its
+fallback whichever line comes first, and `bg`/`fg` are the legacy short names
+Omarchy still accepts.
+
+**A line it cannot read is reported, not guessed.** The decoder understands the
+file's flat subset — `key = "value"`, single or double quotes, a trailing `#`
+comment, CRLF, a byte-order mark. Anything else is named in `problems` with its
+1-based line and a reason (`syntax`, `duplicate`, `empty` for a colour key with
+no value, `mode` for a value that is neither `light` nor `dark`) and left out of
+the palette, so that role keeps the base theme's value instead of a typo
+becoming a colour. A **table header** ends the read: TOML's root keys come
+before its sections, so `[colors]` means the rest is a shape this reader does not
+understand rather than a palette. A duplicated key keeps the first statement. The
+ANSI names with no role here (`color2`, `bright_red`, …) are the file's own
+vocabulary and are ignored rather than reported. What the decoder does not judge
+is whether a colour **paints** — that is `auditTheme`'s question, so the two
+seams keep their own answers. Log `problems` beside the theme you apply; a
+palette the reader did not fully understand is then visible instead of a mix
+nobody can explain.
 
 ### Following a change
 
@@ -1046,11 +1107,24 @@ The pinned runtime has no file watcher, so the follow is a documented poll.
 a callback and the interval (milliseconds), and returns the stop:
 
 ```ts
-import { darkTheme, watchSystemTheme } from "@gpuixui/tokens";
+import {
+  decodeOmarchyPalette,
+  getTheme,
+  paletteMode,
+  watchSystemTheme,
+} from "@gpuixui/tokens";
+
+const appTheme = getTheme("dark"); // the application's own theme
 
 const stop = watchSystemTheme({
-  read: () => readSystemPalette(), // `undefined` when the file is gone
-  base: darkTheme,
+  read: () => {
+    const text = readThemeFile(); // `undefined` when the file is gone
+    return text === undefined ? undefined : decodeOmarchyPalette(text).palette;
+  },
+  base: appTheme,
+  // A desktop switch between its light and dark themes moves the base with the
+  // palette; without this every palette keeps the one base it started on.
+  baseFor: (palette) => getTheme(paletteMode(palette) ?? appTheme.mode),
   onChange: setTheme,
   every: 2000,
 });
@@ -1058,13 +1132,16 @@ const stop = watchSystemTheme({
 
 It applies the first read immediately, then re-applies only when the palette it
 read actually changed — a poll that keeps reading the same file calls nothing,
-and every field the shape offers is compared, so a desktop that moves only its
-border or its selection colour still reaches the window — and an `undefined` read
-applies the base theme, which is how a deleted system theme returns the window to
-the application's own. `read` is the boundary: decode
-the platform's file there, and answer `undefined` rather than throw when it is
-missing or unreadable. A throw is a defect in that boundary, and this seam does
-not hide it.
+and every field the shape offers is compared (the stated `mode` included), so a
+desktop that moves only its border, its selection colour or its mode still
+reaches the window — and an `undefined` read applies the base theme, which is how
+a deleted system theme returns the window to the application's own. `read` is the
+boundary: decode the platform's file there, and answer `undefined` rather than
+throw when it is missing or unreadable. A throw is a defect in that boundary, and
+this seam does not hide it. `baseFor` is optional; when it is absent the palette
+is mapped onto `base` whatever mode it declares, which is right for a desktop
+that only recolours and wrong across a mode switch, because a light page on the
+dark base's surfaces is exactly the mix `auditTheme` reports.
 
 `every` is a plain millisecond count because this package carries no runtime
 dependency; swap `timer` for a `SystemThemeTimer` if the application schedules
@@ -1074,7 +1151,7 @@ drives a tick by hand instead of waiting.
 
 The runnable call sites are in
 [`src/system-theme.example.ts`](../packages/tokens/src/system-theme.example.ts):
-`followPalette` maps a palette onto the mode its page implies, and
+`followPalette` maps a palette onto the mode it states or its page implies, and
 `followDesktop` is the poll. `system-theme.test.ts` holds the mapper to the
 palette's own values, the ink choice to measurement, the watcher to one apply per
 change, and the deleted file to the base theme.
@@ -1089,10 +1166,10 @@ perceptibility floor on its new page. `paletteToTokens` chooses each on-colour
 and never claims the result is shippable; a consumer following a desktop runs the
 gate and then either names the roles a palette cannot answer (the full look
 belongs in the `PlatformStyle` shape, where a style owns its surfaces and its
-chart scale) or accepts the reported mix. Decoding Omarchy's `colors.toml` (or a
-macOS appearance, or a Windows accent) belongs to the consumer's boundary — this
-package names the semantic shape, not a file format. The paint a running window
-makes of a changed palette is measured below.
+chart scale) or accepts the reported mix. Omarchy's `colors.toml` is the one
+platform format this package decodes; a macOS appearance and a Windows accent
+still belong to the consumer's boundary, because their files are not this shape.
+The paint a running window makes of a changed palette is measured below.
 
 ### The paint a window measured
 
@@ -1116,10 +1193,11 @@ per theme, which reads `mounts=2`. Evidence is
 `apps/playground/README.md` §`system-theme-follow`.
 
 **This host is macOS**, so the platform's file is not read here and
-`omarchy-theme-set` is not run: the probe stands in for the decoder at the seam,
-handing over the same `SystemPalette` a real reader must produce. What it
-measures is the follow's paint, interval and lifetime; the Linux half is the
-decoder plus the same poll, and no claim about Hyprland is made from this run.
+`omarchy-theme-set` is not run: the probe stands in for the file at the seam,
+handing over the same `SystemPalette` that `decodeOmarchyPalette` produces from a
+real theme. What it measures is the follow's paint, interval and lifetime; the
+Linux half is the shipped decoder plus the same poll, and no claim about Hyprland
+is made from this run.
 
 ## Checking your own theme
 
