@@ -8,8 +8,9 @@
  * the leave handler was gated on `!disabled`, so the flag survived a pointer
  * that left during the disabled window. The negative controls are the disabled
  * zone (which must refuse a drop) and the resting vs. hovered border (the
- * highlight is a real, distinct state). A blank pick label reads as its
- * documented default, so the fallback route is never an unnamed action.
+ * highlight is a real, distinct state). A blank label or pick label reads as
+ * its documented default, so neither the group nor the fallback route is left
+ * unnamed.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -127,6 +128,20 @@ describe("DropZone", () => {
       ),
     )({});
     expect(picked).toBe(true);
+  });
+
+  it("reads a blank zone label as the documented default", () => {
+    // The label is both the visible headline and the group's accessible name,
+    // so a blank i18n row painted an empty line and published an unnamed group.
+    const blank = renderDropZone(
+      { label: "  ", onDrop: noop },
+      lightTheme,
+      surface(false),
+    );
+    expect(elementProp(blank, "aria-label")).toEqual(Option.some("Drop files"));
+    expect(
+      Arr.map(textElements(blank), (line) => elementProp(line, "children")),
+    ).toEqual([Option.some("Drop files")]);
   });
 
   it("reads a blank pick label as the documented default", () => {

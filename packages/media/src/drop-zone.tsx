@@ -39,7 +39,7 @@ export interface DropPayload {
 
 /** {@link DropZone} props. */
 export interface DropZoneProps extends Omit<Props, "children"> {
-  /** The zone's visible and accessible name. */
+  /** The zone's visible and accessible name. Default `"Drop files"`; a blank name reads as the default. */
   readonly label: string;
   /** Why the reader should drop or pick here. A blank one paints no line. */
   readonly description?: string;
@@ -55,6 +55,8 @@ export interface DropZoneProps extends Omit<Props, "children"> {
 }
 
 /** Both separators: a drop on Windows arrives as `C:\Users\ada\notes.txt`. */
+const DEFAULT_LABEL = "Drop files";
+
 const SEPARATORS = /[\\/]/;
 
 const basename = (path: string): string =>
@@ -113,6 +115,9 @@ export const renderDropZone = (
   // promise of an action, so a disabled zone paints at rest even while the
   // wrapper still holds the last hover flag.
   const highlighted = surface.hovered && !disabled;
+  // The label is the headline *and* the group's name: a blank one would paint
+  // an empty line above an unnamed group, so it reads as the documented default.
+  const name = accessibleName(label, DEFAULT_LABEL);
   const pick = accessibleName(pickLabel, "Choose files");
   // A description is copy like a name: a blank one paints a full blank line
   // under the zone's label (`visibleCopy`), so a key an i18n table never filled
@@ -123,7 +128,7 @@ export const renderDropZone = (
     <div
       {...rest}
       role="group"
-      aria-label={label}
+      aria-label={name}
       onMouseEnter={(event) => {
         if (!disabled) surface.onEnter();
         onMouseEnter?.(event);
@@ -147,7 +152,7 @@ export const renderDropZone = (
       )}
     >
       <Icon name="upload" color={theme.colors.mutedForeground} />
-      <text style={{ color: theme.colors.foreground }}>{label}</text>
+      <text style={{ color: theme.colors.foreground }}>{name}</text>
       {copy === undefined ? null : (
         <text style={{ color: theme.colors.mutedForeground }}>{copy}</text>
       )}
