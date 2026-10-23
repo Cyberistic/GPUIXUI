@@ -3368,6 +3368,82 @@ describe("docs/gpuix-capabilities.md", () => {
     ).toContain("faded-hitbox-lifecycle");
   });
 
+  it("records the hiding word the renderer honours, derived from its probe", () => {
+    // `StyleDesc` accepts any `display` and `visibility`, and only one of the two
+    // words hides a subtree: the renderer matches `display` against `flex` and
+    // `grid` only, so a component that writes `display: "none"` still paints,
+    // lays out and keeps its tab stop, while `visibility: "hidden"` is the
+    // renderer's `invisible()`. A plan reading the type alone picks the wrong
+    // word, which is how the shipped Carousel hid its spare slide. The box, the
+    // stop list and the readouts below are read out of the probe, so the record
+    // cannot teach a word the window no longer honours.
+    const fixture = read("apps/playground/src/live/hidden-subtree.ts");
+    const probe = read("apps/playground/src/live/hidden-subtree-probe.tsx");
+    const named = (pattern: RegExp, source: string): ReadonlyArray<string> =>
+      [...source.matchAll(pattern)].map((match) => match[1] ?? "");
+
+    const words = named(
+      /word: "([a-z]+)"/g,
+      /export const HIDING_CASES[\s\S]*?\n\];/.exec(fixture)?.[0] ?? "",
+    );
+    const stops = named(
+      /HIDDEN_IDS\.([A-Za-z]+)/g,
+      /export const HIDDEN_STOPS[\s\S]*?\n\];/.exec(fixture)?.[0] ?? "",
+    );
+    const walk = Number(
+      /export const HIDDEN_WALK = (\d+);/.exec(fixture)?.[1] ?? Number.NaN,
+    );
+    const control = (
+      /const ProbeControl[\s\S]*?width: (\d+),\s*height: (\d+),/.exec(probe) ??
+      []
+    )
+      .slice(1)
+      .map(Number);
+    const readouts = named(
+      /ctx\.expectContains\(\s*"[^"]+",\s*yield\* ctx\.host\.text\(HIDDEN_IDS\.readout\),\s*"([^"]+)"/g,
+      probe,
+    );
+
+    expect(words).toEqual(["display", "visibility"]);
+    expect(stops).toContain("displayControl");
+    expect(stops).not.toContain("visibilityControl");
+    expect(walk).toBeGreaterThan(stops.length);
+    expect(control).toEqual([200, 32]);
+    expect(readouts).toEqual(["slide=1", "invisibleKeys=0"]);
+
+    const box = `${control[0]}×${control[1]}`;
+    const row = rowFor("Hiding a subtree");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("hidden-subtree-lifecycle");
+    expect(row?.evidence).toContain(`**${box}**`);
+    expect(row?.evidence).toContain('`display: "none"` is ignored');
+    expect(row?.evidence).toContain("invisible()");
+    expect(row?.evidence).toContain(`**${control[1]}**-point row`);
+    expect(row?.evidence).toContain("invisibleKeys=0");
+    expect(row?.workaround).toContain('visibility: "hidden"');
+    expect(row?.workaround).toContain("unmount");
+
+    const page = measuredRow("Hiding a subtree");
+    expect(
+      page,
+      "the page's measured table has no hiding-a-subtree row",
+    ).toBeDefined();
+    expect(page?.[1]).toContain("hidden-subtree-lifecycle");
+    expect(page?.[1]).toContain(`**${box}**`);
+    expect(page?.[1]).toContain(`**${control[1]}**-point row`);
+    expect(page?.[1]).toContain("invisibleKeys=0");
+    expect(page?.[2]).toContain('visibility: "hidden"');
+
+    expect(
+      [...registeredProbes()],
+      "the cited probe is not one the playground registers",
+    ).toContain("hidden-subtree-lifecycle");
+    expect(
+      doc.slice(doc.indexOf("## 5. Keeping this document true")),
+      "the record's §5 owes no line for the hiding words",
+    ).toContain("hidden-subtree-lifecycle");
+  });
+
   it("records the geometry `motion` animates and the content it clips", () => {
     // Two inventory rows rest on this — Tier 3's expandable rows and Tier 4's
     // collapsible sidebars — and neither had a window measurement, because a
