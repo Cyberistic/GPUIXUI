@@ -14,6 +14,9 @@
  *   through `onMotionComplete` on `motion.div`, and the popover, menu and
  *   preview-card surfaces are hosted by `FloatingLayer`'s own element, so one
  *   mechanism covers every surface;
+ * - a leaving surface takes no presses on its own box (`presenceStyle`), and one
+ *   that keeps controls mounted covers them with `PresenceShield` for the exit —
+ *   `pointerEvents` does not inherit, so a child keeps its own hitbox;
  * - the reduced preference is read from `MotionProvider`, because the runtime
  *   exposes no preference of its own. It zeroes the duration: the resting frame
  *   still paints, only the journey is removed.
@@ -294,3 +297,27 @@ export const presenceStyle = (
   present && rest === "wrapper"
     ? {}
     : { pointerEvents: present ? "auto" : "none" };
+
+/**
+ * The layer a leaving surface paints over its content.
+ *
+ * {@link presenceStyle} removes the surface's **own** hitbox, and that is all it
+ * can do: `pointerEvents` does not inherit in `@gpuix/native@0.11.0`, whose hit
+ * test keeps every child's own box, so a control inside a box that is fading
+ * still answers a press. Measured in this renderer: a dismissed `Dialog` stayed
+ * painted for its exit and a press on its confirm action ran the action. A
+ * positioned layer that answers nothing is the one box the hit test can find, so
+ * a leaving surface takes the press for its exit instead of letting a ghost act
+ * on it.
+ *
+ * The layer is inset against its **positioned parent**, so a surface renders it
+ * as a child of the box that fades — the wrapper a reveal paints already owns
+ * such a box (`position: "relative"`), and a surface whose root is not positioned
+ * must make it so before it can shield its content.
+ */
+export const PresenceShield = ({ present }: { readonly present: boolean }) =>
+  present ? null : (
+    <div
+      style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
+    />
+  );
