@@ -236,8 +236,12 @@ export const toggleColumn = (state: ColumnState, id: string): ColumnState =>
  * Move a column `delta` visible places through the order, clamped at both ends.
  *
  * The step is measured over the columns a reader can see: a hidden column
- * between two visible ones must not turn a press into a no-op. The widths move
- * with their columns and the content width is unchanged — a move is an order
+ * between two visible ones must not turn a press into a no-op. A multi-place
+ * move shifts every column it steps over, so `name` moves *after* the two
+ * columns a `+2` crosses rather than trading places with the second. Hidden
+ * columns keep the slots they occupied, so restoring one returns it to the
+ * reader's order instead of the moved column's edge. The widths move with
+ * their columns and the content width is unchanged — a move is an order
  * change, not a resize.
  */
 export const moveColumn = (
@@ -253,24 +257,27 @@ export const moveColumn = (
     Math.min(visible.length - 1, fromVisible.value + delta),
   );
   if (toVisible === fromVisible.value) return state;
-  const from = Arr.findFirstIndex(state.columns, (column) => column.id === id);
-  const to = Option.flatMap(Arr.get(visible, toVisible), (column) =>
-    Arr.findFirstIndex(
-      state.columns,
-      (candidate) => candidate.id === column.id,
-    ),
+  const nextVisible = Option.flatMap(
+    Arr.get(visible, fromVisible.value),
+    (column) =>
+      Arr.insertAt(Arr.remove(visible, fromVisible.value), toVisible, column),
   );
-  const source = Option.flatMap(from, (at) => Arr.get(state.columns, at));
-  const target = Option.flatMap(to, (at) => Arr.get(state.columns, at));
-  if (Option.isNone(from) || Option.isNone(to)) return state;
-  if (Option.isNone(source) || Option.isNone(target)) return state;
+  if (Option.isNone(nextVisible)) return state;
+  const visibleSlots = Arr.reduce(
+    state.columns,
+    Arr.empty<number>(),
+    (slots, column, index) =>
+      column.visible ? Arr.append(slots, index) : slots,
+  );
   return {
     columns: Arr.map(state.columns, (column, index) =>
-      index === from.value
-        ? target.value
-        : index === to.value
-          ? source.value
-          : column,
+      Option.match(
+        Option.flatMap(
+          Arr.findFirstIndex(visibleSlots, (slot) => slot === index),
+          (rank) => Arr.get(nextVisible.value, rank),
+        ),
+        { onNone: () => column, onSome: (next) => next },
+      ),
     ),
   };
 };

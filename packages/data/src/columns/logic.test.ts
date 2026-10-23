@@ -14,6 +14,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   COLUMN_KEY_STEP,
@@ -115,6 +116,31 @@ describe("column configuration", () => {
     expect(isColumnVisible(moved, "status")).toBe(false);
     expect(widthOf(moved, "status")).toBe(110);
     expect(contentWidth(moved)).toBe(350);
+    // The hidden track keeps the slot it occupied, so restoring it returns it
+    // to the reader's own order rather than to the moved column's edge.
+    expect(Arr.map(moved.columns, (column) => column.id)).toEqual([
+      "size",
+      "status",
+      "name",
+    ]);
+  });
+
+  it("moves a column several places in one call, not only by swapping it", () => {
+    const state = opened();
+
+    // A two-place move puts `name` after `size` and shifts both columns it
+    // stepped over left; swapping the source and the target would leave
+    // `status` after `size`, which is not the order a reader asked for.
+    const moved = moveColumn(state, "name", 2);
+    expect(ids(moved)).toEqual(["status", "size", "name"]);
+    expect(contentWidth(moved)).toBe(460);
+    expect(widthOf(moved, "name")).toBe(260);
+
+    expect(ids(moveColumn(state, "size", -2))).toEqual(["size", "name", "status"]);
+
+    // A step past either end clamps at the end rather than stopping one short.
+    expect(ids(moveColumn(state, "name", 9))).toEqual(["status", "size", "name"]);
+    expect(ids(moveColumn(state, "size", -9))).toEqual(["size", "name", "status"]);
   });
 
   it("resizes within the column's own bounds and leaves other tracks alone", () => {

@@ -239,6 +239,13 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   live keyboard stop). Page `docs/virtual-tree.mdx`, example
   `virtual-tree.example.tsx`, and the Tier 5 row is `done`. Directions measured:
   dropping the window reveal fails the `End`/reveal/collapse cases by name.
+- **A column move steps over every column it crosses**: `moveColumn` traded places
+  with its destination, so a `delta` of 2 put the column past the target while the
+  column between them stayed where it was. It now removes the column from the
+  visible order, inserts it at the clamped target and writes the visible columns
+  back into their slots, so hidden columns keep their places and a step past an
+  end clamps at the end. `columns/logic.test.ts` gains the two-place and clamp
+  cases (133 unit cases green; the hidden-column case asserts the slot).
 - Evidence: `nub run --filter @gpuixui/data test` (126) and `test:behaviour` (67)
   green on 0.11.0; `nub apps/playground/dist/smoke/run.js --only data-table-core`
   and `--only data-tree-core` and `--only data-expandable-rows-core` (1/1 each).
