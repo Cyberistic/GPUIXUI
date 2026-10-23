@@ -123,7 +123,7 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   with a re-entrancy guard — with the panes' headers taking the taller of their
   two measured heights, the sideways pan the data pane's alone (its own `x` is
   carried into the vertical mirror) and a frozen press choosing the record for
-  the whole grid. 6 native behaviour cases mount the shipped example
+  the whole grid. 5 native behaviour cases mount the shipped example
   (`src/behaviour/frozen-table.test.tsx`), the page is
   `packages/data/docs/frozen-columns.mdx`, and the Tier 3 Tables and
   Column-configuration rows state the composition. Evidence:
@@ -243,7 +243,7 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   **sibling** detail row because 0.11.0 has no row span; `virtual-list-expand`'s
   rule (a painted row grows and the rows below shift) is why an expanding row
   belongs in the plain table or the list's children mode, not a fixed-estimate
-  window. 13 unit + 12 behaviour cases, two docs pages and two examples; headless
+  window. 15 unit + 9 behaviour cases, two docs pages and two examples; headless
   `data-tree-core` and `data-expandable-rows-core` are 1/1 on 0.11.0.
 - **Virtualized hierarchical data landed (Tier 5)**: `VirtualTree` composes the
   tree model with the `itemCount` window (`packages/data/src/virtual/tree.tsx`),
@@ -397,6 +397,17 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   guard's whole-file search was satisfied by the `Decorative surfaces` row, which
   is why the Tier 3 row needs its own reader. Directions measured: all three cases
   fail on the old text; with it, the package is 19 files / 167 tests.
+- **A row's printed case count is the suite's, not the one it shipped with**:
+  the Tables row said "7 native behaviour cases mount the example" while
+  `table.test.tsx` had grown to **26**, and two path-qualified counts had drifted
+  the same way (`frozen-table.test.tsx` printed 6 with 5 shipped,
+  `tree/logic.test.ts` printed 13 with 15). `src/inventory.test.ts` derives every
+  printed count from the suites the rows name, using the two-space `it(`
+  convention the components package's inventory guard already applies; it sweeps
+  every row naming `@gpuixui/data`, holds the Tables row's unnamed count by name,
+  and reads `docs/virtual-tree.mdx`'s `7 tests`. Directions measured: three cases
+  fail on the old text (`7 native behaviour cases`, `(13 cases)`, `(6 cases)`);
+  with the rows corrected, 4/4 and the package is 20 files / 171 tests.
 
 
 ## 5. Acceptance
