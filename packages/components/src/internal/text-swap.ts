@@ -22,6 +22,7 @@ import {
 } from "@gpuixui/motion/timing";
 import { Match } from "effect";
 import * as Option from "effect/Option";
+import { transitionWindowMs } from "./presence.js";
 
 /** Where a swap is in its two halves. */
 export type SwapPhase = "rest" | "leaving" | "entering";
@@ -184,6 +185,11 @@ const halve = (timing: MotionTransition): MotionTransition => ({
  * The level split across the two halves: a `normal` swap is 200 ms end to end,
  * so each value travels for 100 ms. Under the reduced preference both halves are
  * zero and the swap is immediate.
+ *
+ * The exit half's window is the seam's conversion, not a second division here:
+ * the runtime waits a delayed run's first frame for its delay, so a hand-built
+ * window would swap the value before the outgoing half began — and the two homes
+ * would drift the moment a level names a wait.
  */
 export const swapHalves = (
   level: MotionLevel,
@@ -193,6 +199,6 @@ export const swapHalves = (
   return {
     exit,
     enter: halve(motionTiming(level, { phase: "enter", preference })),
-    swapMs: Math.round((exit.duration ?? 0) * 1000),
+    swapMs: transitionWindowMs(exit),
   };
 };

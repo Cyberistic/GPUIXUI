@@ -295,17 +295,20 @@ const holdsForTiming = (body: string): boolean =>
   (windowConversion.test(body) || readsTimingDuration(body));
 
 /**
- * A source that computes its own millisecond window out of a raw duration.
+ * A source that divides a timing's duration into milliseconds by hand.
  *
- * `readsTimingDuration` alone only proves a source *uses* the seam somewhere;
- * a file that keeps one window through the helper and divides the second by
- * hand still holds a box for a span the seam does not own. This is the shape a
- * reintroduced copy has.
+ * The conversion is the seam's (`transitionWindowMs`), and a second home is a
+ * span it does not own whether or not the source schedules the timer itself:
+ * `text-swap.ts` handed its half to `RollingText`/`SlidingText`, which schedule
+ * it, so a copy sat one call away from the shape that only looked for a
+ * `setTimeout` beside the division. One line naming the duration and converting
+ * it is that copy's shape.
  */
 const handBuiltWindow = (body: string): boolean =>
-  Str.includes("setTimeout")(body) &&
-  Str.includes(".duration")(body) &&
-  (Str.includes("Math.round(")(body) || Str.includes("* 1000")(body));
+  Arr.some(
+    Str.split("\n")(body),
+    (line) => Str.includes(".duration")(line) && Str.includes("* 1000")(line),
+  );
 
 describe("the hold window", () => {
   it("is the seam's conversion, so a delayed run keeps its box", () => {
@@ -319,7 +322,10 @@ describe("the hold window", () => {
     // reaches the rule through the helper or still reads the raw duration — the
     // second is exactly what this case has to see in order to fail it.
     // `gradient-text` and `splitting-text` read the duration only to report the
-    // reduced preference, so they are not hold windows.
+    // reduced preference, so they are not hold windows; a file that hands its
+    // milliseconds to a component that schedules them is one (`text-swap.ts` did,
+    // before the guard looked past the timer), which is why the hand-built shape
+    // is a line and not a file.
     const holding = Arr.filter(sources, ({ body }) => holdsForTiming(body));
     // A scan that reads no hold window cannot pass vacuously.
     expect(Arr.length(holding)).toBeGreaterThan(0);
