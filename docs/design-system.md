@@ -1077,7 +1077,9 @@ colours, and `rgb`/`hsl`/`hwb`/`hsv` with an optional alpha channel, so a brand
 written the way a design tool exports it is measured exactly as its hex twin. A
 perceptual space (`lab`, `lch`, `oklab`, `oklch`), a relative colour or a
 channel expression paints and has its pairs reported unmeasurable rather than
-guessed (`docs/tokens.md` §Paint-ready values). An
+guessed (`docs/tokens.md` §Paint-ready values). Both tables are read through
+their own entries, so a key the prototype chain answers for (`constructor`,
+`__proto__`) is not a colour. An
 elevation level a brand supplies is outside that report — it reads `colors` —
 and an unpaintable shadow colour paints no shadow, so
 `invalidShadowColors(theme)` names the level and position (§7).

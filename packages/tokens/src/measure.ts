@@ -14,6 +14,11 @@
  * they resolve through a colour-space conversion this package does not guess at,
  * and a ratio computed from an approximation is worse than an honest absence —
  * the gate then names the pair instead of passing a colour nobody verified.
+ *
+ * The two tables a value is looked up in are read through their **own entries**,
+ * so a key the prototype chain answers for — `constructor`, `__proto__` — is not
+ * a colour. Without that rule the paint check and this seam disagree: a role
+ * written as one passed `invalidColorRoles` while no channels resolved for it.
  */
 
 /** A colour as the contracts read it: six-digit channels and an optional share. */
@@ -186,16 +191,34 @@ export const namedColours: Readonly<Record<string, string>> = {
 };
 
 /**
+ * One of this module's tables read at an authored key.
+ *
+ * The tables are plain objects, so a key they do not carry can still answer
+ * through the prototype chain: `constructor` is `Object.prototype`'s, and a
+ * value written as one would pass the paint check while nothing resolves to
+ * channels. Only the table's own entries are colours.
+ */
+const entry = <Value>(
+  table: Readonly<Record<string, Value>>,
+  key: string,
+): Value | undefined => (Object.hasOwn(table, key) ? table[key] : undefined);
+
+/**
  * Whether `value` is a named colour the runtime paints, case-insensitively.
+ *
+ * The table is read through its own entries: a key the prototype chain answers
+ * for — `constructor`, `__proto__` — is not a named colour, so the paint check
+ * and {@link measuredColour} cannot disagree about one.
  *
  * @example
  * ```ts
  * isNamedColour("RebeccaPurple"); // true
  * isNamedColour("notacolour"); // false
+ * isNamedColour("constructor"); // false — an inherited key, not a colour
  * ```
  */
 export const isNamedColour = (value: string): boolean =>
-  namedColours[value.trim().toLowerCase()] !== undefined;
+  entry(namedColours, value.trim().toLowerCase()) !== undefined;
 
 /**
  * The functional colour families the runtime's parser reads. The eight this
@@ -483,7 +506,7 @@ const fromFunction = (
   name: string,
   args: string,
 ): MeasuredColour | undefined => {
-  const family = families[name];
+  const family = entry(families, name);
   const channels = splitChannels(args);
   if (family === undefined || channels === undefined) {
     return undefined;
@@ -515,6 +538,7 @@ const fromFunction = (
  * measuredColour("hsl(120 100% 50%)"); // { rgb: "#00FF00" }
  * measuredColour("oklch(0.62 0.26 29.2)"); // undefined — a perceptual space
  * measuredColour(null); // undefined — a value a store wrote for an absent one
+ * measuredColour("constructor"); // undefined — an inherited key, not a colour
  * ```
  */
 export const measuredColour = (value: unknown): MeasuredColour | undefined => {
@@ -527,7 +551,7 @@ export const measuredColour = (value: unknown): MeasuredColour | undefined => {
     return hex;
   }
   const name = colour.toLowerCase();
-  const named = namedColours[name];
+  const named = entry(namedColours, name);
   if (named !== undefined) {
     return fromHex(named);
   }

@@ -19,6 +19,7 @@ import {
   alpha,
   alphaOf,
   blend,
+  invalidColorRoles,
   isPaintableColor,
   lightColors,
   type ThemeColors,
@@ -141,6 +142,29 @@ describe("the named colours the paint check accepts", () => {
       10,
     );
     expect(contrastRatio("white", "black")).toBeCloseTo(21, 10);
+  });
+
+  it("refuses a prototype key the table does not carry", () => {
+    // The tables are plain objects, so a key they do not carry can still answer
+    // through the prototype chain: `constructor` and `__proto__` were reported
+    // paintable while `measuredColour` resolved nothing, and a role written as
+    // one passed `invalidColorRoles` and then failed every pair as
+    // unmeasurable. The seam reads its own entries only, so the paint check and
+    // the measurement cannot disagree about a name.
+    const inherited = Object.getOwnPropertyNames(Object.prototype);
+    expect(inherited.length).toBeGreaterThan(10);
+    expect(inherited.filter((key) => isNamedColour(key))).toEqual([]);
+    expect(inherited.filter((key) => isPaintableColor(key))).toEqual([]);
+    expect(
+      inherited.filter((key) => measuredColour(key) !== undefined),
+    ).toEqual([]);
+    // The functional families are the second table read at an authored key.
+    expect(measuredColour("constructor(1 2 3)")).toBeUndefined();
+    expect(measuredColour("__proto__(1 2 3)")).toBeUndefined();
+    // And the report a brand runs says so, rather than passing the role.
+    expect(
+      invalidColorRoles({ colors: { ...lightColors, primary: "constructor" } }),
+    ).toEqual([{ role: "primary", value: "constructor" }]);
   });
 });
 

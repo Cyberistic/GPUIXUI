@@ -876,7 +876,10 @@ Each report is also a function of its own:
   the way a design tool exports it is measured exactly as its hex twin. A
   perceptual space (`lab`, `lch`, `oklab`, `oklch`), a relative colour
   (`rgb(from …)`) and a channel expression (`calc`, `none`) paint and are
-  reported unmeasurable rather than guessed.
+  reported unmeasurable rather than guessed. The named-colour and functional
+  tables are read through their own entries, so a key the prototype chain
+  answers for — `constructor`, `__proto__` — is not a colour the paint check or
+  the seam accepts.
 - `invalidShadowColors(theme)` applies the same grammar to every shadow in the
   elevation scale, which the role report cannot see: a level a brand supplies
   replaces the array whole, and a colour the runtime ignores paints no shadow at

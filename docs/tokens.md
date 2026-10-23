@@ -1408,6 +1408,14 @@ resolving the arithmetic inside a channel is the runtime's. The argument is
 `unknown`, and anything that is not a string — a missing key in a decoded theme,
 a number, `null` — answers `false` instead of throwing, because that is the
 value a check exists to report rather than crash on.
+
+Both checks read their tables through their **own entries**, so a key the
+prototype chain answers for is not a colour: `constructor` and `__proto__` used
+to pass `invalidColorRoles` while no channels resolved for them — a role that
+painted nothing and then failed every pair as unmeasurable — and
+`measuredColour("constructor(1 2 3)")` answered an object rather than nothing.
+`measure.test.ts` holds every property of `Object.prototype` to the rule, so the
+paint check and the measurement seam cannot disagree about a name.
 `invalidShadowColors(theme)` applies the same check to an elevation level a brand
 supplies, which the role report cannot see (§Elevation); a level the theme does
 not carry is reported once, at position `0`, with `color: undefined`. A theme
