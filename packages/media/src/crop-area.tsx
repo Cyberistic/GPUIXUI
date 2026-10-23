@@ -79,9 +79,9 @@ export interface CropAreaProps extends Omit<Props, "children" | "onChange"> {
   readonly value: CropRect;
   /** Reports the hole a gesture leaves. */
   readonly onChange: (crop: CropRect) => void;
-  /** The smallest side a crop may keep, on a resize and on a move. Default `24`. */
+  /** The smallest side a crop may keep, on a resize and on a move. Default `24`; a value that is not a positive number reads as the default. */
   readonly minSize?: number;
-  /** A corner handle's side. Default `10`. */
+  /** A corner handle's side. Default `10`; a value that is not a positive number reads as the default. */
   readonly handleSize?: number;
   /**
    * The hole's width / height. A drag keeps it; a ratio that cannot be read

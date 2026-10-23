@@ -9,6 +9,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   clampCrop,
@@ -63,6 +64,18 @@ describe("clampCrop", () => {
         ),
       ),
     ).toStrictEqual({ x: 0, y: 0, width: 24, height: 24 });
+  });
+
+  it("reads a minimum it cannot lay out as the default side", () => {
+    const loose = new CropRect({ x: 60, y: 40, width: 0, height: 0 });
+    Arr.forEach([0, -20, Number.NaN, Infinity], (min) => {
+      expect(boxes(clampCrop(loose, bounds, min))).toStrictEqual({
+        x: 60,
+        y: 40,
+        width: 24,
+        height: 24,
+      });
+    });
   });
 
   it("takes the floor a frame smaller than the minimum can offer", () => {
@@ -177,10 +190,12 @@ describe("handleBox", () => {
     });
   });
 
-  it("reads an unreadable handle side as the default box", () => {
-    expect(boxes(handleBox(opening, "se", Number.NaN))).toStrictEqual(
-      boxes(handleBox(opening, "se", CROP_HANDLE_SIZE)),
-    );
+  it("reads a handle side it cannot lay out as the default box", () => {
+    Arr.forEach([Number.NaN, Infinity, 0, -5], (size) => {
+      expect(boxes(handleBox(opening, "se", size))).toStrictEqual(
+        boxes(handleBox(opening, "se", CROP_HANDLE_SIZE)),
+      );
+    });
   });
 });
 

@@ -75,15 +75,16 @@ const clamp = (value: number, low: number, high: number): number =>
 const delta = (value: number): number => (Number.isFinite(value) ? value : 0);
 
 /**
- * The minimum side a frame can actually offer. A minimum that cannot be read
- * (a stored preference) reads as the default, so it cannot poison every side
- * the clamp multiplies it into.
+ * The minimum side a frame can actually offer. A minimum that cannot be laid
+ * out (a stored preference: not finite, or not positive) reads as the default,
+ * so it cannot poison every side the clamp multiplies it into or let a hole
+ * shrink until no corner is left to grab.
  */
 const floorOf = (bounds: CropBounds, min: number): number =>
   Math.max(
     0,
     Math.min(
-      Number.isFinite(min) ? min : CROP_MIN_SIZE,
+      Number.isFinite(min) && min > 0 ? min : CROP_MIN_SIZE,
       Math.max(0, bounds.width),
       Math.max(0, bounds.height),
     ),
@@ -286,14 +287,15 @@ export const cropGuides = (crop: CropRect): ReadonlyArray<CropGuide> => {
 
 /**
  * A corner handle's box, centred on the crop's corner. A side that cannot be
- * read reads as {@link CROP_HANDLE_SIZE}, never a `NaN` box.
+ * laid out (not finite, or not positive) reads as {@link CROP_HANDLE_SIZE}, so
+ * a stored preference never paints a one-point box no pointer can grab.
  */
 export const handleBox = (
   crop: CropRect,
   corner: CropCorner,
   size: number,
 ): CropRect => {
-  const side = Number.isFinite(size) ? Math.max(1, size) : CROP_HANDLE_SIZE;
+  const side = Number.isFinite(size) && size > 0 ? size : CROP_HANDLE_SIZE;
   const point = Match.value(corner).pipe(
     Match.when("nw", () => ({ x: crop.x, y: crop.y })),
     Match.when("ne", () => ({ x: crop.right, y: crop.y })),

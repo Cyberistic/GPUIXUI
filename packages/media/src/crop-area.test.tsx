@@ -157,6 +157,25 @@ describe("renderCropArea", () => {
     ).toBe("60, 40, 24 × 24");
   });
 
+  it("reads a zero or negative handle side and minimum as the defaults", () => {
+    const tiny = new CropRect({ x: 60, y: 40, width: 10, height: 10 });
+    const root = renderCropArea(
+      props({ value: tiny, handleSize: 0, minSize: -20 }),
+      lightTheme,
+      surfaceOf(),
+    );
+    const se = handleOf(root, "se");
+    expect(expectSome(hostProp(se, "style"))).toMatchObject({
+      left: 79,
+      top: 59,
+      width: 10,
+      height: 10,
+    });
+    expect(expectSome(elementProp(se, "aria-valuetext"))).toBe(
+      "60, 40, 24 × 24",
+    );
+  });
+
   it("reads a rectangle it cannot lay out as the origin and the floor", () => {
     const broken = new CropRect({
       x: Number.NaN,
