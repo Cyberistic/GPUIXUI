@@ -4984,6 +4984,26 @@ applies — printed figures a suite derives.
 
 `[x]` `[██████████]` 19/19
 
+`[x]` `packages/components`: **a fractional tag cap admitted one token more than
+      it named** — `TagInput`'s `max` is often a budget a caller computes over a
+      measured width (`width / chipWidth`), and `addTokens` compared
+      `length >= max` without flooring it: a `max` of `2.7` refused the fourth
+      token but admitted the third, so the field painted one chip past the cap
+      it was given. A cap the caller could not read (`NaN`) also silently meant
+      no cap. The cap is a whole count now (`capOf` in
+      `tag-input/logic.ts`): a finite cap is floored and held at zero or more,
+      while an unreadable one is no cap — the reading `AvatarGroup` gives the
+      same unmeasured count. Proof: `tag-input/logic.test.ts`'s
+      `floors a maximum that names part of a token` measured at HEAD
+      `expected [ 'a', 'b', 'c' ] to deeply equal [ 'a', 'b' ]`; its sibling
+      `reads a maximum it cannot measure as no cap` holds the absence rule for
+      `NaN` and infinity. Restored, the file is 12/12 (10 → 12 rule tests), the
+      tag-input behaviour suite is 9/9, `docs.test.ts` 22/22, with
+      `check-types`, `check:tests` and `oxfmt` clean. Docs: the `max` prop's
+      JSDoc, `docs/tag-input.mdx` §Limitations and the `COMPONENTS.md` Tag row
+      (10 → 12 rule tests and the cap rule). No native scenario applies — a pure
+      rule over the caller's token list; the component's own suite paints it.
+
 `[x]` `packages/primitives`: **the Toggle row's example was a `ToggleGroup`** —
       the record in `src/inventory.ts` and `docs/README.md`'s page table both
       named `examples/toggle.example.tsx` as the standalone mode's screen, and

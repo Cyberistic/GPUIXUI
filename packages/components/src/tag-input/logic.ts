@@ -25,14 +25,30 @@ export const splitDraft = (draft: string): ReadonlyArray<string> =>
     return token === "" ? Result.failVoid : Result.succeed(token);
   });
 
+/**
+ * The cap as a whole number of tokens.
+ *
+ * `max` is a count, so it is floored: a budget of `2.7` allows two tokens, not
+ * three. A cap the rules cannot read — `NaN` from a measurement that never
+ * arrived, an infinity from arithmetic against a zero width — is not a cap at
+ * all, the same reading `AvatarGroup` gives its unreadable `max` rather than
+ * hiding every member.
+ */
+const capOf = (max: number | undefined): Option.Option<number> =>
+  Option.map(
+    Option.filter(Option.fromNullishOr(max), Number.isFinite),
+    (value) => Math.max(0, Math.floor(value)),
+  );
+
 /** Append the tokens that pass the rules; a refused addition leaves the list. */
 export const addTokens = (
   current: ReadonlyArray<string>,
   incoming: ReadonlyArray<string>,
   rules: AddRules = {},
-): ReadonlyArray<string> =>
-  Arr.reduce(incoming, current, (tokens, token) => {
-    if (rules.max !== undefined && Arr.length(tokens) >= rules.max) {
+): ReadonlyArray<string> => {
+  const cap = capOf(rules.max);
+  return Arr.reduce(incoming, current, (tokens, token) => {
+    if (Option.exists(cap, (limit) => Arr.length(tokens) >= limit)) {
       return tokens;
     }
     if (
@@ -43,6 +59,7 @@ export const addTokens = (
     }
     return Arr.append(tokens, token);
   });
+};
 
 /** Remove the first exact match; an absent token is a no-op. */
 export const removeToken = (

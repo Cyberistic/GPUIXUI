@@ -87,7 +87,11 @@ export interface TagInputProps extends Omit<Props, "children"> {
   readonly onValueChange: (value: ReadonlyArray<string>) => void;
   /** The group's accessible name. */
   readonly label: string;
-  /** Maximum tokens; additions past it are refused. */
+  /**
+   * Maximum tokens; additions past it are refused. A fractional cap is floored
+   * (a `2.7` budget admits two), and a cap that cannot be read (`NaN`, an
+   * infinity) is no cap, the same reading an absent `max` already has.
+   */
   readonly max?: number;
   /** Keep repeated tokens. Default `false`. */
   readonly allowDuplicates?: boolean;
