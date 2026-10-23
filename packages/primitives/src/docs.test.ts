@@ -1687,6 +1687,64 @@ describe("the primitives docs page contract", () => {
       rowFacts: true,
     });
   });
+  it("documents the tooltip provider's own props, and no others", () => {
+    // The bug guarded: the `### TooltipProvider` table listed `reducedMotion`,
+    // which `TooltipProviderProps` does not declare — a caller following the
+    // page passed a prop TypeScript rejects. The API guard resolves a page's
+    // names against the union of its types, so a row copied from the tip's table
+    // into the provider's passed it.
+    const api = Option.getOrElse(bodyOf(read("tooltip.mdx"), "API"), () => "");
+    const start = api.indexOf("### TooltipProvider");
+    const documented = Arr.flatMap(
+      Arr.filter((start < 0 ? "" : api.slice(start)).split("\n"), (line) =>
+        line.startsWith("|"),
+      ),
+      rowNames,
+    );
+    const declared = propsOf("TooltipProviderProps", declaredTypes());
+
+    expect({
+      section: start >= 0,
+      extra: Arr.filter(documented, (name) => !Arr.contains(declared, name)),
+      missing: Arr.filter(declared, (name) => !Arr.contains(documented, name)),
+    }).toEqual({ section: true, extra: [], missing: [] });
+  });
+
+  it("defaults an animated control's reduced motion from the provider", () => {
+    // The bug guarded: every page gave `reducedMotion` the default `false`, and
+    // the components read only the prop — so an application that wrapped its
+    // tree in the library's one `MotionProvider` still animated every primitive
+    // unless it repeated the flag on each instance. The API rows name the
+    // provider as the default, the prop as the override; `core/motion.test.ts`
+    // holds the sources to the one rule.
+    const pages = [
+      "button.mdx",
+      "icon-button.mdx",
+      "progress.mdx",
+      "skeleton.mdx",
+      "spinner.mdx",
+      "switch.mdx",
+      "toggle.mdx",
+      "tooltip.mdx",
+    ];
+    const rows = (page: string): ReadonlyArray<string> =>
+      Arr.filter(
+        read(page).split("\n"),
+        (line) =>
+          line.startsWith("| `reducedMotion` |") && !line.includes("`—`"),
+      );
+    expect({
+      // Every animated page states the provider's default in its API row.
+      stale: Arr.filter(pages, (page) =>
+        Arr.some(rows(page), (row) => !row.includes("the motion provider")),
+      ),
+      // And at least the pages whose controls move name the provider itself.
+      named: Arr.filter(
+        ["switch.mdx", "tooltip.mdx"],
+        (page) => !read(page).includes("`MotionProvider`"),
+      ),
+    }).toEqual({ stale: [], named: [] });
+  });
 });
 
 /**

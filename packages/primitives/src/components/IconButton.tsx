@@ -22,11 +22,13 @@
  */
 
 import { useContext, type ReactElement, type ReactNode } from "react";
+import { useMotionPreference } from "@gpuixui/motion/react";
 import type { EventPayload } from "@gpuix/react";
 import type { StateStyle } from "@gpuix/react/floating";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ButtonVariant } from "../core/variants.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
+import { reducedMotionOf } from "../core/motion.js";
 import {
   renderButton,
   type ButtonFocus,
@@ -62,7 +64,10 @@ export interface IconButtonProps
    * blank label announces nothing.
    */
   readonly loadingLabel?: string;
-  /** Holds the busy spinner's lit dot, for a reader who asked for no motion. */
+  /**
+   * Holds the busy spinner's lit dot. Defaults to the motion provider's
+   * preference (`MotionProvider`).
+   */
   readonly reducedMotion?: boolean;
   /**
    * Called for a click or an activating key, with the event that caused it —
@@ -148,8 +153,13 @@ export const renderIconButton = (
 export const IconButton = (props: IconButtonProps): ReactElement => {
   const theme = useTheme();
   const focus = useFocus();
+  // The provider states the preference once; the prop is the per-action answer.
+  const reducedMotion = reducedMotionOf(
+    props.reducedMotion,
+    useMotionPreference(),
+  );
   return renderIconButton(
-    props,
+    { ...props, reducedMotion },
     theme,
     focus,
     useContext(AttachedGroup),

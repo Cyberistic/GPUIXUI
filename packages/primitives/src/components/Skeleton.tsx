@@ -13,6 +13,7 @@
 
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import { useMotionPreference } from "@gpuixui/motion/react";
 import { cn } from "@gpuixui/tw";
 import {
   PULSE_INTERVAL_MS,
@@ -21,7 +22,7 @@ import {
   skeletonSize,
   type SkeletonSpec,
 } from "../core/loading.js";
-import { stillFrame } from "../core/motion.js";
+import { reducedMotionOf, stillFrame } from "../core/motion.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { skeletonClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
@@ -30,8 +31,9 @@ import { useTheme } from "./ThemeProvider.js";
 
 export interface SkeletonProps extends SkeletonSpec {
   /**
-   * Paint one frame and schedule no interval. The runtime exposes no
-   * reduced-motion preference, so the caller passes its own.
+   * Paint one frame and schedule no interval. Defaults to the motion
+   * provider's preference (`MotionProvider`); the runtime exposes none of its
+   * own.
    */
   readonly reducedMotion?: boolean;
   readonly style?: StyleDesc;
@@ -62,11 +64,16 @@ export const renderSkeleton = (
 );
 
 /** A pulsing placeholder block. */
-export const Skeleton = (props: SkeletonProps): ReactElement =>
-  renderSkeleton(
-    props,
+export const Skeleton = (props: SkeletonProps): ReactElement => {
+  const reducedMotion = reducedMotionOf(
+    props.reducedMotion,
+    useMotionPreference(),
+  );
+  return renderSkeleton(
+    { ...props, reducedMotion },
     useTheme(),
     // The pulse has its own cadence: no level names a placeholder that
     // alternates while it is on screen (see `core/loading.ts`).
-    useStep(PULSE_STEPS, PULSE_INTERVAL_MS, props.reducedMotion !== true),
+    useStep(PULSE_STEPS, PULSE_INTERVAL_MS, !reducedMotion),
   );
+};

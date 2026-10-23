@@ -26,6 +26,7 @@ import {
 } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
+import { useMotionPreference } from "@gpuixui/motion/react";
 import { cn } from "@gpuixui/tw";
 import { accessibleName, spokenText } from "../core/a11y.js";
 import {
@@ -39,7 +40,7 @@ import {
   SPINNER_SEGMENTS,
   STEP_INTERVAL_MS,
 } from "../core/loading.js";
-import { stillFrame } from "../core/motion.js";
+import { reducedMotionOf, stillFrame } from "../core/motion.js";
 import {
   progressPercent,
   type ProgressSpec,
@@ -86,9 +87,9 @@ export interface ProgressProps {
    */
   readonly loadingText?: string;
   /**
-   * Hold the indeterminate segment and schedule no interval. The runtime
-   * exposes no reduced-motion preference, so the caller passes its own. A
-   * determinate bar never animates, so this changes nothing on it.
+   * Hold the indeterminate segment and schedule no interval. Defaults to the
+   * motion provider's preference (`MotionProvider`); the runtime exposes none of
+   * its own. A determinate bar never animates, so this changes nothing on it.
    */
   readonly reducedMotion?: boolean;
   readonly style?: StyleDesc;
@@ -372,15 +373,19 @@ export const renderProgress = (
  * tree for a segment it never paints is cost with nothing to show for it.
  * `reducedMotion` stops the timer the same way.
  */
-export const Progress = (props: ProgressProps): ReactElement =>
-  renderProgress(
-    props,
+export const Progress = (props: ProgressProps): ReactElement => {
+  const reducedMotion = reducedMotionOf(
+    props.reducedMotion,
+    useMotionPreference(),
+  );
+  return renderProgress(
+    { ...props, reducedMotion },
     useTheme(),
     useStep(
       SPINNER_SEGMENTS,
       STEP_INTERVAL_MS,
-      progressAnimates(Option.fromNullishOr(props.value)) &&
-        props.reducedMotion !== true,
+      progressAnimates(Option.fromNullishOr(props.value)) && !reducedMotion,
     ),
     useMessages(),
   );
+};

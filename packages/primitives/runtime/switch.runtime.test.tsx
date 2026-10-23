@@ -15,6 +15,7 @@
 
 import { expect, it } from "vitest";
 import * as Option from "effect/Option";
+import { MotionProvider } from "@gpuixui/motion/react";
 import { Switch } from "../src/components/Switch.js";
 import { Stack } from "../src/components/Stack.js";
 import { switchThumbInset, switchThumbTravel } from "../src/core/selection.js";
@@ -119,6 +120,30 @@ it("keeps the knob's gap to each edge equal in both states", async () => {
   expect(rest[0]).toBe(
     testTheme.borderWidth.thin + switchThumbInset(testTheme),
   );
+});
+
+it("lands the thumb at once under the provider's reduced preference", async () => {
+  // The bug guarded: every animated primitive defaulted its own `reducedMotion`
+  // to false, so an app that wrapped its tree in the library's one
+  // `MotionProvider` still animated a switch unless it repeated the flag on
+  // every instance. This switch is given no prop at all; the first case in the
+  // file is the negative control, where the same click-frame read is still
+  // short of the far edge.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <MotionProvider preference="reduced">
+        <Switch testId="s" label="Airplane mode" />
+      </MotionProvider>
+    </Surface>,
+  );
+  const rest = thumbOf(runtime);
+  const travel = switchThumbTravel(spec, testTheme);
+
+  runtime.click("s");
+  runtime.flush();
+
+  expect(thumbOf(runtime).x).toBe(rest.x + travel);
 });
 
 it("paints the track's checked fill and leaves it at rest when disabled", async () => {

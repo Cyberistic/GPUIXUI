@@ -39,7 +39,7 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | `label` | `string` | none | accessible name, and `ProgressLabel`'s default text |
 | `formatValue` | `(percent: number) => string` | `` `${percent}%` `` | the announced and painted share; a blank answer keeps the default |
 | `loadingText` | `string` | `loading.indeterminate` (`"loading"`) | what an indeterminate bar says instead of a percentage; a blank one keeps the provider's |
-| `reducedMotion` | `boolean` | `false` | holds the indeterminate segment; no effect with `value` |
+| `reducedMotion` | `boolean` | the motion provider | holds the indeterminate segment; no effect with `value`. The prop overrides the provider |
 | `children` | `ReactNode` | the track | the parts to draw |
 | `style` | `StyleDesc` | — | merged last, on the root frame |
 | `className` | `string` | — | Tailwind classes, joined last on the root frame |

@@ -50,6 +50,7 @@ import {
 } from "react";
 import type { MotionProps, StyleDesc } from "@gpuix/react";
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
+import { useMotionPreference } from "@gpuixui/motion/react";
 import { cn } from "@gpuixui/tw";
 import {
   Tooltip as GpuixTooltip,
@@ -58,6 +59,7 @@ import {
   TooltipTrigger,
 } from "@gpuix/react/tooltip";
 import { accessibleName } from "../core/a11y.js";
+import { reducedMotionOf } from "../core/motion.js";
 import {
   exitWindowMs,
   fadeFromAnchor,
@@ -158,7 +160,8 @@ export interface TooltipProps {
    */
   readonly disableHoverableContent?: boolean;
   /**
-   * The reader asked for less motion. Default `false`.
+   * The reader asked for less motion. Defaults to the motion provider's
+   * preference (`MotionProvider`), and this prop is the per-tip override.
    *
    * The runtime exposes no preference of its own, so the application owns it,
    * exactly as it owns the theme mode: a reduced tip still paints every frame —
@@ -335,7 +338,12 @@ const useHeldOpen = (wanted: boolean, timing: SurfaceTiming): boolean => {
 /** A short label shown when its trigger is hovered. */
 export const Tooltip = (props: TooltipProps): ReactElement => {
   const theme = useTheme();
-  const timing = surfaceTiming(props.reducedMotion === true);
+  // The provider states the preference once; the prop is the per-tip answer.
+  const reducedMotion = reducedMotionOf(
+    props.reducedMotion,
+    useMotionPreference(),
+  );
+  const timing = surfaceTiming(reducedMotion);
   const [requested, setRequested] = useState(props.defaultOpen === true);
   const wanted = props.open ?? requested;
   const mounted = useHeldOpen(wanted, timing);

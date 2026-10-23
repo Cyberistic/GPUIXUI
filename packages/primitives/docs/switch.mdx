@@ -46,7 +46,7 @@ import { Switch } from "@gpuixui/primitives";
 | `description` | `string` | none | announced help (`aria-description`) |
 | `onMouseEnter` / `onMouseLeave` / `aria-description` | `TooltipTriggerProps` | none | forwarded to the press band, so the switch can be a `Tooltip` trigger |
 | `ref` / `aria-id` / `onLayout` | host address | none | the press band is the addressed element |
-| `reducedMotion` | `boolean` | `false` | the thumb lands instead of sliding |
+| `reducedMotion` | `boolean` | the motion provider | the thumb lands instead of sliding; the prop overrides the provider |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the switch's own; yours runs first |
 | `style` | `StateStyle<SwitchState>` | — | resolved against the live state, merged last |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
@@ -68,7 +68,8 @@ import { Switch } from "@gpuixui/primitives";
   (`Label target`) rather than flipping it; the switch's own target is the
   control, because the runtime publishes no press verb for another element.
 - No loading or pending state; disable it while a request is in flight.
-- The slide is 150ms; `reducedMotion` lands the thumb.
+- The slide is 150ms; `reducedMotion` lands the thumb. It defaults to the
+  motion provider's preference (`MotionProvider`), so one wrapper covers a tree.
 - A theme restored from storage writes `null` for the paint it did not carry
   (JSON has no `undefined`): that is no declaration, so the switch paints the
   accent family in the derived box. A table that lost one of its three slots is

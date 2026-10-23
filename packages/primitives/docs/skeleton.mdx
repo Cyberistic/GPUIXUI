@@ -26,7 +26,7 @@ import { Skeleton, Stack } from "@gpuixui/primitives";
 | `height` | `number \| string` | body line height | the block's height |
 | `radius` | `sm \| md \| lg \| xl \| none` | `"sm"` | corner radius |
 | `circle` | `boolean` | `false` | full radius; the missing side mirrors the other |
-| `reducedMotion` | `boolean` | `false` | paints the full-opacity frame and schedules no pulse |
+| `reducedMotion` | `boolean` | the motion provider | paints the full-opacity frame and schedules no pulse; the prop overrides the provider |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |

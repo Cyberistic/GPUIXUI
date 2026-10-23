@@ -32,6 +32,7 @@ import type {
 } from "@gpuix/react";
 import * as P from "effect/Predicate";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
+import { useMotionPreference } from "@gpuixui/motion/react";
 import { cn } from "@gpuixui/tw";
 import { accessibleName } from "../core/a11y.js";
 import {
@@ -40,7 +41,7 @@ import {
   swallowKeyDefault,
 } from "../core/keyboard.js";
 import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
-import { stillTransition } from "../core/motion.js";
+import { reducedMotionOf, stillTransition } from "../core/motion.js";
 import {
   switchTargetStyle,
   switchThumbInset,
@@ -117,8 +118,9 @@ export interface SwitchProps
    */
   readonly label?: string;
   /**
-   * Skip the thumb's slide. The runtime exposes no reduced-motion preference,
-   * so the caller passes its own and the thumb jumps to its position instead.
+   * Skip the thumb's slide and jump to the position instead. Defaults to the
+   * motion provider's preference (`MotionProvider`); the runtime exposes none
+   * of its own.
    */
   readonly reducedMotion?: boolean;
   /** Extra style, resolved against the switch's live state and merged last. */
@@ -307,5 +309,17 @@ export const Switch = (props: SwitchProps): ReactElement => {
     props.defaultChecked ?? false,
     checkedChange(props),
   );
-  return renderSwitch(props, theme, state.value, focus, state.set, messages);
+  // The provider states the preference once; the prop is the per-switch answer.
+  const reducedMotion = reducedMotionOf(
+    props.reducedMotion,
+    useMotionPreference(),
+  );
+  return renderSwitch(
+    { ...props, reducedMotion },
+    theme,
+    state.value,
+    focus,
+    state.set,
+    messages,
+  );
 };

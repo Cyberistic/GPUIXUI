@@ -46,7 +46,7 @@ const theme = useTheme();
 | `defaultOpen` | `boolean` | `false` | starts open before any interaction |
 | `onOpenChange` | `(open: boolean) => void` | — | the state the runtime asked for |
 | `disableHoverableContent` | `boolean` | `false` | close when the pointer leaves the trigger |
-| `reducedMotion` | `boolean` | `false` | removes the journey: the tip lands at once and unmounts at once |
+| `reducedMotion` | `boolean` | the motion provider | removes the journey: the tip lands at once and unmounts at once; the prop overrides the provider |
 | `style` | `StyleDesc` | — | extra style on the tip's surface, merged last |
 | `className` | `string` | — | a Tailwind string joined after the recipe, so it wins conflicts |
 | `testId` | `string` | — | locator on the tip |
@@ -58,7 +58,6 @@ const theme = useTheme();
 | `delay` | `number` | `0` | milliseconds before a hovered tip opens |
 | `skipDelay` | `number` | `300` | the window in which the next tip opens with no wait |
 | `disableHoverableContent` | `boolean` | `false` | close when the pointer leaves the trigger |
-| `reducedMotion` | `boolean` | `false` | removes the journey: the tip lands at once and unmounts at once |
 | `children` | `ReactNode` | required | the tips and triggers the timing applies to |
 
 ## Dependencies
@@ -85,7 +84,8 @@ press that dismissed it. Re-opening during the exit retargets the same box.
 **`reducedMotion` removes the journey, not the frames.** The resting frame is
 what paints either way; a reduced close is an unmount rather than a held exit.
 The runtime exposes no preference (`docs/gpuix-capabilities.md`), so the
-application states it, exactly as it states the theme mode.
+application states it once — `MotionProvider` from `@gpuixui/motion/react` —
+exactly as it states the theme mode, and the prop overrides it per tip.
 
 ## Limitations
 

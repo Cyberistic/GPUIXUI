@@ -44,6 +44,8 @@ import { useContext, useState, type ReactElement, type ReactNode } from "react";
 import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
+import { useMotionPreference } from "@gpuixui/motion/react";
+import { reducedMotionOf } from "../core/motion.js";
 import { accessibleName } from "../core/a11y.js";
 import {
   busyWord,
@@ -102,9 +104,9 @@ export interface ButtonProps
    */
   readonly loadingLabel?: string;
   /**
-   * Hold the busy spinner's lit dot. The runtime exposes no reduced-motion
-   * preference, so the caller passes its own; it reaches the spinner and
-   * nothing else, because a button paints no other motion.
+   * Hold the busy spinner's lit dot. Defaults to the motion provider's
+   * preference (`MotionProvider`); it reaches the spinner and nothing else,
+   * because a button paints no other motion.
    */
   readonly reducedMotion?: boolean;
   readonly leading?: ReactNode;
@@ -291,8 +293,13 @@ export const renderButton = (
 export const Button = (props: ButtonProps): ReactElement => {
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
+  // The provider states the preference once; the prop is the per-action answer.
+  const reducedMotion = reducedMotionOf(
+    props.reducedMotion,
+    useMotionPreference(),
+  );
   return renderButton(
-    props,
+    { ...props, reducedMotion },
     theme,
     {
       focused,

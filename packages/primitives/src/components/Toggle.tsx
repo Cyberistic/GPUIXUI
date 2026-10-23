@@ -26,8 +26,10 @@ import type { ReactElement, ReactNode } from "react";
 import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
+import { useMotionPreference } from "@gpuixui/motion/react";
 import { accessibleName } from "../core/a11y.js";
 import { controlRing } from "../core/focus.js";
+import { reducedMotionOf } from "../core/motion.js";
 import {
   decideActivation,
   isPlainKey,
@@ -90,8 +92,8 @@ export interface ToggleProps
    */
   readonly loadingLabel?: string;
   /**
-   * Hold the busy spinner's lit dot. The runtime exposes no reduced-motion
-   * preference, so the caller passes its own.
+   * Hold the busy spinner's lit dot. Defaults to the motion provider's
+   * preference (`MotionProvider`); the runtime exposes none of its own.
    */
   readonly reducedMotion?: boolean;
   readonly leading?: ReactNode;
@@ -220,5 +222,17 @@ export const Toggle = (props: ToggleProps): ReactElement => {
     props.defaultPressed ?? false,
     props.onPressedChange,
   );
-  return renderToggle(props, theme, state.value, focus, state.set, messages);
+  // The provider states the preference once; the prop is the per-toggle answer.
+  const reducedMotion = reducedMotionOf(
+    props.reducedMotion,
+    useMotionPreference(),
+  );
+  return renderToggle(
+    { ...props, reducedMotion },
+    theme,
+    state.value,
+    focus,
+    state.set,
+    messages,
+  );
 };
