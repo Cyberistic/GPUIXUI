@@ -71,6 +71,43 @@ describe("the composition pages", () => {
     expect(missing).toEqual([]);
   });
 
+  it("list the pages their packages ship from the collections, not by hand", () => {
+    // Bug guarded: both pages answered "what does this lane ship" with a
+    // hand-written list. The data one had lost table selection, sorting and
+    // column configuration; the workspace one had no list at all, so the
+    // editor, file, shell and media pages were reachable only from the
+    // sidebar. `LanePages` reads the mounted collections and the component
+    // suite holds it to the docs folders.
+    const mounted = [
+      { file: dataDisplayPage, lane: "data-display" },
+      { file: workspacePage, lane: "workspace" },
+    ];
+
+    expect(
+      mounted
+        .filter(
+          ({ file, lane }) =>
+            !read(file).includes(`<LanePages lane="${lane}" />`),
+        )
+        .map(({ file }) => file),
+    ).toEqual([]);
+    expect(read(dataDisplayPage)).toContain("## What ships today");
+    expect(read(workspacePage)).toContain("## What ships today");
+    // The layout lane composes primitives, whose pages live in their own
+    // collection; there is no package whose pages the lane entry owns.
+    expect(read("layouts.mdx")).not.toContain("<LanePages");
+  });
+
+  it("mount the page list in the policy, beside the inventory table", () => {
+    const policy = readFileSync(
+      new URL("../../../../docs/preview-strategy.md", import.meta.url),
+      "utf8",
+    );
+
+    expect(policy).toContain('| What ships today | `<LanePages lane="…" />`');
+    expect(policy).toContain("**The page list is generated too.**");
+  });
+
   it("name the inventory as the source of their status", () => {
     const silent = pages
       .filter(({ file }) => !read(file).includes("COMPONENTS.md"))

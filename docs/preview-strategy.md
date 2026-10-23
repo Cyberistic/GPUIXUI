@@ -865,6 +865,7 @@ they have their own contract.
 | frontmatter | `title`, one-sentence `description` |
 | intro | what the lane is, and how much of it is unbuilt |
 | The lane | `<LaneTable lane="…" />` — the generated inventory |
+| What ships today | `<LanePages lane="…" />` — every page the lane's packages mount, generated from their collections |
 | Today | the shipped pieces that compose the lane, each linked to its page, or a runnable composition preview |
 | Gaps | the missing rows, each with its evidence and the strongest honest alternative |
 | Where a change goes | which package owns the next change in the lane |
@@ -877,6 +878,15 @@ appears without a docs change. `src/lib/inventory.test.ts` holds the parse (a
 malformed row is reported, not dropped), `lane-table.test.tsx` proves every row
 reaches the rendered table, and `lane-page.test.ts` proves each page mounts its
 table, names the inventory and sits in the sidebar.
+
+**The page list is generated too.** The packages that fill a lane ship their own
+pages, and a hand-written list of them had already lost three data pages and
+every workspace package but the dock and shell: `<LanePages>` reads the same
+component index the grid does, groups each lane's pages by the package that
+ships them, and prints their descriptions. `lane-pages.test.tsx` walks the
+packages' docs folders independently and requires every page's link, title and
+description in the rendered list, so a new page cannot arrive only in the
+sidebar.
 
 **No preview for a component that does not exist.** A lane preview is either a
 shipped component (`<ComponentPreview>`) or a composition of shipped parts

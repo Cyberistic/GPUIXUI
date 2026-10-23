@@ -10382,7 +10382,31 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 317/319
+`[ ]` `[█████████░]` 318/320
+
+`[x]` Give the **data and workspace lane entries their shipped pages** — both
+      pages answered "what does this lane ship" with a hand-written list, and
+      both had rotted: `/docs/data-display`'s table stopped at twelve and
+      omitted `table-selection`, `table-sorting` and `column-configuration`,
+      while `/docs/workspace` carried no list at all, so the editor, files,
+      shell and media pages (18 across five packages) were reachable only from
+      the sidebar. `<LanePages lane="…" />` renders every page the lane's
+      packages mount, grouped in sidebar order from the same component index the
+      grid uses, so a new page arrives without a docs edit; the data page's
+      companion table keeps the composed pieces (`Table` moved there) and no
+      longer restates the package pages. `lane-pages.test.tsx` walks
+      `packages/*/docs` independently and requires every link, title and
+      description in the rendered table beside the counts and lane isolation;
+      `lane-page.test.ts` gains the mount and policy cases. Directions measured:
+      dropping `files` from the group order fails three cases by name
+      (`/docs/files/file-tree`, `18 pages in 5 packages`, `@gpuixui/files`), and
+      removing the workspace mount fails the mount case
+      (`[ 'workspace/index.mdx' ]`). Verified on a served build:
+      `/docs/workspace` answers 200 with 18 pages over 5 packages and the five
+      dock/editor/files/shell/media groups, `/docs/data-display` with 14 pages
+      and the three recovered links. `apps/docs` is 143 files / 1 266 tests
+      green, `check-types` and `build` clean. No native scenario applies —
+      generated site navigation.
 
 `[x]` Put the **look picker back where plan 433 asks for it** — the plan's
       deliverable is "a docs page with a live switch XP ↔ Aero ↔ default

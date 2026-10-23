@@ -235,6 +235,7 @@ src/components/docs/native-run-note.tsx   The note above a package page: the pla
 src/components/docs/playground-scenarios.tsx The probe catalogue on /docs/playground, grouped by capability
 src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
+src/components/docs/lane-pages.tsx        The generated page list on the data and workspace lanes
 src/components/docs/component-index.tsx   The 3-column tile grid on /docs/components and its URL filter
 src/components/docs/icon-gallery.tsx      Every icon the set publishes, from its own markup
 src/components/docs/use-index-query.ts    A list filter carried in `?q=`, shared by both indexes
@@ -337,6 +338,7 @@ src/lib/virtual-modules.d.ts        The types of the build-time modules
 src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack bridge for the previews
 src/lib/inventory.ts                Parses the tier tables of COMPONENTS.md into lane rows
 src/lib/inventory-data.ts           The parsed inventory, at build time
+src/lib/lane-pages.ts               The pages a lane's packages ship, grouped by package
 src/lib/inventory-status.ts         The page → COMPONENTS.md row join behind the status strip, both ways
 src/lib/public-api.ts               Derives the entry points from each package's exports map
 src/lib/public-api-data.ts          The entry points, at build time

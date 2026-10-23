@@ -32,6 +32,12 @@ The split divider is a 16px hit strip whose width is announced through `aria-val
 
 The frames themselves are on [Layouts](/docs/layouts), and each part's page is under [Components](/docs/components).
 
+## What ships today
+
+Every page the five workspace packages ship, generated from their docs folders:
+
+<LanePages lane="workspace" />
+
 ## State and persistence
 
 A workspace keeps its own layout state: decode a stored `DockNode` or `PanelLayout` with the package's JSON schema and open the default when the decode fails.
