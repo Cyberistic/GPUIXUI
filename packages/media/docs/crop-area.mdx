@@ -75,7 +75,8 @@ gestured without mounting the component; `clampCrop`, `resizeCrop`,
 | press the picture and drag | moves the hole, keeping its size |
 | press a corner handle and drag | resizes from that corner, keeping `aspectRatio` when one is set |
 | `←` `→` `↑` `↓` on a focused handle | resizes that corner by 1 point |
-| `Shift` + arrow | resizes by 8 points |
+| `Alt` + arrow on a focused handle | moves the whole hole by 1 point |
+| `Shift` + arrow | 8 points instead of 1, for either gesture |
 
 Each handle is a `role="slider"` Tab stop with its rectangle announced as
 `aria-valuetext` (`60, 40, 100 × 70`), and the arrow keys swallow the default so
@@ -130,8 +131,8 @@ nothing to the accessibility tree; they are a composing aid, not content.
 The frame is a `role="group"` named by `label`. Each corner handle is a
 `role="slider"` Tab stop announcing the rectangle as `aria-valuetext`
 (`60, 40, 100 × 70`), so a reader who cannot drag can still resize the hole with
-the arrow keys — this is the keyboard path the window probe did not measure and
-the logic and element suites hold. The four veil bars declare
+the arrow keys and move it with `Alt`+arrows — this is the keyboard path the
+window probe did not measure and the logic and element suites hold. The four veil bars declare
 `pointerEvents: "none"` and paint nothing to the accessibility tree, so the mask
 is not announced. A gesture reports through `onChange`; the runtime has no live
 region, so a caller that must announce the new rectangle should render the value
@@ -156,12 +157,14 @@ Measurement, fixture and captures live with the playground:
 `apps/playground/README.md` §`crop-overlay` and
 `.artifacts/live/crop-{rest,min,max,dragged}.png`.
 
-`src/crop/logic.test.ts` (30 cases) holds the clamp — including a rectangle
+`src/crop/logic.test.ts` (36 cases) holds the clamp — including a rectangle
 whose four fields cannot be laid out — the bars as the hole's complement, the
-guides' thirds, every corner's resize, both clamps, moves, the keyboard step, the
-gesture seam and the ratio lock (a stored rectangle shaped to it, a height-first
-drag, the fixed opposite corner, the keyboard path, a frame too small for the
-minimum at the ratio, and an unreadable ratio); `src/crop-area.test.tsx` (11
+guides' thirds, every corner's resize, both clamps, moves, the keyboard step,
+the `Alt` move and the key dispatch (resize versus move, the 8-point Shift step,
+a non-arrow ignored), the gesture seam and the ratio lock (a stored rectangle
+shaped to it, a height-first drag, the fixed opposite corner, the keyboard path,
+a frame too small for the minimum at the ratio, and an unreadable ratio);
+`src/crop-area.test.tsx` (11
 cases) holds the frame, the bars' pointer transparency, the four slider handles
 and their ring, the painted ratio, the guides on and off, the unreadable
 rectangle, minimum and handle side, the blank source, the repaint and the

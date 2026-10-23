@@ -392,6 +392,60 @@ export const keyboardCrop = (
   );
 };
 
+/**
+ * A crop moved from the keyboard; `None` for a key that is not an arrow.
+ *
+ * A move keeps the hole's shape, so the ratio a resize would keep is held here
+ * too; the step reads a negative value as its magnitude like the resize path.
+ */
+export const keyboardMove = (
+  crop: CropRect,
+  key: string,
+  step: number,
+  bounds: CropBounds,
+): Option.Option<CropRect> =>
+  Option.map(keyDelta(key, Math.abs(step)), (delta) =>
+    moveCrop(crop, delta.dx, delta.dy, bounds),
+  );
+
+/** The modifiers a handle's key payload may carry. */
+export interface CropModifiers {
+  readonly shift?: boolean;
+  readonly alt?: boolean;
+}
+
+/** The step an arrow takes: 1 point, or 8 while Shift is held. */
+export const cropKeyStep = (modifiers: CropModifiers | null | undefined): number =>
+  modifiers?.shift === true ? 8 : 1;
+
+/**
+ * The crop a focused handle's key asks for.
+ *
+ * A plain arrow resizes the handle's corner; an arrow with **Alt** moves the
+ * whole hole, so a reader who cannot drag can also place the crop, not only
+ * size it. `None` for a key that is not an arrow.
+ */
+export const cropKey = (
+  crop: CropRect,
+  corner: CropCorner,
+  key: string,
+  modifiers: CropModifiers | null | undefined,
+  bounds: CropBounds,
+  min: number = CROP_MIN_SIZE,
+  aspectRatio?: number,
+): Option.Option<CropRect> =>
+  modifiers?.alt === true
+    ? keyboardMove(crop, key, cropKeyStep(modifiers), bounds)
+    : keyboardCrop(
+        crop,
+        corner,
+        key,
+        cropKeyStep(modifiers),
+        bounds,
+        min,
+        aspectRatio,
+      );
+
 /** A gesture in progress: what was pressed, where, and the crop it began on. */
 export type CropGesture =
   | {

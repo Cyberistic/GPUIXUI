@@ -32,11 +32,12 @@ import {
   CROP_MIN_SIZE,
   CropCorner,
   CropRect,
+  cropKey,
   gestureCrop,
   handleBox,
-  keyboardCrop,
   type CropBounds,
   type CropGesture,
+  type CropModifiers,
 } from "./crop/logic.js";
 import { recipeStyle, useTheme, type Theme } from "./internal.js";
 
@@ -59,7 +60,7 @@ export interface CropPointer {
 /** A key payload, read structurally so a fixture can supply one. */
 export interface CropKey {
   readonly key?: string | null;
-  readonly modifiers?: { readonly shift?: boolean } | null;
+  readonly modifiers?: CropModifiers | null;
   readonly preventDefault?: () => void;
 }
 
@@ -310,13 +311,12 @@ export const CropArea = (props: CropAreaProps): ReactElement => {
       });
     },
     onHandleKey: (corner, event) => {
-      const step = event.modifiers?.shift === true ? 8 : 1;
       Option.match(
-        keyboardCrop(
+        cropKey(
           crop,
           corner,
           event.key ?? "",
-          step,
+          event.modifiers,
           bounds,
           min,
           props.aspectRatio,

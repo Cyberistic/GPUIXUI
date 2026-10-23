@@ -16,11 +16,13 @@ import {
   cropBars,
   cropGuides,
   cropLabel,
+  cropKey,
   gestureCrop,
   CROP_HANDLE_SIZE,
   CropRect,
   handleBox,
   keyboardCrop,
+  keyboardMove,
   moveCrop,
   resizeCrop,
 } from "./logic.js";
@@ -359,6 +361,66 @@ describe("keyboardCrop", () => {
     expect(Option.isNone(keyboardCrop(opening, "se", "enter", 1, bounds))).toBe(
       true,
     );
+  });
+});
+
+describe("keyboardMove", () => {
+  it("moves the hole one step per arrow, keeping its size", () => {
+    expect(
+      Option.map(keyboardMove(opening, "right", 1, bounds), boxes),
+    ).toStrictEqual(Option.some({ x: 61, y: 40, width: 100, height: 70 }));
+    expect(
+      Option.map(keyboardMove(opening, "down", 8, bounds), boxes),
+    ).toStrictEqual(Option.some({ x: 60, y: 48, width: 100, height: 70 }));
+  });
+
+  it("stops the hole at the frame's edges", () => {
+    const atEdge = new CropRect({ x: 0, y: 90, width: 100, height: 70 });
+    expect(
+      Option.map(keyboardMove(atEdge, "left", 1, bounds), boxes),
+    ).toStrictEqual(Option.some(boxes(atEdge)));
+    expect(
+      Option.map(keyboardMove(atEdge, "down", 1, bounds), boxes),
+    ).toStrictEqual(Option.some(boxes(atEdge)));
+  });
+
+  it("ignores a key that is not an arrow", () => {
+    expect(Option.isNone(keyboardMove(opening, "enter", 1, bounds))).toBe(true);
+  });
+});
+
+describe("cropKey", () => {
+  it("resizes the named corner, by 8 with Shift", () => {
+    expect(
+      Option.map(cropKey(opening, "se", "right", {}, bounds), boxes),
+    ).toStrictEqual(Option.some({ x: 60, y: 40, width: 101, height: 70 }));
+    expect(
+      Option.map(
+        cropKey(opening, "se", "right", { shift: true }, bounds),
+        boxes,
+      ),
+    ).toStrictEqual(Option.some({ x: 60, y: 40, width: 108, height: 70 }));
+  });
+
+  it("moves the whole hole with Alt, by 8 with Shift", () => {
+    expect(
+      Option.map(cropKey(opening, "se", "right", { alt: true }, bounds), boxes),
+    ).toStrictEqual(Option.some({ x: 61, y: 40, width: 100, height: 70 }));
+    expect(
+      Option.map(
+        cropKey(opening, "se", "down", { alt: true, shift: true }, bounds),
+        boxes,
+      ),
+    ).toStrictEqual(Option.some({ x: 60, y: 48, width: 100, height: 70 }));
+  });
+
+  it("ignores a key that is not an arrow, with or without Alt", () => {
+    expect(Option.isNone(cropKey(opening, "se", "enter", {}, bounds))).toBe(
+      true,
+    );
+    expect(
+      Option.isNone(cropKey(opening, "se", "enter", { alt: true }, bounds)),
+    ).toBe(true);
   });
 });
 
