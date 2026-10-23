@@ -20,7 +20,7 @@ keyframes, momentum, and reduced-motion-as-policy.
 | `inertia.ts` | Exponential momentum decay with hard bounds/clamping |
 | `motion.ts` | `MotionValue` — the retained scalar entry point, `sample(elapsed, reducedMotion)` |
 | `timing.ts` | `motionLevels`, `motionEasings`, `motionTiming` — the house durations and per-phase easing the library's surfaces move with, in the runtime's seconds |
-| `react.ts` | `useSpring`, `useTransition`, `useInertia` |
+| `react.ts` | `useMotion` and its `useSpring` / `useTransition` / `useInertia` wrappers |
 
 ## Spring
 
@@ -80,7 +80,8 @@ re-declaration of one that is no longer on screen.
 
 ```tsx
 import { motion } from "@gpuix/react";
-import { useSpring, layoutSpring } from "@gpuixui/motion/react";
+import { layoutSpring } from "@gpuixui/motion";
+import { useSpring } from "@gpuixui/motion/react";
 
 function Grow({ open }: { open: boolean }) {
   const { value } = useSpring(open ? 100 : 0, layoutSpring);

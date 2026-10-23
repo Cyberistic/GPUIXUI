@@ -142,3 +142,142 @@ describe("the level table the timing seam describes", () => {
     expect(missing).toEqual([]);
   });
 });
+
+/** The package's own manifest: the subpaths a consumer may import. */
+const packageManifest: unknown = JSON.parse(read("../package.json"));
+const packageName = isRecord(packageManifest)
+  ? packageManifest["name"]
+  : undefined;
+const subpaths = isRecord(packageManifest)
+  ? packageManifest["exports"]
+  : undefined;
+
+/**
+ * The key a specifier matches in the manifest's `exports`.
+ *
+ * A package's root is written `"."` in its manifest and as the bare package
+ * name in an import, so the two spellings are mapped here rather than in every
+ * case below.
+ */
+const exportKey = (specifier: string): string | undefined => {
+  if (typeof packageName !== "string") return undefined;
+  if (specifier === packageName) return ".";
+  const prefix = `${packageName}/`;
+  return specifier.startsWith(prefix)
+    ? `.${specifier.slice(packageName.length)}`
+    : undefined;
+};
+
+/** The file a specifier resolves to, or none when the package declares it not. */
+const moduleFile = (specifier: string): string | undefined => {
+  if (!isRecord(subpaths)) return undefined;
+  const key = exportKey(specifier);
+  if (key === undefined) return undefined;
+  const entry = subpaths[key];
+  if (!isRecord(entry)) return undefined;
+  const types = entry["types"];
+  return typeof types === "string" ? types.replace(/^\.\//, "") : undefined;
+};
+
+/** A re-exported path, resolved from the file that names it. */
+const sibling = (file: string, specifier: string): string =>
+  `${file.slice(0, file.lastIndexOf("/"))}/${specifier
+    .replace(/^\.\//, "")
+    .replace(/\.js$/, ".ts")}`;
+
+/**
+ * The names a module exports — its own declarations, its named re-exports and
+ * everything an `export *` brings in, since the barrel is how the README
+ * reaches the physics modules.
+ */
+const exportedNames = (
+  file: string,
+  seen: ReadonlySet<string> = new Set(),
+): ReadonlySet<string> => {
+  const text = read(`../${file}`);
+  const declared = [
+    ...text.matchAll(
+      /^export\s+(?:declare\s+)?(?:abstract\s+)?(?:const|let|var|class|function|interface|type|enum)\s+([A-Za-z_$][\w$]*)/gm,
+    ),
+  ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
+  const restated = [...text.matchAll(/^export\s+(?:type\s+)?\{([^}]*)\}/gm)]
+    .flatMap((match) => (match[1] ?? "").split(","))
+    .flatMap((entry) => {
+      const exported = entry
+        .trim()
+        .replace(/^type\s+/, "")
+        .split(/\s+as\s+/)
+        .pop();
+      return exported === undefined || exported.length === 0 ? [] : [exported];
+    });
+  const visited = new Set(seen).add(file);
+  const inherited = [...text.matchAll(/^export\s+\*\s+from\s+"([^"]+)"/gm)]
+    .map((match) => sibling(file, match[1] ?? ""))
+    .filter((nested) => !visited.has(nested))
+    .flatMap((nested) => [...exportedNames(nested, visited)]);
+  return new Set([...declared, ...restated, ...inherited]);
+};
+
+/** A named import the README teaches, with the module it comes from. */
+interface ReadmeImport {
+  readonly specifier: string;
+  readonly names: ReadonlyArray<string>;
+}
+
+/**
+ * Every `import { … } from "@gpuixui/motion…"` line in the README.
+ *
+ * The bug this guards: the hook example imported `layoutSpring` from
+ * `@gpuixui/motion/react`, which exports the hooks and their option types and
+ * nothing else, so the first line a consumer copied out of the package's own
+ * README failed to compile — while the site's pages split the same import
+ * correctly, so no reader of the docs could see it. The README is the package's
+ * public surface, so the import paths are resolved here rather than trusted.
+ */
+const readmeImports: ReadonlyArray<ReadmeImport> = [
+  ...readme.matchAll(
+    /^import\s+(?:type\s+)?\{([^}]*)\}\s+from\s+"(@gpuixui\/motion[^"]*)";?$/gm,
+  ),
+].map((match) => ({
+  specifier: match[2] ?? "",
+  names: (match[1] ?? "")
+    .split(",")
+    .map(
+      (entry) =>
+        entry
+          .trim()
+          .replace(/^type\s+/, "")
+          .split(/\s+as\s+/)
+          .shift() ?? "",
+    )
+    .filter((name) => name.length > 0),
+}));
+
+describe("the imports the README teaches", () => {
+  it("reaches each symbol from the subpath that exports it", () => {
+    // A floor: deleting the snippets must not make the rule vacuous.
+    expect(readmeImports.length).toBeGreaterThanOrEqual(4);
+    const failures = readmeImports.flatMap(({ specifier, names }) => {
+      const file = moduleFile(specifier);
+      if (file === undefined) {
+        return [`${specifier} is not a declared export of the package`];
+      }
+      const declared = exportedNames(file);
+      return names
+        .filter((name) => !declared.has(name))
+        .map((name) => `${specifier} does not export \`${name}\``);
+    });
+    expect(failures).toEqual([]);
+  });
+
+  it("places every hook of the React entry in the layout table", () => {
+    const hooks = [...exportedNames("src/react.ts")].filter((name) =>
+      /^use[A-Z]/.test(name),
+    );
+    const row =
+      readme.split("\n").find((line) => line.startsWith("| `react.ts`")) ?? "";
+    const missing = hooks.filter((hook) => !row.includes(`\`${hook}\``));
+    expect(hooks.length).toBeGreaterThan(0);
+    expect(missing).toEqual([]);
+  });
+});
