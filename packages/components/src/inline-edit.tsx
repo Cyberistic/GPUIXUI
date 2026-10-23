@@ -77,9 +77,11 @@ export const InlineEdit = ({
   onEditingChange,
   className,
   style,
+  onChange,
   onKeyDown,
   onFocus,
   onBlur,
+  onSubmit: onSubmitProp,
   ref,
   ...rest
 }: InlineEditProps) => {
@@ -196,10 +198,22 @@ export const InlineEdit = ({
       ref={attachInput}
       value={draft}
       readOnly={disabled}
-      onChange={(event) => setDraft(event.value ?? "")}
+      // The component decides first and the caller's handler sees the same
+      // event after it, the order every host handler in this package composes.
+      onChange={(event) => {
+        setDraft(event.value ?? "");
+        onChange?.(event);
+      }}
       onKeyDown={handleInputKeyDown}
-      onSubmit={() => commit()}
-      onBlur={() => finish(true, false)}
+      onFocus={(event) => onFocus?.(event)}
+      onSubmit={(event) => {
+        commit();
+        onSubmitProp?.(event);
+      }}
+      onBlur={(event) => {
+        finish(true, false);
+        onBlur?.(event);
+      }}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(INLINE_EDIT_INPUT, className), theme), {
           height: controlHeight(theme, "md"),

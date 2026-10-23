@@ -4,7 +4,9 @@
  * The bugs these guard: a swap that leaves focus outside the input; Enter that
  * commits twice (keyDown and submit); Escape that commits the draft; an
  * unchanged draft that still calls `onCommit`; a disabled control that opens;
- * and a controlled edit state the component overrides.
+ * a controlled edit state the component overrides; and the caller's own
+ * `onChange`, `onBlur` and `onSubmit` handlers, which the editor used to drop
+ * because it wrote its own over them.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -150,6 +152,54 @@ describe("InlineEdit", () => {
     clickCentreOf(disabled, "name");
     expect(disabled.renderer.findByType("input")).toHaveLength(0);
     disabled.unmount();
+  });
+
+  it("composes the caller's edit, submit and blur handlers with its own", () => {
+    // `InlineEditProps` extends the host input's props, so a caller can pass
+    // `onChange`/`onSubmit`/`onBlur`; the editor wrote its own over the spread
+    // and the caller's handler ran only on the display, never while editing.
+    const onCommit = vi.fn();
+    const onChange = vi.fn();
+    const onSubmit = vi.fn();
+    const onBlur = vi.fn();
+
+    const Handled = () => (
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <InlineEdit
+          testId="name"
+          label="Workspace name"
+          value=""
+          defaultEditing
+          onCommit={onCommit}
+          onChange={onChange}
+          onSubmit={onSubmit}
+          onBlur={onBlur}
+        />
+        <div testId="elsewhere" tabIndex={0} style={{ height: 20 }}>
+          Elsewhere
+        </div>
+      </div>
+    );
+
+    const edit = renderComponent(<Handled />);
+    type(edit, "docs");
+    const edits = onChange.mock.calls.length;
+    edit.renderer.simulateKeystrokes("enter");
+    const submits = onSubmit.mock.calls.length;
+
+    clickCentreOf(edit, "name");
+    type(edit, "!");
+    edit.renderer.focusElement(
+      edit.renderer.findByTestId("elsewhere")?.id ?? -1,
+    );
+    const blurs = onBlur.mock.calls.length;
+    const commits = onCommit.mock.calls.map((call) => call[0]);
+    edit.unmount();
+
+    expect(edits).toBe(4);
+    expect(submits).toBe(1);
+    expect(blurs).toBe(1);
+    expect(commits).toEqual(["docs", "!"]);
   });
 
   it("follows a controlled edit state", () => {

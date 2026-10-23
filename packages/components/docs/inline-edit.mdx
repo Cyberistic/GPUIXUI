@@ -27,6 +27,11 @@ import { InlineEdit } from "@gpuixui/components";
 | `onEditingChange` | `(editing: boolean) => void` | — |
 | `style` | `StateStyle<InlineEditState>` | — |
 
+The host input's handlers are composed rather than replaced: `onChange`,
+`onFocus`, `onBlur` and `onSubmit` reach the caller on whichever element is
+focused (the display or the editor), and each runs after the component's own
+decision — so `onSubmit` fires once per Enter, after the commit.
+
 ## Limitations
 
 - No rich text; the editor is a single-line `<input>`.

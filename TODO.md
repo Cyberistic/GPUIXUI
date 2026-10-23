@@ -4264,7 +4264,25 @@ and clause).
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 6/6
+`[x]` `[██████████]` 7/7
+
+`[x]` `packages/components`: **the inline editor dropped the caller's own
+      handlers** — `InlineEditProps` extends the host input's props, so a caller
+      can pass `onChange`/`onFocus`/`onBlur`/`onSubmit`, and the editor wrote its
+      own over the `{...rest}` spread: while editing, a form that tracked the
+      draft, the field's blur or Enter heard nothing (the display branch did
+      forward focus and blur, so the handler fired only when the reader was not
+      editing — the one state where it matters). Each handler now runs after the
+      component's own decision (the draft is updated, then `onChange`; `commit()`,
+      then `onSubmit`; `finish(true, false)`, then `onBlur`) and `onFocus` is
+      forwarded from the editor too. `behaviour/inline-edit.test.tsx` gains
+      `composes the caller's edit, submit and blur handlers with its own`
+      (9 cases): four typed characters reach `onChange`, one Enter reaches
+      `onSubmit`, the blur reaches `onBlur`, and both commits still land.
+      Directions measured: at HEAD the case reports `expected +0 to be 4`; with
+      only the edit handler composed it reports `expected +0 to be 1`; with only
+      the submit/blur pair composed, `expected +0 to be 4` again. Docs:
+      `docs/inline-edit.mdx` §API and the Inline edit row.
 
 `[x]` `packages/components`: **a threshold that measured `NaN` stopped the
       message scroller following new rows** — `threshold` is a layout token a
