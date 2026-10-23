@@ -39,6 +39,24 @@ export const applyMention = (
   value: string,
 ): string => `${Str.slice(0, start)(text)}@${value} `;
 
+/** The house row budget a suggestion list shows when its caller declares none. */
+export const mentionMaxVisible = 6;
+
+/**
+ * How many rows a cap can paint.
+ *
+ * `maxVisible` is usually arithmetic over a measured height, so it reaches this
+ * rule as `NaN` until the first layout. A cap that cannot be read is no count:
+ * it takes the house budget rather than `Math.max(0, NaN)`, which stayed `NaN`
+ * and made `Arr.take` empty — the list then painted no suggestion while the
+ * component reported it open. An unbounded cap shows every name and a negative
+ * one none, which is what their own limits mean.
+ */
+export const normalizeMaxVisible = (maxVisible: number): number =>
+  Number.isNaN(maxVisible)
+    ? mentionMaxVisible
+    : Math.max(0, Math.floor(maxVisible));
+
 /** Rank names: prefix matches first, then substrings, each in input order. */
 export const rankMentions = (
   values: ReadonlyArray<string>,
@@ -56,5 +74,8 @@ export const rankMentions = (
     matches,
     (value) => !Str.startsWith(needle)(Str.toLowerCase(value)),
   );
-  return Arr.take(Arr.appendAll(prefixes, rest), Math.max(0, maxVisible));
+  return Arr.take(
+    Arr.appendAll(prefixes, rest),
+    normalizeMaxVisible(maxVisible),
+  );
 };

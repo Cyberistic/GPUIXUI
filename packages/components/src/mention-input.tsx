@@ -47,6 +47,7 @@ import {
 import { fadeFromAnchor, useSurfaceTiming } from "./internal/presence.js";
 import {
   applyMention,
+  mentionMaxVisible,
   mentionQuery,
   rankMentions,
   type MentionQuery,
@@ -126,7 +127,7 @@ export const MentionInput = ({
   onValueChange,
   onMention,
   label,
-  maxVisible = 6,
+  maxVisible = mentionMaxVisible,
   disabled = false,
   className,
   children,
@@ -437,6 +438,7 @@ export const mentionInputMeta = {
     "Enter arrives as the input's submit event, so it is handled there",
     "role=listbox and role=option are dropped from 0.11.0's accessibility dump, so the surface is a named group and rows are selected buttons",
     "no aria-activedescendant in 0.11.0",
+    "maxVisible is a row budget: an unreadable one (NaN from a height measured before layout) reads as the house 6, not as no rows",
   ],
   docs: "docs/mention-input.mdx",
   example: "examples/mention-input.example.tsx",

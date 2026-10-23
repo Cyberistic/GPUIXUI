@@ -4377,7 +4377,24 @@ page — recorded in `TODO.md` → Interlocks as the docs-site half.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 9/9
+`[x]` `[██████████]` 10/10
+
+`[x]` `packages/components`: **a `maxVisible` a caller could not measure hid
+      every mention** — the row budget is usually `Math.floor(availableHeight /
+      rowHeight)`, which is `NaN` before the first layout, and `rankMentions`
+      clamped it with `Math.max(0, NaN)` — still `NaN`, and `Arr.take(list, NaN)`
+      is empty. A field handed that budget painted no suggestion while reporting
+      the list open, the same class breadcrumb, pagination, carousel, countdown,
+      message scroller and the toast queue had closed. `normalizeMaxVisible`
+      reads an unreadable budget as the house `mentionMaxVisible` (6, the
+      component default), an unbounded one as every name, a negative one as none
+      and a fractional one floored, and `mention-input.tsx` now takes the default
+      from the same constant. `mention/logic.test.ts` gains three cap cases and
+      `behaviour/mention-input.test.tsx` gains `shows the house budget for a
+      maxVisible that cannot be measured` — measured failing at `HEAD` with both
+      nodes absent. Docs: `docs/mention-input.mdx` §Limitations, the record and
+      the Mention input row (12 → 13 native cases). No native scenario applies:
+      the ranking rule is pure and the paint is the behaviour suite's.
 
 `[x]` `packages/components`: **an open date calendar outlived the control a
       caller disabled** — `DatePicker`'s trigger refuses to open while

@@ -3,8 +3,9 @@
  *
  * The bugs these guard: a list that never opens on `@`, a query that does not
  * narrow, arrows that do not move the highlight, Enter or a press that inserts
- * the wrong name, Escape/space that fail to close, a double `onMention`, and a
- * disabled field that opens the list.
+ * the wrong name, Escape/space that fail to close, a double `onMention`, a
+ * disabled field that opens the list, and a `maxVisible` a caller computed before
+ * its row height was measured hiding every suggestion.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -228,6 +229,29 @@ describe("MentionInput", () => {
 
     type(mention, "@");
     expect(mention.renderer.findByTestId("row-ana")).toBeUndefined();
+
+    mention.unmount();
+  });
+
+  it("shows the house budget for a maxVisible that cannot be measured", () => {
+    // `maxVisible` is usually `Math.floor(availableHeight / rowHeight)`, which
+    // is `NaN` until the first layout. `Math.max(0, NaN)` kept it `NaN` and
+    // `Arr.take(list, NaN)` is empty, so a query painted no row at all.
+    const mention = renderComponent(
+      <div style={{ width: 360 }}>
+        <MentionInput testId="mention" label="Comment" maxVisible={Number.NaN}>
+          <MentionInputList>
+            <MentionInputItem testId="row-ana" value="ana" />
+            <MentionInputItem testId="row-anna" value="anna" />
+          </MentionInputList>
+        </MentionInput>
+      </div>,
+    );
+
+    type(mention, "@an");
+
+    expect(mention.renderer.findByTestId("row-ana")).toBeDefined();
+    expect(mention.renderer.findByTestId("row-anna")).toBeDefined();
 
     mention.unmount();
   });

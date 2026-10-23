@@ -3,12 +3,18 @@
  *
  * The bugs these guard: an email address treated as a mention, a query that
  * survives whitespace, a token replaced from the wrong position, prefix matches
- * ranked behind substrings, and a cap that reorders names.
+ * ranked behind substrings, a cap that reorders names, and a cap a caller
+ * computed before its row height was measured hiding every suggestion.
  */
 
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { applyMention, mentionQuery, rankMentions } from "./logic.js";
+import {
+  applyMention,
+  mentionMaxVisible,
+  mentionQuery,
+  rankMentions,
+} from "./logic.js";
 
 describe("mentionQuery", () => {
   it("opens an empty query on a trailing @", () => {
@@ -72,6 +78,30 @@ describe("rankMentions", () => {
 
   it("caps the visible list", () => {
     expect(rankMentions(["ana", "anna", "joana"], "", 2)).toEqual([
+      "ana",
+      "anna",
+    ]);
+  });
+
+  it("reads a cap that cannot be measured as the house default", () => {
+    // `maxVisible` is usually `Math.floor(availableHeight / rowHeight)`, which
+    // is `NaN` until the first layout. `Math.max(0, NaN)` stayed `NaN` and
+    // `Arr.take(list, NaN)` is empty, so the suggestion list painted nothing.
+    expect(rankMentions(["ana", "anna"], "", Number.NaN)).toEqual(
+      rankMentions(["ana", "anna"], "", mentionMaxVisible),
+    );
+    expect(rankMentions(["ana", "anna"], "", Number.NaN)).toHaveLength(2);
+  });
+
+  it("shows every name for an unbounded cap and none for a negative one", () => {
+    expect(rankMentions(["ana", "anna"], "", Number.POSITIVE_INFINITY)).toEqual(
+      ["ana", "anna"],
+    );
+    expect(rankMentions(["ana", "anna"], "", -3)).toEqual([]);
+  });
+
+  it("floors a fractional cap the way the renderer takes a count", () => {
+    expect(rankMentions(["ana", "anna", "joana"], "", 2.9)).toEqual([
       "ana",
       "anna",
     ]);

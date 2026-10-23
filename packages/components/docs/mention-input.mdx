@@ -54,5 +54,8 @@ MentionInput
 
 - The query comes from the text, not the caret.
 - A space typed while open is consumed by the runtime.
+- `maxVisible` is a row budget: a value that cannot be read (`NaN`, from a height
+  measured before the first layout) falls back to the house budget of 6 rather
+  than hiding every row; an unbounded budget shows every candidate.
 - No async or remote candidates.
 - No `role="listbox"` in the accessibility dump.
