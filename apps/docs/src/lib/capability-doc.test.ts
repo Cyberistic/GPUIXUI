@@ -1609,8 +1609,8 @@ describe("docs/gpuix-capabilities.md", () => {
     const band = offset + width / 2;
 
     const readme = read("apps/playground/README.md");
-    const section = /### `action-ring`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ??
-      "";
+    const section =
+      /### `action-ring`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ?? "";
     const checks = Number(/(\d+) checks/.exec(section)?.[1] ?? Number.NaN);
     expect(checks).toBeGreaterThan(10);
 
@@ -1707,9 +1707,7 @@ describe("docs/gpuix-capabilities.md", () => {
         new RegExp(`${group}: \\{[\\s\\S]*?tabs: \\[([^\\]]*)\\]`).exec(
           fixture,
         )?.[1] ?? "";
-      return [...block.matchAll(/"([a-z]+)"/g)].map(
-        (match) => match[1] ?? "",
-      );
+      return [...block.matchAll(/"([a-z]+)"/g)].map((match) => match[1] ?? "");
     };
     const left = initial("left");
     const right = initial("right");
@@ -1740,8 +1738,9 @@ describe("docs/gpuix-capabilities.md", () => {
 
     const readme = read("apps/playground/README.md");
     const section =
-      /### `movable-tabs-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ??
-      "";
+      /### `movable-tabs-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(
+        readme,
+      )?.[0] ?? "";
     const checks = Number(/(\d+) checks/.exec(section)?.[1] ?? Number.NaN);
     expect(checks).toBeGreaterThan(20);
 
@@ -1797,8 +1796,9 @@ describe("docs/gpuix-capabilities.md", () => {
 
     const readme = read("apps/playground/README.md");
     const section =
-      /### `theme-switch-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ??
-      "";
+      /### `theme-switch-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(
+        readme,
+      )?.[0] ?? "";
     const checks = Number(/(\d+) checks/.exec(section)?.[1] ?? Number.NaN);
     expect(checks, "the probe's README has no check count").toBeGreaterThan(20);
 
@@ -1877,8 +1877,9 @@ describe("docs/gpuix-capabilities.md", () => {
 
     const readme = read("apps/playground/README.md");
     const section =
-      /### `nested-overlay-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(readme)?.[0] ??
-      "";
+      /### `nested-overlay-lifecycle`[\s\S]*?(?=\n### |\n## )/.exec(
+        readme,
+      )?.[0] ?? "";
     const checks = Number(/(\d+) checks/.exec(section)?.[1] ?? Number.NaN);
     expect(checks, "the probe's README has no check count").toBeGreaterThan(20);
 
@@ -1967,8 +1968,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(tinted).toBeGreaterThan(wide);
     expect(wide).toBeGreaterThan(short);
 
-    const maxScroll = (content: number): number =>
-      Math.max(0, content - track);
+    const maxScroll = (content: number): number => Math.max(0, content - track);
     const rule = (content: number): number => {
       const max = maxScroll(content);
       if (max <= 0) return 0;
@@ -2034,6 +2034,164 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(page?.[1]).toContain(`**${defaultWidth}**`);
     expect(page?.[1]).toContain("paints **none**");
     expect(page?.[2]).toContain("a bar of your own");
+  });
+
+  it("records the second thumb a two-axis scroller paints, from its fixture", () => {
+    // `ScrollArea` accepts `axis="both"`, and a log pane or editor surface
+    // overflows both ways — but the record said only "for each axis with more
+    // to show", which reads as two independent thumbs. The window measured the
+    // opposite: once both show, each track gives up the other's thickness, so a
+    // length sized from the viewport alone is wrong on every two-axis scroller.
+    // Every number below is derived from the probe's own constants.
+    const fixture = read("apps/playground/src/live/scrollbar-both.ts");
+    const scalar = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d_]+);`)
+          .exec(fixture)?.[1]
+          ?.replaceAll("_", "") ?? Number.NaN,
+      );
+    const pair = (name: string): { width: number; height: number } => {
+      const body =
+        new RegExp(`export const ${name} = \\{([^}]*)\\}`).exec(fixture)?.[1] ??
+        "";
+      const field = (key: string): number =>
+        Number(
+          new RegExp(`${key}: ([\\d_]+)`)
+            .exec(body)?.[1]
+            ?.replaceAll("_", "") ?? Number.NaN,
+        );
+      return { width: field("width"), height: field("height") };
+    };
+
+    const viewport = pair("BOTH_VIEWPORT");
+    const content = pair("BOTH_CONTENT");
+    const short = pair("BOTH_SHORT_CONTENT");
+    const thickness = scalar("BOTH_THICKNESS");
+
+    // The premises: the box is smaller than the content on both axes, the
+    // control fits on both, and the tint has a thickness to give up.
+    expect(viewport.width).toBeGreaterThan(0);
+    expect(content.width).toBeGreaterThan(viewport.width);
+    expect(content.height).toBeGreaterThan(viewport.height);
+    expect(short.width).toBeLessThan(viewport.width);
+    expect(short.height).toBeLessThan(viewport.height);
+    expect(thickness).toBeGreaterThan(0);
+
+    /** One axis: the track both thumbs leave, and the extent that can move. */
+    const axis = (extent: number, view: number) => {
+      const track = view - thickness;
+      const max = extent - view;
+      const share = (on: number): number =>
+        Math.round(Math.min((on * on) / (on + max), on));
+      return { track, max, shortened: share(track), viewportOnly: share(view) };
+    };
+    const vertical = axis(content.height, viewport.height);
+    const horizontal = axis(content.width, viewport.width);
+    // The scroll distance keeps the viewport's share: a track-derived rule (the
+    // shortened track applied to the content) would move further than the page.
+    const clamp = -vertical.max;
+    const trackDerived = -(content.height - vertical.track);
+
+    expect(vertical.shortened).toBeLessThan(vertical.viewportOnly);
+    expect(horizontal.shortened).toBeLessThan(horizontal.viewportOnly);
+    expect(trackDerived).toBeLessThan(clamp);
+
+    const row = rowFor("Scrollbar thumb");
+    expect(row?.verdict).toBe("supported");
+    expect(row?.evidence).toContain("scrollbar-thumb-both");
+    expect(row?.evidence).toContain('`axis="both"` paints both thumbs');
+    expect(row?.evidence).toContain(`**${vertical.shortened}**`);
+    expect(row?.evidence).toContain(`**${horizontal.shortened}**`);
+    expect(row?.evidence).toContain(`**${vertical.viewportOnly}**`);
+    expect(row?.evidence).toContain(`**${horizontal.viewportOnly}**`);
+    expect(row?.evidence).toContain(`${clamp}`);
+    expect(row?.evidence).toContain(`${trackDerived}`);
+    expect(row?.evidence).toContain(`${short.width}×${short.height}`);
+    expect(row?.workaround).toContain('axis="both"');
+
+    const page = measuredRow("Scrollbar thumb");
+    expect(page).toBeDefined();
+    expect(page?.[1]).toContain("scrollbar-thumb-both");
+    expect(page?.[1]).toContain(`**${vertical.shortened}**`);
+    expect(page?.[1]).toContain(`**${horizontal.shortened}**`);
+    expect(page?.[1]).toContain(`**${vertical.viewportOnly}**`);
+    expect(page?.[1]).toContain(`**${horizontal.viewportOnly}**`);
+    expect(page?.[1]).toContain(`${clamp}`);
+    expect(page?.[1]).toContain(`${trackDerived}`);
+    expect(page?.[2]).toContain('axis="both"');
+
+    // §5 owes the probe — the section itself, not any backticked mention in
+    // §3, which is where the row's own citation lives.
+    const record = read("docs/gpuix-capabilities.md");
+    const keeping = record.slice(
+      record.indexOf("## 5. Keeping this document true"),
+    );
+    expect(keeping).toContain("`scrollbar-thumb-both`");
+  });
+
+  it("records the height a clipped parent reports, from its fixture", () => {
+    // A disclosure's whole basis is that the body's content box is reported
+    // while its parent was zero high a frame earlier. The record said `onLayout`
+    // reports a size, and nothing about the clipped case — so a plan building a
+    // reveal had to guess whether it needed a caller-supplied height. Every
+    // number is derived from the probe's own constants.
+    const fixture = read("apps/playground/src/live/collapse.ts");
+    const scalar = (name: string): number =>
+      Number(
+        new RegExp(`export const ${name} = ([\\d_]+);`)
+          .exec(fixture)?.[1]
+          ?.replaceAll("_", "") ?? Number.NaN,
+      );
+
+    const body = scalar("COLLAPSE_BODY");
+    const grown = scalar("COLLAPSE_GROWN");
+    const mounted = scalar("COLLAPSE_MOUNTED");
+
+    // The premises: three distinct heights, and the grown body is the largest.
+    expect(mounted).toBeGreaterThan(0);
+    expect(body).toBeGreaterThan(mounted);
+    expect(grown).toBeGreaterThan(body);
+
+    const row = rowFor("Layout reports");
+    expect(row?.verdict).toBe("supported, with limits");
+    expect(row?.evidence).toContain("`collapsible-lifecycle`");
+
+    // The claim, not the row: `**120**` also happens to be the distance the
+    // panel moves in the surface-origin sentence, so a bare `toContain` would
+    // pass on the wrong measurement.
+    const clipped = (text: string): string =>
+      text.slice(text.indexOf("**Inside a clipped parent**"));
+    // Each height with the clause it belongs to: the retired body is also
+    // `**120**`, so a bare number would pass on the wrong step.
+    expect(clipped(row?.evidence ?? "")).toContain(
+      `on the body's **${mounted}** with no press`,
+    );
+    expect(clipped(row?.evidence ?? "")).toContain(
+      `a pressed section on **${body}**`,
+    );
+    expect(clipped(row?.evidence ?? "")).toContain(
+      `a body grown to **${grown}** while the section was closed`,
+    );
+    expect(clipped(row?.evidence ?? "")).toContain(
+      `keeps **neither** the box nor the body mounted`,
+    );
+
+    const page = measuredRow("Layout reports");
+    expect(page).toBeDefined();
+    expect(page?.[1]).toContain("collapsible-lifecycle");
+    expect(clipped(page?.[1] ?? "")).toContain(
+      `on the body's **${mounted}** with no press`,
+    );
+    expect(clipped(page?.[1] ?? "")).toContain(`a pressed one on **${body}**`);
+    expect(clipped(page?.[1] ?? "")).toContain(
+      `a body grown to **${grown}** while the section was closed`,
+    );
+
+    const record = read("docs/gpuix-capabilities.md");
+    const keeping = record.slice(
+      record.indexOf("## 5. Keeping this document true"),
+    );
+    expect(keeping).toContain("`collapsible-lifecycle`");
   });
 
   it("records the box an image occupies, derived from its fixture", () => {
@@ -2630,7 +2788,10 @@ describe("docs/gpuix-capabilities.md", () => {
       ["row-delta", "a row marker the reorder probe dropped onto"],
       ["gridfocus-r2c2", "a cell id the roving-grid probe focused by hand"],
       ["grid-focus-before", "a control id the roving grid's next Tab reached"],
-      ["movable-tab-bravo", "a tab id the movable-tab probe focuses after a move"],
+      [
+        "movable-tab-bravo",
+        "a tab id the movable-tab probe focuses after a move",
+      ],
       [
         "grid-focus-after",
         "a control id a one-press exit from the grid reached",
