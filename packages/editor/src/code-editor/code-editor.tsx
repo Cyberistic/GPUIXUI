@@ -131,15 +131,23 @@ export const CodeEditor = ({
     ) + theme.spacing.sm;
   const state: CodeEditorState = { disabled, focused };
 
+  const edit = (next: string): void => {
+    if (!readOnly && !disabled) setValue(next);
+  };
+
+  /**
+   * The host consumes Enter itself, so the auto-indent is read off the change
+   * it reports: a value that only gained the newline at its end is an Enter at
+   * the document's end, and it inherits the previous line's indentation.
+   */
+  const onChange = (next: string): void =>
+    edit(next === `${value}\n` ? `${next}${enterIndent(value)}` : next);
+
   const onKeyDown = (event: KeyEvent): void => {
+    if (readOnly || disabled) return;
     if (event.key === "tab" && tabInserts(tabMode)) {
       event.preventDefault();
       setValue(value + indent);
-      return;
-    }
-    if (event.key === "enter") {
-      event.preventDefault();
-      setValue(`${value}\n${enterIndent(value)}`);
     }
   };
 
@@ -231,7 +239,7 @@ export const CodeEditor = ({
           minRows={minRows}
           maxRows={maxRows}
           style={fieldStyle}
-          onChange={(event) => setValue(event.value ?? "")}
+          onChange={(event) => onChange(event.value ?? "")}
           onKeyDown={onKeyDown}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}

@@ -35,6 +35,7 @@ editor holds its own draft.
 | Tab (`tabMode="insert"`) | inserts `indent` instead of moving focus |
 | Tab (`tabMode="focus"`) | moves focus, the platform's own traversal |
 | Enter | keeps the newline and appends the previous line's leading indentation |
+| read-only / disabled | refuses Tab and Enter; the text stays as it is |
 
 ## API
 
@@ -65,7 +66,10 @@ editor holds its own draft.
   scroll surface, but a fully positional overlay needs two runtime gaps closed.
 - **Tab insert and Enter auto-indent append at the end of the document.** The
   runtime exposes no caret position, so an insertion cannot target the caret; it
-  lands at the end, which is correct while typing sequentially.
+  lands at the end, which is correct while typing sequentially. The host consumes
+  Enter itself, so the editor reads the auto-indent off the change it reports
+  rather than from the key event, and a newline typed mid-document keeps no
+  indentation.
 - **Pixel-exact alignment is not verified without a native host.** The two
   layers share the `codeBlock` type scale and one surface, but the textarea's own
   text inset is the runtime's, not the component's.
@@ -76,7 +80,9 @@ editor holds its own draft.
 token boundaries and roles, the plain-text fallback, the runs concatenating back
 to the source (with a negative control that drops the last run), and the line
 split across a trailing newline. `src/code-editor/logic.test.ts` holds the Tab
-decision and the indentation helpers.
+decision and the indentation helpers. `src/behaviour/code-editor.test.tsx`
+holds the wiring in the real renderer: Tab inserts the indent, Enter keeps the
+previous line's indentation, and a read-only or disabled editor refuses both.
 
 ## Related
 
