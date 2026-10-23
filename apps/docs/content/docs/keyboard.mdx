@@ -14,7 +14,7 @@ description: The chord grammar, scope-stacked keymaps, sequences and command reg
 | registry | `Command`, the `CommandRegistry` Effect service and its layer |
 | display | `formatSymbols` — keycap parts in platform order |
 | platform | `Platform`, `toTanstackPlatform` |
-| React | `CommandRegistryProvider`, `useCommandRegistry` |
+| React | `@gpuixui/keyboard/react` — `CommandRegistryProvider`, `useCommandRegistry` |
 
 The grammar is `@tanstack/hotkeys`: parsing, normalization, comparison, display and `Mod` resolution.
 
@@ -54,6 +54,25 @@ export const commands: ReadonlyArray<Command> = [
 ```
 
 `render`'s `onKeyDown` is the only app-level route; the focused element handles the key first.
+
+## The React provider
+
+The provider and the hook are published at `@gpuixui/keyboard/react`; the root entry point does not re-export them.
+
+```tsx
+import {
+  CommandRegistryProvider,
+  useCommandRegistry,
+} from "@gpuixui/keyboard/react";
+
+<CommandRegistryProvider commands={commands}>
+  <App />
+</CommandRegistryProvider>;
+
+const registry = useCommandRegistry(); // the nearest list, or an empty one
+```
+
+A subtree with no provider reads an empty registry, so a command palette inside an app that never mounted one resolves nothing rather than throwing.
 
 ## Limitations
 

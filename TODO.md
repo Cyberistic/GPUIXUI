@@ -10306,7 +10306,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 295/295
+`[x]` `[██████████]` 296/296
+
+`[x]` Say where the **keyboard's React provider lives** — `/docs/keyboard` named
+      `CommandRegistryProvider` and `useCommandRegistry` in a table row and never
+      named the specifier, while the root entry point exports neither: the one
+      snippet on the page imports from `@gpuixui/keyboard`, so a reader copying
+      it met `does not export CommandRegistryProvider`. The row now prints
+      `@gpuixui/keyboard/react`, and a **The React provider** section carries a
+      resolving snippet plus the true warning that the root does not re-export
+      them (a subtree with no provider reads an empty registry). `src/lib/keyboard-page.test.ts`
+      (3 cases) derives both entry points from the package's `exports` map, both
+      values from `react.tsx`'s own `export function` lines, and holds the
+      warning to the root index — which must still omit the provider for the
+      sentence to be true. Directions measured: restoring the old row and
+      deleting the section fails `names every entry point the package publishes`
+      and the warning case by name; restored, the app is 125 files / 1 095 tests
+      green, `check-types` clean and `page-snippets.test.ts` resolves the new
+      subpath. No native scenario applies — a site page and the manifest it
+      documents.
 
 `[x]` Publish the **presence entry point the motion page omitted**, and hold the
       page to the package — `/docs/motion` claimed `@gpuixui/motion` while

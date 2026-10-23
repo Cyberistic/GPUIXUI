@@ -32,7 +32,7 @@ layouts.mdx                  The layout lane: primitives, the window frame, runt
 workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
 data-display/index.mdx      The data lane: what ships, the table gate, runtime gaps
 patterns.mdx                 The workflows that cross components, and who owns the state
-keyboard.mdx                 The chord grammar, keymaps, sequences and command registry
+keyboard.mdx                 The chord grammar, keymaps, sequences, the command registry and its React provider
 examples.mdx                 The example registry, generated from every package's examples
 reference.mdx                The public entry points and the symbols behind them
 themes.mdx                   The live token editor, its audit and its copy output
