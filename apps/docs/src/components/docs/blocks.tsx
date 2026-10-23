@@ -14,6 +14,12 @@ import {
   dashboardPackages,
   dashboardSource,
 } from "./dashboard";
+import { KanbanRender, kanbanPackages, kanbanSource } from "./kanban-board";
+import {
+  SettingsDialogRender,
+  settingsDialogPackages,
+  settingsDialogSource,
+} from "./settings-dialog";
 
 /**
  * Block recipes for the docs. A block is a page-level composition of real
@@ -230,6 +236,26 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
     render: SettingsRender,
     source: settingsSource,
+  },
+  "kanban-01": {
+    name: "kanban-01",
+    slug: "kanban",
+    title: "Kanban board",
+    description:
+      "A project task board: an app sidebar, four counted columns and cards that move between them.",
+    packages: [...kanbanPackages],
+    render: KanbanRender,
+    source: kanbanSource,
+  },
+  "settings-dialog-01": {
+    name: "settings-dialog-01",
+    slug: "settings-dialog",
+    title: "Settings dialog",
+    description:
+      "A modal settings window: a section nav beside theme rows — a switch, a font-size slider and two layout cards.",
+    packages: [...settingsDialogPackages],
+    render: SettingsDialogRender,
+    source: settingsDialogSource,
   },
 };
 
