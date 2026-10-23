@@ -2574,17 +2574,17 @@ A table row paints its own rule inside the row — `borderWidth.thin` in `border
 on the row's own fill (`packages/data/src/table/table.tsx`) — so the line that
 separates two records is measured against the wash the row is wearing: the three
 states a row wears (`hover`, `accent` and `selected`, `dividerWashes`) and the
-press it **derives** (`dividerPresses`). A press is not the `active` role: both
-packages derive it with `pointerWash(theme, "active", replaced)` over the wash the
-row was wearing, so seven of the thirty-two press placements paint a colour the
-role does not name — macOS light's press over `accent` is `#D6D6DE` against a
-`#DEDEE6` role, macOS dark's `#3E3E44` against `#3A3A40`, and Windows dark's,
-Linux dark's, Luna light's and Aero light's move theirs too — and measuring the
-role measured a fill those rows do not paint while leaving the painted one
-unnamed.
+press it **derives** (`dividerPresses`). A press is not the `active` role: the
+packages that paint a row derive it with `pointerWash(theme, "active", replaced)`
+over the wash the row was wearing, so seven of the thirty-six press placements
+paint a colour the role does not name — macOS light's press over `accent` is
+`#D6D6DE` against a `#DEDEE6` role, macOS dark's `#3E3E44` against `#3A3A40`, and
+Windows dark's, Linux dark's, Luna light's and Aero light's move theirs too — and
+measuring the role measured a fill those rows do not paint while leaving the
+painted one unnamed.
 
-Measured over the sixteen shipped, high-contrast, platform and authored styles,
-the raw `border` is under the 1.05:1 floor on **22 of the 88** placements: the
+Measured over every shipped, high-contrast, platform and authored style, the raw
+`border` is under the 1.05:1 floor on **22 of the 90** placements: the
 base light theme's `accent` (**1.001:1**) and `hover` (1.036:1) and the base dark
 theme's (**1.004:1** and 1.045:1), each doubled by the `default` platform style
 that wears it; macOS light's `accent` at 1.023:1 and its two presses at 1.029:1
@@ -3784,8 +3784,8 @@ wash strength changed.
 and `selected` as well, and a selectable run inside either one is washed over
 that fill — but both tones are drawn from the same accent family as the wash, so
 a selection moves the fill *toward* the text instead of away from it. Measured
-across the sixteen shipped, high-contrast, platform and authored styles, the
-wash costs contrast in **every one of the 80 placements** on those two tones (it
+across every shipped, high-contrast, platform and authored style, the
+wash costs contrast in **every one of the 90 placements** on those two tones (it
 never once helps) and leaves **43 of the 90 under the floor the unwashed pair
 already met** — the selected row's title, now held to the body floor on the same
 role, accounts for the increase. The tightest is Windows XP (Luna) light's secondary

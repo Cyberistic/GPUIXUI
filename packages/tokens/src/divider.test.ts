@@ -9,7 +9,7 @@
  * measured `border` on the raw `active` role, and that role is not what a
  * pressed row paints: all three packages that paint a row (components,
  * primitives and data) derive the press with
- * `pointerWash(theme, "active", replaced)`, so seven of the thirty-two press
+ * `pointerWash(theme, "active", replaced)`, so seven of the thirty-six press
  * placements in the shipped styles are a colour the role does not name (macOS
  * light's press over `accent` is `#D6D6DE` against a `#DEDEE6` role, macOS
  * dark's is `#3E3E44` against `#3A3A40`, and the authored looks move theirs the
@@ -17,7 +17,7 @@
  * one they do paint unnamed — so a brand whose rule family could not answer the
  * derived press was measured against the role instead.
  *
- * The raw role is under the 1.05:1 perceptibility floor on **20 of the 80**
+ * The raw role is under the 1.05:1 perceptibility floor on **22 of the 90**
  * placements — the base themes' `accent` at 1.001:1 and 1.004:1, and six of the
  * presses the rows paint (macOS dark's over `hover` at 1.000:1) — so the grid
  * vanishes on exactly the row the reader chose. A palette cannot close it: the
@@ -148,6 +148,11 @@ const measured = placements.map((placement) => {
   };
 });
 
+/** The placements the raw `border` role cannot be seen on. */
+const missed = measured.filter(({ theme, wash }) =>
+  underFloor(ratioOf(theme.colors.border, wash)),
+);
+
 describe("a rule on the row it crosses", () => {
   it("names the states a row wears and the press it derives", () => {
     expect(dividerWashes).toEqual(["hover", "accent", "selected"]);
@@ -222,13 +227,9 @@ describe("a rule on the row it crosses", () => {
   });
 
   it("counts the placements the raw role misses", () => {
-    // 22 of 88 over the eighteen styles. The count is the measurement the
-    // catalogue prints; it moves only when a palette or a style changes, and
-    // then the page moves with it.
-    const missed = measured.filter(({ theme, wash }) =>
-      underFloor(ratioOf(theme.colors.border, wash)),
-    );
-
+    // 22 of 90 over the eighteen styles. The count is the measurement both
+    // pages print; a palette or a style added to the set moves it and the pages
+    // with it.
     expect(missed).toHaveLength(22);
   });
 
@@ -367,12 +368,26 @@ describe("a rule on the row it crosses", () => {
     expect(table).toContain('pointerWash(theme, "active", "hover")');
     expect(table).toContain("dividerOn(theme, surface)");
     expect(table).toContain("borderBottomWidth: theme.borderWidth.thin");
-    // Both pages teach the helper, the press and the counts.
+    // Both pages teach the helper, the press and the counts. The totals are
+    // derived, not typed: a rule is drawn on every style × (three washes + two
+    // presses), so a style or a state added to the table fails here until the
+    // pages print the set they now measure — the previous total (88) survived a
+    // look being added because the guard pinned it.
+    const presses = everyStyle.length * dividerPresses.length;
+
+    expect(placements).toHaveLength(everyStyle.length * 5);
+    // The denominator is 36 in prose, so the word is pinned beside the count it
+    // stands for: a style added to the set fails on the number first.
+    expect(presses).toBe(36);
     [catalogue, designSystem].forEach((page) => {
       expect(page).toContain("dividerOn");
       expect(page).toContain("pressedDivider");
-      expect(page).toContain("22 of the 88");
+      expect(page).toContain(
+        `**${missed.length} of the ${placements.length}**`,
+      );
+      expect(page).toContain("seven of the thirty-six press placements");
     });
+    expect(inventory).toContain(`${missed.length} of the ${placements.length}`);
     expect(catalogue).toContain("dividerPresses");
     expect(catalogue).toContain("dividerFailures");
     expect(catalogue).toContain("1.050");

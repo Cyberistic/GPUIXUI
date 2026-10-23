@@ -356,7 +356,7 @@ describe("the documents describe the contract they are held to", () => {
  * `selected`), and the reason is structural rather than a gap: the wash is a
  * share of the accent family, so on a fill drawn from the same family it moves
  * the fill toward the text. Measured, that costs contrast in every placement and
- * 39 of the 80 fall under the floor the unwashed pair already met — the selected
+ * 43 of the 90 fall under the floor the unwashed pair already met — the selected
  * row's title, now held to the body floor on the same role, accounts for the
  * increase. The suite
  * below holds that reasoning in both directions — a new tone fails until it is
@@ -494,6 +494,21 @@ describe("the tones the wash is painted on", () => {
     const printed = `${under.length} of the ${placements.length} placements`;
 
     expect(catalogue).toContain(printed);
+    // The sentence before it states the set the same run measured. It said "80"
+    // while the table held 90, so the total is held to the placements the suite
+    // builds rather than to a number typed beside it.
+    expect(catalogue).toContain(
+      `every one of the ${placements.length} placements`,
+    );
+    expect(design).toContain(
+      `every one of the ${placements.length} placements`,
+    );
+    expect(design).toContain(`leaves ${under.length} of them under the floor`);
+    expect(inventory).toContain(`all ${placements.length} placements`);
+    expect(inventory).toContain(`leaves ${under.length} under the floor`);
+    expect(catalogue).toContain(
+      `**${under.length} of the ${placements.length} under the floor`,
+    );
     expect(catalogue).toContain("3.38");
     expect(catalogue).toContain("5.11");
     expect(catalogue).toContain("saturated");

@@ -316,9 +316,9 @@ the row is in. A table row paints its own rule inside the row — the thin
 pointed one tints `hover`/`accent` under it, and a pressed one repaints the wash
 `pointerWash` derives. The press is not the `active` role: all three packages
 that paint a row — components, primitives and data — derive it
-over the wash the row was wearing, and seven of the thirty-two press placements
+over the wash the row was wearing, and seven of the thirty-six press placements
 paint a colour the role does not name. Measured over the shipped styles, the raw
-`border` is under the 1.05:1 perceptibility floor on **22 of the 88** placements —
+`border` is under the 1.05:1 perceptibility floor on **22 of the 90** placements —
 the base themes' `accent` at 1.001:1 and 1.004:1, and six of the presses the rows
 paint (macOS dark's over `hover` at 1.000:1) — so the grid disappears exactly
 where the reader is looking. The rule is derived instead:
@@ -830,7 +830,7 @@ A **saturated state tone** is not a selection surface. A box also paints
 `accent` and `selected`, and a selectable run inside either is washed over that
 fill — but both tones are drawn from the same accent family as the wash, so the
 selection moves the fill toward the text instead of away from it. Measured, the
-wash costs contrast in every one of the 80 placements on those two tones and
+wash costs contrast in every one of the 90 placements on those two tones and
 leaves 43 of them under the floor the unwashed pair already met — the selected
 row's title, now at the body floor on the same role, accounts for the increase.
 The tightest is Windows XP (Luna) light's secondary line on a selected row at

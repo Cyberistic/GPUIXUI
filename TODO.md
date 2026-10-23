@@ -327,7 +327,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 178/178
+`[x]` `[██████████]` 179/179
 
 `[x]` Measure the **rule a menu draws at half the border role** — `@gpuixui/tw`'s
 `MENU_SEPARATOR` is `bg-border/50` and `MenuSeparator` draws it inside the menu
@@ -1563,6 +1563,31 @@ package is 49 files / 2 841 tests. Docs in `packages/tokens/README.md` §Pointer
 states, `docs/tokens.md` §Decorative surfaces, `docs/design-system.md` §7 and the
 `Decorative surfaces` row. No native scenario applies — a page and painter
 contract; the rows' own presses are `tree.test.tsx`/`table` behaviour suites'.
+
+`[x]` Read the **counts the eighteenth style moved** back off the tables — the
+Omarchy look made the shipped set eighteen styles (four base and high-contrast,
+four platforms × two modes, three authored looks × two modes) and two contracts
+kept printing the old set: the divider sentence printed "22 of the **88**"
+placements while the table holds `18 × (3 washes + 2 presses) = 90`, and the
+selection sentence printed "every one of the **80** placements" while the same
+paragraph already printed "43 of the **90** under the floor". The press
+denominator followed the same miss — `seven of the **thirty-two** press
+placements` is `18 × 2 = 36` — in both pages, the inventory row and the example
+header, and the inventory's divider clause still carried the pre-Omarchy
+"**20 of the 80**". `divider.test.ts` now builds `missed` once, asserts the
+placement total is `everyStyle.length × 5`, asserts the press set is 36 with the
+word pinned beside it, and requires both pages to print `**22 of the 90**`;
+`selection.test.ts`'s `states the scope and the numbers on every surface`
+requires the catalogue's "every one of the 90 placements" and "43 of the 90
+under the floor", the design system's 90/43 and the inventory's 90/43 — all
+derived from `placements.length` and `under.length`, so the next style fails the
+suite until they move. Directions measured: restoring `**22 of the 88**` on the
+catalogue fails the divider case by name; restoring "every one of the 80
+placements" on the design system fails the selection case by name; the shipped
+suite is 49 files / 2 841 tests green, `check-types` clean. Docs in
+`docs/tokens.md` §Decorative surfaces/§Text selection/§Limitations,
+`docs/design-system.md` §7/§8 and the `Decorative surfaces`/`Text selection wash`
+rows. No native scenario applies — printed counts and their guards.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
