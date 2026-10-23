@@ -33,9 +33,10 @@ import type { Props } from "@gpuix/react";
 import {
   Button as PrimitiveButton,
   IconButton as PrimitiveIconButton,
+  actionOnColor as primitiveActionOnColor,
+  type ButtonVariant as PrimitiveVariant,
 } from "@gpuixui/primitives/button";
 import { cn } from "@gpuixui/tw";
-import { Match } from "effect";
 import type { Theme } from "./theme.js";
 
 /** The four looks a control can take. */
@@ -63,48 +64,40 @@ export interface IconButtonProps extends Props {
   readonly disabled?: boolean;
 }
 
-/** This package's look in the primitive's vocabulary. */
-const PRIMITIVE_VARIANT: Readonly<
-  Record<ButtonVariant, "primary" | "secondary" | "ghost" | "destructive">
-> = {
-  primary: "primary",
-  secondary: "secondary",
-  ghost: "ghost",
-  danger: "destructive",
-};
+/** One look: the primitive's variant, and the classes this package adds. */
+interface Look {
+  readonly variant: PrimitiveVariant;
+  readonly className: string;
+}
 
 /**
- * The classes a look carries besides the primitive's recipe.
+ * This package's four look names, in the primitive's vocabulary.
  *
- * `secondary` is the one action with an edge. The primitive's recipe paints
- * `border border-strong` already; the copy here keeps this package's action on
- * the same measured role if that recipe line moves. `button-edge.test.ts`
- * requires both painters to name it, so the copy cannot become the only one
- * without a reader seeing the recipe change.
+ * `danger` is the token palette's `destructive`; `secondary` is the one action
+ * with an edge. The primitive's recipe paints `border border-strong` already,
+ * and the copy here keeps this package's action on the same measured role if
+ * that recipe line moves — `button-edge.test.ts` requires both painters to name
+ * it, so the copy cannot become the only one without a reader seeing the recipe
+ * change.
  */
-const VARIANT_CLASS: Readonly<Record<ButtonVariant, string>> = {
-  primary: "",
-  secondary: "border border-strong",
-  ghost: "",
-  danger: "",
+const LOOKS: Readonly<Record<ButtonVariant, Look>> = {
+  primary: { variant: "primary", className: "" },
+  secondary: { variant: "secondary", className: "border border-strong" },
+  ghost: { variant: "ghost", className: "" },
+  danger: { variant: "destructive", className: "" },
 };
 
 /**
  * The role a variant paints its label in: the on-colour of the fill it owns.
  *
  * A glyph inside an action is the control's label drawn in vectors, not a mark
- * with a colour of its own, so it takes the same role. Any other choice names a
- * colour picked for a different fill — `secondaryForeground` on a `primary` fill
- * measures 1.42:1 in Windows dark, and a chevron painted that way is invisible.
+ * with a colour of its own, so it takes the same role. The table is the
+ * primitive's (`actionOnColor` reads its variant table), so a variant added
+ * there answers here without a second list; a copy kept here would still paint
+ * `secondaryForeground` after the primitive moved its `secondary` label.
  */
 export const actionOnColor = (theme: Theme, variant: ButtonVariant): string =>
-  Match.value(variant).pipe(
-    Match.when("primary", () => theme.colors.primaryForeground),
-    Match.when("danger", () => theme.colors.destructiveForeground),
-    Match.when("secondary", () => theme.colors.secondaryForeground),
-    Match.when("ghost", () => theme.colors.foreground),
-    Match.exhaustive,
-  );
+  primitiveActionOnColor(theme, LOOKS[variant].variant);
 
 /**
  * A labelled action. `variant` picks the look, `size` the density-defined
@@ -122,11 +115,11 @@ export const Button = ({
 }: ButtonProps) => (
   <PrimitiveButton
     {...rest}
-    variant={PRIMITIVE_VARIANT[variant]}
+    variant={LOOKS[variant].variant}
     size={size}
     disabled={disabled}
     label={ariaLabel}
-    className={cn(VARIANT_CLASS[variant])}
+    className={cn(LOOKS[variant].className)}
     onActivate={onClick}
     style={style}
   />

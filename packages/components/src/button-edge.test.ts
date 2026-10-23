@@ -37,8 +37,9 @@ const adapterProse = (): string =>
 const SECONDARY_RECIPE =
   "bg-secondary text-secondary-foreground border border-strong";
 
-/** The adapter's copy of that edge. */
-const SECONDARY_EDGE = 'secondary: "border border-strong"';
+/** The adapter's copy of that edge, on its `secondary` look. */
+const SECONDARY_EDGE =
+  /secondary: \{ variant: "secondary", className: "border border-strong" \}/;
 
 describe("the tonal action's edge", () => {
   it("is painted by the primitive's recipe", () => {
@@ -46,7 +47,7 @@ describe("the tonal action's edge", () => {
   });
 
   it("is carried by the components adapter in the same role", () => {
-    expect(adapter()).toContain(SECONDARY_EDGE);
+    expect(adapter()).toMatch(SECONDARY_EDGE);
   });
 
   it("names the recipe as the painter instead of the retired borderless premise", () => {

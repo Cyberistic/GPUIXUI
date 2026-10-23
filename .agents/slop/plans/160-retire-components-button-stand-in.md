@@ -11,9 +11,18 @@ primitive action (`PopoverTrigger` no longer draws through the adapter).
 no-double-press rule and the three pages, measured 6 of 11 failing on the
 previous tree; behaviour cases drive Enter through each part (date picker 18 →
 20, popover 12 → 14, navigation menu 21 → 23). **Phase 4 remains**: delete the
-adapter and rewrite the 15 call sites that still use it (the three effects in
-the motion workstream still import its `actionOnColor` — see §What Phase 4 still
-waits on). See §Adapter landed for the measured deltas.
+adapter and rewrite the 15 call sites that still use it. The role route is no
+longer a blocker — `@gpuixui/primitives/button` publishes `actionOnColor` and
+`ButtonVariant` beside the two actions, and the adapter's own `actionOnColor`
+now **delegates** to it (`src/button-roles.test.ts`) rather than keeping a
+second table. What remains is the public prop surface: six exported part types
+(`DialogTrigger`/`DialogClose`, `DrawerTrigger`/`DrawerClose`,
+`DropdownMenuTrigger`, `PreviewCardTrigger`) and the three motion effects
+(`RippleButton`/`ShineButton`/`LiquidButton`) extend the adapter's
+`ButtonProps`, so deleting it changes their vocabulary (`danger` →
+`destructive`, `onClick` → `onActivate`, `aria-label` → `label`) and the pages
+and curated guards that print it. See §What Phase 4 still waits on. See
+§Adapter landed for the measured deltas.
 
 **Phase 2 landed 2026-10-23** — `internal/button.tsx` is a thin adapter over
 `@gpuixui/primitives/button`; every STOP below is closed (the disabled stop
@@ -353,23 +362,17 @@ packages/components/src/shine-button.tsx    Button, actionOnColor, ButtonProps
 packages/components/src/liquid-button.tsx   Button, actionOnColor, ButtonProps
 ```
 
-`Button` and `ButtonProps` already exist on `@gpuixui/primitives/button`, so the
-only missing route is `actionOnColor` — the variant → label-role helper the
-three effects read to tint their own layer (`ripple`, `sheen`, `liquid`) and
-that `confirm-dialog.tsx`/`carousel.tsx` read for a busy mark and a chevron.
-Two honest routes, in order of preference:
-
-1. The primitives publish `actionOnColor` on the `./button` subpath (it is the
-   same map `variantStyle` paints its label from, so one implementation).
-2. The three effects stop importing it: they read the primitive's
-   `ButtonState`/variant and paint their layer in the same role the button's
-   label uses.
-
-Either way the three files are another workstream's, so Phase 4's deletion (and
-the `grep` above) cannot land before they move. A partial migration that leaves
-the adapter for three callers only is **not** an acceptable intermediate: it
-keeps the two activation contracts this plan exists to delete. Until then, the
-triggers are migrated (Phases 2–3) and the adapter is a shim for the effects.
+`Button` and `ButtonProps` already exist on `@gpuixui/primitives/button`, and
+so does `actionOnColor` — the primitive's `./button` seam publishes it (and
+`ButtonVariant`) from the same variant table its labels paint, so the three
+effects can import all three symbols from the subpath on the day their props
+move. The deletion is now blocked only by the public surface those parts carry:
+six exported trigger types and the three effects extend this package's
+`ButtonProps`, and the primitive's vocabulary differs (`danger` →
+`destructive`, `onClick` → `onActivate`, `aria-label` → `label`), so the
+rewrite is an API change with the pages and curated guards to match rather than
+a mechanical import swap. The adapter's own role helper is already the
+primitive's (`src/button-roles.test.ts`), so no second role table survives.
 
 ## Commands and expected results
 
