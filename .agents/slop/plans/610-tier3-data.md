@@ -479,6 +479,17 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   `--only data-charts-core` (1/1) and live `--only chart-surface-lifecycle`
   (1/1 on 0.11.0). Docs in `docs/charts.mdx` §The numbers, the README chart
   paragraph and the Charts row.
+- **A loading skeleton mounts the count it can lay out**: `TableSkeleton` built
+  its tracks with `Array.from({ length: Math.max(1, rows) })`, so a computed
+  count either threw (`RangeError: Invalid array length` for an infinity) or
+  painted nothing (`NaN`) — in the one state a reader cannot diagnose. A count
+  the renderer cannot mount now reads as the shipped `3`, and a finite one is
+  bounded to `SKELETON_TRACK_LIMIT` (20) per side, because a skeleton holds a
+  screen's shape rather than a data set's. `behaviour/table.test.tsx` mounts
+  `Infinity`/`NaN`, `10 000` and `0`/`-4` and counts the tree's `Row`/`Cell`
+  nodes; direction measured: the old `Math.max(1, count)` fails on the
+  `RangeError`. Green: 196 unit / 116 behaviour. The README and the Tables row
+  teach the rule.
 
 
 ## 5. Acceptance

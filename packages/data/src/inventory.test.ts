@@ -141,10 +141,12 @@ describe("the data lane's printed case counts", () => {
     // The table suite's old count is checked only against the Tables row: `7`
     // is still correct for the expandable rows, so a whole-lane search would
     // forbid a true claim.
-    expect(row("Tables")).not.toContain("7 native behaviour cases");
-    expect(row("Tree views")).not.toContain(
-      "`src/tree/logic.test.ts` (13 cases)",
-    );
-    expect(row("Tables")).not.toContain("frozen-table.test.tsx` (6 cases)");
+    //
+    // Each retracted figure is matched on a word boundary: a plain substring
+    // search cannot tell `7` from the `27` the row grew to, so the guard would
+    // report a correct count as the retracted one.
+    expect(row("Tables")).not.toMatch(/\b7 native behaviour cases/);
+    expect(row("Tree views")).not.toMatch(/\b13 cases/);
+    expect(row("Tables")).not.toMatch(/\b6 cases/);
   });
 });

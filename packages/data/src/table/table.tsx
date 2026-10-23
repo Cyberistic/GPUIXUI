@@ -626,6 +626,30 @@ export interface TableSkeletonProps {
 }
 
 /**
+ * The most tracks one side of a skeleton paints.
+ *
+ * A skeleton holds the shape of a screen while the first page arrives; a count
+ * past a screenful is a data set, and mounting it would paint thousands of
+ * placeholder bars for a table that shows twenty.
+ */
+export const SKELETON_TRACK_LIMIT = 20;
+
+/**
+ * A skeleton count the renderer can mount.
+ *
+ * `rows`/`columns` are often computed — a page size read from a config, a
+ * viewport divided by a row height — and `Array.from({ length: Infinity })`
+ * throws `RangeError: Invalid array length` while `NaN` mounts nothing: a
+ * loading table either took the renderer down or painted no placeholder at all.
+ * A count the skeleton cannot read is its default, and a finite one is a whole
+ * number of tracks between one and a screenful.
+ */
+const trackCount = (count: number, fallback: number): number =>
+  Number.isFinite(count)
+    ? Math.min(SKELETON_TRACK_LIMIT, Math.max(1, Math.floor(count)))
+    : fallback;
+
+/**
  * The loading placeholder: `rows` × `columns` bars at the cell inset.
  *
  * It paints inside {@link TableBody} when the body has no children, so a table
@@ -635,21 +659,25 @@ export interface TableSkeletonProps {
 export const TableSkeleton = ({
   rows = 3,
   columns = 3,
-}: TableSkeletonProps) => (
-  <>
-    {Array.from({ length: Math.max(1, rows) }, (_, row) => (
-      <TableRow key={`skeleton-${row}`}>
-        {Array.from({ length: Math.max(1, columns) }, (_, column) => (
-          <TableCell key={`skeleton-${row}-${column}`}>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <SkeletonBar />
-            </div>
-          </TableCell>
-        ))}
-      </TableRow>
-    ))}
-  </>
-);
+}: TableSkeletonProps) => {
+  const rowCount = trackCount(rows, 3);
+  const columnCount = trackCount(columns, 3);
+  return (
+    <>
+      {Array.from({ length: rowCount }, (_, row) => (
+        <TableRow key={`skeleton-${row}`}>
+          {Array.from({ length: columnCount }, (_, column) => (
+            <TableCell key={`skeleton-${row}-${column}`}>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <SkeletonBar />
+              </div>
+            </TableCell>
+          ))}
+        </TableRow>
+      ))}
+    </>
+  );
+};
 
 /** One skeleton bar, in the theme's placeholder role. */
 const SkeletonBar = () => {

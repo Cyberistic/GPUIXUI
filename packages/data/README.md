@@ -323,6 +323,14 @@ caller who said there are no records must not be told the first page is still
 arriving. A string `empty` paints as the cell's own `<text>`, because a raw
 string in a box paints and is never announced (`src/behaviour/table-empty-a11y.test.tsx`).
 
+A **loading skeleton counts what it can mount**: `TableBody`'s `rows` and
+`TableSkeleton`'s `rows`/`columns` are often computed — a page size read from a
+config, a viewport divided by a row height — so a count the renderer cannot read
+(`NaN`, an infinity) is the shipped `3`, and a finite one is bounded to
+`SKELETON_TRACK_LIMIT` (20) per side. A skeleton holds the shape of a screen,
+not a data set: `Array.from({ length: Infinity })` would otherwise throw
+`RangeError: Invalid array length`, and `NaN` would paint no track at all.
+
 A **tree** is a flattened column of rows with one tab stop. `useExpandedRows`
 holds the expansion set and the cursor; `TreeView` paints the rows and owns the
 keys and the native focus. A typed prefix is the **published** rule —

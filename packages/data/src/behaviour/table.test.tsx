@@ -25,12 +25,14 @@ import { afterEach, describe, expect, it } from "vitest";
 import { darkTheme, dividerOn, pointerWash } from "@gpuixui/tokens";
 import { TableExample } from "../../examples/table.example.js";
 import { TableColumnDivider } from "../columns/divider.js";
+import { decodeA11yTree, withRole } from "../internal/a11y.js";
 import { requireStyle } from "../internal/interaction.js";
 import {
   renderData,
   settle,
   type DataTestRoot,
 } from "../internal/test-root.js";
+import { SKELETON_TRACK_LIMIT, TableSkeleton } from "../table/table.js";
 
 interface Bounds {
   readonly x: number;
@@ -747,5 +749,52 @@ describe("the column menu", () => {
     expect(readout(root)).toContain("content=460");
     expect(boundsOf(root, "files-size").x).toBe(nameBefore.x);
     expect(boundsOf(root, "files-cell-file-1-size").x).toBe(nameBefore.x);
+  });
+});
+
+describe("the loading skeleton", () => {
+  /**
+   * The skeleton beside a box of its own.
+   *
+   * A fragment of rows at the window root paints only its first child, so the
+   * mount wraps them the way a body does.
+   */
+  const skeleton = (rows: number, columns: number) => (
+    <div>
+      <TableSkeleton rows={rows} columns={columns} />
+    </div>
+  );
+
+  it("mounts a count it can lay out, and a default for one it cannot", () => {
+    // `rows`/`columns` are often computed — a page size read from a config, a
+    // viewport divided by a row height. `Array.from({ length: Infinity })`
+    // throws `RangeError: Invalid array length`, so a loading table took the
+    // renderer down with it, and `NaN` mounted no track at all: the one state a
+    // reader cannot diagnose is the one that paints nothing.
+    const countRoles = (role: string): number => {
+      const tree = decodeA11yTree(root?.renderer.getA11yTree());
+      return withRole(tree, tree.root, role).length;
+    };
+
+    root = renderData(skeleton(Number.POSITIVE_INFINITY, Number.NaN));
+    settle(root);
+    // The unreadable counts are the shipped three: a computed infinity used to
+    // throw, and a computed NaN mounted no track at all.
+    expect(countRoles("Row")).toBe(3);
+    expect(countRoles("Cell")).toBe(9);
+
+    // A finite count past a screenful is bounded rather than mounting a data
+    // set's worth of placeholder bars.
+    root.rerender(skeleton(10_000, 1));
+    settle(root);
+    expect(countRoles("Row")).toBe(SKELETON_TRACK_LIMIT);
+    expect(countRoles("Cell")).toBe(SKELETON_TRACK_LIMIT);
+
+    // A count below one is still a track: the placeholder must hold the shape
+    // of a row even when a caller computed none.
+    root.rerender(skeleton(0, -4));
+    settle(root);
+    expect(countRoles("Row")).toBe(1);
+    expect(countRoles("Cell")).toBe(1);
   });
 });
