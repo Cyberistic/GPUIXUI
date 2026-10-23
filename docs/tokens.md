@@ -832,6 +832,10 @@ tables already hold where a switch stands. **A switch a store wrote as `null` is
 that same "declares none"**: JSON has no `undefined`, so a saved theme comes
 back with `null` where it declared no paint, and the report measures the accent
 switch the theme actually paints rather than reading its first slot off `null`.
+The **primitive painter's own read is the primitives' workstream's** — `switchBox`,
+`switchFill` and `switchThumbPaint` compare `theme.switch !== undefined` — so a
+theme restored with `switch: null` still needs that read moved to the same rule;
+the reports answer it, the paint path does not yet (`TODO.md` → Interlocks).
 
 The floor is the **perceptibility** one (`1.05:1`), not the `3:1` a state
 indicator needs, and the difference is measured rather than assumed: a declared

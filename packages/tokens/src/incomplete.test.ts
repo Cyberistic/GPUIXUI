@@ -1303,6 +1303,8 @@ describe("an optional table a store nulled", () => {
     expect(catalogue).toContain(
       'A switch a store wrote as `null` is that same "declares none"',
     );
+    // The paint path beside the report: the primitives still read the field.
+    expect(catalogue).toContain("the paint path does not yet");
     expect(designSystem).toContain("A switch a store wrote as `null`");
     expect(readme).toContain("A switch a store wrote as `null`");
     expect(inventory).toContain("A table a store nulled is absence");
