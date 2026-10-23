@@ -5275,6 +5275,22 @@ the report built on it.
       Evidence: `apps/playground/README.md` §`qr-matrix`,
       `.artifacts/live/qr-matrix.png`.
 
+`[x]` Announce the **QR refusal a sighted reader can see and a screen reader
+      could not** — the overflow box carried `role="img"` and the symbol's
+      `label`, so a value past the largest symbol painted the capacity sentence
+      for everyone looking at it while assistive technology was told "QR code":
+      an image of a symbol that was never painted, and not the one thing the
+      state exists to deliver. `label` names a painted symbol only now, and the
+      refusal is `role="alert"` with the capacity sentence as its text, the
+      pattern `FieldError` and the multi-step form's step refusal already use.
+      `src/qr-code.test.tsx` gains `announces the refusal as an alert, not as an
+      image`; directions measured: with `role="img"` restored it fails
+      `expected 'img' to be 'alert'`, and restored, the file is 11/11 and the
+      package 9 files / 111 tests green. Docs: `packages/media/docs/qr-code.mdx`
+      §Limitations and the `QR code` row. No native scenario applies — an
+      element tree's role and label; the symbol's paint is the existing
+      `qr-matrix` probe.
+
 ## Phase C — Tier 1–2 components
 
 `[x]` `[██████████]` 22/22

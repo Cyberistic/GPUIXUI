@@ -11,6 +11,11 @@
  * The two colours are **not theme roles**: a symbol is read by a camera, so its
  * ink and paper stay a scanner-safe near-black on white even in a dark theme.
  * A caller may override either, and owns what a low-contrast pair costs.
+ *
+ * A value past the largest symbol paints an **alert** carrying the capacity
+ * sentence, not an image named after a symbol that is not there: a reader who
+ * cannot see the box has to hear why, and the symbol's label would replace the
+ * message the whole state exists to deliver.
  */
 
 import type { Props, StyleDesc } from "@gpuix/react";
@@ -103,8 +108,7 @@ export const renderQrCode = (
       <div
         {...rest}
         testId={rest.testId ?? "qr-code-overflow"}
-        role="img"
-        aria-label={label}
+        role="alert"
         style={mergeStyles(
           mergeStyles(
             recipeStyle(cn("rounded-sm", className), theme),

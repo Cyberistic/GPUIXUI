@@ -6,8 +6,9 @@
  * tinted `<svg>` mask with the quiet zone inside the viewBox, never a themed
  * approximation of a QR code — a symbol whose modules are clipped or whose
  * paper follows a dark theme cannot be scanned. The over-long case must name
- * the capacity instead of painting a truncated (unreadable) symbol, and must
- * keep the box its caller reserved so the page does not jump as a value grows.
+ * the capacity instead of painting a truncated (unreadable) symbol, announce
+ * that refusal rather than an image of a symbol that is not painted, and keep
+ * the box its caller reserved so the page does not jump as a value grows.
  */
 
 import { describe, expect, it } from "vitest";
@@ -140,6 +141,16 @@ describe("QrCode", () => {
     expect(expectSome(elementProp(text, "children"))).toBe(
       qrOverflowMessage(capacity + 1, capacity),
     );
+  });
+
+  it("announces the refusal as an alert, not as an image", () => {
+    // The bug guarded: the overflow box carried `role="img"` and the symbol's
+    // label, so assistive technology heard "QR code" for a state whose visible
+    // text is the capacity refusal — the one thing the reader needs.
+    const capacity = qrByteCapacity(10, "M");
+    const root = render({ value: "y".repeat(capacity + 1), label: "Docs QR" });
+    expect(expectSome(elementProp(root, "role"))).toBe("alert");
+    expect(Option.isNone(elementProp(root, "aria-label"))).toBe(true);
   });
 
   it("keeps the box the caller reserved in the overflow state", () => {

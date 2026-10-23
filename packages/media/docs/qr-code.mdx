@@ -32,5 +32,6 @@ import { QrCode } from "@gpuixui/media";
 ## Limitations
 
 - **Versions 1–10.** The largest symbol holds 274 bytes at `L`.
+- **A value that does not fit is an alert, not an image**: the box announces the capacity sentence, keeps the caller's reserved square and never paints a partial symbol; `label` names the painted symbol only.
 - **Byte mode only.** Numeric and alphanumeric payloads would pack more tightly; the encoder always declares byte mode, which every scanner reads.
 - **No logo or artwork overlay**: a mask is a path, not a composited image.
