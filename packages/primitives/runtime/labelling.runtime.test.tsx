@@ -18,9 +18,16 @@ import * as Option from "effect/Option";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { Input } from "../src/components/Input.js";
 import { Label, labelledBy } from "../src/components/Label.js";
+import { NumberField } from "../src/components/NumberField.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
-import { a11yNode, a11yNodes, type Runtime } from "./harness.js";
+import { TextArea } from "../src/components/TextArea.js";
+import {
+  a11yDescriptionOf,
+  a11yNode,
+  a11yNodes,
+  type Runtime,
+} from "./harness.js";
 import { Surface, openWindow } from "./fixture.js";
 
 const mount = async (
@@ -78,4 +85,47 @@ it("names the controls when the same string reaches their label prop", async () 
   expect(named(runtime, "CheckBox", "Notifications")).toBe(true);
   expect(named(runtime, "Switch", "Notifications")).toBe(true);
   expect(named(runtime, "TextInput", "Notifications")).toBe(true);
+});
+
+it("announces the hint a field paints, while the box is empty", async () => {
+  // The bug guarded: a field paints its own hint because the runtime shapes an
+  // empty host's placeholder in a fixed grey no theme reaches (`fieldHint`), and
+  // handing the host no `placeholder` prop also takes the runtime's
+  // `aria_placeholder` with it — so a reader focused an empty email field and
+  // heard no format at all. The painted words ride the one help channel 0.11.0
+  // has (`aria-description`), and a caller's permanent help still wins.
+  const runtime = await mount(
+    <Stack direction="column">
+      <Input testId="email" label="Email" placeholder="you@example.com" />
+      <TextArea testId="notes" label="Notes" placeholder="What changed?" />
+      <NumberField testId="copies" label="Copies" placeholder="1 to 99" />
+      <Input
+        testId="owner"
+        label="Owner"
+        description="We never share it."
+        placeholder="you@example.com"
+      />
+      <Input
+        testId="filled"
+        label="Filled"
+        placeholder="you@example.com"
+        value="ada@example.com"
+      />
+    </Stack>,
+  );
+  const help = (role: string, label: string) =>
+    a11yDescriptionOf(runtime.a11y(), { role, label });
+
+  expect(help("TextInput", "Email")).toStrictEqual(
+    Option.some("you@example.com"),
+  );
+  expect(help("MultilineTextInput", "Notes")).toStrictEqual(
+    Option.some("What changed?"),
+  );
+  expect(help("TextInput", "Copies")).toStrictEqual(Option.some("1 to 99"));
+  expect(help("TextInput", "Owner")).toStrictEqual(
+    Option.some("We never share it."),
+  );
+  // The hint is gone once the box holds a value, so the channel is free again.
+  expect(help("TextInput", "Filled")).toStrictEqual(Option.none());
 });

@@ -922,6 +922,66 @@ describe("the primitives docs page contract", () => {
     });
   });
 
+  it("announces the hint a field paints, and says what the hint answers", () => {
+    // Bug guarded: a field paints its own hint because the runtime shapes an
+    // empty host's placeholder in a fixed grey (`fieldHint`), and handing the
+    // host no `placeholder` also takes the runtime's `aria_placeholder` with it —
+    // so an empty field announced no format at all, and the inventory said the
+    // hint "reads as a label beside the field" as if that were the whole answer.
+    // The words ride the one help channel 0.11.0 has, while the box is empty.
+    const source = (path: string): string =>
+      readFileSync(fileURLToPath(new URL(path, packageRoot)), "utf8");
+    const rule = source("src/core/a11y.ts");
+    const input = source("src/components/Input.tsx");
+    const number = source("src/components/NumberField.tsx");
+    const evidence = source("runtime/labelling.runtime.test.tsx");
+    const catalogue = readFileSync(
+      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      "utf8",
+    );
+    const row = Option.getOrElse(
+      Arr.findFirst(catalogue.split("\n"), (line) =>
+        Str.startsWith("| Text inputs |")(line),
+      ),
+      () => "",
+    );
+    const announcement =
+      "announced as the field's description while the box is empty";
+
+    expect({
+      // The three pages that paint a hint say what a reader hears.
+      pages: Arr.filter(
+        ["input.mdx", "textarea.mdx", "number-field.mdx"],
+        (page) => !read(page).includes(announcement),
+      ),
+      // One rule, and the host is given no placeholder to announce instead.
+      rule: rule.includes("export const fieldHelp"),
+      empty: rule.includes("value.length === 0"),
+      hostless: !input.includes("placeholder: props.placeholder"),
+      input: input.includes(
+        '"aria-description": fieldHelp(props, state.current)',
+      ),
+      number: number.includes("description: fieldHelp(props, text)"),
+      // The row states the announcement and stops promising a label is enough.
+      row: row.includes(announcement),
+      retracted: row.includes("reads as a label beside the field"),
+      // The window case that measured it.
+      measured: evidence.includes(
+        "announces the hint a field paints, while the box is empty",
+      ),
+    }).toEqual({
+      pages: [],
+      rule: true,
+      empty: true,
+      hostless: true,
+      input: true,
+      number: true,
+      row: true,
+      retracted: false,
+      measured: true,
+    });
+  });
+
   it("paints the number it holds, and says which keys a window delivers", () => {
     // Bug guarded: the display defaulted to zero decimals, so the field painted
     // a number it did not hold — a stored `1.5` read `2` and a `2.5` maximum

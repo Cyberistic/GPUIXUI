@@ -55,7 +55,7 @@ import {
   type NumberRange,
   type ParseValue,
 } from "../core/number.js";
-import { accessibleName } from "../core/a11y.js";
+import { accessibleName, fieldHelp } from "../core/a11y.js";
 import { controlRing, keepContent } from "../core/focus.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
@@ -314,7 +314,9 @@ export const numberFieldPart = (
     autoFocus: disabled ? undefined : props.autoFocus,
     address: props,
     testId: props.testId,
-    description: accessibleName(props.description),
+    // The hint is painted, not handed to the host, so the field publishes the
+    // words itself while the box is empty (see `fieldHelp`).
+    description: fieldHelp(props, text),
     onSubmit: disabled ? undefined : props.onSubmit,
     current,
     range,

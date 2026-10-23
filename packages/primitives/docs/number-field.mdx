@@ -51,8 +51,8 @@ const [copies, setCopies] = useState(1);
 | `invalid` | `boolean` | `false` | destructive border |
 | `label` | `string` | none | accessible name |
 | `onSubmit` | `(event: EventPayload) => void` | — | Enter: the draft commits first, then this reports |
-| `description` | `string` | none | announced help on the input (`aria-description`) |
-| `placeholder` | `string` | none | empty-field hint |
+| `description` | `string` | none | announced help on the input (`aria-description`); a caller's permanent help wins over the hint |
+| `placeholder` | `string` | none | empty-field hint, painted in the `placeholder` role and announced as the field's description while the box is empty (the host's own hint is a fixed grey no theme reaches) |
 | `autoFocus` | `boolean` | `false` | focus on mount |
 | `formatValue` | `(value: number) => string` | fixed decimals | the display text, display-only; pair it with `parseValue` |
 | `parseValue` | `(text: string) => Option<number>` | none | reads the text `formatValue` painted; tried first, then decimal |

@@ -16,7 +16,7 @@ import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import * as Option from "effect/Option";
-import { accessibleName } from "../core/a11y.js";
+import { accessibleName, fieldHelp } from "../core/a11y.js";
 import type { ValueState } from "../core/state.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -135,7 +135,7 @@ export const fieldHostProps = (
   focus: FocusState,
   onValueChange: (value: string) => void,
 ) => {
-  const { ref, "aria-id": controlId, onLayout, description, tabIndex } = props;
+  const { ref, "aria-id": controlId, onLayout, tabIndex } = props;
   return {
     // The runtime's host surface the field does not own. A field is addressed by
     // a form that focuses it, by an automation host that names it, and by a
@@ -145,7 +145,9 @@ export const fieldHostProps = (
     onLayout,
     value: state.current,
     // The host's own hint is a fixed grey the theme cannot reach (measured on
-    // `@gpuix/native@0.11.0`; see `fieldHint`), so the field paints the hint.
+    // `@gpuix/native@0.11.0`; see `fieldHint`), so the field paints the hint —
+    // and publishes the same words as its description, because the runtime's
+    // `aria_placeholder` leaves with the `placeholder` prop.
     readOnly: props.readOnly === true || props.disabled === true,
     autoFocus: props.disabled === true ? undefined : props.autoFocus,
     // A disabled field declares no ring and refuses every key, so a stop there
@@ -154,7 +156,7 @@ export const fieldHostProps = (
     theme: nativeTextTheme(theme),
     testId: props.testId,
     "aria-label": accessibleName(props.label),
-    "aria-description": accessibleName(description),
+    "aria-description": fieldHelp(props, state.current),
     style: fieldChrome(props, theme, focus.focused),
     onChange: (event: EventPayload) => {
       if (props.disabled !== true) onValueChange(event.value ?? "");

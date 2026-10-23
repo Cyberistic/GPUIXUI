@@ -34,7 +34,7 @@ const help = "Where notifications are delivered.";
 | `onValueChange` | `(value: string) => void` | none | called after each edit that changed the value |
 | `onChange` | `(value: string) => void` | none | deprecated alias for `onValueChange` |
 | `onSubmit` | `(event) => void` | none | Enter; the raw runtime event |
-| `placeholder` | `string` | none | empty-state text |
+| `placeholder` | `string` | none | empty-state text: painted in the `placeholder` role and announced as the field's description while the box is empty (the host's own hint is a fixed grey no theme reaches) |
 | `readOnly` | `boolean` | `false` | accepts focus and selection, refuses edits |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, de-emphasised |
 | `autoFocus` | `boolean` | `false` | takes focus on mount |
@@ -42,7 +42,7 @@ const help = "Where notifications are delivered.";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `label` | `string` | none | accessible name; a visible `Label` does not name the field on its own |
-| `description` | `string` | none | announced help after the name (`aria-description`) |
+| `description` | `string` | none | announced help after the name (`aria-description`); a caller's permanent help wins over the hint |
 | `tabIndex` | `number` | none | the field's place in the tab order |
 | `ref` / `aria-id` / `onLayout` | host props | none | the native `<input>` is the addressed element |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the field's own; yours runs first |

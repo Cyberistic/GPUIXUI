@@ -11019,6 +11019,35 @@ fails the case by name; restored, the file is 44/44 and
       Direction measured: deleting §Nesting fails the case by name (`ancestor:
       false`); restored, the file is 32/32. `COMPONENTS.md`'s Scrollable
       containers row carries the same contract and figures.
+`[x]` `packages/primitives`: **the hint a field paints reached no reader** —
+      the fields stopped handing the host a `placeholder` because the runtime
+      shapes its own in a fixed grey no theme can move (`fieldHint`), and the
+      runtime's `aria_placeholder` is set **from that prop** (`input.rs`), so the
+      themed hint cost the announcement: focusing an empty email field heard no
+      format at all, and the inventory said the hint "reads as a label beside the
+      field" as though that were the whole answer. `fieldHelp` (`core/a11y.ts`)
+      is the one rule: a caller's `description` is the field's permanent help and
+      wins; otherwise the placeholder is announced as the field's description
+      **while the box is empty** — the predicate that decides the paint — and
+      says nothing once a value arrives. `fieldHostProps` (so `Input` and
+      `TextArea`) and `NumberField`'s part read it; `OTPField` has no hint.
+      Proof: `a11y.test.ts` gains a `fieldHelp` suite (4 cases: the hint, the
+      caller's description winning in both states, silence once typed, and a
+      blank string read as no help on either side), and
+      `runtime/labelling.runtime.test.tsx` gains `announces the hint a field
+      paints, while the box is empty` — one scene reading the `TextInput` and
+      `MultilineTextInput` nodes' `description` for `Input`, `TextArea` and
+      `NumberField`, the caller's help winning, and the filled field silent
+      (through a new `a11yDescriptionOf` harness helper). Directions measured:
+      restoring `accessibleName(props.description)` at the two call sites fails
+      the window case (`expected Some("you@example.com"), got None`), and
+      removing one page's sentence / one field's wiring each fails the new
+      `src/docs.test.ts` case by name. Docs: `docs/input.mdx`,
+      `docs/textarea.mdx` and `docs/number-field.mdx` §API, the three Tier 1
+      rows (which also say `minRows`/`maxRows` now, not `rows`) — the inventory
+      hunks were swept into `34bf0da6` by another workstream's commit before this
+      one (the shared-index hazard; the content is on `master` under a message
+      that does not name it).
 
 ## Swarm-owned blockers (fix these)
 

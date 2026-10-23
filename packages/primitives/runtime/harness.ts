@@ -230,6 +230,20 @@ export const a11yValueOf = (
   );
 
 /**
+ * The help the accessibility node matching `match` announces.
+ *
+ * `aria-description` is the runtime's one help channel (`aria-describedby` does
+ * not exist in 0.11.0), so this is what a reader hears after the name.
+ */
+export const a11yDescriptionOf = (
+  dump: A11yTreeDump,
+  match: { readonly role?: string; readonly label?: string },
+): Option.Option<string> =>
+  Option.flatMap(a11yNode(dump, match), (node) =>
+    Option.fromNullishOr(node.aria?.description),
+  );
+
+/**
  * A fresh 1280x800 offscreen window and the lookups over it.
  *
  * One per test file: mounting a tree replaces the previous one, and every input
