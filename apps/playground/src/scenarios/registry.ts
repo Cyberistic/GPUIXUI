@@ -127,6 +127,12 @@ export const registry = [
     capability: "panel",
   },
   {
+    id: "panel-group-core",
+    title:
+      "@gpuixui/dock: a PanelGroup's fractions, collapse toggle and divider keys",
+    capability: "panel",
+  },
+  {
     id: "virtual-list-window",
     title: "Virtual list builds only a window of rows",
     capability: "virtual-list",

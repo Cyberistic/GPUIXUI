@@ -24,6 +24,7 @@ import { scrollScenario } from "./scroll.js";
 import { scrollHorizontalScenario } from "./scroll-horizontal.js";
 import { tabOverflowScenario } from "./tab-overflow.js";
 import { panelScenario } from "./panel.js";
+import { panelGroupScenario } from "./panel-group.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { virtualListWindowedScenario } from "./virtual-list-windowed.js";
 import { virtualListRowsScenario } from "./virtual-list-rows.js";
@@ -74,6 +75,7 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "scroll-horizontal": scrollHorizontalScenario,
   "tab-overflow": tabOverflowScenario,
   "panel-resize": panelScenario,
+  "panel-group-core": panelGroupScenario,
   "virtual-list-window": virtualListScenario,
   "virtual-list-windowed": virtualListWindowedScenario,
   "virtual-list-rows": virtualListRowsScenario,
