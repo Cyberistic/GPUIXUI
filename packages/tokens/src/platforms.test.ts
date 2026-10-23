@@ -33,9 +33,11 @@ import {
   platformAccent,
   resolveDensePlatformTheme,
   resolveHouseTheme,
+  resolveSwitchTheme,
 } from "./platforms.example.js";
 import { densityPresets, spacing, targetSize } from "./scale.js";
 import { textStyle } from "./styles.js";
+import { switchFailures } from "./switch.js";
 import {
   applyStyle,
   darkTheme,
@@ -418,6 +420,25 @@ describe("editing a platform style", () => {
       platformStyles.darwin.colors.light.primary,
     );
     expect(platformAccent("default", "dark")).toBe(darkTheme.colors.primary);
+  });
+
+  it("owns the platform's toggle instead of leaving Apple's green", () => {
+    // The switch is the one value a platform style declares that is not a role,
+    // and it is a value like any other: the documented brand replaces all three
+    // slots, and the report holds the paint it ships to the same floor Apple's
+    // own values are measured against.
+    const house = resolveSwitchTheme("dark");
+    const apple = platformTheme(darkTheme, "darwin");
+    expect(house.switch).toEqual({
+      on: "#4ADE80",
+      off: "#3B3B40",
+      knob: "#FFFFFF",
+    });
+    expect(house.switch).not.toEqual(apple.switch);
+    // Everything the brand did not name is still the platform's.
+    expect(house.colors.primary).toBe(apple.colors.primary);
+    expect(switchFailures(resolveSwitchTheme("light")).placements).toEqual([]);
+    expect(switchFailures(house).placements).toEqual([]);
   });
 });
 

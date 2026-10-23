@@ -83,3 +83,19 @@ export const platformAccent = (
   mode: ThemeMode,
 ): string =>
   platformStyles[platform].colors[mode].primary ?? themes[mode].colors.primary;
+
+/**
+ * Own the platform's toggle as well as its palette. The switch is a value of the
+ * theme, not a fixed control: `darwin` declares Apple's green on, grey off and
+ * white knob, and a brand that wants its own toggle replaces the three slots
+ * together. A half-declared switch paints the slots it lost with nothing, which
+ * is why the override is one value rather than a partial.
+ */
+export const resolveSwitchTheme = (mode: ThemeMode): Theme =>
+  extendTheme(platformTheme(themes[mode], "darwin"), {
+    switch: {
+      on: mode === "dark" ? "#4ADE80" : "#16A34A",
+      off: mode === "dark" ? "#3B3B40" : "#DCDCE1",
+      knob: "#FFFFFF",
+    },
+  });

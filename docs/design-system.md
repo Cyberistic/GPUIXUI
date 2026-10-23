@@ -768,7 +768,10 @@ that clears (`#E3E3E8`, 1.058:1). The floor is deliberately the perceptibility
 one: Apple's green is 1.98:1 on its page and its white knob 1.24:1 on its off
 track, with the shadow carrying the knob — a platform's control reproduced, not a
 role this library designed. A theme that needs the stronger cue paints the accent
-switch instead of declaring one.
+switch instead of declaring one. The paint is a theme value like any other: a
+consumer that starts from a platform style and owns its toggle replaces all three
+slots through `extendTheme` (§11), and the report holds the brand's paint to the
+same floor.
 
 Components that cannot express hover or active in the runtime (for example
 `virtual-list`, whose GPUI list has no pressed or hovered style) put the state
@@ -1248,8 +1251,10 @@ The extension mechanism is deliberately small:
 
 Overrides merge by group; typography merges field by field; a density preset's
 `controlHeight` and `controlPaddingX` merge size by size, so a brand that raises
-one size keeps the others; elevation levels are replaced as whole arrays; the
-mode is immutable. Nothing mutates the base, so a theme can be created once at
+one size keeps the others; elevation levels are replaced as whole arrays; a
+platform's `switch` paint is replaced whole, because the three slots are one
+control's paint and a half-declared switch draws the slots it lost with nothing;
+the mode is immutable. Nothing mutates the base, so a theme can be created once at
 startup and shared. `bodyStrong` is its own role, so a brand that changes the
 body size names it too — the pair is one emphasis at one size, and
 `invalidNumbers` reports a strong role that does not follow as `emphasis`.

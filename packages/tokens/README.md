@@ -113,8 +113,10 @@ scrim; `elevation.overlay` is a reserved, empty level that lifts nothing.
 any theme. Neither mutates its base. Groups merge key by key — a key written as
 `undefined` inherits instead of erasing a role the group must carry. Typography
 merges field by field, elevation levels replace whole arrays, a `density`
-override merges each control size so raising `md` keeps `sm` and `lg`, and the
-mode is not overridable.
+override merges each control size so raising `md` keeps `sm` and `lg`, a
+platform's `switch` paint replaces whole (the three slots are one control's
+paint, and `switchFailures` names a slot that was lost), and the mode is not
+overridable.
 
 A brand that changes a fill owns its **on-colour** too, per mode. Dark themes
 pair a light fill with dark text, so the brand's dark fill is a light violet with
@@ -615,7 +617,9 @@ const house = extendTheme(platformTheme(themes.dark, "win32"), {
 ```
 
 A runnable example lives in
-[`src/platforms.example.ts`](./src/platforms.example.ts).
+[`src/platforms.example.ts`](./src/platforms.example.ts); `resolveSwitchTheme`
+there edits the platform's own switch, which is a theme value like the palette
+(§Extending a theme).
 
 ## Authored looks
 

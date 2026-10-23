@@ -954,6 +954,27 @@ resolves both modes, and `platforms.test.ts` holds it to the contrast and
 decorative contracts. `platformTheme` never mutates its base, so it is safe to
 call on every render.
 
+The platform's **toggle** is a value of the style too, and Apple's is the one
+that cannot be derived — green on and grey off, not the accent family. A theme
+that carries one replaces it whole:
+
+```ts
+import { extendTheme, platformTheme, themes } from "@gpuixui/tokens";
+
+const house = extendTheme(platformTheme(themes.dark, "darwin"), {
+  // The three slots are one paint: a half-declared switch draws the slots it
+  // lost with nothing, so a brand owns all three. A theme that carries none
+  // keeps the library's accent switch.
+  switch: { on: "#4ADE80", off: "#3B3B40", knob: "#FFFFFF" },
+});
+```
+
+`resolveSwitchTheme` in the same file is the runnable version; `platforms.test.ts`
+executes it and holds its paint to `switchFailures`, which measures the knob on
+each track and each track on the four strips a switch stands on (the contract
+above). A brand that declares none paints the accent switch, which the mark and
+contrast tables already measure.
+
 ### Authored looks
 
 A look does not have to be a platform. `platformNames` is the persisted key a
@@ -3961,6 +3982,9 @@ interface Theme {
   elevation: Elevation;
   borderWidth: BorderWidth;
   iconSize: IconSize;
+  series?: SeriesColors; // a brand's categorical scale, replaced whole
+  syntax?: SyntaxColors; // the palette a native <code> host highlights with
+  switch?: SwitchColors; // a platform's own toggle; absent paints the accent one
 }
 ```
 
@@ -4017,6 +4041,11 @@ Merge rules:
   body size names it too — the pair is one emphasis at one size, and
   `invalidNumbers` reports a strong role that does not follow as `emphasis`;
 - elevation levels **replace** the whole shadow array;
+- a `switch` paint **replaces** the three slots whole. It is one control's paint
+  rather than three roles — a half-declared switch paints the slots it lost with
+  nothing, and `switchFailures` names the slot — so a brand that starts from a
+  platform style names all three (`{ on, off, knob }`) and a theme that carries
+  none keeps the accent switch;
 - `density` accepts a preset name or `DensityOverrides`; a partial override keeps
   the base preset name and merges `controlHeight` and `controlPaddingX` size by
   size, so raising one size inherits the rest rather than dropping the steps the

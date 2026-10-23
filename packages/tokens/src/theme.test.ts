@@ -22,7 +22,10 @@ import {
   highContrastThemes,
   invalidNumbers,
   lightTheme,
+  platformTheme,
+  switchFailures,
   themes,
+  type SwitchColors,
 } from "./index.js";
 
 describe("built-in themes", () => {
@@ -143,6 +146,42 @@ describe("extendTheme", () => {
     const custom = extendTheme(lightTheme, { elevation: { md: [shadow] } });
     expect(custom.elevation.md).toEqual([shadow]);
     expect(custom.elevation.sm).toBe(lightTheme.elevation.sm);
+  });
+
+  it("replaces the switch a platform style declares, whole", () => {
+    // The switch is a value of the theme, not a fixed control: a consumer that
+    // starts from a platform style and owns its toggle names all three slots,
+    // because a half-declared one paints the slots it lost with nothing.
+    const apple = platformTheme(darkTheme, "darwin");
+    expect(apple.switch).toBeDefined();
+    const house: SwitchColors = {
+      on: "#4ADE80",
+      off: "#3B3B40",
+      knob: "#FFFFFF",
+    };
+    const custom = extendTheme(apple, { switch: house });
+    expect(custom.switch).toEqual(house);
+    expect(apple.switch).not.toEqual(house);
+    // Both the base and the brand are held to the report the override exists to
+    // satisfy, so a documented brand cannot ship a toggle nobody can find.
+    expect(switchFailures(custom).placements).toEqual([]);
+  });
+
+  it("keeps the switch a theme already carries when the override names none", () => {
+    const apple = platformTheme(darkTheme, "darwin");
+    const custom = extendTheme(apple, { colors: { primary: "#123456" } });
+    expect(custom.switch).toBe(apple.switch);
+  });
+
+  it("declares a switch on a theme that carries none", () => {
+    // A theme without a switch paints the accent toggle; an override can give it
+    // the platform paint without starting from a platform style.
+    expect(lightTheme.switch).toBeUndefined();
+    const custom = extendTheme(lightTheme, {
+      switch: { on: "#16A34A", off: "#DCDCE1", knob: "#FFFFFF" },
+    });
+    expect(custom.switch?.on).toBe("#16A34A");
+    expect(switchFailures(custom).placements).toEqual([]);
   });
 
   it("applies a density preset", () => {
@@ -320,6 +359,14 @@ describe("an override that names a value as absent", () => {
     expect(custom.colors.background).toBe(darkTheme.colors.background);
     expect(custom.radius.md).toBe(2);
     expect(custom.radius.lg).toBe(darkTheme.radius.lg);
+  });
+
+  it("inherits the switch a theme carries rather than erasing it", () => {
+    // `applyStyle` clears a look's switch on purpose, but an extension that
+    // forwards an optional paint as `undefined` must not drop the base's.
+    const apple = platformTheme(darkTheme, "darwin");
+    const custom = extendTheme(apple, { switch: undefined });
+    expect(custom.switch).toBe(apple.switch);
   });
 });
 

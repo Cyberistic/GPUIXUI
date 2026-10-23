@@ -120,6 +120,11 @@ export interface Theme {
    * which paints a switch from the accent family; a style that carries one
    * hands the component the native control's own colours — Apple's green on,
    * grey off and white knob — which are not roles the accent can derive.
+   *
+   * It is a value of the theme like any other: an application that starts from a
+   * platform style and wants its own toggle replaces it through
+   * {@link ThemeOverrides.switch}, and a theme that carries none keeps the
+   * accent switch.
    */
   readonly switch?: SwitchColors;
 }
@@ -205,6 +210,17 @@ export interface ThemeOverrides {
    * table it wants to keep: `syntax: { ...syntaxColors(theme), keyword: … }`.
    */
   readonly syntax?: SyntaxColors;
+  /**
+   * Replace the platform switch paint whole, or declare one on a theme that
+   * carries none. A style declares one when its platform's toggle is not the
+   * accent family (`PlatformStyle.switch`); an application that starts from that
+   * style and wants its own toggle names all three slots here, because a slot
+   * the renderer cannot read paints nothing — `switchFailures` names the slot a
+   * paint lost. A theme that carries none keeps the accent switch, and an
+   * override written as `undefined` inherits the base's paint rather than
+   * erasing it.
+   */
+  readonly switch?: SwitchColors;
 }
 
 /** Input to {@link createTheme}: a mode, a contrast variant and overrides. */
@@ -399,9 +415,11 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
     // runtime reads, so a partial one would leave a token on the runtime's own
     // colour. A brand edits one token by spreading the table it keeps.
     syntax: overrides.syntax ?? base.syntax,
-    // A look's own declaration, not an editable role: `applyStyle` replaces it
-    // whole (or clears it), and an override that names no switch keeps it.
-    switch: base.switch,
+    // A switch is one control's paint in three slots; a half-declared one paints
+    // the slots it lost with nothing, so an override replaces the set whole. An
+    // override that names none keeps the base's declaration — the accent switch
+    // when the base carries none.
+    switch: overrides.switch ?? base.switch,
   };
 }
 

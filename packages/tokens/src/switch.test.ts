@@ -29,6 +29,7 @@ import {
   type SwitchAuditSource,
   type Theme,
 } from "./index.js";
+import { resolveSwitchTheme } from "./platforms.example.js";
 
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
@@ -301,5 +302,20 @@ describe("the pages that teach the declared paint", () => {
     expect(readme).toContain("switchFailures");
     // The inventory row records that the declared paint is measured.
     expect(inventoryRow("Platform styles")).toContain("switchFailures");
+  });
+
+  it("teaches the extension route a brand owns the paint through", () => {
+    // The paint is a theme value, not a preset: a consumer that starts from a
+    // platform style replaces it through `extendTheme`, and a page that taught
+    // only the style table would leave the reader with a control they cannot
+    // edit. The counts and values the pages print are read from the export.
+    expect(catalogue).toContain("switch: { on:");
+    expect(catalogue).toContain("resolveSwitchTheme");
+    expect(designSystem).toContain(
+      "platform's `switch` paint is replaced whole",
+    );
+    expect(readme).toContain("platform's `switch` paint replaces whole");
+    expect(resolveSwitchTheme("light").switch?.on).toBe("#16A34A");
+    expect(resolveSwitchTheme("dark").switch?.off).toBe("#3B3B40");
   });
 });
