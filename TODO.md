@@ -7546,7 +7546,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | State that **a draft committed on blur is unverified in the window harness** — `packages/components/docs/inline-edit.mdx` and the `Inline edit` inventory row teach "Enter or blur commits" as a behaviour, and the playground's `blur-delivery-lifecycle` measured that in an automation window neither Tab nor a press commits the typed draft (the focus pair never arrives). The component's handler is right for an active app; the page should say which host proves it and that a consumer needing a proof today has Enter or a caller-owned commit | components (`packages/components/docs/inline-edit.mdx`, the `COMPONENTS.md` Inline edit row) | open — measured 2026-10-23 |
 | Add the **two window verbs and the focus-pair caveat** to `/docs/testing` — `AsyncSmokeHost` gained `blur()` (the renderer's `blur`, so a probe can clear the focus it moved) and `activateWindow()` (the platform's activation), and the window verb table lists `focusNext`/`focusElement` only. The page should also carry the measured limitation `blur-delivery-lifecycle` records: this automation window delivers no `onFocus`/`onBlur` on any route, so a live probe cannot prove a blur commit and the offscreen `a11yTree`/`focus-traversal` are the evidence for the pair | docs-site (`apps/docs/content/docs/testing.mdx`) | open — measured 2026-10-23 |
 | Retract the **crop row's "unverified" half** — `COMPONENTS.md`'s Tier 5 **Crop area** row says "the handles, the constraints and any mask stay **unverified**", while the playground's `crop-overlay` (37 checks, 0.11.0) measured all three: four positioned veil bars in the `overlay` role are the only mask the runtime supports (`#12451F` over a `#34C759` bitmap), the bars leave the hole a press (`pointerEvents: "none"`), and a 10×10 corner handle drags the hole from `60,40,24,24` (the 24-point minimum) to `60,40,180,120` (the bitmap's edges) with the bars re-painting. The row should cite the probe and keep only the honest half — the crop is a composition, not a runtime feature | components (`COMPONENTS.md`'s Crop area row, `@gpuixui/media`) | open — measured 2026-10-23; the probe and its section are the playground's |
-| Name the **soft status tints** in the indicator-marks prose — `indicatorSurfaces` gained each status tone's `xSoft` (the surface a filled action or a status mark stands on inside a message), and both theming pages print the strip list from the array, but the sentence that explains the strips still enumerates the nine it had. Add the four tints and the measurement that put them there (macOS dark's system blue at **2.33:1** on `warningSoft`) once the tokens commit lands | docs-site (`themes.mdx` §The theme audit, `theming.mdx` §Indicator marks) | open — the pages cannot name a strip the committed array does not carry; the printed list is already correct either way |
+| Name the **soft status tints** in the indicator-marks prose — `indicatorSurfaces` gained each status tone's `xSoft` (the surface a filled action or a status mark stands on inside a message), and both theming pages print the strip list from the array, but the sentence that explains the strips still enumerated the nine it had. Both pages now name the four soft tints and the measurement that put them there (macOS dark's system blue failed all four, so the style takes `#3B9DFF` at **3.01:1** on the warning tint, the tightest placement the sweep finds) and cite `indicator.test.ts` | docs-site (`themes.mdx` §The theme audit, `theming.mdx` §Indicator marks) | **resolved 2026-10-23** — the tokens commit (`ed6e9091`) landed the tint and macOS dark's `#3B9DFF`, and both sections teach it; `theming-page.test.ts`'s strip case now requires the tint sentence, the four soft tints and the `indicator.test.ts` citation, so the printed list and the explanation cannot separate. Directions measured: deleting the sentence fails `themes.mdx` and `theming.mdx` by name ("does not explain the tint a mark stands on"), and the file is 1 248 tests with `check-types` clean |
 
 ## Phase D — data and workspace components
 
@@ -8505,7 +8505,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 233/233
+`[x]` `[██████████]` 234/234
+
+`[x]` Name the **soft status tints** in the indicator-marks prose — the tokens
+      change `ed6e9091` added each tone's `xSoft` to `indicatorSurfaces` (a
+      filled action or a status mark inside an `Alert` stands on that tint, and
+      macOS dark's system blue failed all four while every other style cleared
+      them), and the pages printed the new list from the array while the
+      sentence beside it still explained the nine strips it had. Both sections
+      now name the four soft tints, state the composition and the repaired
+      value (`#3B9DFF`, 3.01:1 on the warning tint, the tightest placement),
+      and cite `indicator.test.ts` for the sweep and the pre-fix cells. The
+      strip guard requires the tint sentence, the four tints and the citation,
+      so the list and the explanation cannot separate again. Directions
+      measured: deleting the sentence fails both pages by name; green the docs
+      suite is 117 files / 1 248 tests with `check-types` clean. No native
+      scenario applies — page prose and its guard have no runtime path.
 
 `[x]` Move the **ring premise off the page** and onto the file that measures it —
       `/docs/theming` §Focus rings printed the flush line's measured range

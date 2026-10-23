@@ -502,6 +502,7 @@ describe("the theming pages' indicator strips", () => {
     const wrong = pages.flatMap(({ name, heading }) => {
       const body = page(name);
       const marks = section(body, heading);
+      const prose = marks.replace(/\s+/g, " ");
       const tokensImport = body
         .split("\n")
         .find(
@@ -525,6 +526,15 @@ describe("the theming pages' indicator strips", () => {
         ...(/\b(four|seven|nine) strips\b/.test(marks)
           ? [`${name}: keeps a stale strip count`]
           : []),
+        // The tint a message is filled with is the strip that moved a palette:
+        // a mark standing on it is a mark a reader can lose. The prose names the
+        // composition and cites the sweep, so a mark's tint cannot become a
+        // strip the page lists and never explains.
+        ...(prose.includes("message's own tint") &&
+        prose.includes("four soft status tints") &&
+        prose.includes("indicator.test.ts")
+          ? []
+          : [`${name}: does not explain the tint a message's mark stands on`]),
       ];
     });
 
