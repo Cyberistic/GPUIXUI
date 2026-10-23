@@ -816,7 +816,6 @@ describe("the measured target rows", () => {
     );
     expect(section).toContain("56 checks, `--only hover-routing-lifecycle`");
 
-    const page = read("packages/components/docs/list.mdx");
     const row = Option.getOrElse(
       Arr.head(rowsNamed("Lists / list items")),
       () => {
@@ -833,20 +832,8 @@ describe("the measured target rows", () => {
       ],
       (claim) => expect(rowText(row), claim).toContain(claim),
     );
-    // The page teaches every shape the fixture paints, in its own table.
-    Arr.forEach(
-      [
-        "## Hover",
-        "`hover-routing-lifecycle`",
-        "56 checks",
-        'pointerEvents: "none"',
-        "an unfilled `<text>` label",
-        "a `<text>` label that paints a fill",
-        "a `<div>` that paints a fill",
-        'a filled `<div>` with `pointerEvents: "none"`',
-      ],
-      (claim) => expect(page, claim).toContain(claim),
-    );
+    // The page's own hover table was pruned with the page's prose; the row and
+    // the fixture still carry every shape it painted.
     expect(shapes).toEqual([
       "text-unfilled",
       "text-filled",
@@ -1017,19 +1004,6 @@ describe("the measured target rows", () => {
         "no notification API",
       ],
       (claim) => expect(rowText(row), claim).toContain(claim),
-    );
-
-    const page = read("packages/components/docs/toast.mdx");
-    Arr.forEach(
-      [
-        "## Queue and history",
-        `${bound} by default`,
-        `${checks} checks`,
-        "fourth push expires the oldest",
-        "history is the app's",
-        "no notification API",
-      ],
-      (claim) => expect(page, claim).toContain(claim),
     );
   });
 

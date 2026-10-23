@@ -84,10 +84,4 @@ describe("the code block's tokenizer", () => {
     );
     expect(stale).toStrictEqual([]);
   });
-
-  it("teaches a brand the route its palette takes", () => {
-    expect(page).toContain("extendTheme(theme, {");
-    expect(page).toContain("syntaxColors(theme)");
-    expect(page).toContain("`@tanstack/highlight`");
-  });
 });

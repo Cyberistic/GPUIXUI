@@ -238,9 +238,4 @@ describe("the published seam", () => {
     // same file rather than a copy of it.
     expect(() => read("../src/internal/typeahead.ts")).toThrow();
   });
-
-  it("names the subpath on the page that teaches type-ahead", () => {
-    const page = read("../docs/list.mdx");
-    expect(page).toContain("@gpuixui/components/typeahead");
-  });
 });

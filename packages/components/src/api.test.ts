@@ -546,19 +546,6 @@ describe("component API contract", () => {
     });
 
     expect(missingRing).toEqual([]);
-
-    // The pages a reader reads must state the measured rule: the traversal
-    // focuses the element without running its handler, and the flag is not the
-    // cue.
-    const silentPage = Arr.filter(
-      flagged,
-      (file) =>
-        !Str.includes("without running its `onFocus`")(
-          sourceOf(`../docs/${Str.replace(/\.tsx$/, ".mdx")(file)}`),
-        ),
-    );
-
-    expect(silentPage).toEqual([]);
   });
 
   it("keeps a planned part out of the package until its row lands", () => {

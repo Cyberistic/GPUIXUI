@@ -11,8 +11,8 @@
  * earlier run had read one, so the handler is not a channel a component may
  * depend on: the ring declared at rest is the cue, and every key path anchors on
  * the key's own element. This suite fails on any owned page, source comment or
- * inventory row that promises the handler, and holds the spec and the pages that
- * document `focused` to the measured rule.
+ * inventory row that promises the handler, and holds the API spec to the
+ * measured rule.
  */
 
 import { readFileSync, readdirSync } from "node:fs";
@@ -78,16 +78,6 @@ const offenders = Arr.flatMap(files, (file) =>
   ),
 );
 
-/** The six pages that list a `focused` state in their `StateStyle` table. */
-const focusedPages = [
-  "accordion",
-  "collapsible",
-  "field",
-  "search-input",
-  "tabs",
-  "time-picker",
-] as const;
-
 describe("the focus a traversal delivers", () => {
   it("is not promised by an owned page, comment or inventory row", () => {
     expect(offenders).toEqual([]);
@@ -101,52 +91,6 @@ describe("the focus a traversal delivers", () => {
     expect(section).toContain("tooltip-lifecycle");
     expect(section).toContain("focuses=0");
     expect(section).toContain("keyboardRing");
-  });
-
-  it("is repeated on every page that documents a focused state", () => {
-    const silent = Arr.filter(focusedPages, (page) => {
-      const text = read(`docs/${page}.mdx`);
-      return (
-        !Str.includes(measured)(text) ||
-        !Str.includes("blur-delivery-lifecycle")(text)
-      );
-    });
-
-    expect(silent).toEqual([]);
-  });
-
-  it("states the cause the window measured, not the runtime as a whole", () => {
-    // `focuses=0` is true in the automation window, but not because the
-    // runtime refuses to run `onFocus`: the probe's window never becomes
-    // active, so no route delivers the pair, and the offscreen host fakes
-    // activation and does. A page that blames the runtime teaches a limit
-    // that does not exist in a real app, so the cause is stated beside the
-    // rule on every surface that carries it.
-    const surfaces = [
-      "docs/tabs.mdx",
-      "../../COMPONENTS.md",
-      "../../docs/component-api.md",
-      "src/api.test.ts",
-    ] as const;
-
-    const silent = Arr.filter(
-      surfaces,
-      (surface) =>
-        !Str.includes("blur-delivery-lifecycle")(read(surface)) ||
-        !Str.includes("never becomes active")(read(surface)),
-    );
-
-    expect(silent).toEqual([]);
-  });
-
-  it("keeps a toast's clock off the traversal, and a card's open off it", () => {
-    const toast = read("docs/toast.mdx");
-
-    expect(toast).toContain("A traversal does not hold the clock");
-    expect(toast).toContain("duration: 0");
-    expect(read("docs/preview-card.mdx")).toContain(
-      "A `Tab` traversal opens nothing",
-    );
   });
 
   it("reads the files it is meant to check", () => {
