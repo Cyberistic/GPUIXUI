@@ -17,6 +17,12 @@
  * shares no prefix with its root (KeyboardShortcuts' `Keycap`) is covered only
  * by the forward direction; the forward direction is exact.
  *
+ * The props half reads each Tier 2 page's `## API` against the `*Props`
+ * interfaces its own source declares, so a prop added to a type is reported
+ * until the page names it. The shape props every part carries (`className`,
+ * `children`, `style`, `ref`, `testId`, `aria-id`, `onLayout`) are the
+ * package-wide convention in `docs/component-api.md` and are exempt.
+ *
  * `node:fs` is a test-time repository read, as in `inventory.test.ts`; no
  * component runtime imports it.
  */
@@ -29,7 +35,7 @@ import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import * as api from "./index.js";
-import { inventory } from "./inventory.js";
+import { inventory, type ComponentMeta } from "./inventory.js";
 
 const repoRoot = new URL("../../../", import.meta.url);
 
@@ -152,6 +158,254 @@ const apiRows = (page: string): ReadonlyArray<ReadonlyArray<string>> => {
 /** Whether one row documents `part`: its first two cells name it in a code span. */
 const rowNamesPart = (cells: ReadonlyArray<string>, part: string): boolean =>
   Arr.some(Arr.take(cells, 2), (cell) => cell.includes(`\`${part}\``));
+
+/**
+ * The props every part inherits from the runtime or from this package's own
+ * layout convention.
+ *
+ * A page lists the props a reader decides, and these are the surface every part
+ * carries (`ref` addresses, `testId` locates, `onLayout` measures, `style` and
+ * `className` paint, `children` composes). They are documented once in
+ * `docs/component-api.md`; this contract holds the rest, so a substantive prop
+ * added to a part's type is reported until its page names it.
+ */
+const SHAPE_PROPS: ReadonlySet<string> = new Set([
+  "aria-id",
+  "children",
+  "className",
+  "onLayout",
+  "ref",
+  "style",
+  "testId",
+]);
+
+/** An interface header, however its `extends` list is wrapped. */
+const INTERFACE_HEADER =
+  /(?:^|\n)(?:export\s+)?interface\s+(\w+)(?:<[^>]*>)?(?:\s+extends\s+([^{]+))?\s*\{/g;
+
+/** A type alias header; its body is taken up to the terminating `;`. */
+const TYPE_ALIAS = /(?:^|\n)(?:export\s+)?type\s+(\w+)(?:<[^>]*>)?\s*=\s*/g;
+
+/** `readonly name?:` and `readonly "aria-id"?:`, the shape a prop is written in. */
+const PROP_SIGNATURE =
+  /(?:readonly\s+|^[ \t]*)(?:"([^"]+)"|([A-Za-z_][\w-]*))\s*\??:/gm;
+
+/** The prop names one object type's body declares. */
+const signatureNames = (body: string): ReadonlyArray<string> =>
+  Arr.filterMap(Arr.fromIterable(body.matchAll(PROP_SIGNATURE)), (match) =>
+    Result.succeed(match[1] ?? match[2] ?? ""),
+  );
+
+/**
+ * The text between a `{` and its matching `}`, comments and all.
+ *
+ * A bracket scan is the one place an index walk says more than a combinator
+ * can: it stops at the first balanced close instead of visiting the rest of the
+ * file. A prop's doc comment contains braces of its own, which a character
+ * class cannot track.
+ */
+const balancedBody = (source: string, open: number): Option.Option<string> => {
+  let depth = 0;
+  for (let index = open; index < source.length; index += 1) {
+    if (source[index] === "{") depth += 1;
+    else if (source[index] === "}") {
+      depth -= 1;
+      if (depth === 0) return Option.some(source.slice(open + 1, index));
+    }
+  }
+  return Option.none();
+};
+
+/** A type alias body, up to the `;` that ends it at its own level. */
+const aliasBody = (source: string, start: number): Option.Option<string> => {
+  let depth = 0;
+  for (let index = start; index < source.length; index += 1) {
+    const char = source[index] ?? "";
+    if ("{([".includes(char)) depth += 1;
+    else if ("})]".includes(char)) depth -= 1;
+    else if (char === ";" && depth === 0) {
+      return Option.some(source.slice(start, index));
+    }
+  }
+  return Option.none();
+};
+
+/** The members of an intersection or union, split only at its own level. */
+const typeParts = (body: string): ReadonlyArray<string> => {
+  const opened = "{([";
+  const closed = "})]";
+  const initial: {
+    readonly parts: ReadonlyArray<string>;
+    readonly current: string;
+    readonly depth: number;
+  } = { parts: [], current: "", depth: 0 };
+  const scanned = Arr.reduce(Arr.fromIterable(body), initial, (state, char) => {
+    const depth = opened.includes(char)
+      ? state.depth + 1
+      : closed.includes(char)
+        ? state.depth - 1
+        : state.depth;
+    return state.depth === 0 && (char === "&" || char === "|")
+      ? { parts: [...state.parts, state.current], current: "", depth }
+      : { parts: state.parts, current: `${state.current}${char}`, depth };
+  });
+  return Arr.filter(
+    Arr.map([...scanned.parts, scanned.current], Str.trim),
+    Str.isNonEmpty,
+  );
+};
+
+/** A props type as the source declares it: fields, parents, or an alias body. */
+interface DeclaredType {
+  readonly file: string;
+  readonly props: ReadonlyArray<string>;
+  readonly parents: ReadonlyArray<string>;
+  readonly alias?: string;
+}
+
+/** Every source file whose declarations a page's props are read from. */
+const sourceFiles: ReadonlyArray<string> = Arr.filter(
+  readdirSync(fileURLToPath(new URL("./", import.meta.url)), {
+    recursive: true,
+    encoding: "utf8",
+  }),
+  (name) => /\.tsx?$/.test(name) && !name.includes(".test."),
+);
+
+/**
+ * Every props declaration this package's source carries, by type name.
+ *
+ * A test-time repository read, the boundary `inventory.test.ts` already uses;
+ * `sourceOf` is the same relative read, including the subdirectories a family
+ * keeps its logic in.
+ */
+const declaredTypes = (): ReadonlyMap<string, DeclaredType> => {
+  const types = new Map<string, DeclaredType>();
+  Arr.forEach(sourceFiles, (file) => {
+    const source = sourceOf(file);
+    Arr.forEach(
+      Arr.fromIterable(source.matchAll(INTERFACE_HEADER)),
+      (match) => {
+        const open = (match.index ?? 0) + match[0].length - 1;
+        Option.match(balancedBody(source, open), {
+          onNone: () => undefined,
+          onSome: (body) =>
+            types.set(match[1] ?? "", {
+              file,
+              props: signatureNames(body),
+              parents: Arr.filter(
+                Arr.map((match[2] ?? "").split(","), (parent) =>
+                  Str.replace(/<[\s\S]*$/, "")(Str.trim(parent)),
+                ),
+                Str.isNonEmpty,
+              ),
+            }),
+        });
+      },
+    );
+    Arr.forEach(Arr.fromIterable(source.matchAll(TYPE_ALIAS)), (match) => {
+      const start = (match.index ?? 0) + match[0].length;
+      Option.match(aliasBody(source, start), {
+        onNone: () => undefined,
+        onSome: (alias) =>
+          types.set(match[1] ?? "", { file, props: [], parents: [], alias }),
+      });
+    });
+  });
+  return types;
+};
+
+/**
+ * Every prop a type carries, through `extends`, an alias intersection, a
+ * parenthesised branch of a union, and an `Omit`.
+ *
+ * A name the package does not declare is the runtime's own surface (`Props` and
+ * the floating helpers): its properties are not this package's to document, so
+ * it contributes nothing. `seen` keeps a cycle from recursing.
+ */
+const propsOf = (
+  name: string,
+  types: ReadonlyMap<string, DeclaredType>,
+  seen: ReadonlySet<string> = new Set(),
+): ReadonlyArray<string> => {
+  if (seen.has(name)) return [];
+  const next = new Set([...seen, name]);
+  const declared = types.get(name);
+  if (declared === undefined) return [];
+  if (declared.alias === undefined) {
+    return [
+      ...declared.props,
+      ...Arr.flatMap(declared.parents, (parent) =>
+        propsOf(parent, types, next),
+      ),
+    ];
+  }
+  return Arr.flatMap(typeParts(declared.alias), (part) =>
+    resolvePart(part, types, next),
+  );
+};
+
+/** One alias member, through a grouping parenthesis, an object, or an `Omit`. */
+const resolvePart = (
+  part: string,
+  types: ReadonlyMap<string, DeclaredType>,
+  seen: ReadonlySet<string>,
+): ReadonlyArray<string> => {
+  if (part.startsWith("(") && part.endsWith(")")) {
+    return Arr.flatMap(typeParts(part.slice(1, -1)), (inner) =>
+      resolvePart(inner, types, seen),
+    );
+  }
+  if (part.startsWith("{")) return signatureNames(part);
+  const omit = /^Omit<([\w.]+)\s*,\s*([\s\S]+)>$/.exec(part);
+  if (omit !== null) {
+    const removed = Arr.map(
+      Arr.fromIterable((omit[2] ?? "").matchAll(/"([^"]+)"/g)),
+      (match) => match[1] ?? "",
+    );
+    return Arr.filter(
+      propsOf(omit[1] ?? "", types, seen),
+      (prop) => !Arr.contains(removed, prop),
+    );
+  }
+  const named = /^([A-Za-z_]\w*)/.exec(part)?.[1];
+  return named === undefined ? [] : propsOf(named, types, seen);
+};
+
+/** The identifiers a page's `## API` tables name in code spans. */
+const documentedProps = (page: string): ReadonlySet<string> =>
+  new Set(
+    Arr.flatMap(apiRows(page), (cells) =>
+      Arr.filterMap(
+        Arr.flatMap(cells, (cell) =>
+          Arr.fromIterable(cell.matchAll(/`([^`]+)`/g)),
+        ),
+        (match) => {
+          const name = /^[A-Za-z_][\w-]*/.exec(match[1] ?? "")?.[0];
+          return name === undefined ? Result.failVoid : Result.succeed(name);
+        },
+      ),
+    ),
+  );
+
+/** The docs page's slug: the source file and directory a record's page owns. */
+const slugOf = (meta: ComponentMeta): string =>
+  Str.replace(/\.mdx$/, "")(Str.replace(/^docs\//, "")(meta.docs));
+
+/** The `*Props` types the record's own source file or directory declares. */
+const pageTypes = (
+  meta: ComponentMeta,
+  types: ReadonlyMap<string, DeclaredType>,
+): ReadonlyArray<string> => {
+  const slug = slugOf(meta);
+  return Arr.filter(Arr.fromIterable(types.keys()), (name) => {
+    const file = types.get(name)?.file ?? "";
+    return (
+      Str.endsWith("Props")(name) &&
+      (file === `${slug}.tsx` || Str.startsWith(`${slug}/`)(file))
+    );
+  });
+};
 
 describe("component API contract", () => {
   it("names the boolean change callback beside the value one", () => {
@@ -322,5 +576,60 @@ describe("component API contract", () => {
     );
 
     expect(landed).toEqual([]);
+  });
+
+  it("documents every prop its parts declare", () => {
+    // Bug guarded: a page that lists the props it remembers drifts from the
+    // type a consumer compiles against. `ChatComposer` shipped `submitLabel`,
+    // `stopLabel` and `attachments` — the two words its controls say and the
+    // one slot above its field — and `DropdownMenuContent` shipped
+    // `alignOffset`, with none of the four named anywhere on their pages. The
+    // shape props (`className`, `children`, `style`, `ref`, `testId`,
+    // `aria-id`, `onLayout`) are the package-wide convention and are exempt.
+    const types = declaredTypes();
+    const tier2: ReadonlyArray<ComponentMeta> = Arr.filter(
+      inventory,
+      (meta) => meta.tier === 2,
+    );
+    let checked = 0;
+    const problems = Arr.flatMap(
+      tier2,
+      (meta) => {
+        const documented = documentedProps(pageOf(meta.docs));
+        return Arr.flatMap(pageTypes(meta, types), (name) => {
+          const props = Arr.dedupe(propsOf(name, types));
+          checked += Arr.length(props);
+          return Arr.filter(
+            props,
+            (prop) => !SHAPE_PROPS.has(prop) && !documented.has(prop),
+          ).map((prop) => `${meta.docs}: ${name}.${prop} has no API row`);
+        });
+      },
+    );
+
+    expect(problems).toEqual([]);
+    // A reader that resolved nothing would pass vacuously: every Tier 2 page
+    // declares its props several times over, so the check counts them.
+    expect(checked).toBeGreaterThan(250);
+  });
+
+  it("reads a props type through an alias union, a parent and the runtime", () => {
+    // The reader itself, measured against the package's real declarations: an
+    // alias union of intersections (`ListProps`, `AccordionProps`), a field of
+    // an interface that declares it directly, and a runtime alias whose
+    // surface this package does not own. A reader that resolved nothing would
+    // report every page clean, so this case fails first.
+    const types = declaredTypes();
+
+    expect(propsOf("ChatComposerProps", types)).toEqual(
+      expect.arrayContaining(["attachments", "submitLabel"]),
+    );
+    expect(propsOf("AccordionProps", types)).toEqual(
+      expect.arrayContaining(["collapsible", "type"]),
+    );
+    expect(propsOf("ListProps", types)).toEqual(
+      expect.arrayContaining(["dense", "onActivate", "selectionMode"]),
+    );
+    expect(propsOf("PaginationNextProps", types)).toEqual([]);
   });
 });
