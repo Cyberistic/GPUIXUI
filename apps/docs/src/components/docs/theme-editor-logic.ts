@@ -1,7 +1,6 @@
 import {
   auditTheme,
   extendTheme,
-  highlightFailures,
   invalidScales,
   switchFailures,
   targetSize,
@@ -143,16 +142,15 @@ export const themeConfig = (
  * that hides itself or the text it covers, an indicator mark a reader cannot
  * find on the strip it is drawn on, a disabled control whose faded label
  * vanishes into its faded fill, and a control the runtime's keyboard dim erases.
- * `auditTheme` reads all eleven in one call, so the editor cannot show some
+ * `auditTheme` reads all twelve in one call, so the editor cannot show some
  * reports and leave the others silent. The base is the platform style the
  * preview is painted over, so the audit measures what the reader sees.
  *
- * Three contracts the library measures *beside* the gate are read separately by
- * {@link besideGateFindings}, because a reader can break all three with an edit
- * this editor exposes: the scale order (raising `radius.md` past `radius.lg`
- * makes the larger name paint the smaller corner), a declared switch's paint
- * (recolouring a surface Apple's track stands on can lose the track), and a
- * find wash (a `primary` equal to `card` makes every match vanish).
+ * Two contracts the library measures *beside* the gate are read separately by
+ * {@link besideGateFindings}, because a reader can break both with an edit this
+ * editor exposes: the scale order (raising `radius.md` past `radius.lg` makes
+ * the larger name paint the smaller corner) and a declared switch's paint
+ * (recolouring a surface Apple's track stands on can lose the track).
  */
 export const auditReport = (
   mode: ThemeMode,
@@ -161,8 +159,8 @@ export const auditReport = (
 ): ThemeAudit => auditTheme(resolveTheme(mode, pins, base));
 
 /**
- * Which of the audit's eleven reports — or which of the three contracts beside
- * it — a finding came from.
+ * Which of the audit's twelve reports — or which of the two contracts beside it
+ * — a finding came from.
  */
 export type AuditKind =
   | "role"
@@ -505,6 +503,10 @@ export const auditFindings = (
     kind: "indicator" as const,
     text: formatIndicatorFailure(failure),
   })),
+  ...report.highlight.map((failure) => ({
+    kind: "highlight" as const,
+    text: formatHighlightFailure(failure),
+  })),
   ...report.disabledFade.map((failure) => ({
     kind: "disabled" as const,
     text: formatDisabledFade(failure),
@@ -516,12 +518,12 @@ export const auditFindings = (
 ];
 
 /**
- * The three contracts the library measures beside the gate, worded for the same
- * readout: the scale order, a switch a platform style declares, and every find
- * wash. Each runs beside `auditTheme` rather than inside it — folding one in is
- * a change to the audit's own key list and this readout together — but an edit
- * can break all three, so the readout reports them instead of passing a theme
- * whose `lg` corner is smaller than its `md` or whose matches lie invisible.
+ * The two contracts the library measures beside the gate, worded for the same
+ * readout: the scale order and a switch a platform style declares. Each runs
+ * beside `auditTheme` rather than inside it — folding one in is a change to the
+ * audit's own key list and this readout together — but an edit can break both,
+ * so the readout reports them instead of passing a theme whose `lg` corner is
+ * smaller than its `md` or whose declared track has vanished.
  */
 export const besideGateFindings = (
   theme: Theme,
@@ -540,23 +542,19 @@ export const besideGateFindings = (
       kind: "switch" as const,
       text: formatSwitchPlacement(failure),
     })),
-    ...highlightFailures(theme).map((failure) => ({
-      kind: "highlight" as const,
-      text: formatHighlightFailure(failure),
-    })),
   ];
 };
 
 /** Every finding the editor prints, split by the contract that reported it. */
 export interface ThemeFindings {
-  /** The eleven reports `auditTheme` returns, already worded. */
+  /** The twelve reports `auditTheme` returns, already worded. */
   readonly gate: ReadonlyArray<AuditFinding>;
-  /** The three contracts that run beside the gate, already worded. */
+  /** The two contracts that run beside the gate, already worded. */
   readonly beside: ReadonlyArray<AuditFinding>;
 }
 
 /**
- * The readout's whole list for an edit: the gate's findings and the three
+ * The readout's whole list for an edit: the gate's findings and the two
  * contracts beside it, both measured on the theme the preview paints. Split
  * rather than concatenated so the readout can say which call reported a line —
  * a bespoke report presented as an `auditTheme` one would overstate the gate.

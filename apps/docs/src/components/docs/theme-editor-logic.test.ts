@@ -738,16 +738,22 @@ describe("the contracts beside the gate", () => {
     expect(beside[0]?.kind).toBe("scale");
   });
 
-  it("reports a find wash an edit paints invisible, which no contrast pair sees", () => {
-    const { beside } = themeFindings("light", {
+  it("reports a find wash an edit paints invisible, through the gate", () => {
+    // The report is `auditTheme`'s twelfth key now, so the readout prints it
+    // with the rest: a `primary` equal to its own card is a match nobody sees,
+    // and it reaches the reader from the gate rather than a section of its own.
+    const { gate, beside } = themeFindings("light", {
       colors: { primary: themes.light.colors.card },
     });
-    const highlight = beside.filter((finding) => finding.kind === "highlight");
+    const highlight = gate.filter((finding) => finding.kind === "highlight");
 
     expect(highlight.map((finding) => finding.text)).toContain(
       "find match on card — 1.00:1 (needs 1.05:1)",
     );
     expect(highlight.length).toBeGreaterThan(0);
+    expect(beside.filter((finding) => finding.kind === "highlight")).toEqual(
+      [],
+    );
   });
 
   it("reports a declared switch an edit hides on the strip it stands on", () => {
@@ -823,19 +829,15 @@ describe("the contracts beside the gate", () => {
   });
 
   it("names every report the gate does not carry, so one cannot be read silently", () => {
-    // Three public contracts ship beside `auditTheme`; this readout is the only
-    // place an editor prints them, so a fourth must fail here rather than be
+    // Two public contracts ship beside `auditTheme`; this readout is the only
+    // place an editor prints them, so a third must fail here rather than be
     // forgotten. The list is derived from the package's exports that no audit
     // key covers, not written by hand.
     const source = readFileSync(
       new URL("./theme-editor-logic.ts", import.meta.url),
       "utf8",
     );
-    const besideFunctions = [
-      "invalidScales",
-      "switchFailures",
-      "highlightFailures",
-    ];
+    const besideFunctions = ["invalidScales", "switchFailures"];
 
     expect(
       besideFunctions.filter((name) => !source.includes(`${name}(theme)`)),

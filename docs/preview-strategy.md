@@ -645,7 +645,7 @@ for a reader, because a theme that paints a divider into itself, drops a `NaN`
 radius, erases a disabled label or hides a chart series is still broken and none
 of those is a text pair. The page prints the number as a word derived from the
 gate's own keys, so a thirteenth report cannot land while `/docs/themes` promises
-eleven, and every report has a case in `theme-editor-logic.test.ts` — the cases for
+twelve, and every report has a case in `theme-editor-logic.test.ts` — the cases for
 the reports no contrast pair covers also prove the colour reports stay silent on
 that brand, so only the new line can fail the gate.
 

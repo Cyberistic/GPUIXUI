@@ -409,25 +409,26 @@ describe("the theme page", () => {
     expect(audit).toContain("localStorage");
   });
 
-  it("prints the three contracts the gate does not carry, beside it", () => {
-    // `invalidScales`, `switchFailures` and `highlightFailures` ship as public
-    // functions beside `auditTheme`, and an edit the editor exposes can break
-    // all three — raising `radius.md` past `radius.lg` inverts the radius
-    // ladder, recolouring a surface loses a declared switch, and a `primary`
-    // equal to the card hides every find match. The readout printed eleven
-    // gate reports as the whole audit, so the page has to say where the other
-    // three come from.
+  it("prints the two contracts the gate does not carry, beside it", () => {
+    // `invalidScales` and `switchFailures` ship as public functions beside
+    // `auditTheme`, and an edit the editor exposes can break both — raising
+    // `radius.md` past `radius.lg` inverts the radius ladder, and recolouring a
+    // surface loses a declared switch. The readout printed eleven gate reports
+    // as the whole audit, so the page has to say where the other two come from.
+    // The find wash is no longer here: it is a gate report now (twelve).
     const audit = section(page("themes.mdx"), "The theme audit");
 
-    const reports = ["invalidScales", "switchFailures", "highlightFailures"];
+    const reports = ["invalidScales", "switchFailures"];
     expect(reports.filter((report) => !audit.includes(report))).toEqual([]);
+    expect(audit).toContain("highlightFailures");
+    expect(audit).toContain("twelve");
     expect(audit).toContain("radius.md");
     expect(audit).toContain("radius.lg");
     expect(audit).toContain("beside");
     // The copy block promises the same set, so a consumer can run it on the
     // theme they copied.
     expect(page("themes.mdx")).toContain(
-      "as are the three the readout prints beside it",
+      "as are the two the readout prints beside it",
     );
   });
 
@@ -666,6 +667,9 @@ describe("the theming page's brand snippets", () => {
         ...audit.indicators.map(
           (failure) => `mark ${failure.role}/${failure.surface}`,
         ),
+        ...audit.highlight.map(
+          (failure) => `highlight ${failure.kind} ${failure.surface}`,
+        ),
       ];
       return audit.passed
         ? []
@@ -797,8 +801,8 @@ describe("the theming pages' find highlights", () => {
     expect(marks).toContain("highlightFailures(theme)");
     // The corner is a scale step, not the runtime's literal.
     expect(marks).toContain("`radius.sm`");
-    // The gate boundary is stated, because folding the report in is a docs change.
-    expect(marks).toContain("beside");
+    // The gate boundary is stated, because the report is one of its keys now.
+    expect(marks).toContain("twelve");
     expect(marks).toContain("`auditTheme`");
   });
 

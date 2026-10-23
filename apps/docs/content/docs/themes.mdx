@@ -48,7 +48,7 @@ cannot. The bridge exists only for this preview.
 The readout under the preview runs `auditTheme` on the theme the edits resolve to
 — the same gate `@gpuixui/tokens` tells a theme author to run before shipping, so
 an edit is measured against exactly the contract the library holds itself to. One
-call reports eleven independent failures:
+call reports twelve independent failures:
 
 - **Roles** the renderer cannot paint. GPUix ignores a colour string it cannot
   parse and keeps the previous value or paints black, so the editor names the role
@@ -175,6 +175,15 @@ call reports eleven independent failures:
   pale amber designed to carry near-black text and disappears on the page as a
   dot. The editor does not edit a mark's role directly, but `primary` is one, so
   an action-fill edit can hide a bar.
+- **Find highlights**: `highlightFailures` composites the theme's `primary`
+  behind every match and behind the active one, and holds three jobs: the wash
+  is visible on the strip it covers (`visibility`), the marked text is readable
+  inside it (`legibility`), and the active match stands apart from the resting
+  ones (`distinct`). A host handed no colour paints the runtime's own accent,
+  which is too strong for the body text it marks — see [Find
+  highlights](/docs/theming#find-highlights) for the pair `findHighlight`
+  derives — and setting `primary` to the page's own colour makes a search result
+  disappear while every contrast pair stays clean.
 - **The disabled fade**: a faded control paints a share of its fill over the
   surface and fades its label over *that* faded fill, which is the composite a
   hand calculation usually forgets. `disabledFadeFailures` holds each of those
@@ -195,11 +204,11 @@ call reports eleven independent failures:
   actions do. The editor does not edit the dim, but every filled action is one of
   these pairs, so an action-fill edit can erase one.
 
-### The three contracts beside the gate
+### The two contracts beside the gate
 
-Three contracts the library measures are not `auditTheme` keys yet, and every
-one of them can be broken by an edit this editor exposes, so the readout prints
-them under a heading of their own rather than passing a theme they measure:
+Two contracts the library measures are not `auditTheme` keys yet, and both can
+be broken by an edit this editor exposes, so the readout prints them under a
+heading of their own rather than passing a theme they measure:
 
 - **The scale order** — `invalidScales` reads every named ladder a component
   selects from (spacing, radii, border widths, icon sizes, the type hierarchy,
@@ -214,17 +223,13 @@ them under a heading of their own rather than passing a theme they measure:
   stand on (the page, a card, a popover and a muted strip). Recolouring one of
   those can leave a switch nobody can find, while the role reports stay clean
   because the three colours are not roles.
-- **A find wash** — `highlightFailures` composites the theme's `primary` behind
-  every match and behind the active one, and holds three jobs: the wash is
-  visible on the strip it covers, the marked text is readable inside it, and the
-  active match stands apart from the resting ones. Set `primary` to the page's
-  own colour and a search result disappears.
 
 Those lines are printed separately because `auditTheme` does not return them:
 the readout names which call reported each finding instead of presenting a
-beside-the-gate report as one of the eleven. Folding one into the gate is a
-coordinated change with this readout; the token catalogue records where each
-report stands today.
+beside-the-gate report as one of the twelve. A find wash used to be the third
+line here; it is a gate report now, worded under **Find highlights** above.
+Folding one of these two in is a coordinated change with this readout; the token
+catalogue records where each report stands today.
 
 The same role check guards the URL and `localStorage`: a persisted state that
 carries a value the renderer cannot paint is rejected, and the editor falls back
@@ -241,6 +246,6 @@ one-line usage note. Running the same audit on the result is up to the consumer;
 `auditTheme` and the reports it folds — `invalidColorRoles`, `invalidShadowColors`,
 `invalidNumbers`, `contrastFailures`, `decorativeFailures`, `seriesFailures`,
 `syntaxFailures`, `selectionFailures`, `indicatorFailures`,
-`disabledFadeFailures` and `keyboardDimFailures` — are public for exactly that,
-as are the three the readout prints beside it: `invalidScales`, `switchFailures`
-and `highlightFailures`.
+`highlightFailures`, `disabledFadeFailures` and `keyboardDimFailures` — are
+public for exactly that, as are the two the readout prints beside it:
+`invalidScales` and `switchFailures`.
