@@ -47,7 +47,7 @@ blocks/kanban.mdx            A project task board: sidebar, four counted columns
 blocks/settings-dialog.mdx   A modal settings window: section nav, switch, font-size slider, layouts
 blocks/notification-centre.mdx A notification centre: filters, four row bodies, unread dots
 blocks/command-centre.mdx    A command palette over a dimmed page: filter, highlight, run line
-components/index.mdx         The filterable component index
+components/index.mdx         The filterable component index, its filter in the URL
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
 components/avatar.mdx        Curated: the fallback table, the measured dot roles, the roster panel
@@ -329,6 +329,7 @@ src/lib/examples.ts                 The example registry: ids, paths and header 
 src/lib/examples-data.ts            Reads packages/*/examples/*.example.tsx at build time
 src/lib/component-index.ts          The component index: URL mapping, curated shadowing, filter
 src/lib/component-index-data.ts     The index, from every docs collection at build time
+src/lib/component-index-query.ts    The index filter on the page URL (`?q=`)
 src/lib/related.ts                  The related-component families a package page's strip prints
 src/lib/patterns.ts                 The one source of the patterns and their parts
 src/lib/licenses.ts                 The LICENSES/*.md parse

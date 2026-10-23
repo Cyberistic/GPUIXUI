@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useRouterState } from "@tanstack/react-router";
+import { useCallback, useState } from "react";
 import { componentIndex } from "../../lib/component-index-data";
 import { filterEntries, verdictMark } from "../../lib/component-index";
+import {
+  componentIndexSearch,
+  indexQueryFromSearch,
+} from "../../lib/component-index-query";
 
 /**
  * A filterable index of every component and primitive page.
@@ -17,9 +22,38 @@ import { filterEntries, verdictMark } from "../../lib/component-index";
  *
  * A row whose `COMPONENTS.md` verdict is not whole wears that verdict, because
  * the status strip is on the page the reader has not opened yet.
+ *
+ * The filter travels in the URL (`?q=…`): a view worth sharing is the view a
+ * link opens, and a reload keeps it. The mount reads the route's search string
+ * so a shared link opens filtered rather than painting the whole list first.
  */
 export function ComponentIndex() {
-  const [query, setQuery] = useState("");
+  const search = useRouterState({
+    select: (state) => state.location.searchStr,
+  });
+  // Resolved in the initializer, the rule the platform switch follows: the
+  // first render is already the linked view.
+  const [query, setQuery] = useState(() => indexQueryFromSearch(search));
+
+  const chooseQuery = useCallback((next: string) => {
+    setQuery(next);
+
+    const url = new URL(window.location.href);
+    url.search = componentIndexSearch(next, url.search);
+    window.history.replaceState(null, "", url.toString());
+  }, []);
+
+  return <ComponentIndexView onQueryChange={chooseQuery} query={query} />;
+}
+
+/** The index's markup, with the filter the mount read off the URL. */
+export function ComponentIndexView({
+  query,
+  onQueryChange,
+}: {
+  readonly query: string;
+  readonly onQueryChange: (query: string) => void;
+}) {
   const matches = filterEntries(componentIndex, query);
 
   return (
@@ -30,7 +64,7 @@ export function ComponentIndex() {
         </span>
         <input
           className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => onQueryChange(event.target.value)}
           placeholder="Filter by name, part, prop or limit — try “search”, “DialogFooter”, “onCheckedChange”"
           type="search"
           value={query}

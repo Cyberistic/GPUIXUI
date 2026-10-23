@@ -10218,7 +10218,57 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 276/276
+`[ ]` `[█████████░]` 277/278
+
+`[x]` Put the **component index's filter on the page URL** — the index narrows
+      146 rows by name, part, prop, limit or verdict, and the page taught the
+      query as a feature while the input held React state alone: a filtered view
+      could not be linked, and a reload or a shared URL painted the whole list
+      again. The filter now travels as `?q=…` beside the platform switch's
+      parameters, the rule the switch already follows. `component-index-query.ts`
+      holds the pure read/write (`indexQueryFromSearch`, `componentIndexSearch`):
+      it keeps `platform`/`look`/`mode` untouched, replaces a second `q` rather
+      than appending one, trims surrounding space, and deletes the parameter for
+      an empty filter so the published URL stays clean. `ComponentIndex` reads
+      the route's search string in its `useState` initializer (the platform
+      switch's no-flash rule), so a shared link's first paint is the narrowed
+      view, and writes the address bar with `history.replaceState` on every
+      keystroke; `ComponentIndexView` is the markup the SSR test renders.
+      `components/index.mdx` teaches the parameter, and the README ledger names
+      the module (its absence failed `names every module the site is built from`
+      first). Guards: `component-index-query.test.ts` (7 cases — read, absent,
+      the parameters kept, round trip, replace, empty, trim) and two cases in
+      `component-index.test.tsx` (the view paints exactly `filterEntries`'
+      answer for a linked query, and the mount reads `location.searchStr` /
+      calls `history.replaceState`; the page names `?q=partial` and mounts
+      `<ComponentIndex />`). Directions measured: restoring local-only state,
+      an unfiltered view and an untrimmed value fails four cases by name
+      (`expected '?q=+++' to be ''`, `… to contain '1 of 146 pages'`,
+      `… to contain 'indexQueryFromSearch(search)'`), and retitling the page's
+      parameter (`?q=find`) fails the page case. Restored: the two files are
+      14/14, `check-types` and `build` are clean, and the app's suite passes
+      1 386 of 1 387 — the one red is another workstream's **uncommitted**
+      `COMPONENTS.md` hunk (`Multi-pane editing layouts` marked done with no
+      page yet), which `inventory-status.test.ts` reports by name; the docs
+      lane page for that composition is recorded below. End-to-end on a dev
+      server: `/docs/components` renders
+      `146 of 146 pages`, `?q=DialogFooter` renders `1 of 146 pages` with the
+      index's own list holding only `/docs/components/dialog`. No native
+      scenario applies — a browser page and its URL.
+
+`[ ]` Publish the **multi-pane editing composition** the dock lane now marks
+      shipped — `COMPONENTS.md` moved Tier 4's *Multi-pane editing layouts* to
+      `done (composed)` and cites the `multi-pane-editor` probe (31 checks,
+      0.11.0: two buffers painted side by side, one platform text session that
+      a press moves, a +60 splitter drag that takes no session, a closed pane
+      keeping its buffer, a reopen painting its width and accepting a key, and
+      the divider's press parking the session on `mp-divider`). On `master` the
+      row is `todo`, so `inventory-status.test.ts` only reports the red once
+      that hunk lands; `/docs/workspace` does not teach the composition and
+      `laneRows` has no entry for it. Land the lane section and the `laneRows`
+      row (`cites: "multi-pane-editor"`) with the row's commit, or the site is
+      red on a shipped row with no page. Owner: docs-site (the lane page and
+      the table) with the dock/editor workstream (the row's commit).
 
 `[x]` Publish the **browser build the preview note already sends readers to** —
       every preview's "Open /live to see a real GPUix frame" link landed on a

@@ -1,8 +1,9 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { verdictMark } from "../../lib/component-index";
+import { filterEntries, verdictMark } from "../../lib/component-index";
 import { componentIndex } from "../../lib/component-index-data";
-import { ComponentIndex } from "./component-index";
+import { ComponentIndexView } from "./component-index";
 
 /**
  * The index's rendered rows.
@@ -11,9 +12,18 @@ import { ComponentIndex } from "./component-index";
  * is that the rendered list carries every row of the generated index — a page
  * dropped here has no other symptom — and that the count and the control are
  * what a reader sees before typing.
+ *
+ * The mount reads its filter off the page URL, which is the one fact a server
+ * render of the view cannot show: the last case reads the mount's own source,
+ * so a filter held in local state alone (the bug that made a filtered view
+ * unlinkable) fails here by name.
  */
 
-const markup = renderToStaticMarkup(<ComponentIndex />);
+const noop = (): void => undefined;
+
+const markup = renderToStaticMarkup(
+  <ComponentIndexView onQueryChange={noop} query="" />,
+);
 
 /** One rendered row: from its link to the list item's close. */
 const row = (url: string): string => {
@@ -83,5 +93,50 @@ describe("the component index", () => {
       "Filter components by name, part, prop or purpose",
     );
     expect(markup).toContain('type="search"');
+  });
+
+  it("paints the rows a linked filter matches, and no others", () => {
+    // The filter travels in the URL, so the first paint of a shared link is
+    // already the narrowed view. The expected rows are the pure filter's own
+    // answer, so the markup cannot list a row the query rejects.
+    const query = "DialogFooter";
+    const matches = filterEntries(componentIndex, query);
+    const linked = renderToStaticMarkup(
+      <ComponentIndexView onQueryChange={noop} query={query} />,
+    );
+
+    expect(matches.length).toBeGreaterThan(0);
+    expect(matches.length).toBeLessThan(componentIndex.length);
+    expect(linked).toContain(
+      `${matches.length} of ${componentIndex.length} pages`,
+    );
+    expect(matches.filter((entry) => !linked.includes(entry.url))).toEqual([]);
+    expect(
+      componentIndex.filter(
+        (entry) => !matches.includes(entry) && linked.includes(entry.url),
+      ),
+    ).toEqual([]);
+  });
+
+  it("reads the filter off the URL instead of state the page cannot share", () => {
+    // The mount is what the MDX page renders; the view is the markup. A filter
+    // that never touches `location.search` is the defect this holds shut.
+    const mount = readFileSync(
+      new URL("./component-index.tsx", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const page = readFileSync(
+      new URL("../../../content/docs/components/index.mdx", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(mount).toContain("select: (state) => state.location.searchStr");
+    expect(mount).toContain("indexQueryFromSearch(search)");
+    expect(mount).toContain('history.replaceState(null, "", url.toString())');
+    expect(mount).toContain("componentIndexSearch(next, url.search)");
+    // The page teaches the parameter it writes, so a reader can link a view.
+    expect(page).toContain("`?q=partial`");
+    // And it mounts the URL-backed component, not the view directly.
+    expect(page).toContain("<ComponentIndex />");
   });
 });
