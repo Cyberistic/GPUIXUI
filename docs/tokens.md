@@ -3179,8 +3179,9 @@ element's short side, so an avatar pairs `avatarSize[step]` with `radius.full`.
 ### Target sizes
 
 A control may draw smaller than the area a pointer has to hit. A checkbox paints
-at `iconSize.md` (16px), a switch thumb at the same step, a tree chevron at
-`iconSize.xs` (12px): the drawing is the look, not the target.
+at `iconSize.md` (16px), a switch thumb at the same step, a clear control's
+glyph at `iconSize.sm`–`md`, a rating star at 18px (`sm`) or 20px (`md`): the
+drawing is the look, not the target.
 `targetSize.minimum` is 24px — WCAG 2.2 SC 2.5.8, level AA — and
 `targetSize.comfortable` is 44px, the AAA floor WCAG 2.1 SC 2.5.5 gives a
 touch-first surface. Both are fixed, not a `Theme` group: a floor a brand could
@@ -3205,12 +3206,30 @@ floor. That is a claim about a theme, not only about the built-in presets:
 `invalidNumbers` holds a brand's `controlHeight` to `targetSize.minimum`, so a
 theme that shrinks one below it fails the audit rather than shipping a target no
 pointer can reliably hit. The inset is for the icon-sized parts — selection
-boxes, chevrons, close buttons, status dots — and it belongs on the element that
-receives the press. A
+boxes, clear buttons, rating stars, status dots — and it belongs on the element
+that receives the press. A
 transparent wrapper only becomes a target when it opts in: the runtime passes a
 press through an element that paints no fill, so the wrapper sets
 `pointerEvents: "auto"` and a component adopting the rule measures the hit box
-in a window probe. Component adoption is recorded in `TODO.md` → Interlocks.
+in a window probe.
+
+**Adopted by both packages.** The components package's four clear/remove
+controls, each painted box measured at 24px by `targets.test.tsx`; the
+primitives' standalone `Checkbox` and `Switch`, whose icon-sized drawing sits in
+a 24px target that owns the role, the focus and the ring
+(`selection-targets.runtime.test.tsx` reads both press paths back off the
+renderer); a radio or checkbox option row, which is the press target rather than
+the glyph beside it (`optionRowStyle`, a single line measured 17px, held by
+`groups.runtime.test.tsx`); and `Rating`'s star box (`ratingStarClass`'s
+`min-target`, 24px by `Rating.test.tsx`).
+
+A **tree** needs no inset, because its chevron is a drawing rather than a
+target: the glyph is an `<Icon>`, whose style declares `pointerEvents: "none"`
+so a press lands on the row it sits in, and the row is built at
+`density.rowHeight` — the height `target.test.ts` and `invalidNumbers` hold to
+the floor. `TreeView`, `VirtualTree` and the files package's `FileTree` all
+paint that row; `docs/design-system.md` §6 and the `COMPONENTS.md` row state the
+same split.
 
 ## Focus
 
