@@ -17,6 +17,9 @@
  * - `file-upload` — a queue over `upload/queue.ts`, the pure state machine
  *   (`idle | uploading | done | error`) with a monotonic progress and a token
  *   that cancels a removed file.
+ * - `crop-area` — a controlled crop hole over a picture: four veil bars as the
+ *   mask (the runtime has no clip path), corner handles, keyboard steps and the
+ *   bounds arithmetic in `crop/logic.ts`.
  * - `qr-code` — a QR symbol painted from the package's own encoder
  *   (`qr/encode.ts`): byte mode, versions 1–10, every error correction level,
  *   one tinted `<svg>` mask with the quiet zone inside it.
@@ -61,6 +64,36 @@ export {
   type UploadQueue,
   type UploadStatus,
 } from "./upload/queue.js";
+
+export {
+  CropArea,
+  cropBounds,
+  renderCropArea,
+  type CropAreaProps,
+  type CropAreaSurface,
+  type CropPointer,
+  type CropKey,
+} from "./crop-area.js";
+
+export {
+  clampCrop,
+  cornerLabel,
+  cropBars,
+  cropLabel,
+  CropCorner,
+  CropRect,
+  CROP_BAR_SIDES,
+  CROP_MIN_SIZE,
+  gestureCrop,
+  handleBox,
+  keyboardCrop,
+  moveCrop,
+  resizeCrop,
+  type CropBar,
+  type CropBarSide,
+  type CropBounds,
+  type CropGesture,
+} from "./crop/logic.js";
 
 export {
   QrCode,

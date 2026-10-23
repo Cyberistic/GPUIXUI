@@ -1,0 +1,117 @@
+---
+title: CropArea
+description: A picture with a controlled crop hole, four veil bars as its mask and corner handles that drag or step by keyboard.
+---
+
+`CropArea` puts a crop hole over a picture and paints the rest away. The mask is
+**four positioned veil bars** — the runtime has no `clip-path`, mask or radial
+gradient — and each bar is painted with `pointerEvents: "none"` so a press
+reaches the frame beneath it. The hole is **controlled**: the caller owns the
+rectangle, so a crop can be restored, applied and shown in a readout from one
+value.
+
+```tsx
+import { useState } from "react";
+import { CropArea, CropRect } from "@gpuixui/media";
+
+const [crop, setCrop] = useState(
+  new CropRect({ x: 60, y: 40, width: 100, height: 70 }),
+);
+
+<CropArea
+  src={picture}
+  alt="The picture being cropped"
+  width={240}
+  height={160}
+  value={crop}
+  onChange={setCrop}
+  label="Crop the thumbnail"
+/>;
+```
+
+## Geometry
+
+The crop lives in the frame's own points, and the frame is exactly `width` ×
+`height`. The picture is painted with `objectFit="fill"`, so a source of a
+different shape is stretched into that same coordinate space rather than
+letterboxed — a crop drawn over a `contain` placement would not name the pixels
+the reader sees.
+
+Three rules keep the hole usable:
+
+- every edge stays inside the frame;
+- a side never shrinks below `minSize` (24 points by default);
+- a stored rectangle the current frame cannot hold is **clamped before it
+  paints**, so a crop restored from a smaller picture does not leave the hole
+  outside the bitmap.
+
+`clampCrop`, `cropBars`, `handleBox`, `moveCrop`, `resizeCrop` and `keyboardCrop`
+are exported from `@gpuixui/media/crop/logic`, so a crop can be clamped or
+gestured without mounting the component.
+
+## Gestures
+
+| Gesture | Result |
+| ------- | ------ |
+| press the picture and drag | moves the hole, keeping its size |
+| press a corner handle and drag | resizes from that corner |
+| `←` `→` `↑` `↓` on a focused handle | resizes that corner by 1 point |
+| `Shift` + arrow | resizes by 8 points |
+
+Each handle is a `role="slider"` Tab stop with its rectangle announced as
+`aria-valuetext` (`60, 40, 100 × 70`), and the arrow keys swallow the default so
+the page does not scroll while a crop resizes. The handle declares the keyboard
+focus ring at rest, so the runtime paints it when the reader arrives by Tab.
+
+A bar never takes the press meant for the picture: the bars are pointer
+transparent, and the frame under them starts the move gesture. A press on a
+handle starts a resize and cannot also start a move.
+
+## The mask
+
+The runtime cannot clip a child to a shape, so the mask is the hole's
+complement drawn as up to four bars:
+
+- a hole at an edge has no bar outside it, so the component paints the list
+  rather than a fixed four;
+- a bar is the theme's `overlay` role composited over the bitmap, measured in a
+  window as `#12451F` over a `#34C759` picture;
+- the hole itself paints nothing, so the picture shows through untouched.
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `src` | `string` | required (blank paints no picture) |
+| `alt` | `string` | required |
+| `width` | `number` | required |
+| `height` | `number` | required |
+| `value` | `CropRect` | required |
+| `onChange` | `(crop: CropRect) => void` | required |
+| `minSize` | `number` | `24` |
+| `handleSize` | `number` | `10` |
+| `label` | `string` | `"Crop area"` |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+| `style` | `StyleDesc` | — |
+
+## Limits
+
+- **No rotation.** A rotated crop is a transform of the picture, and the runtime
+  has no `transform` (upstream issue #102); rotate the bytes before cropping.
+- **No aspect-ratio lock or guides.** The rectangle is free; a caller that needs
+  a fixed ratio clamps the rectangle it is handed before storing it.
+- **The window measured the bottom-right drag.** The playground's `crop-overlay`
+  probe (37 checks, 0.11.0) dragged the bottom-right handle through 8 moves,
+  clamped it at the 24-point minimum and the bitmap's edges, and read the bars
+  repainting; the other three corners are the same arithmetic mirrored, held by
+  the logic suite rather than a second window run. The keyboard path is new and
+  element-tree tested.
+- **`fill` is not a choice.** The crop's coordinates only mean what the reader
+  sees while the bitmap fills the frame.
+
+## Evidence
+
+Measurement, fixture and captures live with the playground:
+`apps/playground/README.md` §`crop-overlay` and
+`.artifacts/live/crop-{rest,min,max,dragged}.png`.
