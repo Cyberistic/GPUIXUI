@@ -71,6 +71,21 @@ const measured = (over: string): boolean =>
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
+/**
+ * The four documents that print a figure this suite measures — the catalogue,
+ * the design guide, the package README and the inventory. Each is read by name
+ * so a measurement cannot move on one and stay on the others.
+ */
+const everySurface = (): Readonly<Record<string, string>> => ({
+  "docs/tokens.md": read("../../../docs/tokens.md"),
+  "docs/design-system.md": read("../../../docs/design-system.md"),
+  "packages/tokens/README.md": read("../README.md"),
+  "COMPONENTS.md": read("../../../COMPONENTS.md"),
+});
+
+/** A document's prose with its line wrapping flattened, so a sentence matches whole. */
+const flat = (text: string): string => text.replace(/\s+/g, " ");
+
 /** The text role each content surface already carries before a wash is painted. */
 const restingText: Readonly<Record<string, string>> = {
   input: "inputForeground",
@@ -136,7 +151,10 @@ describe("every theme the library ships", () => {
   it("keeps the tightest bubble readable and prints that ratio", () => {
     // The catalogue prints the tightest shipped placement so a reader can see
     // how much room the contract has; a palette edit that lowers the floor has
-    // to move the page with it.
+    // to move the page with it. Every surface that prints the figure is read:
+    // the inventory printed a stale 7.12 and a pre-fix 6.55 while the page and
+    // the guide had moved, so one document could teach a style the suite had
+    // already caught.
     const ratios = [...shippedThemes, ...platformThemes, ...retroThemes].map(
       (theme) => {
         const wash = blend(
@@ -150,7 +168,12 @@ describe("every theme the library ships", () => {
     const tightest = Math.min(...ratios);
 
     expect(tightest).toBeCloseTo(7.2, 2);
-    expect(read("../../../docs/tokens.md")).toContain(tightest.toFixed(2));
+    Object.entries(everySurface()).forEach(([document, text]) => {
+      expect(flat(text), document).toContain(`${tightest.toFixed(2)}:1`);
+      // The pre-fix value is the one that motivates the 24% share; a document
+      // that prints a different one describes a measurement nobody made.
+      expect(flat(text), document).toContain("6.74:1");
+    });
   });
 });
 
@@ -522,6 +545,32 @@ describe("the tones the wash is painted on", () => {
     expect(design).toContain("content tone");
     expect(readme).toContain("saturated");
     expect(inventory).toContain("saturated");
+  });
+
+  it("names the style each printed tightest placement belongs to", () => {
+    // The figure moved to the authored Omarchy look when that style shipped,
+    // and all four documents kept naming Windows XP (Luna) light — the
+    // runner-up at 3.68:1 — beside the Omarchy number. A reader was told which
+    // palette to fix by the wrong one, so the name is derived from the same
+    // sweep that prints the ratio.
+    const tightest = placements.reduce((a, b) => (b.washed < a.washed ? b : a));
+    const phrase = "secondary line on a selected row";
+
+    Object.entries(everySurface()).forEach(([document, text]) => {
+      const prose = flat(text);
+      const at = prose.indexOf(phrase);
+      expect(at, document).toBeGreaterThan(-1);
+      // The clause around the phrase has to carry both ends of the finding: the
+      // style it belongs to and the ratio it measured.
+      const clause = prose.slice(Math.max(0, at - 240), at + 240);
+      expect(clause, document).toContain(tightest.theme);
+      expect(clause, document).toContain(tightest.washed.toFixed(2));
+      // The attribution that outlived the sweep: the runner-up, not the
+      // tightest, and left beside the tightest figure.
+      expect(prose, document).not.toContain(
+        "Luna light's secondary line on a selected row",
+      );
+    });
   });
 });
 

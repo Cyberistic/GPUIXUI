@@ -3929,8 +3929,9 @@ across every shipped, high-contrast, platform and authored style, the
 wash costs contrast in **every one of the 90 placements** on those two tones (it
 never once helps) and leaves **43 of the 90 under the floor the unwashed pair
 already met** — the selected row's title, now held to the body floor on the same
-role, accounts for the increase. The tightest is Windows XP (Luna) light's secondary
-line on a selected row at **3.38:1** against 4.5, with the tightest body
+role, accounts for the increase. The tightest is Light · Omarchy's secondary
+line on a selected row at **3.38:1** against 4.5 — the authored look's light
+edition is the one that loses the most — with the tightest body
 placement the base dark theme's selected row title at **5.11:1** against 7. No
 share can serve both jobs: one strong enough to be seen
 on the page is exactly what erases text on a saturated fill, and one weak enough

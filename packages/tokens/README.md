@@ -491,9 +491,9 @@ The two **saturated state tones** are deliberately not surfaces: a box paints
 `accent` and `selected`, and both are drawn from the same accent family as the
 wash, so a selection moves them toward the text rather than away from it. The
 wash costs contrast in all 90 placements on those tones and leaves 43 under the
-floor the unwashed pair met (tightest: Luna light's secondary line on a selected
-row, 3.38:1; tightest body placement: the base dark theme's selected row title,
-5.11:1). A selectable run belongs on a content tone; the suite reads the
+floor the unwashed pair met (tightest: Light · Omarchy's secondary line on a
+selected row, 3.38:1; tightest body placement: the base dark theme's selected row
+title, 5.11:1). A selectable run belongs on a content tone; the suite reads the
 tones the box resolves so one cannot be added without a measurement or a
 recorded reason.
 

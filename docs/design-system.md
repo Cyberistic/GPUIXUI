@@ -844,7 +844,7 @@ selection moves the fill toward the text instead of away from it. Measured, the
 wash costs contrast in every one of the 90 placements on those two tones and
 leaves 43 of them under the floor the unwashed pair already met — the selected
 row's title, now at the body floor on the same role, accounts for the increase.
-The tightest is Windows XP (Luna) light's secondary line on a selected row at
+The tightest is Light · Omarchy's secondary line on a selected row at
 3.38:1; the tightest body placement is the base dark theme's selected row title
 at 5.11:1. One translucent role cannot be strong
 enough for the page and weak enough for a saturated fill, so a selectable run
