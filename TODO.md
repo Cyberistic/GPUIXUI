@@ -10282,7 +10282,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 282/282
+`[x]` `[██████████]` 283/283
+
+`[x]` Read the **unmeasured verdict without an unmeasured row** — the lane
+      table's support column printed `unmeasured` for the inventory's `?`
+      verdict, and the suite proved the branch live by requiring at least one
+      real `?` row; `c7dbf100` measured the last one, so the guard failed with
+      `expected 0 to be greater than 0` — the inventory's own success turned the
+      docs suite red. The branch is exercised from a parsed fixture now, and a
+      second case pins the table's cell to `supportLabel(row.support)` so the
+      mapping cannot be bypassed while the real inventory carries no `?`.
+      Directions measured: returning the support cell unchanged fails both
+      cases, printing `row.support` in the table fails the call-site case;
+      restored, `apps/docs` is 132 files / 1 433 tests green. No native scenario
+      applies — a table cell and its parser.
 
 `[x]` Generate the **architecture page's package table** from the manifests —
       the table was hand-kept and drifted the first time a package gained a

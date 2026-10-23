@@ -181,15 +181,35 @@ describe("supportLabel", () => {
     expect(supportLabel("yes")).toBe("yes");
   });
 
-  it("has unmeasured rows in the inventory it is printed for", () => {
-    // The mapping exists because real rows carry `?`; if none did, the label
-    // would be dead code and this guard would say so rather than pass empty.
-    const unmeasured = inventory.rows.filter((row) => row.support === "?");
+  it("prints an unmeasured verdict without the inventory carrying one", () => {
+    // Every shipped row is measured now, so reading the live inventory cannot
+    // exercise this branch: a guard that required a real `?` row went red the
+    // moment the last one was measured. The fixture keeps the branch alive
+    // without making the inventory's progress a test failure.
+    const parsed = parseInventory(
+      [
+        "## Tier 3 — data presentation",
+        "",
+        "| Component | Status | GPUix support | Notes / limitations |",
+        "| --------- | ------ | ------------- | ------------------- |",
+        "| Tables | todo | ? | No `<table>` element. |",
+      ].join("\n"),
+    );
 
-    expect(unmeasured.length).toBeGreaterThan(0);
-    expect(
-      unmeasured.filter((row) => supportLabel(row.support) !== "unmeasured"),
-    ).toEqual([]);
+    expect(parsed.rows.map((row) => supportLabel(row.support))).toEqual([
+      "unmeasured",
+    ]);
+  });
+
+  it("is the verdict the lane table prints", () => {
+    // A label nothing renders is dead code: the lane table must read the cell
+    // through it, so a `?` row cannot reach a reader as a question mark.
+    const table = readFileSync(
+      new URL("../components/docs/lane-table.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(table).toContain("{supportLabel(row.support)}");
   });
 });
 
