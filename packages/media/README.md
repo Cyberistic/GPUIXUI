@@ -1,8 +1,10 @@
 # `@gpuixui/media`
 
-Image, upload and drop surfaces rendered by GPUix through React — a **preview**
-with a loading and an error state plus a pointer zoom, a **file queue** with a
-pure state machine, and a **drop zone** over the runtime's OS file-drop path.
+Image, upload, drop and clip-player surfaces rendered by GPUix through React — a
+**preview** with a loading and an error state plus a pointer zoom, a **file
+queue** with a pure state machine, a **drop zone** over the runtime's OS
+file-drop path, and a **player** whose clock and transport are the app's because
+the runtime has no playback element.
 
 | Surface | What it owns | Runtime rule it honours |
 | ------- | ------------ | ----------------------- |
@@ -11,6 +13,7 @@ pure state machine, and a **drop zone** over the runtime's OS file-drop path.
 | `FileUpload` | the queue and `upload/queue.ts`'s state machine | the transfer is the caller's `upload(file, onProgress)`; the package owns no network |
 | `CropArea` | a controlled crop hole, its mask and its gestures | four veil bars are the only mask the runtime paints; each is pointer-transparent so the press reaches the frame |
 | `QrCode` | the symbol, its quiet zone and the refusal of a value that does not fit | the encoder is the package's; the paint is one tinted `<svg>` mask, the route `qr-matrix` measured |
+| `MediaPlayer` | the clip's frames, a progress track, a waveform and a transport with a seek pad | no `video`/`audio` host, so the caller supplies each frame's bytes and the player owns the clock; `setImagePixels` is the measured paint route |
 
 ## Why a package
 
@@ -31,16 +34,18 @@ src/
   crop/logic.ts       the crop arithmetic (bounds, bars, drag, keyboard)
   qr-code.tsx         the symbol's frame, quiet zone and overflow state
   qr/encode.ts        the encoder (byte mode, versions 1-10, Reed-Solomon)
+  media-player.tsx    the frames, the waveform and the transport
+  player/logic.ts     the player's arithmetic (playhead, clock, keys, waveform)
   internal.ts         the tw + tokens seam
 examples/             one mountable screen per surface
 docs/                 image-preview.mdx, drop-zone.mdx, file-upload.mdx,
-                      crop-area.mdx, qr-code.mdx
+                      crop-area.mdx, qr-code.mdx, media-player.mdx
 ```
 
 ## Commands
 
 ```sh
 nub run --filter @gpuixui/media test          # queue + render-function suites
-nub run --filter @gpuixui/media test:behaviour # the crop gestures, in the real renderer
+nub run --filter @gpuixui/media test:behaviour # the crop gestures and the player transport, in the real renderer
 nub run --filter @gpuixui/media check-types
 ```

@@ -1,0 +1,96 @@
+---
+title: MediaPlayer
+description: A clip's frames and a transport — an app-owned clock, a progress track and a seek pad — composed from the runtime's image and text hosts because it has no playback element
+---
+
+## Usage
+
+```tsx
+import * as Option from "effect/Option";
+import { MediaPlayer, type MediaFrame } from "@gpuixui/media";
+
+// The caller decodes or generates each frame: a file, a stream or a sequence.
+const frameAt = (playhead: number): Option.Option<MediaFrame> =>
+  Option.some(frames[Math.floor(playhead / 1000)] ?? firstFrame);
+
+<MediaPlayer
+  duration={4000}
+  frameAt={frameAt}
+  alt="A clip's frame"
+  label="Generated clip"
+  width={240}
+  height={135}
+  trackWidth={240}
+  peaks={waveformSamples}
+  seekStep={500}
+  onPlayheadChange={(playhead) => savePosition(playhead)}
+/>;
+```
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `duration` | `number` (milliseconds) | required |
+| `frameAt` | `(playhead) => Option<MediaFrame>` | — (no picture) |
+| `alt` | `string` | required (a blank name reads as the player's own) |
+| `label` | `string` | `"Media player"` (a blank name reads as the default) |
+| `width` | `number` | `240` |
+| `height` | `number` | `135` |
+| `trackWidth` | `number` | `200` |
+| `peaks` | `ReadonlyArray<number>` (`0…1`) | — (no waveform) |
+| `defaultPlayhead` | `number` | `0` |
+| `onPlayheadChange` | `(playhead: number) => void` | — |
+| `defaultPlaying` | `boolean` | `false` |
+| `onPlayingChange` | `(playing: boolean) => void` | — |
+| `tickMs` | `number` | `100` |
+| `seekStep` | `number` | `1000` |
+| `playLabel` | `string` | `"Play"` (a blank label reads as the default) |
+| `pauseLabel` | `string` | `"Pause"` (a blank label reads as the default) |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+| `style` | `StyleDesc` | — |
+| `testId` | `string` | — |
+
+A `MediaFrame` is `{ width, height, pixels }`, where `pixels` are straight RGBA
+bytes (`width * height * 4`). The player pushes them with
+`ImgInstance.setImagePixels` from a layout effect; the route is measured by the
+`media-frame-lifecycle` probe. A frame whose box or buffer cannot be laid out
+paints no new picture rather than a broken one.
+
+## Keyboard
+
+The seek pad is a focusable `role="slider"` named `<label> position` and
+announces the clock through `aria-valuetext`:
+
+| Key | What it does |
+| --- | ------------ |
+| `Home` | seek to the clip's start |
+| `End` | seek to the clip's end (and stop a running clip) |
+| `Left` | seek back by `seekStep` |
+| `Right` | seek forward by `seekStep` |
+
+The play/pause action is the shipped `Button`, so it activates on click, Enter
+and Space and leaves the tab order while disabled.
+
+## Limitations
+
+- **No audio, and no decoding.** The runtime declares no `video` or `audio`
+  element and no playback verb, so the caller supplies each frame's bytes. This
+  player is the picture and the transport; a clip's frames must arrive from the
+  app.
+- **No pointer scrub.** The track paints the played share but is not a drag
+  control; a seek is the pad's keys. A caller that wants a click-to-seek track
+  composes one over the same playhead.
+- **The waveform is decorative.** `peaks` draws one tinted `<svg>` silhouette
+  (the runtime's single-mask route); it is not a second seek surface.
+- **The clock is the player's.** `defaultPlayhead` and `defaultPlaying` are
+  starting points and the two callbacks report every change; the component owns
+  the interval, so a caller does not drive the playhead frame by frame.
+- **A disabled player stops.** Its clock is not a background job, and its pad
+  leaves the tab order while the picture and waveform keep painting.
+- **A finished clip restarts on Play.** Pressing Play at the clip's end starts
+  from zero, the way a player's own button does.
+- **Values that cannot be laid out read as defaults**: a stored `duration` that
+  is not positive is a zero-length clip, and a stored `tickMs`, `seekStep`,
+  `width`, `height` or `trackWidth` that is not positive reads as its default.

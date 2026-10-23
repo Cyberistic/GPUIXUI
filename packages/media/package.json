@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Image, upload and drop surfaces \u2014 a preview with a pointer zoom, a file queue with retry and remove, and a drop zone \u2014 rendered by GPUix through React.",
+  "description": "Image, upload, drop and clip-player surfaces \u2014 a preview with a pointer zoom, a file queue with retry and remove, a drop zone and a media player whose clock and transport are the app's \u2014 rendered by GPUix through React.",
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
@@ -14,6 +14,7 @@
     "./upload/queue": "./src/upload/queue.ts",
     "./crop/logic": "./src/crop/logic.ts",
     "./qr/encode": "./src/qr/encode.ts",
+    "./player/logic": "./src/player/logic.ts",
     "./*": "./src/*.tsx"
   },
   "scripts": {

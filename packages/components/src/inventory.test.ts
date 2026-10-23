@@ -783,7 +783,7 @@ describe("the measured target rows", () => {
         throw new Error("COMPONENTS.md: no media row");
       },
     );
-    expect(row.support).toContain("not supported");
+    expect(row.support).toContain("partial");
     Arr.forEach(
       [
         "`media-frame-lifecycle`",
@@ -793,6 +793,9 @@ describe("the measured target rows", () => {
         `${width}×${height}`,
         `${tick} ms ticks`,
         "`content-surfaces`",
+        "`MediaPlayer`",
+        "`src/behaviour/media-player.test.tsx`",
+        "`packages/media/docs/media-player.mdx`",
       ],
       (claim) => expect(rowText(row), claim).toContain(claim),
     );

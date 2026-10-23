@@ -45,6 +45,12 @@ const PAGES: ReadonlyArray<PageContract> = [
     floor: 8,
   },
   {
+    page: "../docs/media-player.mdx",
+    source: "./media-player.tsx",
+    type: "MediaPlayerProps",
+    floor: 17,
+  },
+  {
     page: "../docs/image-preview.mdx",
     source: "./image-preview.tsx",
     type: "ImagePreviewProps",

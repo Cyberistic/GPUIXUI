@@ -105,6 +105,32 @@ export {
 } from "./qr-code.js";
 
 export {
+  MediaPlayer,
+  renderMediaPlayer,
+  type MediaFrame,
+  type MediaFrameAt,
+  type MediaPlayerProps,
+  type MediaPlayerSurface,
+} from "./media-player.js";
+
+export {
+  advancePlayhead,
+  clampPlayhead,
+  durationOf,
+  formatClock,
+  isFinished,
+  MEDIA_SEEK_STEP_MS,
+  MEDIA_TICK_MS,
+  progressWidth,
+  seekPlayhead,
+  stepOf,
+  timeLabel,
+  waveformSvg,
+  type MediaKey,
+  type MediaState,
+} from "./player/logic.js";
+
+export {
   encodeQr,
   qrByteCapacity,
   qrModules,
