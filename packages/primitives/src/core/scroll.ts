@@ -163,8 +163,10 @@ const outside = (
  *
  * A scroll offset grows more negative as the content moves up, so revealing a
  * row below the fold subtracts the overshoot and one above the fold adds the
- * gap back. A row taller than the viewport aligns its top, because a reader needs
- * the start of the row rather than its last line.
+ * gap back. A row taller than the viewport cannot be shown whole, so it is
+ * aligned by its top — on either side of the fold — because a reader needs the
+ * start of the row rather than its last line; aligning such a row by its bottom
+ * would hide the line the row begins with.
  *
  * The row is placed by its painted box, not by its index: `scrollIntoView`
  * scrolls a scroller to the index of its **direct child**, so a row nested in a
@@ -177,7 +179,14 @@ export const revealScroll = (
   current: ScrollOffset,
 ): Option.Option<ScrollOffset> => {
   const { above, below } = outside(row, viewport);
-  const shift = above < 0 ? above : below > 0 ? below : 0;
+  const shift =
+    row.height > viewport.height
+      ? above
+      : above < 0
+        ? above
+        : below > 0
+          ? below
+          : 0;
   return shift === 0
     ? Option.none()
     : Option.some({ x: current.x, y: current.y - shift });

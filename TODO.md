@@ -6008,6 +6008,28 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       row must keep naming the channel. Docs: `docs/select.mdx`
       §intro/§API/§Limitations and the `COMPONENTS.md` Selects row.
 
+`[x]` `packages/primitives`: **a row taller than its scroller revealed its last
+      line, not its first** — `core/scroll.ts`'s `revealScroll` documents that a
+      row taller than the viewport aligns its top ("a reader needs the start of
+      the row rather than its last line"), but the shift was the first edge the
+      scan met: a tall row below the fold was revealed by its bottom, so the
+      list scrolled to the row's end with its start never shown, and a tall row
+      already aligned at the fold moved again on its next reveal because its
+      bottom was still past it. `Select` reveals a highlighted row through this
+      arithmetic, so a long option row the arrows reached below the fold showed
+      the lines it ended with. A row that fits is still revealed by the edge it
+      crosses; one taller than the viewport aligns its top on either side of the
+      fold. Proof: `core/scroll.test.ts` gains `aligns a tall row's top when it
+      starts below the fold` (a 140px row 100px below a 100px viewport at offset
+      `0` answers `-100`, not the bottom-aligned `-140`) and `leaves a tall row
+      alone once its top is at the fold` (a top at the fold answers `None`, not
+      `-70`). Directions measured: both cases fail on the old shift
+      (`expected { y: -70 } to strictly equal { _tag: 'None' }` and the `-140`
+      answer); restored, 53 files / 991 unit cases green and
+      `runtime/fields.runtime.test.tsx` 45/45 in a window. Docs:
+      `docs/select.mdx` §Limitations and the `COMPONENTS.md` Selects row state
+      the tall-row rule beside the reveal.
+
 `[x]` `packages/icons`: an **icon given a measure it cannot paint vanished** —
       `size` takes a named step *or* the raw number a caller measured (a
       collapsed panel's width, a row's height), and `iconPixels` passed that

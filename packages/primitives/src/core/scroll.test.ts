@@ -134,6 +134,23 @@ describe("revealScroll", () => {
     );
   });
 
+  // The bug guarded: a tall row was aligned by whichever edge the scan reached
+  // first, so one starting below the fold scrolled to its **bottom** — the
+  // last lines of a row whose start the reader has never seen — and one whose
+  // top was already at the fold moved again because its bottom was past it.
+  // The documented rule is the row's top, on either side of the fold.
+  it("aligns a tall row's top when it starts below the fold", () => {
+    expect(revealScroll(box(200, 140), viewport, at(0, 0))).toStrictEqual(
+      Option.some(at(0, -100)),
+    );
+  });
+
+  it("leaves a tall row alone once its top is at the fold", () => {
+    expect(revealScroll(box(100, 140), viewport, at(0, -30))).toStrictEqual(
+      Option.none(),
+    );
+  });
+
   it("keeps the horizontal offset it was given", () => {
     expect(revealScroll(box(190, 30), viewport, at(-15, -40))).toStrictEqual(
       Option.some(at(-15, -60)),
