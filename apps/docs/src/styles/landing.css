@@ -313,6 +313,24 @@
   margin: 14px auto 0;
 }
 
+/* The one line that says Omarchy is a following theme, not a static dress. */
+.landing-omarchy-note {
+  max-width: 52ch;
+  margin: 8px auto 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--dim);
+}
+
+.landing-omarchy-note code {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg-soft);
+  color: var(--fg);
+  font-size: 12px;
+}
+
 .landing-actions {
   display: flex;
   gap: 12px;
@@ -420,6 +438,12 @@
   opacity: 0.72;
 }
 
+.landing-deck .landing-window[data-pos="3"] {
+  transform: translateX(-50%) translateY(42px) scale(0.87);
+  z-index: 0;
+  opacity: 0.55;
+}
+
 /* Each card is a desktop, and the conversations block is the window floating
    on it. The wallpaper, menu bar, taskbar, panel and dock are CSS gradients
    and shapes only — no image assets — and the shell is decorative. */
@@ -505,6 +529,17 @@
   opacity: 0.55;
 }
 
+/* Omarchy: Tokyo Night's `#1A1B26` under the accent-blue and brand-green
+   glows. The stops are literals by design — a wallpaper is a picture, not a
+   theme role, and it must stay the same whatever palette the card resolves. */
+.landing-wall-omarchy {
+  background:
+    radial-gradient(82% 62% at 20% 0%, #7aa2f759 0%, transparent 60%),
+    radial-gradient(70% 56% at 84% 18%, #9ece6a47 0%, transparent 62%),
+    radial-gradient(90% 72% at 50% 104%, #24283b 0%, transparent 72%),
+    linear-gradient(166deg, #1a1b26 0%, #16161e 100%);
+}
+
 .landing-desktop-stage {
   position: absolute;
   inset: 34px 40px 70px;
@@ -526,6 +561,23 @@
   width: min(720px, 100%);
   height: 100%;
   box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
+}
+
+/* The chip that says the card is a theme, not a static skin. */
+.landing-omarchy-chip {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 3;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--card) 84%, transparent);
+  color: var(--secondary-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(8px);
 }
 
 /* macOS menu bar and dock */
@@ -594,6 +646,48 @@
 .landing-dock-lnx {
   border-color: rgba(255, 255, 255, 0.14);
   background: rgba(16, 24, 36, 0.6);
+}
+
+/* Omarchy: the shell's near-square geometry and its own accent. */
+.landing-dock-omarchy {
+  gap: 4px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--background) 78%, transparent);
+  box-shadow: 0 8px 18px -6px var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.landing-dock-omarchy .landing-dock-tile {
+  width: 22px;
+  height: 22px;
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+.landing-dock-omarchy .landing-dock-tile[data-tone="accent"] {
+  background: var(--primary);
+}
+
+.landing-dock-omarchy .landing-dock-tile[data-tone="accent-soft"] {
+  background: var(--accent);
+}
+
+.landing-dock-omarchy .landing-dock-tile[data-tone="success"] {
+  background: var(--success);
+}
+
+.landing-dock-omarchy .landing-dock-tile[data-tone="info"] {
+  background: var(--info);
+}
+
+.landing-dock-omarchy .landing-dock-tile[data-tone="warning"] {
+  background: var(--warning);
+}
+
+.landing-dock-omarchy .landing-dock-tile[data-tone="dim"] {
+  background: var(--muted-foreground);
 }
 
 .landing-dock-tile {

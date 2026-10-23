@@ -373,15 +373,25 @@ export const recipeTw = createTw({
     // platform that declares a switch replaces both from one declaration.
     "size-thumb": (theme, value) => {
       const size = controlSize(value);
-      return size === undefined
-        ? undefined
-        : switchBox(size, theme).height - 2 * theme.spacing["2xs"];
+      return size === undefined ? undefined : switchBox(size, theme).knob;
     },
     "switch-track": (theme, value) => {
       const size = controlSize(value);
       if (size === undefined) return undefined;
       const box = switchBox(size, theme);
       return { width: box.width, height: box.height, borderWidth: box.border };
+    },
+    "switch-thumb": (theme, value) => {
+      const size = controlSize(value);
+      if (size === undefined) return undefined;
+      const box = switchBox(size, theme);
+      return {
+        top: (box.height - box.knob) / 2,
+        left: switchThumbOffset(
+          { state: "unchecked", size, accent: "primary" },
+          theme,
+        ),
+      };
     },
     "switch-thumb-on": (theme, value) => {
       const size = controlSize(value);

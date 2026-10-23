@@ -635,8 +635,10 @@ export const switchThumbClass = ({
   const filled = state !== "unchecked";
   return cn(
     // `left` is the slide: the checked utility replaces the resting inset with
-    // the far position, and the component animates between the two.
-    "absolute shrink-0 rounded-full pointer-events-none top-2xs left-2xs",
+    // the far position, and the component animates between the two. `top` is
+    // derived from the box so every platform and size is centred.
+    "absolute shrink-0 rounded-full pointer-events-none",
+    `switch-thumb-${size}`,
     `size-thumb-${size}`,
     filled ? `switch-thumb-on-${size}` : undefined,
     filled ? `bg-${SELECTION_ROLE[accent].fg}` : "bg-foreground",

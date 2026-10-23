@@ -201,3 +201,21 @@ export const step = (
     Match.when({ _tag: "Dismiss" }, () => dismiss(state).state),
     Match.exhaustive,
   );
+
+/**
+ * The state after the pointer enters a menu's trigger.
+ *
+ * macOS opens a sibling the moment the pointer reaches its title, but only while
+ * a dropdown is already open: hovering a closed bar opens nothing, and a
+ * disabled menu never opens. The open menu's own trigger is a no-op, so resting
+ * the pointer there keeps the highlighted row.
+ */
+export const hoverOpen = (
+  state: MenuBarState,
+  menus: ReadonlyArray<AppMenuSpec>,
+  menu: number,
+): MenuBarState =>
+  Option.exists(state.openMenu, (open) => open !== menu) &&
+  Option.exists(Arr.get(menus, menu), (spec) => !spec.disabled)
+    ? step(state, menus, { _tag: "Open", menu })
+    : state;

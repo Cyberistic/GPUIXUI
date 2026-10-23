@@ -41,6 +41,17 @@ describe("kanban board block markup", () => {
     expect(markup).toContain('aria-current="page"');
   });
 
+  it("collapses the app sidebar to an icon strip", () => {
+    // The bug guarded: the sidebar had no toggle, so the board could not take
+    // the width back. The shared rail component names the action, carries the
+    // state, and the labels are the ones the sheet fades.
+    expect(markup).toContain('data-collapsed="false"');
+    expect(markup).toContain('aria-label="Collapse sidebar"');
+    expect(markup).toContain('aria-expanded="true"');
+    expect(markup).toContain("gx-kan-brand-name gx-rail-label");
+    expect(markup).toContain('aria-label="My Time"');
+  });
+
   it("prints the header, both member rows and the tabs", () => {
     expect(markup).toContain("Add Member");
     expect(markup).toContain("Filter");

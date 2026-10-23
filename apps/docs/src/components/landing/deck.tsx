@@ -1,17 +1,21 @@
 /**
- * The hero deck: three platform windows, each running the **conversations
- * block** in its own dress — macOS Messages, Windows 11 Fluent and Linux
- * Breeze — so each card is recognisably its platform.
+ * The hero deck: four platform windows, each running the **conversations
+ * block** in its own dress — macOS Messages, Windows 11 Fluent, Linux Breeze
+ * and Omarchy's Tokyo Night look — so each card is recognisably its desktop.
  *
- * macOS and Windows show on the light palette, Linux on the dark one. The
- * shuffle pauses on hover; the stack is a clean fan with no rotation.
+ * macOS and Windows show on the light palette, Linux and Omarchy on the dark
+ * one. The shuffle pauses on hover; the stack is a clean fan with no rotation.
  */
 import { useEffect, useState, type CSSProperties } from "react";
 import {
+  applyStyle,
   darkTheme,
   lightTheme,
   platformTheme,
+  retroStyles,
+  themes,
   type PlatformName,
+  type Theme,
 } from "@gpuixui/tokens";
 import { toCssVars } from "../../lib/theme-css";
 import { BlockIcon } from "../docs/block-icons";
@@ -21,9 +25,32 @@ import type { Platform } from "./data";
 
 const SHUFFLE_MS = 1600;
 
-/** The library's platform name for a landing card. */
-const platformName = (id: Platform["id"]): PlatformName =>
-  id === "macos" ? "darwin" : id === "windows" ? "win32" : "linux";
+/** The library's platform name for a landing card. Omarchy rides Linux. */
+const platformOfDesktop: Readonly<Record<Platform["id"], PlatformName>> = {
+  macos: "darwin",
+  windows: "win32",
+  linux: "linux",
+  omarchy: "linux",
+};
+
+/**
+ * The theme a card paints.
+ *
+ * Omarchy is the one card that is a look rather than a platform variant: its
+ * bubbles, selection and radii are `retroStyles.omarchy` applied over the Linux
+ * dark base, so the deck shows the Tokyo Night palette rather than Breeze.
+ */
+const desktopTheme = (id: Platform["id"]): Theme =>
+  id === "omarchy"
+    ? applyStyle(platformTheme(themes.dark, "linux"), retroStyles.omarchy)
+    : platformTheme(
+        id === "linux" ? darkTheme : lightTheme,
+        platformOfDesktop[id],
+      );
+
+/** The card the shuffle raises next; a pure function so the wrap is testable. */
+export const nextDesktop = (top: number): number =>
+  (top + 1) % platforms.length;
 
 export function Hero() {
   const [top, setTop] = useState(0);
@@ -40,10 +67,7 @@ export function Hero() {
 
   useEffect(() => {
     if (paused || reduced) return;
-    const timer = setInterval(
-      () => setTop((t) => (t + 1) % platforms.length),
-      SHUFFLE_MS,
-    );
+    const timer = setInterval(() => setTop(nextDesktop), SHUFFLE_MS);
     return () => clearInterval(timer);
   }, [paused, reduced]);
 
@@ -57,12 +81,17 @@ export function Hero() {
       <h1 className="landing-title">
         One library.
         <br />
-        Three native <em>looks</em>.
+        Four native <em>looks</em>.
       </h1>
 
       <p className="landing-sub">
         Components that run on GPUix, styled to feel at home on macOS, Windows
-        11 and Linux — with the source in your hands.
+        11, Linux and Omarchy — with the source in your hands.
+      </p>
+
+      <p className="landing-omarchy-note">
+        Omarchy reads your active theme and re-applies it live when{" "}
+        <code>omarchy-theme-set</code> runs.
       </p>
 
       <div className="landing-actions">
@@ -123,6 +152,15 @@ const DOCK_TONES = [
 
 const WINDOW_TONES = ["blue", "green", "amber", "sky"] as const;
 
+/** Omarchy's dock: the look's accent, brand green and status roles, one each. */
+const OMARCHY_TONES = [
+  "accent",
+  "accent-soft",
+  "success",
+  "info",
+  "warning",
+] as const;
+
 /** One platform desktop, with the conversations block floating on it. */
 function PlatformMini({
   platform,
@@ -131,9 +169,7 @@ function PlatformMini({
   platform: Platform;
   position: number;
 }) {
-  const palette = platform.id === "linux" ? darkTheme : lightTheme;
-  const theme = platformTheme(palette, platformName(platform.id));
-  const style = { ...toCssVars(theme) } as CSSProperties;
+  const style = { ...toCssVars(desktopTheme(platform.id)) } as CSSProperties;
 
   return (
     <div
@@ -144,10 +180,15 @@ function PlatformMini({
     >
       <span
         aria-hidden="true"
-        className={`landing-wall landing-wall-${platform.chrome}`}
+        className={`landing-wall landing-wall-${platform.wall}`}
       />
       {platform.id === "macos" ? <MacMenuBar /> : null}
       {platform.id === "linux" ? <LinuxPanel /> : null}
+      {platform.id === "omarchy" ? (
+        <span className="landing-omarchy-chip">
+          Omarchy · follows your theme
+        </span>
+      ) : null}
 
       <div className="landing-desktop-stage">
         <ConversationWindow platform={platform.id} />
@@ -155,6 +196,7 @@ function PlatformMini({
 
       {platform.id === "windows" ? <WindowsTaskbar /> : null}
       {platform.id === "linux" ? <LinuxDock /> : null}
+      {platform.id === "omarchy" ? <OmarchyDock /> : null}
       {platform.id === "macos" ? <MacDock /> : null}
     </div>
   );
@@ -247,6 +289,19 @@ function LinuxDock() {
       ))}
       <span className="landing-dock-sep" />
       <i className="landing-dock-tile" data-tone="trash" />
+    </div>
+  );
+}
+
+/** Omarchy: a flat dock of near-square tiles in the look's accent. */
+function OmarchyDock() {
+  return (
+    <div aria-hidden="true" className="landing-dock landing-dock-omarchy">
+      {OMARCHY_TONES.map((tone) => (
+        <i className="landing-dock-tile" data-tone={tone} key={tone} />
+      ))}
+      <span className="landing-dock-sep" />
+      <i className="landing-dock-tile" data-tone="dim" />
     </div>
   );
 }

@@ -778,26 +778,30 @@ any other control. The geometry is the window probe's
 Selection never relies on colour alone for meaning: selected rows also carry
 `aria-selected` where the runtime exposes it.
 
-A **platform's own switch** is the one control whose paint is not a role: Apple's
-toggle is green on and grey off whatever the accent is, so `PlatformStyle.switch`
-declares three colours and the primitive merges them over the accent recipe,
-with the HIG's box (51×31, a 27pt knob, no edge) and the knob's `elevation.sm`
-lift. Because those colours enter the theme through no role, they are measured by
-their own report: `switchFailures(theme)` holds the knob on each track and each
-track on the four strips a switch stands on (`switchSurfaces`) to the
+A **platform's own switch** is the one control whose paint and box are not a
+role: Apple's toggle is a 38×22 track with a 20px knob at a 1px inset, green on
+and grey off whatever the accent is; Fluent's is 40×20 with a 12px knob at a
+4px inset and a transparent off track carried by a 1px edge; Adwaita's is 44×24
+with an 18px knob at a 3px inset. `PlatformStyle.switch` declares the colours,
+`PlatformStyle.switchMetrics` the box, and the primitive merges them over the
+accent recipe, with the knob's `elevation.sm` lift. Because those colours enter
+the theme through no role, they are measured by their own report:
+`switchFailures(theme)` holds the knob on each track and each track (or its
+edge) on the four strips a switch stands on (`switchSurfaces`) to the
 perceptibility floor, and `invalidSwitchColors(theme)` refuses a value the
-renderer cannot paint. A declared switch draws no edge, so its track is the
-whole control — and that is what the report found: Apple's `#E9E9EA` off track sat
-**1.003:1** from this style's own `muted` sidebar, so it moved the smallest step
-that clears (`#E3E3E8`, 1.058:1). The floor is deliberately the perceptibility
-one: Apple's green is 1.98:1 on its page and its white knob 1.24:1 on its off
-track, with the shadow carrying the knob — a platform's control reproduced, not a
-role this library designed. A theme that needs the stronger cue paints the accent
-switch instead of declaring one. The paint is a theme value like any other: a
-consumer that starts from a platform style and owns its toggle replaces all three
-slots through `extendTheme` (§11), and the report holds the brand's paint to the
-same floor — it is one of `auditTheme`'s reports (`audit.switch`), so a declared
-track a brand edits fails the gate rather than waiting for a separate check. A switch a store wrote as `null` is the "declares none" the accent
+renderer cannot paint. Apple's `#E9E9EA` off track sits **1.003:1** from this
+style's own `muted` sidebar, so the paint carries a `#C7C7CC` rim that the
+primitive draws as a ring rather than a border, keeping the box and the knob's
+inset whole. The floor is deliberately the perceptibility one: Apple's green is
+1.98:1 on its page and its white knob 1.24:1 on its off track, with the shadow
+carrying the knob — a platform's control reproduced, not a role this library
+designed. A theme that needs the stronger cue paints the accent switch instead
+of declaring one. The paint is a theme value like any other: a consumer that
+starts from a platform style and owns its toggle replaces all three slots
+through `extendTheme` (§11), and the report holds the brand's paint to the same
+floor — it is one of `auditTheme`'s reports (`audit.switch`), so a declared
+track a brand edits fails the gate rather than waiting for a separate check. A
+switch a store wrote as `null` is the "declares none" the accent
 switch answers: a saved theme carries `null` where it declared no paint, and the
 report measures the toggle the theme actually paints rather than reading a slot
 off `null` — and the primitives decode that same table before they paint

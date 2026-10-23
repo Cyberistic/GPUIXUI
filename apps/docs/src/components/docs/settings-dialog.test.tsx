@@ -50,6 +50,17 @@ describe("settings dialog markup", () => {
     expect(markup).toContain("Settings sections");
   });
 
+  it("collapses the section nav to an icon strip", () => {
+    // The bug guarded: the dialog's nav pane had no way to give its 260px
+    // back. The shared toggle carries the state, and the labels are the ones
+    // the sheet fades when the pane is collapsed.
+    expect(markup).toContain('data-collapsed="false"');
+    expect(markup).toContain('aria-label="Collapse sidebar"');
+    expect(markup).toContain('aria-expanded="true"');
+    expect(markup).toContain("gx-set-nav-text gx-rail-label");
+    expect(markup).toContain('aria-label="Appearance"');
+  });
+
   it("marks Appearance active and every row keeps its description", () => {
     expect(markup).toContain('aria-current="page"');
     expect(markup.match(/aria-current="page"/g)?.length).toBe(1);

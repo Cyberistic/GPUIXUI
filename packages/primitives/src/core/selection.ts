@@ -21,6 +21,7 @@ import {
   elevationShadow,
   filledHover,
   filledPressed,
+  switchMetricsAt,
   targetInset,
   targetSize,
 } from "@gpuixui/tokens";
@@ -222,43 +223,50 @@ export const selectionBoxStyle = (
 };
 
 /** The gap a switch thumb keeps from the track's edge, on every side. */
-export const switchThumbInset = (theme: SwitchPaintTheme): number =>
-  theme.spacing["2xs"];
+export const switchThumbInset = (
+  spec: SelectionSpec,
+  source: SwitchPaintTheme,
+): number => switchBox(spec.size, source).inset;
 
 /**
  * The pill a switch draws.
  *
- * A theme that carries a switch paint — a platform whose own toggle has fixed
- * metrics — draws the standard control at 51×31 with no edge, which is the
- * box Apple's HIG publishes. Its `sm` and `lg` sizes keep the icon-derived
- * steps, because the HIG specifies one switch and a compact or large one would
- * be a value Apple never ships. Every other theme keeps the derived box.
+ * A theme that carries switch metrics — a platform whose own toggle has fixed
+ * proportions — draws the box the platform specifies; `md` is the published
+ * control, and `sm`/`lg` keep a proportional scale of it. Every other theme
+ * keeps the derived box, one icon step tall.
  */
 export interface SwitchBox {
   /** Pill width in pixels. */
   readonly width: number;
-  /** Pill height in pixels, which is also the knob's outer box. */
+  /** Pill height in pixels. */
   readonly height: number;
-  /** Edge thickness; the standard platform switch paints none. */
+  /** The knob's side in pixels. */
+  readonly knob: number;
+  /** The gap between the knob and the track's edge. */
+  readonly inset: number;
+  /** Edge thickness; most platform switches paint none. */
   readonly border: number;
 }
 
-/** Apple's switch: 51×31 points, with a 27pt knob at a 2pt inset. */
-const APPLE_SWITCH = { width: 51, height: 31, border: 0 } as const;
-
-/** The box a switch paints in, from the platform's paint and the size step. */
+/** The box a switch paints in, from the platform's metrics and the size step. */
 export const switchBox = (
   size: ControlSize,
   source: SwitchPaintTheme,
 ): SwitchBox => {
   const theme = switchTheme(source);
-  return theme.switch !== undefined && size === "md"
-    ? APPLE_SWITCH
-    : {
-        width: Math.round(theme.iconSize[size] * 1.75),
-        height: theme.iconSize[size],
-        border: theme.borderWidth.thin,
-      };
+  const metrics = theme.switchMetrics;
+  if (theme.switch !== undefined && metrics !== undefined) {
+    return switchMetricsAt(metrics, size);
+  }
+  const iconSide = theme.iconSize[size];
+  return {
+    width: Math.round(iconSide * 1.75),
+    height: iconSide,
+    knob: iconSide - theme.spacing["2xs"] * 2,
+    inset: theme.spacing["2xs"],
+    border: theme.borderWidth.thin,
+  };
 };
 
 /**
@@ -317,7 +325,7 @@ export const switchThumbTravel = (
   theme: SwitchPaintTheme,
 ): number => {
   const box = switchBox(spec.size, theme);
-  return box.width - box.height - box.border * 2;
+  return box.width - box.knob - box.inset * 2;
 };
 
 /**
@@ -333,7 +341,8 @@ export const switchThumbOffset = (
   spec: SelectionSpec,
   theme: SwitchPaintTheme,
 ): number =>
-  switchThumbInset(theme) + (filled(spec) ? switchThumbTravel(spec, theme) : 0);
+  switchThumbInset(spec, theme) +
+  (filled(spec) ? switchThumbTravel(spec, theme) : 0);
 
 /**
  * The fill a platform's own switch paints, or nothing for the accent family.
@@ -368,15 +377,33 @@ export const switchTrackPaint = (
   spec: SelectionSpec,
   source: SwitchPaintTheme,
 ): StyleDesc | undefined => {
-  const fill = switchFill(spec, switchTheme(source));
-  return fill === undefined
-    ? undefined
-    : {
-        backgroundColor: fill,
-        borderColor: fill,
-        hover: { backgroundColor: fill, borderColor: fill },
-        active: { backgroundColor: fill, borderColor: fill },
-      };
+  const theme = switchTheme(source);
+  const fill = switchFill(spec, theme);
+  if (fill === undefined) return undefined;
+  const edge = filled(spec)
+    ? fill
+    : spec.invalid === true
+      ? theme.colors.destructive
+      : (theme.switch?.edge ?? fill);
+  const box = switchBox(spec.size, source);
+  return {
+    backgroundColor: fill,
+    borderColor: edge,
+    // A platform that draws its edge as a rim rather than a border keeps the
+    // knob's inset intact; the ring adds no layout.
+    boxShadow:
+      !filled(spec) && box.border === 0 && theme.switch?.edge !== undefined
+        ? {
+            offsetX: 0,
+            offsetY: 0,
+            blurRadius: 0,
+            spreadRadius: 1,
+            color: edge,
+          }
+        : undefined,
+    hover: { backgroundColor: fill, borderColor: edge },
+    active: { backgroundColor: fill, borderColor: edge },
+  };
 };
 
 /** The knob's paint, which follows the track's declaration. */
@@ -429,6 +456,7 @@ export const switchTrackStyle = (
     borderWidth: box.border,
     borderColor: edge,
     backgroundColor: fill,
+    boxShadow: paint?.boxShadow,
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
     hover:
       paint?.hover ??
@@ -470,14 +498,15 @@ export const switchThumbStyle = (
 ): StyleDesc => {
   const theme = switchTheme(source);
   const paint = switchThumbPaint(source);
-  const inset = switchThumbInset(source);
-  const side = switchBox(spec.size, source).height - inset * 2;
+  const box = switchBox(spec.size, source);
   return {
     position: "absolute",
-    top: inset,
+    // The knob is centred from its box, never from the inset: a platform's
+    // inset is a horizontal gap, and the two dimensions need not agree.
+    top: (box.height - box.knob) / 2,
     left: switchThumbOffset(spec, source),
-    width: side,
-    height: side,
+    width: box.knob,
+    height: box.knob,
     flexShrink: 0,
     borderRadius: theme.radius.full,
     pointerEvents: "none",

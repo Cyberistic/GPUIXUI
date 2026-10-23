@@ -1,5 +1,6 @@
 import { useReducer, useRef, useState } from "react";
 import { BlockIcon, type BlockIconName } from "./block-icons";
+import { RailToggle } from "./sidebar-rail";
 
 /**
  * Email inbox block — `/docs/blocks/email-inbox`.
@@ -166,16 +167,19 @@ export const inboxMessages: ReadonlyArray<MailMessage> = [
 export interface InboxState {
   readonly selectedId: string;
   readonly tab: MailTab;
+  readonly railCollapsed: boolean;
 }
 
 export const initialInboxState: InboxState = {
   selectedId: bobThread.id,
   tab: "primary",
+  railCollapsed: false,
 };
 
 export type InboxAction =
   | { readonly type: "select-message"; readonly id: string }
-  | { readonly type: "select-tab"; readonly tab: MailTab };
+  | { readonly type: "select-tab"; readonly tab: MailTab }
+  | { readonly type: "toggle-rail" };
 
 export const inboxReducer = (
   state: InboxState,
@@ -183,6 +187,9 @@ export const inboxReducer = (
 ): InboxState => {
   if (action.type === "select-message") {
     return { ...state, selectedId: action.id };
+  }
+  if (action.type === "toggle-rail") {
+    return { ...state, railCollapsed: !state.railCollapsed };
   }
   return { ...state, tab: action.tab };
 };
@@ -259,14 +266,15 @@ function FolderRow({
   return (
     <button
       aria-current={current ? "true" : undefined}
+      aria-label={label}
       className="gx-mail-folder"
       data-active={active}
       type="button"
     >
       <BlockIcon name={icon} size={14} />
-      <span className="gx-mail-folder-label">{label}</span>
+      <span className="gx-mail-folder-label gx-rail-label">{label}</span>
       {count === undefined ? null : (
-        <span className="gx-mail-count">{count}</span>
+        <span className="gx-mail-count gx-rail-label">{count}</span>
       )}
     </button>
   );
@@ -352,6 +360,7 @@ export interface EmailInboxSurfaceProps {
   readonly state: InboxState;
   readonly onSelectMessage: (id: string) => void;
   readonly onSelectTab: (tab: MailTab) => void;
+  readonly onToggleRail: () => void;
 }
 
 /** The client at a given state; `EmailInboxRender` owns the reducer. */
@@ -359,6 +368,7 @@ export function EmailInboxSurface({
   state,
   onSelectMessage,
   onSelectTab,
+  onToggleRail,
 }: EmailInboxSurfaceProps) {
   const message = selectedMail(state);
   const messages = messagesInTab(state.tab);
@@ -366,10 +376,19 @@ export function EmailInboxSurface({
 
   return (
     <div className="gx-mail">
-      <aside aria-label="Mail folders" className="gx-mail-side">
+      <aside
+        aria-label="Mail folders"
+        className="gx-mail-side"
+        data-collapsed={state.railCollapsed}
+      >
         <header className="gx-mail-side-head">
-          <h3 className="gx-mail-title">Mail</h3>
-          <span className="gx-mail-new">
+          <h3 className="gx-mail-title gx-rail-label">Mail</h3>
+          <RailToggle
+            className="gx-mail-collapse"
+            collapsed={state.railCollapsed}
+            onToggle={onToggleRail}
+          />
+          <span className="gx-mail-new gx-rail-label">
             <button className="gx-btn gx-btn-primary gx-btn-sm" type="button">
               New
             </button>
@@ -384,11 +403,11 @@ export function EmailInboxSurface({
         </header>
         <button className="gx-mail-refresh" type="button">
           <BlockIcon name="refresh" size={13} />
-          Refresh
+          <span className="gx-rail-label">Refresh</span>
         </button>
 
         <section className="gx-mail-group">
-          <h4 className="gx-mail-group-title">Favorites</h4>
+          <h4 className="gx-mail-group-title gx-rail-label">Favorites</h4>
           {favoriteFolders.map((folder) => (
             <FolderRow
               count={folder.count}
@@ -400,7 +419,7 @@ export function EmailInboxSurface({
         </section>
 
         <section className="gx-mail-group">
-          <h4 className="gx-mail-group-title">Gon - Work</h4>
+          <h4 className="gx-mail-group-title gx-rail-label">Gon - Work</h4>
           {workFolders.map((folder) => (
             <FolderRow
               active={folder.label === "Inbox"}
@@ -414,13 +433,13 @@ export function EmailInboxSurface({
         </section>
 
         <section className="gx-mail-group">
-          <h4 className="gx-mail-group-title">
+          <h4 className="gx-mail-group-title gx-rail-label">
             <BlockIcon name="chevronRight" size={11} />
             Gon - Personal
           </h4>
         </section>
         <section className="gx-mail-group">
-          <h4 className="gx-mail-group-title">
+          <h4 className="gx-mail-group-title gx-rail-label">
             <BlockIcon name="chevronRight" size={11} />
             Local Folders
           </h4>
@@ -531,7 +550,9 @@ export function EmailInboxSurface({
               <div className="gx-mail-from-text">
                 <p>
                   <strong>{message.sender}</strong>
-                  <span className="gx-mail-to">to gon@hunterassociation.org</span>
+                  <span className="gx-mail-to">
+                    to gon@hunterassociation.org
+                  </span>
                 </p>
                 <span className="gx-mail-date">{message.date}</span>
               </div>
@@ -578,6 +599,7 @@ export function EmailInboxRender() {
     <EmailInboxSurface
       onSelectMessage={(id) => dispatch({ type: "select-message", id })}
       onSelectTab={(tab) => dispatch({ type: "select-tab", tab })}
+      onToggleRail={() => dispatch({ type: "toggle-rail" })}
       state={state}
     />
   );

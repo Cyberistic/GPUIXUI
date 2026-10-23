@@ -572,31 +572,34 @@ the base theme's own variant. `default` is the library's own identity and change
 only the name. A high-contrast base keeps its palette and takes only the
 families, radii and density, because accessibility outranks the platform look.
 
-A style may also declare the platform's own switch — Apple's green on and grey
-off, a white knob — which `Theme.switch` carries once applied. The accent family
-cannot derive those fills, so the declaration is separate; the primitives draw
-the platform's 51×31 box only for a theme that carries it, and an authored look
-that declares none keeps the library's accent toggle. Those three colours are
+A style may also declare the platform's own switch — Apple's 38×22 track with a
+20px knob, Fluent's 40×20 with a 12px knob, Adwaita's 44×24 with an 18px knob —
+which `Theme.switch` and `Theme.switchMetrics` carry once applied. The accent
+family cannot derive those fills, so the declaration is separate; the primitives
+draw the platform's box only for a theme that carries it, and an authored look
+that declares none keeps the library's accent toggle. `switchMetricsAt` keeps a
+proportional `sm`/`lg` scale of the published `md` box. Those three colours are
 **measured**, because they enter a theme through no role: `switchFailures(theme)`
-holds the knob on each track and each track on the four strips a switch stands on
-(the page, a card, a popover and a muted toolbar) to the perceptibility floor, and
-`invalidSwitchColors(theme)` names a value the renderer cannot paint. The report
-is one of the gate's (`audit.switch`), so a declared track a brand edits fails
-`auditTheme` rather than waiting for a separate check. The report
-found Apple's `#E9E9EA` off track at **1.003:1** on its own `muted` sidebar — a
-declared switch draws no edge — so it ships the smallest step that clears
-(`#E3E3E8`, 1.058:1). The floor is the perceptibility one, not the 3:1 a state
-indicator needs, because the platform's own values sit under it: Apple's green is
-1.98:1 on its page and its knob 1.24:1 on the off track, with the HIG's shadow
-carrying the knob. A switch a store wrote as `null` is the "declares none" its
-accent toggle answers — a saved theme writes `null` for the paint it never
-carried — and the same rule covers the other two optional tables: a `null`
-`series` or `syntax` resolves the shipped table for the theme's mode and variant
-(`seriesColors`/`syntaxColors`), so no painter is handed one. The paint keeps
-that rule at its own seam: the primitives decode the stored table once
-(`declaredPaint` in `packages/primitives/src/core/selection.ts`), so a restored
-theme draws the accent toggle rather than throwing at its first slot
-(`core/selection.test.ts`'s `a stored switch paint`).
+holds the knob on each track and each track (or its edge) on the four strips a
+switch stands on (the page, a card, a popover and a muted toolbar) to the
+perceptibility floor, and `invalidSwitchColors(theme)` names a value the renderer
+cannot paint. The report is one of the gate's (`audit.switch`), so a declared
+track a brand edits fails `auditTheme` rather than waiting for a separate check.
+The report found Apple's `#E9E9EA` off track at **1.003:1** on its own `muted`
+sidebar, so the paint keeps the platform's off fill and adds a `#C7C7CC` rim —
+drawn as a ring, not a border, so the 38×22 box and its 1px inset are unchanged.
+The floor is the perceptibility one, not the 3:1 a state indicator needs, because
+the platform's own values sit under it: Apple's green is 1.98:1 on its page and
+its knob 1.24:1 on the off track, with the HIG's shadow carrying the knob. A
+switch a store wrote as `null` is the "declares none" its accent toggle answers —
+a saved theme writes `null` for the paint it never carried — and the same rule
+covers the other two optional tables: a `null` `series` or `syntax` resolves the
+shipped table for the theme's mode and variant (`seriesColors`/`syntaxColors`),
+so no painter is handed one. The paint keeps that rule at its own seam: the
+primitives decode the stored table once (`declaredPaint` in
+`packages/primitives/src/core/selection.ts`), so a restored theme draws the accent
+toggle rather than throwing at its first slot (`core/selection.test.ts`'s
+`a stored switch paint`).
 
 All three axes are measured as painted: the playground's `theme-platform` probe
 reads each platform's mono family, `primary` fill, `lg` radius and `md` control

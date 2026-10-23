@@ -39,6 +39,7 @@ const render = (
       onSearch={noop}
       onSelect={noop}
       onSend={noop}
+      onToggleRail={noop}
       platform={platform}
       state={state}
     />,
@@ -99,6 +100,14 @@ const variants: ReadonlyArray<{
     lights: false,
     wincontrols: true,
   },
+  {
+    platform: "omarchy",
+    tone: "primary",
+    placeholder: "Type a message...",
+    rail: true,
+    lights: false,
+    wincontrols: true,
+  },
 ];
 
 describe("the conversations window", () => {
@@ -111,7 +120,8 @@ describe("the conversations window", () => {
     expect(initial).toContain('class="gx-conv-list"');
     expect(initial).toContain('class="gx-conv-log"');
     expect(initial).toContain('placeholder="iMessage"');
-    expect(initial).toContain('aria-label="Show sidebar"');
+    expect(initial).toContain('aria-label="Collapse sidebar"');
+    expect(initial).toContain('aria-expanded="true"');
     expect(initial).toContain('aria-label="New message"');
     expect(initial).toContain('aria-label="Start video call"');
     expect(initial).toContain('aria-label="Start voice call"');
@@ -187,7 +197,7 @@ describe("the conversations window", () => {
   });
 });
 
-describe("the three platform dresses", () => {
+describe("the four platform dresses", () => {
   it.each(variants)(
     "renders $platform with its own $tone outgoing bubbles",
     ({ platform, tone, placeholder, rail, lights, wincontrols }) => {
@@ -198,13 +208,11 @@ describe("the three platform dresses", () => {
       expect(markup.includes('class="gx-conv-rail"')).toBe(rail);
       expect(markup.includes('class="gx-conv-lights"')).toBe(lights);
       expect(markup.includes('class="gx-conv-wincontrols"')).toBe(wincontrols);
-      expect(markup.includes('aria-label="Show sidebar"')).toBe(
-        platform === "macos",
-      );
+      expect(markup).toContain('aria-label="Collapse sidebar"');
     },
   );
 
-  it("gives all three the same actions, only restyled", () => {
+  it("gives every dress the same actions, only restyled", () => {
     const actions = [
       "New message",
       "Start video call",
@@ -225,7 +233,12 @@ describe("the three platform dresses", () => {
   });
 
   it("paints each outgoing role from the sheet, not a literal", () => {
-    const roles = { macos: "success", windows: "primary", linux: "info" };
+    const roles = {
+      macos: "success",
+      windows: "primary",
+      linux: "info",
+      omarchy: "primary",
+    };
     for (const { platform, tone } of variants) {
       const bubble = rule(`.gx-conv-bubble[data-tone="${tone}"]`);
       expect(bubble).toContain(`background: var(--${roles[platform]})`);
@@ -285,6 +298,25 @@ describe("the three platform dresses", () => {
 });
 
 describe("the conversations' state", () => {
+  it("collapses the list pane to an icon strip and expands it again", () => {
+    // The bug this guards: the rail's toggle painted an icon and changed
+    // nothing. The reducer owns the state, so the aria state, the rail's
+    // collapsed flag and the labels' hidden class move together.
+    const collapsed = conversationsReducer(initialConversationsState, {
+      type: "toggle-rail",
+    });
+    const markup = render(collapsed);
+
+    expect(collapsed.railCollapsed).toBe(true);
+    expect(markup).toContain('data-collapsed="true"');
+    expect(markup).toContain('aria-expanded="false"');
+    expect(markup).toContain('aria-label="Expand sidebar"');
+    expect(markup).toContain("gx-conv-row-text gx-rail-label");
+    expect(
+      conversationsReducer(collapsed, { type: "toggle-rail" }).railCollapsed,
+    ).toBe(false);
+  });
+
   it("swaps the thread to the clicked conversation", () => {
     const gon = render({ ...initialConversationsState, selectedId: "gon" });
     expect(gon).toContain('aria-label="Conversation with Gon Freecss"');

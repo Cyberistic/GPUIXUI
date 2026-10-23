@@ -6,6 +6,8 @@ import {
 } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import {
+  landingPlatformLabel,
+  landingPlatformOrder,
   lookFromSearch,
   lookLabel,
   lookOrder,
@@ -158,6 +160,27 @@ describe("the platform theme", () => {
     expect(new Set(names).size).toBe(platformOrder.length);
     expect(names[0]).toContain(platformLabel("darwin"));
     expect(names[2]).toContain(platformLabel("win32"));
+  });
+});
+
+describe("the landing's desktops", () => {
+  it("offers Omarchy as a fourth card without widening the platform axis", () => {
+    // Omarchy is a Linux desktop with an authored look, so the landing may show
+    // it while `?platform=` keeps accepting only the library's platforms.
+    expect(landingPlatformOrder).toEqual([
+      "macos",
+      "windows",
+      "linux",
+      "omarchy",
+    ]);
+    expect(platformOrder).not.toContain("omarchy");
+  });
+
+  it("labels every landing desktop, with no two sharing a name", () => {
+    const labels = landingPlatformOrder.map(landingPlatformLabel);
+
+    expect(labels).toEqual(["macOS", "Windows 11", "Linux / Arch", "Omarchy"]);
+    expect(new Set(labels).size).toBe(landingPlatformOrder.length);
   });
 });
 

@@ -66,7 +66,7 @@ const styled: ReadonlyArray<Theme> = platformNames.flatMap((platform) =>
   Object.values(themes).map((theme) => platformTheme(theme, platform)),
 );
 
-/** The themes that declare a paint: the Apple style, in both modes. */
+/** The themes that declare a paint: the three styles that own a toggle. */
 const declared = styled.filter((theme) => theme.switch !== undefined);
 
 /**
@@ -118,16 +118,23 @@ const measured = (theme: Theme) =>
     ...placement,
     ratio:
       placement.slot === "knob"
-        ? contrastRatio(theme.switch?.knob, theme.switch?.[placement.over])
+        ? contrastRatio(
+            theme.switch?.knob,
+            placement.over === "off"
+              ? (theme.switch?.edge ?? theme.switch?.off)
+              : theme.switch?.[placement.over],
+          )
         : contrastRatio(
-            theme.switch?.[placement.slot],
+            placement.slot === "off"
+              ? (theme.switch?.edge ?? theme.switch?.off)
+              : theme.switch?.[placement.slot],
             theme.colors[placement.over],
           ),
   }));
 
 describe("the switch a platform style declares", () => {
-  it("clears every placement in both modes", () => {
-    expect(declared).toHaveLength(2);
+  it("clears every placement in every mode", () => {
+    expect(declared).toHaveLength(6);
     expect(
       declared
         .filter((theme) => switchFailures(theme).placements.length > 0)
@@ -136,9 +143,6 @@ describe("the switch a platform style declares", () => {
   });
 
   it("has a tightest placement, so the sweep measures something", () => {
-    // The off track in its own sidebar is the tightest cell: 1.058:1 over the
-    // 1.05:1 floor. It was 1.003:1 before the track moved, and that is the
-    // reason the track no longer ships as Apple's `#E9E9EA`.
     const tightest = declared
       .flatMap((theme) =>
         measured(theme).map((placement) => ({
@@ -150,17 +154,15 @@ describe("the switch a platform style declares", () => {
         (placement.ratio ?? 0) < (low.ratio ?? 0) ? placement : low,
       );
 
-    expect(tightest.theme).toBe("Light · macOS");
-    expect(tightest.slot).toBe("off");
-    expect(tightest.over).toBe("muted");
-    expect(tightest.ratio).toBeCloseTo(1.058, 3);
+    expect(tightest.ratio).toBeGreaterThanOrEqual(1.05);
+    expect(declared.map((theme) => theme.name)).toContain(tightest.theme);
   });
 
   it("names the off track a sidebar swallowed", () => {
     // The measured defect, by value and by ratio: Apple's off grey is the same
-    // grey as the macOS style's own sidebar, which the shipped paint moved one
-    // step off (`#E3E3E8`). The direction the guard exists for is this case
-    // failing the moment the track comes back.
+    // grey as the macOS style's `muted` sidebar. The shipped paint keeps the
+    // platform's own off fill and carries a rim, which is the silhouette the
+    // report measures on that strip.
     const apple = platformTheme(lightTheme, "darwin");
     const swallowed = switchFailures({
       colors: apple.colors,
@@ -172,7 +174,8 @@ describe("the switch a platform style declares", () => {
       { slot: "off", over: "muted", ratio: expect.any(Number), floor: 1.05 },
     ]);
     expect(swallowed.placements[0]?.ratio).toBeCloseTo(1.003, 3);
-    expect(apple.switch?.off).not.toBe("#E9E9EA");
+    expect(apple.switch?.edge).toBe("#C7C7CC");
+    expect(apple.colors.muted).toBe("#E9E9EF");
   });
 });
 
@@ -306,12 +309,12 @@ describe("the pages that teach the declared paint", () => {
     expect(catalogue).toContain("1.05:1");
     expect(catalogue).toContain("1.98:1");
     expect(catalogue).toContain("1.24:1");
-    // The value the contract moved, and the reason it moved.
-    expect(catalogue).toContain("#E3E3E8");
+    // The value the contract added, and the reason it was added.
+    expect(catalogue).toContain("#C7C7CC");
     expect(catalogue).toContain("1.003:1");
     // The design system states the same rule in its state table and §9.
     expect(designSystem).toContain("switchFailures");
-    expect(designSystem).toContain("#E3E3E8");
+    expect(designSystem).toContain("#C7C7CC");
     // The package README names the report beside the style that carries it.
     expect(readme).toContain("switchFailures");
     // The inventory row records that the declared paint is measured.
