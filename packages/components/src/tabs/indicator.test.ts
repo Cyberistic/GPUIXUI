@@ -12,6 +12,7 @@
 import type { EventPayload } from "@gpuix/react";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
+import { measuredBox as seamMeasuredBox } from "../internal/measure.js";
 import { indicatorBox, measuredBox, type TabBox } from "./indicator.js";
 
 const event = (payload: Partial<EventPayload>): EventPayload => ({
@@ -42,6 +43,13 @@ describe("measuredBox", () => {
       Option.isNone(measuredBox(event({ x: 12, y: 34, width: 56 }))),
       "a missing height is not a box",
     ).toBe(true);
+  });
+
+  it("is the seam's decoder, not a copy", () => {
+    // The tab pill measured its own boxes with a second decoder shaped like the
+    // seam's, so a rule the seam gained — a side it cannot paint is no box —
+    // would have reached every measuring surface except this one.
+    expect(measuredBox).toBe(seamMeasuredBox);
   });
 });
 

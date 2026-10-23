@@ -19,18 +19,16 @@
  * box rather than sitting in its corner — the runtime reports a layout whose box
  * it can see change, so a rail that resizes (and re-measures its triggers)
  * reports the origin again in that same round.
+ *
+ * The payload decoder is the seam's (`internal/measure.ts`), not a copy: a box
+ * the runtime cannot paint is refused there for every measuring surface, and the
+ * tab pill was the one reader a second decoder would have left behind.
  */
 
-import type { EventPayload } from "@gpuix/react";
-import * as Option from "effect/Option";
+import type { MeasuredBox } from "../internal/measure.js";
 
 /** A border box in window coordinates, as an `onLayout` event reports it. */
-export interface TabBox {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
+export type TabBox = MeasuredBox;
 
 /** The pill's offsets inside the rail's containing block. */
 export interface IndicatorBox {
@@ -42,15 +40,9 @@ export interface IndicatorBox {
 
 /**
  * The box an `onLayout` event carries, `None` for any other event or a payload
- * missing one of the four numbers.
+ * missing or unable to carry one of the four numbers.
  */
-export const measuredBox = (event: EventPayload): Option.Option<TabBox> =>
-  Option.all({
-    x: Option.fromNullishOr(event.x),
-    y: Option.fromNullishOr(event.y),
-    width: Option.fromNullishOr(event.width),
-    height: Option.fromNullishOr(event.height),
-  });
+export { measuredBox } from "../internal/measure.js";
 
 /**
  * The pill's box: the selected trigger's painted box, re-expressed against the

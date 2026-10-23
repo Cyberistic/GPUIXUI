@@ -37,6 +37,27 @@ describe("measuredBox", () => {
       Option.isNone(measuredBox(event({ x: 100, y: 40, width: 80 }))),
     ).toBe(true);
   });
+
+  it("refuses a side it cannot paint", () => {
+    // A measurement the runtime cannot have taken is no box: `NaN` and an
+    // infinity reach an inset as a value the runtime draws as nothing, so a
+    // component would move its layer to nowhere rather than keep the frame it
+    // has. The payload is external input; this seam is where it is decoded.
+    expect(
+      Option.isNone(
+        measuredBox(
+          event({ x: Number.NaN, y: 40, width: 80, height: 32 }),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Option.isNone(
+        measuredBox(
+          event({ x: 100, y: 40, width: Number.POSITIVE_INFINITY, height: 32 }),
+        ),
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("measuredPoint", () => {
@@ -60,6 +81,21 @@ describe("measuredPoint", () => {
     expect(
       Option.isNone(
         measuredPoint({ elementId: 1, eventType: "mouseMove", x: 12 }),
+      ),
+    ).toBe(true);
+  });
+
+  it("refuses an axis it cannot paint", () => {
+    // The same rule as the box: a pointer the payload cannot locate moves
+    // nothing, instead of handing the formula a `NaN`.
+    expect(
+      Option.isNone(
+        measuredPoint({
+          elementId: 1,
+          eventType: "mouseMove",
+          x: 12,
+          y: Number.NaN,
+        }),
       ),
     ).toBe(true);
   });
