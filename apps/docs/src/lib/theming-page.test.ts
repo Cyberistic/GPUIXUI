@@ -832,7 +832,7 @@ describe("the palette a preview paints", () => {
     // nothing. The state falls back to `previewMode`, the resolution takes it,
     // and the surface stamps it so the scene's chrome can follow.
     const source = switchSource();
-    expect(source).toContain("modeFromSearch(search) ?? previewMode");
+    expect(source).toContain("mode: previewMode");
     expect(source).toContain("resolvePlatformTheme(platform, mode, look)");
 
     const surface = readFileSync(

@@ -10,12 +10,17 @@ import {
 } from "react";
 import type { PlatformName, Theme, ThemeMode } from "@gpuixui/tokens";
 import {
+  browserSignals,
+  detectLook,
+  detectPlatform,
   lookFromSearch,
   lookParam,
   modeFromSearch,
   modeLabel,
   modeOrder,
   modeParam,
+  namesOmarchy,
+  openingChoice,
   platformFromSearch,
   platformLabel,
   platformOrder,
@@ -23,9 +28,11 @@ import {
   previewMode,
   resolvePlatformTheme,
   type LookName,
+  type PreviewChoice,
 } from "../../lib/platform";
 import {
   browserChoiceStorage,
+  readDesktopMarker,
   readRememberedChoice,
   writeRememberedChoice,
 } from "../../lib/platform-storage";
@@ -40,7 +47,8 @@ import {
  * the third: the authored Luna and Aero styles `retroStyles` ships, applied over
  * the platform's theme, so the picker shows a real library style rather than a
  * docs-only skin. Every choice lives in the URL, so a link carries it, and in
- * local storage, so a navigation does not reset it.
+ * local storage, so a navigation does not reset it. A first visit has neither,
+ * so it opens on the platform the browser reports.
  */
 
 interface PlatformState {
@@ -76,104 +84,69 @@ const writeUrl = (
   window.history.replaceState(null, "", url.toString());
 };
 
+/** The choice a visit opens with: the URL, then the store, then the browser. */
+const opening = (search: string): PreviewChoice => {
+  const storage = browserChoiceStorage();
+  const signals = browserSignals();
+  const omarchy =
+    namesOmarchy(readDesktopMarker(storage)) || namesOmarchy(signals.userAgent);
+
+  return openingChoice(
+    search,
+    readRememberedChoice(storage, {
+      platform: detectPlatform(signals),
+      look: detectLook(omarchy),
+      mode: previewMode,
+    }),
+  );
+};
+
 /** Provides the platform, palette and look every preview on the page renders. */
 export function PlatformProvider({ children }: { children: ReactNode }) {
   const search = useRouterState({
     select: (state) => state.location.searchStr,
   });
-  const [platform, setPlatform] = useState<PlatformName>(
-    () => platformFromSearch(search) ?? "darwin",
-  );
-  const [look, setLook] = useState<LookName>(
-    () => lookFromSearch(search) ?? "native",
-  );
-  const [mode, setMode] = useState<ThemeMode>(
-    () => modeFromSearch(search) ?? previewMode,
-  );
+  // Resolved in the initializer rather than an effect: the first render already
+  // paints the visitor's platform, so no page opens on a theme it then replaces.
+  const [choice, setChoice] = useState<PreviewChoice>(() => opening(search));
 
   // The URL is the source of truth: a shared link carries every choice, and a
   // navigation that drops a parameter restores the remembered one and puts it
   // back, so the address bar always says what is showing.
   useEffect(() => {
-    const platformInUrl = platformFromSearch(search);
-    const lookInUrl = lookFromSearch(search);
-    const modeInUrl = modeFromSearch(search);
     const storage = browserChoiceStorage();
-    const remembered = readRememberedChoice(storage);
-    const nextPlatform = platformInUrl ?? remembered.platform;
-    const nextLook = lookInUrl ?? remembered.look;
-    const nextMode = modeInUrl ?? remembered.mode;
+    const next = opening(search);
 
-    setPlatform(nextPlatform);
-    setLook(nextLook);
-    setMode(nextMode);
-    writeRememberedChoice(storage, {
-      platform: nextPlatform,
-      look: nextLook,
-      mode: nextMode,
-    });
+    setChoice(next);
+    writeRememberedChoice(storage, next);
     if (
-      platformInUrl === undefined ||
-      lookInUrl === undefined ||
-      modeInUrl === undefined
+      platformFromSearch(search) === undefined ||
+      lookFromSearch(search) === undefined ||
+      modeFromSearch(search) === undefined
     )
-      writeUrl(nextPlatform, nextMode, nextLook);
+      writeUrl(next.platform, next.mode, next.look);
   }, [search]);
 
-  const choosePlatform = useCallback(
-    (next: PlatformName) => {
-      setPlatform(next);
-      writeRememberedChoice(browserChoiceStorage(), {
-        platform: next,
-        look,
-        mode,
-      });
-      writeUrl(next, mode, look);
-    },
-    [look, mode],
-  );
+  const choose = useCallback((next: PreviewChoice) => {
+    setChoice(next);
+    writeRememberedChoice(browserChoiceStorage(), next);
+    writeUrl(next.platform, next.mode, next.look);
+  }, []);
 
-  const chooseLook = useCallback(
-    (next: LookName) => {
-      setLook(next);
-      writeRememberedChoice(browserChoiceStorage(), {
-        platform,
-        look: next,
-        mode,
-      });
-      writeUrl(platform, mode, next);
-    },
-    [platform, mode],
-  );
-
-  const chooseMode = useCallback(
-    (next: ThemeMode) => {
-      setMode(next);
-      writeRememberedChoice(browserChoiceStorage(), {
-        platform,
-        look,
-        mode: next,
-      });
-      writeUrl(platform, next, look);
-    },
-    [platform, look],
-  );
-
+  const { look, mode, platform } = choice;
   const theme = useMemo(
     () => resolvePlatformTheme(platform, mode, look),
     [platform, mode, look],
   );
   const value = useMemo<PlatformState>(
     () => ({
-      platform,
-      look,
-      mode,
+      ...choice,
       theme,
-      setPlatform: choosePlatform,
-      setLook: chooseLook,
-      setMode: chooseMode,
+      setPlatform: (next) => choose({ ...choice, platform: next }),
+      setLook: (next) => choose({ ...choice, look: next }),
+      setMode: (next) => choose({ ...choice, mode: next }),
     }),
-    [platform, look, mode, theme, choosePlatform, chooseLook, chooseMode],
+    [choice, theme, choose],
   );
 
   return (

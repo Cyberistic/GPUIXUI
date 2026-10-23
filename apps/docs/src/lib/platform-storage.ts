@@ -1,10 +1,9 @@
-import type { PlatformName, ThemeMode } from "@gpuixui/tokens";
 import {
   parseLook,
   parseMode,
   parsePlatform,
   previewMode,
-  type LookName,
+  type PreviewChoice,
 } from "./platform";
 
 /**
@@ -39,12 +38,21 @@ export const lookStorageKey = "gpuixui-look";
 /** Where the chosen palette is remembered between visits. */
 export const modeStorageKey = "gpuixui-mode";
 
+/** Where a desktop that names itself is remembered, so its look survives a visit. */
+export const desktopStorageKey = "gpuixui-desktop";
+
 /** Every remembered axis. */
-export interface RememberedChoice {
-  readonly platform: PlatformName;
-  readonly look: LookName;
-  readonly mode: ThemeMode;
-}
+export type RememberedChoice = PreviewChoice;
+
+/**
+ * What a store with nothing to say shows: the switch's own `default` platform,
+ * the platform's style and the palette the site opens in.
+ */
+export const defaultRememberedChoice: RememberedChoice = {
+  platform: "default",
+  look: "native",
+  mode: previewMode,
+};
 
 /** Run a storage call, reading a throw as the absence of an answer. */
 const attempt = <A>(run: () => A): A | undefined => {
@@ -73,14 +81,28 @@ const readKey = (
 ): string | null =>
   storage === undefined ? null : (attempt(() => storage.getItem(key)) ?? null);
 
-/** What `storage` remembers, defaulting and isolating each axis on its own. */
+/**
+ * What `storage` remembers, defaulting each axis on its own to `fallback`.
+ *
+ * The switch passes detection as the fallback, so a missing key means "ask the
+ * browser" while a stored key — including a deliberate `default` platform or
+ * `native` look — always wins. A value written by an older build falls back per
+ * axis rather than resetting the others.
+ */
 export const readRememberedChoice = (
   storage: ChoiceStorage | undefined,
+  fallback: RememberedChoice = defaultRememberedChoice,
 ): RememberedChoice => ({
-  platform: parsePlatform(readKey(storage, platformStorageKey)) ?? "default",
-  look: parseLook(readKey(storage, lookStorageKey)) ?? "native",
-  mode: parseMode(readKey(storage, modeStorageKey)) ?? previewMode,
+  platform:
+    parsePlatform(readKey(storage, platformStorageKey)) ?? fallback.platform,
+  look: parseLook(readKey(storage, lookStorageKey)) ?? fallback.look,
+  mode: parseMode(readKey(storage, modeStorageKey)) ?? fallback.mode,
 });
+
+/** The desktop marker `storage` remembers, if it remembers one. */
+export const readDesktopMarker = (
+  storage: ChoiceStorage | undefined,
+): string | null => readKey(storage, desktopStorageKey);
 
 /**
  * Remember every choice.

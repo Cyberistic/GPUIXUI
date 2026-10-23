@@ -132,6 +132,107 @@ export const modeSearch = (mode: ThemeMode): string => `?${modeParam}=${mode}`;
 export const previewMode: ThemeMode = "dark";
 
 /**
+ * What the browser says about the visitor's desktop.
+ *
+ * `maxTouchPoints` is the only difference an iPad in desktop mode reports: it
+ * sends the Macintosh user agent a Mac sends, but reports touches where a Mac
+ * reports none.
+ */
+export interface PlatformSignals {
+  readonly userAgent: string;
+  readonly maxTouchPoints: number;
+}
+
+/** The browser's signals, or none on the server, where `navigator` is absent. */
+export const browserSignals = (): PlatformSignals =>
+  typeof navigator === "undefined"
+    ? { userAgent: "", maxTouchPoints: 0 }
+    : {
+        userAgent: navigator.userAgent,
+        maxTouchPoints: navigator.maxTouchPoints,
+      };
+
+/** The desktop family a user agent names, before the library picks a platform. */
+export type PlatformFamily = "ios" | "macos" | "windows" | "linux" | "unknown";
+
+/**
+ * The family `signals` name.
+ *
+ * The order is the rule: an iPad in desktop mode says Macintosh, and the touch
+ * count is what separates it from the Mac it imitates. A user agent none of the
+ * patterns names is `unknown`, not a guess at a desktop.
+ */
+export const platformFamily = (
+  { userAgent, maxTouchPoints }: PlatformSignals = browserSignals(),
+): PlatformFamily => {
+  if (/iPhone|iPad|iPod/.test(userAgent)) return "ios";
+  if (/Macintosh|Mac OS X/.test(userAgent))
+    return maxTouchPoints > 1 ? "ios" : "macos";
+  if (/Windows/.test(userAgent)) return "windows";
+  if (/Linux/.test(userAgent)) return "linux";
+  return "unknown";
+};
+
+const platformOfFamily = {
+  ios: "darwin",
+  macos: "darwin",
+  windows: "win32",
+  linux: "linux",
+  unknown: "darwin",
+} as const satisfies Record<PlatformFamily, PlatformName>;
+
+/**
+ * The platform a first visit opens on.
+ *
+ * iOS, macOS and every desktop the library does not name resolve to `darwin`,
+ * the site's own identity; Windows and Linux resolve to the styles the library
+ * ships for them.
+ */
+export const detectPlatform = (
+  signals: PlatformSignals = browserSignals(),
+): PlatformName => platformOfFamily[platformFamily(signals)];
+
+/**
+ * The authored look an Omarchy desktop shows, once `retroStyles` ships it.
+ *
+ * Omarchy is a Linux desktop with its own authored look, so it is a look rather
+ * than a platform. Reading the same `lookOrder` the switch offers keeps the
+ * answer absent — and the style `native` — until the style exists.
+ */
+export const omarchyLook = parseLook("omarchy");
+
+/** Whether a user agent or a stored marker names Omarchy. */
+export const namesOmarchy = (marker: string | null | undefined): boolean =>
+  /omarchy/i.test(marker ?? "");
+
+/** The look a first visit paints: Omarchy's when shipped, else the platform's. */
+export const detectLook = (omarchy: boolean): LookName =>
+  omarchy ? (omarchyLook ?? "native") : "native";
+
+/** One choice of platform, look and palette: what the switch shows. */
+export interface PreviewChoice {
+  readonly platform: PlatformName;
+  readonly look: LookName;
+  readonly mode: ThemeMode;
+}
+
+/**
+ * The choice a visit opens with: the URL, then the store, then detection.
+ *
+ * `remembered` is the store's answer with detection filled in where it had
+ * none, so this function is the whole precedence: a shared link wins over the
+ * visitor's last choice, and both win over the browser's own report.
+ */
+export const openingChoice = (
+  search: string,
+  remembered: PreviewChoice,
+): PreviewChoice => ({
+  platform: platformFromSearch(search) ?? remembered.platform,
+  look: lookFromSearch(search) ?? remembered.look,
+  mode: modeFromSearch(search) ?? remembered.mode,
+});
+
+/**
  * The theme a preview shows: the library's platform variant over one of its
  * built-in modes, then the authored look over that when one is chosen.
  *

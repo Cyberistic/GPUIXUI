@@ -117,7 +117,7 @@ describe("the remembered platform choice", () => {
     );
 
     expect(switchSource).toContain("browserChoiceStorage()");
-    expect(switchSource).toContain("readRememberedChoice(storage)");
+    expect(switchSource).toContain("readRememberedChoice(storage,");
     expect(switchSource).toContain("writeRememberedChoice(storage");
     // The raw property is the call that throws when a browser blocks site
     // data, so the switch must not go near it.
