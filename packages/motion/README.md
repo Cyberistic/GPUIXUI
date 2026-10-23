@@ -104,7 +104,7 @@ build one on every render: `useSpring(target, springPhysics({ … }))` and
 already running, so a render does not re-arm the hook's effect or its frame loop,
 and a frame is published only when it differs from the one on screen — the
 completion edge counts as a difference, because it is the one report a caller
-get that its run ended. Before that rule a hook kept painting frames for as long
+gets that its run ended. Before that rule a hook kept painting frames for as long
 as it was mounted: measured 2026-10-23 in the real GPUix renderer, a spring
 mounted at rest had painted 1 089 frames by 800 ms and 210 more in the following
 150 ms.
