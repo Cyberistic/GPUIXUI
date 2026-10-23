@@ -219,6 +219,55 @@ import {
 } from "./theme-provider-demo";
 import { ToggleDemo, toggleDemoSource } from "./toggle-demo";
 import { ToggleGroupDemo, toggleGroupDemoSource } from "./toggle-group-demo";
+import { AutoHeightDemo, autoHeightDemoSource } from "./auto-height-demo";
+import { AvatarGroupDemo, avatarGroupDemoSource } from "./avatar-group-demo";
+import { BubblesDemo, bubblesDemoSource } from "./bubbles-demo";
+import { CodeBlockDemo, codeBlockDemoSource } from "./code-block-demo";
+import { CopyButtonDemo, copyButtonDemoSource } from "./copy-button-demo";
+import { CountdownDemo, countdownDemoSource } from "./countdown-demo";
+import { FireworksDemo, fireworksDemoSource } from "./fireworks-demo";
+import { GlyphDemo, glyphDemoSource } from "./glyph-demo";
+import { GradientDemo, gradientDemoSource } from "./gradient-demo";
+import { GradientTextDemo, gradientTextDemoSource } from "./gradient-text-demo";
+import { GravityStarsDemo, gravityStarsDemoSource } from "./gravity-stars-demo";
+import { HexagonDemo, hexagonDemoSource } from "./hexagon-demo";
+import {
+  HighlightTextDemo,
+  highlightTextDemoSource,
+} from "./highlight-text-demo";
+import { ImageZoomDemo, imageZoomDemoSource } from "./image-zoom-demo";
+import { LiquidButtonDemo, liquidButtonDemoSource } from "./liquid-button-demo";
+import { MagneticDemo, magneticDemoSource } from "./magnetic-demo";
+import { MotionGridDemo, motionGridDemoSource } from "./motion-grid-demo";
+import {
+  PageTransitionDemo,
+  pageTransitionDemoSource,
+} from "./page-transition-demo";
+import { ParticlesDemo, particlesDemoSource } from "./particles-demo";
+import { PinnedListDemo, pinnedListDemoSource } from "./pinned-list-demo";
+import { RevealDemo, revealDemoSource } from "./reveal-demo";
+import { RippleButtonDemo, rippleButtonDemoSource } from "./ripple-button-demo";
+import { RollingTextDemo, rollingTextDemoSource } from "./rolling-text-demo";
+import { RotatingTextDemo, rotatingTextDemoSource } from "./rotating-text-demo";
+import { ScrollFadeDemo, scrollFadeDemoSource } from "./scroll-fade-demo";
+import {
+  ScrollProgressDemo,
+  scrollProgressDemoSource,
+} from "./scroll-progress-demo";
+import { ShineButtonDemo, shineButtonDemoSource } from "./shine-button-demo";
+import {
+  SlidingNumberDemo,
+  slidingNumberDemoSource,
+} from "./sliding-number-demo";
+import { SlidingTextDemo, slidingTextDemoSource } from "./sliding-text-demo";
+import {
+  SplittingTextDemo,
+  splittingTextDemoSource,
+} from "./splitting-text-demo";
+import { StarsDemo, starsDemoSource } from "./stars-demo";
+import { ThemeTogglerDemo, themeTogglerDemoSource } from "./theme-toggler-demo";
+import { TopographyDemo, topographyDemoSource } from "./topography-demo";
+import { TypingTextDemo, typingTextDemoSource } from "./typing-text-demo";
 
 /**
  * Browser previews for the docs pages.
@@ -2860,4 +2909,98 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: ToggleGroupDemo,
     source: toggleGroupDemoSource,
   },
+  "auto-height-demo": {
+    render: AutoHeightDemo,
+    source: autoHeightDemoSource,
+  },
+  "avatar-group-demo": {
+    render: AvatarGroupDemo,
+    source: avatarGroupDemoSource,
+  },
+  "bubbles-demo": { render: BubblesDemo, source: bubblesDemoSource },
+  "code-block-demo": { render: CodeBlockDemo, source: codeBlockDemoSource },
+  "copy-button-demo": {
+    render: CopyButtonDemo,
+    source: copyButtonDemoSource,
+  },
+  "countdown-demo": { render: CountdownDemo, source: countdownDemoSource },
+  "fireworks-demo": { render: FireworksDemo, source: fireworksDemoSource },
+  "glyph-demo": { render: GlyphDemo, source: glyphDemoSource },
+  "gradient-demo": { render: GradientDemo, source: gradientDemoSource },
+  "gradient-text-demo": {
+    render: GradientTextDemo,
+    source: gradientTextDemoSource,
+  },
+  "gravity-stars-demo": {
+    render: GravityStarsDemo,
+    source: gravityStarsDemoSource,
+  },
+  "hexagon-demo": { render: HexagonDemo, source: hexagonDemoSource },
+  "highlight-text-demo": {
+    render: HighlightTextDemo,
+    source: highlightTextDemoSource,
+  },
+  "image-zoom-demo": { render: ImageZoomDemo, source: imageZoomDemoSource },
+  "liquid-button-demo": {
+    render: LiquidButtonDemo,
+    source: liquidButtonDemoSource,
+  },
+  "magnetic-demo": { render: MagneticDemo, source: magneticDemoSource },
+  "motion-grid-demo": {
+    render: MotionGridDemo,
+    source: motionGridDemoSource,
+  },
+  "page-transition-demo": {
+    render: PageTransitionDemo,
+    source: pageTransitionDemoSource,
+  },
+  "particles-demo": { render: ParticlesDemo, source: particlesDemoSource },
+  "pinned-list-demo": {
+    render: PinnedListDemo,
+    source: pinnedListDemoSource,
+  },
+  "reveal-demo": { render: RevealDemo, source: revealDemoSource },
+  "ripple-button-demo": {
+    render: RippleButtonDemo,
+    source: rippleButtonDemoSource,
+  },
+  "rolling-text-demo": {
+    render: RollingTextDemo,
+    source: rollingTextDemoSource,
+  },
+  "rotating-text-demo": {
+    render: RotatingTextDemo,
+    source: rotatingTextDemoSource,
+  },
+  "scroll-fade-demo": {
+    render: ScrollFadeDemo,
+    source: scrollFadeDemoSource,
+  },
+  "scroll-progress-demo": {
+    render: ScrollProgressDemo,
+    source: scrollProgressDemoSource,
+  },
+  "shine-button-demo": {
+    render: ShineButtonDemo,
+    source: shineButtonDemoSource,
+  },
+  "sliding-number-demo": {
+    render: SlidingNumberDemo,
+    source: slidingNumberDemoSource,
+  },
+  "sliding-text-demo": {
+    render: SlidingTextDemo,
+    source: slidingTextDemoSource,
+  },
+  "splitting-text-demo": {
+    render: SplittingTextDemo,
+    source: splittingTextDemoSource,
+  },
+  "stars-demo": { render: StarsDemo, source: starsDemoSource },
+  "theme-toggler-demo": {
+    render: ThemeTogglerDemo,
+    source: themeTogglerDemoSource,
+  },
+  "topography-demo": { render: TopographyDemo, source: topographyDemoSource },
+  "typing-text-demo": { render: TypingTextDemo, source: typingTextDemoSource },
 };

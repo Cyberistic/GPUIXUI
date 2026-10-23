@@ -8624,3 +8624,1324 @@ button.gx-table-row:focus-visible {
     animation: none;
   }
 }
+
+/* ---- decorative fields (bubbles, stars, particles, gravity stars,
+   fireworks): a seeded field of dots in the caller's bounded box. Each preview
+   scatters the same points and animates the dot's own life (rise, twinkle,
+   drift, fall, burst) with `top`/`left`/`opacity`, never a `transform`. ---- */
+.gx-bubbles,
+.gx-stars,
+.gx-particles,
+.gx-gravitystars,
+.gx-fireworks {
+  position: relative;
+  width: min(520px, 100%);
+  height: 220px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-bubbles-dot {
+  position: absolute;
+  top: 100%;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary) 55%, transparent);
+  animation: gx-bubbles-rise 7s linear infinite;
+}
+
+@keyframes gx-bubbles-rise {
+  0% {
+    top: 100%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    top: -32px;
+    opacity: 0;
+  }
+}
+
+.gx-stars-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--foreground);
+  animation: gx-stars-twinkle 2.4s ease-in-out infinite;
+}
+
+@keyframes gx-stars-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.gx-particles-dot {
+  --start: 0%;
+  position: absolute;
+  left: var(--start);
+  border-radius: 50%;
+  background: var(--primary);
+  animation: gx-particles-drift 14s ease-in-out infinite alternate;
+}
+
+@keyframes gx-particles-drift {
+  0% {
+    opacity: 0.15;
+    left: calc(var(--start) - 6%);
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0.15;
+    left: calc(var(--start) + 6%);
+  }
+}
+
+.gx-gravitystars-dot {
+  position: absolute;
+  top: -4%;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: gx-gravity-fall 3s linear infinite;
+}
+
+@keyframes gx-gravity-fall {
+  0% {
+    top: -4%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    top: 104%;
+    opacity: 0;
+  }
+}
+
+.gx-fireworks-spark {
+  --sx: 0%;
+  --sy: 0%;
+  --ex: 0%;
+  --ey: 0%;
+  position: absolute;
+  left: var(--sx);
+  top: var(--sy);
+  border-radius: 50%;
+  background: var(--primary);
+  animation: gx-fireworks-burst 1.4s ease-out infinite;
+}
+
+@keyframes gx-fireworks-burst {
+  0% {
+    left: var(--sx);
+    top: var(--sy);
+    opacity: 1;
+  }
+  100% {
+    left: var(--ex);
+    top: var(--ey);
+    opacity: 0;
+  }
+}
+
+/* ---- hexagon / topography: generated line-art fields, one `<svg>` and a
+   breathing ink. ---- */
+.gx-hexagon,
+.gx-topography {
+  width: min(520px, 100%);
+  height: 220px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  animation: gx-field-breathe 8s ease-in-out infinite;
+}
+
+@keyframes gx-field-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---- glyph: a wall of seeded marks with a breathing ink. ---- */
+.gx-glyph {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  align-items: center;
+  justify-items: center;
+  width: min(520px, 100%);
+  height: 220px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-glyph-mark {
+  color: var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1;
+  animation: gx-field-breathe 8s ease-in-out infinite;
+}
+
+.gx-glyph-mark[data-dim] {
+  color: var(--border);
+}
+
+.gx-glyph-copy {
+  position: absolute;
+  inset: auto 0 0;
+  margin: 0;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--background) 72%, transparent);
+  color: var(--foreground);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ---- gradient: a two-stop ramp that breathes a second one over it. ---- */
+.gx-gradient {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: min(520px, 100%);
+  padding: 32px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    color-mix(in srgb, var(--primary) 0%, var(--background))
+  );
+}
+
+.gx-gradient-layer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    215deg,
+    var(--accent),
+    color-mix(in srgb, var(--accent) 0%, transparent)
+  );
+  animation: gx-gradient-breathe 6s ease-in-out infinite;
+}
+
+@keyframes gx-gradient-breathe {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.gx-gradient-kicker {
+  position: relative;
+  margin: 0;
+  color: var(--primary-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gx-gradient-title {
+  position: relative;
+  margin: 0;
+  color: var(--primary-foreground);
+  font-size: 24px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.gx-gradient-copy {
+  position: relative;
+  margin: 0;
+  color: var(--primary-foreground);
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* ---- gradient text: a per-glyph ramp painted inline. ---- */
+.gx-gradienttext {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 100%;
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+/* ---- countdown: locale-free clock text. ---- */
+.gx-countdown {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+
+.gx-countdown-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gx-countdown-label {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-countdown-value {
+  margin: 0;
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 34px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* ---- typing text: a string arriving a character at a time. ---- */
+.gx-typing {
+  display: flex;
+  max-width: 100%;
+}
+
+.gx-typing-value {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.gx-typing-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--primary);
+  animation: gx-caret-blink 0.9s steps(1) infinite;
+}
+
+@keyframes gx-caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ---- splitting text: a headline arriving word by word. ---- */
+.gx-splitting {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.gx-splitting-line {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  color: var(--foreground);
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.gx-splitting-word {
+  position: relative;
+  display: inline-block;
+  animation: gx-word-in 420ms ease-out both;
+}
+
+@keyframes gx-word-in {
+  from {
+    top: 8px;
+    opacity: 0;
+  }
+  to {
+    top: 0;
+    opacity: 1;
+  }
+}
+
+/* ---- rotating text: a phrase fading into one line. ---- */
+.gx-rotating {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.gx-rotating-value {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 20px;
+  font-weight: 600;
+  animation: gx-rotating-in 400ms ease-out both;
+}
+
+@keyframes gx-rotating-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.gx-rotating-readout {
+  margin: 0;
+  color: var(--placeholder);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* ---- rolling text: a value rolling into one clipped line. ---- */
+.gx-rolling {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.gx-rolling-line {
+  position: relative;
+  height: 1.3em;
+  overflow: hidden;
+}
+
+.gx-rolling-value {
+  position: relative;
+  display: inline-block;
+  color: var(--foreground);
+  font-size: 26px;
+  font-weight: 650;
+  animation: gx-roll-in 300ms ease-out both;
+}
+
+@keyframes gx-roll-in {
+  from {
+    top: 1.1em;
+    opacity: 0;
+  }
+  to {
+    top: 0;
+    opacity: 1;
+  }
+}
+
+/* ---- sliding text: a value sliding into one clipped box. ---- */
+.gx-slidingtext {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.gx-slidingtext-box {
+  width: 220px;
+  overflow: hidden;
+}
+
+.gx-slidingtext-value {
+  position: relative;
+  display: inline-block;
+  color: var(--foreground);
+  font-size: 18px;
+  font-weight: 600;
+  animation: gx-slide-in 300ms ease-out both;
+}
+
+@keyframes gx-slide-in {
+  from {
+    left: 1.2em;
+    opacity: 0;
+  }
+  to {
+    left: 0;
+    opacity: 1;
+  }
+}
+
+/* ---- sliding number: tabular digits rolling into place. ---- */
+.gx-slidingnumber {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.gx-slidingnumber-line {
+  height: 1.2em;
+  overflow: hidden;
+}
+
+.gx-slidingnumber-value {
+  position: relative;
+  display: inline-block;
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-variant-numeric: tabular-nums;
+  animation: gx-roll-in 300ms ease-out both;
+}
+
+.gx-slidingnumber-readout {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+/* ---- highlight text: a phrase whose matches take the selection wash. ---- */
+.gx-highlight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 100%;
+}
+
+.gx-highlight-text {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.gx-highlight-mark {
+  background: var(--selection);
+  color: var(--foreground);
+  border-radius: 3px;
+}
+
+.gx-highlight-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-highlight-label {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gx-highlight-input {
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--input);
+  color: var(--input-foreground);
+  font: inherit;
+  font-size: 13px;
+}
+
+.gx-highlight-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+/* ---- copy button: an icon action that acknowledges the press. ---- */
+.gx-copybutton {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.gx-copybutton-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--control-height-sm);
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--background);
+}
+
+.gx-copybutton-token {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.gx-copybutton-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.gx-copybutton-btn:hover {
+  background: var(--secondary-hover);
+}
+
+.gx-copybutton-glyph {
+  display: inline-block;
+  animation: gx-roll-in 200ms ease-out both;
+}
+
+/* ---- ripple button: a wash spreading from the press point. ---- */
+.gx-ripple-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  overflow: hidden;
+  border: 0;
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gx-ripple-btn:hover {
+  background: var(--primary-hover);
+}
+
+.gx-ripple-wash {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary-foreground) 28%, transparent);
+  pointer-events: none;
+  animation: gx-ripple-spread 500ms ease-out both;
+}
+
+@keyframes gx-ripple-spread {
+  from {
+    width: 12px;
+    height: 12px;
+    opacity: 0.5;
+  }
+  to {
+    width: 360px;
+    height: 360px;
+    opacity: 0;
+  }
+}
+
+/* ---- liquid button: a fill flooding into the label on hover. ---- */
+.gx-liquid {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.gx-liquid-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gx-liquid-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: var(--accent);
+  transition: width 220ms ease-out;
+}
+
+.gx-liquid-btn:hover .gx-liquid-fill {
+  width: 100%;
+}
+
+.gx-liquid-btn-primary .gx-liquid-fill {
+  background: var(--primary);
+}
+
+.gx-liquid-btn > :not(.gx-liquid-fill) {
+  position: relative;
+}
+
+/* ---- shine button: a sheen crossing the label on hover. ---- */
+.gx-shine {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.gx-shine-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  overflow: hidden;
+  border: 0;
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gx-shine-btn-ghost {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+}
+
+.gx-shine-sheen {
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--foreground) 0%, transparent),
+    color-mix(in srgb, var(--foreground) 22%, transparent),
+    color-mix(in srgb, var(--foreground) 0%, transparent)
+  );
+  pointer-events: none;
+}
+
+.gx-shine-btn:hover .gx-shine-sheen {
+  animation: gx-shine-sweep 700ms ease-out both;
+}
+
+@keyframes gx-shine-sweep {
+  from {
+    left: -80%;
+  }
+  to {
+    left: 140%;
+  }
+}
+
+/* ---- magnetic: content leaning toward the pointer. ---- */
+.gx-magnetic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.gx-magnetic-card {
+  --mx: 0px;
+  --my: 0px;
+  position: relative;
+  left: var(--mx);
+  top: var(--my);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(320px, 100%);
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+  transition:
+    left 180ms ease-out,
+    top 180ms ease-out;
+}
+
+.gx-magnetic-title {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gx-magnetic-copy {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ---- theme toggler: an icon control flipping between light and dark. ---- */
+.gx-themetoggler {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.gx-themetoggler-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height-md);
+  height: var(--control-height-md);
+  border: 1px solid var(--border-strong);
+  border-radius: calc(var(--radius) + 2px);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.gx-themetoggler-btn:hover {
+  background: var(--hover);
+}
+
+.gx-themetoggler-glyph {
+  display: inline-block;
+  animation: gx-rotating-in 200ms ease-out both;
+}
+
+.gx-themetoggler-readout {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+/* ---- auto height: content growing into its measured height. ---- */
+.gx-autoheight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(360px, 100%);
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-autoheight-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  animation: gx-rotating-in 160ms ease-out both;
+}
+
+.gx-autoheight-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--row-height);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+.gx-autoheight-row:last-child {
+  border-bottom: 0;
+}
+
+.gx-autoheight-row b {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+/* ---- avatar group: overlapping discs capped by a chip. ---- */
+.gx-avatargroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.gx-avatargroup-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.gx-avatargroup-disc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height-lg);
+  height: var(--control-height-lg);
+  margin-left: -8px;
+  border: 2px solid var(--background);
+  border-radius: 50%;
+  background: var(--muted);
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gx-avatargroup-disc:first-child {
+  margin-left: 0;
+}
+
+.gx-avatargroup-chip {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  font-size: 11px;
+}
+
+.gx-avatargroup-readout {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+/* ---- code block: title bar, gutter and source. ---- */
+.gx-codeblock {
+  display: flex;
+  flex-direction: column;
+  width: min(460px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--background);
+}
+
+.gx-codeblock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+
+.gx-codeblock-title {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.gx-codeblock-copy {
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.gx-codeblock-copy:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-codeblock-body {
+  margin: 0;
+  padding: 10px 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.gx-codeblock-line {
+  display: flex;
+}
+
+.gx-codeblock-num {
+  flex: 0 0 auto;
+  width: 40px;
+  padding-right: 12px;
+  color: var(--placeholder);
+  text-align: right;
+  user-select: none;
+}
+
+.gx-codeblock-code {
+  color: var(--foreground);
+}
+
+/* ---- image zoom: a picture magnifying under the pointer. ---- */
+.gx-imagezoom {
+  position: relative;
+  width: min(360px, 100%);
+  height: 200px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+}
+
+.gx-imagezoom img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    width 300ms ease,
+    height 300ms ease,
+    left 300ms ease,
+    top 300ms ease;
+}
+
+.gx-imagezoom:hover img {
+  width: 160%;
+  height: 160%;
+  left: -30%;
+  top: -30%;
+}
+
+.gx-imagezoom-readout {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--overlay);
+  color: var(--foreground);
+  font-size: 11px;
+}
+
+/* ---- page transition: a clipped region swapping views. ---- */
+.gx-pagetransition {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  width: min(360px, 100%);
+}
+
+.gx-pagetransition-frame {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-pagetransition-view {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 20px;
+  animation: gx-view-in 320ms ease-out both;
+}
+
+.gx-pagetransition-view[data-direction="back"] {
+  animation-name: gx-view-in-back;
+}
+
+@keyframes gx-view-in {
+  from {
+    left: 16px;
+    opacity: 0;
+  }
+  to {
+    left: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes gx-view-in-back {
+  from {
+    left: -16px;
+    opacity: 0;
+  }
+  to {
+    left: 0;
+    opacity: 1;
+  }
+}
+
+.gx-pagetransition-title {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.gx-pagetransition-copy {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.gx-pagetransition-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---- pinned list: section headers held at the viewport top. ---- */
+.gx-pinnedlist {
+  width: min(320px, 100%);
+  height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--background);
+}
+
+.gx-pinnedlist-section + .gx-pinnedlist-section {
+  border-top: 1px solid var(--border);
+}
+
+.gx-pinnedlist-header {
+  position: sticky;
+  top: 0;
+  padding: 8px 12px;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-pinnedlist-row {
+  min-height: var(--row-height);
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-pinnedlist-row:last-child {
+  border-bottom: 0;
+}
+
+/* ---- reveal: content fading and travelling into place. ---- */
+.gx-reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.gx-reveal-stage {
+  display: flex;
+  min-height: 60px;
+  align-items: center;
+}
+
+.gx-reveal-content {
+  position: relative;
+  margin: 0;
+  color: var(--foreground);
+  font-size: 15px;
+  animation: gx-reveal-in 380ms ease-out both;
+}
+
+@keyframes gx-reveal-in {
+  from {
+    top: 8px;
+    opacity: 0;
+  }
+  to {
+    top: 0;
+    opacity: 1;
+  }
+}
+
+/* ---- scroll fade: strips that toggle with the offset. ---- */
+.gx-scrollfade {
+  position: relative;
+  width: min(320px, 100%);
+  height: 220px;
+}
+
+.gx-scrollfade-box {
+  height: 100%;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--background);
+}
+
+.gx-scrollfade-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--row-height);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+.gx-scrollfade-row:last-child {
+  border-bottom: 0;
+}
+
+.gx-scrollfade-edge {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  height: 28px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease-out;
+}
+
+.gx-scrollfade-edge[data-visible] {
+  opacity: 1;
+}
+
+.gx-scrollfade-top {
+  top: 1px;
+  border-radius: calc(var(--radius) + 2px) calc(var(--radius) + 2px) 0 0;
+  background: linear-gradient(var(--background), transparent);
+}
+
+.gx-scrollfade-bottom {
+  bottom: 1px;
+  border-radius: 0 0 calc(var(--radius) + 2px) calc(var(--radius) + 2px);
+  background: linear-gradient(transparent, var(--background));
+}
+
+/* ---- scroll progress: a reading line following the offset. ---- */
+.gx-scrollprogress {
+  display: flex;
+  flex-direction: column;
+  width: min(320px, 100%);
+}
+
+.gx-scrollprogress-track {
+  height: 3px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+
+.gx-scrollprogress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.gx-scrollprogress-box {
+  height: 190px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 calc(var(--radius) + 2px) calc(var(--radius) + 2px);
+  background: var(--background);
+}
+
+.gx-scrollprogress-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--row-height);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+.gx-scrollprogress-row:last-child {
+  border-bottom: 0;
+}
+
+/* ---- motion grid: cells travelling to their new slots. ---- */
+.gx-motiongrid {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.gx-motiongrid-stage {
+  position: relative;
+}
+
+.gx-motiongrid-cell {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 150px;
+  height: 96px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    left 320ms ease-out,
+    top 320ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-bubbles-dot,
+  .gx-stars-dot,
+  .gx-particles-dot,
+  .gx-gravitystars-dot,
+  .gx-fireworks-spark,
+  .gx-hexagon,
+  .gx-topography,
+  .gx-glyph-mark,
+  .gx-gradient-layer,
+  .gx-typing-caret,
+  .gx-splitting-word,
+  .gx-rotating-value,
+  .gx-rolling-value,
+  .gx-slidingtext-value,
+  .gx-slidingnumber-value,
+  .gx-ripple-wash,
+  .gx-shine-sheen,
+  .gx-themetoggler-glyph,
+  .gx-autoheight-content,
+  .gx-pagetransition-view,
+  .gx-reveal-content {
+    animation: none;
+  }
+}
