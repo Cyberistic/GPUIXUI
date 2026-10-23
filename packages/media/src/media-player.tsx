@@ -301,6 +301,21 @@ export const MediaPlayer = (props: MediaPlayerProps): ReactElement => {
     playhead: clampPlayhead(props.defaultPlayhead ?? 0, duration),
   }));
   const stateRef = useRef(state);
+  /**
+   * The reports the clock must reach: an interval is created once and would
+   * otherwise keep the callbacks from that render, so a caller that swaps its
+   * handlers while a clip plays would hear the old pair until it paused.
+   */
+  const reports = useRef({
+    onPlayheadChange: props.onPlayheadChange,
+    onPlayingChange: props.onPlayingChange,
+  });
+  useEffect(() => {
+    reports.current = {
+      onPlayheadChange: props.onPlayheadChange,
+      onPlayingChange: props.onPlayingChange,
+    };
+  });
 
   /**
    * The only writer: every move is clamped once, the paint and the reports read
@@ -321,10 +336,10 @@ export const MediaPlayer = (props: MediaPlayerProps): ReactElement => {
     stateRef.current = settled;
     setState(settled);
     if (settled.playhead !== current.playhead) {
-      props.onPlayheadChange?.(settled.playhead);
+      reports.current.onPlayheadChange?.(settled.playhead);
     }
     if (settled.playing !== current.playing) {
-      props.onPlayingChange?.(settled.playing);
+      reports.current.onPlayingChange?.(settled.playing);
     }
   };
 

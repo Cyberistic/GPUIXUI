@@ -64,16 +64,22 @@ interface Page {
   readonly root: TestRoot;
   readonly frames: number[];
   readonly playheads: number[];
+  readonly swapped: number[];
   readonly playing: boolean[];
   show: (disabled: boolean) => void;
+  swap: () => void;
 }
 
 const mount = (): Page => {
   const frames: number[] = [];
   const playheads: number[] = [];
+  const swapped: number[] = [];
   const playing: boolean[] = [];
   const root = createTestRoot({ width: 800, height: 600 });
-  const show = (disabled: boolean): void => {
+  const render = (
+    disabled: boolean,
+    onPlayheadChange: (playhead: number) => void,
+  ): void => {
     root.render(
       <ThemeProvider theme={lightTheme}>
         <MediaPlayer
@@ -91,15 +97,18 @@ const mount = (): Page => {
             frames.push(playhead);
             return Option.some(frameFor(playhead % 256));
           }}
-          onPlayheadChange={(playhead) => playheads.push(playhead)}
+          onPlayheadChange={onPlayheadChange}
           onPlayingChange={(next) => playing.push(next)}
           disabled={disabled}
         />
       </ThemeProvider>,
     );
   };
+  const show = (disabled: boolean): void =>
+    render(disabled, (playhead) => playheads.push(playhead));
+  const swap = (): void => render(false, (playhead) => swapped.push(playhead));
   show(false);
-  return { root, frames, playheads, playing, show };
+  return { root, frames, playheads, swapped, playing, show, swap };
 };
 
 const textOf = (root: TestRoot, testId: string): string => {
@@ -208,6 +217,18 @@ describe("MediaPlayer transport", () => {
     await settle();
     expect(page.playheads.length).toBe(held);
     expect(textOf(page.root, "media-time")).not.toBe("0:04 / 0:04");
+    page.root.unmount();
+  });
+
+  it("reports to the handler the caller last handed it", async () => {
+    const page = mount();
+    click(page.root, "media-play");
+    await waitUntil(() => page.playheads.length > 0);
+    page.swap();
+    await waitUntil(() => page.swapped.length > 0);
+    expect(page.swapped.length).toBeGreaterThan(0);
+    expect(page.playing.at(-1)).toBe(true);
+    click(page.root, "media-play");
     page.root.unmount();
   });
 
