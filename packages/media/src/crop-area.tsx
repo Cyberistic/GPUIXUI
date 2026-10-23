@@ -44,7 +44,7 @@ import {
   type CropModifiers,
 } from "./crop/logic.js";
 import { recipeStyle, useTheme, type Theme } from "./internal.js";
-import { accessibleName } from "./name.js";
+import { accessibleName, PICTURE_NAME } from "./name.js";
 
 /** The handler side of a gesture, owned by the React wrapper. */
 export interface CropAreaSurface {
@@ -75,7 +75,7 @@ export interface CropKey {
 export interface CropAreaProps extends Omit<Props, "children" | "onChange"> {
   /** A path, data URL or http(s) URL for the picture. A blank or non-text value paints no picture. */
   readonly src: string;
-  /** The picture's accessible name. */
+  /** The picture's accessible name. A blank or non-text value reads as `"Picture"`. */
   readonly alt: string;
   /** The frame's width in points; the crop's coordinate space. */
   readonly width: number;
@@ -182,6 +182,9 @@ export const renderCropArea = (
     ...rest
   } = props;
   const name = accessibleName(label, DEFAULT_LABEL);
+  // The picture is an `Image` node named by its `alt`; a name restored as
+  // blank or as a non-string publishes a node no reader can identify.
+  const pictureName = accessibleName(alt, PICTURE_NAME);
   // A record restored from storage writes `null` where it carried no picture;
   // reading the source as text keeps the frame, its mask and its handles
   // paintable instead of throwing out of the render on `src.trim()`.
@@ -218,7 +221,7 @@ export const renderCropArea = (
       {picture.length === 0 ? null : (
         <img
           src={picture}
-          alt={alt}
+          alt={pictureName}
           objectFit="fill"
           style={{ width: bounds.width, height: bounds.height }}
         />

@@ -59,6 +59,43 @@ describe("ImagePreview", () => {
     expect(body?.type).toBe(ImageZoom);
   });
 
+  it("names a picture the caller did not, never an unnamed image", () => {
+    // The bug guarded: `alt` was handed to the `<img>`/`ImageZoom` untouched,
+    // and a default covers only `undefined` — a blank name from an i18n table,
+    // or a `null` a saved record writes where it carried no name, published an
+    // `Image` node with no name in the renderer (measured in a real window).
+    Arr.forEach(["", "   ", null as unknown as string], (alt) => {
+      const root = renderImagePreview(
+        { src: "data:image/png;base64,AA==", alt },
+        lightTheme,
+      );
+      const frame = elementChildren(root)[0] ?? expect.fail("no frame");
+      const body =
+        elementChildren(frame)[0] ?? expect.fail("the preview drew no body");
+      expect(elementProp(body, "alt")).toStrictEqual(Option.some("Picture"));
+    });
+    const bare = renderImagePreview(
+      {
+        src: "data:image/png;base64,AA==",
+        alt: "  ",
+        zoom: false,
+      },
+      lightTheme,
+    );
+    const frame = elementChildren(bare)[0] ?? expect.fail("no frame");
+    const host = elementChildren(frame)[0] ?? expect.fail("no picture");
+    expect(expectSome(hostTag(host))).toBe("img");
+    expect(elementProp(host, "alt")).toStrictEqual(Option.some("Picture"));
+    const named = renderImagePreview(
+      { src: "x.png", alt: "  Ada  " },
+      lightTheme,
+    );
+    const namedFrame = elementChildren(named)[0] ?? expect.fail("no frame");
+    const namedBody =
+      elementChildren(namedFrame)[0] ?? expect.fail("the preview drew no body");
+    expect(elementProp(namedBody, "alt")).toStrictEqual(Option.some("Ada"));
+  });
+
   it("paints the loading state when the caller says it is loading", () => {
     const root = renderImagePreview(
       { src: "x.png", alt: "photo", status: "loading" },

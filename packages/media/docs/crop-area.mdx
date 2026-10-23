@@ -33,7 +33,7 @@ const [crop, setCrop] = useState(
 | Prop | Type | Default |
 | ---- | ---- | ------- |
 | `src` | `string` | required (blank paints no picture; a non-text value paints none too) |
-| `alt` | `string` | required |
+| `alt` | `string` | required (a blank or non-text value reads as `"Picture"`) |
 | `width` | `number` | required |
 | `height` | `number` | required |
 | `value` | `CropRect` | required (an absent value reads as the origin at the smallest side) |
@@ -58,5 +58,6 @@ const [crop, setCrop] = useState(
 - A **move** never changes the hole's sides: the caller's `minSize` travels with a pointer drag and with `Alt`+arrow, so a hole allowed below the default does not grow to it.
 - **`fill` is not a choice**: crop coordinates only match a filled frame.
 - A **blank `label`** reads as `"Crop area"` and is trimmed, so a stored empty name cannot publish an unnamed group and four handles called "`nw` handle".
+- **A blank picture name reads as `"Picture"`**: the runtime publishes the `<img>` as an `Image` node named by its `alt`, so an empty or non-text name is announced as a picture rather than with no name at all. A name given is trimmed and kept.
 - **A picture restored from storage that is not text paints no picture**: `src` is read as text once, so a saved record's `null` leaves the frame, its mask and its handles paintable instead of throwing out of the render.
 - **An absent `value` paints the default hole**: a saved record that carried no crop reads as the frame's origin at the smallest side (`0, 0, 24 × 24` by default), the rectangle an unreadable field reads as — the frame, the mask and the four handles stay paintable instead of the render throwing on the missing sides.

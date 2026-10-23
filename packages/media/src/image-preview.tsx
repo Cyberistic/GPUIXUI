@@ -23,7 +23,7 @@ import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 import type { ReactElement } from "react";
 import { recipeStyle, useTheme, type Theme } from "./internal.js";
-import { accessibleName } from "./name.js";
+import { accessibleName, PICTURE_NAME } from "./name.js";
 
 /** What the preview is painting right now. */
 export const ImagePreviewStatus = Schema.Literals([
@@ -40,7 +40,7 @@ const isStatus = Schema.is(ImagePreviewStatus);
 export interface ImagePreviewProps extends Omit<Props, "children"> {
   /** A filesystem path, data URL or http(s) URL for the picture. A blank or non-text value paints the error state. */
   readonly src: string;
-  /** The picture's accessible name. */
+  /** The picture's accessible name. A blank or non-text value reads as `"Picture"`. */
   readonly alt: string;
   /** A line under the frame. */
   readonly caption?: string;
@@ -123,6 +123,10 @@ export const renderImagePreview = (
   const loading = accessibleName(loadingLabel, "Loading");
   const error = accessibleName(errorLabel, "Could not load image");
   const retry = accessibleName(retryLabel, "Retry");
+  // An `<img>` publishes an `Image` node named by its `alt`, and a blank one is
+  // a name a reader cannot identify: a saved record writes `null` where it
+  // carried no name, so both the blank and the non-text arrive here as absent.
+  const pictureName = accessibleName(alt, PICTURE_NAME);
   // A record restored from storage writes `null` where it carried no picture;
   // reading the source as text keeps the derived error state paintable instead
   // of throwing out of `isBlank`.
@@ -159,7 +163,7 @@ export const renderImagePreview = (
       zoom ? (
         <ImageZoom
           src={source}
-          alt={alt}
+          alt={pictureName}
           width={boxWidth}
           height={boxHeight}
           scale={scale}
@@ -168,7 +172,7 @@ export const renderImagePreview = (
       ) : (
         <img
           src={source}
-          alt={alt}
+          alt={pictureName}
           objectFit="contain"
           style={{ width: "100%", height: "100%" }}
         />

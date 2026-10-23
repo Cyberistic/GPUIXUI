@@ -179,6 +179,40 @@ describe("renderCropArea", () => {
     expect(styleOf("se")).toMatchObject({ left: 230, top: 150 });
   });
 
+  it("names a picture the caller did not, never an unnamed image", () => {
+    // The bug guarded: `alt` reached the `<img>` untouched, and the runtime
+    // publishes an `<img>` as an `Image` node named by that `alt` — so a blank
+    // name (an i18n row) or a saved record's `null` published a picture no
+    // reader could identify, while the frame and its handles were already read
+    // through the absence rule.
+    Arr.forEach(["", "   ", null as unknown as string], (alt) => {
+      const root = renderCropArea(
+        props({ src: "data:image/png;base64,AA==", alt }),
+        lightTheme,
+        surfaceOf(),
+      );
+      const picture = expectSome(
+        Arr.findFirst(
+          elementChildren(root),
+          (child) => Option.getOrElse(hostTag(child), () => "") === "img",
+        ),
+      );
+      expect(elementProp(picture, "alt")).toStrictEqual(Option.some("Picture"));
+    });
+    const named = renderCropArea(
+      props({ src: "data:image/png;base64,AA==", alt: "  Ada  " }),
+      lightTheme,
+      surfaceOf(),
+    );
+    const picture = expectSome(
+      Arr.findFirst(
+        elementChildren(named),
+        (child) => Option.getOrElse(hostTag(child), () => "") === "img",
+      ),
+    );
+    expect(elementProp(picture, "alt")).toStrictEqual(Option.some("Ada"));
+  });
+
   it("paints the resize cursor along each corner's own diagonal", () => {
     // The bug guarded: every handle painted `nwse-resize`, so the top-right and
     // bottom-left handles pointed across the diagonal they drag on.

@@ -30,7 +30,7 @@ src/
   file-upload.tsx     the queue view and the upload wiring
   upload/queue.ts     the pure state machine (idle | uploading | done | error)
   crop-area.tsx       the frame, the veil bars and the four corner handles
-  behaviour/          the crop gestures, in the real GPUix renderer
+  behaviour/          the crop gestures, the player transport and a picture's name, in the real GPUix renderer
   crop/logic.ts       the crop arithmetic (bounds, bars, drag, keyboard)
   qr-code.tsx         the symbol's frame, quiet zone and overflow state
   qr/encode.ts        the encoder (byte mode, versions 1-10, Reed-Solomon)
@@ -46,6 +46,6 @@ docs/                 image-preview.mdx, drop-zone.mdx, file-upload.mdx,
 
 ```sh
 nub run --filter @gpuixui/media test          # queue + render-function suites
-nub run --filter @gpuixui/media test:behaviour # the crop gestures and the player transport, in the real renderer
+nub run --filter @gpuixui/media test:behaviour # the crop gestures, the player transport and the picture names, in the real renderer
 nub run --filter @gpuixui/media check-types
 ```
