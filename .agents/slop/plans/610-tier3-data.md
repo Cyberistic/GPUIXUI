@@ -433,6 +433,22 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   the branch at the first assertion. README's key-routing row,
   `docs/tree-view.mdx` §Keyboard and the Tree views row state the rule. 178 unit
   / 107 behaviour green; live `--only data-tree-lifecycle` (1/1) unchanged.
+- **The charts' paint is window-verified**: the status row said
+  *shipped, window-verified* while the five charts had only the offscreen
+  behaviour suite and the headless `data-charts-core` scenario. The live
+  `chart-surface-lifecycle` mounts the shipped `BarChart`, `LineChart`,
+  `StackedBar`, `DonutChart` and `Sparkline` and counts paint out of each
+  **plot's own crop**: two series tints in one plot (the route a one-tint mask
+  forbids), a stack read from its floor, three ring slices and no layer for the
+  zero datum, the sparkline in the caller's colour, and a widened bar repainting
+  a point it did not reach before — 40 checks on 0.11.0, ~1.8 s, twice.
+  `apps/playground/src/live/chart-surface.ts` owns the data, sizes and points;
+  `chart-surface.test.ts` (5 cases) holds the bar/stack samples to
+  `groupedBarMarks`/`stackedBarMarks`, each ring sample to the arc radii its own
+  path names and its datum's sweep, the view to the shipped parts, and the
+  package's status row, Charts row and page to the probe. Direction measured:
+  tinting every layer with the first palette slot fails `the bars plot paints
+  the second series' tint`; restored, 1/1.
 
 
 ## 5. Acceptance
