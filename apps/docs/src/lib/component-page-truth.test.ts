@@ -3124,6 +3124,57 @@ describe("the curated component pages", () => {
     expect(text).toContain("200 ms");
   });
 
+  it("documents the props the one preference defaults, where they are declared", () => {
+    // The primitives' Button, Switch and Tooltip read `useMotionPreference()`
+    // and let the prop win, and the Button's spinner name comes from the
+    // provider's `loading.busy`. The curated tables were written before that
+    // seam: the Button page listed neither prop, and the Switch and Tooltip
+    // rows said the default was `false` rather than the provider's preference —
+    // so a reader under a reduced provider was told the control still animates.
+    const apiSection = (file: string): string => {
+      const text = read(`apps/docs/content/docs/components/${file}`);
+      const start = text.indexOf("## API reference");
+      const end = text.indexOf("\n## ", start + 1);
+      return start === -1
+        ? ""
+        : text.slice(start, end === -1 ? undefined : end);
+    };
+    const apiRow = (file: string, prop: string): string =>
+      apiSection(file)
+        .split("\n")
+        .find((line) => line.startsWith(`| \`${prop}\``)) ?? "";
+
+    ["button.mdx", "switch.mdx", "tooltip.mdx"].forEach((file) => {
+      const page = pages.find((candidate) => candidate.file === file);
+      expect(page, `${file} is not in the curated set`).toBeDefined();
+      if (page === undefined) return;
+
+      expect(
+        read(page.source),
+        `${file}: the component no longer declares the preference prop`,
+      ).toContain("readonly reducedMotion?: boolean;");
+      const row = apiRow(file, "reducedMotion");
+      expect(row, `${file}: no reducedMotion row in its API table`).not.toBe(
+        "",
+      );
+      expect(
+        row,
+        `${file}: the row does not say the provider supplies the default`,
+      ).toContain("provider's preference");
+      expect(row, `${file}: the row does not say the prop wins`).toContain(
+        "the prop wins",
+      );
+    });
+
+    // The spinner's name defaults to the message table the provider publishes.
+    expect(read("packages/primitives/src/components/Button.tsx")).toContain(
+      "readonly loadingLabel?: string;",
+    );
+    const loading = apiRow("button.mdx", "loadingLabel");
+    expect(loading, "button.mdx: no loadingLabel row").not.toBe("");
+    expect(loading).toContain("loading.busy");
+  });
+
   it("list every package the component imports", () => {
     const missing = pages.flatMap((page) => {
       const listed = dependencies(page);

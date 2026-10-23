@@ -140,8 +140,10 @@ same box rather than mounting a second one.
 **`reducedMotion` removes the journey, not the frames.** The resting frame is
 what paints either way; a reduced close unmounts at once instead of holding the
 exit. The runtime exposes no reduced-motion preference (see
-[Runtime capabilities](/docs/runtime)), so the application states it, exactly as
-it states the theme mode — the preview's *motion* switch shows both.
+[Runtime capabilities](/docs/runtime)), so the application states it once
+through `MotionProvider` from `@gpuixui/motion/react`, exactly as it states the
+theme mode; the wrapper reads that preference and the `reducedMotion` prop
+overrides it on one tip. The preview's *motion* switch shows both.
 
 ## API reference
 
@@ -157,7 +159,7 @@ it states the theme mode — the preview's *motion* switch shows both.
 | `defaultOpen` | `boolean` | `false` | starts open before any interaction; ignored while `open` is set |
 | `onOpenChange` | `(open: boolean) => void` | — | every state the runtime asked for, controlled or not |
 | `disableHoverableContent` | `boolean` | `false` | close as soon as the pointer leaves the trigger, instead of letting it cross onto the tip |
-| `reducedMotion` | `boolean` | `false` | removes the journey — the tip lands at once and a close unmounts at once instead of holding the exit |
+| `reducedMotion` | `boolean` | the provider's preference (`false` when none) | removes the journey — the tip lands at once and a close unmounts at once instead of holding the exit; the prop wins |
 | `className` | `string` | — | joined after the tip's recipe, so it wins conflicts |
 | `style` | `StyleDesc` | — | merged after the recipe **and** `className`, so it is the last word |
 | `testId` | `string` | — | lands on the tip's surface |

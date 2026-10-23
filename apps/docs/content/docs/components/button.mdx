@@ -101,6 +101,8 @@ cannot fire an action twice.
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
 | `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
+| `loadingLabel` | `string` | the provider's `loading.busy` (`Loading`) | the spinner's accessible name |
+| `reducedMotion` | `boolean` | the provider's preference (`false` when none) | lands the busy spinner at rest instead of animating it; the prop wins |
 | `leading` / `trailing` | `ReactNode` | none | icon or element beside the label |
 | `label` | `string` | none | accessible name; required for an icon-only button |
 | `onActivate` | `() => void` | none | click or activating key; not called while busy |

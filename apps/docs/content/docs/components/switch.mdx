@@ -127,7 +127,7 @@ stay observable to the caller.
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the checked fill and the knob's on-colour |
 | `label` | `string` | none | the accessible name; a visible `Label` does not supply it |
 | `description` | `string` | none | announced help (`aria-description`); wins over a tooltip's text |
-| `reducedMotion` | `boolean` | `false` | the knob lands on its position instead of sliding there |
+| `reducedMotion` | `boolean` | the provider's preference (`false` when none) | the knob lands on its position instead of sliding there; the prop wins |
 | `style` | `StateStyle<SwitchState>` | — | resolved against the live state and merged last |
 | `className` | `string` | — | joined after the recipe, so it wins conflicts |
 | `testId` | `string` | — | stable locator |
@@ -167,9 +167,12 @@ The knob's position is a **`left` inset**, not a transform: the runtime has no
 `transform`, but it interpolates an inset, so the thumb slides 150 ms
 `easeOut`. `initial={false}` keeps the first paint at rest — only a state change
 animates. `reducedMotion` uses `stillTransition`, which paints the same two
-insets with a zero duration, because the runtime exposes no reduced-motion
-preference and the caller supplies its own. The selected platform's density and
-icon steps resize the pill and knob together; the band never drops below 24px.
+insets with a zero duration. The runtime exposes no reduced-motion preference,
+so the application states it once through `MotionProvider`
+(`@gpuixui/motion/react`); the switch reads that preference and the
+`reducedMotion` prop overrides it on one control. The selected platform's
+density and icon steps resize the pill and knob together; the band never drops
+below 24px.
 
 ## Accessibility and limitations
 
@@ -184,7 +187,8 @@ icon steps resize the pill and knob together; the band never drops below 24px.
   `aria-disabled` and no loading or pending state. Disable the switch while a
   request is in flight.
 - The slide is the caller's preference, not the runtime's: there is no
-  `transform`, and `reducedMotion` is a prop rather than an OS query.
+  `transform`, and the preference comes from the application — `MotionProvider`,
+  with `reducedMotion` overriding it per control — rather than an OS query.
 - A theme **restored from storage** writes `null` where it carried no switch
   paint (JSON has no `undefined`): that is no declaration, so the switch paints
   the accent family in the derived box rather than throwing at the stored
