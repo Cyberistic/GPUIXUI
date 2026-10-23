@@ -26,6 +26,7 @@
 
 import { Match } from "effect";
 import * as Arr from "effect/Array";
+import * as Number from "effect/Number";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 
@@ -93,17 +94,30 @@ export const isAny = (tree: FilterTree): tree is AnyClause =>
 export const isNot = (tree: FilterTree): tree is NotClause =>
   tree.kind === "not";
 
-/** A number a comparison reads, or `NaN` when the text is not one. */
-const numeric = (value: string | number): number =>
-  typeof value === "number" ? value : Number(value);
+/** A number a comparison reads, or `None` when the text is not one. */
+const numeric = (value: string | number): Option.Option<number> =>
+  typeof value === "number" ? Option.some(value) : Number.parse(value);
+
+/** Whether two sides both read as numbers and the first is beyond the second. */
+const ordered = (
+  left: string | number,
+  right: string,
+  compare: (one: number, other: number) => boolean,
+): boolean =>
+  Option.match(Option.all([numeric(left), numeric(right)]), {
+    onNone: () => false,
+    onSome: ([one, other]) => compare(one, other),
+  });
 
 /**
  * One comparison.
  *
  * A numeric comparison reads both sides as numbers, so a field the caller
  * stores as a number and a clause the caller types as text still compare. A
- * text that is not a number never satisfies a numeric comparison: `NaN` fails
- * every order.
+ * side that does not read as a number — a blank value the reader has not typed
+ * yet, or text that is not one — never satisfies an order: the builder appends
+ * a clause with no value, and the global `Number("")` is `0`, which would
+ * otherwise keep every positive row.
  */
 export const matchesComparison = (
   comparison: Comparison,
@@ -116,8 +130,12 @@ export const matchesComparison = (
     Match.when("contains", () =>
       Str.includes(Str.toLowerCase(right), 0)(Str.toLowerCase(`${left}`)),
     ),
-    Match.when("greaterThan", () => numeric(left) > numeric(right)),
-    Match.when("lessThan", () => numeric(left) < numeric(right)),
+    Match.when("greaterThan", () =>
+      ordered(left, right, (one, other) => one > other),
+    ),
+    Match.when("lessThan", () =>
+      ordered(left, right, (one, other) => one < other),
+    ),
     Match.exhaustive,
   );
 

@@ -8,7 +8,10 @@
  *
  * The tree's rules are the pure ones in `surfaces/logic.ts`: the comparisons are
  * literal, a numeric comparison reads both sides as numbers, and an empty
- * `all` matches everything (which is what an empty builder means).
+ * `all` matches everything (which is what an empty builder means). A side that
+ * does not read as a number — the blank value a clause starts with — satisfies
+ * no order, so an unfilled clause keeps no row rather than reading the blank as
+ * zero.
  *
  * The runtime paints no menu of its own, so the field and comparison pickers
  * are the component package's measured `DropdownMenu` — the same surface the

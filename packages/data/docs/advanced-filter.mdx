@@ -52,6 +52,19 @@ The tree's own API, exported beside the builder:
 | `matchesTree(tree, row, valueOf)` | whether one row matches |
 | `describeTree(tree)` | the sentence a tree reads as |
 
+## How a comparison reads a value
+
+The comparisons are literal — a clause's value is never treated as a pattern.
+An `equals`/`notEquals` compares the field's text, a `contains` is a
+case-insensitive substring, and an order reads **both** sides as numbers, so a
+field stored as a number and a clause typed as text still compare.
+
+A side that does not read as a number satisfies no order. That includes the
+blank value a clause starts with: the builder appends `value: ""`, and an order
+built from it keeps no row rather than treating the blank as `0`. A field the
+row does not carry reads as blank too, and text like `wide` never satisfies an
+order.
+
 ## Limitations
 
 - The builder edits a tree; it does not run one — use `filterByTree`.

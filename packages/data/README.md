@@ -401,11 +401,14 @@ const kept = filterByTree(rows, tree, (row, field) => row[field]);
 ```
 
 The comparisons are literal — a value is never a pattern — and an order reads
-both sides as numbers. An empty `all` matches everything, which is what an
-empty builder means. The toolbar's search is the one **debounced** field (the
-core's `@tanstack/pacer` debouncer owns the wait); the table's own filter field
-is deliberately not, because `table-filter-lifecycle` measured the set narrowing
-as the reader types.
+both sides as numbers, so a field stored as a number and a clause typed as text
+still compare. A side that does not read as a number satisfies no order, the
+blank value a new clause starts with included, so an unfilled clause keeps no
+row rather than reading the blank as `0`. An empty `all` matches everything,
+which is what an empty builder means. The toolbar's search is the one
+**debounced** field (the core's `@tanstack/pacer` debouncer owns the wait); the
+table's own filter field is deliberately not, because `table-filter-lifecycle`
+measured the set narrowing as the reader types.
 
 ## Styling
 

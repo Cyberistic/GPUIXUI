@@ -11,7 +11,9 @@
  * - an edit that rebuilt the tree around a nested clause and lost the clauses
  *   the reader did not touch;
  * - a removal that removed the wrong sibling;
- * - an empty builder that matched nothing instead of everything.
+ * - an empty builder that matched nothing instead of everything;
+ * - an order that read a blank side as zero, so an unfilled clause kept every
+ *   positive row.
  */
 
 import { Match } from "effect";
@@ -106,6 +108,20 @@ describe("the comparisons", () => {
     expect(matchesComparison("lessThan", "wide", "10")).toBe(false);
   });
 
+  it("reads a blank side as no number, so an unfilled clause keeps nothing", () => {
+    // The builder appends a clause with `value: ""`; a reader can switch its
+    // comparison before typing, and `Number("")` is 0 — so the order used to
+    // keep every row with a value above (or below) zero.
+    expect(matchesComparison("greaterThan", 5, "")).toBe(false);
+    expect(matchesComparison("lessThan", -5, "")).toBe(false);
+    // A row with no value is not zero either.
+    expect(matchesComparison("greaterThan", "", "-1")).toBe(false);
+    expect(matchesComparison("lessThan", "", "10")).toBe(false);
+    expect(matchesComparison("greaterThan", " ", "0")).toBe(false);
+    // A number that is not a number satisfies no order either.
+    expect(matchesComparison("greaterThan", Number.NaN, "0")).toBe(false);
+  });
+
   it("lists the comparisons a builder offers", () => {
     expect(comparisons).toEqual([
       "equals",
@@ -130,6 +146,16 @@ describe("the tree", () => {
     expect(filterByTree(rows, tree, valueOf).map((row) => row.name)).toEqual([
       "main.ts",
     ]);
+  });
+
+  it("keeps no row while a clause's value is not typed yet", () => {
+    const tree = appendClause(emptyTree, clause("size", "greaterThan", ""));
+
+    expect(filterByTree(rows, tree, valueOf)).toEqual([]);
+    // A field the row does not carry reads as blank, not as zero.
+    expect(
+      filterByTree(rows, clause("missing", "lessThan", "10"), valueOf),
+    ).toEqual([]);
   });
 
   it("keeps a row any one clause matches", () => {
