@@ -616,7 +616,10 @@ inventory does not support. The query indexes those words too, which is what
 makes `partial` a way to find the components the runtime covers only in part.
 `component-index.test.ts` holds the resolution, both axes and the silent case,
 `component-index.test.tsx` holds the badge on the rendered rows, and
-`component-page.test.ts` requires the index page to say what the mark means.
+`component-page.test.ts` requires the index page to say what the mark means. The
+query is not a dead end: a filter the composed lane cannot answer names the lower
+lane that does hold it, with the matching pages linked, so typing a primitive's
+name here finds the primitive.
 
 Because the package writes Markdown and the site compiles MDX, the packages'
 files must satisfy both: valid YAML frontmatter and no raw `<tag>` outside code.

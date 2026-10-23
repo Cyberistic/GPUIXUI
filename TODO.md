@@ -9997,7 +9997,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
       README §What it is not teaches the id rule. No native scenario applies —
       a pure verdict over results.
 
-`[x]` Verify and mark the **seven shipped-but-unchecked Tier 4/5 rows** — Collapsible sidebars, Command palette, Breadcrumb navigation, Terminal surfaces, Multi-pane editing layouts, Syntax highlighting and Keyboard navigation were `todo` while their evidence existed. Re-ran the probes on this tree: `--only command-palette`, `--only grid-focus-lifecycle`, `--only breadcrumb-navigation-lifecycle`, `--only sidebar-clip-lifecycle` (4/4 green), `--only editor-surface` (headless, green) and the four terminal-mode scenarios in a pty (4/4 green). All seven rows are marked — six `done (composed)`/`done` and Terminal surfaces `unsupported (no host element)` with the measured terminal-runtime alternative. *Multi-pane editing layouts* closed last: `multi-pane-editor` is green (31 checks) once its stale session expectation was re-stated to the divider's newer `role="separator"` contract — a drag parks the session on the divider, a press returns it to the pane, and neither buffer changes. Evidence: `--only multi-pane-editor`, 1/1 green on this tree. Re-verified 2026-10-23 on `bc5316fc`, the tree this pass works from: `--only command-palette --only grid-focus-lifecycle --only breadcrumb-navigation-lifecycle --only sidebar-clip-lifecycle --only multi-pane-editor` 5/5 live green (8.9–15.6 s each), `editor-surface` 1/1 headless, and `dist/terminal/run.js` 4/4 in a pty, so all seven rows still hold. Re-verified again on `562a17ed`: `--only sidebar-clip-lifecycle --only command-palette --only breadcrumb-navigation-lifecycle --only multi-pane-editor --only syntax-palette --only grid-focus-lifecycle` 6/6 live green (3.4–13.2 s each), `--only editor-surface` 1/1 headless, and the terminal runner 4/4 in a pty; the four Tier 5 surfaces' own probes are green too (`--only multi-step-form-lifecycle --only qr-matrix --only crop-overlay --only markdown-fence`, 4/4). Re-verified on `be928086` (2026-10-23): the same six live ids 6/6 green (2.4–12.4 s each), `--only editor-surface` 1/1 headless, and `dist/terminal/run.js` 4/4 in a pty, so all seven rows still hold and none needed a change. The four Tier 5 surfaces' own probes were re-run on the same commit: `--only multi-step-form-lifecycle --only qr-matrix --only crop-overlay --only markdown-fence` 4/4 green (0.6–8.8 s each). Re-verified on `b164eddf` (2026-10-23, after the editor whole-word and crop-move fixes): the six live ids are 6/6 green in one window (2.4–12.3 s each), `--only editor-surface` is 1/1 headless, `dist/terminal/run.js` is 4/4 in a pty, and the same four Tier 5 probes are 4/4 green, so all seven rows still hold. Re-verified on `de1fb2d4` (2026-10-23, the page-to-type guard pass): the six live ids are 6/6 green (0.5–8.9 s each), `--only editor-surface` is 1/1 headless, `dist/terminal/run.js` is 4/4 in a pty, and `--only multi-step-form-lifecycle --only qr-matrix --only crop-overlay --only markdown-fence` are 4/4 green; none needed a change.
+`[x]` Verify and mark the **seven shipped-but-unchecked Tier 4/5 rows** — Collapsible sidebars, Command palette, Breadcrumb navigation, Terminal surfaces, Multi-pane editing layouts, Syntax highlighting and Keyboard navigation were `todo` while their evidence existed. Re-ran the probes on this tree: `--only command-palette`, `--only grid-focus-lifecycle`, `--only breadcrumb-navigation-lifecycle`, `--only sidebar-clip-lifecycle` (4/4 green), `--only editor-surface` (headless, green) and the four terminal-mode scenarios in a pty (4/4 green). All seven rows are marked — six `done (composed)`/`done` and Terminal surfaces `unsupported (no host element)` with the measured terminal-runtime alternative. *Multi-pane editing layouts* closed last: `multi-pane-editor` is green (31 checks) once its stale session expectation was re-stated to the divider's newer `role="separator"` contract — a drag parks the session on the divider, a press returns it to the pane, and neither buffer changes. Evidence: `--only multi-pane-editor`, 1/1 green on this tree. Re-verified 2026-10-23 on `bc5316fc`, the tree this pass works from: `--only command-palette --only grid-focus-lifecycle --only breadcrumb-navigation-lifecycle --only sidebar-clip-lifecycle --only multi-pane-editor` 5/5 live green (8.9–15.6 s each), `editor-surface` 1/1 headless, and `dist/terminal/run.js` 4/4 in a pty, so all seven rows still hold. Re-verified again on `562a17ed`: `--only sidebar-clip-lifecycle --only command-palette --only breadcrumb-navigation-lifecycle --only multi-pane-editor --only syntax-palette --only grid-focus-lifecycle` 6/6 live green (3.4–13.2 s each), `--only editor-surface` 1/1 headless, and the terminal runner 4/4 in a pty; the four Tier 5 surfaces' own probes are green too (`--only multi-step-form-lifecycle --only qr-matrix --only crop-overlay --only markdown-fence`, 4/4). Re-verified on `be928086` (2026-10-23): the same six live ids 6/6 green (2.4–12.4 s each), `--only editor-surface` 1/1 headless, and `dist/terminal/run.js` 4/4 in a pty, so all seven rows still hold and none needed a change. The four Tier 5 surfaces' own probes were re-run on the same commit: `--only multi-step-form-lifecycle --only qr-matrix --only crop-overlay --only markdown-fence` 4/4 green (0.6–8.8 s each). Re-verified on `b164eddf` (2026-10-23, after the editor whole-word and crop-move fixes): the six live ids are 6/6 green in one window (2.4–12.3 s each), `--only editor-surface` is 1/1 headless, `dist/terminal/run.js` is 4/4 in a pty, and the same four Tier 5 probes are 4/4 green, so all seven rows still hold. Re-verified on `de1fb2d4` (2026-10-23, the page-to-type guard pass): the six live ids are 6/6 green (0.5–8.9 s each), `--only editor-surface` is 1/1 headless, `dist/terminal/run.js` is 4/4 in a pty, and `--only multi-step-form-lifecycle --only qr-matrix --only crop-overlay --only markdown-fence` are 4/4 green; none needed a change. Re-verified on `a723a006` (2026-10-23, the shared-surface docs pass): `--only sidebar-clip-lifecycle --only command-palette --only breadcrumb-navigation-lifecycle --only multi-pane-editor --only syntax-palette --only grid-focus-lifecycle` is 6/6 live green (3.4–13.2 s each), `--only editor-surface` is 1/1 headless, and `dist/terminal/run.js` is 4/4 in a pty; the seven rows still hold.
 
 `[x]` Read a **stored QR quiet zone failsafe**, and keep the **caller's box in the overflow state** — `QrCode` passed `quietZone` straight through `Math.max(0, Math.floor(quiet))`, so a stored `NaN` reached the viewBox and every path offset (`viewBox="0 0 NaN NaN"`, a symbol that paints nothing) while `size` already read an unlayable value as its default; and the overflow branch merged the recipe and the error chrome but dropped the caller's `style`, so a page that reserved a 240×90 square for the symbol had it collapse to the message's own box exactly when the value outgrew the encoder. `qr/encode.ts` now normalises the quiet zone once (`quietZoneOf`, shared by `qrPlacement` and `qrSvgSource`) and `qr-code.tsx` merges `style` last in both states. `src/qr/encode.test.ts` gains `reads an unreadable quiet zone as the default, never a NaN field` and `reads an unreadable quiet zone as the default in the viewBox`; `src/qr-code.test.tsx` gains `keeps the box the caller reserved in the overflow state` and `reads a stored quiet zone it cannot lay out as the default`. Directions measured: all four fail at `HEAD` (the unit case with `module/quiet/cells/side: NaN`, the viewBox case with `MNaN NaN…`, the overflow case on the missing `240`), and the two files are 27/27 green after. Docs `packages/media/docs/qr-code.mdx` §Sizes/§Levels and capacity; the `QR code` row prints the rule and the new counts (19 + 8). No native scenario applies — pure placement and style arithmetic already measured by `qr-matrix`.
 
@@ -10377,7 +10377,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[ ]` `[█████████░]` 314/315
+`[ ]` `[█████████░]` 315/317
 
 `[x]` Stop the **component index teaching sections the pages do not have** — its
       "How to read a page" table was written from memory and read as a promise:
@@ -10507,27 +10507,39 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `apps/docs/README.md` gains the module's ledger line. No native scenario
       applies — a site page and a repository read.
 
-`[ ]` Hold the **package pages' API tables** to the props they declare too — the
-      curated pages are held now (`component-props.ts` + `component-page.test.ts`),
-      and the 137 mounted package pages are not: `packages/components/src/docs.test.ts`
-      checks an `## API` table's *shape* (a header, a row per part, the cell count)
-      and nothing resolves a prop, while `packages/primitives/src/docs.test.ts` and
-      `packages/icons/src/docs.test.ts` hold only their own two packages. Measured
-      with the new reader over the mounted collections, grouping each table's rows
-      by the part they name and reading a prop as a backticked name or an
-      `name:` in the cell (the components pages write `variant?: "outline"` in
-      prose): `packages/components/docs` is **333 props over 102 parts**, and it
-      is one gap repeated — the shared host surface (`className`, `children`,
-      `style`, the interaction handlers) is undocumented from Accordion to Field,
-      so `Card` documents one of its three props and `BreadcrumbLink` none of its
-      three. `packages/data/docs` has one (`TableSortHeader.testId`); primitives
-      and icons are already guarded by their own suites, and editor, files, shell,
-      dock and media name their parts in prose no table resolves. The fix is the
-      components workstream's page files: map each part to its type with the
-      reader the curated pages now use and add the missing rows, then land the
-      same completeness case in `packages/components/src/docs.test.ts` so its
-      shape check gains a resolution half. The docs app should not carry a
-      333-row known-gap list for another workstream's files.
+`[x]` Hold the **components package's pages** to every prop their parts declare,
+      shared surface included — the curated pages were held by
+      `component-props.ts` + `component-page.test.ts`, and `packages/components`
+      was only held for substantive props: `api.test.ts`'s completeness case
+      exempted the package-wide shape surface (`className`, `children`, `style`,
+      `ref`, `testId`, `aria-id`, `onLayout`), so `Card` documented one of its
+      three props, `BreadcrumbLink` none of its three, and a field's inherited
+      input surface was invisible. Measured with the exemption read back: **180
+      prop entries over 30 pages** (`className`/`children` on 24 of them, the
+      primitives' whole input contract on `FieldInput`, `MentionInput`,
+      `TagInputField`, `SearchInput` and `InlineEdit`, plus `List`'s and
+      `ListItem`'s `children`). Every row is documented now — grouped where one
+      contract covers several names — and `api.test.ts`'s reader resolves a
+      parent through the **primitives** package too (`FieldInputProps extends
+      Omit<InputProps, "style">`), with the generic-aware `parentParts` a
+      multiline `Omit<…>` needs. The reader case measures the cross-package
+      parent (`placeholder`/`ref`/`aria-id`/`fullWidth` on a field), so a
+      components-only index fails it rather than passing with three props.
+      Directions measured: deleting `empty-state`'s `className` row fails
+      `docs/empty-state.mdx: EmptyStateProps.className has no API row`, and
+      dropping the primitives scan fails the reader case
+      (`expected [ 'invalid', 'disabled', …(2) ]`). Green: the package is 103
+      files / 950 tests, `check-types` and `oxlint` clean. The remaining
+      packages are their owners' (open item below).
+      No native scenario applies — a page and a source read.
+
+`[ ]` Hold the **remaining package pages** to the props their parts declare —
+      `packages/data/docs` has one gap (`TableSortHeader.testId`), and
+      `packages/files`, `packages/shell` and `packages/dock` name their parts in
+      prose no table resolves. Editor and media already have their own `## API`
+      prop guards; primitives and icons hold theirs. Owner: data / files / shell
+      / dock. The docs app should not carry a known-gap list for another
+      workstream's files.
 
 `[x]` Publish the **page index an agent reads instead of the sidebar** — the
       site's map existed only as a sidebar (for a reader) and a `sitemap.xml`
@@ -10568,6 +10580,38 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `dashboard.tsx` fails it by name (`expected [ 'src/components/docs/
       dashboard.tsx' ] to deeply equal []`); restored, the file is 7/7. No
       native scenario applies — a repository document.
+
+`[x]` Turn the **component index's empty state into a pointer** — the grid lists
+      the composed lane, so a reader who typed a primitive's name (`range
+      slider`) was told "No component matches" one line under prose saying the
+      lower lanes have their own maps: a dead end where the component existed
+      one section down the sidebar. `otherLaneMatches` in `component-index.ts`
+      groups the other lanes' pages the same query matches (an empty query
+      answers none, because the full grid is already every composed page), and
+      the view prints them under `data-other-lane="true"` with each page linked;
+      a query no lane holds keeps the old "try a shorter word" sentence, and a
+      matching query renders the grid untouched. `/docs/components`'s intro now
+      states the rule and `docs/preview-strategy.md` records it beside the query
+      it describes. `component-index.test.tsx` gains three cases: `range
+      slider` renders the pointer, its lane name and every match's href, and both
+      documents teach it; `zzzzzz` keeps the dead-end sentence and prints
+      `data-other-lane="false"`; `button` matches the composed lane, so the
+      helper answers with no `Components` group and the markup carries no
+      suggestion. Directions measured: dropping the lane exclusion fails the
+      `button` case (`expected false to be true`), and replacing the empty state
+      with the old paragraph fails the first two by name (`…to contain
+      'data-other-lane="true"'` / `"false"`); restored, the file is 12/12.
+      Verified on a served build: `/docs/components?q=range%20slider` renders
+      `data-other-lane="true"` and `/docs/primitives/range-slider`, while
+      `?q=zzzzzz` renders `"false"`. `nub run --filter @gpuixui/docs test` is
+      **140 files / 1 220 tests** green, `check-types` and `build` clean. No
+      native scenario applies — a site page's own filter.
+
+`[ ]` Add **`apps/docs/.tanstack/`** to `.gitignore` — `vite build` writes the
+      generated route-tree cache there, and the repository ignores `dist/`,
+      `build/`, `.source/` and `.alchemy/` but not this directory, so a docs
+      build leaves an untracked tree that a `git add apps/docs` would swallow.
+      Owner: repo tooling (`.gitignore` is shared).
 
 `[x]` Give the **data lane its first honest preview** — the policy said every
       lane but Components and Primitives was strategy 4, so `/docs/data-display`

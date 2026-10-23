@@ -41,11 +41,11 @@ Carousel
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Carousel` | `role="group"` named by `label`, `tabIndex={0}` | `label` (required), `value?`, `defaultValue?` (0), `onValueChange?`, `loop?` |
-| `CarouselTrack` | the slide row | children (slides must be direct) |
-| `CarouselSlide` | one slide, or nothing while another is on screen | `style?: StateStyle<CarouselSlideState>` (`{ index }`) |
+| `Carousel` | `role="group"` named by `label`, `tabIndex={0}` | `label` (required), `value?`, `defaultValue?` (0), `onValueChange?`, `loop?`, `className?`, `children` |
+| `CarouselTrack` | the slide row | `className?`, `children` (slides must be direct) |
+| `CarouselSlide` | one slide, or nothing while another is on screen | `style?: StateStyle<CarouselSlideState>` (`{ index }`), `className?`, `children` |
 | `CarouselControl` | button | `direction: "previous" \| "next"`, `label?`, `disabled?` |
-| `CarouselIndicators` | `role="group"` of named dots | `label?`, `style?: StateStyle<CarouselIndicatorsState>` |
+| `CarouselIndicators` | `role="group"` of named dots | `label?`, `style?: StateStyle<CarouselIndicatorsState>`, `className?` |
 
 ## Limitations
 

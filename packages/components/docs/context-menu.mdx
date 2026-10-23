@@ -53,9 +53,9 @@ ContextMenu
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `ContextMenu` | root context | `open?`, `defaultOpen?` (default `false`), `onOpenChange?` |
+| `ContextMenu` | root context | `open?`, `defaultOpen?` (default `false`), `onOpenChange?`, `children` |
 | `ContextMenuTrigger` | the area whose right click opens the menu | `disabled?` |
-| `ContextMenuContent` | `anchored` surface at the pointer | `label?` (default `"Context menu"`) |
+| `ContextMenuContent` | `anchored` surface at the pointer | `label?` (default `"Context menu"`), `className?`, `children` |
 | `ContextMenuItem` / `ContextMenuCheckboxItem` | the shared rows | `onSelect?`, `disabled?`, `tone?`, `leading?`, `trailing?`, `textValue?`, `closeOnSelect?` |
 | `ContextMenuRadioGroup` / `ContextMenuRadioItem` | the shared exclusive choice: one marked row, and a choice closes the menu | `value` / `onValueChange` / `label?` on the group; `value` (required) on the row |
 | `ContextMenuSeparator` / `ContextMenuLabel` / `ContextMenuGroup` | the shared structure | `ContextMenuGroup` takes `label?` — the group's accessible name |

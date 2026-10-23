@@ -511,3 +511,42 @@ export const filterEntries = (
     return terms.every((term) => haystack.includes(term));
   });
 };
+
+/** The pages another lane holds for a query, grouped by the lane that holds them. */
+export interface LaneMatches {
+  readonly lane: string;
+  readonly entries: ReadonlyArray<ComponentEntry>;
+}
+
+/**
+ * The pages outside the composed lane that a query does match.
+ *
+ * The Components page lists one lane, and a reader who types a primitive's name
+ * ("slider") has not made a mistake — the page would otherwise answer "no
+ * component matches" while the component's page is one section down the
+ * sidebar. The empty state names the lanes that do hold the query rather than
+ * sending the reader to a search box that repeats the same empty answer.
+ *
+ * An empty query is not a lane question, so it answers with no groups: the
+ * full grid is already every composed page.
+ */
+export const otherLaneMatches = (
+  entries: ReadonlyArray<ComponentEntry>,
+  query: string,
+  lane = siteSection,
+): ReadonlyArray<LaneMatches> =>
+  query.trim() === ""
+    ? []
+    : filterEntries(
+        entries.filter((entry) => entry.section !== lane),
+        query,
+      ).reduce<ReadonlyArray<LaneMatches>>((groups, entry) => {
+        const found = groups.find((group) => group.lane === entry.section);
+        return found === undefined
+          ? [...groups, { lane: entry.section, entries: [entry] }]
+          : groups.map((group) =>
+              group.lane === entry.section
+                ? { ...group, entries: [...group.entries, entry] }
+                : group,
+            );
+      }, []);
