@@ -37,6 +37,7 @@ import {
   indeterminateOffset,
   progressAnimates,
   SPINNER_SEGMENTS,
+  STEP_INTERVAL_MS,
 } from "../core/loading.js";
 import { stillFrame } from "../core/motion.js";
 import {
@@ -377,7 +378,7 @@ export const Progress = (props: ProgressProps): ReactElement =>
     useTheme(),
     useStep(
       SPINNER_SEGMENTS,
-      120,
+      STEP_INTERVAL_MS,
       progressAnimates(Option.fromNullishOr(props.value)) &&
         props.reducedMotion !== true,
     ),

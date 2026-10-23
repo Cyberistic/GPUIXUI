@@ -15,6 +15,7 @@ import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
 import {
+  PULSE_INTERVAL_MS,
   PULSE_STEPS,
   pulseOpacity,
   skeletonSize,
@@ -65,5 +66,7 @@ export const Skeleton = (props: SkeletonProps): ReactElement =>
   renderSkeleton(
     props,
     useTheme(),
-    useStep(PULSE_STEPS, 700, props.reducedMotion !== true),
+    // The pulse has its own cadence: no level names a placeholder that
+    // alternates while it is on screen (see `core/loading.ts`).
+    useStep(PULSE_STEPS, PULSE_INTERVAL_MS, props.reducedMotion !== true),
   );

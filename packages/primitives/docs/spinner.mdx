@@ -30,6 +30,14 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
+## Motion
+
+The lit dot advances one place per tick at `motionLevels.step` (120 ms in the
+shipped timing) — the house level `@gpuixui/motion` publishes for a step
+indicator, read rather than copied, so a brand that moves the level moves the
+spinner with it. A full turn is the row's own length, and an indeterminate
+`Progress` ticks its segment on the same cadence.
+
 ## Limitations
 
 - Cannot rotate: a discrete lit-dot step instead.

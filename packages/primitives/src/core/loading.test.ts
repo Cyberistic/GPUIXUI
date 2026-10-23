@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { motionLevels } from "@gpuixui/motion/timing";
 import {
   indeterminateFillStyle,
   indeterminateLeadStyle,
   indeterminateOffset,
   progressAnimates,
+  PULSE_INTERVAL_MS,
   PULSE_STEPS,
   pulseOpacity,
   skeletonSize,
@@ -16,10 +19,13 @@ import {
   SPINNER_SEGMENTS,
   spinnerDotStyle,
   spinnerDots,
+  STEP_INTERVAL_MS,
 } from "./loading.js";
 import {
+  PULSE_INTERVAL_MS as corePulseInterval,
   SPINNER_DOTS as coreSpinnerDots,
   SPINNER_FADE_FLOOR as coreSpinnerFloor,
+  STEP_INTERVAL_MS as coreStepInterval,
 } from "./index.js";
 import { testTheme } from "./testing/theme.fixture.js";
 
@@ -266,5 +272,69 @@ describe("progressAnimates", () => {
     expect(progressAnimates(Option.none())).toBe(true);
     expect(progressAnimates(Option.some(42))).toBe(false);
     expect(progressAnimates(Option.some(0))).toBe(false);
+  });
+});
+
+/**
+ * The loading indicators' cadence.
+ *
+ * `motionLevels.step` exists for "a step indicator's tick", and both step
+ * indicators used to write `120` themselves: the level was a token no painter
+ * read, so moving it changed nothing on screen and the two indicators could
+ * drift apart one edit at a time. The components read this module's constant
+ * now, and this suite holds the seam — the values alone cannot prove it,
+ * because a copied literal equals the level until the level moves.
+ *
+ * Node's `fs` reads the package's own sources, the one-shot test-boundary
+ * convention `focus.test.ts` records.
+ */
+describe("the loading indicators' cadence", () => {
+  const source = (file: string): string =>
+    readFileSync(new URL(`../components/${file}`, import.meta.url), "utf8");
+  const stepIndicators = ["Progress.tsx", "Spinner.tsx"] as const;
+
+  it("ticks the step indicators at the house timing's step level", () => {
+    expect(coreStepInterval).toBe(motionLevels.step);
+    expect(corePulseInterval).toBe(PULSE_INTERVAL_MS);
+    expect(Number.isFinite(STEP_INTERVAL_MS)).toBe(true);
+    expect(STEP_INTERVAL_MS).toBeGreaterThan(0);
+  });
+
+  it("reads that level in both step indicators and writes no number of its own", () => {
+    Arr.forEach(stepIndicators, (file) => {
+      const text = source(file);
+      expect(text, file).toContain("STEP_INTERVAL_MS");
+      expect(text, file).toContain("useStep(");
+      // The copy this case exists for: a bare millisecond count is the token
+      // read as a literal, and it survives the level moving.
+      expect(text, file).not.toMatch(/useStep\([^)]*\b\d{2,}\b/);
+    });
+  });
+
+  it("keeps a pulse slower than a step, outside the transition levels", () => {
+    // A placeholder alternates for as long as it is on screen; the levels time
+    // a transition between two states. The skeleton therefore owns its own
+    // cadence, and a level that ever names it fails here until it is adopted.
+    expect(PULSE_INTERVAL_MS).toBeGreaterThan(STEP_INTERVAL_MS);
+    expect(Object.values(motionLevels)).not.toContain(PULSE_INTERVAL_MS);
+    const text = source("Skeleton.tsx");
+    expect(text).toContain("PULSE_INTERVAL_MS");
+    expect(text).not.toMatch(/useStep\([^)]*\b\d{2,}\b/);
+  });
+
+  it("prints the cadence it reads on the three feedback pages", () => {
+    // The number on a page is derived here, so a page that names a cadence the
+    // components no longer keep fails rather than teaching a retired speed.
+    const page = (name: string): string =>
+      readFileSync(new URL(`../../docs/${name}`, import.meta.url), "utf8");
+    Arr.forEach(["spinner.mdx", "progress.mdx"], (name) => {
+      const text = page(name);
+      expect(text, name).toContain("motionLevels.step");
+      expect(text, name).toContain(`${STEP_INTERVAL_MS} ms`);
+    });
+    const skeleton = page("skeleton.mdx");
+    expect(skeleton).toContain(`${PULSE_INTERVAL_MS} ms`);
+    expect(skeleton).toContain(`${STEP_INTERVAL_MS} ms`);
+    expect(skeleton).toContain("motionLevels.step");
   });
 });

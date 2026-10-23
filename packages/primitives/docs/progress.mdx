@@ -50,6 +50,14 @@ absence**: a locale table with no row for this bar returns `""`, and the bar
 announces and paints its own words rather than an empty value. A real answer is
 trimmed and used as it is.
 
+## Motion
+
+An indeterminate segment advances one step at `motionLevels.step` (120 ms in the
+shipped timing), the same cadence `Spinner` reads: both take the level from
+`@gpuixui/motion` instead of copying the number, so a busy action and a loading
+bar tick at one speed and a brand that moves the level moves both. A determinate
+bar draws a fixed fill and runs no timer at all.
+
 ## Limitations
 
 - No `aria-valuenow`: the value is announced as `aria-valuetext`.

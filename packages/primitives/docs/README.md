@@ -65,7 +65,7 @@ reads this table and every page together.
 | `## Limitations` | yes | measured gaps and the honest alternative |
 | `## Composition` | no | the parts and what each one is responsible for |
 | `## Keyboard` | no | the keys a component answers, and the ones a window cannot deliver |
-| `## Motion` | no | how a surface enters and leaves, and what the reduced preference removes |
+| `## Motion` | no | how a surface enters and leaves, or how a step indicator advances, and what the reduced preference removes |
 | `## Variants` | no | a variant set whose paint needs a sentence of its own |
 | `## Roles` | no | the semantic roles a page enumerates from the theme |
 | `## Tones` | no | the semantic tone set a page enumerates from the theme |

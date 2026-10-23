@@ -31,6 +31,13 @@ import { Skeleton, Stack } from "@gpuixui/primitives";
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
+## Motion
+
+The pulse alternates every 700 ms — its own constant rather than a
+`motionLevels` entry, because the house levels time a transition between two
+states while a placeholder alternates for as long as it is on screen. A pulse
+therefore reads slower than a spinner's step (`motionLevels.step`, 120 ms).
+
 ## Limitations
 
 - No shimmer sweep: motion animates opacity and size only.

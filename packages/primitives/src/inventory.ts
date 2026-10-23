@@ -404,6 +404,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     example: formExample,
     tests: [
       "src/components/Progress.test.tsx",
+      "src/core/loading.test.ts",
       "runtime/loading.runtime.test.tsx",
     ],
   },
@@ -441,6 +442,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     example: "examples/feedback.example.tsx",
     tests: [
       "src/components/presentational.test.tsx",
+      "src/core/loading.test.ts",
       "runtime/loading.runtime.test.tsx",
     ],
   },
@@ -460,6 +462,7 @@ export const inventory: ReadonlyArray<PrimitiveMeta> = [
     example: "examples/feedback.example.tsx",
     tests: [
       "src/components/presentational.test.tsx",
+      "src/core/loading.test.ts",
       "runtime/loading.runtime.test.tsx",
     ],
   },

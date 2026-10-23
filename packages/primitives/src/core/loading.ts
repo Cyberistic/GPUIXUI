@@ -13,6 +13,7 @@
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
+import { motionLevels } from "@gpuixui/motion/timing";
 import type { PrimitiveTheme, RadiusStep } from "./theme.js";
 
 /** How many steps a pulse visits before repeating. */
@@ -23,6 +24,30 @@ export const SPINNER_SEGMENTS = 8;
 
 /** How many dots a spinner paints, and therefore the steps it visits before repeating. */
 export const SPINNER_DOTS = 3;
+
+/**
+ * The cadence a step indicator ticks at: the house timing's `step` level.
+ *
+ * A spinner's lit dot and an indeterminate bar's segment both move by advancing
+ * a counter on an interval, so the two have to read as one speed when a busy
+ * action sits beside a loading bar. The number is `@gpuixui/motion`'s
+ * (`motionLevels.step`) rather than a copy of it: the level exists to be moved,
+ * and a primitive that wrote the millisecond count here would keep painting the
+ * old cadence after it was.
+ */
+export const STEP_INTERVAL_MS = motionLevels.step;
+
+/**
+ * The cadence a skeleton's pulse alternates at.
+ *
+ * Deliberately **not** a `motionLevels` entry: those time a transition between
+ * two states, while a placeholder alternates for as long as it is on screen. A
+ * pulse is therefore slower than a step — it breathes rather than ticks — and
+ * the value lives beside the pulse maths as its own design constant. A level
+ * that ever names this number fails the loading suite until the skeleton adopts
+ * it.
+ */
+export const PULSE_INTERVAL_MS = 700;
 
 /** The dimmest a trail dot paints, as a share of the accent. */
 export const SPINNER_FADE_FLOOR = 0.2;

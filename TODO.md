@@ -4634,7 +4634,34 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
 
 ## Phase C — Tier 1–2 components
 
-`[x]` `[██████████]` 14/14
+`[x]` `[██████████]` 15/15
+
+`[x]` `packages/primitives`: **the step indicators copied the house timing
+      instead of reading it** — `@gpuixui/motion` publishes `motionLevels.step`
+      ("a step indicator's tick") and **nothing read it**: `Spinner` and an
+      indeterminate `Progress` each wrote `120` in their own `useStep` call, so
+      the level was a token with no painter and a brand that moved it changed
+      nothing on screen, while the two indicators could drift apart one edit at a
+      time. The cadence now lives once in `core/loading.ts` — `STEP_INTERVAL_MS`
+      is `motionLevels.step` and `PULSE_INTERVAL_MS` is the skeleton's own 700 ms
+      — and both step indicators plus `Skeleton` read it; the pulse stays
+      deliberately outside the levels, because they time a transition between two
+      states while a placeholder alternates for as long as it is on screen.
+      Proof: `core/loading.test.ts` gains `the loading indicators' cadence` (4
+      cases): the core entry publishes the same two values, both step indicators
+      name `STEP_INTERVAL_MS` and schedule no bare millisecond count, the pulse is
+      slower than a step and is **not** any level (so a level that ever names it
+      fails until adopted), and the three pages print the cadence derived here.
+      Directions measured: restoring `120` in `Spinner` fails `Spinner.tsx: … not
+      to match /useStep\([^)]*\b\d{2,}\b/`; restoring `700` in `Skeleton` fails
+      the pulse case by name; printing `140 ms` on `spinner.mdx` fails
+      `expected … to contain '120 ms'`; restored, the file is 23/23. Docs:
+      `spinner.mdx`/`progress.mdx`/`skeleton.mdx` gain §Motion, the page contract
+      says a motion section may describe how a step indicator advances, the
+      README's rotation row and the three Tier 1 rows state the cadence, and the
+      three inventory records list the new suite. No native scenario applies — a
+      timer's interval and the pages that print it; the indicators' frames are
+      `runtime/loading.runtime.test.tsx`'s.
 
 `[x]` `packages/primitives`: **a blank state word silenced a control's only
       announcement** — the provider's `messages` table is filled per state, so a

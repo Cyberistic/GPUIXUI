@@ -154,6 +154,7 @@ export {
   indeterminateLeadStyle,
   indeterminateOffset,
   progressAnimates,
+  PULSE_INTERVAL_MS,
   PULSE_STEPS,
   pulseOpacity,
   skeletonSize,
@@ -164,6 +165,7 @@ export {
   SPINNER_SEGMENTS,
   spinnerDotStyle,
   spinnerDots,
+  STEP_INTERVAL_MS,
 } from "./loading.js";
 export type {
   SkeletonSpec,

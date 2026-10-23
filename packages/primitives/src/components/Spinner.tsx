@@ -19,6 +19,7 @@ import { iconPixels } from "@gpuixui/icons";
 import { cn } from "@gpuixui/tw";
 import {
   SPINNER_DOTS,
+  STEP_INTERVAL_MS,
   spinnerDots,
   type SpinnerAccent,
 } from "../core/loading.js";
@@ -108,9 +109,10 @@ export const Spinner = (props: SpinnerProps): ReactElement =>
   renderSpinner(
     props,
     useTheme(),
-    // One step per dot: the timer's cycle is the row's own length, so a full
-    // turn lights 0, 1, 2 and repeats — never 0, 1, 2, 0, 1, 2, 0, 1, which
-    // stepped the lit dot backwards when the eight-segment bar period wrapped.
-    useStep(SPINNER_DOTS, 120, props.reducedMotion !== true),
+    // One step per dot on the house timing's step level: the timer's cycle is
+    // the row's own length, so a full turn lights 0, 1, 2 and repeats — never
+    // 0, 1, 2, 0, 1, 2, 0, 1, which stepped the lit dot backwards when the
+    // eight-segment bar period wrapped.
+    useStep(SPINNER_DOTS, STEP_INTERVAL_MS, props.reducedMotion !== true),
     useMessages(),
   );
