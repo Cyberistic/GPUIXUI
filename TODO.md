@@ -7898,6 +7898,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Teach the **stagger direction and the uncallable curve** on `/docs/motion` — the package now reads a `from` it does not name as the house `start` (it used to fall through the distance arithmetic to the **centre**) and treats a value that is not a function as no curve (`Transition`/`Keyframe` are structural, so a hand-built one threw `TypeError: curve is not a function` out of a frame loop), while the page's §Keyframes, stagger and sequences says only that "a stagger step that cannot be read … is no wait" and its §Keyframes curve paragraph covers only a curve that answers `NaN`. A reader of the site cannot learn either repair | docs-site (`apps/docs/content/docs/motion.mdx`; `motion-page.test.ts` should hold the sentences to `timeline.ts`'s `staggerFromOf` and `progress.ts`'s `isCurve`, the way it holds the other repairs) | open — landed in `packages/motion` 2026-10-23 (`timeline.test.ts`, `progress.test.ts`, the README and the module JSDoc); the page and its guard are the docs-site half |
 | Read the **stored switch as absence in the primitive's paint** — the tokens reports now answer a theme whose `switch` is `null` as "no declaration" (the accent toggle), but `packages/primitives/src/core/selection.ts` compares `theme.switch !== undefined` in four places (`switchBox`, `switchFill`, `switchThumbPaint`), so a theme restored from storage with `switch: null` throws `TypeError: Cannot read properties of null (reading 'on')` at the first `Switch` paint — the value the report calls the accent switch. The fix is the same nullish read (`theme.switch ?? undefined`), or a tokens seam that resolves the accent family and cannot be null | primitives (`src/core/selection.ts`) | open — measured 2026-10-23 while closing the tokens-side absence rule (`incomplete.test.ts`'s `an optional table a store nulled`); the paint path is the primitives' to move, and a `Switch` suite in a window would prove it |
 
+| Make the **inventory parser read escaped pipes** — `apps/docs/src/lib/inventory.ts`'s `cells` splits a row on every bar, so a COMPONENTS.md caption whose code span holds a union bar silently becomes five cells and the tier table is rejected (`line 306: expected 4 cells under a tier, found 5`), while the row it belongs to vanishes for `inventory-status` and its package page reports "no row for this page". A shared-index commit carried that row to `master` and the docs suite went red for every workstream until the caption was rewritten without the pipe. The fix is to split on unescaped bars and unescape the escaped form inside a cell, so a code span can carry one | docs-site (`apps/docs/src/lib/inventory.ts`) | open — measured 2026-10-23 while repairing `COMPONENTS.md` line 306; the row now writes `"all" / "any"`, which reads as the union it means, so no content is blocked |
+
 
 ## Phase D — data and workspace components
 
@@ -8993,12 +8995,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
       pane holding a form must keep its controls visible, while a roving control
       calls `scrollIntoView` on each move — and `lane-page.test.ts` gains `says a
       focus past a pane's fold is not revealed, as the window measured it`, which
-      holds the page to the record row it cites. Directions measured:
+      holds the page to the record row it cites; `/docs/keyboard`'s
+      **Limits to design around** gains the same gap with the citation, held by
+      `keyboard-page.test.ts`'s `says a focus past a pane's fold is not revealed,
+      as the window measured it`. Directions measured:
       deleting the record row fails `the record has no focus-reveal row`,
-      printing `**201** points` fails the clause by name, and deleting the
-      workspace section fails the lane case with both documents read; restored,
-      `capability-doc.test.ts` is 116/116, `lane-page.test.ts` 50/50, `build`
-      renders the pages and `check-types` is clean. The docs suite reads 1277/1280
+      printing `**201** points` fails the clause by name, deleting the
+      workspace section fails the lane case, and deleting the keyboard bullet
+      fails its case with both documents read; restored,
+      `capability-doc.test.ts` is 116/116, `lane-page.test.ts` 50/50,
+      `keyboard-page.test.ts` 5/5, `build` renders the pages and `check-types` is
+      clean. The docs suite reads 1277/1280
       in this pass, the three failures being `inventory`/`inventory-status` on an
       in-flight `COMPONENTS.md` row outside this workstream (line 306, five
       cells). No native scenario applies — a published measurement and its guard
