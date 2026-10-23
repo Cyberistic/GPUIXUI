@@ -99,7 +99,8 @@ describe("the system palette section", () => {
     ).toBe(true);
     expect(
       omarchyAudit.contrast.some(
-        (entry) => entry.foreground === "foreground" && entry.background === "muted",
+        (entry) =>
+          entry.foreground === "foreground" && entry.background === "muted",
       ),
     ).toBe(true);
     expect(follow).toContain("{omarchyAudit.contrast.length}");
@@ -161,9 +162,7 @@ describe("the system palette section", () => {
     const dark = read("apps/docs/content/docs/dark-mode.mdx");
 
     expect(dark).toContain("watchSystemTheme");
-    expect(dark).toContain(
-      "/docs/theming#follow-the-desktops-palette",
-    );
+    expect(dark).toContain("/docs/theming#follow-the-desktops-palette");
     // The library still never queries the OS; the host owns the follow.
     expect(dark).toContain("never queries the OS on its own");
   });
