@@ -307,6 +307,42 @@ it expected, and the group's pressed position, then exits `1`.
 `src/lib/palette-switch.test.ts` holds the policy, the command, both measurements
 and the parser the assertions read.
 
+### The platform switch is a measured click
+
+The platform axis (`?platform=`, the sidebar's **Platform style** group) is the
+mission's acceptance: *a reader toggles macOS → Windows and every preview
+changes*. The URL half is server-rendered — `?platform=win32` reaches the
+surface — but a reader changes it by pressing a button, and that press is React
+state: it writes the address bar and re-resolves `platformTheme` for every
+`PreviewSurface`, which no `?platform=` capture proves.
+
+`apps/docs/scripts/platform-switch-probe.ts` presses **Windows**, then **macOS**,
+on the served Button page. It waits for the Windows button to carry
+`__reactProps.onClick`, then reads every preview surface's `data-platform`,
+`data-mode`, the `--control-height-md` variable the bridge wrote and the address
+bar. The height is held against
+`platformTheme(themes[mode], platform).density.controlHeight.md`, so the expected
+geometry is the library's own and a density edit moves the probe with it. It
+requires every surface to follow (`3 of 3` on the Button page) and the URL to
+carry `platform=win32`, then `platform=darwin`. Run it with a dev or preview
+server up:
+
+```sh
+nub run --filter @gpuixui/docs dev
+nub apps/docs/scripts/platform-switch-probe.ts
+```
+
+Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
+against the dev server: `Windows: 3 of 3 surfaces at 32px` and
+`macOS: 3 of 3 surfaces at 28px`, exit `0`. The negative control is a probe that
+expects the macOS height on every platform: it prints
+`FAIL the Windows preview paints --control-height-md 32px, not 28px`, the read
+beside the expected value, and exits `1`. A switch that did not follow a press
+fails the other way — `only 2 of 3 preview surfaces followed the platform switch
+to Windows` — so a page whose one preview never re-resolved cannot pass on the
+surfaces that did. `src/lib/platform-switch.test.ts` holds the policy, the
+command, both measurements and the parser the assertions read.
+
 ### Pages the package writes
 
 Each package writes the page a component ships with. The site mounts those

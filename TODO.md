@@ -6030,6 +6030,24 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       `docs/select.mdx` §Limitations and the `COMPONENTS.md` Selects row state
       the tall-row rule beside the reveal.
 
+`[x]` `packages/primitives`: the **selection controls' disabled fade wrote its
+      own share** — `core/selection.ts` faded a disabled checkbox/radio box and a
+      disabled switch track with a written `0.5`, while `disabledOpacity` is the
+      share `@gpuixui/tokens`' `disabledFadeFailures` composites and the share
+      every other fade writes (the fade item above landed that rule in
+      `core/style.ts`). The number agrees today, so nothing painted differently;
+      the defect is that the mechanism the contract measures could drift from
+      the value two controls paint, and nothing read it — the tokens guard counts
+      the three fades in `style.ts`, so a fourth and fifth share written in a
+      sibling file had no reader. Both sites now import and write
+      `disabledOpacity`. `core/selection.test.ts`'s `writes a disabled fade from
+      the token package's share, not a copy` holds the import, the two writes and
+      the painted share on the box and the track, and the existing disabled case
+      now asserts that exact share instead of "under 1". Directions measured:
+      with the two literals restored the case fails (`expected [ '0.5', '0.5' ]
+      to not include '0.5'`); restored, 53 files / 992 unit cases and 52/52
+      runtime cases (`selection-targets`, `controls`) green.
+
 `[x]` `packages/icons`: an **icon given a measure it cannot paint vanished** —
       `size` takes a named step *or* the raw number a caller measured (a
       collapsed panel's width, a row's height), and `iconPixels` passed that
@@ -7312,6 +7330,26 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[ ]` `[███░░░░░░░]` 1/3
 
 `[ ]` Consistency, keyboard, themes, composability pass
+  - [x] **The platform switch's press path is measured** — the mission's
+    acceptance ("a reader toggles macOS → Windows and every preview changes")
+    was proved by a server-rendered `?platform=` capture and by hand in the dev
+    server, never by pressing the group: the press is React state that writes
+    the URL and re-resolves `platformTheme` for every preview, so nothing held
+    it. `apps/docs/scripts/platform-switch-probe.ts` presses **Windows** then
+    **macOS** on the served Button page and reads every surface's
+    `data-platform`, `data-mode`, the `--control-height-md` the bridge wrote and
+    the address bar, holding the height to
+    `platformTheme(themes[mode], platform).density.controlHeight.md`. Measured
+    2026-10-23 against the dev server: `Windows: 3 of 3 surfaces at 32px` and
+    `macOS: 3 of 3 surfaces at 28px`, exit 0; the negative control (a probe that
+    expects the macOS height on every platform) prints
+    `FAIL the Windows preview paints --control-height-md 32px, not 28px` and
+    exits 1. `src/lib/platform-switch.test.ts` (8 cases) holds the parser, the
+    derived heights, the two presses, the switch's group label, the bridge and
+    the policy section; `docs/preview-strategy.md` gains **The platform switch
+    is a measured click** and the site README's scripts ledger names the probe.
+    Directions measured: deleting the policy section fails by name, and a probe
+    whose height is the constant `28px` fails `expected '28px' to be '32px'`.
   - [x] `packages/primitives`: the **high-contrast palettes had only been read on
     seven controls** — `theme-axes.runtime.test.tsx` mounted a scene of Text,
     Button, Input, Checkbox, Switch, Progress and Separator, so a hard-coded
