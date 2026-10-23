@@ -46,6 +46,8 @@ import {
   brandScaleReport,
   computedBrand,
   elevationScaleReport,
+  equalRadiusBrand,
+  equalRadiusReport,
   unevenElevationBrand,
 } from "./scales.example.js";
 
@@ -98,6 +100,94 @@ describe("every shipped theme keeps its scales ordered", () => {
         previous: { path: "lg", value: 8 },
       },
     ]);
+  });
+});
+
+/**
+ * The Windows fix the Fluent 2 style undid, and the example it left behind.
+ *
+ * The bug this guards: `invalidScales`' first shipped catch was the Windows
+ * platform's `lg: 8` beside its `xl: 8`, and the catalogue, the design system
+ * and the inventory row all teach it as "`xl` is 10 now". The style was
+ * reshaped to Fluent 2 afterwards, where a control corners at 4 and a surface
+ * at 8, so `sm`/`md` and `lg`/`xl` are aliases on purpose and `radius` is the
+ * one ladder that accepts an equal pair. The catalogue's example kept the
+ * older claim too: it printed an equal `xl: 8` with a failure report beside it,
+ * which the report no longer returns, so a reader copying it saw `[]` where the
+ * page promised a finding.
+ */
+describe("the equal radius the Fluent 2 style aliases", () => {
+  const flat = (text: string): string => text.replace(/\s+/g, " ");
+  const read = (path: string): string =>
+    readFileSync(new URL(path, import.meta.url), "utf8");
+  const catalogue = read("../../../docs/tokens.md");
+  const designSystem = read("../../../docs/design-system.md");
+  const inventory = read("../../../COMPONENTS.md");
+  const readme = read("../README.md");
+  const inventoryRow = ((): string => {
+    const start = inventory.indexOf("| Scale order |");
+    const end = inventory.indexOf("\n", start);
+    return start === -1 ? "" : inventory.slice(start, end);
+  })();
+
+  /** The Windows ladder as the style ships it, so a palette edit moves the page. */
+  const winLadder = (): string => {
+    const { sm, md, lg, xl } = platformStyles.win32.radius;
+    return `${sm}/${md}/${lg}/${xl}`;
+  };
+
+  it("prints the ladder the Windows style ships, not the fix it undid", () => {
+    const pages = {
+      "docs/tokens.md": flat(catalogue),
+      "docs/design-system.md": flat(designSystem),
+      "COMPONENTS.md": flat(inventoryRow),
+    };
+    Object.entries(pages).forEach(([name, text]) => {
+      expect(text, name).toContain(winLadder());
+      expect(text, name).not.toContain("2/4/8/10");
+      expect(text, name).not.toContain("`xl` is 10");
+    });
+  });
+
+  it("prints the equal pair as the accepted example, not a finding", () => {
+    // The executed brand is the page's claim: the pair above `lg` is an alias,
+    // so the report is empty rather than "the larger step named nothing".
+    expect(equalRadiusBrand.radius.lg).toBe(equalRadiusBrand.radius.xl);
+    expect(equalRadiusReport).toEqual([]);
+    expect(flat(catalogue)).toContain(
+      "invalidScales(extendTheme(lightTheme, { radius: { xl: 8 } })); // []",
+    );
+    expect(flat(catalogue)).toContain("`equalRadiusBrand`");
+  });
+
+  it("keeps the smaller rung a lie, with the report the page prints", () => {
+    const smaller = brand({ radius: { xl: 6 } });
+
+    expect(invalidScales(smaller)).toEqual([
+      {
+        group: "radius",
+        path: "xl",
+        value: 6,
+        previous: { path: "lg", value: 8 },
+      },
+    ]);
+    expect(flat(catalogue)).toContain(
+      "invalidScales(extendTheme(lightTheme, { radius: { xl: 6 } }))",
+    );
+    expect(flat(catalogue)).toContain('path: "xl", value: 6');
+    expect(flat(catalogue)).toContain('previous: { path: "lg", value: 8 }');
+    // The catalogue and the design system both name the alias rule, so a
+    // reader is not told an equal rung is a defect one page later.
+    expect(flat(catalogue)).toContain("alias");
+    expect(flat(designSystem)).toContain("alias");
+    expect(flat(readme)).toContain("alias");
+  });
+
+  it("prints the case count this file runs", () => {
+    const cases = read("./scales.test.ts").match(/\bit\(/g)?.length ?? 0;
+
+    expect(cases).toBeGreaterThan(10);
+    expect(flat(inventoryRow)).toContain(`\`scales.test.ts\` (${cases} cases)`);
   });
 });
 

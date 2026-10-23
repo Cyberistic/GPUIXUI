@@ -1775,8 +1775,11 @@ carrying a shadow list is read at the entry `elevationShadow` paints.
 import { extendTheme, invalidScales, lightTheme } from "@gpuixui/tokens";
 
 invalidScales(lightTheme); // []
-invalidScales(extendTheme(lightTheme, { radius: { xl: 8 } }));
-// [{ group: "radius", path: "xl", value: 8,
+// Fluent 2 corners every control at 4 and every surface at 8, so an equal pair
+// is a named alias rather than a lying rung:
+invalidScales(extendTheme(lightTheme, { radius: { xl: 8 } })); // []
+invalidScales(extendTheme(lightTheme, { radius: { xl: 6 } }));
+// [{ group: "radius", path: "xl", value: 6,
 //    previous: { path: "lg", value: 8 } }]
 invalidScales(
   extendTheme(lightTheme, {
@@ -1797,10 +1800,14 @@ invalidScales(
 //    previous: { path: "md", value: 68 } }] — a menu casting the dialog's shadow
 ```
 
-The rule found one shipped style: the Windows platform carried `lg: 8` and
-`xl: 8`, so `radius="xl"` and `radius="lg"` painted the same surface and the
-larger step named nothing. It is `xl: 10` now, and the platform scale is
-`2/4/8/10` (§Platform styles).
+The rule found one shipped pair: the Windows platform carries `lg: 8` and
+`xl: 8`, so `radius="xl"` and `radius="lg"` paint the same surface. That pair
+is deliberate — the style is Fluent 2, whose controls round at 4 and surfaces at
+8, so `sm`/`md` and `lg`/`xl` are **aliases** and `4/4/8/8` is the shipped
+ladder (§Platform styles). Radius is the one scale that permits an equal
+adjacent pair; a rung that *shrinks* is still reported, so `xl: 6` under `lg: 8`
+fails. The two executed brands are `equalRadiusBrand` (accepted, `// []`) and
+`computedBrand` (its `xl: 6` reported) in `src/scales.example.ts`.
 
 `invalidScales` is not one of `auditTheme`'s eleven reports yet. The docs site's
 theme readout words each report it prints, so folding this in is one coordinated

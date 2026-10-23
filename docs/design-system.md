@@ -267,14 +267,18 @@ needs an inset; §9 has the rule.
 
 Every one of these scales is a **ladder**, and its order is part of the
 contract: a brand's `sm` control stays shorter than its `md`, which stays
-shorter than its `lg`; a radius step stays rounder than the one below it; a
-heading stays larger than its body text; an elevation level casts a shadow that
-reaches further below its surface than the level under it. `invalidScales(theme)`
-reports a step that repeats or inverts its neighbour — the gap `invalidNumbers`
-cannot see, because each value on its own is layable. It found the Windows
-style's `xl` radius equal to its `lg`, so a dialog and a card there were equally
-square; `xl` is 10 now. `invalidScales` is not one of the audit's reports yet;
-§11 says why and what to run.
+shorter than its `lg`; a radius step stays at least as round as the one below it
+(two names may share a corner — Fluent 2 rounds every control at 4 and every
+surface at 8, so the Windows style's `sm`/`md` and `lg`/`xl` are aliases on
+purpose); a heading stays larger than its body text; an elevation level casts a
+shadow that reaches further below its surface than the level under it.
+`invalidScales(theme)` reports a step that repeats or shrinks against its
+neighbour — the gap `invalidNumbers` cannot see, because each value on its own
+is layable — except an equal radius, the one alias the scale permits. It found
+the Windows pair and the pair stayed: `4/4/8/8` is the shipped ladder, and a
+*rung that shrinks* is still a lie (`xl: 6` under `lg: 8` is reported).
+`invalidScales` is not one of the audit's reports yet; §11 says why and what to
+run.
 
 ## 7. Radii, borders and elevation
 

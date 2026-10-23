@@ -901,7 +901,10 @@ Each report is also a function of its own:
   are compared with each other rather than read through it. It is not one of the
   audit's eleven reports yet (the docs readout words each report it prints), so
   run it beside `auditTheme`; it found the Windows style's `xl` radius equal to
-  its `lg`.
+  its `lg`, and that pair is a deliberate **alias** — Fluent 2 rounds a control
+  at 4 and a surface at 8, so `sm`/`md` and `lg`/`xl` share a corner and radius
+  is the one ladder that permits an equal step — while a smaller rung is still
+  reported.
 - `contrastFailures(theme, floors?)` lists every text-on-surface pair that
   misses its floor, including one it cannot measure because a value is
   translucent. The floors default to the theme's own variant.
