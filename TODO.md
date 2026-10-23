@@ -8006,6 +8006,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `--filter @gpuixui/data test` 157/157, `test:behaviour` 99/99, `check-types`
     clean, headless `--only data-table-core` (1/1, 3 322 ms) and live
     `--only data-table-lifecycle` (1/1, 6 380 ms, a real window). Owner: data.
+  - [x] Read a **column bound it cannot use as the default** — a width is often
+    computed (a stored size, a measurement, a fraction of the table), and
+    `widthBounds` let a non-finite minimum or maximum through: `Math.max` with
+    `NaN` made both bounds `NaN`, so `initialColumns`/`resizeColumn` clamped the
+    track to `NaN` and `contentWidth` plus every later `columnOffset` went with
+    it; a non-finite key step snapped an arrow press to the column's minimum.
+    `widthBounds` reads an unreadable bound as 80/640 and `resizeWidthByKey`
+    reads an unreadable step as 16, both through one `readable` guard.
+    `src/columns/logic.test.ts` gains `reads a bound or a step it cannot use as
+    its default` (the two bounds, an infinite pair, a computed declaration's
+    width and content width, its resize ceiling, and the key step). Direction
+    measured: at `HEAD` the case fails with
+    `expected { minWidth: NaN, maxWidth: NaN } to deeply equal { minWidth: 80,
+    maxWidth: 640 }`; with it 163/163. The README's runtime-rules table, its
+    §Columns paragraph and the Tier 3 **Resizable columns** row state it.
+    Owner: data.
 `[ ]` Tier 4 desktop workspace (panels, docking, tabs, command palette)
 `[x]` Verify critical interactions in the real runtime — MISSION's nine
       representative interactions each map to live probes in

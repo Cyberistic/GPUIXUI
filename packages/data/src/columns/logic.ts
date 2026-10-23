@@ -71,18 +71,35 @@ export interface ColumnWidthBounds {
 }
 
 /**
+ * A number a bound or a step can use: a value that is not finite is the
+ * default.
+ *
+ * A width is often computed — a stored size, a measurement, a fraction of the
+ * table — and an unreadable one must not reach a track: `NaN` bounds clamp
+ * every width to `NaN`, which takes `contentWidth` and every offset after the
+ * column with it, and a `NaN` step snaps a key resize to a bound.
+ */
+const readable = (value: number, fallback: number): number =>
+  globalThis.Number.isFinite(value) ? value : fallback;
+
+/**
  * The bounds a width may move between.
  *
  * A maximum below the minimum is raised to the minimum rather than inverted: a
  * definition with no legal width is a caller mistake, and a clamp that swaps
- * its bounds would resize in the direction opposite to the drag.
+ * its bounds would resize in the direction opposite to the drag. A bound the
+ * grid cannot read is the default bound rather than `NaN`, so a computed
+ * declaration still paints a track.
  */
 export const widthBounds = (
   minWidth: number = DEFAULT_MIN_COLUMN_WIDTH,
   maxWidth: number = DEFAULT_MAX_COLUMN_WIDTH,
 ): ColumnWidthBounds => {
-  const min = Math.max(1, minWidth);
-  return { minWidth: min, maxWidth: Math.max(min, maxWidth) };
+  const min = Math.max(1, readable(minWidth, DEFAULT_MIN_COLUMN_WIDTH));
+  return {
+    minWidth: min,
+    maxWidth: Math.max(min, readable(maxWidth, DEFAULT_MAX_COLUMN_WIDTH)),
+  };
 };
 
 /** A column's own bounds, with the defaults applied. */
@@ -128,22 +145,26 @@ export const isColumnResizeKey = Schema.is(ColumnResizeKey);
 /**
  * The width a key produces: the arrows step by `step`, Home and End name the
  * bounds themselves, and every route clamps because a keyboard reader can hold
- * an arrow against a bound exactly as a pointer can drag past it.
+ * an arrow against a bound exactly as a pointer can drag past it. A step the
+ * divider cannot read is the default step, so an arrow never jumps the column
+ * to a bound because a caller computed `NaN`.
  */
 export const resizeWidthByKey = (
   width: number,
   key: ColumnResizeKey,
   bounds: ColumnWidthBounds,
   step: number = COLUMN_KEY_STEP,
-): number =>
-  pipe(
+): number => {
+  const by = readable(step, COLUMN_KEY_STEP);
+  return pipe(
     Match.value(key),
-    Match.when("left", () => clampWidth(width - step, bounds)),
-    Match.when("right", () => clampWidth(width + step, bounds)),
+    Match.when("left", () => clampWidth(width - by, bounds)),
+    Match.when("right", () => clampWidth(width + by, bounds)),
     Match.when("home", () => bounds.minWidth),
     Match.when("end", () => bounds.maxWidth),
     Match.exhaustive,
   );
+};
 
 /** The columns that paint, in order. */
 export const visibleColumns = (state: ColumnState): ReadonlyArray<Column> =>

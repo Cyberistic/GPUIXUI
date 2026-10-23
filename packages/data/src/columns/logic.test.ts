@@ -211,6 +211,37 @@ describe("column configuration", () => {
     expect(widthOf(clamped, "narrow")).toBe(90);
   });
 
+  it("reads a bound or a step it cannot use as its default", () => {
+    // A bound is often computed (a stored size, a measurement). `NaN` used to
+    // survive `widthBounds`, clamp every width to `NaN`, and take the content
+    // width and every later offset with it; a `NaN` step snapped a key resize
+    // to the column's minimum.
+    expect(widthBounds(Number.NaN, 640)).toEqual({
+      minWidth: 80,
+      maxWidth: 640,
+    });
+    expect(widthBounds(120, Number.NaN)).toEqual({
+      minWidth: 120,
+      maxWidth: 640,
+    });
+    expect(
+      widthBounds(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY),
+    ).toEqual({ minWidth: 80, maxWidth: 640 });
+
+    const computed = initialColumns([
+      { id: "measured", label: "Measured", width: 260, maxWidth: Number.NaN },
+    ]);
+    expect(widthOf(computed, "measured")).toBe(260);
+    expect(contentWidth(computed)).toBe(260);
+    expect(
+      widthOf(resizeColumn(computed, "measured", 10_000), "measured"),
+    ).toBe(640);
+
+    expect(
+      resizeWidthByKey(260, "right", widthBounds(120, 420), Number.NaN),
+    ).toBe(260 + COLUMN_KEY_STEP);
+  });
+
   it("steps a focused divider and names the bounds", () => {
     const bounds = widthBounds(120, 420);
     expect(COLUMN_KEY_STEP).toBe(16);
