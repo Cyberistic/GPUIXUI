@@ -4570,7 +4570,17 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       files / 1 030 tests and 21 runtime files / 304 tests. Docs in
       `docs/progress.mdx`/`docs/meter.mdx` §API (the blank-answer rule),
       `COMPONENTS.md`'s Progress and Meter rows, and `core/index.ts` publishes the
-      helper beside `accessibleName`/`fieldHelp`.
+      helper beside `accessibleName`/`fieldHelp`. The same pass closed the
+      **other half of the rule**: `Button`/`Toggle`/`IconButton` publish the busy
+      word as a description and a spinner's name, and a blank `loadingLabel`
+      deliberately silences both — an opt-out their source comments recorded while
+      all three pages listed the default and stopped, so a caller could not find
+      it or tell it from a bar's `loadingText` (which has no opt-out, because a
+      progressbar's value text is its only report). The three pages' API rows say
+      it, `theme-provider.mdx` §Words states the distinction, and `docs.test.ts`'s
+      `names the one opt-out a busy word has, and how a bar's words differ` holds
+      all four pages (measured failing: dropping the clause reports
+      `[ 'button.mdx' ]`); green, 55 files / 1 031 tests.
 
 `[x]` `packages/components`: **a row still promised a package that shipped** —
       `COMPONENTS.md`'s Command menus row justified its host input with "input is
