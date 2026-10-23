@@ -184,9 +184,10 @@ export type NumberSource = Pick<
   /**
    * A level the theme does not carry is the shadow report's business
    * (`invalidShadowColors`), not a number this report can inspect, so a stored
-   * theme older than a level is measured over the levels it has.
+   * theme older than a level — or than the whole scale — is measured over the
+   * levels it has.
    */
-  readonly elevation: Partial<Elevation>;
+  readonly elevation?: Partial<Elevation>;
 };
 
 /** Whether `value` meets `rule`. */
@@ -518,7 +519,7 @@ export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
       "controlPaddingX.",
     ),
     ...inspect("density", "rowHeight", theme.density.rowHeight, "pressable"),
-    ...Object.entries(theme.elevation).flatMap(([level, shadows]) =>
+    ...Object.entries(theme.elevation ?? {}).flatMap(([level, shadows]) =>
       isShadowList(shadows)
         ? shadows.flatMap((shadow, index) =>
             inspectShadow(level, index, shadow),

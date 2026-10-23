@@ -98,9 +98,11 @@ export type ScaleSource = Pick<
   /**
    * Every elevation level the theme carries. A level it omits is skipped rather
    * than reported: a theme restored from storage can predate a level the
-   * library added, and the missing level is `invalidShadowColors`' business.
+   * library added, and the missing level is `invalidShadowColors`' business. An
+   * absent group is the same rule one level up — a store that predates the
+   * scale has no rung to compare, and the shadow report names every level.
    */
-  readonly elevation: Partial<Elevation>;
+  readonly elevation?: Partial<Elevation>;
 };
 
 /** Spacing steps from tightest to loosest. */
@@ -175,9 +177,11 @@ const reach = ({ offsetY, blurRadius, spreadRadius }: BoxShadow): number =>
  * that paints. A level carrying more than one shadow is read at the entry
  * `elevationShadow` paints, which is the only one the level renders.
  */
-const elevationSteps = (elevation: Partial<Elevation>): readonly Step[] =>
+const elevationSteps = (
+  elevation: Partial<Elevation> | undefined,
+): readonly Step[] =>
   elevationLevels.flatMap((level) => {
-    const shadow = elevation[level]?.[0];
+    const shadow = elevation?.[level]?.[0];
     if (shadow === undefined) {
       return [];
     }

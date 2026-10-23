@@ -38,6 +38,7 @@ import {
   extendTheme,
   invalidColorRoles,
   invalidNumbers,
+  invalidScales,
   invalidShadowColors,
   isPaintableColor,
   lightElevation,
@@ -247,6 +248,85 @@ describe("an absent elevation level", () => {
     );
 
     expect(wrong).toEqual([]);
+  });
+});
+
+describe("an absent elevation group", () => {
+  const absentScale = () => stored({ elevation: undefined });
+
+  it("is every level missing, reported rather than thrown", () => {
+    // A store that predates the elevation scale has no `elevation` key at all,
+    // which is one level up from the absent level this suite already holds:
+    // `invalidShadowColors` read `theme.elevation[level]` and threw
+    // `TypeError: Cannot read properties of undefined (reading 'sm')` — the
+    // gate's own promise ("an incomplete theme does not crash") broken by the
+    // absence a whole scale is.
+    expect(invalidShadowColors({})).toEqual(
+      levels.map((level) => ({ level, index: 0, color: undefined })),
+    );
+    const report = auditTheme(absentScale());
+
+    expect(report.invalidShadows.map(({ level }) => level)).toEqual([
+      ...levels,
+    ]);
+    expect(
+      report.invalidShadows.every(({ color }) => color === undefined),
+    ).toBe(true);
+    const raised = report.decorative.filter(
+      ({ surface }) => surface === "elevation",
+    );
+    expect(raised.length).toBeGreaterThan(0);
+    expect(raised.every(({ ratio }) => ratio === undefined)).toBe(true);
+    expect(report.passed).toBe(false);
+  });
+
+  it("paints nothing for every level instead of throwing", () => {
+    const theme = absentScale();
+
+    levels.forEach((level) =>
+      expect(elevationShadow(theme, level), level).toBeUndefined(),
+    );
+  });
+
+  it("leaves the scale audit's rungs to the shadow report", () => {
+    // The numbers report walks the levels a theme carries (`Object.entries`), so
+    // the group's absence was `TypeError: Cannot convert undefined or null to
+    // object` there as well; the order audit has no rung to compare either.
+    const theme = absentScale();
+
+    expect(invalidNumbers(theme)).toEqual([]);
+    expect(
+      invalidScales(theme).filter(({ group }) => group === "elevation"),
+    ).toEqual([]);
+  });
+
+  it("keeps every shipped style's scale whole", () => {
+    // The optional group must not turn a complete theme flat: every shipped
+    // style still paints all four levels and passes the gate.
+    shipped.forEach((theme) => {
+      levels.forEach((level) =>
+        expect(elevationShadow(theme, level), `${theme.name} · ${level}`).toBe(
+          theme.elevation[level][0],
+        ),
+      );
+      expect(theme.elevation).toHaveProperty("lg");
+    });
+    expect(shipped.filter((theme) => !auditTheme(theme).passed)).toEqual([]);
+  });
+
+  it("teaches the group in the pages that state the absence rule", () => {
+    const read = (path: string): string =>
+      readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
+    const catalogue = read("../../../docs/tokens.md");
+    const designSystem = read("../../../docs/design-system.md");
+
+    expect(catalogue).toContain("the whole `elevation` group");
+    expect(catalogue).toContain("the same absence one level up");
+    expect(designSystem).toContain("or the whole elevation scale");
+    expect(designSystem).toContain("or a whole scale");
+    expect(catalogue).not.toContain(
+      "a theme must carry every numeric group: `elevation`",
+    );
   });
 });
 

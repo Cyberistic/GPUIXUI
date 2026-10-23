@@ -783,8 +783,9 @@ audit.keyboardDim; // [] — every label the runtime's keyboard dim fades is sti
 // Otherwise each entry names both roles, the measured ratio and the floor.
 ```
 
-A theme restored from storage can be **incomplete**. A missing colour role or
-elevation level is a line in the report, but a missing **numeric step** is not
+A theme restored from storage can be **incomplete**. A missing colour role, an
+elevation level or the whole elevation scale is a line in the report, but a
+missing **numeric step** is not
 something the reports can describe: `invalidNumbers` walks the steps a theme
 carries, so it says nothing about one that is not there — the pairs it compares
 (the emphasis, a control's fit) skip a member that is absent rather than reading
@@ -804,8 +805,10 @@ than once per field, so
 a caller deciding whether to restore a stored theme reads the absence as data
 instead of catching the gate's error; `auditTheme` builds its messages from the
 same list, so the report and the error cannot drift. An additive absence (a
-colour role, an elevation level) is not in it: that is a report and a failing
-gate.
+colour role, an elevation level, the whole elevation scale) is not in it: that is
+a report and a failing gate, and the paint side resolves it to nothing rather
+than throwing (`elevationShadow` returns `undefined` for a level a theme does not
+carry — or for every level when the scale is gone).
 
 A store hands back `null` where the theme had no value — JSON has no
 `undefined` — and the suite reads that as the absence it is: a numeric token kept

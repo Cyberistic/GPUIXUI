@@ -1052,12 +1052,14 @@ elevation level a brand supplies is outside that report — it reads `colors` �
 and an unpaintable shadow colour paints no shadow, so
 `invalidShadowColors(theme)` names the level and position (§7).
 
-A theme restored from storage can be **incomplete**: it may predate a role or an
-elevation level the library has added since, and JSON has no `undefined`, so a
+A theme restored from storage can be **incomplete**: it may predate a role, an
+elevation level or the whole elevation scale the library has added since, and
+JSON has no `undefined`, so a
 value that was absent when the theme was saved comes back as `null`. The reports
 carry the absence rather than throwing — `invalidColorRoles` returns the role with
 `value: undefined`, `invalidShadowColors` returns the level once at position `0`
-with no colour, the measuring seam reads any non-colour value as unmeasurable
+with no colour (every level, when the scale itself is gone), the measuring seam
+reads any non-colour value as unmeasurable
 (`ratio: undefined`, an opaque share for a composite), and every contract that
 measures a pair reports it unmeasurable — so the gate returns
 a failing report that names the role instead of a `TypeError`
@@ -1067,7 +1069,8 @@ even when a stored table is short, and a `syntax` palette that names only some
 tokens is reported token by token rather than left to the host's own colours.
 The paint follows the same rule: a role
 the theme lost paints nothing, and `elevationShadow` returns `undefined` for a
-level it does not carry, so no surface throws on the defect the report just
+level — or a whole scale — it does not carry, so no surface throws on the defect
+the report just
 explained (§7). A numeric group — and every numeric step
 inside one — is not treated this way: adding either is a breaking change rather
 than an additive one, because the components read every step, so the gate refuses

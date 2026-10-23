@@ -327,7 +327,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 185/185
+`[x]` `[██████████]` 186/186
 
 `[x]` Record a **followed palette only once the change was delivered** — `watchSystemTheme` stored a palette's key before calling `onChange`, so a callback that threw (a render error at the boundary) left the poll believing the theme had been applied: the next tick read the same file, matched the key and returned, and the window kept the previous palette until the desktop moved again — no further attempt, nothing reported. The key is written after `onChange` returns now; the defect still reaches the caller (the seam does not swallow it) and the next tick offers the same palette again. `system-theme.test.ts` gains `offers a palette again when the change that delivered it threw` (the callback throws once, the next tick re-applies) and `teaches that a change is recorded only once it was delivered` (both pages); directions measured: restoring the write-before-delivery fails the retry case by name (`expected [ … ] to have a length of 2 but got 1`). Docs in `docs/tokens.md` §Following a change and the package README.
 
@@ -4629,6 +4629,8 @@ scenario applies — a stored-data contract; no pointer or paint path changed.
       row below. Evidence: `apps/playground/README.md`
       §`breadcrumb-navigation-lifecycle`,
       `.artifacts/live/breadcrumb-{wide,narrow,narrow-menu}.png`.
+
+`[x]` Report a theme that **lost the whole elevation scale** instead of throwing — the gate's absence rule named "a colour role or an elevation level", and `invalidShadowColors` read `theme.elevation[level]` with `elevation` typed required, so `auditTheme` on a theme whose `elevation` key a store dropped threw `TypeError: Cannot read properties of undefined (reading 'sm')` — the crash the level rule closed one level down — while `elevationShadow` threw on the first raised surface, `invalidNumbers` on `Object.entries(undefined)` and `invalidScales` on `elevation[level]`. Every reader now takes an optional group (`elevation?.[level]`), so an absent scale is every level missing: `invalidShadows` names all four, the decorative table reports each raised placement unmeasurable, the paint is flat, and `passed` is false — a report, because the scale is additive rather than a breaking numeric group. `incomplete.test.ts` gains `an absent elevation group` (5 cases: the four levels by name and the unmeasurable placements, the flat paint, the two numeric audits, the shipped styles whole, and both pages); directions measured: reverting the three optional reads fails three cases with the exact `TypeError`s (`reading 'sm'` twice, `Cannot convert undefined or null to object` once), green after at 49 files / 2 865 tests. Docs in `docs/tokens.md` §Paint-ready values, `docs/design-system.md` §9, the package README and the `Elevation` row. No native scenario applies — a pure report and its paint, no runtime path.
 
 ## Phase C — Tier 1–2 components
 

@@ -76,7 +76,9 @@ export const elevationLevels = [
  * The source is `Partial<Elevation>` because a stored theme can predate a level
  * the library added: the report names it (`invalidShadowColors`) and the surface
  * paints flat, rather than the first raised card throwing where the audit had
- * already said why.
+ * already said why. The group itself may be absent — a store that predates the
+ * elevation scale — in which case every level paints nothing, the same answer
+ * one level up.
  *
  * @example
  * ```tsx
@@ -84,10 +86,10 @@ export const elevationLevels = [
  * ```
  */
 export function elevationShadow(
-  theme: { readonly elevation: Partial<Elevation> },
+  theme: { readonly elevation?: Partial<Elevation> },
   level: ElevationLevel,
 ): BoxShadow | undefined {
-  return theme.elevation[level]?.[0];
+  return theme.elevation?.[level]?.[0];
 }
 
 /** One elevation shadow whose colour the renderer cannot paint. */
@@ -119,7 +121,9 @@ export interface InvalidShadowColor {
  * **A level the theme does not carry is reported once, at position `0`, with no
  * colour**, rather than throwing: `elevationShadow` would read past the end of a
  * missing list, so the missing level is the same silent flat surface as a colour
- * the renderer ignores. The source is `Partial<Elevation>` for that reason.
+ * the renderer ignores. The source is `Partial<Elevation>` for that reason, and
+ * the group may be absent too: a store that predates the scale reports **every**
+ * level missing, which is the same answer one level up.
  *
  * A level's geometry is not checked here: a number the renderer reads is
  * painted, so the failure this report covers is the silent one.
@@ -141,10 +145,10 @@ export interface InvalidShadowColor {
  * ```
  */
 export function invalidShadowColors(theme: {
-  readonly elevation: Partial<Elevation>;
+  readonly elevation?: Partial<Elevation>;
 }): readonly InvalidShadowColor[] {
   return elevationLevels.flatMap((level): ReadonlyArray<InvalidShadowColor> => {
-    const shadows = theme.elevation[level];
+    const shadows = theme.elevation?.[level];
     return shadows === undefined
       ? [{ level, index: 0, color: undefined }]
       : shadows.flatMap((shadow, index) =>

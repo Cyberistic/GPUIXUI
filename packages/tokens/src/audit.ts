@@ -62,11 +62,11 @@ import type { ThemeContrast, ThemeMode } from "./theme.js";
 import { typography as shippedTypography } from "./typography.js";
 
 /**
- * The numeric groups a theme must carry. Every other group is additive — a
- * colour role or an elevation level can arrive later and its absence is a report
- * — but a numeric group is a breaking change: the components read every step in
- * it, so a theme stored by a release that predates one is not a theme this
- * library can paint.
+ * The numeric groups a theme must carry. Every other group is additive: a colour
+ * role, an elevation level or the whole elevation scale can arrive later, and its
+ * absence is a report. A numeric group is different — the components read every
+ * step in it, so a theme stored by a release that predates one is not a theme
+ * this library can paint.
  */
 const numericGroups = [
   "spacing",
@@ -194,10 +194,11 @@ export interface MissingToken {
  * `undefined` let `{ spacing: { md: null } }` pass the gate while the runtime
  * dropped the length and the gap painted as nothing.
  *
- * An **additive** absence is not here: a colour role or an elevation level a
- * theme lost is a report (`invalidColorRoles`, `invalidShadowColors`) and a
- * failing gate, because the runtime can paint the rest. Only a numeric group, a
- * step inside one and a blank family are refusals, because every component reads
+ * An **additive** absence is not here: a colour role, an elevation level or the
+ * whole elevation scale a theme lost is a report (`invalidColorRoles`,
+ * `invalidShadowColors`) and a failing gate, because the runtime can paint the
+ * rest. Only a numeric group, a step inside one and a blank family are refusals,
+ * because every component reads
  * them by name.
  *
  * @example
@@ -301,8 +302,8 @@ type ColourSource = { readonly colors: Partial<ThemeColors> };
 /** A theme's contrast variant, when it has declared one. */
 type ContrastSource = { readonly contrast?: ThemeContrast };
 
-/** The field the shadow audit reads: the elevation scale a theme paints. */
-type ShadowSource = { readonly elevation: Partial<Elevation> };
+/** The field the shadow audit reads: the elevation scale a theme paints, if it carries one. */
+type ShadowSource = { readonly elevation?: Partial<Elevation> };
 
 /** The fields a series audit reads: the mode, the variant and an authored scale. */
 type SeriesSource = {
@@ -358,9 +359,10 @@ export interface ThemeAudit {
  * because the dim is a where-can-Tab-go cue rather than a reading mode.
  *
  * An incomplete theme does not crash the gate. A theme restored from storage can
- * predate a colour role or an elevation level the library has added since, so
- * `invalidRoles` and `invalidShadows` name the absence and the contracts that
- * measure a pair report it unmeasurable; `passed` is false either way. A
+ * predate a colour role, an elevation level or the whole elevation scale the
+ * library has added since, so `invalidRoles` and `invalidShadows` name the
+ * absence and the contracts that measure a pair report it unmeasurable; `passed`
+ * is false either way. A
  * **numeric step** is the one absence the reports cannot describe — the
  * components read every step, and `invalidNumbers` walks the steps a theme
  * carries, so it says nothing about one that is not there while the first paint

@@ -1390,7 +1390,12 @@ a number, `null` — answers `false` instead of throwing, because that is the
 value a check exists to report rather than crash on.
 `invalidShadowColors(theme)` applies the same check to an elevation level a brand
 supplies, which the role report cannot see (§Elevation); a level the theme does
-not carry is reported once, at position `0`, with `color: undefined`.
+not carry is reported once, at position `0`, with `color: undefined`. A theme
+that lost the whole `elevation` group — a store that predates the scale — is the
+same absence one level up: every level is named, the decorative table measures
+each raised placement unmeasurable, `elevationShadow` paints nothing, and the
+gate still returns (the scale is additive, so this is a report rather than the
+refusal a numeric group earns).
 
 **An incomplete theme is a report, not an exception.** Both paint reports take
 the partial group (`Partial<ThemeColors>` / `Partial<Elevation>`), and the
