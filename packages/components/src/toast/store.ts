@@ -62,7 +62,11 @@ export class ToastStore extends Context.Service<
 
 /** How many toasts are kept, and how long a draft without a `duration` lives. */
 export interface ToastStoreOptions {
-  /** Toasts kept before the oldest is dropped. Default 3. */
+  /**
+   * Toasts kept before the oldest is dropped. Default 3. A count that is not a
+   * finite number (a measurement that never arrived) reads as the default, and
+   * a finite count below one keeps one card.
+   */
   readonly max?: number;
   /** Auto-dismiss delay for a draft with no `duration`. Default 5 seconds. */
   readonly defaultDuration?: Duration.Input;
@@ -70,6 +74,19 @@ export interface ToastStoreOptions {
 
 const DEFAULT_MAX = 3;
 const DEFAULT_DURATION = Duration.seconds(5);
+
+/**
+ * How many toasts are kept. A budget is often arithmetic over a measured width
+ * (`Math.floor(w / 320)`), so a measurement that never arrived reaches this as
+ * `NaN`; `NaN` makes the overflow arithmetic non-finite, which drops nothing
+ * and expires nothing — the queue grows without bound and every card keeps its
+ * own timer. An infinite budget is the same leak by another name, so both read
+ * as the default; a finite count below one is one card.
+ */
+const keepCount = (requested: number | undefined): number => {
+  const value = requested ?? DEFAULT_MAX;
+  return Number.isFinite(value) ? Math.max(1, Math.trunc(value)) : DEFAULT_MAX;
+};
 
 const decodeDraft = Schema.decodeUnknownEffect(ToastInput);
 
@@ -84,7 +101,7 @@ const dismisses = (duration: Duration.Duration): boolean =>
 export const makeToastStore = Effect.fn("ToastStore.make")(function* (
   options?: ToastStoreOptions,
 ): Effect.fn.Return<ToastStoreService, never, Scope.Scope> {
-  const max = Math.max(1, Math.trunc(options?.max ?? DEFAULT_MAX));
+  const max = keepCount(options?.max);
   const fallback = pipe(
     Duration.fromInput(options?.defaultDuration ?? DEFAULT_DURATION),
     Option.getOrElse(() => DEFAULT_DURATION),

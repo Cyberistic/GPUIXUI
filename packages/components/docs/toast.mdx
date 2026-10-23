@@ -47,6 +47,11 @@ ToastProvider
 | `useToast()` | `dismiss` / `dismissAll` | `(id: string) => void` / `() => void` | — |
 | `useToast()` | `pause` / `resume` | `(id: string) => void` | — |
 
+`max` bounds the queue: a count the store cannot measure — a `NaN` from a width
+calculation that never arrived, or an `Infinity` — reads as the default 3, and a
+finite count below one keeps one card. An unbounded queue would retain a card
+and its auto-dismiss timer for every toast ever pushed.
+
 ## Limitations
 
 - No `aria-live` or `aria-atomic`; a status region is the announcement.

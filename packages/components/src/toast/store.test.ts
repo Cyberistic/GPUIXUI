@@ -10,6 +10,13 @@
  * It also guards the timing contract: pausing stores the *remaining* time, so a
  * toast paused at 2s of 5s resumes with 3s left — not a fresh 5s, and not an
  * immediate dismissal.
+ *
+ * And it guards the queue's bound: `max` is often arithmetic over a measured
+ * width, so a measurement that never arrived reaches the store as `NaN` (or as
+ * `Infinity` from a caller meaning "no limit"). Both made the overflow
+ * arithmetic non-finite, which expires nothing and drops nothing — the queue
+ * grew without bound and every card kept a timer. A count the store cannot
+ * measure reads as the default now.
  */
 
 import { describe, expect, it } from "@effect/vitest";
@@ -113,6 +120,36 @@ describe("ToastStore", () => {
         expect(ids(yield* store.toasts)).toEqual(["2", "3"]);
       }),
       { max: 2 },
+    ),
+  );
+
+  it.effect("reads a limit it cannot measure as the default", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+
+        expect(ids(yield* store.toasts)).toEqual(["2", "3", "4"]);
+      }),
+      { max: Number.NaN },
+    ),
+  );
+
+  it.effect("reads an unbounded limit as the default", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+
+        expect(ids(yield* store.toasts)).toEqual(["2", "3", "4"]);
+      }),
+      { max: Number.POSITIVE_INFINITY },
     ),
   );
 

@@ -302,7 +302,7 @@ Verification.
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 169/169
+`[x]` `[██████████]` 170/170
 
 `[x]` Decode **Omarchy's `colors.toml`** into the palette this package maps — the
 follow had a poll and a semantic shape but no reader: `docs/tokens.md` §System
@@ -1290,6 +1290,44 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       wash sample, neither moved by a 1–2px pad) is green with the change —
       `--only document-type`, 1/1 in 2 385ms — and `packages/primitives`' 987
       tests stay green.
+
+`[x]` Give a **find highlight** a measured wash the theme owns — a search marks
+      its matches with a wash **behind** the text, and a host given no colour
+      paints the runtime theme's `accent` at **30%** for every match and **65%**
+      for the active one with a **2px** corner
+      (`packages/native/src/text/search.rs` at the pinned
+      `@gpuix/native@0.11.0`). The library's application passes no window theme,
+      so that accent is the runtime's built-in violet: the one text surface
+      still painted from a palette this package does not own. Measured over the
+      fourteen shipped, high-contrast, platform and authored styles, the active
+      share left `foreground` under the 7:1 body floor in **all fourteen**
+      (Windows dark's popover at **3.05:1**) and the resting share in four dark
+      ones — Dark · Linux **6.14:1** on its popover, Windows dark 6.33, Windows
+      XP (Luna) 6.09 and Windows 7 (Aero) 6.55 — so a reader's own query could
+      hide the result they searched for. `findHighlight(theme)` derives the pair
+      from the theme's `primary`: the resting 30% where it holds and the largest
+      share that is visible (1.05:1) **and** keeps body text at the theme's own
+      floor where it does not (Linux 22%, Luna 23%, Windows and Aero 26%), the
+      active match at the strongest wash the ink survives — the secondary floor
+      only when the accent has no stronger body-safe share, since a stronger
+      wash is the only difference a text host can paint — and `radius.sm` for
+      the corner, because the runtime's 2 is no step. Both washes stay
+      translucent; their byte-rounded share is what the contract measures.
+      `highlightSurfaces` names the four content tones a search runs over
+      (page, card, popover, muted) and `highlightFailures(theme, floors?)`
+      reports `visibility`, `legibility` and `distinct` — the last for an active
+      match a surface cannot tell apart at 1.05:1, the one job a wash cannot do
+      for a body pair already on the floor. `highlight.test.ts` (14 cases) holds
+      the exported shares, the four-style step with the pre-fix ratios by name,
+      the 56-placement sweep over every style, the tightest separation
+      (**1.150:1**, high-contrast dark on `muted`), a brand whose accent is its
+      strip, a brand whose body pair sits at 7.00:1 with no headroom for any
+      wash, both floor sets, a stored theme read as absence, the executed
+      `highlight.example.ts` and the three pages. It sits **beside** `auditTheme`
+      rather than inside it until the docs site's readout words a report for it
+      (`TODO.md` → Interlocks), the rule `invalidScales` already follows. Docs in
+      `docs/tokens.md` §Find highlights, `docs/design-system.md` §9/§11, the
+      package README and the `Find highlights` inventory row.
 
 ### Playground and native smoke (`apps/playground`, `packages/testing`)
 
@@ -5378,6 +5416,25 @@ real seams so a dropped `selectionWash`/`fieldHint` fails too.
       (and the picture case two image nodes) and the second
       `[ undefined, undefined, 'Team lead' ]`. Docs: `docs/avatar.mdx`
       §Presence/§Accessibility/§Verification and the `COMPONENTS.md` row
+    - [x] Keep a toast queue's **bound** when the limit cannot be measured —
+      `ToastProvider`'s `max` is a count a caller often derives from a measured
+      width (`Math.floor(w / 320)`), so a measurement that never arrived reaches
+      the store as `NaN`, and a caller meaning "no limit" hands it `Infinity`.
+      `Math.max(1, Math.trunc(NaN))` is `NaN` and `max` stayed it, so the
+      overflow arithmetic went non-finite in both directions: `Arr.length - max`
+      is `NaN`/`-Infinity`, `Math.max(0, …)` is `0`/`NaN`, `Arr.take` drops
+      nothing and `Arr.drop` drops nothing — the queue grew without bound and
+      every card kept its auto-dismiss timer. `keepCount` (`toast/store.ts`) now
+      reads a non-finite limit as the default 3 and a finite count below one as
+      one card, the rule the breadcrumb budget and the skeleton/grid painters
+      already follow. `store.test.ts` gains `reads a limit it cannot measure as
+      the default` and `reads an unbounded limit as the default` (18 in the
+      file); both measured failing at `HEAD` on the four-push queue —
+      `expected [ '1', '2', '3', '4' ] to deeply equal [ '2', '3', '4' ]` — and
+      green after. Docs: `docs/toast.mdx` §API states the rule and why an
+      unbounded queue leaks a timer per card, the `ToastStoreOptions.max` JSDoc
+      and the `COMPONENTS.md` `Toasts / notifications` row name it. Unit
+      94 files / 872 tests, behaviour 96 files / 946 tests, `check-types` green
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
@@ -6588,6 +6645,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Correct the **Dropdown menus row's printed test count** — `packages/components/src/behaviour/dropdown-menu.test.tsx` now runs **42** native cases (the menu-radio work added one) while `COMPONENTS.md`'s Dropdown menus row still prints `41 native behaviour tests`, so the inventory undersells the suite by a case. The docs site's curated page prints 42 and `component-page-truth.test.ts` derives it from the suite, which is how the drift surfaced (the generic count case failed on the page before it was corrected) | components (`COMPONENTS.md`'s Dropdown menus row) | **resolved 2026-10-23** (`2b166041`) — the row prints 42, the suite runs 42, and `src/inventory.test.ts`'s `states the real native test count in every package row` derives the number from the behaviour file, so the row cannot drift again |
 | State the **hidden-column search rule** on the data lane — `@gpuixui/data` now takes `useTable({ hiddenColumns: columns.hidden })` and marks those columns `enableGlobalFilter: false`, so a query keeps no record by text no painted cell shows while a sort on the hidden column still orders the set (`src/grid-core.test.ts`, `src/behaviour/table.test.tsx`: hide `status`, `modified` narrows to `0 rows`, restore and it paints `20 rows`). `/docs/data-display`'s controller rules and the curated `/docs/components/table`'s copyable `useTable({ rows, keyOf, columns })` snippet predate the option, so a reader planning a grid from either page cannot tell that a filtered grid which hides columns must pass the list | docs-site (`apps/docs/content/docs/data-display/index.mdx`, `apps/docs/content/docs/components/table.mdx`, `lane-page.test.ts`, `table-preview.test.ts`) | **open** — the lane page owes a **A hidden column leaves the search, not the sort** rule beside the retention and clamp rules, and the curated page's snippet owes `hiddenColumns: columns.hidden` with `useColumns` declared first; the guards should read the option and the package's `enableGlobalFilter` line so the page cannot outlive the painter |
+| Paint a **find highlight from the theme**, not the runtime's built-in accent — `@gpuixui/tokens` now ships `findHighlight(theme)` (`color`, `activeColor`, `radius`), `highlightSurfaces` and `highlightFailures`, because the runtime's own pair (accent at 30%/65%, a 2px corner) leaves body text under the 7:1 floor in every shipped style at the active share and in four dark ones at the resting share. A search surface should spread it into the host's `highlight` spec (`<text highlight={{ query, ...findHighlight(theme) }}>`), and the playground's `search-highlights` / `search-virtual-document` probes hand the host **no** colour, so they paint the runtime's palette rather than the theme's — the probe is also where the painted wash should be read back (two matches apart, the active one stronger). `HighlightText`'s sweeping marker defaults to the `selection` role, which is a different job and may stay | components + playground | open |
+| Fold **`highlightFailures` into the gate** and the docs-site readout — the find-highlight contract runs beside `auditTheme` because `/docs/themes`' `AuditKind`/`auditFindings` in `apps/docs/src/components/docs/theme-editor-logic.ts` words every report the gate returns and derives its printed count from the gate's own keys. The coordinated change is a twelfth `ThemeAudit` key and `passed` term, an `AuditKind` line (`highlight`) with a formatter naming the state, the strip and the ratio, the `themes.mdx` count/bullet and copy-theme note, and the editor's pass sentence; `packages/tokens/src/highlight.test.ts` already holds the report, its three kinds and both floor sets | docs-site + tokens-theme | open |
 
 ## Phase D — data and workspace components
 
