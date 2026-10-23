@@ -23,6 +23,7 @@ import {
   statusTone,
   themes,
 } from "@gpuixui/tokens";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { trendTone } from "./stat-card.js";
 
@@ -37,6 +38,38 @@ const shippedStyles = [
     Object.values(themes).map((theme) => retroTheme(theme, look)),
   ),
 ] as const;
+
+/** The cells the sweep measures: both directions, on both card surfaces. */
+const trendCells = shippedStyles.flatMap((theme) => {
+  const floor = contrastFloorsFor(theme).body;
+  return (["up", "down"] as const).flatMap((direction) => [
+    {
+      theme: theme.name,
+      direction,
+      surface: "card" as const,
+      ratio: contrastRatio(trendTone(direction, theme), theme.colors.card),
+      floor,
+    },
+    {
+      theme: theme.name,
+      direction,
+      surface: "background" as const,
+      ratio: contrastRatio(
+        trendTone(direction, theme),
+        theme.colors.background,
+      ),
+      floor,
+    },
+  ]);
+});
+
+/** The Tier 3 row that owns the sweep. */
+const statisticRow = readFileSync(
+  new URL("../../../../COMPONENTS.md", import.meta.url),
+  "utf8",
+)
+  .split("\n")
+  .find((line) => line.startsWith("| Statistic / metric cards |"));
 
 describe("trendTone", () => {
   it("asks the status tone for its readable role, not its fill", () => {
@@ -57,33 +90,27 @@ describe("trendTone", () => {
   });
 
   it("clears the text floor on both surfaces a card stands on", () => {
-    const cells = shippedStyles.flatMap((theme) => {
-      const floor = contrastFloorsFor(theme).body;
-      return (["up", "down"] as const).flatMap((direction) => [
-        {
-          theme: theme.name,
-          direction,
-          surface: "card",
-          ratio: contrastRatio(trendTone(direction, theme), theme.colors.card),
-          floor,
-        },
-        {
-          theme: theme.name,
-          direction,
-          surface: "background",
-          ratio: contrastRatio(
-            trendTone(direction, theme),
-            theme.colors.background,
-          ),
-          floor,
-        },
-      ]);
-    });
-
-    const under = cells.filter(
+    const under = trendCells.filter(
       (cell) => cell.ratio === undefined || cell.ratio < cell.floor,
     );
     expect(under).toEqual([]);
+  });
+
+  it("prints the sweep it measures on the card's row", () => {
+    // The row outlived Omarchy's two styles: it still claimed a 64-placement
+    // sweep over sixteen, while the suite walks eighteen styles and four cells
+    // each. A reader plans the contract by that number, so derive it.
+    expect(shippedStyles).toHaveLength(18);
+    expect(trendCells).toHaveLength(72);
+    expect(statisticRow).toBeDefined();
+    // The row emphasises its figures; the claim is the numbers it prints.
+    const printed = (statisticRow ?? "").replaceAll("**", "");
+    expect(printed).toContain(
+      `${trendCells.length}-placement sweep over the ${shippedStyles.length} shipped`,
+    );
+    // The retracted pair, refused where the row is the only thing printing it.
+    expect(printed).not.toContain("64-placement");
+    expect(printed).not.toContain("sixteen");
   });
 
   it("would report the fill role it replaced as unreadable on a page", () => {

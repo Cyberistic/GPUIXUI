@@ -19,6 +19,14 @@
  * `FileSystem` to.
  */
 
+import {
+  highContrastThemes,
+  platformNames,
+  platformTheme,
+  retroNames,
+  retroTheme,
+  themes,
+} from "@gpuixui/tokens";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
@@ -46,6 +54,15 @@ const dataRows = inventory
   .split("\n")
   .filter((line) => line.startsWith("| ") && line.includes("@gpuixui/data"));
 
+/** One row of the inventory by its first cell, wherever it sits. */
+const rowNamed = (name: string): string => {
+  const found = inventory
+    .split("\n")
+    .find((line) => line.startsWith(`| ${name} |`));
+  if (found === undefined) throw new Error(`no ${name} row in the inventory`);
+  return found;
+};
+
 /** One data row by its first cell, failing the case by name when it is gone. */
 const row = (name: string): string => {
   const found = dataRows.find((line) => line.startsWith(`| ${name} |`));
@@ -53,6 +70,18 @@ const row = (name: string): string => {
     throw new Error(`no ${name} row under the data lane`);
   return found;
 };
+
+/** Every shipped, high-contrast, platform and authored style. */
+const shippedStyles = [
+  ...Object.values(themes),
+  ...Object.values(highContrastThemes),
+  ...platformNames.flatMap((platform) =>
+    Object.values(themes).map((theme) => platformTheme(theme, platform)),
+  ),
+  ...retroNames.flatMap((look) =>
+    Object.values(themes).map((theme) => retroTheme(theme, look)),
+  ),
+] as const;
 
 /** A path-qualified count a row prints: `` `src/x.test.ts` (12 cases) ``. */
 const pathClaims = (
@@ -95,6 +124,17 @@ describe("the data lane's printed case counts", () => {
     expect(read(packageRoot, "docs/virtual-tree.mdx")).toContain(
       `${cases} tests`,
     );
+  });
+
+  it("prints the style set the washes are derived in", () => {
+    // The `Row selection` row outlived Omarchy's two styles: the tokens suite
+    // walks eighteen, while the row still told a reader sixteen. The count is
+    // derived from the style table so a new style fails it before the row can
+    // stay green on a set it no longer measures.
+    expect(shippedStyles).toHaveLength(18);
+    const selection = rowNamed("Row selection");
+    expect(selection).toContain(`${shippedStyles.length} styles`);
+    expect(selection).not.toContain("sixteen");
   });
 
   it("keeps the counts that were retracted out of the lane", () => {
