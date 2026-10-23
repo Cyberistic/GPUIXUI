@@ -25,11 +25,21 @@ Rows and statuses come from `COMPONENTS.md`.
 | A docked arrangement | `DockLayout`: a named tree of splits and tab groups rendered from `DockNode` | [Docking layouts](/docs/dock/dock-layout) |
 | Tabbed panels | `Tabs` with a measured shared indicator, both axes, manual or automatic activation | [Tabs](/docs/components/tabs) |
 | Command palette | `CommandMenu` over a dialog-hosted, ranked, searchable list | [Command menu](/docs/components/command-menu) |
-| Application menus | `DropdownMenu`, `ContextMenu` and submenus over the shared row model | [Components](/docs/components) |
+| Application menus | `AppMenu` in the window, over the runtime's fixed macOS bar | [Application menu](/docs/shell/app-menu) |
 | Breadcrumb navigation | `Breadcrumb` with middle collapsing | [Breadcrumb](/docs/components/breadcrumb) |
-| Toolbars and status bars | `Stack` + `ButtonGroup` + `Separator`, a page-level recipe | [Layouts](/docs/layouts) |
+| Toolbars | `Toolbar` with a roving tab stop and an overflow menu | [Toolbar](/docs/shell/toolbar) |
+| Status bars | `StatusBar` with leading/trailing groups and tones | [Status bar](/docs/shell/status-bar) |
 | Notifications | The `Toast` provider and viewport, rendered last in the tree | [Toast](/docs/components/toast) |
 | A whole window | The [Dashboard](/docs/blocks/dashboard) block: sidebar, search, cards and rows | [Blocks](/docs/blocks) |
+
+The application chrome is a package of its own: `@gpuixui/shell` ships the
+`AppMenu` bar, the `Toolbar` strip and the `StatusBar` row in the table above,
+and a window measured all three on 0.11.0 (`app-chrome-lifecycle`, 47 checks) —
+the menu's dropdown paints below its trigger, arrows move the open menu and wrap
+past a disabled entry, Enter runs the highlighted action, and Escape unpaints
+the surface and returns focus to the trigger. The runtime reserves no titlebar,
+so a workspace paints the chrome as its own rows at the window's top and bottom
+edges rather than expecting the desktop to draw them.
 
 <ComponentPreview name="tabs-demo" />
 
@@ -369,7 +379,7 @@ limits, and none of them is a component the lane still owes.
 | --- | -------- | ---------------------------- |
 | A pane detached into its own window | The binding opens **one window per process** and has no drag host feature; a portalled surface paints in another layer of the same window (`portal-layer`) | Move a tab to another layer or pane through `createPortal`; a second OS window stays unavailable |
 | Renderer storage | No storage API in the binding; the package ships `PanelLayout` and `DockNode`, which round-trip through a JSON string | `Schema`-encoded app state, decoded at the entrypoint, as §State and persistence shows |
-| Application menus | The macOS menu bar is a renderer API; cross-platform menus are the app's | `DropdownMenu` in the window, or a caller-drawn in-window menu |
+| Application menus | The macOS menu bar is a renderer API with no API to add an item, so a cross-platform menu is the app's | `AppMenu` from `@gpuixui/shell` draws the bar inside the window, with keyboard traversal and accelerator labels |
 | Terminal surfaces | Rendering the app **into** a terminal is supported and measured: `render(<App />, { terminal: true })` with `isTerminal()`, a 100×40 pty receiving an 800×640 frame, a key repainting it and ctrl-c restoring the terminal ([Runtime capabilities](/docs/runtime#measured-in-a-window)). A pane that hosts a PTY **inside** a window has no PTY host element, so it is not supported | Ship the app as a terminal UI, or put a log viewer in the window: `ScrollArea` + `Text` |
 
 The capability matrix and its evidence are on [Runtime](/docs/runtime).

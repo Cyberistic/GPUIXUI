@@ -1222,3 +1222,70 @@ describe("the data-display page's controller rules", () => {
     expect(dataPage).toMatch(/re-clamps the window in the same\s+commit/);
   });
 });
+
+/**
+ * The workspace lane's application chrome.
+ *
+ * COMPONENTS.md ships the chrome as `@gpuixui/shell` — Tier 4's Application
+ * menus, Toolbars and Status bars rows are `done` and name the part each row
+ * ships — and a window measured all three (`app-chrome-lifecycle`, 47 checks).
+ * The lane page that assembles a workspace still sent a reader to hand-compose
+ * the bar, the toolbar and the status strip from `Stack`/`ButtonGroup`/
+ * `Separator` and to `/docs/layouts` for the recipe, so the one page about
+ * building a window never mentioned the package that ships its chrome.
+ */
+describe("the workspace page's application chrome", () => {
+  const shellIndex = readFileSync(
+    new URL("../../../../packages/shell/src/index.ts", import.meta.url),
+    "utf8",
+  );
+
+  /** The parts the three chrome rows name, derived from the inventory. */
+  const chrome = ["Application menus", "Toolbars", "Status bars"].flatMap(
+    (name) => {
+      const row = inventory.rows.find((candidate) => candidate.name === name);
+      expect(row, `COMPONENTS.md has no ${name} row`).toBeDefined();
+      const part = /`@gpuixui\/shell` \(`([A-Za-z]+)`\)/.exec(
+        row?.notes ?? "",
+      )?.[1];
+      expect(
+        part,
+        `${name} no longer names the shell part it ships`,
+      ).toBeDefined();
+      return row === undefined || part === undefined ? [] : [{ row, part }];
+    },
+  );
+
+  it("ships every part its row names, from the package the row names", () => {
+    const missing = chrome.filter(
+      ({ row, part }) =>
+        row.status !== "done" || !shellIndex.includes(`export { ${part} }`),
+    );
+
+    expect(missing.map(({ part }) => part)).toEqual([]);
+    expect(chrome.length).toBe(3);
+  });
+
+  it("names and links every chrome part instead of a hand-built recipe", () => {
+    const page = read(workspacePage);
+    const unresolved = chrome.flatMap(({ part }) => {
+      const slug = part.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+      const gaps = [
+        ...(page.includes(`\`${part}\``) ? [] : [`${part} is not named`]),
+        ...(page.includes(`](/docs/shell/${slug})`)
+          ? []
+          : [`no link to /docs/shell/${slug}`]),
+      ];
+      return gaps.map((gap) => `${part}: ${gap}`);
+    });
+
+    expect(unresolved).toEqual([]);
+  });
+
+  it("records that the chrome is the app's to paint, from the capability record", () => {
+    // The record measured the origin with `window-chrome`: the runtime reserves
+    // no titlebar, so a workspace's first row is its own chrome.
+    expect(rowFor(record, "Window chrome and insets")).toContain("titlebar");
+    expect(read(workspacePage)).toContain("reserves no titlebar");
+  });
+});

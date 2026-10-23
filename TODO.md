@@ -10048,7 +10048,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 265/265
+`[x]` `[██████████]` 266/266
 
 `[x]` Print the **find wash as the gate's twelfth report** — the tokens
       workstream folded `highlightFailures` into `auditTheme` while the readout
@@ -13938,6 +13938,33 @@ fails the case by name; restored, the file is 44/44 and
       list; restored, the file is 56/56 and `nub run --filter @gpuixui/docs
       check-types` is clean. No native scenario applies — a source seam and the
       pages that teach it.
+
+`[x]` Send a workspace to the **chrome package the inventory says ships it** — `@gpuixui/shell`'s
+      `AppMenu`, `Toolbar` and `StatusBar` are the Tier 4 chrome rows
+      (`done`, measured by `app-chrome-lifecycle`: 47 checks, 0.11.0), while
+      `/docs/workspace`'s **What composes a window today** table still sent a
+      reader to hand-build the bar from `DropdownMenu`/`ContextMenu` and the
+      toolbar and status strip from `Stack` + `ButtonGroup` + `Separator`, with
+      `/docs/layouts` for the recipe — the lane page about assembling a window
+      never mentioned the package that ships its chrome, and the gaps table's
+      application-menu alternative offered the same hand-built shape. The table
+      now names `AppMenu`, `Toolbar` and `StatusBar` and links their package
+      pages; a paragraph introduces the package with the probe's measured
+      behaviour (dropdown below its trigger, arrows wrapping past a disabled
+      entry, Enter running the row, Escape returning focus to the trigger) and
+      the `window-chrome` origin rule (the runtime reserves no titlebar, so the
+      chrome is the app's own top and bottom rows); the gaps row's alternative
+      is `AppMenu`, not a caller-drawn menu. `lane-page.test.ts` gains `the
+      workspace page's application chrome` (3 cases): it derives the three parts
+      from the inventory rows' own notes, proves the package index exports each
+      and the rows are `done`, requires the lane page to name each part and link
+      its `/docs/shell/<slug>` page, and reads the no-titlebar rule out of the
+      capability record. Directions measured: replacing the Toolbar link with
+      `/docs/layouts` fails with `Toolbar: no link to /docs/shell/toolbar`, and
+      rewording the origin sentence fails with `expected … to contain 'reserves
+      no titlebar'`; restored, the four files are 87/87 and the app is green
+      apart from the motion workstream's in-flight page. No native scenario
+      applies — the probe's 0.11.0 run stands; this pass publishes it.
 
 ## Swarm-owned blockers (fix these)
 
