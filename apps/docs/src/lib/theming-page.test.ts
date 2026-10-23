@@ -9,7 +9,6 @@ import {
   decorativeSurfaces,
   extendTheme,
   indicatorFailures,
-  indicatorSurfaces,
   isThemeMode,
   keyboardFocusDimOpacity,
   retroNames,
@@ -517,7 +516,7 @@ describe("the theming pages' indicator strips", () => {
         ...(marks.includes("{indicatorSurfaces.length}")
           ? []
           : [`${name}: prints a literal strip count`]),
-        ...(marks.includes("{indicatorSurfaces.join(\", \")}")
+        ...(marks.includes('{indicatorSurfaces.join(", ")}')
           ? []
           : [`${name}: does not print the package's own strip list`]),
         ...(marks.includes("(`background`")
@@ -1074,14 +1073,10 @@ describe("the theming page's focus-ring section", () => {
     expect(control).toContain("if (state.disabled === true) {");
     expect(control).toContain("outlineColor: theme.colors.destructive");
 
-    // The measured reason the line has to move: in both base themes `ring` is
-    // the primary fill, and the tokens suite pins the range over every style.
-    expect(
-      contrastRatio(themes.light.colors.ring, themes.light.colors.primary),
-    ).toBe(1);
-    expect(
-      contrastRatio(themes.dark.colors.ring, themes.dark.colors.primary),
-    ).toBe(1);
+    // The measured premise lives in the package's own test: the page names it
+    // instead of printing a range that every palette pass has to re-edit (the
+    // premise moved when the palettes did), and the test's table is read so the
+    // citation cannot point at a file that stopped measuring it.
     const measured = readFileSync(
       new URL(
         "../../../../packages/tokens/src/ring-fill.test.ts",
@@ -1089,12 +1084,8 @@ describe("the theming page's focus-ring section", () => {
       ),
       "utf8",
     );
-    expect(measured).toContain(
-      'expect(spread(ratios("primary", "rest"))).toBe("1.00–1.38")',
-    );
-    expect(measured).toContain(
-      'expect(spread(ratios("destructive", "rest"))).toBe("1.00–1.38")',
-    );
+    expect(measured).toContain('spread(ratios("primary", "rest"))');
+    expect(measured).toContain('spread(ratios("destructive", "rest"))');
 
     const text = section(page("theming.mdx"), "Focus rings").replace(
       /\s+/g,
@@ -1105,10 +1096,12 @@ describe("the theming page's focus-ring section", () => {
     expect(text).toContain("`controlFocusRing(theme, { disabled, invalid })`");
     expect(text).toContain("separated from the control's own fill");
     expect(text).toContain("borderWidth.strong");
-    expect(text).toContain("1.00–1.38:1");
-    expect(text).toContain("1.00–1.54:1");
+    expect(text).toContain("`ring-fill.test.ts`");
+    expect(text).toContain("unsatisfiable");
     expect(text).toContain("focus-ring-offset");
     expect(text).toContain("no ring at all");
+    // A literal measured range is what drifts; the page prints the mechanism.
+    expect(text).not.toMatch(/\d\.\d\d–\d\.\d\d:1/);
     // The retracted geometry: the line on the control's own edge.
     expect(text).not.toContain("outlineOffset: 0");
     expect(text).not.toContain("keeps the line on the control's edge");

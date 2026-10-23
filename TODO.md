@@ -8505,7 +8505,25 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 232/232
+`[x]` `[██████████]` 233/233
+
+`[x]` Move the **ring premise off the page** and onto the file that measures it —
+      `/docs/theming` §Focus rings printed the flush line's measured range
+      ("1.00–1.38:1 on `primary` and 1.00–1.54:1 on `destructive`"), which is a
+      palette measurement that moved the moment a palette pass did: the tokens
+      suite's own premise now reads a different range, and both the page and
+      `theming-page.test.ts`'s pinned strings went red on a tree no docs change
+      had touched. The page now states the mechanism and the unsatisfiability
+      (`ring` *is* `primary` in both base themes, the line never clears the
+      boundary floor on a brand face, and in most styles no luminance clears
+      both the page and the face) and cites `ring-fill.test.ts`, which owns the
+      numbers per style; the guard reads that file's premise table so the
+      citation cannot point at a suite that stopped measuring it, and refuses a
+      printed `x.xx–y.yy:1` range. Directions measured: the retracted range
+      fails the new "no literal measured range" case by name, and a citation
+      to a file without the premise cases fails the file case; green the file is
+      1 248 tests with `check-types` clean. No native scenario applies — page
+      prose and its guard have no runtime path.
 
 `[x]` Print the **mark surfaces from the array** on both theming pages —
       `themes.mdx` and `theming.mdx` retyped `indicatorSurfaces` as a nine-name

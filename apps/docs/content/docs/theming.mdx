@@ -299,8 +299,12 @@ The separation is what lets a filled action show a ring at all. In both shipped
 base themes `ring` **is** `primary` — measured
 {contrastRatio(themes.light.colors.ring, themes.light.colors.primary)?.toFixed(2)}:1 —
 so a line sitting on a primary action's edge is drawn in that action's own
-colour; across the shipped, high-contrast, platform and authored styles the
-same line reads 1.00–1.38:1 on `primary` and 1.00–1.54:1 on `destructive`.
+colour. Across the shipped, high-contrast, platform and authored styles that
+line never clears the boundary floor on either brand face, and in most styles no
+luminance clears both the page and the face at all: the pair is unsatisfiable
+rather than unmet, so no palette can close it. `ring-fill.test.ts` holds the
+measured premise for every style and its control samples, so the numbers live
+beside the rule instead of on a page that a palette pass would leave behind.
 Offsetting the line by one border width
 ({keyboardFocusRing(themes.light).focusVisible.outlineOffset} points in the
 shipped themes) shows the strip behind the control through the gap, so the ring
