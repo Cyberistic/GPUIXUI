@@ -68,13 +68,24 @@ export const TABLE_ROWS: ReadonlyArray<PreviewTableRow> = [
   },
 ];
 
+/** The hideable columns, in the order the header paints them. */
+export const COLUMN_IDS = [
+  "service",
+  "environment",
+  "status",
+  "duration",
+] as const;
+
+/** One hideable column. */
+export type ColumnId = (typeof COLUMN_IDS)[number];
+
+/** The value one column paints, before the column is hidden. */
+export const cellOf = (row: PreviewTableRow, id: ColumnId): string =>
+  id === "duration" ? `${row.duration}` : row[id];
+
 /** The four cells a row paints, each one searched on its own. */
-export const cellsOf = (row: PreviewTableRow): ReadonlyArray<string> => [
-  row.service,
-  row.environment,
-  row.status,
-  `${row.duration}`,
-];
+export const cellsOf = (row: PreviewTableRow): ReadonlyArray<string> =>
+  COLUMN_IDS.map((id) => cellOf(row, id));
 
 /** The value one column sorts by: numbers as numbers, everything else as text. */
 export const valueOf = (row: PreviewTableRow, field: string): string | number =>
@@ -164,19 +175,22 @@ export const normalizeQuery = (query: string): string =>
 /**
  * The rows a literal, case-insensitive query keeps.
  *
- * Each cell is matched on its own, which is the rule the core's global filter
- * takes: every column's accessor value is lowercased and asked whether it
- * contains the query. A query therefore cannot span two cells.
+ * Each **shown** cell is matched on its own, which is the rule the core's
+ * global filter takes: every visible column's accessor value is lowercased and
+ * asked whether it contains the query. A query therefore cannot span two cells,
+ * and a hidden column leaves the search (`grid-core.ts` sets
+ * `enableGlobalFilter: false` for it) while its sort entry still orders the set.
  */
 export const filterRows = (
   rows: ReadonlyArray<PreviewTableRow>,
   query: string,
+  columns: ReadonlyArray<ColumnId> = COLUMN_IDS,
 ): ReadonlyArray<PreviewTableRow> => {
   const needle = normalizeQuery(query);
   return needle === ""
     ? rows
     : rows.filter((row) =>
-        cellsOf(row).some((cell) => cell.toLowerCase().includes(needle)),
+        columns.some((id) => cellOf(row, id).toLowerCase().includes(needle)),
       );
 };
 
@@ -228,12 +242,14 @@ export const sortRows = (
         [],
       );
 
-/** The rows a preview paints: filtered first, then sorted by every entry. */
+/** The rows a preview paints: filtered by the shown columns, then sorted by every entry. */
 export const visibleRows = (
   rows: ReadonlyArray<PreviewTableRow>,
   query: string,
   order: PreviewSortOrder,
-): ReadonlyArray<PreviewTableRow> => sortRows(filterRows(rows, query), order);
+  columns: ReadonlyArray<ColumnId> = COLUMN_IDS,
+): ReadonlyArray<PreviewTableRow> =>
+  sortRows(filterRows(rows, query, columns), order);
 
 /** Chosen records plus the record a range extends from. */
 export interface PreviewSelection {
@@ -377,17 +393,6 @@ export const pageSlice = (
  * A shadcn-style data table lets the reader hide columns. The select and
  * actions tracks never hide; the four data columns toggle through a menu and at
  * least one must stay, because a row with no text paints nothing. */
-
-/** The hideable columns, in the order the header paints them. */
-export const COLUMN_IDS = [
-  "service",
-  "environment",
-  "status",
-  "duration",
-] as const;
-
-/** One hideable column. */
-export type ColumnId = (typeof COLUMN_IDS)[number];
 
 /** The columns shown at first. */
 export const ALL_COLUMNS: ReadonlyArray<ColumnId> = [...COLUMN_IDS];

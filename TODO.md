@@ -10408,7 +10408,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ### Docs information architecture (`docs-site`)
 
 
-`[x]` `[██████████]` 362/362
+`[x]` `[██████████]` 363/363
 
 `[x]` Publish the **keyboard contract** every component page promised — the index
       said "every component … with its keyboard contract" and `/docs/components`
@@ -16248,6 +16248,34 @@ fails the case by name; restored, the file is 44/44 and
       --filter @gpuixui/docs test` is **157 files / 1 664 tests** green with
       `check-types` clean. No native scenario applies — a page and the source
       seams it documents.
+
+`[x]` Show the **data lane's table**, and make its drawing obey the hidden-column
+      rule the page teaches — `/docs/data-display` was the one composition lane
+      with no preview: Layouts drew its shell and Workspace its panel group, while
+      the data entry listed the inventory and sent a reader to the Table page to
+      see what the lane looks like. It now mounts `table-workflow` under the lane
+      table with the four decisions the table owns (header press sorts, row press
+      selects, field filters, Columns menu hides). The mount exposed a real
+      contradiction in the preview: `filterRows` searched every cell, so a column
+      the menu hid stayed in the query — hiding `environment` and typing
+      `staging` still painted two rows — while `grid-core.ts` sets
+      `enableGlobalFilter: false` for a hidden column and both the curated Table
+      page and `useTable`'s JSDoc say a hidden column leaves the search and keeps
+      its sort. `filterRows`/`visibleRows` now take the shown columns, and
+      `TableWorkflow` hands them the live `columns` when it paints and when it
+      retains a chosen record. `table-preview.test.ts` gains `leaves a hidden
+      column out of the query, and keeps its sort` (the package's own
+      `enableGlobalFilter` line and `useTable` sentence, the hidden-column query
+      emptying, the remaining columns still matching, a hidden `environment`
+      still ordering the rows, and the two `visibleRows(…, columns)` call sites);
+      `lane-page.test.ts` gains `show the surface the lane is about, from a demo
+      that exists` (every lane page mounts a registered demo, with the policy's
+      new rule). Directions measured: dropping `columns` from the demo's paint
+      call fails on `visibleRows(rows, query, order, columns)`, and removing the
+      lane mount fails `expected [ { …(3) } ] to deeply equal []`; restored, the
+      two files are 26/26. Docs: `docs/preview-strategy.md` §A lane page shows
+      the surface it is about. No native scenario applies — a browser preview and
+      the page it draws on.
 
 ## Swarm-owned blockers (fix these)
 

@@ -118,6 +118,55 @@ describe("the preview's filter", () => {
     expect(filterRows(TABLE_ROWS, "api production")).toEqual([]);
   });
 
+  it("leaves a hidden column out of the query, and keeps its sort", () => {
+    // Bug guarded: the workflow preview drew the Columns menu and still
+    // filtered on a column it had hidden, while the page above it says — and
+    // `useTable` implements — that a hidden column leaves the search. A reader
+    // who hid `environment` and typed `staging` saw two rows the page says the
+    // table cannot show.
+    expect(gridCore).toContain(
+      "enableGlobalFilter: !HashSet.has(hidden, column.id)",
+    );
+    expect(useTableSource).toContain(
+      "A hidden column keeps its sort but leaves the search",
+    );
+
+    expect(ids(filterRows(TABLE_ROWS, "staging"))).toEqual([
+      "search",
+      "reports",
+    ]);
+    expect(
+      filterRows(TABLE_ROWS, "staging", ["service", "status", "duration"]),
+    ).toEqual([]);
+    // The columns that remain are still searched.
+    expect(ids(filterRows(TABLE_ROWS, "staging", ["environment"]))).toEqual([
+      "search",
+      "reports",
+    ]);
+
+    // The hidden column keeps its sort: `environment` still orders the set
+    // while only `service` is shown.
+    expect(
+      ids(
+        visibleRows(
+          TABLE_ROWS,
+          "",
+          [{ field: "environment", direction: "asc" }],
+          ["service"],
+        ),
+      ),
+    ).toEqual(["media", "billing", "gateway", "auth", "search", "reports"]);
+
+    // The workflow hands the current columns to the rule both when it paints
+    // and when it retains a chosen record the narrowed set no longer holds.
+    const workflow = readFileSync(
+      new URL("./table-demo.tsx", import.meta.url),
+      "utf8",
+    );
+    expect(workflow).toContain("visibleRows(rows, query, order, columns)");
+    expect(workflow).toContain("visibleRows(rows, next, order, columns)");
+  });
+
   it("keeps the page's copyable source on the controller the package ships", () => {
     // The snippet a reader copies. It still passed `textOf`/`valueOf` to
     // `useTable` after those options were replaced by one `columns` list, and

@@ -192,7 +192,7 @@ export const TableWorkflow = () => {
     };
   }, []);
 
-  const shown = visibleRows(rows, query, order);
+  const shown = visibleRows(rows, query, order, columns);
   const count = pageCount(shown);
   const current = clampPage(page, count);
   const pageRows = pageSlice(shown, current);
@@ -207,7 +207,7 @@ export const TableWorkflow = () => {
     setSelection((state) =>
       retainSelection(
         state,
-        visibleRows(rows, next, order).map((row) => row.id),
+        visibleRows(rows, next, order, columns).map((row) => row.id),
       ),
     );
   };

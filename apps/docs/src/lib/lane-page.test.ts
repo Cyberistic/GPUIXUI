@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { demos } from "../components/docs/demos";
 import { sidebarPages } from "./sidebar-pages.test-util";
 
 /**
@@ -106,6 +107,35 @@ describe("the composition pages", () => {
 
     expect(policy).toContain('| What ships today | `<LanePages lane="…" />`');
     expect(policy).toContain("**The page list is generated too.**");
+  });
+
+  it("show the surface the lane is about, from a demo that exists", () => {
+    // Bug guarded: a lane page is the entry to its section and listed the
+    // inventory without ever showing the surface a reader came for — the data
+    // lane was the last one with no drawing, while its Table page carried the
+    // preview a reader had to find first. The mount is checked from both sides
+    // so a lane cannot name a demo the registry does not hold either.
+    const mounted = pages.flatMap(({ file }) =>
+      [...read(file).matchAll(/<ComponentPreview\s+name="([^"]+)"/g)].map(
+        (match) => [file, match[1] ?? ""] as const,
+      ),
+    );
+
+    expect(
+      pages.filter(({ file }) => !read(file).includes("<ComponentPreview")),
+    ).toEqual([]);
+    expect(mounted.length).toBeGreaterThanOrEqual(pages.length);
+    expect(
+      mounted
+        .filter(([, name]) => demos[name] === undefined)
+        .map(([file, name]) => `${file}: no demo named "${name}"`),
+    ).toEqual([]);
+
+    const policy = readFileSync(
+      new URL("../../../../docs/preview-strategy.md", import.meta.url),
+      "utf8",
+    );
+    expect(policy).toContain("**A lane page shows the surface it is about.**");
   });
 
   it("name the inventory as the source of their status", () => {

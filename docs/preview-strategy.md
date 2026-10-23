@@ -450,6 +450,13 @@ cannot ship a page the site does not show and the two cannot drift:
 | Panel surfaces | `packages/dock/docs` | `/docs/dock` | Workspace |
 | Media surfaces | `packages/media/docs` | `/docs/media` | Workspace |
 
+**A lane page shows the surface it is about.** `/docs/layouts`, `/docs/workspace`
+and `/docs/data-display` mount a demo of their flagship surface under the
+inventory table — the shell, the panel group and the deploy table — so a reader
+sees what the lane is before the page list. A lane page names a registered demo
+and never ships a drawing for a lane that has none; `lane-page.test.ts` holds all
+three.
+
 The table is the mounted set, not an illustration: `package-docs.test.ts` reads
 it against `packageCollections` in both directions, so a collection the site mounts
 and this table omits fails, and so does a row no collection backs.
