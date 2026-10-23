@@ -1,0 +1,4 @@
+# The TanStack Start build writes its generated route tree here. It is rebuilt
+# from the route files on every start, so it is never repository content — and
+# `git add apps/docs` would otherwise swallow it.
+.tanstack/

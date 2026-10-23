@@ -10701,11 +10701,27 @@ Work that this workstream needs but does not own. Another agent owns each row.
       **140 files / 1 220 tests** green, `check-types` and `build` clean. No
       native scenario applies — a site page's own filter.
 
-`[ ]` Add **`apps/docs/.tanstack/`** to `.gitignore` — `vite build` writes the
-      generated route-tree cache there, and the repository ignores `dist/`,
-      `build/`, `.source/` and `.alchemy/` but not this directory, so a docs
-      build leaves an untracked tree that a `git add apps/docs` would swallow.
-      Owner: repo tooling (`.gitignore` is shared).
+`[x]` Stop the **docs build leaving its route tree untracked** — `vite build`
+      writes the generated route-tree cache to `apps/docs/.tanstack/`, and the
+      repository ignores `dist/`, `build/`, `.source/` and `.alchemy/` but not
+      that directory, so a docs build left a tree a `git add apps/docs` (the
+      lane's own staging command) would swallow. The app now carries
+      `apps/docs/.gitignore` with the one rule, so the shared root file is not
+      edited. `src/lib/build-outputs.test.ts` (2 cases) asks git itself with
+      `check-ignore --no-index` — a hand-written matcher would be a second
+      implementation of gitignore semantics — and holds all three generated
+      trees (`.tanstack/`, `.source/`, `dist/`) to `ignored` while three
+      contributor files are the negative control at `tracked`. Directions
+      measured: without the ignore file the first case fails with
+      `[ '.tanstack/routeTree.gen.ts' ]`, and an ignore-everything rule fails
+      the second with the three source paths named; restored, the file is 2/2.
+      README §Generated trees documents the three trees. No native scenario
+      applies — a repository rule and the tool that applies it.
+
+`[ ]` Ignore the **live probes' evidence directory** — the docs probes write
+      frames to `.artifacts/live/` at the repository root and `.gitignore` does
+      not carry it, so `docs/preview-strategy.md` has to tell a reader to delete
+      the directory by hand. Owner: repo tooling (`.gitignore` is shared).
 
 `[x]` Give the **data lane its first honest preview** — the policy said every
       lane but Components and Primitives was strategy 4, so `/docs/data-display`

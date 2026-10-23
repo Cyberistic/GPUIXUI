@@ -705,6 +705,17 @@ nub run --filter @gpuixui/docs build             # production build
 nub run --filter @gpuixui/docs check-types       # tsc
 ```
 
+## Generated trees
+
+`nub run dev:docs` and the build write three trees beside the source, never into
+it: `.tanstack/` (TanStack Start's route tree, rebuilt on every start),
+`.source/` (Fumadocs' collection output) and `dist/`. All three stay invisible to
+git — `.tanstack/` through this app's own `.gitignore`, the other two through the
+repository root — so `git add apps/docs` stages a lane and never a build.
+`src/lib/build-outputs.test.ts` asks git for each path's verdict with
+`check-ignore --no-index` and holds three contributor files as the negative
+control.
+
 ## Deploy
 
 ```sh
